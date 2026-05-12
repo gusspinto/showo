@@ -8,15 +8,27 @@ import { Navbar } from '../components/Navbar'
 import { generateProject } from '../lib/generateProject'
 
 const colors = {
-  bg: '#1c2333',
+  bg: '#0d1424',
+  bgAlt: '#111c32',
+  card: '#152030',
+  cardHover: '#1c2d44',
+  border: '#1e3050',
+  borderBright: '#2a4275',
   blue: '#3b82f6',
-  text: '#ffffff',
-  muted: '#94a3b8',
-  card: '#232d42',
-  border: '#2e3a54',
+  blueHover: '#2563eb',
+  blueGlow: 'rgba(59,130,246,0.15)',
+  blueSubtle: 'rgba(59,130,246,0.08)',
+  blueBg: '#0a1729',
+  text: '#e8f2ff',
+  muted: '#7d93b0',
+  subtle: '#3d5270',
   green: '#22c55e',
+  greenGlow: 'rgba(34,197,94,0.12)',
+  greenBg: '#061a0f',
   yellow: '#eab308',
+  yellowGlow: 'rgba(234,179,8,0.12)',
   orange: '#f97316',
+  orangeGlow: 'rgba(249,115,22,0.12)',
 }
 
 const CONFETTI_COLORS = ['#3b82f6', '#22c55e', '#eab308', '#f97316', '#a855f7', '#ec4899', '#06b6d4']
@@ -39,8 +51,8 @@ function getLevelInfo(score) {
 }
 
 function ScoreRing({ score }) {
-  const size = 100
-  const stroke = 7
+  const size = 108
+  const stroke = 8
   const r = (size - stroke) / 2
   const circ = 2 * Math.PI * r
   const dash = (score / 100) * circ
@@ -49,21 +61,27 @@ function ScoreRing({ score }) {
 
   return (
     <div style={{ position: 'relative', width: size, height: size }}>
-      <svg width={size} height={size} style={{ transform: 'rotate(-90deg)', display: 'block' }}>
+      {/* Outer glow ring */}
+      <div style={{
+        position: 'absolute', inset: -6, borderRadius: '50%',
+        background: `radial-gradient(circle, ${color}18 0%, transparent 70%)`,
+        pointerEvents: 'none',
+      }} />
+      <svg width={size} height={size} style={{ transform: 'rotate(-90deg)', display: 'block', position: 'relative', zIndex: 1 }}>
         <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={colors.border} strokeWidth={stroke} />
         <circle
           cx={size / 2} cy={size / 2} r={r} fill="none"
           stroke={color} strokeWidth={stroke}
           strokeDasharray={dasharray} strokeLinecap="round"
-          style={{ transition: 'stroke-dasharray 0.6s ease-out, stroke 0.4s' }}
+          style={{ transition: 'stroke-dasharray 0.6s ease-out, stroke 0.4s', filter: `drop-shadow(0 0 6px ${color}80)` }}
         />
       </svg>
       <div style={{
-        position: 'absolute', inset: 0,
+        position: 'absolute', inset: 0, zIndex: 2,
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
       }}>
-        <span style={{ fontSize: 24, fontWeight: 800, color, lineHeight: 1 }}>{score}</span>
-        <span style={{ fontSize: 9, color: colors.muted, fontWeight: 600, letterSpacing: 0.5, textTransform: 'uppercase' }}>score</span>
+        <span style={{ fontSize: 26, fontWeight: 900, color, lineHeight: 1, letterSpacing: '-1px' }}>{score}</span>
+        <span style={{ fontSize: 9, color: colors.muted, fontWeight: 700, letterSpacing: 1.5, textTransform: 'uppercase', marginTop: 2 }}>score</span>
       </div>
     </div>
   )
@@ -72,12 +90,27 @@ function ScoreRing({ score }) {
 function Section({ icon, title, content }) {
   if (!content) return null
   return (
-    <div style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 16, padding: '24px 28px', marginBottom: 16 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-        <span style={{ fontSize: 20 }}>{icon}</span>
-        <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: colors.muted, textTransform: 'uppercase', letterSpacing: 0.5 }}>{title}</h3>
+    <div style={{
+      background: colors.card,
+      border: `1px solid ${colors.border}`,
+      borderRadius: 16,
+      padding: '22px 26px',
+      marginBottom: 12,
+      boxShadow: '0 2px 16px rgba(0,0,0,0.25)',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+        <div style={{
+          width: 32, height: 32, borderRadius: 8,
+          background: 'rgba(255,255,255,0.05)',
+          border: `1px solid ${colors.border}`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 16, flexShrink: 0,
+        }}>
+          {icon}
+        </div>
+        <h3 style={{ margin: 0, fontSize: 11, fontWeight: 700, color: colors.muted, textTransform: 'uppercase', letterSpacing: 1 }}>{title}</h3>
       </div>
-      <p style={{ margin: 0, color: colors.text, fontSize: 16, lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{content}</p>
+      <p style={{ margin: 0, color: colors.text, fontSize: 15, lineHeight: 1.75, whiteSpace: 'pre-wrap' }}>{content}</p>
     </div>
   )
 }
@@ -89,38 +122,71 @@ function ChallengeCard({ challenge, project, onImprove }) {
 
   return (
     <div style={{
-      background: isCompleted ? 'rgba(34,197,94,0.06)' : colors.bg,
-      border: `1px solid ${isCompleted ? 'rgba(34,197,94,0.25)' : colors.border}`,
-      borderRadius: 14, padding: '18px 20px',
+      background: isCompleted ? colors.greenBg : colors.bgAlt,
+      border: `1px solid ${isCompleted ? 'rgba(34,197,94,0.22)' : colors.border}`,
+      borderRadius: 14,
+      padding: '16px 18px',
+      transition: 'border-color 0.2s',
     }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
-        <span style={{ fontSize: 22, flexShrink: 0, marginTop: 1 }}>{challenge.icon}</span>
+        <div style={{
+          width: 38, height: 38, borderRadius: 10, flexShrink: 0, marginTop: 1,
+          background: isCompleted ? 'rgba(34,197,94,0.1)' : 'rgba(255,255,255,0.04)',
+          border: `1px solid ${isCompleted ? 'rgba(34,197,94,0.2)' : colors.border}`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18,
+        }}>
+          {challenge.icon}
+        </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 15, fontWeight: 700, color: isCompleted ? colors.green : colors.text }}>
-              {isCompleted ? '✓ ' : ''}{challenge.title}
+            <span style={{ fontSize: 14, fontWeight: 700, color: isCompleted ? colors.green : colors.text }}>
+              {isCompleted && <span style={{ marginRight: 4 }}>✓</span>}{challenge.title}
             </span>
-            <span style={{ fontSize: 13, fontWeight: 700, color: isCompleted ? colors.green : colors.blue, flexShrink: 0 }}>
+            <span style={{
+              fontSize: 12, fontWeight: 700, flexShrink: 0,
+              color: isCompleted ? colors.green : colors.blue,
+              background: isCompleted ? colors.greenGlow : colors.blueSubtle,
+              border: `1px solid ${isCompleted ? 'rgba(34,197,94,0.2)' : 'rgba(59,130,246,0.15)'}`,
+              borderRadius: 999, padding: '2px 10px',
+            }}>
               +{challenge.xp} XP
             </span>
           </div>
-          <p style={{ margin: '0 0 10px', fontSize: 13, color: colors.muted, lineHeight: 1.5 }}>
+          <p style={{ margin: '0 0 10px', fontSize: 13, color: colors.muted, lineHeight: 1.55 }}>
             {challenge.description}
           </p>
           {!isCompleted && (
             <>
               <div style={{ marginBottom: 10 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
-                  <span style={{ fontSize: 11, color: colors.muted }}>{val.length} / {challenge.threshold} caracteres</span>
-                  <span style={{ fontSize: 11, color: colors.muted }}>{Math.round(progress * 100)}%</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                  <span style={{ fontSize: 11, color: colors.subtle }}>{val.length} / {challenge.threshold} caracteres</span>
+                  <span style={{ fontSize: 11, color: colors.subtle }}>{Math.round(progress * 100)}%</span>
                 </div>
                 <div style={{ height: 4, background: colors.border, borderRadius: 2, overflow: 'hidden' }}>
-                  <div style={{ height: '100%', borderRadius: 2, width: `${progress * 100}%`, background: progress > 0.7 ? colors.orange : colors.blue, transition: 'width 0.3s' }} />
+                  <div style={{
+                    height: '100%', borderRadius: 2,
+                    width: `${progress * 100}%`,
+                    background: progress > 0.7
+                      ? `linear-gradient(90deg, ${colors.orange}, ${colors.yellow})`
+                      : `linear-gradient(90deg, ${colors.blue}, #818cf8)`,
+                    transition: 'width 0.3s',
+                  }} />
                 </div>
               </div>
               <button
                 onClick={() => onImprove(challenge)}
-                style={{ background: 'rgba(59,130,246,0.12)', color: colors.blue, border: '1px solid rgba(59,130,246,0.3)', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+                style={{
+                  background: colors.blueSubtle,
+                  color: colors.blue,
+                  border: '1px solid rgba(59,130,246,0.2)',
+                  borderRadius: 8,
+                  padding: '8px 16px',
+                  fontSize: 13,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                  transition: 'background 0.15s',
+                }}
               >
                 Melhorar agora →
               </button>
@@ -146,41 +212,91 @@ function EditModal({ challenge, project, onClose, onSave, saving }) {
 
   return (
     <div
-      style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 24 }}
+      style={{
+        position: 'fixed', inset: 0,
+        background: 'rgba(0,0,0,0.8)',
+        backdropFilter: 'blur(6px)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        zIndex: 1000, padding: 24,
+      }}
       onClick={e => e.target === e.currentTarget && onClose()}
     >
-      <div style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 20, padding: '28px 32px', width: '100%', maxWidth: 560, boxShadow: '0 24px 60px rgba(0,0,0,0.5)' }}>
+      <div style={{
+        background: colors.card,
+        border: `1px solid ${colors.borderBright}`,
+        borderRadius: 20,
+        padding: '28px 32px',
+        width: '100%', maxWidth: 560,
+        boxShadow: '0 32px 80px rgba(0,0,0,0.6)',
+      }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ fontSize: 26 }}>{challenge.icon}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{
+              width: 42, height: 42, borderRadius: 12,
+              background: 'rgba(255,255,255,0.05)',
+              border: `1px solid ${colors.border}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22,
+            }}>
+              {challenge.icon}
+            </div>
             <div>
               <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: colors.text }}>{challenge.fieldLabel}</h2>
               <span style={{ fontSize: 12, color: colors.blue, fontWeight: 600 }}>+{challenge.xp} XP ao completar</span>
             </div>
           </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: colors.muted, cursor: 'pointer', fontSize: 22, lineHeight: 1, padding: 4 }}>×</button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: colors.muted, cursor: 'pointer', fontSize: 22, lineHeight: 1, padding: 4, borderRadius: 6 }}>×</button>
         </div>
-        <p style={{ color: colors.muted, fontSize: 14, margin: '0 0 16px', lineHeight: 1.5 }}>{challenge.description}</p>
+        <p style={{ color: colors.muted, fontSize: 14, margin: '0 0 16px', lineHeight: 1.55 }}>{challenge.description}</p>
         <textarea
           autoFocus
           value={value}
           onChange={e => setValue(e.target.value)}
-          style={{ width: '100%', minHeight: 150, background: colors.bg, border: `1.5px solid ${isComplete ? colors.green : colors.border}`, borderRadius: 10, padding: '12px 14px', color: colors.text, fontSize: 15, lineHeight: 1.6, resize: 'vertical', fontFamily: 'system-ui, sans-serif', boxSizing: 'border-box', outline: 'none', transition: 'border-color 0.2s' }}
+          style={{
+            width: '100%', minHeight: 150,
+            background: colors.bg,
+            border: `1.5px solid ${isComplete ? colors.green : colors.border}`,
+            borderRadius: 10, padding: '12px 14px',
+            color: colors.text, fontSize: 15, lineHeight: 1.65,
+            resize: 'vertical', fontFamily: 'Inter, system-ui, sans-serif',
+            boxSizing: 'border-box', outline: 'none',
+            transition: 'border-color 0.2s',
+          }}
           placeholder={`Escreve sobre ${challenge.fieldLabel.toLowerCase()}...`}
         />
         <div style={{ margin: '10px 0 20px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-            <span style={{ fontSize: 12, color: isComplete ? colors.green : colors.muted, fontWeight: isComplete ? 600 : 400 }}>{isComplete ? '✓ Objetivo atingido!' : `${len} / ${challenge.threshold} caracteres`}</span>
-            <span style={{ fontSize: 12, color: colors.muted }}>{Math.round(progress * 100)}%</span>
+            <span style={{ fontSize: 12, color: isComplete ? colors.green : colors.muted, fontWeight: isComplete ? 600 : 400 }}>
+              {isComplete ? '✓ Objetivo atingido!' : `${len} / ${challenge.threshold} caracteres`}
+            </span>
+            <span style={{ fontSize: 12, color: colors.subtle }}>{Math.round(progress * 100)}%</span>
           </div>
           <div style={{ height: 5, background: colors.border, borderRadius: 3, overflow: 'hidden' }}>
-            <div style={{ height: '100%', borderRadius: 3, width: `${progress * 100}%`, background: isComplete ? colors.green : colors.blue, transition: 'width 0.15s, background 0.3s' }} />
+            <div style={{
+              height: '100%', borderRadius: 3,
+              width: `${progress * 100}%`,
+              background: isComplete
+                ? `linear-gradient(90deg, ${colors.green}, #4ade80)`
+                : `linear-gradient(90deg, ${colors.blue}, #818cf8)`,
+              transition: 'width 0.15s, background 0.3s',
+            }} />
           </div>
         </div>
         <button
           onClick={() => onSave(value)}
           disabled={saving}
-          style={{ width: '100%', background: isComplete ? colors.green : colors.blue, color: '#fff', border: 'none', borderRadius: 10, padding: '14px 0', fontSize: 16, fontWeight: 700, cursor: saving ? 'default' : 'pointer', opacity: saving ? 0.75 : 1, transition: 'background 0.3s, opacity 0.2s' }}
+          style={{
+            width: '100%',
+            background: isComplete
+              ? `linear-gradient(135deg, ${colors.green}, #16a34a)`
+              : `linear-gradient(135deg, ${colors.blue}, #4f46e5)`,
+            color: '#fff', border: 'none', borderRadius: 10,
+            padding: '14px 0', fontSize: 16, fontWeight: 700,
+            cursor: saving ? 'default' : 'pointer',
+            opacity: saving ? 0.75 : 1,
+            transition: 'opacity 0.2s',
+            fontFamily: 'inherit',
+            boxShadow: isComplete ? '0 4px 20px rgba(34,197,94,0.3)' : '0 4px 20px rgba(59,130,246,0.3)',
+          }}
         >
           {saving ? 'A guardar...' : `Guardar e ganhar +${challenge.xp} XP`}
         </button>
@@ -195,15 +311,16 @@ function Toast({ message, visible }) {
       position: 'fixed', bottom: 32, left: '50%',
       transform: `translateX(-50%) translateY(${visible ? 0 : 100}px)`,
       opacity: visible ? 1 : 0,
-      background: 'linear-gradient(135deg, #1e3a5f, #162d4a)',
-      border: `1px solid ${colors.blue}`,
-      borderRadius: 12, padding: '14px 28px',
-      color: colors.text, fontSize: 16, fontWeight: 600,
+      background: 'linear-gradient(135deg, #111c32, #0a1729)',
+      border: `1px solid ${colors.borderBright}`,
+      borderRadius: 14, padding: '14px 28px',
+      color: colors.text, fontSize: 15, fontWeight: 600,
       zIndex: 2000,
       transition: 'transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s',
       whiteSpace: 'nowrap',
-      boxShadow: '0 8px 40px rgba(0,0,0,0.5)',
+      boxShadow: '0 8px 48px rgba(0,0,0,0.6)',
       pointerEvents: 'none',
+      fontFamily: 'inherit',
     }}>
       {message}
     </div>
@@ -373,7 +490,7 @@ export default function ProjectPage() {
   if (loading) {
     return (
       <div style={{ minHeight: '100vh', backgroundColor: colors.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ width: 40, height: 40, border: `4px solid ${colors.border}`, borderTop: `4px solid ${colors.blue}`, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+        <div style={{ width: 40, height: 40, border: `3px solid ${colors.border}`, borderTop: `3px solid ${colors.blue}`, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     )
@@ -381,19 +498,19 @@ export default function ProjectPage() {
 
   if (!project) {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: 'system-ui, sans-serif', gap: 16, textAlign: 'center', padding: 24 }}>
+      <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: 'Inter, system-ui, sans-serif', gap: 16, textAlign: 'center', padding: 24 }}>
         <div style={{ fontSize: 48 }}>🔍</div>
-        <h2 style={{ margin: 0, fontSize: 24 }}>Este projeto não existe ou foi removido</h2>
+        <h2 style={{ margin: 0, fontSize: 24, fontWeight: 700 }}>Este projeto não existe ou foi removido</h2>
         <p style={{ color: colors.muted, margin: 0 }}>O link pode estar incorrecto ou o projeto foi eliminado.</p>
         <button
           onClick={() => navigate('/novo')}
-          style={{ background: colors.blue, color: '#fff', border: 'none', borderRadius: 10, padding: '12px 28px', fontSize: 16, fontWeight: 700, cursor: 'pointer', marginTop: 8 }}
+          style={{ background: `linear-gradient(135deg, ${colors.blue}, #4f46e5)`, color: '#fff', border: 'none', borderRadius: 10, padding: '12px 28px', fontSize: 16, fontWeight: 700, cursor: 'pointer', marginTop: 8, boxShadow: '0 4px 20px rgba(59,130,246,0.3)', fontFamily: 'inherit' }}
         >
           Criar o meu projeto →
         </button>
         <button
           onClick={() => navigate('/')}
-          style={{ background: 'transparent', border: `1px solid ${colors.border}`, color: colors.muted, borderRadius: 8, padding: '10px 22px', fontSize: 14, cursor: 'pointer' }}
+          style={{ background: 'transparent', border: `1px solid ${colors.border}`, color: colors.muted, borderRadius: 8, padding: '10px 22px', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}
         >
           Ir para o início
         </button>
@@ -416,7 +533,7 @@ export default function ProjectPage() {
   const totalXP = CHALLENGES.reduce((sum, c) => sum + c.xp, 0)
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: 'system-ui, sans-serif' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: 'Inter, system-ui, sans-serif' }}>
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes confetti-fall {
@@ -439,78 +556,146 @@ export default function ProjectPage() {
               const token = localStorage.getItem(`edit_token_${project.slug}`)
               navigate(`/editar/${project.slug}${token ? `?token=${token}` : ''}`)
             }}
-            style={{ background: 'transparent', border: `1px solid ${colors.border}`, color: colors.muted, borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+            style={{
+              background: 'transparent',
+              border: `1px solid ${colors.border}`,
+              color: colors.muted,
+              borderRadius: 8,
+              padding: '8px 16px',
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+            }}
           >
             ✏️ Editar
           </button>
         )}
         <button
           onClick={() => navigate('/novo')}
-          style={{ background: colors.blue, color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
+          style={{
+            background: `linear-gradient(135deg, ${colors.blue}, #4f46e5)`,
+            color: '#fff',
+            border: 'none',
+            borderRadius: 8,
+            padding: '9px 18px',
+            fontSize: 14,
+            fontWeight: 600,
+            cursor: 'pointer',
+            fontFamily: 'inherit',
+            boxShadow: '0 4px 16px rgba(59,130,246,0.3)',
+          }}
         >
           Criar projeto
         </button>
       </Navbar>
 
-      <div style={{ maxWidth: 780, margin: '0 auto', padding: '0 24px 80px' }}>
+      <div style={{ maxWidth: 800, margin: '0 auto', padding: '0 24px 80px' }}>
 
         {/* Cover image */}
         {project.cover_url && (
-          <div style={{ width: '100%', height: 280, position: 'relative', marginTop: 32, borderRadius: 16, overflow: 'hidden' }}>
+          <div style={{ width: '100%', height: 300, position: 'relative', marginTop: 36, borderRadius: 20, overflow: 'hidden', boxShadow: '0 16px 48px rgba(0,0,0,0.5)' }}>
             <img src={project.cover_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 40%, #1c2333)' }} />
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 30%, #0d1424ee)' }} />
           </div>
         )}
 
         {/* Hero */}
-        <div style={{ position: 'relative', padding: `${project.cover_url ? '32px' : '60px'} 0 40px` }}>
-          {/* Score + level */}
-          <div style={{ position: 'absolute', top: project.cover_url ? 32 : 60, right: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+        <div style={{ position: 'relative', padding: `${project.cover_url ? '32px' : '64px'} 0 40px` }}>
+          {/* Score widget */}
+          <div style={{
+            position: 'absolute', top: project.cover_url ? 32 : 64, right: 0,
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10,
+          }}>
             <ScoreRing score={displayScore} />
-            <div style={{ background: level.color + '20', color: level.color, borderRadius: 999, padding: '4px 10px', fontSize: 10, fontWeight: 700, border: `1px solid ${level.color}40`, textAlign: 'center', maxWidth: 110, lineHeight: 1.4 }}>
+            <div style={{
+              background: level.color + '15',
+              color: level.color,
+              borderRadius: 999,
+              padding: '4px 12px',
+              fontSize: 10,
+              fontWeight: 700,
+              border: `1px solid ${level.color}35`,
+              textAlign: 'center',
+              maxWidth: 120,
+              lineHeight: 1.5,
+              letterSpacing: 0.2,
+            }}>
               {level.label}
             </div>
             {internshipReady && (
-              <div style={{ background: 'rgba(34,197,94,0.1)', color: colors.green, border: '1px solid rgba(34,197,94,0.3)', borderRadius: 999, padding: '4px 10px', fontSize: 10, fontWeight: 700, textAlign: 'center', maxWidth: 110, lineHeight: 1.4 }}>
+              <div style={{
+                background: colors.greenGlow,
+                color: colors.green,
+                border: '1px solid rgba(34,197,94,0.25)',
+                borderRadius: 999,
+                padding: '4px 12px',
+                fontSize: 10,
+                fontWeight: 700,
+                textAlign: 'center',
+                maxWidth: 120,
+                lineHeight: 1.5,
+              }}>
                 ✅ Pronto para estágio
               </div>
             )}
           </div>
 
-          {/* Badges row */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 18 }}>
+          {/* Badges */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
             {project.area && (
-              <div style={{ background: '#1e3a5f', color: colors.blue, borderRadius: 999, padding: '5px 14px', fontSize: 13, fontWeight: 600 }}>
+              <div style={{
+                background: colors.blueSubtle,
+                color: '#60a5fa',
+                border: '1px solid rgba(59,130,246,0.2)',
+                borderRadius: 999, padding: '5px 14px', fontSize: 13, fontWeight: 600,
+              }}>
                 {project.area}
               </div>
             )}
             {project.project_type && PROJECT_TYPE_LABELS[project.project_type] && (
-              <div style={{ background: 'rgba(148,163,184,0.1)', color: colors.muted, borderRadius: 999, padding: '5px 14px', fontSize: 13, fontWeight: 600, border: `1px solid ${colors.border}` }}>
+              <div style={{
+                background: 'rgba(255,255,255,0.04)',
+                color: colors.muted,
+                borderRadius: 999, padding: '5px 14px', fontSize: 13, fontWeight: 600,
+                border: `1px solid ${colors.border}`,
+              }}>
                 {PROJECT_TYPE_LABELS[project.project_type]}
               </div>
             )}
             {isPap && (
-              <div style={{ background: 'rgba(234,179,8,0.1)', color: colors.yellow, borderRadius: 999, padding: '5px 14px', fontSize: 13, fontWeight: 700, border: '1px solid rgba(234,179,8,0.3)' }}>
+              <div style={{
+                background: colors.yellowGlow,
+                color: colors.yellow,
+                borderRadius: 999, padding: '5px 14px', fontSize: 13, fontWeight: 700,
+                border: '1px solid rgba(234,179,8,0.25)',
+              }}>
                 🎓 PAP
               </div>
             )}
           </div>
 
-          <h1 style={{ fontSize: 'clamp(32px, 5vw, 52px)', fontWeight: 800, margin: '0 0 16px', lineHeight: 1.1, paddingRight: 130 }}>
+          <h1 style={{ fontSize: 'clamp(30px, 5vw, 52px)', fontWeight: 900, margin: '0 0 16px', lineHeight: 1.1, paddingRight: 140, letterSpacing: '-0.5px' }}>
             {project.name}
           </h1>
 
           {project.ai_tagline && (
-            <p style={{ fontSize: 20, color: colors.muted, lineHeight: 1.6, margin: '0 0 20px', maxWidth: 600 }}>
+            <p style={{ fontSize: 19, color: colors.muted, lineHeight: 1.65, margin: '0 0 24px', maxWidth: 580, fontWeight: 400 }}>
               {project.ai_tagline}
             </p>
           )}
 
-          {/* Creator attribution */}
+          {/* Creator */}
           {(project.creator_name || project.course || project.school_year) && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                <div style={{ width: 32, height: 32, background: colors.blue, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, flexShrink: 0 }}>
+                <div style={{
+                  width: 34, height: 34,
+                  background: `linear-gradient(135deg, ${colors.blue}, #4f46e5)`,
+                  borderRadius: '50%',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 14, fontWeight: 800, flexShrink: 0, color: '#fff',
+                }}>
                   {project.creator_name ? project.creator_name[0].toUpperCase() : '?'}
                 </div>
                 <span style={{ fontSize: 14, color: colors.muted }}>
@@ -523,17 +708,17 @@ export default function ProjectPage() {
               {(project.linkedin_url || project.github_url || project.portfolio_url) && (
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                   {project.linkedin_url && (
-                    <a href={project.linkedin_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(10,102,194,0.12)', border: '1px solid rgba(10,102,194,0.3)', color: '#60a5fa', borderRadius: 8, padding: '6px 12px', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>
-                      <span>in</span> LinkedIn
+                    <a href={project.linkedin_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(10,102,194,0.1)', border: '1px solid rgba(10,102,194,0.25)', color: '#60a5fa', borderRadius: 8, padding: '6px 12px', fontSize: 13, fontWeight: 600 }}>
+                      <span style={{ fontWeight: 900, fontStyle: 'italic' }}>in</span> LinkedIn
                     </a>
                   )}
                   {project.github_url && (
-                    <a href={project.github_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.06)', border: `1px solid ${colors.border}`, color: colors.text, borderRadius: 8, padding: '6px 12px', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>
+                    <a href={project.github_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.04)', border: `1px solid ${colors.border}`, color: colors.text, borderRadius: 8, padding: '6px 12px', fontSize: 13, fontWeight: 600 }}>
                       GitHub
                     </a>
                   )}
                   {project.portfolio_url && (
-                    <a href={project.portfolio_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(168,85,247,0.1)', border: '1px solid rgba(168,85,247,0.3)', color: '#c084fc', borderRadius: 8, padding: '6px 12px', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>
+                    <a href={project.portfolio_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(168,85,247,0.08)', border: '1px solid rgba(168,85,247,0.2)', color: '#c084fc', borderRadius: 8, padding: '6px 12px', fontSize: 13, fontWeight: 600 }}>
                       🌐 Portfólio
                     </a>
                   )}
@@ -545,38 +730,69 @@ export default function ProjectPage() {
 
         {/* AI Description */}
         {project.ai_description && (
-          <div style={{ background: 'linear-gradient(135deg, #1e3a5f 0%, #1a2d4a 100%)', border: '1px solid #2563eb40', borderRadius: 16, padding: '24px 28px', marginBottom: 28 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
+          <div style={{
+            background: 'linear-gradient(135deg, #0e1f3e 0%, #0a1729 100%)',
+            border: '1px solid rgba(59,130,246,0.25)',
+            borderRadius: 18, padding: '24px 28px', marginBottom: 24,
+            boxShadow: '0 4px 24px rgba(59,130,246,0.08)',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontSize: 16 }}>✨</span>
-                <span style={{ fontSize: 12, fontWeight: 700, color: colors.blue, textTransform: 'uppercase', letterSpacing: 1 }}>Resumo gerado por IA</span>
+                <div style={{
+                  width: 28, height: 28, borderRadius: 8,
+                  background: 'rgba(99,102,241,0.15)',
+                  border: '1px solid rgba(99,102,241,0.25)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14,
+                }}>
+                  ✨
+                </div>
+                <span style={{ fontSize: 11, fontWeight: 700, color: '#818cf8', textTransform: 'uppercase', letterSpacing: 1.2 }}>Resumo gerado por IA</span>
               </div>
               <button
                 onClick={handleRegenerate}
                 disabled={regenerating || regenCooldown > 0}
-                style={{ background: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.3)', color: colors.blue, borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: (regenerating || regenCooldown > 0) ? 'default' : 'pointer', opacity: (regenerating || regenCooldown > 0) ? 0.6 : 1, whiteSpace: 'nowrap' }}
+                style={{
+                  background: 'rgba(59,130,246,0.1)',
+                  border: '1px solid rgba(59,130,246,0.2)',
+                  color: '#60a5fa',
+                  borderRadius: 8, padding: '6px 12px',
+                  fontSize: 12, fontWeight: 600,
+                  cursor: (regenerating || regenCooldown > 0) ? 'default' : 'pointer',
+                  opacity: (regenerating || regenCooldown > 0) ? 0.55 : 1,
+                  whiteSpace: 'nowrap',
+                  fontFamily: 'inherit',
+                }}
               >
                 {regenerating ? '⏳ A gerar...' : regenCooldown > 0 ? `🕐 ${regenCooldown}s` : '🔄 Regenerar'}
               </button>
             </div>
-            <p style={{ margin: 0, fontSize: 16, lineHeight: 1.8, color: '#e2e8f0' }}>{project.ai_description}</p>
+            <p style={{ margin: 0, fontSize: 16, lineHeight: 1.8, color: '#cbd5f0' }}>{project.ai_description}</p>
           </div>
         )}
 
         {/* Highlights */}
         {highlights.length > 0 && (
-          <div style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 16, padding: '24px 28px', marginBottom: 28 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
-              <span style={{ fontSize: 20 }}>🏆</span>
-              <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: colors.muted, textTransform: 'uppercase', letterSpacing: 0.5 }}>Destaques</h3>
+          <div style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 16, padding: '22px 26px', marginBottom: 24, boxShadow: '0 2px 16px rgba(0,0,0,0.25)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+              <div style={{ width: 32, height: 32, borderRadius: 8, background: colors.yellowGlow, border: '1px solid rgba(234,179,8,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>
+                🏆
+              </div>
+              <h3 style={{ margin: 0, fontSize: 11, fontWeight: 700, color: colors.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Destaques</h3>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {highlights.map((h, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-                  <div style={{ width: 22, height: 22, background: '#166534', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
-                    <span style={{ color: colors.green, fontSize: 12, fontWeight: 700 }}>✓</span>
+                  <div style={{
+                    width: 20, height: 20,
+                    background: colors.greenGlow,
+                    border: '1px solid rgba(34,197,94,0.25)',
+                    borderRadius: '50%',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    flexShrink: 0, marginTop: 2,
+                  }}>
+                    <span style={{ color: colors.green, fontSize: 11, fontWeight: 700 }}>✓</span>
                   </div>
-                  <p style={{ margin: 0, color: colors.text, fontSize: 15, lineHeight: 1.6 }}>{h}</p>
+                  <p style={{ margin: 0, color: colors.text, fontSize: 15, lineHeight: 1.65 }}>{h}</p>
                 </div>
               ))}
             </div>
@@ -585,22 +801,22 @@ export default function ProjectPage() {
 
         {/* PAP details */}
         {isPap && (project.pap_supervisor || project.pap_date) && (
-          <div style={{ background: 'rgba(234,179,8,0.06)', border: '1px solid rgba(234,179,8,0.2)', borderRadius: 16, padding: '20px 24px', marginBottom: 16 }}>
+          <div style={{ background: colors.yellowGlow, border: '1px solid rgba(234,179,8,0.18)', borderRadius: 16, padding: '20px 24px', marginBottom: 12 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
               <span style={{ fontSize: 18 }}>🎓</span>
-              <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: colors.yellow, textTransform: 'uppercase', letterSpacing: 0.5 }}>Detalhes da PAP</h3>
+              <h3 style={{ margin: 0, fontSize: 11, fontWeight: 700, color: colors.yellow, textTransform: 'uppercase', letterSpacing: 0.8 }}>Detalhes da PAP</h3>
             </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 20 }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24 }}>
               {project.pap_supervisor && (
                 <div>
-                  <div style={{ fontSize: 11, color: colors.muted, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 3 }}>Orientador</div>
-                  <div style={{ fontSize: 15, color: colors.text }}>{project.pap_supervisor}</div>
+                  <div style={{ fontSize: 11, color: colors.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>Orientador</div>
+                  <div style={{ fontSize: 15, color: colors.text, fontWeight: 500 }}>{project.pap_supervisor}</div>
                 </div>
               )}
               {project.pap_date && (
                 <div>
-                  <div style={{ fontSize: 11, color: colors.muted, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 3 }}>Apresentação</div>
-                  <div style={{ fontSize: 15, color: colors.text }}>{project.pap_date}</div>
+                  <div style={{ fontSize: 11, color: colors.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>Apresentação</div>
+                  <div style={{ fontSize: 15, color: colors.text, fontWeight: 500 }}>{project.pap_date}</div>
                 </div>
               )}
             </div>
@@ -618,23 +834,41 @@ export default function ProjectPage() {
         <Section icon="🧠" title="Aprendizagens" content={project.learnings} />
 
         {/* Missions */}
-        <div style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 20, padding: 28, marginBottom: 16, marginTop: 8 }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 12 }}>
+        <div style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 20, padding: '28px', marginBottom: 16, marginTop: 8, boxShadow: '0 4px 24px rgba(0,0,0,0.3)' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 14 }}>
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-                <span style={{ fontSize: 22 }}>🎮</span>
-                <h3 style={{ margin: 0, fontSize: 20, fontWeight: 800 }}>Missões</h3>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 5 }}>
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(168,85,247,0.1)', border: '1px solid rgba(168,85,247,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>
+                  🎮
+                </div>
+                <h3 style={{ margin: 0, fontSize: 20, fontWeight: 800, letterSpacing: '-0.3px' }}>Missões</h3>
               </div>
-              <p style={{ margin: 0, fontSize: 14, color: colors.muted }}>Completa missões para melhorar o teu projeto e aumentar o score</p>
+              <p style={{ margin: 0, fontSize: 13, color: colors.muted, paddingLeft: 46 }}>Completa missões para melhorar o score</p>
             </div>
-            <div style={{ background: colors.bg, border: `1px solid ${colors.border}`, borderRadius: 12, padding: '10px 18px', textAlign: 'center', flexShrink: 0 }}>
-              <div style={{ fontSize: 20, fontWeight: 800, color: colors.blue }}>{earnedXP} <span style={{ fontSize: 13, color: colors.muted, fontWeight: 400 }}>/ {totalXP} XP</span></div>
-              <div style={{ fontSize: 11, color: colors.muted, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>{completedCount}/{CHALLENGES.length} completas</div>
+            <div style={{
+              background: colors.bg,
+              border: `1px solid ${colors.border}`,
+              borderRadius: 12, padding: '10px 20px',
+              textAlign: 'center', flexShrink: 0,
+            }}>
+              <div style={{ fontSize: 20, fontWeight: 800, color: colors.blue, letterSpacing: '-0.5px' }}>
+                {earnedXP} <span style={{ fontSize: 13, color: colors.subtle, fontWeight: 500 }}>/ {totalXP} XP</span>
+              </div>
+              <div style={{ fontSize: 11, color: colors.muted, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 2 }}>{completedCount}/{CHALLENGES.length} completas</div>
             </div>
           </div>
+
+          {/* XP progress bar */}
           <div style={{ height: 6, background: colors.border, borderRadius: 3, overflow: 'hidden', marginBottom: 20 }}>
-            <div style={{ height: '100%', borderRadius: 3, width: `${(earnedXP / totalXP) * 100}%`, background: `linear-gradient(90deg, ${colors.blue}, ${colors.green})`, transition: 'width 0.6s ease-out' }} />
+            <div style={{
+              height: '100%', borderRadius: 3,
+              width: `${(earnedXP / totalXP) * 100}%`,
+              background: `linear-gradient(90deg, ${colors.blue}, ${colors.green})`,
+              transition: 'width 0.6s ease-out',
+              boxShadow: '0 0 8px rgba(59,130,246,0.4)',
+            }} />
           </div>
+
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {sortedChallenges.map(challenge => (
               <ChallengeCard key={challenge.id} challenge={challenge} project={project} onImprove={setEditModal} />
@@ -643,43 +877,74 @@ export default function ProjectPage() {
         </div>
 
         {/* Share */}
-        <div style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 16, padding: '32px 28px', marginTop: 32 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24 }}>
-            <span style={{ fontSize: 22 }}>🔗</span>
-            <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>Partilha o teu projeto</h3>
+        <div style={{
+          background: colors.card,
+          border: `1px solid ${colors.border}`,
+          borderRadius: 18, padding: '32px 28px', marginTop: 32,
+          boxShadow: '0 4px 24px rgba(0,0,0,0.3)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: colors.blueSubtle, border: '1px solid rgba(59,130,246,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>
+              🔗
+            </div>
+            <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, letterSpacing: '-0.2px' }}>Partilha o teu projeto</h3>
           </div>
-          <div style={{ display: 'flex', gap: 32, flexWrap: 'wrap', alignItems: 'flex-start' }}>
+          <div style={{ display: 'flex', gap: 36, flexWrap: 'wrap', alignItems: 'flex-start' }}>
             <div style={{ flex: 1, minWidth: 220 }}>
-              <p style={{ color: colors.muted, fontSize: 14, margin: '0 0 12px' }}>Link do projeto</p>
+              <p style={{ color: colors.muted, fontSize: 13, margin: '0 0 10px', fontWeight: 500 }}>Link do projeto</p>
               <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
                 <div style={{ flex: 1, background: colors.bg, border: `1px solid ${colors.border}`, borderRadius: 8, padding: '10px 14px', fontSize: 13, color: colors.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {pageUrl}
                 </div>
                 <button
                   onClick={handleCopy}
-                  style={{ background: copied ? colors.green : colors.blue, color: '#fff', border: 'none', borderRadius: 8, padding: '10px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'background 0.2s' }}
+                  style={{
+                    background: copied ? `linear-gradient(135deg, ${colors.green}, #16a34a)` : `linear-gradient(135deg, ${colors.blue}, #4f46e5)`,
+                    color: '#fff', border: 'none', borderRadius: 8,
+                    padding: '10px 16px', fontSize: 13, fontWeight: 600,
+                    cursor: 'pointer', whiteSpace: 'nowrap',
+                    transition: 'background 0.3s',
+                    fontFamily: 'inherit',
+                    boxShadow: copied ? '0 4px 16px rgba(34,197,94,0.3)' : '0 4px 16px rgba(59,130,246,0.3)',
+                  }}
                 >
                   {copied ? '✓ Copiado!' : 'Copiar link'}
                 </button>
               </div>
               <button
                 onClick={() => navigate('/novo')}
-                style={{ background: 'transparent', border: `1px solid ${colors.border}`, color: colors.muted, borderRadius: 8, padding: '10px 18px', fontSize: 14, cursor: 'pointer', width: '100%' }}
+                style={{
+                  background: 'transparent',
+                  border: `1px solid ${colors.border}`,
+                  color: colors.muted,
+                  borderRadius: 8, padding: '10px 18px',
+                  fontSize: 14, cursor: 'pointer', width: '100%',
+                  fontFamily: 'inherit',
+                  transition: 'border-color 0.2s',
+                }}
               >
                 Criar o meu projeto →
               </button>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-              <div style={{ background: '#fff', borderRadius: 12, padding: 12 }}>
+              <div style={{ background: '#fff', borderRadius: 14, padding: 12, boxShadow: '0 4px 16px rgba(0,0,0,0.3)' }}>
                 <QRCodeSVG value={pageUrl} size={120} />
               </div>
-              <span style={{ color: colors.muted, fontSize: 12 }}>QR Code</span>
+              <span style={{ color: colors.subtle, fontSize: 12, fontWeight: 500 }}>QR Code</span>
             </div>
           </div>
         </div>
 
-        <div style={{ textAlign: 'center', padding: '40px 0 0', color: colors.muted, fontSize: 13 }}>
-          Criado com <span style={{ color: colors.blue, fontWeight: 700 }}>Showo</span> · Transforma projetos em páginas profissionais
+        <div style={{ textAlign: 'center', padding: '40px 0 0', color: colors.subtle, fontSize: 13 }}>
+          Criado com{' '}
+          <span style={{
+            background: 'linear-gradient(135deg, #3b82f6, #818cf8)',
+            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text', fontWeight: 700,
+          }}>
+            Showo
+          </span>
+          {' '}· Transforma projetos em páginas profissionais
         </div>
       </div>
     </div>

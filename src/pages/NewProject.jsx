@@ -7,23 +7,39 @@ import { Toast, useToast } from '../components/Toast'
 import { Navbar } from '../components/Navbar'
 
 const colors = {
-  bg: '#1c2333',
+  bg: '#0d1424',
+  bgAlt: '#111c32',
+  card: '#152030',
+  cardHover: '#1c2d44',
+  border: '#1e3050',
+  borderBright: '#2a4275',
   blue: '#3b82f6',
-  text: '#ffffff',
-  muted: '#94a3b8',
-  card: '#232d42',
-  border: '#2e3a54',
-  inputBg: '#1a2235',
+  blueHover: '#2563eb',
+  blueGlow: 'rgba(59,130,246,0.15)',
+  blueSubtle: 'rgba(59,130,246,0.08)',
+  text: '#e8f2ff',
+  muted: '#7d93b0',
+  subtle: '#3d5270',
   green: '#22c55e',
+  greenGlow: 'rgba(34,197,94,0.12)',
   yellow: '#eab308',
+  yellowGlow: 'rgba(234,179,8,0.1)',
   orange: '#f97316',
+  inputBg: '#0a1118',
 }
 
 const inputBase = {
-  width: '100%', background: '#1a2235', border: '2px solid #2e3a54',
-  borderRadius: 10, color: '#ffffff', fontSize: 15, padding: '13px 16px',
-  outline: 'none', fontFamily: 'system-ui, sans-serif', boxSizing: 'border-box',
-  transition: 'border-color 0.2s',
+  width: '100%',
+  background: colors.inputBg,
+  border: `1.5px solid ${colors.border}`,
+  borderRadius: 10,
+  color: colors.text,
+  fontSize: 15,
+  padding: '13px 16px',
+  outline: 'none',
+  fontFamily: 'Inter, system-ui, sans-serif',
+  boxSizing: 'border-box',
+  transition: 'border-color 0.2s, box-shadow 0.2s',
 }
 
 const GOAL_OPTIONS = [
@@ -44,8 +60,6 @@ const PROJECT_TYPES = [
   { id: 'other',        icon: '✨', label: 'Outro' },
 ]
 
-// 10 steps total
-// types: dual_text | text | textarea | dual_textarea | finalize
 const STEPS = [
   {
     type: 'dual_text',
@@ -71,7 +85,7 @@ const STEPS = [
   { type: 'finalize', label: 'Quase pronto!' },
 ]
 
-const TOTAL_STEPS = STEPS.length // 10
+const TOTAL_STEPS = STEPS.length
 
 const GOAL_LABELS = {
   school: '📝 Projeto escolar', internship: '💼 Para recrutadores',
@@ -113,7 +127,7 @@ async function resizeImage(file, maxWidth = 1200) {
 
 export default function NewProject() {
   const navigate = useNavigate()
-  const [phase, setPhase] = useState('goal') // 'goal' | 'form' | 'generating' | 'success'
+  const [phase, setPhase] = useState('goal')
   const [formGoal, setFormGoal] = useState(null)
   const [step, setStep] = useState(0)
   const [answers, setAnswers] = useState({})
@@ -178,17 +192,28 @@ export default function NewProject() {
     } catch { showToast('Erro ao processar a imagem', 'error') }
   }
 
+  const sharedInputHandlers = {
+    onFocus: e => {
+      e.target.style.borderColor = colors.blue
+      e.target.style.boxShadow = '0 0 0 3px rgba(59,130,246,0.1)'
+    },
+    onBlur: e => {
+      e.target.style.borderColor = colors.border
+      e.target.style.boxShadow = 'none'
+    },
+  }
+
   // ── GOAL ─────────────────────────────────────────────────
   if (phase === 'goal') {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: 'system-ui, sans-serif', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: 'Inter, system-ui, sans-serif', display: 'flex', flexDirection: 'column' }}>
         <Navbar showLinks={false} />
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 24px' }}>
           <div style={{ width: '100%', maxWidth: 560 }}>
-            <h2 style={{ fontSize: 'clamp(24px, 4vw, 34px)', fontWeight: 800, marginBottom: 8, textAlign: 'center', marginTop: 0 }}>
+            <h2 style={{ fontSize: 'clamp(22px, 4vw, 32px)', fontWeight: 800, marginBottom: 8, textAlign: 'center', marginTop: 0, letterSpacing: '-0.5px' }}>
               O que pretendes alcançar?
             </h2>
-            <p style={{ color: colors.muted, textAlign: 'center', marginBottom: 32, fontSize: 16 }}>
+            <p style={{ color: colors.muted, textAlign: 'center', marginBottom: 32, fontSize: 15, marginTop: 8 }}>
               Escolhe o teu objetivo para personalizarmos a experiência
             </p>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12, marginBottom: 24 }}>
@@ -198,11 +223,26 @@ export default function NewProject() {
                   <button
                     key={opt.id}
                     onClick={() => setFormGoal(opt.id)}
-                    style={{ background: sel ? 'rgba(59,130,246,0.12)' : colors.card, border: `2px solid ${sel ? colors.blue : colors.border}`, borderRadius: 16, padding: '20px 16px', color: colors.text, cursor: 'pointer', textAlign: 'left', transition: 'border-color 0.15s, background 0.15s' }}
+                    style={{
+                      background: sel ? 'rgba(59,130,246,0.1)' : colors.card,
+                      border: `2px solid ${sel ? colors.blue : colors.border}`,
+                      borderRadius: 16, padding: '20px 16px',
+                      color: colors.text, cursor: 'pointer', textAlign: 'left',
+                      transition: 'border-color 0.15s, background 0.15s',
+                      boxShadow: sel ? '0 4px 20px rgba(59,130,246,0.15)' : '0 2px 10px rgba(0,0,0,0.25)',
+                      fontFamily: 'inherit',
+                    }}
                   >
-                    <div style={{ fontSize: 26, marginBottom: 8 }}>{opt.icon}</div>
-                    <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>{opt.title}</div>
-                    <div style={{ fontSize: 12, color: colors.muted, lineHeight: 1.4 }}>{opt.subtitle}</div>
+                    <div style={{
+                      width: 42, height: 42, borderRadius: 10, marginBottom: 12,
+                      background: sel ? 'rgba(59,130,246,0.15)' : 'rgba(255,255,255,0.04)',
+                      border: `1px solid ${sel ? 'rgba(59,130,246,0.25)' : colors.border}`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22,
+                    }}>
+                      {opt.icon}
+                    </div>
+                    <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 5, letterSpacing: '-0.1px' }}>{opt.title}</div>
+                    <div style={{ fontSize: 12, color: colors.muted, lineHeight: 1.45 }}>{opt.subtitle}</div>
                   </button>
                 )
               })}
@@ -210,7 +250,17 @@ export default function NewProject() {
             <button
               onClick={handleNext}
               disabled={!formGoal}
-              style={{ width: '100%', background: formGoal ? colors.blue : colors.border, color: '#fff', border: 'none', borderRadius: 12, padding: '15px 0', fontSize: 17, fontWeight: 700, cursor: formGoal ? 'pointer' : 'not-allowed', transition: 'background 0.2s' }}
+              style={{
+                width: '100%',
+                background: formGoal ? `linear-gradient(135deg, ${colors.blue}, #4f46e5)` : colors.border,
+                color: '#fff', border: 'none', borderRadius: 12,
+                padding: '15px 0', fontSize: 17, fontWeight: 700,
+                cursor: formGoal ? 'pointer' : 'not-allowed',
+                transition: 'background 0.2s, box-shadow 0.2s',
+                fontFamily: 'inherit',
+                boxShadow: formGoal ? '0 4px 20px rgba(59,130,246,0.3)' : 'none',
+                letterSpacing: '-0.2px',
+              }}
             >
               Continuar →
             </button>
@@ -233,24 +283,33 @@ export default function NewProject() {
     }
 
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: 'system-ui, sans-serif', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: 'Inter, system-ui, sans-serif', display: 'flex', flexDirection: 'column' }}>
         <Navbar showLinks={false} />
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 24px' }}>
           <div style={{ width: '100%', maxWidth: 560 }}>
             <div style={{ textAlign: 'center', marginBottom: 36 }}>
-              <div style={{ fontSize: 52, marginBottom: 12 }}>🎉</div>
-              <h2 style={{ fontSize: 'clamp(24px, 4vw, 32px)', fontWeight: 800, margin: '0 0 8px' }}>O teu projeto está pronto!</h2>
+              <div style={{ fontSize: 56, marginBottom: 16 }}>🎉</div>
+              <h2 style={{ fontSize: 'clamp(22px, 4vw, 30px)', fontWeight: 800, margin: '0 0 8px', letterSpacing: '-0.5px' }}>O teu projeto está pronto!</h2>
               <p style={{ color: colors.muted, margin: 0, fontSize: 15 }}>Guarda o link de edição — só tu o tens.</p>
             </div>
 
             {/* Project link */}
-            <div style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 14, padding: '20px 24px', marginBottom: 14 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: colors.muted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 }}>Link do projeto</div>
+            <div style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 14, padding: '20px 22px', marginBottom: 12, boxShadow: '0 2px 12px rgba(0,0,0,0.25)' }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: colors.subtle, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 10 }}>Link do projeto</div>
               <div style={{ display: 'flex', gap: 8 }}>
-                <div style={{ flex: 1, background: colors.bg, border: `1px solid ${colors.border}`, borderRadius: 8, padding: '10px 12px', fontSize: 13, color: colors.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{projectUrl}</div>
+                <div style={{ flex: 1, background: colors.bg, border: `1px solid ${colors.border}`, borderRadius: 8, padding: '10px 12px', fontSize: 13, color: colors.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {projectUrl}
+                </div>
                 <button
                   onClick={() => copyLink(projectUrl, 'project')}
-                  style={{ background: copiedLink === 'project' ? colors.green : colors.blue, color: '#fff', border: 'none', borderRadius: 8, padding: '10px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'background 0.2s' }}
+                  style={{
+                    background: copiedLink === 'project' ? `linear-gradient(135deg, ${colors.green}, #16a34a)` : `linear-gradient(135deg, ${colors.blue}, #4f46e5)`,
+                    color: '#fff', border: 'none', borderRadius: 8,
+                    padding: '10px 16px', fontSize: 13, fontWeight: 600,
+                    cursor: 'pointer', whiteSpace: 'nowrap',
+                    transition: 'background 0.2s',
+                    fontFamily: 'inherit',
+                  }}
                 >
                   {copiedLink === 'project' ? '✓ Copiado' : 'Copiar'}
                 </button>
@@ -258,17 +317,28 @@ export default function NewProject() {
             </div>
 
             {/* Edit link */}
-            <div style={{ background: 'rgba(234,179,8,0.06)', border: '1px solid rgba(234,179,8,0.25)', borderRadius: 14, padding: '20px 24px', marginBottom: 28 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+            <div style={{ background: colors.yellowGlow, border: '1px solid rgba(234,179,8,0.2)', borderRadius: 14, padding: '20px 22px', marginBottom: 28 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                 <span style={{ fontSize: 16 }}>🔐</span>
-                <div style={{ fontSize: 12, fontWeight: 700, color: colors.yellow, textTransform: 'uppercase', letterSpacing: 0.5 }}>Teu link privado de edição</div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: colors.yellow, textTransform: 'uppercase', letterSpacing: 0.8 }}>Teu link privado de edição</div>
               </div>
-              <p style={{ margin: '0 0 12px', fontSize: 13, color: colors.muted, lineHeight: 1.5 }}>Guarda este link. É o único modo de editar o teu projeto — não o partilhes.</p>
+              <p style={{ margin: '0 0 12px', fontSize: 13, color: colors.muted, lineHeight: 1.55 }}>
+                Guarda este link. É o único modo de editar o teu projeto — não o partilhes.
+              </p>
               <div style={{ display: 'flex', gap: 8 }}>
-                <div style={{ flex: 1, background: colors.bg, border: `1px solid rgba(234,179,8,0.2)`, borderRadius: 8, padding: '10px 12px', fontSize: 13, color: colors.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{editUrl}</div>
+                <div style={{ flex: 1, background: colors.bg, border: '1px solid rgba(234,179,8,0.15)', borderRadius: 8, padding: '10px 12px', fontSize: 13, color: colors.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {editUrl}
+                </div>
                 <button
                   onClick={() => copyLink(editUrl, 'edit')}
-                  style={{ background: copiedLink === 'edit' ? colors.green : colors.yellow, color: '#1c2333', border: 'none', borderRadius: 8, padding: '10px 16px', fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'background 0.2s' }}
+                  style={{
+                    background: copiedLink === 'edit' ? `linear-gradient(135deg, ${colors.green}, #16a34a)` : colors.yellow,
+                    color: '#0d1424', border: 'none', borderRadius: 8,
+                    padding: '10px 16px', fontSize: 13, fontWeight: 700,
+                    cursor: 'pointer', whiteSpace: 'nowrap',
+                    transition: 'background 0.2s',
+                    fontFamily: 'inherit',
+                  }}
                 >
                   {copiedLink === 'edit' ? '✓ Copiado' : 'Copiar'}
                 </button>
@@ -277,7 +347,16 @@ export default function NewProject() {
 
             <button
               onClick={() => navigate(`/projeto/${savedProject.slug}`)}
-              style={{ width: '100%', background: colors.blue, color: '#fff', border: 'none', borderRadius: 12, padding: '15px 0', fontSize: 17, fontWeight: 700, cursor: 'pointer' }}
+              style={{
+                width: '100%',
+                background: `linear-gradient(135deg, ${colors.blue}, #4f46e5)`,
+                color: '#fff', border: 'none',
+                borderRadius: 12, padding: '15px 0',
+                fontSize: 17, fontWeight: 700, cursor: 'pointer',
+                fontFamily: 'inherit',
+                boxShadow: '0 4px 20px rgba(59,130,246,0.3)',
+                letterSpacing: '-0.2px',
+              }}
             >
               Ver o meu projeto →
             </button>
@@ -290,10 +369,19 @@ export default function NewProject() {
   // ── GENERATING ────────────────────────────────────────────
   if (phase === 'generating') {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: 'system-ui, sans-serif', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 24 }}>
-        <div style={{ width: 60, height: 60, border: `4px solid ${colors.border}`, borderTop: `4px solid ${colors.blue}`, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
-        <p style={{ fontSize: 22, fontWeight: 700, margin: 0 }}>✨ A IA está a analisar o teu projeto...</p>
-        <p style={{ color: colors.muted, fontSize: 15, margin: 0 }}>Isto pode demorar alguns segundos</p>
+      <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: 'Inter, system-ui, sans-serif', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 24 }}>
+        <div style={{
+          width: 64, height: 64,
+          border: `3px solid ${colors.border}`,
+          borderTop: `3px solid ${colors.blue}`,
+          borderRadius: '50%',
+          animation: 'spin 1s linear infinite',
+          boxShadow: `0 0 24px ${colors.blueGlow}`,
+        }} />
+        <div style={{ textAlign: 'center' }}>
+          <p style={{ fontSize: 20, fontWeight: 700, margin: '0 0 8px', letterSpacing: '-0.3px' }}>✨ A IA está a analisar o teu projeto...</p>
+          <p style={{ color: colors.muted, fontSize: 14, margin: 0 }}>Isto pode demorar alguns segundos</p>
+        </div>
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     )
@@ -303,39 +391,51 @@ export default function NewProject() {
   const isFinalize = s.type === 'finalize'
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: 'system-ui, sans-serif', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: 'Inter, system-ui, sans-serif', display: 'flex', flexDirection: 'column' }}>
       <Toast {...toast} />
 
       <Navbar showLinks={false}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           {formGoal && (
-            <span style={{ fontSize: 11, color: colors.blue, background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: 999, padding: '3px 10px', fontWeight: 600 }}>
+            <span style={{
+              fontSize: 11, color: '#60a5fa',
+              background: 'rgba(59,130,246,0.08)',
+              border: '1px solid rgba(59,130,246,0.15)',
+              borderRadius: 999, padding: '3px 10px', fontWeight: 600,
+            }}>
               {GOAL_LABELS[formGoal]}
             </span>
           )}
-          <span style={{ color: colors.muted, fontSize: 14 }}>{step + 1}/{TOTAL_STEPS}</span>
+          <span style={{ color: colors.subtle, fontSize: 13, fontWeight: 500 }}>{step + 1}/{TOTAL_STEPS}</span>
         </div>
       </Navbar>
 
+      {/* Progress bar */}
       <div style={{ height: 3, background: colors.border }}>
-        <div style={{ height: '100%', width: `${progress}%`, background: colors.blue, transition: 'width 0.4s ease' }} />
+        <div style={{
+          height: '100%',
+          width: `${progress}%`,
+          background: `linear-gradient(90deg, ${colors.blue}, #818cf8)`,
+          transition: 'width 0.4s ease',
+          boxShadow: '0 0 8px rgba(59,130,246,0.4)',
+        }} />
       </div>
 
       <div style={{ flex: 1, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '44px 24px 40px', overflowY: 'auto' }}>
         <div style={{ width: '100%', maxWidth: 600 }}>
 
-          <div style={{ fontSize: 11, color: colors.blue, fontWeight: 700, marginBottom: 4, textTransform: 'uppercase', letterSpacing: 1 }}>
+          <div style={{ fontSize: 11, color: '#818cf8', fontWeight: 700, marginBottom: 5, textTransform: 'uppercase', letterSpacing: 1.2 }}>
             {isFinalize ? 'Finalizar' : `Passo ${step + 1} de ${TOTAL_STEPS}`}
           </div>
 
           {/* ── dual_text ── */}
           {s.type === 'dual_text' && (
             <>
-              <h2 style={{ fontSize: 'clamp(22px, 4vw, 30px)', fontWeight: 700, marginBottom: 24, marginTop: 6, lineHeight: 1.3 }}>{s.label}</h2>
+              <h2 style={{ fontSize: 'clamp(20px, 4vw, 28px)', fontWeight: 800, marginBottom: 24, marginTop: 6, lineHeight: 1.25, letterSpacing: '-0.3px' }}>{s.label}</h2>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 {s.keys.map((key, i) => (
                   <div key={key}>
-                    <label style={{ display: 'block', fontSize: 13, color: colors.muted, fontWeight: 600, marginBottom: 6 }}>{s.labels[i]}</label>
+                    <label style={{ display: 'block', fontSize: 12, color: colors.muted, fontWeight: 600, marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>{s.labels[i]}</label>
                     <input
                       type="text"
                       value={answers[key] ?? ''}
@@ -344,8 +444,7 @@ export default function NewProject() {
                       placeholder={s.placeholders[i]}
                       autoFocus={i === 0}
                       style={{ ...inputBase, fontSize: 17 }}
-                      onFocus={e => (e.target.style.borderColor = colors.blue)}
-                      onBlur={e => (e.target.style.borderColor = colors.border)}
+                      {...sharedInputHandlers}
                     />
                   </div>
                 ))}
@@ -356,7 +455,7 @@ export default function NewProject() {
           {/* ── text ── */}
           {s.type === 'text' && (
             <>
-              <h2 style={{ fontSize: 'clamp(22px, 4vw, 30px)', fontWeight: 700, marginBottom: 24, marginTop: 6, lineHeight: 1.3 }}>{s.label}</h2>
+              <h2 style={{ fontSize: 'clamp(20px, 4vw, 28px)', fontWeight: 800, marginBottom: 24, marginTop: 6, lineHeight: 1.25, letterSpacing: '-0.3px' }}>{s.label}</h2>
               <input
                 key={s.key}
                 type="text"
@@ -366,8 +465,7 @@ export default function NewProject() {
                 placeholder={s.placeholder}
                 autoFocus
                 style={{ ...inputBase, fontSize: 18, padding: '15px 16px' }}
-                onFocus={e => (e.target.style.borderColor = colors.blue)}
-                onBlur={e => (e.target.style.borderColor = colors.border)}
+                {...sharedInputHandlers}
               />
             </>
           )}
@@ -375,7 +473,7 @@ export default function NewProject() {
           {/* ── textarea ── */}
           {s.type === 'textarea' && (
             <>
-              <h2 style={{ fontSize: 'clamp(22px, 4vw, 30px)', fontWeight: 700, marginBottom: 24, marginTop: 6, lineHeight: 1.3 }}>{s.label}</h2>
+              <h2 style={{ fontSize: 'clamp(20px, 4vw, 28px)', fontWeight: 800, marginBottom: 24, marginTop: 6, lineHeight: 1.25, letterSpacing: '-0.3px' }}>{s.label}</h2>
               <textarea
                 key={s.key}
                 value={answers[s.key] ?? ''}
@@ -383,9 +481,8 @@ export default function NewProject() {
                 placeholder={s.placeholder}
                 rows={5}
                 autoFocus
-                style={{ ...inputBase, fontSize: 16, padding: '14px 16px', resize: 'vertical', lineHeight: 1.6, border: '2px solid #2e3a54' }}
-                onFocus={e => (e.target.style.borderColor = colors.blue)}
-                onBlur={e => (e.target.style.borderColor = colors.border)}
+                style={{ ...inputBase, fontSize: 16, padding: '14px 16px', resize: 'vertical', lineHeight: 1.65, border: `1.5px solid ${colors.border}` }}
+                {...sharedInputHandlers}
               />
             </>
           )}
@@ -393,20 +490,19 @@ export default function NewProject() {
           {/* ── dual_textarea ── */}
           {s.type === 'dual_textarea' && (
             <>
-              <h2 style={{ fontSize: 'clamp(22px, 4vw, 30px)', fontWeight: 700, marginBottom: 24, marginTop: 6, lineHeight: 1.3 }}>{s.label}</h2>
+              <h2 style={{ fontSize: 'clamp(20px, 4vw, 28px)', fontWeight: 800, marginBottom: 24, marginTop: 6, lineHeight: 1.25, letterSpacing: '-0.3px' }}>{s.label}</h2>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 {s.keys.map((key, i) => (
                   <div key={key}>
-                    <label style={{ display: 'block', fontSize: 13, color: colors.muted, fontWeight: 600, marginBottom: 6 }}>{s.labels[i]}</label>
+                    <label style={{ display: 'block', fontSize: 12, color: colors.muted, fontWeight: 600, marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>{s.labels[i]}</label>
                     <textarea
                       value={answers[key] ?? ''}
                       onChange={e => set(key, e.target.value)}
                       placeholder={s.placeholders[i]}
                       rows={4}
                       autoFocus={i === 0}
-                      style={{ ...inputBase, fontSize: 15, resize: 'vertical', lineHeight: 1.6, border: '2px solid #2e3a54' }}
-                      onFocus={e => (e.target.style.borderColor = colors.blue)}
-                      onBlur={e => (e.target.style.borderColor = colors.border)}
+                      style={{ ...inputBase, fontSize: 15, resize: 'vertical', lineHeight: 1.65, border: `1.5px solid ${colors.border}` }}
+                      {...sharedInputHandlers}
                     />
                   </div>
                 ))}
@@ -417,54 +513,60 @@ export default function NewProject() {
           {/* ── finalize ── */}
           {isFinalize && (
             <>
-              <h2 style={{ fontSize: 'clamp(22px, 4vw, 30px)', fontWeight: 700, marginBottom: 6, marginTop: 6, lineHeight: 1.3 }}>Quase pronto!</h2>
-              <p style={{ color: colors.muted, fontSize: 15, marginBottom: 28, marginTop: 0 }}>
+              <h2 style={{ fontSize: 'clamp(20px, 4vw, 28px)', fontWeight: 800, marginBottom: 6, marginTop: 6, lineHeight: 1.25, letterSpacing: '-0.3px' }}>Quase pronto!</h2>
+              <p style={{ color: colors.muted, fontSize: 14, marginBottom: 28, marginTop: 0 }}>
                 Todos os campos abaixo são opcionais — podes preencher agora ou depois.
               </p>
 
               {/* About */}
-              <div style={{ marginBottom: 24 }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: colors.muted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 12 }}>Sobre ti</div>
+              <div style={{ marginBottom: 28 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: colors.subtle, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 12 }}>Sobre ti</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  <input type="text" placeholder="O teu nome próprio (ex: João)" value={answers.creator_name ?? ''} onChange={e => set('creator_name', e.target.value)} style={inputBase} />
-                  <input type="text" placeholder="Curso (ex: Técnico de Informática)" value={answers.course ?? ''} onChange={e => set('course', e.target.value)} style={inputBase} />
+                  <input type="text" placeholder="O teu nome próprio (ex: João)" value={answers.creator_name ?? ''} onChange={e => set('creator_name', e.target.value)} style={inputBase} {...sharedInputHandlers} />
+                  <input type="text" placeholder="Curso (ex: Técnico de Informática)" value={answers.course ?? ''} onChange={e => set('course', e.target.value)} style={inputBase} {...sharedInputHandlers} />
                   <select
                     value={answers.school_year ?? ''}
                     onChange={e => set('school_year', e.target.value)}
-                    style={{ ...inputBase, cursor: 'pointer', color: answers.school_year ? '#fff' : colors.muted }}
+                    style={{ ...inputBase, cursor: 'pointer', color: answers.school_year ? colors.text : colors.muted }}
+                    {...sharedInputHandlers}
                   >
                     <option value="" disabled style={{ color: colors.muted }}>Ano escolar</option>
-                    {SCHOOL_YEARS.map(y => <option key={y} value={y} style={{ background: '#1a2235', color: '#fff' }}>{y}</option>)}
+                    {SCHOOL_YEARS.map(y => <option key={y} value={y} style={{ background: '#0a1118', color: colors.text }}>{y}</option>)}
                   </select>
-                  <input type="text" placeholder="Escola (opcional)" value={answers.school ?? ''} onChange={e => set('school', e.target.value)} style={inputBase} />
+                  <input type="text" placeholder="Escola (opcional)" value={answers.school ?? ''} onChange={e => set('school', e.target.value)} style={inputBase} {...sharedInputHandlers} />
                   {formGoal === 'school' && (
-                    <label style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', padding: '13px 16px', background: colors.inputBg, borderRadius: 10, border: `1px solid ${answers.is_pap ? colors.blue : colors.border}` }}>
+                    <label style={{
+                      display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer',
+                      padding: '13px 16px', background: colors.inputBg, borderRadius: 10,
+                      border: `1.5px solid ${answers.is_pap ? colors.blue : colors.border}`,
+                      transition: 'border-color 0.2s',
+                    }}>
                       <input type="checkbox" checked={answers.is_pap ?? false} onChange={e => set('is_pap', e.target.checked)} style={{ width: 18, height: 18, accentColor: colors.blue, cursor: 'pointer' }} />
                       <span style={{ fontSize: 15 }}>Este projeto é a minha <strong>PAP</strong> 🎓</span>
                     </label>
                   )}
                   {answers.is_pap && (
                     <>
-                      <input type="text" placeholder="Nome do orientador" value={answers.pap_supervisor ?? ''} onChange={e => set('pap_supervisor', e.target.value)} style={inputBase} />
-                      <input type="text" placeholder="Data de apresentação (ex: 15 de Junho de 2025)" value={answers.pap_date ?? ''} onChange={e => set('pap_date', e.target.value)} style={inputBase} />
+                      <input type="text" placeholder="Nome do orientador" value={answers.pap_supervisor ?? ''} onChange={e => set('pap_supervisor', e.target.value)} style={inputBase} {...sharedInputHandlers} />
+                      <input type="text" placeholder="Data de apresentação (ex: 15 de Junho de 2025)" value={answers.pap_date ?? ''} onChange={e => set('pap_date', e.target.value)} style={inputBase} {...sharedInputHandlers} />
                     </>
                   )}
                 </div>
               </div>
 
               {/* Social links */}
-              <div style={{ marginBottom: 24 }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: colors.muted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 12 }}>Links e redes (opcional)</div>
+              <div style={{ marginBottom: 28 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: colors.subtle, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 12 }}>Links e redes (opcional)</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  <input type="url" placeholder="LinkedIn (https://linkedin.com/in/...)" value={answers.linkedin_url ?? ''} onChange={e => set('linkedin_url', e.target.value)} style={inputBase} />
-                  <input type="url" placeholder="GitHub (https://github.com/...)" value={answers.github_url ?? ''} onChange={e => set('github_url', e.target.value)} style={inputBase} />
-                  <input type="url" placeholder="Portfólio ou site pessoal" value={answers.portfolio_url ?? ''} onChange={e => set('portfolio_url', e.target.value)} style={inputBase} />
+                  <input type="url" placeholder="LinkedIn (https://linkedin.com/in/...)" value={answers.linkedin_url ?? ''} onChange={e => set('linkedin_url', e.target.value)} style={inputBase} {...sharedInputHandlers} />
+                  <input type="url" placeholder="GitHub (https://github.com/...)" value={answers.github_url ?? ''} onChange={e => set('github_url', e.target.value)} style={inputBase} {...sharedInputHandlers} />
+                  <input type="url" placeholder="Portfólio ou site pessoal" value={answers.portfolio_url ?? ''} onChange={e => set('portfolio_url', e.target.value)} style={inputBase} {...sharedInputHandlers} />
                 </div>
               </div>
 
               {/* Type */}
-              <div style={{ marginBottom: 24 }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: colors.muted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 12 }}>Tipo de projeto</div>
+              <div style={{ marginBottom: 28 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: colors.subtle, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 12 }}>Tipo de projeto</div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
                   {PROJECT_TYPES.map(t => {
                     const sel = answers.project_type === t.id
@@ -472,10 +574,17 @@ export default function NewProject() {
                       <button
                         key={t.id}
                         onClick={() => set('project_type', sel ? null : t.id)}
-                        style={{ background: sel ? 'rgba(59,130,246,0.12)' : colors.card, border: `2px solid ${sel ? colors.blue : colors.border}`, borderRadius: 10, padding: '14px 10px', color: colors.text, cursor: 'pointer', textAlign: 'center', transition: 'border-color 0.15s' }}
+                        style={{
+                          background: sel ? 'rgba(59,130,246,0.1)' : colors.card,
+                          border: `2px solid ${sel ? colors.blue : colors.border}`,
+                          borderRadius: 10, padding: '14px 10px',
+                          color: colors.text, cursor: 'pointer', textAlign: 'center',
+                          transition: 'border-color 0.15s, background 0.15s',
+                          fontFamily: 'inherit',
+                        }}
                       >
-                        <div style={{ fontSize: 20, marginBottom: 4 }}>{t.icon}</div>
-                        <div style={{ fontSize: 12, fontWeight: 600, lineHeight: 1.3 }}>{t.label}</div>
+                        <div style={{ fontSize: 20, marginBottom: 5 }}>{t.icon}</div>
+                        <div style={{ fontSize: 12, fontWeight: 600, lineHeight: 1.35, color: sel ? colors.text : colors.muted }}>{t.label}</div>
                       </button>
                     )
                   })}
@@ -484,23 +593,29 @@ export default function NewProject() {
 
               {/* Image */}
               <div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: colors.muted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 12 }}>Imagem de capa</div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: colors.subtle, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 12 }}>Imagem de capa</div>
                 {answers.cover_url ? (
                   <div>
-                    <img src={answers.cover_url} alt="" style={{ width: '100%', height: 180, objectFit: 'cover', borderRadius: 10, border: `1px solid ${colors.border}`, display: 'block' }} />
-                    <button onClick={() => set('cover_url', null)} style={{ marginTop: 8, background: 'transparent', border: `1px solid ${colors.border}`, color: colors.muted, borderRadius: 8, padding: '7px 14px', fontSize: 13, cursor: 'pointer' }}>
+                    <img src={answers.cover_url} alt="" style={{ width: '100%', height: 180, objectFit: 'cover', borderRadius: 12, border: `1px solid ${colors.border}`, display: 'block' }} />
+                    <button onClick={() => set('cover_url', null)} style={{ marginTop: 8, background: 'transparent', border: `1px solid ${colors.border}`, color: colors.muted, borderRadius: 8, padding: '7px 14px', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>
                       Remover imagem
                     </button>
                   </div>
                 ) : (
                   <div
                     onClick={() => fileInputRef.current?.click()}
-                    style={{ border: `2px dashed ${colors.border}`, borderRadius: 10, padding: '32px 20px', textAlign: 'center', cursor: 'pointer', transition: 'border-color 0.2s' }}
-                    onMouseEnter={e => (e.currentTarget.style.borderColor = colors.blue)}
-                    onMouseLeave={e => (e.currentTarget.style.borderColor = colors.border)}
+                    style={{
+                      border: `2px dashed ${colors.border}`,
+                      borderRadius: 12, padding: '36px 20px',
+                      textAlign: 'center', cursor: 'pointer',
+                      transition: 'border-color 0.2s, background 0.2s',
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = colors.blue; e.currentTarget.style.background = 'rgba(59,130,246,0.03)' }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.background = 'transparent' }}
                   >
-                    <div style={{ fontSize: 28, marginBottom: 8 }}>📷</div>
-                    <p style={{ color: colors.muted, margin: 0, fontSize: 14 }}>Clica para escolher uma imagem (opcional)</p>
+                    <div style={{ fontSize: 28, marginBottom: 10 }}>📷</div>
+                    <p style={{ color: colors.muted, margin: 0, fontSize: 14, fontWeight: 500 }}>Clica para escolher uma imagem (opcional)</p>
+                    <p style={{ color: colors.subtle, margin: '4px 0 0', fontSize: 12 }}>PNG, JPG ou WEBP · máx. 8MB</p>
                   </div>
                 )}
                 <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} style={{ display: 'none' }} />
@@ -508,28 +623,42 @@ export default function NewProject() {
             </>
           )}
 
-          {/* Score preview (not on finalize) */}
+          {/* Score preview */}
           {!isFinalize && estimatedScore > 0 && (
-            <div style={{ marginTop: 18, padding: '13px 16px', background: colors.card, borderRadius: 10, border: `1px solid ${colors.border}` }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 7 }}>
-                <span style={{ fontSize: 13, color: colors.muted }}>Score estimado</span>
-                <span style={{ fontSize: 16, fontWeight: 800, color: getScoreColor(estimatedScore) }}>{estimatedScore}</span>
+            <div style={{ marginTop: 20, padding: '14px 16px', background: colors.card, borderRadius: 12, border: `1px solid ${colors.border}` }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                <span style={{ fontSize: 13, color: colors.muted, fontWeight: 500 }}>Score estimado</span>
+                <span style={{ fontSize: 16, fontWeight: 800, color: getScoreColor(estimatedScore), letterSpacing: '-0.3px' }}>{estimatedScore}</span>
               </div>
               <div style={{ height: 4, background: colors.border, borderRadius: 2, overflow: 'hidden' }}>
-                <div style={{ height: '100%', borderRadius: 2, width: `${estimatedScore}%`, background: getScoreColor(estimatedScore), transition: 'width 0.4s ease, background 0.3s' }} />
+                <div style={{
+                  height: '100%', borderRadius: 2,
+                  width: `${estimatedScore}%`,
+                  background: getScoreColor(estimatedScore),
+                  transition: 'width 0.4s ease, background 0.3s',
+                }} />
               </div>
-              <p style={{ margin: '7px 0 0', fontSize: 12, color: colors.muted }}>{getMotivation(estimatedScore)}</p>
+              <p style={{ margin: '8px 0 0', fontSize: 12, color: colors.muted }}>{getMotivation(estimatedScore)}</p>
             </div>
           )}
 
-          {error && <p style={{ color: '#f87171', fontSize: 14, marginTop: 12 }}>{error}</p>}
+          {error && (
+            <p style={{ color: '#f87171', fontSize: 14, marginTop: 12, fontWeight: 500 }}>{error}</p>
+          )}
 
           {/* Navigation */}
           <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
             {step > 0 && (
               <button
                 onClick={() => setStep(n => n - 1)}
-                style={{ background: 'transparent', border: `2px solid ${colors.border}`, color: colors.muted, borderRadius: 10, padding: '12px 20px', fontSize: 15, cursor: 'pointer', fontWeight: 600 }}
+                style={{
+                  background: 'transparent',
+                  border: `1.5px solid ${colors.border}`,
+                  color: colors.muted, borderRadius: 10,
+                  padding: '12px 20px', fontSize: 15, cursor: 'pointer',
+                  fontWeight: 600, fontFamily: 'inherit',
+                  transition: 'border-color 0.2s',
+                }}
               >
                 ← Anterior
               </button>
@@ -537,14 +666,24 @@ export default function NewProject() {
             <button
               onClick={handleNext}
               disabled={!canProceed()}
-              style={{ flex: 1, background: canProceed() ? colors.blue : colors.border, color: '#fff', border: 'none', borderRadius: 10, padding: '14px 24px', fontSize: 16, fontWeight: 700, cursor: canProceed() ? 'pointer' : 'not-allowed', transition: 'background 0.2s' }}
+              style={{
+                flex: 1,
+                background: canProceed() ? `linear-gradient(135deg, ${colors.blue}, #4f46e5)` : colors.border,
+                color: '#fff', border: 'none', borderRadius: 10,
+                padding: '14px 24px', fontSize: 16, fontWeight: 700,
+                cursor: canProceed() ? 'pointer' : 'not-allowed',
+                transition: 'background 0.2s, box-shadow 0.2s',
+                fontFamily: 'inherit',
+                boxShadow: canProceed() ? '0 4px 20px rgba(59,130,246,0.3)' : 'none',
+                letterSpacing: '-0.1px',
+              }}
             >
               {step === TOTAL_STEPS - 1 ? 'Gerar página →' : 'Próximo →'}
             </button>
           </div>
 
           {s.type === 'text' && (
-            <p style={{ color: colors.muted, fontSize: 13, marginTop: 14, textAlign: 'center' }}>Prima Enter para avançar</p>
+            <p style={{ color: colors.subtle, fontSize: 12, marginTop: 12, textAlign: 'center', fontWeight: 500 }}>Prima Enter para avançar</p>
           )}
         </div>
       </div>

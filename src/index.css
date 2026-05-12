@@ -14,8 +14,8 @@ body {
   margin: 0;
   padding: 0;
   min-width: 320px;
-  background-color: #1c2333;
-  color: #ffffff;
+  background-color: #0d1424;
+  color: #e8f2ff;
 }
 
 #root {
@@ -27,6 +27,29 @@ a {
   color: inherit;
 }
 
-textarea, input {
-  font-family: inherit;
+textarea, input, select {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+::selection {
+  background: rgba(59, 130, 246, 0.3);
+  color: #e8f2ff;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0d1424;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1e3050;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #2a4275;
 }
