@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Navbar } from '../components/Navbar'
+import { prefillProject } from '../lib/prefillProject'
 
 const colors = {
   bg: '#0d1424',
@@ -66,14 +67,46 @@ const FEATURES = [
   },
 ]
 
+// Map widget tag → formGoal used inside NewProject
+const TAG_TO_GOAL = {
+  pap:         'school',
+  internship:  'internship',
+  group:       'school',
+  personal:    'show',
+  competition: 'show',
+}
+
 export default function Home() {
   const navigate = useNavigate()
   const [selectedGoal, setSelectedGoal] = useState(null)
   const [inputText, setInputText] = useState('')
+  const [analyzing, setAnalyzing] = useState(false)
 
-  function handleStart(e) {
+  async function handleStart(e) {
     e.preventDefault()
-    navigate('/novo')
+
+    // No text and no tag → go to normal /novo flow
+    if (!inputText.trim() && !selectedGoal) {
+      navigate('/novo')
+      return
+    }
+
+    setAnalyzing(true)
+    const prefill = await prefillProject(inputText.trim(), selectedGoal)
+    setAnalyzing(false)
+
+    navigate('/novo', {
+      state: {
+        prefill: {
+          answers: {
+            ...prefill,
+            project_type: selectedGoal ?? null,
+          },
+          formGoal: TAG_TO_GOAL[selectedGoal] ?? 'show',
+          fromWidget: true,
+        },
+      },
+    })
   }
 
   const placeholder = selectedGoal
@@ -83,6 +116,7 @@ export default function Home() {
   return (
     <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: 'Inter, system-ui, sans-serif' }}>
       <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes pulse-glow {
           0%, 100% { opacity: 0.3; }
           50%       { opacity: 0.6; }
@@ -245,18 +279,24 @@ export default function Home() {
               />
               <button
                 type="submit"
+                disabled={analyzing}
                 className="submit-btn"
                 style={{
-                  background: '#3b82f6', border: 'none', borderRadius: 12,
+                  background: analyzing ? '#1e3050' : '#3b82f6', border: 'none', borderRadius: 12,
                   color: '#fff', width: 48, height: 48,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  cursor: 'pointer', flexShrink: 0,
+                  cursor: analyzing ? 'not-allowed' : 'pointer', flexShrink: 0,
+                  transition: 'background 0.15s',
                 }}
               >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="5" y1="12" x2="19" y2="12"/>
-                  <polyline points="12 5 19 12 12 19"/>
-                </svg>
+                {analyzing ? (
+                  <div style={{ width: 18, height: 18, border: '2px solid rgba(255,255,255,0.3)', borderTop: '2px solid #fff', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+                ) : (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="5" y1="12" x2="19" y2="12"/>
+                    <polyline points="12 5 19 12 12 19"/>
+                  </svg>
+                )}
               </button>
             </div>
 

@@ -1,5 +1,5 @@
-import { useState, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useRef, useEffect } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { generateProject } from '../lib/generateProject'
 import { saveProject } from '../lib/saveProject'
 import { calculateScore } from '../lib/score'
@@ -128,6 +128,7 @@ async function resizeImage(file, maxWidth = 1200) {
 
 export default function NewProject() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { user } = useAuth()
   const [phase, setPhase] = useState('goal')
   const [formGoal, setFormGoal] = useState(null)
@@ -136,8 +137,29 @@ export default function NewProject() {
   const [error, setError] = useState(null)
   const [savedProject, setSavedProject] = useState(null)
   const [copiedLink, setCopiedLink] = useState(null)
+  const [prefillBanner, setPrefillBanner] = useState(false)
   const { toast, show: showToast } = useToast()
   const fileInputRef = useRef(null)
+
+  // On mount: check for widget prefill state
+  useEffect(() => {
+    const state = location.state?.prefill
+    if (!state?.fromWidget) return
+    setFormGoal(state.formGoal ?? 'show')
+    setAnswers(state.answers ?? {})
+    setPhase('form')
+    // Find first step that isn't already filled — start there
+    const firstEmpty = STEPS.findIndex(s => {
+      if (s.type === 'finalize') return false
+      if (s.type === 'dual_text')     return s.keys.some(k => !(state.answers?.[k] ?? '').trim())
+      if (s.type === 'dual_textarea') return !(state.answers?.[s.keys[0]] ?? '').trim()
+      return !(state.answers?.[s.key] ?? '').trim()
+    })
+    setStep(firstEmpty === -1 ? STEPS.length - 1 : firstEmpty)
+    if (Object.values(state.answers ?? {}).some(v => v)) setPrefillBanner(true)
+    // Clear state so refresh doesn't re-apply
+    window.history.replaceState({}, '')
+  }, [])
 
   const progress = phase === 'goal' ? 0 : ((step + 1) / TOTAL_STEPS) * 100
   const estimatedScore = calculateScore(answers).score
@@ -425,6 +447,23 @@ export default function NewProject() {
 
       <div style={{ flex: 1, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '44px 24px 40px', overflowY: 'auto' }}>
         <div style={{ width: '100%', maxWidth: 600 }}>
+
+          {/* Prefill banner */}
+          {prefillBanner && (
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)',
+              borderRadius: 10, padding: '10px 14px', marginBottom: 20, gap: 10,
+            }}>
+              <span style={{ color: '#60a5fa', fontSize: 13, fontWeight: 500 }}>
+                A IA pré-preencheu alguns campos com base na tua descrição. Revê e corrige o que precisares.
+              </span>
+              <button
+                onClick={() => setPrefillBanner(false)}
+                style={{ background: 'none', border: 'none', color: '#7d93b0', cursor: 'pointer', fontSize: 16, padding: 0, flexShrink: 0 }}
+              >✕</button>
+            </div>
+          )}
 
           <div style={{ fontSize: 11, color: '#818cf8', fontWeight: 700, marginBottom: 5, textTransform: 'uppercase', letterSpacing: 1.2 }}>
             {isFinalize ? 'Finalizar' : `Passo ${step + 1} de ${TOTAL_STEPS}`}

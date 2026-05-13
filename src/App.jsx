@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
+import RestReminder from './components/RestReminder'
 import Home from './pages/Home'
 import NewProject from './pages/NewProject'
 import ProjectPage from './pages/ProjectPage'
@@ -34,6 +35,7 @@ export default function App() {
   return (
     <AuthProvider>
       {splashMounted && <SplashScreen visible={splashVisible} />}
+      <RestReminder />
       <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Routes>
           <Route path="/"              element={<Home />}        />

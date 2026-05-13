@@ -186,9 +186,11 @@ export default function Dashboard() {
 
   const greeting = (() => {
     const h = new Date().getHours()
-    if (h < 12) return 'Bom dia'
-    if (h < 19) return 'Boa tarde'
-    return 'Boa noite'
+    if (h >= 5  && h < 12) return `Bom dia, ${firstName}`
+    if (h >= 12 && h < 17) return `Boa tarde, ${firstName}`
+    if (h >= 17 && h < 21) return `Boa noite, ${firstName}`
+    if (h >= 21 && h < 24) return `Ainda aqui, ${firstName}?`
+    return `A acabar à última da hora, ${firstName}?`
   })()
 
   return (
@@ -201,7 +203,7 @@ export default function Dashboard() {
         {/* Header */}
         <div style={{ marginBottom: 36 }}>
           <h1 style={{ color: C.text, fontSize: 28, fontWeight: 800, margin: '0 0 4px', letterSpacing: '-0.5px' }}>
-            {greeting}, {firstName}! 👋
+            {greeting}
           </h1>
           <p style={{ color: C.muted, fontSize: 15, margin: 0 }}>{user.email}</p>
         </div>

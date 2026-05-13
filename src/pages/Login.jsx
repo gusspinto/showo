@@ -13,12 +13,62 @@ const C = {
   error: '#f87171',
 }
 
+function EyeIcon({ visible }) {
+  return visible ? (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+      <circle cx="12" cy="12" r="3"/>
+    </svg>
+  ) : (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+      <line x1="1" y1="1" x2="23" y2="23"/>
+    </svg>
+  )
+}
+
+function PasswordInput({ value, onChange, placeholder }) {
+  const [show, setShow] = useState(false)
+  const [focused, setFocused] = useState(false)
+  return (
+    <div style={{ position: 'relative' }}>
+      <input
+        type={show ? 'text' : 'password'}
+        value={value} onChange={onChange} required placeholder={placeholder}
+        style={{
+          width: '100%', background: '#0a1118',
+          border: `1px solid ${focused ? C.blue : C.border}`,
+          borderRadius: 8, padding: '10px 44px 10px 14px',
+          color: C.text, fontSize: 15, outline: 'none', fontFamily: 'inherit',
+          boxSizing: 'border-box', transition: 'border-color 0.15s',
+          boxShadow: focused ? '0 0 0 3px rgba(59,130,246,0.1)' : 'none',
+        }}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+      />
+      <button
+        type="button" onClick={() => setShow(s => !s)}
+        style={{
+          position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
+          background: 'none', border: 'none', cursor: 'pointer',
+          color: show ? C.blue : C.muted, padding: 0, display: 'flex',
+          transition: 'color 0.15s',
+        }}
+        tabIndex={-1}
+      >
+        <EyeIcon visible={show} />
+      </button>
+    </div>
+  )
+}
+
 export default function Login() {
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [emailFocused, setEmailFocused] = useState(false)
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -35,31 +85,21 @@ export default function Login() {
 
   return (
     <div style={{
-      minHeight: '100vh',
-      background: C.bg,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '24px 16px',
-      fontFamily: 'Inter, sans-serif',
+      minHeight: '100vh', background: C.bg,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      padding: '24px 16px', fontFamily: 'Inter, sans-serif',
     }}>
       <div style={{ width: '100%', maxWidth: 400 }}>
 
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <img
-            src="/logo-3.png"
-            alt="Showo"
+            src="/logo-3.png" alt="Showo"
             style={{ width: 'clamp(130px, 40vw, 180px)', height: 'auto', cursor: 'pointer' }}
             onClick={() => navigate('/')}
           />
         </div>
 
-        <div style={{
-          background: C.card,
-          border: `1px solid ${C.border}`,
-          borderRadius: 16,
-          padding: '36px 32px',
-        }}>
+        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: '36px 32px' }}>
           <h1 style={{ color: C.text, fontSize: 22, fontWeight: 700, margin: '0 0 8px' }}>Entrar</h1>
           <p style={{ color: C.muted, fontSize: 14, margin: '0 0 28px' }}>Acede ao teu painel de projetos</p>
 
@@ -68,30 +108,35 @@ export default function Login() {
               <label style={{ color: C.muted, fontSize: 13, fontWeight: 500 }}>Email</label>
               <input
                 type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="tu@email.com"
-                style={{ background: '#0d1424', border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 14px', color: C.text, fontSize: 15, outline: 'none', fontFamily: 'inherit' }}
-                onFocus={e => e.target.style.borderColor = C.blue}
-                onBlur={e => e.target.style.borderColor = C.border}
+                style={{
+                  background: '#0a1118', border: `1px solid ${emailFocused ? C.blue : C.border}`,
+                  borderRadius: 8, padding: '10px 14px', color: C.text, fontSize: 15,
+                  outline: 'none', fontFamily: 'inherit', transition: 'border-color 0.15s',
+                  boxShadow: emailFocused ? '0 0 0 3px rgba(59,130,246,0.1)' : 'none',
+                }}
+                onFocus={() => setEmailFocused(true)}
+                onBlur={() => setEmailFocused(false)}
               />
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               <label style={{ color: C.muted, fontSize: 13, fontWeight: 500 }}>Palavra-passe</label>
-              <input
-                type="password" value={password} onChange={e => setPassword(e.target.value)} required placeholder="••••••••"
-                style={{ background: '#0d1424', border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 14px', color: C.text, fontSize: 15, outline: 'none', fontFamily: 'inherit' }}
-                onFocus={e => e.target.style.borderColor = C.blue}
-                onBlur={e => e.target.style.borderColor = C.border}
-              />
+              <PasswordInput value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" />
             </div>
 
             {error && (
-              <div style={{ background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.3)', borderRadius: 8, padding: '10px 14px', color: C.error, fontSize: 14 }}>
+              <div style={{ background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.25)', borderRadius: 8, padding: '10px 14px', color: C.error, fontSize: 14 }}>
                 {error}
               </div>
             )}
 
             <button
               type="submit" disabled={loading}
-              style={{ background: loading ? '#1e3050' : C.blue, color: '#fff', border: 'none', borderRadius: 8, padding: '12px', fontSize: 15, fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit', marginTop: 4 }}
+              style={{
+                background: loading ? '#1e3050' : C.blue, color: '#fff', border: 'none',
+                borderRadius: 8, padding: '12px', fontSize: 15, fontWeight: 600,
+                cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
+                marginTop: 4, transition: 'background 0.15s',
+              }}
               onMouseEnter={e => { if (!loading) e.target.style.background = C.blueHover }}
               onMouseLeave={e => { if (!loading) e.target.style.background = C.blue }}
             >
