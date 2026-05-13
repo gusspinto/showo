@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 
 const C = {
   bg: 'rgba(13, 20, 36, 0.88)',
@@ -25,7 +26,13 @@ const btnStyle = {
 
 export function Navbar({ children, showLinks = true }) {
   const navigate = useNavigate()
+  const { user, signOut } = useAuth()
   const [open, setOpen] = useState(false)
+
+  async function handleSignOut() {
+    await signOut()
+    navigate('/')
+  }
 
   return (
     <>
@@ -97,6 +104,20 @@ export function Navbar({ children, showLinks = true }) {
           <button className="mobile-drawer-btn" onClick={() => { navigate('/ranking'); setOpen(false) }}>
             Ranking
           </button>
+          {user ? (
+            <>
+              <button className="mobile-drawer-btn" onClick={() => { navigate('/dashboard'); setOpen(false) }}>
+                Dashboard
+              </button>
+              <button className="mobile-drawer-btn" onClick={() => { handleSignOut(); setOpen(false) }}>
+                Sair
+              </button>
+            </>
+          ) : (
+            <button className="mobile-drawer-btn" onClick={() => { navigate('/login'); setOpen(false) }}>
+              Entrar
+            </button>
+          )}
         </div>
       )}
 
@@ -142,9 +163,49 @@ export function Navbar({ children, showLinks = true }) {
           />
         </div>
 
-        {/* Right — CTA + hamburger */}
+        {/* Right — auth + children + hamburger */}
         <div className="nav-right">
           {children}
+
+          {/* Auth buttons — desktop only (hidden on mobile, drawer handles it) */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }} className="nav-left" /* reuse nav-left to hide on mobile */>
+            {user ? (
+              <>
+                <button onClick={() => navigate('/dashboard')} style={btnStyle} className="nav-btn">
+                  Dashboard
+                </button>
+                <button
+                  onClick={handleSignOut}
+                  style={{ ...btnStyle, border: `1px solid ${C.border}`, padding: '7px 14px' }}
+                  className="nav-btn"
+                >
+                  Sair
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={() => navigate('/login')}
+                style={{
+                  background: C.blue,
+                  border: 'none',
+                  borderRadius: 8,
+                  padding: '8px 16px',
+                  color: '#fff',
+                  fontSize: 14,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                  transition: 'background 0.15s',
+                  whiteSpace: 'nowrap',
+                }}
+                onMouseEnter={e => e.target.style.background = '#2563eb'}
+                onMouseLeave={e => e.target.style.background = C.blue}
+              >
+                Entrar
+              </button>
+            )}
+          </div>
+
           {showLinks && (
             <button
               className="ham-btn"

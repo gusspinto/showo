@@ -5,6 +5,7 @@ import { saveProject } from '../lib/saveProject'
 import { calculateScore } from '../lib/score'
 import { Toast, useToast } from '../components/Toast'
 import { Navbar } from '../components/Navbar'
+import { useAuth } from '../context/AuthContext'
 
 const colors = {
   bg: '#0d1424',
@@ -127,6 +128,7 @@ async function resizeImage(file, maxWidth = 1200) {
 
 export default function NewProject() {
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [phase, setPhase] = useState('goal')
   const [formGoal, setFormGoal] = useState(null)
   const [step, setStep] = useState(0)
@@ -169,7 +171,7 @@ export default function NewProject() {
     setError(null)
     try {
       const aiResult = await generateProject(answers)
-      const project = await saveProject(answers, aiResult)
+      const project = await saveProject(answers, aiResult, user?.id ?? null)
       localStorage.setItem(`edit_token_${project.slug}`, project.edit_token)
       setSavedProject(project)
       setPhase('success')

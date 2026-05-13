@@ -8,13 +8,22 @@ export default function SplashScreen({ visible }) {
       transform: visible ? 'none' : 'translateY(-12px)',
       pointerEvents: visible ? 'all' : 'none',
       transition: 'opacity 0.65s cubic-bezier(0.4,0,0.2,1), transform 0.65s cubic-bezier(0.4,0,0.2,1)',
+      overflow: 'hidden',
+      padding: '0 16px',
     }}>
       <style>{`
-        @keyframes logo-enter {
-          0%   { opacity: 0; transform: translateX(210px) scale(0.93); }
-          18%  { opacity: 1; transform: translateX(210px) scale(1); }
+        /* ── Animations ── */
+        @keyframes logo-enter-desk {
+          0%   { opacity: 0; transform: translateX(var(--logo-offset)) scale(0.93); }
+          18%  { opacity: 1; transform: translateX(var(--logo-offset)) scale(1); }
           70%  { opacity: 1; transform: translateX(0); }
           100% { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes logo-enter-mob {
+          0%   { opacity: 0; transform: scale(0.93); }
+          25%  { opacity: 1; transform: scale(1); }
+          100% { opacity: 1; transform: scale(1); }
         }
 
         @keyframes learn-descend {
@@ -31,6 +40,13 @@ export default function SplashScreen({ visible }) {
           100%   { transform: scaleY(1); opacity: 1; }
         }
 
+        @keyframes divider-grow-h {
+          0%,50% { transform: scaleX(0); opacity: 0; }
+          52%    { opacity: 1; }
+          70%    { transform: scaleX(1); opacity: 1; }
+          100%   { transform: scaleX(1); opacity: 1; }
+        }
+
         @keyframes text-wipe-1 {
           0%,55% { opacity:0; clip-path:inset(0 100% 0 0); transform:translateX(16px); }
           80%    { opacity:1; clip-path:inset(0 0% 0 0); transform:translateX(0); }
@@ -43,28 +59,120 @@ export default function SplashScreen({ visible }) {
           100%   { opacity:1; clip-path:inset(0 0% 0 0); transform:translateX(0); }
         }
 
-        /* Mobile: same row layout as desktop, scaled down */
-        @media (max-width: 560px) {
-          .splash-logo-img   { width: 126px !important; }
-          .splash-logo-block { padding-bottom: 26px !important; }
-          .splash-mask       { bottom: 26px !important; }
-          .splash-learn      { font-size: 16px !important; }
-          .splash-spacer     { width: 14px !important; }
-          .splash-divider    { height: 50px !important; }
-          .splash-tagline > div { font-size: 14px !important; }
+        @keyframes fade-up {
+          0%    { opacity: 0; transform: translateY(12px); }
+          100%  { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ── Desktop layout ── */
+        .splash-inner {
+          display: flex;
+          align-items: center;
+          --logo-offset: 210px;
+        }
+
+        .splash-logo-block {
+          position: relative;
+          padding-bottom: 44px;
+        }
+
+        .splash-logo-anim {
+          animation: logo-enter-desk 2.2s cubic-bezier(0.22,1,0.36,1) both;
+        }
+
+        .splash-divider-v {
+          display: block;
+          width: 1.5px;
+          height: 80px;
+          flex-shrink: 0;
+          background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.22) 30%, rgba(255,255,255,0.22) 70%, transparent);
+          transform-origin: center center;
+          animation: divider-grow 2.2s cubic-bezier(0.22,1,0.36,1) both;
+        }
+
+        .splash-divider-h { display: none; }
+
+        .splash-spacer { width: 36px; flex-shrink: 0; }
+
+        .splash-tagline-line {
+          font-size: clamp(18px, 3vw, 32px);
+          font-weight: 800;
+          font-family: Inter, system-ui, sans-serif;
+          color: #e8f2ff;
+          letter-spacing: -0.4px;
+          line-height: 1.25;
+          white-space: nowrap;
+        }
+
+        /* ── Mobile (≤ 520px): vertical stack ── */
+        @media (max-width: 520px) {
+          .splash-inner {
+            flex-direction: column;
+            align-items: center;
+            gap: 0;
+          }
+
+          .splash-logo-anim {
+            animation: logo-enter-mob 1.4s cubic-bezier(0.22,1,0.36,1) both;
+          }
+
+          .splash-logo-img { width: clamp(140px, 55vw, 200px) !important; }
+
+          .splash-logo-block {
+            padding-bottom: 36px;
+          }
+
+          .splash-mask { bottom: 36px !important; }
+
+          .splash-learn {
+            font-size: clamp(16px, 5vw, 24px) !important;
+          }
+
+          .splash-spacer { display: none; }
+
+          .splash-divider-v { display: none; }
+
+          .splash-divider-h {
+            display: block;
+            width: 60px;
+            height: 1.5px;
+            background: linear-gradient(to right, transparent, rgba(255,255,255,0.22) 30%, rgba(255,255,255,0.22) 70%, transparent);
+            transform-origin: center center;
+            margin: 16px 0;
+            animation: divider-grow-h 2.2s cubic-bezier(0.22,1,0.36,1) both;
+          }
+
+          .splash-tagline {
+            text-align: center;
+          }
+
+          .splash-tagline-line {
+            font-size: clamp(18px, 5.5vw, 26px);
+            white-space: normal;
+            text-align: center;
+          }
+        }
+
+        /* ── Small-medium (521–768px): horizontal but scaled ── */
+        @media (min-width: 521px) and (max-width: 768px) {
+          .splash-inner { --logo-offset: 160px; }
+          .splash-logo-img { width: clamp(150px, 22vw, 210px) !important; }
+          .splash-logo-block { padding-bottom: 36px; }
+          .splash-mask { bottom: 36px !important; }
+          .splash-spacer { width: 24px; }
+          .splash-divider-v { height: 64px; }
+          .splash-learn { font-size: clamp(17px, 2.5vw, 26px) !important; }
+          .splash-tagline-line { font-size: clamp(17px, 2.5vw, 26px); }
         }
       `}</style>
 
-      <div className="splash-inner" style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center' }}>
+      <div className="splash-inner">
 
-        {/* Logo block — slides in as a unit */}
-        <div style={{
-          flexShrink: 0,
-          animation: 'logo-enter 2.2s cubic-bezier(0.22,1,0.36,1) both',
-        }}>
-          <div className="splash-logo-block" style={{ position: 'relative', paddingBottom: 44 }}>
+        {/* Logo block */}
+        <div className="splash-logo-anim" style={{ flexShrink: 0 }}>
+          <div className="splash-logo-block">
 
-            {/* z-index 3 — logo on top */}
+            {/* Logo image — z-index 3 (on top) */}
             <img
               src="/showo_logo.png"
               alt="Showo"
@@ -80,7 +188,7 @@ export default function SplashScreen({ visible }) {
               }}
             />
 
-            {/* z-index 2 — opaque mask covers logo area so Learn is hidden while sliding through */}
+            {/* Opaque mask hides "Learn" while it slides through the logo */}
             <div className="splash-mask" style={{
               position: 'absolute',
               top: 0, left: 0, right: 0,
@@ -89,9 +197,7 @@ export default function SplashScreen({ visible }) {
               zIndex: 2,
             }} />
 
-            {/* z-index 1 — "Learn" slides out from within the logo.
-                opacity starts at 0 so nothing is visible before the animation fires.
-                animationFillMode 'forwards' holds the final frame (opacity 1, translateY 0). */}
+            {/* "Learn" slides down from behind the logo */}
             <div className="splash-learn" style={{
               position: 'absolute',
               bottom: 0, left: 0, right: 0,
@@ -114,36 +220,27 @@ export default function SplashScreen({ visible }) {
             }}>
               Learn
             </div>
-
           </div>
         </div>
 
-        <div className="splash-spacer" style={{ width: 36, flexShrink: 0 }} />
+        <div className="splash-spacer" />
 
-        {/* Divider */}
-        <div className="splash-divider" style={{
-          width: 1.5, height: 80, flexShrink: 0,
-          background: 'linear-gradient(to bottom, transparent, rgba(255,255,255,0.22) 30%, rgba(255,255,255,0.22) 70%, transparent)',
-          transformOrigin: 'center center',
-          animation: 'divider-grow 2.2s cubic-bezier(0.22,1,0.36,1) both',
-        }} />
+        {/* Vertical divider (desktop / wide) */}
+        <div className="splash-divider-v" />
 
-        <div className="splash-spacer" style={{ width: 36, flexShrink: 0 }} />
+        {/* Horizontal divider (mobile stack) */}
+        <div className="splash-divider-h" />
+
+        <div className="splash-spacer" />
 
         {/* Tagline */}
         <div className="splash-tagline" style={{ display: 'flex', flexDirection: 'column', gap: 2, flexShrink: 0 }}>
-          <div style={{
-            fontSize: 'clamp(20px, 3vw, 32px)', fontWeight: 800,
-            fontFamily: 'Inter, system-ui, sans-serif',
-            color: '#e8f2ff', letterSpacing: '-0.4px', lineHeight: 1.25, whiteSpace: 'nowrap',
+          <div className="splash-tagline-line" style={{
             animation: 'text-wipe-1 2.2s cubic-bezier(0.22,1,0.36,1) both',
           }}>
             Dá um{' '}<span style={{ color: '#3b82f6', fontStyle: 'italic' }}>boost</span>
           </div>
-          <div style={{
-            fontSize: 'clamp(20px, 3vw, 32px)', fontWeight: 800,
-            fontFamily: 'Inter, system-ui, sans-serif',
-            color: '#e8f2ff', letterSpacing: '-0.4px', lineHeight: 1.25, whiteSpace: 'nowrap',
+          <div className="splash-tagline-line" style={{
             animation: 'text-wipe-2 2.2s cubic-bezier(0.22,1,0.36,1) both',
           }}>
             aos teus projetos!

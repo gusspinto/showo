@@ -3,6 +3,7 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { updateProject } from '../lib/updateProject'
 import { Navbar } from '../components/Navbar'
+import { useAuth } from '../context/AuthContext'
 
 const colors = {
   bg: '#0d1424',
@@ -108,6 +109,7 @@ export default function EditProject() {
   const { slug } = useParams()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
+  const { user } = useAuth()
   const [project, setProject] = useState(null)
   const [form, setForm] = useState({})
   const [loading, setLoading] = useState(true)
@@ -130,7 +132,12 @@ export default function EditProject() {
       const tokenFromStorage = localStorage.getItem(`edit_token_${slug}`)
       const token = tokenFromUrl || tokenFromStorage
 
-      if (data.edit_token && token !== data.edit_token) {
+      // Dual ownership: logged-in owner OR valid edit token OR legacy project
+      const isOwner = user && data.user_id && user.id === data.user_id
+      const hasToken = data.edit_token && token === data.edit_token
+      const isLegacy = !data.edit_token && !data.user_id
+
+      if (!isOwner && !hasToken && !isLegacy) {
         setAccessDenied(true)
         setLoading(false)
         return

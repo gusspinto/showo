@@ -6,6 +6,7 @@ import { calculateScore } from '../lib/score'
 import { CHALLENGES, getChallengeStatus } from '../lib/challenges'
 import { Navbar } from '../components/Navbar'
 import { generateProject } from '../lib/generateProject'
+import { useAuth } from '../context/AuthContext'
 
 const colors = {
   bg: '#0d1424',
@@ -341,6 +342,7 @@ function Confetti() {
 export default function ProjectPage() {
   const { slug } = useParams()
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [project, setProject] = useState(null)
   const [loading, setLoading] = useState(true)
   const [copied, setCopied] = useState(false)
@@ -538,7 +540,11 @@ export default function ProjectPage() {
       )}
 
       <Navbar>
-        {project && (!project.edit_token || localStorage.getItem(`edit_token_${project.slug}`)) && (
+        {project && (
+          (user?.id && project.user_id && user.id === project.user_id) ||
+          (!project.edit_token && !project.user_id) ||
+          localStorage.getItem(`edit_token_${project.slug}`)
+        ) && (
           <button
             onClick={() => {
               const token = localStorage.getItem(`edit_token_${project.slug}`)

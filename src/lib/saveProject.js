@@ -18,13 +18,14 @@ function generateSlug(name) {
   )
 }
 
-export async function saveProject(formData, aiResult) {
+export async function saveProject(formData, aiResult, userId = null) {
   const slug = generateSlug(formData.name)
   const isPap = formData.is_pap || formData.project_type === 'pap'
   const { score } = calculateScore(formData)
   const edit_token = generateToken()
 
   const payload = {
+    user_id: userId || null,
     name: formData.name,
     area: formData.area,
     goal: formData.goal,
