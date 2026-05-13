@@ -14,8 +14,8 @@ import SplashScreen from './components/SplashScreen'
 // 0.65s — fade out transition (handled by CSS on SplashScreen)
 // 0.65s — unmount after fade completes
 
-const HOLD_MS    = 1900 + 1000   // when to start fading (2900ms)
-const UNMOUNT_MS = HOLD_MS + 700 // when to remove from DOM (3600ms)
+const HOLD_MS    = 1900 + 1800   // when to start fading (3700ms)
+const UNMOUNT_MS = HOLD_MS + 700 // when to remove from DOM (4400ms)
 
 export default function App() {
   const [splashVisible,  setSplashVisible]  = useState(true)

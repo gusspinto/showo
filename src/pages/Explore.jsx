@@ -163,7 +163,6 @@ export default function Explore() {
           </div>
         ) : filtered.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '80px 0', color: colors.muted }}>
-            <div style={{ fontSize: 40, marginBottom: 12 }}>📭</div>
             <p style={{ fontSize: 16 }}>{query ? `Nenhum projeto encontrado para "${search}"` : 'Ainda não há projetos. Sê o primeiro!'}</p>
             {!query && (
               <button

@@ -121,7 +121,7 @@ export default function Ranking() {
         {/* Header */}
         <div style={{ marginBottom: 36 }}>
           <h1 style={{ fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 900, margin: '0 0 8px', letterSpacing: '-0.5px' }}>
-            🏆 Ranking de Projetos
+            Ranking de Projetos
           </h1>
           <p style={{ color: colors.muted, margin: 0, fontSize: 15 }}>Os melhores projetos da comunidade Showo, ordenados por score</p>
         </div>
@@ -174,15 +174,12 @@ export default function Ranking() {
           </div>
         ) : filtered.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '80px 0', color: colors.muted }}>
-            <div style={{ fontSize: 40, marginBottom: 12 }}>📭</div>
             <p style={{ fontSize: 16 }}>Nenhum projeto encontrado com estes filtros.</p>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {filtered.map((project, i) => {
               const isTop3 = i < 3
-              const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : null
-              const scoreColor = getLevelColor(project.score)
               const glowColor = isTop3 ? TOP3_GLOW[i] : null
 
               return (
@@ -216,8 +213,16 @@ export default function Ranking() {
                 >
                   {/* Rank */}
                   <div style={{ width: 36, textAlign: 'center', flexShrink: 0 }}>
-                    {medal ? (
-                      <span style={{ fontSize: 24 }}>{medal}</span>
+                    {isTop3 ? (
+                      <div style={{
+                        width: 28, height: 28, borderRadius: '50%', margin: '0 auto',
+                        background: glowColor + '20',
+                        border: `1.5px solid ${glowColor}60`,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: 12, fontWeight: 800, color: glowColor,
+                      }}>
+                        {i + 1}
+                      </div>
                     ) : (
                       <span style={{ fontSize: 14, fontWeight: 700, color: colors.subtle }}>#{i + 1}</span>
                     )}

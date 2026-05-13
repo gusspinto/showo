@@ -34,16 +34,16 @@ const colors = {
 const CONFETTI_COLORS = ['#3b82f6', '#22c55e', '#eab308', '#f97316', '#a855f7', '#ec4899', '#06b6d4']
 
 const PROJECT_TYPE_LABELS = {
-  group: '📋 Trabalho de grupo',
-  pap: '🎓 PAP / Projeto final',
-  presentation: '📊 Apresentação',
-  personal: '💻 Projeto pessoal',
-  competition: '🏆 Projeto de competição',
-  other: '✨ Outro',
+  group: 'Trabalho de grupo',
+  pap: 'PAP / Projeto final',
+  presentation: 'Apresentação',
+  personal: 'Projeto pessoal',
+  competition: 'Projeto de competição',
+  other: 'Outro',
 }
 
 function getLevelInfo(score) {
-  if (score === 100) return { label: 'Projeto completo! 🏆', color: colors.green }
+  if (score === 100) return { label: 'Projeto completo!', color: colors.green }
   if (score >= 81) return { label: 'Impressionante', color: colors.blue }
   if (score >= 61) return { label: 'Quase pronto', color: colors.orange }
   if (score >= 41) return { label: 'A ganhar forma', color: colors.yellow }
@@ -87,7 +87,7 @@ function ScoreRing({ score }) {
   )
 }
 
-function Section({ icon, title, content }) {
+function Section({ title, content }) {
   if (!content) return null
   return (
     <div style={{
@@ -98,18 +98,7 @@ function Section({ icon, title, content }) {
       marginBottom: 12,
       boxShadow: '0 2px 16px rgba(0,0,0,0.25)',
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-        <div style={{
-          width: 32, height: 32, borderRadius: 8,
-          background: 'rgba(255,255,255,0.05)',
-          border: `1px solid ${colors.border}`,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 16, flexShrink: 0,
-        }}>
-          {icon}
-        </div>
-        <h3 style={{ margin: 0, fontSize: 11, fontWeight: 700, color: colors.muted, textTransform: 'uppercase', letterSpacing: 1 }}>{title}</h3>
-      </div>
+      <h3 style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 700, color: colors.muted, textTransform: 'uppercase', letterSpacing: 1 }}>{title}</h3>
       <p style={{ margin: 0, color: colors.text, fontSize: 15, lineHeight: 1.75, whiteSpace: 'pre-wrap' }}>{content}</p>
     </div>
   )
@@ -499,7 +488,6 @@ export default function ProjectPage() {
   if (!project) {
     return (
       <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: 'Inter, system-ui, sans-serif', gap: 16, textAlign: 'center', padding: 24 }}>
-        <div style={{ fontSize: 48 }}>🔍</div>
         <h2 style={{ margin: 0, fontSize: 24, fontWeight: 700 }}>Este projeto não existe ou foi removido</h2>
         <p style={{ color: colors.muted, margin: 0 }}>O link pode estar incorrecto ou o projeto foi eliminado.</p>
         <button
@@ -568,7 +556,7 @@ export default function ProjectPage() {
               fontFamily: 'inherit',
             }}
           >
-            ✏️ Editar
+            Editar
           </button>
         )}
         <button
@@ -636,7 +624,7 @@ export default function ProjectPage() {
                 maxWidth: 120,
                 lineHeight: 1.5,
               }}>
-                ✅ Pronto para estágio
+                Pronto para estágio
               </div>
             )}
           </div>
@@ -670,7 +658,7 @@ export default function ProjectPage() {
                 borderRadius: 999, padding: '5px 14px', fontSize: 13, fontWeight: 700,
                 border: '1px solid rgba(234,179,8,0.25)',
               }}>
-                🎓 PAP
+                PAP
               </div>
             )}
           </div>
@@ -719,7 +707,7 @@ export default function ProjectPage() {
                   )}
                   {project.portfolio_url && (
                     <a href={project.portfolio_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(168,85,247,0.08)', border: '1px solid rgba(168,85,247,0.2)', color: '#c084fc', borderRadius: 8, padding: '6px 12px', fontSize: 13, fontWeight: 600 }}>
-                      🌐 Portfólio
+                      Portfólio
                     </a>
                   )}
                 </div>
@@ -738,14 +726,6 @@ export default function ProjectPage() {
           }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <div style={{
-                  width: 28, height: 28, borderRadius: 8,
-                  background: 'rgba(99,102,241,0.15)',
-                  border: '1px solid rgba(99,102,241,0.25)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14,
-                }}>
-                  ✨
-                </div>
                 <span style={{ fontSize: 11, fontWeight: 700, color: '#818cf8', textTransform: 'uppercase', letterSpacing: 1.2 }}>Resumo gerado por IA</span>
               </div>
               <button
@@ -763,7 +743,7 @@ export default function ProjectPage() {
                   fontFamily: 'inherit',
                 }}
               >
-                {regenerating ? '⏳ A gerar...' : regenCooldown > 0 ? `🕐 ${regenCooldown}s` : '🔄 Regenerar'}
+                {regenerating ? 'A gerar...' : regenCooldown > 0 ? `${regenCooldown}s` : 'Regenerar'}
               </button>
             </div>
             <p style={{ margin: 0, fontSize: 16, lineHeight: 1.8, color: '#cbd5f0' }}>{project.ai_description}</p>
@@ -774,9 +754,6 @@ export default function ProjectPage() {
         {highlights.length > 0 && (
           <div style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 16, padding: '22px 26px', marginBottom: 24, boxShadow: '0 2px 16px rgba(0,0,0,0.25)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-              <div style={{ width: 32, height: 32, borderRadius: 8, background: colors.yellowGlow, border: '1px solid rgba(234,179,8,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>
-                🏆
-              </div>
               <h3 style={{ margin: 0, fontSize: 11, fontWeight: 700, color: colors.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Destaques</h3>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -802,10 +779,7 @@ export default function ProjectPage() {
         {/* PAP details */}
         {isPap && (project.pap_supervisor || project.pap_date) && (
           <div style={{ background: colors.yellowGlow, border: '1px solid rgba(234,179,8,0.18)', borderRadius: 16, padding: '20px 24px', marginBottom: 12 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-              <span style={{ fontSize: 18 }}>🎓</span>
-              <h3 style={{ margin: 0, fontSize: 11, fontWeight: 700, color: colors.yellow, textTransform: 'uppercase', letterSpacing: 0.8 }}>Detalhes da PAP</h3>
-            </div>
+            <h3 style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 700, color: colors.yellow, textTransform: 'uppercase', letterSpacing: 0.8 }}>Detalhes da PAP</h3>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24 }}>
               {project.pap_supervisor && (
                 <div>
@@ -824,23 +798,20 @@ export default function ProjectPage() {
         )}
 
         {/* Project sections */}
-        <Section icon="🎯" title="Problema" content={project.problem} />
-        <Section icon="💡" title="Solução" content={project.solution} />
-        <Section icon="👥" title="Público-alvo" content={project.target_audience} />
-        <Section icon="⚙️" title="Funcionalidades" content={project.features} />
-        <Section icon="🛠️" title="Tecnologias" content={project.technologies} />
-        <Section icon="🧗" title="Desafios" content={project.challenges} />
-        <Section icon="📈" title="Resultados" content={project.results} />
-        <Section icon="🧠" title="Aprendizagens" content={project.learnings} />
+        <Section title="Problema" content={project.problem} />
+        <Section title="Solução" content={project.solution} />
+        <Section title="Público-alvo" content={project.target_audience} />
+        <Section title="Funcionalidades" content={project.features} />
+        <Section title="Tecnologias" content={project.technologies} />
+        <Section title="Desafios" content={project.challenges} />
+        <Section title="Resultados" content={project.results} />
+        <Section title="Aprendizagens" content={project.learnings} />
 
         {/* Missions */}
         <div style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 20, padding: '28px', marginBottom: 16, marginTop: 8, boxShadow: '0 4px 24px rgba(0,0,0,0.3)' }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 14 }}>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 5 }}>
-                <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(168,85,247,0.1)', border: '1px solid rgba(168,85,247,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>
-                  🎮
-                </div>
                 <h3 style={{ margin: 0, fontSize: 20, fontWeight: 800, letterSpacing: '-0.3px' }}>Missões</h3>
               </div>
               <p style={{ margin: 0, fontSize: 13, color: colors.muted, paddingLeft: 46 }}>Completa missões para melhorar o score</p>
@@ -883,10 +854,7 @@ export default function ProjectPage() {
           borderRadius: 18, padding: '32px 28px', marginTop: 32,
           boxShadow: '0 4px 24px rgba(0,0,0,0.3)',
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, background: colors.blueSubtle, border: '1px solid rgba(59,130,246,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>
-              🔗
-            </div>
+          <div style={{ marginBottom: 24 }}>
             <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, letterSpacing: '-0.2px' }}>Partilha o teu projeto</h3>
           </div>
           <div style={{ display: 'flex', gap: 36, flexWrap: 'wrap', alignItems: 'flex-start' }}>

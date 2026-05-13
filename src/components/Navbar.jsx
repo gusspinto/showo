@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 const C = {
@@ -24,6 +25,7 @@ const btnStyle = {
 
 export function Navbar({ children, showLinks = true }) {
   const navigate = useNavigate()
+  const [open, setOpen] = useState(false)
 
   return (
     <>
@@ -32,20 +34,71 @@ export function Navbar({ children, showLinks = true }) {
         .nav-logo { transition: opacity 0.15s; }
         .nav-logo:hover { opacity: 0.85; }
 
-        /* 3-column layout on desktop */
         .nav-left  { display: flex; align-items: center; gap: 2px; flex: 1; }
         .nav-mid   { display: flex; align-items: center; justify-content: center; }
         .nav-right { display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex: 1; }
 
-        /* Mobile: hide nav links, keep icon + CTA */
+        .ham-btn { display: none !important; }
+
         @media (max-width: 600px) {
           .nav-left  { display: none; }
           .nav-mid   { flex: 1; justify-content: flex-start; }
           .nav-right { flex: none; }
-          .nav-logo  { width: 120px !important; height: auto !important; }
+          .nav-logo  { width: 120px !important; }
           .showo-nav-pad { padding-left: 20px !important; padding-right: 20px !important; }
+          .ham-btn   { display: flex !important; }
         }
+
+        @media (min-width: 601px) and (max-width: 900px) {
+          .nav-logo { width: 130px !important; }
+        }
+
+        .mobile-drawer {
+          position: fixed;
+          top: 62px; left: 0; right: 0;
+          background: rgba(13,20,36,0.98);
+          border-bottom: 1px solid #1e3050;
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
+          padding: 8px 20px 16px;
+          z-index: 98;
+          display: flex;
+          flex-direction: column;
+          transform: translateY(-110%);
+          transition: transform 0.25s cubic-bezier(0.4,0,0.2,1);
+          box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+        }
+        .mobile-drawer.is-open {
+          transform: translateY(0);
+        }
+        .mobile-drawer-btn {
+          background: transparent;
+          border: none;
+          color: #7d93b0;
+          font-size: 15px;
+          font-weight: 500;
+          cursor: pointer;
+          padding: 14px 4px;
+          text-align: left;
+          font-family: inherit;
+          border-bottom: 1px solid #1e3050;
+          transition: color 0.15s;
+        }
+        .mobile-drawer-btn:last-child { border-bottom: none; }
+        .mobile-drawer-btn:hover { color: #e8f2ff; }
       `}</style>
+
+      {/* Mobile nav drawer */}
+      {showLinks && (
+        <div className={`mobile-drawer${open ? ' is-open' : ''}`}>
+          <button className="mobile-drawer-btn" onClick={() => { navigate('/explorar'); setOpen(false) }}>
+            Explorar
+          </button>
+          <button className="mobile-drawer-btn" onClick={() => { navigate('/ranking'); setOpen(false) }}>
+            Ranking
+          </button>
+        </div>
+      )}
 
       <nav
         className="showo-nav-pad"
@@ -65,7 +118,7 @@ export function Navbar({ children, showLinks = true }) {
           gap: 12,
         }}
       >
-        {/* Left — nav links */}
+        {/* Left — nav links (desktop) */}
         {showLinks && (
           <div className="nav-left">
             <button onClick={() => navigate('/explorar')} style={btnStyle} className="nav-btn">
@@ -77,7 +130,7 @@ export function Navbar({ children, showLinks = true }) {
           </div>
         )}
 
-        {/* Centre — logo mark */}
+        {/* Centre — logo */}
         <div className="nav-mid">
           <img
             src="/logo-3.png"
@@ -89,9 +142,51 @@ export function Navbar({ children, showLinks = true }) {
           />
         </div>
 
-        {/* Right — CTA + any injected children */}
+        {/* Right — CTA + hamburger */}
         <div className="nav-right">
           {children}
+          {showLinks && (
+            <button
+              className="ham-btn"
+              onClick={() => setOpen(o => !o)}
+              aria-label="Menu"
+              style={{
+                background: 'transparent',
+                border: `1px solid ${open ? '#3b82f6' : C.border}`,
+                borderRadius: 8,
+                width: 38, height: 38,
+                flexDirection: 'column',
+                alignItems: 'center', justifyContent: 'center',
+                gap: 5,
+                cursor: 'pointer',
+                padding: 0,
+                transition: 'border-color 0.2s',
+                flexShrink: 0,
+              }}
+            >
+              <span style={{
+                display: 'block', width: 18, height: 1.5,
+                background: open ? C.text : C.muted,
+                borderRadius: 1,
+                transition: 'background 0.2s, transform 0.22s',
+                transform: open ? 'translateY(6.5px) rotate(45deg)' : 'none',
+              }} />
+              <span style={{
+                display: 'block', width: 18, height: 1.5,
+                background: open ? C.text : C.muted,
+                borderRadius: 1,
+                transition: 'background 0.2s, opacity 0.22s',
+                opacity: open ? 0 : 1,
+              }} />
+              <span style={{
+                display: 'block', width: 18, height: 1.5,
+                background: open ? C.text : C.muted,
+                borderRadius: 1,
+                transition: 'background 0.2s, transform 0.22s',
+                transform: open ? 'translateY(-6.5px) rotate(-45deg)' : 'none',
+              }} />
+            </button>
+          )}
         </div>
       </nav>
     </>
