@@ -341,6 +341,55 @@ function Confetti() {
   )
 }
 
+const SECTION_LABELS = { cover: 'Introdução', problem: 'Problema', solution: 'Solução', features: 'Funcionalidades', technologies: 'Tecnologias', results: 'Resultados', learnings: 'Aprendizagens', closing: 'Encerramento' }
+
+function MembersPanel({ ownerName, members, colors }) {
+  if (!ownerName && members.length === 0) return null
+  const displayOwner = ownerName || 'Dono'
+  return (
+    <div style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 16, padding: '18px 22px', marginBottom: 24, boxShadow: '0 2px 16px rgba(0,0,0,0.2)' }}>
+      <h3 style={{ margin: '0 0 14px', fontSize: 11, fontWeight: 700, color: colors.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Equipa</h3>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {/* Owner */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg, #3b82f6, #4f46e5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
+            {displayOwner[0]?.toUpperCase()}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ fontSize: 14, fontWeight: 600, color: colors.text }}>{displayOwner}</span>
+            <span style={{ fontSize: 11, background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.25)', borderRadius: 5, padding: '1px 7px', color: '#60a5fa', fontWeight: 700 }}>Dono</span>
+          </div>
+        </div>
+        {/* Collaborators */}
+        {members.map(m => {
+          const name = m.profiles?.full_name || m.profiles?.username || 'Colaborador'
+          const sections = (m.sections ?? []).map(s => SECTION_LABELS[s]).filter(Boolean)
+          return (
+            <div key={m.user_id} style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+              <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg, #34d399, #059669)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
+                {name[0]?.toUpperCase()}
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: 14, fontWeight: 600, color: colors.text }}>{name}</span>
+                  <span style={{ fontSize: 11, background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.25)', borderRadius: 5, padding: '1px 7px', color: '#34d399', fontWeight: 700 }}>Colaborador</span>
+                </div>
+                {sections.length > 0 && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 5 }}>
+                    {sections.map(s => (
+                      <span key={s} style={{ fontSize: 11, color: colors.muted, background: 'rgba(255,255,255,0.04)', border: `1px solid ${colors.border}`, borderRadius: 4, padding: '1px 6px' }}>{s}</span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 export default function ProjectPage() {
   const { slug } = useParams()
   const navigate = useNavigate()
@@ -849,54 +898,7 @@ export default function ProjectPage() {
         )}
 
         {/* Members panel — show when there are collaborators */}
-        {(members.length > 0 || isOwner) && (() => {
-          const sectionLabels = { cover: 'Introdução', problem: 'Problema', solution: 'Solução', features: 'Funcionalidades', technologies: 'Tecnologias', results: 'Resultados', learnings: 'Aprendizagens', closing: 'Encerramento' }
-          const ownerName = project.creator_name || 'Dono'
-          return (
-            <div style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 16, padding: '18px 22px', marginBottom: 24, boxShadow: '0 2px 16px rgba(0,0,0,0.2)' }}>
-              <h3 style={{ margin: '0 0 14px', fontSize: 11, fontWeight: 700, color: colors.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Equipa</h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {/* Owner */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg, #3b82f6, #4f46e5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
-                    {ownerName[0]?.toUpperCase()}
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <span style={{ fontSize: 14, fontWeight: 600, color: colors.text }}>{ownerName}</span>
-                      <span style={{ fontSize: 11, background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.25)', borderRadius: 5, padding: '1px 7px', color: '#60a5fa', fontWeight: 700 }}>Dono</span>
-                    </div>
-                  </div>
-                </div>
-                {/* Collaborators */}
-                {members.map(m => {
-                  const name = m.profiles?.full_name || m.profiles?.username || 'Colaborador'
-                  const sections = (m.sections ?? []).map(s => sectionLabels[s]).filter(Boolean)
-                  return (
-                    <div key={m.user_id} style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-                      <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg, #34d399, #059669)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
-                        {name[0]?.toUpperCase()}
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                          <span style={{ fontSize: 14, fontWeight: 600, color: colors.text }}>{name}</span>
-                          <span style={{ fontSize: 11, background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.25)', borderRadius: 5, padding: '1px 7px', color: '#34d399', fontWeight: 700 }}>Colaborador</span>
-                        </div>
-                        {sections.length > 0 && (
-                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 5 }}>
-                            {sections.map(s => (
-                              <span key={s} style={{ fontSize: 11, color: colors.muted, background: 'rgba(255,255,255,0.04)', border: `1px solid ${colors.border}`, borderRadius: 4, padding: '1px 6px' }}>{s}</span>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-          )
-        })()}
+        <MembersPanel ownerName={project.creator_name} members={members} colors={colors} />
 
         {/* PAP details */}
         {isPap && (project.pap_supervisor || project.pap_date) && (
