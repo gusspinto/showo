@@ -36,7 +36,7 @@ function getDisplayName(user) {
   return user?.email?.split('@')[0] ?? ''
 }
 
-function UserChip({ user, onClick, onSignOut }) {
+function UserChip({ user, onClick, onSettings, onSignOut }) {
   const [open, setOpen] = useState(false)
   const initial = getInitial(user)
   const name = getDisplayName(user)
@@ -93,6 +93,14 @@ function UserChip({ user, onClick, onSignOut }) {
               onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
             >
               📂 Dashboard
+            </button>
+            <button
+              onClick={() => { onSettings(); setOpen(false) }}
+              style={{ ...dropItemStyle, color: C.text }}
+              onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.07)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+            >
+              ⚙️ Definições
             </button>
             <div style={{ height: 1, background: C.border, margin: '4px 6px' }} />
             <button
@@ -253,6 +261,7 @@ export function Navbar({ children, showLinks = true }) {
               <UserChip
                 user={user}
                 onClick={() => navigate('/dashboard')}
+                onSettings={() => navigate('/settings')}
                 onSignOut={handleSignOut}
               />
             ) : (

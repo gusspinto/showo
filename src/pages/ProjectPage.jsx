@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { Helmet } from 'react-helmet-async'
 import { QRCodeSVG } from 'qrcode.react'
 import { supabase } from '../lib/supabase'
 import { calculateScore } from '../lib/score'
@@ -513,6 +514,12 @@ export default function ProjectPage() {
   const internshipReady = score > 80 && !!project.technologies?.trim() && !!project.results?.trim()
   const isPap = project.is_pap || project.project_type === 'pap'
 
+  const isOwner = (
+    (user?.id && project.user_id && user.id === project.user_id) ||
+    (!project.edit_token && !project.user_id) ||
+    !!localStorage.getItem(`edit_token_${project.slug}`)
+  )
+
   const sortedChallenges = [...CHALLENGES].sort((a, b) => {
     const aCompleted = getChallengeStatus(a, project) === 'completed' ? 1 : 0
     const bCompleted = getChallengeStatus(b, project) === 'completed' ? 1 : 0
@@ -524,6 +531,19 @@ export default function ProjectPage() {
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: 'Inter, system-ui, sans-serif' }}>
+      <Helmet>
+        <title>{project.name} — Showo</title>
+        <meta name="description" content={project.ai_tagline || project.goal || `Projeto de ${project.creator_name || 'estudante'} no Showo`} />
+        <meta property="og:title" content={`${project.name} — Showo`} />
+        <meta property="og:description" content={project.ai_tagline || project.goal || `Projeto de ${project.creator_name || 'estudante'} no Showo`} />
+        <meta property="og:url" content={pageUrl} />
+        <meta property="og:type" content="website" />
+        {project.cover_url && <meta property="og:image" content={project.cover_url} />}
+        <meta name="twitter:card" content={project.cover_url ? 'summary_large_image' : 'summary'} />
+        <meta name="twitter:title" content={`${project.name} — Showo`} />
+        <meta name="twitter:description" content={project.ai_tagline || project.goal || `Projeto no Showo`} />
+        {project.cover_url && <meta name="twitter:image" content={project.cover_url} />}
+      </Helmet>
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes confetti-fall {
@@ -813,8 +833,8 @@ export default function ProjectPage() {
         <Section title="Resultados" content={project.results} />
         <Section title="Aprendizagens" content={project.learnings} />
 
-        {/* Missions */}
-        <div style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 20, padding: '28px', marginBottom: 16, marginTop: 8, boxShadow: '0 4px 24px rgba(0,0,0,0.3)' }}>
+        {/* Missions — only for owner */}
+        {isOwner && <div style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 20, padding: '28px', marginBottom: 16, marginTop: 8, boxShadow: '0 4px 24px rgba(0,0,0,0.3)' }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 14 }}>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 5 }}>
@@ -851,7 +871,7 @@ export default function ProjectPage() {
               <ChallengeCard key={challenge.id} challenge={challenge} project={project} onImprove={setEditModal} />
             ))}
           </div>
-        </div>
+        </div>}
 
         {/* Share */}
         <div style={{

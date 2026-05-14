@@ -201,11 +201,46 @@ export default function Dashboard() {
       <div style={{ maxWidth: 800, margin: '0 auto', padding: '44px 24px 80px' }}>
 
         {/* Header */}
-        <div style={{ marginBottom: 36 }}>
-          <h1 style={{ color: C.text, fontSize: 28, fontWeight: 800, margin: '0 0 4px', letterSpacing: '-0.5px' }}>
-            {greeting}
-          </h1>
-          <p style={{ color: C.muted, fontSize: 15, margin: 0 }}>{user.email}</p>
+        <div style={{ marginBottom: 36, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+          <div>
+            <h1 style={{ color: C.text, fontSize: 28, fontWeight: 800, margin: '0 0 4px', letterSpacing: '-0.5px' }}>
+              {greeting}
+            </h1>
+            <p style={{ color: C.muted, fontSize: 15, margin: 0 }}>{user.email}</p>
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button
+              onClick={async () => {
+                const { data } = await supabase.from('profiles').select('username').eq('id', user.id).single()
+                navigate(data?.username ? `/u/${data.username}` : `/u/${user.id}`)
+              }}
+              style={{
+                background: 'transparent', border: `1px solid ${C.border}`,
+                borderRadius: 8, padding: '8px 14px',
+                color: C.muted, fontSize: 13, fontWeight: 500,
+                cursor: 'pointer', fontFamily: 'Inter, sans-serif',
+                transition: 'border-color 0.15s, color 0.15s',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = '#2a4275'; e.currentTarget.style.color = C.text }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted }}
+            >
+              Ver perfil
+            </button>
+            <button
+              onClick={() => navigate('/settings')}
+              style={{
+                background: 'transparent', border: `1px solid ${C.border}`,
+                borderRadius: 8, padding: '8px 14px',
+                color: C.muted, fontSize: 13, fontWeight: 500,
+                cursor: 'pointer', fontFamily: 'Inter, sans-serif',
+                transition: 'border-color 0.15s, color 0.15s',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = '#2a4275'; e.currentTarget.style.color = C.text }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted }}
+            >
+              Definições
+            </button>
+          </div>
         </div>
 
         {/* Stats */}
