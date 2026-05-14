@@ -9,19 +9,19 @@ DROP POLICY IF EXISTS "Collaborator can respond to invite" ON public.project_col
 CREATE POLICY "Owner insert collaborators"
   ON public.project_collaborators FOR INSERT
   WITH CHECK (
-    EXISTS (SELECT 1 FROM public.projects WHERE id = project_id AND user_id = auth.uid())
+    EXISTS (SELECT 1 FROM public.projects WHERE id = project_id AND user_id = auth.uid()::text)
   );
 
 CREATE POLICY "Owner update collaborators"
   ON public.project_collaborators FOR UPDATE
   USING (
-    EXISTS (SELECT 1 FROM public.projects WHERE id = project_id AND user_id = auth.uid())
+    EXISTS (SELECT 1 FROM public.projects WHERE id = project_id AND user_id = auth.uid()::text)
   );
 
 CREATE POLICY "Owner delete collaborators"
   ON public.project_collaborators FOR DELETE
   USING (
-    EXISTS (SELECT 1 FROM public.projects WHERE id = project_id AND user_id = auth.uid())
+    EXISTS (SELECT 1 FROM public.projects WHERE id = project_id AND user_id = auth.uid()::text)
   );
 
 -- Collaborator: can only update their own status (accept/decline)

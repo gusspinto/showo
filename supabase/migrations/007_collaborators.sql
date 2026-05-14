@@ -20,7 +20,7 @@ CREATE POLICY "View if owner or collaborator"
     user_id = auth.uid() OR
     EXISTS (
       SELECT 1 FROM public.projects
-      WHERE id = project_id AND user_id = auth.uid()
+      WHERE id = project_id AND user_id = auth.uid()::text
     )
   );
 
@@ -30,6 +30,6 @@ CREATE POLICY "Owner manages collaborators"
   USING (
     EXISTS (
       SELECT 1 FROM public.projects
-      WHERE id = project_id AND user_id = auth.uid()
+      WHERE id = project_id AND user_id = auth.uid()::text
     )
   );
