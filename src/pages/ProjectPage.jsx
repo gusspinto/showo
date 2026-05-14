@@ -390,13 +390,14 @@ export default function ProjectPage() {
         supabase.from('projects').update({ score: s }).eq('id', data.id)
       }
 
-      // Check if logged-in user is a collaborator (not the owner)
+      // Check if logged-in user is an accepted collaborator (not the owner)
       if (user?.id && data.user_id && user.id !== data.user_id) {
         supabase
           .from('project_collaborators')
           .select('sections')
           .eq('project_id', data.id)
           .eq('user_id', user.id)
+          .eq('status', 'accepted')
           .single()
           .then(({ data: collab }) => {
             if (collab) setCollaboratorSections(collab.sections ?? [])
@@ -585,24 +586,26 @@ export default function ProjectPage() {
       )}
 
       <Navbar>
-        <button
-          onClick={() => setDefenseMode(true)}
-          style={{
-            background: 'rgba(251,191,36,0.08)',
-            border: '1px solid rgba(251,191,36,0.25)',
-            color: '#fbbf24',
-            borderRadius: 8, padding: '8px 14px',
-            fontSize: 13, fontWeight: 600,
-            cursor: 'pointer', fontFamily: 'inherit',
-            display: 'flex', alignItems: 'center', gap: 6,
-            transition: 'background 0.15s',
-          }}
-          onMouseEnter={e => e.currentTarget.style.background = 'rgba(251,191,36,0.14)'}
-          onMouseLeave={e => e.currentTarget.style.background = 'rgba(251,191,36,0.08)'}
-          title="Preparar a defesa do projeto"
-        >
-          🎓 Preparar defesa
-        </button>
+        {(isOwner || collaboratorSections !== null) && (
+          <button
+            onClick={() => setDefenseMode(true)}
+            style={{
+              background: 'rgba(251,191,36,0.08)',
+              border: '1px solid rgba(251,191,36,0.25)',
+              color: '#fbbf24',
+              borderRadius: 8, padding: '8px 14px',
+              fontSize: 13, fontWeight: 600,
+              cursor: 'pointer', fontFamily: 'inherit',
+              display: 'flex', alignItems: 'center', gap: 6,
+              transition: 'background 0.15s',
+            }}
+            onMouseEnter={e => e.currentTarget.style.background = 'rgba(251,191,36,0.14)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'rgba(251,191,36,0.08)'}
+            title="Preparar a defesa do projeto"
+          >
+            🎓 Preparar defesa
+          </button>
+        )}
         {project && isOwner && (
           <button
             onClick={() => {

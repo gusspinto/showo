@@ -634,11 +634,12 @@ const ALL_SECTIONS = [
 ]
 
 function GrupoPanel({ project }) {
+  const { user } = useAuth()
   const [search, setSearch]           = useState('')
   const [searchResult, setSearchResult] = useState(null)  // profile found
   const [searching, setSearching]     = useState(false)
   const [searchErr, setSearchErr]     = useState('')
-  const [collaborators, setCollaborators] = useState([])  // { user_id, sections, profiles }
+  const [collaborators, setCollaborators] = useState([])  // { id, user_id, status, sections, profiles }
   const [pendingSections, setPendingSections] = useState({}) // { user_id: [section_ids] }
   const [saving, setSaving]           = useState(false)
   const [saved, setSaved]             = useState(false)
@@ -648,7 +649,7 @@ function GrupoPanel({ project }) {
   async function loadCollaborators() {
     const { data } = await supabase
       .from('project_collaborators')
-      .select('user_id, sections, profiles(id, username, full_name)')
+      .select('id, user_id, status, sections, profiles(id, username, full_name)')
       .eq('project_id', project.id)
     if (data) {
       setCollaborators(data)
@@ -684,7 +685,9 @@ function GrupoPanel({ project }) {
     await supabase.from('project_collaborators').upsert({
       project_id: project.id,
       user_id: searchResult.id,
+      invited_by: user?.id,
       sections: [],
+      status: 'pending',
     })
     setSearchResult(null)
     setSearch('')
@@ -784,9 +787,13 @@ function GrupoPanel({ project }) {
           {collaborators.map(collab => {
             const name = collab.profiles?.full_name || collab.profiles?.username || 'Colega'
             const assigned = pendingSections[collab.user_id] ?? []
+            const isPending  = collab.status === 'pending'
+            const isDeclined = collab.status === 'declined'
+            const statusColor = isPending ? '#fbbf24' : isDeclined ? '#f87171' : C.green
+            const statusLabel = isPending ? '⏳ Convite pendente' : isDeclined ? '✕ Recusou o convite' : '✓ Aceite'
             return (
-              <div key={collab.user_id} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: '18px 20px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+              <div key={collab.user_id} style={{ background: C.card, border: `1px solid ${isDeclined ? 'rgba(248,113,113,0.2)' : C.border}`, borderRadius: 14, padding: '18px 20px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: isPending || isDeclined ? 6 : 14 }}>
                   <div>
                     <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{name}</div>
                     <div style={{ fontSize: 12, color: C.muted }}>@{collab.profiles?.username}</div>
@@ -798,30 +805,42 @@ function GrupoPanel({ project }) {
                     Remover
                   </button>
                 </div>
-                <p style={{ margin: '0 0 10px', fontSize: 11, fontWeight: 700, color: C.subtle, textTransform: 'uppercase', letterSpacing: 1 }}>
-                  Secções atribuídas ({assigned.length})
-                </p>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                  {ALL_SECTIONS.map(s => {
-                    const on = assigned.includes(s.id)
-                    return (
-                      <button
-                        key={s.id}
-                        onClick={() => toggleSection(collab.user_id, s.id)}
-                        style={{
-                          background: on ? 'rgba(59,130,246,0.12)' : 'transparent',
-                          border: `1px solid ${on ? 'rgba(59,130,246,0.4)' : C.border}`,
-                          borderRadius: 7, padding: '5px 10px',
-                          color: on ? '#60a5fa' : C.muted,
-                          fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
-                          transition: 'all 0.12s',
-                        }}
-                      >
-                        {s.icon} {s.label}
-                      </button>
-                    )
-                  })}
+
+                {/* Status badge */}
+                <div style={{ marginBottom: isPending || isDeclined ? 0 : 12 }}>
+                  <span style={{ fontSize: 12, color: statusColor, fontWeight: 600 }}>{statusLabel}</span>
+                  {isPending && <span style={{ fontSize: 12, color: C.subtle, marginLeft: 8 }}>— a aguardar que o colega aceite</span>}
                 </div>
+
+                {/* Section assignment — only if accepted */}
+                {!isPending && !isDeclined && (
+                  <>
+                    <p style={{ margin: '14px 0 10px', fontSize: 11, fontWeight: 700, color: C.subtle, textTransform: 'uppercase', letterSpacing: 1 }}>
+                      Secções atribuídas ({assigned.length})
+                    </p>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                      {ALL_SECTIONS.map(s => {
+                        const on = assigned.includes(s.id)
+                        return (
+                          <button
+                            key={s.id}
+                            onClick={() => toggleSection(collab.user_id, s.id)}
+                            style={{
+                              background: on ? 'rgba(59,130,246,0.12)' : 'transparent',
+                              border: `1px solid ${on ? 'rgba(59,130,246,0.4)' : C.border}`,
+                              borderRadius: 7, padding: '5px 10px',
+                              color: on ? '#60a5fa' : C.muted,
+                              fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+                              transition: 'all 0.12s',
+                            }}
+                          >
+                            {s.icon} {s.label}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </>
+                )}
               </div>
             )
           })}

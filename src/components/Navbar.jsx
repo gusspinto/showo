@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { supabase } from '../lib/supabase'
 
 const C = {
   bg: 'rgba(13, 20, 36, 0.88)',
@@ -34,6 +35,151 @@ function getDisplayName(user) {
   const name = user?.user_metadata?.full_name
   if (name) return name.split(' ')[0]   // first name only
   return user?.email?.split('@')[0] ?? ''
+}
+
+function InviteInbox({ userId }) {
+  const navigate = useNavigate()
+  const [open, setOpen]       = useState(false)
+  const [invites, setInvites] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [acting, setActing]   = useState({}) // { id: 'accepting'|'declining' }
+
+  useEffect(() => {
+    if (!userId) return
+    loadInvites()
+    // Poll for new invites every 30 seconds
+    const t = setInterval(loadInvites, 30000)
+    return () => clearInterval(t)
+  }, [userId])
+
+  async function loadInvites() {
+    const { data } = await supabase
+      .from('project_collaborators')
+      .select('id, project_id, sections, projects(id, name, slug), profiles!invited_by(username, full_name)')
+      .eq('user_id', userId)
+      .eq('status', 'pending')
+    setInvites(data ?? [])
+  }
+
+  async function respond(invite, status) {
+    setActing(a => ({ ...a, [invite.id]: status === 'accepted' ? 'accepting' : 'declining' }))
+    await supabase
+      .from('project_collaborators')
+      .update({ status })
+      .eq('id', invite.id)
+    setInvites(prev => prev.filter(i => i.id !== invite.id))
+    setActing(a => { const n = { ...a }; delete n[invite.id]; return n })
+    if (status === 'accepted') {
+      setOpen(false)
+      navigate(`/projeto/${invite.projects.slug}`)
+    }
+  }
+
+  const count = invites.length
+
+  return (
+    <div style={{ position: 'relative' }}>
+      <button
+        onClick={() => { setOpen(o => !o); if (!open) setLoading(false) }}
+        style={{
+          position: 'relative',
+          background: open ? 'rgba(59,130,246,0.1)' : 'transparent',
+          border: `1px solid ${open ? 'rgba(59,130,246,0.35)' : C.border}`,
+          borderRadius: 8, width: 36, height: 36,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          cursor: 'pointer', color: open ? '#60a5fa' : C.muted,
+          transition: 'all 0.15s',
+        }}
+        title="Convites de grupo"
+      >
+        {/* Bell icon */}
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+        {/* Badge */}
+        {count > 0 && (
+          <span style={{
+            position: 'absolute', top: -4, right: -4,
+            background: '#ef4444', borderRadius: '50%',
+            width: 16, height: 16, fontSize: 9, fontWeight: 800,
+            color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            border: '2px solid rgba(13,20,36,0.9)',
+          }}>
+            {count}
+          </span>
+        )}
+      </button>
+
+      {open && (
+        <>
+          <div style={{ position: 'fixed', inset: 0, zIndex: 98 }} onClick={() => setOpen(false)} />
+          <div style={{
+            position: 'absolute', top: 'calc(100% + 8px)', right: 0,
+            background: 'rgba(13,20,36,0.98)', border: `1px solid ${C.border}`,
+            borderRadius: 14, padding: '8px',
+            boxShadow: '0 8px 40px rgba(0,0,0,0.6)',
+            backdropFilter: 'blur(16px)',
+            zIndex: 99, width: 300,
+          }}>
+            <p style={{ margin: '6px 10px 10px', fontSize: 12, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>
+              Convites de grupo
+            </p>
+            {invites.length === 0 ? (
+              <div style={{ padding: '20px 12px', textAlign: 'center' }}>
+                <p style={{ margin: 0, color: C.muted, fontSize: 13 }}>Nenhum convite pendente</p>
+              </div>
+            ) : invites.map(invite => {
+              const invitedBy = invite.profiles?.full_name || invite.profiles?.username || 'alguém'
+              const projectName = invite.projects?.name || 'Projeto'
+              const isActing = !!acting[invite.id]
+              return (
+                <div key={invite.id} style={{
+                  background: 'rgba(59,130,246,0.05)', border: '1px solid rgba(59,130,246,0.15)',
+                  borderRadius: 10, padding: '12px 14px', marginBottom: 6,
+                }}>
+                  <p style={{ margin: '0 0 2px', fontSize: 14, fontWeight: 700, color: C.text }}>
+                    {projectName}
+                  </p>
+                  <p style={{ margin: '0 0 12px', fontSize: 12, color: C.muted }}>
+                    Convidado por {invitedBy}
+                  </p>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <button
+                      onClick={() => respond(invite, 'accepted')}
+                      disabled={isActing}
+                      style={{
+                        flex: 1, padding: '7px 0',
+                        background: 'linear-gradient(135deg, #3b82f6, #4f46e5)',
+                        border: 'none', borderRadius: 7,
+                        color: '#fff', fontSize: 12, fontWeight: 700,
+                        cursor: isActing ? 'default' : 'pointer', fontFamily: 'inherit',
+                      }}
+                    >
+                      {acting[invite.id] === 'accepting' ? '...' : '✓ Aceitar'}
+                    </button>
+                    <button
+                      onClick={() => respond(invite, 'declined')}
+                      disabled={isActing}
+                      style={{
+                        flex: 1, padding: '7px 0',
+                        background: 'transparent', border: '1px solid rgba(248,113,113,0.3)',
+                        borderRadius: 7,
+                        color: '#f87171', fontSize: 12, fontWeight: 600,
+                        cursor: isActing ? 'default' : 'pointer', fontFamily: 'inherit',
+                      }}
+                    >
+                      {acting[invite.id] === 'declining' ? '...' : 'Recusar'}
+                    </button>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </>
+      )}
+    </div>
+  )
 }
 
 function UserChip({ user, onClick, onProfile, onSettings, onSignOut }) {
@@ -270,13 +416,16 @@ export function Navbar({ children, showLinks = true }) {
           {/* Auth section */}
           <div className="nav-auth">
             {user ? (
-              <UserChip
-                user={user}
-                onClick={() => navigate('/dashboard')}
-                onProfile={profileUrl ? () => navigate(profileUrl) : null}
-                onSettings={() => navigate('/settings')}
-                onSignOut={handleSignOut}
-              />
+              <>
+                <InviteInbox userId={user.id} />
+                <UserChip
+                  user={user}
+                  onClick={() => navigate('/dashboard')}
+                  onProfile={profileUrl ? () => navigate(profileUrl) : null}
+                  onSettings={() => navigate('/settings')}
+                  onSignOut={handleSignOut}
+                />
+              </>
             ) : (
               <>
                 <button onClick={() => navigate('/login')} style={btnStyle} className="nav-btn">
