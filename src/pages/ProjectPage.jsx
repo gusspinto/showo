@@ -584,9 +584,9 @@ export default function ProjectPage() {
           }}
           onMouseEnter={e => e.currentTarget.style.background = 'rgba(251,191,36,0.14)'}
           onMouseLeave={e => e.currentTarget.style.background = 'rgba(251,191,36,0.08)'}
-          title="Apresentar projeto em modo fullscreen"
+          title="Preparar a defesa do projeto"
         >
-          ▶ Apresentar
+          🎓 Preparar defesa
         </button>
         {project && isOwner && (
           <button
