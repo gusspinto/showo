@@ -68,19 +68,32 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [notConfirmed, setNotConfirmed] = useState(false)
+  const [resendState, setResendState] = useState('idle') // 'idle' | 'sending' | 'sent'
   const [emailFocused, setEmailFocused] = useState(false)
 
   async function handleSubmit(e) {
     e.preventDefault()
     setError('')
+    setNotConfirmed(false)
     setLoading(true)
     const { error: err } = await supabase.auth.signInWithPassword({ email, password })
     setLoading(false)
     if (err) {
-      setError('Email ou palavra-passe incorretos.')
+      if (err.message?.toLowerCase().includes('email not confirmed')) {
+        setNotConfirmed(true)
+      } else {
+        setError('Email ou palavra-passe incorretos.')
+      }
     } else {
       navigate('/dashboard')
     }
+  }
+
+  async function resendConfirmation() {
+    setResendState('sending')
+    await supabase.auth.resend({ type: 'signup', email })
+    setResendState('sent')
   }
 
   return (
@@ -126,6 +139,36 @@ export default function Login() {
             {error && (
               <div style={{ background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.25)', borderRadius: 8, padding: '10px 14px', color: C.error, fontSize: 14 }}>
                 {error}
+              </div>
+            )}
+
+            {notConfirmed && (
+              <div style={{ background: 'rgba(251,191,36,0.07)', border: '1px solid rgba(251,191,36,0.25)', borderRadius: 10, padding: '14px 16px' }}>
+                <p style={{ margin: '0 0 10px', color: '#fbbf24', fontSize: 14, fontWeight: 600 }}>
+                  ✉️ Email ainda não confirmado
+                </p>
+                <p style={{ margin: '0 0 12px', color: '#7d93b0', fontSize: 13, lineHeight: 1.5 }}>
+                  Confirma o teu email antes de entrar. Se o link expirou, envia um novo.
+                </p>
+                {resendState === 'sent' ? (
+                  <p style={{ margin: 0, color: '#34d399', fontSize: 13, fontWeight: 600 }}>
+                    ✓ Novo email enviado! Verifica a tua caixa de entrada.
+                  </p>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={resendConfirmation}
+                    disabled={resendState === 'sending' || !email}
+                    style={{
+                      background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.3)',
+                      borderRadius: 7, padding: '8px 16px',
+                      color: '#fbbf24', fontSize: 13, fontWeight: 600,
+                      cursor: email ? 'pointer' : 'default', fontFamily: 'inherit',
+                    }}
+                  >
+                    {resendState === 'sending' ? 'A enviar...' : 'Reenviar email de confirmação'}
+                  </button>
+                )}
               </div>
             )}
 
