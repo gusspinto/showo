@@ -253,17 +253,26 @@ function hasContent(project, id) {
   return !!map[id]
 }
 
+// Estimated minutes per section
+const SECTION_TIMES = { cover: 1, problem: 2, solution: 2, features: 3, technologies: 2, results: 2, learnings: 2, closing: 1 }
+
 function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose }) {
   const sections = SECTIONS.filter(s => hasContent(project, s.id))
-  const [current, setCurrent]   = useState(0)
-  const [checked, setChecked]   = useState({})   // { sectionId_pointIdx: bool }
-  const [timer, setTimer]       = useState(0)
-  const [timerOn, setTimerOn]   = useState(false)
-  const timerRef = useRef(null)
+  const totalMins = sections.reduce((acc, s) => acc + (SECTION_TIMES[s.id] || 2), 0)
 
-  const section = sections[current]
-  const accent  = section?.accent || C.blue
+  const [started, setStarted]     = useState(false)
+  const [current, setCurrent]     = useState(0)
+  const [checked, setChecked]     = useState({})   // { sectionId_pointIdx: bool }
+  const [showNote, setShowNote]   = useState(false) // toggle full speaker note
+  const [timer, setTimer]         = useState(0)
+  const [timerOn, setTimerOn]     = useState(false)
+  const timerRef = useRef(null)
+  const touchStartX = useRef(null)
+
+  const section   = sections[current]
+  const accent    = section?.accent || C.blue
   const keyPoints = aiData?.key_points?.[section?.id] ?? []
+  const speakerNote = aiData?.slide_notes?.[section?.id] ?? ''
 
   useEffect(() => {
     if (timerOn) { timerRef.current = setInterval(() => setTimer(t => t + 1), 1000) }
@@ -273,45 +282,142 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose 
 
   useEffect(() => {
     function onKey(e) {
+      if (!started) return
       if (e.key === 'ArrowRight') next()
       if (e.key === 'ArrowLeft')  prev()
       if (e.key === 'Escape') onClose()
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [current])
+  }, [current, started])
 
-  function next() { if (current < sections.length - 1) { setCurrent(c => c + 1); setChecked({}) } }
-  function prev() { if (current > 0) { setCurrent(c => c - 1); setChecked({}) } }
+  function next() {
+    if (current < sections.length - 1) {
+      setCurrent(c => c + 1)
+      setChecked({})
+      setShowNote(false)
+    }
+  }
+  function prev() {
+    if (current > 0) {
+      setCurrent(c => c - 1)
+      setChecked({})
+      setShowNote(false)
+    }
+  }
 
   function fmt(s) {
     const m = Math.floor(s / 60), sec = s % 60
     return `${m}:${String(sec).padStart(2,'0')}`
   }
 
-  const checkedCount = keyPoints.filter((_, i) => checked[`${section.id}_${i}`]).length
-  const allChecked   = keyPoints.length > 0 && checkedCount === keyPoints.length
+  function handleTouchStart(e) { touchStartX.current = e.touches[0].clientX }
+  function handleTouchEnd(e) {
+    if (touchStartX.current === null) return
+    const dx = e.changedTouches[0].clientX - touchStartX.current
+    if (dx < -50) next()
+    if (dx >  50) prev()
+    touchStartX.current = null
+  }
 
+  const checkedCount = keyPoints.filter((_, i) => checked[`${section?.id}_${i}`]).length
+  const allChecked   = keyPoints.length > 0 && checkedCount === keyPoints.length
+  const sectionMins  = SECTION_TIMES[section?.id] || 2
+
+  // ── Start screen ─────────────────────────────────────────────────────────
+  if (!started) {
+    const juryCount = aiData?.jury_questions?.length ?? 0
+    return (
+      <div style={{ position: 'fixed', inset: 0, zIndex: 10000, background: '#060c18', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: 'Inter, system-ui, sans-serif', color: C.text, padding: 24 }}>
+        <style>{`@keyframes spin{to{transform:rotate(360deg)}} @keyframes pop{0%{transform:scale(0.92)}60%{transform:scale(1.04)}100%{transform:scale(1)}} @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}`}</style>
+
+        <div style={{ maxWidth: 360, width: '100%', textAlign: 'center', animation: 'fadeUp 0.3s ease-out' }}>
+          {/* Icon */}
+          <div style={{ width: 72, height: 72, borderRadius: 20, background: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 34, margin: '0 auto 20px' }}>
+            🎤
+          </div>
+
+          <h2 style={{ fontSize: 24, fontWeight: 800, margin: '0 0 8px', letterSpacing: '-0.4px' }}>Guia do Apresentador</h2>
+          <p style={{ fontSize: 15, color: C.muted, margin: '0 0 32px', lineHeight: 1.6 }}>
+            Usa este guia no teu telemóvel enquanto apresentas no Canva ou PowerPoint.
+          </p>
+
+          {/* Stats */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 32 }}>
+            {[
+              { n: sections.length, label: 'secções' },
+              { n: `~${totalMins}m`, label: 'duração' },
+              { n: juryCount || '—', label: 'perguntas' },
+            ].map(({ n, label }) => (
+              <div key={label} style={{ background: '#0d1829', border: '1px solid #1e3050', borderRadius: 12, padding: '14px 8px' }}>
+                <div style={{ fontSize: 22, fontWeight: 800, color: C.text }}>{n}</div>
+                <div style={{ fontSize: 11, color: C.subtle, marginTop: 2 }}>{label}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Tips */}
+          <div style={{ background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.18)', borderRadius: 12, padding: '14px 16px', marginBottom: 28, textAlign: 'left' }}>
+            <p style={{ margin: '0 0 6px', fontSize: 11, fontWeight: 700, color: '#fbbf24', textTransform: 'uppercase', letterSpacing: 1 }}>Antes de começar</p>
+            {['Coloca o telemóvel em silêncio 🔇', 'Abre o teu Canva/PowerPoint no PC', 'Mantém este guia no telemóvel'].map(tip => (
+              <p key={tip} style={{ margin: '4px 0 0', fontSize: 13, color: C.muted }}>· {tip}</p>
+            ))}
+          </div>
+
+          {loadingAI && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center', marginBottom: 16 }}>
+              <div style={{ width: 14, height: 14, border: '2px solid #1e3050', borderTop: '2px solid #3b82f6', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+              <span style={{ fontSize: 13, color: C.muted }}>A preparar pontos-chave com IA...</span>
+            </div>
+          )}
+
+          <button
+            onClick={() => { setStarted(true); setTimerOn(true) }}
+            style={{
+              width: '100%', padding: '16px 0',
+              background: 'linear-gradient(135deg, #3b82f6, #4f46e5)',
+              border: 'none', borderRadius: 14,
+              color: '#fff', fontSize: 17, fontWeight: 700,
+              cursor: 'pointer', fontFamily: 'inherit',
+              boxShadow: '0 8px 32px rgba(59,130,246,0.4)',
+            }}
+          >
+            Começar apresentação →
+          </button>
+
+          <button onClick={onClose} style={{ marginTop: 14, background: 'none', border: 'none', color: C.subtle, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>
+            Voltar atrás
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // ── Active guide ──────────────────────────────────────────────────────────
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 10000, background: '#060c18', display: 'flex', flexDirection: 'column', fontFamily: 'Inter, system-ui, sans-serif', color: C.text }}>
+    <div
+      style={{ position: 'fixed', inset: 0, zIndex: 10000, background: '#060c18', display: 'flex', flexDirection: 'column', fontFamily: 'Inter, system-ui, sans-serif', color: C.text }}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
       <style>{`@keyframes spin{to{transform:rotate(360deg)}} @keyframes pop{0%{transform:scale(0.92)}60%{transform:scale(1.04)}100%{transform:scale(1)}}`}</style>
 
       {/* Top bar */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 20px', borderBottom: '1px solid #0f1e35', flexShrink: 0, background: '#07101e' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          {/* Timer */}
+          {/* Timer — tap to pause/resume */}
           <button
             onClick={() => setTimerOn(s => !s)}
             style={{ background: timerOn ? `${accent}18` : 'rgba(255,255,255,0.04)', border: `1px solid ${timerOn ? accent + '44' : '#1e3050'}`, borderRadius: 8, padding: '6px 12px', color: timerOn ? accent : C.subtle, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', minWidth: 60, textAlign: 'center' }}
           >
             {fmt(timer)}
           </button>
-          <span style={{ fontSize: 12, color: C.subtle }}>{project.name}</span>
+          <span style={{ fontSize: 12, color: C.subtle, maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{project.name}</span>
         </div>
         {/* Section dots */}
         <div style={{ display: 'flex', gap: 5 }}>
           {sections.map((s, i) => (
-            <button key={s.id} onClick={() => { setCurrent(i); setChecked({}) }}
+            <button key={s.id} onClick={() => { setCurrent(i); setChecked({}); setShowNote(false) }}
               style={{ width: i === current ? 18 : 6, height: 6, borderRadius: 3, border: 'none', cursor: 'pointer', padding: 0, background: i === current ? accent : i < current ? '#2a4070' : '#1e3050', transition: 'all 0.2s' }}
             />
           ))}
@@ -320,24 +426,30 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose 
       </div>
 
       {/* Section header */}
-      <div key={section.id} style={{ padding: '28px 24px 0', flexShrink: 0, animation: 'pop 0.25s ease-out' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-          <span style={{ width: 40, height: 40, borderRadius: 12, background: `${accent}18`, border: `1px solid ${accent}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>{section.icon}</span>
-          <div>
-            <div style={{ fontSize: 11, fontWeight: 700, color: accent, textTransform: 'uppercase', letterSpacing: 1.5 }}>
-              {current + 1} de {sections.length}
+      <div key={section.id} style={{ padding: '22px 24px 0', flexShrink: 0, animation: 'pop 0.25s ease-out' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ width: 40, height: 40, borderRadius: 12, background: `${accent}18`, border: `1px solid ${accent}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>{section.icon}</span>
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: accent, textTransform: 'uppercase', letterSpacing: 1.5 }}>
+                {current + 1} / {sections.length}
+              </div>
+              <div style={{ fontSize: 21, fontWeight: 800, color: C.text, letterSpacing: '-0.3px', lineHeight: 1.2 }}>{section.label}</div>
             </div>
-            <div style={{ fontSize: 22, fontWeight: 800, color: C.text, letterSpacing: '-0.3px', lineHeight: 1.2 }}>{section.label}</div>
+          </div>
+          {/* Time estimate badge */}
+          <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid #1e3050', borderRadius: 8, padding: '4px 10px', textAlign: 'center' }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: C.muted }}>~{sectionMins}m</div>
           </div>
         </div>
         {/* Progress bar */}
-        <div style={{ height: 3, background: '#1e3050', borderRadius: 2, overflow: 'hidden', marginTop: 12 }}>
+        <div style={{ height: 3, background: '#1e3050', borderRadius: 2, overflow: 'hidden', marginTop: 8 }}>
           <div style={{ height: '100%', background: accent, borderRadius: 2, width: `${((current + 1) / sections.length) * 100}%`, transition: 'width 0.3s' }} />
         </div>
       </div>
 
-      {/* Key points */}
-      <div style={{ flex: 1, overflow: 'auto', padding: '20px 24px' }}>
+      {/* Key points + speaker note */}
+      <div style={{ flex: 1, overflow: 'auto', padding: '18px 24px' }}>
         {loadingAI ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {[0,1,2].map(i => (
@@ -370,20 +482,19 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose 
                     borderRadius: 14, padding: '16px 18px', cursor: 'pointer',
                     textAlign: 'left', fontFamily: 'inherit',
                     transition: 'all 0.15s',
-                    animation: done ? 'pop 0.2s ease-out' : 'none',
                   }}
                 >
                   <span style={{
-                    width: 26, height: 26, borderRadius: 8, flexShrink: 0,
+                    width: 28, height: 28, borderRadius: 8, flexShrink: 0,
                     background: done ? accent : 'rgba(255,255,255,0.04)',
                     border: `1.5px solid ${done ? accent : '#2a4070'}`,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 12, color: done ? '#fff' : C.subtle, fontWeight: 700,
+                    fontSize: 13, color: done ? '#fff' : C.subtle, fontWeight: 700,
                     transition: 'all 0.15s',
                   }}>
                     {done ? '✓' : i + 1}
                   </span>
-                  <span style={{ fontSize: 16, fontWeight: done ? 500 : 600, color: done ? C.subtle : C.text, lineHeight: 1.4, textDecoration: done ? 'line-through' : 'none', transition: 'all 0.15s' }}>
+                  <span style={{ fontSize: 16, fontWeight: done ? 400 : 600, color: done ? C.subtle : C.text, lineHeight: 1.4, textDecoration: done ? 'line-through' : 'none', transition: 'all 0.15s' }}>
                     {point}
                   </span>
                 </button>
@@ -391,24 +502,41 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose 
             })}
 
             {allChecked && (
-              <div style={{ marginTop: 8, background: `${accent}0d`, border: `1px solid ${accent}30`, borderRadius: 12, padding: '14px 18px', textAlign: 'center', animation: 'pop 0.3s ease-out' }}>
+              <div style={{ background: `${accent}0d`, border: `1px solid ${accent}30`, borderRadius: 12, padding: '14px 18px', textAlign: 'center', animation: 'pop 0.3s ease-out' }}>
                 <span style={{ fontSize: 14, fontWeight: 700, color: accent }}>Secção completa — avança! →</span>
+              </div>
+            )}
+
+            {/* Speaker note toggle */}
+            {speakerNote && (
+              <div style={{ marginTop: 4 }}>
+                <button
+                  onClick={() => setShowNote(s => !s)}
+                  style={{ background: 'transparent', border: `1px solid ${showNote ? '#2a4275' : '#1e3050'}`, borderRadius: 9, padding: '7px 14px', color: showNote ? '#60a5fa' : C.subtle, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s' }}
+                >
+                  {showNote ? '▲ Esconder nota' : '▼ Ver nota completa'}
+                </button>
+                {showNote && (
+                  <div style={{ marginTop: 10, background: 'rgba(59,130,246,0.05)', border: '1px solid rgba(59,130,246,0.15)', borderRadius: 12, padding: '14px 16px', animation: 'pop 0.2s ease-out' }}>
+                    <p style={{ margin: 0, fontSize: 14, color: '#93c5fd', lineHeight: 1.75 }}>{speakerNote}</p>
+                  </div>
+                )}
               </div>
             )}
           </div>
         ) : (
           /* No AI data — show raw content as fallback */
           <div style={{ background: '#0d1829', border: '1px solid #1e3050', borderRadius: 12, padding: '18px' }}>
-            <p style={{ margin: '0 0 6px', fontSize: 11, fontWeight: 700, color: C.subtle, textTransform: 'uppercase', letterSpacing: 1 }}>Conteúdo</p>
+            <p style={{ margin: '0 0 8px', fontSize: 11, fontWeight: 700, color: C.subtle, textTransform: 'uppercase', letterSpacing: 1 }}>Conteúdo</p>
             <p style={{ margin: 0, fontSize: 15, color: C.muted, lineHeight: 1.7 }}>
-              {section.id === 'cover'   && (project.ai_tagline || project.goal || project.name)}
-              {section.id === 'problem' && project.problem}
-              {section.id === 'solution' && project.solution}
-              {section.id === 'features' && project.features}
+              {section.id === 'cover'        && (project.ai_tagline || project.goal || project.name)}
+              {section.id === 'problem'      && project.problem}
+              {section.id === 'solution'     && project.solution}
+              {section.id === 'features'     && project.features}
               {section.id === 'technologies' && project.technologies}
-              {section.id === 'results' && project.results}
-              {section.id === 'learnings' && project.learnings}
-              {section.id === 'closing' && 'Agradece ao júri e abre para perguntas.'}
+              {section.id === 'results'      && project.results}
+              {section.id === 'learnings'    && project.learnings}
+              {section.id === 'closing'      && 'Agradece ao júri e abre para perguntas.'}
             </p>
           </div>
         )}
@@ -426,7 +554,7 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose 
           disabled={current === sections.length - 1}
           style={{ flex: 3, padding: '16px 0', background: current === sections.length - 1 ? 'rgba(255,255,255,0.03)' : `linear-gradient(135deg, ${accent}, ${accent}bb)`, border: 'none', borderRadius: 14, color: current === sections.length - 1 ? '#1e3050' : '#fff', fontSize: 16, fontWeight: 700, cursor: current === sections.length - 1 ? 'default' : 'pointer', fontFamily: 'inherit', boxShadow: current === sections.length - 1 ? 'none' : `0 4px 20px ${accent}44` }}
         >
-          {current === sections.length - 1 ? 'Fim' : 'Próxima secção →'}
+          {current === sections.length - 1 ? '🎓 Fim' : 'Próxima secção →'}
         </button>
       </div>
     </div>
@@ -504,7 +632,7 @@ export default function DefenseMode({ project, isOwner, onClose }) {
           {tabs.map(t => (
             <button
               key={t.id}
-              onClick={() => t.id === 'guide' ? setGuideMode(true) : setTab(t.id)}
+              onClick={() => setTab(t.id)}
               style={{
                 background: tab === t.id ? 'rgba(59,130,246,0.12)' : 'transparent',
                 border: `1px solid ${tab === t.id ? 'rgba(59,130,246,0.35)' : C.border}`,
@@ -528,6 +656,40 @@ export default function DefenseMode({ project, isOwner, onClose }) {
           )}
           {tab === 'notes' && isOwner && <NotesPanel aiData={aiData} loadingAI={loadingAI} aiError={aiError} onRetry={loadAI} />}
           {tab === 'jury'  && isOwner && <JuryPanel  aiData={aiData} loadingAI={loadingAI} aiError={aiError} onRetry={loadAI} />}
+          {tab === 'guide' && (
+            <div>
+              {/* Preview card */}
+              <div style={{ background: 'linear-gradient(135deg, rgba(59,130,246,0.08), rgba(79,70,229,0.06))', border: '1px solid rgba(59,130,246,0.2)', borderRadius: 16, padding: '22px 24px', marginBottom: 20 }}>
+                <div style={{ fontSize: 28, marginBottom: 10 }}>📱</div>
+                <h3 style={{ margin: '0 0 8px', fontSize: 16, fontWeight: 800, color: C.text }}>Guia do Apresentador</h3>
+                <p style={{ margin: '0 0 16px', fontSize: 14, color: C.muted, lineHeight: 1.6 }}>
+                  Um guia no telemóvel enquanto apresentas no Canva ou PowerPoint. Acompanha as tuas secções, faz check dos pontos-chave e consulta o que dizer se ficares em branco.
+                </p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
+                  {['✓ Pontos-chave interativos', '✓ Nota completa por secção', '✓ Temporizador', '✓ Navegação por swipe'].map(f => (
+                    <span key={f} style={{ background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.18)', borderRadius: 6, padding: '4px 10px', fontSize: 12, color: '#93c5fd' }}>{f}</span>
+                  ))}
+                </div>
+                <button
+                  onClick={() => setGuideMode(true)}
+                  style={{
+                    width: '100%', padding: '14px 0',
+                    background: 'linear-gradient(135deg, #3b82f6, #4f46e5)',
+                    border: 'none', borderRadius: 12,
+                    color: '#fff', fontSize: 15, fontWeight: 700,
+                    cursor: 'pointer', fontFamily: 'inherit',
+                    boxShadow: '0 6px 24px rgba(59,130,246,0.35)',
+                  }}
+                >
+                  Abrir guia →
+                </button>
+              </div>
+
+              <p style={{ fontSize: 12, color: C.subtle, textAlign: 'center', margin: 0 }}>
+                💡 Abre num segundo ecrã ou telemóvel durante a apresentação real
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>
