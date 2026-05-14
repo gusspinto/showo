@@ -39,39 +39,75 @@ function getDisplayName(user) {
 
 function InviteInbox({ userId }) {
   const navigate = useNavigate()
-  const [open, setOpen]       = useState(false)
+  const [open, setOpen]     = useState(false)
   const [invites, setInvites] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [acting, setActing]   = useState({}) // { id: 'accepting'|'declining' }
+  const [acting, setActing] = useState({})
 
   useEffect(() => {
     if (!userId) return
     loadInvites()
-    // Poll for new invites every 30 seconds
-    const t = setInterval(loadInvites, 30000)
+    const t = setInterval(loadInvites, 20000)
     return () => clearInterval(t)
   }, [userId])
 
   async function loadInvites() {
-    const { data } = await supabase
+    // Step 1: get raw invite rows (no joins — avoids PostgREST ambiguity)
+    const { data: rows, error } = await supabase
       .from('project_collaborators')
-      .select('id, project_id, sections, projects(id, name, slug), profiles!invited_by(username, full_name)')
+      .select('id, project_id, invited_by, sections')
       .eq('user_id', userId)
       .eq('status', 'pending')
-    setInvites(data ?? [])
+
+    if (error || !rows?.length) { setInvites([]); return }
+
+    // Step 2: fetch project names
+    const projectIds = [...new Set(rows.map(r => r.project_id))]
+    const { data: projects } = await supabase
+      .from('projects')
+      .select('id, name, slug')
+      .in('id', projectIds)
+
+    // Step 3: fetch inviter usernames
+    const inviterIds = [...new Set(rows.map(r => r.invited_by).filter(Boolean))]
+    let inviters = []
+    if (inviterIds.length) {
+      const { data } = await supabase
+        .from('profiles')
+        .select('id, username, full_name')
+        .in('id', inviterIds)
+      inviters = data ?? []
+    }
+
+    const enriched = rows.map(r => ({
+      ...r,
+      projectName: projects?.find(p => p.id === r.project_id)?.name ?? 'Projeto',
+      projectSlug: projects?.find(p => p.id === r.project_id)?.slug ?? '',
+      inviterName: inviters.find(p => p.id === r.invited_by)?.full_name
+        || inviters.find(p => p.id === r.invited_by)?.username
+        || null,
+    }))
+    setInvites(enriched)
   }
 
-  async function respond(invite, status) {
-    setActing(a => ({ ...a, [invite.id]: status === 'accepted' ? 'accepting' : 'declining' }))
-    await supabase
+  async function respond(invite, newStatus) {
+    setActing(a => ({ ...a, [invite.id]: newStatus }))
+    const { error } = await supabase
       .from('project_collaborators')
-      .update({ status })
+      .update({ status: newStatus })
       .eq('id', invite.id)
+      .eq('user_id', userId)   // safety: only update own rows
+
+    if (error) {
+      console.error('Invite respond error:', error)
+      setActing(a => { const n = { ...a }; delete n[invite.id]; return n })
+      return
+    }
+
     setInvites(prev => prev.filter(i => i.id !== invite.id))
     setActing(a => { const n = { ...a }; delete n[invite.id]; return n })
-    if (status === 'accepted') {
+    if (newStatus === 'accepted' && invite.projectSlug) {
       setOpen(false)
-      navigate(`/projeto/${invite.projects.slug}`)
+      navigate(`/projeto/${invite.projectSlug}`)
     }
   }
 
@@ -130,8 +166,8 @@ function InviteInbox({ userId }) {
                 <p style={{ margin: 0, color: C.muted, fontSize: 13 }}>Nenhum convite pendente</p>
               </div>
             ) : invites.map(invite => {
-              const invitedBy = invite.profiles?.full_name || invite.profiles?.username || 'alguém'
-              const projectName = invite.projects?.name || 'Projeto'
+              const invitedBy = invite.inviterName || 'um colega'
+              const projectName = invite.projectName || 'Projeto'
               const isActing = !!acting[invite.id]
               return (
                 <div key={invite.id} style={{
@@ -156,7 +192,7 @@ function InviteInbox({ userId }) {
                         cursor: isActing ? 'default' : 'pointer', fontFamily: 'inherit',
                       }}
                     >
-                      {acting[invite.id] === 'accepting' ? '...' : '✓ Aceitar'}
+                      {acting[invite.id] === 'accepted' ? '...' : '✓ Aceitar'}
                     </button>
                     <button
                       onClick={() => respond(invite, 'declined')}
@@ -169,7 +205,7 @@ function InviteInbox({ userId }) {
                         cursor: isActing ? 'default' : 'pointer', fontFamily: 'inherit',
                       }}
                     >
-                      {acting[invite.id] === 'declining' ? '...' : 'Recusar'}
+                      {acting[invite.id] === 'declined' ? '...' : 'Recusar'}
                     </button>
                   </div>
                 </div>
