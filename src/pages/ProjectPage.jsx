@@ -343,9 +343,19 @@ function Confetti() {
 
 const SECTION_LABELS = { cover: 'Introdução', problem: 'Problema', solution: 'Solução', features: 'Funcionalidades', technologies: 'Tecnologias', results: 'Resultados', learnings: 'Aprendizagens', closing: 'Encerramento' }
 
-function MembersPanel({ ownerName, members, colors }) {
+function MembersPanel({ ownerName, members, colors, isOwner }) {
   if (!ownerName && members.length === 0) return null
   const displayOwner = ownerName || 'Dono'
+
+  const statusCfg = {
+    accepted: { label: 'Colaborador', color: '#34d399', bg: 'rgba(52,211,153,0.1)', border: 'rgba(52,211,153,0.25)', avatar: 'linear-gradient(135deg,#34d399,#059669)', dim: false },
+    pending:  { label: '⏳ Pendente', color: '#eab308', bg: 'rgba(234,179,8,0.1)',  border: 'rgba(234,179,8,0.25)',  avatar: 'linear-gradient(135deg,#ca8a04,#92400e)', dim: true  },
+    declined: { label: '✕ Recusou',  color: '#f87171', bg: 'rgba(248,113,113,0.1)', border: 'rgba(248,113,113,0.25)', avatar: 'linear-gradient(135deg,#ef4444,#b91c1c)', dim: true  },
+  }
+
+  // For non-owners, only show accepted; already filtered at query level but guard here too
+  const visibleMembers = isOwner ? members : members.filter(m => m.status === 'accepted')
+
   return (
     <div style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 16, padding: '18px 22px', boxShadow: '0 2px 16px rgba(0,0,0,0.2)' }}>
       <h3 style={{ margin: '0 0 14px', fontSize: 11, fontWeight: 700, color: colors.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Equipa</h3>
@@ -361,20 +371,21 @@ function MembersPanel({ ownerName, members, colors }) {
           </div>
         </div>
         {/* Collaborators */}
-        {members.map(m => {
+        {visibleMembers.map(m => {
           const name = m.profiles?.full_name || m.profiles?.username || 'Colaborador'
           const sections = (m.sections ?? []).map(s => SECTION_LABELS[s]).filter(Boolean)
+          const cfg = statusCfg[m.status] || statusCfg.accepted
           return (
-            <div key={m.user_id} style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-              <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg, #34d399, #059669)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
+            <div key={m.user_id} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, opacity: cfg.dim ? 0.65 : 1 }}>
+              <div style={{ width: 32, height: 32, borderRadius: '50%', background: cfg.avatar, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
                 {name[0]?.toUpperCase()}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                   <span style={{ fontSize: 14, fontWeight: 600, color: colors.text }}>{name}</span>
-                  <span style={{ fontSize: 11, background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.25)', borderRadius: 5, padding: '1px 7px', color: '#34d399', fontWeight: 700 }}>Colaborador</span>
+                  <span style={{ fontSize: 11, background: cfg.bg, border: `1px solid ${cfg.border}`, borderRadius: 5, padding: '1px 7px', color: cfg.color, fontWeight: 700 }}>{cfg.label}</span>
                 </div>
-                {sections.length > 0 && (
+                {m.status === 'accepted' && sections.length > 0 && (
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 5 }}>
                     {sections.map(s => (
                       <span key={s} style={{ fontSize: 11, color: colors.muted, background: 'rgba(255,255,255,0.04)', border: `1px solid ${colors.border}`, borderRadius: 4, padding: '1px 6px' }}>{s}</span>
@@ -441,15 +452,17 @@ export default function ProjectPage() {
         supabase.from('projects').update({ score: s }).eq('id', data.id)
       }
 
-      // Load all accepted collaborators for the members panel
-      supabase
+      // Load collaborators for the members panel
+      // Owner sees all (pending/accepted/declined); others see only accepted
+      const isProjectOwner = !!(user?.id && data.user_id && user.id === data.user_id)
+      const collabQuery = supabase
         .from('project_collaborators')
         .select('user_id, status, sections, profiles(id, username, full_name)')
         .eq('project_id', data.id)
-        .eq('status', 'accepted')
-        .then(({ data: collabs }) => {
-          if (collabs) setMembers(collabs)
-        })
+      const finalQuery = isProjectOwner ? collabQuery : collabQuery.eq('status', 'accepted')
+      finalQuery.then(({ data: collabs }) => {
+        if (collabs) setMembers(collabs)
+      })
 
       // Load owner profile for correct name display
       if (data.user_id) {
@@ -1074,6 +1087,7 @@ export default function ProjectPage() {
             ownerName={ownerProfile?.full_name || ownerProfile?.username || project.creator_name}
             members={members}
             colors={colors}
+            isOwner={isOwner}
           />
         </aside>
         </div>{/* end proj-layout */}

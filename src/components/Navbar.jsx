@@ -43,12 +43,35 @@ function InviteInbox({ userId }) {
   const [invites, setInvites] = useState([])
   const [acting, setActing] = useState({})
 
+  // Owner response notifications — persisted in sessionStorage
+  const [responses, setResponses] = useState(() => {
+    try { return JSON.parse(sessionStorage.getItem(`owner-notifs-${userId}`) || '[]') } catch { return [] }
+  })
+
+  function addResponse(notif) {
+    setResponses(prev => {
+      // avoid duplicate if same id+status
+      if (prev.some(n => n.id === notif.id)) return prev
+      const updated = [notif, ...prev].slice(0, 15)
+      try { sessionStorage.setItem(`owner-notifs-${userId}`, JSON.stringify(updated)) } catch {}
+      return updated
+    })
+  }
+
+  function dismissResponse(id) {
+    setResponses(prev => {
+      const updated = prev.filter(n => n.id !== id)
+      try { sessionStorage.setItem(`owner-notifs-${userId}`, JSON.stringify(updated)) } catch {}
+      return updated
+    })
+  }
+
   useEffect(() => {
     if (!userId) return
     loadInvites()
 
-    // Real-time: re-fetch when any collaborator row for this user changes
-    const channel = supabase
+    // Channel 1 — invites TO me (pending)
+    const inviteChannel = supabase
       .channel(`invites-${userId}`)
       .on('postgres_changes', {
         event: '*',
@@ -58,7 +81,37 @@ function InviteInbox({ userId }) {
       }, () => loadInvites())
       .subscribe()
 
-    return () => supabase.removeChannel(channel)
+    // Channel 2 — responses to MY invites (invited_by = me)
+    const ownerChannel = supabase
+      .channel(`owner-responses-${userId}`)
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'project_collaborators',
+        filter: `invited_by=eq.${userId}`,
+      }, async (payload) => {
+        const row = payload.new
+        if (row.status !== 'accepted' && row.status !== 'declined') return
+        // Fetch name + project in parallel
+        const [profRes, projRes] = await Promise.all([
+          supabase.from('profiles').select('full_name, username').eq('id', row.user_id).single(),
+          supabase.from('projects').select('name, slug').eq('id', row.project_id).single(),
+        ])
+        addResponse({
+          id: `${row.id}-${row.status}`,
+          status: row.status,
+          userName: profRes.data?.full_name || profRes.data?.username || 'Alguém',
+          projectName: projRes.data?.name || 'um projeto',
+          projectSlug: projRes.data?.slug || '',
+          time: Date.now(),
+        })
+      })
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(inviteChannel)
+      supabase.removeChannel(ownerChannel)
+    }
   }, [userId])
 
   async function loadInvites() {
@@ -122,12 +175,12 @@ function InviteInbox({ userId }) {
     }
   }
 
-  const count = invites.length
+  const count = invites.length + responses.length
 
   return (
     <div style={{ position: 'relative' }}>
       <button
-        onClick={() => { setOpen(o => !o); if (!open) setLoading(false) }}
+        onClick={() => setOpen(o => !o)}
         style={{
           position: 'relative',
           background: open ? 'rgba(59,130,246,0.1)' : 'transparent',
@@ -137,14 +190,12 @@ function InviteInbox({ userId }) {
           cursor: 'pointer', color: open ? '#60a5fa' : C.muted,
           transition: 'all 0.15s',
         }}
-        title="Convites de grupo"
+        title="Notificações"
       >
-        {/* Bell icon */}
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
           <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
         </svg>
-        {/* Badge */}
         {count > 0 && (
           <span style={{
             position: 'absolute', top: -4, right: -4,
@@ -167,61 +218,87 @@ function InviteInbox({ userId }) {
             borderRadius: 14, padding: '8px',
             boxShadow: '0 8px 40px rgba(0,0,0,0.6)',
             backdropFilter: 'blur(16px)',
-            zIndex: 99, width: 300,
+            zIndex: 99, width: 310,
+            maxHeight: 480, overflowY: 'auto',
           }}>
-            <p style={{ margin: '6px 10px 10px', fontSize: 12, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>
-              Convites de grupo
-            </p>
-            {invites.length === 0 ? (
-              <div style={{ padding: '20px 12px', textAlign: 'center' }}>
-                <p style={{ margin: 0, color: C.muted, fontSize: 13 }}>Nenhum convite pendente</p>
-              </div>
-            ) : invites.map(invite => {
-              const invitedBy = invite.inviterName || 'um colega'
-              const projectName = invite.projectName || 'Projeto'
-              const isActing = !!acting[invite.id]
-              return (
-                <div key={invite.id} style={{
-                  background: 'rgba(59,130,246,0.05)', border: '1px solid rgba(59,130,246,0.15)',
-                  borderRadius: 10, padding: '12px 14px', marginBottom: 6,
-                }}>
-                  <p style={{ margin: '0 0 2px', fontSize: 14, fontWeight: 700, color: C.text }}>
-                    {projectName}
-                  </p>
-                  <p style={{ margin: '0 0 12px', fontSize: 12, color: C.muted }}>
-                    Convidado por {invitedBy}
-                  </p>
-                  <div style={{ display: 'flex', gap: 6 }}>
+
+            {/* Pending invites TO me */}
+            {invites.length > 0 && (
+              <>
+                <p style={{ margin: '6px 10px 8px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>
+                  Convites de grupo
+                </p>
+                {invites.map(invite => {
+                  const invitedBy = invite.inviterName || 'um colega'
+                  const isActing = !!acting[invite.id]
+                  return (
+                    <div key={invite.id} style={{
+                      background: 'rgba(59,130,246,0.05)', border: '1px solid rgba(59,130,246,0.15)',
+                      borderRadius: 10, padding: '12px 14px', marginBottom: 6,
+                    }}>
+                      <p style={{ margin: '0 0 2px', fontSize: 14, fontWeight: 700, color: C.text }}>{invite.projectName}</p>
+                      <p style={{ margin: '0 0 12px', fontSize: 12, color: C.muted }}>Convidado por {invitedBy}</p>
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        <button
+                          onClick={() => respond(invite, 'accepted')} disabled={isActing}
+                          style={{ flex: 1, padding: '7px 0', background: 'linear-gradient(135deg,#3b82f6,#4f46e5)', border: 'none', borderRadius: 7, color: '#fff', fontSize: 12, fontWeight: 700, cursor: isActing ? 'default' : 'pointer', fontFamily: 'inherit' }}
+                        >{acting[invite.id] === 'accepted' ? '...' : '✓ Aceitar'}</button>
+                        <button
+                          onClick={() => respond(invite, 'declined')} disabled={isActing}
+                          style={{ flex: 1, padding: '7px 0', background: 'transparent', border: '1px solid rgba(248,113,113,0.3)', borderRadius: 7, color: '#f87171', fontSize: 12, fontWeight: 600, cursor: isActing ? 'default' : 'pointer', fontFamily: 'inherit' }}
+                        >{acting[invite.id] === 'declined' ? '...' : 'Recusar'}</button>
+                      </div>
+                    </div>
+                  )
+                })}
+              </>
+            )}
+
+            {/* Response notifications (someone accepted/declined MY invite) */}
+            {responses.length > 0 && (
+              <>
+                <p style={{ margin: `${invites.length > 0 ? '12px' : '6px'} 10px 8px`, fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>
+                  Respostas aos teus convites
+                </p>
+                {responses.map(r => (
+                  <div key={r.id} style={{
+                    background: r.status === 'accepted' ? 'rgba(34,197,94,0.05)' : 'rgba(248,113,113,0.05)',
+                    border: `1px solid ${r.status === 'accepted' ? 'rgba(34,197,94,0.2)' : 'rgba(248,113,113,0.2)'}`,
+                    borderRadius: 10, padding: '10px 14px', marginBottom: 6,
+                    display: 'flex', alignItems: 'flex-start', gap: 10,
+                  }}>
+                    <span style={{ fontSize: 18, flexShrink: 0, marginTop: 1 }}>
+                      {r.status === 'accepted' ? '✅' : '❌'}
+                    </span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ margin: '0 0 2px', fontSize: 13, fontWeight: 700, color: C.text }}>
+                        {r.userName} {r.status === 'accepted' ? 'aceitou' : 'recusou'}
+                      </p>
+                      <p style={{ margin: 0, fontSize: 12, color: C.muted }}>
+                        {r.projectName}
+                        {r.status === 'accepted' && r.projectSlug && (
+                          <span
+                            onClick={() => { navigate(`/projeto/${r.projectSlug}`); setOpen(false) }}
+                            style={{ marginLeft: 8, color: '#60a5fa', cursor: 'pointer', textDecoration: 'underline' }}
+                          >Ver projeto</span>
+                        )}
+                      </p>
+                    </div>
                     <button
-                      onClick={() => respond(invite, 'accepted')}
-                      disabled={isActing}
-                      style={{
-                        flex: 1, padding: '7px 0',
-                        background: 'linear-gradient(135deg, #3b82f6, #4f46e5)',
-                        border: 'none', borderRadius: 7,
-                        color: '#fff', fontSize: 12, fontWeight: 700,
-                        cursor: isActing ? 'default' : 'pointer', fontFamily: 'inherit',
-                      }}
-                    >
-                      {acting[invite.id] === 'accepted' ? '...' : '✓ Aceitar'}
-                    </button>
-                    <button
-                      onClick={() => respond(invite, 'declined')}
-                      disabled={isActing}
-                      style={{
-                        flex: 1, padding: '7px 0',
-                        background: 'transparent', border: '1px solid rgba(248,113,113,0.3)',
-                        borderRadius: 7,
-                        color: '#f87171', fontSize: 12, fontWeight: 600,
-                        cursor: isActing ? 'default' : 'pointer', fontFamily: 'inherit',
-                      }}
-                    >
-                      {acting[invite.id] === 'declined' ? '...' : 'Recusar'}
-                    </button>
+                      onClick={() => dismissResponse(r.id)}
+                      style={{ background: 'none', border: 'none', color: C.muted, cursor: 'pointer', fontSize: 14, padding: 0, flexShrink: 0, lineHeight: 1, marginTop: 2 }}
+                    >✕</button>
                   </div>
-                </div>
-              )
-            })}
+                ))}
+              </>
+            )}
+
+            {/* Empty state */}
+            {invites.length === 0 && responses.length === 0 && (
+              <div style={{ padding: '24px 12px', textAlign: 'center' }}>
+                <p style={{ margin: 0, color: C.muted, fontSize: 13 }}>Nenhuma notificação</p>
+              </div>
+            )}
           </div>
         </>
       )}
