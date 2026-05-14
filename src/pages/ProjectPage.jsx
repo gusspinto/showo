@@ -347,7 +347,7 @@ function MembersPanel({ ownerName, members, colors }) {
   if (!ownerName && members.length === 0) return null
   const displayOwner = ownerName || 'Dono'
   return (
-    <div style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 16, padding: '18px 22px', marginBottom: 24, boxShadow: '0 2px 16px rgba(0,0,0,0.2)' }}>
+    <div style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 16, padding: '18px 22px', boxShadow: '0 2px 16px rgba(0,0,0,0.2)' }}>
       <h3 style={{ margin: '0 0 14px', fontSize: 11, fontWeight: 700, color: colors.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Equipa</h3>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {/* Owner */}
@@ -407,7 +407,8 @@ export default function ProjectPage() {
   const [regenCooldown, setRegenCooldown] = useState(0)
   const [defenseMode, setDefenseMode] = useState(false)
   const [collaboratorSections, setCollaboratorSections] = useState(null) // null = not a collaborator
-  const [members, setMembers] = useState([]) // [{ user_id, status, sections, profiles, isOwner }]
+  const [members, setMembers] = useState([]) // [{ user_id, status, sections, profiles }]
+  const [ownerProfile, setOwnerProfile] = useState(null)
 
   const prevScoreRef = useRef(null)
   const rafRef = useRef(null)
@@ -449,6 +450,18 @@ export default function ProjectPage() {
         .then(({ data: collabs }) => {
           if (collabs) setMembers(collabs)
         })
+
+      // Load owner profile for correct name display
+      if (data.user_id) {
+        supabase
+          .from('profiles')
+          .select('id, username, full_name')
+          .eq('id', data.user_id)
+          .single()
+          .then(({ data: prof }) => {
+            if (prof) setOwnerProfile(prof)
+          })
+      }
 
       // Check if logged-in user is an accepted collaborator (not the owner)
       if (user?.id && data.user_id && user.id !== data.user_id) {
@@ -628,6 +641,20 @@ export default function ProjectPage() {
           80% { opacity: 1; }
           100% { transform: translateY(105vh) rotate(720deg); opacity: 0; }
         }
+        .proj-layout {
+          display: grid;
+          grid-template-columns: 1fr 260px;
+          gap: 28px;
+          align-items: start;
+        }
+        .proj-sidebar {
+          position: sticky;
+          top: 88px;
+        }
+        @media (max-width: 860px) {
+          .proj-layout { grid-template-columns: 1fr; }
+          .proj-sidebar { position: static; order: -1; }
+        }
       `}</style>
 
       {defenseMode && (
@@ -699,15 +726,19 @@ export default function ProjectPage() {
         </button>
       </Navbar>
 
-      <div style={{ maxWidth: 800, margin: '0 auto', padding: '0 24px 80px' }}>
+      <div style={{ maxWidth: 1080, margin: '0 auto', padding: '0 24px 80px' }}>
 
-        {/* Cover image */}
+        {/* Cover image — full width above the grid */}
         {project.cover_url && (
           <div style={{ width: '100%', height: 300, position: 'relative', marginTop: 36, borderRadius: 20, overflow: 'hidden', boxShadow: '0 16px 48px rgba(0,0,0,0.5)' }}>
             <img src={project.cover_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
             <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 30%, #0d1424ee)' }} />
           </div>
         )}
+
+        {/* Two-column layout: main content + sticky sidebar */}
+        <div className="proj-layout">
+        <div className="proj-main">
 
         {/* Hero */}
         <div style={{ position: 'relative', padding: `${project.cover_url ? '32px' : '64px'} 0 40px` }}>
@@ -897,9 +928,6 @@ export default function ProjectPage() {
           </div>
         )}
 
-        {/* Members panel — show when there are collaborators */}
-        <MembersPanel ownerName={project.creator_name} members={members} colors={colors} />
-
         {/* PAP details */}
         {isPap && (project.pap_supervisor || project.pap_date) && (
           <div style={{ background: colors.yellowGlow, border: '1px solid rgba(234,179,8,0.18)', borderRadius: 16, padding: '20px 24px', marginBottom: 12 }}>
@@ -1038,6 +1066,18 @@ export default function ProjectPage() {
           </span>
           {' '}· Transforma projetos em páginas profissionais
         </div>
+        </div>{/* end proj-main */}
+
+        {/* Sidebar */}
+        <aside className="proj-sidebar" style={{ paddingTop: project.cover_url ? 32 : 64 }}>
+          <MembersPanel
+            ownerName={ownerProfile?.full_name || ownerProfile?.username || project.creator_name}
+            members={members}
+            colors={colors}
+          />
+        </aside>
+        </div>{/* end proj-layout */}
+
       </div>
     </div>
   )
