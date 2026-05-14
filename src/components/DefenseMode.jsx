@@ -235,107 +235,199 @@ function JuryPanel({ aiData, loadingAI, aiError, onRetry }) {
 
 // ─── Backup slides ────────────────────────────────────────────────────────────
 
-function buildSlides(project) {
-  const slides = []
-  slides.push({ id: 'cover', type: 'cover', title: project.name, subtitle: project.ai_tagline || project.goal || '', meta: [project.creator_name, project.course, project.school_year].filter(Boolean).join(' · '), area: project.area, accent: '#3b82f6' })
-  if (project.problem?.trim())      slides.push({ id: 'problem',      type: 'content', label: 'O Problema',      title: 'Que problema identificámos?', content: project.problem,         accent: '#f97316', icon: '🔍' })
-  if (project.solution?.trim())     slides.push({ id: 'solution',     type: 'content', label: 'A Solução',       title: 'Como o resolvemos',           content: project.solution,        accent: '#22c55e', icon: '💡' })
-  if (project.features?.trim())     slides.push({ id: 'features',     type: 'bullets', label: 'Funcionalidades', title: 'O que faz o projeto',          items: project.features.split(/[,\n]/).map(f => f.trim()).filter(Boolean), accent: '#06b6d4', icon: '⚙️' })
-  if (project.technologies?.trim()) slides.push({ id: 'technologies', type: 'tech',    label: 'Tecnologias',     title: 'Stack utilizada',              items: project.technologies.split(/[,\n]/).map(t => t.trim()).filter(Boolean), accent: '#818cf8', icon: '🛠️' })
-  if (project.results?.trim())      slides.push({ id: 'results',      type: 'content', label: 'Resultados',      title: 'O que alcançámos',             content: project.results,         accent: '#34d399', icon: '🏆' })
-  if (project.learnings?.trim())    slides.push({ id: 'learnings',    type: 'content', label: 'Aprendizagens',   title: 'O que aprendi',                content: project.learnings,       accent: '#f472b6', icon: '📚' })
-  slides.push({ id: 'closing', type: 'closing', title: 'Obrigado', subtitle: 'Questões?', meta: project.creator_name || '', accent: '#3b82f6' })
-  return slides
+// ─── Presenter guide (phone companion) ───────────────────────────────────────
+
+const SECTIONS = [
+  { id: 'cover',        label: 'Introdução',      icon: '👋', accent: '#3b82f6' },
+  { id: 'problem',      label: 'O Problema',       icon: '🔍', accent: '#f97316' },
+  { id: 'solution',     label: 'A Solução',        icon: '💡', accent: '#22c55e' },
+  { id: 'features',     label: 'Funcionalidades',  icon: '⚙️', accent: '#06b6d4' },
+  { id: 'technologies', label: 'Tecnologias',      icon: '🛠️', accent: '#818cf8' },
+  { id: 'results',      label: 'Resultados',       icon: '🏆', accent: '#34d399' },
+  { id: 'learnings',    label: 'Aprendizagens',    icon: '📚', accent: '#f472b6' },
+  { id: 'closing',      label: 'Encerramento',     icon: '🎤', accent: '#3b82f6' },
+]
+
+function hasContent(project, id) {
+  const map = { cover: true, problem: project.problem, solution: project.solution, features: project.features, technologies: project.technologies, results: project.results, learnings: project.learnings, closing: true }
+  return !!map[id]
 }
 
-function SlideView({ project, onExit }) {
-  const [current, setCurrent] = useState(0)
-  const slides = buildSlides(project)
-  const slide = slides[current]
-  const accent = slide.accent || '#3b82f6'
+function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose }) {
+  const sections = SECTIONS.filter(s => hasContent(project, s.id))
+  const [current, setCurrent]   = useState(0)
+  const [checked, setChecked]   = useState({})   // { sectionId_pointIdx: bool }
+  const [timer, setTimer]       = useState(0)
+  const [timerOn, setTimerOn]   = useState(false)
+  const timerRef = useRef(null)
+
+  const section = sections[current]
+  const accent  = section?.accent || C.blue
+  const keyPoints = aiData?.key_points?.[section?.id] ?? []
+
+  useEffect(() => {
+    if (timerOn) { timerRef.current = setInterval(() => setTimer(t => t + 1), 1000) }
+    else clearInterval(timerRef.current)
+    return () => clearInterval(timerRef.current)
+  }, [timerOn])
 
   useEffect(() => {
     function onKey(e) {
-      if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); if (current < slides.length - 1) setCurrent(c => c + 1) }
-      if (e.key === 'ArrowLeft') { e.preventDefault(); if (current > 0) setCurrent(c => c - 1) }
-      if (e.key === 'Escape') onExit()
+      if (e.key === 'ArrowRight') next()
+      if (e.key === 'ArrowLeft')  prev()
+      if (e.key === 'Escape') onClose()
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [current])
 
+  function next() { if (current < sections.length - 1) { setCurrent(c => c + 1); setChecked({}) } }
+  function prev() { if (current > 0) { setCurrent(c => c - 1); setChecked({}) } }
+
+  function fmt(s) {
+    const m = Math.floor(s / 60), sec = s % 60
+    return `${m}:${String(sec).padStart(2,'0')}`
+  }
+
+  const checkedCount = keyPoints.filter((_, i) => checked[`${section.id}_${i}`]).length
+  const allChecked   = keyPoints.length > 0 && checkedCount === keyPoints.length
+
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 10000, background: '#080e1a', display: 'flex', flexDirection: 'column', fontFamily: 'Inter, system-ui, sans-serif' }}>
+    <div style={{ position: 'fixed', inset: 0, zIndex: 10000, background: '#060c18', display: 'flex', flexDirection: 'column', fontFamily: 'Inter, system-ui, sans-serif', color: C.text }}>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}} @keyframes pop{0%{transform:scale(0.92)}60%{transform:scale(1.04)}100%{transform:scale(1)}}`}</style>
+
       {/* Top bar */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 24px', borderBottom: '1px solid #0f1e35', background: 'rgba(8,14,26,0.95)', flexShrink: 0 }}>
-        <span style={{ fontSize: 13, color: '#3b82f6', fontWeight: 700 }}>{project.name}</span>
-        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-          <span style={{ fontSize: 12, color: C.subtle }}>{current + 1} / {slides.length}</span>
-          <button onClick={onExit} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid #1e3050', borderRadius: 8, padding: '6px 10px', color: C.subtle, fontSize: 16, cursor: 'pointer' }}>✕</button>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 20px', borderBottom: '1px solid #0f1e35', flexShrink: 0, background: '#07101e' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          {/* Timer */}
+          <button
+            onClick={() => setTimerOn(s => !s)}
+            style={{ background: timerOn ? `${accent}18` : 'rgba(255,255,255,0.04)', border: `1px solid ${timerOn ? accent + '44' : '#1e3050'}`, borderRadius: 8, padding: '6px 12px', color: timerOn ? accent : C.subtle, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', minWidth: 60, textAlign: 'center' }}
+          >
+            {fmt(timer)}
+          </button>
+          <span style={{ fontSize: 12, color: C.subtle }}>{project.name}</span>
+        </div>
+        {/* Section dots */}
+        <div style={{ display: 'flex', gap: 5 }}>
+          {sections.map((s, i) => (
+            <button key={s.id} onClick={() => { setCurrent(i); setChecked({}) }}
+              style={{ width: i === current ? 18 : 6, height: 6, borderRadius: 3, border: 'none', cursor: 'pointer', padding: 0, background: i === current ? accent : i < current ? '#2a4070' : '#1e3050', transition: 'all 0.2s' }}
+            />
+          ))}
+        </div>
+        <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid #1e3050', borderRadius: 8, padding: '6px 10px', color: C.subtle, fontSize: 16, cursor: 'pointer', lineHeight: 1 }}>✕</button>
+      </div>
+
+      {/* Section header */}
+      <div key={section.id} style={{ padding: '28px 24px 0', flexShrink: 0, animation: 'pop 0.25s ease-out' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+          <span style={{ width: 40, height: 40, borderRadius: 12, background: `${accent}18`, border: `1px solid ${accent}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>{section.icon}</span>
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: accent, textTransform: 'uppercase', letterSpacing: 1.5 }}>
+              {current + 1} de {sections.length}
+            </div>
+            <div style={{ fontSize: 22, fontWeight: 800, color: C.text, letterSpacing: '-0.3px', lineHeight: 1.2 }}>{section.label}</div>
+          </div>
+        </div>
+        {/* Progress bar */}
+        <div style={{ height: 3, background: '#1e3050', borderRadius: 2, overflow: 'hidden', marginTop: 12 }}>
+          <div style={{ height: '100%', background: accent, borderRadius: 2, width: `${((current + 1) / sections.length) * 100}%`, transition: 'width 0.3s' }} />
         </div>
       </div>
 
-      {/* Slide */}
-      <div key={current} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 80px', animation: 'fadeIn 0.25s ease-out', overflow: 'hidden', position: 'relative' }}>
-        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 600, height: 600, borderRadius: '50%', background: `radial-gradient(circle, ${accent}10 0%, transparent 65%)`, pointerEvents: 'none' }} />
-        <div style={{ position: 'relative', zIndex: 1, textAlign: slide.type === 'cover' || slide.type === 'closing' ? 'center' : 'left', maxWidth: 900, width: '100%' }}>
-          {slide.type === 'cover' && (<>
-            {slide.area && <span style={{ display: 'inline-block', marginBottom: 20, background: `${accent}18`, border: `1px solid ${accent}44`, borderRadius: 999, padding: '5px 16px', color: accent, fontSize: 13, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1 }}>{slide.area}</span>}
-            <h1 style={{ fontSize: 'clamp(44px, 8vw, 88px)', fontWeight: 900, margin: '0 0 18px', color: '#f0f6ff', letterSpacing: '-2px', lineHeight: 1.05 }}>{slide.title}</h1>
-            {slide.subtitle && <p style={{ fontSize: 'clamp(16px, 2.5vw, 26px)', color: C.muted, margin: '0 0 28px' }}>{slide.subtitle}</p>}
-            {slide.meta && <p style={{ fontSize: 15, color: C.subtle }}>{slide.meta}</p>}
-          </>)}
-          {(slide.type === 'content') && (<>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
-              <span style={{ background: `${accent}18`, border: `1px solid ${accent}30`, borderRadius: 8, padding: '6px 10px', fontSize: 20 }}>{slide.icon}</span>
-              <span style={{ fontSize: 11, fontWeight: 700, color: accent, textTransform: 'uppercase', letterSpacing: 1.5 }}>{slide.label}</span>
+      {/* Key points */}
+      <div style={{ flex: 1, overflow: 'auto', padding: '20px 24px' }}>
+        {loadingAI ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {[0,1,2].map(i => (
+              <div key={i} style={{ height: 56, background: '#0d1829', border: '1px solid #1e3050', borderRadius: 12, opacity: 0.5 + i * 0.15 }} />
+            ))}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
+              <div style={{ width: 14, height: 14, border: '2px solid #1e3050', borderTop: `2px solid ${accent}`, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+              <span style={{ fontSize: 13, color: C.subtle }}>A gerar pontos-chave...</span>
             </div>
-            <h2 style={{ fontSize: 'clamp(24px, 4vw, 46px)', fontWeight: 800, margin: '0 0 24px', color: '#f0f6ff', letterSpacing: '-0.5px' }}>{slide.title}</h2>
-            <p style={{ fontSize: 'clamp(16px, 2vw, 22px)', color: '#a0b4cc', lineHeight: 1.75, margin: 0 }}>{slide.content}</p>
-          </>)}
-          {slide.type === 'bullets' && (<>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
-              <span style={{ background: `${accent}18`, border: `1px solid ${accent}30`, borderRadius: 8, padding: '6px 10px', fontSize: 20 }}>{slide.icon}</span>
-              <span style={{ fontSize: 11, fontWeight: 700, color: accent, textTransform: 'uppercase', letterSpacing: 1.5 }}>{slide.label}</span>
-            </div>
-            <h2 style={{ fontSize: 'clamp(22px, 3.5vw, 40px)', fontWeight: 800, margin: '0 0 24px', color: '#f0f6ff' }}>{slide.title}</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {slide.items.slice(0, 6).map((item, i) => (
-                <div key={i} style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
-                  <span style={{ width: 26, height: 26, borderRadius: 7, background: `${accent}18`, border: `1px solid ${accent}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: accent, flexShrink: 0, marginTop: 2 }}>{i+1}</span>
-                  <span style={{ fontSize: 'clamp(15px, 1.8vw, 20px)', color: '#a0b4cc', lineHeight: 1.5 }}>{item}</span>
-                </div>
-              ))}
-            </div>
-          </>)}
-          {slide.type === 'tech' && (<>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
-              <span style={{ background: `${accent}18`, border: `1px solid ${accent}30`, borderRadius: 8, padding: '6px 10px', fontSize: 20 }}>{slide.icon}</span>
-              <span style={{ fontSize: 11, fontWeight: 700, color: accent, textTransform: 'uppercase', letterSpacing: 1.5 }}>{slide.label}</span>
-            </div>
-            <h2 style={{ fontSize: 'clamp(22px, 3.5vw, 40px)', fontWeight: 800, margin: '0 0 28px', color: '#f0f6ff' }}>{slide.title}</h2>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
-              {slide.items.map((t, i) => <span key={i} style={{ background: `${accent}12`, border: `1px solid ${accent}35`, borderRadius: 10, padding: '10px 20px', fontSize: 'clamp(14px,1.5vw,18px)', fontWeight: 700, color: accent }}>{t}</span>)}
-            </div>
-          </>)}
-          {slide.type === 'closing' && (<>
-            <h1 style={{ fontSize: 'clamp(56px, 12vw, 120px)', fontWeight: 900, margin: '0 0 14px', color: '#f0f6ff', letterSpacing: '-3px' }}>{slide.title}</h1>
-            <p style={{ fontSize: 'clamp(22px, 3.5vw, 42px)', color: '#3b82f6', fontWeight: 700, margin: '0 0 24px' }}>{slide.subtitle}</p>
-            {slide.meta && <p style={{ fontSize: 15, color: C.subtle }}>{slide.meta}</p>}
-          </>)}
-        </div>
+          </div>
+        ) : aiError ? (
+          <div style={{ background: 'rgba(248,113,113,0.06)', border: '1px solid rgba(248,113,113,0.2)', borderRadius: 12, padding: '20px', textAlign: 'center' }}>
+            <p style={{ color: C.red, margin: '0 0 12px', fontSize: 14 }}>Não foi possível carregar os pontos-chave.</p>
+            <button onClick={onRetry} style={{ background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.3)', borderRadius: 8, padding: '8px 18px', color: C.red, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Tentar novamente</button>
+          </div>
+        ) : keyPoints.length > 0 ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <p style={{ margin: '0 0 6px', fontSize: 11, fontWeight: 700, color: C.subtle, textTransform: 'uppercase', letterSpacing: 1 }}>O que tens de mencionar</p>
+            {keyPoints.map((point, i) => {
+              const key = `${section.id}_${i}`
+              const done = !!checked[key]
+              return (
+                <button
+                  key={i}
+                  onClick={() => setChecked(c => ({ ...c, [key]: !done }))}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 14, width: '100%',
+                    background: done ? `${accent}10` : '#0d1829',
+                    border: `1.5px solid ${done ? accent + '50' : '#1e3050'}`,
+                    borderRadius: 14, padding: '16px 18px', cursor: 'pointer',
+                    textAlign: 'left', fontFamily: 'inherit',
+                    transition: 'all 0.15s',
+                    animation: done ? 'pop 0.2s ease-out' : 'none',
+                  }}
+                >
+                  <span style={{
+                    width: 26, height: 26, borderRadius: 8, flexShrink: 0,
+                    background: done ? accent : 'rgba(255,255,255,0.04)',
+                    border: `1.5px solid ${done ? accent : '#2a4070'}`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 12, color: done ? '#fff' : C.subtle, fontWeight: 700,
+                    transition: 'all 0.15s',
+                  }}>
+                    {done ? '✓' : i + 1}
+                  </span>
+                  <span style={{ fontSize: 16, fontWeight: done ? 500 : 600, color: done ? C.subtle : C.text, lineHeight: 1.4, textDecoration: done ? 'line-through' : 'none', transition: 'all 0.15s' }}>
+                    {point}
+                  </span>
+                </button>
+              )
+            })}
+
+            {allChecked && (
+              <div style={{ marginTop: 8, background: `${accent}0d`, border: `1px solid ${accent}30`, borderRadius: 12, padding: '14px 18px', textAlign: 'center', animation: 'pop 0.3s ease-out' }}>
+                <span style={{ fontSize: 14, fontWeight: 700, color: accent }}>Secção completa — avança! →</span>
+              </div>
+            )}
+          </div>
+        ) : (
+          /* No AI data — show raw content as fallback */
+          <div style={{ background: '#0d1829', border: '1px solid #1e3050', borderRadius: 12, padding: '18px' }}>
+            <p style={{ margin: '0 0 6px', fontSize: 11, fontWeight: 700, color: C.subtle, textTransform: 'uppercase', letterSpacing: 1 }}>Conteúdo</p>
+            <p style={{ margin: 0, fontSize: 15, color: C.muted, lineHeight: 1.7 }}>
+              {section.id === 'cover'   && (project.ai_tagline || project.goal || project.name)}
+              {section.id === 'problem' && project.problem}
+              {section.id === 'solution' && project.solution}
+              {section.id === 'features' && project.features}
+              {section.id === 'technologies' && project.technologies}
+              {section.id === 'results' && project.results}
+              {section.id === 'learnings' && project.learnings}
+              {section.id === 'closing' && 'Agradece ao júri e abre para perguntas.'}
+            </p>
+          </div>
+        )}
       </div>
 
-      {/* Nav */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '14px 24px', borderTop: '1px solid #0f1e35', background: 'rgba(8,14,26,0.95)', flexShrink: 0 }}>
-        <div style={{ display: 'flex', gap: 5, marginRight: 12 }}>
-          {slides.map((_, i) => <button key={i} onClick={() => setCurrent(i)} style={{ width: i === current ? 20 : 7, height: 7, borderRadius: 4, background: i === current ? accent : '#1e3050', border: 'none', cursor: 'pointer', padding: 0, transition: 'all 0.2s' }} />)}
-        </div>
-        <button onClick={() => setCurrent(c => Math.max(0, c-1))} disabled={current === 0} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid #1e3050', borderRadius: 8, padding: '8px 18px', color: current === 0 ? '#1e3050' : C.muted, fontSize: 16, cursor: current === 0 ? 'default' : 'pointer', fontFamily: 'inherit' }}>←</button>
-        <button onClick={() => setCurrent(c => Math.min(slides.length-1, c+1))} disabled={current === slides.length-1} style={{ background: current === slides.length-1 ? 'rgba(255,255,255,0.04)' : `linear-gradient(135deg,${accent},${accent}bb)`, border: 'none', borderRadius: 8, padding: '8px 28px', color: current === slides.length-1 ? '#1e3050' : '#fff', fontSize: 14, fontWeight: 700, cursor: current === slides.length-1 ? 'default' : 'pointer', fontFamily: 'inherit', boxShadow: current === slides.length-1 ? 'none' : `0 4px 16px ${accent}44` }}>
-          {current === slides.length-1 ? 'Fim' : 'Avançar →'}
+      {/* Nav buttons */}
+      <div style={{ display: 'flex', gap: 10, padding: '16px 24px', borderTop: '1px solid #0f1e35', flexShrink: 0, background: '#07101e' }}>
+        <button
+          onClick={prev}
+          disabled={current === 0}
+          style={{ flex: 1, padding: '16px 0', background: 'rgba(255,255,255,0.03)', border: '1px solid #1e3050', borderRadius: 14, color: current === 0 ? '#1e3050' : C.muted, fontSize: 20, cursor: current === 0 ? 'default' : 'pointer', fontFamily: 'inherit' }}
+        >←</button>
+        <button
+          onClick={next}
+          disabled={current === sections.length - 1}
+          style={{ flex: 3, padding: '16px 0', background: current === sections.length - 1 ? 'rgba(255,255,255,0.03)' : `linear-gradient(135deg, ${accent}, ${accent}bb)`, border: 'none', borderRadius: 14, color: current === sections.length - 1 ? '#1e3050' : '#fff', fontSize: 16, fontWeight: 700, cursor: current === sections.length - 1 ? 'default' : 'pointer', fontFamily: 'inherit', boxShadow: current === sections.length - 1 ? 'none' : `0 4px 20px ${accent}44` }}
+        >
+          {current === sections.length - 1 ? 'Fim' : 'Próxima secção →'}
         </button>
-        <span style={{ marginLeft: 8, fontSize: 11, color: '#1e3050' }}>← → navegar · Esc fechar</span>
       </div>
     </div>
   )
@@ -344,11 +436,11 @@ function SlideView({ project, onExit }) {
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function DefenseMode({ project, isOwner, onClose }) {
-  const [tab, setTab]             = useState('notes')   // 'notes' | 'jury' | 'slides'
+  const [tab, setTab]             = useState('notes')   // 'notes' | 'jury' | 'guide'
   const [aiData, setAiData]       = useState(null)
   const [loadingAI, setLoadingAI] = useState(false)
   const [aiError, setAiError]     = useState(false)
-  const [slideMode, setSlideMode] = useState(false)
+  const [guideMode, setGuideMode] = useState(false)
 
   useEffect(() => {
     if (!isOwner) return
@@ -356,10 +448,10 @@ export default function DefenseMode({ project, isOwner, onClose }) {
   }, [])
 
   useEffect(() => {
-    function onKey(e) { if (e.key === 'Escape' && !slideMode) onClose() }
+    function onKey(e) { if (e.key === 'Escape' && !guideMode) onClose() }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [slideMode])
+  }, [guideMode])
 
   function loadAI() {
     setLoadingAI(true)
@@ -373,12 +465,21 @@ export default function DefenseMode({ project, isOwner, onClose }) {
       .finally(() => setLoadingAI(false))
   }
 
-  if (slideMode) return <SlideView project={project} onExit={() => setSlideMode(false)} />
+  if (guideMode) return (
+    <PresenterGuide
+      project={project}
+      aiData={aiData}
+      loadingAI={loadingAI}
+      aiError={aiError}
+      onRetry={loadAI}
+      onClose={() => setGuideMode(false)}
+    />
+  )
 
   const tabs = [
-    { id: 'notes', label: '📝 Notas',    show: true },
+    { id: 'notes', label: '📝 Notas',    show: isOwner },
     { id: 'jury',  label: '🎓 Júri',     show: isOwner },
-    { id: 'slides',label: '▶ Slides',    show: true },
+    { id: 'guide', label: '📱 No dia',   show: true },
   ].filter(t => t.show)
 
   return (
@@ -403,7 +504,7 @@ export default function DefenseMode({ project, isOwner, onClose }) {
           {tabs.map(t => (
             <button
               key={t.id}
-              onClick={() => t.id === 'slides' ? setSlideMode(true) : setTab(t.id)}
+              onClick={() => t.id === 'guide' ? setGuideMode(true) : setTab(t.id)}
               style={{
                 background: tab === t.id ? 'rgba(59,130,246,0.12)' : 'transparent',
                 border: `1px solid ${tab === t.id ? 'rgba(59,130,246,0.35)' : C.border}`,
@@ -414,20 +515,19 @@ export default function DefenseMode({ project, isOwner, onClose }) {
               }}
             >
               {t.label}
-              {t.id === 'slides' && <span style={{ marginLeft: 6, fontSize: 10, color: C.subtle, fontWeight: 400 }}>backup</span>}
             </button>
           ))}
         </div>
 
         {/* Content */}
         <div style={{ flex: 1, overflow: 'auto', padding: '20px 28px 28px' }}>
-          {tab === 'notes' && !isOwner && (
+          {!isOwner && (
             <div style={{ background: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.15)', borderRadius: 12, padding: '20px', textAlign: 'center' }}>
-              <p style={{ margin: 0, color: C.muted, fontSize: 14 }}>As notas do orador estão disponíveis apenas para o criador do projeto.</p>
+              <p style={{ margin: 0, color: C.muted, fontSize: 14 }}>A preparação completa está disponível apenas para o criador do projeto.</p>
             </div>
           )}
           {tab === 'notes' && isOwner && <NotesPanel aiData={aiData} loadingAI={loadingAI} aiError={aiError} onRetry={loadAI} />}
-          {tab === 'jury'  && <JuryPanel  aiData={aiData} loadingAI={loadingAI} aiError={aiError} onRetry={loadAI} />}
+          {tab === 'jury'  && isOwner && <JuryPanel  aiData={aiData} loadingAI={loadingAI} aiError={aiError} onRetry={loadAI} />}
         </div>
       </div>
     </div>
