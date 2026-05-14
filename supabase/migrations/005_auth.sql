@@ -29,7 +29,7 @@ CREATE POLICY "Anyone can insert" ON public.projects
 
 CREATE POLICY "Owner update" ON public.projects
   FOR UPDATE USING (
-    auth.uid() = user_id        -- logged-in owner
+    auth.uid()::text = user_id  -- logged-in owner (user_id stored as text)
     OR user_id IS NULL          -- anonymous project (token checked in app)
   );
 
