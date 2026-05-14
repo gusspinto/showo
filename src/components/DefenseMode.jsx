@@ -635,28 +635,59 @@ const ALL_SECTIONS = [
 
 function GrupoPanel({ project }) {
   const { user } = useAuth()
-  const [search, setSearch]           = useState('')
-  const [searchResult, setSearchResult] = useState(null)  // profile found
-  const [searching, setSearching]     = useState(false)
-  const [searchErr, setSearchErr]     = useState('')
-  const [collaborators, setCollaborators] = useState([])  // { id, user_id, status, sections, profiles }
-  const [pendingSections, setPendingSections] = useState({}) // { user_id: [section_ids] }
-  const [saving, setSaving]           = useState(false)
-  const [saved, setSaved]             = useState(false)
+  const [search, setSearch]               = useState('')
+  const [searchResult, setSearchResult]   = useState(null)
+  const [searching, setSearching]         = useState(false)
+  const [searchErr, setSearchErr]         = useState('')
+  const [collaborators, setCollaborators] = useState([])
+  const [prevStatuses, setPrevStatuses]   = useState({}) // { user_id: status } — detect changes
+  const [pendingSections, setPendingSections] = useState({})
+  const [saving, setSaving]               = useState(false)
+  const [saved, setSaved]                 = useState(false)
+  const [events, setEvents]               = useState([]) // [{ id, msg, color }]
 
-  useEffect(() => { loadCollaborators() }, [])
+  // Load on mount + poll every 5 s to detect status changes
+  useEffect(() => {
+    loadCollaborators()
+    const t = setInterval(loadCollaborators, 5000)
+    return () => clearInterval(t)
+  }, [])
+
+  function pushEvent(msg, color = C.green) {
+    const id = Date.now()
+    setEvents(prev => [...prev, { id, msg, color }])
+    setTimeout(() => setEvents(prev => prev.filter(e => e.id !== id)), 4000)
+  }
 
   async function loadCollaborators() {
     const { data } = await supabase
       .from('project_collaborators')
       .select('id, user_id, status, sections, profiles(id, username, full_name)')
       .eq('project_id', project.id)
-    if (data) {
-      setCollaborators(data)
-      const initial = {}
-      data.forEach(c => { initial[c.user_id] = c.sections ?? [] })
-      setPendingSections(initial)
-    }
+    if (!data) return
+
+    // Detect status changes vs previous load
+    setPrevStatuses(prev => {
+      data.forEach(c => {
+        const name = c.profiles?.full_name || c.profiles?.username || 'O colega'
+        const oldStatus = prev[c.user_id]
+        if (oldStatus === 'pending' && c.status === 'accepted') {
+          pushEvent(`${name} aceitou o convite 🎉`, C.green)
+        } else if (oldStatus === 'pending' && c.status === 'declined') {
+          pushEvent(`${name} recusou o convite`, C.red)
+        }
+      })
+      const next = {}
+      data.forEach(c => { next[c.user_id] = c.status })
+      return next
+    })
+
+    setCollaborators(data)
+    setPendingSections(prev => {
+      const updated = { ...prev }
+      data.forEach(c => { if (!updated[c.user_id]) updated[c.user_id] = c.sections ?? [] })
+      return updated
+    })
   }
 
   async function doSearch() {
@@ -682,6 +713,7 @@ function GrupoPanel({ project }) {
 
   async function addCollaborator() {
     if (!searchResult) return
+    const name = searchResult.full_name || searchResult.username
     await supabase.from('project_collaborators').upsert({
       project_id: project.id,
       user_id: searchResult.id,
@@ -691,6 +723,7 @@ function GrupoPanel({ project }) {
     })
     setSearchResult(null)
     setSearch('')
+    pushEvent(`${name} recebeu o convite ✉️`, '#60a5fa')
     loadCollaborators()
   }
 
@@ -740,6 +773,22 @@ function GrupoPanel({ project }) {
       <p style={{ margin: '0 0 18px', fontSize: 14, color: C.muted, lineHeight: 1.6 }}>
         Adiciona os teus colegas de grupo pelo username do Showo. Depois atribui as secções que cada um vai apresentar — o Guia do Apresentador deles só mostrará as secções deles.
       </p>
+
+      {/* Event toasts */}
+      {events.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 16 }}>
+          {events.map(e => (
+            <div key={e.id} style={{
+              background: `${e.color}10`, border: `1px solid ${e.color}35`,
+              borderRadius: 10, padding: '10px 14px',
+              fontSize: 13, fontWeight: 600, color: e.color,
+              animation: 'fadeIn 0.2s ease-out',
+            }}>
+              {e.msg}
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Search */}
       <div style={{ display: 'flex', gap: 8, marginBottom: searchErr ? 8 : 20 }}>
