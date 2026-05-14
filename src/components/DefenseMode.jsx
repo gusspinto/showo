@@ -111,7 +111,7 @@ function buildSlides(project) {
   return slides
 }
 
-function SlideContent({ slide, notes, showNotes }) {
+function SlideContent({ slide, notes, showNotes, loadingAI, aiError, onRetry }) {
   const accent = slide.accent || '#3b82f6'
 
   return (
@@ -248,16 +248,32 @@ function SlideContent({ slide, notes, showNotes }) {
       )}
 
       {/* Speaker notes panel */}
-      {showNotes && notes && (
+      {showNotes && (
         <div style={{
           position: 'absolute', bottom: 0, left: 0, right: 0,
           background: 'rgba(10,14,24,0.97)', borderTop: '1px solid #1e3050',
           padding: '16px 60px', zIndex: 10,
         }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: '#3b82f6', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>
-            Notas do orador
+          <div style={{ fontSize: 11, fontWeight: 700, color: '#3b82f6', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
+            📝 Notas do orador
           </div>
-          <p style={{ margin: 0, fontSize: 15, color: '#a0b4cc', lineHeight: 1.65 }}>{notes}</p>
+          {loadingAI ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ width: 14, height: 14, border: '2px solid #1e3050', borderTop: '2px solid #3b82f6', borderRadius: '50%', animation: 'spin 1s linear infinite', flexShrink: 0 }} />
+              <span style={{ fontSize: 14, color: '#4a6080' }}>A gerar notas com IA...</span>
+            </div>
+          ) : aiError ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <span style={{ fontSize: 13, color: '#f87171' }}>Não foi possível carregar as notas.</span>
+              <button onClick={onRetry} style={{ background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.25)', borderRadius: 6, padding: '4px 10px', color: '#f87171', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>
+                Tentar novamente
+              </button>
+            </div>
+          ) : notes ? (
+            <p style={{ margin: 0, fontSize: 15, color: '#a0b4cc', lineHeight: 1.65 }}>{notes}</p>
+          ) : (
+            <p style={{ margin: 0, fontSize: 14, color: '#3d5270', fontStyle: 'italic' }}>Sem notas para este slide.</p>
+          )}
         </div>
       )}
     </div>
@@ -270,6 +286,7 @@ export default function DefenseMode({ project, isOwner, onClose }) {
   const [showJury, setShowJury]     = useState(false)
   const [aiData, setAiData]         = useState(null)
   const [loadingAI, setLoadingAI]   = useState(false)
+  const [aiError, setAiError]       = useState(false)
   const [timer, setTimer]           = useState(0)
   const [timerOn, setTimerOn]       = useState(false)
   const [copied, setCopied]         = useState(false)
@@ -281,10 +298,28 @@ export default function DefenseMode({ project, isOwner, onClose }) {
   useEffect(() => {
     if (!isOwner) return
     setLoadingAI(true)
+    setAiError(false)
     supabase.functions.invoke('defense-notes', { body: { project } })
-      .then(({ data }) => { if (data) setAiData(data) })
+      .then(({ data, error }) => {
+        if (error || !data) { setAiError(true); return }
+        setAiData(data)
+      })
+      .catch(() => setAiError(true))
       .finally(() => setLoadingAI(false))
   }, [])
+
+  function retryAI() {
+    setAiError(false)
+    setAiData(null)
+    setLoadingAI(true)
+    supabase.functions.invoke('defense-notes', { body: { project } })
+      .then(({ data, error }) => {
+        if (error || !data) { setAiError(true); return }
+        setAiData(data)
+      })
+      .catch(() => setAiError(true))
+      .finally(() => setLoadingAI(false))
+  }
 
   // Keyboard navigation
   useEffect(() => {
@@ -388,7 +423,7 @@ export default function DefenseMode({ project, isOwner, onClose }) {
                 fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
               }}
             >
-              {loadingAI ? '⏳' : '📝'} Notas
+              {loadingAI ? '⏳' : aiError ? '⚠️' : '📝'} Notas
             </button>
           )}
 
@@ -446,7 +481,10 @@ export default function DefenseMode({ project, isOwner, onClose }) {
           <SlideContent
             slide={slide}
             notes={slideNotes}
-            showNotes={showNotes && !!slideNotes}
+            showNotes={showNotes}
+            loadingAI={loadingAI}
+            aiError={aiError}
+            onRetry={retryAI}
           />
         </div>
       ) : (
@@ -460,7 +498,18 @@ export default function DefenseMode({ project, isOwner, onClose }) {
               {tip && <p style={{ color: '#7d93b0', fontSize: 14, margin: 0 }}>💡 {tip}</p>}
             </div>
             {loadingAI ? (
-              <p style={{ color: '#4a6080' }}>A gerar perguntas...</p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ width: 18, height: 18, border: '2px solid #1e3050', borderTop: '2px solid #fbbf24', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+                <span style={{ color: '#4a6080', fontSize: 15 }}>A gerar perguntas com IA...</span>
+              </div>
+            ) : aiError ? (
+              <div style={{ background: 'rgba(248,113,113,0.06)', border: '1px solid rgba(248,113,113,0.2)', borderRadius: 12, padding: '20px 24px' }}>
+                <p style={{ margin: '0 0 12px', color: '#f87171', fontSize: 15 }}>Não foi possível gerar as perguntas.</p>
+                <p style={{ margin: '0 0 16px', color: '#7d93b0', fontSize: 13 }}>Certifica-te de que o Edge Function <code style={{ background: 'rgba(255,255,255,0.06)', padding: '2px 6px', borderRadius: 4 }}>defense-notes</code> está deployed no Supabase.</p>
+                <button onClick={retryAI} style={{ background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.3)', borderRadius: 8, padding: '8px 18px', color: '#f87171', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                  Tentar novamente
+                </button>
+              </div>
             ) : juryQuestions.length === 0 ? (
               <p style={{ color: '#4a6080' }}>Sem perguntas geradas.</p>
             ) : (
