@@ -8,6 +8,7 @@ import { CHALLENGES, getChallengeStatus } from '../lib/challenges'
 import { Navbar } from '../components/Navbar'
 import { generateProject } from '../lib/generateProject'
 import { useAuth } from '../context/AuthContext'
+import DefenseMode from '../components/DefenseMode'
 
 const colors = {
   bg: '#0d1424',
@@ -355,6 +356,7 @@ export default function ProjectPage() {
   const [showConfetti, setShowConfetti] = useState(false)
   const [regenerating, setRegenerating] = useState(false)
   const [regenCooldown, setRegenCooldown] = useState(0)
+  const [defenseMode, setDefenseMode] = useState(false)
 
   const prevScoreRef = useRef(null)
   const rafRef = useRef(null)
@@ -553,6 +555,14 @@ export default function ProjectPage() {
         }
       `}</style>
 
+      {defenseMode && (
+        <DefenseMode
+          project={project}
+          isOwner={isOwner}
+          onClose={() => setDefenseMode(false)}
+        />
+      )}
+
       {showConfetti && <Confetti />}
       <Toast message={toast.message} visible={toast.visible} />
       {editModal && (
@@ -560,11 +570,25 @@ export default function ProjectPage() {
       )}
 
       <Navbar>
-        {project && (
-          (user?.id && project.user_id && user.id === project.user_id) ||
-          (!project.edit_token && !project.user_id) ||
-          localStorage.getItem(`edit_token_${project.slug}`)
-        ) && (
+        <button
+          onClick={() => setDefenseMode(true)}
+          style={{
+            background: 'rgba(251,191,36,0.08)',
+            border: '1px solid rgba(251,191,36,0.25)',
+            color: '#fbbf24',
+            borderRadius: 8, padding: '8px 14px',
+            fontSize: 13, fontWeight: 600,
+            cursor: 'pointer', fontFamily: 'inherit',
+            display: 'flex', alignItems: 'center', gap: 6,
+            transition: 'background 0.15s',
+          }}
+          onMouseEnter={e => e.currentTarget.style.background = 'rgba(251,191,36,0.14)'}
+          onMouseLeave={e => e.currentTarget.style.background = 'rgba(251,191,36,0.08)'}
+          title="Apresentar projeto em modo fullscreen"
+        >
+          ▶ Apresentar
+        </button>
+        {project && isOwner && (
           <button
             onClick={() => {
               const token = localStorage.getItem(`edit_token_${project.slug}`)
@@ -574,12 +598,9 @@ export default function ProjectPage() {
               background: 'transparent',
               border: `1px solid ${colors.border}`,
               color: colors.muted,
-              borderRadius: 8,
-              padding: '8px 16px',
-              fontSize: 13,
-              fontWeight: 600,
-              cursor: 'pointer',
-              fontFamily: 'inherit',
+              borderRadius: 8, padding: '8px 16px',
+              fontSize: 13, fontWeight: 600,
+              cursor: 'pointer', fontFamily: 'inherit',
             }}
           >
             Editar
@@ -589,14 +610,10 @@ export default function ProjectPage() {
           onClick={() => navigate('/novo')}
           style={{
             background: `linear-gradient(135deg, ${colors.blue}, #4f46e5)`,
-            color: '#fff',
-            border: 'none',
-            borderRadius: 8,
-            padding: '9px 18px',
-            fontSize: 14,
-            fontWeight: 600,
-            cursor: 'pointer',
-            fontFamily: 'inherit',
+            color: '#fff', border: 'none',
+            borderRadius: 8, padding: '9px 18px',
+            fontSize: 14, fontWeight: 600,
+            cursor: 'pointer', fontFamily: 'inherit',
             boxShadow: '0 4px 16px rgba(59,130,246,0.3)',
           }}
         >

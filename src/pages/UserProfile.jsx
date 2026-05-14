@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
+import { QRCodeSVG } from 'qrcode.react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
+import CoverLetterModal from '../components/CoverLetterModal'
 
 const C = {
   bg: '#0d1424',
@@ -101,6 +103,8 @@ export default function UserProfile() {
   const [projects, setProjects] = useState([])
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
+  const [showCoverLetter, setShowCoverLetter] = useState(false)
+  const [showQR, setShowQR] = useState(false)
 
   useEffect(() => {
     async function load() {
@@ -217,23 +221,84 @@ export default function UserProfile() {
             </div>
           </div>
 
-          {isOwnProfile && (
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', flexShrink: 0 }}>
+            {isOwnProfile && projects.length > 0 && (
+              <button
+                onClick={() => setShowCoverLetter(true)}
+                style={{
+                  background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.25)',
+                  borderRadius: 8, padding: '9px 14px',
+                  color: '#fbbf24', fontSize: 13, fontWeight: 600,
+                  cursor: 'pointer', fontFamily: 'inherit',
+                  transition: 'background 0.15s',
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = 'rgba(251,191,36,0.14)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'rgba(251,191,36,0.08)'}
+              >
+                ✉️ Kit de estágio
+              </button>
+            )}
             <button
-              onClick={() => navigate('/settings')}
+              onClick={() => setShowQR(s => !s)}
               style={{
-                background: 'transparent', border: `1px solid ${C.border}`,
-                borderRadius: 8, padding: '9px 18px',
-                color: C.muted, fontSize: 13, fontWeight: 600,
-                cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0,
-                transition: 'border-color 0.15s, color 0.15s',
+                background: showQR ? 'rgba(59,130,246,0.12)' : 'transparent',
+                border: `1px solid ${showQR ? 'rgba(59,130,246,0.4)' : C.border}`,
+                borderRadius: 8, padding: '9px 14px',
+                color: showQR ? '#60a5fa' : C.muted, fontSize: 13, fontWeight: 600,
+                cursor: 'pointer', fontFamily: 'inherit',
+                transition: 'all 0.15s',
               }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = '#2a4275'; e.currentTarget.style.color = C.text }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted }}
             >
-              Editar perfil
+              QR
             </button>
-          )}
+            {isOwnProfile && (
+              <button
+                onClick={() => navigate('/settings')}
+                style={{
+                  background: 'transparent', border: `1px solid ${C.border}`,
+                  borderRadius: 8, padding: '9px 14px',
+                  color: C.muted, fontSize: 13, fontWeight: 600,
+                  cursor: 'pointer', fontFamily: 'inherit',
+                  transition: 'border-color 0.15s, color 0.15s',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = '#2a4275'; e.currentTarget.style.color = C.text }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted }}
+              >
+                Editar perfil
+              </button>
+            )}
+          </div>
         </div>
+
+        {/* QR Panel */}
+        {showQR && (
+          <div style={{
+            background: C.card, border: `1px solid ${C.border}`,
+            borderRadius: 16, padding: '24px 28px', marginBottom: 32,
+            display: 'flex', alignItems: 'center', gap: 24, flexWrap: 'wrap',
+          }}>
+            <div style={{ background: '#fff', borderRadius: 12, padding: 12, boxShadow: '0 4px 20px rgba(0,0,0,0.3)' }}>
+              <QRCodeSVG value={profileUrl} size={120} />
+            </div>
+            <div>
+              <h3 style={{ color: C.text, fontSize: 16, fontWeight: 700, margin: '0 0 6px' }}>QR do teu perfil</h3>
+              <p style={{ color: C.muted, fontSize: 13, margin: '0 0 12px', lineHeight: 1.6 }}>
+                Imprime e usa em apresentações, feiras de ciências ou cartões de visita.<br />
+                Aponta para: <span style={{ color: '#60a5fa' }}>{profileUrl}</span>
+              </p>
+              <button
+                onClick={() => window.print()}
+                style={{
+                  background: C.blue, border: 'none', borderRadius: 8,
+                  padding: '8px 18px', color: '#fff', fontSize: 13, fontWeight: 600,
+                  cursor: 'pointer', fontFamily: 'inherit',
+                }}
+              >
+                Imprimir / Guardar PDF
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Projects */}
         <h2 style={{ color: C.text, fontSize: 16, fontWeight: 700, margin: '0 0 18px', letterSpacing: '-0.2px' }}>
@@ -271,6 +336,14 @@ export default function UserProfile() {
           </div>
         )}
       </div>
+
+      {showCoverLetter && (
+        <CoverLetterModal
+          projects={projects}
+          studentName={profile?.full_name || profile?.username || ''}
+          onClose={() => setShowCoverLetter(false)}
+        />
+      )}
     </div>
   )
 }
