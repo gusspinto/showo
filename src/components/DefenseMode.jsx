@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
+import { useAuth } from '../context/AuthContext'
 
 const C = {
   bg: '#080e1a',
@@ -256,11 +257,16 @@ function hasContent(project, id) {
 // Estimated minutes per section
 const SECTION_TIMES = { cover: 1, problem: 2, solution: 2, features: 3, technologies: 2, results: 2, learnings: 2, closing: 1 }
 
-function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose }) {
-  const sections = SECTIONS.filter(s => hasContent(project, s.id))
+function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose, collaboratorSections, studentName }) {
+  const allSections = SECTIONS.filter(s => hasContent(project, s.id))
+  // If collaboratorSections is set (non-owner), only show assigned sections
+  const sections = collaboratorSections?.length > 0
+    ? allSections.filter(s => collaboratorSections.includes(s.id))
+    : allSections
   const totalMins = sections.reduce((acc, s) => acc + (SECTION_TIMES[s.id] || 2), 0)
 
   const [started, setStarted]     = useState(false)
+  const [finished, setFinished]   = useState(false)
   const [current, setCurrent]     = useState(0)
   const [checked, setChecked]     = useState({})   // { sectionId_pointIdx: bool }
   const [showNote, setShowNote]   = useState(false) // toggle full speaker note
@@ -323,6 +329,57 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose 
   const checkedCount = keyPoints.filter((_, i) => checked[`${section?.id}_${i}`]).length
   const allChecked   = keyPoints.length > 0 && checkedCount === keyPoints.length
   const sectionMins  = SECTION_TIMES[section?.id] || 2
+
+  // ── Finished / celebration screen ────────────────────────────────────────
+  if (finished) {
+    const firstName = studentName ? studentName.split(' ')[0] : null
+    const mins = Math.floor(timer / 60)
+    const secs = timer % 60
+    const timeStr = mins > 0 ? `${mins}m ${String(secs).padStart(2,'0')}s` : `${secs}s`
+
+    return (
+      <div style={{ position: 'fixed', inset: 0, zIndex: 10000, background: '#060c18', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: 'Inter, system-ui, sans-serif', color: C.text, padding: 32, textAlign: 'center' }}>
+        <style>{`@keyframes pop{0%{transform:scale(0.5);opacity:0}60%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}} @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}`}</style>
+
+        <div style={{ fontSize: 80, marginBottom: 4, animation: 'pop 0.5s ease-out' }}>🎓</div>
+        <h2 style={{ fontSize: 28, fontWeight: 800, margin: '16px 0 8px', letterSpacing: '-0.5px', animation: 'fadeUp 0.4s 0.2s ease-out both' }}>
+          Boa apresentação{firstName ? `, ${firstName}` : ''}!
+        </h2>
+        <p style={{ fontSize: 18, color: '#93c5fd', margin: '0 0 8px', animation: 'fadeUp 0.4s 0.35s ease-out both' }}>
+          Vês como foi fácil?
+        </p>
+        <p style={{ fontSize: 14, color: C.muted, margin: '0 0 32px', lineHeight: 1.6, maxWidth: 300, animation: 'fadeUp 0.4s 0.45s ease-out both' }}>
+          Passaste por todas as secções. Agora é só confiar no trabalho que fizeste.
+        </p>
+
+        <div style={{ display: 'flex', gap: 12, marginBottom: 32, animation: 'fadeUp 0.4s 0.5s ease-out both' }}>
+          <div style={{ background: '#0d1829', border: '1px solid #1e3050', borderRadius: 12, padding: '16px 24px' }}>
+            <div style={{ fontSize: 22, fontWeight: 800, color: C.text }}>{timeStr}</div>
+            <div style={{ fontSize: 11, color: C.subtle, marginTop: 2 }}>duração</div>
+          </div>
+          <div style={{ background: '#0d1829', border: '1px solid #1e3050', borderRadius: 12, padding: '16px 24px' }}>
+            <div style={{ fontSize: 22, fontWeight: 800, color: C.text }}>{sections.length}</div>
+            <div style={{ fontSize: 11, color: C.subtle, marginTop: 2 }}>secções</div>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%', maxWidth: 320, animation: 'fadeUp 0.4s 0.6s ease-out both' }}>
+          <button
+            onClick={() => { setFinished(false); setTimer(0); setTimerOn(false); setCurrent(0); setChecked({}); setShowNote(false) }}
+            style={{ padding: '14px 0', background: 'linear-gradient(135deg, #3b82f6, #4f46e5)', border: 'none', borderRadius: 14, color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 6px 24px rgba(59,130,246,0.35)' }}
+          >
+            Recomeçar do início
+          </button>
+          <button
+            onClick={onClose}
+            style={{ padding: '14px 0', background: 'transparent', border: '1px solid #1e3050', borderRadius: 14, color: C.muted, fontSize: 15, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+          >
+            Fechar
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   // ── Start screen ─────────────────────────────────────────────────────────
   if (!started) {
@@ -550,28 +607,263 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose 
           style={{ flex: 1, padding: '16px 0', background: 'rgba(255,255,255,0.03)', border: '1px solid #1e3050', borderRadius: 14, color: current === 0 ? '#1e3050' : C.muted, fontSize: 20, cursor: current === 0 ? 'default' : 'pointer', fontFamily: 'inherit' }}
         >←</button>
         <button
-          onClick={next}
-          disabled={current === sections.length - 1}
-          style={{ flex: 3, padding: '16px 0', background: current === sections.length - 1 ? 'rgba(255,255,255,0.03)' : `linear-gradient(135deg, ${accent}, ${accent}bb)`, border: 'none', borderRadius: 14, color: current === sections.length - 1 ? '#1e3050' : '#fff', fontSize: 16, fontWeight: 700, cursor: current === sections.length - 1 ? 'default' : 'pointer', fontFamily: 'inherit', boxShadow: current === sections.length - 1 ? 'none' : `0 4px 20px ${accent}44` }}
+          onClick={() => {
+            if (current === sections.length - 1) { setTimerOn(false); setFinished(true) }
+            else next()
+          }}
+          style={{ flex: 3, padding: '16px 0', background: `linear-gradient(135deg, ${current === sections.length - 1 ? '#22c55e, #16a34a' : `${accent}, ${accent}bb`})`, border: 'none', borderRadius: 14, color: '#fff', fontSize: 16, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: `0 4px 20px ${current === sections.length - 1 ? 'rgba(34,197,94,0.4)' : accent + '44'}` }}
         >
-          {current === sections.length - 1 ? '🎓 Fim' : 'Próxima secção →'}
+          {current === sections.length - 1 ? '🎓 Terminar apresentação' : 'Próxima secção →'}
         </button>
       </div>
     </div>
   )
 }
 
+// ─── Group / collaborators panel ─────────────────────────────────────────────
+
+const ALL_SECTIONS = [
+  { id: 'cover',        label: 'Introdução',      icon: '👋' },
+  { id: 'problem',      label: 'O Problema',       icon: '🔍' },
+  { id: 'solution',     label: 'A Solução',        icon: '💡' },
+  { id: 'features',     label: 'Funcionalidades',  icon: '⚙️' },
+  { id: 'technologies', label: 'Tecnologias',      icon: '🛠️' },
+  { id: 'results',      label: 'Resultados',       icon: '🏆' },
+  { id: 'learnings',    label: 'Aprendizagens',    icon: '📚' },
+  { id: 'closing',      label: 'Encerramento',     icon: '🎤' },
+]
+
+function GrupoPanel({ project }) {
+  const [search, setSearch]           = useState('')
+  const [searchResult, setSearchResult] = useState(null)  // profile found
+  const [searching, setSearching]     = useState(false)
+  const [searchErr, setSearchErr]     = useState('')
+  const [collaborators, setCollaborators] = useState([])  // { user_id, sections, profiles }
+  const [pendingSections, setPendingSections] = useState({}) // { user_id: [section_ids] }
+  const [saving, setSaving]           = useState(false)
+  const [saved, setSaved]             = useState(false)
+
+  useEffect(() => { loadCollaborators() }, [])
+
+  async function loadCollaborators() {
+    const { data } = await supabase
+      .from('project_collaborators')
+      .select('user_id, sections, profiles(id, username, full_name)')
+      .eq('project_id', project.id)
+    if (data) {
+      setCollaborators(data)
+      const initial = {}
+      data.forEach(c => { initial[c.user_id] = c.sections ?? [] })
+      setPendingSections(initial)
+    }
+  }
+
+  async function doSearch() {
+    const q = search.trim()
+    if (!q) return
+    setSearching(true)
+    setSearchErr('')
+    setSearchResult(null)
+    const { data } = await supabase
+      .from('profiles')
+      .select('id, username, full_name')
+      .eq('username', q)
+      .single()
+    if (!data) {
+      setSearchErr('Utilizador não encontrado. Verifica o username.')
+    } else if (collaborators.find(c => c.user_id === data.id)) {
+      setSearchErr('Este utilizador já foi adicionado.')
+    } else {
+      setSearchResult(data)
+    }
+    setSearching(false)
+  }
+
+  async function addCollaborator() {
+    if (!searchResult) return
+    await supabase.from('project_collaborators').upsert({
+      project_id: project.id,
+      user_id: searchResult.id,
+      sections: [],
+    })
+    setSearchResult(null)
+    setSearch('')
+    loadCollaborators()
+  }
+
+  async function saveAssignments() {
+    setSaving(true)
+    for (const [userId, sections] of Object.entries(pendingSections)) {
+      await supabase
+        .from('project_collaborators')
+        .update({ sections })
+        .eq('project_id', project.id)
+        .eq('user_id', userId)
+    }
+    setSaving(false)
+    setSaved(true)
+    setTimeout(() => setSaved(false), 2000)
+  }
+
+  async function removeCollaborator(userId) {
+    await supabase
+      .from('project_collaborators')
+      .delete()
+      .eq('project_id', project.id)
+      .eq('user_id', userId)
+    loadCollaborators()
+  }
+
+  function toggleSection(userId, sectionId) {
+    setPendingSections(prev => {
+      const current = prev[userId] ?? []
+      return {
+        ...prev,
+        [userId]: current.includes(sectionId)
+          ? current.filter(s => s !== sectionId)
+          : [...current, sectionId],
+      }
+    })
+  }
+
+  const hasChanges = collaborators.some(c => {
+    const original = c.sections ?? []
+    const pending = pendingSections[c.user_id] ?? []
+    return JSON.stringify([...original].sort()) !== JSON.stringify([...pending].sort())
+  })
+
+  return (
+    <div>
+      <p style={{ margin: '0 0 18px', fontSize: 14, color: C.muted, lineHeight: 1.6 }}>
+        Adiciona os teus colegas de grupo pelo username do Showo. Depois atribui as secções que cada um vai apresentar — o Guia do Apresentador deles só mostrará as secções deles.
+      </p>
+
+      {/* Search */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: searchErr ? 8 : 20 }}>
+        <input
+          type="text"
+          value={search}
+          onChange={e => { setSearch(e.target.value); setSearchErr(''); setSearchResult(null) }}
+          onKeyDown={e => e.key === 'Enter' && doSearch()}
+          placeholder="Username do colega (ex: joaosilva)"
+          style={{ flex: 1, background: '#060c16', border: `1.5px solid ${C.border}`, borderRadius: 10, color: C.text, fontSize: 14, padding: '10px 14px', outline: 'none', fontFamily: 'inherit' }}
+        />
+        <button
+          onClick={doSearch}
+          disabled={!search.trim() || searching}
+          style={{ background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.25)', borderRadius: 10, padding: '10px 16px', color: '#60a5fa', fontSize: 13, fontWeight: 600, cursor: search.trim() ? 'pointer' : 'default', fontFamily: 'inherit' }}
+        >
+          {searching ? '...' : 'Procurar'}
+        </button>
+      </div>
+
+      {searchErr && <p style={{ color: C.red, fontSize: 13, margin: '0 0 16px' }}>{searchErr}</p>}
+
+      {searchResult && (
+        <div style={{ background: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: 12, padding: '14px 16px', marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{searchResult.full_name || searchResult.username}</div>
+            <div style={{ fontSize: 12, color: C.muted }}>@{searchResult.username}</div>
+          </div>
+          <button
+            onClick={addCollaborator}
+            style={{ background: 'linear-gradient(135deg, #3b82f6, #4f46e5)', border: 'none', borderRadius: 8, padding: '8px 16px', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+          >
+            Adicionar
+          </button>
+        </div>
+      )}
+
+      {/* Collaborator list with section assignment */}
+      {collaborators.length === 0 ? (
+        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: '28px', textAlign: 'center' }}>
+          <p style={{ margin: 0, color: C.subtle, fontSize: 14 }}>Nenhum colega adicionado ainda.</p>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {collaborators.map(collab => {
+            const name = collab.profiles?.full_name || collab.profiles?.username || 'Colega'
+            const assigned = pendingSections[collab.user_id] ?? []
+            return (
+              <div key={collab.user_id} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: '18px 20px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{name}</div>
+                    <div style={{ fontSize: 12, color: C.muted }}>@{collab.profiles?.username}</div>
+                  </div>
+                  <button
+                    onClick={() => removeCollaborator(collab.user_id)}
+                    style={{ background: 'transparent', border: 'none', color: C.subtle, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}
+                  >
+                    Remover
+                  </button>
+                </div>
+                <p style={{ margin: '0 0 10px', fontSize: 11, fontWeight: 700, color: C.subtle, textTransform: 'uppercase', letterSpacing: 1 }}>
+                  Secções atribuídas ({assigned.length})
+                </p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {ALL_SECTIONS.map(s => {
+                    const on = assigned.includes(s.id)
+                    return (
+                      <button
+                        key={s.id}
+                        onClick={() => toggleSection(collab.user_id, s.id)}
+                        style={{
+                          background: on ? 'rgba(59,130,246,0.12)' : 'transparent',
+                          border: `1px solid ${on ? 'rgba(59,130,246,0.4)' : C.border}`,
+                          borderRadius: 7, padding: '5px 10px',
+                          color: on ? '#60a5fa' : C.muted,
+                          fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+                          transition: 'all 0.12s',
+                        }}
+                      >
+                        {s.icon} {s.label}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            )
+          })}
+
+          {(hasChanges || saved) && (
+            <button
+              onClick={saveAssignments}
+              disabled={saving}
+              style={{
+                padding: '12px 0', width: '100%',
+                background: saved ? 'rgba(52,211,153,0.1)' : 'linear-gradient(135deg, #3b82f6, #4f46e5)',
+                border: saved ? '1px solid rgba(52,211,153,0.3)' : 'none',
+                borderRadius: 12,
+                color: saved ? C.green : '#fff',
+                fontSize: 14, fontWeight: 700, cursor: saving ? 'default' : 'pointer', fontFamily: 'inherit',
+              }}
+            >
+              {saving ? 'A guardar...' : saved ? '✓ Guardado' : 'Guardar atribuições'}
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export default function DefenseMode({ project, isOwner, onClose }) {
-  const [tab, setTab]             = useState('notes')   // 'notes' | 'jury' | 'guide'
+export default function DefenseMode({ project, isOwner, collaboratorSections, onClose }) {
+  const { profile } = useAuth()
+  const studentName = profile?.full_name || profile?.username || ''
+  const isCollaborator = collaboratorSections !== null && !isOwner
+  const canSeeFullPrep = isOwner || isCollaborator
+
+  const [tab, setTab]             = useState('notes')   // 'notes' | 'jury' | 'guide' | 'grupo'
   const [aiData, setAiData]       = useState(null)
   const [loadingAI, setLoadingAI] = useState(false)
   const [aiError, setAiError]     = useState(false)
   const [guideMode, setGuideMode] = useState(false)
 
   useEffect(() => {
-    if (!isOwner) return
+    if (!canSeeFullPrep) return
     loadAI()
   }, [])
 
@@ -601,13 +893,16 @@ export default function DefenseMode({ project, isOwner, onClose }) {
       aiError={aiError}
       onRetry={loadAI}
       onClose={() => setGuideMode(false)}
+      collaboratorSections={collaboratorSections}
+      studentName={studentName}
     />
   )
 
   const tabs = [
-    { id: 'notes', label: '📝 Notas',    show: isOwner },
-    { id: 'jury',  label: '🎓 Júri',     show: isOwner },
+    { id: 'notes', label: '📝 Notas',    show: canSeeFullPrep },
+    { id: 'jury',  label: '🎓 Júri',     show: canSeeFullPrep },
     { id: 'guide', label: '📱 No dia',   show: true },
+    { id: 'grupo', label: '👥 Grupo',    show: isOwner },
   ].filter(t => t.show)
 
   return (
@@ -649,13 +944,14 @@ export default function DefenseMode({ project, isOwner, onClose }) {
 
         {/* Content */}
         <div style={{ flex: 1, overflow: 'auto', padding: '20px 28px 28px' }}>
-          {!isOwner && (
+          {!canSeeFullPrep && (
             <div style={{ background: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.15)', borderRadius: 12, padding: '20px', textAlign: 'center' }}>
-              <p style={{ margin: 0, color: C.muted, fontSize: 14 }}>A preparação completa está disponível apenas para o criador do projeto.</p>
+              <p style={{ margin: 0, color: C.muted, fontSize: 14 }}>A preparação completa está disponível para o criador e colaboradores do projeto.</p>
             </div>
           )}
-          {tab === 'notes' && isOwner && <NotesPanel aiData={aiData} loadingAI={loadingAI} aiError={aiError} onRetry={loadAI} />}
-          {tab === 'jury'  && isOwner && <JuryPanel  aiData={aiData} loadingAI={loadingAI} aiError={aiError} onRetry={loadAI} />}
+          {tab === 'notes' && canSeeFullPrep && <NotesPanel aiData={aiData} loadingAI={loadingAI} aiError={aiError} onRetry={loadAI} />}
+          {tab === 'jury'  && canSeeFullPrep && <JuryPanel  aiData={aiData} loadingAI={loadingAI} aiError={aiError} onRetry={loadAI} />}
+          {tab === 'grupo' && isOwner && <GrupoPanel project={project} />}
           {tab === 'guide' && (
             <div>
               {/* Preview card */}

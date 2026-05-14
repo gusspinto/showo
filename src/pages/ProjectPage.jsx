@@ -357,6 +357,7 @@ export default function ProjectPage() {
   const [regenerating, setRegenerating] = useState(false)
   const [regenCooldown, setRegenCooldown] = useState(0)
   const [defenseMode, setDefenseMode] = useState(false)
+  const [collaboratorSections, setCollaboratorSections] = useState(null) // null = not a collaborator
 
   const prevScoreRef = useRef(null)
   const rafRef = useRef(null)
@@ -388,9 +389,22 @@ export default function ProjectPage() {
       if (s > 0 && (!data.score || data.score !== s)) {
         supabase.from('projects').update({ score: s }).eq('id', data.id)
       }
+
+      // Check if logged-in user is a collaborator (not the owner)
+      if (user?.id && data.user_id && user.id !== data.user_id) {
+        supabase
+          .from('project_collaborators')
+          .select('sections')
+          .eq('project_id', data.id)
+          .eq('user_id', user.id)
+          .single()
+          .then(({ data: collab }) => {
+            if (collab) setCollaboratorSections(collab.sections ?? [])
+          })
+      }
     }
     fetchProject()
-  }, [slug])
+  }, [slug, user?.id])
 
   useEffect(() => {
     if (prevScoreRef.current === null || prevScoreRef.current === score) return
@@ -559,6 +573,7 @@ export default function ProjectPage() {
         <DefenseMode
           project={project}
           isOwner={isOwner}
+          collaboratorSections={collaboratorSections}
           onClose={() => setDefenseMode(false)}
         />
       )}
