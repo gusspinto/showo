@@ -12,7 +12,7 @@ export function AuthProvider({ children }) {
     if (!uid) { setProfile(null); return }
     const { data } = await supabase
       .from('profiles')
-      .select('id, username, full_name, bio')
+      .select('id, username, full_name, bio, is_admin, banned_at')
       .eq('id', uid)
       .single()
     setProfile(data ?? null)
@@ -46,8 +46,10 @@ export function AuthProvider({ children }) {
     if (user) fetchProfile(user.id)
   }
 
+  const isAdmin = profile?.is_admin === true
+
   return (
-    <AuthContext.Provider value={{ user, profile, loading, signOut, refreshProfile }}>
+    <AuthContext.Provider value={{ user, profile, loading, signOut, refreshProfile, isAdmin }}>
       {children}
     </AuthContext.Provider>
   )

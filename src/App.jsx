@@ -15,6 +15,7 @@ import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
 import Settings from './pages/Settings'
 import UserProfile from './pages/UserProfile'
+import Admin from './pages/Admin'
 import SplashScreen from './components/SplashScreen'
 
 // Animation timeline:
@@ -96,6 +97,7 @@ export default function App() {
             <Route path="/dashboard"     element={<Dashboard />}   />
             <Route path="/settings"      element={<Settings />}    />
             <Route path="/u/:username"   element={<UserProfile />} />
+            <Route path="/admin"         element={<Admin />}       />
           </Routes>
         </BrowserRouter>
       </AuthProvider>

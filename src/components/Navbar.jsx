@@ -331,7 +331,7 @@ const dropItemStyle = {
 
 export function Navbar({ children, showLinks = true }) {
   const navigate = useNavigate()
-  const { user, profile, signOut } = useAuth()
+  const { user, profile, signOut, isAdmin } = useAuth()
   const [open, setOpen] = useState(false)
 
   const profileUrl = profile?.username ? `/u/${profile.username}` : user ? `/u/${user.id}` : null
@@ -464,6 +464,17 @@ export function Navbar({ children, showLinks = true }) {
           <div className="nav-auth">
             {user ? (
               <>
+                {isAdmin && (
+                  <button
+                    onClick={() => navigate('/admin')}
+                    style={{
+                      background: 'rgba(168,85,247,0.08)', border: '1px solid rgba(168,85,247,0.25)',
+                      color: '#a855f7', borderRadius: 8, padding: '6px 12px',
+                      fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                    }}
+                    title="Painel de administração"
+                  >🛡️</button>
+                )}
                 <InviteInbox userId={user.id} />
                 <UserChip
                   user={user}
