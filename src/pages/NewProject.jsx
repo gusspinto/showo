@@ -129,7 +129,7 @@ async function resizeImage(file, maxWidth = 1200) {
 export default function NewProject() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const [phase, setPhase] = useState('goal')
   const [formGoal, setFormGoal] = useState(null)
   const [step, setStep] = useState(0)
@@ -138,8 +138,18 @@ export default function NewProject() {
   const [savedProject, setSavedProject] = useState(null)
   const [copiedLink, setCopiedLink] = useState(null)
   const [prefillBanner, setPrefillBanner] = useState(false)
+  const [showAuthNudge, setShowAuthNudge] = useState(false)
   const { toast, show: showToast } = useToast()
   const fileInputRef = useRef(null)
+
+  // Show auth nudge for anonymous users (once per session)
+  useEffect(() => {
+    if (authLoading) return
+    if (!user && !sessionStorage.getItem('showo_auth_nudge_dismissed')) {
+      setShowAuthNudge(true)
+    }
+    if (user) setShowAuthNudge(false)
+  }, [user, authLoading])
 
   // On mount: check for widget prefill state
   useEffect(() => {
@@ -414,9 +424,90 @@ export default function NewProject() {
   // ── FORM ─────────────────────────────────────────────────
   const isFinalize = s.type === 'finalize'
 
+  function handleAuthNudgeDismiss() {
+    sessionStorage.setItem('showo_auth_nudge_dismissed', '1')
+    setShowAuthNudge(false)
+  }
+
   return (
     <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: 'Inter, system-ui, sans-serif', display: 'flex', flexDirection: 'column' }}>
       <Toast {...toast} />
+
+      {/* Auth nudge modal */}
+      {showAuthNudge && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 9999,
+          background: 'rgba(8,14,26,0.82)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: '0 16px',
+          backdropFilter: 'blur(4px)',
+        }}>
+          <div style={{
+            background: '#111827',
+            border: '1px solid #1e3050',
+            borderRadius: 18,
+            padding: '36px 32px 28px',
+            maxWidth: 420, width: '100%',
+            boxShadow: '0 24px 60px rgba(0,0,0,0.6)',
+            textAlign: 'center',
+          }}>
+            <div style={{ fontSize: 36, marginBottom: 16 }}>💾</div>
+            <h2 style={{ color: '#e8f2ff', fontSize: 20, fontWeight: 800, margin: '0 0 10px', letterSpacing: '-0.3px' }}>
+              Guarda o teu projeto
+            </h2>
+            <p style={{ color: '#7d93b0', fontSize: 14, lineHeight: 1.65, margin: '0 0 28px' }}>
+              Sem conta, o teu projeto fica guardado apenas com um link privado — se o perderes, não há forma de recuperar. Com conta, fica sempre acessível.
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <button
+                onClick={() => navigate('/register')}
+                style={{
+                  background: 'linear-gradient(135deg, #3b82f6, #4f46e5)',
+                  border: 'none', borderRadius: 10,
+                  padding: '12px 0', color: '#fff',
+                  fontSize: 15, fontWeight: 700,
+                  cursor: 'pointer', fontFamily: 'Inter, sans-serif',
+                  boxShadow: '0 4px 16px rgba(59,130,246,0.3)',
+                  transition: 'opacity 0.15s',
+                }}
+                onMouseEnter={e => e.currentTarget.style.opacity = '0.88'}
+                onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+              >
+                Criar conta
+              </button>
+              <button
+                onClick={() => navigate('/login')}
+                style={{
+                  background: 'transparent',
+                  border: '1px solid #1e3050', borderRadius: 10,
+                  padding: '11px 0', color: '#e8f2ff',
+                  fontSize: 15, fontWeight: 600,
+                  cursor: 'pointer', fontFamily: 'Inter, sans-serif',
+                  transition: 'border-color 0.15s, background 0.15s',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = '#2a4275'; e.currentTarget.style.background = 'rgba(255,255,255,0.03)' }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = '#1e3050'; e.currentTarget.style.background = 'transparent' }}
+              >
+                Iniciar sessão
+              </button>
+              <button
+                onClick={handleAuthNudgeDismiss}
+                style={{
+                  background: 'transparent', border: 'none',
+                  color: '#4a6080', fontSize: 13, fontWeight: 500,
+                  cursor: 'pointer', fontFamily: 'Inter, sans-serif',
+                  padding: '8px 0', marginTop: 2,
+                  transition: 'color 0.15s',
+                }}
+                onMouseEnter={e => e.currentTarget.style.color = '#7d93b0'}
+                onMouseLeave={e => e.currentTarget.style.color = '#4a6080'}
+              >
+                Continuar sem conta
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Navbar showLinks={false}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
