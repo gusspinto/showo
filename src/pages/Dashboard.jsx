@@ -145,7 +145,7 @@ function ProjectRow({ project, onView, onEdit }) {
 }
 
 export default function Dashboard() {
-  const { user, loading: authLoading } = useAuth()
+  const { user, profile, loading: authLoading } = useAuth()
   const navigate = useNavigate()
   const [projects, setProjects] = useState([])
   const [loadingProjects, setLoadingProjects] = useState(true)
@@ -210,10 +210,7 @@ export default function Dashboard() {
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             <button
-              onClick={async () => {
-                const { data } = await supabase.from('profiles').select('username').eq('id', user.id).single()
-                navigate(data?.username ? `/u/${data.username}` : `/u/${user.id}`)
-              }}
+              onClick={() => navigate(profile?.username ? `/u/${profile.username}` : `/u/${user.id}`)}
               style={{
                 background: 'transparent', border: `1px solid ${C.border}`,
                 borderRadius: 8, padding: '8px 14px',

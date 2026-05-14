@@ -36,7 +36,7 @@ function getDisplayName(user) {
   return user?.email?.split('@')[0] ?? ''
 }
 
-function UserChip({ user, onClick, onSettings, onSignOut }) {
+function UserChip({ user, onClick, onProfile, onSettings, onSignOut }) {
   const [open, setOpen] = useState(false)
   const initial = getInitial(user)
   const name = getDisplayName(user)
@@ -94,6 +94,16 @@ function UserChip({ user, onClick, onSettings, onSignOut }) {
             >
               📂 Dashboard
             </button>
+            {onProfile && (
+              <button
+                onClick={() => { onProfile(); setOpen(false) }}
+                style={{ ...dropItemStyle, color: C.text }}
+                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.07)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+              >
+                👤 Meu perfil
+              </button>
+            )}
             <button
               onClick={() => { onSettings(); setOpen(false) }}
               style={{ ...dropItemStyle, color: C.text }}
@@ -128,8 +138,10 @@ const dropItemStyle = {
 
 export function Navbar({ children, showLinks = true }) {
   const navigate = useNavigate()
-  const { user, signOut } = useAuth()
+  const { user, profile, signOut } = useAuth()
   const [open, setOpen] = useState(false)
+
+  const profileUrl = profile?.username ? `/u/${profile.username}` : user ? `/u/${user.id}` : null
 
   async function handleSignOut() {
     await signOut()
@@ -261,6 +273,7 @@ export function Navbar({ children, showLinks = true }) {
               <UserChip
                 user={user}
                 onClick={() => navigate('/dashboard')}
+                onProfile={profileUrl ? () => navigate(profileUrl) : null}
                 onSettings={() => navigate('/settings')}
                 onSignOut={handleSignOut}
               />

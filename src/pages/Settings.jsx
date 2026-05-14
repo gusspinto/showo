@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
@@ -115,14 +115,19 @@ function SectionCard({ title, children }) {
 }
 
 export default function Settings() {
-  const { user, loading: authLoading } = useAuth()
+  const { user, loading: authLoading, refreshProfile } = useAuth()
   const navigate = useNavigate()
 
-  const [fullName, setFullName]       = useState('')
-  const [username, setUsername]       = useState('')
-  const [bio, setBio]                 = useState('')
-  const [saving, setSaving]           = useState(false)
-  const [saveMsg, setSaveMsg]         = useState(null) // { type: 'ok'|'err', text }
+  const [fullName, setFullName]           = useState('')
+  const [username, setUsername]           = useState('')
+  const [originalUsername, setOriginalUsername] = useState('')
+  const [bio, setBio]                     = useState('')
+  const [saving, setSaving]               = useState(false)
+  const [saveMsg, setSaveMsg]             = useState(null)
+
+  // Username availability check
+  const [usernameStatus, setUsernameStatus] = useState(null) // null | 'checking' | 'available' | 'taken' | 'invalid'
+  const debounceRef = useRef(null)
 
   const [currentPw, setCurrentPw]     = useState('')
   const [newPw, setNewPw]             = useState('')
@@ -142,10 +147,38 @@ export default function Settings() {
     supabase.from('profiles').select('username, bio').eq('id', user.id).single().then(({ data }) => {
       if (data) {
         setUsername(data.username ?? '')
+        setOriginalUsername(data.username ?? '')
         setBio(data.bio ?? '')
       }
     })
   }, [user])
+
+  // Real-time username availability check
+  useEffect(() => {
+    clearTimeout(debounceRef.current)
+    const trimmed = username.trim()
+
+    if (!trimmed || trimmed === originalUsername) {
+      setUsernameStatus(null)
+      return
+    }
+    if (!/^[a-z0-9_]{3,30}$/.test(trimmed)) {
+      setUsernameStatus('invalid')
+      return
+    }
+
+    setUsernameStatus('checking')
+    debounceRef.current = setTimeout(async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('username', trimmed)
+        .single()
+      setUsernameStatus(data ? 'taken' : 'available')
+    }, 500)
+
+    return () => clearTimeout(debounceRef.current)
+  }, [username, originalUsername])
 
   async function handleSaveProfile() {
     if (!user) return
@@ -155,6 +188,11 @@ export default function Settings() {
     // Validate username
     if (username && !/^[a-z0-9_]{3,30}$/.test(username)) {
       setSaveMsg({ type: 'err', text: 'Username só pode ter letras minúsculas, números e _ (3–30 caracteres).' })
+      setSaving(false)
+      return
+    }
+    if (usernameStatus === 'taken') {
+      setSaveMsg({ type: 'err', text: 'Este username já está a ser usado.' })
       setSaving(false)
       return
     }
@@ -182,6 +220,9 @@ export default function Settings() {
         throw profileError
       }
 
+      setOriginalUsername(username.trim())
+      setUsernameStatus(null)
+      refreshProfile()
       setSaveMsg({ type: 'ok', text: 'Perfil guardado.' })
     } catch (err) {
       setSaveMsg({ type: 'err', text: err.message ?? 'Erro ao guardar.' })
@@ -245,7 +286,13 @@ export default function Settings() {
             onChange={v => setUsername(v.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
             placeholder="ex: gustavo_silva"
             prefix="@"
-            hint="Letras minúsculas, números e _. Usado no teu link público: showo.vercel.app/u/username"
+            hint={
+              usernameStatus === 'checking'  ? '⏳ A verificar disponibilidade...' :
+              usernameStatus === 'available' ? '✅ Username disponível!' :
+              usernameStatus === 'taken'     ? '❌ Este username já está a ser usado.' :
+              usernameStatus === 'invalid'   ? '⚠️ Só letras minúsculas, números e _ (mín. 3 caracteres).' :
+              `Link público: showo.vercel.app/u/${username || 'username'}`
+            }
           />
           <Textarea
             label="Bio"
