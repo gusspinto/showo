@@ -132,12 +132,24 @@ export default function EditProject() {
       const tokenFromStorage = localStorage.getItem(`edit_token_${slug}`)
       const token = tokenFromUrl || tokenFromStorage
 
-      // Dual ownership: logged-in owner OR valid edit token OR legacy project
+      // Dual ownership: logged-in owner OR valid edit token OR legacy project OR accepted collaborator
       const isOwner = user && data.user_id && user.id === data.user_id
       const hasToken = data.edit_token && token === data.edit_token
       const isLegacy = !data.edit_token && !data.user_id
 
-      if (!isOwner && !hasToken && !isLegacy) {
+      let isCollaborator = false
+      if (!isOwner && !hasToken && !isLegacy && user) {
+        const { data: collab } = await supabase
+          .from('project_collaborators')
+          .select('id')
+          .eq('project_id', data.id)
+          .eq('user_id', user.id)
+          .eq('status', 'accepted')
+          .single()
+        isCollaborator = !!collab
+      }
+
+      if (!isOwner && !hasToken && !isLegacy && !isCollaborator) {
         setAccessDenied(true)
         setLoading(false)
         return

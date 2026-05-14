@@ -46,8 +46,19 @@ function InviteInbox({ userId }) {
   useEffect(() => {
     if (!userId) return
     loadInvites()
-    const t = setInterval(loadInvites, 20000)
-    return () => clearInterval(t)
+
+    // Real-time: re-fetch when any collaborator row for this user changes
+    const channel = supabase
+      .channel(`invites-${userId}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'project_collaborators',
+        filter: `user_id=eq.${userId}`,
+      }, () => loadInvites())
+      .subscribe()
+
+    return () => supabase.removeChannel(channel)
   }, [userId])
 
   async function loadInvites() {
