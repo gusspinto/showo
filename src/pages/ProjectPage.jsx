@@ -455,12 +455,24 @@ export default function ProjectPage() {
       const isProjectOwner = !!(user?.id && data.user_id && user.id === data.user_id)
 
       async function loadMembers(projectId) {
+        // Step 1: get collaborator rows (no embedded join — two FKs to profiles causes PostgREST ambiguity)
         const q = supabase
           .from('project_collaborators')
-          .select('user_id, status, sections, profiles(id, username, full_name)')
+          .select('user_id, status, sections')
           .eq('project_id', projectId)
-        const { data: collabs } = isProjectOwner ? await q : await q.eq('status', 'accepted')
-        if (collabs) setMembers(collabs)
+        const { data: rows } = isProjectOwner ? await q : await q.eq('status', 'accepted')
+        if (!rows?.length) { setMembers([]); return }
+
+        // Step 2: fetch profiles separately
+        const userIds = [...new Set(rows.map(r => r.user_id))]
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, username, full_name')
+          .in('id', userIds)
+        const profileMap = {}
+        profiles?.forEach(p => { profileMap[p.id] = p })
+
+        setMembers(rows.map(r => ({ ...r, profiles: profileMap[r.user_id] || null })))
       }
       loadMembers(data.id)
 
