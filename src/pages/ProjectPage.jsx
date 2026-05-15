@@ -452,17 +452,28 @@ export default function ProjectPage() {
         supabase.from('projects').update({ score: s }).eq('id', data.id)
       }
 
-      // Load collaborators for the members panel
-      // Owner sees all (pending/accepted/declined); others see only accepted
       const isProjectOwner = !!(user?.id && data.user_id && user.id === data.user_id)
-      const collabQuery = supabase
-        .from('project_collaborators')
-        .select('user_id, status, sections, profiles(id, username, full_name)')
-        .eq('project_id', data.id)
-      const finalQuery = isProjectOwner ? collabQuery : collabQuery.eq('status', 'accepted')
-      finalQuery.then(({ data: collabs }) => {
+
+      async function loadMembers(projectId) {
+        const q = supabase
+          .from('project_collaborators')
+          .select('user_id, status, sections, profiles(id, username, full_name)')
+          .eq('project_id', projectId)
+        const { data: collabs } = isProjectOwner ? await q : await q.eq('status', 'accepted')
         if (collabs) setMembers(collabs)
-      })
+      }
+      loadMembers(data.id)
+
+      // Realtime: update members panel when any collaborator row changes
+      const channel = supabase
+        .channel(`members-${data.id}`)
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'project_collaborators',
+          filter: `project_id=eq.${data.id}`,
+        }, () => loadMembers(data.id))
+        .subscribe()
 
       // Load owner profile for correct name display
       if (data.user_id) {
@@ -489,6 +500,8 @@ export default function ProjectPage() {
             if (collab) setCollaboratorSections(collab.sections ?? [])
           })
       }
+
+      return () => supabase.removeChannel(channel)
     }
     fetchProject()
   }, [slug, user?.id])
