@@ -144,11 +144,28 @@ function ProjectRow({ project, onView, onEdit }) {
   )
 }
 
+function generateClassCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+  return Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join('')
+}
+
 export default function Dashboard() {
   const { user, profile, loading: authLoading } = useAuth()
   const navigate = useNavigate()
   const [projects, setProjects] = useState([])
   const [loadingProjects, setLoadingProjects] = useState(true)
+  const [myClasses, setMyClasses] = useState([])
+  const [showCreateClass, setShowCreateClass] = useState(false)
+  const [className, setClassName] = useState('')
+  const [classSubject, setClassSubject] = useState('')
+  const [creatingClass, setCreatingClass] = useState(false)
+  const [classToast, setClassToast] = useState('')
+  const [copiedCode, setCopiedCode] = useState(null)
+
+  function showClassToast(msg) {
+    setClassToast(msg)
+    setTimeout(() => setClassToast(''), 3500)
+  }
 
   useEffect(() => {
     if (!authLoading && !user) navigate('/login')
@@ -157,16 +174,54 @@ export default function Dashboard() {
   useEffect(() => {
     if (!user) return
     async function load() {
-      const { data, error } = await supabase
-        .from('projects')
-        .select('id, name, slug, score, area, created_at, ai_tagline')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-      if (!error) setProjects(data || [])
+      const [projRes, classRes] = await Promise.all([
+        supabase.from('projects').select('id, name, slug, score, area, created_at, ai_tagline').eq('user_id', user.id).order('created_at', { ascending: false }),
+        supabase.from('classes').select('id, name, subject, code, created_at').eq('teacher_id', user.id).order('created_at', { ascending: false }),
+      ])
+      if (!projRes.error) setProjects(projRes.data || [])
+      if (!classRes.error) setMyClasses(classRes.data || [])
       setLoadingProjects(false)
     }
     load()
   }, [user])
+
+  async function createClass() {
+    if (!className.trim()) return
+    setCreatingClass(true)
+    let code = generateClassCode()
+    // Try to insert, retry if code collision
+    for (let i = 0; i < 5; i++) {
+      const { data, error } = await supabase
+        .from('classes')
+        .insert({ name: className.trim(), subject: classSubject.trim() || null, code, teacher_id: user.id, teacher_name: profile?.full_name || profile?.username || null })
+        .select()
+        .single()
+      if (!error && data) {
+        setMyClasses(prev => [data, ...prev])
+        setClassName('')
+        setClassSubject('')
+        setShowCreateClass(false)
+        showClassToast(`✅ Turma criada! Código: ${code}`)
+        break
+      }
+      if (error?.code === '23505') { code = generateClassCode(); continue } // code collision
+      showClassToast('Erro ao criar turma.')
+      break
+    }
+    setCreatingClass(false)
+  }
+
+  async function deleteClass(id) {
+    await supabase.from('classes').delete().eq('id', id)
+    setMyClasses(prev => prev.filter(c => c.id !== id))
+    showClassToast('Turma eliminada.')
+  }
+
+  function copyCode(code) {
+    navigator.clipboard.writeText(code)
+    setCopiedCode(code)
+    setTimeout(() => setCopiedCode(null), 2000)
+  }
 
   if (authLoading) {
     return (
@@ -284,6 +339,52 @@ export default function Dashboard() {
           </h2>
         </div>
 
+        {/* Toast for classes */}
+        <div style={{
+          position: 'fixed', bottom: 28, left: '50%',
+          transform: `translateX(-50%) translateY(${classToast ? 0 : 80}px)`,
+          opacity: classToast ? 1 : 0, transition: 'all 0.3s cubic-bezier(0.34,1.56,0.64,1)',
+          background: '#111c32', border: '1px solid #2a4275', borderRadius: 12,
+          padding: '12px 24px', fontSize: 14, fontWeight: 600, color: C.text,
+          zIndex: 3000, pointerEvents: 'none', whiteSpace: 'nowrap',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+        }}>{classToast}</div>
+
+        {/* Create class modal */}
+        {showCreateClass && (
+          <div style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
+            onClick={e => e.target === e.currentTarget && setShowCreateClass(false)}>
+            <div style={{ background: '#111c32', border: '1px solid #2a4275', borderRadius: 18, padding: '28px', width: '100%', maxWidth: 400, boxShadow: '0 16px 48px rgba(0,0,0,0.6)', fontFamily: 'Inter, sans-serif' }}>
+              <h3 style={{ margin: '0 0 20px', fontSize: 18, fontWeight: 700, color: C.text }}>Nova turma</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 20 }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: C.muted, marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>Nome da turma *</label>
+                  <input
+                    value={className} onChange={e => setClassName(e.target.value)}
+                    placeholder="Ex: 12º DEV, Turma A..."
+                    onKeyDown={e => e.key === 'Enter' && createClass()}
+                    style={{ width: '100%', background: '#0a1118', border: '1px solid #1e3050', borderRadius: 8, padding: '10px 12px', color: C.text, fontSize: 14, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: C.muted, marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>Disciplina (opcional)</label>
+                  <input
+                    value={classSubject} onChange={e => setClassSubject(e.target.value)}
+                    placeholder="Ex: Projeto e Desenvolvimento..."
+                    style={{ width: '100%', background: '#0a1118', border: '1px solid #1e3050', borderRadius: 8, padding: '10px 12px', color: C.text, fontSize: 14, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }}
+                  />
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button onClick={() => setShowCreateClass(false)} style={{ flex: 1, background: 'transparent', border: '1px solid #1e3050', borderRadius: 8, padding: '10px', color: C.muted, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}>Cancelar</button>
+                <button onClick={createClass} disabled={!className.trim() || creatingClass} style={{ flex: 2, background: 'linear-gradient(135deg,#3b82f6,#4f46e5)', border: 'none', borderRadius: 8, padding: '10px', color: '#fff', fontSize: 14, fontWeight: 700, cursor: !className.trim() || creatingClass ? 'default' : 'pointer', opacity: !className.trim() || creatingClass ? 0.6 : 1, fontFamily: 'inherit' }}>
+                  {creatingClass ? 'A criar...' : 'Criar turma'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {loadingProjects ? (
           <div style={{ color: C.muted, fontSize: 15, padding: '24px 0' }}>A carregar projetos…</div>
         ) : projects.length === 0 ? (
@@ -321,6 +422,57 @@ export default function Dashboard() {
             ))}
           </div>
         )}
+
+        {/* ── Turmas ── */}
+        <div style={{ marginTop: 48 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+            <h2 style={{ color: C.text, fontSize: 16, fontWeight: 700, margin: 0 }}>
+              As minhas turmas
+              {myClasses.length > 0 && <span style={{ color: C.muted, fontWeight: 400, fontSize: 14, marginLeft: 8 }}>({myClasses.length})</span>}
+            </h2>
+            <button
+              onClick={() => setShowCreateClass(true)}
+              style={{ background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: 8, padding: '7px 14px', color: '#60a5fa', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+            >
+              + Criar turma
+            </button>
+          </div>
+
+          {myClasses.length === 0 ? (
+            <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: '36px 32px', textAlign: 'center' }}>
+              <div style={{ fontSize: 36, marginBottom: 10 }}>🏫</div>
+              <p style={{ color: C.text, fontSize: 15, fontWeight: 700, margin: '0 0 6px' }}>Nenhuma turma criada</p>
+              <p style={{ color: C.muted, fontSize: 13, margin: '0 0 18px', lineHeight: 1.6 }}>Cria uma turma, partilha o código com os alunos e acompanha os projetos deles.</p>
+              <button onClick={() => setShowCreateClass(true)} style={{ background: C.blue, border: 'none', borderRadius: 8, padding: '9px 20px', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                Criar primeira turma →
+              </button>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {myClasses.map(cls => (
+                <div key={cls.id} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+                  <div style={{ width: 38, height: 38, borderRadius: 10, background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>🏫</div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{cls.name}</div>
+                    {cls.subject && <div style={{ fontSize: 12, color: C.muted }}>{cls.subject}</div>}
+                  </div>
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', flexShrink: 0 }}>
+                    <button onClick={() => copyCode(cls.code)} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.15)', borderRadius: 7, padding: '5px 10px', cursor: 'pointer', fontFamily: 'inherit' }}>
+                      <span style={{ fontSize: 13, fontWeight: 800, color: '#60a5fa', letterSpacing: 1.5 }}>{cls.code}</span>
+                      <span style={{ fontSize: 11, color: copiedCode === cls.code ? C.green : C.muted }}>{copiedCode === cls.code ? '✓' : '⎘'}</span>
+                    </button>
+                    <button onClick={() => navigate(`/turma/${cls.code}`)} style={{ background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 7, padding: '5px 12px', color: C.muted, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                      Ver turma
+                    </button>
+                    <button onClick={() => deleteClass(cls.id)} style={{ background: 'rgba(248,113,113,0.06)', border: '1px solid rgba(248,113,113,0.2)', borderRadius: 7, padding: '5px 10px', color: '#f87171', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>
+                      ✕
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

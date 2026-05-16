@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Navbar } from '../components/Navbar'
 import { prefillProject } from '../lib/prefillProject'
+import Onboarding from '../components/Onboarding'
 
 const colors = {
   bg: '#0d1424',
@@ -81,6 +82,7 @@ export default function Home() {
   const [selectedGoal, setSelectedGoal] = useState(null)
   const [inputText, setInputText] = useState('')
   const [analyzing, setAnalyzing] = useState(false)
+  const [showOnboarding, setShowOnboarding] = useState(() => !localStorage.getItem('showo_seen_onboarding'))
 
   async function handleStart(e) {
     e.preventDefault()
@@ -115,6 +117,7 @@ export default function Home() {
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: 'Inter, system-ui, sans-serif' }}>
+      {showOnboarding && <Onboarding onDone={() => setShowOnboarding(false)} />}
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes pulse-glow {

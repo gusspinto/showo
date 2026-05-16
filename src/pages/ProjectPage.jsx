@@ -9,6 +9,7 @@ import { Navbar } from '../components/Navbar'
 import { generateProject } from '../lib/generateProject'
 import { useAuth } from '../context/AuthContext'
 import DefenseMode from '../components/DefenseMode'
+import { analyzeProject } from '../lib/analyzeProject'
 
 const colors = {
   bg: '#0d1424',
@@ -420,6 +421,12 @@ export default function ProjectPage() {
   const [collaboratorSections, setCollaboratorSections] = useState(null) // null = not a collaborator
   const [members, setMembers] = useState([]) // [{ user_id, status, sections, profiles }]
   const [ownerProfile, setOwnerProfile] = useState(null)
+  const [aiFeedback, setAiFeedback] = useState(null)
+  const [analyzingAI, setAnalyzingAI] = useState(false)
+  const [analyzeError, setAnalyzeError] = useState(null)
+  const [classCode, setClassCode] = useState('')
+  const [joiningClass, setJoiningClass] = useState(false)
+  const [classJoinMsg, setClassJoinMsg] = useState(null)
 
   const prevScoreRef = useRef(null)
   const rafRef = useRef(null)
@@ -451,6 +458,9 @@ export default function ProjectPage() {
       if (s > 0 && (!data.score || data.score !== s)) {
         supabase.from('projects').update({ score: s }).eq('id', data.id)
       }
+
+      // Load cached AI feedback
+      if (data.ai_feedback) setAiFeedback(data.ai_feedback)
 
       const isProjectOwner = !!(user?.id && data.user_id && user.id === data.user_id)
 
@@ -581,6 +591,50 @@ export default function ProjectPage() {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     })
+  }
+
+  async function handleAnalyzeAI() {
+    if (!project) return
+    setAnalyzingAI(true)
+    setAnalyzeError(null)
+    try {
+      const result = await analyzeProject(project)
+      setAiFeedback(result)
+      // persist to DB so it loads next time
+      await supabase.from('projects').update({ ai_feedback: result }).eq('id', project.id)
+    } catch (e) {
+      setAnalyzeError('Erro ao analisar. Tenta novamente.')
+    }
+    setAnalyzingAI(false)
+  }
+
+  async function handleJoinClass() {
+    const code = classCode.trim().toUpperCase()
+    if (!code || !project) return
+    setJoiningClass(true)
+    setClassJoinMsg(null)
+    try {
+      // Find class by code
+      const { data: cls, error: clsErr } = await supabase
+        .from('classes').select('id, name').eq('code', code).single()
+      if (clsErr || !cls) {
+        setClassJoinMsg({ ok: false, text: 'Código de turma inválido.' })
+        setJoiningClass(false)
+        return
+      }
+      const { error: insErr } = await supabase
+        .from('class_projects').insert({ class_id: cls.id, project_id: project.id })
+      if (insErr) {
+        if (insErr.code === '23505') setClassJoinMsg({ ok: true, text: `Projeto já adicionado à turma "${cls.name}".` })
+        else setClassJoinMsg({ ok: false, text: 'Erro ao adicionar à turma.' })
+      } else {
+        setClassJoinMsg({ ok: true, text: `✓ Projeto adicionado à turma "${cls.name}"!` })
+        setClassCode('')
+      }
+    } catch {
+      setClassJoinMsg({ ok: false, text: 'Erro inesperado.' })
+    }
+    setJoiningClass(false)
   }
 
   async function handleRegenerate() {
@@ -1036,6 +1090,116 @@ export default function ProjectPage() {
             ))}
           </div>
         </div>}
+
+        {/* AI Feedback — owner only */}
+        {isOwner && (
+          <div style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 20, padding: '28px', marginTop: 24, boxShadow: '0 4px 24px rgba(0,0,0,0.3)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: aiFeedback ? 20 : 0, flexWrap: 'wrap', gap: 12 }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+                  <span style={{ fontSize: 22 }}>🤖</span>
+                  <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, letterSpacing: '-0.3px' }}>Análise da IA</h3>
+                </div>
+                <p style={{ margin: 0, fontSize: 13, color: colors.muted, paddingLeft: 32 }}>Feedback personalizado para melhorar o teu projeto</p>
+              </div>
+              <button
+                onClick={handleAnalyzeAI}
+                disabled={analyzingAI}
+                style={{
+                  background: analyzingAI ? 'rgba(59,130,246,0.1)' : 'linear-gradient(135deg,#3b82f6,#4f46e5)',
+                  border: analyzingAI ? '1px solid rgba(59,130,246,0.3)' : 'none',
+                  borderRadius: 10, padding: '9px 18px',
+                  color: analyzingAI ? '#60a5fa' : '#fff',
+                  fontSize: 13, fontWeight: 700, cursor: analyzingAI ? 'default' : 'pointer',
+                  fontFamily: 'inherit', transition: 'all 0.2s',
+                  boxShadow: analyzingAI ? 'none' : '0 4px 16px rgba(59,130,246,0.35)',
+                  flexShrink: 0,
+                }}
+              >
+                {analyzingAI ? '✨ A analisar…' : aiFeedback ? '↻ Reanalisar' : '✨ Analisar com IA'}
+              </button>
+            </div>
+
+            {analyzeError && (
+              <div style={{ background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.25)', borderRadius: 10, padding: '12px 16px', color: '#f87171', fontSize: 13 }}>
+                {analyzeError}
+              </div>
+            )}
+
+            {aiFeedback && !analyzingAI && (
+              <div>
+                {/* Overall summary */}
+                <div style={{ background: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.15)', borderRadius: 12, padding: '14px 16px', marginBottom: 16 }}>
+                  <div style={{ fontSize: 13, color: '#e8f2ff', lineHeight: 1.65, marginBottom: aiFeedback.score_hint ? 8 : 0 }}>
+                    {aiFeedback.overall}
+                  </div>
+                  {aiFeedback.score_hint && (
+                    <div style={{ fontSize: 12, color: '#60a5fa', fontWeight: 600, display: 'flex', alignItems: 'flex-start', gap: 6 }}>
+                      <span>💡</span>
+                      <span>{aiFeedback.score_hint}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Per-section feedback */}
+                {aiFeedback.sections && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {Object.entries(aiFeedback.sections).map(([key, sec]) => {
+                      const LABELS = { goal: 'Objetivo', problem: 'Problema', solution: 'Solução', target_audience: 'Público-alvo', features: 'Funcionalidades', technologies: 'Tecnologias', results: 'Resultados', learnings: 'Aprendizagens' }
+                      const ratingColor = sec.rating === 'forte' ? colors.green : sec.rating === 'médio' ? colors.yellow : colors.orange
+                      const ratingBg = sec.rating === 'forte' ? 'rgba(34,197,94,0.1)' : sec.rating === 'médio' ? 'rgba(234,179,8,0.1)' : 'rgba(249,115,22,0.1)'
+                      return (
+                        <div key={key} style={{ background: colors.bg, border: `1px solid ${colors.border}`, borderRadius: 10, padding: '12px 14px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                            <span style={{ fontSize: 12, fontWeight: 700, color: colors.muted, minWidth: 110 }}>{LABELS[key] || key}</span>
+                            <span style={{ fontSize: 11, fontWeight: 700, color: ratingColor, background: ratingBg, borderRadius: 5, padding: '2px 7px', textTransform: 'uppercase' }}>{sec.rating}</span>
+                          </div>
+                          <p style={{ margin: '0 0 4px', fontSize: 12, color: '#afc3dc', lineHeight: 1.55 }}>{sec.feedback}</p>
+                          {sec.tip && (
+                            <p style={{ margin: 0, fontSize: 12, color: '#60a5fa', lineHeight: 1.55 }}>→ {sec.tip}</p>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Adicionar a uma turma — owner only */}
+        {isOwner && (
+          <div style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 16, padding: '22px 24px', marginTop: 16, display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 20 }}>🏫</span>
+            <div style={{ flex: 1, minWidth: 180 }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: colors.text, marginBottom: 3 }}>Adicionar a uma turma</div>
+              <div style={{ fontSize: 12, color: colors.muted }}>Insere o código da turma do teu professor</div>
+            </div>
+            <div style={{ display: 'flex', gap: 8, flexShrink: 0, flexWrap: 'wrap' }}>
+              <input
+                value={classCode}
+                onChange={e => { setClassCode(e.target.value.toUpperCase()); setClassJoinMsg(null) }}
+                onKeyDown={e => e.key === 'Enter' && handleJoinClass()}
+                placeholder="Código (ex: AB34XZ)"
+                maxLength={8}
+                style={{ background: colors.bg, border: `1px solid ${classJoinMsg?.ok === false ? 'rgba(248,113,113,0.5)' : colors.border}`, borderRadius: 8, padding: '8px 12px', color: colors.text, fontSize: 13, fontFamily: 'inherit', outline: 'none', width: 130, letterSpacing: 2, fontWeight: 700 }}
+              />
+              <button
+                onClick={handleJoinClass}
+                disabled={joiningClass || !classCode.trim()}
+                style={{ background: 'linear-gradient(135deg,#3b82f6,#4f46e5)', border: 'none', borderRadius: 8, padding: '8px 16px', color: '#fff', fontSize: 13, fontWeight: 700, cursor: joiningClass || !classCode.trim() ? 'default' : 'pointer', opacity: joiningClass || !classCode.trim() ? 0.6 : 1, fontFamily: 'inherit' }}
+              >
+                {joiningClass ? '…' : 'Entrar'}
+              </button>
+            </div>
+            {classJoinMsg && (
+              <div style={{ width: '100%', fontSize: 12, fontWeight: 600, color: classJoinMsg.ok ? colors.green : '#f87171', paddingLeft: 34 }}>
+                {classJoinMsg.text}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Share */}
         <div style={{
