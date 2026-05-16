@@ -424,9 +424,6 @@ export default function ProjectPage() {
   const [aiFeedback, setAiFeedback] = useState(null)
   const [analyzingAI, setAnalyzingAI] = useState(false)
   const [analyzeError, setAnalyzeError] = useState(null)
-  const [classCode, setClassCode] = useState('')
-  const [joiningClass, setJoiningClass] = useState(false)
-  const [classJoinMsg, setClassJoinMsg] = useState(null)
 
   const prevScoreRef = useRef(null)
   const rafRef = useRef(null)
@@ -608,34 +605,6 @@ export default function ProjectPage() {
     setAnalyzingAI(false)
   }
 
-  async function handleJoinClass() {
-    const code = classCode.trim().toUpperCase()
-    if (!code || !project) return
-    setJoiningClass(true)
-    setClassJoinMsg(null)
-    try {
-      // Find class by code
-      const { data: cls, error: clsErr } = await supabase
-        .from('classes').select('id, name').eq('code', code).single()
-      if (clsErr || !cls) {
-        setClassJoinMsg({ ok: false, text: 'Código de turma inválido.' })
-        setJoiningClass(false)
-        return
-      }
-      const { error: insErr } = await supabase
-        .from('class_projects').insert({ class_id: cls.id, project_id: project.id })
-      if (insErr) {
-        if (insErr.code === '23505') setClassJoinMsg({ ok: true, text: `Projeto já adicionado à turma "${cls.name}".` })
-        else setClassJoinMsg({ ok: false, text: 'Erro ao adicionar à turma.' })
-      } else {
-        setClassJoinMsg({ ok: true, text: `✓ Projeto adicionado à turma "${cls.name}"!` })
-        setClassCode('')
-      }
-    } catch {
-      setClassJoinMsg({ ok: false, text: 'Erro inesperado.' })
-    }
-    setJoiningClass(false)
-  }
 
   async function handleRegenerate() {
     if (regenCooldown > 0 || regenerating) return
@@ -1163,39 +1132,6 @@ export default function ProjectPage() {
                     })}
                   </div>
                 )}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Adicionar a uma turma — owner only */}
-        {isOwner && (
-          <div style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 16, padding: '22px 24px', marginTop: 16, display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 20 }}>🏫</span>
-            <div style={{ flex: 1, minWidth: 180 }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: colors.text, marginBottom: 3 }}>Adicionar a uma turma</div>
-              <div style={{ fontSize: 12, color: colors.muted }}>Insere o código da turma do teu professor</div>
-            </div>
-            <div style={{ display: 'flex', gap: 8, flexShrink: 0, flexWrap: 'wrap' }}>
-              <input
-                value={classCode}
-                onChange={e => { setClassCode(e.target.value.toUpperCase()); setClassJoinMsg(null) }}
-                onKeyDown={e => e.key === 'Enter' && handleJoinClass()}
-                placeholder="Código (ex: AB34XZ)"
-                maxLength={8}
-                style={{ background: colors.bg, border: `1px solid ${classJoinMsg?.ok === false ? 'rgba(248,113,113,0.5)' : colors.border}`, borderRadius: 8, padding: '8px 12px', color: colors.text, fontSize: 13, fontFamily: 'inherit', outline: 'none', width: 130, letterSpacing: 2, fontWeight: 700 }}
-              />
-              <button
-                onClick={handleJoinClass}
-                disabled={joiningClass || !classCode.trim()}
-                style={{ background: 'linear-gradient(135deg,#3b82f6,#4f46e5)', border: 'none', borderRadius: 8, padding: '8px 16px', color: '#fff', fontSize: 13, fontWeight: 700, cursor: joiningClass || !classCode.trim() ? 'default' : 'pointer', opacity: joiningClass || !classCode.trim() ? 0.6 : 1, fontFamily: 'inherit' }}
-              >
-                {joiningClass ? '…' : 'Entrar'}
-              </button>
-            </div>
-            {classJoinMsg && (
-              <div style={{ width: '100%', fontSize: 12, fontWeight: 600, color: classJoinMsg.ok ? colors.green : '#f87171', paddingLeft: 34 }}>
-                {classJoinMsg.text}
               </div>
             )}
           </div>
