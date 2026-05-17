@@ -1,12 +1,10 @@
 import { useState, useEffect } from 'react'
 
 /*
-  Sequência:
-  Phase 0 (0–1s)    → icon.png sozinho, centrado
-  Phase 1 (1–1.5s)  → logo.png emerge à direita; os dois centrados juntos
-  Phase 2 (1.6s+)   → ambos deslizam para a esquerda (flex reflow natural)
-                       → separador vertical aparece
-                       → slogan aparece à direita ("boost" em #1b78f7, fonte Croogla)
+  Phase 0 (0–1.4s)  → icon only, centred
+  Phase 1 (1.4–2.5s)→ logo emerges right of icon
+  Phase 2 (2.5s+)   → desktop: divider + slogan slide in beside logo
+                       mobile:  slogan fades in below logo (column layout)
 */
 
 export default function SplashScreen({ visible }) {
@@ -18,8 +16,8 @@ export default function SplashScreen({ visible }) {
       return () => clearTimeout(t)
     }
     setPhase(0)
-    const t1 = setTimeout(() => setPhase(1), 1400)   // icon sozinho 1.4s
-    const t2 = setTimeout(() => setPhase(2), 2500)   // icon+logo juntos 1.1s
+    const t1 = setTimeout(() => setPhase(1), 1400)
+    const t2 = setTimeout(() => setPhase(2), 2500)
     return () => { clearTimeout(t1); clearTimeout(t2) }
   }, [visible])
 
@@ -36,66 +34,93 @@ export default function SplashScreen({ visible }) {
       padding: '0 24px',
     }}>
       <style>{`
-        .sp-icon      { height: 64px; width: auto; display: block; user-select: none; flex-shrink: 0; }
-        .sp-logo      { height: 44px; width: auto; display: block; user-select: none; flex-shrink: 0; }
-        .sp-divider-bar { height: 72px; width: 1.5px; }
-        .sp-slogan    { font-size: 22px; }
+        .sp-icon { height: 64px; width: auto; display: block; user-select: none; flex-shrink: 0; }
+        .sp-logo { height: 44px; width: auto; display: block; user-select: none; flex-shrink: 0; }
+        .sp-divider-bar { height: 72px; width: 1.5px; flex-shrink: 0; }
 
-        @media (max-width: 768px) {
-          .sp-icon        { height: 52px; }
-          .sp-logo        { height: 36px; }
-          .sp-divider-bar { height: 58px; }
-          .sp-slogan      { font-size: 18px; }
+        /* Phase-driven classes (desktop: max-width slide) */
+        .sp-logo-wrap {
+          overflow: hidden; max-width: 0; opacity: 0; flex-shrink: 0;
+          transition: max-width 0.75s ease-in-out, opacity 0.6s ease-in-out;
         }
+        .sp-logo-wrap.sp-p1 { max-width: 400px; opacity: 1; }
+
+        .sp-sep-wrap {
+          overflow: hidden; max-width: 0; opacity: 0; flex-shrink: 0;
+          display: flex; align-items: center; justify-content: center;
+          transition: max-width 0.6s ease-in-out, opacity 0.5s ease-in-out;
+        }
+        .sp-sep-wrap.sp-p2 { max-width: 64px; opacity: 1; }
+
+        .sp-slogan-wrap {
+          overflow: hidden; max-width: 0; opacity: 0; flex-shrink: 0;
+          transition: max-width 0.65s ease-in-out 0.15s, opacity 0.55s ease-in-out 0.2s;
+        }
+        .sp-slogan-wrap.sp-p2 { max-width: 500px; opacity: 1; }
+
+        .sp-slogan {
+          font-family: var(--font-heading); font-weight: 800;
+          color: #e8f2ff; white-space: nowrap;
+          letter-spacing: -0.3px; line-height: 1.3; padding-right: 4px;
+          font-size: 22px;
+        }
+
+        /* Outer row */
+        .sp-outer { display: flex; align-items: center; }
+
+        /* ── Mobile: column layout ── */
+        @media (max-width: 768px) {
+          .sp-icon { height: 52px; }
+          .sp-logo { height: 36px; }
+          .sp-divider-bar { height: 58px; }
+          .sp-slogan { font-size: 18px; }
+        }
+
         @media (max-width: 520px) {
-          .sp-icon        { height: 40px; }
-          .sp-logo        { height: 28px; }
+          .sp-icon { height: 40px; }
+          .sp-logo { height: 28px; }
           .sp-divider-bar { height: 44px; }
-          .sp-slogan      { font-size: 14px; }
+
+          /* Column stacking */
+          .sp-outer { flex-direction: column; gap: 14px; }
+
+          /* Hide horizontal divider */
+          .sp-sep-wrap { display: none !important; }
+
+          /* Switch slogan to max-height animation (vertical reveal) */
+          .sp-slogan-wrap {
+            max-width: none !important;
+            max-height: 0;
+            width: 100%;
+            transition: max-height 0.5s ease-in-out 0.15s, opacity 0.5s ease-in-out 0.2s !important;
+          }
+          .sp-slogan-wrap.sp-p2 {
+            max-width: none !important;
+            max-height: 80px !important;
+            opacity: 1 !important;
+          }
+
+          /* Wrap + centre the text */
+          .sp-slogan {
+            font-size: 15px !important;
+            white-space: normal !important;
+            text-align: center;
+          }
         }
       `}</style>
 
-      <div style={{ display: 'flex', alignItems: 'center' }}>
+      <div className="sp-outer">
 
-        {/* ── Icon + Wordmark group ── */}
+        {/* Icon + Logo */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexShrink: 0 }}>
-
-          {/* icon.png — visível desde o início */}
-          <img
-            src="/icon.png"
-            alt=""
-            draggable={false}
-            className="sp-icon"
-          />
-
-          {/* logo.png — emerge no phase 1 */}
-          <div style={{
-            overflow: 'hidden',
-            maxWidth: phase >= 1 ? '400px' : '0px',
-            opacity: phase >= 1 ? 1 : 0,
-            transition: 'max-width 0.75s ease-in-out, opacity 0.6s ease-in-out',
-            flexShrink: 0,
-          }}>
-            <img
-              src="/logo.png"
-              alt="Showo"
-              draggable={false}
-              className="sp-logo"
-            />
+          <img src="/icon.png" alt="" draggable={false} className="sp-icon" />
+          <div className={`sp-logo-wrap${phase >= 1 ? ' sp-p1' : ''}`}>
+            <img src="/logo.png" alt="Showo" draggable={false} className="sp-logo" />
           </div>
         </div>
 
-        {/* ── Separador vertical — aparece no phase 2 ── */}
-        <div style={{
-          overflow: 'hidden',
-          maxWidth: phase >= 2 ? '64px' : '0px',
-          opacity: phase >= 2 ? 1 : 0,
-          flexShrink: 0,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          transition: 'max-width 0.6s ease-in-out, opacity 0.5s ease-in-out',
-        }}>
+        {/* Divider (desktop only) */}
+        <div className={`sp-sep-wrap${phase >= 2 ? ' sp-p2' : ''}`}>
           <div style={{ width: 28, flexShrink: 0 }} />
           <div
             className="sp-divider-bar"
@@ -104,32 +129,14 @@ export default function SplashScreen({ visible }) {
               transform: phase >= 2 ? 'scaleY(1)' : 'scaleY(0)',
               transformOrigin: 'center',
               transition: 'transform 0.55s ease-in-out 0.1s',
-              flexShrink: 0,
             }}
           />
           <div style={{ width: 28, flexShrink: 0 }} />
         </div>
 
-        {/* ── Slogan — aparece no phase 2 ── */}
-        <div style={{
-          overflow: 'hidden',
-          maxWidth: phase >= 2 ? '500px' : '0px',
-          opacity: phase >= 2 ? 1 : 0,
-          flexShrink: 0,
-          transition: 'max-width 0.65s ease-in-out 0.15s, opacity 0.55s ease-in-out 0.2s',
-        }}>
-          <div
-            className="sp-slogan"
-            style={{
-              fontFamily: 'var(--font-heading)',
-              fontWeight: 800,
-              color: '#e8f2ff',
-              whiteSpace: 'nowrap',
-              letterSpacing: '-0.3px',
-              lineHeight: 1.2,
-              paddingRight: 4,
-            }}
-          >
+        {/* Slogan */}
+        <div className={`sp-slogan-wrap${phase >= 2 ? ' sp-p2' : ''}`}>
+          <div className="sp-slogan">
             Dá um{' '}
             <span style={{ color: '#1b78f7' }}>boost</span>
             {' '}aos teus projetos!
