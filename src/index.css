@@ -1,11 +1,17 @@
-@import url('https://fonts.cdnfonts.com/css/croogla');
+@font-face {
+  font-family: 'Croogla';
+  src: url('/fonts/croogla_4f_regular.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
 
 *, *::before, *::after {
   box-sizing: border-box;
 }
 
 :root {
-  --font-heading: 'Croogla', 'Fredoka One', 'Poppins', 'Inter', sans-serif;
+  --font-heading: 'Croogla', 'Poppins', 'Inter', sans-serif;
   --font-body: 'Montserrat', 'Inter', system-ui, -apple-system, sans-serif;
 
   font-synthesis: none;
