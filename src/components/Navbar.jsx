@@ -437,7 +437,7 @@ export function Navbar({ children, showLinks = true }) {
         @media (max-width: 600px) {
           .nav-left         { display: none; }
           .nav-mid          { flex: 1; justify-content: flex-start; }
-          .nav-right        { flex: none; overflow: hidden; }
+          .nav-right        { flex: none; }
           .nav-auth         { display: none !important; }
           .nav-children-wrap{ display: none !important; }
           .nav-logo         { height: 28px !important; width: auto !important; }
@@ -545,7 +545,6 @@ export function Navbar({ children, showLinks = true }) {
           borderBottom: `1px solid ${C.border}`,
           boxShadow: '0 1px 24px rgba(0,0,0,0.3)',
           gap: 12,
-          overflow: 'hidden',
         }}
       >
         {/* Left */}
