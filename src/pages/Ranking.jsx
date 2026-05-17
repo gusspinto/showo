@@ -164,9 +164,13 @@ export default function Ranking() {
         .rank-mid:hover { transform: translateX(4px) !important; }
         .rank-rest:hover { background: ${colors.cardHover} !important; }
         .rank-top, .rank-mid, .rank-rest { transition: all 0.18s ease !important; }
-        @media (max-width: 520px) {
-          .podium-grid { flex-direction: column !important; align-items: stretch !important; }
-          .podium-card { min-height: unset !important; }
+        @media (max-width: 600px) {
+          .podium-grid { gap: 6px !important; }
+          .podium-card { padding: 14px 8px 16px !important; border-radius: 14px !important; min-height: unset !important; }
+          .podium-card-name { font-size: 11px !important; }
+          .podium-card-tagline { display: none !important; }
+          .podium-card-creator { display: none !important; }
+          .podium-card-badge { display: none !important; }
         }
       `}</style>
 
@@ -315,7 +319,7 @@ export default function Ranking() {
                         {ringEl}
 
                         {/* Name */}
-                        <span style={{
+                        <span className="podium-card-name" style={{
                           fontSize: isFirst ? 15 : 13,
                           fontWeight: 800, color: colors.text,
                           lineHeight: 1.25, marginTop: 2,
@@ -326,7 +330,7 @@ export default function Ranking() {
 
                         {/* Tagline — only on 1st */}
                         {isFirst && proj.ai_tagline && (
-                          <p style={{
+                          <p className="podium-card-tagline" style={{
                             margin: 0, fontSize: 11, color: colors.muted, lineHeight: 1.45,
                             display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
                           }}>
@@ -335,7 +339,7 @@ export default function Ranking() {
                         )}
 
                         {/* Badges */}
-                        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', justifyContent: 'center', marginTop: 2 }}>
+                        <div className="podium-card-badge" style={{ display: 'flex', gap: 4, flexWrap: 'wrap', justifyContent: 'center', marginTop: 2 }}>
                           {proj.is_pap && (
                             <span style={{
                               fontSize: 9, color: colors.yellow, fontWeight: 700,
@@ -356,7 +360,7 @@ export default function Ranking() {
 
                         {/* Creator */}
                         {!isSm && (
-                          <div style={{ fontSize: 10, color: colors.subtle, marginTop: 'auto' }}>
+                          <div className="podium-card-creator" style={{ fontSize: 10, color: colors.subtle, marginTop: 'auto' }}>
                             {[proj.creator_name, proj.school_year].filter(Boolean).join(' · ')}
                           </div>
                         )}
