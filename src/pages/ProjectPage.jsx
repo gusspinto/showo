@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import { QRCodeSVG } from 'qrcode.react'
 import { supabase } from '../lib/supabase'
@@ -421,6 +421,7 @@ function MembersPanel({ ownerName, members, colors, isOwner }) {
 export default function ProjectPage() {
   const { slug } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
   const { user } = useAuth()
   const [project, setProject] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -445,6 +446,14 @@ export default function ProjectPage() {
   const rafRef = useRef(null)
   const toastTimerRef = useRef(null)
   const cooldownRef = useRef(null)
+
+  // Show toast for newly created projects
+  useEffect(() => {
+    if (location.state?.newProject && location.state?.message) {
+      triggerToast(location.state.message)
+      window.history.replaceState({}, '')
+    }
+  }, [])
 
   const pageUrl = window.location.href
 
@@ -1183,6 +1192,109 @@ export default function ProjectPage() {
         <Section title="Resultados" content={project.results} />
         <Section title="Aprendizagens" content={project.learnings} />
 
+        {/* AI Feedback — BEFORE missions, visible to all if exists */}
+        {(isOwner || aiFeedback) ? (
+          <div style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 20, padding: '28px', marginBottom: 24, marginTop: 8, boxShadow: '0 4px 24px rgba(0,0,0,0.3)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: aiFeedback ? 20 : 0, flexWrap: 'wrap', gap: 12 }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+                  <Bot size={22} color="#818cf8" />
+                  <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, letterSpacing: '-0.3px' }}>Análise da IA</h3>
+                </div>
+                <p style={{ margin: 0, fontSize: 13, color: colors.muted, paddingLeft: 32 }}>Feedback personalizado para melhorar o teu projeto</p>
+              </div>
+              {isOwner && (
+                <button
+                  onClick={handleAnalyzeAI}
+                  disabled={analyzingAI}
+                  style={{
+                    background: analyzingAI ? 'rgba(27,120,247,0.1)' : 'linear-gradient(135deg,#3b82f6,#4f46e5)',
+                    border: analyzingAI ? '1px solid rgba(27,120,247,0.3)' : 'none',
+                    borderRadius: 10, padding: '9px 18px',
+                    color: analyzingAI ? '#60a5fa' : '#fff',
+                    fontSize: 13, fontWeight: 700, cursor: analyzingAI ? 'default' : 'pointer',
+                    fontFamily: 'inherit', transition: 'all 0.2s',
+                    boxShadow: analyzingAI ? 'none' : '0 4px 16px rgba(27,120,247,0.35)',
+                    flexShrink: 0,
+                  }}
+                >
+                  {analyzingAI ? <><Sparkles size={14} style={{ verticalAlign: 'middle' }} /> A analisar…</> : aiFeedback ? '↻ Reanalisar' : <><Sparkles size={14} style={{ verticalAlign: 'middle' }} /> Analisar com IA</>}
+                </button>
+              )}
+            </div>
+
+            {analyzeError && (
+              <div style={{ background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.25)', borderRadius: 10, padding: '12px 16px', color: '#f87171', fontSize: 13 }}>
+                {analyzeError}
+              </div>
+            )}
+
+            {aiFeedback && !analyzingAI && (
+              <div>
+                <div style={{ background: 'rgba(27,120,247,0.06)', border: '1px solid rgba(27,120,247,0.15)', borderRadius: 12, padding: '14px 16px', marginBottom: 16 }}>
+                  <div style={{ fontSize: 13, color: '#e8f2ff', lineHeight: 1.65, marginBottom: aiFeedback.score_hint ? 8 : 0 }}>
+                    {aiFeedback.overall}
+                  </div>
+                  {aiFeedback.score_hint && (
+                    <div style={{ fontSize: 12, color: '#60a5fa', fontWeight: 600, display: 'flex', alignItems: 'flex-start', gap: 6 }}>
+                      <Lightbulb size={14} style={{ flexShrink: 0, marginTop: 1 }} />
+                      <span>{aiFeedback.score_hint}</span>
+                    </div>
+                  )}
+                </div>
+                {aiFeedback.sections && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {Object.entries(aiFeedback.sections).map(([key, sec]) => {
+                      const LABELS = { goal: 'Objetivo', problem: 'Problema', solution: 'Solução', target_audience: 'Público-alvo', features: 'Funcionalidades', technologies: 'Tecnologias', results: 'Resultados', learnings: 'Aprendizagens' }
+                      const ratingColor = sec.rating === 'forte' ? colors.green : sec.rating === 'médio' ? colors.yellow : colors.orange
+                      const ratingBg = sec.rating === 'forte' ? 'rgba(34,197,94,0.1)' : sec.rating === 'médio' ? 'rgba(234,179,8,0.1)' : 'rgba(249,115,22,0.1)'
+                      return (
+                        <div key={key} style={{ background: colors.bg, border: `1px solid ${colors.border}`, borderRadius: 10, padding: '12px 14px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                            <span style={{ fontSize: 12, fontWeight: 700, color: colors.muted, minWidth: 110 }}>{LABELS[key] || key}</span>
+                            <span style={{ fontSize: 11, fontWeight: 700, color: ratingColor, background: ratingBg, borderRadius: 5, padding: '2px 7px', textTransform: 'uppercase' }}>{sec.rating}</span>
+                          </div>
+                          <p style={{ margin: '0 0 4px', fontSize: 12, color: '#afc3dc', lineHeight: 1.55 }}>{sec.feedback}</p>
+                          {sec.tip && (
+                            <p style={{ margin: 0, fontSize: 12, color: '#60a5fa', lineHeight: 1.55 }}>→ {sec.tip}</p>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        ) : (
+          /* Teaser for non-owners viewing a project without AI analysis */
+          <div style={{
+            background: 'linear-gradient(135deg, #0e1830 0%, #0a1220 100%)',
+            border: '1px solid rgba(129,140,248,0.2)',
+            borderRadius: 16, padding: '20px 24px', marginBottom: 24, marginTop: 8,
+            display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap',
+          }}>
+            <Bot size={28} color="#818cf8" style={{ flexShrink: 0 }} />
+            <div style={{ flex: 1, minWidth: 200 }}>
+              <p style={{ margin: '0 0 10px', fontSize: 14, color: '#c4b5fd', lineHeight: 1.55 }}>
+                Este projeto tem análise por IA disponível — Cria o teu para receberes feedback personalizado.
+              </p>
+              <button
+                onClick={() => window.location.href = '/novo'}
+                style={{
+                  background: 'linear-gradient(135deg, #6d28d9, #4f46e5)',
+                  border: 'none', borderRadius: 8, padding: '8px 18px',
+                  color: '#fff', fontSize: 13, fontWeight: 700,
+                  cursor: 'pointer', fontFamily: 'inherit',
+                  boxShadow: '0 4px 14px rgba(109,40,217,0.35)',
+                }}
+              >
+                Criar o meu projeto →
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Missions — visible to all, edit actions only for owner */}
         {<div style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 20, padding: '28px', marginBottom: 16, marginTop: 8, boxShadow: '0 4px 24px rgba(0,0,0,0.3)' }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 14 }}>
@@ -1222,85 +1334,6 @@ export default function ProjectPage() {
             ))}
           </div>
         </div>}
-
-        {/* AI Feedback — button only for owner, results visible to all if exists */}
-        {(isOwner || aiFeedback) && (
-          <div style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 20, padding: '28px', marginTop: 24, boxShadow: '0 4px 24px rgba(0,0,0,0.3)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: aiFeedback ? 20 : 0, flexWrap: 'wrap', gap: 12 }}>
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-                  <Bot size={22} color="#818cf8" />
-                  <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, letterSpacing: '-0.3px' }}>Análise da IA</h3>
-                </div>
-                <p style={{ margin: 0, fontSize: 13, color: colors.muted, paddingLeft: 32 }}>Feedback personalizado para melhorar o teu projeto</p>
-              </div>
-              {isOwner && (
-                <button
-                  onClick={handleAnalyzeAI}
-                  disabled={analyzingAI}
-                  style={{
-                    background: analyzingAI ? 'rgba(27,120,247,0.1)' : 'linear-gradient(135deg,#3b82f6,#4f46e5)',
-                    border: analyzingAI ? '1px solid rgba(27,120,247,0.3)' : 'none',
-                    borderRadius: 10, padding: '9px 18px',
-                    color: analyzingAI ? '#60a5fa' : '#fff',
-                    fontSize: 13, fontWeight: 700, cursor: analyzingAI ? 'default' : 'pointer',
-                    fontFamily: 'inherit', transition: 'all 0.2s',
-                    boxShadow: analyzingAI ? 'none' : '0 4px 16px rgba(27,120,247,0.35)',
-                    flexShrink: 0,
-                  }}
-                >
-                  {analyzingAI ? <><Sparkles size={14} style={{ verticalAlign: 'middle' }} /> A analisar…</> : aiFeedback ? '↻ Reanalisar' : <><Sparkles size={14} style={{ verticalAlign: 'middle' }} /> Analisar com IA</>}
-                </button>
-              )}
-            </div>
-
-            {analyzeError && (
-              <div style={{ background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.25)', borderRadius: 10, padding: '12px 16px', color: '#f87171', fontSize: 13 }}>
-                {analyzeError}
-              </div>
-            )}
-
-            {aiFeedback && !analyzingAI && (
-              <div>
-                {/* Overall summary */}
-                <div style={{ background: 'rgba(27,120,247,0.06)', border: '1px solid rgba(27,120,247,0.15)', borderRadius: 12, padding: '14px 16px', marginBottom: 16 }}>
-                  <div style={{ fontSize: 13, color: '#e8f2ff', lineHeight: 1.65, marginBottom: aiFeedback.score_hint ? 8 : 0 }}>
-                    {aiFeedback.overall}
-                  </div>
-                  {aiFeedback.score_hint && (
-                    <div style={{ fontSize: 12, color: '#60a5fa', fontWeight: 600, display: 'flex', alignItems: 'flex-start', gap: 6 }}>
-                      <Lightbulb size={14} style={{ flexShrink: 0, marginTop: 1 }} />
-                      <span>{aiFeedback.score_hint}</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Per-section feedback */}
-                {aiFeedback.sections && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                    {Object.entries(aiFeedback.sections).map(([key, sec]) => {
-                      const LABELS = { goal: 'Objetivo', problem: 'Problema', solution: 'Solução', target_audience: 'Público-alvo', features: 'Funcionalidades', technologies: 'Tecnologias', results: 'Resultados', learnings: 'Aprendizagens' }
-                      const ratingColor = sec.rating === 'forte' ? colors.green : sec.rating === 'médio' ? colors.yellow : colors.orange
-                      const ratingBg = sec.rating === 'forte' ? 'rgba(34,197,94,0.1)' : sec.rating === 'médio' ? 'rgba(234,179,8,0.1)' : 'rgba(249,115,22,0.1)'
-                      return (
-                        <div key={key} style={{ background: colors.bg, border: `1px solid ${colors.border}`, borderRadius: 10, padding: '12px 14px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                            <span style={{ fontSize: 12, fontWeight: 700, color: colors.muted, minWidth: 110 }}>{LABELS[key] || key}</span>
-                            <span style={{ fontSize: 11, fontWeight: 700, color: ratingColor, background: ratingBg, borderRadius: 5, padding: '2px 7px', textTransform: 'uppercase' }}>{sec.rating}</span>
-                          </div>
-                          <p style={{ margin: '0 0 4px', fontSize: 12, color: '#afc3dc', lineHeight: 1.55 }}>{sec.feedback}</p>
-                          {sec.tip && (
-                            <p style={{ margin: 0, fontSize: 12, color: '#60a5fa', lineHeight: 1.55 }}>→ {sec.tip}</p>
-                          )}
-                        </div>
-                      )
-                    })}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
 
         {/* Share */}
         <div className="proj-card-pad" style={{

@@ -1,12 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import { QRCodeSVG } from 'qrcode.react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
-import CoverLetterModal from '../components/CoverLetterModal'
-import { Mail, Search, Folder, FolderOpen } from 'lucide-react'
+import { Mail, Search, FolderOpen, X, Check, Download } from 'lucide-react'
 
 const C = {
   bg: '#0d1424',
@@ -20,6 +19,15 @@ const C = {
   green: '#34d399',
   yellow: '#fbbf24',
   red: '#f87171',
+}
+
+function getAreaGradient(area) {
+  const a = (area || '').toLowerCase()
+  if (a.includes('educa')) return 'linear-gradient(135deg, #1e3a5f, #2d6a4f)'
+  if (a.includes('comercial') || a.includes('marketing') || a.includes('vendas')) return 'linear-gradient(135deg, #3d1a6e, #1a3a6e)'
+  if (a.includes('tecnolog') || a.includes('informátic') || a.includes('programaç') || a.includes('software')) return 'linear-gradient(135deg, #0d2137, #1a4a6e)'
+  if (a.includes('saúde') || a.includes('saude') || a.includes('medical') || a.includes('bio')) return 'linear-gradient(135deg, #1a4a2e, #2d6a4f)'
+  return 'linear-gradient(135deg, #2d1a4a, #1a2d6e)'
 }
 
 function getScoreColor(score) {
@@ -59,11 +67,12 @@ function ProjectCard({ project, onClick }) {
       ) : (
         <div style={{
           height: 100,
-          background: `linear-gradient(135deg, ${color}18, ${color}06)`,
+          background: getAreaGradient(project.area),
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 36,
         }}>
-          {project.area ? project.area[0] : <Folder size={36} color={color} />}
+          <span style={{ fontSize: 40, fontWeight: 900, color: 'rgba(255,255,255,0.25)', userSelect: 'none', lineHeight: 1 }}>
+            {project.name ? project.name[0].toUpperCase() : '?'}
+          </span>
         </div>
       )}
 
@@ -96,6 +105,193 @@ function ProjectCard({ project, onClick }) {
   )
 }
 
+function KitDeEstagioModal({ profile, projects, onClose }) {
+  const [copiedField, setCopiedField] = useState(null)
+  const [emailText, setEmailText] = useState('')
+  const qrRef = useRef(null)
+
+  const displayName = profile?.full_name || profile?.username || 'O teu nome'
+  const username = profile?.username || profile?.id || ''
+  const profileUrl = `https://showo.app/u/${username}`
+
+  useEffect(() => {
+    setEmailText(
+`Assunto: Candidatura a Estágio — ${displayName}
+
+Olá,
+
+Chamo-me ${displayName} e estou a candidatar-me a uma oportunidade de estágio na vossa empresa. Desenvolvi ${projects.length} projeto${projects.length !== 1 ? 's' : ''} que pode consultar no meu portfólio: ${profileUrl}
+
+Fico disponível para qualquer questão.
+
+Cumprimentos,
+${displayName}`
+    )
+  }, [displayName, username, projects.length])
+
+  function copy(text, key) {
+    navigator.clipboard.writeText(text)
+    setCopiedField(key)
+    setTimeout(() => setCopiedField(null), 2200)
+  }
+
+  function downloadQR() {
+    const svg = qrRef.current?.querySelector('svg')
+    if (!svg) return
+    const canvas = document.createElement('canvas')
+    const size = 300
+    canvas.width = size
+    canvas.height = size
+    const ctx = canvas.getContext('2d')
+    ctx.fillStyle = '#ffffff'
+    ctx.fillRect(0, 0, size, size)
+    const svgData = new XMLSerializer().serializeToString(svg)
+    const img = new Image()
+    img.onload = () => {
+      ctx.drawImage(img, 0, 0, size, size)
+      const link = document.createElement('a')
+      link.download = `showo-qr-${username}.png`
+      link.href = canvas.toDataURL('image/png')
+      link.click()
+    }
+    img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)))
+  }
+
+  return (
+    <div
+      style={{
+        position: 'fixed', inset: 0, zIndex: 9800,
+        background: 'rgba(5,9,18,0.88)', backdropFilter: 'blur(6px)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: '16px', fontFamily: 'Inter, sans-serif',
+      }}
+      onClick={e => e.target === e.currentTarget && onClose()}
+    >
+      <div style={{
+        background: '#0d1829', border: '1px solid #1e3050',
+        borderRadius: 20, width: '100%', maxWidth: 560,
+        maxHeight: '90vh', overflow: 'auto',
+        boxShadow: '0 32px 80px rgba(0,0,0,0.7)',
+      }}>
+        {/* Header */}
+        <div style={{ padding: '24px 28px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div>
+            <h2 style={{ margin: '0 0 4px', fontSize: 20, fontWeight: 800, color: C.text }}>Kit de Estágio</h2>
+            <p style={{ margin: 0, fontSize: 13, color: C.muted }}>Tudo o que precisas para conseguir um estágio com os teus projetos Showo.</p>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: C.muted, cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center' }}>
+            <X size={20} />
+          </button>
+        </div>
+
+        <div style={{ padding: '20px 28px 28px', display: 'flex', flexDirection: 'column', gap: 24 }}>
+
+          {/* Section 1: Profile link */}
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>
+              O teu link de perfil
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <div style={{
+                flex: 1, background: '#060c16', border: '1px solid #1e3050',
+                borderRadius: 9, padding: '10px 14px',
+                fontSize: 14, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                fontFamily: 'inherit',
+              }}>
+                {profileUrl}
+              </div>
+              <button
+                onClick={() => copy(profileUrl, 'profile')}
+                style={{
+                  background: copiedField === 'profile' ? 'rgba(52,211,153,0.1)' : 'rgba(59,130,246,0.1)',
+                  border: `1px solid ${copiedField === 'profile' ? 'rgba(52,211,153,0.3)' : 'rgba(59,130,246,0.2)'}`,
+                  borderRadius: 8, padding: '8px 14px',
+                  color: copiedField === 'profile' ? C.green : '#60a5fa',
+                  fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+                  whiteSpace: 'nowrap',
+                  transition: 'all 0.15s',
+                }}
+              >
+                {copiedField === 'profile' ? <><Check size={13} style={{ verticalAlign: 'middle', marginRight: 3 }} />Copiado</> : 'Copiar'}
+              </button>
+            </div>
+          </div>
+
+          {/* Section 2: Email template */}
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>
+              Email de candidatura
+            </div>
+            <textarea
+              value={emailText}
+              onChange={e => setEmailText(e.target.value)}
+              rows={10}
+              style={{
+                width: '100%', background: '#060c16',
+                border: '1.5px solid #1e3050', borderRadius: 10,
+                color: C.text, fontSize: 13, lineHeight: 1.7,
+                padding: '12px 14px', resize: 'vertical',
+                fontFamily: 'inherit', outline: 'none',
+                boxSizing: 'border-box',
+                transition: 'border-color 0.2s',
+              }}
+              onFocus={e => e.target.style.borderColor = '#3b82f6'}
+              onBlur={e => e.target.style.borderColor = '#1e3050'}
+            />
+            <button
+              onClick={() => copy(emailText, 'email')}
+              style={{
+                marginTop: 8,
+                background: copiedField === 'email' ? 'rgba(52,211,153,0.1)' : 'rgba(59,130,246,0.1)',
+                border: `1px solid ${copiedField === 'email' ? 'rgba(52,211,153,0.3)' : 'rgba(59,130,246,0.2)'}`,
+                borderRadius: 8, padding: '9px 18px',
+                color: copiedField === 'email' ? C.green : '#60a5fa',
+                fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+                transition: 'all 0.15s',
+              }}
+            >
+              {copiedField === 'email' ? <><Check size={13} style={{ verticalAlign: 'middle', marginRight: 4 }} />Copiado</> : 'Copiar email'}
+            </button>
+          </div>
+
+          {/* Section 3: QR Code */}
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>
+              QR Code do teu perfil
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
+              <div ref={qrRef} style={{ background: '#fff', borderRadius: 12, padding: 12, boxShadow: '0 4px 20px rgba(0,0,0,0.3)', flexShrink: 0 }}>
+                <QRCodeSVG value={profileUrl} size={110} />
+              </div>
+              <div>
+                <button
+                  onClick={downloadQR}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 7,
+                    background: 'rgba(59,130,246,0.1)',
+                    border: '1px solid rgba(59,130,246,0.2)',
+                    borderRadius: 8, padding: '9px 16px',
+                    color: '#60a5fa', fontSize: 13, fontWeight: 600,
+                    cursor: 'pointer', fontFamily: 'inherit',
+                    marginBottom: 10,
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  <Download size={14} /> Descarregar QR
+                </button>
+                <p style={{ margin: 0, fontSize: 12, color: C.muted, lineHeight: 1.55 }}>
+                  Imprime e inclui no teu CV físico.
+                </p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function UserProfile() {
   const { username } = useParams()
   const navigate = useNavigate()
@@ -104,7 +300,7 @@ export default function UserProfile() {
   const [projects, setProjects] = useState([])
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
-  const [showCoverLetter, setShowCoverLetter] = useState(false)
+  const [showKitModal, setShowKitModal] = useState(false)
   const [showQR, setShowQR] = useState(false)
 
   useEffect(() => {
@@ -225,7 +421,7 @@ export default function UserProfile() {
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', flexShrink: 0 }}>
             {isOwnProfile && projects.length > 0 && (
               <button
-                onClick={() => setShowCoverLetter(true)}
+                onClick={() => setShowKitModal(true)}
                 style={{
                   background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.25)',
                   borderRadius: 8, padding: '9px 14px',
@@ -338,11 +534,11 @@ export default function UserProfile() {
         )}
       </div>
 
-      {showCoverLetter && (
-        <CoverLetterModal
+      {showKitModal && (
+        <KitDeEstagioModal
+          profile={profile}
           projects={projects}
-          studentName={profile?.full_name || profile?.username || ''}
-          onClose={() => setShowCoverLetter(false)}
+          onClose={() => setShowKitModal(false)}
         />
       )}
     </div>

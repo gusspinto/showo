@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
-import { Folder, Trophy, BarChart2, Rocket } from 'lucide-react'
+import { Folder, Trophy, BarChart2, Rocket, Eye } from 'lucide-react'
 
 const C = {
   bg: '#0d1424',
@@ -160,7 +160,7 @@ export default function Dashboard() {
     async function load() {
       const { data, error } = await supabase
         .from('projects')
-        .select('id, name, slug, score, area, created_at, ai_tagline')
+        .select('id, name, slug, score, area, created_at, ai_tagline, views')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
       if (!error) setProjects(data || [])
@@ -184,6 +184,7 @@ export default function Dashboard() {
   const scores = projects.map(p => p.score).filter(s => s != null)
   const bestScore = scores.length ? Math.max(...scores) : null
   const avgScore = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null
+  const totalViews = projects.reduce((sum, p) => sum + (p.views ?? 0), 0)
 
   const greeting = (() => {
     const h = new Date().getHours()
@@ -245,13 +246,14 @@ export default function Dashboard() {
         {!loadingProjects && projects.length > 0 && (
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
             gap: 12,
             marginBottom: 36,
           }}>
             <StatCard icon={<Folder size={22} />} label="Projetos" value={projects.length} color={C.blue} />
             <StatCard icon={<Trophy size={22} />} label="Melhor score" value={bestScore ?? '—'} color={getScoreColor(bestScore)} />
             <StatCard icon={<BarChart2 size={22} />} label="Score médio" value={avgScore ?? '—'} color={getScoreColor(avgScore)} />
+            <StatCard icon={<Eye size={22} />} label="Total visualizações" value={totalViews} color={C.purple} />
           </div>
         )}
 

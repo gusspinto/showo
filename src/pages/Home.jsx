@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Navbar } from '../components/Navbar'
 import { prefillProject } from '../lib/prefillProject'
+import { supabase } from '../lib/supabase'
 import Onboarding from '../components/Onboarding'
 
 const colors = {
@@ -15,87 +16,6 @@ const colors = {
   subtle:       '#3d5270',
 }
 
-const PHRASES = [
-  { full: 'O teu projeto merece uma página incrível.', highlight: 'uma página incrível.' },
-  { full: 'Organiza. Apresenta. Mostra.', highlight: 'Organiza. Apresenta. Mostra.' },
-]
-
-function TypedHero() {
-  const [idx,      setIdx]      = useState(0)
-  const [text,     setText]     = useState('')
-  const [deleting, setDeleting] = useState(false)
-  const [cursor,   setCursor]   = useState(true)
-
-  useEffect(() => {
-    const t = setInterval(() => setCursor(c => !c), 530)
-    return () => clearInterval(t)
-  }, [])
-
-  useEffect(() => {
-    const phrase = PHRASES[idx].full
-    let timer
-    if (!deleting) {
-      if (text.length < phrase.length) {
-        timer = setTimeout(() => setText(phrase.slice(0, text.length + 1)), 60)
-      } else {
-        timer = setTimeout(() => setDeleting(true), 2000)
-      }
-    } else {
-      if (text.length > 0) {
-        timer = setTimeout(() => setText(text.slice(0, -1)), 35)
-      } else {
-        setDeleting(false)
-        setIdx(i => (i + 1) % PHRASES.length)
-      }
-    }
-    return () => clearTimeout(timer)
-  }, [text, deleting, idx])
-
-  const phrase = PHRASES[idx]
-  let rendered
-  if (phrase.highlight) {
-    const hStart = phrase.full.indexOf(phrase.highlight)
-    if (text.length > hStart) {
-      const before = text.slice(0, hStart)
-      const hl     = text.slice(hStart)
-      rendered = (
-        <>
-          {before}
-          <span style={{
-            background: 'linear-gradient(135deg, #1b78f7 0%, #818cf8 60%, #60a5fa 100%)',
-            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-          }}>
-            {hl}
-          </span>
-        </>
-      )
-    } else {
-      rendered = text
-    }
-  } else {
-    rendered = text
-  }
-
-  return (
-    <h1 className="hero-h1" style={{
-      fontSize: 'clamp(36px, 5.5vw, 62px)', fontWeight: 900,
-      lineHeight: 1.1, margin: '0 0 18px',
-      letterSpacing: '-1.2px', maxWidth: 680,
-      fontFamily: 'var(--font-heading)',
-      minHeight: '2.2em',
-    }}>
-      {rendered}
-      <span style={{
-        color: '#1b78f7',
-        WebkitTextFillColor: '#1b78f7',
-        opacity: cursor ? 1 : 0,
-        marginLeft: 3,
-        transition: 'opacity 0.1s',
-      }}>|</span>
-    </h1>
-  )
-}
-
 const QUICK_GOALS = [
   { id: 'pap',         label: 'PAP' },
   { id: 'internship',  label: 'Estágio' },
@@ -106,46 +26,19 @@ const QUICK_GOALS = [
 
 const FEATURES = [
   {
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 3l1.2 3.6L18 9l-3.6 1.2L12 15l-1.2-3.6L6 9l3.6-1.2z"/>
-        <path d="M5 3l.6 1.8L8 6l-1.8.6L5 9l-.6-1.8L2 6l1.8-.6z"/>
-      </svg>
-    ),
-    iconBg: 'rgba(27,120,247,0.12)', iconColor: '#5a9ff5',
-    title: 'IA avançada',
-    desc: 'O Claude analisa o teu projeto e gera um texto profissional automaticamente.',
+    icon: '🌐',
+    title: 'Página profissional',
+    desc: 'Em 10 minutos tens um link para partilhar com qualquer empresa ou professor.',
   },
   {
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
-      </svg>
-    ),
-    iconBg: 'rgba(168,85,247,0.12)', iconColor: '#c084fc',
-    title: 'Sistema de Missões',
-    desc: 'Completa missões para melhorar o score e brilhar no ranking.',
+    icon: '🤖',
+    title: 'Análise por IA',
+    desc: 'A IA avalia o teu projeto campo a campo e diz-te exatamente o que melhorar.',
   },
   {
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
-      </svg>
-    ),
-    iconBg: 'rgba(234,179,8,0.12)', iconColor: '#fbbf24',
-    title: 'Ranking público',
-    desc: 'Compara o teu projeto com outros estudantes e sobe na tabela.',
-  },
-  {
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/>
-        <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>
-      </svg>
-    ),
-    iconBg: 'rgba(34,197,94,0.12)', iconColor: '#4ade80',
-    title: 'Partilha fácil',
-    desc: 'Link único + QR code gerado automaticamente para partilhares.',
+    icon: '🎯',
+    title: 'Prepara a defesa',
+    desc: 'Perguntas prováveis do júri, guia do apresentador e gestão de grupo incluídos.',
   },
 ]
 
@@ -164,11 +57,21 @@ export default function Home() {
   const [inputText, setInputText] = useState('')
   const [analyzing, setAnalyzing] = useState(false)
   const [showOnboarding, setShowOnboarding] = useState(() => !localStorage.getItem('showo_seen_onboarding'))
+  const [projectCount, setProjectCount] = useState(null)
+
+  useEffect(() => {
+    async function fetchCount() {
+      const { count } = await supabase
+        .from('projects')
+        .select('*', { count: 'exact', head: true })
+      if (count != null) setProjectCount(count)
+    }
+    fetchCount()
+  }, [])
 
   async function handleStart(e) {
     e.preventDefault()
 
-    // No text and no tag → go to normal /novo flow
     if (!inputText.trim() && !selectedGoal) {
       navigate('/novo')
       return
@@ -214,11 +117,13 @@ export default function Home() {
         .feature-card { transition: all 0.2s ease !important; cursor: default; }
         .feature-card:hover {
           border-color: #2a4275 !important;
-          transform: scale(1.02) !important;
+          transform: translateY(-3px) !important;
           box-shadow: 0 16px 48px rgba(0,0,0,0.45) !important;
         }
         .submit-btn:hover { background: #1564d4 !important; }
         .submit-btn { transition: background 0.15s !important; }
+        .home-cta-btn { transition: all 0.15s !important; }
+        .home-cta-btn:hover { opacity: 0.88 !important; }
         .home-sec-btn { transition: all 0.15s !important; }
         .home-sec-btn:hover {
           border-color: #1b78f7 !important;
@@ -228,17 +133,18 @@ export default function Home() {
 
         @media (max-width: 600px) {
           .hero-section  { min-height: calc(100dvh - 62px) !important; justify-content: center !important; padding: 32px 20px 48px !important; }
-          .hero-h1       { font-size: 36px !important; letter-spacing: -0.8px !important; margin-bottom: 14px !important; }
-          .hero-widget   { margin-top: 48px !important; max-width: 100% !important; }
+          .hero-h1       { font-size: 32px !important; letter-spacing: -0.5px !important; margin-bottom: 14px !important; }
+          .hero-sub      { font-size: 15px !important; }
+          .hero-widget   { margin-top: 32px !important; max-width: 100% !important; }
           .goals-row     { flex-wrap: nowrap !important; overflow-x: auto !important; justify-content: flex-start !important; padding-bottom: 4px !important; scrollbar-width: none !important; }
           .goals-row::-webkit-scrollbar { display: none !important; }
           .goal-pill     { font-size: 11px !important; padding: 5px 12px !important; flex-shrink: 0 !important; }
           .widget-box    { padding: 3px 3px 3px 16px !important; border-radius: 12px !important; }
           .widget-input  { padding: 7px 0 !important; font-size: 14px !important; }
           .submit-btn    { width: 38px !important; height: 38px !important; border-radius: 9px !important; }
+          .social-strip  { flex-direction: column !important; gap: 8px !important; font-size: 12px !important; }
+          .features-grid { grid-template-columns: 1fr !important; }
           .feature-card  { padding: 18px 16px !important; }
-          .feature-h3    { font-size: 14px !important; }
-          .feature-p     { font-size: 12px !important; }
           .hero-badge    { font-size: 10px !important; padding: 4px 10px !important; gap: 5px !important; }
         }
       `}</style>
@@ -258,7 +164,7 @@ export default function Home() {
         </button>
       </Navbar>
 
-      {/* Hero — vertically centred in the viewport */}
+      {/* Hero */}
       <div style={{ position: 'relative', overflow: 'hidden' }}>
         <div style={{
           position: 'absolute', top: -80, left: '50%', transform: 'translateX(-50%)',
@@ -280,15 +186,31 @@ export default function Home() {
             display: 'inline-flex', alignItems: 'center', gap: 8,
             background: 'rgba(27,120,247,0.07)', border: '1px solid rgba(27,120,247,0.18)',
             color: '#5a9ff5', borderRadius: 999,
-            padding: '5px 16px', fontSize: 12, fontWeight: 600, marginBottom: 32,
+            padding: '5px 16px', fontSize: 12, fontWeight: 600, marginBottom: 28,
           }}>
             <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#1b78f7', display: 'inline-block', animation: 'pulse-glow 2s ease-in-out infinite' }} />
             Para estudantes do ensino profissional e universitário
           </div>
 
-          <TypedHero />
+          {/* Headline */}
+          <h1 className="hero-h1" style={{
+            fontSize: 'clamp(36px, 5.5vw, 62px)', fontWeight: 900,
+            lineHeight: 1.1, margin: '0 0 18px',
+            letterSpacing: '-1.2px', maxWidth: 680,
+            fontFamily: 'var(--font-heading)',
+          }}>
+            O teu projeto merece mais do que um PDF.
+          </h1>
 
-          {/* Widget — wider than the title */}
+          {/* Subheadline */}
+          <p className="hero-sub" style={{
+            fontSize: 18, color: colors.muted, lineHeight: 1.65,
+            margin: '0 0 0', maxWidth: 520, fontWeight: 400,
+          }}>
+            Cria uma página profissional em minutos. A IA analisa, pontua e prepara-te para a defesa.
+          </p>
+
+          {/* Widget */}
           <form
             className="hero-widget"
             onSubmit={handleStart}
@@ -363,51 +285,81 @@ export default function Home() {
               </button>
             </div>
 
-            <p style={{ color: colors.subtle, fontSize: 12, marginTop: 18, fontWeight: 500 }}>
+            <p style={{ color: colors.subtle, fontSize: 12, marginTop: 14, fontWeight: 500 }}>
               Sem registo · Sem cartão de crédito
             </p>
           </form>
         </div>
       </div>
 
-      {/* Features — below the fold */}
-      <div style={{
-        maxWidth: 860, margin: '0 auto',
-        padding: '0 24px 80px',
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
-        gap: 16,
+      {/* Social proof strip */}
+      <div className="social-strip" style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        gap: 24, padding: '18px 24px',
+        borderTop: `1px solid ${colors.border}`,
+        borderBottom: `1px solid ${colors.border}`,
+        background: 'rgba(21,32,48,0.5)',
+        flexWrap: 'wrap',
+        fontSize: 13, color: colors.muted, fontWeight: 500,
       }}>
-        {FEATURES.map(f => (
-          <div key={f.title} className="feature-card" style={{
-            background: colors.card, border: `1px solid ${colors.border}`,
-            borderRadius: 16, padding: '24px 22px',
-            boxShadow: '0 4px 24px rgba(0,0,0,0.18)',
-          }}>
-            <div style={{
-              width: 42, height: 42, borderRadius: 11,
-              background: f.iconBg, color: f.iconColor,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              marginBottom: 14, border: `1px solid ${f.iconBg.replace('0.12', '0.2')}`,
-            }}>
-              {f.icon}
-            </div>
-            <h3 className="feature-h3" style={{ margin: '0 0 8px', fontSize: 15, fontWeight: 700, color: colors.text, fontFamily: 'var(--font-heading)' }}>{f.title}</h3>
-            <p className="feature-p" style={{ margin: 0, color: colors.muted, fontSize: 13, lineHeight: 1.65 }}>{f.desc}</p>
-          </div>
-        ))}
+        <span>
+          <span style={{ color: colors.text, fontWeight: 700 }}>
+            {projectCount != null ? `Já ${projectCount}` : 'Vários'} projetos criados
+          </span>
+        </span>
+        <span style={{ color: colors.subtle }}>·</span>
+        <span>Ranking público</span>
+        <span style={{ color: colors.subtle }}>·</span>
+        <span>Análise por IA</span>
       </div>
 
-      {/* Secondary CTAs */}
-      <div style={{ padding: '0 24px 96px', display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
-        <button onClick={() => navigate('/explorar')} className="home-sec-btn"
-          style={{ background: 'transparent', color: colors.muted, border: `1px solid ${colors.border}`, borderRadius: 12, padding: '10px 22px', fontSize: 13, cursor: 'pointer', fontWeight: 600, fontFamily: 'var(--font-body)' }}>
-          Ver projetos públicos
+      {/* Features */}
+      <div style={{ maxWidth: 960, margin: '0 auto', padding: '64px 24px 48px' }}>
+        <div className="features-grid" style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, 1fr)',
+          gap: 20,
+        }}>
+          {FEATURES.map(f => (
+            <div key={f.title} className="feature-card" style={{
+              background: colors.card, border: `1px solid ${colors.border}`,
+              borderRadius: 18, padding: '28px 24px',
+              boxShadow: '0 4px 24px rgba(0,0,0,0.18)',
+            }}>
+              <div style={{ fontSize: 32, marginBottom: 16 }}>{f.icon}</div>
+              <h3 style={{ margin: '0 0 10px', fontSize: 16, fontWeight: 800, color: colors.text, fontFamily: 'var(--font-heading)', letterSpacing: '-0.2px' }}>{f.title}</h3>
+              <p style={{ margin: 0, color: colors.muted, fontSize: 14, lineHeight: 1.65 }}>{f.desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Bottom CTA */}
+      <div style={{ padding: '0 24px 80px', textAlign: 'center' }}>
+        <button
+          onClick={() => navigate('/novo')}
+          className="home-cta-btn"
+          style={{
+            background: 'linear-gradient(135deg, #1b78f7, #4f46e5)',
+            color: '#fff', border: 'none', borderRadius: 14,
+            padding: '16px 40px', fontSize: 17, fontWeight: 700,
+            cursor: 'pointer', fontFamily: 'var(--font-body)',
+            boxShadow: '0 4px 24px rgba(27,120,247,0.35)',
+            letterSpacing: '-0.2px',
+          }}
+        >
+          Criar o meu projeto →
         </button>
-        <button onClick={() => navigate('/ranking')} className="home-sec-btn"
-          style={{ background: 'transparent', color: colors.muted, border: `1px solid ${colors.border}`, borderRadius: 12, padding: '10px 22px', fontSize: 13, cursor: 'pointer', fontWeight: 600, fontFamily: 'var(--font-body)' }}>
-          Ver ranking
-        </button>
+        <div style={{ marginTop: 20, display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
+          <button onClick={() => navigate('/explorar')} className="home-sec-btn"
+            style={{ background: 'transparent', color: colors.muted, border: `1px solid ${colors.border}`, borderRadius: 12, padding: '10px 22px', fontSize: 13, cursor: 'pointer', fontWeight: 600, fontFamily: 'var(--font-body)' }}>
+            Ver projetos públicos
+          </button>
+          <button onClick={() => navigate('/ranking')} className="home-sec-btn"
+            style={{ background: 'transparent', color: colors.muted, border: `1px solid ${colors.border}`, borderRadius: 12, padding: '10px 22px', fontSize: 13, cursor: 'pointer', fontWeight: 600, fontFamily: 'var(--font-body)' }}>
+            Ver ranking
+          </button>
+        </div>
       </div>
     </div>
   )

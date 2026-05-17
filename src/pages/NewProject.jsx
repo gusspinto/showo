@@ -152,6 +152,30 @@ export default function NewProject() {
     if (user) setShowAuthNudge(false)
   }, [user, authLoading])
 
+  // On mount: restore draft from localStorage (if no widget prefill)
+  useEffect(() => {
+    const hasPrefill = !!location.state?.prefill?.fromWidget
+    if (hasPrefill) return
+    try {
+      const raw = localStorage.getItem('showo_new_project_draft')
+      if (!raw) return
+      const draft = JSON.parse(raw)
+      if (draft.answers && Object.keys(draft.answers).length > 0) {
+        setAnswers(draft.answers)
+        if (draft.formGoal) { setFormGoal(draft.formGoal); setPhase('form') }
+        if (typeof draft.step === 'number') setStep(draft.step)
+      }
+    } catch {}
+  }, [])
+
+  // Persist draft to localStorage whenever answers/step/formGoal change
+  useEffect(() => {
+    if (phase !== 'form' && phase !== 'goal') return
+    try {
+      localStorage.setItem('showo_new_project_draft', JSON.stringify({ answers, formGoal, step }))
+    } catch {}
+  }, [answers, formGoal, step, phase])
+
   // On mount: check for widget prefill state
   useEffect(() => {
     const state = location.state?.prefill
@@ -206,8 +230,10 @@ export default function NewProject() {
       const aiResult = await generateProject(answers)
       const project = await saveProject(answers, aiResult, user?.id ?? null)
       localStorage.setItem(`edit_token_${project.slug}`, project.edit_token)
-      setSavedProject(project)
-      setPhase('success')
+      localStorage.removeItem('showo_new_project_draft')
+      navigate(`/projeto/${project.slug}`, {
+        state: { newProject: true, message: '🎉 Projeto criado! Começa a melhorar o teu score.' }
+      })
     } catch (err) {
       console.error(err)
       setError('Ocorreu um erro. Tenta novamente.')

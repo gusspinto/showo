@@ -20,6 +20,15 @@ const colors = {
   orange: '#f97316',
 }
 
+function getAreaGradient(area) {
+  const a = (area || '').toLowerCase()
+  if (a.includes('educa')) return 'linear-gradient(135deg, #1e3a5f, #2d6a4f)'
+  if (a.includes('comercial') || a.includes('marketing') || a.includes('vendas')) return 'linear-gradient(135deg, #3d1a6e, #1a3a6e)'
+  if (a.includes('tecnolog') || a.includes('informátic') || a.includes('programaç') || a.includes('software')) return 'linear-gradient(135deg, #0d2137, #1a4a6e)'
+  if (a.includes('saúde') || a.includes('saude') || a.includes('medical') || a.includes('bio')) return 'linear-gradient(135deg, #1a4a2e, #2d6a4f)'
+  return 'linear-gradient(135deg, #2d1a4a, #1a2d6e)'
+}
+
 function getLevelColor(score) {
   if (score === 100) return colors.green
   if (score >= 81) return colors.blue
@@ -203,6 +212,17 @@ export default function Explore() {
                     }}
                     onClick={() => navigate(`/projeto/${project.slug}`)}
                   >
+                    {/* Cover placeholder gradient */}
+                    <div style={{
+                      height: 80, borderRadius: '10px 10px 0 0', marginTop: -22, marginLeft: -22, marginRight: -22, marginBottom: 16,
+                      background: getAreaGradient(project.area),
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      <span style={{ fontSize: 36, fontWeight: 900, color: 'rgba(255,255,255,0.25)', userSelect: 'none', lineHeight: 1 }}>
+                        {project.name ? project.name[0].toUpperCase() : '?'}
+                      </span>
+                    </div>
+
                     {/* Top row */}
                     <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
