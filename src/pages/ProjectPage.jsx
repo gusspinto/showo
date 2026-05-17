@@ -672,7 +672,6 @@ export default function ProjectPage() {
 
   const isOwner = (
     (user?.id && project.user_id && user.id === project.user_id) ||
-    (!project.edit_token && !project.user_id) ||
     !!localStorage.getItem(`edit_token_${project.slug}`)
   )
 
