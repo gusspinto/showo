@@ -191,24 +191,23 @@ export default function EditProject() {
     setForm(f => ({ ...f, [key]: value }))
   }
 
-  function handleCoverImage(e) {
+  async function handleCoverImage(e) {
     const file = e.target.files[0]
     if (!file) return
-    const reader = new FileReader()
-    reader.onload = (ev) => {
-      const img = new Image()
-      img.onload = () => {
-        const canvas = document.createElement('canvas')
-        const MAX = 1200
-        const ratio = Math.min(MAX / img.width, MAX / img.height, 1)
-        canvas.width = img.width * ratio
-        canvas.height = img.height * ratio
-        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height)
-        set('cover_url', canvas.toDataURL('image/jpeg', 0.82))
-      }
-      img.src = ev.target.result
+    if (file.size > 10 * 1024 * 1024) { setError('Imagem demasiado grande (máx. 10MB)'); return }
+    setError(null)
+    set('cover_url', '__uploading__')
+    try {
+      const ext = file.name.split('.').pop() || 'jpg'
+      const path = `${project.slug}-${Date.now()}.${ext}`
+      const { error: upErr } = await supabase.storage.from('covers').upload(path, file, { upsert: true, contentType: file.type })
+      if (upErr) throw upErr
+      const { data: { publicUrl } } = supabase.storage.from('covers').getPublicUrl(path)
+      set('cover_url', publicUrl)
+    } catch {
+      set('cover_url', '')
+      setError('Erro ao carregar imagem. Tenta novamente.')
     }
-    reader.readAsDataURL(file)
   }
 
   async function handleSubmit(e) {
@@ -359,7 +358,12 @@ export default function EditProject() {
 
           {/* Cover image */}
           <SectionCard title="Imagem de capa">
-            {form.cover_url ? (
+            {form.cover_url === '__uploading__' ? (
+              <div style={{ height: 180, borderRadius: 10, background: colors.card, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, color: colors.muted, fontSize: 14, marginBottom: 12 }}>
+                <div style={{ width: 20, height: 20, border: `2px solid ${colors.border}`, borderTop: `2px solid ${colors.blue}`, borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+                A carregar imagem…
+              </div>
+            ) : form.cover_url ? (
               <div style={{ position: 'relative', marginBottom: 12 }}>
                 <img src={form.cover_url} alt="" style={{ width: '100%', height: 180, objectFit: 'cover', borderRadius: 10, display: 'block' }} />
                 <button
@@ -367,23 +371,19 @@ export default function EditProject() {
                   onClick={() => set('cover_url', '')}
                   style={{
                     position: 'absolute', top: 10, right: 10,
-                    background: 'rgba(0,0,0,0.7)',
-                    backdropFilter: 'blur(4px)',
+                    background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)',
                     color: '#fff', border: 'none', borderRadius: 8,
                     padding: '6px 12px', fontSize: 12, cursor: 'pointer',
                     fontWeight: 600, fontFamily: 'inherit',
                   }}
-                >
-                  Remover
-                </button>
+                >Remover</button>
               </div>
             ) : (
               <div
                 onClick={() => coverInputRef.current?.click()}
                 style={{
-                  border: `2px dashed ${colors.border}`,
-                  borderRadius: 12, padding: '36px 20px',
-                  textAlign: 'center', cursor: 'pointer',
+                  border: `2px dashed ${colors.border}`, borderRadius: 12,
+                  padding: '36px 20px', textAlign: 'center', cursor: 'pointer',
                   color: colors.muted, transition: 'border-color 0.2s, background 0.2s',
                 }}
                 onMouseEnter={e => { e.currentTarget.style.borderColor = colors.blue; e.currentTarget.style.background = 'rgba(27,120,247,0.03)' }}
@@ -391,10 +391,10 @@ export default function EditProject() {
               >
                 <div style={{ marginBottom: 10 }}><Image size={28} color={colors.muted} /></div>
                 <p style={{ margin: 0, fontSize: 14, fontWeight: 500 }}>Clica para carregar uma imagem</p>
-                <p style={{ margin: '4px 0 0', fontSize: 12, color: colors.subtle }}>PNG, JPG ou WEBP</p>
+                <p style={{ margin: '4px 0 0', fontSize: 12, color: colors.subtle }}>PNG, JPG ou WEBP · máx. 10MB</p>
               </div>
             )}
-            <input ref={coverInputRef} type="file" accept="image/*" onChange={handleCoverImage} style={{ display: 'none' }} />
+            <input ref={coverInputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={handleCoverImage} style={{ display: 'none' }} />
           </SectionCard>
 
           {error && (

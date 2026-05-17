@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import { supabase } from '../lib/supabase'
 import { GraduationCap, Briefcase, Rocket, Users, ClipboardList, BarChart2, Monitor, Trophy, Sparkles, Check, Lock, Camera, X, Save } from 'lucide-react'
 import { generateProject } from '../lib/generateProject'
 import { saveProject } from '../lib/saveProject'
@@ -108,24 +109,6 @@ function getMotivation(s) {
   return 'Continua! Estás a começar.'
 }
 
-async function resizeImage(file, maxWidth = 1200) {
-  return new Promise(resolve => {
-    const reader = new FileReader()
-    reader.onload = e => {
-      const img = new Image()
-      img.onload = () => {
-        const ratio = Math.min(maxWidth / img.width, 1)
-        const canvas = document.createElement('canvas')
-        canvas.width = img.width * ratio
-        canvas.height = img.height * ratio
-        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height)
-        resolve(canvas.toDataURL('image/jpeg', 0.82))
-      }
-      img.src = e.target.result
-    }
-    reader.readAsDataURL(file)
-  })
-}
 
 export default function NewProject() {
   const navigate = useNavigate()
@@ -172,7 +155,8 @@ export default function NewProject() {
   useEffect(() => {
     if (phase !== 'form' && phase !== 'goal') return
     try {
-      localStorage.setItem('showo_new_project_draft', JSON.stringify({ answers, formGoal, step }))
+      const { cover_url: _omit, ...answersWithoutCover } = answers
+      localStorage.setItem('showo_new_project_draft', JSON.stringify({ answers: answersWithoutCover, formGoal, step }))
     } catch {}
   }, [answers, formGoal, step, phase])
 
@@ -245,12 +229,17 @@ export default function NewProject() {
   async function handleImageUpload(e) {
     const file = e.target.files?.[0]
     if (!file) return
-    if (file.size > 8 * 1024 * 1024) { showToast('Imagem demasiado grande (máx. 8MB)', 'error'); return }
+    if (file.size > 10 * 1024 * 1024) { showToast('Imagem demasiado grande (máx. 10MB)', 'error'); return }
+    set('cover_url', '__uploading__')
     try {
-      const base64 = await resizeImage(file)
-      set('cover_url', base64)
+      const ext = file.name.split('.').pop() || 'jpg'
+      const path = `draft-${Date.now()}.${ext}`
+      const { error: upErr } = await supabase.storage.from('covers').upload(path, file, { upsert: true, contentType: file.type })
+      if (upErr) throw upErr
+      const { data: { publicUrl } } = supabase.storage.from('covers').getPublicUrl(path)
+      set('cover_url', publicUrl)
       showToast('Imagem adicionada!')
-    } catch { showToast('Erro ao processar a imagem', 'error') }
+    } catch { set('cover_url', ''); showToast('Erro ao carregar imagem. Tenta novamente.', 'error') }
   }
 
   const sharedInputHandlers = {
