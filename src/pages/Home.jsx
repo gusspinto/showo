@@ -239,6 +239,7 @@ export default function Home() {
           .feature-card  { padding: 18px 16px !important; }
           .feature-h3    { font-size: 14px !important; }
           .feature-p     { font-size: 12px !important; }
+          .hero-badge    { font-size: 10px !important; padding: 4px 10px !important; gap: 5px !important; }
         }
       `}</style>
 

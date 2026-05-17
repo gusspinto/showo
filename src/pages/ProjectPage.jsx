@@ -736,6 +736,10 @@ export default function ProjectPage() {
       </Helmet>
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes sparkle-pulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(139,92,246,0.5), 0 4px 20px rgba(0,0,0,0.4); }
+          50%       { box-shadow: 0 0 0 10px rgba(139,92,246,0), 0 4px 20px rgba(0,0,0,0.4); }
+        }
         @keyframes confetti-fall {
           0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
           80% { opacity: 1; }
@@ -756,17 +760,24 @@ export default function ProjectPage() {
           .proj-layout { grid-template-columns: 1fr; }
           .proj-sidebar { position: static; order: -1; }
         }
+        .proj-edit-inline { display: none; }
+        .proj-dashboard   { display: none; }
+        .proj-ai-fab      { display: none; }
         @media (max-width: 600px) {
-          .proj-nav-btns  { display: none !important; }
-          .proj-fab-area  { display: flex !important; }
-          .proj-wrap      { padding: 0 16px 120px !important; overflow-x: hidden !important; }
-          .proj-cover     { height: 200px !important; margin-top: 20px !important; border-radius: 14px !important; }
-          .proj-hero      { padding: 28px 0 24px !important; }
-          .proj-h1        { font-size: 26px !important; padding-right: 0 !important; margin-bottom: 12px !important; }
-          .proj-tagline   { font-size: 15px !important; }
-          .proj-score-abs { display: none !important; }
-          .proj-score-mob { display: flex !important; }
-          .proj-card-pad  { padding: 18px 16px !important; border-radius: 14px !important; }
+          .proj-nav-btns     { display: none !important; }
+          .proj-fab-area     { display: flex !important; }
+          .proj-wrap         { padding: 0 16px 120px !important; overflow-x: hidden !important; }
+          .proj-cover        { height: 200px !important; margin-top: 20px !important; border-radius: 14px !important; }
+          .proj-hero         { padding: 20px 0 16px !important; }
+          .proj-h1-row       { display: flex !important; align-items: flex-start !important; gap: 8px !important; margin-bottom: 16px !important; }
+          .proj-h1           { font-size: 24px !important; padding-right: 0 !important; margin-bottom: 0 !important; }
+          .proj-edit-inline  { display: flex !important; }
+          .proj-dashboard    { display: flex !important; }
+          .proj-score-mob    { display: none !important; }
+          .proj-score-abs    { display: none !important; }
+          .proj-tagline      { font-size: 15px !important; }
+          .proj-card-pad     { padding: 18px 16px !important; border-radius: 14px !important; }
+          .proj-badges       { margin-bottom: 10px !important; }
         }
       `}</style>
 
@@ -790,6 +801,28 @@ export default function ProjectPage() {
         display: 'none', position: 'fixed', bottom: 24, right: 20,
         flexDirection: 'column', gap: 10, zIndex: 90,
       }}>
+        {/* AI Analyse FAB */}
+        {isOwner && (
+          <button
+            className="proj-ai-fab"
+            onClick={handleAnalyzeAI}
+            title="Análise com IA"
+            disabled={analyzingAI}
+            style={{
+              width: 52, height: 52, borderRadius: '50%',
+              background: 'linear-gradient(135deg, #6d28d9, #4f46e5)',
+              border: 'none',
+              color: '#fff', cursor: analyzingAI ? 'default' : 'pointer',
+              display: 'none', alignItems: 'center', justifyContent: 'center',
+              animation: analyzingAI ? 'none' : 'sparkle-pulse 2s ease-in-out infinite',
+              opacity: analyzingAI ? 0.7 : 1,
+              backdropFilter: 'blur(8px)',
+            }}
+          >
+            <Sparkles size={22} />
+          </button>
+        )}
+        {/* Defense FAB */}
         {(isOwner || collaboratorSections !== null) && (
           <button
             onClick={() => setDefenseMode(true)}
@@ -805,26 +838,6 @@ export default function ProjectPage() {
             }}
           >
             <GraduationCap size={22} />
-          </button>
-        )}
-        {project && (isOwner || collaboratorSections !== null) && (
-          <button
-            onClick={() => {
-              const token = localStorage.getItem(`edit_token_${project.slug}`)
-              navigate(`/editar/${project.slug}${token ? `?token=${token}` : ''}`)
-            }}
-            title="Editar projeto"
-            style={{
-              width: 52, height: 52, borderRadius: '50%',
-              background: 'rgba(13,20,36,0.9)',
-              border: `1px solid ${colors.border}`,
-              color: colors.muted, cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
-              backdropFilter: 'blur(8px)',
-            }}
-          >
-            <Pencil size={20} />
           </button>
         )}
       </div>
@@ -940,29 +953,8 @@ export default function ProjectPage() {
             )}
           </div>
 
-          {/* Score widget — mobile inline, hidden on desktop */}
-          <div className="proj-score-mob" style={{
-            display: 'none', alignItems: 'center', gap: 14, marginBottom: 20,
-          }}>
-            <ScoreRing score={displayScore} />
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <div style={{
-                background: level.color + '15', color: level.color,
-                borderRadius: 999, padding: '4px 12px', fontSize: 11, fontWeight: 700,
-                border: `1px solid ${level.color}35`, display: 'inline-block',
-              }}>{level.label}</div>
-              {internshipReady && (
-                <div style={{
-                  background: colors.greenGlow, color: colors.green,
-                  border: '1px solid rgba(34,197,94,0.25)',
-                  borderRadius: 999, padding: '4px 12px', fontSize: 11, fontWeight: 700, display: 'inline-block',
-                }}>Pronto para estágio</div>
-              )}
-            </div>
-          </div>
-
           {/* Badges */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
+          <div className="proj-badges" style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
             {project.area && (
               <div style={{
                 background: colors.blueSubtle,
@@ -995,9 +987,61 @@ export default function ProjectPage() {
             )}
           </div>
 
-          <h1 className="proj-h1" style={{ fontSize: 'clamp(26px, 5vw, 52px)', fontWeight: 900, margin: '0 0 16px', lineHeight: 1.1, paddingRight: 140, letterSpacing: '-0.5px' }}>
-            {project.name}
-          </h1>
+          {/* Title row — edit icon on mobile */}
+          <div className="proj-h1-row" style={{ marginBottom: 16 }}>
+            <h1 className="proj-h1" style={{ fontSize: 'clamp(26px, 5vw, 52px)', fontWeight: 900, margin: 0, lineHeight: 1.1, paddingRight: 140, letterSpacing: '-0.5px', flex: 1 }}>
+              {project.name}
+            </h1>
+            {isOwner && (
+              <button
+                className="proj-edit-inline"
+                onClick={() => {
+                  const token = localStorage.getItem(`edit_token_${project.slug}`)
+                  navigate(`/editar/${project.slug}${token ? `?token=${token}` : ''}`)
+                }}
+                title="Editar projeto"
+                style={{
+                  display: 'none', alignItems: 'center', justifyContent: 'center',
+                  width: 36, height: 36, borderRadius: 10, flexShrink: 0, marginTop: 4,
+                  background: 'rgba(255,255,255,0.05)',
+                  border: `1px solid ${colors.border}`,
+                  color: colors.muted, cursor: 'pointer',
+                  transition: 'all 0.15s',
+                }}
+              >
+                <Pencil size={16} />
+              </button>
+            )}
+          </div>
+
+          {/* Mobile dashboard — score + missions progress (hidden on desktop) */}
+          <div className="proj-dashboard" style={{
+            display: 'none', alignItems: 'center', gap: 14, marginBottom: 20,
+            background: colors.bgAlt,
+            border: `1px solid ${colors.border}`,
+            borderRadius: 14, padding: '14px 16px',
+          }}>
+            <ScoreRing score={displayScore} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{
+                display: 'inline-block', marginBottom: 8,
+                background: level.color + '15', color: level.color,
+                borderRadius: 999, padding: '3px 10px', fontSize: 11, fontWeight: 700,
+                border: `1px solid ${level.color}35`,
+              }}>{level.label}</div>
+              <div style={{ height: 4, background: colors.border, borderRadius: 2, overflow: 'hidden', marginBottom: 6 }}>
+                <div style={{
+                  height: '100%', borderRadius: 2,
+                  width: `${(earnedXP / totalXP) * 100}%`,
+                  background: `linear-gradient(90deg, ${colors.blue}, ${colors.green})`,
+                  transition: 'width 0.5s',
+                }} />
+              </div>
+              <div style={{ fontSize: 12, color: colors.muted }}>
+                {completedCount}/{CHALLENGES.length} missões · {earnedXP}/{totalXP} pts
+              </div>
+            </div>
+          </div>
 
           {project.ai_tagline && (
             <p className="proj-tagline" style={{ fontSize: 19, color: colors.muted, lineHeight: 1.65, margin: '0 0 24px', maxWidth: 580, fontWeight: 400 }}>

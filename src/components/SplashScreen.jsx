@@ -82,17 +82,29 @@ export default function SplashScreen({ visible }) {
           .sp-divider-bar { height: 44px; }
 
           /* Column stacking */
-          .sp-outer { flex-direction: column; gap: 14px; }
+          .sp-outer { flex-direction: column; gap: 0; align-items: center; }
 
-          /* Hide horizontal divider */
+          /* Hide the vertical (horizontal-layout) divider */
           .sp-sep-wrap { display: none !important; }
 
-          /* Switch slogan to max-height animation (vertical reveal) */
+          /* Horizontal line separator — appears with the slogan */
+          .sp-h-line {
+            width: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+            margin: 16px 0 0;
+            transition: width 0.55s ease-in-out 0.05s;
+            overflow: hidden;
+          }
+          .sp-h-line.sp-p2 { width: 160px; }
+
+          /* Switch slogan to max-height animation (vertical reveal from line) */
           .sp-slogan-wrap {
             max-width: none !important;
             max-height: 0;
             width: 100%;
-            transition: max-height 0.5s ease-in-out 0.15s, opacity 0.5s ease-in-out 0.2s !important;
+            overflow: hidden;
+            transition: max-height 0.45s ease-in-out 0.3s, opacity 0.4s ease-in-out 0.35s !important;
           }
           .sp-slogan-wrap.sp-p2 {
             max-width: none !important;
@@ -105,6 +117,7 @@ export default function SplashScreen({ visible }) {
             font-size: 15px !important;
             white-space: normal !important;
             text-align: center;
+            padding-top: 12px !important;
           }
         }
       `}</style>
@@ -119,7 +132,7 @@ export default function SplashScreen({ visible }) {
           </div>
         </div>
 
-        {/* Divider (desktop only) */}
+        {/* Divider (desktop/tablet only — hidden on mobile via CSS) */}
         <div className={`sp-sep-wrap${phase >= 2 ? ' sp-p2' : ''}`}>
           <div style={{ width: 28, flexShrink: 0 }} />
           <div
@@ -133,6 +146,9 @@ export default function SplashScreen({ visible }) {
           />
           <div style={{ width: 28, flexShrink: 0 }} />
         </div>
+
+        {/* Horizontal line — mobile only, appears as slogan triggers */}
+        <div className={`sp-h-line${phase >= 2 ? ' sp-p2' : ''}`} />
 
         {/* Slogan */}
         <div className={`sp-slogan-wrap${phase >= 2 ? ' sp-p2' : ''}`}>
