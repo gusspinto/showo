@@ -435,13 +435,14 @@ export function Navbar({ children, showLinks = true }) {
         .ham-btn    { display: none !important; }
 
         @media (max-width: 600px) {
-          .nav-left  { display: none; }
-          .nav-mid   { flex: 1; justify-content: flex-start; }
-          .nav-right { flex: none; }
-          .nav-auth  { display: none; }
-          .nav-logo  { height: 28px !important; width: auto !important; }
-          .showo-nav-pad { padding-left: 20px !important; padding-right: 20px !important; }
-          .ham-btn   { display: flex !important; }
+          .nav-left         { display: none; }
+          .nav-mid          { flex: 1; justify-content: flex-start; }
+          .nav-right        { flex: none; overflow: hidden; }
+          .nav-auth         { display: none !important; }
+          .nav-children-wrap{ display: none !important; }
+          .nav-logo         { height: 28px !important; width: auto !important; }
+          .showo-nav-pad    { padding-left: 20px !important; padding-right: 20px !important; }
+          .ham-btn          { display: flex !important; }
         }
 
         @media (min-width: 601px) and (max-width: 900px) {
@@ -543,6 +544,7 @@ export function Navbar({ children, showLinks = true }) {
           borderBottom: `1px solid ${C.border}`,
           boxShadow: '0 1px 24px rgba(0,0,0,0.3)',
           gap: 12,
+          overflow: 'hidden',
         }}
       >
         {/* Left */}
@@ -566,7 +568,7 @@ export function Navbar({ children, showLinks = true }) {
         <div className="nav-right">
           {/* Page-specific buttons (children) */}
           {children && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div className="nav-children-wrap" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               {children}
             </div>
           )}

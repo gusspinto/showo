@@ -648,9 +648,25 @@ export default function ProjectPage() {
 
   if (loading) {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: colors.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ width: 40, height: 40, border: `3px solid ${colors.border}`, borderTop: `3px solid ${colors.blue}`, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: 'var(--font-body)' }}>
+        <Navbar />
+        <div style={{ maxWidth: 1080, margin: '0 auto', padding: '0 24px', overflowX: 'hidden' }}>
+          {/* Cover placeholder */}
+          <div style={{ width: '100%', height: 220, borderRadius: 18, background: colors.card, marginTop: 36, animation: 'shimmer 1.5s ease-in-out infinite' }} />
+          {/* Title placeholder */}
+          <div style={{ paddingTop: 32, display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div style={{ height: 34, width: '55%', borderRadius: 8, background: colors.card, animation: 'shimmer 1.5s ease-in-out infinite' }} />
+            <div style={{ height: 18, width: '80%', borderRadius: 6, background: colors.card, animation: 'shimmer 1.5s ease-in-out infinite 0.1s' }} />
+            <div style={{ height: 18, width: '65%', borderRadius: 6, background: colors.card, animation: 'shimmer 1.5s ease-in-out infinite 0.2s' }} />
+          </div>
+        </div>
+        <style>{`
+          @keyframes shimmer {
+            0%   { opacity: 0.5; }
+            50%  { opacity: 1; }
+            100% { opacity: 0.5; }
+          }
+        `}</style>
       </div>
     )
   }
@@ -1242,7 +1258,7 @@ export default function ProjectPage() {
           boxShadow: '0 4px 24px rgba(0,0,0,0.3)',
         }}>
           <div style={{ marginBottom: 24 }}>
-            <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, letterSpacing: '-0.2px' }}>Partilha o teu projeto</h3>
+            <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, letterSpacing: '-0.2px' }}>{isOwner ? 'Partilha o teu projeto' : 'Partilha este projeto'}</h3>
           </div>
           <div style={{ display: 'flex', gap: 36, flexWrap: 'wrap', alignItems: 'flex-start' }}>
             <div style={{ flex: 1, minWidth: 220 }}>
