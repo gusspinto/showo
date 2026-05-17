@@ -16,6 +16,80 @@ const colors = {
   subtle:       '#3d5270',
 }
 
+const PHRASES = [
+  { full: 'O teu projeto merece mais do que um PDF.', highlight: 'mais do que um PDF.' },
+  { full: 'Organiza. Apresenta. Impressiona.', highlight: 'Organiza. Apresenta. Impressiona.' },
+  { full: 'A IA prepara-te para a defesa.', highlight: 'prepara-te para a defesa.' },
+]
+
+function TypedHero() {
+  const [idx,      setIdx]      = useState(0)
+  const [text,     setText]     = useState('')
+  const [deleting, setDeleting] = useState(false)
+  const [cursor,   setCursor]   = useState(true)
+
+  useEffect(() => {
+    const t = setInterval(() => setCursor(c => !c), 530)
+    return () => clearInterval(t)
+  }, [])
+
+  useEffect(() => {
+    const phrase = PHRASES[idx].full
+    let timer
+    if (!deleting) {
+      if (text.length < phrase.length) {
+        timer = setTimeout(() => setText(phrase.slice(0, text.length + 1)), 55)
+      } else {
+        timer = setTimeout(() => setDeleting(true), 2200)
+      }
+    } else {
+      if (text.length > 0) {
+        timer = setTimeout(() => setText(text.slice(0, -1)), 30)
+      } else {
+        setDeleting(false)
+        setIdx(i => (i + 1) % PHRASES.length)
+      }
+    }
+    return () => clearTimeout(timer)
+  }, [text, deleting, idx])
+
+  const phrase = PHRASES[idx]
+  let rendered
+  if (phrase.highlight) {
+    const hStart = phrase.full.indexOf(phrase.highlight)
+    if (text.length > hStart) {
+      const before = text.slice(0, hStart)
+      const hl     = text.slice(hStart)
+      rendered = (
+        <>
+          {before}
+          <span style={{
+            background: 'linear-gradient(135deg, #1b78f7 0%, #818cf8 60%, #60a5fa 100%)',
+            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+          }}>{hl}</span>
+        </>
+      )
+    } else {
+      rendered = text
+    }
+  } else {
+    rendered = text
+  }
+
+  return (
+    <h1 className="hero-h1" style={{
+      fontSize: 'clamp(36px, 5.5vw, 62px)', fontWeight: 900,
+      lineHeight: 1.1, margin: '0 0 18px',
+      letterSpacing: '-1.2px', maxWidth: 680,
+      fontFamily: 'var(--font-heading)',
+      minHeight: '2.2em',
+    }}>
+      {rendered}
+      <span style={{ color: '#1b78f7', WebkitTextFillColor: '#1b78f7', opacity: cursor ? 1 : 0, marginLeft: 3, transition: 'opacity 0.1s' }}>|</span>
+    </h1>
+  )
+}
+
 const QUICK_GOALS = [
   { id: 'pap',         label: 'PAP' },
   { id: 'internship',  label: 'Estágio' },
@@ -193,14 +267,7 @@ export default function Home() {
           </div>
 
           {/* Headline */}
-          <h1 className="hero-h1" style={{
-            fontSize: 'clamp(36px, 5.5vw, 62px)', fontWeight: 900,
-            lineHeight: 1.1, margin: '0 0 18px',
-            letterSpacing: '-1.2px', maxWidth: 680,
-            fontFamily: 'var(--font-heading)',
-          }}>
-            O teu projeto merece mais do que um PDF.
-          </h1>
+          <TypedHero />
 
           {/* Subheadline */}
           <p className="hero-sub" style={{
