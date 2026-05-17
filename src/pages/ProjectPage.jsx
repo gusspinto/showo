@@ -109,7 +109,7 @@ function Section({ title, content }) {
   )
 }
 
-function ChallengeCard({ challenge, project, onImprove }) {
+function ChallengeCard({ challenge, project, onImprove, isOwner }) {
   const isCompleted = getChallengeStatus(challenge, project) === 'completed'
   const val = String(project[challenge.field] || '').trim()
   const progress = Math.min(val.length / challenge.threshold, 1)
@@ -153,7 +153,7 @@ function ChallengeCard({ challenge, project, onImprove }) {
           </p>
           {!isCompleted && (
             <>
-              <div style={{ marginBottom: 10 }}>
+              <div style={{ marginBottom: isOwner ? 10 : 0 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
                   <span style={{ fontSize: 11, color: colors.subtle }}>{val.length} / {challenge.threshold} caracteres</span>
                   <span style={{ fontSize: 11, color: colors.subtle }}>{Math.round(progress * 100)}%</span>
@@ -169,23 +169,25 @@ function ChallengeCard({ challenge, project, onImprove }) {
                   }} />
                 </div>
               </div>
-              <button
-                onClick={() => onImprove(challenge)}
-                style={{
-                  background: colors.blueSubtle,
-                  color: colors.blue,
-                  border: '1px solid rgba(27,120,247,0.2)',
-                  borderRadius: 8,
-                  padding: '8px 16px',
-                  fontSize: 13,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  fontFamily: 'inherit',
-                  transition: 'background 0.15s',
-                }}
-              >
-                Melhorar agora →
-              </button>
+              {isOwner && (
+                <button
+                  onClick={() => onImprove(challenge)}
+                  style={{
+                    background: colors.blueSubtle,
+                    color: colors.blue,
+                    border: '1px solid rgba(27,120,247,0.2)',
+                    borderRadius: 8,
+                    padding: '8px 16px',
+                    fontSize: 13,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    fontFamily: 'inherit',
+                    transition: 'background 0.15s',
+                  }}
+                >
+                  Melhorar agora →
+                </button>
+              )}
             </>
           )}
         </div>
@@ -1104,8 +1106,8 @@ export default function ProjectPage() {
         <Section title="Resultados" content={project.results} />
         <Section title="Aprendizagens" content={project.learnings} />
 
-        {/* Missions — only for owner */}
-        {isOwner && <div style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 20, padding: '28px', marginBottom: 16, marginTop: 8, boxShadow: '0 4px 24px rgba(0,0,0,0.3)' }}>
+        {/* Missions — visible to all, edit actions only for owner */}
+        {<div style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 20, padding: '28px', marginBottom: 16, marginTop: 8, boxShadow: '0 4px 24px rgba(0,0,0,0.3)' }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 14 }}>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 5 }}>
@@ -1139,13 +1141,13 @@ export default function ProjectPage() {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {sortedChallenges.map(challenge => (
-              <ChallengeCard key={challenge.id} challenge={challenge} project={project} onImprove={setEditModal} />
+              <ChallengeCard key={challenge.id} challenge={challenge} project={project} onImprove={setEditModal} isOwner={isOwner} />
             ))}
           </div>
         </div>}
 
-        {/* AI Feedback — owner only */}
-        {isOwner && (
+        {/* AI Feedback — button only for owner, results visible to all if exists */}
+        {(isOwner || aiFeedback) && (
           <div style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 20, padding: '28px', marginTop: 24, boxShadow: '0 4px 24px rgba(0,0,0,0.3)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: aiFeedback ? 20 : 0, flexWrap: 'wrap', gap: 12 }}>
               <div>
@@ -1155,22 +1157,24 @@ export default function ProjectPage() {
                 </div>
                 <p style={{ margin: 0, fontSize: 13, color: colors.muted, paddingLeft: 32 }}>Feedback personalizado para melhorar o teu projeto</p>
               </div>
-              <button
-                onClick={handleAnalyzeAI}
-                disabled={analyzingAI}
-                style={{
-                  background: analyzingAI ? 'rgba(27,120,247,0.1)' : 'linear-gradient(135deg,#3b82f6,#4f46e5)',
-                  border: analyzingAI ? '1px solid rgba(27,120,247,0.3)' : 'none',
-                  borderRadius: 10, padding: '9px 18px',
-                  color: analyzingAI ? '#60a5fa' : '#fff',
-                  fontSize: 13, fontWeight: 700, cursor: analyzingAI ? 'default' : 'pointer',
-                  fontFamily: 'inherit', transition: 'all 0.2s',
-                  boxShadow: analyzingAI ? 'none' : '0 4px 16px rgba(27,120,247,0.35)',
-                  flexShrink: 0,
-                }}
-              >
-                {analyzingAI ? <><Sparkles size={14} style={{ verticalAlign: 'middle' }} /> A analisar…</> : aiFeedback ? '↻ Reanalisar' : <><Sparkles size={14} style={{ verticalAlign: 'middle' }} /> Analisar com IA</>}
-              </button>
+              {isOwner && (
+                <button
+                  onClick={handleAnalyzeAI}
+                  disabled={analyzingAI}
+                  style={{
+                    background: analyzingAI ? 'rgba(27,120,247,0.1)' : 'linear-gradient(135deg,#3b82f6,#4f46e5)',
+                    border: analyzingAI ? '1px solid rgba(27,120,247,0.3)' : 'none',
+                    borderRadius: 10, padding: '9px 18px',
+                    color: analyzingAI ? '#60a5fa' : '#fff',
+                    fontSize: 13, fontWeight: 700, cursor: analyzingAI ? 'default' : 'pointer',
+                    fontFamily: 'inherit', transition: 'all 0.2s',
+                    boxShadow: analyzingAI ? 'none' : '0 4px 16px rgba(27,120,247,0.35)',
+                    flexShrink: 0,
+                  }}
+                >
+                  {analyzingAI ? <><Sparkles size={14} style={{ verticalAlign: 'middle' }} /> A analisar…</> : aiFeedback ? '↻ Reanalisar' : <><Sparkles size={14} style={{ verticalAlign: 'middle' }} /> Analisar com IA</>}
+                </button>
+              )}
             </div>
 
             {analyzeError && (
