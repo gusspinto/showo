@@ -10,8 +10,8 @@ const colors = {
   cardHover: '#1c2d44',
   border: '#1e3050',
   borderBright: '#2a4275',
-  blue: '#3b82f6',
-  blueSubtle: 'rgba(59,130,246,0.08)',
+  blue: '#1b78f7',
+  blueSubtle: 'rgba(27,120,247,0.08)',
   text: '#e8f2ff',
   muted: '#7d93b0',
   subtle: '#3d5270',
@@ -85,7 +85,7 @@ export default function Explore() {
     : projects
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: 'Inter, system-ui, sans-serif' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: 'var(--font-body)' }}>
       <style>{`
         .explore-card:hover {
           border-color: #2a4275 !important;
@@ -103,7 +103,7 @@ export default function Explore() {
             color: '#fff', border: 'none', borderRadius: 8,
             padding: '9px 18px', fontSize: 14, fontWeight: 600, cursor: 'pointer',
             fontFamily: 'inherit',
-            boxShadow: '0 4px 16px rgba(59,130,246,0.3)',
+            boxShadow: '0 4px 16px rgba(27,120,247,0.3)',
           }}
         >
           Criar projeto
@@ -141,13 +141,13 @@ export default function Explore() {
               fontSize: 15,
               padding: '14px 16px 14px 48px',
               outline: 'none',
-              fontFamily: 'Inter, system-ui, sans-serif',
+              fontFamily: 'var(--font-body)',
               boxSizing: 'border-box',
               transition: 'border-color 0.2s, box-shadow 0.2s',
             }}
             onFocus={e => {
               e.target.style.borderColor = colors.blue
-              e.target.style.boxShadow = '0 0 0 3px rgba(59,130,246,0.1)'
+              e.target.style.boxShadow = '0 0 0 3px rgba(27,120,247,0.1)'
             }}
             onBlur={e => {
               e.target.style.borderColor = colors.border
@@ -173,7 +173,7 @@ export default function Explore() {
                   color: '#fff', border: 'none', borderRadius: 10,
                   padding: '12px 24px', fontSize: 15, fontWeight: 700, cursor: 'pointer',
                   fontFamily: 'inherit',
-                  boxShadow: '0 4px 20px rgba(59,130,246,0.3)',
+                  boxShadow: '0 4px 20px rgba(27,120,247,0.3)',
                 }}
               >
                 Criar o meu projeto →
@@ -209,8 +209,8 @@ export default function Explore() {
                         {project.area && (
                           <span style={{
                             fontSize: 11, color: '#60a5fa',
-                            background: 'rgba(59,130,246,0.08)',
-                            border: '1px solid rgba(59,130,246,0.15)',
+                            background: 'rgba(27,120,247,0.08)',
+                            border: '1px solid rgba(27,120,247,0.15)',
                             borderRadius: 999, padding: '3px 10px', fontWeight: 600,
                           }}>
                             {project.area}
@@ -257,8 +257,8 @@ export default function Explore() {
                       <span style={{ fontSize: 13, color: '#60a5fa', fontWeight: 600 }}>Ver projeto →</span>
                       <div style={{
                         width: 26, height: 26, borderRadius: '50%',
-                        background: 'rgba(59,130,246,0.08)',
-                        border: '1px solid rgba(59,130,246,0.15)',
+                        background: 'rgba(27,120,247,0.08)',
+                        border: '1px solid rgba(27,120,247,0.15)',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         fontSize: 12, color: '#60a5fa',
                       }}>

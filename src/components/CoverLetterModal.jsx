@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { Check, X, GraduationCap, Briefcase, Sparkles, Lightbulb } from 'lucide-react'
 
 const C = {
   bg: '#080e1a',
@@ -58,7 +59,7 @@ function CopyField({ label, value }) {
             fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
           }}
         >
-          {copied ? '✓ Copiado' : 'Copiar'}
+          {copied ? <><Check size={12} style={{ verticalAlign: 'middle' }} /> Copiado</> : 'Copiar'}
         </button>
       </div>
       <div style={{
@@ -119,7 +120,7 @@ export default function CoverLetterModal({ projects, studentName, onClose }) {
             <h2 style={{ margin: '0 0 4px', fontSize: 20, fontWeight: 800, color: C.text }}>Kit de Estágio</h2>
             <p style={{ margin: 0, fontSize: 13, color: C.muted }}>Gerado com base nos teus projetos no Showo</p>
           </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: C.muted, cursor: 'pointer', fontSize: 20, padding: 4 }}>✕</button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: C.muted, cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center' }}><X size={20} /></button>
         </div>
 
         <div style={{ padding: '20px 28px 28px' }}>
@@ -127,7 +128,10 @@ export default function CoverLetterModal({ projects, studentName, onClose }) {
             <>
               {/* Type selector */}
               <div style={{ display: 'flex', gap: 8, marginBottom: 18 }}>
-                {[['internship', '🎓 Estágio'], ['job', '💼 Emprego']].map(([val, label]) => (
+                {[
+                  { val: 'internship', Icon: GraduationCap, label: 'Estágio' },
+                  { val: 'job',        Icon: Briefcase,     label: 'Emprego' },
+                ].map(({ val, Icon, label }) => (
                   <button
                     key={val}
                     onClick={() => setType(val)}
@@ -138,9 +142,10 @@ export default function CoverLetterModal({ projects, studentName, onClose }) {
                       borderRadius: 10, color: type === val ? '#60a5fa' : C.muted,
                       fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
                       transition: 'all 0.15s',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
                     }}
                   >
-                    {label}
+                    <Icon size={15} /> {label}
                   </button>
                 ))}
               </div>
@@ -198,14 +203,14 @@ export default function CoverLetterModal({ projects, studentName, onClose }) {
               {error && <p style={{ color: '#f87171', fontSize: 13, marginBottom: 12 }}>{error}</p>}
 
               <Btn primary onClick={generate} disabled={!company.trim() || loading} style={{ width: '100%' }}>
-                {loading ? 'A gerar...' : '✨ Gerar candidatura'}
+                {loading ? 'A gerar...' : <><Sparkles size={14} style={{ verticalAlign: 'middle', marginRight: 5 }} />Gerar candidatura</>}
               </Btn>
             </>
           ) : (
             <>
               {result.highlight && (
                 <div style={{ background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 10, padding: '10px 14px', marginBottom: 18 }}>
-                  <p style={{ margin: 0, fontSize: 13, color: '#34d399' }}>💡 {result.highlight}</p>
+                  <p style={{ margin: 0, fontSize: 13, color: '#34d399', display: 'flex', alignItems: 'flex-start', gap: 6 }}><Lightbulb size={14} style={{ flexShrink: 0, marginTop: 1 }} />{result.highlight}</p>
                 </div>
               )}
 

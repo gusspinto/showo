@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { Check, X, Info } from 'lucide-react'
 
 const BORDER = {
   error: '#f43f5e',
@@ -6,10 +7,11 @@ const BORDER = {
   success: '#22c55e',
 }
 
-const ICON = {
-  error: '✕',
-  info: 'ℹ',
-  success: '✓',
+function ToastIcon({ type, color }) {
+  const size = 13
+  if (type === 'error') return <X size={size} color={color} />
+  if (type === 'info')  return <Info size={size} color={color} />
+  return <Check size={size} color={color} />
 }
 
 const ICON_BG = {
@@ -20,7 +22,6 @@ const ICON_BG = {
 
 export function Toast({ message, type = 'success', visible }) {
   const border = BORDER[type] ?? BORDER.success
-  const icon = ICON[type] ?? ICON.success
   const iconBg = ICON_BG[type] ?? ICON_BG.success
 
   return (
@@ -47,9 +48,9 @@ export function Toast({ message, type = 'success', visible }) {
         width: 24, height: 24, borderRadius: 6, flexShrink: 0,
         background: iconBg,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontSize: 12, fontWeight: 700, color: border,
+        color: border,
       }}>
-        {icon}
+        <ToastIcon type={type} color={border} />
       </div>
       <span>{message}</span>
     </div>

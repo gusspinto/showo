@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import { GraduationCap, Briefcase, Rocket, Users, ClipboardList, BarChart2, Monitor, Trophy, Sparkles, Check, Lock, Camera, X, Save } from 'lucide-react'
 import { generateProject } from '../lib/generateProject'
 import { saveProject } from '../lib/saveProject'
 import { calculateScore } from '../lib/score'
@@ -44,21 +45,21 @@ const inputBase = {
 }
 
 const GOAL_OPTIONS = [
-  { id: 'school',     icon: '🎓', title: 'Apresentar um projeto escolar', subtitle: 'PAP, trabalho de grupo ou apresentação' },
-  { id: 'internship', icon: '💼', title: 'Conseguir um estágio',           subtitle: 'Mostra o teu trabalho a recrutadores' },
-  { id: 'show',       icon: '🚀', title: 'Mostrar o meu projeto',          subtitle: 'Partilha o que construíste com o mundo' },
-  { id: 'clients',    icon: '👥', title: 'Conseguir clientes',             subtitle: 'Transforma projetos em prova profissional' },
+  { id: 'school',     Icon: GraduationCap, title: 'Apresentar um projeto escolar', subtitle: 'PAP, trabalho de grupo ou apresentação' },
+  { id: 'internship', Icon: Briefcase,     title: 'Conseguir um estágio',           subtitle: 'Mostra o teu trabalho a recrutadores' },
+  { id: 'show',       Icon: Rocket,        title: 'Mostrar o meu projeto',          subtitle: 'Partilha o que construíste com o mundo' },
+  { id: 'clients',    Icon: Users,         title: 'Conseguir clientes',             subtitle: 'Transforma projetos em prova profissional' },
 ]
 
 const SCHOOL_YEARS = ['10º ano', '11º ano', '12º ano', 'Licenciatura', 'Mestrado', 'Outro']
 
 const PROJECT_TYPES = [
-  { id: 'group',        icon: '📋', label: 'Trabalho de grupo' },
-  { id: 'pap',          icon: '🎓', label: 'PAP / Projeto final' },
-  { id: 'presentation', icon: '📊', label: 'Apresentação' },
-  { id: 'personal',     icon: '💻', label: 'Projeto pessoal' },
-  { id: 'competition',  icon: '🏆', label: 'Projeto de competição' },
-  { id: 'other',        icon: '✨', label: 'Outro' },
+  { id: 'group',        Icon: ClipboardList, label: 'Trabalho de grupo' },
+  { id: 'pap',          Icon: GraduationCap, label: 'PAP / Projeto final' },
+  { id: 'presentation', Icon: BarChart2,     label: 'Apresentação' },
+  { id: 'personal',     Icon: Monitor,       label: 'Projeto pessoal' },
+  { id: 'competition',  Icon: Trophy,        label: 'Projeto de competição' },
+  { id: 'other',        Icon: Sparkles,      label: 'Outro' },
 ]
 
 const STEPS = [
@@ -89,8 +90,8 @@ const STEPS = [
 const TOTAL_STEPS = STEPS.length
 
 const GOAL_LABELS = {
-  school: '📝 Projeto escolar', internship: '💼 Para recrutadores',
-  show: '🚀 Partilha pública', clients: '🤝 Prova profissional',
+  school: 'Projeto escolar', internship: 'Para recrutadores',
+  show: 'Partilha pública', clients: 'Prova profissional',
 }
 
 function getScoreColor(s) {
@@ -101,10 +102,10 @@ function getScoreColor(s) {
 }
 
 function getMotivation(s) {
-  if (s > 80) return 'Excelente! 🏆'
-  if (s >= 60) return 'Quase lá! ⭐'
-  if (s >= 40) return 'Bom progresso! 🔥'
-  return 'Continua! Estás a começar 💪'
+  if (s > 80) return 'Excelente!'
+  if (s >= 60) return 'Quase lá!'
+  if (s >= 40) return 'Bom progresso!'
+  return 'Continua! Estás a começar.'
 }
 
 async function resizeImage(file, maxWidth = 1200) {
@@ -222,7 +223,7 @@ export default function NewProject() {
     try {
       const base64 = await resizeImage(file)
       set('cover_url', base64)
-      showToast('Imagem adicionada! ✓')
+      showToast('Imagem adicionada!')
     } catch { showToast('Erro ao processar a imagem', 'error') }
   }
 
@@ -271,9 +272,9 @@ export default function NewProject() {
                       width: 42, height: 42, borderRadius: 10, marginBottom: 12,
                       background: sel ? 'rgba(59,130,246,0.15)' : 'rgba(255,255,255,0.04)',
                       border: `1px solid ${sel ? 'rgba(59,130,246,0.25)' : colors.border}`,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
                     }}>
-                      {opt.icon}
+                      <opt.Icon size={22} color={sel ? colors.blue : colors.muted} />
                     </div>
                     <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 5, letterSpacing: '-0.1px' }}>{opt.title}</div>
                     <div style={{ fontSize: 12, color: colors.muted, lineHeight: 1.45 }}>{opt.subtitle}</div>
@@ -322,7 +323,7 @@ export default function NewProject() {
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 24px' }}>
           <div style={{ width: '100%', maxWidth: 560 }}>
             <div style={{ textAlign: 'center', marginBottom: 36 }}>
-              <div style={{ fontSize: 56, marginBottom: 16 }}>🎉</div>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}><Sparkles size={52} color={colors.blue} /></div>
               <h2 style={{ fontSize: 'clamp(22px, 4vw, 30px)', fontWeight: 800, margin: '0 0 8px', letterSpacing: '-0.5px' }}>O teu projeto está pronto!</h2>
               <p style={{ color: colors.muted, margin: 0, fontSize: 15 }}>Guarda o link de edição — só tu o tens.</p>
             </div>
@@ -345,7 +346,7 @@ export default function NewProject() {
                     fontFamily: 'inherit',
                   }}
                 >
-                  {copiedLink === 'project' ? '✓ Copiado' : 'Copiar'}
+                  {copiedLink === 'project' ? <><Check size={13} style={{verticalAlign:'middle',marginRight:3}}/>Copiado</> : 'Copiar'}
                 </button>
               </div>
             </div>
@@ -353,7 +354,7 @@ export default function NewProject() {
             {/* Edit link */}
             <div style={{ background: colors.yellowGlow, border: '1px solid rgba(234,179,8,0.2)', borderRadius: 14, padding: '20px 22px', marginBottom: 28 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                <span style={{ fontSize: 16 }}>🔐</span>
+                <Lock size={16} color={colors.yellow} />
                 <div style={{ fontSize: 11, fontWeight: 700, color: colors.yellow, textTransform: 'uppercase', letterSpacing: 0.8 }}>Teu link privado de edição</div>
               </div>
               <p style={{ margin: '0 0 12px', fontSize: 13, color: colors.muted, lineHeight: 1.55 }}>
@@ -374,7 +375,7 @@ export default function NewProject() {
                     fontFamily: 'inherit',
                   }}
                 >
-                  {copiedLink === 'edit' ? '✓ Copiado' : 'Copiar'}
+                  {copiedLink === 'edit' ? <><Check size={13} style={{verticalAlign:'middle',marginRight:3}}/>Copiado</> : 'Copiar'}
                 </button>
               </div>
             </div>
@@ -413,7 +414,7 @@ export default function NewProject() {
           boxShadow: `0 0 24px ${colors.blueGlow}`,
         }} />
         <div style={{ textAlign: 'center' }}>
-          <p style={{ fontSize: 20, fontWeight: 700, margin: '0 0 8px', letterSpacing: '-0.3px' }}>✨ A IA está a analisar o teu projeto...</p>
+          <p style={{ fontSize: 20, fontWeight: 700, margin: '0 0 8px', letterSpacing: '-0.3px', display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}><Sparkles size={20} color={colors.blue} /> A IA está a analisar o teu projeto...</p>
           <p style={{ color: colors.muted, fontSize: 14, margin: 0 }}>Isto pode demorar alguns segundos</p>
         </div>
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
@@ -451,7 +452,7 @@ export default function NewProject() {
             boxShadow: '0 24px 60px rgba(0,0,0,0.6)',
             textAlign: 'center',
           }}>
-            <div style={{ fontSize: 36, marginBottom: 16 }}>💾</div>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}><Save size={36} color={colors.blue} /></div>
             <h2 style={{ color: '#e8f2ff', fontSize: 20, fontWeight: 800, margin: '0 0 10px', letterSpacing: '-0.3px' }}>
               Guarda o teu projeto
             </h2>
@@ -552,7 +553,7 @@ export default function NewProject() {
               <button
                 onClick={() => setPrefillBanner(false)}
                 style={{ background: 'none', border: 'none', color: '#7d93b0', cursor: 'pointer', fontSize: 16, padding: 0, flexShrink: 0 }}
-              >✕</button>
+              ><X size={14} /></button>
             </div>
           )}
 
@@ -674,7 +675,7 @@ export default function NewProject() {
                       transition: 'border-color 0.2s',
                     }}>
                       <input type="checkbox" checked={answers.is_pap ?? false} onChange={e => set('is_pap', e.target.checked)} style={{ width: 18, height: 18, accentColor: colors.blue, cursor: 'pointer' }} />
-                      <span style={{ fontSize: 15 }}>Este projeto é a minha <strong>PAP</strong> 🎓</span>
+                      <span style={{ fontSize: 15 }}>Este projeto é a minha <strong>PAP</strong></span>
                     </label>
                   )}
                   {answers.is_pap && (
@@ -715,7 +716,7 @@ export default function NewProject() {
                           fontFamily: 'inherit',
                         }}
                       >
-                        <div style={{ fontSize: 20, marginBottom: 5 }}>{t.icon}</div>
+                        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 5 }}><t.Icon size={20} color={sel ? colors.blue : colors.muted} /></div>
                         <div style={{ fontSize: 12, fontWeight: 600, lineHeight: 1.35, color: sel ? colors.text : colors.muted }}>{t.label}</div>
                       </button>
                     )
@@ -745,7 +746,7 @@ export default function NewProject() {
                     onMouseEnter={e => { e.currentTarget.style.borderColor = colors.blue; e.currentTarget.style.background = 'rgba(59,130,246,0.03)' }}
                     onMouseLeave={e => { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.background = 'transparent' }}
                   >
-                    <div style={{ fontSize: 28, marginBottom: 10 }}>📷</div>
+                    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 10 }}><Camera size={28} color={colors.muted} /></div>
                     <p style={{ color: colors.muted, margin: 0, fontSize: 14, fontWeight: 500 }}>Clica para escolher uma imagem (opcional)</p>
                     <p style={{ color: colors.subtle, margin: '4px 0 0', fontSize: 12 }}>PNG, JPG ou WEBP · máx. 8MB</p>
                   </div>

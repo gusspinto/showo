@@ -3,6 +3,10 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
+import {
+  AlertTriangle, HelpCircle, User, Folder, Star,
+  Shield, BarChart2, MapPin, Calendar, Check, X, Search,
+} from 'lucide-react'
 
 const C = {
   bg: '#0d1424',
@@ -86,7 +90,9 @@ function ConfirmModal({ title, body, onConfirm, onCancel, danger = true }) {
         borderRadius: 18, padding: '28px 32px', maxWidth: 420, width: '100%',
         boxShadow: '0 16px 48px rgba(0,0,0,0.6)',
       }}>
-        <div style={{ fontSize: 28, marginBottom: 12, textAlign: 'center' }}>{danger ? '⚠️' : '❓'}</div>
+        <div style={{ fontSize: 28, marginBottom: 12, textAlign: 'center', display: 'flex', justifyContent: 'center' }}>
+          {danger ? <AlertTriangle size={28} color="#f87171" /> : <HelpCircle size={28} color="#3b82f6" />}
+        </div>
         <h3 style={{ margin: '0 0 10px', fontSize: 17, fontWeight: 700, color: C.text, textAlign: 'center' }}>{title}</h3>
         <p style={{ margin: '0 0 24px', fontSize: 14, color: C.muted, textAlign: 'center', lineHeight: 1.6 }}>{body}</p>
         <div style={{ display: 'flex', gap: 10 }}>
@@ -126,10 +132,10 @@ function OverviewTab({ users, projects }) {
   return (
     <div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 16, marginBottom: 32 }}>
-        <StatCard icon="👤" label="Total de utilizadores" value={totalUsers} color={C.blue} sub={`+${newUsersWeek} esta semana`} />
-        <StatCard icon="📁" label="Total de projetos" value={totalProjects} color={C.green} sub={`+${newThisWeek} esta semana`} />
-        <StatCard icon="⭐" label="Score médio" value={avgScore} color={C.yellow} sub="nos projetos com score" />
-        <StatCard icon="🛡️" label="Administradores" value={admins} color={C.purple} />
+        <StatCard icon={<User size={20} />} label="Total de utilizadores" value={totalUsers} color={C.blue} sub={`+${newUsersWeek} esta semana`} />
+        <StatCard icon={<Folder size={20} />} label="Total de projetos" value={totalProjects} color={C.green} sub={`+${newThisWeek} esta semana`} />
+        <StatCard icon={<Star size={20} />} label="Score médio" value={avgScore} color={C.yellow} sub="nos projetos com score" />
+        <StatCard icon={<Shield size={20} />} label="Administradores" value={admins} color={C.purple} />
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
@@ -142,7 +148,7 @@ function OverviewTab({ users, projects }) {
                 <div style={{ width: 36, height: 36, borderRadius: 8, background: C.bgAlt, border: `1px solid ${C.border}`, overflow: 'hidden', flexShrink: 0 }}>
                   {p.cover_url
                     ? <img src={p.cover_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>📁</div>
+                    : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Folder size={16} color={C.muted} /></div>
                   }
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -217,7 +223,7 @@ function UsersTab({ users, projects, onToggleAdmin, onDeleteUser }) {
       <div style={{ marginBottom: 16 }}>
         <input
           value={search} onChange={e => setSearch(e.target.value)}
-          placeholder="🔍  Pesquisar por nome, username ou email…"
+          placeholder="Pesquisar por nome, username ou email…"
           style={{
             width: '100%', background: C.card, border: `1px solid ${C.border}`,
             borderRadius: 10, padding: '10px 14px', color: C.text, fontSize: 14,
@@ -249,7 +255,7 @@ function UsersTab({ users, projects, onToggleAdmin, onDeleteUser }) {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap', marginBottom: 3 }}>
                   <span style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{name}</span>
                   {u.username && <span style={{ fontSize: 12, color: C.subtle }}>@{u.username}</span>}
-                  {u.is_admin && <Badge color={C.purple}>🛡️ Admin</Badge>}
+                  {u.is_admin && <Badge color={C.purple}><span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Shield size={11} /> Admin</span></Badge>}
                   {u.banned_at && <Badge color={C.red}>Banido</Badge>}
                 </div>
                 <div style={{ fontSize: 12, color: C.muted }}>{u.email || '—'}</div>
@@ -323,7 +329,7 @@ function ProjectsTab({ projects, users, onDeleteProject }) {
       <div style={{ marginBottom: 16 }}>
         <input
           value={search} onChange={e => setSearch(e.target.value)}
-          placeholder="🔍  Pesquisar por nome, criador ou área…"
+          placeholder="Pesquisar por nome, criador ou área…"
           style={{
             width: '100%', background: C.card, border: `1px solid ${C.border}`,
             borderRadius: 10, padding: '10px 14px', color: C.text, fontSize: 14,
@@ -349,16 +355,16 @@ function ProjectsTab({ projects, users, onDeleteProject }) {
               <div style={{ width: 48, height: 36, borderRadius: 6, background: C.bgAlt, border: `1px solid ${C.border}`, overflow: 'hidden', flexShrink: 0 }}>
                 {p.cover_url
                   ? <img src={p.cover_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>📁</div>
+                  : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Folder size={18} color={C.muted} /></div>
                 }
               </div>
               {/* Info */}
               <div style={{ flex: 1, minWidth: 200 }}>
                 <div style={{ fontSize: 14, fontWeight: 700, color: C.text, marginBottom: 2 }}>{p.name}</div>
-                <div style={{ fontSize: 12, color: C.subtle, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                  <span>👤 {creator}</span>
-                  {p.area && <span>📌 {p.area}</span>}
-                  <span>📅 {created}</span>
+                <div style={{ fontSize: 12, color: C.subtle, display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><User size={12} /> {creator}</span>
+                  {p.area && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><MapPin size={12} /> {p.area}</span>}
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Calendar size={12} /> {created}</span>
                 </div>
               </div>
               {/* Score */}
@@ -441,39 +447,39 @@ export default function Admin() {
       .from('profiles')
       .update({ is_admin: makeAdmin })
       .eq('id', userId)
-    if (error) { showToast('❌ Erro ao atualizar permissões'); return }
-    showToast(makeAdmin ? '✅ Utilizador é agora administrador' : '✅ Privilégios revogados')
+    if (error) { showToast('Erro ao atualizar permissões'); return }
+    showToast(makeAdmin ? 'Utilizador é agora administrador' : 'Privilégios revogados')
     setUsers(prev => prev.map(u => u.id === userId ? { ...u, is_admin: makeAdmin } : u))
   }
 
   async function handleDeleteUser(userId) {
     const { error } = await supabase.rpc('admin_delete_user', { target_user_id: userId })
-    if (error) { showToast('❌ Erro ao eliminar utilizador: ' + error.message); return }
-    showToast('✅ Utilizador eliminado')
+    if (error) { showToast('Erro ao eliminar utilizador: ' + error.message); return }
+    showToast('Utilizador eliminado')
     setUsers(prev => prev.filter(u => u.id !== userId))
     setProjects(prev => prev.filter(p => p.user_id !== userId))
   }
 
   async function handleDeleteProject(projectId) {
     const { error } = await supabase.from('projects').delete().eq('id', projectId)
-    if (error) { showToast('❌ Erro ao eliminar projeto: ' + error.message); return }
-    showToast('✅ Projeto eliminado')
+    if (error) { showToast('Erro ao eliminar projeto: ' + error.message); return }
+    showToast('Projeto eliminado')
     setProjects(prev => prev.filter(p => p.id !== projectId))
   }
 
   if (authLoading || (!isAdmin && !authLoading)) return null
 
   const tabs = [
-    { id: 'overview', label: '📊 Visão geral' },
-    { id: 'users',    label: `👤 Utilizadores (${users.length})` },
-    { id: 'projects', label: `📁 Projetos (${projects.length})` },
+    { id: 'overview', label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><BarChart2 size={14} /> Visão geral</span> },
+    { id: 'users',    label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><User size={14} /> Utilizadores ({users.length})</span> },
+    { id: 'projects', label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Folder size={14} /> Projetos ({projects.length})</span> },
   ]
 
   return (
     <div style={{ minHeight: '100vh', background: C.bg, color: C.text, fontFamily: 'Inter, system-ui, sans-serif' }}>
       <Navbar>
         <div style={{ fontSize: 12, color: C.purple, fontWeight: 700, background: C.purpleSoft, border: `1px solid ${C.purple}30`, borderRadius: 6, padding: '4px 10px' }}>
-          🛡️ Admin
+          <Shield size={12} style={{ verticalAlign: 'middle', marginRight: 4 }} />Admin
         </div>
       </Navbar>
 
@@ -495,8 +501,8 @@ export default function Admin() {
               width: 44, height: 44, borderRadius: 12,
               background: 'linear-gradient(135deg,#a855f7,#7c3aed)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 22, boxShadow: '0 4px 16px rgba(168,85,247,0.3)',
-            }}>🛡️</div>
+              boxShadow: '0 4px 16px rgba(168,85,247,0.3)',
+            }}><Shield size={22} color="#fff" /></div>
             <div>
               <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, letterSpacing: '-0.3px' }}>Painel de Administração</h1>
               <p style={{ margin: 0, fontSize: 13, color: C.muted }}>Gestão completa de utilizadores e projetos</p>

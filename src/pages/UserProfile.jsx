@@ -6,6 +6,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
 import CoverLetterModal from '../components/CoverLetterModal'
+import { Mail, Search, Folder, FolderOpen } from 'lucide-react'
 
 const C = {
   bg: '#0d1424',
@@ -62,7 +63,7 @@ function ProjectCard({ project, onClick }) {
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: 36,
         }}>
-          {project.area ? project.area[0] : '📁'}
+          {project.area ? project.area[0] : <Folder size={36} color={color} />}
         </div>
       )}
 
@@ -158,7 +159,7 @@ export default function UserProfile() {
     <div style={{ minHeight: '100vh', background: C.bg, fontFamily: 'Inter, sans-serif', display: 'flex', flexDirection: 'column' }}>
       <Navbar />
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, padding: 24, textAlign: 'center' }}>
-        <div style={{ fontSize: 48, marginBottom: 8 }}>🔍</div>
+        <div style={{ marginBottom: 8 }}><Search size={48} color={C.muted} /></div>
         <h2 style={{ color: C.text, fontSize: 22, fontWeight: 800, margin: 0 }}>Perfil não encontrado</h2>
         <p style={{ color: C.muted, margin: 0, fontSize: 14 }}>O utilizador @{username} não existe.</p>
         <button onClick={() => navigate('/')} style={{ marginTop: 8, background: C.blue, border: 'none', borderRadius: 8, padding: '10px 24px', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
@@ -235,7 +236,7 @@ export default function UserProfile() {
                 onMouseEnter={e => e.currentTarget.style.background = 'rgba(251,191,36,0.14)'}
                 onMouseLeave={e => e.currentTarget.style.background = 'rgba(251,191,36,0.08)'}
               >
-                ✉️ Kit de estágio
+                <Mail size={14} style={{ verticalAlign: 'middle', marginRight: 5 }} />Kit de estágio
               </button>
             )}
             <button
@@ -310,7 +311,7 @@ export default function UserProfile() {
 
         {projects.length === 0 ? (
           <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: '44px 32px', textAlign: 'center' }}>
-            <div style={{ fontSize: 40, marginBottom: 12 }}>📂</div>
+            <div style={{ marginBottom: 12 }}><FolderOpen size={40} color={C.subtle} /></div>
             <p style={{ color: C.text, fontSize: 16, fontWeight: 700, margin: '0 0 6px' }}>Ainda sem projetos públicos</p>
             <p style={{ color: C.muted, fontSize: 14, margin: 0 }}>
               {isOwnProfile ? 'Cria o teu primeiro projeto e partilha-o aqui.' : 'Este utilizador ainda não tem projetos.'}

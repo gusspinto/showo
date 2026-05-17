@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
+import { Folder, Check, Search, School, User, Copy, Inbox } from 'lucide-react'
 
 const C = {
   bg: '#0d1424', bgAlt: '#0a1018', card: '#111c32', cardHover: '#152030',
@@ -36,8 +37,8 @@ function ProjectCard({ project, navigate }) {
       {project.cover_url ? (
         <img src={project.cover_url} alt="" style={{ width: '100%', height: 120, objectFit: 'cover', display: 'block' }} />
       ) : (
-        <div style={{ width: '100%', height: 80, background: 'linear-gradient(135deg,rgba(59,130,246,0.08),rgba(79,70,229,0.05))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28 }}>
-          📁
+        <div style={{ width: '100%', height: 80, background: 'linear-gradient(135deg,rgba(59,130,246,0.08),rgba(79,70,229,0.05))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Folder size={28} color="#3b82f6" />
         </div>
       )}
       <div style={{ padding: '14px 16px' }}>
@@ -143,7 +144,7 @@ export default function TurmaPage() {
         .in('id', [...projects.map(p => p.id), projectId])
         .order('score', { ascending: false })
       setProjects(projs || [])
-      showToast('✅ Projeto adicionado à turma!')
+      showToast('Projeto adicionado à turma!')
       setShowAdd(false)
     }
     setAdding(null)
@@ -167,7 +168,7 @@ export default function TurmaPage() {
   if (!turma) {
     return (
       <div style={{ minHeight: '100vh', background: C.bg, color: C.text, fontFamily: 'Inter, system-ui, sans-serif', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, padding: 24 }}>
-        <div style={{ fontSize: 52 }}>🔍</div>
+        <Search size={52} color="#3b82f6" />
         <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700 }}>Turma não encontrada</h2>
         <p style={{ color: C.muted, margin: 0 }}>O código <strong style={{ color: C.text }}>{code}</strong> não existe. Verifica com o professor.</p>
         <button onClick={() => navigate('/')} style={{ background: C.blue, border: 'none', borderRadius: 8, padding: '10px 24px', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
@@ -248,8 +249,8 @@ export default function TurmaPage() {
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-                <div style={{ width: 44, height: 44, borderRadius: 12, background: 'linear-gradient(135deg,rgba(59,130,246,0.2),rgba(79,70,229,0.15))', border: `1px solid rgba(59,130,246,0.25)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>
-                  🏫
+                <div style={{ width: 44, height: 44, borderRadius: 12, background: 'linear-gradient(135deg,rgba(59,130,246,0.2),rgba(79,70,229,0.15))', border: `1px solid rgba(59,130,246,0.25)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <School size={22} color="#3b82f6" />
                 </div>
                 <div>
                   <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, letterSpacing: '-0.3px' }}>{turma.name}</h1>
@@ -257,8 +258,8 @@ export default function TurmaPage() {
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', fontSize: 13, color: C.subtle }}>
-                {turma.teacher_name && <span>👤 {turma.teacher_name}</span>}
-                <span>📁 {projects.length} projeto{projects.length !== 1 ? 's' : ''}</span>
+                {turma.teacher_name && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><User size={13} />{turma.teacher_name}</span>}
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Folder size={13} />{projects.length} projeto{projects.length !== 1 ? 's' : ''}</span>
               </div>
             </div>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -269,7 +270,7 @@ export default function TurmaPage() {
               >
                 <span style={{ fontSize: 11, color: C.muted, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>Código</span>
                 <span style={{ fontSize: 16, fontWeight: 800, color: '#60a5fa', letterSpacing: 2 }}>{turma.code}</span>
-                <span style={{ fontSize: 12, color: copied ? C.green : C.muted }}>{copied ? '✓' : '⎘'}</span>
+                <span style={{ fontSize: 12, color: copied ? C.green : C.muted }}>{copied ? <Check size={12} /> : <Copy size={12} />}</span>
               </button>
               {/* Add project */}
               {user ? (
@@ -294,7 +295,7 @@ export default function TurmaPage() {
         {/* Projects grid */}
         {projects.length === 0 ? (
           <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: '60px 32px', textAlign: 'center' }}>
-            <div style={{ fontSize: 44, marginBottom: 14 }}>📭</div>
+            <div style={{ marginBottom: 14 }}><Inbox size={44} color="#3d5270" /></div>
             <p style={{ color: C.text, fontSize: 17, fontWeight: 700, margin: '0 0 8px' }}>Ainda não há projetos</p>
             <p style={{ color: C.muted, fontSize: 14, margin: '0 0 24px' }}>Partilha o código <strong style={{ color: '#60a5fa' }}>{turma.code}</strong> com os teus alunos para que adicionem os seus projetos.</p>
           </div>

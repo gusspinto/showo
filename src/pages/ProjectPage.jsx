@@ -10,6 +10,7 @@ import { generateProject } from '../lib/generateProject'
 import { useAuth } from '../context/AuthContext'
 import DefenseMode from '../components/DefenseMode'
 import { analyzeProject } from '../lib/analyzeProject'
+import { Check, Loader, GraduationCap, Save, Sparkles, Bot, Lightbulb, Pencil } from 'lucide-react'
 
 const colors = {
   bg: '#0d1424',
@@ -18,10 +19,10 @@ const colors = {
   cardHover: '#1c2d44',
   border: '#1e3050',
   borderBright: '#2a4275',
-  blue: '#3b82f6',
-  blueHover: '#2563eb',
-  blueGlow: 'rgba(59,130,246,0.15)',
-  blueSubtle: 'rgba(59,130,246,0.08)',
+  blue: '#1b78f7',
+  blueHover: '#1564d4',
+  blueGlow: 'rgba(27,120,247,0.15)',
+  blueSubtle: 'rgba(27,120,247,0.08)',
   blueBg: '#0a1729',
   text: '#e8f2ff',
   muted: '#7d93b0',
@@ -35,7 +36,7 @@ const colors = {
   orangeGlow: 'rgba(249,115,22,0.12)',
 }
 
-const CONFETTI_COLORS = ['#3b82f6', '#22c55e', '#eab308', '#f97316', '#a855f7', '#ec4899', '#06b6d4']
+const CONFETTI_COLORS = ['#1b78f7', '#22c55e', '#eab308', '#f97316', '#a855f7', '#ec4899', '#06b6d4']
 
 const PROJECT_TYPE_LABELS = {
   group: 'Trabalho de grupo',
@@ -94,7 +95,7 @@ function ScoreRing({ score }) {
 function Section({ title, content }) {
   if (!content) return null
   return (
-    <div style={{
+    <div className="proj-card-pad" style={{
       background: colors.card,
       border: `1px solid ${colors.border}`,
       borderRadius: 16,
@@ -112,6 +113,7 @@ function ChallengeCard({ challenge, project, onImprove }) {
   const isCompleted = getChallengeStatus(challenge, project) === 'completed'
   const val = String(project[challenge.field] || '').trim()
   const progress = Math.min(val.length / challenge.threshold, 1)
+  const ChalIcon = challenge.icon
 
   return (
     <div style={{
@@ -126,20 +128,21 @@ function ChallengeCard({ challenge, project, onImprove }) {
           width: 38, height: 38, borderRadius: 10, flexShrink: 0, marginTop: 1,
           background: isCompleted ? 'rgba(34,197,94,0.1)' : 'rgba(255,255,255,0.04)',
           border: `1px solid ${isCompleted ? 'rgba(34,197,94,0.2)' : colors.border}`,
-          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          color: isCompleted ? colors.green : colors.muted,
         }}>
-          {challenge.icon}
+          <ChalIcon size={18} />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
             <span style={{ fontSize: 14, fontWeight: 700, color: isCompleted ? colors.green : colors.text }}>
-              {isCompleted && <span style={{ marginRight: 4 }}>✓</span>}{challenge.title}
+              {isCompleted && <Check size={14} style={{ marginRight: 4, verticalAlign: 'middle' }} />}{challenge.title}
             </span>
             <span style={{
               fontSize: 12, fontWeight: 700, flexShrink: 0,
               color: isCompleted ? colors.green : colors.blue,
               background: isCompleted ? colors.greenGlow : colors.blueSubtle,
-              border: `1px solid ${isCompleted ? 'rgba(34,197,94,0.2)' : 'rgba(59,130,246,0.15)'}`,
+              border: `1px solid ${isCompleted ? 'rgba(34,197,94,0.2)' : 'rgba(27,120,247,0.15)'}`,
               borderRadius: 999, padding: '2px 10px',
             }}>
               +{challenge.xp} XP
@@ -171,7 +174,7 @@ function ChallengeCard({ challenge, project, onImprove }) {
                 style={{
                   background: colors.blueSubtle,
                   color: colors.blue,
-                  border: '1px solid rgba(59,130,246,0.2)',
+                  border: '1px solid rgba(27,120,247,0.2)',
                   borderRadius: 8,
                   padding: '8px 16px',
                   fontSize: 13,
@@ -195,6 +198,7 @@ function EditModal({ challenge, project, onClose, onSave, saving }) {
   const [value, setValue] = useState(String(project[challenge.field] || ''))
   const len = value.trim().length
   const isComplete = len >= challenge.threshold
+  const ChalIcon = challenge.icon
   const progress = Math.min(len / challenge.threshold, 1)
 
   useEffect(() => {
@@ -228,9 +232,10 @@ function EditModal({ challenge, project, onClose, onSave, saving }) {
               width: 42, height: 42, borderRadius: 12,
               background: 'rgba(255,255,255,0.05)',
               border: `1px solid ${colors.border}`,
-              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: colors.muted,
             }}>
-              {challenge.icon}
+              <ChalIcon size={22} />
             </div>
             <div>
               <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: colors.text }}>{challenge.fieldLabel}</h2>
@@ -250,7 +255,7 @@ function EditModal({ challenge, project, onClose, onSave, saving }) {
             border: `1.5px solid ${isComplete ? colors.green : colors.border}`,
             borderRadius: 10, padding: '12px 14px',
             color: colors.text, fontSize: 15, lineHeight: 1.65,
-            resize: 'vertical', fontFamily: 'Inter, system-ui, sans-serif',
+            resize: 'vertical', fontFamily: 'var(--font-body)',
             boxSizing: 'border-box', outline: 'none',
             transition: 'border-color 0.2s',
           }}
@@ -258,8 +263,8 @@ function EditModal({ challenge, project, onClose, onSave, saving }) {
         />
         <div style={{ margin: '10px 0 20px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-            <span style={{ fontSize: 12, color: isComplete ? colors.green : colors.muted, fontWeight: isComplete ? 600 : 400 }}>
-              {isComplete ? '✓ Objetivo atingido!' : `${len} / ${challenge.threshold} caracteres`}
+            <span style={{ fontSize: 12, color: isComplete ? colors.green : colors.muted, fontWeight: isComplete ? 600 : 400, display: 'flex', alignItems: 'center', gap: 4 }}>
+              {isComplete ? <><Check size={12} /> Objetivo atingido!</> : `${len} / ${challenge.threshold} caracteres`}
             </span>
             <span style={{ fontSize: 12, color: colors.subtle }}>{Math.round(progress * 100)}%</span>
           </div>
@@ -288,7 +293,7 @@ function EditModal({ challenge, project, onClose, onSave, saving }) {
             opacity: saving ? 0.75 : 1,
             transition: 'opacity 0.2s',
             fontFamily: 'inherit',
-            boxShadow: isComplete ? '0 4px 20px rgba(34,197,94,0.3)' : '0 4px 20px rgba(59,130,246,0.3)',
+            boxShadow: isComplete ? '0 4px 20px rgba(34,197,94,0.3)' : '0 4px 20px rgba(27,120,247,0.3)',
           }}
         >
           {saving ? 'A guardar...' : `Guardar e ganhar +${challenge.xp} XP`}
@@ -350,8 +355,8 @@ function MembersPanel({ ownerName, members, colors, isOwner }) {
 
   const statusCfg = {
     accepted: { label: 'Colaborador', color: '#34d399', bg: 'rgba(52,211,153,0.1)', border: 'rgba(52,211,153,0.25)', avatar: 'linear-gradient(135deg,#34d399,#059669)', dim: false },
-    pending:  { label: '⏳ Pendente', color: '#eab308', bg: 'rgba(234,179,8,0.1)',  border: 'rgba(234,179,8,0.25)',  avatar: 'linear-gradient(135deg,#ca8a04,#92400e)', dim: true  },
-    declined: { label: '✕ Recusou',  color: '#f87171', bg: 'rgba(248,113,113,0.1)', border: 'rgba(248,113,113,0.25)', avatar: 'linear-gradient(135deg,#ef4444,#b91c1c)', dim: true  },
+    pending:  { label: 'Pendente', color: '#eab308', bg: 'rgba(234,179,8,0.1)',  border: 'rgba(234,179,8,0.25)',  avatar: 'linear-gradient(135deg,#ca8a04,#92400e)', dim: true  },
+    declined: { label: 'Recusou',  color: '#f87171', bg: 'rgba(248,113,113,0.1)', border: 'rgba(248,113,113,0.25)', avatar: 'linear-gradient(135deg,#ef4444,#b91c1c)', dim: true  },
   }
 
   // For non-owners, only show accepted; already filtered at query level but guard here too
@@ -368,7 +373,7 @@ function MembersPanel({ ownerName, members, colors, isOwner }) {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <span style={{ fontSize: 14, fontWeight: 600, color: colors.text }}>{displayOwner}</span>
-            <span style={{ fontSize: 11, background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.25)', borderRadius: 5, padding: '1px 7px', color: '#60a5fa', fontWeight: 700 }}>Dono</span>
+            <span style={{ fontSize: 11, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.25)', borderRadius: 5, padding: '1px 7px', color: '#60a5fa', fontWeight: 700 }}>Dono</span>
           </div>
         </div>
         {/* Collaborators */}
@@ -570,13 +575,13 @@ export default function ProjectPage() {
 
     const isNowCompleted = getChallengeStatus(challenge, updatedProject) === 'completed'
     if (!wasCompleted && isNowCompleted) {
-      triggerToast(`🎉 +${challenge.xp} XP! Score: ${oldScore} → ${newScore}`)
+      triggerToast(`+${challenge.xp} XP! Score: ${oldScore} → ${newScore}`)
       if (newScore === 100) {
         setShowConfetti(true)
         setTimeout(() => setShowConfetti(false), 5000)
       }
     } else {
-      triggerToast(`💾 Guardado! Score atual: ${newScore}`)
+      triggerToast(`Guardado! Score atual: ${newScore}`)
     }
 
     setEditModal(null)
@@ -617,7 +622,7 @@ export default function ProjectPage() {
         .eq('id', project.id)
       if (!error) {
         setProject(p => ({ ...p, ai_tagline: aiResult.tagline, ai_description: aiResult.description, ai_highlights: aiResult.highlights }))
-        triggerToast('✨ Texto da IA atualizado!')
+        triggerToast('Texto da IA atualizado!')
         let t = 60
         setRegenCooldown(t)
         cooldownRef.current = setInterval(() => {
@@ -641,12 +646,12 @@ export default function ProjectPage() {
 
   if (!project) {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: 'Inter, system-ui, sans-serif', gap: 16, textAlign: 'center', padding: 24 }}>
+      <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-body)', gap: 16, textAlign: 'center', padding: 24 }}>
         <h2 style={{ margin: 0, fontSize: 24, fontWeight: 700 }}>Este projeto não existe ou foi removido</h2>
         <p style={{ color: colors.muted, margin: 0 }}>O link pode estar incorrecto ou o projeto foi eliminado.</p>
         <button
           onClick={() => navigate('/novo')}
-          style={{ background: `linear-gradient(135deg, ${colors.blue}, #4f46e5)`, color: '#fff', border: 'none', borderRadius: 10, padding: '12px 28px', fontSize: 16, fontWeight: 700, cursor: 'pointer', marginTop: 8, boxShadow: '0 4px 20px rgba(59,130,246,0.3)', fontFamily: 'inherit' }}
+          style={{ background: `linear-gradient(135deg, ${colors.blue}, #4f46e5)`, color: '#fff', border: 'none', borderRadius: 10, padding: '12px 28px', fontSize: 16, fontWeight: 700, cursor: 'pointer', marginTop: 8, boxShadow: '0 4px 20px rgba(27,120,247,0.3)', fontFamily: 'inherit' }}
         >
           Criar o meu projeto →
         </button>
@@ -681,7 +686,7 @@ export default function ProjectPage() {
   const totalXP = CHALLENGES.reduce((sum, c) => sum + c.xp, 0)
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: 'Inter, system-ui, sans-serif' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: 'var(--font-body)', overflowX: 'hidden' }}>
       <Helmet>
         <title>{project.name} — Showo</title>
         <meta name="description" content={project.ai_tagline || project.goal || `Projeto de ${project.creator_name || 'estudante'} no Showo`} />
@@ -708,6 +713,7 @@ export default function ProjectPage() {
           gap: 28px;
           align-items: start;
         }
+        .proj-layout > * { min-width: 0; }
         .proj-sidebar {
           position: sticky;
           top: 88px;
@@ -715,6 +721,18 @@ export default function ProjectPage() {
         @media (max-width: 860px) {
           .proj-layout { grid-template-columns: 1fr; }
           .proj-sidebar { position: static; order: -1; }
+        }
+        @media (max-width: 600px) {
+          .proj-nav-btns  { display: none !important; }
+          .proj-fab-area  { display: flex !important; }
+          .proj-wrap      { padding: 0 16px 120px !important; overflow-x: hidden !important; }
+          .proj-cover     { height: 200px !important; margin-top: 20px !important; border-radius: 14px !important; }
+          .proj-hero      { padding: 28px 0 24px !important; }
+          .proj-h1        { font-size: 26px !important; padding-right: 0 !important; margin-bottom: 12px !important; }
+          .proj-tagline   { font-size: 15px !important; }
+          .proj-score-abs { display: none !important; }
+          .proj-score-mob { display: flex !important; }
+          .proj-card-pad  { padding: 18px 16px !important; border-radius: 14px !important; }
         }
       `}</style>
 
@@ -733,25 +751,26 @@ export default function ProjectPage() {
         <EditModal challenge={editModal} project={project} onClose={() => setEditModal(null)} onSave={handleSave} saving={saving} />
       )}
 
-      <Navbar>
+      {/* Mobile FABs — only visible on mobile via CSS */}
+      <div className="proj-fab-area" style={{
+        display: 'none', position: 'fixed', bottom: 24, right: 20,
+        flexDirection: 'column', gap: 10, zIndex: 90,
+      }}>
         {(isOwner || collaboratorSections !== null) && (
           <button
             onClick={() => setDefenseMode(true)}
+            title="Preparar defesa"
             style={{
-              background: 'rgba(251,191,36,0.08)',
-              border: '1px solid rgba(251,191,36,0.25)',
-              color: '#fbbf24',
-              borderRadius: 8, padding: '8px 14px',
-              fontSize: 13, fontWeight: 600,
-              cursor: 'pointer', fontFamily: 'inherit',
-              display: 'flex', alignItems: 'center', gap: 6,
-              transition: 'background 0.15s',
+              width: 52, height: 52, borderRadius: '50%',
+              background: 'rgba(251,191,36,0.12)',
+              border: '1px solid rgba(251,191,36,0.4)',
+              color: '#fbbf24', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
+              backdropFilter: 'blur(8px)',
             }}
-            onMouseEnter={e => e.currentTarget.style.background = 'rgba(251,191,36,0.14)'}
-            onMouseLeave={e => e.currentTarget.style.background = 'rgba(251,191,36,0.08)'}
-            title="Preparar a defesa do projeto"
           >
-            🎓 Preparar defesa
+            <GraduationCap size={22} />
           </button>
         )}
         {project && (isOwner || collaboratorSections !== null) && (
@@ -760,38 +779,83 @@ export default function ProjectPage() {
               const token = localStorage.getItem(`edit_token_${project.slug}`)
               navigate(`/editar/${project.slug}${token ? `?token=${token}` : ''}`)
             }}
+            title="Editar projeto"
             style={{
-              background: 'transparent',
+              width: 52, height: 52, borderRadius: '50%',
+              background: 'rgba(13,20,36,0.9)',
               border: `1px solid ${colors.border}`,
-              color: colors.muted,
-              borderRadius: 8, padding: '8px 16px',
-              fontSize: 13, fontWeight: 600,
-              cursor: 'pointer', fontFamily: 'inherit',
+              color: colors.muted, cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
+              backdropFilter: 'blur(8px)',
             }}
           >
-            Editar
+            <Pencil size={20} />
           </button>
         )}
-        <button
-          onClick={() => navigate('/novo')}
-          style={{
-            background: `linear-gradient(135deg, ${colors.blue}, #4f46e5)`,
-            color: '#fff', border: 'none',
-            borderRadius: 8, padding: '9px 18px',
-            fontSize: 14, fontWeight: 600,
-            cursor: 'pointer', fontFamily: 'inherit',
-            boxShadow: '0 4px 16px rgba(59,130,246,0.3)',
-          }}
-        >
-          Criar projeto
-        </button>
+      </div>
+
+      <Navbar>
+        <div className="proj-nav-btns" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {(isOwner || collaboratorSections !== null) && (
+            <button
+              onClick={() => setDefenseMode(true)}
+              style={{
+                background: 'rgba(251,191,36,0.08)',
+                border: '1px solid rgba(251,191,36,0.25)',
+                color: '#fbbf24',
+                borderRadius: 8, padding: '8px 14px',
+                fontSize: 13, fontWeight: 600,
+                cursor: 'pointer', fontFamily: 'inherit',
+                display: 'flex', alignItems: 'center', gap: 6,
+                transition: 'background 0.15s',
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = 'rgba(251,191,36,0.14)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'rgba(251,191,36,0.08)'}
+              title="Preparar a defesa do projeto"
+            >
+              <GraduationCap size={15} /> Preparar defesa
+            </button>
+          )}
+          {project && (isOwner || collaboratorSections !== null) && (
+            <button
+              onClick={() => {
+                const token = localStorage.getItem(`edit_token_${project.slug}`)
+                navigate(`/editar/${project.slug}${token ? `?token=${token}` : ''}`)
+              }}
+              style={{
+                background: 'transparent',
+                border: `1px solid ${colors.border}`,
+                color: colors.muted,
+                borderRadius: 8, padding: '8px 16px',
+                fontSize: 13, fontWeight: 600,
+                cursor: 'pointer', fontFamily: 'inherit',
+              }}
+            >
+              Editar
+            </button>
+          )}
+          <button
+            onClick={() => navigate('/novo')}
+            style={{
+              background: `linear-gradient(135deg, ${colors.blue}, #4f46e5)`,
+              color: '#fff', border: 'none',
+              borderRadius: 8, padding: '9px 18px',
+              fontSize: 14, fontWeight: 600,
+              cursor: 'pointer', fontFamily: 'inherit',
+              boxShadow: '0 4px 16px rgba(27,120,247,0.3)',
+            }}
+          >
+            Criar projeto
+          </button>
+        </div>
       </Navbar>
 
-      <div style={{ maxWidth: 1080, margin: '0 auto', padding: '0 24px 80px' }}>
+      <div className="proj-wrap" style={{ maxWidth: 1080, margin: '0 auto', padding: '0 24px 80px', overflowX: 'hidden' }}>
 
         {/* Cover image — full width above the grid */}
         {project.cover_url && (
-          <div style={{ width: '100%', height: 300, position: 'relative', marginTop: 36, borderRadius: 20, overflow: 'hidden', boxShadow: '0 16px 48px rgba(0,0,0,0.5)' }}>
+          <div className="proj-cover" style={{ width: '100%', height: 300, position: 'relative', marginTop: 36, borderRadius: 20, overflow: 'hidden', boxShadow: '0 16px 48px rgba(0,0,0,0.5)' }}>
             <img src={project.cover_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
             <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 30%, #0d1424ee)' }} />
           </div>
@@ -802,9 +866,9 @@ export default function ProjectPage() {
         <div className="proj-main">
 
         {/* Hero */}
-        <div style={{ position: 'relative', padding: `${project.cover_url ? '32px' : '64px'} 0 40px` }}>
-          {/* Score widget */}
-          <div style={{
+        <div className="proj-hero" style={{ position: 'relative', padding: `${project.cover_url ? '32px' : '64px'} 0 40px` }}>
+          {/* Score widget — desktop absolute, hidden on mobile */}
+          <div className="proj-score-abs" style={{
             position: 'absolute', top: project.cover_url ? 32 : 64, right: 0,
             display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10,
           }}>
@@ -842,13 +906,34 @@ export default function ProjectPage() {
             )}
           </div>
 
+          {/* Score widget — mobile inline, hidden on desktop */}
+          <div className="proj-score-mob" style={{
+            display: 'none', alignItems: 'center', gap: 14, marginBottom: 20,
+          }}>
+            <ScoreRing score={displayScore} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <div style={{
+                background: level.color + '15', color: level.color,
+                borderRadius: 999, padding: '4px 12px', fontSize: 11, fontWeight: 700,
+                border: `1px solid ${level.color}35`, display: 'inline-block',
+              }}>{level.label}</div>
+              {internshipReady && (
+                <div style={{
+                  background: colors.greenGlow, color: colors.green,
+                  border: '1px solid rgba(34,197,94,0.25)',
+                  borderRadius: 999, padding: '4px 12px', fontSize: 11, fontWeight: 700, display: 'inline-block',
+                }}>Pronto para estágio</div>
+              )}
+            </div>
+          </div>
+
           {/* Badges */}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
             {project.area && (
               <div style={{
                 background: colors.blueSubtle,
                 color: '#60a5fa',
-                border: '1px solid rgba(59,130,246,0.2)',
+                border: '1px solid rgba(27,120,247,0.2)',
                 borderRadius: 999, padding: '5px 14px', fontSize: 13, fontWeight: 600,
               }}>
                 {project.area}
@@ -876,12 +961,12 @@ export default function ProjectPage() {
             )}
           </div>
 
-          <h1 style={{ fontSize: 'clamp(30px, 5vw, 52px)', fontWeight: 900, margin: '0 0 16px', lineHeight: 1.1, paddingRight: 140, letterSpacing: '-0.5px' }}>
+          <h1 className="proj-h1" style={{ fontSize: 'clamp(26px, 5vw, 52px)', fontWeight: 900, margin: '0 0 16px', lineHeight: 1.1, paddingRight: 140, letterSpacing: '-0.5px' }}>
             {project.name}
           </h1>
 
           {project.ai_tagline && (
-            <p style={{ fontSize: 19, color: colors.muted, lineHeight: 1.65, margin: '0 0 24px', maxWidth: 580, fontWeight: 400 }}>
+            <p className="proj-tagline" style={{ fontSize: 19, color: colors.muted, lineHeight: 1.65, margin: '0 0 24px', maxWidth: 580, fontWeight: 400 }}>
               {project.ai_tagline}
             </p>
           )}
@@ -931,11 +1016,11 @@ export default function ProjectPage() {
 
         {/* AI Description */}
         {project.ai_description && (
-          <div style={{
+          <div className="proj-card-pad" style={{
             background: 'linear-gradient(135deg, #0e1f3e 0%, #0a1729 100%)',
-            border: '1px solid rgba(59,130,246,0.25)',
+            border: '1px solid rgba(27,120,247,0.25)',
             borderRadius: 18, padding: '24px 28px', marginBottom: 24,
-            boxShadow: '0 4px 24px rgba(59,130,246,0.08)',
+            boxShadow: '0 4px 24px rgba(27,120,247,0.08)',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -945,8 +1030,8 @@ export default function ProjectPage() {
                 onClick={handleRegenerate}
                 disabled={regenerating || regenCooldown > 0}
                 style={{
-                  background: 'rgba(59,130,246,0.1)',
-                  border: '1px solid rgba(59,130,246,0.2)',
+                  background: 'rgba(27,120,247,0.1)',
+                  border: '1px solid rgba(27,120,247,0.2)',
                   color: '#60a5fa',
                   borderRadius: 8, padding: '6px 12px',
                   fontSize: 12, fontWeight: 600,
@@ -965,7 +1050,7 @@ export default function ProjectPage() {
 
         {/* Highlights */}
         {highlights.length > 0 && (
-          <div style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 16, padding: '22px 26px', marginBottom: 24, boxShadow: '0 2px 16px rgba(0,0,0,0.25)' }}>
+          <div className="proj-card-pad" style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 16, padding: '22px 26px', marginBottom: 24, boxShadow: '0 2px 16px rgba(0,0,0,0.25)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
               <h3 style={{ margin: 0, fontSize: 11, fontWeight: 700, color: colors.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Destaques</h3>
             </div>
@@ -980,7 +1065,7 @@ export default function ProjectPage() {
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     flexShrink: 0, marginTop: 2,
                   }}>
-                    <span style={{ color: colors.green, fontSize: 11, fontWeight: 700 }}>✓</span>
+                    <Check size={11} color={colors.green} strokeWidth={3} />
                   </div>
                   <p style={{ margin: 0, color: colors.text, fontSize: 15, lineHeight: 1.65 }}>{h}</p>
                 </div>
@@ -991,7 +1076,7 @@ export default function ProjectPage() {
 
         {/* PAP details */}
         {isPap && (project.pap_supervisor || project.pap_date) && (
-          <div style={{ background: colors.yellowGlow, border: '1px solid rgba(234,179,8,0.18)', borderRadius: 16, padding: '20px 24px', marginBottom: 12 }}>
+          <div className="proj-card-pad" style={{ background: colors.yellowGlow, border: '1px solid rgba(234,179,8,0.18)', borderRadius: 16, padding: '20px 24px', marginBottom: 12 }}>
             <h3 style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 700, color: colors.yellow, textTransform: 'uppercase', letterSpacing: 0.8 }}>Detalhes da PAP</h3>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24 }}>
               {project.pap_supervisor && (
@@ -1049,7 +1134,7 @@ export default function ProjectPage() {
               width: `${(earnedXP / totalXP) * 100}%`,
               background: `linear-gradient(90deg, ${colors.blue}, ${colors.green})`,
               transition: 'width 0.6s ease-out',
-              boxShadow: '0 0 8px rgba(59,130,246,0.4)',
+              boxShadow: '0 0 8px rgba(27,120,247,0.4)',
             }} />
           </div>
 
@@ -1066,7 +1151,7 @@ export default function ProjectPage() {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: aiFeedback ? 20 : 0, flexWrap: 'wrap', gap: 12 }}>
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-                  <span style={{ fontSize: 22 }}>🤖</span>
+                  <Bot size={22} color="#818cf8" />
                   <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, letterSpacing: '-0.3px' }}>Análise da IA</h3>
                 </div>
                 <p style={{ margin: 0, fontSize: 13, color: colors.muted, paddingLeft: 32 }}>Feedback personalizado para melhorar o teu projeto</p>
@@ -1075,17 +1160,17 @@ export default function ProjectPage() {
                 onClick={handleAnalyzeAI}
                 disabled={analyzingAI}
                 style={{
-                  background: analyzingAI ? 'rgba(59,130,246,0.1)' : 'linear-gradient(135deg,#3b82f6,#4f46e5)',
-                  border: analyzingAI ? '1px solid rgba(59,130,246,0.3)' : 'none',
+                  background: analyzingAI ? 'rgba(27,120,247,0.1)' : 'linear-gradient(135deg,#3b82f6,#4f46e5)',
+                  border: analyzingAI ? '1px solid rgba(27,120,247,0.3)' : 'none',
                   borderRadius: 10, padding: '9px 18px',
                   color: analyzingAI ? '#60a5fa' : '#fff',
                   fontSize: 13, fontWeight: 700, cursor: analyzingAI ? 'default' : 'pointer',
                   fontFamily: 'inherit', transition: 'all 0.2s',
-                  boxShadow: analyzingAI ? 'none' : '0 4px 16px rgba(59,130,246,0.35)',
+                  boxShadow: analyzingAI ? 'none' : '0 4px 16px rgba(27,120,247,0.35)',
                   flexShrink: 0,
                 }}
               >
-                {analyzingAI ? '✨ A analisar…' : aiFeedback ? '↻ Reanalisar' : '✨ Analisar com IA'}
+                {analyzingAI ? <><Sparkles size={14} style={{ verticalAlign: 'middle' }} /> A analisar…</> : aiFeedback ? '↻ Reanalisar' : <><Sparkles size={14} style={{ verticalAlign: 'middle' }} /> Analisar com IA</>}
               </button>
             </div>
 
@@ -1098,13 +1183,13 @@ export default function ProjectPage() {
             {aiFeedback && !analyzingAI && (
               <div>
                 {/* Overall summary */}
-                <div style={{ background: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.15)', borderRadius: 12, padding: '14px 16px', marginBottom: 16 }}>
+                <div style={{ background: 'rgba(27,120,247,0.06)', border: '1px solid rgba(27,120,247,0.15)', borderRadius: 12, padding: '14px 16px', marginBottom: 16 }}>
                   <div style={{ fontSize: 13, color: '#e8f2ff', lineHeight: 1.65, marginBottom: aiFeedback.score_hint ? 8 : 0 }}>
                     {aiFeedback.overall}
                   </div>
                   {aiFeedback.score_hint && (
                     <div style={{ fontSize: 12, color: '#60a5fa', fontWeight: 600, display: 'flex', alignItems: 'flex-start', gap: 6 }}>
-                      <span>💡</span>
+                      <Lightbulb size={14} style={{ flexShrink: 0, marginTop: 1 }} />
                       <span>{aiFeedback.score_hint}</span>
                     </div>
                   )}
@@ -1138,7 +1223,7 @@ export default function ProjectPage() {
         )}
 
         {/* Share */}
-        <div style={{
+        <div className="proj-card-pad" style={{
           background: colors.card,
           border: `1px solid ${colors.border}`,
           borderRadius: 18, padding: '32px 28px', marginTop: 32,
@@ -1163,10 +1248,10 @@ export default function ProjectPage() {
                     cursor: 'pointer', whiteSpace: 'nowrap',
                     transition: 'background 0.3s',
                     fontFamily: 'inherit',
-                    boxShadow: copied ? '0 4px 16px rgba(34,197,94,0.3)' : '0 4px 16px rgba(59,130,246,0.3)',
+                    boxShadow: copied ? '0 4px 16px rgba(34,197,94,0.3)' : '0 4px 16px rgba(27,120,247,0.3)',
                   }}
                 >
-                  {copied ? '✓ Copiado!' : 'Copiar link'}
+                  {copied ? <><Check size={13} style={{ verticalAlign: 'middle' }} /> Copiado!</> : 'Copiar link'}
                 </button>
               </div>
               <button

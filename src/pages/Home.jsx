@@ -1,18 +1,99 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Navbar } from '../components/Navbar'
 import { prefillProject } from '../lib/prefillProject'
 import Onboarding from '../components/Onboarding'
 
 const colors = {
-  bg: '#0d1424',
-  card: '#152030',
-  border: '#1e3050',
+  bg:           '#0d1424',
+  card:         '#152030',
+  border:       '#1e3050',
   borderBright: '#2a4275',
-  blue: '#3b82f6',
-  text: '#e8f2ff',
-  muted: '#7d93b0',
-  subtle: '#3d5270',
+  blue:         '#1b78f7',
+  text:         '#e8f2ff',
+  muted:        '#7d93b0',
+  subtle:       '#3d5270',
+}
+
+const PHRASES = [
+  { full: 'O teu projeto merece uma página incrível.', highlight: 'uma página incrível.' },
+  { full: 'Organiza. Apresenta. Mostra.', highlight: 'Organiza. Apresenta. Mostra.' },
+]
+
+function TypedHero() {
+  const [idx,      setIdx]      = useState(0)
+  const [text,     setText]     = useState('')
+  const [deleting, setDeleting] = useState(false)
+  const [cursor,   setCursor]   = useState(true)
+
+  useEffect(() => {
+    const t = setInterval(() => setCursor(c => !c), 530)
+    return () => clearInterval(t)
+  }, [])
+
+  useEffect(() => {
+    const phrase = PHRASES[idx].full
+    let timer
+    if (!deleting) {
+      if (text.length < phrase.length) {
+        timer = setTimeout(() => setText(phrase.slice(0, text.length + 1)), 60)
+      } else {
+        timer = setTimeout(() => setDeleting(true), 2000)
+      }
+    } else {
+      if (text.length > 0) {
+        timer = setTimeout(() => setText(text.slice(0, -1)), 35)
+      } else {
+        setDeleting(false)
+        setIdx(i => (i + 1) % PHRASES.length)
+      }
+    }
+    return () => clearTimeout(timer)
+  }, [text, deleting, idx])
+
+  const phrase = PHRASES[idx]
+  let rendered
+  if (phrase.highlight) {
+    const hStart = phrase.full.indexOf(phrase.highlight)
+    if (text.length > hStart) {
+      const before = text.slice(0, hStart)
+      const hl     = text.slice(hStart)
+      rendered = (
+        <>
+          {before}
+          <span style={{
+            background: 'linear-gradient(135deg, #1b78f7 0%, #818cf8 60%, #60a5fa 100%)',
+            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+          }}>
+            {hl}
+          </span>
+        </>
+      )
+    } else {
+      rendered = text
+    }
+  } else {
+    rendered = text
+  }
+
+  return (
+    <h1 className="hero-h1" style={{
+      fontSize: 'clamp(36px, 5.5vw, 62px)', fontWeight: 900,
+      lineHeight: 1.1, margin: '0 0 18px',
+      letterSpacing: '-1.2px', maxWidth: 680,
+      fontFamily: 'var(--font-heading)',
+      minHeight: '2.2em',
+    }}>
+      {rendered}
+      <span style={{
+        color: '#1b78f7',
+        WebkitTextFillColor: '#1b78f7',
+        opacity: cursor ? 1 : 0,
+        marginLeft: 3,
+        transition: 'opacity 0.1s',
+      }}>|</span>
+    </h1>
+  )
 }
 
 const QUICK_GOALS = [
@@ -31,7 +112,7 @@ const FEATURES = [
         <path d="M5 3l.6 1.8L8 6l-1.8.6L5 9l-.6-1.8L2 6l1.8-.6z"/>
       </svg>
     ),
-    iconBg: 'rgba(59,130,246,0.12)', iconColor: '#60a5fa',
+    iconBg: 'rgba(27,120,247,0.12)', iconColor: '#5a9ff5',
     title: 'IA avançada',
     desc: 'O Claude analisa o teu projeto e gera um texto profissional automaticamente.',
   },
@@ -116,7 +197,7 @@ export default function Home() {
     : 'Descreve o teu projeto em poucas palavras...'
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: 'Inter, system-ui, sans-serif' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: 'var(--font-body)' }}>
       {showOnboarding && <Onboarding onDone={() => setShowOnboarding(false)} />}
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -124,34 +205,31 @@ export default function Home() {
           0%, 100% { opacity: 0.3; }
           50%       { opacity: 0.6; }
         }
-
         .goal-pill { transition: all 0.15s !important; cursor: pointer; }
         .goal-pill:hover {
-          border-color: #3b82f6 !important;
+          border-color: #1b78f7 !important;
           color: #e8f2ff !important;
-          background: rgba(59,130,246,0.08) !important;
+          background: rgba(27,120,247,0.08) !important;
         }
-        .feature-card { transition: all 0.2s ease !important; }
+        .feature-card { transition: all 0.2s ease !important; cursor: default; }
         .feature-card:hover {
           border-color: #2a4275 !important;
-          transform: translateY(-4px) !important;
+          transform: scale(1.02) !important;
           box-shadow: 0 16px 48px rgba(0,0,0,0.45) !important;
         }
-        .submit-btn:hover { background: #2563eb !important; }
+        .submit-btn:hover { background: #1564d4 !important; }
         .submit-btn { transition: background 0.15s !important; }
         .home-sec-btn { transition: all 0.15s !important; }
         .home-sec-btn:hover {
-          border-color: #3b82f6 !important;
+          border-color: #1b78f7 !important;
           color: #e8f2ff !important;
-          background: rgba(59,130,246,0.06) !important;
+          background: rgba(27,120,247,0.06) !important;
         }
 
         @media (max-width: 600px) {
-          .hero-section  { min-height: unset !important; justify-content: flex-start !important; padding: 48px 20px 40px !important; }
-          .hero-badge    { display: none !important; }
+          .hero-section  { min-height: calc(100dvh - 62px) !important; justify-content: center !important; padding: 32px 20px 48px !important; }
           .hero-h1       { font-size: 36px !important; letter-spacing: -0.8px !important; margin-bottom: 14px !important; }
-          .hero-sub      { font-size: 14px !important; white-space: normal !important; }
-          .hero-widget   { margin-top: 52px !important; max-width: 100% !important; }
+          .hero-widget   { margin-top: 48px !important; max-width: 100% !important; }
           .goals-row     { flex-wrap: nowrap !important; overflow-x: auto !important; justify-content: flex-start !important; padding-bottom: 4px !important; scrollbar-width: none !important; }
           .goals-row::-webkit-scrollbar { display: none !important; }
           .goal-pill     { font-size: 11px !important; padding: 5px 12px !important; flex-shrink: 0 !important; }
@@ -168,11 +246,11 @@ export default function Home() {
         <button
           onClick={() => navigate('/novo')}
           style={{
-            background: 'linear-gradient(135deg, #3b82f6, #4f46e5)',
-            color: '#fff', border: 'none', borderRadius: 8,
-            padding: '9px 20px', fontSize: 14, fontWeight: 600,
-            cursor: 'pointer', fontFamily: 'inherit',
-            boxShadow: '0 4px 16px rgba(59,130,246,0.3)',
+            background: 'linear-gradient(135deg, #1b78f7, #4f46e5)',
+            color: '#fff', border: 'none', borderRadius: 12,
+            padding: '9px 20px', fontSize: 14, fontWeight: 700,
+            cursor: 'pointer', fontFamily: 'var(--font-body)',
+            boxShadow: '0 4px 16px rgba(27,120,247,0.3)',
           }}
         >
           Criar projeto
@@ -184,11 +262,11 @@ export default function Home() {
         <div style={{
           position: 'absolute', top: -80, left: '50%', transform: 'translateX(-50%)',
           width: 800, height: 500, borderRadius: '50%',
-          background: 'radial-gradient(ellipse, rgba(59,130,246,0.08) 0%, transparent 68%)',
+          background: 'radial-gradient(ellipse, rgba(27,120,247,0.08) 0%, transparent 68%)',
           pointerEvents: 'none', animation: 'pulse-glow 5s ease-in-out infinite',
         }} />
 
-        <div style={{
+        <div className="hero-section" style={{
           minHeight: 'calc(100vh - 62px)',
           display: 'flex', flexDirection: 'column',
           alignItems: 'center', justifyContent: 'center',
@@ -199,42 +277,21 @@ export default function Home() {
           {/* Badge */}
           <div className="hero-badge" style={{
             display: 'inline-flex', alignItems: 'center', gap: 8,
-            background: 'rgba(59,130,246,0.07)', border: '1px solid rgba(59,130,246,0.18)',
-            color: '#60a5fa', borderRadius: 999,
+            background: 'rgba(27,120,247,0.07)', border: '1px solid rgba(27,120,247,0.18)',
+            color: '#5a9ff5', borderRadius: 999,
             padding: '5px 16px', fontSize: 12, fontWeight: 600, marginBottom: 32,
           }}>
-            <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#3b82f6', display: 'inline-block', animation: 'pulse-glow 2s ease-in-out infinite' }} />
+            <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#1b78f7', display: 'inline-block', animation: 'pulse-glow 2s ease-in-out infinite' }} />
             Para estudantes do ensino profissional e universitário
           </div>
 
-          {/* H1 */}
-          <h1 className="hero-h1" style={{
-            fontSize: 'clamp(36px, 5.5vw, 62px)', fontWeight: 900,
-            lineHeight: 1.08, margin: '0 0 18px',
-            letterSpacing: '-1.2px', maxWidth: 640,
-          }}>
-            O teu projeto merece<br />
-            <span style={{
-              background: 'linear-gradient(135deg, #3b82f6 0%, #818cf8 60%, #60a5fa 100%)',
-              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-            }}>
-              uma página incrível
-            </span>
-          </h1>
-
-          {/* Subtitle — one line, no maxWidth restriction */}
-          <p className="hero-sub" style={{
-            fontSize: 16, color: colors.muted, lineHeight: 1.6,
-            margin: 0, fontWeight: 400, whiteSpace: 'nowrap',
-          }}>
-            Transforma qualquer projeto numa página profissional com IA, em minutos.
-          </p>
+          <TypedHero />
 
           {/* Widget — wider than the title */}
           <form
             className="hero-widget"
             onSubmit={handleStart}
-            style={{ width: '100%', maxWidth: 720, margin: '126px auto 0' }}
+            style={{ width: '100%', maxWidth: 720, margin: '40px auto 0' }}
           >
             {/* Pills */}
             <div className="goals-row" style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 14 }}>
@@ -245,9 +302,9 @@ export default function Home() {
                   className="goal-pill"
                   onClick={() => setSelectedGoal(selectedGoal === g.id ? null : g.id)}
                   style={{
-                    background: selectedGoal === g.id ? 'rgba(59,130,246,0.12)' : 'transparent',
-                    border: `1px solid ${selectedGoal === g.id ? '#3b82f6' : colors.border}`,
-                    color: selectedGoal === g.id ? '#60a5fa' : colors.muted,
+                    background: selectedGoal === g.id ? 'rgba(27,120,247,0.12)' : 'transparent',
+                    border: `1px solid ${selectedGoal === g.id ? '#1b78f7' : colors.border}`,
+                    color: selectedGoal === g.id ? '#5a9ff5' : colors.muted,
                     borderRadius: 999, padding: '6px 15px',
                     fontSize: 12, fontWeight: 600, fontFamily: 'inherit',
                   }}
@@ -259,6 +316,7 @@ export default function Home() {
 
             {/* Input */}
             <div
+              className="widget-box"
               style={{
                 display: 'flex', alignItems: 'center',
                 background: '#111c32',
@@ -266,11 +324,12 @@ export default function Home() {
                 borderRadius: 16, padding: '6px 6px 6px 20px',
                 boxShadow: '0 8px 40px rgba(0,0,0,0.45)',
               }}
-              onFocusCapture={e => { e.currentTarget.style.borderColor = '#3b82f6' }}
+              onFocusCapture={e => { e.currentTarget.style.borderColor = '#1b78f7' }}
               onBlurCapture={e => { if (!e.currentTarget.contains(e.relatedTarget)) e.currentTarget.style.borderColor = colors.borderBright }}
             >
               <input
                 type="text"
+                className="widget-input"
                 value={inputText}
                 onChange={e => setInputText(e.target.value)}
                 placeholder={placeholder}
@@ -285,7 +344,7 @@ export default function Home() {
                 disabled={analyzing}
                 className="submit-btn"
                 style={{
-                  background: analyzing ? '#1e3050' : '#3b82f6', border: 'none', borderRadius: 12,
+                  background: analyzing ? '#1e3050' : '#1b78f7', border: 'none', borderRadius: 12,
                   color: '#fff', width: 48, height: 48,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   cursor: analyzing ? 'not-allowed' : 'pointer', flexShrink: 0,
@@ -303,7 +362,7 @@ export default function Home() {
               </button>
             </div>
 
-            <p style={{ color: colors.subtle, fontSize: 12, marginTop: 12, fontWeight: 500 }}>
+            <p style={{ color: colors.subtle, fontSize: 12, marginTop: 18, fontWeight: 500 }}>
               Sem registo · Sem cartão de crédito
             </p>
           </form>
@@ -312,17 +371,17 @@ export default function Home() {
 
       {/* Features — below the fold */}
       <div style={{
-        maxWidth: 1000, margin: '0 auto',
+        maxWidth: 860, margin: '0 auto',
         padding: '0 24px 80px',
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-        gap: 14,
+        gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
+        gap: 16,
       }}>
         {FEATURES.map(f => (
           <div key={f.title} className="feature-card" style={{
             background: colors.card, border: `1px solid ${colors.border}`,
-            borderRadius: 18, padding: '24px 22px',
-            boxShadow: '0 2px 16px rgba(0,0,0,0.25)',
+            borderRadius: 16, padding: '24px 22px',
+            boxShadow: '0 4px 24px rgba(0,0,0,0.18)',
           }}>
             <div style={{
               width: 42, height: 42, borderRadius: 11,
@@ -332,7 +391,7 @@ export default function Home() {
             }}>
               {f.icon}
             </div>
-            <h3 className="feature-h3" style={{ margin: '0 0 8px', fontSize: 15, fontWeight: 700, color: colors.text, letterSpacing: '-0.1px' }}>{f.title}</h3>
+            <h3 className="feature-h3" style={{ margin: '0 0 8px', fontSize: 15, fontWeight: 700, color: colors.text, fontFamily: 'var(--font-heading)' }}>{f.title}</h3>
             <p className="feature-p" style={{ margin: 0, color: colors.muted, fontSize: 13, lineHeight: 1.65 }}>{f.desc}</p>
           </div>
         ))}
@@ -341,11 +400,11 @@ export default function Home() {
       {/* Secondary CTAs */}
       <div style={{ padding: '0 24px 96px', display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
         <button onClick={() => navigate('/explorar')} className="home-sec-btn"
-          style={{ background: 'transparent', color: colors.muted, border: `1px solid ${colors.border}`, borderRadius: 8, padding: '10px 22px', fontSize: 13, cursor: 'pointer', fontWeight: 500, fontFamily: 'inherit' }}>
+          style={{ background: 'transparent', color: colors.muted, border: `1px solid ${colors.border}`, borderRadius: 12, padding: '10px 22px', fontSize: 13, cursor: 'pointer', fontWeight: 600, fontFamily: 'var(--font-body)' }}>
           Ver projetos públicos
         </button>
         <button onClick={() => navigate('/ranking')} className="home-sec-btn"
-          style={{ background: 'transparent', color: colors.muted, border: `1px solid ${colors.border}`, borderRadius: 8, padding: '10px 22px', fontSize: 13, cursor: 'pointer', fontWeight: 500, fontFamily: 'inherit' }}>
+          style={{ background: 'transparent', color: colors.muted, border: `1px solid ${colors.border}`, borderRadius: 12, padding: '10px 22px', fontSize: 13, cursor: 'pointer', fontWeight: 600, fontFamily: 'var(--font-body)' }}>
           Ver ranking
         </button>
       </div>

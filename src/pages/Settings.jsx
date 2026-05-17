@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
+import { Loader, Check, X, AlertTriangle } from 'lucide-react'
 
 const C = {
   bg: '#0d1424',
@@ -287,10 +288,10 @@ export default function Settings() {
             placeholder="ex: gustavo_silva"
             prefix="@"
             hint={
-              usernameStatus === 'checking'  ? '⏳ A verificar disponibilidade...' :
-              usernameStatus === 'available' ? '✅ Username disponível!' :
-              usernameStatus === 'taken'     ? '❌ Este username já está a ser usado.' :
-              usernameStatus === 'invalid'   ? '⚠️ Só letras minúsculas, números e _ (mín. 3 caracteres).' :
+              usernameStatus === 'checking'  ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Loader size={12} style={{ display: 'inline-block', verticalAlign: 'middle' }} /> A verificar disponibilidade...</span> :
+              usernameStatus === 'available' ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Check size={12} style={{ display: 'inline-block', verticalAlign: 'middle' }} /> Username disponível!</span> :
+              usernameStatus === 'taken'     ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><X size={12} style={{ display: 'inline-block', verticalAlign: 'middle' }} /> Este username já está a ser usado.</span> :
+              usernameStatus === 'invalid'   ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><AlertTriangle size={12} style={{ display: 'inline-block', verticalAlign: 'middle' }} /> Só letras minúsculas, números e _ (mín. 3 caracteres).</span> :
               `Link público: showo.vercel.app/u/${username || 'username'}`
             }
           />

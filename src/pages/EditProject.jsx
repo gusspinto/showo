@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import { updateProject } from '../lib/updateProject'
 import { Navbar } from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
+import { Sparkles, Lock, Search, Image } from 'lucide-react'
 
 const colors = {
   bg: '#0d1424',
@@ -11,8 +12,8 @@ const colors = {
   card: '#152030',
   border: '#1e3050',
   borderBright: '#2a4275',
-  blue: '#3b82f6',
-  blueHover: '#2563eb',
+  blue: '#1b78f7',
+  blueHover: '#1564d4',
   text: '#e8f2ff',
   muted: '#7d93b0',
   subtle: '#3d5270',
@@ -23,12 +24,12 @@ const colors = {
 
 const PROJECT_TYPES = [
   { value: '', label: 'Selecionar tipo...' },
-  { value: 'group', label: '📋 Trabalho de grupo' },
-  { value: 'pap', label: '🎓 PAP / Projeto final' },
-  { value: 'presentation', label: '📊 Apresentação' },
-  { value: 'personal', label: '💻 Projeto pessoal' },
-  { value: 'competition', label: '🏆 Projeto de competição' },
-  { value: 'other', label: '✨ Outro' },
+  { value: 'group', label: 'Trabalho de grupo' },
+  { value: 'pap', label: 'PAP / Projeto final' },
+  { value: 'presentation', label: 'Apresentação' },
+  { value: 'personal', label: 'Projeto pessoal' },
+  { value: 'competition', label: 'Projeto de competição' },
+  { value: 'other', label: 'Outro' },
 ]
 
 const FIELDS = [
@@ -52,7 +53,7 @@ const inputStyle = {
   padding: '11px 14px',
   color: colors.text,
   fontSize: 15,
-  fontFamily: 'Inter, system-ui, sans-serif',
+  fontFamily: 'var(--font-body)',
   outline: 'none',
   boxSizing: 'border-box',
   transition: 'border-color 0.2s, box-shadow 0.2s',
@@ -61,7 +62,7 @@ const inputStyle = {
 const inputHandlers = {
   onFocus: e => {
     e.target.style.borderColor = colors.blue
-    e.target.style.boxShadow = '0 0 0 3px rgba(59,130,246,0.1)'
+    e.target.style.boxShadow = '0 0 0 3px rgba(27,120,247,0.1)'
   },
   onBlur: e => {
     e.target.style.borderColor = colors.border
@@ -235,19 +236,19 @@ export default function EditProject() {
 
   if (accessDenied) {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, fontFamily: 'Inter, system-ui, sans-serif', padding: 24, textAlign: 'center' }}>
-        <div style={{ fontSize: 48 }}>🔐</div>
+      <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, fontFamily: 'var(--font-body)', padding: 24, textAlign: 'center' }}>
+        <Lock size={48} color={colors.yellow ?? '#fbbf24'} />
         <h2 style={{ margin: 0, fontSize: 24, fontWeight: 700 }}>Acesso restrito</h2>
         <p style={{ color: colors.muted, margin: 0, maxWidth: 380, lineHeight: 1.65 }}>Só o criador deste projeto pode editá-lo. Usa o link privado de edição que recebeste quando criaste o projeto.</p>
-        <button onClick={() => navigate(`/projeto/${slug}`)} style={{ background: `linear-gradient(135deg, ${colors.blue}, #4f46e5)`, color: '#fff', border: 'none', borderRadius: 10, padding: '12px 28px', fontSize: 15, fontWeight: 700, cursor: 'pointer', marginTop: 8, boxShadow: '0 4px 20px rgba(59,130,246,0.3)', fontFamily: 'inherit' }}>Ver o projeto</button>
+        <button onClick={() => navigate(`/projeto/${slug}`)} style={{ background: `linear-gradient(135deg, ${colors.blue}, #4f46e5)`, color: '#fff', border: 'none', borderRadius: 10, padding: '12px 28px', fontSize: 15, fontWeight: 700, cursor: 'pointer', marginTop: 8, boxShadow: '0 4px 20px rgba(27,120,247,0.3)', fontFamily: 'inherit' }}>Ver o projeto</button>
       </div>
     )
   }
 
   if (!project) {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, fontFamily: 'Inter, system-ui, sans-serif' }}>
-        <div style={{ fontSize: 48 }}>🔍</div>
+      <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, fontFamily: 'var(--font-body)' }}>
+        <Search size={48} color={colors.blue} />
         <h2 style={{ margin: 0, fontWeight: 700 }}>Projeto não encontrado</h2>
         <button onClick={() => navigate('/')} style={{ background: `linear-gradient(135deg, ${colors.blue}, #4f46e5)`, color: '#fff', border: 'none', borderRadius: 10, padding: '12px 28px', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>Ir para o início</button>
       </div>
@@ -257,7 +258,7 @@ export default function EditProject() {
   const isPap = form.project_type === 'pap'
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: 'Inter, system-ui, sans-serif' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: 'var(--font-body)' }}>
       <Navbar showLinks={false}>
         <button
           onClick={() => navigate(`/projeto/${slug}`)}
@@ -385,10 +386,10 @@ export default function EditProject() {
                   textAlign: 'center', cursor: 'pointer',
                   color: colors.muted, transition: 'border-color 0.2s, background 0.2s',
                 }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = colors.blue; e.currentTarget.style.background = 'rgba(59,130,246,0.03)' }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = colors.blue; e.currentTarget.style.background = 'rgba(27,120,247,0.03)' }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.background = 'transparent' }}
               >
-                <div style={{ fontSize: 28, marginBottom: 10 }}>🖼️</div>
+                <div style={{ marginBottom: 10 }}><Image size={28} color={colors.muted} /></div>
                 <p style={{ margin: 0, fontSize: 14, fontWeight: 500 }}>Clica para carregar uma imagem</p>
                 <p style={{ margin: '4px 0 0', fontSize: 12, color: colors.subtle }}>PNG, JPG ou WEBP</p>
               </div>
@@ -422,7 +423,7 @@ export default function EditProject() {
               opacity: saving ? 0.7 : 1,
               transition: 'opacity 0.2s, background 0.2s',
               fontFamily: 'inherit',
-              boxShadow: saving || !form.name?.trim() || !form.area?.trim() ? 'none' : '0 4px 20px rgba(59,130,246,0.3)',
+              boxShadow: saving || !form.name?.trim() || !form.area?.trim() ? 'none' : '0 4px 20px rgba(27,120,247,0.3)',
               letterSpacing: '-0.1px',
             }}
           >

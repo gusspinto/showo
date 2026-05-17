@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { Mail, Check } from 'lucide-react'
 
 const C = {
   bg: '#0d1424',
@@ -106,8 +107,8 @@ export default function Login() {
 
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <img
-            src="/logo-3.png" alt="Showo"
-            style={{ width: 'clamp(130px, 40vw, 180px)', height: 'auto', cursor: 'pointer' }}
+            src="/icon_logo.png" alt="Showo"
+            style={{ height: 'clamp(44px, 10vw, 56px)', width: 'auto', cursor: 'pointer' }}
             onClick={() => navigate('/')}
           />
         </div>
@@ -144,15 +145,15 @@ export default function Login() {
 
             {notConfirmed && (
               <div style={{ background: 'rgba(251,191,36,0.07)', border: '1px solid rgba(251,191,36,0.25)', borderRadius: 10, padding: '14px 16px' }}>
-                <p style={{ margin: '0 0 10px', color: '#fbbf24', fontSize: 14, fontWeight: 600 }}>
-                  ✉️ Email ainda não confirmado
+                <p style={{ margin: '0 0 10px', color: '#fbbf24', fontSize: 14, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <Mail size={14} style={{ display: 'inline-block', verticalAlign: 'middle', flexShrink: 0 }} /> Email ainda não confirmado
                 </p>
                 <p style={{ margin: '0 0 12px', color: '#7d93b0', fontSize: 13, lineHeight: 1.5 }}>
                   Confirma o teu email antes de entrar. Se o link expirou, envia um novo.
                 </p>
                 {resendState === 'sent' ? (
-                  <p style={{ margin: 0, color: '#34d399', fontSize: 13, fontWeight: 600 }}>
-                    ✓ Novo email enviado! Verifica a tua caixa de entrada.
+                  <p style={{ margin: 0, color: '#34d399', fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <Check size={14} style={{ display: 'inline-block', verticalAlign: 'middle', flexShrink: 0 }} /> Novo email enviado! Verifica a tua caixa de entrada.
                   </p>
                 ) : (
                   <button
@@ -175,13 +176,15 @@ export default function Login() {
             <button
               type="submit" disabled={loading}
               style={{
-                background: loading ? '#1e3050' : C.blue, color: '#fff', border: 'none',
-                borderRadius: 8, padding: '12px', fontSize: 15, fontWeight: 600,
+                background: loading ? '#1e3050' : 'linear-gradient(135deg, #1b78f7, #4f46e5)',
+                color: '#fff', border: 'none',
+                borderRadius: 10, padding: '13px', fontSize: 15, fontWeight: 700,
                 cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
-                marginTop: 4, transition: 'background 0.15s',
+                marginTop: 4, transition: 'opacity 0.15s',
+                boxShadow: loading ? 'none' : '0 4px 20px rgba(27,120,247,0.35)',
               }}
-              onMouseEnter={e => { if (!loading) e.target.style.background = C.blueHover }}
-              onMouseLeave={e => { if (!loading) e.target.style.background = C.blue }}
+              onMouseEnter={e => { if (!loading) e.currentTarget.style.opacity = '0.88' }}
+              onMouseLeave={e => { if (!loading) e.currentTarget.style.opacity = '1' }}
             >
               {loading ? 'A entrar…' : 'Entrar'}
             </button>

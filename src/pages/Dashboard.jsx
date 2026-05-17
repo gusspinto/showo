@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
+import { Folder, Trophy, BarChart2, Rocket } from 'lucide-react'
 
 const C = {
   bg: '#0d1424',
@@ -52,7 +53,7 @@ function StatCard({ icon, label, value, color }) {
       borderRadius: 14, padding: '20px 22px',
       display: 'flex', flexDirection: 'column', gap: 6,
     }}>
-      <span style={{ fontSize: 22 }}>{icon}</span>
+      <span style={{ display: 'flex', alignItems: 'center', color: color ?? C.text }}>{icon}</span>
       <span style={{ color: color ?? C.text, fontSize: 26, fontWeight: 800, letterSpacing: '-0.5px', lineHeight: 1 }}>
         {value}
       </span>
@@ -248,9 +249,9 @@ export default function Dashboard() {
             gap: 12,
             marginBottom: 36,
           }}>
-            <StatCard icon="📁" label="Projetos" value={projects.length} color={C.blue} />
-            <StatCard icon="🏆" label="Melhor score" value={bestScore ?? '—'} color={getScoreColor(bestScore)} />
-            <StatCard icon="📊" label="Score médio" value={avgScore ?? '—'} color={getScoreColor(avgScore)} />
+            <StatCard icon={<Folder size={22} />} label="Projetos" value={projects.length} color={C.blue} />
+            <StatCard icon={<Trophy size={22} />} label="Melhor score" value={bestScore ?? '—'} color={getScoreColor(bestScore)} />
+            <StatCard icon={<BarChart2 size={22} />} label="Score médio" value={avgScore ?? '—'} color={getScoreColor(avgScore)} />
           </div>
         )}
 
@@ -291,7 +292,7 @@ export default function Dashboard() {
             background: C.card, border: `1px solid ${C.border}`,
             borderRadius: 14, padding: '52px 32px', textAlign: 'center',
           }}>
-            <div style={{ fontSize: 44, marginBottom: 14 }}>🚀</div>
+            <div style={{ marginBottom: 14, display: 'flex', justifyContent: 'center', color: C.blue }}><Rocket size={44} /></div>
             <p style={{ color: C.text, fontSize: 17, fontWeight: 700, margin: '0 0 8px' }}>
               Ainda não tens projetos
             </p>

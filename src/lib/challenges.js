@@ -1,7 +1,9 @@
+import { Target, Lightbulb, Users, Settings, Wrench, Mountain, TrendingUp, Brain } from 'lucide-react'
+
 export const CHALLENGES = [
   {
     id: 'problem',
-    icon: '🎯',
+    icon: Target,
     title: 'Apresenta o problema',
     description: 'Descreve o problema que o teu projeto resolve com pelo menos 100 caracteres.',
     xp: 15,
@@ -11,7 +13,7 @@ export const CHALLENGES = [
   },
   {
     id: 'solution',
-    icon: '💡',
+    icon: Lightbulb,
     title: 'Descreve a solução',
     description: 'Explica a tua solução com pelo menos 100 caracteres.',
     xp: 15,
@@ -21,7 +23,7 @@ export const CHALLENGES = [
   },
   {
     id: 'target_audience',
-    icon: '👥',
+    icon: Users,
     title: 'Define o teu público',
     description: 'Descreve quem vai usar o teu projeto com pelo menos 50 caracteres.',
     xp: 10,
@@ -31,7 +33,7 @@ export const CHALLENGES = [
   },
   {
     id: 'features',
-    icon: '⚙️',
+    icon: Settings,
     title: 'Lista as funcionalidades',
     description: 'Descreve as funcionalidades principais com pelo menos 100 caracteres.',
     xp: 10,
@@ -41,7 +43,7 @@ export const CHALLENGES = [
   },
   {
     id: 'technologies',
-    icon: '🛠️',
+    icon: Wrench,
     title: 'Mostra as tecnologias',
     description: 'Menciona as tecnologias utilizadas no projeto.',
     xp: 8,
@@ -51,7 +53,7 @@ export const CHALLENGES = [
   },
   {
     id: 'challenges',
-    icon: '🧗',
+    icon: Mountain,
     title: 'Documenta os desafios',
     description: 'Partilha os desafios que enfrentaste com pelo menos 50 caracteres.',
     xp: 8,
@@ -61,7 +63,7 @@ export const CHALLENGES = [
   },
   {
     id: 'results',
-    icon: '📈',
+    icon: TrendingUp,
     title: 'Prova os resultados',
     description: 'Mostra os resultados alcançados com pelo menos 80 caracteres.',
     xp: 12,
@@ -71,7 +73,7 @@ export const CHALLENGES = [
   },
   {
     id: 'learnings',
-    icon: '🧠',
+    icon: Brain,
     title: 'Reflete sobre o aprendizado',
     description: 'Partilha o que aprendeste com pelo menos 80 caracteres.',
     xp: 12,

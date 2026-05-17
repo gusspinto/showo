@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { Mail } from 'lucide-react'
 
 const C = {
   bg: '#0d1424',
@@ -117,15 +118,15 @@ export default function Register() {
 
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <img
-            src="/logo-3.png" alt="Showo"
-            style={{ width: 'clamp(130px, 40vw, 180px)', height: 'auto', cursor: 'pointer' }}
+            src="/icon_logo.png" alt="Showo"
+            style={{ height: 'clamp(44px, 10vw, 56px)', width: 'auto', cursor: 'pointer' }}
             onClick={() => navigate('/')}
           />
         </div>
 
         {done ? (
           <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: '40px 32px', textAlign: 'center' }}>
-            <div style={{ fontSize: 52, marginBottom: 16 }}>📬</div>
+            <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'center' }}><Mail size={52} color="#3b82f6" /></div>
             <h2 style={{ color: C.text, fontSize: 20, fontWeight: 700, margin: '0 0 10px' }}>
               Confirma o teu email
             </h2>
@@ -138,7 +139,13 @@ export default function Register() {
             </p>
             <button
               onClick={() => navigate('/login')}
-              style={{ background: C.blue, border: 'none', borderRadius: 8, padding: '11px 28px', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+              style={{
+                background: 'linear-gradient(135deg, #1b78f7, #4f46e5)',
+                border: 'none', borderRadius: 10, padding: '12px 28px',
+                color: '#fff', fontSize: 14, fontWeight: 700,
+                cursor: 'pointer', fontFamily: 'inherit',
+                boxShadow: '0 4px 20px rgba(27,120,247,0.35)',
+              }}
             >
               Ir para o login
             </button>
@@ -171,13 +178,15 @@ export default function Register() {
               <button
                 type="submit" disabled={loading}
                 style={{
-                  background: loading ? '#1e3050' : C.blue, color: '#fff', border: 'none',
-                  borderRadius: 8, padding: '12px', fontSize: 15, fontWeight: 600,
+                  background: loading ? '#1e3050' : 'linear-gradient(135deg, #1b78f7, #4f46e5)',
+                  color: '#fff', border: 'none',
+                  borderRadius: 10, padding: '13px', fontSize: 15, fontWeight: 700,
                   cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit', marginTop: 4,
-                  transition: 'background 0.15s',
+                  transition: 'opacity 0.15s',
+                  boxShadow: loading ? 'none' : '0 4px 20px rgba(27,120,247,0.35)',
                 }}
-                onMouseEnter={e => { if (!loading) e.target.style.background = C.blueHover }}
-                onMouseLeave={e => { if (!loading) e.target.style.background = C.blue }}
+                onMouseEnter={e => { if (!loading) e.currentTarget.style.opacity = '0.88' }}
+                onMouseLeave={e => { if (!loading) e.currentTarget.style.opacity = '1' }}
               >
                 {loading ? 'A criar conta…' : 'Criar conta'}
               </button>

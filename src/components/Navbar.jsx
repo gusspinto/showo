@@ -2,11 +2,12 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
+import { Check, X, FolderOpen, User, Settings as SettingsIcon, Shield } from 'lucide-react'
 
 const C = {
   bg: 'rgba(13, 20, 36, 0.88)',
   border: '#1e3050',
-  blue: '#3b82f6',
+  blue: '#1b78f7',
   muted: '#7d93b0',
   text: '#e8f2ff',
 }
@@ -241,8 +242,8 @@ function InviteInbox({ userId }) {
                       <div style={{ display: 'flex', gap: 6 }}>
                         <button
                           onClick={() => respond(invite, 'accepted')} disabled={isActing}
-                          style={{ flex: 1, padding: '7px 0', background: 'linear-gradient(135deg,#3b82f6,#4f46e5)', border: 'none', borderRadius: 7, color: '#fff', fontSize: 12, fontWeight: 700, cursor: isActing ? 'default' : 'pointer', fontFamily: 'inherit' }}
-                        >{acting[invite.id] === 'accepted' ? '...' : '✓ Aceitar'}</button>
+                          style={{ flex: 1, padding: '7px 0', background: 'linear-gradient(135deg,#1b78f7,#4f46e5)', border: 'none', borderRadius: 7, color: '#fff', fontSize: 12, fontWeight: 700, cursor: isActing ? 'default' : 'pointer', fontFamily: 'inherit' }}
+                        >{acting[invite.id] === 'accepted' ? '...' : <><Check size={12} style={{ verticalAlign: 'middle', marginRight: 3 }} />Aceitar</>}</button>
                         <button
                           onClick={() => respond(invite, 'declined')} disabled={isActing}
                           style={{ flex: 1, padding: '7px 0', background: 'transparent', border: '1px solid rgba(248,113,113,0.3)', borderRadius: 7, color: '#f87171', fontSize: 12, fontWeight: 600, cursor: isActing ? 'default' : 'pointer', fontFamily: 'inherit' }}
@@ -267,8 +268,10 @@ function InviteInbox({ userId }) {
                     borderRadius: 10, padding: '10px 14px', marginBottom: 6,
                     display: 'flex', alignItems: 'flex-start', gap: 10,
                   }}>
-                    <span style={{ fontSize: 18, flexShrink: 0, marginTop: 1 }}>
-                      {r.status === 'accepted' ? '✅' : '❌'}
+                    <span style={{ fontSize: 18, flexShrink: 0, marginTop: 1, display: 'flex', alignItems: 'center' }}>
+                      {r.status === 'accepted'
+                        ? <Check size={16} color="#22c55e" />
+                        : <X size={16} color="#f87171" />}
                     </span>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <p style={{ margin: '0 0 2px', fontSize: 13, fontWeight: 700, color: C.text }}>
@@ -286,8 +289,8 @@ function InviteInbox({ userId }) {
                     </div>
                     <button
                       onClick={() => dismissResponse(r.id)}
-                      style={{ background: 'none', border: 'none', color: C.muted, cursor: 'pointer', fontSize: 14, padding: 0, flexShrink: 0, lineHeight: 1, marginTop: 2 }}
-                    >✕</button>
+                      style={{ background: 'none', border: 'none', color: C.muted, cursor: 'pointer', fontSize: 14, padding: 0, flexShrink: 0, lineHeight: 1, marginTop: 2, display: 'flex', alignItems: 'center' }}
+                    ><X size={14} /></button>
                   </div>
                 ))}
               </>
@@ -362,7 +365,7 @@ function UserChip({ user, onClick, onProfile, onSettings, onSignOut }) {
               onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.07)'}
               onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
             >
-              📂 Dashboard
+              <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><FolderOpen size={15} /> Dashboard</span>
             </button>
             {onProfile && (
               <button
@@ -371,7 +374,7 @@ function UserChip({ user, onClick, onProfile, onSettings, onSignOut }) {
                 onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.07)'}
                 onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
               >
-                👤 Meu perfil
+                <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><User size={15} /> Meu perfil</span>
               </button>
             )}
             <button
@@ -380,7 +383,7 @@ function UserChip({ user, onClick, onProfile, onSettings, onSignOut }) {
               onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.07)'}
               onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
             >
-              ⚙️ Definições
+              <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><SettingsIcon size={15} /> Definições</span>
             </button>
             <div style={{ height: 1, background: C.border, margin: '4px 6px' }} />
             <button
@@ -436,13 +439,13 @@ export function Navbar({ children, showLinks = true }) {
           .nav-mid   { flex: 1; justify-content: flex-start; }
           .nav-right { flex: none; }
           .nav-auth  { display: none; }
-          .nav-logo  { width: 120px !important; }
+          .nav-logo  { height: 28px !important; width: auto !important; }
           .showo-nav-pad { padding-left: 20px !important; padding-right: 20px !important; }
           .ham-btn   { display: flex !important; }
         }
 
         @media (min-width: 601px) and (max-width: 900px) {
-          .nav-logo { width: 130px !important; }
+          .nav-logo { height: 32px !important; width: auto !important; }
         }
 
         .mobile-drawer {
@@ -472,6 +475,19 @@ export function Navbar({ children, showLinks = true }) {
         .mobile-drawer-btn.danger { color: #f87171 !important; }
       `}</style>
 
+      {/* Mobile backdrop blur */}
+      {showLinks && open && (
+        <div
+          onClick={() => setOpen(false)}
+          style={{
+            position: 'fixed', inset: 0, top: 62, zIndex: 97,
+            background: 'rgba(5,9,18,0.55)',
+            backdropFilter: 'blur(4px)',
+            WebkitBackdropFilter: 'blur(4px)',
+          }}
+        />
+      )}
+
       {/* Mobile drawer */}
       {showLinks && (
         <div className={`mobile-drawer${open ? ' is-open' : ''}`}>
@@ -486,8 +502,31 @@ export function Navbar({ children, showLinks = true }) {
             </>
           ) : (
             <>
-              <button className="mobile-drawer-btn" onClick={() => { navigate('/login'); setOpen(false) }}>Entrar</button>
-              <button className="mobile-drawer-btn" onClick={() => { navigate('/register'); setOpen(false) }}>Criar conta</button>
+              <div style={{ display: 'flex', gap: 8, padding: '20px 0 4px' }}>
+                <button
+                  onClick={() => { navigate('/login'); setOpen(false) }}
+                  style={{
+                    flex: 1, padding: '12px 0',
+                    background: 'transparent',
+                    border: '1px solid #1e3050',
+                    borderRadius: 10, color: '#e8f2ff',
+                    fontSize: 14, fontWeight: 600,
+                    cursor: 'pointer', fontFamily: 'inherit',
+                  }}
+                >Entrar</button>
+                <button
+                  onClick={() => { navigate('/register'); setOpen(false) }}
+                  style={{
+                    flex: 1, padding: '12px 0',
+                    background: 'linear-gradient(135deg, #1b78f7, #4f46e5)',
+                    border: 'none',
+                    borderRadius: 10, color: '#fff',
+                    fontSize: 14, fontWeight: 700,
+                    cursor: 'pointer', fontFamily: 'inherit',
+                    boxShadow: '0 4px 16px rgba(27,120,247,0.3)',
+                  }}
+                >Criar conta</button>
+              </div>
             </>
           )}
         </div>
@@ -517,9 +556,9 @@ export function Navbar({ children, showLinks = true }) {
         {/* Centre */}
         <div className="nav-mid">
           <img
-            src="/logo-3.png" alt="Showo" draggable={false}
+            src="/logo.png" alt="Showo" draggable={false}
             onClick={() => navigate('/')} className="nav-logo"
-            style={{ width: 160, height: 'auto', display: 'block', cursor: 'pointer', userSelect: 'none' }}
+            style={{ height: 36, width: 'auto', display: 'block', cursor: 'pointer', userSelect: 'none' }}
           />
         </div>
 
@@ -550,7 +589,7 @@ export function Navbar({ children, showLinks = true }) {
                       fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
                     }}
                     title="Painel de administração"
-                  >🛡️</button>
+                  ><Shield size={14} /></button>
                 )}
                 <InviteInbox userId={user.id} />
                 <UserChip
@@ -573,7 +612,7 @@ export function Navbar({ children, showLinks = true }) {
                     padding: '8px 16px', color: '#fff', fontSize: 14, fontWeight: 600,
                     cursor: 'pointer', fontFamily: 'inherit', transition: 'background 0.15s', whiteSpace: 'nowrap',
                   }}
-                  onMouseEnter={e => e.target.style.background = '#2563eb'}
+                  onMouseEnter={e => e.target.style.background = '#1564d4'}
                   onMouseLeave={e => e.target.style.background = C.blue}
                 >
                   Criar conta

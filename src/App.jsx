@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { AlertTriangle, X as XIcon } from 'lucide-react'
 import { supabase } from './lib/supabase'
 import { HelmetProvider } from 'react-helmet-async'
 import { AuthProvider } from './context/AuthContext'
@@ -57,14 +58,14 @@ function AuthErrorBanner() {
       boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
       fontFamily: 'Inter, sans-serif',
     }}>
-      <span style={{ fontSize: 18, flexShrink: 0 }}>⚠️</span>
+      <span style={{ flexShrink: 0, display: 'flex', alignItems: 'center' }}><AlertTriangle size={18} /></span>
       <div style={{ flex: 1 }}>
         <p style={{ margin: 0, fontSize: 14, color: '#fca5a5', lineHeight: 1.5 }}>{msg}</p>
       </div>
       <button
         onClick={() => setMsg('')}
-        style={{ background: 'none', border: 'none', color: '#7d93b0', cursor: 'pointer', fontSize: 16, padding: 0, flexShrink: 0, lineHeight: 1 }}
-      >✕</button>
+        style={{ background: 'none', border: 'none', color: '#7d93b0', cursor: 'pointer', padding: 0, flexShrink: 0, lineHeight: 1, display: 'flex', alignItems: 'center' }}
+      ><XIcon size={16} /></button>
     </div>
   )
 }

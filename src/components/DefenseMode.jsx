@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
+import { Hand, Search, Lightbulb, Settings, Wrench, Trophy, BookOpen, Mic, GraduationCap, Check, X, Smartphone } from 'lucide-react'
 
 const C = {
   bg: '#080e1a',
@@ -18,14 +19,14 @@ const C = {
 // ─── Notes summary (all sections in one view) ───────────────────────────────
 
 const NOTE_SECTIONS = [
-  { id: 'cover',        label: 'Introdução',      icon: '👋' },
-  { id: 'problem',      label: 'O Problema',       icon: '🔍' },
-  { id: 'solution',     label: 'A Solução',        icon: '💡' },
-  { id: 'features',     label: 'Funcionalidades',  icon: '⚙️' },
-  { id: 'technologies', label: 'Tecnologias',      icon: '🛠️' },
-  { id: 'results',      label: 'Resultados',       icon: '🏆' },
-  { id: 'learnings',    label: 'Aprendizagens',    icon: '📚' },
-  { id: 'closing',      label: 'Encerramento',     icon: '🎤' },
+  { id: 'cover',        label: 'Introdução',      Icon: Hand },
+  { id: 'problem',      label: 'O Problema',       Icon: Search },
+  { id: 'solution',     label: 'A Solução',        Icon: Lightbulb },
+  { id: 'features',     label: 'Funcionalidades',  Icon: Settings },
+  { id: 'technologies', label: 'Tecnologias',      Icon: Wrench },
+  { id: 'results',      label: 'Resultados',       Icon: Trophy },
+  { id: 'learnings',    label: 'Aprendizagens',    Icon: BookOpen },
+  { id: 'closing',      label: 'Encerramento',     Icon: Mic },
 ]
 
 function NotesPanel({ aiData, loadingAI, aiError, onRetry }) {
@@ -58,7 +59,7 @@ function NotesPanel({ aiData, loadingAI, aiError, onRetry }) {
     <div>
       {tip && (
         <div style={{ background: 'rgba(59,130,246,0.07)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: 12, padding: '14px 18px', marginBottom: 24, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-          <span style={{ fontSize: 18, flexShrink: 0 }}>💡</span>
+          <Lightbulb size={18} color="#93c5fd" style={{ flexShrink: 0 }} />
           <p style={{ margin: 0, fontSize: 14, color: '#93c5fd', lineHeight: 1.6 }}>{tip}</p>
         </div>
       )}
@@ -66,7 +67,7 @@ function NotesPanel({ aiData, loadingAI, aiError, onRetry }) {
         {filled.map(section => (
           <div key={section.id} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: '18px 20px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-              <span style={{ fontSize: 16 }}>{section.icon}</span>
+              <section.Icon size={16} color={C.muted} />
               <span style={{ fontSize: 12, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>{section.label}</span>
             </div>
             <p style={{ margin: 0, fontSize: 15, color: '#a0b4cc', lineHeight: 1.7 }}>{notes[section.id]}</p>
@@ -163,7 +164,7 @@ function JuryPanel({ aiData, loadingAI, aiError, onRetry }) {
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: 12, fontWeight: 700, color: isPracticed ? C.green : C.yellow,
                 }}>
-                  {isPracticed ? '✓' : i + 1}
+                  {isPracticed ? <Check size={12} /> : i + 1}
                 </span>
                 <p style={{ margin: 0, fontSize: 15, fontWeight: 600, color: isPracticed ? '#6ee7b7' : C.text, lineHeight: 1.5, flex: 1 }}>
                   {item.q}
@@ -226,7 +227,7 @@ function JuryPanel({ aiData, loadingAI, aiError, onRetry }) {
 
       {practicedCount === questions.length && (
         <div style={{ marginTop: 24, background: 'rgba(52,211,153,0.07)', border: '1px solid rgba(52,211,153,0.2)', borderRadius: 14, padding: '20px', textAlign: 'center' }}>
-          <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: C.green }}>Preparação completa 🎓</p>
+          <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: C.green }}>Preparação completa</p>
           <p style={{ margin: '4px 0 0', fontSize: 13, color: C.muted }}>Treinaste todas as perguntas. Boa defesa!</p>
         </div>
       )}
@@ -239,14 +240,14 @@ function JuryPanel({ aiData, loadingAI, aiError, onRetry }) {
 // ─── Presenter guide (phone companion) ───────────────────────────────────────
 
 const SECTIONS = [
-  { id: 'cover',        label: 'Introdução',      icon: '👋', accent: '#3b82f6' },
-  { id: 'problem',      label: 'O Problema',       icon: '🔍', accent: '#f97316' },
-  { id: 'solution',     label: 'A Solução',        icon: '💡', accent: '#22c55e' },
-  { id: 'features',     label: 'Funcionalidades',  icon: '⚙️', accent: '#06b6d4' },
-  { id: 'technologies', label: 'Tecnologias',      icon: '🛠️', accent: '#818cf8' },
-  { id: 'results',      label: 'Resultados',       icon: '🏆', accent: '#34d399' },
-  { id: 'learnings',    label: 'Aprendizagens',    icon: '📚', accent: '#f472b6' },
-  { id: 'closing',      label: 'Encerramento',     icon: '🎤', accent: '#3b82f6' },
+  { id: 'cover',        label: 'Introdução',      Icon: Hand,     accent: '#3b82f6' },
+  { id: 'problem',      label: 'O Problema',       Icon: Search,   accent: '#f97316' },
+  { id: 'solution',     label: 'A Solução',        Icon: Lightbulb,accent: '#22c55e' },
+  { id: 'features',     label: 'Funcionalidades',  Icon: Settings, accent: '#06b6d4' },
+  { id: 'technologies', label: 'Tecnologias',      Icon: Wrench,   accent: '#818cf8' },
+  { id: 'results',      label: 'Resultados',       Icon: Trophy,   accent: '#34d399' },
+  { id: 'learnings',    label: 'Aprendizagens',    Icon: BookOpen, accent: '#f472b6' },
+  { id: 'closing',      label: 'Encerramento',     Icon: Mic,      accent: '#3b82f6' },
 ]
 
 function hasContent(project, id) {
@@ -341,7 +342,7 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
       <div style={{ position: 'fixed', inset: 0, zIndex: 10000, background: '#060c18', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: 'Inter, system-ui, sans-serif', color: C.text, padding: 32, textAlign: 'center' }}>
         <style>{`@keyframes pop{0%{transform:scale(0.5);opacity:0}60%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}} @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}`}</style>
 
-        <div style={{ fontSize: 80, marginBottom: 4, animation: 'pop 0.5s ease-out' }}>🎓</div>
+        <div style={{ marginBottom: 4, animation: 'pop 0.5s ease-out' }}><GraduationCap size={80} color={C.blue} /></div>
         <h2 style={{ fontSize: 28, fontWeight: 800, margin: '16px 0 8px', letterSpacing: '-0.5px', animation: 'fadeUp 0.4s 0.2s ease-out both' }}>
           Boa apresentação{firstName ? `, ${firstName}` : ''}!
         </h2>
@@ -390,8 +391,8 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
 
         <div style={{ maxWidth: 360, width: '100%', textAlign: 'center', animation: 'fadeUp 0.3s ease-out' }}>
           {/* Icon */}
-          <div style={{ width: 72, height: 72, borderRadius: 20, background: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 34, margin: '0 auto 20px' }}>
-            🎤
+          <div style={{ width: 72, height: 72, borderRadius: 20, background: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+            <Mic size={34} color={C.blue} />
           </div>
 
           <h2 style={{ fontSize: 24, fontWeight: 800, margin: '0 0 8px', letterSpacing: '-0.4px' }}>Guia do Apresentador</h2>
@@ -416,7 +417,7 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
           {/* Tips */}
           <div style={{ background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.18)', borderRadius: 12, padding: '14px 16px', marginBottom: 28, textAlign: 'left' }}>
             <p style={{ margin: '0 0 6px', fontSize: 11, fontWeight: 700, color: '#fbbf24', textTransform: 'uppercase', letterSpacing: 1 }}>Antes de começar</p>
-            {['Coloca o telemóvel em silêncio 🔇', 'Abre o teu Canva/PowerPoint no PC', 'Mantém este guia no telemóvel'].map(tip => (
+            {['Coloca o telemóvel em silêncio', 'Abre o teu Canva/PowerPoint no PC', 'Mantém este guia no telemóvel'].map(tip => (
               <p key={tip} style={{ margin: '4px 0 0', fontSize: 13, color: C.muted }}>· {tip}</p>
             ))}
           </div>
@@ -479,14 +480,14 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
             />
           ))}
         </div>
-        <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid #1e3050', borderRadius: 8, padding: '6px 10px', color: C.subtle, fontSize: 16, cursor: 'pointer', lineHeight: 1 }}>✕</button>
+        <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid #1e3050', borderRadius: 8, padding: '6px 10px', color: C.subtle, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={16} /></button>
       </div>
 
       {/* Section header */}
       <div key={section.id} style={{ padding: '22px 24px 0', flexShrink: 0, animation: 'pop 0.25s ease-out' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ width: 40, height: 40, borderRadius: 12, background: `${accent}18`, border: `1px solid ${accent}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>{section.icon}</span>
+            <span style={{ width: 40, height: 40, borderRadius: 12, background: `${accent}18`, border: `1px solid ${accent}30`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><section.Icon size={20} color={accent} /></span>
             <div>
               <div style={{ fontSize: 11, fontWeight: 700, color: accent, textTransform: 'uppercase', letterSpacing: 1.5 }}>
                 {current + 1} / {sections.length}
@@ -549,7 +550,7 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
                     fontSize: 13, color: done ? '#fff' : C.subtle, fontWeight: 700,
                     transition: 'all 0.15s',
                   }}>
-                    {done ? '✓' : i + 1}
+                    {done ? <Check size={13} color="#fff" /> : i + 1}
                   </span>
                   <span style={{ fontSize: 16, fontWeight: done ? 400 : 600, color: done ? C.subtle : C.text, lineHeight: 1.4, textDecoration: done ? 'line-through' : 'none', transition: 'all 0.15s' }}>
                     {point}
@@ -613,7 +614,7 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
           }}
           style={{ flex: 3, padding: '16px 0', background: `linear-gradient(135deg, ${current === sections.length - 1 ? '#22c55e, #16a34a' : `${accent}, ${accent}bb`})`, border: 'none', borderRadius: 14, color: '#fff', fontSize: 16, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: `0 4px 20px ${current === sections.length - 1 ? 'rgba(34,197,94,0.4)' : accent + '44'}` }}
         >
-          {current === sections.length - 1 ? '🎓 Terminar apresentação' : 'Próxima secção →'}
+          {current === sections.length - 1 ? 'Terminar apresentação' : 'Próxima secção →'}
         </button>
       </div>
     </div>
@@ -623,14 +624,14 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
 // ─── Group / collaborators panel ─────────────────────────────────────────────
 
 const ALL_SECTIONS = [
-  { id: 'cover',        label: 'Introdução',      icon: '👋' },
-  { id: 'problem',      label: 'O Problema',       icon: '🔍' },
-  { id: 'solution',     label: 'A Solução',        icon: '💡' },
-  { id: 'features',     label: 'Funcionalidades',  icon: '⚙️' },
-  { id: 'technologies', label: 'Tecnologias',      icon: '🛠️' },
-  { id: 'results',      label: 'Resultados',       icon: '🏆' },
-  { id: 'learnings',    label: 'Aprendizagens',    icon: '📚' },
-  { id: 'closing',      label: 'Encerramento',     icon: '🎤' },
+  { id: 'cover',        label: 'Introdução',      Icon: Hand },
+  { id: 'problem',      label: 'O Problema',       Icon: Search },
+  { id: 'solution',     label: 'A Solução',        Icon: Lightbulb },
+  { id: 'features',     label: 'Funcionalidades',  Icon: Settings },
+  { id: 'technologies', label: 'Tecnologias',      Icon: Wrench },
+  { id: 'results',      label: 'Resultados',       Icon: Trophy },
+  { id: 'learnings',    label: 'Aprendizagens',    Icon: BookOpen },
+  { id: 'closing',      label: 'Encerramento',     Icon: Mic },
 ]
 
 function GrupoPanel({ project }) {
@@ -672,7 +673,7 @@ function GrupoPanel({ project }) {
         const name = c.profiles?.full_name || c.profiles?.username || 'O colega'
         const oldStatus = prev[c.user_id]
         if (oldStatus === 'pending' && c.status === 'accepted') {
-          pushEvent(`${name} aceitou o convite 🎉`, C.green)
+          pushEvent(`${name} aceitou o convite`, C.green)
         } else if (oldStatus === 'pending' && c.status === 'declined') {
           pushEvent(`${name} recusou o convite`, C.red)
         }
@@ -723,7 +724,7 @@ function GrupoPanel({ project }) {
     })
     setSearchResult(null)
     setSearch('')
-    pushEvent(`${name} recebeu o convite ✉️`, '#60a5fa')
+    pushEvent(`${name} recebeu o convite`, '#60a5fa')
     loadCollaborators()
   }
 
@@ -839,7 +840,7 @@ function GrupoPanel({ project }) {
             const isPending  = collab.status === 'pending'
             const isDeclined = collab.status === 'declined'
             const statusColor = isPending ? '#fbbf24' : isDeclined ? '#f87171' : C.green
-            const statusLabel = isPending ? '⏳ Convite pendente' : isDeclined ? '✕ Recusou o convite' : '✓ Aceite'
+            const statusLabel = isPending ? 'Convite pendente' : isDeclined ? 'Recusou o convite' : 'Aceite'
             return (
               <div key={collab.user_id} style={{ background: C.card, border: `1px solid ${isDeclined ? 'rgba(248,113,113,0.2)' : C.border}`, borderRadius: 14, padding: '18px 20px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: isPending || isDeclined ? 6 : 14 }}>
@@ -883,7 +884,7 @@ function GrupoPanel({ project }) {
                               transition: 'all 0.12s',
                             }}
                           >
-                            {s.icon} {s.label}
+                            <s.Icon size={12} style={{ marginRight: 4, verticalAlign: 'middle' }} />{s.label}
                           </button>
                         )
                       })}
@@ -907,7 +908,7 @@ function GrupoPanel({ project }) {
                 fontSize: 14, fontWeight: 700, cursor: saving ? 'default' : 'pointer', fontFamily: 'inherit',
               }}
             >
-              {saving ? 'A guardar...' : saved ? '✓ Guardado' : 'Guardar atribuições'}
+              {saving ? 'A guardar...' : saved ? <><Check size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} />Guardado</> : 'Guardar atribuições'}
             </button>
           )}
         </div>
@@ -967,10 +968,10 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
   )
 
   const tabs = [
-    { id: 'notes', label: '📝 Notas',    show: canSeeFullPrep },
-    { id: 'jury',  label: '🎓 Júri',     show: canSeeFullPrep },
-    { id: 'guide', label: '📱 No dia',   show: true },
-    { id: 'grupo', label: '👥 Grupo',    show: isOwner },
+    { id: 'notes', label: 'Notas',    show: canSeeFullPrep },
+    { id: 'jury',  label: 'Júri',     show: canSeeFullPrep },
+    { id: 'guide', label: 'No dia',   show: true },
+    { id: 'grupo', label: 'Grupo',    show: isOwner },
   ].filter(t => t.show)
 
   return (
@@ -987,7 +988,7 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
             <h2 style={{ margin: '0 0 2px', fontSize: 18, fontWeight: 800, color: C.text }}>Preparar defesa</h2>
             <p style={{ margin: 0, fontSize: 13, color: C.subtle }}>{project.name}</p>
           </div>
-          <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid #1e3050', borderRadius: 8, padding: '7px 10px', color: C.muted, fontSize: 18, cursor: 'pointer', lineHeight: 1 }}>✕</button>
+          <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid #1e3050', borderRadius: 8, padding: '7px 10px', color: C.muted, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={18} /></button>
         </div>
 
         {/* Tabs */}
@@ -1024,13 +1025,13 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
             <div>
               {/* Preview card */}
               <div style={{ background: 'linear-gradient(135deg, rgba(59,130,246,0.08), rgba(79,70,229,0.06))', border: '1px solid rgba(59,130,246,0.2)', borderRadius: 16, padding: '22px 24px', marginBottom: 20 }}>
-                <div style={{ fontSize: 28, marginBottom: 10 }}>📱</div>
+                <div style={{ marginBottom: 10 }}><Smartphone size={28} color={C.blue} /></div>
                 <h3 style={{ margin: '0 0 8px', fontSize: 16, fontWeight: 800, color: C.text }}>Guia do Apresentador</h3>
                 <p style={{ margin: '0 0 16px', fontSize: 14, color: C.muted, lineHeight: 1.6 }}>
                   Um guia no telemóvel enquanto apresentas no Canva ou PowerPoint. Acompanha as tuas secções, faz check dos pontos-chave e consulta o que dizer se ficares em branco.
                 </p>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
-                  {['✓ Pontos-chave interativos', '✓ Nota completa por secção', '✓ Temporizador', '✓ Navegação por swipe'].map(f => (
+                  {['Pontos-chave interativos', 'Nota completa por secção', 'Temporizador', 'Navegação por swipe'].map(f => (
                     <span key={f} style={{ background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.18)', borderRadius: 6, padding: '4px 10px', fontSize: 12, color: '#93c5fd' }}>{f}</span>
                   ))}
                 </div>
@@ -1049,8 +1050,8 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
                 </button>
               </div>
 
-              <p style={{ fontSize: 12, color: C.subtle, textAlign: 'center', margin: 0 }}>
-                💡 Abre num segundo ecrã ou telemóvel durante a apresentação real
+              <p style={{ fontSize: 12, color: C.subtle, textAlign: 'center', margin: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
+                <Lightbulb size={12} /> Abre num segundo ecrã ou telemóvel durante a apresentação real
               </p>
             </div>
           )}

@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
+import { Edit3, Zap, Link } from 'lucide-react'
 
 const STEPS = [
   {
-    emoji: '✍️',
+    icon: <Edit3 size={48} color="#3b82f6" />,
     title: 'Descreve o teu projeto',
     desc: 'Escreve umas palavras sobre o que estás a construir — a IA percebe o contexto sozinha.',
     preview: (
@@ -24,7 +25,7 @@ const STEPS = [
     ),
   },
   {
-    emoji: '✨',
+    icon: <Zap size={48} color="#3b82f6" />,
     title: 'A IA preenche tudo',
     desc: 'O Claude analisa a descrição e pré-preenche o objetivo, problema, solução, tecnologias e muito mais.',
     preview: (
@@ -51,7 +52,7 @@ const STEPS = [
     ),
   },
   {
-    emoji: '🔗',
+    icon: <Link size={48} color="#3b82f6" />,
     title: 'A tua página profissional',
     desc: 'O resultado é uma página com design profissional, score, análise IA e link único para partilhares com quem quiseres.',
     preview: (
@@ -148,7 +149,7 @@ export default function Onboarding({ onDone }) {
 
         {/* Step content */}
         <div style={{ textAlign: 'center', marginBottom: 8 }}>
-          <div style={{ fontSize: 48, marginBottom: 14, lineHeight: 1 }}>{s.emoji}</div>
+          <div style={{ marginBottom: 14, lineHeight: 1, display: 'flex', justifyContent: 'center' }}>{s.icon}</div>
           <h2 style={{ margin: '0 0 10px', fontSize: 21, fontWeight: 800, color: '#e8f2ff', letterSpacing: '-0.3px' }}>
             {s.title}
           </h2>
