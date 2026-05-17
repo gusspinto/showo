@@ -648,25 +648,33 @@ export default function ProjectPage() {
 
   if (loading) {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: 'var(--font-body)' }}>
+      <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: 'var(--font-body)', overflowX: 'hidden' }}>
         <Navbar />
-        <div style={{ maxWidth: 1080, margin: '0 auto', padding: '0 24px', overflowX: 'hidden' }}>
-          {/* Cover placeholder */}
-          <div style={{ width: '100%', height: 220, borderRadius: 18, background: colors.card, marginTop: 36, animation: 'shimmer 1.5s ease-in-out infinite' }} />
-          {/* Title placeholder */}
-          <div style={{ paddingTop: 32, display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <div style={{ height: 34, width: '55%', borderRadius: 8, background: colors.card, animation: 'shimmer 1.5s ease-in-out infinite' }} />
-            <div style={{ height: 18, width: '80%', borderRadius: 6, background: colors.card, animation: 'shimmer 1.5s ease-in-out infinite 0.1s' }} />
-            <div style={{ height: 18, width: '65%', borderRadius: 6, background: colors.card, animation: 'shimmer 1.5s ease-in-out infinite 0.2s' }} />
-          </div>
-        </div>
         <style>{`
           @keyframes shimmer {
-            0%   { opacity: 0.5; }
-            50%  { opacity: 1; }
-            100% { opacity: 0.5; }
+            0%, 100% { opacity: 0.4; }
+            50%       { opacity: 0.85; }
           }
+          .sk { background: ${colors.card}; border-radius: 10px; animation: shimmer 1.6s ease-in-out infinite; }
+          .sk-wrap { max-width: 720px; margin: 0 auto; padding: 0 16px 80px; box-sizing: border-box; }
         `}</style>
+        <div className="sk-wrap">
+          {/* Cover */}
+          <div className="sk" style={{ width: '100%', height: 200, borderRadius: 16, marginTop: 24 }} />
+          {/* Title */}
+          <div className="sk" style={{ height: 30, width: '60%', marginTop: 28 }} />
+          {/* Tagline */}
+          <div className="sk" style={{ height: 16, width: '88%', marginTop: 14, animationDelay: '0.1s' }} />
+          <div className="sk" style={{ height: 16, width: '72%', marginTop: 10, animationDelay: '0.15s' }} />
+          {/* Score bar */}
+          <div style={{ display: 'flex', gap: 12, marginTop: 28 }}>
+            <div className="sk" style={{ height: 48, flex: 1, animationDelay: '0.2s' }} />
+            <div className="sk" style={{ height: 48, flex: 1, animationDelay: '0.25s' }} />
+          </div>
+          {/* Card block */}
+          <div className="sk" style={{ height: 140, width: '100%', marginTop: 20, borderRadius: 16, animationDelay: '0.3s' }} />
+          <div className="sk" style={{ height: 100, width: '100%', marginTop: 14, borderRadius: 16, animationDelay: '0.35s' }} />
+        </div>
       </div>
     )
   }
