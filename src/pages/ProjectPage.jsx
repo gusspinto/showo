@@ -115,6 +115,15 @@ function ChallengeCard({ challenge, project, onImprove, isOwner }) {
   const progress = Math.min(val.length / challenge.threshold, 1)
   const ChalIcon = challenge.icon
 
+  // Ganho real de score: diferença entre score atual e score após completar esta missão
+  const realGain = (() => {
+    if (isCompleted) return challenge.scoreGain
+    const currentScore = calculateScore(project).score
+    const filledProject = { ...project, [challenge.field]: 'x'.repeat(challenge.threshold) }
+    const maxScore = calculateScore(filledProject).score
+    return Math.max(0, maxScore - currentScore)
+  })()
+
   return (
     <div style={{
       background: isCompleted ? colors.greenBg : colors.bgAlt,
@@ -145,7 +154,7 @@ function ChallengeCard({ challenge, project, onImprove, isOwner }) {
               border: `1px solid ${isCompleted ? 'rgba(34,197,94,0.2)' : 'rgba(27,120,247,0.15)'}`,
               borderRadius: 999, padding: '2px 10px',
             }}>
-              +{challenge.xp} XP
+              {isCompleted ? `+${challenge.scoreGain} pts` : `+${realGain} pts no score`}
             </span>
           </div>
           <p style={{ margin: '0 0 10px', fontSize: 13, color: colors.muted, lineHeight: 1.55 }}>
@@ -683,8 +692,8 @@ export default function ProjectPage() {
     return aCompleted - bCompleted
   })
   const completedCount = CHALLENGES.filter(c => getChallengeStatus(c, project) === 'completed').length
-  const earnedXP = CHALLENGES.reduce((sum, c) => sum + (getChallengeStatus(c, project) === 'completed' ? c.xp : 0), 0)
-  const totalXP = CHALLENGES.reduce((sum, c) => sum + c.xp, 0)
+  const earnedXP = CHALLENGES.reduce((sum, c) => sum + (getChallengeStatus(c, project) === 'completed' ? c.scoreGain : 0), 0)
+  const totalXP = CHALLENGES.reduce((sum, c) => sum + c.scoreGain, 0)
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: 'var(--font-body)', overflowX: 'hidden' }}>
@@ -1122,13 +1131,13 @@ export default function ProjectPage() {
               textAlign: 'center', flexShrink: 0,
             }}>
               <div style={{ fontSize: 20, fontWeight: 800, color: colors.blue, letterSpacing: '-0.5px' }}>
-                {earnedXP} <span style={{ fontSize: 13, color: colors.subtle, fontWeight: 500 }}>/ {totalXP} XP</span>
+                {earnedXP} <span style={{ fontSize: 13, color: colors.subtle, fontWeight: 500 }}>/ {totalXP} pts</span>
               </div>
-              <div style={{ fontSize: 11, color: colors.muted, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 2 }}>{completedCount}/{CHALLENGES.length} completas</div>
+              <div style={{ fontSize: 11, color: colors.muted, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 2 }}>{completedCount}/{CHALLENGES.length} missões completas</div>
             </div>
           </div>
 
-          {/* XP progress bar */}
+          {/* Score progress bar */}
           <div style={{ height: 6, background: colors.border, borderRadius: 3, overflow: 'hidden', marginBottom: 20 }}>
             <div style={{
               height: '100%', borderRadius: 3,
