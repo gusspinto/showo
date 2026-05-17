@@ -460,10 +460,11 @@ export function Navbar({ children, showLinks = true }) {
           z-index: 98;
           display: flex; flex-direction: column;
           transform: translateY(-110%);
-          transition: transform 0.25s cubic-bezier(0.4,0,0.2,1);
+          visibility: hidden;
+          transition: transform 0.25s cubic-bezier(0.4,0,0.2,1), visibility 0s 0.25s;
           box-shadow: 0 8px 32px rgba(0,0,0,0.4);
         }
-        .mobile-drawer.is-open { transform: translateY(0); }
+        .mobile-drawer.is-open { transform: translateY(0); visibility: visible; transition: transform 0.25s cubic-bezier(0.4,0,0.2,1), visibility 0s; }
         .mobile-drawer-btn {
           background: transparent; border: none;
           color: #7d93b0; font-size: 15px; font-weight: 500;
