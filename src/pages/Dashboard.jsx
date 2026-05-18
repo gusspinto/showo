@@ -163,17 +163,7 @@ function QuickCreateProject({ navigate }) {
 
   function handleSubmit(e) {
     e.preventDefault()
-    const selected = QUICK_TYPES.find(t => t.id === type)
-    const draft = {
-      answers: {
-        ...(type ? { project_type: type } : {}),
-        ...(desc.trim() ? { goal: desc.trim() } : {}),
-      },
-      formGoal: selected?.formGoal ?? null,
-      step: 0,
-    }
-    localStorage.setItem('showo_new_project_draft', JSON.stringify(draft))
-    navigate('/novo')
+    navigate('/interview', { state: { type: type || 'personal', description: desc.trim() } })
   }
 
   return (
