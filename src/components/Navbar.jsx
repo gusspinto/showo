@@ -497,9 +497,14 @@ export function Navbar({ children, showLinks = true }) {
           <button className="mobile-drawer-btn" onClick={() => { navigate('/ranking'); setOpen(false) }}>Ranking</button>
           {user ? (
             <>
-              <button className="mobile-drawer-btn" onClick={() => { navigate('/dashboard'); setOpen(false) }}>
-                {getDisplayName(user)} · Dashboard
+              <button className="mobile-drawer-btn" onClick={() => { navigate('/dashboard'); setOpen(false) }} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'linear-gradient(135deg,#3b82f6,#4f46e5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
+                  {getInitial(user)}
+                </div>
+                {getDisplayName(user)}
               </button>
+              <button className="mobile-drawer-btn" onClick={() => { navigate('/dashboard'); setOpen(false) }}>Dashboard</button>
+              {profile?.username && <button className="mobile-drawer-btn" onClick={() => { navigate(`/u/${profile.username}`); setOpen(false) }}>Meu perfil</button>}
               <button className="mobile-drawer-btn danger" onClick={() => { handleSignOut(); setOpen(false) }}>Sair</button>
             </>
           ) : (
@@ -578,6 +583,9 @@ export function Navbar({ children, showLinks = true }) {
             <div className="nav-auth" style={{ width: 1, height: 20, background: C.border, margin: '0 4px', flexShrink: 0 }} />
           )}
 
+          {/* Notification bell — always visible when logged in (including mobile) */}
+          {user && <InviteInbox userId={user.id} />}
+
           {/* Auth section */}
           <div className="nav-auth">
             {user ? (
@@ -593,7 +601,6 @@ export function Navbar({ children, showLinks = true }) {
                     title="Painel de administração"
                   ><Shield size={14} /></button>
                 )}
-                <InviteInbox userId={user.id} />
                 <UserChip
                   user={user}
                   onClick={() => navigate('/dashboard')}
@@ -622,6 +629,27 @@ export function Navbar({ children, showLinks = true }) {
               </>
             )}
           </div>
+
+          {/* Mobile quick-create button */}
+          {showLinks && (
+            <button
+              className="ham-btn"
+              onClick={() => navigate('/novo')}
+              aria-label="Criar projeto"
+              style={{
+                background: 'linear-gradient(135deg, #1b78f7, #4f46e5)',
+                border: 'none',
+                borderRadius: 8, width: 38, height: 38,
+                flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer', padding: 0, flexShrink: 0,
+                boxShadow: '0 4px 12px rgba(27,120,247,0.35)',
+              }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+            </button>
+          )}
 
           {/* Hamburger */}
           {showLinks && (

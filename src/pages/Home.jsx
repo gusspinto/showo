@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { Globe, Bot, GraduationCap } from 'lucide-react'
 import { Navbar } from '../components/Navbar'
 import { supabase } from '../lib/supabase'
 import Onboarding from '../components/Onboarding'
@@ -99,17 +100,23 @@ const QUICK_GOALS = [
 
 const FEATURES = [
   {
-    icon: '🌐',
+    Icon: Globe,
+    iconColor: '#5a9ff5',
+    iconBg: 'rgba(27,120,247,0.1)',
     title: 'Página profissional',
     desc: 'Em 10 minutos tens um link para partilhar com qualquer empresa ou professor.',
   },
   {
-    icon: '🤖',
+    Icon: Bot,
+    iconColor: '#818cf8',
+    iconBg: 'rgba(129,140,248,0.1)',
     title: 'Análise por IA',
     desc: 'A IA avalia o teu projeto campo a campo e diz-te exatamente o que melhorar.',
   },
   {
-    icon: '🎯',
+    Icon: GraduationCap,
+    iconColor: '#fbbf24',
+    iconBg: 'rgba(251,191,36,0.1)',
     title: 'Prepara a defesa',
     desc: 'Perguntas prováveis do júri, guia do apresentador e gestão de grupo incluídos.',
   },
@@ -194,6 +201,7 @@ export default function Home() {
           .features-grid { grid-template-columns: 1fr !important; }
           .feature-card  { padding: 18px 16px !important; }
           .hero-badge    { font-size: 10px !important; padding: 4px 10px !important; gap: 5px !important; }
+          .hero-note     { font-size: 10px !important; }
         }
       `}</style>
 
@@ -242,14 +250,6 @@ export default function Home() {
 
           {/* Headline */}
           <TypedHero />
-
-          {/* Subheadline */}
-          <p className="hero-sub" style={{
-            fontSize: 18, color: colors.muted, lineHeight: 1.65,
-            margin: '0 0 0', maxWidth: 520, fontWeight: 400,
-          }}>
-            Cria uma página profissional em minutos. A IA analisa, pontua e prepara-te para a defesa.
-          </p>
 
           {/* Widget */}
           <form
@@ -323,7 +323,7 @@ export default function Home() {
               </button>
             </div>
 
-            <p style={{ color: colors.subtle, fontSize: 12, marginTop: 14, fontWeight: 500 }}>
+            <p className="hero-note" style={{ color: colors.subtle, fontSize: 12, marginTop: 14, fontWeight: 500 }}>
               Sem registo · Sem cartão de crédito
             </p>
           </form>
@@ -364,7 +364,9 @@ export default function Home() {
               borderRadius: 18, padding: '28px 24px',
               boxShadow: '0 4px 24px rgba(0,0,0,0.18)',
             }}>
-              <div style={{ fontSize: 32, marginBottom: 16 }}>{f.icon}</div>
+              <div style={{ width: 48, height: 48, borderRadius: 12, background: f.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+                <f.Icon size={24} color={f.iconColor} />
+              </div>
               <h3 style={{ margin: '0 0 10px', fontSize: 16, fontWeight: 800, color: colors.text, fontFamily: 'var(--font-heading)', letterSpacing: '-0.2px' }}>{f.title}</h3>
               <p style={{ margin: 0, color: colors.muted, fontSize: 14, lineHeight: 1.65 }}>{f.desc}</p>
             </div>

@@ -10,7 +10,7 @@ import { generateProject } from '../lib/generateProject'
 import { useAuth } from '../context/AuthContext'
 import DefenseMode from '../components/DefenseMode'
 import { analyzeProject } from '../lib/analyzeProject'
-import { Check, Loader, GraduationCap, Save, Sparkles, Bot, Lightbulb, Pencil } from 'lucide-react'
+import { Check, Loader, GraduationCap, Save, Sparkles, Bot, Lightbulb, Pencil, Search, Target, Wrench, Zap, TrendingUp, Briefcase, Users, Rocket, Trophy, BarChart2, CheckCircle } from 'lucide-react'
 
 const colors = {
   bg: '#0d1424',
@@ -49,12 +49,12 @@ const PROJECT_TYPE_LABELS = {
 }
 
 const TYPE_HERO = {
-  pap:         { c1: '#6366f1', c2: '#4f46e5', emoji: '🎓' },
-  internship:  { c1: '#10b981', c2: '#059669', emoji: '💼' },
-  group:       { c1: '#f59e0b', c2: '#d97706', emoji: '👥' },
-  personal:    { c1: '#1b78f7', c2: '#4f46e5', emoji: '🚀' },
-  competition: { c1: '#ef4444', c2: '#dc2626', emoji: '🏆' },
-  presentation:{ c1: '#8b5cf6', c2: '#7c3aed', emoji: '📊' },
+  pap:         { c1: '#6366f1', c2: '#4f46e5', Icon: GraduationCap },
+  internship:  { c1: '#10b981', c2: '#059669', Icon: Briefcase },
+  group:       { c1: '#f59e0b', c2: '#d97706', Icon: Users },
+  personal:    { c1: '#1b78f7', c2: '#4f46e5', Icon: Rocket },
+  competition: { c1: '#ef4444', c2: '#dc2626', Icon: Trophy },
+  presentation:{ c1: '#8b5cf6', c2: '#7c3aed', Icon: BarChart2 },
 }
 
 const QUALITY_MIN = 60 // below this = "needs more"
@@ -71,14 +71,14 @@ const PROFILE_SCORE_FIELDS = [
 ]
 
 const SECTION_META = {
-  problem:         { icon: '🔍', label: 'Problema' },
-  solution:        { icon: '💡', label: 'Solução' },
-  target_audience: { icon: '🎯', label: 'Público-alvo' },
-  features:        { icon: '⚙️', label: 'Funcionalidades' },
-  technologies:    { icon: '🛠', label: 'Tecnologias' },
-  challenges:      { icon: '⚡', label: 'Desafios' },
-  results:         { icon: '📈', label: 'Resultados' },
-  learnings:       { icon: '🧠', label: 'Aprendizagens' },
+  problem:         { Icon: Search,     label: 'Problema' },
+  solution:        { Icon: Lightbulb,  label: 'Solução' },
+  target_audience: { Icon: Target,     label: 'Público-alvo' },
+  features:        { Icon: Wrench,     label: 'Funcionalidades' },
+  technologies:    { Icon: Wrench,     label: 'Tecnologias' },
+  challenges:      { Icon: Zap,        label: 'Desafios' },
+  results:         { Icon: TrendingUp, label: 'Resultados' },
+  learnings:       { Icon: Lightbulb,  label: 'Aprendizagens' },
 }
 
 function getLevelInfo(score) {
@@ -127,7 +127,7 @@ function ScoreRing({ score }) {
 }
 
 function Section({ fieldKey, content, isOwner, onImprove }) {
-  const meta    = SECTION_META[fieldKey] ?? { icon: '📄', label: fieldKey }
+  const meta    = SECTION_META[fieldKey] ?? { Icon: Wrench, label: fieldKey }
   const fieldCfg = PROFILE_SCORE_FIELDS.find(f => f.key === fieldKey)
   const len     = (content || '').trim().length
   const isEmpty = len === 0
@@ -149,7 +149,7 @@ function Section({ fieldKey, content, isOwner, onImprove }) {
           color: isShort ? colors.yellow : isEmpty ? colors.subtle : colors.muted,
           display: 'flex', alignItems: 'center', gap: 7,
         }}>
-          <span style={{ fontSize: 14 }}>{meta.icon}</span>
+          <meta.Icon size={13} />
           {meta.label}
           {isShort && (
             <span style={{ fontSize: 10, color: colors.yellow, background: 'rgba(234,179,8,0.1)', border: '1px solid rgba(234,179,8,0.2)', borderRadius: 4, padding: '1px 7px', letterSpacing: '0.03em', fontWeight: 700 }}>
@@ -188,7 +188,7 @@ function Section({ fieldKey, content, isOwner, onImprove }) {
           <p style={{ margin: 0, color: isShort ? '#afc3dc' : colors.text, fontSize: 15, lineHeight: 1.75, whiteSpace: 'pre-wrap' }}>{content}</p>
           {isShort && fieldCfg?.tip && (
             <div style={{ marginTop: 12, display: 'flex', alignItems: 'flex-start', gap: 8, background: 'rgba(234,179,8,0.05)', border: '1px solid rgba(234,179,8,0.14)', borderRadius: 8, padding: '9px 12px' }}>
-              <span style={{ fontSize: 13, flexShrink: 0 }}>💡</span>
+              <Lightbulb size={13} color="#d4a820" style={{ flexShrink: 0 }} />
               <p style={{ margin: 0, fontSize: 12, color: '#d4a820', lineHeight: 1.6 }}>{fieldCfg.tip}</p>
             </div>
           )}
@@ -216,18 +216,18 @@ function MissionRow({ challenge, project, onImprove, isOwner }) {
       style={{
         display: 'flex', alignItems: 'center', gap: 12,
         padding: '11px 14px', borderRadius: 12,
-        background: isCompleted ? 'rgba(34,197,94,0.04)' : colors.bgAlt,
-        border: `1px solid ${isCompleted ? 'rgba(34,197,94,0.18)' : colors.border}`,
+        background: isCompleted ? 'rgba(52,211,153,0.03)' : colors.bgAlt,
+        border: `1px solid ${isCompleted ? 'rgba(52,211,153,0.14)' : colors.border}`,
         transition: 'border-color 0.15s',
       }}
     >
       {/* Status dot / icon */}
       <div style={{
         width: 30, height: 30, borderRadius: 9, flexShrink: 0,
-        background: isCompleted ? 'rgba(34,197,94,0.12)' : 'rgba(255,255,255,0.03)',
-        border: `1px solid ${isCompleted ? 'rgba(34,197,94,0.25)' : colors.border}`,
+        background: isCompleted ? 'rgba(52,211,153,0.1)' : 'rgba(255,255,255,0.03)',
+        border: `1px solid ${isCompleted ? 'rgba(52,211,153,0.22)' : colors.border}`,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        color: isCompleted ? colors.green : colors.muted,
+        color: isCompleted ? '#34d399' : colors.muted,
       }}>
         {isCompleted ? <Check size={13} strokeWidth={3} /> : <ChalIcon size={13} />}
       </div>
@@ -259,11 +259,11 @@ function MissionRow({ challenge, project, onImprove, isOwner }) {
       {/* Points badge */}
       <span style={{
         fontSize: 11, fontWeight: 700, flexShrink: 0, borderRadius: 999, padding: '2px 9px',
-        color: isCompleted ? colors.green : colors.blue,
-        background: isCompleted ? 'rgba(34,197,94,0.08)' : 'rgba(27,120,247,0.08)',
-        border: `1px solid ${isCompleted ? 'rgba(34,197,94,0.18)' : 'rgba(27,120,247,0.18)'}`,
+        color: isCompleted ? '#34d399' : colors.blue,
+        background: isCompleted ? 'rgba(52,211,153,0.08)' : 'rgba(27,120,247,0.08)',
+        border: `1px solid ${isCompleted ? 'rgba(52,211,153,0.18)' : 'rgba(27,120,247,0.18)'}`,
       }}>
-        {isCompleted ? '✓' : `+${realGain} XP`}
+        {isCompleted ? <Check size={10} strokeWidth={3} /> : `+${realGain} XP`}
       </span>
 
       {/* Action */}
@@ -519,6 +519,8 @@ export default function ProjectPage() {
   const [aiFeedback, setAiFeedback] = useState(null)
   const [analyzingAI, setAnalyzingAI] = useState(false)
   const [analyzeError, setAnalyzeError] = useState(null)
+  const [completudeOpen, setCompletudeOpen] = useState(false)
+  const [tipsOpen, setTipsOpen] = useState(false)
 
   const prevScoreRef = useRef(null)
   const rafRef = useRef(null)
@@ -735,7 +737,7 @@ export default function ProjectPage() {
 
   if (loading) {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: 'var(--font-body)', overflowX: 'hidden' }}>
+      <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: 'var(--font-body)', overflowX: 'clip' }}>
         <Navbar />
         <style>{`
           @keyframes shimmer {
@@ -807,7 +809,7 @@ export default function ProjectPage() {
   const totalXP = CHALLENGES.reduce((sum, c) => sum + c.scoreGain, 0)
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: 'var(--font-body)', overflowX: 'hidden' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: 'var(--font-body)', overflowX: 'clip' }}>
       <Helmet>
         <title>{project.name} — Showo</title>
         <meta name="description" content={project.ai_tagline || project.goal || `Projeto de ${project.creator_name || 'estudante'} no Showo`} />
@@ -854,7 +856,13 @@ export default function ProjectPage() {
         .proj-edit-inline { display: none; }
         .proj-dashboard   { display: none; }
         .proj-ai-fab      { display: none; }
+        .sidebar-section-toggle { display: none; }
+        @media (max-width: 860px) {
+          .sidebar-section-toggle { display: flex !important; }
+          .sidebar-section-body.collapsed { display: none !important; }
+        }
         @media (max-width: 600px) {
+          .proj-ai-fab     { display: flex !important; }
           .proj-nav-btns     { display: none !important; }
           .proj-fab-area     { display: flex !important; }
           .proj-wrap         { padding: 0 16px 120px !important; overflow-x: hidden !important; }
@@ -863,9 +871,8 @@ export default function ProjectPage() {
           .proj-h1-row       { display: flex !important; align-items: flex-start !important; gap: 8px !important; margin-bottom: 16px !important; }
           .proj-h1           { font-size: 24px !important; padding-right: 0 !important; margin-bottom: 0 !important; }
           .proj-edit-inline  { display: flex !important; }
-          .proj-dashboard    { display: flex !important; }
           .proj-score-mob    { display: none !important; }
-          .proj-score-abs    { display: none !important; }
+          .proj-score-abs    { transform: scale(0.72); transform-origin: top right; }
           .proj-tagline      { font-size: 15px !important; }
           .proj-card-pad     { padding: 18px 16px !important; border-radius: 14px !important; }
           .proj-badges       { margin-bottom: 10px !important; }
@@ -1014,7 +1021,7 @@ export default function ProjectPage() {
         )
       })()}
 
-      <div className="proj-wrap" style={{ maxWidth: 1080, margin: '0 auto', padding: '0 24px 80px', overflowX: 'hidden' }}>
+      <div className="proj-wrap" style={{ maxWidth: 1080, margin: '0 auto', padding: '0 24px 80px', overflowX: 'clip' }}>
 
         {/* Two-column layout: main content + sticky sidebar */}
         <div className="proj-layout">
@@ -1038,7 +1045,7 @@ export default function ProjectPage() {
                     display: 'flex', alignItems: 'center', gap: 6,
                     boxShadow: `0 4px 16px ${hero.c1}40`,
                   }}>
-                    <span>{hero.emoji}</span> {PROJECT_TYPE_LABELS[project.project_type].toUpperCase()}
+                    {hero.Icon && <hero.Icon size={12} />} {PROJECT_TYPE_LABELS[project.project_type].toUpperCase()}
                   </div>
                 )}
                 {project.area && (
@@ -1223,20 +1230,23 @@ export default function ProjectPage() {
         {/* Highlights — 3 column cards */}
         {highlights.length > 0 && (() => {
           const hero = TYPE_HERO[project.project_type] ?? TYPE_HERO.personal
-          const icons = ['⚡', '📈', '🧠']
+          const HlIcons = [Zap, TrendingUp, Lightbulb]
           return (
             <div className="proj-highlights-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, marginBottom: 24 }}>
-              {highlights.map((h, i) => (
+              {highlights.map((h, i) => {
+                const HlIcon = HlIcons[i] ?? Sparkles
+                return (
                 <div key={i} style={{
                   background: `linear-gradient(135deg, ${hero.c1}0d, ${hero.c2}07)`,
                   border: `1px solid ${hero.c1}30`,
                   borderRadius: 14, padding: '16px 18px',
                   display: 'flex', flexDirection: 'column', gap: 10,
                 }}>
-                  <span style={{ fontSize: 20 }}>{icons[i] ?? '✨'}</span>
+                  <HlIcon size={18} color={hero.c1} />
                   <p style={{ margin: 0, fontSize: 13, color: '#b8d4f0', lineHeight: 1.6 }}>{h}</p>
                 </div>
-              ))}
+                )
+              })}
             </div>
           )
         })()}
@@ -1378,27 +1388,29 @@ export default function ProjectPage() {
         {/* Missions */}
         <div id="missions-section" style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 18, padding: '22px 24px', marginBottom: 16, marginTop: 8, boxShadow: '0 4px 24px rgba(0,0,0,0.2)', scrollMarginTop: 88 }}>
           {/* Header */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 16, gap: 12 }}>
             <div>
-              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800, letterSpacing: '-0.2px' }}>Missões</h3>
-              <p style={{ margin: '2px 0 0', fontSize: 12, color: colors.muted }}>{completedCount}/{CHALLENGES.length} completas</p>
+              <h3 style={{ margin: '0 0 4px', fontSize: 16, fontWeight: 800, letterSpacing: '-0.2px' }}>Missões</h3>
+              <p style={{ margin: 0, fontSize: 12, color: colors.muted }}>Completa missões para melhorar o score</p>
             </div>
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: 18, fontWeight: 800, color: colors.blue, letterSpacing: '-0.5px' }}>
-                {earnedXP}<span style={{ fontSize: 12, color: colors.subtle, fontWeight: 500 }}>/{totalXP}</span>
-              </div>
-              <div style={{ fontSize: 11, color: colors.subtle, fontWeight: 600 }}>pontos</div>
-            </div>
-          </div>
-
-          {/* Progress bar */}
-          <div style={{ height: 4, background: colors.border, borderRadius: 99, overflow: 'hidden', marginBottom: 16 }}>
+            {/* XP card with progress bar inside */}
             <div style={{
-              height: '100%', borderRadius: 99,
-              width: `${(earnedXP / totalXP) * 100}%`,
-              background: `linear-gradient(90deg, ${colors.blue}, ${colors.green})`,
-              transition: 'width 0.6s ease-out',
-            }} />
+              background: colors.bg, border: `1px solid ${colors.border}`,
+              borderRadius: 12, padding: '12px 16px', minWidth: 110, flexShrink: 0,
+            }}>
+              <div style={{ fontSize: 20, fontWeight: 800, color: colors.blue, letterSpacing: '-0.5px', marginBottom: 6 }}>
+                {earnedXP}<span style={{ fontSize: 12, color: colors.subtle, fontWeight: 500 }}>/{totalXP} pts</span>
+              </div>
+              <div style={{ height: 4, background: colors.border, borderRadius: 99, overflow: 'hidden', marginBottom: 5 }}>
+                <div style={{
+                  height: '100%', borderRadius: 99,
+                  width: `${(earnedXP / totalXP) * 100}%`,
+                  background: 'linear-gradient(90deg, rgba(255,255,255,0.85), #1b78f7)',
+                  transition: 'width 0.6s ease-out',
+                }} />
+              </div>
+              <div style={{ fontSize: 10, color: colors.subtle, fontWeight: 600 }}>{completedCount}/{CHALLENGES.length} completas</div>
+            </div>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -1464,15 +1476,9 @@ export default function ProjectPage() {
           </div>
         </div>
 
-        <div style={{ textAlign: 'center', padding: '40px 0 0', color: colors.subtle, fontSize: 13 }}>
+        <div style={{ textAlign: 'center', padding: '40px 0 0', color: colors.subtle, fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, flexWrap: 'wrap' }}>
           Criado com{' '}
-          <span style={{
-            background: 'linear-gradient(135deg, #3b82f6, #818cf8)',
-            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text', fontWeight: 700,
-          }}>
-            Showo
-          </span>
+          <img src="/logo.png" alt="Showo" style={{ height: 16, width: 'auto', verticalAlign: 'middle', opacity: 0.7 }} />
           {' '}· Transforma projetos em páginas profissionais
         </div>
         </div>{/* end proj-main */}
@@ -1499,23 +1505,36 @@ export default function ProjectPage() {
 
             return (
               <div style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 16, padding: '20px 22px', marginTop: 16 }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: completudeOpen ? 14 : 0 }}>
                   <h3 style={{ margin: 0, fontSize: 11, fontWeight: 800, color: colors.muted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Completude</h3>
-                  <span style={{ fontSize: 13, fontWeight: 800, color: pct === 100 ? '#10b981' : pct > 60 ? colors.blue : colors.yellow }}>{pct}%</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 13, fontWeight: 800, color: pct === 100 ? '#10b981' : pct > 60 ? colors.blue : colors.yellow }}>{pct}%</span>
+                    <button
+                      className="sidebar-section-toggle"
+                      onClick={() => setCompletudeOpen(o => !o)}
+                      style={{ background: 'none', border: 'none', color: colors.muted, cursor: 'pointer', padding: '2px 4px', display: 'none', alignItems: 'center' }}
+                    >
+                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: completudeOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
+                        <path d="M2 4l4 4 4-4"/>
+                      </svg>
+                    </button>
+                  </div>
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {fieldQuality.map(f => (
-                    <div key={f.key} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <div style={{ width: 6, height: 6, borderRadius: '50%', flexShrink: 0, background: f.quality === 'good' ? '#10b981' : f.quality === 'short' ? colors.yellow : colors.subtle }} />
-                      <span style={{ flex: 1, fontSize: 12, color: f.quality === 'good' ? colors.text : f.quality === 'short' ? '#d4a820' : colors.subtle, fontWeight: f.quality === 'good' ? 600 : 400 }}>{f.label}</span>
-                      {f.quality === 'good'  && <span style={{ fontSize: 11, color: '#10b981', fontWeight: 800 }}>✓</span>}
-                      {f.quality === 'short' && <span style={{ fontSize: 10, color: colors.yellow, fontWeight: 700 }}>curto</span>}
-                      {f.quality === 'empty' && <span style={{ fontSize: 11, color: colors.subtle }}>—</span>}
-                    </div>
-                  ))}
-                </div>
-                <div style={{ marginTop: 14, height: 4, background: colors.border, borderRadius: 99, overflow: 'hidden' }}>
-                  <div style={{ height: '100%', borderRadius: 99, width: `${pct}%`, background: 'linear-gradient(90deg, #1b78f7, #10b981)', transition: 'width 0.5s' }} />
+                <div className={`sidebar-section-body${completudeOpen ? '' : ' collapsed'}`}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {fieldQuality.map(f => (
+                      <div key={f.key} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <div style={{ width: 6, height: 6, borderRadius: '50%', flexShrink: 0, background: f.quality === 'good' ? '#10b981' : f.quality === 'short' ? colors.yellow : colors.subtle }} />
+                        <span style={{ flex: 1, fontSize: 12, color: f.quality === 'good' ? colors.text : f.quality === 'short' ? '#d4a820' : colors.subtle, fontWeight: f.quality === 'good' ? 600 : 400 }}>{f.label}</span>
+                        {f.quality === 'good'  && <span style={{ fontSize: 11, color: '#10b981', fontWeight: 800 }}>✓</span>}
+                        {f.quality === 'short' && <span style={{ fontSize: 10, color: colors.yellow, fontWeight: 700 }}>curto</span>}
+                        {f.quality === 'empty' && <span style={{ fontSize: 11, color: colors.subtle }}>—</span>}
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ marginTop: 14, height: 4, background: colors.border, borderRadius: 99, overflow: 'hidden' }}>
+                    <div style={{ height: '100%', borderRadius: 99, width: `${pct}%`, background: 'linear-gradient(90deg, #1b78f7, #10b981)', transition: 'width 0.5s' }} />
+                  </div>
                 </div>
               </div>
             )
@@ -1532,38 +1551,51 @@ export default function ProjectPage() {
 
             if (needsWork.length === 0) return (
               <div style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: 16, padding: '16px 20px', marginTop: 16, textAlign: 'center' }}>
-                <div style={{ fontSize: 20, marginBottom: 6 }}>🎉</div>
+                <CheckCircle size={24} color="#34d399" style={{ marginBottom: 6 }} />
                 <p style={{ margin: 0, fontSize: 13, color: '#34d399', fontWeight: 700 }}>Perfil completo!</p>
               </div>
             )
 
             return (
               <div style={{ background: 'linear-gradient(135deg, rgba(27,120,247,0.07), rgba(79,70,229,0.04))', border: '1px solid rgba(27,120,247,0.18)', borderRadius: 16, padding: '18px 20px', marginTop: 16 }}>
-                <h3 style={{ margin: '0 0 14px', fontSize: 11, fontWeight: 800, color: '#5a9ff5', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#5a9ff5" strokeWidth="2.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                  Como aumentar o score
-                </h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  {needsWork.map(f => (
-                    <div key={f.key} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-                      <div style={{ width: 5, height: 5, borderRadius: '50%', background: f.quality === 'short' ? colors.yellow : '#1b78f7', flexShrink: 0, marginTop: 6 }} />
-                      <div>
-                        <span style={{ fontSize: 11, fontWeight: 700, color: f.quality === 'short' ? colors.yellow : '#5a9ff5', display: 'block', marginBottom: 2 }}>
-                          {f.label} {f.quality === 'short' ? '· muito curto' : '· em falta'}
-                        </span>
-                        <p style={{ margin: 0, fontSize: 12, color: colors.muted, lineHeight: 1.55 }}>{f.tip}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                {isOwner && (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: tipsOpen ? 14 : 0 }}>
+                  <h3 style={{ margin: 0, fontSize: 11, fontWeight: 800, color: '#5a9ff5', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#5a9ff5" strokeWidth="2.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                    Como aumentar o score
+                  </h3>
                   <button
-                    onClick={() => document.getElementById('missions-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-                    style={{ marginTop: 14, width: '100%', background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.2)', color: '#5a9ff5', borderRadius: 10, padding: '9px 0', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+                    className="sidebar-section-toggle"
+                    onClick={() => setTipsOpen(o => !o)}
+                    style={{ background: 'none', border: 'none', color: '#5a9ff5', cursor: 'pointer', padding: '2px 4px', display: 'none', alignItems: 'center' }}
                   >
-                    Ver missões ↓
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: tipsOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
+                      <path d="M2 4l4 4 4-4"/>
+                    </svg>
                   </button>
-                )}
+                </div>
+                <div className={`sidebar-section-body${tipsOpen ? '' : ' collapsed'}`}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    {needsWork.map(f => (
+                      <div key={f.key} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                        <div style={{ width: 5, height: 5, borderRadius: '50%', background: f.quality === 'short' ? colors.yellow : '#1b78f7', flexShrink: 0, marginTop: 6 }} />
+                        <div>
+                          <span style={{ fontSize: 11, fontWeight: 700, color: f.quality === 'short' ? colors.yellow : '#5a9ff5', display: 'block', marginBottom: 2 }}>
+                            {f.label} {f.quality === 'short' ? '· muito curto' : '· em falta'}
+                          </span>
+                          <p style={{ margin: 0, fontSize: 12, color: colors.muted, lineHeight: 1.55 }}>{f.tip}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {isOwner && (
+                    <button
+                      onClick={() => document.getElementById('missions-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                      style={{ marginTop: 14, width: '100%', background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.2)', color: '#5a9ff5', borderRadius: 10, padding: '9px 0', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+                    >
+                      Ver missões ↓
+                    </button>
+                  )}
+                </div>
               </div>
             )
           })()}

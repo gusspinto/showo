@@ -160,18 +160,10 @@ export default function Ranking() {
     <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: 'var(--font-body)' }}>
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
-        .rank-top:hover { transform: translateY(-4px) !important; }
+        .rank-top:hover { transform: translateX(3px) !important; box-shadow: 0 4px 24px rgba(0,0,0,0.4) !important; }
         .rank-mid:hover { transform: translateX(4px) !important; }
         .rank-rest:hover { background: ${colors.cardHover} !important; }
         .rank-top, .rank-mid, .rank-rest { transition: all 0.18s ease !important; }
-        @media (max-width: 600px) {
-          .podium-grid { gap: 6px !important; }
-          .podium-card { padding: 14px 8px 16px !important; border-radius: 14px !important; min-height: unset !important; }
-          .podium-card-name { font-size: 11px !important; }
-          .podium-card-tagline { display: none !important; }
-          .podium-card-creator { display: none !important; }
-          .podium-card-badge { display: none !important; }
-        }
       `}</style>
 
       <Navbar>
@@ -250,133 +242,90 @@ export default function Ranking() {
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
 
-            {/* ── TOP 3 ── podium layout: 2nd | 1st | 3rd */}
-            {top3.length > 0 && (() => {
-              // Podium order: 2nd (left), 1st (center, tallest), 3rd (right)
-              const podium = [
-                top3[1] ? { proj: top3[1], rank: 1, t: TOP3[1], size: 'md' } : null,
-                top3[0] ? { proj: top3[0], rank: 0, t: TOP3[0], size: 'lg' } : null,
-                top3[2] ? { proj: top3[2], rank: 2, t: TOP3[2], size: 'sm' } : null,
-              ].filter(Boolean)
+            {/* ── TOP 3 ── hall of fame */}
+            {top3.length > 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 8 }}>
+                {top3.map((project, i) => {
+                  const t = TOP3[i]
+                  const RankIcon = t.Icon
+                  return (
+                    <div
+                      key={project.id}
+                      className="rank-top"
+                      onClick={() => navigate(`/projeto/${project.slug}`)}
+                      style={{
+                        position: 'relative', overflow: 'hidden',
+                        background: colors.card,
+                        border: `1px solid ${colors.border}`,
+                        borderLeft: `3px solid ${t.color}`,
+                        borderRadius: 16,
+                        padding: '22px 28px',
+                        cursor: 'pointer',
+                        boxShadow: i === 0 ? `0 4px 24px rgba(0,0,0,0.3), inset 0 0 0 1px ${t.color}18` : '0 2px 12px rgba(0,0,0,0.2)',
+                        display: 'flex', alignItems: 'center', gap: 20,
+                      }}
+                    >
+                      {/* Giant translucent rank number in background */}
+                      <div style={{
+                        position: 'absolute', right: 24, top: '50%', transform: 'translateY(-50%)',
+                        fontSize: 110, fontWeight: 900,
+                        color: t.color, opacity: 0.06,
+                        lineHeight: 1, userSelect: 'none', pointerEvents: 'none',
+                        fontFamily: 'var(--font-heading)',
+                      }}>
+                        {i + 1}
+                      </div>
 
-              return (
-                <div className="podium-grid" style={{ display: 'flex', alignItems: 'flex-end', gap: 10, marginBottom: 8 }}>
-                  {podium.map(({ proj, rank, t, size }) => {
-                    const RankIcon = t.Icon
-                    const isFirst = size === 'lg'
-                    const isSm   = size === 'sm'
-                    const iconSize = isFirst ? 28 : 22
-                    const ringEl  = isFirst ? <ScoreRingLg score={proj.score} /> : <ScoreRingMd score={proj.score} />
-                    const minH    = isFirst ? 260 : isSm ? 180 : 215
+                      {/* Rank icon + label */}
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flexShrink: 0, minWidth: 36 }}>
+                        <RankIcon size={i === 0 ? 26 : 20} color={t.color} strokeWidth={2}
+                          style={{ filter: `drop-shadow(0 0 8px ${t.color}70)` }} />
+                        <span style={{ fontSize: 10, fontWeight: 800, color: t.color, letterSpacing: '0.3px' }}>{t.label}</span>
+                      </div>
 
-                    return (
-                      <div
-                        key={proj.id}
-                        className="rank-top podium-card"
-                        onClick={() => navigate(`/projeto/${proj.slug}`)}
-                        style={{
-                          flex: isFirst ? 1.15 : 1,
-                          minHeight: minH,
-                          background: t.grad,
-                          border: `1.5px solid ${t.color}30`,
-                          borderRadius: 18,
-                          padding: isFirst ? '24px 18px 28px' : isSm ? '18px 14px 18px' : '20px 16px 22px',
-                          cursor: 'pointer',
-                          boxShadow: isFirst
-                            ? `0 8px 36px ${t.color}28, 0 2px 8px rgba(0,0,0,0.4)`
-                            : `0 4px 18px ${t.color}16`,
-                          display: 'flex',
-                          flexDirection: 'column',
-                          alignItems: 'center',
-                          gap: 8,
-                          textAlign: 'center',
-                          position: 'relative',
-                          overflow: 'hidden',
-                        }}
-                      >
-                        {/* Glow bg for 1st */}
-                        {isFirst && (
-                          <div style={{
-                            position: 'absolute', top: -20, left: '50%', transform: 'translateX(-50%)',
-                            width: 120, height: 120, borderRadius: '50%',
-                            background: `radial-gradient(circle, ${t.color}22 0%, transparent 70%)`,
-                            pointerEvents: 'none',
-                          }} />
-                        )}
+                      {/* Score — big number */}
+                      <div style={{
+                        fontSize: i === 0 ? 44 : 36, fontWeight: 900,
+                        color: t.color, letterSpacing: '-2px',
+                        lineHeight: 1, flexShrink: 0, width: 68, textAlign: 'center',
+                        filter: i === 0 ? `drop-shadow(0 0 12px ${t.color}60)` : 'none',
+                      }}>
+                        {project.score}
+                      </div>
 
-                        {/* Rank icon */}
-                        <RankIcon
-                          size={iconSize}
-                          color={t.color}
-                          strokeWidth={2}
-                          style={{ filter: `drop-shadow(0 0 ${isFirst ? 10 : 6}px ${t.color}80)`, flexShrink: 0 }}
-                        />
-                        <span style={{ fontSize: isFirst ? 13 : 11, fontWeight: 800, color: t.color, letterSpacing: '0.3px', marginTop: -2 }}>
-                          {t.label}
-                        </span>
+                      {/* Divider */}
+                      <div style={{ width: 1, height: 44, background: colors.border, flexShrink: 0 }} />
 
-                        {/* Score ring */}
-                        {ringEl}
-
-                        {/* Name */}
-                        <span className="podium-card-name" style={{
-                          fontSize: isFirst ? 15 : 13,
-                          fontWeight: 800, color: colors.text,
-                          lineHeight: 1.25, marginTop: 2,
-                          display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
-                        }}>
-                          {proj.name}
-                        </span>
-
-                        {/* Tagline — only on 1st */}
-                        {isFirst && proj.ai_tagline && (
-                          <p className="podium-card-tagline" style={{
-                            margin: 0, fontSize: 11, color: colors.muted, lineHeight: 1.45,
-                            display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
-                          }}>
-                            {proj.ai_tagline}
-                          </p>
-                        )}
-
-                        {/* Badges */}
-                        <div className="podium-card-badge" style={{ display: 'flex', gap: 4, flexWrap: 'wrap', justifyContent: 'center', marginTop: 2 }}>
-                          {proj.is_pap && (
-                            <span style={{
-                              fontSize: 9, color: colors.yellow, fontWeight: 700,
-                              background: 'rgba(234,179,8,0.1)',
-                              border: '1px solid rgba(234,179,8,0.25)',
-                              padding: '1px 6px', borderRadius: 999,
-                            }}>PAP</span>
+                      {/* Info */}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 6 }}>
+                          <span style={{ fontSize: i === 0 ? 19 : 16, fontWeight: 800, color: colors.text, letterSpacing: '-0.2px' }}>
+                            {project.name}
+                          </span>
+                          {project.is_pap && (
+                            <span style={{ fontSize: 10, color: colors.yellow, fontWeight: 700, background: 'rgba(234,179,8,0.1)', border: '1px solid rgba(234,179,8,0.25)', padding: '2px 8px', borderRadius: 999 }}>PAP</span>
                           )}
-                          {proj.area && (
-                            <span style={{
-                              fontSize: 9, color: '#60a5fa',
-                              background: 'rgba(27,120,247,0.1)',
-                              border: '1px solid rgba(27,120,247,0.18)',
-                              borderRadius: 999, padding: '1px 7px', fontWeight: 600,
-                            }}>{proj.area}</span>
+                          {project.area && (
+                            <span style={{ fontSize: 11, color: '#60a5fa', background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.18)', borderRadius: 999, padding: '2px 10px', fontWeight: 600 }}>{project.area}</span>
                           )}
                         </div>
-
-                        {/* Creator */}
-                        {!isSm && (
-                          <div className="podium-card-creator" style={{ fontSize: 10, color: colors.subtle, marginTop: 'auto' }}>
-                            {[proj.creator_name, proj.school_year].filter(Boolean).join(' · ')}
-                          </div>
+                        {i === 0 && project.ai_tagline && (
+                          <p style={{ margin: '0 0 8px', fontSize: 13, color: colors.muted, lineHeight: 1.5,
+                            display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                            {project.ai_tagline}
+                          </p>
                         )}
-
-                        {/* Platform bar at bottom */}
-                        <div style={{
-                          position: 'absolute', bottom: 0, left: 0, right: 0,
-                          height: isFirst ? 6 : isSm ? 3 : 4,
-                          background: `linear-gradient(90deg, transparent, ${t.color}60, transparent)`,
-                        }} />
+                        <div style={{ fontSize: 12, color: colors.subtle }}>
+                          {[project.creator_name, project.course, project.school_year].filter(Boolean).join(' · ')}
+                        </div>
                       </div>
-                    )
-                  })}
-                </div>
-              )
-            })()}
+
+                      <span style={{ fontSize: 13, color: t.color, fontWeight: 700, flexShrink: 0, opacity: 0.8, zIndex: 1 }}>→</span>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
 
             {/* ── #4–10 ── medium cards */}
             {mid.length > 0 && (
