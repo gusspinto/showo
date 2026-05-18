@@ -10,7 +10,7 @@ import { generateProject } from '../lib/generateProject'
 import { useAuth } from '../context/AuthContext'
 import DefenseMode from '../components/DefenseMode'
 import { analyzeProject } from '../lib/analyzeProject'
-import { Check, Loader, GraduationCap, Save, Sparkles, Bot, Lightbulb, Pencil, Search, Target, Wrench, Zap, TrendingUp, Briefcase, Users, Rocket, Trophy, BarChart2, CheckCircle } from 'lucide-react'
+import { Check, X, Loader, GraduationCap, Save, Sparkles, Bot, Lightbulb, Pencil, Search, Target, Wrench, Zap, TrendingUp, Briefcase, Users, Rocket, Trophy, BarChart2, CheckCircle } from 'lucide-react'
 
 const colors = {
   bg: '#0d1424',
@@ -529,6 +529,7 @@ export default function ProjectPage() {
   const [aiFeedback, setAiFeedback] = useState(null)
   const [analyzingAI, setAnalyzingAI] = useState(false)
   const [analyzeError, setAnalyzeError] = useState(null)
+  const [aiModalOpen, setAiModalOpen] = useState(false)
   const [completudeOpen, setCompletudeOpen] = useState(false)
   const [tipsOpen, setTipsOpen] = useState(false)
 
@@ -721,6 +722,13 @@ export default function ProjectPage() {
   }
 
 
+  function handleAIClick() {
+    setAiModalOpen(true)
+    if (!aiFeedback && !analyzingAI) {
+      handleAnalyzeAI()
+    }
+  }
+
   async function handleRegenerate() {
     if (regenCooldown > 0 || regenerating) return
     setRegenerating(true)
@@ -869,7 +877,7 @@ export default function ProjectPage() {
         }
         /* Edit button always visible next to title */
         .proj-edit-inline    { display: flex; }
-        .proj-h1-row         { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
+        .proj-h1-row         { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
         .proj-dashboard      { display: none; }
         .proj-ai-fab         { display: none; }
         .proj-fab-area       { display: none; }
@@ -880,16 +888,17 @@ export default function ProjectPage() {
           .sidebar-section-body.collapsed { display: none !important; }
           .proj-nav-btns     { display: none !important; }
           .proj-fab-area     { display: flex !important; }
+          .proj-ai-fab       { display: flex !important; }
           /* Tablet: defense FAB is pill-shaped with label */
           .proj-fab-defense-label { display: inline !important; }
         }
         @media (max-width: 600px) {
-          .proj-ai-fab     { display: flex !important; }
           .proj-wrap         { padding: 0 16px 80px !important; overflow-x: hidden !important; }
           .proj-cover        { height: 200px !important; margin-top: 20px !important; border-radius: 14px !important; }
           .proj-hero         { padding: 20px 0 16px !important; }
           .proj-h1           { font-size: 24px !important; }
-          .proj-score-abs    { transform: scale(0.68); transform-origin: center right; }
+          .proj-score-abs    { display: none !important; }
+          .proj-dashboard    { display: flex !important; }
           .proj-tagline      { font-size: 15px !important; }
           .proj-card-pad     { padding: 18px 16px !important; border-radius: 14px !important; }
           .proj-badges       { margin-bottom: 10px !important; }
@@ -914,6 +923,132 @@ export default function ProjectPage() {
         <EditModal challenge={editModal} project={project} onClose={() => setEditModal(null)} onSave={handleSave} saving={saving} />
       )}
 
+      {/* AI Feedback Modal */}
+      {aiModalOpen && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, zIndex: 500,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: '20px 16px',
+            background: 'rgba(0,0,0,0.72)',
+            backdropFilter: 'blur(8px)',
+          }}
+          onClick={() => setAiModalOpen(false)}
+        >
+          <div
+            style={{
+              background: colors.card,
+              border: `1px solid ${colors.border}`,
+              borderRadius: 20,
+              padding: '28px',
+              maxWidth: 580,
+              width: '100%',
+              maxHeight: '85vh',
+              overflowY: 'auto',
+              position: 'relative',
+              boxShadow: '0 24px 80px rgba(0,0,0,0.6)',
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Close */}
+            <button
+              onClick={() => setAiModalOpen(false)}
+              style={{
+                position: 'absolute', top: 16, right: 16,
+                background: 'rgba(255,255,255,0.05)',
+                border: `1px solid ${colors.border}`,
+                borderRadius: 8, width: 32, height: 32,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer', color: colors.muted,
+              }}
+            ><X size={16} /></button>
+
+            {/* Header */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+              <Bot size={22} color="#818cf8" />
+              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, letterSpacing: '-0.3px' }}>Análise da IA</h3>
+            </div>
+            <p style={{ margin: '0 0 20px', fontSize: 13, color: colors.muted, paddingLeft: 32 }}>
+              Feedback personalizado para melhorar o teu projeto
+            </p>
+
+            {/* Analyze button */}
+            {isOwner && (
+              <button
+                onClick={handleAnalyzeAI}
+                disabled={analyzingAI}
+                style={{
+                  background: analyzingAI ? 'rgba(27,120,247,0.1)' : 'linear-gradient(135deg,#3b82f6,#4f46e5)',
+                  border: analyzingAI ? '1px solid rgba(27,120,247,0.3)' : 'none',
+                  borderRadius: 10, padding: '9px 18px',
+                  color: analyzingAI ? '#60a5fa' : '#fff',
+                  fontSize: 13, fontWeight: 700,
+                  cursor: analyzingAI ? 'default' : 'pointer',
+                  fontFamily: 'inherit',
+                  boxShadow: analyzingAI ? 'none' : '0 4px 16px rgba(27,120,247,0.35)',
+                  marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8,
+                }}
+              >
+                {analyzingAI
+                  ? <><Sparkles size={14} style={{ verticalAlign: 'middle' }} /> A analisar…</>
+                  : aiFeedback
+                    ? <><Sparkles size={14} style={{ verticalAlign: 'middle' }} /> Reanalisar</>
+                    : <><Sparkles size={14} style={{ verticalAlign: 'middle' }} /> Analisar com IA</>}
+              </button>
+            )}
+
+            {analyzeError && (
+              <div style={{ background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.25)', borderRadius: 10, padding: '12px 16px', color: '#f87171', fontSize: 13, marginBottom: 16 }}>
+                {analyzeError}
+              </div>
+            )}
+
+            {aiFeedback && !analyzingAI && (
+              <div>
+                <div style={{ background: 'rgba(27,120,247,0.06)', border: '1px solid rgba(27,120,247,0.15)', borderRadius: 12, padding: '14px 16px', marginBottom: 16 }}>
+                  <div style={{ fontSize: 13, color: '#e8f2ff', lineHeight: 1.65, marginBottom: aiFeedback.score_hint ? 8 : 0 }}>
+                    {aiFeedback.overall}
+                  </div>
+                  {aiFeedback.score_hint && (
+                    <div style={{ fontSize: 12, color: '#60a5fa', fontWeight: 600, display: 'flex', alignItems: 'flex-start', gap: 6 }}>
+                      <Lightbulb size={14} style={{ flexShrink: 0, marginTop: 1 }} />
+                      <span>{aiFeedback.score_hint}</span>
+                    </div>
+                  )}
+                </div>
+                {aiFeedback.sections && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {Object.entries(aiFeedback.sections).map(([key, sec]) => {
+                      const LABELS = { goal: 'Objetivo', problem: 'Problema', solution: 'Solução', target_audience: 'Público-alvo', features: 'Funcionalidades', technologies: 'Tecnologias', results: 'Resultados', learnings: 'Aprendizagens' }
+                      const ratingColor = sec.rating === 'forte' ? colors.green : sec.rating === 'médio' ? colors.yellow : colors.orange
+                      const ratingBg = sec.rating === 'forte' ? 'rgba(34,197,94,0.1)' : sec.rating === 'médio' ? 'rgba(234,179,8,0.1)' : 'rgba(249,115,22,0.1)'
+                      return (
+                        <div key={key} style={{ background: colors.bg, border: `1px solid ${colors.border}`, borderRadius: 10, padding: '12px 14px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                            <span style={{ fontSize: 12, fontWeight: 700, color: colors.muted, minWidth: 110 }}>{LABELS[key] || key}</span>
+                            <span style={{ fontSize: 11, fontWeight: 700, color: ratingColor, background: ratingBg, borderRadius: 5, padding: '2px 7px', textTransform: 'uppercase' }}>{sec.rating}</span>
+                          </div>
+                          <p style={{ margin: '0 0 4px', fontSize: 12, color: '#afc3dc', lineHeight: 1.55 }}>{sec.feedback}</p>
+                          {sec.tip && (
+                            <p style={{ margin: 0, fontSize: 12, color: '#60a5fa', lineHeight: 1.55 }}>→ {sec.tip}</p>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {!aiFeedback && !analyzingAI && (
+              <div style={{ textAlign: 'center', padding: '24px 0', color: colors.muted, fontSize: 13 }}>
+                Clica em "Analisar com IA" para receber feedback personalizado do teu projeto.
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* FABs — visible on tablet + mobile via CSS (hidden on desktop) */}
       <div className="proj-fab-area" style={{
         position: 'fixed', bottom: 24, right: 20,
@@ -923,7 +1058,7 @@ export default function ProjectPage() {
         {isOwner && (
           <button
             className="proj-ai-fab"
-            onClick={handleAnalyzeAI}
+            onClick={handleAIClick}
             title="Análise com IA"
             disabled={analyzingAI}
             style={{
@@ -1054,9 +1189,9 @@ export default function ProjectPage() {
             )
           })()}
 
-          {/* Title row — edit icon always visible */}
+          {/* Title row — edit icon sits right after title text */}
           <div className="proj-h1-row">
-            <h1 className="proj-h1" style={{ fontSize: 'clamp(22px, 5vw, 48px)', fontWeight: 900, margin: 0, lineHeight: 1.1, letterSpacing: '-0.5px', flex: 1 }}>
+            <h1 className="proj-h1" style={{ fontSize: 'clamp(22px, 5vw, 48px)', fontWeight: 900, margin: 0, lineHeight: 1.1, letterSpacing: '-0.5px' }}>
               {project.name}
             </h1>
             {isOwner && (
@@ -1073,7 +1208,7 @@ export default function ProjectPage() {
                   background: 'rgba(255,255,255,0.05)',
                   border: `1px solid ${colors.border}`,
                   color: colors.muted, cursor: 'pointer',
-                  transition: 'all 0.15s',
+                  transition: 'all 0.15s', marginTop: 6,
                 }}
               >
                 <Pencil size={15} />
@@ -1116,47 +1251,6 @@ export default function ProjectPage() {
             </p>
           )}
 
-          {/* Creator */}
-          {(project.creator_name || project.course || project.school_year) && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                <div style={{
-                  width: 34, height: 34,
-                  background: `linear-gradient(135deg, ${colors.blue}, #4f46e5)`,
-                  borderRadius: '50%',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 14, fontWeight: 800, flexShrink: 0, color: '#fff',
-                }}>
-                  {project.creator_name ? project.creator_name[0].toUpperCase() : '?'}
-                </div>
-                <span style={{ fontSize: 14, color: colors.muted }}>
-                  {project.creator_name && <span style={{ color: colors.text, fontWeight: 600 }}>{project.creator_name}</span>}
-                  {project.course && <span> · {project.course}</span>}
-                  {project.school_year && <span> · {project.school_year}</span>}
-                  {project.school && <span> · {project.school}</span>}
-                </span>
-              </div>
-              {(project.linkedin_url || project.github_url || project.portfolio_url) && (
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  {project.linkedin_url && (
-                    <a href={project.linkedin_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(10,102,194,0.1)', border: '1px solid rgba(10,102,194,0.25)', color: '#60a5fa', borderRadius: 8, padding: '6px 12px', fontSize: 13, fontWeight: 600 }}>
-                      <span style={{ fontWeight: 900, fontStyle: 'italic' }}>in</span> LinkedIn
-                    </a>
-                  )}
-                  {project.github_url && (
-                    <a href={project.github_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.04)', border: `1px solid ${colors.border}`, color: colors.text, borderRadius: 8, padding: '6px 12px', fontSize: 13, fontWeight: 600 }}>
-                      GitHub
-                    </a>
-                  )}
-                  {project.portfolio_url && (
-                    <a href={project.portfolio_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(168,85,247,0.08)', border: '1px solid rgba(168,85,247,0.2)', color: '#c084fc', borderRadius: 8, padding: '6px 12px', fontSize: 13, fontWeight: 600 }}>
-                      Portfólio
-                    </a>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
           </div>{/* end left flex column */}
 
           {/* Score ring — right flex column */}
@@ -1278,99 +1372,58 @@ export default function ProjectPage() {
         <Section fieldKey="results"         content={project.results}         isOwner={isOwner} onImprove={setEditModal} />
         <Section fieldKey="learnings"       content={project.learnings}       isOwner={isOwner} onImprove={setEditModal} />
 
-        {/* AI Feedback — BEFORE missions, visible to all if exists */}
-        {(isOwner || aiFeedback) ? (
-          <div style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 20, padding: '28px', marginBottom: 24, marginTop: 8, boxShadow: '0 4px 24px rgba(0,0,0,0.3)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: aiFeedback ? 20 : 0, flexWrap: 'wrap', gap: 12 }}>
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-                  <Bot size={22} color="#818cf8" />
-                  <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, letterSpacing: '-0.3px' }}>Análise da IA</h3>
-                </div>
-                <p style={{ margin: 0, fontSize: 13, color: colors.muted, paddingLeft: 32 }}>Feedback personalizado para melhorar o teu projeto</p>
+        {/* AI Analysis — compact trigger card (opens modal) */}
+        {isOwner ? (
+          <div
+            style={{
+              background: 'linear-gradient(135deg, rgba(109,40,217,0.07), rgba(79,70,229,0.05))',
+              border: '1px solid rgba(129,140,248,0.2)',
+              borderRadius: 16, padding: '16px 20px',
+              marginBottom: 16, marginTop: 8,
+              display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
+              cursor: 'pointer',
+            }}
+            onClick={handleAIClick}
+          >
+            <Bot size={22} color="#818cf8" style={{ flexShrink: 0 }} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: colors.text, marginBottom: 2 }}>Análise da IA</div>
+              <div style={{ fontSize: 12, color: colors.muted }}>
+                {aiFeedback ? 'Feedback guardado · clica para ver' : 'Recebe feedback personalizado para melhorar o score'}
               </div>
-              {isOwner && (
-                <button
-                  onClick={handleAnalyzeAI}
-                  disabled={analyzingAI}
-                  style={{
-                    background: analyzingAI ? 'rgba(27,120,247,0.1)' : 'linear-gradient(135deg,#3b82f6,#4f46e5)',
-                    border: analyzingAI ? '1px solid rgba(27,120,247,0.3)' : 'none',
-                    borderRadius: 10, padding: '9px 18px',
-                    color: analyzingAI ? '#60a5fa' : '#fff',
-                    fontSize: 13, fontWeight: 700, cursor: analyzingAI ? 'default' : 'pointer',
-                    fontFamily: 'inherit', transition: 'all 0.2s',
-                    boxShadow: analyzingAI ? 'none' : '0 4px 16px rgba(27,120,247,0.35)',
-                    flexShrink: 0,
-                  }}
-                >
-                  {analyzingAI ? <><Sparkles size={14} style={{ verticalAlign: 'middle' }} /> A analisar…</> : aiFeedback ? '↻ Reanalisar' : <><Sparkles size={14} style={{ verticalAlign: 'middle' }} /> Analisar com IA</>}
-                </button>
-              )}
             </div>
-
-            {analyzeError && (
-              <div style={{ background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.25)', borderRadius: 10, padding: '12px 16px', color: '#f87171', fontSize: 13 }}>
-                {analyzeError}
-              </div>
-            )}
-
-            {aiFeedback && !analyzingAI && (
-              <div>
-                <div style={{ background: 'rgba(27,120,247,0.06)', border: '1px solid rgba(27,120,247,0.15)', borderRadius: 12, padding: '14px 16px', marginBottom: 16 }}>
-                  <div style={{ fontSize: 13, color: '#e8f2ff', lineHeight: 1.65, marginBottom: aiFeedback.score_hint ? 8 : 0 }}>
-                    {aiFeedback.overall}
-                  </div>
-                  {aiFeedback.score_hint && (
-                    <div style={{ fontSize: 12, color: '#60a5fa', fontWeight: 600, display: 'flex', alignItems: 'flex-start', gap: 6 }}>
-                      <Lightbulb size={14} style={{ flexShrink: 0, marginTop: 1 }} />
-                      <span>{aiFeedback.score_hint}</span>
-                    </div>
-                  )}
-                </div>
-                {aiFeedback.sections && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                    {Object.entries(aiFeedback.sections).map(([key, sec]) => {
-                      const LABELS = { goal: 'Objetivo', problem: 'Problema', solution: 'Solução', target_audience: 'Público-alvo', features: 'Funcionalidades', technologies: 'Tecnologias', results: 'Resultados', learnings: 'Aprendizagens' }
-                      const ratingColor = sec.rating === 'forte' ? colors.green : sec.rating === 'médio' ? colors.yellow : colors.orange
-                      const ratingBg = sec.rating === 'forte' ? 'rgba(34,197,94,0.1)' : sec.rating === 'médio' ? 'rgba(234,179,8,0.1)' : 'rgba(249,115,22,0.1)'
-                      return (
-                        <div key={key} style={{ background: colors.bg, border: `1px solid ${colors.border}`, borderRadius: 10, padding: '12px 14px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                            <span style={{ fontSize: 12, fontWeight: 700, color: colors.muted, minWidth: 110 }}>{LABELS[key] || key}</span>
-                            <span style={{ fontSize: 11, fontWeight: 700, color: ratingColor, background: ratingBg, borderRadius: 5, padding: '2px 7px', textTransform: 'uppercase' }}>{sec.rating}</span>
-                          </div>
-                          <p style={{ margin: '0 0 4px', fontSize: 12, color: '#afc3dc', lineHeight: 1.55 }}>{sec.feedback}</p>
-                          {sec.tip && (
-                            <p style={{ margin: 0, fontSize: 12, color: '#60a5fa', lineHeight: 1.55 }}>→ {sec.tip}</p>
-                          )}
-                        </div>
-                      )
-                    })}
-                  </div>
-                )}
-              </div>
-            )}
+            <div style={{
+              background: aiFeedback ? 'rgba(34,197,94,0.1)' : 'linear-gradient(135deg,#6d28d9,#4f46e5)',
+              border: aiFeedback ? '1px solid rgba(34,197,94,0.3)' : 'none',
+              borderRadius: 10, padding: '8px 16px',
+              color: aiFeedback ? '#34d399' : '#fff',
+              fontSize: 13, fontWeight: 700,
+              flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6,
+              boxShadow: aiFeedback ? 'none' : '0 4px 14px rgba(109,40,217,0.35)',
+            }}>
+              <Sparkles size={13} />
+              {aiFeedback ? 'Ver análise' : 'Analisar'}
+            </div>
           </div>
         ) : (
-          /* Teaser for non-owners viewing a project without AI analysis */
+          /* Teaser for non-owners */
           <div style={{
             background: 'linear-gradient(135deg, #0e1830 0%, #0a1220 100%)',
-            border: '1px solid rgba(129,140,248,0.2)',
-            borderRadius: 16, padding: '20px 24px', marginBottom: 24, marginTop: 8,
-            display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap',
+            border: '1px solid rgba(129,140,248,0.15)',
+            borderRadius: 16, padding: '16px 20px', marginBottom: 16, marginTop: 8,
+            display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
           }}>
-            <Bot size={28} color="#818cf8" style={{ flexShrink: 0 }} />
+            <Bot size={20} color="#818cf8" style={{ flexShrink: 0 }} />
             <div style={{ flex: 1, minWidth: 200 }}>
-              <p style={{ margin: '0 0 10px', fontSize: 14, color: '#c4b5fd', lineHeight: 1.55 }}>
-                Este projeto tem análise por IA disponível — Cria o teu para receberes feedback personalizado.
+              <p style={{ margin: '0 0 8px', fontSize: 13, color: '#c4b5fd', lineHeight: 1.55 }}>
+                Cria o teu projeto e recebe análise por IA com feedback personalizado.
               </p>
               <button
                 onClick={() => window.location.href = '/novo'}
                 style={{
                   background: 'linear-gradient(135deg, #6d28d9, #4f46e5)',
-                  border: 'none', borderRadius: 8, padding: '8px 18px',
-                  color: '#fff', fontSize: 13, fontWeight: 700,
+                  border: 'none', borderRadius: 8, padding: '7px 16px',
+                  color: '#fff', fontSize: 12, fontWeight: 700,
                   cursor: 'pointer', fontFamily: 'inherit',
                   boxShadow: '0 4px 14px rgba(109,40,217,0.35)',
                 }}
@@ -1596,6 +1649,48 @@ export default function ProjectPage() {
               </div>
             )
           })()}
+          {/* Creator info — below tips card */}
+          {(project.creator_name || project.course || project.school_year) && (
+            <div style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 16, padding: '18px 22px' }}>
+              <h3 style={{ margin: '0 0 14px', fontSize: 11, fontWeight: 700, color: colors.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Autor</h3>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: (project.linkedin_url || project.github_url || project.portfolio_url) ? 12 : 0 }}>
+                <div style={{
+                  width: 34, height: 34,
+                  background: `linear-gradient(135deg, ${colors.blue}, #4f46e5)`,
+                  borderRadius: '50%',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 14, fontWeight: 800, flexShrink: 0, color: '#fff',
+                }}>
+                  {project.creator_name ? project.creator_name[0].toUpperCase() : '?'}
+                </div>
+                <span style={{ fontSize: 14, color: colors.muted }}>
+                  {project.creator_name && <span style={{ color: colors.text, fontWeight: 600 }}>{project.creator_name}</span>}
+                  {project.course && <span> · {project.course}</span>}
+                  {project.school_year && <span> · {project.school_year}</span>}
+                  {project.school && <span> · {project.school}</span>}
+                </span>
+              </div>
+              {(project.linkedin_url || project.github_url || project.portfolio_url) && (
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  {project.linkedin_url && (
+                    <a href={project.linkedin_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(10,102,194,0.1)', border: '1px solid rgba(10,102,194,0.25)', color: '#60a5fa', borderRadius: 8, padding: '6px 12px', fontSize: 13, fontWeight: 600 }}>
+                      <span style={{ fontWeight: 900, fontStyle: 'italic' }}>in</span> LinkedIn
+                    </a>
+                  )}
+                  {project.github_url && (
+                    <a href={project.github_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.04)', border: `1px solid ${colors.border}`, color: colors.text, borderRadius: 8, padding: '6px 12px', fontSize: 13, fontWeight: 600 }}>
+                      GitHub
+                    </a>
+                  )}
+                  {project.portfolio_url && (
+                    <a href={project.portfolio_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(168,85,247,0.08)', border: '1px solid rgba(168,85,247,0.2)', color: '#c084fc', borderRadius: 8, padding: '6px 12px', fontSize: 13, fontWeight: 600 }}>
+                      Portfólio
+                    </a>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </aside>
         </div>{/* end proj-layout */}
 

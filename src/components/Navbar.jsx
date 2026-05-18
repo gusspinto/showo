@@ -507,6 +507,10 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
         .mobile-drawer-pair-btn:hover { background: rgba(255,255,255,0.08); border-color: #2a4275; }
         .mobile-drawer-pair-btn.danger { color: #f87171 !important; border-color: rgba(248,113,113,0.2) !important; }
         .mobile-drawer-pair-btn.danger:hover { background: rgba(248,113,113,0.06) !important; }
+        /* On tablet the UserChip is visible — hide the profile section inside drawer */
+        @media (min-width: 601px) {
+          .nav-drawer-profile { display: none !important; }
+        }
       `}</style>
 
       {/* Mobile backdrop blur */}
@@ -534,7 +538,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
           </button>
 
           {user ? (
-            <>
+            <div className="nav-drawer-profile">
               {/* User header */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '16px 4px 0', borderTop: '1px solid #1e3050', marginTop: 4 }}>
                 <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'linear-gradient(135deg,#3b82f6,#4f46e5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
@@ -566,7 +570,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
                 style={{ width: '100%', marginTop: 6, justifyContent: 'center' }}>
                 <LogOut size={15} /> Sair
               </button>
-            </>
+            </div>
           ) : (
             <div style={{ display: 'flex', gap: 8, padding: '16px 0 4px', borderTop: '1px solid #1e3050', marginTop: 4 }}>
               <button
