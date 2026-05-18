@@ -14,14 +14,44 @@ const C = {
   error: '#f87171',
 }
 
-function Field({ label, children }) {
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-      <label style={{ color: C.muted, fontSize: 13, fontWeight: 500 }}>{label}</label>
-      {children}
-    </div>
-  )
-}
+const ROLES = [
+  {
+    id: 'aluno',
+    emoji: '🎓',
+    label: 'Aluno',
+    desc: 'Estou a criar o meu projeto profissional',
+    color: '#1b78f7',
+    bg: 'rgba(27,120,247,0.08)',
+    border: 'rgba(27,120,247,0.25)',
+  },
+  {
+    id: 'professor',
+    emoji: '👨‍🏫',
+    label: 'Professor',
+    desc: 'Acompanho e avalio projetos de alunos',
+    color: '#10b981',
+    bg: 'rgba(16,185,129,0.08)',
+    border: 'rgba(16,185,129,0.25)',
+  },
+  {
+    id: 'recrutador',
+    emoji: '🔍',
+    label: 'Recrutador',
+    desc: 'Procuro talentos e avalio candidatos',
+    color: '#8b5cf6',
+    bg: 'rgba(139,92,246,0.08)',
+    border: 'rgba(139,92,246,0.25)',
+  },
+  {
+    id: 'empresa',
+    emoji: '🏢',
+    label: 'Empresa',
+    desc: 'Somos uma empresa à procura de talento',
+    color: '#f59e0b',
+    bg: 'rgba(245,158,11,0.08)',
+    border: 'rgba(245,158,11,0.25)',
+  },
+]
 
 function EyeIcon({ visible }) {
   return visible ? (
@@ -33,6 +63,15 @@ function EyeIcon({ visible }) {
       <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
       <line x1="1" y1="1" x2="23" y2="23"/>
     </svg>
+  )
+}
+
+function Field({ label, children }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <label style={{ color: C.muted, fontSize: 13, fontWeight: 500 }}>{label}</label>
+      {children}
+    </div>
   )
 }
 
@@ -75,6 +114,8 @@ function Input({ type = 'text', value, onChange, placeholder, required }) {
 
 export default function Register() {
   const navigate = useNavigate()
+  const [step, setStep] = useState('role') // 'role' | 'form'
+  const [role, setRole] = useState('')
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -92,21 +133,32 @@ export default function Register() {
     if (password !== confirmPassword) { setError('As palavras-passe não coincidem.'); return }
 
     setLoading(true)
-    const { error: err } = await supabase.auth.signUp({
+    const { data, error: err } = await supabase.auth.signUp({
       email,
       password,
       options: { data: { full_name: name.trim() } },
     })
-    setLoading(false)
-
     if (err) {
+      setLoading(false)
       setError(err.message === 'User already registered'
         ? 'Este email já está registado. Tenta entrar.'
         : 'Algo correu mal. Tenta novamente.')
-    } else {
-      setDone(true)
+      return
     }
+
+    // Save role to profile
+    if (data?.user) {
+      await supabase.from('profiles').upsert({
+        id: data.user.id,
+        full_name: name.trim(),
+        role: role || 'aluno',
+      })
+    }
+    setLoading(false)
+    setDone(true)
   }
+
+  const selectedRole = ROLES.find(r => r.id === role)
 
   return (
     <div style={{
@@ -114,7 +166,11 @@ export default function Register() {
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       padding: '24px 16px', fontFamily: 'Inter, sans-serif',
     }}>
-      <div style={{ width: '100%', maxWidth: 420 }}>
+      <style>{`
+        .role-card { transition: all 0.15s; cursor: pointer; }
+        .role-card:hover { transform: translateY(-2px); }
+      `}</style>
+      <div style={{ width: '100%', maxWidth: step === 'role' ? 560 : 420 }}>
 
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <img
@@ -150,10 +206,90 @@ export default function Register() {
               Ir para o login
             </button>
           </div>
-        ) : (
+
+        ) : step === 'role' ? (
+          /* ── STEP 1: escolha de tipo de conta ── */
           <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: '36px 32px' }}>
             <h1 style={{ color: C.text, fontSize: 22, fontWeight: 700, margin: '0 0 6px' }}>Criar conta</h1>
-            <p style={{ color: C.muted, fontSize: 14, margin: '0 0 28px' }}>Junta-te ao Showo e apresenta os teus projetos</p>
+            <p style={{ color: C.muted, fontSize: 14, margin: '0 0 28px' }}>Como vais usar o Showo?</p>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 24 }}>
+              {ROLES.map(r => {
+                const selected = role === r.id
+                return (
+                  <div
+                    key={r.id}
+                    className="role-card"
+                    onClick={() => setRole(r.id)}
+                    style={{
+                      background: selected ? r.bg : 'rgba(255,255,255,0.02)',
+                      border: `2px solid ${selected ? r.border : C.border}`,
+                      borderRadius: 14, padding: '18px 16px',
+                      display: 'flex', flexDirection: 'column', gap: 8,
+                      boxShadow: selected ? `0 0 0 1px ${r.border}` : 'none',
+                    }}
+                  >
+                    <span style={{ fontSize: 28 }}>{r.emoji}</span>
+                    <div>
+                      <div style={{ fontSize: 15, fontWeight: 700, color: selected ? r.color : C.text, marginBottom: 3 }}>
+                        {r.label}
+                      </div>
+                      <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.4 }}>
+                        {r.desc}
+                      </div>
+                    </div>
+                    {selected && (
+                      <div style={{ width: 16, height: 16, borderRadius: '50%', background: r.color, display: 'flex', alignItems: 'center', justifyContent: 'center', alignSelf: 'flex-end' }}>
+                        <svg width="9" height="7" viewBox="0 0 9 7" fill="none">
+                          <path d="M1 3.5L3.5 6L8 1" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+
+            <button
+              onClick={() => { if (role) setStep('form') }}
+              disabled={!role}
+              style={{
+                width: '100%',
+                background: role ? `linear-gradient(135deg, ${selectedRole?.color ?? C.blue}, #4f46e5)` : '#1e3050',
+                color: '#fff', border: 'none', borderRadius: 10, padding: '13px',
+                fontSize: 15, fontWeight: 700, cursor: role ? 'pointer' : 'not-allowed',
+                fontFamily: 'inherit', transition: 'all 0.15s',
+                boxShadow: role ? '0 4px 20px rgba(27,120,247,0.3)' : 'none',
+              }}
+            >
+              {role ? `Continuar como ${selectedRole?.label}` : 'Escolhe um tipo de conta'}
+            </button>
+          </div>
+
+        ) : (
+          /* ── STEP 2: formulário ── */
+          <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: '36px 32px' }}>
+            {/* Role badge + back */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 20 }}>{selectedRole?.emoji}</span>
+                <span style={{
+                  fontSize: 12, fontWeight: 700, color: selectedRole?.color,
+                  background: selectedRole?.bg, border: `1px solid ${selectedRole?.border}`,
+                  borderRadius: 999, padding: '3px 12px',
+                }}>
+                  {selectedRole?.label}
+                </span>
+              </div>
+              <button
+                onClick={() => setStep('role')}
+                style={{ background: 'none', border: 'none', color: C.muted, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}
+              >
+                ← Alterar
+              </button>
+            </div>
+
+            <h1 style={{ color: C.text, fontSize: 20, fontWeight: 700, margin: '0 0 20px' }}>Os teus dados</h1>
 
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <Field label="O teu nome">

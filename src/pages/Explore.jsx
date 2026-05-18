@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { Navbar } from '../components/Navbar'
+import { useAuth } from '../context/AuthContext'
 
 const colors = {
   bg: '#0d1424',
@@ -116,8 +117,14 @@ function SelectFilter({ value, onChange, options, label }) {
   )
 }
 
+const ROLE_LABELS = {
+  recrutador: { label: 'Recrutador', color: '#8b5cf6', bg: 'rgba(139,92,246,0.1)', border: 'rgba(139,92,246,0.3)', emoji: '🔍' },
+  empresa:    { label: 'Empresa',    color: '#f59e0b', bg: 'rgba(245,158,11,0.1)',  border: 'rgba(245,158,11,0.3)',  emoji: '🏢' },
+}
+
 export default function Explore() {
   const navigate = useNavigate()
+  const { profile } = useAuth()
   const [projects, setProjects] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -125,8 +132,10 @@ export default function Explore() {
   const [filterType, setFilterType] = useState('')
   const [filterMinScore, setFilterMinScore] = useState(0)
   const [filterZone, setFilterZone] = useState('')
-  const [recruiterMode, setRecruiterMode] = useState(() => sessionStorage.getItem('recruiter_mode') === '1')
   const [areas, setAreas] = useState([])
+
+  const recruiterMode = profile?.role === 'recrutador' || profile?.role === 'empresa'
+  const roleInfo = ROLE_LABELS[profile?.role] ?? null
 
   useEffect(() => {
     async function load() {
@@ -145,13 +154,6 @@ export default function Explore() {
     }
     load()
   }, [])
-
-  function toggleRecruiterMode() {
-    const next = !recruiterMode
-    setRecruiterMode(next)
-    if (next) sessionStorage.setItem('recruiter_mode', '1')
-    else sessionStorage.removeItem('recruiter_mode')
-  }
 
   function handleProjectClick(project) {
     if (recruiterMode) {
@@ -200,8 +202,6 @@ export default function Explore() {
         .explore-search { width: 100%; background: #152030; border: 1px solid #1e3050; border-radius: 12px; color: #e8f2ff; font-size: 15px; padding: 14px 16px 14px 48px; outline: none; font-family: var(--font-body); box-sizing: border-box; transition: border-color 0.2s, box-shadow 0.2s; }
         .explore-search:focus { border-color: #1b78f7 !important; box-shadow: 0 0 0 3px rgba(27,120,247,0.12) !important; }
         .filter-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-        .recruiter-btn { transition: all 0.15s; }
-        .recruiter-btn:hover { opacity: 0.85; }
         @media (max-width: 680px) {
           .explore-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)) !important; }
           .filter-row { gap: 8px; }
@@ -223,45 +223,25 @@ export default function Explore() {
 
       <div style={{ maxWidth: 1080, margin: '0 auto', padding: '44px 24px 80px' }}>
         {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 28, flexWrap: 'wrap' }}>
-          <div>
-            <h1 style={{ fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 900, margin: '0 0 8px', letterSpacing: '-0.5px' }}>
-              Explorar Projetos
-            </h1>
-            <p style={{ color: colors.muted, margin: 0, fontSize: 15 }}>Descobre o que outros estudantes estão a construir</p>
-          </div>
-
-          {/* Recruiter mode toggle */}
-          <button
-            className="recruiter-btn"
-            onClick={toggleRecruiterMode}
-            style={{
-              background: recruiterMode ? 'linear-gradient(135deg, #7c3aed, #4f46e5)' : 'transparent',
-              border: `1px solid ${recruiterMode ? '#7c3aed' : colors.border}`,
-              color: recruiterMode ? '#fff' : colors.muted,
-              borderRadius: 10, padding: '10px 18px',
-              fontSize: 13, fontWeight: 700, cursor: 'pointer',
-              fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 8,
-              boxShadow: recruiterMode ? '0 4px 16px rgba(124,58,237,0.3)' : 'none',
-              flexShrink: 0,
-            }}
-          >
-            <span>{recruiterMode ? '✦' : '🔍'}</span>
-            Modo Recrutador
-          </button>
+        <div style={{ marginBottom: 28 }}>
+          <h1 style={{ fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 900, margin: '0 0 8px', letterSpacing: '-0.5px' }}>
+            Explorar Projetos
+          </h1>
+          <p style={{ color: colors.muted, margin: 0, fontSize: 15 }}>Descobre o que outros estudantes estão a construir</p>
         </div>
 
-        {/* Recruiter banner */}
-        {recruiterMode && (
+        {/* Recruiter/Empresa banner — shown automatically based on account role */}
+        {recruiterMode && roleInfo && (
           <div style={{
-            background: 'linear-gradient(135deg, rgba(124,58,237,0.1), rgba(79,70,229,0.07))',
-            border: '1px solid rgba(124,58,237,0.3)',
+            background: roleInfo.bg,
+            border: `1px solid ${roleInfo.border}`,
             borderRadius: 12, padding: '14px 20px', marginBottom: 24,
             display: 'flex', alignItems: 'center', gap: 12,
           }}>
-            <span style={{ fontSize: 18, flexShrink: 0 }}>✦</span>
-            <p style={{ margin: 0, fontSize: 13, color: '#c4b5fd', lineHeight: 1.5 }}>
-              <strong>Está em modo recrutador</strong> — os criadores dos projetos são notificados quando visita.
+            <span style={{ fontSize: 18, flexShrink: 0 }}>{roleInfo.emoji}</span>
+            <p style={{ margin: 0, fontSize: 13, color: roleInfo.color, lineHeight: 1.5 }}>
+              <strong>Estás em modo {roleInfo.label}</strong> — os criadores dos projetos são notificados quando os visitas.
+              Vês também as tecnologias usadas em cada projeto.
             </p>
           </div>
         )}

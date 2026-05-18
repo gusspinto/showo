@@ -123,6 +123,7 @@ export default function Settings() {
   const [username, setUsername]           = useState('')
   const [originalUsername, setOriginalUsername] = useState('')
   const [bio, setBio]                     = useState('')
+  const [role, setRole]                   = useState('aluno')
   const [saving, setSaving]               = useState(false)
   const [saveMsg, setSaveMsg]             = useState(null)
 
@@ -145,11 +146,12 @@ export default function Settings() {
     // Pre-fill from user_metadata
     setFullName(user.user_metadata?.full_name ?? '')
     // Load profile
-    supabase.from('profiles').select('username, bio').eq('id', user.id).single().then(({ data }) => {
+    supabase.from('profiles').select('username, bio, role').eq('id', user.id).single().then(({ data }) => {
       if (data) {
         setUsername(data.username ?? '')
         setOriginalUsername(data.username ?? '')
         setBio(data.bio ?? '')
+        setRole(data.role ?? 'aluno')
       }
     })
   }, [user])
@@ -211,6 +213,7 @@ export default function Settings() {
         full_name: fullName.trim(),
         username: username.trim() || null,
         bio: bio.trim() || null,
+        role,
       })
       if (profileError) {
         if (profileError.code === '23505') {
@@ -302,6 +305,42 @@ export default function Settings() {
             placeholder="Conta um pouco sobre ti e os teus projetos..."
             hint="Aparece no teu perfil público."
           />
+
+          {/* Role */}
+          <div style={{ marginBottom: 20 }}>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: C.muted, marginBottom: 10 }}>
+              Tipo de conta
+            </label>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+              {[
+                { id: 'aluno',      emoji: '🎓', label: 'Aluno',      color: '#1b78f7' },
+                { id: 'professor',  emoji: '👨‍🏫', label: 'Professor',  color: '#10b981' },
+                { id: 'recrutador', emoji: '🔍', label: 'Recrutador', color: '#8b5cf6' },
+                { id: 'empresa',    emoji: '🏢', label: 'Empresa',    color: '#f59e0b' },
+              ].map(r => (
+                <button
+                  key={r.id}
+                  type="button"
+                  onClick={() => setRole(r.id)}
+                  style={{
+                    background: role === r.id ? `${r.color}14` : 'transparent',
+                    border: `1.5px solid ${role === r.id ? r.color : C.border}`,
+                    borderRadius: 10, padding: '10px 14px',
+                    display: 'flex', alignItems: 'center', gap: 8,
+                    cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s',
+                    color: role === r.id ? r.color : C.muted,
+                    fontSize: 13, fontWeight: role === r.id ? 700 : 500,
+                  }}
+                >
+                  <span style={{ fontSize: 16 }}>{r.emoji}</span>
+                  {r.label}
+                </button>
+              ))}
+            </div>
+            <p style={{ margin: '8px 0 0', fontSize: 12, color: C.subtle }}>
+              Recrutadores e empresas vêem os projetos em modo profissional.
+            </p>
+          </div>
 
           {saveMsg && (
             <div style={{
