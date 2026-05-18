@@ -652,7 +652,7 @@ export default function ProjectPage() {
     const viewKey = `viewed_${project.slug}`
     if (!sessionStorage.getItem(viewKey)) {
       sessionStorage.setItem(viewKey, '1')
-      supabase.from('projects').update({ views: (project.views ?? 0) + 1 }).eq('id', project.id)
+      supabase.rpc('increment_project_views', { project_id: project.id })
     }
 
     // PROJECT_VIEW notification (max once per hour per project)
