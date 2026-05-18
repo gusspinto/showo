@@ -149,6 +149,52 @@ function ProjectRow({ project, onView, onEdit }) {
   )
 }
 
+function JoinTurmaBar({ navigate }) {
+  const [code, setCode] = useState('')
+  const [error, setError] = useState('')
+  const [checking, setChecking] = useState(false)
+
+  async function handleJoin(e) {
+    e.preventDefault()
+    const trimmed = code.trim().toUpperCase()
+    if (!trimmed) return
+    setChecking(true)
+    setError('')
+    const { data } = await supabase
+      .from('classes')
+      .select('code')
+      .eq('code', trimmed)
+      .single()
+    setChecking(false)
+    if (!data) { setError('Código inválido. Verifica com o professor.'); return }
+    navigate(`/turma/${trimmed}`)
+  }
+
+  return (
+    <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: '16px 20px', marginBottom: 28, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+      <School size={18} color="#3b82f6" style={{ flexShrink: 0 }} />
+      <span style={{ fontSize: 14, fontWeight: 600, color: C.text, flexShrink: 0 }}>Entrar numa turma</span>
+      <form onSubmit={handleJoin} style={{ display: 'flex', gap: 8, flex: 1, minWidth: 200 }}>
+        <input
+          value={code}
+          onChange={e => { setCode(e.target.value.toUpperCase()); setError('') }}
+          placeholder="Código da turma"
+          maxLength={6}
+          style={{ flex: 1, background: '#0d1424', border: `1px solid ${error ? '#f87171' : C.border}`, borderRadius: 8, padding: '8px 12px', color: C.text, fontSize: 14, fontFamily: 'inherit', outline: 'none', letterSpacing: 2, fontWeight: 700, minWidth: 0 }}
+        />
+        <button
+          type="submit"
+          disabled={checking || !code.trim()}
+          style={{ background: C.blue, border: 'none', borderRadius: 8, padding: '8px 18px', color: '#fff', fontSize: 13, fontWeight: 600, cursor: checking || !code.trim() ? 'default' : 'pointer', opacity: checking || !code.trim() ? 0.6 : 1, fontFamily: 'inherit', flexShrink: 0 }}
+        >
+          {checking ? '…' : 'Entrar'}
+        </button>
+      </form>
+      {error && <span style={{ fontSize: 12, color: '#f87171', width: '100%', marginTop: -4 }}>{error}</span>}
+    </div>
+  )
+}
+
 function generateCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
   return Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join('')
@@ -407,6 +453,11 @@ export default function Dashboard() {
               </div>
             )}
           </div>
+        )}
+
+        {/* Aluno: Entrar numa turma */}
+        {profile?.role !== 'professor' && (
+          <JoinTurmaBar navigate={navigate} />
         )}
 
         {/* Stats */}
