@@ -510,7 +510,7 @@ export default function ProjectPage() {
   const { slug } = useParams()
   const navigate = useNavigate()
   const location = useLocation()
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
   const [project, setProject] = useState(null)
   const [loading, setLoading] = useState(true)
   const [copied, setCopied] = useState(false)
@@ -664,10 +664,12 @@ export default function ProjectPage() {
         .then(r => r.json())
         .then(geo => {
           const city = geo?.status === 'success' ? (geo.city || 'Portugal') : 'Portugal'
-          supabase.functions.invoke('notify-view', { body: { project_slug: project.slug, type: 'PROJECT_VIEW', city } })
+          const visitor_role = profile?.role ?? null
+          supabase.functions.invoke('notify-view', { body: { project_slug: project.slug, type: 'PROJECT_VIEW', city, visitor_role } })
         })
         .catch(() => {
-          supabase.functions.invoke('notify-view', { body: { project_slug: project.slug, type: 'PROJECT_VIEW', city: 'Portugal' } })
+          const visitor_role = profile?.role ?? null
+          supabase.functions.invoke('notify-view', { body: { project_slug: project.slug, type: 'PROJECT_VIEW', city: 'Portugal', visitor_role } })
         })
     }
 
@@ -677,7 +679,7 @@ export default function ProjectPage() {
     if (!lastCompany) {
       const t = setTimeout(() => {
         sessionStorage.setItem(companyKey, '1')
-        supabase.functions.invoke('notify-view', { body: { project_slug: project.slug, type: 'COMPANY_VIEW' } })
+        supabase.functions.invoke('notify-view', { body: { project_slug: project.slug, type: 'COMPANY_VIEW', visitor_role: profile?.role ?? null } })
       }, 30000)
       return () => clearTimeout(t)
     }

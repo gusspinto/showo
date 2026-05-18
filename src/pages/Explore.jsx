@@ -162,7 +162,7 @@ export default function Explore() {
       if (!sessionStorage.getItem(key)) {
         sessionStorage.setItem(key, '1')
         supabase.functions.invoke('notify-view', {
-          body: { project_slug: project.slug, type: 'COMPANY_VIEW' }
+          body: { project_slug: project.slug, type: 'COMPANY_VIEW', visitor_role: profile?.role ?? null }
         })
       }
     }
