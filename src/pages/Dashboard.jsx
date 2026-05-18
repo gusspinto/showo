@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Pencil, ExternalLink } from 'lucide-react'
 import { Navbar } from '../components/Navbar'
-import { Folder, Trophy, BarChart2, Rocket, Eye } from 'lucide-react'
+import { Folder, Trophy, BarChart2, Rocket, Eye, School, Plus, X, Users, ChevronRight } from 'lucide-react'
 
 const C = {
   bg: '#0d1424',
@@ -149,11 +149,105 @@ function ProjectRow({ project, onView, onEdit }) {
   )
 }
 
+function generateCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+  return Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join('')
+}
+
+function CreateTurmaModal({ onClose, onCreated }) {
+  const { user, profile } = useAuth()
+  const [name, setName] = useState('')
+  const [subject, setSubject] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+
+  async function handleCreate(e) {
+    e.preventDefault()
+    if (!name.trim()) return
+    setSaving(true)
+    setError('')
+    const code = generateCode()
+    const teacherName = profile?.full_name || user?.user_metadata?.full_name || ''
+    const { data, error: err } = await supabase
+      .from('classes')
+      .insert({ name: name.trim(), subject: subject.trim() || null, code, teacher_id: user.id, teacher_name: teacherName })
+      .select()
+      .single()
+    setSaving(false)
+    if (err) { setError(err.message); return }
+    onCreated(data)
+    onClose()
+  }
+
+  return (
+    <div
+      style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
+      onClick={e => e.target === e.currentTarget && onClose()}
+    >
+      <div style={{ background: C.card, border: `1px solid ${C.borderBright}`, borderRadius: 18, padding: 28, width: '100%', maxWidth: 400, boxShadow: '0 16px 48px rgba(0,0,0,0.6)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+          <h3 style={{ margin: 0, fontSize: 17, fontWeight: 700, color: C.text }}>Nova turma</h3>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.muted, padding: 4 }}><X size={18} /></button>
+        </div>
+        <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>Nome da turma *</label>
+            <input
+              value={name} onChange={e => setName(e.target.value)} required
+              placeholder="ex: Turma A — 11º ano"
+              style={{ width: '100%', background: '#0d1424', border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 12px', color: C.text, fontSize: 14, fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none' }}
+            />
+          </div>
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>Disciplina</label>
+            <input
+              value={subject} onChange={e => setSubject(e.target.value)}
+              placeholder="ex: Programação e Sistemas de Informação"
+              style={{ width: '100%', background: '#0d1424', border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 12px', color: C.text, fontSize: 14, fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none' }}
+            />
+          </div>
+          {error && <p style={{ color: '#f87171', fontSize: 13, margin: 0 }}>{error}</p>}
+          <button type="submit" disabled={saving || !name.trim()} style={{ background: 'linear-gradient(135deg,#3b82f6,#4f46e5)', border: 'none', borderRadius: 8, padding: '11px', color: '#fff', fontSize: 14, fontWeight: 600, cursor: saving ? 'default' : 'pointer', opacity: saving ? 0.7 : 1, fontFamily: 'inherit', marginTop: 4 }}>
+            {saving ? 'A criar…' : 'Criar turma'}
+          </button>
+        </form>
+      </div>
+    </div>
+  )
+}
+
+function TurmaCard({ turma, navigate }) {
+  const [hov, setHov] = useState(false)
+  return (
+    <div
+      onClick={() => navigate(`/turma/${turma.code}`)}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{ background: hov ? C.cardHover : C.card, border: `1px solid ${hov ? C.borderBright : C.border}`, borderRadius: 12, padding: '16px 18px', cursor: 'pointer', transition: 'all 0.15s', display: 'flex', alignItems: 'center', gap: 14 }}
+    >
+      <div style={{ width: 40, height: 40, borderRadius: 10, background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <School size={18} color="#3b82f6" />
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ color: C.text, fontSize: 14, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{turma.name}</div>
+        {turma.subject && <div style={{ color: C.muted, fontSize: 12, marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{turma.subject}</div>}
+        <div style={{ color: C.subtle, fontSize: 11, marginTop: 4, display: 'flex', gap: 10 }}>
+          <span style={{ color: '#60a5fa', fontWeight: 700, letterSpacing: 1 }}>{turma.code}</span>
+          {turma.project_count != null && <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}><Users size={10} />{turma.project_count} projeto{turma.project_count !== 1 ? 's' : ''}</span>}
+        </div>
+      </div>
+      <ChevronRight size={16} color={C.subtle} />
+    </div>
+  )
+}
+
 export default function Dashboard() {
   const { user, profile, loading: authLoading } = useAuth()
   const navigate = useNavigate()
   const [projects, setProjects] = useState([])
   const [loadingProjects, setLoadingProjects] = useState(true)
+  const [turmas, setTurmas] = useState([])
+  const [showCreateTurma, setShowCreateTurma] = useState(false)
 
   useEffect(() => {
     if (!authLoading && !user) navigate('/login')
@@ -172,6 +266,27 @@ export default function Dashboard() {
     }
     load()
   }, [user])
+
+  useEffect(() => {
+    if (!user || profile?.role !== 'professor') return
+    async function loadTurmas() {
+      const { data: cls } = await supabase
+        .from('classes')
+        .select('id, name, subject, code, created_at')
+        .eq('teacher_id', user.id)
+        .order('created_at', { ascending: false })
+      if (!cls?.length) { setTurmas([]); return }
+      // Get project counts
+      const { data: cp } = await supabase
+        .from('class_projects')
+        .select('class_id')
+        .in('class_id', cls.map(c => c.id))
+      const counts = {}
+      cp?.forEach(r => { counts[r.class_id] = (counts[r.class_id] || 0) + 1 })
+      setTurmas(cls.map(c => ({ ...c, project_count: counts[c.id] ?? 0 })))
+    }
+    loadTurmas()
+  }, [user, profile?.role])
 
   if (authLoading) {
     return (
@@ -213,6 +328,12 @@ export default function Dashboard() {
         }
       `}</style>
       <Navbar />
+      {showCreateTurma && (
+        <CreateTurmaModal
+          onClose={() => setShowCreateTurma(false)}
+          onCreated={turma => setTurmas(prev => [{ ...turma, project_count: 0 }, ...prev])}
+        />
+      )}
 
       <div style={{ maxWidth: 800, margin: '0 auto', padding: '44px 24px 80px' }}>
 
@@ -255,6 +376,38 @@ export default function Dashboard() {
             </button>
           </div>
         </div>
+
+        {/* Professor: Turmas section */}
+        {profile?.role === 'professor' && (
+          <div style={{ marginBottom: 36 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+              <h2 style={{ color: C.text, fontSize: 16, fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <School size={18} color="#3b82f6" /> As minhas turmas
+                {turmas.length > 0 && <span style={{ color: C.muted, fontWeight: 400, fontSize: 14 }}>({turmas.length})</span>}
+              </h2>
+              <button
+                onClick={() => setShowCreateTurma(true)}
+                style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.25)', borderRadius: 8, padding: '7px 14px', color: '#60a5fa', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+              >
+                <Plus size={14} /> Nova turma
+              </button>
+            </div>
+            {turmas.length === 0 ? (
+              <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: '28px', textAlign: 'center' }}>
+                <School size={36} color={C.subtle} style={{ marginBottom: 10 }} />
+                <p style={{ color: C.text, fontSize: 15, fontWeight: 600, margin: '0 0 6px' }}>Ainda não tens turmas</p>
+                <p style={{ color: C.muted, fontSize: 13, margin: '0 0 16px' }}>Cria uma turma e partilha o código com os teus alunos.</p>
+                <button onClick={() => setShowCreateTurma(true)} style={{ background: C.blue, border: 'none', borderRadius: 8, padding: '9px 20px', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                  Criar primeira turma →
+                </button>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {turmas.map(t => <TurmaCard key={t.id} turma={t} navigate={navigate} />)}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Stats */}
         {!loadingProjects && projects.length > 0 && (

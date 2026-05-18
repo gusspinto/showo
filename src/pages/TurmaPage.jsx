@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
-import { Folder, Check, Search, School, User, Copy, Inbox } from 'lucide-react'
+import { Folder, Check, Search, School, User, Copy, Inbox, Download, MessageSquare, X, ChevronUp, ChevronDown } from 'lucide-react'
 
 const C = {
   bg: '#0d1424', bgAlt: '#0a1018', card: '#111c32', cardHover: '#152030',
@@ -63,6 +63,102 @@ function ProjectCard({ project, navigate }) {
   )
 }
 
+const SECTION_LABELS = {
+  description: 'Descrição', tech: 'Tecnologias', links: 'Links', demo: 'Demo',
+  team: 'Equipa', gallery: 'Galeria', geral: 'Geral',
+}
+
+function FeedbackModal({ project, teacherId, onClose }) {
+  const [comment, setComment] = useState('')
+  const [fieldKey, setFieldKey] = useState('geral')
+  const [existing, setExisting] = useState([])
+  const [saving, setSaving] = useState(false)
+  const [editing, setEditing] = useState(null)
+
+  useEffect(() => {
+    supabase
+      .from('teacher_feedback')
+      .select('*')
+      .eq('project_id', project.id)
+      .eq('teacher_id', teacherId)
+      .then(({ data }) => setExisting(data || []))
+  }, [project.id, teacherId])
+
+  async function handleSave() {
+    if (!comment.trim()) return
+    setSaving(true)
+    if (editing) {
+      await supabase.from('teacher_feedback').update({ comment: comment.trim() }).eq('id', editing)
+      setExisting(prev => prev.map(f => f.id === editing ? { ...f, comment: comment.trim() } : f))
+    } else {
+      const { data } = await supabase.from('teacher_feedback')
+        .upsert({ project_id: project.id, teacher_id: teacherId, field_key: fieldKey, comment: comment.trim() }, { onConflict: 'project_id,teacher_id,field_key' })
+        .select().single()
+      if (data) setExisting(prev => { const idx = prev.findIndex(f => f.field_key === fieldKey); return idx >= 0 ? prev.map((f, i) => i === idx ? data : f) : [...prev, data] })
+    }
+    setComment(''); setEditing(null); setSaving(false)
+  }
+
+  async function handleDelete(id) {
+    await supabase.from('teacher_feedback').delete().eq('id', id)
+    setExisting(prev => prev.filter(f => f.id !== id))
+  }
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
+      onClick={e => e.target === e.currentTarget && onClose()}>
+      <div style={{ background: C.card, border: `1px solid ${C.borderBright}`, borderRadius: 18, padding: 28, width: '100%', maxWidth: 480, maxHeight: '80vh', overflowY: 'auto', boxShadow: '0 16px 48px rgba(0,0,0,0.6)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+          <div>
+            <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: C.text }}>Feedback do professor</h3>
+            <p style={{ margin: '3px 0 0', fontSize: 13, color: C.muted }}>{project.name}</p>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.muted, padding: 4 }}><X size={18} /></button>
+        </div>
+
+        {existing.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 18 }}>
+            {existing.map(f => (
+              <div key={f.id} style={{ background: '#0d1424', border: `1px solid ${C.border}`, borderRadius: 10, padding: '12px 14px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: '#60a5fa', textTransform: 'uppercase', letterSpacing: 0.5 }}>{SECTION_LABELS[f.field_key] || f.field_key}</span>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button onClick={() => { setEditing(f.id); setFieldKey(f.field_key); setComment(f.comment) }} style={{ background: 'none', border: 'none', color: C.muted, cursor: 'pointer', fontSize: 12, padding: 0, fontFamily: 'inherit' }}>Editar</button>
+                    <button onClick={() => handleDelete(f.id)} style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', fontSize: 12, padding: 0, fontFamily: 'inherit' }}>Apagar</button>
+                  </div>
+                </div>
+                <p style={{ margin: 0, fontSize: 13, color: C.text, lineHeight: 1.5 }}>{f.comment}</p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {Object.entries(SECTION_LABELS).map(([k, l]) => (
+              <button key={k} onClick={() => setFieldKey(k)} style={{ fontSize: 12, padding: '4px 10px', borderRadius: 6, border: `1px solid ${fieldKey === k ? '#3b82f6' : C.border}`, background: fieldKey === k ? 'rgba(59,130,246,0.15)' : 'transparent', color: fieldKey === k ? '#60a5fa' : C.muted, cursor: 'pointer', fontFamily: 'inherit', fontWeight: fieldKey === k ? 700 : 400 }}>
+                {l}
+              </button>
+            ))}
+          </div>
+          <textarea
+            value={comment} onChange={e => setComment(e.target.value)}
+            placeholder={`Comentário sobre ${SECTION_LABELS[fieldKey] || fieldKey}…`}
+            rows={3}
+            style={{ width: '100%', background: '#0d1424', border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 12px', color: C.text, fontSize: 13, fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box', outline: 'none' }}
+          />
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={handleSave} disabled={saving || !comment.trim()} style={{ flex: 1, background: 'linear-gradient(135deg,#3b82f6,#4f46e5)', border: 'none', borderRadius: 8, padding: '10px', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: saving || !comment.trim() ? 0.6 : 1, fontFamily: 'inherit' }}>
+              {saving ? 'A guardar…' : editing ? 'Atualizar' : 'Guardar feedback'}
+            </button>
+            {editing && <button onClick={() => { setEditing(null); setComment('') }} style={{ background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 14px', color: C.muted, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>Cancelar</button>}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function TurmaPage() {
   const { code } = useParams()
   const navigate = useNavigate()
@@ -76,6 +172,10 @@ export default function TurmaPage() {
   const [adding, setAdding] = useState(null)
   const [toast, setToast] = useState('')
   const [copied, setCopied] = useState(false)
+  const [isTeacher, setIsTeacher] = useState(false)
+  const [sortBy, setSortBy] = useState('score')
+  const [sortAsc, setSortAsc] = useState(false)
+  const [feedbackProject, setFeedbackProject] = useState(null)
 
   function showToast(msg) {
     setToast(msg)
@@ -84,17 +184,16 @@ export default function TurmaPage() {
 
   useEffect(() => {
     async function load() {
-      // Load class
       const { data: cls, error } = await supabase
         .from('classes')
-        .select('id, name, subject, code, teacher_name, created_at')
+        .select('id, name, subject, code, teacher_name, teacher_id, created_at')
         .eq('code', code.toUpperCase())
         .single()
 
       if (error || !cls) { setLoading(false); return }
       setTurma(cls)
+      if (user && cls.teacher_id === user.id) setIsTeacher(true)
 
-      // Load class projects
       const { data: cp } = await supabase
         .from('class_projects')
         .select('project_id')
@@ -104,16 +203,15 @@ export default function TurmaPage() {
         const ids = cp.map(r => r.project_id)
         const { data: projs } = await supabase
           .from('projects')
-          .select('id, name, slug, score, area, creator_name, cover_url, ai_tagline')
+          .select('id, name, slug, score, area, creator_name, cover_url, ai_tagline, updated_at, description, tech_stack, demo_url, links, team_members')
           .in('id', ids)
-          .order('score', { ascending: false })
         setProjects(projs || [])
       }
 
       setLoading(false)
     }
     load()
-  }, [code])
+  }, [code, user])
 
   // Load user's own projects for the add modal
   useEffect(() => {
@@ -156,6 +254,41 @@ export default function TurmaPage() {
     setTimeout(() => setCopied(false), 2000)
   }
 
+  function computeCompletude(p) {
+    const fields = [p.description, p.tech_stack, p.demo_url, p.links, p.team_members]
+    const filled = fields.filter(f => f && (Array.isArray(f) ? f.length > 0 : String(f).trim().length > 0)).length
+    return Math.round((filled / fields.length) * 100)
+  }
+
+  function exportCSV() {
+    const rows = [['Aluno', 'Projeto', 'Score', 'Completude (%)', 'Última atualização', 'Link']]
+    sortedProjects.forEach(p => {
+      const updated = p.updated_at ? new Date(p.updated_at).toLocaleDateString('pt-PT') : '—'
+      rows.push([p.creator_name || '—', p.name, p.score ?? '—', computeCompletude(p), updated, `${window.location.origin}/projeto/${p.slug}`])
+    })
+    const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n')
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a'); a.href = url; a.download = `${turma.name}-${turma.code}.csv`
+    a.click(); URL.revokeObjectURL(url)
+  }
+
+  function toggleSort(field) {
+    if (sortBy === field) setSortAsc(a => !a)
+    else { setSortBy(field); setSortAsc(field === 'name') }
+  }
+
+  const sortedProjects = [...projects].sort((a, b) => {
+    let av, bv
+    if (sortBy === 'score') { av = a.score ?? -1; bv = b.score ?? -1 }
+    else if (sortBy === 'completude') { av = computeCompletude(a); bv = computeCompletude(b) }
+    else if (sortBy === 'updated') { av = a.updated_at || ''; bv = b.updated_at || '' }
+    else { av = (a.name || '').toLowerCase(); bv = (b.name || '').toLowerCase() }
+    if (av < bv) return sortAsc ? -1 : 1
+    if (av > bv) return sortAsc ? 1 : -1
+    return 0
+  })
+
   if (loading) {
     return (
       <div style={{ minHeight: '100vh', background: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -185,6 +318,15 @@ export default function TurmaPage() {
     <div style={{ minHeight: '100vh', background: C.bg, color: C.text, fontFamily: 'Inter, system-ui, sans-serif' }}>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
       <Navbar />
+
+      {/* Feedback modal */}
+      {feedbackProject && (
+        <FeedbackModal
+          project={feedbackProject}
+          teacherId={user.id}
+          onClose={() => setFeedbackProject(null)}
+        />
+      )}
 
       {/* Toast */}
       <div style={{
@@ -272,8 +414,17 @@ export default function TurmaPage() {
                 <span style={{ fontSize: 16, fontWeight: 800, color: '#60a5fa', letterSpacing: 2 }}>{turma.code}</span>
                 <span style={{ fontSize: 12, color: copied ? C.green : C.muted }}>{copied ? <Check size={12} /> : <Copy size={12} />}</span>
               </button>
-              {/* Add project */}
-              {user ? (
+              {/* Professor: export CSV */}
+              {isTeacher && projects.length > 0 && (
+                <button
+                  onClick={exportCSV}
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 10, padding: '9px 14px', color: '#4ade80', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+                >
+                  <Download size={14} /> Exportar CSV
+                </button>
+              )}
+              {/* Add project (students only) */}
+              {!isTeacher && (user ? (
                 <button
                   onClick={() => setShowAdd(true)}
                   style={{ background: 'linear-gradient(135deg,#3b82f6,#4f46e5)', border: 'none', borderRadius: 10, padding: '9px 18px', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 16px rgba(59,130,246,0.3)' }}
@@ -287,21 +438,63 @@ export default function TurmaPage() {
                 >
                   Entrar para adicionar
                 </button>
-              )}
+              ))}
             </div>
           </div>
         </div>
 
-        {/* Projects grid */}
-        {projects.length === 0 ? (
+        {/* Projects */}
+        {sortedProjects.length === 0 ? (
           <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: '60px 32px', textAlign: 'center' }}>
             <div style={{ marginBottom: 14 }}><Inbox size={44} color="#3d5270" /></div>
             <p style={{ color: C.text, fontSize: 17, fontWeight: 700, margin: '0 0 8px' }}>Ainda não há projetos</p>
             <p style={{ color: C.muted, fontSize: 14, margin: '0 0 24px' }}>Partilha o código <strong style={{ color: '#60a5fa' }}>{turma.code}</strong> com os teus alunos para que adicionem os seus projetos.</p>
           </div>
+        ) : isTeacher ? (
+          /* Professor table view */
+          <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, overflow: 'hidden' }}>
+            {/* Table header */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 80px 90px 140px 100px', gap: 0, padding: '10px 16px', borderBottom: `1px solid ${C.border}`, background: '#0d1424' }}>
+              {[['name','Projeto'], ['score','Score'], ['completude','Completude'], ['updated','Última atualização'], [null,'']].map(([field, label]) => (
+                <div key={label} onClick={() => field && toggleSort(field)} style={{ fontSize: 11, fontWeight: 700, color: field ? (sortBy === field ? '#60a5fa' : C.muted) : C.muted, textTransform: 'uppercase', letterSpacing: 0.5, cursor: field ? 'pointer' : 'default', display: 'flex', alignItems: 'center', gap: 4, userSelect: 'none' }}>
+                  {label}
+                  {field && sortBy === field && (sortAsc ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}
+                </div>
+              ))}
+            </div>
+            {sortedProjects.map((p, i) => {
+              const completude = computeCompletude(p)
+              const updated = p.updated_at ? new Date(p.updated_at).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' }) : '—'
+              return (
+                <div key={p.id} style={{ display: 'grid', gridTemplateColumns: '1fr 80px 90px 140px 100px', gap: 0, padding: '13px 16px', borderBottom: i < sortedProjects.length - 1 ? `1px solid ${C.border}` : 'none', alignItems: 'center', transition: 'background 0.12s' }}
+                  onMouseEnter={e => e.currentTarget.style.background = C.cardHover}
+                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: 'pointer' }} onClick={() => navigate(`/projeto/${p.slug}`)}>
+                      {p.name}
+                    </div>
+                    {p.creator_name && <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>{p.creator_name}</div>}
+                  </div>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: scoreColor(p.score) }}>{p.score ?? '—'}</div>
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: completude >= 80 ? C.green : completude >= 50 ? C.yellow : C.muted, marginBottom: 3 }}>{completude}%</div>
+                    <div style={{ height: 4, borderRadius: 2, background: C.border, overflow: 'hidden' }}>
+                      <div style={{ width: `${completude}%`, height: '100%', background: completude >= 80 ? C.green : completude >= 50 ? C.yellow : '#f97316', borderRadius: 2 }} />
+                    </div>
+                  </div>
+                  <div style={{ fontSize: 12, color: C.muted }}>{updated}</div>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <button onClick={() => navigate(`/projeto/${p.slug}`)} style={{ fontSize: 12, padding: '5px 10px', borderRadius: 6, border: `1px solid ${C.border}`, background: 'transparent', color: C.muted, cursor: 'pointer', fontFamily: 'inherit' }}>Ver</button>
+                    <button onClick={() => setFeedbackProject(p)} style={{ fontSize: 12, padding: '5px 8px', borderRadius: 6, border: '1px solid rgba(59,130,246,0.3)', background: 'rgba(59,130,246,0.08)', color: '#60a5fa', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 4 }}><MessageSquare size={11} /></button>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
         ) : (
+          /* Student grid view */
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 16 }}>
-            {projects.map(p => (
+            {sortedProjects.map(p => (
               <ProjectCard key={p.id} project={p} navigate={navigate} />
             ))}
           </div>
