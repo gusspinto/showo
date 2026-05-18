@@ -86,8 +86,9 @@ function ActionBtn({ onClick, label, primary }) {
   )
 }
 
-function ProjectRow({ project, onView, onEdit }) {
+function ProjectRow({ project, onView, onEdit, onDelete }) {
   const [hovered, setHovered] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
   const date = new Date(project.created_at).toLocaleDateString('pt-PT', {
     day: 'numeric', month: 'short', year: 'numeric',
   })
@@ -142,8 +143,19 @@ function ProjectRow({ project, onView, onEdit }) {
 
       {/* Actions */}
       <div className="dash-project-actions">
-        <ActionBtn onClick={onEdit} label="Editar" />
-        <ActionBtn onClick={onView} label="Ver" primary />
+        {confirmDelete ? (
+          <>
+            <span style={{ fontSize: 12, color: C.muted, alignSelf: 'center' }}>Tens a certeza?</span>
+            <ActionBtn onClick={() => { onDelete(project.id); setConfirmDelete(false) }} label="Apagar" />
+            <ActionBtn onClick={() => setConfirmDelete(false)} label="Cancelar" primary />
+          </>
+        ) : (
+          <>
+            <ActionBtn onClick={() => setConfirmDelete(true)} label="Apagar" />
+            <ActionBtn onClick={onEdit} label="Editar" />
+            <ActionBtn onClick={onView} label="Ver" primary />
+          </>
+        )}
       </div>
     </div>
   )
@@ -373,6 +385,11 @@ export default function Dashboard() {
     load()
   }, [user])
 
+  async function deleteProject(id) {
+    await supabase.from('projects').delete().eq('id', id).eq('user_id', user.id)
+    setProjects(prev => prev.filter(p => p.id !== id))
+  }
+
   useEffect(() => {
     if (!user || profile?.role !== 'professor') return
     async function loadTurmas() {
@@ -592,6 +609,7 @@ export default function Dashboard() {
                 project={project}
                 onView={() => navigate(`/projeto/${project.slug}`)}
                 onEdit={() => navigate(`/editar/${project.slug}`)}
+                onDelete={deleteProject}
               />
             ))}
           </div>
