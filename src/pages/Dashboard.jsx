@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Pencil, ExternalLink } from 'lucide-react'
 import { Navbar } from '../components/Navbar'
-import { Folder, Trophy, BarChart2, Rocket, Eye, School, Plus, X, Users, ChevronRight } from 'lucide-react'
+import { Folder, Trophy, BarChart2, Rocket, Eye, School, Plus, X, Users, ChevronRight, User, Settings, Compass, Medal, LogOut } from 'lucide-react'
 
 const C = {
   bg: '#0d1424',
@@ -364,10 +364,8 @@ export default function Dashboard() {
     <div style={{ minHeight: '100vh', background: C.bg, fontFamily: 'var(--font-body)' }}>
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
-        .dash-header-btns { display: flex; gap: 8px; }
         .dash-project-actions { display: flex; gap: 6px; flex-shrink: 0; }
         @media (max-width: 600px) {
-          .dash-header-btns { flex-wrap: wrap; }
           .dash-project-row { flex-wrap: wrap; gap: 10px !important; }
           .dash-project-info { min-width: 0; flex: 1 1 calc(100% - 58px); }
           .dash-project-actions { width: 100%; justify-content: flex-end; border-top: 1px solid #1e3050; padding-top: 10px; margin-top: 2px; }
@@ -384,42 +382,30 @@ export default function Dashboard() {
       <div style={{ maxWidth: 800, margin: '0 auto', padding: '44px 24px 80px' }}>
 
         {/* Header */}
-        <div style={{ marginBottom: 36, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-          <div>
-            <h1 style={{ color: C.text, fontSize: 28, fontWeight: 800, margin: '0 0 4px', letterSpacing: '-0.5px' }}>
-              {greeting}
-            </h1>
-            <p style={{ color: C.muted, fontSize: 15, margin: 0 }}>{user.email}</p>
-          </div>
-          <div className="dash-header-btns">
-            <button
-              onClick={() => navigate(profile?.username ? `/u/${profile.username}` : `/u/${user.id}`)}
-              style={{
-                background: 'transparent', border: `1px solid ${C.border}`,
-                borderRadius: 8, padding: '8px 14px',
-                color: C.muted, fontSize: 13, fontWeight: 500,
-                cursor: 'pointer', fontFamily: 'var(--font-body)',
-                transition: 'border-color 0.15s, color 0.15s',
-              }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = C.borderBright; e.currentTarget.style.color = C.text }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted }}
-            >
-              Ver perfil
-            </button>
-            <button
-              onClick={() => navigate('/settings')}
-              style={{
-                background: 'transparent', border: `1px solid ${C.border}`,
-                borderRadius: 8, padding: '8px 14px',
-                color: C.muted, fontSize: 13, fontWeight: 500,
-                cursor: 'pointer', fontFamily: 'var(--font-body)',
-                transition: 'border-color 0.15s, color 0.15s',
-              }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = C.borderBright; e.currentTarget.style.color = C.text }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted }}
-            >
-              Definições
-            </button>
+        <div style={{ marginBottom: 28 }}>
+          <h1 style={{ color: C.text, fontSize: 28, fontWeight: 800, margin: '0 0 4px', letterSpacing: '-0.5px' }}>
+            {greeting}
+          </h1>
+          <p style={{ color: C.muted, fontSize: 15, margin: '0 0 20px' }}>{user.email}</p>
+
+          {/* Quick nav */}
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {[
+              { icon: <User size={14} />, label: 'Meu perfil', to: profile?.username ? `/u/${profile.username}` : `/u/${user.id}` },
+              { icon: <Compass size={14} />, label: 'Explorar', to: '/explorar' },
+              { icon: <Medal size={14} />, label: 'Ranking', to: '/ranking' },
+              { icon: <Settings size={14} />, label: 'Definições', to: '/settings' },
+            ].map(({ icon, label, to }) => (
+              <button
+                key={label}
+                onClick={() => navigate(to)}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 8, padding: '7px 13px', color: C.muted, fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'var(--font-body)', transition: 'border-color 0.15s, color 0.15s' }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = C.borderBright; e.currentTarget.style.color = C.text }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted }}
+              >
+                {icon}{label}
+              </button>
+            ))}
           </div>
         </div>
 
