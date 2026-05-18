@@ -851,31 +851,40 @@ export default function ProjectPage() {
         }
         @media (max-width: 860px) {
           .proj-layout { grid-template-columns: 1fr; }
-          .proj-sidebar { position: static; order: -1; }
+          .proj-sidebar { position: static; order: 2; }
         }
-        .proj-edit-inline { display: none; }
-        .proj-dashboard   { display: none; }
-        .proj-ai-fab      { display: none; }
+        .proj-edit-inline    { display: none !important; }
+        .proj-dashboard      { display: none; }
+        .proj-ai-fab         { display: none; }
+        .proj-fab-area       { display: none; }
+        .proj-fab-defense-label { display: none; }
         .sidebar-section-toggle { display: none; }
         @media (max-width: 860px) {
           .sidebar-section-toggle { display: flex !important; }
           .sidebar-section-body.collapsed { display: none !important; }
+          .proj-nav-btns     { display: none !important; }
+          .proj-fab-area     { display: flex !important; }
+          /* Tablet: edit button next to project name */
+          .proj-edit-inline  { display: flex !important; }
+          .proj-h1-row       { display: flex !important; align-items: flex-start !important; gap: 8px !important; margin-bottom: 16px !important; }
+          .proj-h1           { padding-right: 0 !important; margin-bottom: 0 !important; }
+          /* Tablet: defense FAB is pill-shaped with label */
+          .proj-fab-defense-label { display: inline !important; }
         }
         @media (max-width: 600px) {
           .proj-ai-fab     { display: flex !important; }
-          .proj-nav-btns     { display: none !important; }
-          .proj-fab-area     { display: flex !important; }
           .proj-wrap         { padding: 0 16px 120px !important; overflow-x: hidden !important; }
           .proj-cover        { height: 200px !important; margin-top: 20px !important; border-radius: 14px !important; }
           .proj-hero         { padding: 20px 0 16px !important; }
-          .proj-h1-row       { display: flex !important; align-items: flex-start !important; gap: 8px !important; margin-bottom: 16px !important; }
-          .proj-h1           { font-size: 24px !important; padding-right: 0 !important; margin-bottom: 0 !important; }
-          .proj-edit-inline  { display: flex !important; }
+          .proj-h1           { font-size: 24px !important; }
           .proj-score-mob    { display: none !important; }
           .proj-score-abs    { transform: scale(0.72); transform-origin: top right; }
           .proj-tagline      { font-size: 15px !important; }
           .proj-card-pad     { padding: 18px 16px !important; border-radius: 14px !important; }
           .proj-badges       { margin-bottom: 10px !important; }
+          /* Mobile: defense FAB is circular, no label */
+          .proj-fab-defense-label { display: none !important; }
+          .proj-fab-defense { padding: 0 !important; width: 52px !important; min-width: 52px !important; }
         }
       `}</style>
 
@@ -894,9 +903,9 @@ export default function ProjectPage() {
         <EditModal challenge={editModal} project={project} onClose={() => setEditModal(null)} onSave={handleSave} saving={saving} />
       )}
 
-      {/* Mobile FABs — only visible on mobile via CSS */}
+      {/* FABs — visible on tablet + mobile via CSS (hidden on desktop) */}
       <div className="proj-fab-area" style={{
-        display: 'none', position: 'fixed', bottom: 24, right: 20,
+        position: 'fixed', bottom: 24, right: 20,
         flexDirection: 'column', gap: 10, zIndex: 90,
       }}>
         {/* AI Analyse FAB */}
@@ -911,7 +920,7 @@ export default function ProjectPage() {
               background: 'linear-gradient(135deg, #6d28d9, #4f46e5)',
               border: 'none',
               color: '#fff', cursor: analyzingAI ? 'default' : 'pointer',
-              display: 'none', alignItems: 'center', justifyContent: 'center',
+              alignItems: 'center', justifyContent: 'center',
               animation: analyzingAI ? 'none' : 'sparkle-pulse 2s ease-in-out infinite',
               opacity: analyzingAI ? 0.7 : 1,
               backdropFilter: 'blur(8px)',
@@ -920,27 +929,31 @@ export default function ProjectPage() {
             <Sparkles size={22} />
           </button>
         )}
-        {/* Defense FAB */}
+        {/* Defense FAB — circular on mobile, pill with text on tablet */}
         {(isOwner || collaboratorSections !== null) && (
           <button
+            className="proj-fab-defense"
             onClick={() => setDefenseMode(true)}
             title="Preparar defesa"
             style={{
-              width: 52, height: 52, borderRadius: '50%',
+              borderRadius: 999,
               background: 'rgba(251,191,36,0.12)',
               border: '1px solid rgba(251,191,36,0.4)',
               color: '#fbbf24', cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+              padding: '0 18px', height: 52, minWidth: 52,
               boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
               backdropFilter: 'blur(8px)',
+              fontFamily: 'inherit', fontSize: 14, fontWeight: 700,
             }}
           >
             <GraduationCap size={22} />
+            <span className="proj-fab-defense-label">Defesa</span>
           </button>
         )}
       </div>
 
-      <Navbar>
+      <Navbar showCreateProject={true}>
         <div className="proj-nav-btns" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {(isOwner || collaboratorSections !== null) && (
             <button
@@ -980,19 +993,6 @@ export default function ProjectPage() {
               Editar
             </button>
           )}
-          <button
-            onClick={() => navigate('/novo')}
-            style={{
-              background: `linear-gradient(135deg, ${colors.blue}, #4f46e5)`,
-              color: '#fff', border: 'none',
-              borderRadius: 8, padding: '9px 18px',
-              fontSize: 14, fontWeight: 600,
-              cursor: 'pointer', fontFamily: 'inherit',
-              boxShadow: '0 4px 16px rgba(27,120,247,0.3)',
-            }}
-          >
-            Criar projeto
-          </button>
         </div>
       </Navbar>
 
@@ -1075,7 +1075,7 @@ export default function ProjectPage() {
                 }}
                 title="Editar projeto"
                 style={{
-                  display: 'none', alignItems: 'center', justifyContent: 'center',
+                  alignItems: 'center', justifyContent: 'center',
                   width: 36, height: 36, borderRadius: 10, flexShrink: 0, marginTop: 4,
                   background: 'rgba(255,255,255,0.05)',
                   border: `1px solid ${colors.border}`,

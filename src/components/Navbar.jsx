@@ -309,7 +309,7 @@ function InviteInbox({ userId }) {
   )
 }
 
-function UserChip({ user, onClick, onProfile, onSettings, onSignOut }) {
+function UserChip({ user, onClick, onProfile, onSettings, onSignOut, onCreateProject }) {
   const [open, setOpen] = useState(false)
   const initial = getInitial(user)
   const name = getDisplayName(user)
@@ -359,6 +359,22 @@ function UserChip({ user, onClick, onProfile, onSettings, onSignOut }) {
             backdropFilter: 'blur(16px)',
             zIndex: 99, minWidth: 160,
           }}>
+            {onCreateProject && (
+              <>
+                <button
+                  onClick={() => { onCreateProject(); setOpen(false) }}
+                  style={{ ...dropItemStyle, color: '#60a5fa' }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(27,120,247,0.08)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                >
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Criar projeto
+                  </span>
+                </button>
+                <div style={{ height: 1, background: C.border, margin: '4px 6px' }} />
+              </>
+            )}
             <button
               onClick={() => { onClick(); setOpen(false) }}
               style={{ ...dropItemStyle, color: C.text }}
@@ -409,7 +425,7 @@ const dropItemStyle = {
   transition: 'background 0.12s',
 }
 
-export function Navbar({ children, showLinks = true }) {
+export function Navbar({ children, showLinks = true, showCreateProject = false }) {
   const navigate = useNavigate()
   const { user, profile, signOut, isAdmin } = useAuth()
   const [open, setOpen] = useState(false)
@@ -434,18 +450,24 @@ export function Navbar({ children, showLinks = true }) {
         .nav-auth   { display: flex; align-items: center; gap: 8px; }
         .ham-btn    { display: none !important; }
 
+        /* Tablet: hamburger for nav-left links + page children; keep nav-auth visible */
+        @media (max-width: 860px) {
+          .nav-left          { display: none; }
+          .nav-children-wrap { display: none !important; }
+          .ham-btn           { display: flex !important; }
+          .mob-only-create   { display: none !important; }
+        }
+
         @media (max-width: 600px) {
-          .nav-left         { display: none; }
           .nav-mid          { flex: 1; justify-content: flex-start; }
           .nav-right        { flex: none; }
           .nav-auth         { display: none !important; }
-          .nav-children-wrap{ display: none !important; }
           .nav-logo         { height: 28px !important; width: auto !important; }
           .showo-nav-pad    { padding-left: 20px !important; padding-right: 20px !important; }
-          .ham-btn          { display: flex !important; }
+          .mob-only-create  { display: flex !important; }
         }
 
-        @media (min-width: 601px) and (max-width: 900px) {
+        @media (min-width: 601px) and (max-width: 860px) {
           .nav-logo { height: 32px !important; width: auto !important; }
         }
 
@@ -607,6 +629,7 @@ export function Navbar({ children, showLinks = true }) {
                   onProfile={profileUrl ? () => navigate(profileUrl) : null}
                   onSettings={() => navigate('/settings')}
                   onSignOut={handleSignOut}
+                  onCreateProject={showCreateProject ? () => navigate('/novo') : undefined}
                 />
               </>
             ) : (
@@ -630,10 +653,10 @@ export function Navbar({ children, showLinks = true }) {
             )}
           </div>
 
-          {/* Mobile quick-create button */}
+          {/* Mobile quick-create button — only on mobile (not tablet) */}
           {showLinks && (
             <button
-              className="ham-btn"
+              className="ham-btn mob-only-create"
               onClick={() => navigate('/novo')}
               aria-label="Criar projeto"
               style={{
