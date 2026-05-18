@@ -149,6 +149,75 @@ function ProjectRow({ project, onView, onEdit }) {
   )
 }
 
+const QUICK_TYPES = [
+  { id: 'pap',        label: 'PAP',               formGoal: 'school' },
+  { id: 'internship', label: 'Estágio',            formGoal: 'work'   },
+  { id: 'group',      label: 'Trabalho de grupo',  formGoal: 'school' },
+  { id: 'personal',   label: 'Projeto pessoal',    formGoal: 'personal'},
+  { id: 'competition',label: 'Competição',         formGoal: 'personal'},
+]
+
+function QuickCreateProject({ navigate }) {
+  const [type, setType] = useState('')
+  const [desc, setDesc] = useState('')
+
+  function handleSubmit(e) {
+    e.preventDefault()
+    const selected = QUICK_TYPES.find(t => t.id === type)
+    const draft = {
+      answers: {
+        ...(type ? { project_type: type } : {}),
+        ...(desc.trim() ? { goal: desc.trim() } : {}),
+      },
+      formGoal: selected?.formGoal ?? null,
+      step: 0,
+    }
+    localStorage.setItem('showo_new_project_draft', JSON.stringify(draft))
+    navigate('/novo')
+  }
+
+  return (
+    <div style={{ marginBottom: 28 }}>
+      <form onSubmit={handleSubmit} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+        {/* Type pills */}
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {QUICK_TYPES.map(t => {
+            const sel = type === t.id
+            return (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => setType(sel ? '' : t.id)}
+                style={{ fontSize: 13, padding: '5px 14px', borderRadius: 20, border: `1px solid ${sel ? C.blue : C.border}`, background: sel ? `${C.blue}22` : 'transparent', color: sel ? '#60a5fa' : C.muted, cursor: 'pointer', fontFamily: 'inherit', fontWeight: sel ? 700 : 400, transition: 'all 0.12s' }}
+              >
+                {t.label}
+              </button>
+            )
+          })}
+        </div>
+        {/* Input + button */}
+        <div style={{ display: 'flex', gap: 10 }}>
+          <input
+            value={desc}
+            onChange={e => setDesc(e.target.value)}
+            placeholder="Descreve o teu projeto em poucas palavras..."
+            style={{ flex: 1, background: '#0d1424', border: `1px solid ${C.border}`, borderRadius: 10, padding: '12px 16px', color: C.text, fontSize: 14, fontFamily: 'inherit', outline: 'none', minWidth: 0 }}
+            onFocus={e => e.target.style.borderColor = C.borderBright}
+            onBlur={e => e.target.style.borderColor = C.border}
+          />
+          <button
+            type="submit"
+            style={{ background: `linear-gradient(135deg, ${C.blue}, #4f46e5)`, border: 'none', borderRadius: 10, width: 46, height: 46, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, boxShadow: '0 4px 16px rgba(59,130,246,0.35)' }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </button>
+        </div>
+        <p style={{ margin: 0, fontSize: 12, color: C.subtle, textAlign: 'center' }}>Sem registo obrigatório · Sem cartão de crédito</p>
+      </form>
+    </div>
+  )
+}
+
 function JoinTurmaBar({ navigate }) {
   const [code, setCode] = useState('')
   const [error, setError] = useState('')
@@ -461,23 +530,8 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* New project CTA */}
-        <button
-          onClick={() => navigate('/novo')}
-          style={{
-            display: 'inline-flex', alignItems: 'center', gap: 8,
-            background: `linear-gradient(135deg, ${C.blue}, #4f46e5)`,
-            border: 'none', borderRadius: 10,
-            padding: '12px 22px', color: '#fff', fontSize: 15, fontWeight: 600,
-            cursor: 'pointer', fontFamily: 'inherit', marginBottom: 28,
-            boxShadow: '0 4px 20px rgba(59,130,246,0.3)',
-            transition: 'opacity 0.15s',
-          }}
-          onMouseEnter={e => e.currentTarget.style.opacity = '0.88'}
-          onMouseLeave={e => e.currentTarget.style.opacity = '1'}
-        >
-          + Novo projeto
-        </button>
+        {/* Quick-create widget */}
+        <QuickCreateProject navigate={navigate} />
 
         {/* Projects */}
         <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
