@@ -914,7 +914,19 @@ export default function ProjectPage() {
       const { data: created } = await supabase.from('teacher_feedback')
         .upsert({ project_id: project.id, teacher_id: user.id, field_key: fbFieldKey, comment: fbComment.trim() }, { onConflict: 'project_id,teacher_id,field_key' })
         .select().single()
-      if (created) setTeacherFeedback(prev => { const idx = prev.findIndex(f => f.field_key === fbFieldKey && f.teacher_id === user.id); return idx >= 0 ? prev.map((f, i) => i === idx ? created : f) : [...prev, created] })
+      if (created) {
+        setTeacherFeedback(prev => { const idx = prev.findIndex(f => f.field_key === fbFieldKey && f.teacher_id === user.id); return idx >= 0 ? prev.map((f, i) => i === idx ? created : f) : [...prev, created] })
+        // Notify the student (only on new feedback, not edits)
+        if (project.user_id) {
+          supabase.from('notifications').insert({
+            user_id: project.user_id,
+            type: 'TEACHER_FEEDBACK',
+            message: `O teu professor deixou feedback no projeto "${project.name}".`,
+            project_slug: project.slug,
+            read: false,
+          })
+        }
+      }
     }
     setFbComment(''); setFbSaving(false)
   }

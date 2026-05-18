@@ -94,7 +94,19 @@ function FeedbackModal({ project, teacherId, onClose }) {
       const { data } = await supabase.from('teacher_feedback')
         .upsert({ project_id: project.id, teacher_id: teacherId, field_key: fieldKey, comment: comment.trim() }, { onConflict: 'project_id,teacher_id,field_key' })
         .select().single()
-      if (data) setExisting(prev => { const idx = prev.findIndex(f => f.field_key === fieldKey); return idx >= 0 ? prev.map((f, i) => i === idx ? data : f) : [...prev, data] })
+      if (data) {
+        setExisting(prev => { const idx = prev.findIndex(f => f.field_key === fieldKey); return idx >= 0 ? prev.map((f, i) => i === idx ? data : f) : [...prev, data] })
+        // Notify the student
+        if (project.user_id) {
+          supabase.from('notifications').insert({
+            user_id: project.user_id,
+            type: 'TEACHER_FEEDBACK',
+            message: `O teu professor deixou feedback no projeto "${project.name}".`,
+            project_slug: project.slug,
+            read: false,
+          })
+        }
+      }
     }
     setComment(''); setEditing(null); setSaving(false)
   }
@@ -203,7 +215,7 @@ export default function TurmaPage() {
         const ids = cp.map(r => r.project_id)
         const { data: projs } = await supabase
           .from('projects')
-          .select('id, name, slug, score, area, creator_name, cover_url, ai_tagline, updated_at, description, tech_stack, demo_url, links, team_members')
+          .select('id, name, slug, score, area, creator_name, cover_url, ai_tagline, created_at, user_id, goal, problem, solution, features, technologies, results, linkedin_url, github_url, portfolio_url')
           .in('id', ids)
         setProjects(projs || [])
       }
@@ -248,6 +260,13 @@ export default function TurmaPage() {
     setAdding(null)
   }
 
+  async function removeProject(projectId) {
+    if (!turma || !isTeacher) return
+    await supabase.from('class_projects').delete().eq('class_id', turma.id).eq('project_id', projectId)
+    setProjects(prev => prev.filter(p => p.id !== projectId))
+    showToast('Projeto removido da turma.')
+  }
+
   function copyCode() {
     navigator.clipboard.writeText(turma.code)
     setCopied(true)
@@ -255,16 +274,23 @@ export default function TurmaPage() {
   }
 
   function computeCompletude(p) {
-    const fields = [p.description, p.tech_stack, p.demo_url, p.links, p.team_members]
-    const filled = fields.filter(f => f && (Array.isArray(f) ? f.length > 0 : String(f).trim().length > 0)).length
-    return Math.round((filled / fields.length) * 100)
+    const checks = [
+      !!(p.goal || p.problem),
+      !!p.solution,
+      !!p.technologies,
+      !!p.features,
+      !!p.results,
+      !!(p.linkedin_url || p.github_url || p.portfolio_url),
+      !!p.cover_url,
+    ]
+    return Math.round((checks.filter(Boolean).length / checks.length) * 100)
   }
 
   function exportCSV() {
-    const rows = [['Aluno', 'Projeto', 'Score', 'Completude (%)', 'Última atualização', 'Link']]
+    const rows = [['Aluno', 'Projeto', 'Score', 'Completude (%)', 'Data', 'Link']]
     sortedProjects.forEach(p => {
-      const updated = p.updated_at ? new Date(p.updated_at).toLocaleDateString('pt-PT') : '—'
-      rows.push([p.creator_name || '—', p.name, p.score ?? '—', computeCompletude(p), updated, `${window.location.origin}/projeto/${p.slug}`])
+      const date = p.created_at ? new Date(p.created_at).toLocaleDateString('pt-PT') : '—'
+      rows.push([p.creator_name || '—', p.name, p.score ?? '—', computeCompletude(p), date, `${window.location.origin}/projeto/${p.slug}`])
     })
     const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n')
     const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
@@ -282,7 +308,7 @@ export default function TurmaPage() {
     let av, bv
     if (sortBy === 'score') { av = a.score ?? -1; bv = b.score ?? -1 }
     else if (sortBy === 'completude') { av = computeCompletude(a); bv = computeCompletude(b) }
-    else if (sortBy === 'updated') { av = a.updated_at || ''; bv = b.updated_at || '' }
+    else if (sortBy === 'updated') { av = a.created_at || ''; bv = b.created_at || '' }
     else { av = (a.name || '').toLowerCase(); bv = (b.name || '').toLowerCase() }
     if (av < bv) return sortAsc ? -1 : 1
     if (av > bv) return sortAsc ? 1 : -1
@@ -455,7 +481,7 @@ export default function TurmaPage() {
           <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, overflow: 'hidden' }}>
             {/* Table header */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 80px 90px 140px 100px', gap: 0, padding: '10px 16px', borderBottom: `1px solid ${C.border}`, background: '#0d1424' }}>
-              {[['name','Projeto'], ['score','Score'], ['completude','Completude'], ['updated','Última atualização'], [null,'']].map(([field, label]) => (
+              {[['name','Projeto'], ['score','Score'], ['completude','Completude'], ['updated','Data'], [null,'']].map(([field, label]) => (
                 <div key={label} onClick={() => field && toggleSort(field)} style={{ fontSize: 11, fontWeight: 700, color: field ? (sortBy === field ? '#60a5fa' : C.muted) : C.muted, textTransform: 'uppercase', letterSpacing: 0.5, cursor: field ? 'pointer' : 'default', display: 'flex', alignItems: 'center', gap: 4, userSelect: 'none' }}>
                   {label}
                   {field && sortBy === field && (sortAsc ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}
@@ -464,7 +490,7 @@ export default function TurmaPage() {
             </div>
             {sortedProjects.map((p, i) => {
               const completude = computeCompletude(p)
-              const updated = p.updated_at ? new Date(p.updated_at).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' }) : '—'
+              const updated = p.created_at ? new Date(p.created_at).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' }) : '—'
               return (
                 <div key={p.id} style={{ display: 'grid', gridTemplateColumns: '1fr 80px 90px 140px 100px', gap: 0, padding: '13px 16px', borderBottom: i < sortedProjects.length - 1 ? `1px solid ${C.border}` : 'none', alignItems: 'center', transition: 'background 0.12s' }}
                   onMouseEnter={e => e.currentTarget.style.background = C.cardHover}
@@ -486,6 +512,7 @@ export default function TurmaPage() {
                   <div style={{ display: 'flex', gap: 6 }}>
                     <button onClick={() => navigate(`/projeto/${p.slug}`)} style={{ fontSize: 12, padding: '5px 10px', borderRadius: 6, border: `1px solid ${C.border}`, background: 'transparent', color: C.muted, cursor: 'pointer', fontFamily: 'inherit' }}>Ver</button>
                     <button onClick={() => setFeedbackProject(p)} style={{ fontSize: 12, padding: '5px 8px', borderRadius: 6, border: '1px solid rgba(59,130,246,0.3)', background: 'rgba(59,130,246,0.08)', color: '#60a5fa', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 4 }}><MessageSquare size={11} /></button>
+                    <button onClick={() => removeProject(p.id)} style={{ fontSize: 12, padding: '5px 8px', borderRadius: 6, border: '1px solid rgba(248,113,113,0.3)', background: 'transparent', color: '#f87171', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center' }}><X size={11} /></button>
                   </div>
                 </div>
               )
