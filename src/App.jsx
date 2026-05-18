@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AlertTriangle, X as XIcon } from 'lucide-react'
 import { supabase } from './lib/supabase'
 import { HelmetProvider } from 'react-helmet-async'
-import { AuthProvider } from './context/AuthContext'
+import { AuthProvider, useAuth } from './context/AuthContext'
 import RestReminder from './components/RestReminder'
 import Home from './pages/Home'
 import NewProject from './pages/NewProject'
@@ -30,6 +30,13 @@ import SplashScreen from './components/SplashScreen'
 
 const HOLD_MS    = 1900 + 1800   // when to start fading (3700ms)
 const UNMOUNT_MS = HOLD_MS + 700 // when to remove from DOM (4400ms)
+
+function HomeRoute() {
+  const { user, loading } = useAuth()
+  if (loading) return null
+  if (user) return <Navigate to="/dashboard" replace />
+  return <Home />
+}
 
 function AuthErrorBanner() {
   const [msg, setMsg] = useState('')
@@ -90,7 +97,7 @@ export default function App() {
         <RestReminder />
         <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <Routes>
-            <Route path="/"              element={<Home />}        />
+            <Route path="/"              element={<HomeRoute />}   />
             <Route path="/novo"          element={<NewProject />}  />
             <Route path="/projeto/:slug" element={<ProjectPage />} />
             <Route path="/editar/:slug"  element={<EditProject />} />
