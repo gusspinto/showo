@@ -156,16 +156,24 @@ export default function Explore() {
   }, [])
 
   function handleProjectClick(project) {
-    if (recruiterMode) {
-      // Trigger COMPANY_VIEW notification immediately in recruiter mode
-      const key = `recruiter_viewed_${project.slug}`
-      if (!sessionStorage.getItem(key)) {
-        sessionStorage.setItem(key, '1')
-        supabase.functions.invoke('notify-view', {
-          body: { project_slug: project.slug, type: 'COMPANY_VIEW', visitor_role: profile?.role ?? null }
+    const role = profile?.role ?? null
+    const type = (role === 'recrutador' || role === 'empresa') ? 'COMPANY_VIEW' : 'PROJECT_VIEW'
+    const key  = `explore_notif_${project.slug}`
+
+    if (!sessionStorage.getItem(key)) {
+      sessionStorage.setItem(key, '1')
+      // Get city async — don't block navigation
+      fetch('https://ip-api.com/json/?fields=city,status')
+        .then(r => r.json())
+        .then(geo => {
+          const city = geo?.status === 'success' ? (geo.city || 'Portugal') : 'Portugal'
+          supabase.functions.invoke('notify-view', { body: { project_slug: project.slug, type, city, visitor_role: role } })
         })
-      }
+        .catch(() => {
+          supabase.functions.invoke('notify-view', { body: { project_slug: project.slug, type, city: 'Portugal', visitor_role: role } })
+        })
     }
+
     navigate(`/projeto/${project.slug}`)
   }
 
