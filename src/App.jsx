@@ -19,6 +19,7 @@ import UserProfile from './pages/UserProfile'
 import Admin from './pages/Admin'
 import TurmaPage from './pages/TurmaPage'
 import AIInterview from './pages/AIInterview'
+import Certificate from './pages/Certificate'
 import SplashScreen from './components/SplashScreen'
 
 // Animation timeline:
@@ -102,7 +103,8 @@ export default function App() {
             <Route path="/u/:username"   element={<UserProfile />} />
             <Route path="/admin"         element={<Admin />}       />
             <Route path="/turma/:code"   element={<TurmaPage />}   />
-            <Route path="/interview"     element={<AIInterview />} />
+            <Route path="/interview"          element={<AIInterview />}  />
+            <Route path="/certificado/:slug"  element={<Certificate />}  />
           </Routes>
         </BrowserRouter>
       </AuthProvider>
