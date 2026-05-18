@@ -336,9 +336,10 @@ function TurmaCard({ turma, navigate }) {
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ color: C.text, fontSize: 14, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{turma.name}</div>
         {turma.subject && <div style={{ color: C.muted, fontSize: 12, marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{turma.subject}</div>}
-        <div style={{ color: C.subtle, fontSize: 11, marginTop: 4, display: 'flex', gap: 10 }}>
+        <div style={{ color: C.subtle, fontSize: 11, marginTop: 4, display: 'flex', gap: 10, alignItems: 'center' }}>
           <span style={{ color: '#60a5fa', fontWeight: 700, letterSpacing: 1 }}>{turma.code}</span>
           {turma.project_count != null && <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}><Users size={10} />{turma.project_count} projeto{turma.project_count !== 1 ? 's' : ''}</span>}
+          {turma.avg_score != null && <span style={{ color: turma.avg_score >= 70 ? '#22c55e' : turma.avg_score >= 40 ? '#eab308' : '#f97316', fontWeight: 700 }}>⌀ {turma.avg_score}</span>}
         </div>
       </div>
       <ChevronRight size={16} color={C.subtle} />
@@ -381,14 +382,37 @@ export default function Dashboard() {
         .eq('teacher_id', user.id)
         .order('created_at', { ascending: false })
       if (!cls?.length) { setTurmas([]); return }
-      // Get project counts
+
       const { data: cp } = await supabase
         .from('class_projects')
-        .select('class_id')
+        .select('class_id, project_id')
         .in('class_id', cls.map(c => c.id))
+
       const counts = {}
-      cp?.forEach(r => { counts[r.class_id] = (counts[r.class_id] || 0) + 1 })
-      setTurmas(cls.map(c => ({ ...c, project_count: counts[c.id] ?? 0 })))
+      const classProjects = {}
+      cp?.forEach(r => {
+        counts[r.class_id] = (counts[r.class_id] || 0) + 1
+        if (!classProjects[r.class_id]) classProjects[r.class_id] = []
+        classProjects[r.class_id].push(r.project_id)
+      })
+
+      // Fetch scores for all projects across all turmas
+      const allProjectIds = cp?.map(r => r.project_id) ?? []
+      let scoreMap = {}
+      if (allProjectIds.length) {
+        const { data: projs } = await supabase
+          .from('projects')
+          .select('id, score')
+          .in('id', allProjectIds)
+        projs?.forEach(p => { scoreMap[p.id] = p.score })
+      }
+
+      setTurmas(cls.map(c => {
+        const ids = classProjects[c.id] ?? []
+        const scores = ids.map(id => scoreMap[id]).filter(s => s != null)
+        const avg_score = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null
+        return { ...c, project_count: counts[c.id] ?? 0, avg_score }
+      }))
     }
     loadTurmas()
   }, [user, profile?.role])

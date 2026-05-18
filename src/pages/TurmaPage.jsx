@@ -188,6 +188,7 @@ export default function TurmaPage() {
   const [sortBy, setSortBy] = useState('score')
   const [sortAsc, setSortAsc] = useState(false)
   const [feedbackProject, setFeedbackProject] = useState(null)
+  const [copiedLink, setCopiedLink] = useState(false)
 
   function showToast(msg) {
     setToast(msg)
@@ -247,15 +248,24 @@ export default function TurmaPage() {
       if (error.code === '23505') showToast('Este projeto já está na turma.')
       else showToast('Erro ao adicionar: ' + error.message)
     } else {
-      // Reload projects
       const { data: projs } = await supabase
         .from('projects')
-        .select('id, name, slug, score, area, creator_name, cover_url, ai_tagline')
+        .select('id, name, slug, score, area, creator_name, cover_url, ai_tagline, created_at, user_id, goal, problem, solution, features, technologies, results, linkedin_url, github_url, portfolio_url')
         .in('id', [...projects.map(p => p.id), projectId])
-        .order('score', { ascending: false })
       setProjects(projs || [])
       showToast('Projeto adicionado à turma!')
       setShowAdd(false)
+      // Notify the teacher
+      if (turma.teacher_id) {
+        const added = myProjects.find(p => p.id === projectId)
+        supabase.from('notifications').insert({
+          user_id: turma.teacher_id,
+          type: 'STUDENT_JOINED',
+          message: `Um aluno adicionou o projeto "${added?.name ?? 'novo projeto'}" à turma "${turma.name}".`,
+          project_slug: added?.slug ?? null,
+          read: false,
+        })
+      }
     }
     setAdding(null)
   }
@@ -271,6 +281,12 @@ export default function TurmaPage() {
     navigator.clipboard.writeText(turma.code)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
+  }
+
+  function copyLink() {
+    navigator.clipboard.writeText(`${window.location.origin}/turma/${turma.code}`)
+    setCopiedLink(true)
+    setTimeout(() => setCopiedLink(false), 2000)
   }
 
   function computeCompletude(p) {
@@ -438,7 +454,15 @@ export default function TurmaPage() {
               >
                 <span style={{ fontSize: 11, color: C.muted, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>Código</span>
                 <span style={{ fontSize: 16, fontWeight: 800, color: '#60a5fa', letterSpacing: 2 }}>{turma.code}</span>
-                <span style={{ fontSize: 12, color: copied ? C.green : C.muted }}>{copied ? <Check size={12} /> : <Copy size={12} />}</span>
+                <span style={{ color: copied ? C.green : C.muted }}>{copied ? <Check size={12} /> : <Copy size={12} />}</span>
+              </button>
+              {/* Copy link */}
+              <button
+                onClick={copyLink}
+                style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(59,130,246,0.06)', border: `1px solid rgba(59,130,246,0.2)`, borderRadius: 10, padding: '8px 14px', cursor: 'pointer', fontFamily: 'inherit', color: copiedLink ? C.green : C.muted, fontSize: 13, fontWeight: 600, transition: 'color 0.15s' }}
+              >
+                {copiedLink ? <Check size={13} /> : <Copy size={13} />}
+                {copiedLink ? 'Link copiado!' : 'Copiar link'}
               </button>
               {/* Professor: export CSV */}
               {isTeacher && projects.length > 0 && (
