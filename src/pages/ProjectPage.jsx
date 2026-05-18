@@ -641,6 +641,48 @@ export default function ProjectPage() {
     fetchProject()
   }, [slug, user?.id])
 
+  // View tracking + PROJECT_VIEW / COMPANY_VIEW notifications
+  useEffect(() => {
+    if (!project) return
+    const isOwner = !!(user?.id && project.user_id && user.id === project.user_id)
+    const editToken = localStorage.getItem(`edit_token_${project.slug}`)
+    if (isOwner || editToken) return // don't track owner views
+
+    // Increment view counter once per session
+    const viewKey = `viewed_${project.slug}`
+    if (!sessionStorage.getItem(viewKey)) {
+      sessionStorage.setItem(viewKey, '1')
+      supabase.from('projects').update({ views: (project.views ?? 0) + 1 }).eq('id', project.id)
+    }
+
+    // PROJECT_VIEW notification (max once per hour per project)
+    const notifKey = `notified_view_${project.slug}`
+    if (!sessionStorage.getItem(notifKey)) {
+      sessionStorage.setItem(notifKey, '1')
+      // Get city first, then notify
+      fetch('https://ip-api.com/json/?fields=city,status')
+        .then(r => r.json())
+        .then(geo => {
+          const city = geo?.status === 'success' ? (geo.city || 'Portugal') : 'Portugal'
+          supabase.functions.invoke('notify-view', { body: { project_slug: project.slug, type: 'PROJECT_VIEW', city } })
+        })
+        .catch(() => {
+          supabase.functions.invoke('notify-view', { body: { project_slug: project.slug, type: 'PROJECT_VIEW', city: 'Portugal' } })
+        })
+    }
+
+    // COMPANY_VIEW after 30s (max once per day per project)
+    const companyKey = `company_view_${project.slug}`
+    const lastCompany = sessionStorage.getItem(companyKey)
+    if (!lastCompany) {
+      const t = setTimeout(() => {
+        sessionStorage.setItem(companyKey, '1')
+        supabase.functions.invoke('notify-view', { body: { project_slug: project.slug, type: 'COMPANY_VIEW' } })
+      }, 30000)
+      return () => clearTimeout(t)
+    }
+  }, [project?.id])
+
   useEffect(() => {
     if (prevScoreRef.current === null || prevScoreRef.current === score) return
     const from = prevScoreRef.current
@@ -691,8 +733,34 @@ export default function ProjectPage() {
         setShowConfetti(true)
         setTimeout(() => setShowConfetti(false), 5000)
       }
+      // MISSION_COMPLETE notification
+      if (user?.id) {
+        supabase.from('notifications').insert({
+          user_id: user.id,
+          type: 'MISSION_COMPLETE',
+          message: `Missão completa: ${challenge.fieldLabel} +${challenge.scoreGain} XP 🏆`,
+          project_slug: project.slug,
+        })
+      }
     } else {
       triggerToast(`Guardado! Score atual: ${newScore}`)
+    }
+
+    // SCORE_MILESTONE notification
+    const MILESTONES = [50, 70, 85, 90]
+    const current = updatedProject.notified_milestones ?? []
+    const newMilestones = MILESTONES.filter(m => newScore >= m && oldScore < m && !current.includes(m))
+    if (newMilestones.length && user?.id) {
+      const m = newMilestones[newMilestones.length - 1]
+      supabase.from('notifications').insert({
+        user_id: user.id,
+        type: 'SCORE_MILESTONE',
+        message: `O teu projeto "${project.name}" atingiu ${m} pontos! 🎯`,
+        project_slug: project.slug,
+      })
+      const updatedMilestones = [...current, ...newMilestones]
+      supabase.from('projects').update({ notified_milestones: updatedMilestones }).eq('id', project.id)
+      setProject(p => ({ ...p, notified_milestones: updatedMilestones }))
     }
 
     setEditModal(null)
@@ -1309,6 +1377,38 @@ export default function ProjectPage() {
         {/* proj-body: everything after hero — ordered after sidebar on tablet/mobile */}
         <div className="proj-body">
 
+        {/* Certificate banner — owner only, score >= 75 */}
+        {isOwner && score >= 75 && (
+          <div style={{
+            background: 'linear-gradient(135deg, rgba(79,70,229,0.12), rgba(27,120,247,0.08))',
+            border: '1px solid rgba(79,70,229,0.3)',
+            borderRadius: 16, padding: '18px 22px', marginBottom: 20,
+            display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
+          }}>
+            <span style={{ fontSize: 28 }}>🎓</span>
+            <div style={{ flex: 1, minWidth: 200 }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: '#c4b5fd', marginBottom: 2 }}>
+                O teu projeto atingiu nível profissional.
+              </div>
+              <div style={{ fontSize: 13, color: colors.muted }}>
+                O teu certificado verificado por IA está disponível.
+              </div>
+            </div>
+            <button
+              onClick={() => navigate(`/certificado/${project.slug}`)}
+              style={{
+                background: 'linear-gradient(135deg, #4f46e5, #1b78f7)',
+                color: '#fff', border: 'none', borderRadius: 10,
+                padding: '10px 20px', fontSize: 13, fontWeight: 700,
+                cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0,
+                boxShadow: '0 4px 16px rgba(79,70,229,0.3)',
+              }}
+            >
+              Ver certificado →
+            </button>
+          </div>
+        )}
+
         {/* AI Description */}
         {project.ai_description && (
           <div className="proj-card-pad" style={{
@@ -1561,6 +1661,14 @@ export default function ProjectPage() {
 
         {/* Sidebar */}
         <aside className="proj-sidebar" style={{ paddingTop: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {/* View count */}
+          {(project.views ?? 0) > 0 && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: colors.muted, fontSize: 13, fontWeight: 500 }}>
+              <span style={{ fontSize: 15 }}>👁</span>
+              <span><strong style={{ color: colors.text }}>{project.views}</strong> visualizaç{project.views === 1 ? 'ão' : 'ões'}</span>
+            </div>
+          )}
+
           <MembersPanel
             ownerName={ownerProfile?.full_name || ownerProfile?.username || project.creator_name}
             members={members}

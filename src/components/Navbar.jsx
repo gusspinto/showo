@@ -38,11 +38,30 @@ function getDisplayName(user) {
   return user?.email?.split('@')[0] ?? ''
 }
 
+// Notification type → icon emoji
+const NOTIF_ICON = {
+  PROJECT_VIEW:    '👁',
+  COMPANY_VIEW:    '👀',
+  SCORE_MILESTONE: '🎯',
+  RANKING_CHANGE:  '🚀',
+  MISSION_COMPLETE:'🏆',
+}
+
+function timeAgo(ts) {
+  const diff = (Date.now() - new Date(ts).getTime()) / 1000
+  if (diff < 60)    return 'agora mesmo'
+  if (diff < 3600)  return `há ${Math.floor(diff / 60)} min`
+  if (diff < 86400) return `há ${Math.floor(diff / 3600)}h`
+  if (diff < 604800) return `há ${Math.floor(diff / 86400)} dias`
+  return new Date(ts).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' })
+}
+
 function InviteInbox({ userId }) {
   const navigate = useNavigate()
   const [open, setOpen]     = useState(false)
   const [invites, setInvites] = useState([])
   const [acting, setActing] = useState({})
+  const [dbNotifs, setDbNotifs] = useState([])
 
   // Owner response notifications — persisted in sessionStorage
   const [responses, setResponses] = useState(() => {
@@ -67,9 +86,34 @@ function InviteInbox({ userId }) {
     })
   }
 
+  async function loadDbNotifs() {
+    const { data } = await supabase
+      .from('notifications')
+      .select('id, type, message, project_slug, read, created_at')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(20)
+    if (data) setDbNotifs(data)
+  }
+
+  async function markAllRead() {
+    await supabase
+      .from('notifications')
+      .update({ read: true })
+      .eq('user_id', userId)
+      .eq('read', false)
+    setDbNotifs(prev => prev.map(n => ({ ...n, read: true })))
+  }
+
+  async function markRead(id) {
+    await supabase.from('notifications').update({ read: true }).eq('id', id)
+    setDbNotifs(prev => prev.map(n => n.id === id ? { ...n, read: true } : n))
+  }
+
   useEffect(() => {
     if (!userId) return
     loadInvites()
+    loadDbNotifs()
 
     // Channel 1 — invites TO me (pending)
     const inviteChannel = supabase
@@ -93,7 +137,6 @@ function InviteInbox({ userId }) {
       }, async (payload) => {
         const row = payload.new
         if (row.status !== 'accepted' && row.status !== 'declined') return
-        // Fetch name + project in parallel
         const [profRes, projRes] = await Promise.all([
           supabase.from('profiles').select('full_name, username').eq('id', row.user_id).single(),
           supabase.from('projects').select('name, slug').eq('id', row.project_id).single(),
@@ -109,9 +152,21 @@ function InviteInbox({ userId }) {
       })
       .subscribe()
 
+    // Channel 3 — real-time DB notifications
+    const notifChannel = supabase
+      .channel(`notifs-${userId}`)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'notifications',
+        filter: `user_id=eq.${userId}`,
+      }, () => loadDbNotifs())
+      .subscribe()
+
     return () => {
       supabase.removeChannel(inviteChannel)
       supabase.removeChannel(ownerChannel)
+      supabase.removeChannel(notifChannel)
     }
   }, [userId])
 
@@ -176,7 +231,8 @@ function InviteInbox({ userId }) {
     }
   }
 
-  const count = invites.length + responses.length
+  const unreadDbCount = dbNotifs.filter(n => !n.read).length
+  const count = invites.length + responses.length + unreadDbCount
 
   return (
     <div style={{ position: 'relative' }}>
@@ -293,10 +349,58 @@ function InviteInbox({ userId }) {
               </>
             )}
 
+            {/* DB notifications */}
+            {dbNotifs.length > 0 && (
+              <>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: `${(invites.length + responses.length) > 0 ? '12px' : '6px'} 10px 8px` }}>
+                  <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>
+                    Notificações
+                  </p>
+                  {unreadDbCount > 0 && (
+                    <button
+                      onClick={markAllRead}
+                      style={{ background: 'none', border: 'none', color: '#60a5fa', fontSize: 11, fontWeight: 600, cursor: 'pointer', padding: 0, fontFamily: 'inherit' }}
+                    >
+                      Marcar todas como lidas
+                    </button>
+                  )}
+                </div>
+                {dbNotifs.map(n => (
+                  <div
+                    key={n.id}
+                    onClick={() => {
+                      markRead(n.id)
+                      if (n.project_slug) { navigate(`/projeto/${n.project_slug}`); setOpen(false) }
+                    }}
+                    style={{
+                      borderRadius: 10, padding: '10px 12px', marginBottom: 4,
+                      background: n.read ? 'transparent' : 'rgba(27,120,247,0.05)',
+                      border: `1px solid ${n.read ? 'transparent' : 'rgba(27,120,247,0.12)'}`,
+                      borderLeft: n.read ? '3px solid transparent' : '3px solid rgba(27,120,247,0.5)',
+                      cursor: n.project_slug ? 'pointer' : 'default',
+                      display: 'flex', alignItems: 'flex-start', gap: 10,
+                      transition: 'background 0.12s',
+                    }}
+                  >
+                    <span style={{ fontSize: 16, flexShrink: 0, marginTop: 1 }}>{NOTIF_ICON[n.type] ?? '🔔'}</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ margin: '0 0 3px', fontSize: 13, color: n.read ? C.muted : C.text, lineHeight: 1.45, fontWeight: n.read ? 400 : 500 }}>
+                        {n.message}
+                      </p>
+                      <span style={{ fontSize: 11, color: C.muted }}>{timeAgo(n.created_at)}</span>
+                    </div>
+                    {!n.read && <div style={{ width: 6, height: 6, borderRadius: '50%', background: C.blue, flexShrink: 0, marginTop: 5 }} />}
+                  </div>
+                ))}
+              </>
+            )}
+
             {/* Empty state */}
-            {invites.length === 0 && responses.length === 0 && (
+            {invites.length === 0 && responses.length === 0 && dbNotifs.length === 0 && (
               <div style={{ padding: '24px 12px', textAlign: 'center' }}>
-                <p style={{ margin: 0, color: C.muted, fontSize: 13 }}>Nenhuma notificação</p>
+                <p style={{ margin: '0 0 6px', fontSize: 20 }}>🔔</p>
+                <p style={{ margin: 0, color: C.muted, fontSize: 13 }}>Sem notificações por agora</p>
+                <p style={{ margin: '4px 0 0', color: C.muted, fontSize: 11, opacity: 0.7 }}>Quando alguém vir o teu projeto, aparece aqui.</p>
               </div>
             )}
           </div>
