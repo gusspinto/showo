@@ -18,6 +18,7 @@ import Settings from './pages/Settings'
 import UserProfile from './pages/UserProfile'
 import Admin from './pages/Admin'
 import TurmaPage from './pages/TurmaPage'
+import AIInterview from './pages/AIInterview'
 import SplashScreen from './components/SplashScreen'
 
 // Animation timeline:
@@ -101,6 +102,7 @@ export default function App() {
             <Route path="/u/:username"   element={<UserProfile />} />
             <Route path="/admin"         element={<Admin />}       />
             <Route path="/turma/:code"   element={<TurmaPage />}   />
+            <Route path="/interview"     element={<AIInterview />} />
           </Routes>
         </BrowserRouter>
       </AuthProvider>

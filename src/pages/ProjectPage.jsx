@@ -44,7 +44,41 @@ const PROJECT_TYPE_LABELS = {
   presentation: 'Apresentação',
   personal: 'Projeto pessoal',
   competition: 'Projeto de competição',
+  internship: 'Estágio',
   other: 'Outro',
+}
+
+const TYPE_HERO = {
+  pap:         { c1: '#6366f1', c2: '#4f46e5', emoji: '🎓' },
+  internship:  { c1: '#10b981', c2: '#059669', emoji: '💼' },
+  group:       { c1: '#f59e0b', c2: '#d97706', emoji: '👥' },
+  personal:    { c1: '#1b78f7', c2: '#4f46e5', emoji: '🚀' },
+  competition: { c1: '#ef4444', c2: '#dc2626', emoji: '🏆' },
+  presentation:{ c1: '#8b5cf6', c2: '#7c3aed', emoji: '📊' },
+}
+
+const QUALITY_MIN = 60 // below this = "needs more"
+
+const PROFILE_SCORE_FIELDS = [
+  { key: 'problem',         label: 'Problema',       minLen: QUALITY_MIN, tip: 'Descreve quem sofre com o problema, qual o impacto real e por que é urgente. Evita respostas de uma linha.' },
+  { key: 'solution',        label: 'Solução',        minLen: QUALITY_MIN, tip: 'Explica como funciona tecnicamente: a abordagem, a arquitetura, o que a torna única.' },
+  { key: 'results',         label: 'Resultados',     minLen: QUALITY_MIN, tip: 'Acrescenta números concretos: %, tempo poupado, utilizadores impactados, métricas.' },
+  { key: 'learnings',       label: 'Aprendizagens',  minLen: QUALITY_MIN, tip: 'Explica o que foi difícil, o que farias diferente, e que competências reais ganhaste.' },
+  { key: 'technologies',    label: 'Tecnologias',    minLen: 15,          tip: 'Lista linguagens, frameworks, bases de dados, APIs e ferramentas. Quanto mais completo, melhor.' },
+  { key: 'target_audience', label: 'Público-alvo',   minLen: QUALITY_MIN, tip: 'Sê específico: perfil, faixa etária, contexto profissional, necessidades concretas.' },
+  { key: 'features',        label: 'Funcionalidades', minLen: QUALITY_MIN, tip: 'Descreve cada funcionalidade com uma frase sobre o que faz e porquê é relevante.' },
+  { key: 'cover_url',       label: 'Foto de capa',   minLen: 1,           tip: 'Uma boa imagem de capa aumenta muito a impressão do projeto.' },
+]
+
+const SECTION_META = {
+  problem:         { icon: '🔍', label: 'Problema' },
+  solution:        { icon: '💡', label: 'Solução' },
+  target_audience: { icon: '🎯', label: 'Público-alvo' },
+  features:        { icon: '⚙️', label: 'Funcionalidades' },
+  technologies:    { icon: '🛠', label: 'Tecnologias' },
+  challenges:      { icon: '⚡', label: 'Desafios' },
+  results:         { icon: '📈', label: 'Resultados' },
+  learnings:       { icon: '🧠', label: 'Aprendizagens' },
 }
 
 function getLevelInfo(score) {
@@ -92,115 +126,159 @@ function ScoreRing({ score }) {
   )
 }
 
-function Section({ title, content }) {
-  if (!content) return null
+function Section({ fieldKey, content, isOwner, onImprove }) {
+  const meta    = SECTION_META[fieldKey] ?? { icon: '📄', label: fieldKey }
+  const fieldCfg = PROFILE_SCORE_FIELDS.find(f => f.key === fieldKey)
+  const len     = (content || '').trim().length
+  const isEmpty = len === 0
+  const isShort = len > 0 && len < (fieldCfg?.minLen ?? QUALITY_MIN)
+  const challenge = CHALLENGES.find(c => c.field === fieldKey)
+
+  if (isEmpty && !isOwner) return null
+
   return (
     <div className="proj-card-pad" style={{
       background: colors.card,
-      border: `1px solid ${colors.border}`,
-      borderRadius: 16,
-      padding: '22px 26px',
-      marginBottom: 12,
-      boxShadow: '0 2px 16px rgba(0,0,0,0.25)',
+      border: `1px solid ${isShort ? 'rgba(234,179,8,0.22)' : isEmpty ? colors.subtle + '55' : colors.border}`,
+      borderRadius: 16, padding: '20px 24px', marginBottom: 12,
+      boxShadow: '0 2px 16px rgba(0,0,0,0.2)',
     }}>
-      <h3 style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 700, color: colors.muted, textTransform: 'uppercase', letterSpacing: 1 }}>{title}</h3>
-      <p style={{ margin: 0, color: colors.text, fontSize: 15, lineHeight: 1.75, whiteSpace: 'pre-wrap' }}>{content}</p>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: isEmpty ? 0 : 12 }}>
+        <h3 style={{
+          margin: 0, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em',
+          color: isShort ? colors.yellow : isEmpty ? colors.subtle : colors.muted,
+          display: 'flex', alignItems: 'center', gap: 7,
+        }}>
+          <span style={{ fontSize: 14 }}>{meta.icon}</span>
+          {meta.label}
+          {isShort && (
+            <span style={{ fontSize: 10, color: colors.yellow, background: 'rgba(234,179,8,0.1)', border: '1px solid rgba(234,179,8,0.2)', borderRadius: 4, padding: '1px 7px', letterSpacing: '0.03em', fontWeight: 700 }}>
+              Pouco detalhe
+            </span>
+          )}
+        </h3>
+        {isOwner && challenge && (
+          <button
+            onClick={() => onImprove(challenge)}
+            style={{ background: 'none', border: 'none', color: colors.subtle, cursor: 'pointer', fontSize: 12, fontWeight: 600, fontFamily: 'inherit', padding: '2px 6px', borderRadius: 6 }}
+            onMouseEnter={e => e.target.style.color = colors.blue}
+            onMouseLeave={e => e.target.style.color = colors.subtle}
+          >
+            Editar →
+          </button>
+        )}
+      </div>
+
+      {isEmpty ? (
+        isOwner && (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+            <p style={{ margin: 0, fontSize: 13, color: colors.subtle, fontStyle: 'italic' }}>Campo ainda vazio</p>
+            {challenge && (
+              <button
+                onClick={() => onImprove(challenge)}
+                style={{ background: 'rgba(27,120,247,0.08)', border: '1px solid rgba(27,120,247,0.18)', color: '#5a9ff5', borderRadius: 8, padding: '6px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
+              >
+                Preencher
+              </button>
+            )}
+          </div>
+        )
+      ) : (
+        <>
+          <p style={{ margin: 0, color: isShort ? '#afc3dc' : colors.text, fontSize: 15, lineHeight: 1.75, whiteSpace: 'pre-wrap' }}>{content}</p>
+          {isShort && fieldCfg?.tip && (
+            <div style={{ marginTop: 12, display: 'flex', alignItems: 'flex-start', gap: 8, background: 'rgba(234,179,8,0.05)', border: '1px solid rgba(234,179,8,0.14)', borderRadius: 8, padding: '9px 12px' }}>
+              <span style={{ fontSize: 13, flexShrink: 0 }}>💡</span>
+              <p style={{ margin: 0, fontSize: 12, color: '#d4a820', lineHeight: 1.6 }}>{fieldCfg.tip}</p>
+            </div>
+          )}
+        </>
+      )}
     </div>
   )
 }
 
-function ChallengeCard({ challenge, project, onImprove, isOwner }) {
+function MissionRow({ challenge, project, onImprove, isOwner }) {
   const isCompleted = getChallengeStatus(challenge, project) === 'completed'
-  const val = String(project[challenge.field] || '').trim()
-  const progress = Math.min(val.length / challenge.threshold, 1)
-  const ChalIcon = challenge.icon
-
-  // Ganho real de score: diferença entre score atual e score após completar esta missão
-  const realGain = (() => {
+  const val         = String(project[challenge.field] || '').trim()
+  const progress    = Math.min(val.length / challenge.threshold, 1)
+  const ChalIcon    = challenge.icon
+  const realGain    = (() => {
     if (isCompleted) return challenge.scoreGain
-    const currentScore = calculateScore(project).score
-    const filledProject = { ...project, [challenge.field]: 'x'.repeat(challenge.threshold) }
-    const maxScore = calculateScore(filledProject).score
-    return Math.max(0, maxScore - currentScore)
+    const cur = calculateScore(project).score
+    const max = calculateScore({ ...project, [challenge.field]: 'x'.repeat(challenge.threshold) }).score
+    return Math.max(0, max - cur)
   })()
 
   return (
-    <div style={{
-      background: isCompleted ? colors.greenBg : colors.bgAlt,
-      border: `1px solid ${isCompleted ? 'rgba(34,197,94,0.22)' : colors.border}`,
-      borderRadius: 14,
-      padding: '16px 18px',
-      transition: 'border-color 0.2s',
-    }}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
-        <div style={{
-          width: 38, height: 38, borderRadius: 10, flexShrink: 0, marginTop: 1,
-          background: isCompleted ? 'rgba(34,197,94,0.1)' : 'rgba(255,255,255,0.04)',
-          border: `1px solid ${isCompleted ? 'rgba(34,197,94,0.2)' : colors.border}`,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          color: isCompleted ? colors.green : colors.muted,
-        }}>
-          <ChalIcon size={18} />
-        </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 14, fontWeight: 700, color: isCompleted ? colors.green : colors.text }}>
-              {isCompleted && <Check size={14} style={{ marginRight: 4, verticalAlign: 'middle' }} />}{challenge.title}
-            </span>
-            <span style={{
-              fontSize: 12, fontWeight: 700, flexShrink: 0,
-              color: isCompleted ? colors.green : colors.blue,
-              background: isCompleted ? colors.greenGlow : colors.blueSubtle,
-              border: `1px solid ${isCompleted ? 'rgba(34,197,94,0.2)' : 'rgba(27,120,247,0.15)'}`,
-              borderRadius: 999, padding: '2px 10px',
-            }}>
-              {isCompleted ? `+${challenge.scoreGain} pts` : `+${realGain} pts no score`}
-            </span>
-          </div>
-          <p style={{ margin: '0 0 10px', fontSize: 13, color: colors.muted, lineHeight: 1.55 }}>
-            {challenge.description}
-          </p>
-          {!isCompleted && (
-            <>
-              <div style={{ marginBottom: isOwner ? 10 : 0 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                  <span style={{ fontSize: 11, color: colors.subtle }}>{val.length} / {challenge.threshold} caracteres</span>
-                  <span style={{ fontSize: 11, color: colors.subtle }}>{Math.round(progress * 100)}%</span>
-                </div>
-                <div style={{ height: 4, background: colors.border, borderRadius: 2, overflow: 'hidden' }}>
-                  <div style={{
-                    height: '100%', borderRadius: 2,
-                    width: `${progress * 100}%`,
-                    background: progress > 0.7
-                      ? `linear-gradient(90deg, ${colors.orange}, ${colors.yellow})`
-                      : `linear-gradient(90deg, ${colors.blue}, #818cf8)`,
-                    transition: 'width 0.3s',
-                  }} />
-                </div>
-              </div>
-              {isOwner && (
-                <button
-                  onClick={() => onImprove(challenge)}
-                  style={{
-                    background: colors.blueSubtle,
-                    color: colors.blue,
-                    border: '1px solid rgba(27,120,247,0.2)',
-                    borderRadius: 8,
-                    padding: '8px 16px',
-                    fontSize: 13,
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    fontFamily: 'inherit',
-                    transition: 'background 0.15s',
-                  }}
-                >
-                  Melhorar agora →
-                </button>
-              )}
-            </>
-          )}
-        </div>
+    <div
+      className="mission-row"
+      style={{
+        display: 'flex', alignItems: 'center', gap: 12,
+        padding: '11px 14px', borderRadius: 12,
+        background: isCompleted ? 'rgba(34,197,94,0.04)' : colors.bgAlt,
+        border: `1px solid ${isCompleted ? 'rgba(34,197,94,0.18)' : colors.border}`,
+        transition: 'border-color 0.15s',
+      }}
+    >
+      {/* Status dot / icon */}
+      <div style={{
+        width: 30, height: 30, borderRadius: 9, flexShrink: 0,
+        background: isCompleted ? 'rgba(34,197,94,0.12)' : 'rgba(255,255,255,0.03)',
+        border: `1px solid ${isCompleted ? 'rgba(34,197,94,0.25)' : colors.border}`,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        color: isCompleted ? colors.green : colors.muted,
+      }}>
+        {isCompleted ? <Check size={13} strokeWidth={3} /> : <ChalIcon size={13} />}
       </div>
+
+      {/* Title + mini progress */}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{
+          fontSize: 13, fontWeight: isCompleted ? 500 : 700,
+          color: isCompleted ? colors.subtle : colors.text,
+          textDecoration: isCompleted ? 'line-through' : 'none',
+          marginBottom: (!isCompleted && val.length > 0) ? 5 : 0,
+        }}>
+          {challenge.title}
+        </div>
+        {!isCompleted && val.length > 0 && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div style={{ flex: 1, height: 3, background: colors.border, borderRadius: 99, overflow: 'hidden' }}>
+              <div style={{
+                height: '100%', borderRadius: 99,
+                width: `${progress * 100}%`,
+                background: progress > 0.7 ? `linear-gradient(90deg,${colors.orange},${colors.yellow})` : 'linear-gradient(90deg,#1b78f7,#818cf8)',
+              }} />
+            </div>
+            <span style={{ fontSize: 10, color: colors.subtle, flexShrink: 0 }}>{val.length}/{challenge.threshold}</span>
+          </div>
+        )}
+      </div>
+
+      {/* Points badge */}
+      <span style={{
+        fontSize: 11, fontWeight: 700, flexShrink: 0, borderRadius: 999, padding: '2px 9px',
+        color: isCompleted ? colors.green : colors.blue,
+        background: isCompleted ? 'rgba(34,197,94,0.08)' : 'rgba(27,120,247,0.08)',
+        border: `1px solid ${isCompleted ? 'rgba(34,197,94,0.18)' : 'rgba(27,120,247,0.18)'}`,
+      }}>
+        {isCompleted ? '✓' : `+${realGain} XP`}
+      </span>
+
+      {/* Action */}
+      {!isCompleted && isOwner && (
+        <button
+          onClick={() => onImprove(challenge)}
+          style={{
+            background: 'rgba(27,120,247,0.08)', border: '1px solid rgba(27,120,247,0.18)',
+            color: '#5a9ff5', borderRadius: 8, padding: '5px 12px',
+            fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0,
+          }}
+        >
+          Fazer →
+        </button>
+      )}
     </div>
   )
 }
@@ -250,7 +328,7 @@ function EditModal({ challenge, project, onClose, onSave, saving }) {
             </div>
             <div>
               <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: colors.text }}>{challenge.fieldLabel}</h2>
-              <span style={{ fontSize: 12, color: colors.blue, fontWeight: 600 }}>+{challenge.xp} XP ao completar</span>
+              <span style={{ fontSize: 12, color: colors.blue, fontWeight: 600 }}>+{challenge.scoreGain} XP ao completar</span>
             </div>
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: colors.muted, cursor: 'pointer', fontSize: 22, lineHeight: 1, padding: 4, borderRadius: 6 }}>×</button>
@@ -307,7 +385,7 @@ function EditModal({ challenge, project, onClose, onSave, saving }) {
             boxShadow: isComplete ? '0 4px 20px rgba(34,197,94,0.3)' : '0 4px 20px rgba(27,120,247,0.3)',
           }}
         >
-          {saving ? 'A guardar...' : `Guardar e ganhar +${challenge.xp} XP`}
+          {saving ? 'A guardar...' : `Guardar e ganhar +${challenge.scoreGain} XP`}
         </button>
       </div>
     </div>
@@ -595,7 +673,7 @@ export default function ProjectPage() {
 
     const isNowCompleted = getChallengeStatus(challenge, updatedProject) === 'completed'
     if (!wasCompleted && isNowCompleted) {
-      triggerToast(`+${challenge.xp} XP! Score: ${oldScore} → ${newScore}`)
+      triggerToast(`+${challenge.scoreGain} XP! Score: ${oldScore} → ${newScore}`)
       if (newScore === 100) {
         setShowConfetti(true)
         setTimeout(() => setShowConfetti(false), 5000)
@@ -756,9 +834,13 @@ export default function ProjectPage() {
         }
         .proj-layout {
           display: grid;
-          grid-template-columns: 1fr 260px;
+          grid-template-columns: 1fr 280px;
           gap: 28px;
           align-items: start;
+        }
+        .proj-highlights-grid { }
+        @media (max-width: 700px) {
+          .proj-highlights-grid { grid-template-columns: 1fr !important; }
         }
         .proj-layout > * { min-width: 0; }
         .proj-sidebar {
@@ -907,98 +989,74 @@ export default function ProjectPage() {
         </div>
       </Navbar>
 
-      <div className="proj-wrap" style={{ maxWidth: 1080, margin: '0 auto', padding: '0 24px 80px', overflowX: 'hidden' }}>
-
-        {/* Cover image — full width above the grid */}
-        {project.cover_url && (
-          <div className="proj-cover" style={{ width: '100%', height: 300, position: 'relative', marginTop: 36, borderRadius: 20, overflow: 'hidden', boxShadow: '0 16px 48px rgba(0,0,0,0.5)' }}>
-            <img src={project.cover_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 30%, #0d1424ee)' }} />
+      {/* Full-width gradient hero — always shown, adapts to project type */}
+      {(() => {
+        const hero = TYPE_HERO[project.project_type] ?? TYPE_HERO.personal
+        return (
+          <div style={{ position: 'relative', width: '100%', overflow: 'hidden' }}>
+            {project.cover_url ? (
+              <div className="proj-cover" style={{ width: '100%', height: 300, position: 'relative' }}>
+                <img src={project.cover_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 20%, #0d1424 100%)' }} />
+              </div>
+            ) : (
+              <div style={{
+                width: '100%', height: 220,
+                background: `linear-gradient(135deg, ${hero.c1}22 0%, ${hero.c2}55 50%, #0d1424 100%)`,
+                position: 'relative', overflow: 'hidden',
+              }}>
+                <div style={{ position: 'absolute', top: -60, left: '10%', width: 400, height: 400, borderRadius: '50%', background: `radial-gradient(ellipse, ${hero.c1}28 0%, transparent 65%)`, pointerEvents: 'none' }} />
+                <div style={{ position: 'absolute', top: -20, right: '5%', width: 250, height: 250, borderRadius: '50%', background: `radial-gradient(ellipse, ${hero.c2}22 0%, transparent 65%)`, pointerEvents: 'none' }} />
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 40%, #0d1424 100%)' }} />
+              </div>
+            )}
           </div>
-        )}
+        )
+      })()}
+
+      <div className="proj-wrap" style={{ maxWidth: 1080, margin: '0 auto', padding: '0 24px 80px', overflowX: 'hidden' }}>
 
         {/* Two-column layout: main content + sticky sidebar */}
         <div className="proj-layout">
         <div className="proj-main">
 
         {/* Hero */}
-        <div className="proj-hero" style={{ position: 'relative', padding: `${project.cover_url ? '32px' : '64px'} 0 40px` }}>
-          {/* Score widget — desktop absolute, hidden on mobile */}
-          <div className="proj-score-abs" style={{
-            position: 'absolute', top: project.cover_url ? 32 : 64, right: 0,
-            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10,
-          }}>
-            <ScoreRing score={displayScore} />
-            <div style={{
-              background: level.color + '15',
-              color: level.color,
-              borderRadius: 999,
-              padding: '4px 12px',
-              fontSize: 10,
-              fontWeight: 700,
-              border: `1px solid ${level.color}35`,
-              textAlign: 'center',
-              maxWidth: 120,
-              lineHeight: 1.5,
-              letterSpacing: 0.2,
-            }}>
-              {level.label}
-            </div>
-            {internshipReady && (
-              <div style={{
-                background: colors.greenGlow,
-                color: colors.green,
-                border: '1px solid rgba(34,197,94,0.25)',
-                borderRadius: 999,
-                padding: '4px 12px',
-                fontSize: 10,
-                fontWeight: 700,
-                textAlign: 'center',
-                maxWidth: 120,
-                lineHeight: 1.5,
-              }}>
-                Pronto para estágio
-              </div>
-            )}
-          </div>
+        <div className="proj-hero" style={{ padding: '24px 0 40px' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 24 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
 
           {/* Badges */}
-          <div className="proj-badges" style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
-            {project.area && (
-              <div style={{
-                background: colors.blueSubtle,
-                color: '#60a5fa',
-                border: '1px solid rgba(27,120,247,0.2)',
-                borderRadius: 999, padding: '5px 14px', fontSize: 13, fontWeight: 600,
-              }}>
-                {project.area}
+          {(() => {
+            const hero = TYPE_HERO[project.project_type] ?? TYPE_HERO.personal
+            return (
+              <div className="proj-badges" style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
+                {project.project_type && PROJECT_TYPE_LABELS[project.project_type] && (
+                  <div style={{
+                    background: `linear-gradient(135deg, ${hero.c1}, ${hero.c2})`,
+                    color: '#fff', borderRadius: 8, padding: '5px 14px',
+                    fontSize: 11, fontWeight: 800, letterSpacing: '0.06em',
+                    display: 'flex', alignItems: 'center', gap: 6,
+                    boxShadow: `0 4px 16px ${hero.c1}40`,
+                  }}>
+                    <span>{hero.emoji}</span> {PROJECT_TYPE_LABELS[project.project_type].toUpperCase()}
+                  </div>
+                )}
+                {project.area && (
+                  <div style={{
+                    background: colors.blueSubtle, color: '#60a5fa',
+                    border: '1px solid rgba(27,120,247,0.2)',
+                    borderRadius: 8, padding: '5px 14px', fontSize: 12, fontWeight: 600,
+                  }}>
+                    {project.area}
+                  </div>
+                )}
               </div>
-            )}
-            {project.project_type && PROJECT_TYPE_LABELS[project.project_type] && (
-              <div style={{
-                background: 'rgba(255,255,255,0.04)',
-                color: colors.muted,
-                borderRadius: 999, padding: '5px 14px', fontSize: 13, fontWeight: 600,
-                border: `1px solid ${colors.border}`,
-              }}>
-                {PROJECT_TYPE_LABELS[project.project_type]}
-              </div>
-            )}
-            {isPap && (
-              <div style={{
-                background: colors.yellowGlow,
-                color: colors.yellow,
-                borderRadius: 999, padding: '5px 14px', fontSize: 13, fontWeight: 700,
-                border: '1px solid rgba(234,179,8,0.25)',
-              }}>
-                PAP
-              </div>
-            )}
-          </div>
+            )
+          })()}
 
           {/* Title row — edit icon on mobile */}
           <div className="proj-h1-row" style={{ marginBottom: 16 }}>
-            <h1 className="proj-h1" style={{ fontSize: 'clamp(26px, 5vw, 52px)', fontWeight: 900, margin: 0, lineHeight: 1.1, paddingRight: 140, letterSpacing: '-0.5px', flex: 1 }}>
+            <h1 className="proj-h1" style={{ fontSize: 'clamp(26px, 5vw, 52px)', fontWeight: 900, margin: 0, lineHeight: 1.1, letterSpacing: '-0.5px', flex: 1 }}>
               {project.name}
             </h1>
             {isOwner && (
@@ -1047,7 +1105,7 @@ export default function ProjectPage() {
                 }} />
               </div>
               <div style={{ fontSize: 12, color: colors.muted }}>
-                {completedCount}/{CHALLENGES.length} missões · {earnedXP}/{totalXP} pts
+                {completedCount}/{CHALLENGES.length} missões · {earnedXP}/{totalXP} XP
               </div>
             </div>
           </div>
@@ -1099,6 +1157,33 @@ export default function ProjectPage() {
               )}
             </div>
           )}
+          </div>{/* end left flex column */}
+
+          {/* Score ring — right flex column, desktop only (hidden on mobile via CSS) */}
+          <div className="proj-score-abs" style={{
+            flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, paddingTop: 8,
+          }}>
+            <ScoreRing score={displayScore} />
+            <div style={{
+              background: level.color + '15', color: level.color,
+              borderRadius: 999, padding: '4px 12px',
+              fontSize: 10, fontWeight: 700, border: `1px solid ${level.color}35`,
+              textAlign: 'center', maxWidth: 120, lineHeight: 1.5, letterSpacing: 0.2,
+            }}>
+              {level.label}
+            </div>
+            {internshipReady && (
+              <div style={{
+                background: colors.greenGlow, color: colors.green,
+                border: '1px solid rgba(34,197,94,0.25)',
+                borderRadius: 999, padding: '4px 12px',
+                fontSize: 10, fontWeight: 700, textAlign: 'center', maxWidth: 120, lineHeight: 1.5,
+              }}>
+                Pronto para estágio
+              </div>
+            )}
+          </div>
+          </div>{/* end flex row */}
         </div>
 
         {/* AI Description */}
@@ -1135,31 +1220,26 @@ export default function ProjectPage() {
           </div>
         )}
 
-        {/* Highlights */}
-        {highlights.length > 0 && (
-          <div className="proj-card-pad" style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 16, padding: '22px 26px', marginBottom: 24, boxShadow: '0 2px 16px rgba(0,0,0,0.25)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-              <h3 style={{ margin: 0, fontSize: 11, fontWeight: 700, color: colors.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Destaques</h3>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {/* Highlights — 3 column cards */}
+        {highlights.length > 0 && (() => {
+          const hero = TYPE_HERO[project.project_type] ?? TYPE_HERO.personal
+          const icons = ['⚡', '📈', '🧠']
+          return (
+            <div className="proj-highlights-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, marginBottom: 24 }}>
               {highlights.map((h, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-                  <div style={{
-                    width: 20, height: 20,
-                    background: colors.greenGlow,
-                    border: '1px solid rgba(34,197,94,0.25)',
-                    borderRadius: '50%',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    flexShrink: 0, marginTop: 2,
-                  }}>
-                    <Check size={11} color={colors.green} strokeWidth={3} />
-                  </div>
-                  <p style={{ margin: 0, color: colors.text, fontSize: 15, lineHeight: 1.65 }}>{h}</p>
+                <div key={i} style={{
+                  background: `linear-gradient(135deg, ${hero.c1}0d, ${hero.c2}07)`,
+                  border: `1px solid ${hero.c1}30`,
+                  borderRadius: 14, padding: '16px 18px',
+                  display: 'flex', flexDirection: 'column', gap: 10,
+                }}>
+                  <span style={{ fontSize: 20 }}>{icons[i] ?? '✨'}</span>
+                  <p style={{ margin: 0, fontSize: 13, color: '#b8d4f0', lineHeight: 1.6 }}>{h}</p>
                 </div>
               ))}
             </div>
-          </div>
-        )}
+          )
+        })()}
 
         {/* PAP details */}
         {isPap && (project.pap_supervisor || project.pap_date) && (
@@ -1183,14 +1263,14 @@ export default function ProjectPage() {
         )}
 
         {/* Project sections */}
-        <Section title="Problema" content={project.problem} />
-        <Section title="Solução" content={project.solution} />
-        <Section title="Público-alvo" content={project.target_audience} />
-        <Section title="Funcionalidades" content={project.features} />
-        <Section title="Tecnologias" content={project.technologies} />
-        <Section title="Desafios" content={project.challenges} />
-        <Section title="Resultados" content={project.results} />
-        <Section title="Aprendizagens" content={project.learnings} />
+        <Section fieldKey="problem"         content={project.problem}         isOwner={isOwner} onImprove={setEditModal} />
+        <Section fieldKey="solution"        content={project.solution}        isOwner={isOwner} onImprove={setEditModal} />
+        <Section fieldKey="target_audience" content={project.target_audience} isOwner={isOwner} onImprove={setEditModal} />
+        <Section fieldKey="features"        content={project.features}        isOwner={isOwner} onImprove={setEditModal} />
+        <Section fieldKey="technologies"    content={project.technologies}    isOwner={isOwner} onImprove={setEditModal} />
+        <Section fieldKey="challenges"      content={project.challenges}      isOwner={isOwner} onImprove={setEditModal} />
+        <Section fieldKey="results"         content={project.results}         isOwner={isOwner} onImprove={setEditModal} />
+        <Section fieldKey="learnings"       content={project.learnings}       isOwner={isOwner} onImprove={setEditModal} />
 
         {/* AI Feedback — BEFORE missions, visible to all if exists */}
         {(isOwner || aiFeedback) ? (
@@ -1295,45 +1375,38 @@ export default function ProjectPage() {
           </div>
         )}
 
-        {/* Missions — visible to all, edit actions only for owner */}
-        {<div style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 20, padding: '28px', marginBottom: 16, marginTop: 8, boxShadow: '0 4px 24px rgba(0,0,0,0.3)' }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 14 }}>
+        {/* Missions */}
+        <div id="missions-section" style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 18, padding: '22px 24px', marginBottom: 16, marginTop: 8, boxShadow: '0 4px 24px rgba(0,0,0,0.2)', scrollMarginTop: 88 }}>
+          {/* Header */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 5 }}>
-                <h3 style={{ margin: 0, fontSize: 20, fontWeight: 800, letterSpacing: '-0.3px' }}>Missões</h3>
-              </div>
-              <p style={{ margin: 0, fontSize: 13, color: colors.muted, paddingLeft: 46 }}>Completa missões para melhorar o score</p>
+              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800, letterSpacing: '-0.2px' }}>Missões</h3>
+              <p style={{ margin: '2px 0 0', fontSize: 12, color: colors.muted }}>{completedCount}/{CHALLENGES.length} completas</p>
             </div>
-            <div style={{
-              background: colors.bg,
-              border: `1px solid ${colors.border}`,
-              borderRadius: 12, padding: '10px 20px',
-              textAlign: 'center', flexShrink: 0,
-            }}>
-              <div style={{ fontSize: 20, fontWeight: 800, color: colors.blue, letterSpacing: '-0.5px' }}>
-                {earnedXP} <span style={{ fontSize: 13, color: colors.subtle, fontWeight: 500 }}>/ {totalXP} pts</span>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: 18, fontWeight: 800, color: colors.blue, letterSpacing: '-0.5px' }}>
+                {earnedXP}<span style={{ fontSize: 12, color: colors.subtle, fontWeight: 500 }}>/{totalXP}</span>
               </div>
-              <div style={{ fontSize: 11, color: colors.muted, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 2 }}>{completedCount}/{CHALLENGES.length} missões completas</div>
+              <div style={{ fontSize: 11, color: colors.subtle, fontWeight: 600 }}>pontos</div>
             </div>
           </div>
 
-          {/* Score progress bar */}
-          <div style={{ height: 6, background: colors.border, borderRadius: 3, overflow: 'hidden', marginBottom: 20 }}>
+          {/* Progress bar */}
+          <div style={{ height: 4, background: colors.border, borderRadius: 99, overflow: 'hidden', marginBottom: 16 }}>
             <div style={{
-              height: '100%', borderRadius: 3,
+              height: '100%', borderRadius: 99,
               width: `${(earnedXP / totalXP) * 100}%`,
               background: `linear-gradient(90deg, ${colors.blue}, ${colors.green})`,
               transition: 'width 0.6s ease-out',
-              boxShadow: '0 0 8px rgba(27,120,247,0.4)',
             }} />
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {sortedChallenges.map(challenge => (
-              <ChallengeCard key={challenge.id} challenge={challenge} project={project} onImprove={setEditModal} isOwner={isOwner} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {sortedChallenges.map(c => (
+              <MissionRow key={c.id} challenge={c} project={project} onImprove={setEditModal} isOwner={isOwner} />
             ))}
           </div>
-        </div>}
+        </div>
 
         {/* Share */}
         <div className="proj-card-pad" style={{
@@ -1405,13 +1478,95 @@ export default function ProjectPage() {
         </div>{/* end proj-main */}
 
         {/* Sidebar */}
-        <aside className="proj-sidebar" style={{ paddingTop: project.cover_url ? 32 : 64 }}>
+        <aside className="proj-sidebar" style={{ paddingTop: project.cover_url ? 32 : 32 }}>
           <MembersPanel
             ownerName={ownerProfile?.full_name || ownerProfile?.username || project.creator_name}
             members={members}
             colors={colors}
             isOwner={isOwner}
           />
+
+          {/* Profile completeness */}
+          {(() => {
+            const fieldQuality = PROFILE_SCORE_FIELDS.map(f => {
+              const val = String(project[f.key] || '').trim()
+              const len = val.length
+              const quality = len === 0 ? 'empty' : len < f.minLen ? 'short' : 'good'
+              return { ...f, val, len, quality }
+            })
+            const goodCount  = fieldQuality.filter(f => f.quality === 'good').length
+            const pct = Math.round((goodCount / fieldQuality.length) * 100)
+
+            return (
+              <div style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 16, padding: '20px 22px', marginTop: 16 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+                  <h3 style={{ margin: 0, fontSize: 11, fontWeight: 800, color: colors.muted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Completude</h3>
+                  <span style={{ fontSize: 13, fontWeight: 800, color: pct === 100 ? '#10b981' : pct > 60 ? colors.blue : colors.yellow }}>{pct}%</span>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {fieldQuality.map(f => (
+                    <div key={f.key} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div style={{ width: 6, height: 6, borderRadius: '50%', flexShrink: 0, background: f.quality === 'good' ? '#10b981' : f.quality === 'short' ? colors.yellow : colors.subtle }} />
+                      <span style={{ flex: 1, fontSize: 12, color: f.quality === 'good' ? colors.text : f.quality === 'short' ? '#d4a820' : colors.subtle, fontWeight: f.quality === 'good' ? 600 : 400 }}>{f.label}</span>
+                      {f.quality === 'good'  && <span style={{ fontSize: 11, color: '#10b981', fontWeight: 800 }}>✓</span>}
+                      {f.quality === 'short' && <span style={{ fontSize: 10, color: colors.yellow, fontWeight: 700 }}>curto</span>}
+                      {f.quality === 'empty' && <span style={{ fontSize: 11, color: colors.subtle }}>—</span>}
+                    </div>
+                  ))}
+                </div>
+                <div style={{ marginTop: 14, height: 4, background: colors.border, borderRadius: 99, overflow: 'hidden' }}>
+                  <div style={{ height: '100%', borderRadius: 99, width: `${pct}%`, background: 'linear-gradient(90deg, #1b78f7, #10b981)', transition: 'width 0.5s' }} />
+                </div>
+              </div>
+            )
+          })()}
+
+          {/* How to improve — contextual tips based on actual quality */}
+          {(() => {
+            const needsWork = PROFILE_SCORE_FIELDS.map(f => {
+              const val = String(project[f.key] || '').trim()
+              const len = val.length
+              const quality = len === 0 ? 'empty' : len < f.minLen ? 'short' : 'good'
+              return { ...f, quality }
+            }).filter(f => f.quality !== 'good').slice(0, 3)
+
+            if (needsWork.length === 0) return (
+              <div style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: 16, padding: '16px 20px', marginTop: 16, textAlign: 'center' }}>
+                <div style={{ fontSize: 20, marginBottom: 6 }}>🎉</div>
+                <p style={{ margin: 0, fontSize: 13, color: '#34d399', fontWeight: 700 }}>Perfil completo!</p>
+              </div>
+            )
+
+            return (
+              <div style={{ background: 'linear-gradient(135deg, rgba(27,120,247,0.07), rgba(79,70,229,0.04))', border: '1px solid rgba(27,120,247,0.18)', borderRadius: 16, padding: '18px 20px', marginTop: 16 }}>
+                <h3 style={{ margin: '0 0 14px', fontSize: 11, fontWeight: 800, color: '#5a9ff5', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#5a9ff5" strokeWidth="2.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                  Como aumentar o score
+                </h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {needsWork.map(f => (
+                    <div key={f.key} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                      <div style={{ width: 5, height: 5, borderRadius: '50%', background: f.quality === 'short' ? colors.yellow : '#1b78f7', flexShrink: 0, marginTop: 6 }} />
+                      <div>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: f.quality === 'short' ? colors.yellow : '#5a9ff5', display: 'block', marginBottom: 2 }}>
+                          {f.label} {f.quality === 'short' ? '· muito curto' : '· em falta'}
+                        </span>
+                        <p style={{ margin: 0, fontSize: 12, color: colors.muted, lineHeight: 1.55 }}>{f.tip}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {isOwner && (
+                  <button
+                    onClick={() => document.getElementById('missions-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                    style={{ marginTop: 14, width: '100%', background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.2)', color: '#5a9ff5', borderRadius: 10, padding: '9px 0', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+                  >
+                    Ver missões ↓
+                  </button>
+                )}
+              </div>
+            )
+          })()}
         </aside>
         </div>{/* end proj-layout */}
 

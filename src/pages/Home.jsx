@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Navbar } from '../components/Navbar'
-import { prefillProject } from '../lib/prefillProject'
 import { supabase } from '../lib/supabase'
 import Onboarding from '../components/Onboarding'
 
@@ -116,20 +115,11 @@ const FEATURES = [
   },
 ]
 
-// Map widget tag → formGoal used inside NewProject
-const TAG_TO_GOAL = {
-  pap:         'school',
-  internship:  'internship',
-  group:       'school',
-  personal:    'show',
-  competition: 'show',
-}
 
 export default function Home() {
   const navigate = useNavigate()
   const [selectedGoal, setSelectedGoal] = useState(null)
   const [inputText, setInputText] = useState('')
-  const [analyzing, setAnalyzing] = useState(false)
   const [showOnboarding, setShowOnboarding] = useState(() => !localStorage.getItem('showo_seen_onboarding'))
   const [projectCount, setProjectCount] = useState(null)
 
@@ -143,28 +133,12 @@ export default function Home() {
     fetchCount()
   }, [])
 
-  async function handleStart(e) {
+  function handleStart(e) {
     e.preventDefault()
-
-    if (!inputText.trim() && !selectedGoal) {
-      navigate('/novo')
-      return
-    }
-
-    setAnalyzing(true)
-    const prefill = await prefillProject(inputText.trim(), selectedGoal)
-    setAnalyzing(false)
-
-    navigate('/novo', {
+    navigate('/interview', {
       state: {
-        prefill: {
-          answers: {
-            ...prefill,
-            project_type: selectedGoal ?? null,
-          },
-          formGoal: TAG_TO_GOAL[selectedGoal] ?? 'show',
-          fromWidget: true,
-        },
+        type:        selectedGoal ?? 'personal',
+        description: inputText.trim(),
       },
     })
   }
@@ -331,19 +305,16 @@ export default function Home() {
               />
               <button
                 type="submit"
-                disabled={analyzing}
                 className="submit-btn"
                 style={{
-                  background: analyzing ? '#1e3050' : '#1b78f7', border: 'none', borderRadius: 12,
+                  background: '#1b78f7', border: 'none', borderRadius: 12,
                   color: '#fff', width: 48, height: 48,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  cursor: analyzing ? 'not-allowed' : 'pointer', flexShrink: 0,
+                  cursor: 'pointer', flexShrink: 0,
                   transition: 'background 0.15s',
                 }}
               >
-                {analyzing ? (
-                  <div style={{ width: 18, height: 18, border: '2px solid rgba(255,255,255,0.3)', borderTop: '2px solid #fff', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
-                ) : (
+                {(
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <line x1="5" y1="12" x2="19" y2="12"/>
                     <polyline points="12 5 19 12 12 19"/>

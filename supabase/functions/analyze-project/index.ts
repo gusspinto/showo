@@ -12,41 +12,60 @@ Deno.serve(async (req) => {
 
   try {
     const { data: project } = await req.json()
+    const client = new Anthropic({ apiKey: Deno.env.get('ANTHROPIC_API_KEY') ?? '' })
 
-    const client = new Anthropic({
-      apiKey: Deno.env.get('ANTHROPIC_API_KEY') ?? '',
-    })
+    const f = (v: string | undefined | null) => v?.trim() || ''
+    const hasContent = (v: string | undefined | null) => (v?.trim()?.length ?? 0) > 10
 
-    const field = (v: string | undefined | null) => v?.trim() || 'Não preenchido'
+    const prompt = `És um mentor sénior especializado em avaliar projetos de estudantes portugueses — PAPs, estágios, projetos universitários e pessoais. Tens 20 anos de experiência em júris de avaliação.
 
-    const prompt = `És um coach especializado em ajudar estudantes portugueses a melhorar os seus projetos PAP e apresentações finais.
+O teu objetivo é dar feedback HONESTO, ESPECÍFICO e ACIONÁVEL. Nunca sejas vago. Cita o que o estudante escreveu e diz exatamente o que falta ou o que está bem.
 
-Analisa este projeto e dá feedback específico, honesto e construtivo em português de Portugal (PT-PT).
+PROJETO A AVALIAR:
+━━━━━━━━━━━━━━━━━━━━━━
+Nome: ${f(project.name) || '(sem nome)'}
+Tipo: ${f(project.project_type) || '(não especificado)'}
+Área: ${f(project.area) || '(não especificada)'}
 
-DADOS DO PROJETO:
-- Nome: ${field(project.name)}
-- Área: ${field(project.area)}
-- Objetivo: ${field(project.goal)}
-- Problema: ${field(project.problem)}
-- Solução: ${field(project.solution)}
-- Público-alvo: ${field(project.target_audience)}
-- Funcionalidades: ${field(project.features)}
-- Tecnologias: ${field(project.technologies)}
-- Desafios: ${field(project.challenges)}
-- Resultados: ${field(project.results)}
-- Aprendizagens: ${field(project.learnings)}
+OBJETIVO: ${f(project.goal) || '(vazio)'}
 
-Regras de avaliação:
-- "fraco": campo vazio, muito curto (<40 chars) ou demasiado vago
-- "médio": preenchido mas poderia ser mais específico ou impactante
-- "forte": claro, específico, com impacto ou exemplos concretos
+PROBLEMA: ${f(project.problem) || '(vazio)'}
+
+SOLUÇÃO: ${f(project.solution) || '(vazio)'}
+
+PÚBLICO-ALVO: ${f(project.target_audience) || '(vazio)'}
+
+FUNCIONALIDADES: ${f(project.features) || '(vazio)'}
+
+TECNOLOGIAS: ${f(project.technologies) || '(vazio)'}
+
+DESAFIOS: ${f(project.challenges) || '(vazio)'}
+
+RESULTADOS: ${f(project.results) || '(vazio)'}
+
+APRENDIZAGENS: ${f(project.learnings) || '(vazio)'}
+━━━━━━━━━━━━━━━━━━━━━━
+
+CRITÉRIOS DE AVALIAÇÃO:
+- "forte": conteúdo específico, claro, com exemplos ou números concretos. Impressiona um júri.
+- "médio": conteúdo presente mas genérico, vago, ou demasiado curto para ser convincente.
+- "fraco": vazio, uma frase só, ou informação que não diz nada de útil.
+
+REGRAS CRÍTICAS:
+1. Cita literalmente partes do que o estudante escreveu no feedback (usa aspas)
+2. O "tip" deve ser uma ação concreta e específica — nunca "podes melhorar" sem dizer COMO
+3. Se o campo tiver 1-2 palavras como "a" ou "teste", considera FRACO e diz isso claramente
+4. Para campos vazios: feedback = "Este campo está vazio" e tip = o que escrever especificamente
+5. Usa PT-PT natural, sem formalidades excessivas
+6. O "overall" deve ser uma avaliação honesta do estado real do projeto, não elogios vazios
+7. O "score_hint" deve identificar o campo que, se melhorado, mais impacto terá no score
 
 Responde APENAS com este JSON (sem markdown, sem texto extra):
 {
-  "overall": "<resumo geral em 1-2 frases sobre o ponto em que o projeto está>",
-  "score_hint": "<o que faria o score subir mais rápido, em 1 frase>",
+  "overall": "<avaliação honesta em 2 frases — o que está bem e o que falta mesmo>",
+  "score_hint": "<campo específico + o que escrever lá para subir mais pontos, 1 frase>",
   "sections": {
-    "goal":            { "rating": "fraco|médio|forte", "feedback": "<o que está bem ou mal, 1 frase>", "tip": "<sugestão concreta de melhoria, começando por um verbo, 1 frase>" },
+    "goal":            { "rating": "fraco|médio|forte", "feedback": "<cita o conteúdo e diz o que falta ou está bem>", "tip": "<ação concreta e específica>" },
     "problem":         { "rating": "...", "feedback": "...", "tip": "..." },
     "solution":        { "rating": "...", "feedback": "...", "tip": "..." },
     "target_audience": { "rating": "...", "feedback": "...", "tip": "..." },
@@ -58,8 +77,8 @@ Responde APENAS com este JSON (sem markdown, sem texto extra):
 }`
 
     const message = await client.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 1200,
+      model: 'claude-sonnet-4-6',
+      max_tokens: 1800,
       messages: [{ role: 'user', content: prompt }],
     })
 
@@ -67,12 +86,11 @@ Responde APENAS com este JSON (sem markdown, sem texto extra):
     const jsonMatch = raw.match(/\{[\s\S]*\}/)
     if (!jsonMatch) throw new Error('Resposta inválida da IA')
 
-    const result = JSON.parse(jsonMatch[0])
-
-    return new Response(JSON.stringify(result), {
+    return new Response(jsonMatch[0], {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } catch (err) {
+    console.error(err)
     return new Response(JSON.stringify({ error: String(err) }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
