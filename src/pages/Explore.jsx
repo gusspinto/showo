@@ -389,12 +389,29 @@ export default function Explore() {
                   )}
 
                   {/* CTA */}
-                  <div style={{ marginTop: 'auto', paddingTop: 6, borderTop: '1px solid rgba(30,48,80,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <span style={{ fontSize: 13, color: '#60a5fa', fontWeight: 600 }}>
-                      {recruiterMode ? '👀 Visitar candidato →' : 'Ver projeto →'}
-                    </span>
+                  <div style={{ marginTop: 'auto', paddingTop: 10 }}>
+                    <button
+                      onClick={e => { e.stopPropagation(); handleProjectClick(project) }}
+                      style={{
+                        width: '100%',
+                        background: recruiterMode
+                          ? 'linear-gradient(135deg, #7c3aed, #4f46e5)'
+                          : 'rgba(27,120,247,0.1)',
+                        border: `1px solid ${recruiterMode ? 'rgba(124,58,237,0.4)' : 'rgba(27,120,247,0.25)'}`,
+                        color: recruiterMode ? '#fff' : '#60a5fa',
+                        borderRadius: 10, padding: '10px 0',
+                        fontSize: 13, fontWeight: 700,
+                        cursor: 'pointer', fontFamily: 'inherit',
+                        letterSpacing: '-0.1px',
+                        boxShadow: recruiterMode ? '0 2px 12px rgba(124,58,237,0.25)' : 'none',
+                      }}
+                    >
+                      {recruiterMode ? 'Ver candidato' : 'Ver projeto'}
+                    </button>
                     {(project.views ?? 0) > 0 && (
-                      <span style={{ fontSize: 11, color: colors.subtle }}>👁 {project.views}</span>
+                      <div style={{ textAlign: 'center', marginTop: 6, fontSize: 11, color: colors.subtle }}>
+                        {project.views} visualização{project.views !== 1 ? 'ões' : ''}
+                      </div>
                     )}
                   </div>
                 </div>
