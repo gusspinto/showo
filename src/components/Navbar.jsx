@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
-import { Check, X, FolderOpen, User, Settings as SettingsIcon, Shield } from 'lucide-react'
+import { Check, X, FolderOpen, User, Settings as SettingsIcon, Shield, Globe, Trophy, LogOut } from 'lucide-react'
 
 const C = {
   bg: 'rgba(13, 20, 36, 0.88)',
@@ -490,13 +490,26 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
         .mobile-drawer-btn {
           background: transparent; border: none;
           color: #7d93b0; font-size: 15px; font-weight: 500;
-          cursor: pointer; padding: 14px 4px; text-align: left;
+          cursor: pointer; padding: 13px 4px; text-align: left;
           font-family: inherit; border-bottom: 1px solid #1e3050;
           transition: color 0.15s;
+          display: flex; align-items: center; gap: 12px;
+          width: 100%;
         }
         .mobile-drawer-btn:last-child { border-bottom: none; }
         .mobile-drawer-btn:hover { color: #e8f2ff; }
         .mobile-drawer-btn.danger { color: #f87171 !important; }
+        .mobile-drawer-pair { display: flex; gap: 8px; padding: 16px 0 4px; }
+        .mobile-drawer-pair-btn {
+          flex: 1; display: flex; align-items: center; justify-content: center; gap: 7px;
+          background: rgba(255,255,255,0.04); border: 1px solid #1e3050;
+          border-radius: 10px; padding: 11px 8px;
+          color: #e8f2ff; font-size: 13px; font-weight: 600;
+          cursor: pointer; font-family: inherit; transition: background 0.15s, border-color 0.15s;
+        }
+        .mobile-drawer-pair-btn:hover { background: rgba(255,255,255,0.08); border-color: #2a4275; }
+        .mobile-drawer-pair-btn.danger { color: #f87171 !important; border-color: rgba(248,113,113,0.2) !important; }
+        .mobile-drawer-pair-btn.danger:hover { background: rgba(248,113,113,0.06) !important; }
       `}</style>
 
       {/* Mobile backdrop blur */}
@@ -512,51 +525,62 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
         />
       )}
 
-      {/* Mobile drawer */}
+      {/* Mobile / tablet drawer */}
       {showLinks && (
         <div className={`mobile-drawer${open ? ' is-open' : ''}`}>
-          <button className="mobile-drawer-btn" onClick={() => { navigate('/explorar'); setOpen(false) }}>Explorar</button>
-          <button className="mobile-drawer-btn" onClick={() => { navigate('/ranking'); setOpen(false) }}>Ranking</button>
+          {/* Nav links */}
+          <button className="mobile-drawer-btn" onClick={() => { navigate('/explorar'); setOpen(false) }}>
+            <Globe size={17} /> Explorar
+          </button>
+          <button className="mobile-drawer-btn" onClick={() => { navigate('/ranking'); setOpen(false) }}>
+            <Trophy size={17} /> Ranking
+          </button>
+
           {user ? (
             <>
-              <button className="mobile-drawer-btn" onClick={() => { navigate('/dashboard'); setOpen(false) }} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'linear-gradient(135deg,#3b82f6,#4f46e5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
+              {/* User header */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '16px 4px 0', borderTop: '1px solid #1e3050', marginTop: 4 }}>
+                <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'linear-gradient(135deg,#3b82f6,#4f46e5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
                   {getInitial(user)}
                 </div>
-                {getDisplayName(user)}
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: '#e8f2ff', lineHeight: 1.2 }}>{getDisplayName(user)}</div>
+                  <div style={{ fontSize: 11, color: '#7d93b0', marginTop: 2 }}>{user.email}</div>
+                </div>
+              </div>
+
+              {/* Dashboard + Meu perfil side by side */}
+              <div className="mobile-drawer-pair">
+                <button className="mobile-drawer-pair-btn" onClick={() => { navigate('/dashboard'); setOpen(false) }}>
+                  <FolderOpen size={15} /> Dashboard
+                </button>
+                {profile?.username && (
+                  <button className="mobile-drawer-pair-btn" onClick={() => { navigate(`/u/${profile.username}`); setOpen(false) }}>
+                    <User size={15} /> Meu perfil
+                  </button>
+                )}
+                <button className="mobile-drawer-pair-btn" onClick={() => { navigate('/settings'); setOpen(false) }}>
+                  <SettingsIcon size={15} /> Definições
+                </button>
+              </div>
+
+              {/* Sair */}
+              <button className="mobile-drawer-pair-btn danger" onClick={() => { handleSignOut(); setOpen(false) }}
+                style={{ width: '100%', marginTop: 6, justifyContent: 'center' }}>
+                <LogOut size={15} /> Sair
               </button>
-              <button className="mobile-drawer-btn" onClick={() => { navigate('/dashboard'); setOpen(false) }}>Dashboard</button>
-              {profile?.username && <button className="mobile-drawer-btn" onClick={() => { navigate(`/u/${profile.username}`); setOpen(false) }}>Meu perfil</button>}
-              <button className="mobile-drawer-btn danger" onClick={() => { handleSignOut(); setOpen(false) }}>Sair</button>
             </>
           ) : (
-            <>
-              <div style={{ display: 'flex', gap: 8, padding: '20px 0 4px' }}>
-                <button
-                  onClick={() => { navigate('/login'); setOpen(false) }}
-                  style={{
-                    flex: 1, padding: '12px 0',
-                    background: 'transparent',
-                    border: '1px solid #1e3050',
-                    borderRadius: 10, color: '#e8f2ff',
-                    fontSize: 14, fontWeight: 600,
-                    cursor: 'pointer', fontFamily: 'inherit',
-                  }}
-                >Entrar</button>
-                <button
-                  onClick={() => { navigate('/register'); setOpen(false) }}
-                  style={{
-                    flex: 1, padding: '12px 0',
-                    background: 'linear-gradient(135deg, #1b78f7, #4f46e5)',
-                    border: 'none',
-                    borderRadius: 10, color: '#fff',
-                    fontSize: 14, fontWeight: 700,
-                    cursor: 'pointer', fontFamily: 'inherit',
-                    boxShadow: '0 4px 16px rgba(27,120,247,0.3)',
-                  }}
-                >Criar conta</button>
-              </div>
-            </>
+            <div style={{ display: 'flex', gap: 8, padding: '16px 0 4px', borderTop: '1px solid #1e3050', marginTop: 4 }}>
+              <button
+                onClick={() => { navigate('/login'); setOpen(false) }}
+                style={{ flex: 1, padding: '12px 0', background: 'transparent', border: '1px solid #1e3050', borderRadius: 10, color: '#e8f2ff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+              >Entrar</button>
+              <button
+                onClick={() => { navigate('/register'); setOpen(false) }}
+                style={{ flex: 1, padding: '12px 0', background: 'linear-gradient(135deg, #1b78f7, #4f46e5)', border: 'none', borderRadius: 10, color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 16px rgba(27,120,247,0.3)' }}
+              >Criar conta</button>
+            </div>
           )}
         </div>
       )}

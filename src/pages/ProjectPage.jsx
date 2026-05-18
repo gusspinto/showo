@@ -81,6 +81,16 @@ const SECTION_META = {
   learnings:       { Icon: Lightbulb,  label: 'Aprendizagens' },
 }
 
+// Progress bar gradient: white → blue, darker as pct increases (closer to goal = darker blue)
+function progBar(pct) {
+  const blue = pct >= 90 ? '#0f4ba0'
+             : pct >= 70 ? '#1348c0'
+             : pct >= 50 ? '#1564d4'
+             : pct >= 30 ? '#1b78f7'
+             :              '#60a5fa'
+  return `linear-gradient(90deg, rgba(255,255,255,0.85) 0%, ${blue} 100%)`
+}
+
 function getLevelInfo(score) {
   if (score === 100) return { label: 'Projeto completo!', color: colors.green }
   if (score >= 81) return { label: 'Impressionante', color: colors.blue }
@@ -248,7 +258,7 @@ function MissionRow({ challenge, project, onImprove, isOwner }) {
               <div style={{
                 height: '100%', borderRadius: 99,
                 width: `${progress * 100}%`,
-                background: progress > 0.7 ? `linear-gradient(90deg,${colors.orange},${colors.yellow})` : 'linear-gradient(90deg,#1b78f7,#818cf8)',
+                background: progBar(Math.round(progress * 100)),
               }} />
             </div>
             <span style={{ fontSize: 10, color: colors.subtle, flexShrink: 0 }}>{val.length}/{challenge.threshold}</span>
@@ -850,10 +860,16 @@ export default function ProjectPage() {
           top: 88px;
         }
         @media (max-width: 860px) {
+          /* Dissolve proj-main so hero / body / sidebar can be individually ordered */
           .proj-layout { grid-template-columns: 1fr; }
-          .proj-sidebar { position: static; order: 2; }
+          .proj-main   { display: contents; }
+          .proj-hero   { order: 1; min-width: 0; }
+          .proj-sidebar{ position: static; order: 2; min-width: 0; }
+          .proj-body   { order: 3; min-width: 0; }
         }
-        .proj-edit-inline    { display: none !important; }
+        /* Edit button always visible next to title */
+        .proj-edit-inline    { display: flex; }
+        .proj-h1-row         { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
         .proj-dashboard      { display: none; }
         .proj-ai-fab         { display: none; }
         .proj-fab-area       { display: none; }
@@ -864,10 +880,6 @@ export default function ProjectPage() {
           .sidebar-section-body.collapsed { display: none !important; }
           .proj-nav-btns     { display: none !important; }
           .proj-fab-area     { display: flex !important; }
-          /* Tablet: edit button next to project name */
-          .proj-edit-inline  { display: flex !important; }
-          .proj-h1-row       { display: flex !important; align-items: flex-start !important; gap: 8px !important; margin-bottom: 16px !important; }
-          .proj-h1           { padding-right: 0 !important; margin-bottom: 0 !important; }
           /* Tablet: defense FAB is pill-shaped with label */
           .proj-fab-defense-label { display: inline !important; }
         }
@@ -877,7 +889,6 @@ export default function ProjectPage() {
           .proj-cover        { height: 200px !important; margin-top: 20px !important; border-radius: 14px !important; }
           .proj-hero         { padding: 20px 0 16px !important; }
           .proj-h1           { font-size: 24px !important; }
-          .proj-score-mob    { display: none !important; }
           .proj-score-abs    { transform: scale(0.72); transform-origin: top right; }
           .proj-tagline      { font-size: 15px !important; }
           .proj-card-pad     { padding: 18px 16px !important; border-radius: 14px !important; }
@@ -975,24 +986,6 @@ export default function ProjectPage() {
               <GraduationCap size={15} /> Preparar defesa
             </button>
           )}
-          {project && (isOwner || collaboratorSections !== null) && (
-            <button
-              onClick={() => {
-                const token = localStorage.getItem(`edit_token_${project.slug}`)
-                navigate(`/editar/${project.slug}${token ? `?token=${token}` : ''}`)
-              }}
-              style={{
-                background: 'transparent',
-                border: `1px solid ${colors.border}`,
-                color: colors.muted,
-                borderRadius: 8, padding: '8px 16px',
-                fontSize: 13, fontWeight: 600,
-                cursor: 'pointer', fontFamily: 'inherit',
-              }}
-            >
-              Editar
-            </button>
-          )}
         </div>
       </Navbar>
 
@@ -1036,7 +1029,7 @@ export default function ProjectPage() {
           {(() => {
             const hero = TYPE_HERO[project.project_type] ?? TYPE_HERO.personal
             return (
-              <div className="proj-badges" style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
+              <div className="proj-badges" style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 15 }}>
                 {project.project_type && PROJECT_TYPE_LABELS[project.project_type] && (
                   <div style={{
                     background: `linear-gradient(135deg, ${hero.c1}, ${hero.c2})`,
@@ -1061,9 +1054,9 @@ export default function ProjectPage() {
             )
           })()}
 
-          {/* Title row — edit icon on mobile */}
-          <div className="proj-h1-row" style={{ marginBottom: 16 }}>
-            <h1 className="proj-h1" style={{ fontSize: 'clamp(26px, 5vw, 52px)', fontWeight: 900, margin: 0, lineHeight: 1.1, letterSpacing: '-0.5px', flex: 1 }}>
+          {/* Title row — edit icon always visible */}
+          <div className="proj-h1-row">
+            <h1 className="proj-h1" style={{ fontSize: 'clamp(22px, 5vw, 48px)', fontWeight: 900, margin: 0, lineHeight: 1.1, letterSpacing: '-0.5px', flex: 1 }}>
               {project.name}
             </h1>
             {isOwner && (
@@ -1076,14 +1069,14 @@ export default function ProjectPage() {
                 title="Editar projeto"
                 style={{
                   alignItems: 'center', justifyContent: 'center',
-                  width: 36, height: 36, borderRadius: 10, flexShrink: 0, marginTop: 4,
+                  width: 34, height: 34, borderRadius: 9, flexShrink: 0,
                   background: 'rgba(255,255,255,0.05)',
                   border: `1px solid ${colors.border}`,
                   color: colors.muted, cursor: 'pointer',
                   transition: 'all 0.15s',
                 }}
               >
-                <Pencil size={16} />
+                <Pencil size={15} />
               </button>
             )}
           </div>
@@ -1107,7 +1100,7 @@ export default function ProjectPage() {
                 <div style={{
                   height: '100%', borderRadius: 2,
                   width: `${(earnedXP / totalXP) * 100}%`,
-                  background: `linear-gradient(90deg, ${colors.blue}, ${colors.green})`,
+                  background: progBar(Math.round((earnedXP / totalXP) * 100)),
                   transition: 'width 0.5s',
                 }} />
               </div>
@@ -1118,7 +1111,7 @@ export default function ProjectPage() {
           </div>
 
           {project.ai_tagline && (
-            <p className="proj-tagline" style={{ fontSize: 19, color: colors.muted, lineHeight: 1.65, margin: '0 0 24px', maxWidth: 580, fontWeight: 400 }}>
+            <p className="proj-tagline" style={{ fontSize: 18, color: colors.muted, lineHeight: 1.6, margin: '0 0 20px', maxWidth: 580, fontWeight: 400 }}>
               {project.ai_tagline}
             </p>
           )}
@@ -1166,9 +1159,9 @@ export default function ProjectPage() {
           )}
           </div>{/* end left flex column */}
 
-          {/* Score ring — right flex column, desktop only (hidden on mobile via CSS) */}
+          {/* Score ring — right flex column */}
           <div className="proj-score-abs" style={{
-            flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, paddingTop: 8,
+            flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, alignSelf: 'center',
           }}>
             <ScoreRing score={displayScore} />
             <div style={{
@@ -1191,7 +1184,10 @@ export default function ProjectPage() {
             )}
           </div>
           </div>{/* end flex row */}
-        </div>
+        </div>{/* end proj-hero */}
+
+        {/* proj-body: everything after hero — ordered after sidebar on tablet/mobile */}
+        <div className="proj-body">
 
         {/* AI Description */}
         {project.ai_description && (
@@ -1405,7 +1401,7 @@ export default function ProjectPage() {
                 <div style={{
                   height: '100%', borderRadius: 99,
                   width: `${(earnedXP / totalXP) * 100}%`,
-                  background: 'linear-gradient(90deg, rgba(255,255,255,0.85), #1b78f7)',
+                  background: progBar(Math.round((earnedXP / totalXP) * 100)),
                   transition: 'width 0.6s ease-out',
                 }} />
               </div>
@@ -1481,6 +1477,7 @@ export default function ProjectPage() {
           <img src="/logo.png" alt="Showo" style={{ height: 16, width: 'auto', verticalAlign: 'middle', opacity: 0.7 }} />
           {' '}· Transforma projetos em páginas profissionais
         </div>
+        </div>{/* end proj-body */}
         </div>{/* end proj-main */}
 
         {/* Sidebar */}
@@ -1533,7 +1530,7 @@ export default function ProjectPage() {
                     ))}
                   </div>
                   <div style={{ marginTop: 14, height: 4, background: colors.border, borderRadius: 99, overflow: 'hidden' }}>
-                    <div style={{ height: '100%', borderRadius: 99, width: `${pct}%`, background: 'linear-gradient(90deg, #1b78f7, #10b981)', transition: 'width 0.5s' }} />
+                    <div style={{ height: '100%', borderRadius: 99, width: `${pct}%`, background: progBar(pct), transition: 'width 0.5s' }} />
                   </div>
                 </div>
               </div>
