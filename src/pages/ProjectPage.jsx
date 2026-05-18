@@ -196,7 +196,7 @@ function Section({ fieldKey, content, isOwner, onImprove }) {
       ) : (
         <>
           <p style={{ margin: 0, color: isShort ? '#afc3dc' : colors.text, fontSize: 15, lineHeight: 1.75, whiteSpace: 'pre-wrap' }}>{content}</p>
-          {isShort && fieldCfg?.tip && (
+          {isOwner && isShort && fieldCfg?.tip && (
             <div style={{ marginTop: 12, display: 'flex', alignItems: 'flex-start', gap: 8, background: 'rgba(234,179,8,0.05)', border: '1px solid rgba(234,179,8,0.14)', borderRadius: 8, padding: '9px 12px' }}>
               <Lightbulb size={13} color="#d4a820" style={{ flexShrink: 0 }} />
               <p style={{ margin: 0, fontSize: 12, color: '#d4a820', lineHeight: 1.6 }}>{fieldCfg.tip}</p>
@@ -1560,8 +1560,8 @@ export default function ProjectPage() {
           </div>
         )}
 
-        {/* Missions */}
-        <div id="missions-section" style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 18, padding: '22px 24px', marginBottom: 16, marginTop: 8, boxShadow: '0 4px 24px rgba(0,0,0,0.2)', scrollMarginTop: 88 }}>
+        {/* Missions — owner only */}
+        {isOwner && <div id="missions-section" style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 18, padding: '22px 24px', marginBottom: 16, marginTop: 8, boxShadow: '0 4px 24px rgba(0,0,0,0.2)', scrollMarginTop: 88 }}>
           {/* Header */}
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 16, gap: 12 }}>
             <div>
@@ -1593,7 +1593,7 @@ export default function ProjectPage() {
               <MissionRow key={c.id} challenge={c} project={project} onImprove={setEditModal} isOwner={isOwner} />
             ))}
           </div>
-        </div>
+        </div>}
 
         {/* Share */}
         <div className="proj-card-pad" style={{
@@ -1677,7 +1677,7 @@ export default function ProjectPage() {
           />
 
           {/* Profile completeness */}
-          {(() => {
+          {isOwner && (() => {
             const fieldQuality = PROFILE_SCORE_FIELDS.map(f => {
               const val = String(project[f.key] || '').trim()
               const len = val.length
@@ -1724,8 +1724,8 @@ export default function ProjectPage() {
             )
           })()}
 
-          {/* How to improve — contextual tips based on actual quality */}
-          {(() => {
+          {/* How to improve — owner only */}
+          {isOwner && (() => {
             const needsWork = PROFILE_SCORE_FIELDS.map(f => {
               const val = String(project[f.key] || '').trim()
               const len = val.length

@@ -7,3 +7,5 @@ LANGUAGE sql SECURITY DEFINER AS $$
   SET views = COALESCE(views, 0) + 1
   WHERE id = project_id;
 $$;
+
+GRANT EXECUTE ON FUNCTION public.increment_project_views(UUID) TO anon, authenticated;
