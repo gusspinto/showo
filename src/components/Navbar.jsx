@@ -539,8 +539,8 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
 
           {user ? (
             <div className="nav-drawer-profile">
-              {/* User header */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '16px 4px 0', borderTop: '1px solid #1e3050', marginTop: 4 }}>
+              {/* User header — border-bottom do botão Ranking já separa, sem borderTop extra */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 4px 0' }}>
                 <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'linear-gradient(135deg,#3b82f6,#4f46e5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
                   {getInitial(user)}
                 </div>

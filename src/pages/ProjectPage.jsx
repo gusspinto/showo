@@ -880,6 +880,7 @@ export default function ProjectPage() {
         .proj-h1-row         { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
         .proj-dashboard      { display: none; }
         .proj-ai-fab         { display: none; }
+        .proj-ai-fab-label   { display: none; }
         .proj-fab-area       { display: none; }
         .proj-fab-defense-label { display: none; }
         .sidebar-section-toggle { display: none; }
@@ -888,8 +889,10 @@ export default function ProjectPage() {
           .sidebar-section-body.collapsed { display: none !important; }
           .proj-nav-btns     { display: none !important; }
           .proj-fab-area     { display: flex !important; }
-          .proj-ai-fab       { display: flex !important; }
-          /* Tablet: defense FAB is pill-shaped with label */
+          /* AI FAB — pill com label no tablet */
+          .proj-ai-fab       { display: flex !important; border-radius: 999px !important; width: auto !important; padding: 0 18px !important; gap: 8px !important; font-family: var(--font-body); font-size: 14px; font-weight: 700; }
+          .proj-ai-fab-label { display: inline !important; }
+          /* Defense FAB — pill com label no tablet */
           .proj-fab-defense-label { display: inline !important; }
         }
         @media (max-width: 600px) {
@@ -902,7 +905,9 @@ export default function ProjectPage() {
           .proj-tagline      { font-size: 15px !important; }
           .proj-card-pad     { padding: 18px 16px !important; border-radius: 14px !important; }
           .proj-badges       { margin-bottom: 10px !important; }
-          /* Mobile: defense FAB is circular, no label */
+          /* Mobile: ambos os FABs circulares, sem label */
+          .proj-ai-fab       { border-radius: 50% !important; width: 52px !important; padding: 0 !important; gap: 0 !important; }
+          .proj-ai-fab-label { display: none !important; }
           .proj-fab-defense-label { display: none !important; }
           .proj-fab-defense { padding: 0 !important; width: 52px !important; min-width: 52px !important; }
         }
@@ -1073,6 +1078,7 @@ export default function ProjectPage() {
             }}
           >
             <Sparkles size={22} />
+            <span className="proj-ai-fab-label">Análise</span>
           </button>
         )}
         {/* Defense FAB — circular on mobile, pill with text on tablet */}
@@ -1101,6 +1107,26 @@ export default function ProjectPage() {
 
       <Navbar showCreateProject={true}>
         <div className="proj-nav-btns" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {isOwner && (
+            <button
+              onClick={handleAIClick}
+              style={{
+                background: 'rgba(109,40,217,0.08)',
+                border: '1px solid rgba(109,40,217,0.25)',
+                color: '#a78bfa',
+                borderRadius: 8, padding: '8px 14px',
+                fontSize: 13, fontWeight: 600,
+                cursor: 'pointer', fontFamily: 'inherit',
+                display: 'flex', alignItems: 'center', gap: 6,
+                transition: 'background 0.15s',
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = 'rgba(109,40,217,0.15)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'rgba(109,40,217,0.08)'}
+              title="Análise do projeto com IA"
+            >
+              <Sparkles size={15} /> Análise IA
+            </button>
+          )}
           {(isOwner || collaboratorSections !== null) && (
             <button
               onClick={() => setDefenseMode(true)}
