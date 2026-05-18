@@ -186,22 +186,29 @@ export default function Home() {
           background: rgba(27,120,247,0.06) !important;
         }
 
+        /* Tablet */
+        @media (max-width: 860px) {
+          .features-grid { grid-template-columns: repeat(2, 1fr) !important; }
+        }
+
         @media (max-width: 600px) {
           .hero-section  { min-height: calc(100dvh - 62px) !important; justify-content: center !important; padding: 32px 20px 48px !important; }
-          .hero-h1       { font-size: 32px !important; letter-spacing: -0.5px !important; margin-bottom: 14px !important; }
+          .hero-h1       { font-size: 30px !important; letter-spacing: -0.5px !important; margin-bottom: 12px !important; min-height: auto !important; }
           .hero-sub      { font-size: 15px !important; }
-          .hero-widget   { margin-top: 32px !important; max-width: 100% !important; }
-          .goals-row     { flex-wrap: nowrap !important; overflow-x: auto !important; justify-content: flex-start !important; padding-bottom: 4px !important; scrollbar-width: none !important; }
+          .hero-widget   { margin-top: 28px !important; max-width: 100% !important; }
+          .goals-row     { flex-wrap: nowrap !important; overflow-x: auto !important; justify-content: flex-start !important; padding-bottom: 6px !important; scrollbar-width: none !important; -webkit-overflow-scrolling: touch !important; }
           .goals-row::-webkit-scrollbar { display: none !important; }
-          .goal-pill     { font-size: 11px !important; padding: 5px 12px !important; flex-shrink: 0 !important; }
-          .widget-box    { padding: 3px 3px 3px 16px !important; border-radius: 12px !important; }
-          .widget-input  { padding: 7px 0 !important; font-size: 14px !important; }
-          .submit-btn    { width: 38px !important; height: 38px !important; border-radius: 9px !important; }
-          .social-strip  { flex-direction: column !important; gap: 8px !important; font-size: 12px !important; }
-          .features-grid { grid-template-columns: 1fr !important; }
-          .feature-card  { padding: 18px 16px !important; }
-          .hero-badge    { font-size: 10px !important; padding: 4px 10px !important; gap: 5px !important; }
-          .hero-note     { font-size: 10px !important; }
+          .goal-pill     { font-size: 12px !important; padding: 6px 14px !important; flex-shrink: 0 !important; min-height: 36px !important; }
+          .widget-box    { padding: 4px 4px 4px 16px !important; border-radius: 14px !important; }
+          .widget-input  { padding: 8px 0 !important; font-size: 15px !important; }
+          .submit-btn    { width: 42px !important; height: 42px !important; border-radius: 10px !important; }
+          .social-strip  { gap: 10px !important; font-size: 12px !important; justify-content: center !important; }
+          .features-grid { grid-template-columns: 1fr !important; gap: 12px !important; }
+          .feature-card  { padding: 20px 18px !important; }
+          .hero-badge    { font-size: 11px !important; padding: 5px 12px !important; gap: 6px !important; }
+          .hero-note     { font-size: 11px !important; }
+          .home-ctas     { flex-direction: column !important; gap: 10px !important; align-items: stretch !important; }
+          .home-ctas button { width: 100% !important; justify-content: center !important; }
         }
       `}</style>
 
@@ -390,7 +397,7 @@ export default function Home() {
         >
           Criar o meu projeto →
         </button>
-        <div style={{ marginTop: 20, display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
+        <div className="home-ctas" style={{ marginTop: 20, display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
           <button onClick={() => navigate('/explorar')} className="home-sec-btn"
             style={{ background: 'transparent', color: colors.muted, border: `1px solid ${colors.border}`, borderRadius: 12, padding: '10px 22px', fontSize: 13, cursor: 'pointer', fontWeight: 600, fontFamily: 'var(--font-body)' }}>
             Ver projetos públicos

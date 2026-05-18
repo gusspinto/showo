@@ -2,18 +2,21 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
+import { Pencil, ExternalLink } from 'lucide-react'
 import { Navbar } from '../components/Navbar'
 import { Folder, Trophy, BarChart2, Rocket, Eye } from 'lucide-react'
 
 const C = {
   bg: '#0d1424',
-  card: '#111827',
-  cardHover: '#16213a',
+  card: '#152030',
+  cardHover: '#1c2d44',
   border: '#1e3050',
-  blue: '#3b82f6',
-  blueHover: '#2563eb',
+  borderBright: '#2a4275',
+  blue: '#1b78f7',
+  blueHover: '#1564d4',
   muted: '#7d93b0',
   text: '#e8f2ff',
+  subtle: '#3d5270',
   green: '#34d399',
   yellow: '#fbbf24',
   red: '#f87171',
@@ -74,8 +77,8 @@ function ActionBtn({ onClick, label, primary }) {
         border: primary ? 'none' : `1px solid ${C.border}`,
         borderRadius: 7, padding: '7px 14px',
         color: primary ? '#fff' : C.muted,
-        fontSize: 13, fontWeight: 500, cursor: 'pointer',
-        fontFamily: 'Inter, sans-serif', transition: 'background 0.15s, color 0.15s',
+        fontSize: 13, fontWeight: 600, cursor: 'pointer',
+        fontFamily: 'var(--font-body)', transition: 'background 0.15s, color 0.15s',
       }}
     >
       {label}
@@ -94,12 +97,13 @@ function ProjectRow({ project, onView, onEdit }) {
       onMouseLeave={() => setHovered(false)}
       style={{
         background: hovered ? C.cardHover : C.card,
-        border: `1px solid ${hovered ? '#2a4070' : C.border}`,
+        border: `1px solid ${hovered ? C.borderBright : C.border}`,
         borderRadius: 12, padding: '16px 20px',
         display: 'flex', alignItems: 'center', gap: 14,
         transition: 'background 0.15s, border-color 0.15s',
         cursor: 'default',
       }}
+      className="dash-project-row"
     >
       {/* Score ring */}
       <div style={{
@@ -117,7 +121,7 @@ function ProjectRow({ project, onView, onEdit }) {
       </div>
 
       {/* Info */}
-      <div style={{ flex: 1, minWidth: 0 }}>
+      <div className="dash-project-info" style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
           <span style={{ color: C.text, fontSize: 15, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {project.name}
@@ -133,11 +137,11 @@ function ProjectRow({ project, onView, onEdit }) {
             {project.ai_tagline}
           </p>
         )}
-        <span style={{ color: '#374151', fontSize: 11, marginTop: 3, display: 'block' }}>{date}</span>
+        <span style={{ color: C.subtle, fontSize: 11, marginTop: 3, display: 'block' }}>{date}</span>
       </div>
 
       {/* Actions */}
-      <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+      <div className="dash-project-actions">
         <ActionBtn onClick={onEdit} label="Editar" />
         <ActionBtn onClick={onView} label="Ver" primary />
       </div>
@@ -146,7 +150,7 @@ function ProjectRow({ project, onView, onEdit }) {
 }
 
 export default function Dashboard() {
-  const { user, loading: authLoading } = useAuth()
+  const { user, profile, loading: authLoading } = useAuth()
   const navigate = useNavigate()
   const [projects, setProjects] = useState([])
   const [loadingProjects, setLoadingProjects] = useState(true)
@@ -196,8 +200,18 @@ export default function Dashboard() {
   })()
 
   return (
-    <div style={{ minHeight: '100vh', background: C.bg, fontFamily: 'Inter, sans-serif' }}>
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    <div style={{ minHeight: '100vh', background: C.bg, fontFamily: 'var(--font-body)' }}>
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .dash-header-btns { display: flex; gap: 8px; }
+        .dash-project-actions { display: flex; gap: 6px; flex-shrink: 0; }
+        @media (max-width: 600px) {
+          .dash-header-btns { flex-wrap: wrap; }
+          .dash-project-row { flex-wrap: wrap; gap: 10px !important; }
+          .dash-project-info { min-width: 0; flex: 1 1 calc(100% - 58px); }
+          .dash-project-actions { width: 100%; justify-content: flex-end; border-top: 1px solid #1e3050; padding-top: 10px; margin-top: 2px; }
+        }
+      `}</style>
       <Navbar />
 
       <div style={{ maxWidth: 800, margin: '0 auto', padding: '44px 24px 80px' }}>
@@ -210,17 +224,17 @@ export default function Dashboard() {
             </h1>
             <p style={{ color: C.muted, fontSize: 15, margin: 0 }}>{user.email}</p>
           </div>
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div className="dash-header-btns">
             <button
               onClick={() => navigate(profile?.username ? `/u/${profile.username}` : `/u/${user.id}`)}
               style={{
                 background: 'transparent', border: `1px solid ${C.border}`,
                 borderRadius: 8, padding: '8px 14px',
                 color: C.muted, fontSize: 13, fontWeight: 500,
-                cursor: 'pointer', fontFamily: 'Inter, sans-serif',
+                cursor: 'pointer', fontFamily: 'var(--font-body)',
                 transition: 'border-color 0.15s, color 0.15s',
               }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = '#2a4275'; e.currentTarget.style.color = C.text }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = C.borderBright; e.currentTarget.style.color = C.text }}
               onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted }}
             >
               Ver perfil
@@ -231,10 +245,10 @@ export default function Dashboard() {
                 background: 'transparent', border: `1px solid ${C.border}`,
                 borderRadius: 8, padding: '8px 14px',
                 color: C.muted, fontSize: 13, fontWeight: 500,
-                cursor: 'pointer', fontFamily: 'Inter, sans-serif',
+                cursor: 'pointer', fontFamily: 'var(--font-body)',
                 transition: 'border-color 0.15s, color 0.15s',
               }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = '#2a4275'; e.currentTarget.style.color = C.text }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = C.borderBright; e.currentTarget.style.color = C.text }}
               onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted }}
             >
               Definições

@@ -96,12 +96,27 @@ export default function Explore() {
   return (
     <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: 'var(--font-body)' }}>
       <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
         .explore-card:hover {
           border-color: #2a4275 !important;
           transform: translateY(-3px) !important;
           box-shadow: 0 12px 40px rgba(0,0,0,0.45) !important;
         }
         .explore-card { transition: all 0.2s ease !important; }
+        .explore-grid { grid-template-columns: repeat(auto-fill, minmax(288px, 1fr)); }
+        @media (max-width: 680px) {
+          .explore-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)) !important; }
+        }
+        @media (max-width: 440px) {
+          .explore-grid { grid-template-columns: 1fr !important; }
+        }
+        .explore-search {
+          width: 100%; background: #152030; border: 1px solid #1e3050; border-radius: 12px;
+          color: #e8f2ff; font-size: 15px; padding: 14px 16px 14px 48px;
+          outline: none; font-family: var(--font-body); box-sizing: border-box;
+          transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .explore-search:focus { border-color: #1b78f7 !important; box-shadow: 0 0 0 3px rgba(27,120,247,0.12) !important; }
       `}</style>
 
       <Navbar>
@@ -138,37 +153,16 @@ export default function Explore() {
           </svg>
           <input
             type="text"
+            className="explore-search"
             placeholder="Pesquisar por nome, área ou curso..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            style={{
-              width: '100%',
-              background: colors.card,
-              border: `1px solid ${colors.border}`,
-              borderRadius: 12,
-              color: colors.text,
-              fontSize: 15,
-              padding: '14px 16px 14px 48px',
-              outline: 'none',
-              fontFamily: 'var(--font-body)',
-              boxSizing: 'border-box',
-              transition: 'border-color 0.2s, box-shadow 0.2s',
-            }}
-            onFocus={e => {
-              e.target.style.borderColor = colors.blue
-              e.target.style.boxShadow = '0 0 0 3px rgba(27,120,247,0.1)'
-            }}
-            onBlur={e => {
-              e.target.style.borderColor = colors.border
-              e.target.style.boxShadow = 'none'
-            }}
           />
         </div>
 
         {loading ? (
           <div style={{ display: 'flex', justifyContent: 'center', padding: '80px 0' }}>
             <div style={{ width: 36, height: 36, border: `3px solid ${colors.border}`, borderTop: `3px solid ${colors.blue}`, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
-            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
           </div>
         ) : filtered.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '80px 0', color: colors.muted }}>
@@ -194,7 +188,7 @@ export default function Explore() {
             <div style={{ color: colors.subtle, fontSize: 13, marginBottom: 20, fontWeight: 500 }}>
               {filtered.length} projeto{filtered.length !== 1 ? 's' : ''}{query && ` para "${search}"`}
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(288px, 1fr))', gap: 16 }}>
+            <div className="explore-grid" style={{ display: 'grid', gap: 16 }}>
               {filtered.map(project => {
                 const scoreColor = getLevelColor(project.score)
                 return (
@@ -273,17 +267,8 @@ export default function Explore() {
                     )}
 
                     {/* CTA */}
-                    <div style={{ marginTop: 'auto', paddingTop: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ marginTop: 'auto', paddingTop: 6, borderTop: '1px solid rgba(30,48,80,0.6)' }}>
                       <span style={{ fontSize: 13, color: '#60a5fa', fontWeight: 600 }}>Ver projeto →</span>
-                      <div style={{
-                        width: 26, height: 26, borderRadius: '50%',
-                        background: 'rgba(27,120,247,0.08)',
-                        border: '1px solid rgba(27,120,247,0.15)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: 12, color: '#60a5fa',
-                      }}>
-                        →
-                      </div>
                     </div>
                   </div>
                 )

@@ -885,11 +885,11 @@ export default function ProjectPage() {
         }
         @media (max-width: 600px) {
           .proj-ai-fab     { display: flex !important; }
-          .proj-wrap         { padding: 0 16px 120px !important; overflow-x: hidden !important; }
+          .proj-wrap         { padding: 0 16px 80px !important; overflow-x: hidden !important; }
           .proj-cover        { height: 200px !important; margin-top: 20px !important; border-radius: 14px !important; }
           .proj-hero         { padding: 20px 0 16px !important; }
           .proj-h1           { font-size: 24px !important; }
-          .proj-score-abs    { transform: scale(0.72); transform-origin: top right; }
+          .proj-score-abs    { transform: scale(0.68); transform-origin: center right; }
           .proj-tagline      { font-size: 15px !important; }
           .proj-card-pad     { padding: 18px 16px !important; border-radius: 14px !important; }
           .proj-badges       { margin-bottom: 10px !important; }
@@ -1481,7 +1481,7 @@ export default function ProjectPage() {
         </div>{/* end proj-main */}
 
         {/* Sidebar */}
-        <aside className="proj-sidebar" style={{ paddingTop: project.cover_url ? 32 : 32 }}>
+        <aside className="proj-sidebar" style={{ paddingTop: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
           <MembersPanel
             ownerName={ownerProfile?.full_name || ownerProfile?.username || project.creator_name}
             members={members}
@@ -1501,7 +1501,7 @@ export default function ProjectPage() {
             const pct = Math.round((goodCount / fieldQuality.length) * 100)
 
             return (
-              <div style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 16, padding: '20px 22px', marginTop: 16 }}>
+              <div style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 16, padding: '20px 22px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: completudeOpen ? 14 : 0 }}>
                   <h3 style={{ margin: 0, fontSize: 11, fontWeight: 800, color: colors.muted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Completude</h3>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -1547,14 +1547,14 @@ export default function ProjectPage() {
             }).filter(f => f.quality !== 'good').slice(0, 3)
 
             if (needsWork.length === 0) return (
-              <div style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: 16, padding: '16px 20px', marginTop: 16, textAlign: 'center' }}>
+              <div style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: 16, padding: '16px 20px', textAlign: 'center' }}>
                 <CheckCircle size={24} color="#34d399" style={{ marginBottom: 6 }} />
                 <p style={{ margin: 0, fontSize: 13, color: '#34d399', fontWeight: 700 }}>Perfil completo!</p>
               </div>
             )
 
             return (
-              <div style={{ background: 'linear-gradient(135deg, rgba(27,120,247,0.07), rgba(79,70,229,0.04))', border: '1px solid rgba(27,120,247,0.18)', borderRadius: 16, padding: '18px 20px', marginTop: 16 }}>
+              <div style={{ background: 'linear-gradient(135deg, rgba(27,120,247,0.07), rgba(79,70,229,0.04))', border: '1px solid rgba(27,120,247,0.18)', borderRadius: 16, padding: '18px 20px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: tipsOpen ? 14 : 0 }}>
                   <h3 style={{ margin: 0, fontSize: 11, fontWeight: 800, color: '#5a9ff5', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'flex', alignItems: 'center', gap: 6 }}>
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#5a9ff5" strokeWidth="2.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>

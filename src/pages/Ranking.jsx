@@ -163,7 +163,13 @@ export default function Ranking() {
         .rank-top:hover { transform: translateX(3px) !important; box-shadow: 0 4px 24px rgba(0,0,0,0.4) !important; }
         .rank-mid:hover { transform: translateX(4px) !important; }
         .rank-rest:hover { background: ${colors.cardHover} !important; }
-        .rank-top, .rank-mid, .rank-rest { transition: all 0.18s ease !important; }
+        .rank-top, .rank-mid, .rank-rest { transition: all 0.18s ease !important; cursor: pointer !important; }
+        @media (max-width: 600px) {
+          .rank-filters { flex-direction: column !important; gap: 8px !important; }
+          .rank-filters select { width: 100% !important; }
+          .rank-top-cards { gap: 8px !important; }
+          .rank-mid-cards { gap: 8px !important; }
+        }
       `}</style>
 
       <Navbar>
@@ -191,7 +197,7 @@ export default function Ranking() {
         </div>
 
         {/* Filters */}
-        <div style={{ display: 'flex', gap: 10, marginBottom: 36, flexWrap: 'wrap', alignItems: 'center' }}>
+        <div className="rank-filters" style={{ display: 'flex', gap: 10, marginBottom: 36, flexWrap: 'wrap', alignItems: 'center' }}>
           <select
             value={areaFilter}
             onChange={e => setAreaFilter(e.target.value)}
@@ -244,7 +250,7 @@ export default function Ranking() {
 
             {/* ── TOP 3 ── hall of fame */}
             {top3.length > 0 && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 8 }}>
+              <div className="rank-top-cards" style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 8 }}>
                 {top3.map((project, i) => {
                   const t = TOP3[i]
                   const RankIcon = t.Icon
