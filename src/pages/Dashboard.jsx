@@ -190,7 +190,7 @@ function QuickCreateProject({ navigate }) {
           <input
             value={desc}
             onChange={e => setDesc(e.target.value)}
-            placeholder="Descreve o teu projeto em poucas palavras..."
+            placeholder={type ? `Nome do teu ${QUICK_TYPES.find(t => t.id === type)?.label.toLowerCase()}...` : 'Descreve o teu projeto em poucas palavras...'}
             style={{ flex: 1, background: '#0d1424', border: `1px solid ${C.border}`, borderRadius: 10, padding: '12px 16px', color: C.text, fontSize: 14, fontFamily: 'inherit', outline: 'none', minWidth: 0 }}
             onFocus={e => e.target.style.borderColor = C.borderBright}
             onBlur={e => e.target.style.borderColor = C.border}
