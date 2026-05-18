@@ -195,82 +195,85 @@ export default function Ranking() {
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
 
-            {/* ── TOP 3 ── */}
+            {/* ── PODIUM ── */}
             {top3.length > 0 && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <p style={{ margin: '0 0 8px', fontSize: 11, fontWeight: 700, color: C.subtle, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                  Top 3
+              <div style={{ marginBottom: 8 }}>
+                <p style={{ margin: '0 0 20px', fontSize: 11, fontWeight: 700, color: C.subtle, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                  Pódio
                 </p>
-                {top3.map((project, i) => {
-                  const accent     = RANK_ACCENT[i]
-                  const tierColor  = getTierColor(project.score)
-                  const isMe       = user?.id && project.user_id === user.id
-                  return (
-                    <div
-                      key={project.id}
-                      className="rank-top"
-                      onClick={() => navigate(`/projeto/${project.slug}`)}
-                      style={{
-                        background: isMe ? 'rgba(27,120,247,0.06)' : C.card,
-                        border: `1px solid ${isMe ? C.borderBright : C.border}`,
-                        borderLeft: `3px solid ${accent}`,
-                        borderRadius: 16,
-                        padding: i === 0 ? '22px 24px' : '18px 24px',
-                        display: 'flex', alignItems: 'center', gap: 18,
-                        boxShadow: i === 0
-                          ? `0 4px 28px rgba(0,0,0,0.32), 0 0 0 1px ${accent}12`
-                          : '0 2px 12px rgba(0,0,0,0.22)',
-                        position: 'relative', overflow: 'hidden',
-                      }}
-                    >
-                      {/* Position badge */}
-                      <div style={{
-                        width: 28, height: 28, borderRadius: 8, flexShrink: 0,
-                        background: `${accent}14`,
-                        border: `1px solid ${accent}40`,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: 12, fontWeight: 900, color: accent,
-                        letterSpacing: '-0.3px',
-                      }}>
-                        {i + 1}
-                      </div>
-
-                      {/* Score ring — the visual hero */}
-                      <ScoreRing score={project.score} size={i === 0 ? 68 : 56} strokeW={i === 0 ? 5 : 4} />
-
-                      {/* Divider */}
-                      <div style={{ width: 1, height: 40, background: C.border, flexShrink: 0 }} />
-
-                      {/* Info */}
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 5 }}>
-                          <span style={{ fontSize: i === 0 ? 17 : 15, fontWeight: 800, color: C.text, letterSpacing: '-0.2px' }}>
-                            {project.name}
-                          </span>
-                          {project.is_pap && (
-                            <span style={{ fontSize: 10, color: C.yellow, fontWeight: 700, background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.22)', padding: '2px 8px', borderRadius: 999 }}>PAP</span>
-                          )}
-                          {project.area && (
-                            <span style={{ fontSize: 11, color: '#60a5fa', background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.18)', borderRadius: 999, padding: '2px 9px', fontWeight: 600 }}>{project.area}</span>
-                          )}
-                          {isMe && (
-                            <span style={{ fontSize: 10, color: C.blue, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.25)', borderRadius: 999, padding: '2px 9px', fontWeight: 700 }}>O teu projeto</span>
-                          )}
+                {/* order: 2nd · 1st · 3rd */}
+                <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8 }}>
+                  {[top3[1], top3[0], top3[2]].map((project, col) => {
+                    if (!project) return <div key={col} style={{ flex: 1 }} />
+                    const posMap   = [1, 0, 2]           // col→original index
+                    const i        = posMap[col]          // 0=1st, 1=2nd, 2=3rd
+                    const rank     = i + 1
+                    const accent   = RANK_ACCENT[i]
+                    const isFirst  = i === 0
+                    const podiumH  = isFirst ? 72 : i === 1 ? 48 : 32
+                    const medal    = ['🥇', '🥈', '🥉'][i]
+                    const isMe     = user?.id && project.user_id === user.id
+                    return (
+                      <div
+                        key={project.id}
+                        className="rank-top"
+                        onClick={() => navigate(`/projeto/${project.slug}`)}
+                        style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer' }}
+                      >
+                        {/* Card above platform */}
+                        <div style={{
+                          width: '100%',
+                          background: isMe ? 'rgba(27,120,247,0.08)' : C.card,
+                          border: `1px solid ${isMe ? C.borderBright : C.border}`,
+                          borderRadius: 14,
+                          padding: isFirst ? '20px 14px 18px' : '14px 12px 14px',
+                          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10,
+                          boxShadow: isFirst ? `0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px ${accent}18` : '0 2px 12px rgba(0,0,0,0.22)',
+                          marginBottom: 0,
+                          textAlign: 'center',
+                        }}>
+                          <span style={{ fontSize: isFirst ? 28 : 22 }}>{medal}</span>
+                          <ScoreRing score={project.score} size={isFirst ? 72 : 58} strokeW={isFirst ? 5 : 4} />
+                          <div>
+                            <div style={{
+                              fontSize: isFirst ? 15 : 13, fontWeight: 800,
+                              color: C.text, letterSpacing: '-0.2px',
+                              display: '-webkit-box', WebkitLineClamp: 2,
+                              WebkitBoxOrient: 'vertical', overflow: 'hidden',
+                              lineHeight: 1.25, marginBottom: 4,
+                            }}>
+                              {project.name}
+                            </div>
+                            {project.creator_name && (
+                              <div style={{ fontSize: 11, color: C.muted, fontWeight: 500 }}>
+                                {project.creator_name}
+                              </div>
+                            )}
+                            {project.area && (
+                              <div style={{ marginTop: 6 }}>
+                                <span style={{ fontSize: 10, color: '#60a5fa', background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.18)', borderRadius: 999, padding: '2px 7px', fontWeight: 600 }}>
+                                  {project.area}
+                                </span>
+                              </div>
+                            )}
+                          </div>
                         </div>
-                        {i === 0 && project.ai_tagline && (
-                          <p className="rank-top-info-tagline" style={{ margin: '0 0 6px', fontSize: 13, color: C.muted, lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                            {project.ai_tagline}
-                          </p>
-                        )}
-                        <div style={{ fontSize: 12, color: C.subtle }}>
-                          {[project.creator_name, project.course, project.school_year].filter(Boolean).join(' · ')}
+
+                        {/* Platform */}
+                        <div style={{
+                          width: '100%', height: podiumH,
+                          background: `linear-gradient(180deg, ${accent}22 0%, ${accent}10 100%)`,
+                          border: `1px solid ${accent}35`,
+                          borderTop: `2px solid ${accent}`,
+                          borderRadius: '0 0 10px 10px',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        }}>
+                          <span style={{ fontSize: isFirst ? 22 : 16, fontWeight: 900, color: accent }}>{rank}</span>
                         </div>
                       </div>
-
-                      <span style={{ fontSize: 13, color: C.subtle, fontWeight: 600, flexShrink: 0 }}>→</span>
-                    </div>
-                  )
-                })}
+                    )
+                  })}
+                </div>
               </div>
             )}
 
