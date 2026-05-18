@@ -14,13 +14,24 @@ export function AuthProvider({ children }) {
       supabase.from('profiles').select('id, username, full_name, bio, is_admin, banned_at, role').eq('id', uid).single(),
       supabase.auth.getUser(),
     ])
-    const data = profileRes.data
-    const metaRole = userRes.data?.user?.user_metadata?.role
-    // Sync role from user_metadata to profile if profile has default/missing role
-    if (data && metaRole && data.role !== metaRole) {
+    const meta = userRes.data?.user?.user_metadata ?? {}
+    const metaRole = meta.role
+    let data = profileRes.data
+
+    // Profile doesn't exist yet — create it from user_metadata
+    if (!data) {
+      const { data: created } = await supabase
+        .from('profiles')
+        .upsert({ id: uid, full_name: meta.full_name ?? null, role: metaRole ?? 'aluno' })
+        .select('id, username, full_name, bio, is_admin, banned_at, role')
+        .single()
+      data = created
+    } else if (metaRole && data.role !== metaRole) {
+      // Sync role from user_metadata if it drifted
       await supabase.from('profiles').update({ role: metaRole }).eq('id', uid)
       data.role = metaRole
     }
+
     setProfile(data ?? null)
   }, [])
 
