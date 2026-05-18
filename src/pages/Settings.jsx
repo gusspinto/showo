@@ -201,9 +201,9 @@ export default function Settings() {
     }
 
     try {
-      // Update auth metadata (full_name)
+      // Update auth metadata (full_name + role kept in sync)
       const { error: metaError } = await supabase.auth.updateUser({
-        data: { full_name: fullName.trim() }
+        data: { full_name: fullName.trim(), role }
       })
       if (metaError) throw metaError
 
