@@ -306,41 +306,33 @@ export default function Settings() {
             hint="Aparece no teu perfil público."
           />
 
-          {/* Role */}
-          <div style={{ marginBottom: 20 }}>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: C.muted, marginBottom: 10 }}>
-              Tipo de conta
-            </label>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-              {[
-                { id: 'aluno',      emoji: '🎓', label: 'Aluno',      color: '#1b78f7' },
-                { id: 'professor',  emoji: '👨‍🏫', label: 'Professor',  color: '#10b981' },
-                { id: 'recrutador', emoji: '🔍', label: 'Recrutador', color: '#8b5cf6' },
-                { id: 'empresa',    emoji: '🏢', label: 'Empresa',    color: '#f59e0b' },
-              ].map(r => (
-                <button
-                  key={r.id}
-                  type="button"
-                  onClick={() => setRole(r.id)}
-                  style={{
-                    background: role === r.id ? `${r.color}14` : 'transparent',
-                    border: `1.5px solid ${role === r.id ? r.color : C.border}`,
-                    borderRadius: 10, padding: '10px 14px',
-                    display: 'flex', alignItems: 'center', gap: 8,
-                    cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s',
-                    color: role === r.id ? r.color : C.muted,
-                    fontSize: 13, fontWeight: role === r.id ? 700 : 500,
-                  }}
-                >
-                  <span style={{ fontSize: 16 }}>{r.emoji}</span>
-                  {r.label}
-                </button>
-              ))}
-            </div>
-            <p style={{ margin: '8px 0 0', fontSize: 12, color: C.subtle }}>
-              Recrutadores e empresas vêem os projetos em modo profissional.
-            </p>
-          </div>
+          {/* Role — locked after registration */}
+          {(() => {
+            const ROLE_INFO = {
+              aluno:      { emoji: '🎓', label: 'Aluno',      color: '#1b78f7' },
+              professor:  { emoji: '👨‍🏫', label: 'Professor',  color: '#10b981' },
+              recrutador: { emoji: '🔍', label: 'Recrutador', color: '#8b5cf6' },
+              empresa:    { emoji: '🏢', label: 'Empresa',    color: '#f59e0b' },
+            }
+            const r = ROLE_INFO[role] ?? ROLE_INFO.aluno
+            return (
+              <div style={{ marginBottom: 20 }}>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: C.muted, marginBottom: 10 }}>
+                  Tipo de conta
+                </label>
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: 10,
+                  background: `${r.color}0d`,
+                  border: `1.5px solid ${r.color}40`,
+                  borderRadius: 10, padding: '12px 16px',
+                }}>
+                  <span style={{ fontSize: 20 }}>{r.emoji}</span>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: r.color }}>{r.label}</span>
+                  <span style={{ marginLeft: 'auto', fontSize: 11, color: C.subtle }}>🔒 Definido no registo</span>
+                </div>
+              </div>
+            )
+          })()}
 
           {saveMsg && (
             <div style={{
