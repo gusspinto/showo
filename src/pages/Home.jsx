@@ -258,6 +258,14 @@ export default function Home() {
           {/* Headline */}
           <TypedHero />
 
+          {/* Subheadline */}
+          <p className="hero-sub" style={{
+            fontSize: 18, color: colors.muted, maxWidth: 560,
+            lineHeight: 1.6, margin: '0 auto 8px', fontWeight: 400,
+          }}>
+            Cria uma página profissional em minutos. A IA analisa, pontua e prepara-te para a defesa.
+          </p>
+
           {/* Widget */}
           <form
             className="hero-widget"
@@ -349,13 +357,15 @@ export default function Home() {
       }}>
         <span>
           <span style={{ color: colors.text, fontWeight: 700 }}>
-            {projectCount != null ? `Já ${projectCount}` : 'Vários'} projetos criados
+            {projectCount != null ? `Já ${projectCount} projetos` : 'Vários projetos'} por estudantes portugueses
           </span>
         </span>
         <span style={{ color: colors.subtle }}>·</span>
         <span>Ranking público</span>
         <span style={{ color: colors.subtle }}>·</span>
         <span>Análise por IA</span>
+        <span style={{ color: colors.subtle }}>·</span>
+        <span>Certificados verificados</span>
       </div>
 
       {/* Features */}
