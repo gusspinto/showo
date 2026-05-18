@@ -2,107 +2,54 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { Navbar } from '../components/Navbar'
-import { Trophy, Medal, Award } from 'lucide-react'
+import { useAuth } from '../context/AuthContext'
 
-const colors = {
-  bg: '#0d1424',
-  bgAlt: '#111c32',
-  card: '#152030',
-  cardHover: '#1c2d44',
-  border: '#1e3050',
-  borderBright: '#2a4275',
-  blue: '#1b78f7',
-  blueSubtle: 'rgba(27,120,247,0.08)',
-  text: '#e8f2ff',
-  muted: '#7d93b0',
-  subtle: '#3d5270',
-  green: '#22c55e',
-  yellow: '#eab308',
-  orange: '#f97316',
+const C = {
+  bg:          '#0d1424',
+  bgAlt:       '#111c32',
+  card:        '#152030',
+  cardHover:   '#1c2d44',
+  border:      '#1e3050',
+  borderBright:'#2a4275',
+  blue:        '#1b78f7',
+  text:        '#e8f2ff',
+  muted:       '#7d93b0',
+  subtle:      '#3d5270',
+  green:       '#22c55e',
+  yellow:      '#fbbf24',
+  orange:      '#f97316',
 }
 
-const TOP3 = [
-  { color: '#fbbf24', label: '1.º', Icon: Trophy, grad: 'linear-gradient(135deg,#1e1a0e 0%,#2a2010 60%,#1e1a0e 100%)' },
-  { color: '#94a3b8', label: '2.º', Icon: Medal,  grad: 'linear-gradient(135deg,#161b22 0%,#1e2530 60%,#161b22 100%)' },
-  { color: '#cd7c2f', label: '3.º', Icon: Award,  grad: 'linear-gradient(135deg,#1a1208 0%,#221a0e 60%,#1a1208 100%)' },
-]
-
-function getLevelColor(score) {
-  if (score === 100) return colors.green
-  if (score >= 81) return colors.blue
-  if (score >= 61) return colors.orange
-  if (score >= 41) return colors.yellow
-  return colors.muted
+// Tier color based on score — connects directly to the scoring system
+function getTierColor(score) {
+  if (score >= 90) return C.yellow   // gold — elite
+  if (score >= 70) return C.blue     // blue — advanced (brand primary)
+  if (score >= 50) return C.orange   // orange — growing
+  return C.subtle                     // subtle — developing
 }
 
-function ScoreRingLg({ score }) {
-  const size = 72, stroke = 5
-  const r = (size - stroke) / 2
+// Rank position accent: 1st=yellow, 2nd=muted(silver-ish), 3rd=orange
+const RANK_ACCENT = [C.yellow, C.muted, C.orange]
+
+function ScoreRing({ score, size = 64, strokeW = 5 }) {
+  const r    = (size - strokeW) / 2
   const circ = 2 * Math.PI * r
   const dash = (score / 100) * circ
-  const color = getLevelColor(score)
+  const color = getTierColor(score)
   return (
     <div style={{ position: 'relative', width: size, height: size, flexShrink: 0 }}>
       <svg width={size} height={size} style={{ transform: 'rotate(-90deg)', display: 'block' }}>
-        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={colors.border} strokeWidth={stroke} />
+        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={C.border} strokeWidth={strokeW} />
         <circle
           cx={size/2} cy={size/2} r={r} fill="none"
-          stroke={color} strokeWidth={stroke}
-          strokeDasharray={`${dash} ${circ - dash}`} strokeLinecap="round"
-          style={{ filter: `drop-shadow(0 0 6px ${color}90)` }}
-        />
-      </svg>
-      <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-        <span style={{ fontSize: 18, fontWeight: 900, color, letterSpacing: '-0.5px', lineHeight: 1 }}>{score}</span>
-        <span style={{ fontSize: 9, fontWeight: 600, color: colors.subtle, letterSpacing: '0.5px', marginTop: 1 }}>SCORE</span>
-      </div>
-    </div>
-  )
-}
-
-function ScoreRingMd({ score }) {
-  const size = 52, stroke = 4
-  const r = (size - stroke) / 2
-  const circ = 2 * Math.PI * r
-  const dash = (score / 100) * circ
-  const color = getLevelColor(score)
-  return (
-    <div style={{ position: 'relative', width: size, height: size, flexShrink: 0 }}>
-      <svg width={size} height={size} style={{ transform: 'rotate(-90deg)', display: 'block' }}>
-        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={colors.border} strokeWidth={stroke} />
-        <circle
-          cx={size/2} cy={size/2} r={r} fill="none"
-          stroke={color} strokeWidth={stroke}
+          stroke={color} strokeWidth={strokeW}
           strokeDasharray={`${dash} ${circ - dash}`} strokeLinecap="round"
           style={{ filter: `drop-shadow(0 0 5px ${color}80)` }}
         />
       </svg>
-      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <span style={{ fontSize: 13, fontWeight: 800, color, letterSpacing: '-0.3px' }}>{score}</span>
-      </div>
-    </div>
-  )
-}
-
-function ScoreRingSm({ score }) {
-  const size = 40, stroke = 3
-  const r = (size - stroke) / 2
-  const circ = 2 * Math.PI * r
-  const dash = (score / 100) * circ
-  const color = getLevelColor(score)
-  return (
-    <div style={{ position: 'relative', width: size, height: size, flexShrink: 0 }}>
-      <svg width={size} height={size} style={{ transform: 'rotate(-90deg)', display: 'block' }}>
-        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={colors.border} strokeWidth={stroke} />
-        <circle
-          cx={size/2} cy={size/2} r={r} fill="none"
-          stroke={color} strokeWidth={stroke}
-          strokeDasharray={`${dash} ${circ - dash}`} strokeLinecap="round"
-          style={{ filter: `drop-shadow(0 0 3px ${color}70)` }}
-        />
-      </svg>
-      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <span style={{ fontSize: 10, fontWeight: 800, color, letterSpacing: '-0.2px' }}>{score}</span>
+      <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+        <span style={{ fontSize: size >= 64 ? 17 : size >= 48 ? 13 : 10, fontWeight: 900, color, letterSpacing: '-0.5px', lineHeight: 1 }}>{score}</span>
+        {size >= 48 && <span style={{ fontSize: 8, fontWeight: 600, color: C.subtle, letterSpacing: '0.5px', marginTop: 1 }}>PTS</span>}
       </div>
     </div>
   )
@@ -110,24 +57,23 @@ function ScoreRingSm({ score }) {
 
 export default function Ranking() {
   const navigate = useNavigate()
-  const [projects, setProjects] = useState([])
-  const [loading, setLoading] = useState(true)
+  const { user } = useAuth()
+  const [projects, setProjects]   = useState([])
+  const [loading, setLoading]     = useState(true)
   const [areaFilter, setAreaFilter] = useState('')
   const [yearFilter, setYearFilter] = useState('')
 
   useEffect(() => {
-    async function fetch() {
+    async function load() {
       const { data, error } = await supabase
         .from('projects')
-        .select('id,name,slug,area,creator_name,course,school_year,project_type,is_pap,score,ai_tagline,created_at')
+        .select('id,name,slug,area,creator_name,course,school_year,project_type,is_pap,score,ai_tagline,created_at,user_id')
         .order('score', { ascending: false })
         .limit(200)
-
-      if (error || !data) { setLoading(false); return }
-      setProjects(data)
+      if (!error && data) setProjects(data)
       setLoading(false)
     }
-    fetch()
+    load()
   }, [])
 
   const areas = [...new Set(projects.map(p => p.area).filter(Boolean))].sort()
@@ -140,35 +86,28 @@ export default function Ranking() {
   })
 
   const top3 = filtered.slice(0, 3)
-  const mid = filtered.slice(3, 10)
-  const rest = filtered.slice(10)
+  const rest = filtered.slice(3)
 
   const selectStyle = {
-    background: colors.card,
-    border: `1px solid ${colors.border}`,
-    color: colors.text,
-    borderRadius: 8,
-    padding: '9px 14px',
-    fontSize: 14,
-    cursor: 'pointer',
-    outline: 'none',
-    fontFamily: 'var(--font-body)',
-    transition: 'border-color 0.2s',
+    background: C.card, border: `1px solid ${C.border}`,
+    color: C.text, borderRadius: 8, padding: '9px 14px',
+    fontSize: 14, cursor: 'pointer', outline: 'none',
+    fontFamily: 'var(--font-body)', transition: 'border-color 0.2s',
+    appearance: 'none', WebkitAppearance: 'none',
   }
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: 'var(--font-body)' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: C.bg, color: C.text, fontFamily: 'var(--font-body)' }}>
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
-        .rank-top:hover { transform: translateX(3px) !important; box-shadow: 0 4px 24px rgba(0,0,0,0.4) !important; }
-        .rank-mid:hover { transform: translateX(4px) !important; }
-        .rank-rest:hover { background: ${colors.cardHover} !important; }
-        .rank-top, .rank-mid, .rank-rest { transition: all 0.18s ease !important; cursor: pointer !important; }
+        .rank-row { transition: background 0.15s, border-color 0.15s, transform 0.15s !important; cursor: pointer !important; }
+        .rank-row:hover { background: ${C.cardHover} !important; border-color: ${C.borderBright} !important; transform: translateX(3px) !important; }
+        .rank-top { transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.15s !important; cursor: pointer !important; }
+        .rank-top:hover { background: ${C.cardHover} !important; transform: translateX(4px) !important; }
         @media (max-width: 600px) {
           .rank-filters { flex-direction: column !important; gap: 8px !important; }
           .rank-filters select { width: 100% !important; }
-          .rank-top-cards { gap: 8px !important; }
-          .rank-mid-cards { gap: 8px !important; }
+          .rank-top-info-tagline { display: none !important; }
         }
       `}</style>
 
@@ -176,10 +115,10 @@ export default function Ranking() {
         <button
           onClick={() => navigate('/novo')}
           style={{
-            background: `linear-gradient(135deg, ${colors.blue}, #4f46e5)`,
-            color: '#fff', border: 'none', borderRadius: 12,
-            padding: '9px 18px', fontSize: 14, fontWeight: 600, cursor: 'pointer',
-            fontFamily: 'inherit',
+            background: `linear-gradient(135deg, ${C.blue}, #4f46e5)`,
+            color: '#fff', border: 'none', borderRadius: 8,
+            padding: '9px 18px', fontSize: 14, fontWeight: 600,
+            cursor: 'pointer', fontFamily: 'inherit',
             boxShadow: '0 4px 16px rgba(27,120,247,0.3)',
           }}
         >
@@ -188,273 +127,209 @@ export default function Ranking() {
       </Navbar>
 
       <div style={{ maxWidth: 860, margin: '0 auto', padding: '44px 24px 80px' }}>
+
         {/* Header */}
-        <div style={{ marginBottom: 36 }}>
+        <div style={{ marginBottom: 32 }}>
           <h1 style={{ fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 900, margin: '0 0 8px', letterSpacing: '-0.5px' }}>
             Ranking de Projetos
           </h1>
-          <p style={{ color: colors.muted, margin: 0, fontSize: 15 }}>Os melhores projetos da comunidade Showo, ordenados por score</p>
+          <p style={{ color: C.muted, margin: 0, fontSize: 15 }}>
+            Os melhores projetos da comunidade Showo, ordenados por score
+          </p>
         </div>
 
         {/* Filters */}
-        <div className="rank-filters" style={{ display: 'flex', gap: 10, marginBottom: 36, flexWrap: 'wrap', alignItems: 'center' }}>
-          <select
-            value={areaFilter}
-            onChange={e => setAreaFilter(e.target.value)}
-            style={selectStyle}
-            onFocus={e => (e.target.style.borderColor = colors.blue)}
-            onBlur={e => (e.target.style.borderColor = colors.border)}
-          >
-            <option value="">Todas as áreas</option>
-            {areas.map(a => <option key={a} value={a}>{a}</option>)}
-          </select>
-          <select
-            value={yearFilter}
-            onChange={e => setYearFilter(e.target.value)}
-            style={selectStyle}
-            onFocus={e => (e.target.style.borderColor = colors.blue)}
-            onBlur={e => (e.target.style.borderColor = colors.border)}
-          >
-            <option value="">Todos os anos</option>
-            {years.map(y => <option key={y} value={y}>{y}</option>)}
-          </select>
+        <div className="rank-filters" style={{ display: 'flex', gap: 10, marginBottom: 32, flexWrap: 'wrap', alignItems: 'center' }}>
+          <div style={{ position: 'relative' }}>
+            <select value={areaFilter} onChange={e => setAreaFilter(e.target.value)} style={selectStyle}
+              onFocus={e => (e.target.style.borderColor = C.blue)}
+              onBlur={e => (e.target.style.borderColor = C.border)}>
+              <option value="">Todas as áreas</option>
+              {areas.map(a => <option key={a} value={a}>{a}</option>)}
+            </select>
+          </div>
+          <div style={{ position: 'relative' }}>
+            <select value={yearFilter} onChange={e => setYearFilter(e.target.value)} style={selectStyle}
+              onFocus={e => (e.target.style.borderColor = C.blue)}
+              onBlur={e => (e.target.style.borderColor = C.border)}>
+              <option value="">Todos os anos</option>
+              {years.map(y => <option key={y} value={y}>{y}</option>)}
+            </select>
+          </div>
           {(areaFilter || yearFilter) && (
             <button
               onClick={() => { setAreaFilter(''); setYearFilter('') }}
-              style={{
-                background: 'transparent',
-                border: `1px solid ${colors.border}`,
-                color: colors.muted,
-                borderRadius: 8, padding: '9px 14px',
-                fontSize: 13, cursor: 'pointer', fontFamily: 'inherit',
-              }}
+              style={{ background: 'transparent', border: `1px solid ${C.border}`, color: C.muted, borderRadius: 8, padding: '9px 14px', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}
             >
               Limpar ×
             </button>
           )}
-          <span style={{ marginLeft: 'auto', color: colors.subtle, fontSize: 13, fontWeight: 500 }}>
+          <span style={{ marginLeft: 'auto', color: C.subtle, fontSize: 13, fontWeight: 500 }}>
             {filtered.length} projeto{filtered.length !== 1 ? 's' : ''}
           </span>
         </div>
 
+        {/* Legend */}
+        <div style={{ display: 'flex', gap: 16, marginBottom: 28, flexWrap: 'wrap' }}>
+          {[
+            { color: C.yellow, label: 'Elite  90+' },
+            { color: C.blue,   label: 'Avançado  70+' },
+            { color: C.orange, label: 'A crescer  50+' },
+            { color: C.subtle, label: 'Em desenvolvimento' },
+          ].map(t => (
+            <div key={t.label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div style={{ width: 3, height: 14, borderRadius: 99, background: t.color, flexShrink: 0 }} />
+              <span style={{ fontSize: 12, color: C.muted, fontWeight: 500 }}>{t.label}</span>
+            </div>
+          ))}
+        </div>
+
         {loading ? (
           <div style={{ display: 'flex', justifyContent: 'center', padding: '80px 0' }}>
-            <div style={{ width: 36, height: 36, border: `3px solid ${colors.border}`, borderTop: `3px solid ${colors.blue}`, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+            <div style={{ width: 36, height: 36, border: `3px solid ${C.border}`, borderTop: `3px solid ${C.blue}`, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
           </div>
         ) : filtered.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '80px 0', color: colors.muted }}>
+          <div style={{ textAlign: 'center', padding: '80px 0', color: C.muted }}>
             <p style={{ fontSize: 16 }}>Nenhum projeto encontrado com estes filtros.</p>
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
 
-            {/* ── TOP 3 ── hall of fame */}
+            {/* ── TOP 3 ── */}
             {top3.length > 0 && (
-              <div className="rank-top-cards" style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 8 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <p style={{ margin: '0 0 8px', fontSize: 11, fontWeight: 700, color: C.subtle, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                  Top 3
+                </p>
                 {top3.map((project, i) => {
-                  const t = TOP3[i]
-                  const RankIcon = t.Icon
+                  const accent     = RANK_ACCENT[i]
+                  const tierColor  = getTierColor(project.score)
+                  const isMe       = user?.id && project.user_id === user.id
                   return (
                     <div
                       key={project.id}
                       className="rank-top"
                       onClick={() => navigate(`/projeto/${project.slug}`)}
                       style={{
-                        position: 'relative', overflow: 'hidden',
-                        background: colors.card,
-                        border: `1px solid ${colors.border}`,
-                        borderLeft: `3px solid ${t.color}`,
+                        background: isMe ? 'rgba(27,120,247,0.06)' : C.card,
+                        border: `1px solid ${isMe ? C.borderBright : C.border}`,
+                        borderLeft: `3px solid ${accent}`,
                         borderRadius: 16,
-                        padding: '22px 28px',
-                        cursor: 'pointer',
-                        boxShadow: i === 0 ? `0 4px 24px rgba(0,0,0,0.3), inset 0 0 0 1px ${t.color}18` : '0 2px 12px rgba(0,0,0,0.2)',
-                        display: 'flex', alignItems: 'center', gap: 20,
+                        padding: i === 0 ? '22px 24px' : '18px 24px',
+                        display: 'flex', alignItems: 'center', gap: 18,
+                        boxShadow: i === 0
+                          ? `0 4px 28px rgba(0,0,0,0.32), 0 0 0 1px ${accent}12`
+                          : '0 2px 12px rgba(0,0,0,0.22)',
+                        position: 'relative', overflow: 'hidden',
                       }}
                     >
-                      {/* Giant translucent rank number in background */}
+                      {/* Position badge */}
                       <div style={{
-                        position: 'absolute', right: 24, top: '50%', transform: 'translateY(-50%)',
-                        fontSize: 110, fontWeight: 900,
-                        color: t.color, opacity: 0.06,
-                        lineHeight: 1, userSelect: 'none', pointerEvents: 'none',
-                        fontFamily: 'var(--font-heading)',
+                        width: 28, height: 28, borderRadius: 8, flexShrink: 0,
+                        background: `${accent}14`,
+                        border: `1px solid ${accent}40`,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: 12, fontWeight: 900, color: accent,
+                        letterSpacing: '-0.3px',
                       }}>
                         {i + 1}
                       </div>
 
-                      {/* Rank icon + label */}
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flexShrink: 0, minWidth: 36 }}>
-                        <RankIcon size={i === 0 ? 26 : 20} color={t.color} strokeWidth={2}
-                          style={{ filter: `drop-shadow(0 0 8px ${t.color}70)` }} />
-                        <span style={{ fontSize: 10, fontWeight: 800, color: t.color, letterSpacing: '0.3px' }}>{t.label}</span>
-                      </div>
-
-                      {/* Score — big number */}
-                      <div style={{
-                        fontSize: i === 0 ? 44 : 36, fontWeight: 900,
-                        color: t.color, letterSpacing: '-2px',
-                        lineHeight: 1, flexShrink: 0, width: 68, textAlign: 'center',
-                        filter: i === 0 ? `drop-shadow(0 0 12px ${t.color}60)` : 'none',
-                      }}>
-                        {project.score}
-                      </div>
+                      {/* Score ring — the visual hero */}
+                      <ScoreRing score={project.score} size={i === 0 ? 68 : 56} strokeW={i === 0 ? 5 : 4} />
 
                       {/* Divider */}
-                      <div style={{ width: 1, height: 44, background: colors.border, flexShrink: 0 }} />
+                      <div style={{ width: 1, height: 40, background: C.border, flexShrink: 0 }} />
 
                       {/* Info */}
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 6 }}>
-                          <span style={{ fontSize: i === 0 ? 19 : 16, fontWeight: 800, color: colors.text, letterSpacing: '-0.2px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 5 }}>
+                          <span style={{ fontSize: i === 0 ? 17 : 15, fontWeight: 800, color: C.text, letterSpacing: '-0.2px' }}>
                             {project.name}
                           </span>
                           {project.is_pap && (
-                            <span style={{ fontSize: 10, color: colors.yellow, fontWeight: 700, background: 'rgba(234,179,8,0.1)', border: '1px solid rgba(234,179,8,0.25)', padding: '2px 8px', borderRadius: 999 }}>PAP</span>
+                            <span style={{ fontSize: 10, color: C.yellow, fontWeight: 700, background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.22)', padding: '2px 8px', borderRadius: 999 }}>PAP</span>
                           )}
                           {project.area && (
-                            <span style={{ fontSize: 11, color: '#60a5fa', background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.18)', borderRadius: 999, padding: '2px 10px', fontWeight: 600 }}>{project.area}</span>
+                            <span style={{ fontSize: 11, color: '#60a5fa', background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.18)', borderRadius: 999, padding: '2px 9px', fontWeight: 600 }}>{project.area}</span>
+                          )}
+                          {isMe && (
+                            <span style={{ fontSize: 10, color: C.blue, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.25)', borderRadius: 999, padding: '2px 9px', fontWeight: 700 }}>O teu projeto</span>
                           )}
                         </div>
                         {i === 0 && project.ai_tagline && (
-                          <p style={{ margin: '0 0 8px', fontSize: 13, color: colors.muted, lineHeight: 1.5,
-                            display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                          <p className="rank-top-info-tagline" style={{ margin: '0 0 6px', fontSize: 13, color: C.muted, lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                             {project.ai_tagline}
                           </p>
                         )}
-                        <div style={{ fontSize: 12, color: colors.subtle }}>
+                        <div style={{ fontSize: 12, color: C.subtle }}>
                           {[project.creator_name, project.course, project.school_year].filter(Boolean).join(' · ')}
                         </div>
                       </div>
 
-                      <span style={{ fontSize: 13, color: t.color, fontWeight: 700, flexShrink: 0, opacity: 0.8, zIndex: 1 }}>→</span>
+                      <span style={{ fontSize: 13, color: C.subtle, fontWeight: 600, flexShrink: 0 }}>→</span>
                     </div>
                   )
                 })}
               </div>
             )}
 
-            {/* ── #4–10 ── medium cards */}
-            {mid.length > 0 && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {mid.map((project, i) => {
-                  const rank = i + 4
-                  return (
-                    <div
-                      key={project.id}
-                      className="rank-mid"
-                      onClick={() => navigate(`/projeto/${project.slug}`)}
-                      style={{
-                        background: colors.card,
-                        border: `1px solid ${colors.border}`,
-                        borderRadius: 16,
-                        padding: '18px 22px',
-                        cursor: 'pointer',
-                        display: 'flex', alignItems: 'center', gap: 16,
-                        boxShadow: '0 2px 12px rgba(0,0,0,0.28)',
-                      }}
-                    >
-                      {/* Rank badge */}
-                      <div style={{
-                        width: 34, height: 34, borderRadius: 10, flexShrink: 0,
-                        background: colors.bgAlt,
-                        border: `1px solid ${colors.border}`,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: 13, fontWeight: 800, color: colors.muted,
-                      }}>
-                        {rank}
-                      </div>
-
-                      {/* Score ring */}
-                      <ScoreRingMd score={project.score} />
-
-                      {/* Info */}
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 4 }}>
-                          <span style={{ fontSize: 15, fontWeight: 700, color: colors.text, letterSpacing: '-0.1px' }}>{project.name}</span>
-                          {project.is_pap && (
-                            <span style={{
-                              fontSize: 10, color: colors.yellow, fontWeight: 700,
-                              background: 'rgba(234,179,8,0.08)',
-                              border: '1px solid rgba(234,179,8,0.2)',
-                              padding: '2px 7px', borderRadius: 999,
-                            }}>PAP</span>
-                          )}
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                          {project.area && (
-                            <span style={{
-                              fontSize: 11, color: '#60a5fa',
-                              background: 'rgba(27,120,247,0.08)',
-                              border: '1px solid rgba(27,120,247,0.15)',
-                              borderRadius: 999, padding: '2px 9px', fontWeight: 600,
-                            }}>{project.area}</span>
-                          )}
-                          {(project.creator_name || project.school_year) && (
-                            <span style={{ fontSize: 12, color: colors.subtle }}>
-                              {[project.creator_name, project.school_year].filter(Boolean).join(' · ')}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      <span style={{ fontSize: 13, color: colors.subtle, flexShrink: 0, fontWeight: 600 }}>Ver →</span>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-
-            {/* ── #11+ ── compact list */}
+            {/* ── REST (#4+) — leaderboard ── */}
             {rest.length > 0 && (
-              <div style={{
-                background: colors.card,
-                border: `1px solid ${colors.border}`,
-                borderRadius: 16,
-                overflow: 'hidden',
-              }}>
-                {rest.map((project, i) => {
-                  const rank = i + 11
-                  const isLast = i === rest.length - 1
-                  return (
-                    <div
-                      key={project.id}
-                      className="rank-rest"
-                      onClick={() => navigate(`/projeto/${project.slug}`)}
-                      style={{
-                        display: 'flex', alignItems: 'center', gap: 14,
-                        padding: '13px 20px',
-                        cursor: 'pointer',
-                        borderBottom: isLast ? 'none' : `1px solid ${colors.border}`,
-                      }}
-                    >
-                      <span style={{ fontSize: 12, fontWeight: 700, color: colors.subtle, width: 30, textAlign: 'right', flexShrink: 0 }}>
-                        #{rank}
-                      </span>
+              <div>
+                <p style={{ margin: '0 0 10px', fontSize: 11, fontWeight: 700, color: C.subtle, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                  Leaderboard
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {rest.map((project, i) => {
+                    const rank      = i + 4
+                    const tierColor = getTierColor(project.score)
+                    const isMe      = user?.id && project.user_id === user.id
+                    return (
+                      <div
+                        key={project.id}
+                        className="rank-row"
+                        onClick={() => navigate(`/projeto/${project.slug}`)}
+                        style={{
+                          background: isMe ? 'rgba(27,120,247,0.05)' : C.card,
+                          border: `1px solid ${isMe ? C.borderBright : C.border}`,
+                          borderLeft: `3px solid ${tierColor}`,
+                          borderRadius: 12,
+                          padding: '13px 18px',
+                          display: 'flex', alignItems: 'center', gap: 14,
+                          boxShadow: isMe ? `0 0 0 1px ${C.blue}20` : 'none',
+                        }}
+                      >
+                        {/* Position number */}
+                        <span style={{ fontSize: 12, fontWeight: 700, color: C.subtle, width: 26, textAlign: 'right', flexShrink: 0 }}>
+                          {rank}
+                        </span>
 
-                      <ScoreRingSm score={project.score} />
+                        {/* Score ring */}
+                        <ScoreRing score={project.score} size={40} strokeW={3} />
 
-                      <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                        <span style={{ fontSize: 14, fontWeight: 600, color: colors.text, letterSpacing: '-0.1px' }}>{project.name}</span>
-                        {project.is_pap && (
-                          <span style={{
-                            fontSize: 9, color: colors.yellow, fontWeight: 700,
-                            background: 'rgba(234,179,8,0.08)',
-                            border: '1px solid rgba(234,179,8,0.18)',
-                            padding: '1px 6px', borderRadius: 999,
-                          }}>PAP</span>
-                        )}
-                        {project.area && (
-                          <span style={{ fontSize: 11, color: colors.subtle }}>{project.area}</span>
-                        )}
-                        {project.creator_name && (
-                          <span style={{ fontSize: 11, color: colors.subtle }}>· {project.creator_name}</span>
-                        )}
+                        {/* Info */}
+                        <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                          <span style={{ fontSize: 14, fontWeight: 600, color: C.text, letterSpacing: '-0.1px' }}>{project.name}</span>
+                          {project.is_pap && (
+                            <span style={{ fontSize: 9, color: C.yellow, fontWeight: 700, background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.18)', padding: '1px 6px', borderRadius: 999 }}>PAP</span>
+                          )}
+                          {project.area && (
+                            <span style={{ fontSize: 11, color: C.subtle }}>{project.area}</span>
+                          )}
+                          {project.creator_name && (
+                            <span style={{ fontSize: 11, color: C.subtle }}>· {project.creator_name}</span>
+                          )}
+                          {isMe && (
+                            <span style={{ fontSize: 10, color: C.blue, fontWeight: 700 }}>· O teu projeto</span>
+                          )}
+                        </div>
+
+                        <span style={{ fontSize: 12, color: C.subtle, flexShrink: 0 }}>→</span>
                       </div>
-
-                      <span style={{ fontSize: 12, color: colors.subtle, flexShrink: 0 }}>→</span>
-                    </div>
-                  )
-                })}
+                    )
+                  })}
+                </div>
               </div>
             )}
 
