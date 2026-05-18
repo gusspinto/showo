@@ -133,28 +133,18 @@ export default function Register() {
     if (password !== confirmPassword) { setError('As palavras-passe não coincidem.'); return }
 
     setLoading(true)
-    const { data, error: err } = await supabase.auth.signUp({
+    const { error: err } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { full_name: name.trim() } },
+      options: { data: { full_name: name.trim(), role: role || 'aluno' } },
     })
+    setLoading(false)
     if (err) {
-      setLoading(false)
       setError(err.message === 'User already registered'
         ? 'Este email já está registado. Tenta entrar.'
         : 'Algo correu mal. Tenta novamente.')
       return
     }
-
-    // Save role to profile
-    if (data?.user) {
-      await supabase.from('profiles').upsert({
-        id: data.user.id,
-        full_name: name.trim(),
-        role: role || 'aluno',
-      })
-    }
-    setLoading(false)
     setDone(true)
   }
 

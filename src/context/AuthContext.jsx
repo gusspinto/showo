@@ -10,12 +10,22 @@ export function AuthProvider({ children }) {
 
   const fetchProfile = useCallback(async (uid) => {
     if (!uid) { setProfile(null); return }
-    const { data } = await supabase
-      .from('profiles')
-      .select('id, username, full_name, bio, is_admin, banned_at, role')
-      .eq('id', uid)
-      .single()
-    setProfile(data ?? null)
+    const [{ data }, { data: { user } }] = await Promise.all([
+      supabase.from('profiles').select('id, username, full_name, bio, is_admin, banned_at, role').eq('id', uid).single(),
+      supabase.auth.getUser(),
+    ])
+    const metaRole = user?.user_metadata?.role
+    // Sync role from user_metadata if profile has none
+    if (data && !data.role && metaRole) {
+      await supabase.from('profiles').update({ role: metaRole }).eq('id', uid)
+      data.role = metaRole
+    }
+    // Expose role from metadata even before profile row is created
+    if (!data?.role && metaRole) {
+      setProfile({ ...(data ?? { id: uid }), role: metaRole })
+    } else {
+      setProfile(data ?? null)
+    }
   }, [])
 
   useEffect(() => {
