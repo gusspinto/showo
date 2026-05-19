@@ -503,9 +503,10 @@ export default function TurmaPage() {
         ) : isTeacher ? (
           /* Professor table view */
           <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, overflow: 'hidden' }}>
+            <div style={{ overflowX: 'auto' }}>
             {/* Table header */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 80px 90px 140px 100px', gap: 0, padding: '10px 16px', borderBottom: `1px solid ${C.border}`, background: '#0d1424' }}>
-              {[['name','Projeto'], ['score','Score'], ['completude','Completude'], ['updated','Data'], [null,'']].map(([field, label]) => (
+            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(160px,1fr) 64px 120px 88px 130px', gap: 0, padding: '10px 16px', borderBottom: `1px solid ${C.border}`, background: '#0d1424', minWidth: 580 }}>
+              {[['name','Projeto'], ['score','Score'], ['completude','Completude'], ['updated','Data'], [null,'Ações']].map(([field, label]) => (
                 <div key={label} onClick={() => field && toggleSort(field)} style={{ fontSize: 11, fontWeight: 700, color: field ? (sortBy === field ? '#60a5fa' : C.muted) : C.muted, textTransform: 'uppercase', letterSpacing: 0.5, cursor: field ? 'pointer' : 'default', display: 'flex', alignItems: 'center', gap: 4, userSelect: 'none' }}>
                   {label}
                   {field && sortBy === field && (sortAsc ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}
@@ -516,31 +517,32 @@ export default function TurmaPage() {
               const completude = computeCompletude(p)
               const updated = p.created_at ? new Date(p.created_at).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' }) : '—'
               return (
-                <div key={p.id} style={{ display: 'grid', gridTemplateColumns: '1fr 80px 90px 140px 100px', gap: 0, padding: '13px 16px', borderBottom: i < sortedProjects.length - 1 ? `1px solid ${C.border}` : 'none', alignItems: 'center', transition: 'background 0.12s' }}
+                <div key={p.id} style={{ display: 'grid', gridTemplateColumns: 'minmax(160px,1fr) 64px 120px 88px 130px', gap: 0, padding: '12px 16px', borderBottom: i < sortedProjects.length - 1 ? `1px solid ${C.border}` : 'none', alignItems: 'center', transition: 'background 0.12s', minWidth: 580 }}
                   onMouseEnter={e => e.currentTarget.style.background = C.cardHover}
                   onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                  <div style={{ minWidth: 0 }}>
+                  <div style={{ minWidth: 0, paddingRight: 12 }}>
                     <div style={{ fontSize: 14, fontWeight: 600, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: 'pointer' }} onClick={() => navigate(`/projeto/${p.slug}`)}>
                       {p.name}
                     </div>
                     {p.creator_name && <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>{p.creator_name}</div>}
                   </div>
-                  <div style={{ fontSize: 14, fontWeight: 800, color: scoreColor(p.score) }}>{p.score ?? '—'}</div>
-                  <div>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: completude >= 80 ? C.green : completude >= 50 ? C.yellow : C.muted, marginBottom: 3 }}>{completude}%</div>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: scoreColor(p.score) }}>{p.score ?? '—'}</div>
+                  <div style={{ paddingRight: 8 }}>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: completude >= 80 ? C.green : completude >= 50 ? C.yellow : C.muted, marginBottom: 4 }}>{completude}%</div>
                     <div style={{ height: 4, borderRadius: 2, background: C.border, overflow: 'hidden' }}>
                       <div style={{ width: `${completude}%`, height: '100%', background: completude >= 80 ? C.green : completude >= 50 ? C.yellow : '#f97316', borderRadius: 2 }} />
                     </div>
                   </div>
                   <div style={{ fontSize: 12, color: C.muted }}>{updated}</div>
-                  <div style={{ display: 'flex', gap: 6 }}>
-                    <button onClick={() => navigate(`/projeto/${p.slug}`)} style={{ fontSize: 12, padding: '5px 10px', borderRadius: 6, border: `1px solid ${C.border}`, background: 'transparent', color: C.muted, cursor: 'pointer', fontFamily: 'inherit' }}>Ver</button>
-                    <button onClick={() => setFeedbackProject(p)} style={{ fontSize: 12, padding: '5px 8px', borderRadius: 6, border: '1px solid rgba(59,130,246,0.3)', background: 'rgba(59,130,246,0.08)', color: '#60a5fa', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 4 }}><MessageSquare size={11} /></button>
-                    <button onClick={() => removeProject(p.id)} style={{ fontSize: 12, padding: '5px 8px', borderRadius: 6, border: '1px solid rgba(248,113,113,0.3)', background: 'transparent', color: '#f87171', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center' }}><X size={11} /></button>
+                  <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
+                    <button onClick={() => navigate(`/projeto/${p.slug}`)} style={{ fontSize: 12, padding: '5px 11px', borderRadius: 6, border: `1px solid ${C.border}`, background: 'transparent', color: C.muted, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>Ver</button>
+                    <button onClick={() => setFeedbackProject(p)} title="Feedback" style={{ padding: '5px 8px', borderRadius: 6, border: '1px solid rgba(59,130,246,0.3)', background: 'rgba(59,130,246,0.08)', color: '#60a5fa', cursor: 'pointer', display: 'flex', alignItems: 'center', flexShrink: 0 }}><MessageSquare size={12} /></button>
+                    <button onClick={() => removeProject(p.id)} title="Remover" style={{ padding: '5px 8px', borderRadius: 6, border: '1px solid rgba(248,113,113,0.3)', background: 'transparent', color: '#f87171', cursor: 'pointer', display: 'flex', alignItems: 'center', flexShrink: 0 }}><X size={12} /></button>
                   </div>
                 </div>
               )
             })}
+            </div>
           </div>
         ) : (
           /* Student grid view */

@@ -747,7 +747,7 @@ export default function Dashboard() {
           <div style={{ marginBottom: 36 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
               <h2 style={{ color: C.text, fontSize: 16, fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <School size={18} color="#3b82f6" /> As minhas turmas
+                As minhas turmas
                 {turmas.length > 0 && <span style={{ color: C.muted, fontWeight: 400, fontSize: 14 }}>({turmas.length})</span>}
               </h2>
               <button

@@ -674,8 +674,8 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
                 <button className="mobile-drawer-pair-btn" onClick={() => { navigate('/dashboard'); setOpen(false) }}>
                   <FolderOpen size={15} /> Dashboard
                 </button>
-                {profile?.username && (
-                  <button className="mobile-drawer-pair-btn" onClick={() => { navigate(`/u/${profile.username}`); setOpen(false) }}>
+                {profileUrl && (
+                  <button className="mobile-drawer-pair-btn" onClick={() => { navigate(profileUrl); setOpen(false) }}>
                     <User size={15} /> Meu perfil
                   </button>
                 )}
