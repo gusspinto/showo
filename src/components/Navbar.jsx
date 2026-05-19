@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
-import { Check, X, FolderOpen, User, Settings as SettingsIcon, Shield, Globe, Trophy, LogOut, Bell } from 'lucide-react'
+import { Check, X, FolderOpen, User, Settings as SettingsIcon, Shield, Globe, Trophy, LogOut, Bell, Eye, Target, TrendingUp, GraduationCap, UserPlus } from 'lucide-react'
 
 const C = {
   bg: 'rgba(13, 20, 36, 0.88)',
@@ -38,15 +38,19 @@ function getDisplayName(user) {
   return user?.email?.split('@')[0] ?? ''
 }
 
-// Notification type → icon emoji
-const NOTIF_ICON = {
-  PROJECT_VIEW:    '👁',
-  COMPANY_VIEW:    '👀',
-  SCORE_MILESTONE: '🎯',
-  RANKING_CHANGE:  '🚀',
-  MISSION_COMPLETE:'🏆',
-  TEACHER_FEEDBACK:'👨‍🏫',
-  STUDENT_JOINED:  '🎓',
+// Notification type → Lucide icon
+function getNotifIcon(type) {
+  const s = { size: 15, strokeWidth: 2 }
+  switch (type) {
+    case 'PROJECT_VIEW':     return <Eye {...s} />
+    case 'COMPANY_VIEW':     return <Eye {...s} />
+    case 'SCORE_MILESTONE':  return <Target {...s} />
+    case 'RANKING_CHANGE':   return <TrendingUp {...s} />
+    case 'MISSION_COMPLETE': return <Trophy {...s} />
+    case 'TEACHER_FEEDBACK': return <GraduationCap {...s} />
+    case 'STUDENT_JOINED':   return <UserPlus {...s} />
+    default:                 return <Bell {...s} />
+  }
 }
 
 function timeAgo(ts) {
@@ -384,7 +388,7 @@ function InviteInbox({ userId }) {
                       transition: 'background 0.12s',
                     }}
                   >
-                    <span style={{ fontSize: 16, flexShrink: 0, marginTop: 1 }}>{NOTIF_ICON[n.type] ?? '🔔'}</span>
+                    <span style={{ display: 'flex', flexShrink: 0, marginTop: 1, color: C.muted }}>{getNotifIcon(n.type)}</span>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <p style={{ margin: '0 0 3px', fontSize: 13, color: n.read ? C.muted : C.text, lineHeight: 1.45, fontWeight: n.read ? 400 : 500 }}>
                         {n.message}
@@ -400,7 +404,7 @@ function InviteInbox({ userId }) {
             {/* Empty state */}
             {invites.length === 0 && responses.length === 0 && dbNotifs.length === 0 && (
               <div style={{ padding: '24px 12px', textAlign: 'center' }}>
-                <p style={{ margin: '0 0 6px', fontSize: 20 }}>🔔</p>
+                <Bell size={22} color={C.muted} style={{ marginBottom: 6 }} />
                 <p style={{ margin: 0, color: C.muted, fontSize: 13 }}>Sem notificações por agora</p>
                 <p style={{ margin: '4px 0 0', color: C.muted, fontSize: 11, opacity: 0.7 }}>Quando alguém vir o teu projeto, aparece aqui.</p>
               </div>

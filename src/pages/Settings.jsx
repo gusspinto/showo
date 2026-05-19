@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
-import { Loader, Check, X, AlertTriangle, Camera } from 'lucide-react'
+import { Loader, Check, X, AlertTriangle, Camera, ArrowLeft, GraduationCap, BookOpen, Search, Building2, Lock } from 'lucide-react'
 
 const C = {
   bg: '#0d1424',
@@ -313,9 +313,26 @@ export default function Settings() {
       <Navbar />
       <div style={{ maxWidth: 600, margin: '0 auto', padding: '44px 24px 80px' }}>
 
-        <div style={{ marginBottom: 32 }}>
-          <h1 style={{ color: C.text, fontSize: 26, fontWeight: 800, margin: '0 0 4px', letterSpacing: '-0.5px' }}>Definições</h1>
-          <p style={{ color: C.muted, fontSize: 14, margin: 0 }}>Gere o teu perfil e conta</p>
+        <div style={{ marginBottom: 32, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+          <div>
+            <h1 style={{ color: C.text, fontSize: 26, fontWeight: 800, margin: '0 0 4px', letterSpacing: '-0.5px' }}>Definições</h1>
+            <p style={{ color: C.muted, fontSize: 14, margin: 0 }}>Gere o teu perfil e conta</p>
+          </div>
+          <button
+            onClick={() => navigate('/dashboard')}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 6,
+              background: 'transparent', border: `1px solid ${C.border}`,
+              borderRadius: 8, padding: '8px 14px',
+              color: C.muted, fontSize: 13, fontWeight: 500,
+              cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0, marginTop: 4,
+              transition: 'border-color 0.15s, color 0.15s',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = '#2a4275'; e.currentTarget.style.color = C.text }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted }}
+          >
+            <ArrowLeft size={14} /> Dashboard
+          </button>
         </div>
 
         {/* Profile */}
@@ -412,10 +429,10 @@ export default function Settings() {
           {/* Role — locked after registration */}
           {(() => {
             const ROLE_INFO = {
-              aluno:      { emoji: '🎓', label: 'Aluno',      color: '#1b78f7' },
-              professor:  { emoji: '👨‍🏫', label: 'Professor',  color: '#10b981' },
-              recrutador: { emoji: '🔍', label: 'Recrutador', color: '#8b5cf6' },
-              empresa:    { emoji: '🏢', label: 'Empresa',    color: '#f59e0b' },
+              aluno:      { icon: <GraduationCap size={18} />, label: 'Aluno',      color: '#1b78f7' },
+              professor:  { icon: <BookOpen size={18} />,      label: 'Professor',  color: '#10b981' },
+              recrutador: { icon: <Search size={18} />,        label: 'Recrutador', color: '#8b5cf6' },
+              empresa:    { icon: <Building2 size={18} />,     label: 'Empresa',    color: '#f59e0b' },
             }
             const r = ROLE_INFO[role] ?? ROLE_INFO.aluno
             return (
@@ -429,9 +446,11 @@ export default function Settings() {
                   border: `1.5px solid ${r.color}40`,
                   borderRadius: 10, padding: '12px 16px',
                 }}>
-                  <span style={{ fontSize: 20 }}>{r.emoji}</span>
+                  <span style={{ color: r.color, display: 'flex', alignItems: 'center' }}>{r.icon}</span>
                   <span style={{ fontSize: 14, fontWeight: 700, color: r.color }}>{r.label}</span>
-                  <span style={{ marginLeft: 'auto', fontSize: 11, color: C.subtle }}>🔒 Definido no registo</span>
+                  <span style={{ marginLeft: 'auto', fontSize: 11, color: C.subtle, display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <Lock size={11} /> Definido no registo
+                  </span>
                 </div>
               </div>
             )

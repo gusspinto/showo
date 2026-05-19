@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import { QRCodeSVG } from 'qrcode.react'
 import { supabase } from '../lib/supabase'
+import { Link2, Check } from 'lucide-react'
 
 const C = {
   bg: '#0d1424',
@@ -221,7 +222,10 @@ export default function Certificate() {
             cursor: 'pointer', fontFamily: 'inherit',
           }}
         >
-          {copied ? '✓ Link copiado' : '🔗 Partilhar link'}
+          {copied
+            ? <><Check size={15} style={{ verticalAlign: 'middle', marginRight: 6 }} />Link copiado</>
+            : <><Link2 size={15} style={{ verticalAlign: 'middle', marginRight: 6 }} />Partilhar link</>
+          }
         </button>
       </div>
     </div>

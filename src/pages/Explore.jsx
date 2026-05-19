@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { Navbar } from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
+import { Search, Building2 } from 'lucide-react'
 
 const colors = {
   bg: '#0d1424',
@@ -118,8 +119,8 @@ function SelectFilter({ value, onChange, options, label }) {
 }
 
 const ROLE_LABELS = {
-  recrutador: { label: 'Recrutador', color: '#8b5cf6', bg: 'rgba(139,92,246,0.1)', border: 'rgba(139,92,246,0.3)', emoji: '🔍' },
-  empresa:    { label: 'Empresa',    color: '#f59e0b', bg: 'rgba(245,158,11,0.1)',  border: 'rgba(245,158,11,0.3)',  emoji: '🏢' },
+  recrutador: { label: 'Recrutador', color: '#8b5cf6', bg: 'rgba(139,92,246,0.1)', border: 'rgba(139,92,246,0.3)', icon: <Search size={16} /> },
+  empresa:    { label: 'Empresa',    color: '#f59e0b', bg: 'rgba(245,158,11,0.1)',  border: 'rgba(245,158,11,0.3)',  icon: <Building2 size={16} /> },
 }
 
 export default function Explore() {
@@ -246,7 +247,7 @@ export default function Explore() {
             borderRadius: 12, padding: '14px 20px', marginBottom: 24,
             display: 'flex', alignItems: 'center', gap: 12,
           }}>
-            <span style={{ fontSize: 18, flexShrink: 0 }}>{roleInfo.emoji}</span>
+            <span style={{ color: roleInfo.color, display: 'flex', flexShrink: 0, alignItems: 'center' }}>{roleInfo.icon}</span>
             <p style={{ margin: 0, fontSize: 13, color: roleInfo.color, lineHeight: 1.5 }}>
               <strong>Estás em modo {roleInfo.label}</strong> — os criadores dos projetos são notificados quando os visitas.
               Vês também as tecnologias usadas em cada projeto.

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { saveProject } from '../lib/saveProject'
+import { AlertTriangle } from 'lucide-react'
 
 const C = {
   bg:     '#0d1424',
@@ -345,7 +346,7 @@ export default function AIInterview() {
           {/* Error */}
           {phase === 'error' && (
             <div style={{ textAlign: 'center', paddingTop: 80, animation: 'fadeIn 0.4s ease' }}>
-              <div style={{ fontSize: 36, marginBottom: 16 }}>⚠️</div>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16, color: '#f87171' }}><AlertTriangle size={36} /></div>
               <p style={{ color: '#f87171', fontSize: 15, marginBottom: 8, maxWidth: 400, margin: '0 auto 8px' }}>{errorMsg}</p>
               <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginTop: 24, flexWrap: 'wrap' }}>
                 <button

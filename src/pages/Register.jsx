@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { Mail } from 'lucide-react'
+import { Mail, GraduationCap, BookOpen, Search, Building2 } from 'lucide-react'
 
 const C = {
   bg: '#0d1424',
@@ -17,7 +17,7 @@ const C = {
 const ROLES = [
   {
     id: 'aluno',
-    emoji: '🎓',
+    icon: <GraduationCap size={26} />,
     label: 'Aluno',
     desc: 'Estou a criar o meu projeto profissional',
     color: '#1b78f7',
@@ -26,7 +26,7 @@ const ROLES = [
   },
   {
     id: 'professor',
-    emoji: '👨‍🏫',
+    icon: <BookOpen size={26} />,
     label: 'Professor',
     desc: 'Acompanho e avalio projetos de alunos',
     color: '#10b981',
@@ -35,7 +35,7 @@ const ROLES = [
   },
   {
     id: 'recrutador',
-    emoji: '🔍',
+    icon: <Search size={26} />,
     label: 'Recrutador',
     desc: 'Procuro talentos e avalio candidatos',
     color: '#8b5cf6',
@@ -44,7 +44,7 @@ const ROLES = [
   },
   {
     id: 'empresa',
-    emoji: '🏢',
+    icon: <Building2 size={26} />,
     label: 'Empresa',
     desc: 'Somos uma empresa à procura de talento',
     color: '#f59e0b',
@@ -219,7 +219,7 @@ export default function Register() {
                       boxShadow: selected ? `0 0 0 1px ${r.border}` : 'none',
                     }}
                   >
-                    <span style={{ fontSize: 28 }}>{r.emoji}</span>
+                    <span style={{ color: r.color, display: 'flex', alignItems: 'center' }}>{r.icon}</span>
                     <div>
                       <div style={{ fontSize: 15, fontWeight: 700, color: selected ? r.color : C.text, marginBottom: 3 }}>
                         {r.label}
@@ -262,7 +262,7 @@ export default function Register() {
             {/* Role badge + back */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontSize: 20 }}>{selectedRole?.emoji}</span>
+                <span style={{ color: selectedRole?.color, display: 'flex', alignItems: 'center' }}>{selectedRole?.icon && <span style={{ transform: 'scale(0.8)' }}>{selectedRole.icon}</span>}</span>
                 <span style={{
                   fontSize: 12, fontWeight: 700, color: selectedRole?.color,
                   background: selectedRole?.bg, border: `1px solid ${selectedRole?.border}`,

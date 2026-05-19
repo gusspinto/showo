@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Edit3, Zap, Link } from 'lucide-react'
+import { Edit3, Zap, Link, BookOpen, X } from 'lucide-react'
 
 const STEPS = [
   {
@@ -147,7 +147,7 @@ export default function Onboarding({ onDone }) {
             border: '1px solid rgba(59,130,246,0.25)',
             borderRadius: 20, padding: '4px 10px 4px 7px',
           }}>
-            <span style={{ fontSize: 13 }}>📖</span>
+            <BookOpen size={13} color="#60a5fa" />
             <span style={{ fontSize: 12, fontWeight: 700, color: '#60a5fa', letterSpacing: 0.2 }}>Guia rápido</span>
             <span style={{
               fontSize: 10, fontWeight: 700, color: '#3b82f6',
@@ -170,7 +170,7 @@ export default function Onboarding({ onDone }) {
             onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.color = '#e8f2ff' }}
             onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.color = '#7d93b0' }}
           >
-            <span style={{ fontSize: 14, lineHeight: 1 }}>✕</span>
+            <X size={14} />
             <span>Saltar guia</span>
           </button>
         </div>

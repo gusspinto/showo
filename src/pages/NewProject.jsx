@@ -216,7 +216,7 @@ export default function NewProject() {
       localStorage.setItem(`edit_token_${project.slug}`, project.edit_token)
       localStorage.removeItem('showo_new_project_draft')
       navigate(`/projeto/${project.slug}`, {
-        state: { newProject: true, message: '🎉 Projeto criado! Começa a melhorar o teu score.' }
+        state: { newProject: true, message: 'Projeto criado! Começa a melhorar o teu score.' }
       })
     } catch (err) {
       console.error(err)

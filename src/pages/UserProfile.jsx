@@ -5,7 +5,7 @@ import { QRCodeSVG } from 'qrcode.react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
-import { Mail, Search, FolderOpen, X, Check, Download } from 'lucide-react'
+import { Mail, Search, FolderOpen, X, Check, Download, Rocket } from 'lucide-react'
 
 const C = {
   bg: '#0d1424',
@@ -516,7 +516,7 @@ export default function UserProfile() {
         {projects.length === 0 ? (
           isOwnProfile ? (
             <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: '48px 32px', textAlign: 'center' }}>
-              <div style={{ fontSize: 40, marginBottom: 16 }}>🚀</div>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16, color: '#3b82f6' }}><Rocket size={40} /></div>
               <p style={{ color: C.text, fontSize: 18, fontWeight: 700, margin: '0 0 8px' }}>O teu portfólio começa aqui</p>
               <p style={{ color: C.muted, fontSize: 14, margin: '0 0 24px', maxWidth: 360, marginLeft: 'auto', marginRight: 'auto', lineHeight: 1.6 }}>
                 Adiciona o teu primeiro projeto escolar ou pessoal e transforma-o numa página profissional com a ajuda da IA.

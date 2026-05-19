@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Pencil, ExternalLink } from 'lucide-react'
 import { Navbar } from '../components/Navbar'
-import { Folder, Trophy, BarChart2, Rocket, Eye, School, Plus, X, Users, ChevronRight, User, Settings, Compass, Medal, LogOut } from 'lucide-react'
+import { Folder, Trophy, BarChart2, Rocket, Eye, School, Plus, X, Users, ChevronRight, User, Settings, Compass, Medal, LogOut, Globe, TrendingUp, MessageSquare, Star, Mail, Search, ChevronDown, BookOpen } from 'lucide-react'
 
 const C = {
   bg: '#0d1424',
@@ -49,18 +49,38 @@ function ScoreBadge({ score }) {
   )
 }
 
-function StatCard({ icon, label, value, color }) {
+function StatCard({ icon, label, value, color, onClick, expandable, expanded, children }) {
   return (
-    <div style={{
-      background: C.card, border: `1px solid ${C.border}`,
-      borderRadius: 14, padding: '20px 22px',
-      display: 'flex', flexDirection: 'column', gap: 6,
-    }}>
-      <span style={{ display: 'flex', alignItems: 'center', color: color ?? C.text }}>{icon}</span>
+    <div
+      onClick={onClick}
+      className="stat-card-wrap"
+      style={{
+        background: C.card,
+        border: `1px solid ${expanded ? C.borderBright : C.border}`,
+        borderRadius: 14, padding: '20px 22px',
+        display: 'flex', flexDirection: 'column', gap: 6,
+        cursor: onClick ? 'pointer' : 'default',
+        transition: 'background 0.15s, border-color 0.15s',
+      }}
+    >
+      <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: color ?? C.text }}>
+        {icon}
+        {expandable && (
+          <ChevronDown
+            size={15} color={C.muted}
+            style={{ transition: 'transform 0.2s', transform: expanded ? 'rotate(180deg)' : 'none' }}
+          />
+        )}
+      </span>
       <span style={{ color: color ?? C.text, fontSize: 26, fontWeight: 800, letterSpacing: '-0.5px', lineHeight: 1 }}>
         {value}
       </span>
       <span style={{ color: C.muted, fontSize: 13 }}>{label}</span>
+      {expanded && children && (
+        <div style={{ marginTop: 10, borderTop: `1px solid ${C.border}`, paddingTop: 10 }}>
+          {children}
+        </div>
+      )}
     </div>
   )
 }
@@ -180,9 +200,9 @@ function QuickCreateProject({ navigate }) {
 
   return (
     <div style={{ marginBottom: 28 }}>
-      <form onSubmit={handleSubmit} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <form onSubmit={handleSubmit} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: 12 }}>
         {/* Type pills */}
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <div className="qc-pills" style={{ display: 'flex', gap: 7, flexWrap: 'wrap' }}>
           {QUICK_TYPES.map(t => {
             const sel = type === t.id
             return (
@@ -190,7 +210,8 @@ function QuickCreateProject({ navigate }) {
                 key={t.id}
                 type="button"
                 onClick={() => setType(sel ? '' : t.id)}
-                style={{ fontSize: 13, padding: '5px 14px', borderRadius: 20, border: `1px solid ${sel ? C.blue : C.border}`, background: sel ? `${C.blue}22` : 'transparent', color: sel ? '#60a5fa' : C.muted, cursor: 'pointer', fontFamily: 'inherit', fontWeight: sel ? 700 : 400, transition: 'all 0.12s' }}
+                className="qc-pill"
+                style={{ fontSize: 12, padding: '5px 12px', borderRadius: 20, border: `1px solid ${sel ? C.blue : C.border}`, background: sel ? `${C.blue}22` : 'transparent', color: sel ? '#60a5fa' : C.muted, cursor: 'pointer', fontFamily: 'inherit', fontWeight: sel ? 700 : 400, transition: 'all 0.12s' }}
               >
                 {t.label}
               </button>
@@ -198,23 +219,25 @@ function QuickCreateProject({ navigate }) {
           })}
         </div>
         {/* Input + button */}
-        <div style={{ display: 'flex', gap: 10 }}>
+        <div className="qc-input-row" style={{ display: 'flex', gap: 9 }}>
           <input
             value={desc}
             onChange={e => setDesc(e.target.value)}
             placeholder={type ? `Nome do teu ${QUICK_TYPES.find(t => t.id === type)?.label.toLowerCase()}...` : 'Descreve o teu projeto em poucas palavras...'}
-            style={{ flex: 1, background: '#0d1424', border: `1px solid ${C.border}`, borderRadius: 10, padding: '12px 16px', color: C.text, fontSize: 14, fontFamily: 'inherit', outline: 'none', minWidth: 0 }}
+            className="qc-input"
+            style={{ flex: 1, background: '#0d1424', border: `1px solid ${C.border}`, borderRadius: 10, padding: '11px 14px', color: C.text, fontSize: 14, fontFamily: 'inherit', outline: 'none', minWidth: 0 }}
             onFocus={e => e.target.style.borderColor = C.borderBright}
             onBlur={e => e.target.style.borderColor = C.border}
           />
           <button
             type="submit"
-            style={{ background: `linear-gradient(135deg, ${C.blue}, #4f46e5)`, border: 'none', borderRadius: 10, width: 46, height: 46, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, boxShadow: '0 4px 16px rgba(59,130,246,0.35)' }}
+            className="qc-btn"
+            style={{ background: `linear-gradient(135deg, ${C.blue}, #4f46e5)`, border: 'none', borderRadius: 10, width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, boxShadow: '0 4px 16px rgba(59,130,246,0.35)' }}
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
           </button>
         </div>
-        <p style={{ margin: 0, fontSize: 12, color: C.subtle, textAlign: 'center' }}>Sem registo obrigatório · Sem cartão de crédito</p>
+        <p className="qc-footnote" style={{ margin: 0, fontSize: 12, color: C.subtle, textAlign: 'center' }}>Sem registo obrigatório · Sem cartão de crédito</p>
       </form>
     </div>
   )
@@ -361,50 +384,46 @@ function TurmaCard({ turma, navigate }) {
 
 const ONBOARDING = {
   aluno: {
-    emoji: '🎓',
     title: 'Bem-vindo ao Showo!',
     subtitle: 'O teu portfólio profissional começa aqui.',
     steps: [
-      { icon: '✏️', title: 'Cria o teu projeto', desc: 'Responde a algumas perguntas sobre o teu trabalho — a IA trata do resto.' },
-      { icon: '🌐', title: 'Partilha a tua página', desc: 'Cada projeto ganha uma página pública pronta a enviar a recrutadores e professores.' },
-      { icon: '📈', title: 'Acompanha o crescimento', desc: 'Vê o score, visualizações e feedback em tempo real.' },
+      { icon: <Pencil size={20} color="#7d93b0" />, title: 'Cria o teu projeto', desc: 'Responde a algumas perguntas sobre o teu trabalho — a IA trata do resto.' },
+      { icon: <Globe size={20} color="#7d93b0" />, title: 'Partilha a tua página', desc: 'Cada projeto ganha uma página pública pronta a enviar a recrutadores e professores.' },
+      { icon: <TrendingUp size={20} color="#7d93b0" />, title: 'Acompanha o crescimento', desc: 'Vê o score, visualizações e feedback em tempo real.' },
     ],
     cta: 'Criar o meu primeiro projeto',
     ctaPath: '/interview',
     ctaState: { type: 'personal', description: '' },
   },
   professor: {
-    emoji: '👨‍🏫',
     title: 'Bem-vindo ao Showo!',
     subtitle: 'Acompanha e avalia os projetos dos teus alunos.',
     steps: [
-      { icon: '🏫', title: 'Cria uma turma', desc: 'Gera um código único e partilha-o com os teus alunos para que se juntem.' },
-      { icon: '📊', title: 'Acompanha o progresso', desc: 'Vê scores, completude e evolução de cada aluno numa tabela clara.' },
-      { icon: '💬', title: 'Dá feedback', desc: 'Deixa comentários por secção diretamente nos projetos dos alunos.' },
+      { icon: <School size={20} color="#7d93b0" />, title: 'Cria uma turma', desc: 'Gera um código único e partilha-o com os teus alunos para que se juntem.' },
+      { icon: <BarChart2 size={20} color="#7d93b0" />, title: 'Acompanha o progresso', desc: 'Vê scores, completude e evolução de cada aluno numa tabela clara.' },
+      { icon: <MessageSquare size={20} color="#7d93b0" />, title: 'Dá feedback', desc: 'Deixa comentários por secção diretamente nos projetos dos alunos.' },
     ],
     cta: 'Criar a minha primeira turma',
     ctaAction: 'createTurma',
   },
   recrutador: {
-    emoji: '🔍',
     title: 'Bem-vindo ao Showo!',
     subtitle: 'Descobre talentos reais com projetos reais.',
     steps: [
-      { icon: '🧭', title: 'Explora projetos', desc: 'Navega por projetos de estudantes organizados por área e score.' },
-      { icon: '⭐', title: 'Perfis completos', desc: 'Cada aluno tem uma página com links, tecnologias e contexto do projeto.' },
-      { icon: '📩', title: 'Contacta diretamente', desc: 'Encontra o LinkedIn ou email de cada candidato no perfil.' },
+      { icon: <Compass size={20} color="#7d93b0" />, title: 'Explora projetos', desc: 'Navega por projetos de estudantes organizados por área e score.' },
+      { icon: <Star size={20} color="#7d93b0" />, title: 'Perfis completos', desc: 'Cada aluno tem uma página com links, tecnologias e contexto do projeto.' },
+      { icon: <Mail size={20} color="#7d93b0" />, title: 'Contacta diretamente', desc: 'Encontra o LinkedIn ou email de cada candidato no perfil.' },
     ],
     cta: 'Explorar projetos',
     ctaPath: '/explorar',
   },
   empresa: {
-    emoji: '🏢',
     title: 'Bem-vindo ao Showo!',
     subtitle: 'Encontra o talento certo para a tua empresa.',
     steps: [
-      { icon: '🔎', title: 'Descobre talento jovem', desc: 'Acede a projetos reais de estudantes do ensino profissional e universitário.' },
-      { icon: '🏆', title: 'Filtra pelos melhores', desc: 'O ranking e os scores ajudam-te a identificar rapidamente os candidatos de destaque.' },
-      { icon: '🤝', title: 'Estabelece contacto', desc: 'Cada perfil inclui links de contacto direto com o estudante.' },
+      { icon: <Search size={20} color="#7d93b0" />, title: 'Descobre talento jovem', desc: 'Acede a projetos reais de estudantes do ensino profissional e universitário.' },
+      { icon: <Trophy size={20} color="#7d93b0" />, title: 'Filtra pelos melhores', desc: 'O ranking e os scores ajudam-te a identificar rapidamente os candidatos de destaque.' },
+      { icon: <Users size={20} color="#7d93b0" />, title: 'Estabelece contacto', desc: 'Cada perfil inclui links de contacto direto com o estudante.' },
     ],
     cta: 'Ver ranking',
     ctaPath: '/ranking',
@@ -442,7 +461,7 @@ function OnboardingModal({ user, profile, onDismiss, onCreateTurma }) {
         {step === 0 ? (
           <>
             <div style={{ textAlign: 'center', marginBottom: 28 }}>
-              <div style={{ fontSize: 52, marginBottom: 16, lineHeight: 1 }}>{cfg.emoji}</div>
+              <img src="/icon.png" alt="Showo" style={{ width: 60, height: 60, objectFit: 'contain', marginBottom: 14, display: 'block', margin: '0 auto 14px' }} />
               <h2 style={{ color: '#e8f2ff', fontSize: 22, fontWeight: 800, margin: '0 0 8px', letterSpacing: '-0.3px' }}>
                 {cfg.title}
               </h2>
@@ -451,7 +470,7 @@ function OnboardingModal({ user, profile, onDismiss, onCreateTurma }) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 28 }}>
               {cfg.steps.map((s, i) => (
                 <div key={i} style={{ display: 'flex', gap: 14, alignItems: 'flex-start', background: 'rgba(255,255,255,0.03)', border: '1px solid #1e3050', borderRadius: 12, padding: '14px 16px' }}>
-                  <span style={{ fontSize: 22, lineHeight: 1, flexShrink: 0, marginTop: 1 }}>{s.icon}</span>
+                  <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1, width: 24, height: 24 }}>{s.icon}</span>
                   <div>
                     <div style={{ color: '#e8f2ff', fontSize: 14, fontWeight: 600, marginBottom: 3 }}>{s.title}</div>
                     <div style={{ color: '#7d93b0', fontSize: 13, lineHeight: 1.4 }}>{s.desc}</div>
@@ -477,7 +496,7 @@ function OnboardingModal({ user, profile, onDismiss, onCreateTurma }) {
         ) : (
           <>
             <div style={{ textAlign: 'center', marginBottom: 28 }}>
-              <div style={{ fontSize: 44, marginBottom: 14, lineHeight: 1 }}>🚀</div>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 14 }}><Rocket size={44} color="#1b78f7" /></div>
               <h2 style={{ color: '#e8f2ff', fontSize: 20, fontWeight: 800, margin: '0 0 8px', letterSpacing: '-0.3px' }}>
                 Pronto para começar?
               </h2>
@@ -525,6 +544,7 @@ export default function Dashboard() {
   const [showCreateTurma, setShowCreateTurma] = useState(false)
   const [toast, setToast] = useState('')
   const [showOnboarding, setShowOnboarding] = useState(false)
+  const [projCardOpen, setProjCardOpen] = useState(false)
 
   function showToast(msg) {
     setToast(msg)
@@ -647,6 +667,20 @@ export default function Dashboard() {
           .dash-project-row { flex-wrap: wrap; gap: 10px !important; }
           .dash-project-info { min-width: 0; flex: 1 1 calc(100% - 58px); }
           .dash-project-actions { width: 100%; justify-content: flex-end; border-top: 1px solid #1e3050; padding-top: 10px; margin-top: 2px; }
+          /* Stat cards clickable on mobile */
+          .stat-card-wrap { user-select: none; -webkit-tap-highlight-color: transparent; }
+          .stat-card-wrap:active { background: #1c2d44 !important; }
+          /* QuickCreate compact */
+          .qc-pills { gap: 5px !important; }
+          .qc-pill { font-size: 11px !important; padding: 4px 10px !important; }
+          .qc-input-row { gap: 7px !important; }
+          .qc-input { padding: 10px 12px !important; font-size: 13px !important; }
+          .qc-btn { width: 40px !important; height: 40px !important; }
+          .qc-footnote { display: none !important; }
+        }
+        @media (min-width: 601px) and (max-width: 860px) {
+          .stat-card-wrap { user-select: none; -webkit-tap-highlight-color: transparent; }
+          .stat-card-wrap:active { background: #1c2d44 !important; }
         }
       `}</style>
       <Navbar />
@@ -753,8 +787,49 @@ export default function Dashboard() {
             gap: 12,
             marginBottom: 36,
           }}>
-            <StatCard icon={<Folder size={22} />} label="Projetos" value={projects.length} color={C.blue} />
-            <StatCard icon={<Trophy size={22} />} label="Melhor score" value={bestScore ?? '—'} color={getScoreColor(bestScore)} />
+            <StatCard
+              icon={<Folder size={22} />} label="Projetos" value={projects.length} color={C.blue}
+              expandable expanded={projCardOpen}
+              onClick={() => setProjCardOpen(o => !o)}
+            >
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {projects.slice(0, 5).map(p => (
+                  <div
+                    key={p.id}
+                    onClick={e => { e.stopPropagation(); navigate(`/projeto/${p.slug}`) }}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 10,
+                      padding: '8px 10px', borderRadius: 9,
+                      background: 'rgba(255,255,255,0.04)', border: `1px solid ${C.border}`,
+                      cursor: 'pointer', transition: 'background 0.12s',
+                    }}
+                    onPointerEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
+                    onPointerLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
+                  >
+                    <div style={{
+                      width: 28, height: 28, borderRadius: '50%', flexShrink: 0,
+                      background: `conic-gradient(${getScoreColor(p.score)} ${(p.score ?? 0) * 3.6}deg, #1e3050 0deg)`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      <div style={{ width: 20, height: 20, borderRadius: '50%', background: C.card, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 700, color: getScoreColor(p.score) }}>
+                        {p.score ?? '—'}
+                      </div>
+                    </div>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{p.name}</span>
+                    <ChevronRight size={12} color={C.subtle} />
+                  </div>
+                ))}
+                {projects.length > 5 && (
+                  <button
+                    onClick={e => { e.stopPropagation(); setProjCardOpen(false); document.querySelector('#proj-list')?.scrollIntoView({ behavior: 'smooth' }) }}
+                    style={{ background: 'none', border: 'none', color: '#60a5fa', fontSize: 12, cursor: 'pointer', padding: '4px 0', fontFamily: 'inherit', textAlign: 'left' }}
+                  >
+                    Ver todos ({projects.length}) →
+                  </button>
+                )}
+              </div>
+            </StatCard>
+            <StatCard icon={<Trophy size={22} />} label="Melhor score" value={bestScore ?? '—'} color={getScoreColor(bestScore)} onClick={() => navigate('/ranking')} />
             <StatCard icon={<BarChart2 size={22} />} label="Score médio" value={avgScore ?? '—'} color={getScoreColor(avgScore)} />
             <StatCard icon={<Eye size={22} />} label="Total visualizações" value={totalViews} color={C.purple} />
           </div>
@@ -764,7 +839,7 @@ export default function Dashboard() {
         <QuickCreateProject navigate={navigate} />
 
         {/* Projects */}
-        <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div id="proj-list" style={{ marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <h2 style={{ color: C.text, fontSize: 16, fontWeight: 700, margin: 0 }}>
             Os meus projetos
             {projects.length > 0 && (

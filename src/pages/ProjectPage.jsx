@@ -99,9 +99,8 @@ function getLevelInfo(score) {
   return { label: 'Em desenvolvimento', color: colors.muted }
 }
 
-function ScoreRing({ score }) {
-  const size = 108
-  const stroke = 8
+function ScoreRing({ score, size = 108 }) {
+  const stroke = size <= 80 ? 6 : 8
   const r = (size - stroke) / 2
   const circ = 2 * Math.PI * r
   const dash = (score / 100) * circ
@@ -129,8 +128,8 @@ function ScoreRing({ score }) {
         position: 'absolute', inset: 0, zIndex: 2,
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
       }}>
-        <span style={{ fontSize: 26, fontWeight: 900, color, lineHeight: 1, letterSpacing: '-1px' }}>{score}</span>
-        <span style={{ fontSize: 9, color: colors.muted, fontWeight: 700, letterSpacing: 1.5, textTransform: 'uppercase', marginTop: 2 }}>score</span>
+        <span style={{ fontSize: size <= 80 ? 18 : 26, fontWeight: 900, color, lineHeight: 1, letterSpacing: '-1px' }}>{score}</span>
+        <span style={{ fontSize: size <= 80 ? 7 : 9, color: colors.muted, fontWeight: 700, letterSpacing: 1.5, textTransform: 'uppercase', marginTop: 2 }}>score</span>
       </div>
     </div>
   )
@@ -755,7 +754,7 @@ export default function ProjectPage() {
         supabase.from('notifications').insert({
           user_id: user.id,
           type: 'MISSION_COMPLETE',
-          message: `Missão completa: ${challenge.fieldLabel} +${challenge.scoreGain} XP 🏆`,
+          message: `Missão completa: ${challenge.fieldLabel} +${challenge.scoreGain} XP`,
           project_slug: project.slug,
         })
       }
@@ -772,7 +771,7 @@ export default function ProjectPage() {
       supabase.from('notifications').insert({
         user_id: user.id,
         type: 'SCORE_MILESTONE',
-        message: `O teu projeto "${project.name}" atingiu ${m} pontos! 🎯`,
+        message: `O teu projeto "${project.name}" atingiu ${m} pontos!`,
         project_slug: project.slug,
       })
       const updatedMilestones = [...current, ...newMilestones]
@@ -1361,22 +1360,22 @@ export default function ProjectPage() {
             )}
           </div>
 
-          {/* Mobile dashboard — score + missions progress (hidden on desktop) */}
+          {/* Mobile dashboard — score + level (hidden on desktop, shown on mobile) */}
           <div className="proj-dashboard" style={{
-            display: 'none', alignItems: 'center', gap: 14, marginBottom: 20,
+            display: 'none', alignItems: 'center', gap: 14, marginBottom: 18,
             background: colors.bgAlt,
             border: `1px solid ${colors.border}`,
-            borderRadius: 14, padding: '14px 16px',
+            borderRadius: 12, padding: '12px 16px',
           }}>
-            <ScoreRing score={displayScore} />
+            <ScoreRing score={displayScore} size={72} />
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{
-                display: 'inline-block', marginBottom: 8,
+                display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 6,
                 background: level.color + '15', color: level.color,
-                borderRadius: 999, padding: '3px 10px', fontSize: 11, fontWeight: 700,
+                borderRadius: 999, padding: '3px 10px', fontSize: 12, fontWeight: 700,
                 border: `1px solid ${level.color}35`,
               }}>{level.label}</div>
-              <div style={{ height: 4, background: colors.border, borderRadius: 2, overflow: 'hidden', marginBottom: 6 }}>
+              <div style={{ height: 3, background: colors.border, borderRadius: 2, overflow: 'hidden', marginBottom: 5 }}>
                 <div style={{
                   height: '100%', borderRadius: 2,
                   width: `${(earnedXP / totalXP) * 100}%`,
@@ -1384,7 +1383,7 @@ export default function ProjectPage() {
                   transition: 'width 0.5s',
                 }} />
               </div>
-              <div style={{ fontSize: 12, color: colors.muted }}>
+              <div style={{ fontSize: 11, color: colors.muted }}>
                 {completedCount}/{CHALLENGES.length} missões · {earnedXP}/{totalXP} XP
               </div>
             </div>
@@ -1436,7 +1435,7 @@ export default function ProjectPage() {
             borderRadius: 16, padding: '18px 22px', marginBottom: 20,
             display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
           }}>
-            <span style={{ fontSize: 28 }}>🎓</span>
+            <GraduationCap size={28} color="#c4b5fd" style={{ flexShrink: 0 }} />
             <div style={{ flex: 1, minWidth: 200 }}>
               <div style={{ fontSize: 14, fontWeight: 700, color: '#c4b5fd', marginBottom: 2 }}>
                 O teu projeto atingiu nível profissional.
@@ -1557,7 +1556,7 @@ export default function ProjectPage() {
             <div style={{ background: 'linear-gradient(135deg,rgba(251,191,36,0.04),rgba(245,158,11,0.02))', border: '1px solid rgba(251,191,36,0.2)', borderRadius: 16, padding: '18px 20px', marginBottom: 16, marginTop: 8 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: myFeedback.length > 0 || isProfessor ? 14 : 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ fontSize: 15 }}>👨‍🏫</span>
+                  <GraduationCap size={15} color={colors.muted} />
                   <span style={{ fontSize: 14, fontWeight: 700, color: colors.text }}>Feedback do Professor</span>
                 </div>
                 {isProfessor && (
@@ -1776,7 +1775,7 @@ export default function ProjectPage() {
           {/* View count */}
           {(project.views ?? 0) > 0 && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: colors.muted, fontSize: 13, fontWeight: 500 }}>
-              <span style={{ fontSize: 15 }}>👁</span>
+              <Eye size={15} color={colors.muted} />
               <span><strong style={{ color: colors.text }}>{project.views}</strong> visualizaç{project.views === 1 ? 'ão' : 'ões'}</span>
             </div>
           )}
