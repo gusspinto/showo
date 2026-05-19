@@ -191,8 +191,8 @@ export default function Settings() {
   async function handleAvatarChange(e) {
     const file = e.target.files?.[0]
     if (!file || !user) return
-    if (file.size > 2 * 1024 * 1024) {
-      setSaveMsg({ type: 'err', text: 'A imagem não pode ter mais de 2 MB.' })
+    if (file.size > 5 * 1024 * 1024) {
+      setSaveMsg({ type: 'err', text: 'A imagem não pode ter mais de 5 MB.' })
       return
     }
     setAvatarUploading(true)
@@ -377,7 +377,7 @@ export default function Settings() {
                   Remover foto
                 </button>
               )}
-              <p style={{ margin: '8px 0 0', fontSize: 12, color: C.subtle }}>JPG, PNG ou WebP · máx. 2 MB</p>
+              <p style={{ margin: '8px 0 0', fontSize: 12, color: C.subtle }}>JPG, PNG ou WebP · máx. 5 MB</p>
             </div>
           </div>
 
