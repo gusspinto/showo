@@ -434,7 +434,7 @@ export default function TurmaPage() {
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
                 <div style={{ width: 44, height: 44, borderRadius: 12, background: 'linear-gradient(135deg,rgba(59,130,246,0.2),rgba(79,70,229,0.15))', border: `1px solid rgba(59,130,246,0.25)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <i className="fi fi-rs-workshop" style={{ fontSize: 22, color: '#3b82f6', lineHeight: 1 }} />
+                  <i className="fi fi-rs-classroom" style={{ fontSize: 22, color: '#3b82f6', lineHeight: 1 }} />
                 </div>
                 <div>
                   <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, letterSpacing: '-0.3px' }}>{turma.name}</h1>
