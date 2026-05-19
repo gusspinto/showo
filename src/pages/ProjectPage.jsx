@@ -10,7 +10,7 @@ import { generateProject } from '../lib/generateProject'
 import { useAuth } from '../context/AuthContext'
 import DefenseMode from '../components/DefenseMode'
 import { analyzeProject } from '../lib/analyzeProject'
-import { Check, X, Loader, GraduationCap, Save, Sparkles, Bot, Lightbulb, Pencil, Search, Target, Wrench, Zap, TrendingUp, Briefcase, Users, Rocket, Trophy, BarChart2, CheckCircle, BookOpen, ChevronDown } from 'lucide-react'
+import { Check, X, Loader, GraduationCap, Save, Sparkles, Bot, Lightbulb, Pencil, Search, Target, Wrench, Zap, TrendingUp, Briefcase, Users, Rocket, Trophy, BarChart2, CheckCircle, BookOpen, ChevronDown, Eye } from 'lucide-react'
 
 const colors = {
   bg: '#0d1424',

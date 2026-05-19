@@ -386,19 +386,18 @@ export default function Explore() {
                         )}
                       </>
                     )}
-                    {/* Views badge — bottom-left, always visible */}
-                    {(project.views ?? 0) > 0 && (
-                      <div style={{
-                        position: 'absolute', bottom: 8, left: 10,
-                        display: 'flex', alignItems: 'center', gap: 4,
-                        background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)',
-                        borderRadius: 20, padding: '3px 8px',
-                        fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.85)',
-                      }}>
-                        <Eye size={11} />
-                        {project.views}
-                      </div>
-                    )}
+                    {/* Views badge — always visible */}
+                    <div style={{
+                      position: 'absolute', bottom: 8, left: 10,
+                      display: 'flex', alignItems: 'center', gap: 4,
+                      background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)',
+                      borderRadius: 20, padding: '3px 8px',
+                      fontSize: 11, fontWeight: 600,
+                      color: (project.views ?? 0) > 0 ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.4)',
+                    }}>
+                      <Eye size={11} />
+                      {project.views ?? 0}
+                    </div>
                   </div>
 
                   {/* Score + area */}
