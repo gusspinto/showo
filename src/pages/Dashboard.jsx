@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Pencil, ExternalLink } from 'lucide-react'
 import { Navbar } from '../components/Navbar'
-import { Folder, Trophy, BarChart2, Rocket, Eye, School, Plus, X, Users, ChevronRight, User, Settings, Compass, Medal, LogOut, Globe, TrendingUp, MessageSquare, Star, Mail, Search, ChevronDown, BookOpen } from 'lucide-react'
+import { Folder, Trophy, BarChart2, Rocket, Eye, GraduationCap, Plus, X, Users, ChevronRight, User, Settings, Compass, Medal, LogOut, Globe, TrendingUp, MessageSquare, Star, Mail, Search, ChevronDown, BookOpen, Trash2 } from 'lucide-react'
 
 const C = {
   bg: '#0d1424',
@@ -35,6 +35,16 @@ function getDisplayName(user) {
   const name = user?.user_metadata?.full_name
   if (name) return name.split(' ')[0]
   return user?.email?.split('@')[0] ?? ''
+}
+
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth <= 860)
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth <= 860)
+    window.addEventListener('resize', handler)
+    return () => window.removeEventListener('resize', handler)
+  }, [])
+  return isMobile
 }
 
 function ScoreBadge({ score }) {
@@ -266,7 +276,7 @@ function JoinTurmaBar({ navigate }) {
 
   return (
     <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: '16px 20px', marginBottom: 28, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-      <School size={18} color="#3b82f6" style={{ flexShrink: 0 }} />
+      <GraduationCap size={18} color="#3b82f6" style={{ flexShrink: 0 }} />
       <span style={{ fontSize: 14, fontWeight: 600, color: C.text, flexShrink: 0 }}>Entrar numa turma</span>
       <form onSubmit={handleJoin} style={{ display: 'flex', gap: 8, flex: 1, minWidth: 200 }}>
         <input
@@ -366,7 +376,7 @@ function TurmaCard({ turma, navigate }) {
       style={{ background: hov ? C.cardHover : C.card, border: `1px solid ${hov ? C.borderBright : C.border}`, borderRadius: 12, padding: '16px 18px', cursor: 'pointer', transition: 'all 0.15s', display: 'flex', alignItems: 'center', gap: 14 }}
     >
       <div style={{ width: 40, height: 40, borderRadius: 10, background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-        <School size={18} color="#3b82f6" />
+        <GraduationCap size={18} color="#3b82f6" />
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ color: C.text, fontSize: 14, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{turma.name}</div>
@@ -399,7 +409,7 @@ const ONBOARDING = {
     title: 'Bem-vindo ao Showo!',
     subtitle: 'Acompanha e avalia os projetos dos teus alunos.',
     steps: [
-      { icon: <School size={20} color="#7d93b0" />, title: 'Cria uma turma', desc: 'Gera um código único e partilha-o com os teus alunos para que se juntem.' },
+      { icon: <GraduationCap size={20} color="#7d93b0" />, title: 'Cria uma turma', desc: 'Gera um código único e partilha-o com os teus alunos para que se juntem.' },
       { icon: <BarChart2 size={20} color="#7d93b0" />, title: 'Acompanha o progresso', desc: 'Vê scores, completude e evolução de cada aluno numa tabela clara.' },
       { icon: <MessageSquare size={20} color="#7d93b0" />, title: 'Dá feedback', desc: 'Deixa comentários por secção diretamente nos projetos dos alunos.' },
     ],
@@ -538,6 +548,7 @@ function OnboardingModal({ user, profile, onDismiss, onCreateTurma }) {
 export default function Dashboard() {
   const { user, profile, loading: authLoading } = useAuth()
   const navigate = useNavigate()
+  const isMobile = useIsMobile()
   const [projects, setProjects] = useState([])
   const [loadingProjects, setLoadingProjects] = useState(true)
   const [turmas, setTurmas] = useState([])
@@ -545,6 +556,7 @@ export default function Dashboard() {
   const [toast, setToast] = useState('')
   const [showOnboarding, setShowOnboarding] = useState(false)
   const [projCardOpen, setProjCardOpen] = useState(false)
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null)
 
   function showToast(msg) {
     setToast(msg)
@@ -663,13 +675,19 @@ export default function Dashboard() {
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
         .dash-project-actions { display: flex; gap: 6px; flex-shrink: 0; }
+        @media (max-width: 860px) {
+          /* Hide full project list on mobile/tablet */
+          .dash-proj-section { display: none !important; }
+          /* Equal horizontal padding for centered layout */
+          .dash-content { padding-left: 20px !important; padding-right: 20px !important; }
+          /* Stat cards tappable */
+          .stat-card-wrap { user-select: none; -webkit-tap-highlight-color: transparent; }
+          .stat-card-wrap:active { background: #1c2d44 !important; }
+        }
         @media (max-width: 600px) {
           .dash-project-row { flex-wrap: wrap; gap: 10px !important; }
           .dash-project-info { min-width: 0; flex: 1 1 calc(100% - 58px); }
           .dash-project-actions { width: 100%; justify-content: flex-end; border-top: 1px solid #1e3050; padding-top: 10px; margin-top: 2px; }
-          /* Stat cards clickable on mobile */
-          .stat-card-wrap { user-select: none; -webkit-tap-highlight-color: transparent; }
-          .stat-card-wrap:active { background: #1c2d44 !important; }
           /* QuickCreate compact */
           .qc-pills { gap: 5px !important; }
           .qc-pill { font-size: 11px !important; padding: 4px 10px !important; }
@@ -677,10 +695,6 @@ export default function Dashboard() {
           .qc-input { padding: 10px 12px !important; font-size: 13px !important; }
           .qc-btn { width: 40px !important; height: 40px !important; }
           .qc-footnote { display: none !important; }
-        }
-        @media (min-width: 601px) and (max-width: 860px) {
-          .stat-card-wrap { user-select: none; -webkit-tap-highlight-color: transparent; }
-          .stat-card-wrap:active { background: #1c2d44 !important; }
         }
       `}</style>
       <Navbar />
@@ -712,7 +726,7 @@ export default function Dashboard() {
         />
       )}
 
-      <div style={{ maxWidth: 800, margin: '0 auto', padding: '44px 24px 80px' }}>
+      <div className="dash-content" style={{ maxWidth: 800, margin: '0 auto', padding: '44px 24px 80px' }}>
 
         {/* Header */}
         <div style={{ marginBottom: 36, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
@@ -759,7 +773,7 @@ export default function Dashboard() {
             </div>
             {turmas.length === 0 ? (
               <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: '28px', textAlign: 'center' }}>
-                <School size={36} color={C.subtle} style={{ marginBottom: 10 }} />
+                <GraduationCap size={36} color={C.subtle} style={{ marginBottom: 10 }} />
                 <p style={{ color: C.text, fontSize: 15, fontWeight: 600, margin: '0 0 6px' }}>Ainda não tens turmas</p>
                 <p style={{ color: C.muted, fontSize: 13, margin: '0 0 16px' }}>Cria uma turma e partilha o código com os teus alunos.</p>
                 <button onClick={() => setShowCreateTurma(true)} style={{ background: C.blue, border: 'none', borderRadius: 8, padding: '9px 20px', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
@@ -789,43 +803,64 @@ export default function Dashboard() {
           }}>
             <StatCard
               icon={<Folder size={22} />} label="Projetos" value={projects.length} color={C.blue}
-              expandable expanded={projCardOpen}
-              onClick={() => setProjCardOpen(o => !o)}
+              expandable={isMobile} expanded={isMobile && projCardOpen}
+              onClick={isMobile ? () => setProjCardOpen(o => !o) : undefined}
             >
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {projects.slice(0, 5).map(p => (
                   <div
                     key={p.id}
-                    onClick={e => { e.stopPropagation(); navigate(`/projeto/${p.slug}`) }}
                     style={{
                       display: 'flex', alignItems: 'center', gap: 10,
                       padding: '8px 10px', borderRadius: 9,
-                      background: 'rgba(255,255,255,0.04)', border: `1px solid ${C.border}`,
-                      cursor: 'pointer', transition: 'background 0.12s',
+                      background: confirmDeleteId === p.id ? 'rgba(248,113,113,0.07)' : 'rgba(255,255,255,0.04)',
+                      border: `1px solid ${confirmDeleteId === p.id ? 'rgba(248,113,113,0.3)' : C.border}`,
+                      transition: 'background 0.12s',
                     }}
-                    onPointerEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
-                    onPointerLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
                   >
-                    <div style={{
-                      width: 28, height: 28, borderRadius: '50%', flexShrink: 0,
-                      background: `conic-gradient(${getScoreColor(p.score)} ${(p.score ?? 0) * 3.6}deg, #1e3050 0deg)`,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    }}>
-                      <div style={{ width: 20, height: 20, borderRadius: '50%', background: C.card, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 700, color: getScoreColor(p.score) }}>
-                        {p.score ?? '—'}
-                      </div>
-                    </div>
-                    <span style={{ fontSize: 13, fontWeight: 600, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{p.name}</span>
-                    <ChevronRight size={12} color={C.subtle} />
+                    {confirmDeleteId === p.id ? (
+                      <>
+                        <span style={{ fontSize: 12, color: C.muted, flex: 1 }}>Apagar projeto?</span>
+                        <button onClick={e => { e.stopPropagation(); deleteProject(p.id); setConfirmDeleteId(null) }} style={{ background: 'none', border: 'none', color: '#f87171', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', padding: '2px 8px' }}>Sim</button>
+                        <button onClick={e => { e.stopPropagation(); setConfirmDeleteId(null) }} style={{ background: 'none', border: 'none', color: C.muted, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', padding: '2px 8px' }}>Não</button>
+                      </>
+                    ) : (
+                      <>
+                        <div
+                          onClick={e => { e.stopPropagation(); navigate(`/projeto/${p.slug}`) }}
+                          style={{ width: 28, height: 28, borderRadius: '50%', flexShrink: 0, cursor: 'pointer',
+                            background: `conic-gradient(${getScoreColor(p.score)} ${(p.score ?? 0) * 3.6}deg, #1e3050 0deg)`,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          }}
+                        >
+                          <div style={{ width: 20, height: 20, borderRadius: '50%', background: C.card, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 700, color: getScoreColor(p.score) }}>
+                            {p.score ?? '—'}
+                          </div>
+                        </div>
+                        <span
+                          onClick={e => { e.stopPropagation(); navigate(`/projeto/${p.slug}`) }}
+                          style={{ fontSize: 13, fontWeight: 600, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, cursor: 'pointer' }}
+                        >{p.name}</span>
+                        <div style={{ display: 'flex', gap: 2, flexShrink: 0 }} onClick={e => e.stopPropagation()}>
+                          <button
+                            onClick={() => navigate(`/editar/${p.slug}`)}
+                            title="Editar"
+                            style={{ background: 'none', border: 'none', color: C.muted, cursor: 'pointer', padding: 5, display: 'flex', alignItems: 'center', borderRadius: 5 }}
+                          ><Pencil size={13} /></button>
+                          <button
+                            onClick={() => setConfirmDeleteId(p.id)}
+                            title="Apagar"
+                            style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', padding: 5, display: 'flex', alignItems: 'center', borderRadius: 5 }}
+                          ><Trash2 size={13} /></button>
+                        </div>
+                      </>
+                    )}
                   </div>
                 ))}
                 {projects.length > 5 && (
-                  <button
-                    onClick={e => { e.stopPropagation(); setProjCardOpen(false); document.querySelector('#proj-list')?.scrollIntoView({ behavior: 'smooth' }) }}
-                    style={{ background: 'none', border: 'none', color: '#60a5fa', fontSize: 12, cursor: 'pointer', padding: '4px 0', fontFamily: 'inherit', textAlign: 'left' }}
-                  >
-                    Ver todos ({projects.length}) →
-                  </button>
+                  <span style={{ color: '#60a5fa', fontSize: 12, padding: '2px 0' }}>
+                    +{projects.length - 5} mais
+                  </span>
                 )}
               </div>
             </StatCard>
@@ -838,56 +873,58 @@ export default function Dashboard() {
         {/* Quick-create widget */}
         <QuickCreateProject navigate={navigate} />
 
-        {/* Projects */}
-        <div id="proj-list" style={{ marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <h2 style={{ color: C.text, fontSize: 16, fontWeight: 700, margin: 0 }}>
-            Os meus projetos
-            {projects.length > 0 && (
-              <span style={{ color: C.muted, fontWeight: 400, fontSize: 14, marginLeft: 8 }}>
-                ({projects.length})
-              </span>
-            )}
-          </h2>
-        </div>
+        {/* Projects — hidden on mobile/tablet, shown on desktop */}
+        <div className="dash-proj-section">
+          <div id="proj-list" style={{ marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <h2 style={{ color: C.text, fontSize: 16, fontWeight: 700, margin: 0 }}>
+              Os meus projetos
+              {projects.length > 0 && (
+                <span style={{ color: C.muted, fontWeight: 400, fontSize: 14, marginLeft: 8 }}>
+                  ({projects.length})
+                </span>
+              )}
+            </h2>
+          </div>
 
-        {loadingProjects ? (
-          <div style={{ color: C.muted, fontSize: 15, padding: '24px 0' }}>A carregar projetos…</div>
-        ) : projects.length === 0 ? (
-          <div style={{
-            background: C.card, border: `1px solid ${C.border}`,
-            borderRadius: 14, padding: '52px 32px', textAlign: 'center',
-          }}>
-            <div style={{ marginBottom: 14, display: 'flex', justifyContent: 'center', color: C.blue }}><Rocket size={44} /></div>
-            <p style={{ color: C.text, fontSize: 17, fontWeight: 700, margin: '0 0 8px' }}>
-              Ainda não tens projetos
-            </p>
-            <p style={{ color: C.muted, fontSize: 14, margin: '0 0 24px', lineHeight: 1.65 }}>
-              Cria o teu primeiro projeto e partilha o que estás a construir com o mundo.
-            </p>
-            <button
-              onClick={() => navigate('/novo')}
-              style={{
-                background: C.blue, border: 'none', borderRadius: 8,
-                padding: '11px 24px', color: '#fff', fontSize: 14, fontWeight: 600,
-                cursor: 'pointer', fontFamily: 'inherit',
-              }}
-            >
-              Criar primeiro projeto →
-            </button>
-          </div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {projects.map(project => (
-              <ProjectRow
-                key={project.id}
-                project={project}
-                onView={() => navigate(`/projeto/${project.slug}`)}
-                onEdit={() => navigate(`/editar/${project.slug}`)}
-                onDelete={deleteProject}
-              />
-            ))}
-          </div>
-        )}
+          {loadingProjects ? (
+            <div style={{ color: C.muted, fontSize: 15, padding: '24px 0' }}>A carregar projetos…</div>
+          ) : projects.length === 0 ? (
+            <div style={{
+              background: C.card, border: `1px solid ${C.border}`,
+              borderRadius: 14, padding: '52px 32px', textAlign: 'center',
+            }}>
+              <div style={{ marginBottom: 14, display: 'flex', justifyContent: 'center', color: C.blue }}><Rocket size={44} /></div>
+              <p style={{ color: C.text, fontSize: 17, fontWeight: 700, margin: '0 0 8px' }}>
+                Ainda não tens projetos
+              </p>
+              <p style={{ color: C.muted, fontSize: 14, margin: '0 0 24px', lineHeight: 1.65 }}>
+                Cria o teu primeiro projeto e partilha o que estás a construir com o mundo.
+              </p>
+              <button
+                onClick={() => navigate('/novo')}
+                style={{
+                  background: C.blue, border: 'none', borderRadius: 8,
+                  padding: '11px 24px', color: '#fff', fontSize: 14, fontWeight: 600,
+                  cursor: 'pointer', fontFamily: 'inherit',
+                }}
+              >
+                Criar primeiro projeto →
+              </button>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {projects.map(project => (
+                <ProjectRow
+                  key={project.id}
+                  project={project}
+                  onView={() => navigate(`/projeto/${project.slug}`)}
+                  onEdit={() => navigate(`/editar/${project.slug}`)}
+                  onDelete={deleteProject}
+                />
+              ))}
+            </div>
+          )}
+        </div>
 
       </div>
     </div>

@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
-import { Folder, Check, Search, School, User, Copy, Inbox, Download, MessageSquare, X, ChevronUp, ChevronDown } from 'lucide-react'
+import { Folder, Check, Search, GraduationCap, User, Copy, Inbox, Download, MessageSquare, X, ChevronUp, ChevronDown } from 'lucide-react'
 
 const C = {
   bg: '#0d1424', bgAlt: '#0a1018', card: '#111c32', cardHover: '#152030',
@@ -434,7 +434,7 @@ export default function TurmaPage() {
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
                 <div style={{ width: 44, height: 44, borderRadius: 12, background: 'linear-gradient(135deg,rgba(59,130,246,0.2),rgba(79,70,229,0.15))', border: `1px solid rgba(59,130,246,0.25)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <School size={22} color="#3b82f6" />
+                  <GraduationCap size={22} color="#3b82f6" />
                 </div>
                 <div>
                   <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, letterSpacing: '-0.3px' }}>{turma.name}</h1>
