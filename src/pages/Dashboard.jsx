@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Pencil, ExternalLink } from 'lucide-react'
 import { Navbar } from '../components/Navbar'
-import { Folder, Trophy, BarChart2, Rocket, Eye, GraduationCap, Plus, X, Users, ChevronRight, User, Settings, Compass, Medal, LogOut, Globe, TrendingUp, MessageSquare, Star, Mail, Search, ChevronDown, BookOpen, Trash2 } from 'lucide-react'
+import { Folder, Trophy, BarChart2, Rocket, Eye, GraduationCap, Plus, X, Users, Users2, ChevronRight, User, Settings, Compass, Medal, LogOut, Globe, TrendingUp, MessageSquare, Star, Mail, Search, ChevronDown, BookOpen, Trash2 } from 'lucide-react'
 
 const C = {
   bg: '#0d1424',
@@ -276,7 +276,7 @@ function JoinTurmaBar({ navigate }) {
 
   return (
     <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: '16px 20px', marginBottom: 28, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-      <i className="fi fi-rs-classroom" style={{ fontSize: 18, color: '#3b82f6', flexShrink: 0, lineHeight: 1 }} />
+      <Users2 size={18} color="#3b82f6" style={{ flexShrink: 0 }} />
       <span style={{ fontSize: 14, fontWeight: 600, color: C.text, flexShrink: 0 }}>Entrar numa turma</span>
       <form onSubmit={handleJoin} style={{ display: 'flex', gap: 8, flex: 1, minWidth: 200 }}>
         <input
@@ -376,7 +376,7 @@ function TurmaCard({ turma, navigate }) {
       style={{ background: hov ? C.cardHover : C.card, border: `1px solid ${hov ? C.borderBright : C.border}`, borderRadius: 12, padding: '16px 18px', cursor: 'pointer', transition: 'all 0.15s', display: 'flex', alignItems: 'center', gap: 14 }}
     >
       <div style={{ width: 40, height: 40, borderRadius: 10, background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-        <i className="fi fi-rs-classroom" style={{ fontSize: 18, color: '#3b82f6', lineHeight: 1 }} />
+        <Users2 size={18} color="#3b82f6" />
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ color: C.text, fontSize: 14, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{turma.name}</div>
@@ -794,7 +794,7 @@ export default function Dashboard() {
             </div>
             {turmas.length === 0 ? (
               <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: '28px', textAlign: 'center' }}>
-                <i className="fi fi-rs-classroom" style={{ fontSize: 36, color: C.subtle, lineHeight: 1, marginBottom: 10, display: 'block' }} />
+                <Users2 size={36} color={C.subtle} style={{ marginBottom: 10 }} />
                 <p style={{ color: C.text, fontSize: 15, fontWeight: 600, margin: '0 0 6px' }}>Ainda não tens turmas</p>
                 <p style={{ color: C.muted, fontSize: 13, margin: '0 0 16px' }}>Cria uma turma e partilha o código com os teus alunos.</p>
                 <button onClick={() => setShowCreateTurma(true)} style={{ background: C.blue, border: 'none', borderRadius: 8, padding: '9px 20px', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
