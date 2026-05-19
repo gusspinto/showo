@@ -10,7 +10,7 @@ import { generateProject } from '../lib/generateProject'
 import { useAuth } from '../context/AuthContext'
 import DefenseMode from '../components/DefenseMode'
 import { analyzeProject } from '../lib/analyzeProject'
-import { Check, X, Loader, GraduationCap, Save, Sparkles, Bot, Lightbulb, Pencil, Search, Target, Wrench, Zap, TrendingUp, Briefcase, Users, Rocket, Trophy, BarChart2, CheckCircle } from 'lucide-react'
+import { Check, X, Loader, GraduationCap, Save, Sparkles, Bot, Lightbulb, Pencil, Search, Target, Wrench, Zap, TrendingUp, Briefcase, Users, Rocket, Trophy, BarChart2, CheckCircle, BookOpen, ChevronDown } from 'lucide-react'
 
 const colors = {
   bg: '#0d1424',
@@ -535,6 +535,7 @@ export default function ProjectPage() {
   const [aiModalOpen, setAiModalOpen] = useState(false)
   const [completudeOpen, setCompletudeOpen] = useState(false)
   const [tipsOpen, setTipsOpen] = useState(false)
+  const [sectionsOpen, setSectionsOpen] = useState(false)
   const [teacherFeedback, setTeacherFeedback] = useState([])
   const [showFeedbackForm, setShowFeedbackForm] = useState(false)
   const [fbComment, setFbComment] = useState('')
@@ -1006,9 +1007,22 @@ export default function ProjectPage() {
         .proj-fab-area       { display: none; }
         .proj-fab-defense-label { display: none; }
         .sidebar-section-toggle { display: none; }
+        .proj-sections-toggle { display: none; }
         @media (max-width: 860px) {
           .sidebar-section-toggle { display: flex !important; }
           .sidebar-section-body.collapsed { display: none !important; }
+          .proj-sections-toggle {
+            display: flex !important;
+            align-items: center; justify-content: space-between;
+            width: 100%; background: ${colors.card};
+            border: 1px solid ${colors.borderBright};
+            border-radius: 14px; padding: 16px 20px;
+            cursor: pointer; font-family: inherit;
+            margin-bottom: 12px;
+            transition: background 0.15s;
+          }
+          .proj-sections-toggle:active { background: ${colors.cardHover} !important; }
+          .proj-sections-body.collapsed { display: none !important; }
           .proj-nav-btns     { display: none !important; }
           .proj-fab-area     { display: flex !important; }
           /* AI FAB — pill com label no tablet */
@@ -1542,76 +1556,31 @@ export default function ProjectPage() {
           </div>
         )}
 
-        {/* Project sections */}
-        <Section fieldKey="problem"         content={project.problem}         isOwner={isOwner} onImprove={setEditModal} />
-        <Section fieldKey="solution"        content={project.solution}        isOwner={isOwner} onImprove={setEditModal} />
-        <Section fieldKey="target_audience" content={project.target_audience} isOwner={isOwner} onImprove={setEditModal} />
-        <Section fieldKey="features"        content={project.features}        isOwner={isOwner} onImprove={setEditModal} />
-        <Section fieldKey="technologies"    content={project.technologies}    isOwner={isOwner} onImprove={setEditModal} />
-        <Section fieldKey="challenges"      content={project.challenges}      isOwner={isOwner} onImprove={setEditModal} />
-        <Section fieldKey="results"         content={project.results}         isOwner={isOwner} onImprove={setEditModal} />
-        <Section fieldKey="learnings"       content={project.learnings}       isOwner={isOwner} onImprove={setEditModal} />
+        {/* Project sections — accordion on mobile/tablet, always visible on desktop */}
+        <button
+          className="proj-sections-toggle"
+          onClick={() => setSectionsOpen(o => !o)}
+        >
+          <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 3 }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <BookOpen size={15} color={colors.blue} />
+              <span style={{ fontSize: 15, fontWeight: 700, color: colors.text }}>Explorar o projeto</span>
+            </span>
+            <span style={{ fontSize: 12, color: colors.muted, paddingLeft: 23 }}>Problema · Solução · Resultados · e mais</span>
+          </span>
+          <ChevronDown size={16} color={colors.muted} style={{ flexShrink: 0, transition: 'transform 0.22s', transform: sectionsOpen ? 'rotate(180deg)' : 'none' }} />
+        </button>
 
-        {/* Teacher feedback panel */}
-        {(isOwner || isProfessor) && (teacherFeedback.length > 0 || isProfessor) && (() => {
-          const FB_SECTION_LABELS = { description: 'Descrição', tech: 'Tecnologias', links: 'Links', demo: 'Demo', team: 'Equipa', gallery: 'Galeria', geral: 'Geral' }
-          const myFeedback = isProfessor ? teacherFeedback.filter(f => f.teacher_id === user?.id) : teacherFeedback
-          return (
-            <div style={{ background: 'linear-gradient(135deg,rgba(251,191,36,0.04),rgba(245,158,11,0.02))', border: '1px solid rgba(251,191,36,0.2)', borderRadius: 16, padding: '18px 20px', marginBottom: 16, marginTop: 8 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: myFeedback.length > 0 || isProfessor ? 14 : 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <GraduationCap size={15} color={colors.muted} />
-                  <span style={{ fontSize: 14, fontWeight: 700, color: colors.text }}>Feedback do Professor</span>
-                </div>
-                {isProfessor && (
-                  <button onClick={() => setShowFeedbackForm(f => !f)} style={{ fontSize: 12, padding: '5px 12px', borderRadius: 6, border: '1px solid rgba(251,191,36,0.3)', background: showFeedbackForm ? 'rgba(251,191,36,0.15)' : 'transparent', color: '#fbbf24', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}>
-                    {showFeedbackForm ? 'Fechar' : '+ Adicionar feedback'}
-                  </button>
-                )}
-              </div>
-
-              {myFeedback.length > 0 && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: showFeedbackForm ? 14 : 0 }}>
-                  {myFeedback.map(f => (
-                    <div key={f.id} style={{ background: 'rgba(0,0,0,0.2)', borderRadius: 10, padding: '12px 14px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                        <span style={{ fontSize: 11, fontWeight: 700, color: '#fbbf24', textTransform: 'uppercase', letterSpacing: 0.5 }}>{FB_SECTION_LABELS[f.field_key] || f.field_key}</span>
-                        {isProfessor && (
-                          <div style={{ display: 'flex', gap: 8 }}>
-                            <button onClick={() => { setFbEditing(f.id); setFbFieldKey(f.field_key); setFbComment(f.comment); setShowFeedbackForm(true) }} style={{ background: 'none', border: 'none', color: colors.muted, cursor: 'pointer', fontSize: 12, padding: 0, fontFamily: 'inherit' }}>Editar</button>
-                            <button onClick={() => handleFbDelete(f.id)} style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', fontSize: 12, padding: 0, fontFamily: 'inherit' }}>Apagar</button>
-                          </div>
-                        )}
-                      </div>
-                      <p style={{ margin: 0, fontSize: 13, color: colors.text, lineHeight: 1.55 }}>{f.comment}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {isProfessor && isOwner === false && teacherFeedback.length === 0 && !showFeedbackForm && (
-                <p style={{ margin: 0, fontSize: 13, color: colors.muted }}>Ainda não deixaste feedback neste projeto.</p>
-              )}
-
-              {isProfessor && showFeedbackForm && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                    {Object.entries(FB_SECTION_LABELS).map(([k, l]) => (
-                      <button key={k} onClick={() => setFbFieldKey(k)} style={{ fontSize: 12, padding: '4px 10px', borderRadius: 6, border: `1px solid ${fbFieldKey === k ? '#fbbf24' : colors.border}`, background: fbFieldKey === k ? 'rgba(251,191,36,0.12)' : 'transparent', color: fbFieldKey === k ? '#fbbf24' : colors.muted, cursor: 'pointer', fontFamily: 'inherit', fontWeight: fbFieldKey === k ? 700 : 400 }}>{l}</button>
-                    ))}
-                  </div>
-                  <textarea value={fbComment} onChange={e => setFbComment(e.target.value)} placeholder={`Feedback sobre ${FB_SECTION_LABELS[fbFieldKey]}…`} rows={3} style={{ width: '100%', background: '#0d1424', border: `1px solid ${colors.border}`, borderRadius: 8, padding: '10px 12px', color: colors.text, fontSize: 13, fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box', outline: 'none' }} />
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    <button onClick={handleFbSave} disabled={fbSaving || !fbComment.trim()} style={{ flex: 1, background: 'linear-gradient(135deg,#d97706,#b45309)', border: 'none', borderRadius: 8, padding: '10px', color: '#fff', fontSize: 13, fontWeight: 600, cursor: fbSaving || !fbComment.trim() ? 'default' : 'pointer', opacity: fbSaving || !fbComment.trim() ? 0.6 : 1, fontFamily: 'inherit' }}>
-                      {fbSaving ? 'A guardar…' : fbEditing ? 'Atualizar' : 'Guardar'}
-                    </button>
-                    {fbEditing && <button onClick={() => { setFbEditing(null); setFbComment('') }} style={{ background: 'transparent', border: `1px solid ${colors.border}`, borderRadius: 8, padding: '10px 14px', color: colors.muted, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>Cancelar</button>}
-                  </div>
-                </div>
-              )}
-            </div>
-          )
-        })()}
+        <div className={`proj-sections-body${sectionsOpen ? '' : ' collapsed'}`}>
+          <Section fieldKey="problem"         content={project.problem}         isOwner={isOwner} onImprove={setEditModal} />
+          <Section fieldKey="solution"        content={project.solution}        isOwner={isOwner} onImprove={setEditModal} />
+          <Section fieldKey="target_audience" content={project.target_audience} isOwner={isOwner} onImprove={setEditModal} />
+          <Section fieldKey="features"        content={project.features}        isOwner={isOwner} onImprove={setEditModal} />
+          <Section fieldKey="technologies"    content={project.technologies}    isOwner={isOwner} onImprove={setEditModal} />
+          <Section fieldKey="challenges"      content={project.challenges}      isOwner={isOwner} onImprove={setEditModal} />
+          <Section fieldKey="results"         content={project.results}         isOwner={isOwner} onImprove={setEditModal} />
+          <Section fieldKey="learnings"       content={project.learnings}       isOwner={isOwner} onImprove={setEditModal} />
+        </div>
 
         {/* AI Analysis — compact trigger card (opens modal) */}
         {isOwner ? (
@@ -1790,6 +1759,67 @@ export default function ProjectPage() {
             colors={colors}
             isOwner={isOwner}
           />
+
+          {/* Teacher feedback — sidebar: desktop first/second slot, mobile above author */}
+          {(isOwner || isProfessor) && (teacherFeedback.length > 0 || isProfessor) && (() => {
+            const FB_SECTION_LABELS = { description: 'Descrição', tech: 'Tecnologias', links: 'Links', demo: 'Demo', team: 'Equipa', gallery: 'Galeria', geral: 'Geral' }
+            const myFeedback = isProfessor ? teacherFeedback.filter(f => f.teacher_id === user?.id) : teacherFeedback
+            return (
+              <div style={{ background: 'linear-gradient(135deg,rgba(251,191,36,0.05),rgba(245,158,11,0.02))', border: '1px solid rgba(251,191,36,0.22)', borderRadius: 16, padding: '18px 20px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: myFeedback.length > 0 || isProfessor ? 14 : 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <GraduationCap size={15} color="#fbbf24" />
+                    <span style={{ fontSize: 13, fontWeight: 700, color: colors.text }}>Feedback do Professor</span>
+                  </div>
+                  {isProfessor && (
+                    <button onClick={() => setShowFeedbackForm(f => !f)} style={{ fontSize: 12, padding: '4px 10px', borderRadius: 6, border: '1px solid rgba(251,191,36,0.3)', background: showFeedbackForm ? 'rgba(251,191,36,0.15)' : 'transparent', color: '#fbbf24', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}>
+                      {showFeedbackForm ? 'Fechar' : '+ Feedback'}
+                    </button>
+                  )}
+                </div>
+
+                {myFeedback.length > 0 && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: showFeedbackForm ? 14 : 0 }}>
+                    {myFeedback.map(f => (
+                      <div key={f.id} style={{ background: 'rgba(0,0,0,0.2)', borderRadius: 10, padding: '11px 13px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
+                          <span style={{ fontSize: 10, fontWeight: 700, color: '#fbbf24', textTransform: 'uppercase', letterSpacing: 0.5 }}>{FB_SECTION_LABELS[f.field_key] || f.field_key}</span>
+                          {isProfessor && (
+                            <div style={{ display: 'flex', gap: 8 }}>
+                              <button onClick={() => { setFbEditing(f.id); setFbFieldKey(f.field_key); setFbComment(f.comment); setShowFeedbackForm(true) }} style={{ background: 'none', border: 'none', color: colors.muted, cursor: 'pointer', fontSize: 11, padding: 0, fontFamily: 'inherit' }}>Editar</button>
+                              <button onClick={() => handleFbDelete(f.id)} style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', fontSize: 11, padding: 0, fontFamily: 'inherit' }}>Apagar</button>
+                            </div>
+                          )}
+                        </div>
+                        <p style={{ margin: 0, fontSize: 13, color: colors.text, lineHeight: 1.5 }}>{f.comment}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {isProfessor && isOwner === false && teacherFeedback.length === 0 && !showFeedbackForm && (
+                  <p style={{ margin: 0, fontSize: 13, color: colors.muted }}>Ainda não deixaste feedback neste projeto.</p>
+                )}
+
+                {isProfessor && showFeedbackForm && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+                      {Object.entries(FB_SECTION_LABELS).map(([k, l]) => (
+                        <button key={k} onClick={() => setFbFieldKey(k)} style={{ fontSize: 11, padding: '3px 9px', borderRadius: 6, border: `1px solid ${fbFieldKey === k ? '#fbbf24' : colors.border}`, background: fbFieldKey === k ? 'rgba(251,191,36,0.12)' : 'transparent', color: fbFieldKey === k ? '#fbbf24' : colors.muted, cursor: 'pointer', fontFamily: 'inherit', fontWeight: fbFieldKey === k ? 700 : 400 }}>{l}</button>
+                      ))}
+                    </div>
+                    <textarea value={fbComment} onChange={e => setFbComment(e.target.value)} placeholder={`Feedback sobre ${FB_SECTION_LABELS[fbFieldKey]}…`} rows={3} style={{ width: '100%', background: '#0d1424', border: `1px solid ${colors.border}`, borderRadius: 8, padding: '9px 11px', color: colors.text, fontSize: 13, fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box', outline: 'none' }} />
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button onClick={handleFbSave} disabled={fbSaving || !fbComment.trim()} style={{ flex: 1, background: 'linear-gradient(135deg,#d97706,#b45309)', border: 'none', borderRadius: 8, padding: '9px', color: '#fff', fontSize: 13, fontWeight: 600, cursor: fbSaving || !fbComment.trim() ? 'default' : 'pointer', opacity: fbSaving || !fbComment.trim() ? 0.6 : 1, fontFamily: 'inherit' }}>
+                        {fbSaving ? 'A guardar…' : fbEditing ? 'Atualizar' : 'Guardar'}
+                      </button>
+                      {fbEditing && <button onClick={() => { setFbEditing(null); setFbComment('') }} style={{ background: 'transparent', border: `1px solid ${colors.border}`, borderRadius: 8, padding: '9px 12px', color: colors.muted, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>Cancelar</button>}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )
+          })()}
 
           {/* Profile completeness */}
           {isOwner && (() => {
