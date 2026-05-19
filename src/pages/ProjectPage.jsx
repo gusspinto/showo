@@ -1814,12 +1814,10 @@ export default function ProjectPage() {
         {/* Sidebar */}
         <aside className="proj-sidebar" style={{ paddingTop: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
           {/* View count */}
-          {(project.views ?? 0) > 0 && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: colors.muted, fontSize: 13, fontWeight: 500 }}>
-              <Eye size={15} color={colors.muted} />
-              <span><strong style={{ color: colors.text }}>{project.views}</strong> visualizaç{project.views === 1 ? 'ão' : 'ões'}</span>
-            </div>
-          )}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: colors.muted, fontSize: 13, fontWeight: 500 }}>
+            <Eye size={15} color={colors.muted} />
+            <span><strong style={{ color: colors.text }}>{project.views ?? 0}</strong> visualizaç{project.views === 1 ? 'ão' : 'ões'}</span>
+          </div>
 
           <MembersPanel
             ownerName={ownerProfile?.full_name || ownerProfile?.username || project.creator_name}
