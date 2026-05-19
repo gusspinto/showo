@@ -134,6 +134,7 @@ export default function Explore() {
   const [filterMinScore, setFilterMinScore] = useState(0)
   const [filterZone, setFilterZone] = useState('')
   const [areas, setAreas] = useState([])
+  const [sortBy, setSortBy] = useState('score')
 
   const recruiterMode = profile?.role === 'recrutador' || profile?.role === 'empresa'
   const roleInfo = ROLE_LABELS[profile?.role] ?? null
@@ -142,7 +143,7 @@ export default function Explore() {
     async function load() {
       const { data, error } = await supabase
         .from('projects')
-        .select('id,name,slug,area,creator_name,course,school_year,ai_tagline,project_type,is_pap,score,created_at,technologies,views')
+        .select('id,name,slug,area,creator_name,course,school_year,ai_tagline,project_type,is_pap,score,created_at,technologies,views,cover_url')
         .order('score', { ascending: false })
         .limit(300)
       if (!error && data) {
@@ -200,6 +201,18 @@ export default function Explore() {
   })
 
   const hasFilters = filterArea || filterType || filterMinScore > 0 || filterZone
+
+  const SORT_OPTIONS = [
+    { id: 'score',   label: 'Melhor score' },
+    { id: 'recent',  label: 'Mais recentes' },
+    { id: 'views',   label: 'Mais vistos' },
+  ]
+
+  const sorted = [...filtered].sort((a, b) => {
+    if (sortBy === 'recent') return new Date(b.created_at) - new Date(a.created_at)
+    if (sortBy === 'views')  return (b.views ?? 0) - (a.views ?? 0)
+    return (b.score ?? 0) - (a.score ?? 0)
+  })
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: 'var(--font-body)' }}>
@@ -285,6 +298,8 @@ export default function Explore() {
             </span>
           </div>
 
+          <SelectFilter value={sortBy} onChange={setSortBy} options={SORT_OPTIONS} label="Ordenar por" />
+
           {hasFilters && (
             <button
               onClick={() => { setFilterArea(''); setFilterType(''); setFilterMinScore(0); setFilterZone('') }}
@@ -312,10 +327,10 @@ export default function Explore() {
         ) : (
           <>
             <div style={{ color: colors.subtle, fontSize: 13, marginBottom: 20, fontWeight: 500 }}>
-              {filtered.length} projeto{filtered.length !== 1 ? 's' : ''}{query && ` para "${search}"`}
+              {sorted.length} projeto{sorted.length !== 1 ? 's' : ''}{query && ` para "${search}"`}
             </div>
             <div className="explore-grid" style={{ display: 'grid', gap: 16 }}>
-              {filtered.map(project => (
+              {sorted.map(project => (
                 <div
                   key={project.id}
                   className="explore-card"
@@ -327,26 +342,51 @@ export default function Explore() {
                     boxShadow: '0 2px 12px rgba(0,0,0,0.3)',
                   }}
                 >
-                  {/* Cover gradient */}
+                  {/* Cover */}
                   <div style={{
-                    height: 80, borderRadius: '10px 10px 0 0',
+                    height: project.cover_url ? 120 : 80,
+                    borderRadius: '10px 10px 0 0',
                     marginTop: -22, marginLeft: -22, marginRight: -22, marginBottom: 16,
                     background: getAreaGradient(project.area),
+                    position: 'relative', overflow: 'hidden',
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    padding: '0 16px',
+                    padding: project.cover_url ? 0 : '0 16px',
                   }}>
-                    <span style={{ fontSize: 36, fontWeight: 900, color: 'rgba(255,255,255,0.25)', userSelect: 'none', lineHeight: 1 }}>
-                      {project.name ? project.name[0].toUpperCase() : '?'}
-                    </span>
-                    {project.project_type && TYPE_COLORS[project.project_type] && (
-                      <span style={{
-                        fontSize: 11, fontWeight: 700, color: '#fff',
-                        background: TYPE_COLORS[project.project_type] + '99',
-                        border: `1px solid ${TYPE_COLORS[project.project_type]}55`,
-                        borderRadius: 6, padding: '3px 9px',
-                      }}>
-                        {PROJECT_TYPES.find(t => t.id === project.project_type)?.label || project.project_type}
-                      </span>
+                    {project.cover_url ? (
+                      <>
+                        <img
+                          src={project.cover_url}
+                          alt=""
+                          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                        />
+                        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 40%, rgba(13,20,36,0.7) 100%)' }} />
+                        {project.project_type && TYPE_COLORS[project.project_type] && (
+                          <span style={{
+                            position: 'absolute', top: 10, right: 10,
+                            fontSize: 11, fontWeight: 700, color: '#fff',
+                            background: TYPE_COLORS[project.project_type] + 'cc',
+                            borderRadius: 6, padding: '3px 9px',
+                          }}>
+                            {PROJECT_TYPES.find(t => t.id === project.project_type)?.label || project.project_type}
+                          </span>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <span style={{ fontSize: 36, fontWeight: 900, color: 'rgba(255,255,255,0.25)', userSelect: 'none', lineHeight: 1 }}>
+                          {project.name ? project.name[0].toUpperCase() : '?'}
+                        </span>
+                        {project.project_type && TYPE_COLORS[project.project_type] && (
+                          <span style={{
+                            fontSize: 11, fontWeight: 700, color: '#fff',
+                            background: TYPE_COLORS[project.project_type] + '99',
+                            border: `1px solid ${TYPE_COLORS[project.project_type]}55`,
+                            borderRadius: 6, padding: '3px 9px',
+                          }}>
+                            {PROJECT_TYPES.find(t => t.id === project.project_type)?.label || project.project_type}
+                          </span>
+                        )}
+                      </>
                     )}
                   </div>
 
