@@ -111,9 +111,33 @@ function InviteInbox({ userId }) {
     setDbNotifs(prev => prev.map(n => ({ ...n, read: true })))
   }
 
-  async function markRead(id) {
-    await supabase.from('notifications').update({ read: true }).eq('id', id)
-    setDbNotifs(prev => prev.map(n => n.id === id ? { ...n, read: true } : n))
+  async function markRead(ids) {
+    const arr = Array.isArray(ids) ? ids : [ids]
+    await supabase.from('notifications').update({ read: true }).in('id', arr)
+    setDbNotifs(prev => prev.map(n => arr.includes(n.id) ? { ...n, read: true } : n))
+  }
+
+  // Group consecutive VIEW notifications by project_slug
+  const VIEW_TYPES = ['PROJECT_VIEW', 'COMPANY_VIEW']
+  function groupedNotifs(notifs) {
+    const result = []
+    const seen = {}
+    for (const n of notifs) {
+      if (VIEW_TYPES.includes(n.type) && n.project_slug) {
+        const key = `${n.type}__${n.project_slug}`
+        if (seen[key] != null) {
+          result[seen[key]].groupIds.push(n.id)
+          result[seen[key]].count++
+          if (!n.read) result[seen[key]].anyUnread = true
+        } else {
+          seen[key] = result.length
+          result.push({ ...n, count: 1, groupIds: [n.id], anyUnread: !n.read })
+        }
+      } else {
+        result.push({ ...n, count: 1, groupIds: [n.id], anyUnread: !n.read })
+      }
+    }
+    return result
   }
 
   useEffect(() => {
@@ -237,7 +261,8 @@ function InviteInbox({ userId }) {
     }
   }
 
-  const unreadDbCount = dbNotifs.filter(n => !n.read).length
+  const grouped = groupedNotifs(dbNotifs)
+  const unreadDbCount = grouped.filter(n => n.anyUnread).length
   const count = invites.length + responses.length + unreadDbCount
 
   return (
@@ -371,18 +396,18 @@ function InviteInbox({ userId }) {
                     </button>
                   )}
                 </div>
-                {dbNotifs.map(n => (
+                {grouped.map(n => (
                   <div
                     key={n.id}
                     onClick={() => {
-                      markRead(n.id)
+                      markRead(n.groupIds)
                       if (n.project_slug) { navigate(`/projeto/${n.project_slug}`); setOpen(false) }
                     }}
                     style={{
                       borderRadius: 10, padding: '10px 12px', marginBottom: 4,
-                      background: n.read ? 'transparent' : 'rgba(27,120,247,0.05)',
-                      border: `1px solid ${n.read ? 'transparent' : 'rgba(27,120,247,0.12)'}`,
-                      borderLeft: n.read ? '3px solid transparent' : '3px solid rgba(27,120,247,0.5)',
+                      background: n.anyUnread ? 'rgba(27,120,247,0.05)' : 'transparent',
+                      border: `1px solid ${n.anyUnread ? 'rgba(27,120,247,0.12)' : 'transparent'}`,
+                      borderLeft: n.anyUnread ? '3px solid rgba(27,120,247,0.5)' : '3px solid transparent',
                       cursor: n.project_slug ? 'pointer' : 'default',
                       display: 'flex', alignItems: 'flex-start', gap: 10,
                       transition: 'background 0.12s',
@@ -390,12 +415,16 @@ function InviteInbox({ userId }) {
                   >
                     <span style={{ display: 'flex', flexShrink: 0, marginTop: 1, color: C.muted }}>{getNotifIcon(n.type)}</span>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ margin: '0 0 3px', fontSize: 13, color: n.read ? C.muted : C.text, lineHeight: 1.45, fontWeight: n.read ? 400 : 500 }}>
-                        {n.message}
+                      <p style={{ margin: '0 0 3px', fontSize: 13, color: n.anyUnread ? C.text : C.muted, lineHeight: 1.45, fontWeight: n.anyUnread ? 500 : 400 }}>
+                        {n.count > 1
+                          ? n.type === 'COMPANY_VIEW'
+                            ? `${n.count} empresas/recrutadores viram o teu projeto.`
+                            : `${n.count} pessoas viram o teu projeto.`
+                          : n.message}
                       </p>
                       <span style={{ fontSize: 11, color: C.muted }}>{timeAgo(n.created_at)}</span>
                     </div>
-                    {!n.read && <div style={{ width: 6, height: 6, borderRadius: '50%', background: C.blue, flexShrink: 0, marginTop: 5 }} />}
+                    {n.anyUnread && <div style={{ width: 6, height: 6, borderRadius: '50%', background: C.blue, flexShrink: 0, marginTop: 5 }} />}
                   </div>
                 ))}
               </>
