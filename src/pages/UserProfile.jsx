@@ -506,21 +506,37 @@ export default function UserProfile() {
         </h2>
 
         {projects.length === 0 ? (
-          <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: '44px 32px', textAlign: 'center' }}>
-            <div style={{ marginBottom: 12 }}><FolderOpen size={40} color={C.subtle} /></div>
-            <p style={{ color: C.text, fontSize: 16, fontWeight: 700, margin: '0 0 6px' }}>Ainda sem projetos públicos</p>
-            <p style={{ color: C.muted, fontSize: 14, margin: 0 }}>
-              {isOwnProfile ? 'Cria o teu primeiro projeto e partilha-o aqui.' : 'Este utilizador ainda não tem projetos.'}
-            </p>
-            {isOwnProfile && (
-              <button
-                onClick={() => navigate('/novo')}
-                style={{ marginTop: 20, background: C.blue, border: 'none', borderRadius: 8, padding: '10px 22px', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
-              >
-                Criar projeto →
-              </button>
-            )}
-          </div>
+          isOwnProfile ? (
+            <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: '48px 32px', textAlign: 'center' }}>
+              <div style={{ fontSize: 40, marginBottom: 16 }}>🚀</div>
+              <p style={{ color: C.text, fontSize: 18, fontWeight: 700, margin: '0 0 8px' }}>O teu portfólio começa aqui</p>
+              <p style={{ color: C.muted, fontSize: 14, margin: '0 0 24px', maxWidth: 360, marginLeft: 'auto', marginRight: 'auto', lineHeight: 1.6 }}>
+                Adiciona o teu primeiro projeto escolar ou pessoal e transforma-o numa página profissional com a ajuda da IA.
+              </p>
+              <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+                <button
+                  onClick={() => navigate('/interview')}
+                  style={{ background: C.blue, border: 'none', borderRadius: 8, padding: '11px 24px', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+                >
+                  Criar com IA →
+                </button>
+                <button
+                  onClick={() => navigate('/novo')}
+                  style={{ background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 8, padding: '11px 24px', color: C.muted, fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}
+                >
+                  Preencher manualmente
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: '48px 32px', textAlign: 'center' }}>
+              <div style={{ marginBottom: 14 }}><FolderOpen size={40} color={C.subtle} /></div>
+              <p style={{ color: C.text, fontSize: 16, fontWeight: 700, margin: '0 0 8px' }}>Ainda sem projetos</p>
+              <p style={{ color: C.muted, fontSize: 14, margin: 0, lineHeight: 1.6 }}>
+                {profile?.full_name?.split(' ')[0] || 'Este utilizador'} ainda não partilhou nenhum projeto.
+              </p>
+            </div>
+          )
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 16 }}>
             {projects.map(project => (

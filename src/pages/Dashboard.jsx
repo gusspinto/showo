@@ -359,6 +359,163 @@ function TurmaCard({ turma, navigate }) {
   )
 }
 
+const ONBOARDING = {
+  aluno: {
+    emoji: '🎓',
+    title: 'Bem-vindo ao Showo!',
+    subtitle: 'O teu portfólio profissional começa aqui.',
+    steps: [
+      { icon: '✏️', title: 'Cria o teu projeto', desc: 'Responde a algumas perguntas sobre o teu trabalho — a IA trata do resto.' },
+      { icon: '🌐', title: 'Partilha a tua página', desc: 'Cada projeto ganha uma página pública pronta a enviar a recrutadores e professores.' },
+      { icon: '📈', title: 'Acompanha o crescimento', desc: 'Vê o score, visualizações e feedback em tempo real.' },
+    ],
+    cta: 'Criar o meu primeiro projeto',
+    ctaPath: '/interview',
+    ctaState: { type: 'personal', description: '' },
+  },
+  professor: {
+    emoji: '👨‍🏫',
+    title: 'Bem-vindo ao Showo!',
+    subtitle: 'Acompanha e avalia os projetos dos teus alunos.',
+    steps: [
+      { icon: '🏫', title: 'Cria uma turma', desc: 'Gera um código único e partilha-o com os teus alunos para que se juntem.' },
+      { icon: '📊', title: 'Acompanha o progresso', desc: 'Vê scores, completude e evolução de cada aluno numa tabela clara.' },
+      { icon: '💬', title: 'Dá feedback', desc: 'Deixa comentários por secção diretamente nos projetos dos alunos.' },
+    ],
+    cta: 'Criar a minha primeira turma',
+    ctaAction: 'createTurma',
+  },
+  recrutador: {
+    emoji: '🔍',
+    title: 'Bem-vindo ao Showo!',
+    subtitle: 'Descobre talentos reais com projetos reais.',
+    steps: [
+      { icon: '🧭', title: 'Explora projetos', desc: 'Navega por projetos de estudantes organizados por área e score.' },
+      { icon: '⭐', title: 'Perfis completos', desc: 'Cada aluno tem uma página com links, tecnologias e contexto do projeto.' },
+      { icon: '📩', title: 'Contacta diretamente', desc: 'Encontra o LinkedIn ou email de cada candidato no perfil.' },
+    ],
+    cta: 'Explorar projetos',
+    ctaPath: '/explorar',
+  },
+  empresa: {
+    emoji: '🏢',
+    title: 'Bem-vindo ao Showo!',
+    subtitle: 'Encontra o talento certo para a tua empresa.',
+    steps: [
+      { icon: '🔎', title: 'Descobre talento jovem', desc: 'Acede a projetos reais de estudantes do ensino profissional e universitário.' },
+      { icon: '🏆', title: 'Filtra pelos melhores', desc: 'O ranking e os scores ajudam-te a identificar rapidamente os candidatos de destaque.' },
+      { icon: '🤝', title: 'Estabelece contacto', desc: 'Cada perfil inclui links de contacto direto com o estudante.' },
+    ],
+    cta: 'Ver ranking',
+    ctaPath: '/ranking',
+  },
+}
+
+function OnboardingModal({ user, profile, onDismiss, onCreateTurma }) {
+  const navigate = useNavigate()
+  const [step, setStep] = useState(0)
+  const role = profile?.role || 'aluno'
+  const cfg = ONBOARDING[role] || ONBOARDING.aluno
+  const totalSteps = 2
+
+  function handleCta() {
+    onDismiss()
+    if (cfg.ctaAction === 'createTurma') {
+      onCreateTurma()
+    } else if (cfg.ctaPath) {
+      navigate(cfg.ctaPath, cfg.ctaState ? { state: cfg.ctaState } : undefined)
+    }
+  }
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 4000,
+      background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(6px)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
+    }}>
+      <div style={{
+        background: '#111827', border: '1px solid #2a4275',
+        borderRadius: 20, padding: '36px 32px', width: '100%', maxWidth: 440,
+        boxShadow: '0 24px 64px rgba(0,0,0,0.7)',
+        fontFamily: 'Inter, sans-serif',
+      }}>
+        {step === 0 ? (
+          <>
+            <div style={{ textAlign: 'center', marginBottom: 28 }}>
+              <div style={{ fontSize: 52, marginBottom: 16, lineHeight: 1 }}>{cfg.emoji}</div>
+              <h2 style={{ color: '#e8f2ff', fontSize: 22, fontWeight: 800, margin: '0 0 8px', letterSpacing: '-0.3px' }}>
+                {cfg.title}
+              </h2>
+              <p style={{ color: '#7d93b0', fontSize: 15, margin: 0, lineHeight: 1.5 }}>{cfg.subtitle}</p>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 28 }}>
+              {cfg.steps.map((s, i) => (
+                <div key={i} style={{ display: 'flex', gap: 14, alignItems: 'flex-start', background: 'rgba(255,255,255,0.03)', border: '1px solid #1e3050', borderRadius: 12, padding: '14px 16px' }}>
+                  <span style={{ fontSize: 22, lineHeight: 1, flexShrink: 0, marginTop: 1 }}>{s.icon}</span>
+                  <div>
+                    <div style={{ color: '#e8f2ff', fontSize: 14, fontWeight: 600, marginBottom: 3 }}>{s.title}</div>
+                    <div style={{ color: '#7d93b0', fontSize: 13, lineHeight: 1.4 }}>{s.desc}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button
+                onClick={() => setStep(1)}
+                style={{ flex: 1, background: 'linear-gradient(135deg,#1b78f7,#4f46e5)', border: 'none', borderRadius: 10, padding: '13px', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 20px rgba(27,120,247,0.35)' }}
+              >
+                Continuar →
+              </button>
+            </div>
+            <button
+              onClick={onDismiss}
+              style={{ display: 'block', width: '100%', background: 'none', border: 'none', color: '#3d5270', fontSize: 13, cursor: 'pointer', marginTop: 14, fontFamily: 'inherit', padding: 0 }}
+            >
+              Saltar introdução
+            </button>
+          </>
+        ) : (
+          <>
+            <div style={{ textAlign: 'center', marginBottom: 28 }}>
+              <div style={{ fontSize: 44, marginBottom: 14, lineHeight: 1 }}>🚀</div>
+              <h2 style={{ color: '#e8f2ff', fontSize: 20, fontWeight: 800, margin: '0 0 8px', letterSpacing: '-0.3px' }}>
+                Pronto para começar?
+              </h2>
+              <p style={{ color: '#7d93b0', fontSize: 14, margin: 0, lineHeight: 1.55, maxWidth: 320, marginLeft: 'auto', marginRight: 'auto' }}>
+                {role === 'aluno' && 'A IA vai guiar-te passo a passo para transformar o teu projeto numa página profissional.'}
+                {role === 'professor' && 'Cria a tua turma agora e partilha o código com os teus alunos.'}
+                {role === 'recrutador' && 'Explora os projetos e descobre os talentos que procuras.'}
+                {role === 'empresa' && 'Vê quem está no topo do ranking e encontra o teu próximo talento.'}
+              </p>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <button
+                onClick={handleCta}
+                style={{ background: 'linear-gradient(135deg,#1b78f7,#4f46e5)', border: 'none', borderRadius: 10, padding: '14px', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 20px rgba(27,120,247,0.35)' }}
+              >
+                {cfg.cta} →
+              </button>
+              <button
+                onClick={onDismiss}
+                style={{ background: 'transparent', border: '1px solid #1e3050', borderRadius: 10, padding: '13px', color: '#7d93b0', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}
+              >
+                Explorar primeiro
+              </button>
+            </div>
+          </>
+        )}
+
+        {/* Dots */}
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginTop: 20 }}>
+          {Array.from({ length: totalSteps }).map((_, i) => (
+            <div key={i} style={{ width: i === step ? 20 : 6, height: 6, borderRadius: 3, background: i === step ? '#1b78f7' : '#1e3050', transition: 'all 0.2s' }} />
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function Dashboard() {
   const { user, profile, loading: authLoading } = useAuth()
   const navigate = useNavigate()
@@ -367,15 +524,29 @@ export default function Dashboard() {
   const [turmas, setTurmas] = useState([])
   const [showCreateTurma, setShowCreateTurma] = useState(false)
   const [toast, setToast] = useState('')
+  const [showOnboarding, setShowOnboarding] = useState(false)
 
   function showToast(msg) {
     setToast(msg)
     setTimeout(() => setToast(''), 3000)
   }
 
+  function dismissOnboarding() {
+    localStorage.setItem(`showo_onboarded_${user.id}`, '1')
+    setShowOnboarding(false)
+  }
+
   useEffect(() => {
     if (!authLoading && !user) navigate('/login')
   }, [user, authLoading, navigate])
+
+  useEffect(() => {
+    if (!user) return
+    const key = `showo_onboarded_${user.id}`
+    if (!localStorage.getItem(key)) {
+      setShowOnboarding(true)
+    }
+  }, [user])
 
   useEffect(() => {
     if (!user) return
@@ -479,6 +650,15 @@ export default function Dashboard() {
         }
       `}</style>
       <Navbar />
+
+      {showOnboarding && (
+        <OnboardingModal
+          user={user}
+          profile={profile}
+          onDismiss={dismissOnboarding}
+          onCreateTurma={() => { dismissOnboarding(); setShowCreateTurma(true) }}
+        />
+      )}
 
       {/* Toast */}
       <div style={{
