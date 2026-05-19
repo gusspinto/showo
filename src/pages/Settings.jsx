@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
-import { Loader, Check, X, AlertTriangle } from 'lucide-react'
+import { Loader, Check, X, AlertTriangle, Camera } from 'lucide-react'
 
 const C = {
   bg: '#0d1424',
@@ -131,6 +131,10 @@ export default function Settings() {
   const [usernameStatus, setUsernameStatus] = useState(null) // null | 'checking' | 'available' | 'taken' | 'invalid'
   const debounceRef = useRef(null)
 
+  const [avatarUrl, setAvatarUrl]     = useState('')
+  const [avatarUploading, setAvatarUploading] = useState(false)
+  const avatarInputRef = useRef(null)
+
   const [currentPw, setCurrentPw]     = useState('')
   const [newPw, setNewPw]             = useState('')
   const [confirmPw, setConfirmPw]     = useState('')
@@ -146,12 +150,13 @@ export default function Settings() {
     // Pre-fill from user_metadata
     setFullName(user.user_metadata?.full_name ?? '')
     // Load profile
-    supabase.from('profiles').select('username, bio, role').eq('id', user.id).single().then(({ data }) => {
+    supabase.from('profiles').select('username, bio, role, avatar_url').eq('id', user.id).single().then(({ data }) => {
       if (data) {
         setUsername(data.username ?? '')
         setOriginalUsername(data.username ?? '')
         setBio(data.bio ?? '')
         setRole(data.role ?? 'aluno')
+        setAvatarUrl(data.avatar_url ?? '')
       }
     })
   }, [user])
@@ -182,6 +187,43 @@ export default function Settings() {
 
     return () => clearTimeout(debounceRef.current)
   }, [username, originalUsername])
+
+  async function handleAvatarChange(e) {
+    const file = e.target.files?.[0]
+    if (!file || !user) return
+    if (file.size > 2 * 1024 * 1024) {
+      setSaveMsg({ type: 'err', text: 'A imagem não pode ter mais de 2 MB.' })
+      return
+    }
+    setAvatarUploading(true)
+    setSaveMsg(null)
+    const ext = file.name.split('.').pop()
+    const path = `${user.id}/avatar.${ext}`
+    const { error: upErr } = await supabase.storage.from('avatars').upload(path, file, { upsert: true })
+    if (upErr) {
+      setSaveMsg({ type: 'err', text: 'Erro ao carregar imagem.' })
+      setAvatarUploading(false)
+      return
+    }
+    const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path)
+    // Append cache-bust so the browser reloads after replace
+    const bustedUrl = `${publicUrl}?t=${Date.now()}`
+    await supabase.from('profiles').update({ avatar_url: bustedUrl }).eq('id', user.id)
+    setAvatarUrl(bustedUrl)
+    refreshProfile()
+    setSaveMsg({ type: 'ok', text: 'Foto de perfil atualizada.' })
+    setAvatarUploading(false)
+  }
+
+  async function handleRemoveAvatar() {
+    if (!user) return
+    setAvatarUploading(true)
+    await supabase.from('profiles').update({ avatar_url: null }).eq('id', user.id)
+    setAvatarUrl('')
+    refreshProfile()
+    setSaveMsg({ type: 'ok', text: 'Foto removida.' })
+    setAvatarUploading(false)
+  }
 
   async function handleSaveProfile() {
     if (!user) return
@@ -278,6 +320,67 @@ export default function Settings() {
 
         {/* Profile */}
         <SectionCard title="Perfil público">
+          {/* Avatar upload */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 24 }}>
+            <div style={{ position: 'relative', flexShrink: 0 }}>
+              {avatarUrl ? (
+                <img
+                  src={avatarUrl}
+                  alt="Avatar"
+                  style={{ width: 72, height: 72, borderRadius: '50%', objectFit: 'cover', border: `2px solid ${C.border}` }}
+                />
+              ) : (
+                <div style={{ width: 72, height: 72, borderRadius: '50%', background: 'linear-gradient(135deg,#3b82f6,#4f46e5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, fontWeight: 800, color: '#fff', border: `2px solid ${C.border}` }}>
+                  {fullName?.[0]?.toUpperCase() ?? user?.email?.[0]?.toUpperCase() ?? '?'}
+                </div>
+              )}
+              {/* Camera overlay */}
+              <button
+                type="button"
+                onClick={() => avatarInputRef.current?.click()}
+                disabled={avatarUploading}
+                style={{
+                  position: 'absolute', bottom: 0, right: 0,
+                  width: 26, height: 26, borderRadius: '50%',
+                  background: C.blue, border: `2px solid ${C.inputBg}`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: avatarUploading ? 'default' : 'pointer',
+                  opacity: avatarUploading ? 0.6 : 1,
+                }}
+              >
+                <Camera size={13} color="#fff" />
+              </button>
+              <input
+                ref={avatarInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                style={{ display: 'none' }}
+                onChange={handleAvatarChange}
+              />
+            </div>
+            <div>
+              <button
+                type="button"
+                onClick={() => avatarInputRef.current?.click()}
+                disabled={avatarUploading}
+                style={{ display: 'block', background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 8, padding: '8px 16px', color: C.text, fontSize: 13, fontWeight: 600, cursor: avatarUploading ? 'default' : 'pointer', fontFamily: 'inherit', marginBottom: 8, opacity: avatarUploading ? 0.6 : 1 }}
+              >
+                {avatarUploading ? 'A carregar…' : 'Alterar foto'}
+              </button>
+              {avatarUrl && (
+                <button
+                  type="button"
+                  onClick={handleRemoveAvatar}
+                  disabled={avatarUploading}
+                  style={{ display: 'block', background: 'none', border: 'none', color: C.muted, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}
+                >
+                  Remover foto
+                </button>
+              )}
+              <p style={{ margin: '8px 0 0', fontSize: 12, color: C.subtle }}>JPG, PNG ou WebP · máx. 2 MB</p>
+            </div>
+          </div>
+
           <Input
             label="Nome"
             value={fullName}

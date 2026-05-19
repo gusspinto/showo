@@ -412,7 +412,27 @@ function InviteInbox({ userId }) {
   )
 }
 
-function UserChip({ user, onClick, onProfile, onSettings, onSignOut, onCreateProject }) {
+function AvatarCircle({ avatarUrl, initial, size = 28, fontSize = 13 }) {
+  return avatarUrl ? (
+    <img
+      src={avatarUrl}
+      alt=""
+      style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, display: 'block' }}
+    />
+  ) : (
+    <div style={{
+      width: size, height: size, borderRadius: '50%',
+      background: 'linear-gradient(135deg, #3b82f6, #4f46e5)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      fontSize, fontWeight: 700, color: '#fff', flexShrink: 0,
+      userSelect: 'none',
+    }}>
+      {initial}
+    </div>
+  )
+}
+
+function UserChip({ user, profile, onClick, onProfile, onSettings, onSignOut, onCreateProject }) {
   const [open, setOpen] = useState(false)
   const initial = getInitial(user)
   const name = getDisplayName(user)
@@ -432,16 +452,7 @@ function UserChip({ user, onClick, onProfile, onSettings, onSignOut, onCreatePro
         onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.borderColor = '#2a4070' }}
         onMouseLeave={e => { if (!open) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = C.border } }}
       >
-        {/* Avatar circle */}
-        <div style={{
-          width: 28, height: 28, borderRadius: '50%',
-          background: 'linear-gradient(135deg, #3b82f6, #4f46e5)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 13, fontWeight: 700, color: '#fff', flexShrink: 0,
-          userSelect: 'none',
-        }}>
-          {initial}
-        </div>
+        <AvatarCircle avatarUrl={profile?.avatar_url} initial={initial} size={28} fontSize={13} />
         <span style={{ color: C.text, fontSize: 14, fontWeight: 500 }}>{name}</span>
         {/* Chevron */}
         <svg width="10" height="6" viewBox="0 0 10 6" fill="none" style={{ transition: 'transform 0.2s', transform: open ? 'rotate(180deg)' : 'none', marginLeft: 2 }}>
@@ -647,9 +658,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
             <div className="nav-drawer-profile">
               {/* User header — border-bottom do botão Ranking já separa, sem borderTop extra */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 4px 0' }}>
-                <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'linear-gradient(135deg,#3b82f6,#4f46e5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
-                  {getInitial(user)}
-                </div>
+                <AvatarCircle avatarUrl={profile?.avatar_url} initial={getInitial(user)} size={36} fontSize={14} />
                 <div>
                   <div style={{ fontSize: 14, fontWeight: 700, color: '#e8f2ff', lineHeight: 1.2 }}>{getDisplayName(user)}</div>
                   <div style={{ fontSize: 11, color: '#7d93b0', marginTop: 2 }}>{user.email}</div>
@@ -756,6 +765,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
                 )}
                 <UserChip
                   user={user}
+                  profile={profile}
                   onClick={() => navigate('/dashboard')}
                   onProfile={profileUrl ? () => navigate(profileUrl) : null}
                   onSettings={() => navigate('/settings')}

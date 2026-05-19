@@ -382,15 +382,23 @@ export default function UserProfile() {
         {/* Profile header */}
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 24, marginBottom: 48, flexWrap: 'wrap' }}>
           {/* Avatar */}
-          <div style={{
-            width: 80, height: 80, borderRadius: '50%', flexShrink: 0,
-            background: `linear-gradient(135deg, ${C.blue}, #4f46e5)`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 32, fontWeight: 900, color: '#fff',
-            boxShadow: '0 8px 32px rgba(59,130,246,0.25)',
-          }}>
-            {displayName[0].toUpperCase()}
-          </div>
+          {profile.avatar_url ? (
+            <img
+              src={profile.avatar_url}
+              alt={displayName}
+              style={{ width: 80, height: 80, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, boxShadow: '0 8px 32px rgba(59,130,246,0.25)' }}
+            />
+          ) : (
+            <div style={{
+              width: 80, height: 80, borderRadius: '50%', flexShrink: 0,
+              background: `linear-gradient(135deg, ${C.blue}, #4f46e5)`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 32, fontWeight: 900, color: '#fff',
+              boxShadow: '0 8px 32px rgba(59,130,246,0.25)',
+            }}>
+              {displayName[0].toUpperCase()}
+            </div>
+          )}
 
           <div style={{ flex: 1, minWidth: 200 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 4 }}>
