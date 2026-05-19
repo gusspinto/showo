@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { Navbar } from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
-import { Search, Building2 } from 'lucide-react'
+import { Search, Building2, Eye } from 'lucide-react'
 
 const colors = {
   bg: '#0d1424',
@@ -139,6 +139,9 @@ export default function Explore() {
   const recruiterMode = profile?.role === 'recrutador' || profile?.role === 'empresa'
   const roleInfo = ROLE_LABELS[profile?.role] ?? null
 
+  const TODAY = new Date().toDateString()
+  const VIEWS_KEY = `showo_views_${TODAY}`
+
   useEffect(() => {
     async function load() {
       const { data, error } = await supabase
@@ -147,9 +150,17 @@ export default function Explore() {
         .order('score', { ascending: false })
         .limit(300)
       if (!error && data) {
-        setProjects(data)
-        // Extract unique areas
-        const areaSet = [...new Set(data.map(p => p.area).filter(Boolean))].sort()
+        // Merge with cached daily view counts
+        let viewCache = {}
+        try { viewCache = JSON.parse(localStorage.getItem(VIEWS_KEY) || '{}') } catch {}
+        const anyMissing = data.some(p => !(p.slug in viewCache))
+        if (anyMissing) {
+          data.forEach(p => { viewCache[p.slug] = p.views ?? 0 })
+          try { localStorage.setItem(VIEWS_KEY, JSON.stringify(viewCache)) } catch {}
+        }
+        const merged = data.map(p => ({ ...p, views: viewCache[p.slug] ?? p.views ?? 0 }))
+        setProjects(merged)
+        const areaSet = [...new Set(merged.map(p => p.area).filter(Boolean))].sort()
         setAreas([{ id: '', label: 'Todas as áreas' }, ...areaSet.map(a => ({ id: a, label: a }))])
       }
       setLoading(false)
@@ -354,19 +365,10 @@ export default function Explore() {
                   }}>
                     {project.cover_url ? (
                       <>
-                        <img
-                          src={project.cover_url}
-                          alt=""
-                          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-                        />
+                        <img src={project.cover_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 40%, rgba(13,20,36,0.7) 100%)' }} />
                         {project.project_type && TYPE_COLORS[project.project_type] && (
-                          <span style={{
-                            position: 'absolute', top: 10, right: 10,
-                            fontSize: 11, fontWeight: 700, color: '#fff',
-                            background: TYPE_COLORS[project.project_type] + 'cc',
-                            borderRadius: 6, padding: '3px 9px',
-                          }}>
+                          <span style={{ position: 'absolute', top: 10, right: 10, fontSize: 11, fontWeight: 700, color: '#fff', background: TYPE_COLORS[project.project_type] + 'cc', borderRadius: 6, padding: '3px 9px' }}>
                             {PROJECT_TYPES.find(t => t.id === project.project_type)?.label || project.project_type}
                           </span>
                         )}
@@ -377,16 +379,24 @@ export default function Explore() {
                           {project.name ? project.name[0].toUpperCase() : '?'}
                         </span>
                         {project.project_type && TYPE_COLORS[project.project_type] && (
-                          <span style={{
-                            fontSize: 11, fontWeight: 700, color: '#fff',
-                            background: TYPE_COLORS[project.project_type] + '99',
-                            border: `1px solid ${TYPE_COLORS[project.project_type]}55`,
-                            borderRadius: 6, padding: '3px 9px',
-                          }}>
+                          <span style={{ fontSize: 11, fontWeight: 700, color: '#fff', background: TYPE_COLORS[project.project_type] + '99', border: `1px solid ${TYPE_COLORS[project.project_type]}55`, borderRadius: 6, padding: '3px 9px' }}>
                             {PROJECT_TYPES.find(t => t.id === project.project_type)?.label || project.project_type}
                           </span>
                         )}
                       </>
+                    )}
+                    {/* Views badge — bottom-left, always visible */}
+                    {(project.views ?? 0) > 0 && (
+                      <div style={{
+                        position: 'absolute', bottom: 8, left: 10,
+                        display: 'flex', alignItems: 'center', gap: 4,
+                        background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)',
+                        borderRadius: 20, padding: '3px 8px',
+                        fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.85)',
+                      }}>
+                        <Eye size={11} />
+                        {project.views}
+                      </div>
                     )}
                   </div>
 
@@ -457,11 +467,6 @@ export default function Explore() {
                     >
                       {recruiterMode ? 'Ver candidato' : 'Ver projeto'}
                     </button>
-                    {(project.views ?? 0) > 0 && (
-                      <div style={{ textAlign: 'center', marginTop: 6, fontSize: 11, color: colors.subtle }}>
-                        {project.views} visualização{project.views !== 1 ? 'ões' : ''}
-                      </div>
-                    )}
                   </div>
                 </div>
               ))}
