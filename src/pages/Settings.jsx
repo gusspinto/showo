@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
 import { Loader, Check, X, AlertTriangle, Camera, ArrowLeft, GraduationCap, BookOpen, Search, Building2, Lock } from 'lucide-react'
+import { CropModal } from '../components/CropModal'
 
 const C = {
   bg: '#0d1424',
@@ -133,6 +134,7 @@ export default function Settings() {
 
   const [avatarUrl, setAvatarUrl]     = useState('')
   const [avatarUploading, setAvatarUploading] = useState(false)
+  const [avatarCropFile, setAvatarCropFile] = useState(null)
   const avatarInputRef = useRef(null)
 
   const [currentPw, setCurrentPw]     = useState('')
@@ -188,25 +190,30 @@ export default function Settings() {
     return () => clearTimeout(debounceRef.current)
   }, [username, originalUsername])
 
-  async function handleAvatarChange(e) {
+  function handleAvatarChange(e) {
     const file = e.target.files?.[0]
     if (!file || !user) return
-    if (file.size > 5 * 1024 * 1024) {
-      setSaveMsg({ type: 'err', text: 'A imagem não pode ter mais de 5 MB.' })
+    if (file.size > 10 * 1024 * 1024) {
+      setSaveMsg({ type: 'err', text: 'A imagem não pode ter mais de 10 MB.' })
       return
     }
+    setAvatarCropFile(file)
+    if (e.target) e.target.value = ''
+  }
+
+  async function handleAvatarCropConfirm(blob) {
+    setAvatarCropFile(null)
+    if (!user) return
     setAvatarUploading(true)
     setSaveMsg(null)
-    const ext = file.name.split('.').pop()
-    const path = `${user.id}/avatar.${ext}`
-    const { error: upErr } = await supabase.storage.from('avatars').upload(path, file, { upsert: true })
+    const path = `${user.id}/avatar.jpg`
+    const { error: upErr } = await supabase.storage.from('avatars').upload(path, blob, { upsert: true, contentType: 'image/jpeg' })
     if (upErr) {
       setSaveMsg({ type: 'err', text: 'Erro ao carregar imagem.' })
       setAvatarUploading(false)
       return
     }
     const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path)
-    // Append cache-bust so the browser reloads after replace
     const bustedUrl = `${publicUrl}?t=${Date.now()}`
     await supabase.from('profiles').update({ avatar_url: bustedUrl }).eq('id', user.id)
     setAvatarUrl(bustedUrl)
@@ -374,6 +381,14 @@ export default function Settings() {
                 style={{ display: 'none' }}
                 onChange={handleAvatarChange}
               />
+              {avatarCropFile && (
+                <CropModal
+                  file={avatarCropFile}
+                  circular={true}
+                  onConfirm={handleAvatarCropConfirm}
+                  onCancel={() => setAvatarCropFile(null)}
+                />
+              )}
             </div>
             <div>
               <button

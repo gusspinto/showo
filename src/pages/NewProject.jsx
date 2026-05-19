@@ -8,6 +8,7 @@ import { calculateScore } from '../lib/score'
 import { Toast, useToast } from '../components/Toast'
 import { Navbar } from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
+import { CropModal } from '../components/CropModal'
 
 const colors = {
   bg: '#0d1424',
@@ -125,6 +126,8 @@ export default function NewProject() {
   const [showAuthNudge, setShowAuthNudge] = useState(false)
   const { toast, show: showToast } = useToast()
   const fileInputRef = useRef(null)
+  const [dragOver, setDragOver] = useState(false)
+  const [cropFile, setCropFile] = useState(null) // File waiting to be cropped
 
   // Show auth nudge for anonymous users (once per session)
   useEffect(() => {
@@ -226,15 +229,30 @@ export default function NewProject() {
     }
   }
 
-  async function handleImageUpload(e) {
+  function handleImageUpload(e) {
     const file = e.target.files?.[0]
     if (!file) return
     if (file.size > 10 * 1024 * 1024) { showToast('Imagem demasiado grande (máx. 10MB)', 'error'); return }
+    setCropFile(file)
+    // Reset input so same file can be re-selected after cancel
+    if (e.target) e.target.value = ''
+  }
+
+  function handleDrop(e) {
+    e.preventDefault()
+    setDragOver(false)
+    const file = e.dataTransfer.files?.[0]
+    if (!file || !file.type.startsWith('image/')) { showToast('Ficheiro inválido. Usa PNG, JPG ou WEBP.', 'error'); return }
+    if (file.size > 10 * 1024 * 1024) { showToast('Imagem demasiado grande (máx. 10MB)', 'error'); return }
+    setCropFile(file)
+  }
+
+  async function handleCropConfirm(blob) {
+    setCropFile(null)
     set('cover_url', '__uploading__')
     try {
-      const ext = file.name.split('.').pop() || 'jpg'
-      const path = `draft-${Date.now()}.${ext}`
-      const { error: upErr } = await supabase.storage.from('covers').upload(path, file, { upsert: true, contentType: file.type })
+      const path = `draft-${Date.now()}.jpg`
+      const { error: upErr } = await supabase.storage.from('covers').upload(path, blob, { upsert: true, contentType: 'image/jpeg' })
       if (upErr) throw upErr
       const { data: { publicUrl } } = supabase.storage.from('covers').getPublicUrl(path)
       set('cover_url', publicUrl)
@@ -742,31 +760,47 @@ export default function NewProject() {
               {/* Image */}
               <div>
                 <div style={{ fontSize: 11, fontWeight: 700, color: colors.subtle, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 12 }}>Imagem de capa</div>
-                {answers.cover_url ? (
+                {answers.cover_url && answers.cover_url !== '__uploading__' ? (
                   <div>
                     <img src={answers.cover_url} alt="" style={{ width: '100%', height: 180, objectFit: 'cover', borderRadius: 12, border: `1px solid ${colors.border}`, display: 'block' }} />
-                    <button onClick={() => set('cover_url', null)} style={{ marginTop: 8, background: 'transparent', border: `1px solid ${colors.border}`, color: colors.muted, borderRadius: 8, padding: '7px 14px', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>
+                    <button type="button" onClick={() => set('cover_url', null)} style={{ marginTop: 8, background: 'transparent', border: `1px solid ${colors.border}`, color: colors.muted, borderRadius: 8, padding: '7px 14px', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>
                       Remover imagem
                     </button>
+                  </div>
+                ) : answers.cover_url === '__uploading__' ? (
+                  <div style={{ border: `2px dashed ${colors.border}`, borderRadius: 12, padding: '36px 20px', textAlign: 'center', color: colors.muted, fontSize: 13 }}>
+                    A carregar…
                   </div>
                 ) : (
                   <div
                     onClick={() => fileInputRef.current?.click()}
+                    onDragOver={e => { e.preventDefault(); setDragOver(true) }}
+                    onDragLeave={() => setDragOver(false)}
+                    onDrop={handleDrop}
                     style={{
-                      border: `2px dashed ${colors.border}`,
+                      border: `2px dashed ${dragOver ? colors.blue : colors.border}`,
+                      background: dragOver ? 'rgba(27,120,247,0.06)' : 'transparent',
                       borderRadius: 12, padding: '36px 20px',
                       textAlign: 'center', cursor: 'pointer',
                       transition: 'border-color 0.2s, background 0.2s',
                     }}
-                    onMouseEnter={e => { e.currentTarget.style.borderColor = colors.blue; e.currentTarget.style.background = 'rgba(59,130,246,0.03)' }}
-                    onMouseLeave={e => { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.background = 'transparent' }}
+                    onMouseEnter={e => { if (!dragOver) { e.currentTarget.style.borderColor = colors.blue; e.currentTarget.style.background = 'rgba(59,130,246,0.03)' }}}
+                    onMouseLeave={e => { if (!dragOver) { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.background = 'transparent' }}}
                   >
-                    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 10 }}><Camera size={28} color={colors.muted} /></div>
-                    <p style={{ color: colors.muted, margin: 0, fontSize: 14, fontWeight: 500 }}>Clica para escolher uma imagem (opcional)</p>
-                    <p style={{ color: colors.subtle, margin: '4px 0 0', fontSize: 12 }}>PNG, JPG ou WEBP · máx. 8MB</p>
+                    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 10 }}><Camera size={28} color={dragOver ? colors.blue : colors.muted} /></div>
+                    <p style={{ color: dragOver ? colors.blue : colors.muted, margin: 0, fontSize: 14, fontWeight: 500 }}>Clica ou arrasta uma imagem (opcional)</p>
+                    <p style={{ color: colors.subtle, margin: '4px 0 0', fontSize: 12 }}>PNG, JPG ou WEBP · máx. 10MB</p>
                   </div>
                 )}
                 <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} style={{ display: 'none' }} />
+                {cropFile && (
+                  <CropModal
+                    file={cropFile}
+                    aspectRatio={16 / 9}
+                    onConfirm={handleCropConfirm}
+                    onCancel={() => setCropFile(null)}
+                  />
+                )}
               </div>
             </>
           )}

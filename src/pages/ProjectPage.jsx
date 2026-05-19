@@ -1006,14 +1006,13 @@ export default function ProjectPage() {
         .proj-ai-fab-label   { display: none; }
         .proj-fab-area       { display: none; }
         .proj-fab-defense-label { display: none; }
-        .sidebar-section-toggle { display: none; }
+        /* Sidebar section toggles — visible on all breakpoints (desktop + mobile) */
+        .sidebar-section-toggle { display: flex; }
+        .sidebar-section-body.collapsed { display: none; }
         .proj-sections-toggle { display: none; }
-        .proj-author-mini { display: none; }
         @media (max-width: 860px) {
-          .sidebar-section-toggle { display: flex !important; }
-          .sidebar-section-body.collapsed { display: none !important; }
-          .proj-author-card { display: none !important; }
-          .proj-author-mini { display: flex !important; }
+          /* Completude + tips side-by-side on mobile/tablet */
+          .proj-completude-grid { display: grid !important; grid-template-columns: 1fr 1fr; gap: 12px; }
           .proj-sections-toggle {
             display: flex !important;
             align-items: center; gap: 14px; text-align: left;
@@ -1118,27 +1117,29 @@ export default function ProjectPage() {
 
             {/* Analyze button */}
             {isOwner && (
-              <button
-                onClick={handleAnalyzeAI}
-                disabled={analyzingAI}
-                style={{
-                  background: analyzingAI ? 'rgba(27,120,247,0.1)' : 'linear-gradient(135deg,#3b82f6,#4f46e5)',
-                  border: analyzingAI ? '1px solid rgba(27,120,247,0.3)' : 'none',
-                  borderRadius: 10, padding: '9px 18px',
-                  color: analyzingAI ? '#60a5fa' : '#fff',
-                  fontSize: 13, fontWeight: 700,
-                  cursor: analyzingAI ? 'default' : 'pointer',
-                  fontFamily: 'inherit',
-                  boxShadow: analyzingAI ? 'none' : '0 4px 16px rgba(27,120,247,0.35)',
-                  marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8,
-                }}
-              >
-                {analyzingAI
-                  ? <><Sparkles size={14} style={{ verticalAlign: 'middle' }} /> A analisar…</>
-                  : aiFeedback
-                    ? <><Sparkles size={14} style={{ verticalAlign: 'middle' }} /> Reanalisar</>
-                    : <><Sparkles size={14} style={{ verticalAlign: 'middle' }} /> Analisar com IA</>}
-              </button>
+              <div style={{ display: 'flex', justifyContent: aiFeedback ? 'flex-end' : 'flex-start', marginBottom: 20 }}>
+                <button
+                  onClick={handleAnalyzeAI}
+                  disabled={analyzingAI}
+                  style={{
+                    background: analyzingAI ? 'rgba(27,120,247,0.1)' : 'linear-gradient(135deg,#3b82f6,#4f46e5)',
+                    border: analyzingAI ? '1px solid rgba(27,120,247,0.3)' : 'none',
+                    borderRadius: 10, padding: '9px 18px',
+                    color: analyzingAI ? '#60a5fa' : '#fff',
+                    fontSize: 13, fontWeight: 700,
+                    cursor: analyzingAI ? 'default' : 'pointer',
+                    fontFamily: 'inherit',
+                    boxShadow: analyzingAI ? 'none' : '0 4px 16px rgba(27,120,247,0.35)',
+                    display: 'flex', alignItems: 'center', gap: 8,
+                  }}
+                >
+                  {analyzingAI
+                    ? <><Sparkles size={14} style={{ verticalAlign: 'middle' }} /> A analisar…</>
+                    : aiFeedback
+                      ? <><Sparkles size={14} style={{ verticalAlign: 'middle' }} /> Reanalisar</>
+                      : <><Sparkles size={14} style={{ verticalAlign: 'middle' }} /> Analisar com IA</>}
+                </button>
+              </div>
             )}
 
             {analyzeError && (
@@ -1168,9 +1169,9 @@ export default function ProjectPage() {
                       const ratingBg = sec.rating === 'forte' ? 'rgba(34,197,94,0.1)' : sec.rating === 'médio' ? 'rgba(234,179,8,0.1)' : 'rgba(249,115,22,0.1)'
                       return (
                         <div key={key} style={{ background: colors.bg, border: `1px solid ${colors.border}`, borderRadius: 10, padding: '12px 14px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                            <span style={{ fontSize: 12, fontWeight: 700, color: colors.muted, minWidth: 110 }}>{LABELS[key] || key}</span>
-                            <span style={{ fontSize: 11, fontWeight: 700, color: ratingColor, background: ratingBg, borderRadius: 5, padding: '2px 7px', textTransform: 'uppercase' }}>{sec.rating}</span>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 6 }}>
+                            <span style={{ fontSize: 12, fontWeight: 700, color: colors.muted }}>{LABELS[key] || key}</span>
+                            <span style={{ fontSize: 11, fontWeight: 700, color: ratingColor, background: ratingBg, borderRadius: 5, padding: '2px 7px', textTransform: 'uppercase', flexShrink: 0 }}>{sec.rating}</span>
                           </div>
                           <p style={{ margin: '0 0 4px', fontSize: 12, color: '#afc3dc', lineHeight: 1.55 }}>{sec.feedback}</p>
                           {sec.tip && (
@@ -1380,46 +1381,6 @@ export default function ProjectPage() {
               </button>
             )}
           </div>
-
-          {/* Mini author byline — mobile/tablet only; sidebar card handles desktop */}
-          {(project.creator_name || project.course || project.school_year) && (
-            <div className="proj-author-mini" style={{ alignItems: 'center', gap: 8, marginTop: 10, marginBottom: 4, flexWrap: 'wrap' }}>
-              <div style={{
-                width: 22, height: 22,
-                background: `linear-gradient(135deg, ${colors.blue}, #4f46e5)`,
-                borderRadius: '50%',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 11, fontWeight: 800, color: '#fff', flexShrink: 0,
-              }}>
-                {project.creator_name ? project.creator_name[0].toUpperCase() : '?'}
-              </div>
-              <span style={{ fontSize: 13, color: colors.muted, lineHeight: 1.4 }}>
-                {project.creator_name && <span style={{ color: colors.text, fontWeight: 600 }}>{project.creator_name}</span>}
-                {project.course && <span> · {project.course}</span>}
-                {project.school_year && <span> · {project.school_year}</span>}
-                {project.school && <span> · {project.school}</span>}
-              </span>
-              {(project.linkedin_url || project.github_url || project.portfolio_url) && (
-                <div style={{ display: 'flex', gap: 4 }}>
-                  {project.linkedin_url && (
-                    <a href={project.linkedin_url} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ display: 'inline-flex', alignItems: 'center', background: 'rgba(10,102,194,0.1)', border: '1px solid rgba(10,102,194,0.2)', color: '#60a5fa', borderRadius: 6, padding: '2px 8px', fontSize: 11, fontWeight: 700 }}>
-                      <span style={{ fontWeight: 900, fontStyle: 'italic' }}>in</span>
-                    </a>
-                  )}
-                  {project.github_url && (
-                    <a href={project.github_url} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ display: 'inline-flex', alignItems: 'center', background: 'rgba(255,255,255,0.04)', border: `1px solid ${colors.border}`, color: colors.muted, borderRadius: 6, padding: '2px 8px', fontSize: 11, fontWeight: 600 }}>
-                      GitHub
-                    </a>
-                  )}
-                  {project.portfolio_url && (
-                    <a href={project.portfolio_url} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ display: 'inline-flex', alignItems: 'center', background: 'rgba(168,85,247,0.08)', border: '1px solid rgba(168,85,247,0.15)', color: '#c084fc', borderRadius: 6, padding: '2px 8px', fontSize: 11, fontWeight: 600 }}>
-                      Portfólio
-                    </a>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
 
           {project.ai_tagline && (
             <p className="proj-tagline" style={{ fontSize: 18, color: colors.muted, lineHeight: 1.6, margin: '10px 0 16px', maxWidth: 580, fontWeight: 400 }}>
@@ -1776,6 +1737,52 @@ export default function ProjectPage() {
           </div>
         </div>
 
+        {/* Author — bottom of page, all devices */}
+        {(project.creator_name || project.course || project.school_year || project.school) && (
+          <div className="proj-card-pad" style={{
+            background: colors.card, border: `1px solid ${colors.border}`,
+            borderRadius: 18, padding: '20px 24px', marginTop: 8,
+            display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap',
+          }}>
+            <div style={{
+              width: 44, height: 44, flexShrink: 0,
+              background: `linear-gradient(135deg, ${colors.blue}, #4f46e5)`,
+              borderRadius: '50%',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 17, fontWeight: 800, color: '#fff',
+            }}>
+              {project.creator_name ? project.creator_name[0].toUpperCase() : '?'}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 15, fontWeight: 700, color: colors.text, marginBottom: 3 }}>
+                {project.creator_name || 'Autor'}
+              </div>
+              <div style={{ fontSize: 13, color: colors.muted }}>
+                {[project.course, project.school_year, project.school].filter(Boolean).join(' · ')}
+              </div>
+            </div>
+            {(project.linkedin_url || project.github_url || project.portfolio_url) && (
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', flexShrink: 0 }}>
+                {project.linkedin_url && (
+                  <a href={project.linkedin_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(10,102,194,0.1)', border: '1px solid rgba(10,102,194,0.25)', color: '#60a5fa', borderRadius: 8, padding: '7px 14px', fontSize: 13, fontWeight: 600 }}>
+                    <span style={{ fontWeight: 900, fontStyle: 'italic' }}>in</span> LinkedIn
+                  </a>
+                )}
+                {project.github_url && (
+                  <a href={project.github_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.04)', border: `1px solid ${colors.border}`, color: colors.text, borderRadius: 8, padding: '7px 14px', fontSize: 13, fontWeight: 600 }}>
+                    GitHub
+                  </a>
+                )}
+                {project.portfolio_url && (
+                  <a href={project.portfolio_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(168,85,247,0.08)', border: '1px solid rgba(168,85,247,0.2)', color: '#c084fc', borderRadius: 8, padding: '7px 14px', fontSize: 13, fontWeight: 600 }}>
+                    Portfólio
+                  </a>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
         <div style={{ textAlign: 'center', padding: '40px 0 0', color: colors.subtle, fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, flexWrap: 'wrap' }}>
           Criado com{' '}
           <img src="/logo.png" alt="Showo" style={{ height: 16, width: 'auto', verticalAlign: 'middle', opacity: 0.7 }} />
@@ -1879,7 +1886,8 @@ export default function ProjectPage() {
             )
           })()}
 
-          {/* Profile completeness */}
+          {/* Profile completeness + tips — side-by-side grid on mobile */}
+          <div className="proj-completude-grid">
           {isOwner && (() => {
             const fieldQuality = PROFILE_SCORE_FIELDS.map(f => {
               const val = String(project[f.key] || '').trim()
@@ -1899,7 +1907,7 @@ export default function ProjectPage() {
                     <button
                       className="sidebar-section-toggle"
                       onClick={() => setCompletudeOpen(o => !o)}
-                      style={{ background: 'none', border: 'none', color: colors.muted, cursor: 'pointer', padding: '2px 4px', display: 'none', alignItems: 'center' }}
+                      style={{ background: 'none', border: 'none', color: colors.muted, cursor: 'pointer', padding: '2px 4px', alignItems: 'center' }}
                     >
                       <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: completudeOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
                         <path d="M2 4l4 4 4-4"/>
@@ -1953,7 +1961,7 @@ export default function ProjectPage() {
                   <button
                     className="sidebar-section-toggle"
                     onClick={() => setTipsOpen(o => !o)}
-                    style={{ background: 'none', border: 'none', color: '#5a9ff5', cursor: 'pointer', padding: '2px 4px', display: 'none', alignItems: 'center' }}
+                    style={{ background: 'none', border: 'none', color: '#5a9ff5', cursor: 'pointer', padding: '2px 4px', alignItems: 'center' }}
                   >
                     <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: tipsOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
                       <path d="M2 4l4 4 4-4"/>
@@ -1986,48 +1994,7 @@ export default function ProjectPage() {
               </div>
             )
           })()}
-          {/* Creator info — below tips card; hidden on mobile/tablet (proj-author-mini in hero handles those) */}
-          {(project.creator_name || project.course || project.school_year) && (
-            <div className="proj-author-card" style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 16, padding: '18px 22px' }}>
-              <h3 style={{ margin: '0 0 14px', fontSize: 11, fontWeight: 700, color: colors.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Autor</h3>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: (project.linkedin_url || project.github_url || project.portfolio_url) ? 12 : 0 }}>
-                <div style={{
-                  width: 34, height: 34,
-                  background: `linear-gradient(135deg, ${colors.blue}, #4f46e5)`,
-                  borderRadius: '50%',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 14, fontWeight: 800, flexShrink: 0, color: '#fff',
-                }}>
-                  {project.creator_name ? project.creator_name[0].toUpperCase() : '?'}
-                </div>
-                <span style={{ fontSize: 14, color: colors.muted }}>
-                  {project.creator_name && <span style={{ color: colors.text, fontWeight: 600 }}>{project.creator_name}</span>}
-                  {project.course && <span> · {project.course}</span>}
-                  {project.school_year && <span> · {project.school_year}</span>}
-                  {project.school && <span> · {project.school}</span>}
-                </span>
-              </div>
-              {(project.linkedin_url || project.github_url || project.portfolio_url) && (
-                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                  {project.linkedin_url && (
-                    <a href={project.linkedin_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(10,102,194,0.1)', border: '1px solid rgba(10,102,194,0.25)', color: '#60a5fa', borderRadius: 8, padding: '6px 12px', fontSize: 13, fontWeight: 600 }}>
-                      <span style={{ fontWeight: 900, fontStyle: 'italic' }}>in</span> LinkedIn
-                    </a>
-                  )}
-                  {project.github_url && (
-                    <a href={project.github_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.04)', border: `1px solid ${colors.border}`, color: colors.text, borderRadius: 8, padding: '6px 12px', fontSize: 13, fontWeight: 600 }}>
-                      GitHub
-                    </a>
-                  )}
-                  {project.portfolio_url && (
-                    <a href={project.portfolio_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(168,85,247,0.08)', border: '1px solid rgba(168,85,247,0.2)', color: '#c084fc', borderRadius: 8, padding: '6px 12px', fontSize: 13, fontWeight: 600 }}>
-                      Portfólio
-                    </a>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
+          </div>{/* end proj-completude-grid */}
         </aside>
         </div>{/* end proj-layout */}
 
