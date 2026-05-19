@@ -1016,7 +1016,7 @@ export default function ProjectPage() {
           .proj-author-mini { display: flex !important; }
           .proj-sections-toggle {
             display: flex !important;
-            align-items: center; gap: 14px;
+            align-items: center; gap: 14px; text-align: left;
             width: 100%; background: ${colors.card};
             border: 1px solid ${colors.borderBright};
             border-radius: 14px; padding: 16px 20px;
@@ -1038,7 +1038,7 @@ export default function ProjectPage() {
           .proj-wrap         { padding: 0 16px 80px !important; overflow-x: hidden !important; }
           .proj-cover        { height: 200px !important; margin-top: 20px !important; border-radius: 14px !important; }
           .proj-hero         { padding: 20px 0 16px !important; }
-          .proj-h1           { font-size: 24px !important; }
+          .proj-h1           { font-size: 30px !important; }
           .proj-score-abs    { display: none !important; }
           .proj-dashboard    { display: flex !important; }
           .proj-tagline      { font-size: 15px !important; }
@@ -1421,6 +1421,12 @@ export default function ProjectPage() {
             </div>
           )}
 
+          {project.ai_tagline && (
+            <p className="proj-tagline" style={{ fontSize: 18, color: colors.muted, lineHeight: 1.6, margin: '10px 0 16px', maxWidth: 580, fontWeight: 400 }}>
+              {project.ai_tagline}
+            </p>
+          )}
+
           {/* Mobile dashboard — score + level (hidden on desktop, shown on mobile) */}
           <div className="proj-dashboard" style={{
             display: 'none', alignItems: 'center', gap: 14, marginBottom: 18,
@@ -1449,12 +1455,6 @@ export default function ProjectPage() {
               </div>
             </div>
           </div>
-
-          {project.ai_tagline && (
-            <p className="proj-tagline" style={{ fontSize: 18, color: colors.muted, lineHeight: 1.6, margin: '0 0 20px', maxWidth: 580, fontWeight: 400 }}>
-              {project.ai_tagline}
-            </p>
-          )}
 
           </div>{/* end left flex column */}
 
