@@ -117,27 +117,60 @@ function InviteInbox({ userId }) {
     setDbNotifs(prev => prev.map(n => arr.includes(n.id) ? { ...n, read: true } : n))
   }
 
-  // Group consecutive VIEW notifications by project_slug
+  async function deleteNotifs(ids) {
+    const arr = Array.isArray(ids) ? ids : [ids]
+    await supabase.from('notifications').delete().in('id', arr)
+    setDbNotifs(prev => prev.filter(n => !arr.includes(n.id)))
+  }
+
+  // Group VIEW notifications by project_slug, track time-window counts
   const VIEW_TYPES = ['PROJECT_VIEW', 'COMPANY_VIEW']
   function groupedNotifs(notifs) {
+    const now = Date.now()
     const result = []
     const seen = {}
     for (const n of notifs) {
       if (VIEW_TYPES.includes(n.type) && n.project_slug) {
         const key = `${n.type}__${n.project_slug}`
+        const ts = new Date(n.created_at).getTime()
+        const age = (now - ts) / 1000
         if (seen[key] != null) {
-          result[seen[key]].groupIds.push(n.id)
-          result[seen[key]].count++
-          if (!n.read) result[seen[key]].anyUnread = true
+          const g = result[seen[key]]
+          g.groupIds.push(n.id)
+          g.count++
+          if (!n.read) g.anyUnread = true
+          if (age <= 1800) g.count30m++
+          if (age <= 3600) g.count1h++
+          if (age <= 86400) g.count24h++
+          if (ts > g.latestTs) { g.latestTs = ts; g.created_at = n.created_at }
         } else {
           seen[key] = result.length
-          result.push({ ...n, count: 1, groupIds: [n.id], anyUnread: !n.read })
+          result.push({
+            ...n,
+            count: 1,
+            groupIds: [n.id],
+            anyUnread: !n.read,
+            latestTs: ts,
+            count30m: age <= 1800 ? 1 : 0,
+            count1h:  age <= 3600 ? 1 : 0,
+            count24h: age <= 86400 ? 1 : 0,
+          })
         }
       } else {
-        result.push({ ...n, count: 1, groupIds: [n.id], anyUnread: !n.read })
+        result.push({ ...n, count: 1, groupIds: [n.id], anyUnread: !n.read, latestTs: new Date(n.created_at).getTime(), count30m: 0, count1h: 0, count24h: 0 })
       }
     }
     return result
+  }
+
+  function viewMessage(n) {
+    const isCompany = n.type === 'COMPANY_VIEW'
+    const who = isCompany ? 'empresas/recrutadores' : 'pessoas'
+    if (n.count30m >= 2) return `🔥 ${n.count30m} ${who} nas últimas 30 min`
+    if (n.count1h >= 2)  return `👀 ${n.count1h} ${who} na última hora`
+    if (n.count24h >= 2) return `${n.count24h} ${who} hoje`
+    if (n.count > 1)     return `${n.count} ${who} viram o teu projeto`
+    return n.message
   }
 
   useEffect(() => {
@@ -399,7 +432,8 @@ function InviteInbox({ userId }) {
                 {grouped.map(n => (
                   <div
                     key={n.id}
-                    onClick={() => {
+                    onClick={(e) => {
+                      if (e.target.closest('[data-delete]')) return
                       markRead(n.groupIds)
                       if (n.project_slug) { navigate(`/projeto/${n.project_slug}`); setOpen(false) }
                     }}
@@ -415,16 +449,29 @@ function InviteInbox({ userId }) {
                   >
                     <span style={{ display: 'flex', flexShrink: 0, marginTop: 1, color: C.muted }}>{getNotifIcon(n.type)}</span>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ margin: '0 0 3px', fontSize: 13, color: n.anyUnread ? C.text : C.muted, lineHeight: 1.45, fontWeight: n.anyUnread ? 500 : 400 }}>
-                        {n.count > 1
-                          ? n.type === 'COMPANY_VIEW'
-                            ? `${n.count} empresas/recrutadores viram o teu projeto.`
-                            : `${n.count} pessoas viram o teu projeto.`
-                          : n.message}
+                      <p style={{ margin: '0 0 2px', fontSize: 13, color: n.anyUnread ? C.text : C.muted, lineHeight: 1.45, fontWeight: n.anyUnread ? 500 : 400 }}>
+                        {VIEW_TYPES.includes(n.type) ? viewMessage(n) : n.message}
                       </p>
+                      {n.project_slug && VIEW_TYPES.includes(n.type) && (
+                        <p style={{ margin: '0 0 2px', fontSize: 11, color: '#60a5fa', opacity: 0.8, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {n.project_slug}
+                        </p>
+                      )}
                       <span style={{ fontSize: 11, color: C.muted }}>{timeAgo(n.created_at)}</span>
                     </div>
-                    {n.anyUnread && <div style={{ width: 6, height: 6, borderRadius: '50%', background: C.blue, flexShrink: 0, marginTop: 5 }} />}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0, marginTop: 2 }}>
+                      {n.anyUnread && <div style={{ width: 6, height: 6, borderRadius: '50%', background: C.blue }} />}
+                      <button
+                        data-delete
+                        onClick={() => deleteNotifs(n.groupIds)}
+                        title="Apagar notificação"
+                        style={{ background: 'none', border: 'none', color: C.muted, cursor: 'pointer', padding: '2px 3px', borderRadius: 4, display: 'flex', alignItems: 'center', opacity: 0.6, transition: 'opacity 0.12s, color 0.12s', lineHeight: 1 }}
+                        onMouseEnter={e => { e.currentTarget.style.opacity = 1; e.currentTarget.style.color = '#f87171' }}
+                        onMouseLeave={e => { e.currentTarget.style.opacity = 0.6; e.currentTarget.style.color = C.muted }}
+                      >
+                        <X size={13} />
+                      </button>
+                    </div>
                   </div>
                 ))}
               </>
