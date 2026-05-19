@@ -1011,8 +1011,27 @@ export default function ProjectPage() {
         .sidebar-section-body.collapsed { display: none; }
         .proj-sections-toggle { display: none; }
         @media (max-width: 860px) {
+          /* Edit button proportional to mobile title */
+          .proj-edit-inline { width: 26px !important; height: 26px !important; border-radius: 7px !important; margin-top: 2px !important; }
+          .proj-h1-row { margin-bottom: 4px !important; gap: 8px !important; }
+          .proj-tagline { margin-top: 4px !important; margin-bottom: 14px !important; font-size: 15px !important; }
           /* Completude + tips side-by-side on mobile/tablet */
-          .proj-completude-grid { display: grid !important; grid-template-columns: 1fr 1fr; gap: 12px; }
+          .proj-completude-grid {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            align-items: start;   /* each card only as tall as its own content */
+          }
+          /* Tighter padding inside grid cards */
+          .proj-completude-grid > div { padding: 12px 12px !important; }
+          /* Shrink long heading so it fits without wrapping */
+          .proj-completude-grid h3 {
+            font-size: 9px !important;
+            letter-spacing: 0.03em !important;
+            line-height: 1.3 !important;
+          }
+          /* Prevent toggle chevron from shrinking away */
+          .proj-completude-grid .sidebar-section-toggle { flex-shrink: 0; }
           .proj-sections-toggle {
             display: flex !important;
             align-items: center; gap: 14px; text-align: left;
@@ -1906,7 +1925,7 @@ export default function ProjectPage() {
                     <span style={{ fontSize: 13, fontWeight: 800, color: pct === 100 ? '#10b981' : pct > 60 ? colors.blue : colors.yellow }}>{pct}%</span>
                     <button
                       className="sidebar-section-toggle"
-                      onClick={() => setCompletudeOpen(o => !o)}
+                      onClick={() => { const next = !completudeOpen; setCompletudeOpen(next); if (next) setTipsOpen(false) }}
                       style={{ background: 'none', border: 'none', color: colors.muted, cursor: 'pointer', padding: '2px 4px', alignItems: 'center' }}
                     >
                       <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: completudeOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
@@ -1954,13 +1973,13 @@ export default function ProjectPage() {
             return (
               <div style={{ background: 'linear-gradient(135deg, rgba(27,120,247,0.07), rgba(79,70,229,0.04))', border: '1px solid rgba(27,120,247,0.18)', borderRadius: 16, padding: '18px 20px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: tipsOpen ? 14 : 0 }}>
-                  <h3 style={{ margin: 0, fontSize: 11, fontWeight: 800, color: '#5a9ff5', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#5a9ff5" strokeWidth="2.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                    Como aumentar o score
+                  <h3 style={{ margin: 0, minWidth: 0, fontSize: 11, fontWeight: 800, color: '#5a9ff5', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'flex', alignItems: 'center', gap: 5, flex: 1, overflow: 'hidden' }}>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#5a9ff5" strokeWidth="2.5" style={{ flexShrink: 0 }}><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Como aumentar o score</span>
                   </h3>
                   <button
                     className="sidebar-section-toggle"
-                    onClick={() => setTipsOpen(o => !o)}
+                    onClick={() => { const next = !tipsOpen; setTipsOpen(next); if (next) setCompletudeOpen(false) }}
                     style={{ background: 'none', border: 'none', color: '#5a9ff5', cursor: 'pointer', padding: '2px 4px', alignItems: 'center' }}
                   >
                     <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: tipsOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
