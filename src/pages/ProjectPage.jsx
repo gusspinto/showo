@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import { QRCodeSVG } from 'qrcode.react'
-import { supabase } from '../lib/supabase'
+import { supabase, supabaseUrl, supabaseAnonKey } from '../lib/supabase'
 import { calculateScore } from '../lib/score'
 import { CHALLENGES, getChallengeStatus } from '../lib/challenges'
 import { Navbar } from '../components/Navbar'
@@ -671,9 +671,20 @@ export default function ProjectPage() {
 
     const viewKey = `viewed_${project.slug}`
     if (!sessionStorage.getItem(viewKey)) {
-      // Mark first, then call RPC — prevents double-count on re-renders
       sessionStorage.setItem(viewKey, '1')
-      supabase.rpc('increment_project_views', { project_id: project.id })
+      // keepalive ensures the request survives page refresh/navigation
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        fetch(`${supabaseUrl}/rest/v1/rpc/increment_project_views`, {
+          method: 'POST',
+          keepalive: true,
+          headers: {
+            'Content-Type': 'application/json',
+            apikey: supabaseAnonKey,
+            Authorization: `Bearer ${session?.access_token ?? supabaseAnonKey}`,
+          },
+          body: JSON.stringify({ project_id: project.id }),
+        })
+      })
       setProject(prev => prev ? { ...prev, views: (prev.views ?? 0) + 1 } : prev)
     }
 
