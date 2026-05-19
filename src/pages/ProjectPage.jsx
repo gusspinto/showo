@@ -664,15 +664,17 @@ export default function ProjectPage() {
   useEffect(() => {
     if (!project) return
     if (authLoading) return // wait for auth to resolve before checking ownership
-    const isOwner = !!(user?.id && project.user_id && user.id === project.user_id)
+    if (!user?.id) return  // only logged-in visitors count
+    const isOwner = !!(project.user_id && user.id === project.user_id)
     const editToken = localStorage.getItem(`edit_token_${project.slug}`)
     if (isOwner || editToken) return // don't track owner views
 
-    // Increment view counter once per session
+    // Increment view counter once per session, update local state immediately
     const viewKey = `viewed_${project.slug}`
     if (!sessionStorage.getItem(viewKey)) {
       sessionStorage.setItem(viewKey, '1')
       supabase.rpc('increment_project_views', { project_id: project.id })
+      setProject(prev => prev ? { ...prev, views: (prev.views ?? 0) + 1 } : prev)
     }
 
     // PROJECT_VIEW notification (max once per hour per project)
