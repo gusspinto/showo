@@ -1765,47 +1765,64 @@ export default function ProjectPage() {
             const FB_SECTION_LABELS = { description: 'Descrição', tech: 'Tecnologias', links: 'Links', demo: 'Demo', team: 'Equipa', gallery: 'Galeria', geral: 'Geral' }
             const myFeedback = isProfessor ? teacherFeedback.filter(f => f.teacher_id === user?.id) : teacherFeedback
             return (
-              <div style={{ background: 'linear-gradient(135deg,rgba(251,191,36,0.05),rgba(245,158,11,0.02))', border: '1px solid rgba(251,191,36,0.22)', borderRadius: 16, padding: '18px 20px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: myFeedback.length > 0 || isProfessor ? 14 : 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <GraduationCap size={15} color="#fbbf24" />
+              <div style={{ background: 'linear-gradient(135deg,rgba(251,191,36,0.05),rgba(245,158,11,0.02))', border: '1px solid rgba(251,191,36,0.22)', borderRadius: 16, overflow: 'hidden' }}>
+                {/* Header */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 16px', borderBottom: myFeedback.length > 0 || showFeedbackForm ? '1px solid rgba(251,191,36,0.12)' : 'none' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                    <GraduationCap size={14} color="#fbbf24" />
                     <span style={{ fontSize: 13, fontWeight: 700, color: colors.text }}>Feedback do Professor</span>
                   </div>
                   {isProfessor && (
-                    <button onClick={() => setShowFeedbackForm(f => !f)} style={{ fontSize: 12, padding: '4px 10px', borderRadius: 6, border: '1px solid rgba(251,191,36,0.3)', background: showFeedbackForm ? 'rgba(251,191,36,0.15)' : 'transparent', color: '#fbbf24', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}>
-                      {showFeedbackForm ? 'Fechar' : '+ Feedback'}
+                    <button
+                      onClick={() => setShowFeedbackForm(f => !f)}
+                      style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, padding: '4px 9px', borderRadius: 6, border: `1px solid ${showFeedbackForm ? 'rgba(251,191,36,0.5)' : 'rgba(251,191,36,0.3)'}`, background: showFeedbackForm ? 'rgba(251,191,36,0.15)' : 'transparent', color: '#fbbf24', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700 }}
+                    >
+                      {showFeedbackForm ? <><X size={11} /> Fechar</> : <><Pencil size={11} /> Editar</>}
                     </button>
                   )}
                 </div>
 
+                {/* Feedback items — each on one compact row */}
                 {myFeedback.length > 0 && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: showFeedbackForm ? 14 : 0 }}>
-                    {myFeedback.map(f => (
-                      <div key={f.id} style={{ background: 'rgba(0,0,0,0.2)', borderRadius: 10, padding: '11px 13px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
-                          <span style={{ fontSize: 10, fontWeight: 700, color: '#fbbf24', textTransform: 'uppercase', letterSpacing: 0.5 }}>{FB_SECTION_LABELS[f.field_key] || f.field_key}</span>
-                          {isProfessor && (
-                            <div style={{ display: 'flex', gap: 8 }}>
-                              <button onClick={() => { setFbEditing(f.id); setFbFieldKey(f.field_key); setFbComment(f.comment); setShowFeedbackForm(true) }} style={{ background: 'none', border: 'none', color: colors.muted, cursor: 'pointer', fontSize: 11, padding: 0, fontFamily: 'inherit' }}>Editar</button>
-                              <button onClick={() => handleFbDelete(f.id)} style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', fontSize: 11, padding: 0, fontFamily: 'inherit' }}>Apagar</button>
-                            </div>
-                          )}
-                        </div>
-                        <p style={{ margin: 0, fontSize: 13, color: colors.text, lineHeight: 1.5 }}>{f.comment}</p>
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    {myFeedback.map((f, idx) => (
+                      <div
+                        key={f.id}
+                        style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '10px 16px', borderBottom: idx < myFeedback.length - 1 ? '1px solid rgba(251,191,36,0.08)' : 'none' }}
+                      >
+                        <span style={{ fontSize: 9, fontWeight: 800, color: '#fbbf24', background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.2)', borderRadius: 4, padding: '2px 6px', letterSpacing: 0.5, textTransform: 'uppercase', flexShrink: 0, marginTop: 2, whiteSpace: 'nowrap' }}>
+                          {FB_SECTION_LABELS[f.field_key] || f.field_key}
+                        </span>
+                        <span style={{ flex: 1, fontSize: 13, color: colors.text, lineHeight: 1.5 }}>{f.comment}</span>
+                        {isProfessor && (
+                          <div style={{ display: 'flex', gap: 4, flexShrink: 0, marginTop: 1 }}>
+                            <button
+                              onClick={() => { setFbEditing(f.id); setFbFieldKey(f.field_key); setFbComment(f.comment); setShowFeedbackForm(true) }}
+                              title="Editar"
+                              style={{ background: 'none', border: 'none', color: colors.muted, cursor: 'pointer', padding: 3, display: 'flex', alignItems: 'center', borderRadius: 4 }}
+                            ><Pencil size={11} /></button>
+                            <button
+                              onClick={() => handleFbDelete(f.id)}
+                              title="Apagar"
+                              style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', padding: 3, display: 'flex', alignItems: 'center', borderRadius: 4 }}
+                            ><X size={11} /></button>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
                 )}
 
-                {isProfessor && isOwner === false && teacherFeedback.length === 0 && !showFeedbackForm && (
-                  <p style={{ margin: 0, fontSize: 13, color: colors.muted }}>Ainda não deixaste feedback neste projeto.</p>
+                {isProfessor && teacherFeedback.length === 0 && !showFeedbackForm && (
+                  <p style={{ margin: 0, fontSize: 13, color: colors.muted, padding: '10px 16px' }}>Ainda não deixaste feedback.</p>
                 )}
 
+                {/* Feedback form */}
                 {isProfessor && showFeedbackForm && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '12px 16px', borderTop: myFeedback.length > 0 ? '1px solid rgba(251,191,36,0.12)' : 'none' }}>
                     <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
                       {Object.entries(FB_SECTION_LABELS).map(([k, l]) => (
-                        <button key={k} onClick={() => setFbFieldKey(k)} style={{ fontSize: 11, padding: '3px 9px', borderRadius: 6, border: `1px solid ${fbFieldKey === k ? '#fbbf24' : colors.border}`, background: fbFieldKey === k ? 'rgba(251,191,36,0.12)' : 'transparent', color: fbFieldKey === k ? '#fbbf24' : colors.muted, cursor: 'pointer', fontFamily: 'inherit', fontWeight: fbFieldKey === k ? 700 : 400 }}>{l}</button>
+                        <button key={k} onClick={() => setFbFieldKey(k)} style={{ fontSize: 11, padding: '3px 8px', borderRadius: 5, border: `1px solid ${fbFieldKey === k ? '#fbbf24' : colors.border}`, background: fbFieldKey === k ? 'rgba(251,191,36,0.12)' : 'transparent', color: fbFieldKey === k ? '#fbbf24' : colors.muted, cursor: 'pointer', fontFamily: 'inherit', fontWeight: fbFieldKey === k ? 700 : 400 }}>{l}</button>
                       ))}
                     </div>
                     <textarea value={fbComment} onChange={e => setFbComment(e.target.value)} placeholder={`Feedback sobre ${FB_SECTION_LABELS[fbFieldKey]}…`} rows={3} style={{ width: '100%', background: '#0d1424', border: `1px solid ${colors.border}`, borderRadius: 8, padding: '9px 11px', color: colors.text, fontSize: 13, fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box', outline: 'none' }} />
