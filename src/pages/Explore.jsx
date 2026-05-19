@@ -172,8 +172,9 @@ export default function Explore() {
     const role = profile?.role ?? null
     const type = (role === 'recrutador' || role === 'empresa') ? 'COMPANY_VIEW' : 'PROJECT_VIEW'
     const key  = `explore_notif_${project.slug}`
+    const isOwn = !!(profile?.id && project.user_id && profile.id === project.user_id)
 
-    if (!sessionStorage.getItem(key)) {
+    if (!isOwn && !sessionStorage.getItem(key)) {
       sessionStorage.setItem(key, '1')
       // Get city async — don't block navigation
       fetch('https://ip-api.com/json/?fields=city,status')

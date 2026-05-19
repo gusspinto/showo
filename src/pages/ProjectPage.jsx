@@ -513,7 +513,7 @@ export default function ProjectPage() {
   const { slug } = useParams()
   const navigate = useNavigate()
   const location = useLocation()
-  const { user, profile } = useAuth()
+  const { user, profile, loading: authLoading } = useAuth()
   const [project, setProject] = useState(null)
   const [loading, setLoading] = useState(true)
   const [copied, setCopied] = useState(false)
@@ -663,6 +663,7 @@ export default function ProjectPage() {
   // View tracking + PROJECT_VIEW / COMPANY_VIEW notifications
   useEffect(() => {
     if (!project) return
+    if (authLoading) return // wait for auth to resolve before checking ownership
     const isOwner = !!(user?.id && project.user_id && user.id === project.user_id)
     const editToken = localStorage.getItem(`edit_token_${project.slug}`)
     if (isOwner || editToken) return // don't track owner views
@@ -702,7 +703,7 @@ export default function ProjectPage() {
       }, 30000)
       return () => clearTimeout(t)
     }
-  }, [project?.id])
+  }, [project?.id, user?.id, authLoading])
 
   useEffect(() => {
     if (prevScoreRef.current === null || prevScoreRef.current === score) return
