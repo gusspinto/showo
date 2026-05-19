@@ -662,22 +662,18 @@ export default function ProjectPage() {
 
   // View tracking + PROJECT_VIEW / COMPANY_VIEW notifications
   useEffect(() => {
-    if (!project) { console.log('[view] skip: no project'); return }
-    if (authLoading) { console.log('[view] skip: authLoading'); return }
-    if (!user?.id) { console.log('[view] skip: no user'); return }
+    if (!project) return
+    if (authLoading) return
+    if (!user?.id) return
     const isOwner = !!(project.user_id && user.id === project.user_id)
     const editToken = localStorage.getItem(`edit_token_${project.slug}`)
-    console.log('[view] isOwner:', isOwner, '| editToken:', !!editToken, '| slug:', project.slug)
     if (isOwner || editToken) return
 
     const viewKey = `viewed_${project.slug}`
-    const alreadySeen = !!sessionStorage.getItem(viewKey)
-    console.log('[view] alreadySeen:', alreadySeen)
-    if (!alreadySeen) {
+    if (!sessionStorage.getItem(viewKey)) {
+      // Mark first, then call RPC — prevents double-count on re-renders
       sessionStorage.setItem(viewKey, '1')
-      console.log('[view] calling increment_project_views for', project.id)
       supabase.rpc('increment_project_views', { project_id: project.id })
-        .then(({ error }) => { if (error) console.error('[view] RPC error:', error) })
       setProject(prev => prev ? { ...prev, views: (prev.views ?? 0) + 1 } : prev)
     }
 
