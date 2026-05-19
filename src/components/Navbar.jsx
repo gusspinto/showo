@@ -45,6 +45,8 @@ const NOTIF_ICON = {
   SCORE_MILESTONE: '🎯',
   RANKING_CHANGE:  '🚀',
   MISSION_COMPLETE:'🏆',
+  TEACHER_FEEDBACK:'👨‍🏫',
+  STUDENT_JOINED:  '🎓',
 }
 
 function timeAgo(ts) {
