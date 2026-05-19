@@ -139,8 +139,7 @@ export default function Explore() {
   const recruiterMode = profile?.role === 'recrutador' || profile?.role === 'empresa'
   const roleInfo = ROLE_LABELS[profile?.role] ?? null
 
-  const TODAY = new Date().toDateString()
-  const VIEWS_KEY = `showo_views_${TODAY}`
+  const VIEWS_KEY = `showo_views_${new Date().toISOString().slice(0, 13)}`
 
   useEffect(() => {
     async function load() {
