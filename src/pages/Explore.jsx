@@ -145,7 +145,7 @@ export default function Explore() {
     async function load() {
       const { data, error } = await supabase
         .from('projects')
-        .select('id,name,slug,area,creator_name,course,school_year,ai_tagline,project_type,is_pap,score,created_at,technologies,views,cover_url')
+        .select('id,name,slug,area,creator_name,course,school_year,ai_tagline,project_type,is_pap,score,created_at,technologies,views,cover_url,user_id')
         .order('score', { ascending: false })
         .limit(300)
       if (!error && data) {
@@ -175,7 +175,7 @@ export default function Explore() {
     const key  = `explore_notif_${project.slug}`
     const isOwn = !!(profile?.id && project.user_id && profile.id === project.user_id)
 
-    if (!isOwn && !sessionStorage.getItem(key)) {
+    if (profile?.id && !isOwn && !sessionStorage.getItem(key)) {
       sessionStorage.setItem(key, '1')
       // Get city async — don't block navigation
       fetch('https://ip-api.com/json/?fields=city,status')
