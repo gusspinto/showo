@@ -366,6 +366,12 @@ export default function Dashboard() {
   const [loadingProjects, setLoadingProjects] = useState(true)
   const [turmas, setTurmas] = useState([])
   const [showCreateTurma, setShowCreateTurma] = useState(false)
+  const [toast, setToast] = useState('')
+
+  function showToast(msg) {
+    setToast(msg)
+    setTimeout(() => setToast(''), 3000)
+  }
 
   useEffect(() => {
     if (!authLoading && !user) navigate('/login')
@@ -388,6 +394,7 @@ export default function Dashboard() {
   async function deleteProject(id) {
     await supabase.from('projects').delete().eq('id', id).eq('user_id', user.id)
     setProjects(prev => prev.filter(p => p.id !== id))
+    showToast('Projeto eliminado.')
   }
 
   useEffect(() => {
@@ -472,6 +479,18 @@ export default function Dashboard() {
         }
       `}</style>
       <Navbar />
+
+      {/* Toast */}
+      <div style={{
+        position: 'fixed', bottom: 28, left: '50%',
+        transform: `translateX(-50%) translateY(${toast ? 0 : 80}px)`,
+        opacity: toast ? 1 : 0, transition: 'all 0.3s cubic-bezier(0.34,1.56,0.64,1)',
+        background: '#111c32', border: `1px solid ${C.borderBright}`, borderRadius: 12,
+        padding: '12px 24px', fontSize: 14, fontWeight: 600, color: C.text,
+        zIndex: 3000, pointerEvents: 'none', whiteSpace: 'nowrap',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+      }}>{toast}</div>
+
       {showCreateTurma && (
         <CreateTurmaModal
           onClose={() => setShowCreateTurma(false)}
