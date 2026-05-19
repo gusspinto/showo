@@ -1008,12 +1008,15 @@ export default function ProjectPage() {
         .proj-fab-defense-label { display: none; }
         .sidebar-section-toggle { display: none; }
         .proj-sections-toggle { display: none; }
+        .proj-author-mini { display: none; }
         @media (max-width: 860px) {
           .sidebar-section-toggle { display: flex !important; }
           .sidebar-section-body.collapsed { display: none !important; }
+          .proj-author-card { display: none !important; }
+          .proj-author-mini { display: flex !important; }
           .proj-sections-toggle {
             display: flex !important;
-            align-items: center; justify-content: space-between;
+            align-items: center; gap: 14px;
             width: 100%; background: ${colors.card};
             border: 1px solid ${colors.borderBright};
             border-radius: 14px; padding: 16px 20px;
@@ -1378,6 +1381,46 @@ export default function ProjectPage() {
             )}
           </div>
 
+          {/* Mini author byline — mobile/tablet only; sidebar card handles desktop */}
+          {(project.creator_name || project.course || project.school_year) && (
+            <div className="proj-author-mini" style={{ alignItems: 'center', gap: 8, marginTop: 10, marginBottom: 4, flexWrap: 'wrap' }}>
+              <div style={{
+                width: 22, height: 22,
+                background: `linear-gradient(135deg, ${colors.blue}, #4f46e5)`,
+                borderRadius: '50%',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 11, fontWeight: 800, color: '#fff', flexShrink: 0,
+              }}>
+                {project.creator_name ? project.creator_name[0].toUpperCase() : '?'}
+              </div>
+              <span style={{ fontSize: 13, color: colors.muted, lineHeight: 1.4 }}>
+                {project.creator_name && <span style={{ color: colors.text, fontWeight: 600 }}>{project.creator_name}</span>}
+                {project.course && <span> · {project.course}</span>}
+                {project.school_year && <span> · {project.school_year}</span>}
+                {project.school && <span> · {project.school}</span>}
+              </span>
+              {(project.linkedin_url || project.github_url || project.portfolio_url) && (
+                <div style={{ display: 'flex', gap: 4 }}>
+                  {project.linkedin_url && (
+                    <a href={project.linkedin_url} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ display: 'inline-flex', alignItems: 'center', background: 'rgba(10,102,194,0.1)', border: '1px solid rgba(10,102,194,0.2)', color: '#60a5fa', borderRadius: 6, padding: '2px 8px', fontSize: 11, fontWeight: 700 }}>
+                      <span style={{ fontWeight: 900, fontStyle: 'italic' }}>in</span>
+                    </a>
+                  )}
+                  {project.github_url && (
+                    <a href={project.github_url} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ display: 'inline-flex', alignItems: 'center', background: 'rgba(255,255,255,0.04)', border: `1px solid ${colors.border}`, color: colors.muted, borderRadius: 6, padding: '2px 8px', fontSize: 11, fontWeight: 600 }}>
+                      GitHub
+                    </a>
+                  )}
+                  {project.portfolio_url && (
+                    <a href={project.portfolio_url} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ display: 'inline-flex', alignItems: 'center', background: 'rgba(168,85,247,0.08)', border: '1px solid rgba(168,85,247,0.15)', color: '#c084fc', borderRadius: 6, padding: '2px 8px', fontSize: 11, fontWeight: 600 }}>
+                      Portfólio
+                    </a>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Mobile dashboard — score + level (hidden on desktop, shown on mobile) */}
           <div className="proj-dashboard" style={{
             display: 'none', alignItems: 'center', gap: 14, marginBottom: 18,
@@ -1561,13 +1604,11 @@ export default function ProjectPage() {
           className="proj-sections-toggle"
           onClick={() => setSectionsOpen(o => !o)}
         >
-          <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 3 }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <BookOpen size={15} color={colors.blue} />
-              <span style={{ fontSize: 15, fontWeight: 700, color: colors.text }}>Explorar o projeto</span>
-            </span>
-            <span style={{ fontSize: 12, color: colors.muted, paddingLeft: 23 }}>Problema · Solução · Resultados · e mais</span>
-          </span>
+          <BookOpen size={18} color={colors.blue} style={{ flexShrink: 0 }} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: colors.text, marginBottom: 2 }}>Explorar o projeto</div>
+            <div style={{ fontSize: 12, color: colors.muted }}>Problema · Solução · Resultados · e mais</div>
+          </div>
           <ChevronDown size={16} color={colors.muted} style={{ flexShrink: 0, transition: 'transform 0.22s', transform: sectionsOpen ? 'rotate(180deg)' : 'none' }} />
         </button>
 
@@ -1945,9 +1986,9 @@ export default function ProjectPage() {
               </div>
             )
           })()}
-          {/* Creator info — below tips card */}
+          {/* Creator info — below tips card; hidden on mobile/tablet (proj-author-mini in hero handles those) */}
           {(project.creator_name || project.course || project.school_year) && (
-            <div style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 16, padding: '18px 22px' }}>
+            <div className="proj-author-card" style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 16, padding: '18px 22px' }}>
               <h3 style={{ margin: '0 0 14px', fontSize: 11, fontWeight: 700, color: colors.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Autor</h3>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: (project.linkedin_url || project.github_url || project.portfolio_url) ? 12 : 0 }}>
                 <div style={{
