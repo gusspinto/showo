@@ -149,15 +149,17 @@ export default function Explore() {
         .order('score', { ascending: false })
         .limit(300)
       if (!error && data) {
-        // Merge with cached daily view counts
+        // Use fresh DB values, but keep highest seen value this hour (avoids flickering down)
         let viewCache = {}
         try { viewCache = JSON.parse(localStorage.getItem(VIEWS_KEY) || '{}') } catch {}
-        const anyMissing = data.some(p => !(p.slug in viewCache))
-        if (anyMissing) {
-          data.forEach(p => { viewCache[p.slug] = p.views ?? 0 })
-          try { localStorage.setItem(VIEWS_KEY, JSON.stringify(viewCache)) } catch {}
-        }
-        const merged = data.map(p => ({ ...p, views: viewCache[p.slug] ?? p.views ?? 0 }))
+        const merged = data.map(p => {
+          const cached = viewCache[p.slug] ?? 0
+          const fresh = p.views ?? 0
+          const best = Math.max(cached, fresh)
+          viewCache[p.slug] = best
+          return { ...p, views: best }
+        })
+        try { localStorage.setItem(VIEWS_KEY, JSON.stringify(viewCache)) } catch {}
         setProjects(merged)
         const areaSet = [...new Set(merged.map(p => p.area).filter(Boolean))].sort()
         setAreas([{ id: '', label: 'Todas as áreas' }, ...areaSet.map(a => ({ id: a, label: a }))])
