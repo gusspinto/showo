@@ -5,7 +5,7 @@ import { QRCodeSVG } from 'qrcode.react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
-import { Mail, Search, FolderOpen, X, Check, Download, Rocket } from 'lucide-react'
+import { Mail, Search, FolderOpen, X, Check, Download, Rocket, QrCode } from 'lucide-react'
 
 const C = {
   bg: '#0d1424',
@@ -100,6 +100,70 @@ function ProjectCard({ project, onClick }) {
             {project.area}
           </span>
         )}
+      </div>
+    </div>
+  )
+}
+
+function QRModal({ profileUrl, username, onClose }) {
+  const qrRef = useRef(null)
+
+  function downloadQR() {
+    const svg = qrRef.current?.querySelector('svg')
+    if (!svg) return
+    const canvas = document.createElement('canvas')
+    const size = 400
+    canvas.width = size; canvas.height = size
+    const ctx = canvas.getContext('2d')
+    ctx.fillStyle = '#ffffff'
+    ctx.fillRect(0, 0, size, size)
+    const svgData = new XMLSerializer().serializeToString(svg)
+    const img = new Image()
+    img.onload = () => {
+      ctx.drawImage(img, 0, 0, size, size)
+      const link = document.createElement('a')
+      link.download = `showo-qr-${username}.png`
+      link.href = canvas.toDataURL('image/png')
+      link.click()
+    }
+    img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)))
+  }
+
+  return (
+    <div
+      style={{ position: 'fixed', inset: 0, zIndex: 9800, background: 'rgba(5,9,18,0.88)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, fontFamily: 'Inter, sans-serif' }}
+      onClick={e => e.target === e.currentTarget && onClose()}
+    >
+      <div style={{ background: '#0d1829', border: '1px solid #1e3050', borderRadius: 20, width: '100%', maxWidth: 380, boxShadow: '0 32px 80px rgba(0,0,0,0.7)' }}>
+        <div style={{ padding: '24px 24px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: C.text }}>QR Code do perfil</h2>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: C.muted, cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center' }}>
+            <X size={20} />
+          </button>
+        </div>
+        <div style={{ padding: '20px 24px 28px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20 }}>
+          <div ref={qrRef} style={{ background: '#fff', borderRadius: 16, padding: 16, boxShadow: '0 4px 24px rgba(0,0,0,0.4)' }}>
+            <QRCodeSVG value={profileUrl} size={180} />
+          </div>
+          <p style={{ margin: 0, fontSize: 13, color: C.muted, textAlign: 'center', lineHeight: 1.55 }}>
+            Aponta para: <span style={{ color: '#60a5fa', fontWeight: 600 }}>{profileUrl}</span><br />
+            Imprime e usa em apresentações, feiras ou CVs.
+          </p>
+          <div style={{ display: 'flex', gap: 10, width: '100%' }}>
+            <button
+              onClick={downloadQR}
+              style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.25)', borderRadius: 10, padding: '11px 16px', color: '#60a5fa', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+            >
+              <Download size={15} /> Descarregar
+            </button>
+            <button
+              onClick={() => window.print()}
+              style={{ flex: 1, background: C.blue, border: 'none', borderRadius: 10, padding: '11px 16px', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+            >
+              Imprimir
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   )
@@ -444,17 +508,20 @@ export default function UserProfile() {
               </button>
             )}
             <button
-              onClick={() => setShowQR(s => !s)}
+              onClick={() => setShowQR(true)}
               style={{
-                background: showQR ? 'rgba(59,130,246,0.12)' : 'transparent',
-                border: `1px solid ${showQR ? 'rgba(59,130,246,0.4)' : C.border}`,
+                background: 'transparent',
+                border: `1px solid ${C.border}`,
                 borderRadius: 8, padding: '9px 14px',
-                color: showQR ? '#60a5fa' : C.muted, fontSize: 13, fontWeight: 600,
+                color: C.muted, fontSize: 13, fontWeight: 600,
                 cursor: 'pointer', fontFamily: 'inherit',
+                display: 'flex', alignItems: 'center', gap: 6,
                 transition: 'all 0.15s',
               }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = '#2a4275'; e.currentTarget.style.color = C.text }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted }}
             >
-              QR
+              <QrCode size={14} /> QR
             </button>
             {isOwnProfile && (
               <button
@@ -474,36 +541,6 @@ export default function UserProfile() {
             )}
           </div>
         </div>
-
-        {/* QR Panel */}
-        {showQR && (
-          <div style={{
-            background: C.card, border: `1px solid ${C.border}`,
-            borderRadius: 16, padding: '24px 28px', marginBottom: 32,
-            display: 'flex', alignItems: 'center', gap: 24, flexWrap: 'wrap',
-          }}>
-            <div style={{ background: '#fff', borderRadius: 12, padding: 12, boxShadow: '0 4px 20px rgba(0,0,0,0.3)' }}>
-              <QRCodeSVG value={profileUrl} size={120} />
-            </div>
-            <div>
-              <h3 style={{ color: C.text, fontSize: 16, fontWeight: 700, margin: '0 0 6px' }}>QR do teu perfil</h3>
-              <p style={{ color: C.muted, fontSize: 13, margin: '0 0 12px', lineHeight: 1.6 }}>
-                Imprime e usa em apresentações, feiras de ciências ou cartões de visita.<br />
-                Aponta para: <span style={{ color: '#60a5fa' }}>{profileUrl}</span>
-              </p>
-              <button
-                onClick={() => window.print()}
-                style={{
-                  background: C.blue, border: 'none', borderRadius: 8,
-                  padding: '8px 18px', color: '#fff', fontSize: 13, fontWeight: 600,
-                  cursor: 'pointer', fontFamily: 'inherit',
-                }}
-              >
-                Imprimir / Guardar PDF
-              </button>
-            </div>
-          </div>
-        )}
 
         {/* Projects */}
         <h2 style={{ color: C.text, fontSize: 16, fontWeight: 700, margin: '0 0 18px', letterSpacing: '-0.2px' }}>
@@ -563,6 +600,13 @@ export default function UserProfile() {
           profile={profile}
           projects={projects}
           onClose={() => setShowKitModal(false)}
+        />
+      )}
+      {showQR && (
+        <QRModal
+          profileUrl={profileUrl}
+          username={profile?.username || profile?.id || ''}
+          onClose={() => setShowQR(false)}
         />
       )}
     </div>

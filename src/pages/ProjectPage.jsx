@@ -460,20 +460,8 @@ function MembersPanel({ ownerName, members, colors, isOwner }) {
   // For non-owners, only show accepted; already filtered at query level but guard here too
   const visibleMembers = isOwner ? members : members.filter(m => m.status === 'accepted')
 
-  // Solo project — show just the author without a team card
-  if (visibleMembers.length === 0) {
-    return (
-      <div style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 16, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 10 }}>
-        <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg, #3b82f6, #4f46e5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
-          {displayOwner[0]?.toUpperCase()}
-        </div>
-        <div>
-          <span style={{ fontSize: 14, fontWeight: 600, color: colors.text }}>{displayOwner}</span>
-          <div style={{ fontSize: 11, color: colors.muted, marginTop: 1 }}>Autor</div>
-        </div>
-      </div>
-    )
-  }
+  // Solo project — no team card; the detailed "Autor" card below handles this
+  if (visibleMembers.length === 0) return null
 
   // Team project — show full Equipa card
   return (

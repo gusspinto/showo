@@ -276,7 +276,7 @@ function JoinTurmaBar({ navigate }) {
 
   return (
     <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: '16px 20px', marginBottom: 28, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-      <GraduationCap size={18} color="#3b82f6" style={{ flexShrink: 0 }} />
+      <i className="fi fi-rs-workshop" style={{ fontSize: 18, color: '#3b82f6', flexShrink: 0, lineHeight: 1 }} />
       <span style={{ fontSize: 14, fontWeight: 600, color: C.text, flexShrink: 0 }}>Entrar numa turma</span>
       <form onSubmit={handleJoin} style={{ display: 'flex', gap: 8, flex: 1, minWidth: 200 }}>
         <input
@@ -376,7 +376,7 @@ function TurmaCard({ turma, navigate }) {
       style={{ background: hov ? C.cardHover : C.card, border: `1px solid ${hov ? C.borderBright : C.border}`, borderRadius: 12, padding: '16px 18px', cursor: 'pointer', transition: 'all 0.15s', display: 'flex', alignItems: 'center', gap: 14 }}
     >
       <div style={{ width: 40, height: 40, borderRadius: 10, background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-        <GraduationCap size={18} color="#3b82f6" />
+        <i className="fi fi-rs-workshop" style={{ fontSize: 18, color: '#3b82f6', lineHeight: 1 }} />
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ color: C.text, fontSize: 14, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{turma.name}</div>
@@ -557,6 +557,7 @@ export default function Dashboard() {
   const [showOnboarding, setShowOnboarding] = useState(false)
   const [projCardOpen, setProjCardOpen] = useState(false)
   const [confirmDeleteId, setConfirmDeleteId] = useState(null)
+  const [collabProjects, setCollabProjects] = useState([])
 
   function showToast(msg) {
     setToast(msg)
@@ -599,6 +600,26 @@ export default function Dashboard() {
     setProjects(prev => prev.filter(p => p.id !== id))
     showToast('Projeto eliminado.')
   }
+
+  useEffect(() => {
+    if (!user) return
+    async function loadCollabProjects() {
+      const { data: collabs } = await supabase
+        .from('project_collaborators')
+        .select('project_id')
+        .eq('user_id', user.id)
+        .eq('status', 'accepted')
+      if (!collabs?.length) return
+      const ids = collabs.map(c => c.project_id)
+      const { data: projs } = await supabase
+        .from('projects')
+        .select('id, name, slug, score, area, ai_tagline, creator_name')
+        .in('id', ids)
+        .order('score', { ascending: false })
+      setCollabProjects(projs || [])
+    }
+    loadCollabProjects()
+  }, [user])
 
   useEffect(() => {
     if (!user || profile?.role !== 'professor') return
@@ -773,7 +794,7 @@ export default function Dashboard() {
             </div>
             {turmas.length === 0 ? (
               <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: '28px', textAlign: 'center' }}>
-                <GraduationCap size={36} color={C.subtle} style={{ marginBottom: 10 }} />
+                <i className="fi fi-rs-workshop" style={{ fontSize: 36, color: C.subtle, lineHeight: 1, marginBottom: 10, display: 'block' }} />
                 <p style={{ color: C.text, fontSize: 15, fontWeight: 600, margin: '0 0 6px' }}>Ainda não tens turmas</p>
                 <p style={{ color: C.muted, fontSize: 13, margin: '0 0 16px' }}>Cria uma turma e partilha o código com os teus alunos.</p>
                 <button onClick={() => setShowCreateTurma(true)} style={{ background: C.blue, border: 'none', borderRadius: 8, padding: '9px 20px', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
@@ -872,6 +893,45 @@ export default function Dashboard() {
 
         {/* Quick-create widget */}
         <QuickCreateProject navigate={navigate} />
+
+        {/* Shared projects — only shown when user has accepted collaborations */}
+        {collabProjects.length > 0 && (
+          <div style={{ marginBottom: 32 }}>
+            <h2 style={{ color: C.text, fontSize: 16, fontWeight: 700, margin: '0 0 14px', display: 'flex', alignItems: 'center', gap: 8 }}>
+              Partilhados comigo
+              <span style={{ color: C.muted, fontWeight: 400, fontSize: 14 }}>({collabProjects.length})</span>
+            </h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {collabProjects.map(p => (
+                <div
+                  key={p.id}
+                  onClick={() => navigate(`/projeto/${p.slug}`)}
+                  style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer', transition: 'background 0.15s, border-color 0.15s' }}
+                  onMouseEnter={e => { e.currentTarget.style.background = C.cardHover; e.currentTarget.style.borderColor = C.borderBright }}
+                  onMouseLeave={e => { e.currentTarget.style.background = C.card; e.currentTarget.style.borderColor = C.border }}
+                >
+                  <div style={{ width: 38, height: 38, borderRadius: '50%', flexShrink: 0,
+                    background: `conic-gradient(${getScoreColor(p.score)} ${(p.score ?? 0) * 3.6}deg, #1e3050 0deg)`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ width: 28, height: 28, borderRadius: '50%', background: C.card, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: getScoreColor(p.score) }}>
+                      {p.score ?? '—'}
+                    </div>
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ color: C.text, fontSize: 14, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
+                    {p.creator_name && <div style={{ color: C.muted, fontSize: 12, marginTop: 2 }}>de {p.creator_name}</div>}
+                  </div>
+                  {p.area && (
+                    <span style={{ fontSize: 11, color: C.muted, background: 'rgba(255,255,255,0.04)', border: `1px solid ${C.border}`, borderRadius: 5, padding: '2px 8px', flexShrink: 0 }}>
+                      {p.area}
+                    </span>
+                  )}
+                  <ChevronRight size={15} color={C.subtle} style={{ flexShrink: 0 }} />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Projects — hidden on mobile/tablet, shown on desktop */}
         <div className="dash-proj-section">

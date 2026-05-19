@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { Navbar } from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
+import { Trophy, ChevronRight } from 'lucide-react'
 
 const C = {
   bg:          '#0d1424',
@@ -211,7 +212,6 @@ export default function Ranking() {
                     const accent   = RANK_ACCENT[i]
                     const isFirst  = i === 0
                     const podiumH  = isFirst ? 72 : i === 1 ? 48 : 32
-                    const medal    = ['🥇', '🥈', '🥉'][i]
                     const isMe     = user?.id && project.user_id === user.id
                     return (
                       <div
@@ -232,7 +232,9 @@ export default function Ranking() {
                           marginBottom: 0,
                           textAlign: 'center',
                         }}>
-                          <span style={{ fontSize: isFirst ? 28 : 22 }}>{medal}</span>
+                          {isFirst && (
+                            <Trophy size={28} color={C.yellow} style={{ marginBottom: 4 }} />
+                          )}
                           <ScoreRing score={project.score} size={isFirst ? 72 : 58} strokeW={isFirst ? 5 : 4} />
                           <div>
                             <div style={{
@@ -328,7 +330,7 @@ export default function Ranking() {
                           )}
                         </div>
 
-                        <span style={{ fontSize: 12, color: C.subtle, flexShrink: 0 }}>→</span>
+                        <ChevronRight size={14} color={C.subtle} style={{ flexShrink: 0 }} />
                       </div>
                     )
                   })}
