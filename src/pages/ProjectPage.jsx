@@ -540,6 +540,7 @@ export default function ProjectPage() {
   const [tipsOpen, setTipsOpen] = useState(true)
   const [viewsExpanded, setViewsExpanded] = useState(false)
   const [sectionsOpen, setSectionsOpen] = useState(false)
+  const [showQR, setShowQR] = useState(false)
   const [showInvite, setShowInvite] = useState(false)
   const [inviteInput, setInviteInput] = useState('')
   const [inviting, setInviting] = useState(false)
@@ -1106,6 +1107,7 @@ export default function ProjectPage() {
         .sidebar-section-body.collapsed { display: none; }
         /* Mobile-only accordion for sections */
         .proj-sections-toggle { display: none; }
+        .proj-share-qr-label { display: inline; }
         /* Views widget — hover to reveal count on desktop */
         .proj-views-count { opacity: 0; max-width: 0; overflow: hidden; transition: opacity 0.18s, max-width 0.18s; }
         .proj-views-widget:hover .proj-views-count,
@@ -1153,6 +1155,7 @@ export default function ProjectPage() {
           .proj-author-links { justify-content: center !important; }
           /* Body gap override on tablet */
           .proj-body { gap: 14px; }
+          .proj-share-qr-label { display: none; }
         }
         @media (max-width: 600px) {
           .proj-wrap         { padding: 0 16px 80px !important; overflow-x: hidden !important; }
@@ -1890,42 +1893,97 @@ export default function ProjectPage() {
           </div>
         </div>}
 
-        {/* Share */}
-        <div className="proj-card-pad proj-card" style={{ marginTop: 8 }}>
-          <div style={{ marginBottom: 20 }}>
-            <h3 className="proj-sec-label">{isOwner ? 'Partilha o teu projeto' : 'Partilha este projeto'}</h3>
-          </div>
-          <div style={{ display: 'flex', gap: 36, flexWrap: 'wrap', alignItems: 'flex-start' }}>
-            <div style={{ flex: 1, minWidth: 220 }}>
-              <p style={{ color: colors.muted, fontSize: 13, margin: '0 0 10px', fontWeight: 500 }}>Link do projeto</p>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <div style={{ flex: 1, background: colors.bg, border: `1px solid ${colors.border}`, borderRadius: 8, padding: '10px 14px', fontSize: 13, color: colors.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {pageUrl}
-                </div>
-                <button
-                  onClick={handleCopy}
-                  style={{
-                    background: copied ? `linear-gradient(135deg, ${colors.green}, #16a34a)` : `linear-gradient(135deg, ${colors.blue}, #4f46e5)`,
-                    color: '#fff', border: 'none', borderRadius: 8,
-                    padding: '10px 16px', fontSize: 13, fontWeight: 600,
-                    cursor: 'pointer', whiteSpace: 'nowrap',
-                    transition: 'background 0.3s',
-                    fontFamily: 'inherit',
-                    boxShadow: copied ? '0 4px 16px rgba(34,197,94,0.3)' : '0 4px 16px rgba(27,120,247,0.3)',
-                  }}
-                >
-                  {copied ? <><Check size={13} style={{ verticalAlign: 'middle' }} /> Copiado!</> : 'Copiar link'}
-                </button>
-              </div>
+        {/* Share — compact bar */}
+        <div className="proj-card" style={{ padding: '12px 16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: colors.muted, textTransform: 'uppercase', letterSpacing: '0.08em', flexShrink: 0 }}>
+              {isOwner ? 'Partilhar' : 'Partilha'}
+            </span>
+            <div style={{ flex: 1, minWidth: 0, background: colors.bg, border: `1px solid ${colors.border}`, borderRadius: 7, padding: '7px 12px', fontSize: 12, color: colors.subtle, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {pageUrl}
             </div>
-            <div className="proj-share-qr" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-              <div style={{ background: '#fff', borderRadius: 14, padding: 12, boxShadow: '0 4px 16px rgba(0,0,0,0.3)' }}>
-                <QRCodeSVG value={pageUrl} size={120} />
-              </div>
-              <span style={{ color: colors.subtle, fontSize: 12, fontWeight: 500 }}>QR Code</span>
-            </div>
+            <button
+              onClick={handleCopy}
+              style={{
+                background: copied ? `${colors.green}18` : `${colors.blue}18`,
+                border: `1px solid ${copied ? colors.green + '35' : colors.blue + '30'}`,
+                color: copied ? colors.green : '#60a5fa',
+                borderRadius: 8, padding: '7px 14px',
+                fontSize: 12, fontWeight: 700,
+                cursor: 'pointer', whiteSpace: 'nowrap',
+                transition: 'all 0.2s',
+                fontFamily: 'inherit', flexShrink: 0,
+                display: 'flex', alignItems: 'center', gap: 5,
+              }}
+            >
+              {copied ? <><Check size={12} />Copiado</> : 'Copiar'}
+            </button>
+            <button
+              onClick={() => setShowQR(true)}
+              title="Ver QR Code"
+              style={{
+                background: 'rgba(255,255,255,0.04)',
+                border: `1px solid ${colors.border}`,
+                borderRadius: 8, padding: '7px 10px',
+                color: colors.muted, cursor: 'pointer',
+                fontFamily: 'inherit', flexShrink: 0,
+                display: 'flex', alignItems: 'center', gap: 5,
+                fontSize: 12, fontWeight: 600,
+                transition: 'all 0.15s',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = colors.borderBright; e.currentTarget.style.color = colors.text }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.color = colors.muted }}
+            >
+              {/* QR icon */}
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+                <rect x="3" y="14" width="7" height="7"/>
+                <path d="M14 14h3v3h-3zM17 17h3v3h-3zM14 20h3"/>
+              </svg>
+              <span className="proj-share-qr-label">QR Code</span>
+            </button>
           </div>
         </div>
+
+        {/* QR Modal */}
+        {showQR && (
+          <div
+            onClick={() => setShowQR(false)}
+            style={{
+              position: 'fixed', inset: 0, zIndex: 800,
+              background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(6px)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              padding: 24,
+            }}
+          >
+            <div
+              onClick={e => e.stopPropagation()}
+              style={{
+                background: colors.card, border: `1px solid ${colors.borderBright}`,
+                borderRadius: 20, padding: '28px 32px',
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20,
+                boxShadow: '0 24px 64px rgba(0,0,0,0.6)',
+                maxWidth: 320, width: '100%',
+                position: 'relative',
+              }}
+            >
+              <button
+                onClick={() => setShowQR(false)}
+                style={{ position: 'absolute', top: 14, right: 14, background: 'rgba(255,255,255,0.05)', border: `1px solid ${colors.border}`, borderRadius: 8, width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: colors.muted }}
+              ><X size={14} /></button>
+              <div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: colors.text, textAlign: 'center', marginBottom: 4 }}>{project.name}</div>
+                <div style={{ fontSize: 12, color: colors.muted, textAlign: 'center' }}>Aponta a câmara para abrir</div>
+              </div>
+              <div style={{ background: '#fff', borderRadius: 16, padding: 16, boxShadow: '0 8px 32px rgba(0,0,0,0.4)' }}>
+                <QRCodeSVG value={pageUrl} size={180} />
+              </div>
+              <div style={{ background: colors.bg, border: `1px solid ${colors.border}`, borderRadius: 8, padding: '8px 14px', fontSize: 11, color: colors.subtle, textAlign: 'center', wordBreak: 'break-all', maxWidth: '100%' }}>
+                {pageUrl}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Author — bottom of page */}
         {(project.creator_name || project.course || project.school_year || project.school) && (
