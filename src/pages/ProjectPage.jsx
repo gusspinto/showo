@@ -902,13 +902,16 @@ export default function ProjectPage() {
     setRegenerating(true)
     try {
       const aiResult = await generateProject(project)
+      const newDescription = Array.isArray(aiResult.historia)
+        ? aiResult.historia.join('\n\n')
+        : (aiResult.description ?? null)
       const { error } = await supabase
         .from('projects')
-        .update({ ai_tagline: aiResult.tagline, ai_description: aiResult.description, ai_highlights: aiResult.highlights })
+        .update({ ai_tagline: aiResult.tagline, ai_description: newDescription, ai_highlights: aiResult.highlights })
         .eq('id', project.id)
       if (!error) {
-        setProject(p => ({ ...p, ai_tagline: aiResult.tagline, ai_description: aiResult.description, ai_highlights: aiResult.highlights }))
-        triggerToast('Texto da IA atualizado!')
+        setProject(p => ({ ...p, ai_tagline: aiResult.tagline, ai_description: newDescription, ai_highlights: aiResult.highlights }))
+        triggerToast('A tua história foi atualizada!')
         let t = 60
         setRegenCooldown(t)
         cooldownRef.current = setInterval(() => {
@@ -1935,17 +1938,19 @@ export default function ProjectPage() {
           </div>
         )}
 
-        {/* AI Description */}
+        {/* A tua história — AI narrative */}
         {project.ai_description && (
           <div className="proj-card-pad proj-card" style={{
-            background: `linear-gradient(135deg, rgba(129,140,248,0.04) 0%, rgba(27,120,247,0.02) 100%)`,
-            border: '1px solid rgba(129,140,248,0.18)',
+            background: 'linear-gradient(160deg, rgba(129,140,248,0.05) 0%, rgba(27,120,247,0.03) 60%, transparent 100%)',
+            border: '1px solid rgba(129,140,248,0.15)',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
-              <span style={{ fontSize: 11, fontWeight: 700, color: '#818cf8', textTransform: 'uppercase', letterSpacing: '0.1em', display: 'flex', alignItems: 'center', gap: 6 }}>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#818cf8" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                Resumo gerado por IA
-              </span>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 24, flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#818cf8" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                <span style={{ fontSize: 13, fontWeight: 700, color: '#818cf8', letterSpacing: '0.05em' }}>
+                  A tua história
+                </span>
+              </div>
               {isOwner && (
                 <button
                   onClick={handleRegenerate}
@@ -1969,7 +1974,21 @@ export default function ProjectPage() {
                 </button>
               )}
             </div>
-            <p style={{ margin: 0, fontSize: 17, lineHeight: 1.85, color: colors.text, fontWeight: 400 }}>{project.ai_description}</p>
+            {/* Split into paragraphs — new content has \n\n, old content is single block */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+              {project.ai_description.split('\n\n').filter(p => p.trim()).map((para, i) => (
+                <p key={i} style={{
+                  margin: 0,
+                  fontSize: i === 0 ? 18 : 16,
+                  lineHeight: 1.9,
+                  color: i === 0 ? colors.text : 'rgba(232,242,255,0.85)',
+                  fontWeight: i === 0 ? 500 : 400,
+                  letterSpacing: '-0.1px',
+                }}>
+                  {para.trim()}
+                </p>
+              ))}
+            </div>
           </div>
         )}
 

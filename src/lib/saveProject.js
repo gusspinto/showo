@@ -44,7 +44,9 @@ export async function saveProject(formData, aiResult, userId = null) {
     slug,
     edit_token,
     ai_tagline: aiResult.tagline ?? null,
-    ai_description: aiResult.description ?? null,
+    ai_description: Array.isArray(aiResult.historia)
+      ? aiResult.historia.join('\n\n')
+      : (aiResult.description ?? null),
     ai_highlights: aiResult.highlights ?? null,
     school_year: formData.school_year || null,
     course: formData.course || null,

@@ -17,9 +17,9 @@ Deno.serve(async (req) => {
       apiKey: Deno.env.get('ANTHROPIC_API_KEY') ?? '',
     })
 
-    const prompt = `És um assistente especializado em comunicação de projetos tecnológicos e de inovação para estudantes universitários e programadores.
-
-Analisa os dados deste projeto e gera conteúdo profissional em Português de Portugal (PT-PT).
+    const prompt = `És um mestre de storytelling e pitch writer.
+Um estudante português do ensino profissional acabou de descrever o seu projeto.
+O teu trabalho é transformar o que ele descreveu em algo que o faça sentir visto e orgulhoso — como se alguém finalmente percebeu o que ele construiu.
 
 DADOS DO PROJETO:
 - Nome: ${projectData.name ?? 'N/A'}
@@ -34,20 +34,31 @@ DADOS DO PROJETO:
 - Resultados: ${projectData.results ?? 'N/A'}
 - Aprendizagens: ${projectData.learnings ?? 'N/A'}
 
-Gera exatamente este JSON (sem mais nada, só o JSON):
+Gera exatamente este JSON (sem mais nada, só o JSON válido):
 {
-  "tagline": "<frase impactante e curta, máximo 12 palavras, que capta a essência do projeto>",
-  "description": "<parágrafo de 3-4 frases que descreve o projeto de forma apelativa para recrutadores e investidores, em PT-PT>",
+  "tagline": "<uma frase poderosa. Não uma descrição — uma declaração. Algo que este estudante colocaria orgulhoso no CV. Máximo 12 palavras. Em PT-PT.>",
+  "historia": [
+    "<Parágrafo 1: O problema que este estudante viu e decidiu resolver. Faz sentir real e humano. 3-4 frases. Em PT-PT.>",
+    "<Parágrafo 2: O que ele construiu e a jornada de o construir. Honra o esforço. 3-4 frases. Em PT-PT.>",
+    "<Parágrafo 3: O que este projeto diz sobre quem este estudante é e para onde vai. 3-4 frases. Em PT-PT.>"
+  ],
   "highlights": [
-    "<destaque 1: conquista ou ponto forte específico do projeto, 1 frase>",
-    "<destaque 2: impacto técnico ou inovação, 1 frase>",
-    "<destaque 3: resultado ou aprendizagem relevante, 1 frase>"
+    "<destaque 1: conquista ou ponto forte específico do projeto, 1 frase em PT-PT>",
+    "<destaque 2: impacto técnico ou inovação, 1 frase em PT-PT>",
+    "<destaque 3: resultado ou aprendizagem relevante, 1 frase em PT-PT>"
   ]
-}`
+}
+
+Regras absolutas:
+- Nunca uses linguagem corporativa fria
+- Nunca uses clichês como "solução inovadora" ou "abordagem revolucionária"
+- Escreve como um mentor orgulhoso que acredita genuinamente neste estudante
+- Sê específico ao projeto dele — nunca genérico
+- Sempre em Português de Portugal (PT-PT)`
 
     const message = await client.messages.create({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 600,
+      max_tokens: 900,
       messages: [{ role: 'user', content: prompt }],
     })
 
@@ -58,6 +69,11 @@ Gera exatamente este JSON (sem mais nada, só o JSON):
     if (!jsonMatch) throw new Error('Resposta inválida da IA')
 
     const result = JSON.parse(jsonMatch[0])
+
+    // Ensure backward compat: also provide description as joined historia
+    if (Array.isArray(result.historia)) {
+      result.description = result.historia.join('\n\n')
+    }
 
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
