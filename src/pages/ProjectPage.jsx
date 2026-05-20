@@ -568,6 +568,8 @@ export default function ProjectPage() {
   const [inviting, setInviting] = useState(false)
   const [inviteMsg, setInviteMsg] = useState(null) // { type: 'success'|'error', text }
   const [milestoneCard, setMilestoneCard] = useState(null) // { score, tier }
+  const [showLaunchOverlay, setShowLaunchOverlay] = useState(false)
+  const [launchCopied, setLaunchCopied] = useState(false)
   const [defenseDate, setDefenseDate] = useState('')
   const [savingDefense, setSavingDefense] = useState(false)
   const [teacherFeedback, setTeacherFeedback] = useState([])
@@ -582,10 +584,10 @@ export default function ProjectPage() {
   const toastTimerRef = useRef(null)
   const cooldownRef = useRef(null)
 
-  // Show toast for newly created projects
+  // Show launch overlay for newly created projects
   useEffect(() => {
-    if (location.state?.newProject && location.state?.message) {
-      triggerToast(location.state.message)
+    if (location.state?.newProject) {
+      setShowLaunchOverlay(true)
       window.history.replaceState({}, '')
     }
   }, [])
@@ -1243,6 +1245,140 @@ export default function ProjectPage() {
 
       {showConfetti && <Confetti />}
       <Toast message={toast.message} visible={toast.visible} />
+
+      {/* ── Launch overlay (shown once after project creation) ── */}
+      {showLaunchOverlay && project && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, zIndex: 700,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: '20px 16px',
+            background: 'rgba(7,13,26,0.96)',
+            backdropFilter: 'blur(16px)',
+            animation: 'fadeIn 0.4s ease',
+          }}
+          onClick={() => setShowLaunchOverlay(false)}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              width: '100%', maxWidth: 440,
+              background: 'linear-gradient(145deg, #0e1f3a 0%, #152030 60%, #0d1424 100%)',
+              border: '1px solid rgba(27,120,247,0.35)',
+              borderRadius: 28,
+              padding: '44px 36px 36px',
+              textAlign: 'center',
+              position: 'relative',
+              boxShadow: '0 32px 100px rgba(27,120,247,0.25), 0 8px 40px rgba(0,0,0,0.7)',
+              overflow: 'hidden',
+            }}
+          >
+            {/* Glow blobs */}
+            <div style={{ position: 'absolute', top: -80, left: '50%', transform: 'translateX(-50%)', width: 360, height: 360, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(27,120,247,0.16) 0%, transparent 70%)', pointerEvents: 'none' }} />
+            <div style={{ position: 'absolute', bottom: -60, right: -40, width: 240, height: 240, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(79,70,229,0.12) 0%, transparent 70%)', pointerEvents: 'none' }} />
+
+            {/* Star icon */}
+            <div style={{ fontSize: 40, marginBottom: 20, lineHeight: 1, position: 'relative', color: '#1b78f7', letterSpacing: 4 }}>✦</div>
+
+            <h2 style={{
+              margin: '0 0 10px',
+              fontFamily: 'Syne, sans-serif',
+              fontSize: 28,
+              fontWeight: 900,
+              color: '#e8f2ff',
+              letterSpacing: '-0.5px',
+              lineHeight: 1.2,
+              position: 'relative',
+            }}>
+              O teu projeto está no ar.
+            </h2>
+
+            <p style={{
+              margin: '0 0 28px',
+              fontSize: 16,
+              color: 'rgba(232,242,255,0.6)',
+              lineHeight: 1.6,
+              position: 'relative',
+            }}>
+              Partilha com alguém que importa.
+            </p>
+
+            {/* URL copy field */}
+            <div style={{
+              display: 'flex',
+              gap: 8,
+              marginBottom: 16,
+              position: 'relative',
+            }}>
+              <input
+                readOnly
+                value={`${window.location.origin}/projeto/${project.slug}`}
+                style={{
+                  flex: 1,
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(27,120,247,0.25)',
+                  borderRadius: 10,
+                  padding: '11px 14px',
+                  fontSize: 13,
+                  color: 'rgba(232,242,255,0.7)',
+                  fontFamily: 'monospace',
+                  outline: 'none',
+                  cursor: 'text',
+                  minWidth: 0,
+                }}
+                onFocus={e => e.target.select()}
+              />
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(`${window.location.origin}/projeto/${project.slug}`)
+                  setLaunchCopied(true)
+                  setTimeout(() => setLaunchCopied(false), 2500)
+                }}
+                style={{
+                  background: launchCopied ? 'rgba(34,197,94,0.15)' : 'rgba(27,120,247,0.15)',
+                  border: `1px solid ${launchCopied ? 'rgba(34,197,94,0.4)' : 'rgba(27,120,247,0.4)'}`,
+                  borderRadius: 10,
+                  padding: '11px 16px',
+                  cursor: 'pointer',
+                  color: launchCopied ? '#22c55e' : '#5a9ff5',
+                  fontSize: 13,
+                  fontWeight: 600,
+                  whiteSpace: 'nowrap',
+                  transition: 'all 0.2s',
+                  flexShrink: 0,
+                }}
+              >
+                {launchCopied ? '✓ Copiado' : 'Copiar'}
+              </button>
+            </div>
+
+            {/* CTA button */}
+            <button
+              onClick={() => setShowLaunchOverlay(false)}
+              style={{
+                display: 'block',
+                width: '100%',
+                background: 'linear-gradient(135deg, #1b78f7, #4f46e5)',
+                border: 'none',
+                borderRadius: 12,
+                padding: '14px 24px',
+                color: '#fff',
+                fontSize: 16,
+                fontWeight: 700,
+                cursor: 'pointer',
+                letterSpacing: '-0.2px',
+                boxShadow: '0 4px 20px rgba(27,120,247,0.35)',
+                transition: 'transform 0.15s, box-shadow 0.15s',
+                position: 'relative',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 6px 28px rgba(27,120,247,0.45)' }}
+              onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 4px 20px rgba(27,120,247,0.35)' }}
+            >
+              Ver a minha página →
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ── Milestone shareable card overlay ── */}
       {milestoneCard && (
