@@ -16,16 +16,17 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     )
 
-    // Get project owner
+    // Get project owner and name
     const { data: project } = await supabase
       .from('projects')
-      .select('user_id')
+      .select('user_id, name')
       .eq('slug', project_slug)
       .single()
 
     if (!project?.user_id) return new Response(JSON.stringify({ ok: false }), { headers: corsHeaders })
 
     const user_id = project.user_id
+    const projectName = project.name || 'o teu projeto'
     const now = new Date()
 
     // Dedup window: 1h for PROJECT_VIEW, 24h for COMPANY_VIEW
@@ -51,20 +52,20 @@ Deno.serve(async (req) => {
 
     if (type === 'COMPANY_VIEW') {
       if (visitor_role === 'empresa') {
-        message = `Uma empresa ${location} viu o teu projeto — ficou mais de 30s a explorar.`
+        message = `Uma empresa ${location} viu o teu projeto '${projectName}' — ficou mais de 30s a explorar. 👀`
       } else if (visitor_role === 'recrutador') {
-        message = `Um recrutador ${location} viu o teu projeto — ficou mais de 30s a explorar.`
+        message = `Um recrutador ${location} viu o teu projeto '${projectName}' — ficou mais de 30s a explorar. 👀`
       } else {
-        message = `Uma empresa ${location} viu o teu projeto — ficou mais de 30s a explorar.`
+        message = `Alguém ${location} viu o teu projeto '${projectName}' — ficou mais de 30s a explorar. 👀`
       }
     } else {
       // PROJECT_VIEW
       if (visitor_role === 'empresa') {
-        message = `Uma empresa ${location} viu o teu projeto.`
+        message = `Uma empresa ${location} viu o teu projeto '${projectName}' há pouco. 👀`
       } else if (visitor_role === 'recrutador') {
-        message = `Um recrutador ${location} viu o teu projeto.`
+        message = `Um recrutador ${location} viu o teu projeto '${projectName}' há pouco. 👀`
       } else {
-        message = `Alguém ${location} viu o teu projeto.`
+        message = `Alguém ${location} viu o teu projeto '${projectName}' há pouco. 👀`
       }
     }
 

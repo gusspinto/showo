@@ -722,33 +722,40 @@ export default function ProjectPage() {
       setProject(prev => prev ? { ...prev, views: (prev.views ?? 0) + 1 } : prev)
     }
 
-    // PROJECT_VIEW notification (max once per hour per project)
+    // PROJECT_VIEW notification after 15s (max once per hour per project)
     const notifKey = `notified_view_${project.slug}`
+    let t1 = null
+    let t2 = null
     if (!sessionStorage.getItem(notifKey)) {
-      sessionStorage.setItem(notifKey, '1')
-      // Get city first, then notify
-      fetch('https://ip-api.com/json/?fields=city,status')
-        .then(r => r.json())
-        .then(geo => {
-          const city = geo?.status === 'success' ? (geo.city || 'Portugal') : 'Portugal'
-          const visitor_role = profile?.role ?? null
-          supabase.functions.invoke('notify-view', { body: { project_slug: project.slug, type: 'PROJECT_VIEW', city, visitor_role } })
-        })
-        .catch(() => {
-          const visitor_role = profile?.role ?? null
-          supabase.functions.invoke('notify-view', { body: { project_slug: project.slug, type: 'PROJECT_VIEW', city: 'Portugal', visitor_role } })
-        })
+      t1 = setTimeout(() => {
+        sessionStorage.setItem(notifKey, '1')
+        // Get city first, then notify
+        fetch('https://ip-api.com/json/?fields=city,status')
+          .then(r => r.json())
+          .then(geo => {
+            const city = geo?.status === 'success' ? (geo.city || 'Portugal') : 'Portugal'
+            const visitor_role = profile?.role ?? null
+            supabase.functions.invoke('notify-view', { body: { project_slug: project.slug, type: 'PROJECT_VIEW', city, visitor_role } })
+          })
+          .catch(() => {
+            const visitor_role = profile?.role ?? null
+            supabase.functions.invoke('notify-view', { body: { project_slug: project.slug, type: 'PROJECT_VIEW', city: 'Portugal', visitor_role } })
+          })
+      }, 15000)
     }
 
     // COMPANY_VIEW after 30s (max once per day per project)
     const companyKey = `company_view_${project.slug}`
-    const lastCompany = sessionStorage.getItem(companyKey)
-    if (!lastCompany) {
-      const t = setTimeout(() => {
+    if (!sessionStorage.getItem(companyKey)) {
+      t2 = setTimeout(() => {
         sessionStorage.setItem(companyKey, '1')
         supabase.functions.invoke('notify-view', { body: { project_slug: project.slug, type: 'COMPANY_VIEW', visitor_role: profile?.role ?? null } })
       }, 30000)
-      return () => clearTimeout(t)
+    }
+
+    return () => {
+      if (t1) clearTimeout(t1)
+      if (t2) clearTimeout(t2)
     }
   }, [project?.id, user?.id, authLoading])
 
