@@ -4,14 +4,16 @@ import { supabase } from '../lib/supabase'
 import { Mail, GraduationCap, BookOpen, Search, Building2 } from 'lucide-react'
 
 const C = {
-  bg: '#0d1424',
-  card: '#111827',
-  border: '#1e3050',
-  blue: '#3b82f6',
-  blueHover: '#2563eb',
-  muted: '#7d93b0',
-  text: '#e8f2ff',
-  error: '#f87171',
+  bg:          '#0d1424',
+  card:        '#152030',
+  border:      '#1e3050',
+  borderBright:'#2a4275',
+  blue:        '#1b78f7',
+  blueHover:   '#1564d4',
+  muted:       '#7d93b0',
+  subtle:      '#3d5270',
+  text:        '#e8f2ff',
+  error:       '#ef4444',
 }
 
 const ROLES = [
@@ -85,12 +87,12 @@ function Input({ type = 'text', value, onChange, placeholder, required }) {
         type={isPassword ? (show ? 'text' : 'password') : type}
         value={value} onChange={onChange} placeholder={placeholder} required={required}
         style={{
-          width: '100%', background: '#0a1118',
+          width: '100%', background: C.bg,
           border: `1px solid ${focused ? C.blue : C.border}`,
           borderRadius: 8, padding: isPassword ? '11px 44px 11px 14px' : '11px 14px',
           color: C.text, fontSize: 15, outline: 'none', fontFamily: 'inherit',
           transition: 'border-color 0.15s', boxSizing: 'border-box',
-          boxShadow: focused ? '0 0 0 3px rgba(59,130,246,0.1)' : 'none',
+          boxShadow: focused ? '0 0 0 3px rgba(27,120,247,0.1)' : 'none',
         }}
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
@@ -155,12 +157,14 @@ export default function Register() {
       minHeight: '100vh', background: C.bg,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       padding: '24px 16px', fontFamily: 'Inter, sans-serif',
+      position: 'relative', overflow: 'hidden',
     }}>
+      <div style={{ position: 'absolute', top: '-10%', left: '50%', transform: 'translateX(-50%)', width: 600, height: 400, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(27,120,247,0.07) 0%, transparent 70%)', pointerEvents: 'none' }} />
       <style>{`
         .role-card { transition: all 0.15s; cursor: pointer; }
         .role-card:hover { transform: translateY(-2px); }
       `}</style>
-      <div style={{ width: '100%', maxWidth: step === 'role' ? 560 : 420 }}>
+      <div style={{ width: '100%', maxWidth: 480, position: 'relative' }}>
 
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <img
@@ -172,7 +176,7 @@ export default function Register() {
 
         {done ? (
           <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: '40px 32px', textAlign: 'center' }}>
-            <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'center' }}><Mail size={52} color="#3b82f6" /></div>
+            <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'center' }}><Mail size={52} color={C.blue} /></div>
             <h2 style={{ color: C.text, fontSize: 20, fontWeight: 700, margin: '0 0 10px' }}>
               Confirma o teu email
             </h2>
@@ -199,7 +203,7 @@ export default function Register() {
 
         ) : step === 'role' ? (
           /* ── STEP 1: escolha de tipo de conta ── */
-          <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: '36px 32px' }}>
+          <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 18, padding: '36px 32px', boxShadow: '0 8px 40px rgba(0,0,0,0.35)' }}>
             <h1 style={{ color: C.text, fontSize: 22, fontWeight: 700, margin: '0 0 6px' }}>Criar conta</h1>
             <p style={{ color: C.muted, fontSize: 14, margin: '0 0 28px' }}>Como vais usar o Showo?</p>
 
@@ -212,7 +216,7 @@ export default function Register() {
                     className="role-card"
                     onClick={() => setRole(r.id)}
                     style={{
-                      background: selected ? r.bg : 'rgba(255,255,255,0.02)',
+                      background: selected ? r.bg : 'rgba(255,255,255,0.025)',
                       border: `2px solid ${selected ? r.border : C.border}`,
                       borderRadius: 14, padding: '18px 16px',
                       display: 'flex', flexDirection: 'column', gap: 8,
@@ -258,7 +262,7 @@ export default function Register() {
 
         ) : (
           /* ── STEP 2: formulário ── */
-          <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: '36px 32px' }}>
+          <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 18, padding: '36px 32px', boxShadow: '0 8px 40px rgba(0,0,0,0.35)' }}>
             {/* Role badge + back */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

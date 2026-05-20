@@ -4,14 +4,16 @@ import { supabase } from '../lib/supabase'
 import { Mail, Check } from 'lucide-react'
 
 const C = {
-  bg: '#0d1424',
-  card: '#111827',
-  border: '#1e3050',
-  blue: '#3b82f6',
-  blueHover: '#2563eb',
-  muted: '#7d93b0',
-  text: '#e8f2ff',
-  error: '#f87171',
+  bg:          '#0d1424',
+  card:        '#152030',
+  border:      '#1e3050',
+  borderBright:'#2a4275',
+  blue:        '#1b78f7',
+  blueHover:   '#1564d4',
+  muted:       '#7d93b0',
+  subtle:      '#3d5270',
+  text:        '#e8f2ff',
+  error:       '#ef4444',
 }
 
 function EyeIcon({ visible }) {
@@ -37,12 +39,12 @@ function PasswordInput({ value, onChange, placeholder }) {
         type={show ? 'text' : 'password'}
         value={value} onChange={onChange} required placeholder={placeholder}
         style={{
-          width: '100%', background: '#0a1118',
+          width: '100%', background: C.bg,
           border: `1px solid ${focused ? C.blue : C.border}`,
-          borderRadius: 8, padding: '10px 44px 10px 14px',
+          borderRadius: 10, padding: '10px 44px 10px 14px',
           color: C.text, fontSize: 15, outline: 'none', fontFamily: 'inherit',
           boxSizing: 'border-box', transition: 'border-color 0.15s',
-          boxShadow: focused ? '0 0 0 3px rgba(59,130,246,0.1)' : 'none',
+          boxShadow: focused ? '0 0 0 3px rgba(27,120,247,0.1)' : 'none',
         }}
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
@@ -102,8 +104,11 @@ export default function Login() {
       minHeight: '100vh', background: C.bg,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       padding: '24px 16px', fontFamily: 'Inter, sans-serif',
+      position: 'relative', overflow: 'hidden',
     }}>
-      <div style={{ width: '100%', maxWidth: 400 }}>
+      {/* Subtle background glow */}
+      <div style={{ position: 'absolute', top: '-10%', left: '50%', transform: 'translateX(-50%)', width: 600, height: 400, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(27,120,247,0.07) 0%, transparent 70%)', pointerEvents: 'none' }} />
+      <div style={{ width: '100%', maxWidth: 400, position: 'relative' }}>
 
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <img
@@ -113,7 +118,7 @@ export default function Login() {
           />
         </div>
 
-        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: '36px 32px' }}>
+        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 18, padding: '36px 32px', boxShadow: '0 8px 40px rgba(0,0,0,0.35)' }}>
           <h1 style={{ color: C.text, fontSize: 22, fontWeight: 700, margin: '0 0 8px' }}>Entrar</h1>
           <p style={{ color: C.muted, fontSize: 14, margin: '0 0 28px' }}>Acede ao teu painel de projetos</p>
 
@@ -123,10 +128,10 @@ export default function Login() {
               <input
                 type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="tu@email.com"
                 style={{
-                  background: '#0a1118', border: `1px solid ${emailFocused ? C.blue : C.border}`,
-                  borderRadius: 8, padding: '10px 14px', color: C.text, fontSize: 15,
+                  background: C.bg, border: `1px solid ${emailFocused ? C.blue : C.border}`,
+                  borderRadius: 10, padding: '10px 14px', color: C.text, fontSize: 15,
                   outline: 'none', fontFamily: 'inherit', transition: 'border-color 0.15s',
-                  boxShadow: emailFocused ? '0 0 0 3px rgba(59,130,246,0.1)' : 'none',
+                  boxShadow: emailFocused ? '0 0 0 3px rgba(27,120,247,0.1)' : 'none',
                 }}
                 onFocus={() => setEmailFocused(true)}
                 onBlur={() => setEmailFocused(false)}
@@ -138,7 +143,7 @@ export default function Login() {
             </div>
 
             {error && (
-              <div style={{ background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.25)', borderRadius: 8, padding: '10px 14px', color: C.error, fontSize: 14 }}>
+              <div style={{ background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.25)', borderRadius: 10, padding: '10px 14px', color: C.error, fontSize: 14 }}>
                 {error}
               </div>
             )}

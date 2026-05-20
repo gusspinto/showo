@@ -17,10 +17,10 @@ const colors = {
   cardHover: '#1c2d44',
   border: '#1e3050',
   borderBright: '#2a4275',
-  blue: '#3b82f6',
-  blueHover: '#2563eb',
-  blueGlow: 'rgba(59,130,246,0.15)',
-  blueSubtle: 'rgba(59,130,246,0.08)',
+  blue: '#1b78f7',
+  blueHover: '#1564d4',
+  blueGlow: 'rgba(27,120,247,0.15)',
+  blueSubtle: 'rgba(27,120,247,0.08)',
   text: '#e8f2ff',
   muted: '#7d93b0',
   subtle: '#3d5270',
@@ -29,7 +29,8 @@ const colors = {
   yellow: '#eab308',
   yellowGlow: 'rgba(234,179,8,0.1)',
   orange: '#f97316',
-  inputBg: '#0a1118',
+  red: '#ef4444',
+  inputBg: '#0d1424',
 }
 
 const inputBase = {
@@ -263,7 +264,7 @@ export default function NewProject() {
   const sharedInputHandlers = {
     onFocus: e => {
       e.target.style.borderColor = colors.blue
-      e.target.style.boxShadow = '0 0 0 3px rgba(59,130,246,0.1)'
+      e.target.style.boxShadow = '0 0 0 3px rgba(27,120,247,0.1)'
     },
     onBlur: e => {
       e.target.style.borderColor = colors.border
@@ -292,19 +293,19 @@ export default function NewProject() {
                     key={opt.id}
                     onClick={() => setFormGoal(opt.id)}
                     style={{
-                      background: sel ? 'rgba(59,130,246,0.1)' : colors.card,
+                      background: sel ? 'rgba(27,120,247,0.1)' : colors.card,
                       border: `2px solid ${sel ? colors.blue : colors.border}`,
                       borderRadius: 16, padding: '20px 16px',
                       color: colors.text, cursor: 'pointer', textAlign: 'left',
                       transition: 'border-color 0.15s, background 0.15s',
-                      boxShadow: sel ? '0 4px 20px rgba(59,130,246,0.15)' : '0 2px 10px rgba(0,0,0,0.25)',
+                      boxShadow: sel ? '0 4px 20px rgba(27,120,247,0.15)' : '0 2px 10px rgba(0,0,0,0.25)',
                       fontFamily: 'inherit',
                     }}
                   >
                     <div style={{
                       width: 42, height: 42, borderRadius: 10, marginBottom: 12,
-                      background: sel ? 'rgba(59,130,246,0.15)' : 'rgba(255,255,255,0.04)',
-                      border: `1px solid ${sel ? 'rgba(59,130,246,0.25)' : colors.border}`,
+                      background: sel ? 'rgba(27,120,247,0.15)' : 'rgba(255,255,255,0.04)',
+                      border: `1px solid ${sel ? 'rgba(27,120,247,0.25)' : colors.border}`,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                     }}>
                       <opt.Icon size={22} color={sel ? colors.blue : colors.muted} />
@@ -326,7 +327,7 @@ export default function NewProject() {
                 cursor: formGoal ? 'pointer' : 'not-allowed',
                 transition: 'background 0.2s, box-shadow 0.2s',
                 fontFamily: 'inherit',
-                boxShadow: formGoal ? '0 4px 20px rgba(59,130,246,0.3)' : 'none',
+                boxShadow: formGoal ? '0 4px 20px rgba(27,120,247,0.3)' : 'none',
                 letterSpacing: '-0.2px',
               }}
             >
@@ -422,7 +423,7 @@ export default function NewProject() {
                 borderRadius: 12, padding: '15px 0',
                 fontSize: 17, fontWeight: 700, cursor: 'pointer',
                 fontFamily: 'inherit',
-                boxShadow: '0 4px 20px rgba(59,130,246,0.3)',
+                boxShadow: '0 4px 20px rgba(27,120,247,0.3)',
                 letterSpacing: '-0.2px',
               }}
             >
@@ -477,7 +478,7 @@ export default function NewProject() {
           backdropFilter: 'blur(4px)',
         }}>
           <div style={{
-            background: '#111827',
+            background: colors.card,
             border: '1px solid #1e3050',
             borderRadius: 18,
             padding: '36px 32px 28px',
@@ -496,12 +497,12 @@ export default function NewProject() {
               <button
                 onClick={() => navigate('/register')}
                 style={{
-                  background: 'linear-gradient(135deg, #3b82f6, #4f46e5)',
+                  background: 'linear-gradient(135deg, #1b78f7, #4f46e5)',
                   border: 'none', borderRadius: 10,
                   padding: '12px 0', color: '#fff',
                   fontSize: 15, fontWeight: 700,
                   cursor: 'pointer', fontFamily: 'Inter, sans-serif',
-                  boxShadow: '0 4px 16px rgba(59,130,246,0.3)',
+                  boxShadow: '0 4px 16px rgba(27,120,247,0.3)',
                   transition: 'opacity 0.15s',
                 }}
                 onMouseEnter={e => e.currentTarget.style.opacity = '0.88'}
@@ -548,8 +549,8 @@ export default function NewProject() {
           {formGoal && (
             <span style={{
               fontSize: 11, color: '#60a5fa',
-              background: 'rgba(59,130,246,0.08)',
-              border: '1px solid rgba(59,130,246,0.15)',
+              background: 'rgba(27,120,247,0.08)',
+              border: '1px solid rgba(27,120,247,0.15)',
               borderRadius: 999, padding: '3px 10px', fontWeight: 600,
             }}>
               {GOAL_LABELS[formGoal]}
@@ -566,7 +567,7 @@ export default function NewProject() {
           width: `${progress}%`,
           background: `linear-gradient(90deg, ${colors.blue}, #818cf8)`,
           transition: 'width 0.4s ease',
-          boxShadow: '0 0 8px rgba(59,130,246,0.4)',
+          boxShadow: '0 0 8px rgba(27,120,247,0.4)',
         }} />
       </div>
 
@@ -577,7 +578,7 @@ export default function NewProject() {
           {prefillBanner && (
             <div style={{
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)',
+              background: 'rgba(27,120,247,0.08)', border: '1px solid rgba(27,120,247,0.2)',
               borderRadius: 10, padding: '10px 14px', marginBottom: 20, gap: 10,
             }}>
               <span style={{ color: '#60a5fa', fontSize: 13, fontWeight: 500 }}>
@@ -697,7 +698,7 @@ export default function NewProject() {
                     {...sharedInputHandlers}
                   >
                     <option value="" disabled style={{ color: colors.muted }}>Ano escolar</option>
-                    {SCHOOL_YEARS.map(y => <option key={y} value={y} style={{ background: '#0a1118', color: colors.text }}>{y}</option>)}
+                    {SCHOOL_YEARS.map(y => <option key={y} value={y} style={{ background: colors.inputBg, color: colors.text }}>{y}</option>)}
                   </select>
                   <input type="text" placeholder="Escola (opcional)" value={answers.school ?? ''} onChange={e => set('school', e.target.value)} style={inputBase} {...sharedInputHandlers} />
                   {formGoal === 'school' && (
@@ -741,7 +742,7 @@ export default function NewProject() {
                         key={t.id}
                         onClick={() => set('project_type', sel ? null : t.id)}
                         style={{
-                          background: sel ? 'rgba(59,130,246,0.1)' : colors.card,
+                          background: sel ? 'rgba(27,120,247,0.1)' : colors.card,
                           border: `2px solid ${sel ? colors.blue : colors.border}`,
                           borderRadius: 10, padding: '14px 10px',
                           color: colors.text, cursor: 'pointer', textAlign: 'center',
@@ -784,7 +785,7 @@ export default function NewProject() {
                       textAlign: 'center', cursor: 'pointer',
                       transition: 'border-color 0.2s, background 0.2s',
                     }}
-                    onMouseEnter={e => { if (!dragOver) { e.currentTarget.style.borderColor = colors.blue; e.currentTarget.style.background = 'rgba(59,130,246,0.03)' }}}
+                    onMouseEnter={e => { if (!dragOver) { e.currentTarget.style.borderColor = colors.blue; e.currentTarget.style.background = 'rgba(27,120,247,0.03)' }}}
                     onMouseLeave={e => { if (!dragOver) { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.background = 'transparent' }}}
                   >
                     <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 10 }}><Camera size={28} color={dragOver ? colors.blue : colors.muted} /></div>
@@ -825,7 +826,7 @@ export default function NewProject() {
           )}
 
           {error && (
-            <p style={{ color: '#f87171', fontSize: 14, marginTop: 12, fontWeight: 500 }}>{error}</p>
+            <p style={{ color: colors.red, fontSize: 14, marginTop: 12, fontWeight: 500 }}>{error}</p>
           )}
 
           {/* Navigation */}
@@ -856,7 +857,7 @@ export default function NewProject() {
                 cursor: canProceed() ? 'pointer' : 'not-allowed',
                 transition: 'background 0.2s, box-shadow 0.2s',
                 fontFamily: 'inherit',
-                boxShadow: canProceed() ? '0 4px 20px rgba(59,130,246,0.3)' : 'none',
+                boxShadow: canProceed() ? '0 4px 20px rgba(27,120,247,0.3)' : 'none',
                 letterSpacing: '-0.1px',
               }}
             >
