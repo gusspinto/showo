@@ -166,9 +166,9 @@ function Section({ fieldKey, content, isOwner, onImprove }) {
         {isOwner && challenge && (
           <button
             onClick={() => onImprove(challenge)}
-            style={{ background: 'none', border: 'none', color: colors.subtle, cursor: 'pointer', fontSize: 12, fontWeight: 600, fontFamily: 'inherit', padding: '2px 6px', borderRadius: 6 }}
-            onMouseEnter={e => e.target.style.color = colors.blue}
-            onMouseLeave={e => e.target.style.color = colors.subtle}
+            style={{ background: `${colors.blue}10`, border: `1px solid ${colors.blue}22`, color: '#60a5fa', cursor: 'pointer', fontSize: 11, fontWeight: 700, fontFamily: 'inherit', padding: '3px 9px', borderRadius: 6, flexShrink: 0, transition: 'all 0.15s' }}
+            onMouseEnter={e => { e.currentTarget.style.background = `${colors.blue}1e`; e.currentTarget.style.borderColor = `${colors.blue}44` }}
+            onMouseLeave={e => { e.currentTarget.style.background = `${colors.blue}10`; e.currentTarget.style.borderColor = `${colors.blue}22` }}
           >
             Editar →
           </button>
@@ -182,7 +182,9 @@ function Section({ fieldKey, content, isOwner, onImprove }) {
             {challenge && (
               <button
                 onClick={() => onImprove(challenge)}
-                style={{ background: 'rgba(27,120,247,0.08)', border: '1px solid rgba(27,120,247,0.18)', color: '#5a9ff5', borderRadius: 8, padding: '6px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
+                style={{ background: `${colors.blue}10`, border: `1px solid ${colors.blue}22`, color: '#60a5fa', borderRadius: 6, padding: '3px 9px', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0, transition: 'all 0.15s' }}
+                onMouseEnter={e => { e.currentTarget.style.background = `${colors.blue}1e`; e.currentTarget.style.borderColor = `${colors.blue}44` }}
+                onMouseLeave={e => { e.currentTarget.style.background = `${colors.blue}10`; e.currentTarget.style.borderColor = `${colors.blue}22` }}
               >
                 Preencher
               </button>
@@ -1061,6 +1063,11 @@ export default function ProjectPage() {
         .proj-body {
           display: flex; flex-direction: column; gap: 16px;
         }
+        /* Sections within the accordion body */
+        .proj-sections-body {
+          display: flex; flex-direction: column; gap: 12px;
+        }
+        .proj-sections-body.collapsed { display: none; }
 
         .proj-layout {
           display: grid;
@@ -1094,9 +1101,10 @@ export default function ProjectPage() {
         .proj-fab-area       { display: none; }
         .proj-fab-defense-label { display: none; }
         .proj-invite-label   { display: inline; }
-        /* Sidebar section toggles — visible on all breakpoints (desktop + mobile) */
+        /* Sidebar section toggles */
         .sidebar-section-toggle { display: flex; }
         .sidebar-section-body.collapsed { display: none; }
+        /* Mobile-only accordion for sections */
         .proj-sections-toggle { display: none; }
         /* Views widget — hover to reveal count on desktop */
         .proj-views-count { opacity: 0; max-width: 0; overflow: hidden; transition: opacity 0.18s, max-width 0.18s; }
@@ -1135,13 +1143,14 @@ export default function ProjectPage() {
           .proj-fab-defense-label { display: inline !important; }
           /* Invite button: icon only on tablet */
           .proj-invite-label { display: none !important; }
-          /* Author: centered on tablet too */
+          /* Author: centered on tablet/mobile */
           .proj-author-bottom {
             flex-direction: column !important;
             align-items: center !important;
             text-align: center !important;
           }
-          .proj-author-links { margin-left: 0 !important; justify-content: center; }
+          .proj-author-bottom > div[style*="flex: 1"] { text-align: center; }
+          .proj-author-links { justify-content: center !important; }
           /* Body gap override on tablet */
           .proj-body { gap: 14px; }
         }
@@ -1167,10 +1176,9 @@ export default function ProjectPage() {
             flex-direction: column !important;
             align-items: center !important;
             text-align: center !important;
-            padding-top: 24px !important;
           }
           .proj-author-bottom-text { text-align: center; }
-          .proj-author-links { margin-left: 0 !important; justify-content: center; }
+          .proj-author-links { justify-content: center !important; }
           /* Body gap on mobile */
           .proj-body { gap: 12px; }
         }
@@ -1746,33 +1754,38 @@ export default function ProjectPage() {
         {/* AI Description */}
         {project.ai_description && (
           <div className="proj-card-pad proj-card" style={{
-            background: 'linear-gradient(135deg, #0e1f3e 0%, #0a1729 100%)',
-            border: '1px solid rgba(27,120,247,0.22)',
-            boxShadow: '0 4px 20px rgba(27,120,247,0.07)',
+            background: `linear-gradient(135deg, rgba(129,140,248,0.04) 0%, rgba(27,120,247,0.02) 100%)`,
+            border: '1px solid rgba(129,140,248,0.18)',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontSize: 11, fontWeight: 700, color: '#818cf8', textTransform: 'uppercase', letterSpacing: 1.2 }}>Resumo gerado por IA</span>
-              </div>
-              <button
-                onClick={handleRegenerate}
-                disabled={regenerating || regenCooldown > 0}
-                style={{
-                  background: 'rgba(27,120,247,0.1)',
-                  border: '1px solid rgba(27,120,247,0.2)',
-                  color: '#60a5fa',
-                  borderRadius: 8, padding: '6px 12px',
-                  fontSize: 12, fontWeight: 600,
-                  cursor: (regenerating || regenCooldown > 0) ? 'default' : 'pointer',
-                  opacity: (regenerating || regenCooldown > 0) ? 0.55 : 1,
-                  whiteSpace: 'nowrap',
-                  fontFamily: 'inherit',
-                }}
-              >
-                {regenerating ? 'A gerar...' : regenCooldown > 0 ? `${regenCooldown}s` : 'Regenerar'}
-              </button>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: '#818cf8', textTransform: 'uppercase', letterSpacing: '0.1em', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#818cf8" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                Resumo gerado por IA
+              </span>
+              {isOwner && (
+                <button
+                  onClick={handleRegenerate}
+                  disabled={regenerating || regenCooldown > 0}
+                  style={{
+                    background: 'transparent',
+                    border: `1px solid rgba(129,140,248,0.22)`,
+                    color: '#818cf8',
+                    borderRadius: 7, padding: '4px 10px',
+                    fontSize: 11, fontWeight: 600,
+                    cursor: (regenerating || regenCooldown > 0) ? 'default' : 'pointer',
+                    opacity: (regenerating || regenCooldown > 0) ? 0.5 : 0.8,
+                    whiteSpace: 'nowrap',
+                    fontFamily: 'inherit',
+                    transition: 'opacity 0.15s',
+                  }}
+                  onMouseEnter={e => { if (!(regenerating || regenCooldown > 0)) e.currentTarget.style.opacity = '1' }}
+                  onMouseLeave={e => { e.currentTarget.style.opacity = (regenerating || regenCooldown > 0) ? '0.5' : '0.8' }}
+                >
+                  {regenerating ? 'A gerar...' : regenCooldown > 0 ? `${regenCooldown}s` : 'Regenerar'}
+                </button>
+              )}
             </div>
-            <p style={{ margin: 0, fontSize: 16, lineHeight: 1.8, color: '#cbd5f0' }}>{project.ai_description}</p>
+            <p style={{ margin: 0, fontSize: 17, lineHeight: 1.85, color: colors.text, fontWeight: 400 }}>{project.ai_description}</p>
           </div>
         )}
 
@@ -1785,15 +1798,12 @@ export default function ProjectPage() {
               {highlights.map((h, i) => {
                 const HlIcon = HlIcons[i] ?? Sparkles
                 return (
-                <div key={i} style={{
-                  background: `linear-gradient(135deg, ${hero.c1}0d, ${hero.c2}07)`,
-                  border: `1px solid ${hero.c1}30`,
-                  borderRadius: 14, padding: '16px 18px',
-                  display: 'flex', flexDirection: 'column', gap: 10,
-                }}>
-                  <HlIcon size={18} color={hero.c1} />
-                  <p style={{ margin: 0, fontSize: 13, color: '#b8d4f0', lineHeight: 1.6 }}>{h}</p>
-                </div>
+                  <div key={i} className="proj-card" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    <div style={{ width: 32, height: 32, borderRadius: 9, flexShrink: 0, background: `${hero.c1}14`, border: `1px solid ${hero.c1}28`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <HlIcon size={15} color={hero.c1} />
+                    </div>
+                    <p style={{ margin: 0, fontSize: 13, color: colors.muted, lineHeight: 1.65 }}>{h}</p>
+                  </div>
                 )
               })}
             </div>
@@ -1888,7 +1898,7 @@ export default function ProjectPage() {
           <div style={{ display: 'flex', gap: 36, flexWrap: 'wrap', alignItems: 'flex-start' }}>
             <div style={{ flex: 1, minWidth: 220 }}>
               <p style={{ color: colors.muted, fontSize: 13, margin: '0 0 10px', fontWeight: 500 }}>Link do projeto</p>
-              <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+              <div style={{ display: 'flex', gap: 8 }}>
                 <div style={{ flex: 1, background: colors.bg, border: `1px solid ${colors.border}`, borderRadius: 8, padding: '10px 14px', fontSize: 13, color: colors.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {pageUrl}
                 </div>
@@ -1907,20 +1917,6 @@ export default function ProjectPage() {
                   {copied ? <><Check size={13} style={{ verticalAlign: 'middle' }} /> Copiado!</> : 'Copiar link'}
                 </button>
               </div>
-              <button
-                onClick={() => navigate('/novo')}
-                style={{
-                  background: 'transparent',
-                  border: `1px solid ${colors.border}`,
-                  color: colors.muted,
-                  borderRadius: 8, padding: '10px 18px',
-                  fontSize: 14, cursor: 'pointer', width: '100%',
-                  fontFamily: 'inherit',
-                  transition: 'border-color 0.2s',
-                }}
-              >
-                Criar o meu projeto →
-              </button>
             </div>
             <div className="proj-share-qr" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
               <div style={{ background: '#fff', borderRadius: 14, padding: 12, boxShadow: '0 4px 16px rgba(0,0,0,0.3)' }}>
@@ -1931,62 +1927,60 @@ export default function ProjectPage() {
           </div>
         </div>
 
-        {/* Author — bottom of page, subtle separator style */}
+        {/* Author — bottom of page */}
         {(project.creator_name || project.course || project.school_year || project.school) && (
-          <div className="proj-author-bottom" style={{
-            borderTop: `1px solid ${colors.border}`,
-            paddingTop: 20,
-            display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap',
+          <div className="proj-author-bottom proj-card" style={{
+            display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
           }}>
-            {/* Avatar — real photo if available, else gradient initial */}
+            {/* Avatar */}
             {ownerProfile?.avatar_url ? (
               <img
                 src={ownerProfile.avatar_url}
                 alt={project.creator_name}
-                style={{ width: 32, height: 32, borderRadius: '50%', flexShrink: 0, objectFit: 'cover', border: `1px solid ${colors.border}` }}
+                style={{ width: 44, height: 44, borderRadius: '50%', flexShrink: 0, objectFit: 'cover', border: `2px solid ${colors.border}` }}
               />
             ) : (
               <div style={{
-                width: 32, height: 32, flexShrink: 0,
+                width: 44, height: 44, flexShrink: 0,
                 background: `linear-gradient(135deg, ${colors.blue}, #4f46e5)`,
                 borderRadius: '50%',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 12, fontWeight: 800, color: '#fff',
+                fontSize: 16, fontWeight: 800, color: '#fff',
               }}>
                 {project.creator_name ? project.creator_name[0].toUpperCase() : '?'}
               </div>
             )}
-            <div className="proj-author-bottom-text">
-              <div style={{ fontSize: 13, color: colors.text, fontWeight: 600 }}>
+            <div className="proj-author-bottom-text" style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 15, color: colors.text, fontWeight: 700, marginBottom: 2 }}>
                 {project.creator_name || 'Autor'}
               </div>
               {[project.course, project.school_year, project.school].filter(Boolean).length > 0 && (
-                <div style={{ fontSize: 12, color: colors.subtle, fontWeight: 400, marginTop: 1 }}>
+                <div style={{ fontSize: 12, color: colors.muted, fontWeight: 400 }}>
                   {[project.course, project.school_year, project.school].filter(Boolean).join(' · ')}
                 </div>
               )}
             </div>
             {(project.linkedin_url || project.github_url || project.portfolio_url) && (
-              <div className="proj-author-links" style={{ display: 'flex', gap: 8, marginLeft: 'auto' }}>
+              <div className="proj-author-links" style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
                 {project.linkedin_url && (
                   <a href={project.linkedin_url} target="_blank" rel="noopener noreferrer"
-                    style={{ fontSize: 12, color: colors.muted, fontWeight: 600, textDecoration: 'none', opacity: 0.75 }}
-                    onMouseEnter={e => e.currentTarget.style.opacity = '1'}
-                    onMouseLeave={e => e.currentTarget.style.opacity = '0.75'}
+                    style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: colors.muted, fontWeight: 600, textDecoration: 'none', background: 'rgba(255,255,255,0.04)', border: `1px solid ${colors.border}`, borderRadius: 7, padding: '5px 10px', transition: 'all 0.15s' }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = colors.borderBright; e.currentTarget.style.color = colors.text }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.color = colors.muted }}
                   >LinkedIn</a>
                 )}
                 {project.github_url && (
                   <a href={project.github_url} target="_blank" rel="noopener noreferrer"
-                    style={{ fontSize: 12, color: colors.muted, fontWeight: 600, textDecoration: 'none', opacity: 0.75 }}
-                    onMouseEnter={e => e.currentTarget.style.opacity = '1'}
-                    onMouseLeave={e => e.currentTarget.style.opacity = '0.75'}
+                    style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: colors.muted, fontWeight: 600, textDecoration: 'none', background: 'rgba(255,255,255,0.04)', border: `1px solid ${colors.border}`, borderRadius: 7, padding: '5px 10px', transition: 'all 0.15s' }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = colors.borderBright; e.currentTarget.style.color = colors.text }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.color = colors.muted }}
                   >GitHub</a>
                 )}
                 {project.portfolio_url && (
                   <a href={project.portfolio_url} target="_blank" rel="noopener noreferrer"
-                    style={{ fontSize: 12, color: colors.muted, fontWeight: 600, textDecoration: 'none', opacity: 0.75 }}
-                    onMouseEnter={e => e.currentTarget.style.opacity = '1'}
-                    onMouseLeave={e => e.currentTarget.style.opacity = '0.75'}
+                    style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: colors.muted, fontWeight: 600, textDecoration: 'none', background: 'rgba(255,255,255,0.04)', border: `1px solid ${colors.border}`, borderRadius: 7, padding: '5px 10px', transition: 'all 0.15s' }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = colors.borderBright; e.currentTarget.style.color = colors.text }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.color = colors.muted }}
                   >Portfólio</a>
                 )}
               </div>
