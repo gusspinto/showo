@@ -535,6 +535,7 @@ export default function ProjectPage() {
   const [aiModalOpen, setAiModalOpen] = useState(false)
   const [completudeOpen, setCompletudeOpen] = useState(false)
   const [tipsOpen, setTipsOpen] = useState(false)
+  const [viewsExpanded, setViewsExpanded] = useState(false)
   const [sectionsOpen, setSectionsOpen] = useState(false)
   const [teacherFeedback, setTeacherFeedback] = useState([])
   const [showFeedbackForm, setShowFeedbackForm] = useState(false)
@@ -1024,28 +1025,24 @@ export default function ProjectPage() {
         .sidebar-section-toggle { display: flex; }
         .sidebar-section-body.collapsed { display: none; }
         .proj-sections-toggle { display: none; }
+        /* Views widget — hover to reveal count on desktop */
+        .proj-views-count { opacity: 0; max-width: 0; overflow: hidden; transition: opacity 0.18s, max-width 0.18s; }
+        .proj-views-widget:hover .proj-views-count,
+        .proj-views-widget.expanded .proj-views-count { opacity: 1; max-width: 80px; }
         @media (max-width: 860px) {
           /* Edit button proportional to mobile title */
           .proj-edit-inline { width: 26px !important; height: 26px !important; border-radius: 7px !important; margin-top: 2px !important; }
           .proj-h1-row { margin-bottom: 4px !important; gap: 8px !important; }
           .proj-tagline { margin-top: 4px !important; margin-bottom: 14px !important; font-size: 15px !important; }
-          /* Completude + tips side-by-side on mobile/tablet */
-          .proj-completude-grid {
-            display: grid !important;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            align-items: start;   /* each card only as tall as its own content */
-          }
-          /* Tighter padding inside grid cards */
-          .proj-completude-grid > div { padding: 12px 12px !important; }
-          /* Shrink long heading so it fits without wrapping */
-          .proj-completude-grid h3 {
-            font-size: 9px !important;
-            letter-spacing: 0.03em !important;
-            line-height: 1.3 !important;
-          }
-          /* Prevent toggle chevron from shrinking away */
-          .proj-completude-grid .sidebar-section-toggle { flex-shrink: 0; }
+          /* AI FAB hidden on mobile/tablet — AI card in body is sufficient */
+          .proj-ai-fab { display: none !important; }
+          .proj-ai-fab-label { display: none !important; }
+          /* QR code centered on mobile */
+          .proj-share-qr { align-self: center !important; }
+          /* Completude + tips: full-width stacked on mobile, proper spacing */
+          .proj-completude-grid { display: flex !important; flex-direction: column; gap: 10px; }
+          .proj-completude-grid > div { padding: 16px 18px !important; }
+          .proj-completude-grid h3 { font-size: 11px !important; letter-spacing: 0.06em !important; }
           .proj-sections-toggle {
             display: flex !important;
             align-items: center; gap: 14px; text-align: left;
@@ -1388,11 +1385,23 @@ export default function ProjectPage() {
             )
           })()}
 
-          {/* Title row — edit icon sits right after title text */}
+          {/* Title row — edit icon + views widget sit right after title text */}
           <div className="proj-h1-row">
-            <h1 className="proj-h1" style={{ fontSize: 'clamp(22px, 5vw, 48px)', fontWeight: 900, margin: 0, lineHeight: 1.1, letterSpacing: '-0.5px' }}>
+            <h1 className="proj-h1" style={{ fontSize: 'clamp(22px, 5vw, 48px)', fontWeight: 900, margin: 0, lineHeight: 1.1, letterSpacing: '-0.5px', flex: 1 }}>
               {project.name}
             </h1>
+            {/* Views — eye icon, hover/click to reveal count */}
+            <div
+              className={`proj-views-widget${viewsExpanded ? ' expanded' : ''}`}
+              onClick={() => setViewsExpanded(v => !v)}
+              title={`${project.views ?? 0} visualizações`}
+              style={{ display: 'flex', alignItems: 'center', gap: 5, cursor: 'pointer', color: colors.muted, flexShrink: 0, marginTop: 8, padding: '2px 4px', borderRadius: 6 }}
+            >
+              <Eye size={14} color={colors.muted} />
+              <span className="proj-views-count" style={{ fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap' }}>
+                {project.views ?? 0}
+              </span>
+            </div>
             {isOwner && (
               <button
                 className="proj-edit-inline"
@@ -1514,6 +1523,68 @@ export default function ProjectPage() {
           </div>
         )}
 
+        {/* AI Analysis — compact trigger card (opens modal) — above AI description */}
+        {isOwner ? (
+          <div
+            style={{
+              background: 'linear-gradient(135deg, rgba(109,40,217,0.07), rgba(79,70,229,0.05))',
+              border: '1px solid rgba(129,140,248,0.2)',
+              borderRadius: 16, padding: '16px 20px',
+              marginBottom: 16,
+              display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
+              cursor: 'pointer',
+            }}
+            onClick={handleAIClick}
+          >
+            <Bot size={22} color="#818cf8" style={{ flexShrink: 0 }} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: colors.text, marginBottom: 2 }}>Análise da IA</div>
+              <div style={{ fontSize: 12, color: colors.muted }}>
+                {aiFeedback ? 'Feedback guardado · clica para ver' : 'Recebe feedback personalizado para melhorar o score'}
+              </div>
+            </div>
+            <div style={{
+              background: aiFeedback ? 'rgba(34,197,94,0.1)' : 'linear-gradient(135deg,#6d28d9,#4f46e5)',
+              border: aiFeedback ? '1px solid rgba(34,197,94,0.3)' : 'none',
+              borderRadius: 10, padding: '8px 16px',
+              color: aiFeedback ? '#34d399' : '#fff',
+              fontSize: 13, fontWeight: 700,
+              flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6,
+              boxShadow: aiFeedback ? 'none' : '0 4px 14px rgba(109,40,217,0.35)',
+            }}>
+              <Sparkles size={13} />
+              {aiFeedback ? 'Ver análise' : 'Analisar'}
+            </div>
+          </div>
+        ) : (
+          /* Teaser for non-owners */
+          <div style={{
+            background: 'linear-gradient(135deg, #0e1830 0%, #0a1220 100%)',
+            border: '1px solid rgba(129,140,248,0.15)',
+            borderRadius: 16, padding: '16px 20px', marginBottom: 16,
+            display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
+          }}>
+            <Bot size={20} color="#818cf8" style={{ flexShrink: 0 }} />
+            <div style={{ flex: 1, minWidth: 200 }}>
+              <p style={{ margin: '0 0 8px', fontSize: 13, color: '#c4b5fd', lineHeight: 1.55 }}>
+                Cria o teu projeto e recebe análise por IA com feedback personalizado.
+              </p>
+              <button
+                onClick={() => window.location.href = '/novo'}
+                style={{
+                  background: 'linear-gradient(135deg, #6d28d9, #4f46e5)',
+                  border: 'none', borderRadius: 8, padding: '7px 16px',
+                  color: '#fff', fontSize: 12, fontWeight: 700,
+                  cursor: 'pointer', fontFamily: 'inherit',
+                  boxShadow: '0 4px 14px rgba(109,40,217,0.35)',
+                }}
+              >
+                Criar o meu projeto →
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* AI Description */}
         {project.ai_description && (
           <div className="proj-card-pad" style={{
@@ -1617,68 +1688,6 @@ export default function ProjectPage() {
           <Section fieldKey="learnings"       content={project.learnings}       isOwner={isOwner} onImprove={setEditModal} />
         </div>
 
-        {/* AI Analysis — compact trigger card (opens modal) */}
-        {isOwner ? (
-          <div
-            style={{
-              background: 'linear-gradient(135deg, rgba(109,40,217,0.07), rgba(79,70,229,0.05))',
-              border: '1px solid rgba(129,140,248,0.2)',
-              borderRadius: 16, padding: '16px 20px',
-              marginBottom: 16, marginTop: 8,
-              display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
-              cursor: 'pointer',
-            }}
-            onClick={handleAIClick}
-          >
-            <Bot size={22} color="#818cf8" style={{ flexShrink: 0 }} />
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: colors.text, marginBottom: 2 }}>Análise da IA</div>
-              <div style={{ fontSize: 12, color: colors.muted }}>
-                {aiFeedback ? 'Feedback guardado · clica para ver' : 'Recebe feedback personalizado para melhorar o score'}
-              </div>
-            </div>
-            <div style={{
-              background: aiFeedback ? 'rgba(34,197,94,0.1)' : 'linear-gradient(135deg,#6d28d9,#4f46e5)',
-              border: aiFeedback ? '1px solid rgba(34,197,94,0.3)' : 'none',
-              borderRadius: 10, padding: '8px 16px',
-              color: aiFeedback ? '#34d399' : '#fff',
-              fontSize: 13, fontWeight: 700,
-              flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6,
-              boxShadow: aiFeedback ? 'none' : '0 4px 14px rgba(109,40,217,0.35)',
-            }}>
-              <Sparkles size={13} />
-              {aiFeedback ? 'Ver análise' : 'Analisar'}
-            </div>
-          </div>
-        ) : (
-          /* Teaser for non-owners */
-          <div style={{
-            background: 'linear-gradient(135deg, #0e1830 0%, #0a1220 100%)',
-            border: '1px solid rgba(129,140,248,0.15)',
-            borderRadius: 16, padding: '16px 20px', marginBottom: 16, marginTop: 8,
-            display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
-          }}>
-            <Bot size={20} color="#818cf8" style={{ flexShrink: 0 }} />
-            <div style={{ flex: 1, minWidth: 200 }}>
-              <p style={{ margin: '0 0 8px', fontSize: 13, color: '#c4b5fd', lineHeight: 1.55 }}>
-                Cria o teu projeto e recebe análise por IA com feedback personalizado.
-              </p>
-              <button
-                onClick={() => window.location.href = '/novo'}
-                style={{
-                  background: 'linear-gradient(135deg, #6d28d9, #4f46e5)',
-                  border: 'none', borderRadius: 8, padding: '7px 16px',
-                  color: '#fff', fontSize: 12, fontWeight: 700,
-                  cursor: 'pointer', fontFamily: 'inherit',
-                  boxShadow: '0 4px 14px rgba(109,40,217,0.35)',
-                }}
-              >
-                Criar o meu projeto →
-              </button>
-            </div>
-          </div>
-        )}
-
         {/* Missions — owner only */}
         {isOwner && <div id="missions-section" style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 18, padding: '22px 24px', marginBottom: 16, marginTop: 8, boxShadow: '0 4px 24px rgba(0,0,0,0.2)', scrollMarginTop: 88 }}>
           {/* Header */}
@@ -1761,7 +1770,7 @@ export default function ProjectPage() {
                 Criar o meu projeto →
               </button>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+            <div className="proj-share-qr" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
               <div style={{ background: '#fff', borderRadius: 14, padding: 12, boxShadow: '0 4px 16px rgba(0,0,0,0.3)' }}>
                 <QRCodeSVG value={pageUrl} size={120} />
               </div>
@@ -1770,46 +1779,53 @@ export default function ProjectPage() {
           </div>
         </div>
 
-        {/* Author — bottom of page, all devices */}
+        {/* Author — bottom of page, subtle separator style */}
         {(project.creator_name || project.course || project.school_year || project.school) && (
-          <div className="proj-card-pad" style={{
-            background: colors.card, border: `1px solid ${colors.border}`,
-            borderRadius: 18, padding: '20px 24px', marginTop: 8,
-            display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap',
+          <div style={{
+            borderTop: `1px solid ${colors.border}`,
+            marginTop: 32, paddingTop: 20,
+            display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap',
           }}>
             <div style={{
-              width: 44, height: 44, flexShrink: 0,
-              background: `linear-gradient(135deg, ${colors.blue}, #4f46e5)`,
+              width: 28, height: 28, flexShrink: 0,
+              background: `linear-gradient(135deg, ${colors.blue}44, #4f46e544)`,
+              border: `1px solid ${colors.border}`,
               borderRadius: '50%',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 17, fontWeight: 800, color: '#fff',
+              fontSize: 11, fontWeight: 800, color: colors.muted,
             }}>
               {project.creator_name ? project.creator_name[0].toUpperCase() : '?'}
             </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 15, fontWeight: 700, color: colors.text, marginBottom: 3 }}>
-                {project.creator_name || 'Autor'}
-              </div>
-              <div style={{ fontSize: 13, color: colors.muted }}>
-                {[project.course, project.school_year, project.school].filter(Boolean).join(' · ')}
-              </div>
-            </div>
+            <span style={{ fontSize: 13, color: colors.subtle, fontWeight: 500 }}>
+              {project.creator_name || 'Autor'}
+              {[project.course, project.school_year, project.school].filter(Boolean).length > 0 && (
+                <span style={{ color: colors.subtle, fontWeight: 400 }}>
+                  {' '}· {[project.course, project.school_year, project.school].filter(Boolean).join(' · ')}
+                </span>
+              )}
+            </span>
             {(project.linkedin_url || project.github_url || project.portfolio_url) && (
-              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', flexShrink: 0 }}>
+              <div style={{ display: 'flex', gap: 8, marginLeft: 4 }}>
                 {project.linkedin_url && (
-                  <a href={project.linkedin_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(10,102,194,0.1)', border: '1px solid rgba(10,102,194,0.25)', color: '#60a5fa', borderRadius: 8, padding: '7px 14px', fontSize: 13, fontWeight: 600 }}>
-                    <span style={{ fontWeight: 900, fontStyle: 'italic' }}>in</span> LinkedIn
-                  </a>
+                  <a href={project.linkedin_url} target="_blank" rel="noopener noreferrer"
+                    style={{ fontSize: 12, color: colors.muted, fontWeight: 600, textDecoration: 'none', opacity: 0.75 }}
+                    onMouseEnter={e => e.currentTarget.style.opacity = '1'}
+                    onMouseLeave={e => e.currentTarget.style.opacity = '0.75'}
+                  >LinkedIn</a>
                 )}
                 {project.github_url && (
-                  <a href={project.github_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.04)', border: `1px solid ${colors.border}`, color: colors.text, borderRadius: 8, padding: '7px 14px', fontSize: 13, fontWeight: 600 }}>
-                    GitHub
-                  </a>
+                  <a href={project.github_url} target="_blank" rel="noopener noreferrer"
+                    style={{ fontSize: 12, color: colors.muted, fontWeight: 600, textDecoration: 'none', opacity: 0.75 }}
+                    onMouseEnter={e => e.currentTarget.style.opacity = '1'}
+                    onMouseLeave={e => e.currentTarget.style.opacity = '0.75'}
+                  >GitHub</a>
                 )}
                 {project.portfolio_url && (
-                  <a href={project.portfolio_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(168,85,247,0.08)', border: '1px solid rgba(168,85,247,0.2)', color: '#c084fc', borderRadius: 8, padding: '7px 14px', fontSize: 13, fontWeight: 600 }}>
-                    Portfólio
-                  </a>
+                  <a href={project.portfolio_url} target="_blank" rel="noopener noreferrer"
+                    style={{ fontSize: 12, color: colors.muted, fontWeight: 600, textDecoration: 'none', opacity: 0.75 }}
+                    onMouseEnter={e => e.currentTarget.style.opacity = '1'}
+                    onMouseLeave={e => e.currentTarget.style.opacity = '0.75'}
+                  >Portfólio</a>
                 )}
               </div>
             )}
@@ -1826,12 +1842,6 @@ export default function ProjectPage() {
 
         {/* Sidebar */}
         <aside className="proj-sidebar" style={{ paddingTop: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {/* View count */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: colors.muted, fontSize: 13, fontWeight: 500 }}>
-            <Eye size={15} color={colors.muted} />
-            <span><strong style={{ color: colors.text }}>{project.views ?? 0}</strong> visualizaç{project.views === 1 ? 'ão' : 'ões'}</span>
-          </div>
-
           <MembersPanel
             ownerName={ownerProfile?.full_name || ownerProfile?.username || project.creator_name}
             members={members}
@@ -1917,8 +1927,8 @@ export default function ProjectPage() {
             )
           })()}
 
-          {/* Profile completeness + tips — side-by-side grid on mobile */}
-          <div className="proj-completude-grid">
+          {/* Profile completeness + tips */}
+          <div className="proj-completude-grid" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           {isOwner && (() => {
             const fieldQuality = PROFILE_SCORE_FIELDS.map(f => {
               const val = String(project[f.key] || '').trim()
@@ -1937,7 +1947,7 @@ export default function ProjectPage() {
                     <span style={{ fontSize: 13, fontWeight: 800, color: pct === 100 ? '#10b981' : pct > 60 ? colors.blue : colors.yellow }}>{pct}%</span>
                     <button
                       className="sidebar-section-toggle"
-                      onClick={() => { const next = !completudeOpen; setCompletudeOpen(next); if (next) setTipsOpen(false) }}
+                      onClick={() => setCompletudeOpen(o => !o)}
                       style={{ background: 'none', border: 'none', color: colors.muted, cursor: 'pointer', padding: '2px 4px', alignItems: 'center' }}
                     >
                       <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: completudeOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
@@ -1991,7 +2001,7 @@ export default function ProjectPage() {
                   </h3>
                   <button
                     className="sidebar-section-toggle"
-                    onClick={() => { const next = !tipsOpen; setTipsOpen(next); if (next) setCompletudeOpen(false) }}
+                    onClick={() => setTipsOpen(o => !o)}
                     style={{ background: 'none', border: 'none', color: '#5a9ff5', cursor: 'pointer', padding: '2px 4px', alignItems: 'center' }}
                   >
                     <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: tipsOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
