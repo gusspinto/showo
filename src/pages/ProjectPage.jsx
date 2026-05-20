@@ -10,7 +10,7 @@ import { generateProject } from '../lib/generateProject'
 import { useAuth } from '../context/AuthContext'
 import DefenseMode from '../components/DefenseMode'
 import { analyzeProject } from '../lib/analyzeProject'
-import { Check, X, Loader, GraduationCap, Save, Sparkles, Bot, Lightbulb, Pencil, Search, Target, Wrench, Zap, TrendingUp, Briefcase, Users, Rocket, Trophy, BarChart2, CheckCircle, BookOpen, ChevronDown, Eye } from 'lucide-react'
+import { Check, X, Loader, GraduationCap, Save, Sparkles, Bot, Lightbulb, Pencil, Search, Target, Wrench, Zap, TrendingUp, Briefcase, Users, Rocket, Trophy, BarChart2, CheckCircle, BookOpen, ChevronDown, Eye, UserPlus } from 'lucide-react'
 
 const colors = {
   bg: '#0d1424',
@@ -149,7 +149,7 @@ function Section({ fieldKey, content, isOwner, onImprove }) {
     <div className="proj-card-pad" style={{
       background: colors.card,
       border: `1px solid ${isShort ? 'rgba(234,179,8,0.22)' : isEmpty ? colors.subtle + '55' : colors.border}`,
-      borderRadius: 16, padding: '20px 24px', marginBottom: 12,
+      borderRadius: 16, padding: '20px 24px', marginBottom: 16,
       boxShadow: '0 2px 16px rgba(0,0,0,0.2)',
     }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: isEmpty ? 0 : 12 }}>
@@ -537,6 +537,10 @@ export default function ProjectPage() {
   const [tipsOpen, setTipsOpen] = useState(false)
   const [viewsExpanded, setViewsExpanded] = useState(false)
   const [sectionsOpen, setSectionsOpen] = useState(false)
+  const [showInvite, setShowInvite] = useState(false)
+  const [inviteInput, setInviteInput] = useState('')
+  const [inviting, setInviting] = useState(false)
+  const [inviteMsg, setInviteMsg] = useState(null) // { type: 'success'|'error', text }
   const [teacherFeedback, setTeacherFeedback] = useState([])
   const [showFeedbackForm, setShowFeedbackForm] = useState(false)
   const [fbComment, setFbComment] = useState('')
@@ -833,6 +837,51 @@ export default function ProjectPage() {
     }
   }
 
+  async function handleInvite(e) {
+    e.preventDefault()
+    const val = inviteInput.trim()
+    if (!val || !project?.id) return
+    setInviting(true)
+    setInviteMsg(null)
+    try {
+      // Look up by username first, then email
+      let { data: found } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('username', val)
+        .maybeSingle()
+      if (!found) {
+        // Try auth users via profiles email col if it exists
+        const { data: byEmail } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('email', val)
+          .maybeSingle()
+        found = byEmail
+      }
+      if (!found) {
+        setInviteMsg({ type: 'error', text: 'Utilizador não encontrado. Verifica o username.' })
+        setInviting(false)
+        return
+      }
+      if (found.id === user?.id) {
+        setInviteMsg({ type: 'error', text: 'Não podes convidar-te a ti próprio.' })
+        setInviting(false)
+        return
+      }
+      const { error } = await supabase
+        .from('project_collaborators')
+        .upsert({ project_id: project.id, user_id: found.id, status: 'pending', sections: [] }, { onConflict: 'project_id,user_id' })
+      if (error) throw error
+      setInviteMsg({ type: 'success', text: 'Convite enviado!' })
+      setInviteInput('')
+      setTimeout(() => { setShowInvite(false); setInviteMsg(null) }, 2000)
+    } catch {
+      setInviteMsg({ type: 'error', text: 'Erro ao enviar convite. Tenta novamente.' })
+    }
+    setInviting(false)
+  }
+
   async function handleRegenerate() {
     if (regenCooldown > 0 || regenerating) return
     setRegenerating(true)
@@ -1015,12 +1064,13 @@ export default function ProjectPage() {
         }
         /* Edit button always visible next to title */
         .proj-edit-inline    { display: flex; }
-        .proj-h1-row         { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+        .proj-h1-row         { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; flex-wrap: nowrap; }
         .proj-dashboard      { display: none; }
         .proj-ai-fab         { display: none; }
         .proj-ai-fab-label   { display: none; }
         .proj-fab-area       { display: none; }
         .proj-fab-defense-label { display: none; }
+        .proj-invite-label   { display: inline; }
         /* Sidebar section toggles — visible on all breakpoints (desktop + mobile) */
         .sidebar-section-toggle { display: flex; }
         .sidebar-section-body.collapsed { display: none; }
@@ -1031,8 +1081,8 @@ export default function ProjectPage() {
         .proj-views-widget.expanded .proj-views-count { opacity: 1; max-width: 80px; }
         @media (max-width: 860px) {
           /* Edit button proportional to mobile title */
-          .proj-edit-inline { width: 26px !important; height: 26px !important; border-radius: 7px !important; margin-top: 2px !important; }
-          .proj-h1-row { margin-bottom: 4px !important; gap: 8px !important; }
+          .proj-edit-inline { width: 26px !important; height: 26px !important; border-radius: 7px !important; }
+          .proj-h1-row { margin-bottom: 6px !important; gap: 8px !important; align-items: center !important; }
           .proj-tagline { margin-top: 4px !important; margin-bottom: 14px !important; font-size: 15px !important; }
           /* AI FAB hidden on mobile/tablet — AI card in body is sufficient */
           .proj-ai-fab { display: none !important; }
@@ -1057,11 +1107,13 @@ export default function ProjectPage() {
           .proj-sections-body.collapsed { display: none !important; }
           .proj-nav-btns     { display: none !important; }
           .proj-fab-area     { display: flex !important; }
-          /* AI FAB — pill com label no tablet */
-          .proj-ai-fab       { display: flex !important; border-radius: 999px !important; width: auto !important; padding: 0 18px !important; gap: 8px !important; font-family: var(--font-body); font-size: 14px; font-weight: 700; }
-          .proj-ai-fab-label { display: inline !important; }
+          /* AI FAB — hidden on tablet too; AI card in body is sufficient */
+          .proj-ai-fab       { display: none !important; }
+          .proj-ai-fab-label { display: none !important; }
           /* Defense FAB — pill com label no tablet */
           .proj-fab-defense-label { display: inline !important; }
+          /* Invite button: icon only on tablet */
+          .proj-invite-label { display: none !important; }
         }
         @media (max-width: 600px) {
           .proj-wrap         { padding: 0 16px 80px !important; overflow-x: hidden !important; }
@@ -1072,12 +1124,14 @@ export default function ProjectPage() {
           .proj-dashboard    { display: flex !important; }
           .proj-tagline      { font-size: 15px !important; }
           .proj-card-pad     { padding: 18px 16px !important; border-radius: 14px !important; }
-          .proj-badges       { margin-bottom: 10px !important; }
-          /* Mobile: ambos os FABs circulares, sem label */
-          .proj-ai-fab       { border-radius: 50% !important; width: 52px !important; padding: 0 !important; gap: 0 !important; }
+          .proj-badges       { margin-bottom: 14px !important; }
+          /* Mobile: AI FAB hidden, Defense FAB circular */
+          .proj-ai-fab       { display: none !important; }
           .proj-ai-fab-label { display: none !important; }
           .proj-fab-defense-label { display: none !important; }
           .proj-fab-defense { padding: 0 !important; width: 52px !important; min-width: 52px !important; }
+          /* Invite: icon only on mobile */
+          .proj-invite-label { display: none !important; }
         }
       `}</style>
 
@@ -1137,40 +1191,40 @@ export default function ProjectPage() {
             ><X size={16} /></button>
 
             {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-              <Bot size={22} color="#818cf8" />
-              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, letterSpacing: '-0.3px' }}>Análise da IA</h3>
-            </div>
-            <p style={{ margin: '0 0 20px', fontSize: 13, color: colors.muted, paddingLeft: 32 }}>
-              Feedback personalizado para melhorar o teu projeto
-            </p>
-
-            {/* Analyze button */}
-            {isOwner && (
-              <div style={{ display: 'flex', justifyContent: aiFeedback ? 'flex-end' : 'flex-start', marginBottom: 20 }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 20, paddingRight: 44 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ width: 38, height: 38, borderRadius: 10, flexShrink: 0, background: 'rgba(129,140,248,0.12)', border: '1px solid rgba(129,140,248,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Bot size={20} color="#818cf8" />
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800, letterSpacing: '-0.3px' }}>Análise da IA</h3>
+                  <p style={{ margin: 0, fontSize: 12, color: colors.muted, marginTop: 2 }}>Feedback personalizado para melhorar o teu projeto</p>
+                </div>
+              </div>
+              {/* Analyze / Reanalisar button — always in header */}
+              {isOwner && (
                 <button
                   onClick={handleAnalyzeAI}
                   disabled={analyzingAI}
                   style={{
-                    background: analyzingAI ? 'rgba(27,120,247,0.1)' : 'linear-gradient(135deg,#3b82f6,#4f46e5)',
-                    border: analyzingAI ? '1px solid rgba(27,120,247,0.3)' : 'none',
-                    borderRadius: 10, padding: '9px 18px',
-                    color: analyzingAI ? '#60a5fa' : '#fff',
-                    fontSize: 13, fontWeight: 700,
+                    flexShrink: 0,
+                    background: analyzingAI ? 'rgba(27,120,247,0.08)' : aiFeedback ? 'rgba(27,120,247,0.1)' : 'linear-gradient(135deg,#3b82f6,#4f46e5)',
+                    border: analyzingAI || aiFeedback ? `1px solid ${colors.blue}30` : 'none',
+                    borderRadius: 9, padding: '8px 16px',
+                    color: analyzingAI || aiFeedback ? '#60a5fa' : '#fff',
+                    fontSize: 12, fontWeight: 700,
                     cursor: analyzingAI ? 'default' : 'pointer',
                     fontFamily: 'inherit',
-                    boxShadow: analyzingAI ? 'none' : '0 4px 16px rgba(27,120,247,0.35)',
-                    display: 'flex', alignItems: 'center', gap: 8,
+                    boxShadow: analyzingAI || aiFeedback ? 'none' : '0 4px 14px rgba(27,120,247,0.3)',
+                    display: 'flex', alignItems: 'center', gap: 7,
+                    transition: 'all 0.15s',
                   }}
                 >
-                  {analyzingAI
-                    ? <><Sparkles size={14} style={{ verticalAlign: 'middle' }} /> A analisar…</>
-                    : aiFeedback
-                      ? <><Sparkles size={14} style={{ verticalAlign: 'middle' }} /> Reanalisar</>
-                      : <><Sparkles size={14} style={{ verticalAlign: 'middle' }} /> Analisar com IA</>}
+                  <Sparkles size={13} />
+                  {analyzingAI ? 'A analisar…' : aiFeedback ? 'Reanalisar' : 'Analisar'}
                 </button>
-              </div>
-            )}
+              )}
+            </div>
 
             {analyzeError && (
               <div style={{ background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.25)', borderRadius: 10, padding: '12px 16px', color: '#f87171', fontSize: 13, marginBottom: 16 }}>
@@ -1356,11 +1410,11 @@ export default function ProjectPage() {
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 24 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
 
-          {/* Badges */}
+          {/* Badges + invite */}
           {(() => {
             const hero = TYPE_HERO[project.project_type] ?? TYPE_HERO.personal
             return (
-              <div className="proj-badges" style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 15 }}>
+              <div className="proj-badges" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, marginBottom: 20 }}>
                 {project.project_type && PROJECT_TYPE_LABELS[project.project_type] && (
                   <div style={{
                     background: `linear-gradient(135deg, ${hero.c1}, ${hero.c2})`,
@@ -1381,12 +1435,76 @@ export default function ProjectPage() {
                     {project.area}
                   </div>
                 )}
+
+                {/* Invite collaborator — owner only */}
+                {isOwner && !showInvite && (
+                  <button
+                    onClick={() => setShowInvite(true)}
+                    title="Convida o teu colega"
+                    className="proj-invite-btn"
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 6,
+                      background: 'transparent',
+                      border: `1px solid ${colors.border}`,
+                      borderRadius: 8, padding: '5px 12px',
+                      color: colors.subtle, cursor: 'pointer',
+                      fontSize: 12, fontWeight: 600, fontFamily: 'inherit',
+                      transition: 'all 0.15s',
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = colors.borderBright; e.currentTarget.style.color = colors.muted }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.color = colors.subtle }}
+                  >
+                    <UserPlus size={13} />
+                    <span className="proj-invite-label">Convida o teu colega</span>
+                  </button>
+                )}
+
+                {/* Invite inline form */}
+                {isOwner && showInvite && (
+                  <form
+                    onSubmit={handleInvite}
+                    style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}
+                  >
+                    <input
+                      autoFocus
+                      value={inviteInput}
+                      onChange={e => { setInviteInput(e.target.value); setInviteMsg(null) }}
+                      placeholder="username do colega"
+                      style={{
+                        background: colors.bg, border: `1px solid ${inviteMsg?.type === 'error' ? '#f87171' : inviteMsg?.type === 'success' ? '#22c55e' : colors.borderBright}`,
+                        borderRadius: 8, padding: '5px 12px', color: colors.text,
+                        fontSize: 12, fontFamily: 'inherit', outline: 'none',
+                        width: 150, transition: 'border-color 0.15s',
+                      }}
+                    />
+                    <button
+                      type="submit"
+                      disabled={inviting || !inviteInput.trim()}
+                      style={{
+                        background: `${colors.blue}18`, border: `1px solid ${colors.blue}30`,
+                        borderRadius: 8, padding: '5px 12px', color: '#60a5fa',
+                        fontSize: 12, fontWeight: 700, cursor: inviting ? 'default' : 'pointer',
+                        fontFamily: 'inherit', opacity: inviting ? 0.6 : 1,
+                      }}
+                    >{inviting ? '…' : 'Convidar'}</button>
+                    <button
+                      type="button"
+                      onClick={() => { setShowInvite(false); setInviteInput(''); setInviteMsg(null) }}
+                      style={{ background: 'transparent', border: 'none', color: colors.subtle, cursor: 'pointer', padding: '4px 6px', borderRadius: 6, fontSize: 13 }}
+                    >✕</button>
+                    {inviteMsg && (
+                      <span style={{ fontSize: 11, fontWeight: 600, color: inviteMsg.type === 'success' ? '#22c55e' : '#f87171', width: '100%' }}>
+                        {inviteMsg.text}
+                      </span>
+                    )}
+                  </form>
+                )}
               </div>
             )
           })()}
 
           {/* Title row — edit icon + views widget sit right after title text */}
-          <div className="proj-h1-row">
+          <div className="proj-h1-row" style={{ alignItems: 'center' }}>
             <h1 className="proj-h1" style={{ fontSize: 'clamp(22px, 5vw, 48px)', fontWeight: 900, margin: 0, lineHeight: 1.1, letterSpacing: '-0.5px', flex: 1 }}>
               {project.name}
             </h1>
@@ -1395,7 +1513,7 @@ export default function ProjectPage() {
               className={`proj-views-widget${viewsExpanded ? ' expanded' : ''}`}
               onClick={() => setViewsExpanded(v => !v)}
               title={`${project.views ?? 0} visualizações`}
-              style={{ display: 'flex', alignItems: 'center', gap: 5, cursor: 'pointer', color: colors.muted, flexShrink: 0, marginTop: 8, padding: '2px 4px', borderRadius: 6 }}
+              style={{ display: 'flex', alignItems: 'center', gap: 5, cursor: 'pointer', color: colors.muted, flexShrink: 0, padding: '4px 6px', borderRadius: 6 }}
             >
               <Eye size={14} color={colors.muted} />
               <span className="proj-views-count" style={{ fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap' }}>
@@ -1411,12 +1529,12 @@ export default function ProjectPage() {
                 }}
                 title="Editar projeto"
                 style={{
-                  alignItems: 'center', justifyContent: 'center',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
                   width: 34, height: 34, borderRadius: 9, flexShrink: 0,
                   background: 'rgba(255,255,255,0.05)',
                   border: `1px solid ${colors.border}`,
                   color: colors.muted, cursor: 'pointer',
-                  transition: 'all 0.15s', marginTop: 6,
+                  transition: 'all 0.15s',
                 }}
               >
                 <Pencil size={15} />
@@ -1425,7 +1543,7 @@ export default function ProjectPage() {
           </div>
 
           {project.ai_tagline && (
-            <p className="proj-tagline" style={{ fontSize: 18, color: colors.muted, lineHeight: 1.6, margin: '10px 0 16px', maxWidth: 580, fontWeight: 400 }}>
+            <p className="proj-tagline" style={{ fontSize: 18, color: colors.muted, lineHeight: 1.6, margin: '12px 0 24px', maxWidth: 580, fontWeight: 400 }}>
               {project.ai_tagline}
             </p>
           )}
