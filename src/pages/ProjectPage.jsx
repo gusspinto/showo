@@ -95,6 +95,23 @@ function progTrack(pct) {
   return 'rgba(249,115,22,0.12)'
 }
 
+// Area-based gradient for the hero background (when no cover image)
+function getAreaGradient(area) {
+  const a = (area || '').toLowerCase()
+  if (a.includes('tecnolog') || a.includes('informátic') || a.includes('programaç') || a.includes('software') || a.includes('digital') || a.includes('eletrónic'))
+    return { g1: '#0a1e3d', g2: '#0d2137', accent1: '#1b78f7', accent2: '#0ea5e9' }
+  if (a.includes('comercial') || a.includes('marketing') || a.includes('vendas') || a.includes('gestão') || a.includes('negócio'))
+    return { g1: '#1a0a3d', g2: '#200a4a', accent1: '#8b5cf6', accent2: '#6366f1' }
+  if (a.includes('design') || a.includes('arte') || a.includes('visual') || a.includes('multimédia') || a.includes('gráfico'))
+    return { g1: '#051a1f', g2: '#082030', accent1: '#0d9488', accent2: '#06b6d4' }
+  if (a.includes('saúde') || a.includes('saude') || a.includes('farmác') || a.includes('medicina') || a.includes('bio'))
+    return { g1: '#051a12', g2: '#062818', accent1: '#10b981', accent2: '#22c55e' }
+  if (a.includes('construção') || a.includes('civil') || a.includes('arquitet'))
+    return { g1: '#1a1005', g2: '#231500', accent1: '#f59e0b', accent2: '#f97316' }
+  // default: deep slate to dark blue
+  return { g1: '#0c1528', g2: '#0d1e38', accent1: '#1b78f7', accent2: '#4f46e5' }
+}
+
 function getLevelInfo(score) {
   if (score >= 86) return { label: 'Nível profissional', color: '#22c55e' }
   if (score >= 71) return { label: 'Quase profissional', color: '#8b5cf6' }
@@ -1548,25 +1565,29 @@ export default function ProjectPage() {
         </div>
       </Navbar>
 
-      {/* Full-width gradient hero — always shown, adapts to project type */}
+      {/* Full-width hero — cover image or rich area gradient */}
       {(() => {
-        const hero = TYPE_HERO[project.project_type] ?? TYPE_HERO.personal
+        const ag = getAreaGradient(project.area)
         return (
           <div style={{ position: 'relative', width: '100%', overflow: 'hidden' }}>
             {project.cover_url ? (
-              <div className="proj-cover" style={{ width: '100%', height: 300, position: 'relative' }}>
+              <div className="proj-cover" style={{ width: '100%', height: 320, position: 'relative' }}>
                 <img src={project.cover_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 20%, #0d1424 100%)' }} />
+                {/* Strong dark gradient overlay for text legibility */}
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(13,20,36,0.35) 0%, rgba(13,20,36,0.6) 50%, #0d1424 100%)' }} />
               </div>
             ) : (
               <div style={{
-                width: '100%', height: 220,
-                background: `linear-gradient(135deg, ${hero.c1}22 0%, ${hero.c2}55 50%, #0d1424 100%)`,
+                width: '100%', height: 260,
+                background: `linear-gradient(160deg, ${ag.g1} 0%, ${ag.g2} 100%)`,
                 position: 'relative', overflow: 'hidden',
               }}>
-                <div style={{ position: 'absolute', top: -60, left: '10%', width: 400, height: 400, borderRadius: '50%', background: `radial-gradient(ellipse, ${hero.c1}28 0%, transparent 65%)`, pointerEvents: 'none' }} />
-                <div style={{ position: 'absolute', top: -20, right: '5%', width: 250, height: 250, borderRadius: '50%', background: `radial-gradient(ellipse, ${hero.c2}22 0%, transparent 65%)`, pointerEvents: 'none' }} />
-                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 40%, #0d1424 100%)' }} />
+                {/* Large ambient glow blobs */}
+                <div style={{ position: 'absolute', top: -80, left: '-5%', width: 500, height: 500, borderRadius: '50%', background: `radial-gradient(ellipse, ${ag.accent1}22 0%, transparent 60%)`, pointerEvents: 'none' }} />
+                <div style={{ position: 'absolute', top: -40, right: '-5%', width: 380, height: 380, borderRadius: '50%', background: `radial-gradient(ellipse, ${ag.accent2}18 0%, transparent 60%)`, pointerEvents: 'none' }} />
+                <div style={{ position: 'absolute', bottom: -60, left: '30%', width: 300, height: 300, borderRadius: '50%', background: `radial-gradient(ellipse, ${ag.accent1}14 0%, transparent 70%)`, pointerEvents: 'none' }} />
+                {/* Fade to page background at bottom */}
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 35%, #0d1424 100%)' }} />
               </div>
             )}
           </div>
@@ -1677,9 +1698,18 @@ export default function ProjectPage() {
             )
           })()}
 
-          {/* Title row — edit icon + views widget sit right after title text */}
-          <div className="proj-h1-row" style={{ alignItems: 'center' }}>
-            <h1 className="proj-h1" style={{ fontSize: 'clamp(22px, 5vw, 48px)', fontWeight: 900, margin: 0, lineHeight: 1.1, letterSpacing: '-0.5px', flex: 1 }}>
+          {/* Title row — Syne font, large */}
+          <div className="proj-h1-row" style={{ alignItems: 'flex-start' }}>
+            <h1 className="proj-h1" style={{
+              fontSize: 'clamp(30px, 5vw, 42px)',
+              fontWeight: 900,
+              margin: 0,
+              lineHeight: 1.08,
+              letterSpacing: '-1px',
+              flex: 1,
+              fontFamily: "'Syne', 'Inter', sans-serif",
+              color: colors.text,
+            }}>
               {project.name}
             </h1>
             {/* Views — eye icon, hover/click to reveal count */}
@@ -1687,7 +1717,7 @@ export default function ProjectPage() {
               className={`proj-views-widget${viewsExpanded ? ' expanded' : ''}`}
               onClick={() => setViewsExpanded(v => !v)}
               title={`${project.views ?? 0} visualizações`}
-              style={{ display: 'flex', alignItems: 'center', gap: 5, cursor: 'pointer', color: colors.muted, flexShrink: 0, padding: '4px 6px', borderRadius: 6 }}
+              style={{ display: 'flex', alignItems: 'center', gap: 5, cursor: 'pointer', color: colors.muted, flexShrink: 0, padding: '4px 6px', borderRadius: 6, marginTop: 8 }}
             >
               <Eye size={14} color={colors.muted} />
               <span className="proj-views-count" style={{ fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap' }}>
@@ -1708,7 +1738,7 @@ export default function ProjectPage() {
                   background: 'rgba(255,255,255,0.05)',
                   border: `1px solid ${colors.border}`,
                   color: colors.muted, cursor: 'pointer',
-                  transition: 'all 0.15s',
+                  transition: 'all 0.15s', marginTop: 4,
                 }}
               >
                 <Pencil size={15} />
@@ -1717,9 +1747,28 @@ export default function ProjectPage() {
           </div>
 
           {project.ai_tagline && (
-            <p className="proj-tagline" style={{ fontSize: 18, color: colors.muted, lineHeight: 1.6, margin: '12px 0 24px', maxWidth: 580, fontWeight: 400 }}>
+            <p className="proj-tagline" style={{ fontSize: 20, color: 'rgba(232,242,255,0.75)', lineHeight: 1.55, margin: '16px 0 18px', maxWidth: 600, fontWeight: 400, letterSpacing: '-0.1px' }}>
               {project.ai_tagline}
             </p>
+          )}
+
+          {/* Student identity line — name · area · course */}
+          {(project.creator_name || project.area || project.course) && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
+              {ownerProfile?.available_for_work && (
+                <span style={{ fontSize: 11, fontWeight: 700, color: '#10b981', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.25)', borderRadius: 999, padding: '3px 10px' }}>
+                  💼 Disponível
+                </span>
+              )}
+              {[project.creator_name, project.area, project.course, project.school_year]
+                .filter(Boolean)
+                .map((item, i) => (
+                  <span key={i} style={{ fontSize: 13, color: colors.muted, display: 'flex', alignItems: 'center', gap: 8 }}>
+                    {i > 0 && <span style={{ color: colors.subtle, fontSize: 11 }}>·</span>}
+                    {item}
+                  </span>
+                ))}
+            </div>
           )}
 
           {/* Mobile dashboard — score + level (hidden on desktop, shown on mobile) */}
@@ -1753,16 +1802,17 @@ export default function ProjectPage() {
 
           </div>{/* end left flex column */}
 
-          {/* Score ring — right flex column */}
+          {/* Score ring — right flex column — secondary, smaller */}
           <div className="proj-score-abs" style={{
-            flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, alignSelf: 'center',
+            flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, alignSelf: 'flex-start', paddingTop: 4,
           }}>
-            <ScoreRing score={displayScore} />
+            <ScoreRing score={displayScore} size={84} />
             <div style={{
-              background: level.color + '15', color: level.color,
-              borderRadius: 999, padding: '4px 12px',
-              fontSize: 10, fontWeight: 700, border: `1px solid ${level.color}35`,
-              textAlign: 'center', maxWidth: 120, lineHeight: 1.5, letterSpacing: 0.2,
+              background: level.color + '12', color: level.color,
+              borderRadius: 999, padding: '3px 10px',
+              fontSize: 9, fontWeight: 700, border: `1px solid ${level.color}30`,
+              textAlign: 'center', maxWidth: 120, lineHeight: 1.5, letterSpacing: 0.4,
+              textTransform: 'uppercase',
             }}>
               {level.label}
             </div>
@@ -1770,21 +1820,10 @@ export default function ProjectPage() {
               <div style={{
                 background: colors.greenGlow, color: colors.green,
                 border: '1px solid rgba(34,197,94,0.25)',
-                borderRadius: 999, padding: '4px 12px',
-                fontSize: 10, fontWeight: 700, textAlign: 'center', maxWidth: 120, lineHeight: 1.5,
+                borderRadius: 999, padding: '3px 10px',
+                fontSize: 9, fontWeight: 700, textAlign: 'center', maxWidth: 120, lineHeight: 1.5,
               }}>
                 Pronto para estágio
-              </div>
-            )}
-            {ownerProfile?.available_for_work && (
-              <div style={{
-                background: 'rgba(16,185,129,0.1)', color: '#10b981',
-                border: '1px solid rgba(16,185,129,0.3)',
-                borderRadius: 999, padding: '4px 12px',
-                fontSize: 10, fontWeight: 700, textAlign: 'center', maxWidth: 140, lineHeight: 1.5,
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
-              }}>
-                💼 Disponível
               </div>
             )}
           </div>
