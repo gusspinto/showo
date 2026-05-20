@@ -843,34 +843,21 @@ export default function Dashboard() {
 
         {/* ── Header ── */}
         <div style={{ marginBottom: 40, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-            {/* Avatar initial */}
-            <div style={{
-              width: 46, height: 46, borderRadius: 13, flexShrink: 0,
-              background: 'linear-gradient(135deg, #1b78f7, #4f46e5)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 18, fontWeight: 800, color: '#fff',
-              boxShadow: '0 4px 20px rgba(27,120,247,0.3)',
-              fontFamily: 'var(--font-heading)',
-            }}>
-              {firstName[0]?.toUpperCase() ?? '?'}
-            </div>
-            <div>
-              <h1 style={{ color: C.text, fontSize: 22, fontWeight: 800, margin: '0 0 3px', letterSpacing: '-0.4px' }}>
-                {greeting}
-              </h1>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                {profile?.role && (
-                  <span style={{
-                    fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em',
-                    color: C.blue, background: `${C.blue}18`, border: `1px solid ${C.blue}30`,
-                    borderRadius: 5, padding: '2px 7px',
-                  }}>
-                    {{ aluno: 'Aluno', professor: 'Professor', recrutador: 'Recrutador', empresa: 'Empresa' }[profile.role] ?? 'Membro'}
-                  </span>
-                )}
-                <p style={{ color: C.subtle, fontSize: 12, margin: 0 }}>{user.email}</p>
-              </div>
+          <div>
+            <h1 style={{ color: C.text, fontSize: 22, fontWeight: 800, margin: '0 0 4px', letterSpacing: '-0.4px' }}>
+              {greeting}
+            </h1>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              {profile?.role && (
+                <span style={{
+                  fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em',
+                  color: C.blue, background: `${C.blue}18`, border: `1px solid ${C.blue}30`,
+                  borderRadius: 5, padding: '2px 7px',
+                }}>
+                  {{ aluno: 'Aluno', professor: 'Professor', recrutador: 'Recrutador', empresa: 'Empresa' }[profile.role] ?? 'Membro'}
+                </span>
+              )}
+              <p style={{ color: C.subtle, fontSize: 12, margin: 0 }}>{user.email}</p>
             </div>
           </div>
           <div className="dash-header-btns" style={{ display: 'flex', gap: 8 }}>

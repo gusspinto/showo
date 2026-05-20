@@ -470,37 +470,41 @@ function MembersPanel({ ownerName, members, colors, isOwner }) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {/* Owner */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg, #3b82f6, #4f46e5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
+          <div style={{ width: 32, height: 32, borderRadius: '50%', flexShrink: 0, background: 'linear-gradient(135deg, #3b82f6, #4f46e5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#fff' }}>
             {displayOwner[0]?.toUpperCase()}
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ fontSize: 14, fontWeight: 600, color: colors.text }}>{displayOwner}</span>
-            <span style={{ fontSize: 11, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.25)', borderRadius: 5, padding: '1px 7px', color: '#60a5fa', fontWeight: 700 }}>Dono</span>
-          </div>
+          <span style={{ fontSize: 14, fontWeight: 600, color: colors.text, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{displayOwner}</span>
+          <span style={{ fontSize: 11, flexShrink: 0, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.25)', borderRadius: 5, padding: '2px 8px', color: '#60a5fa', fontWeight: 700 }}>Dono</span>
         </div>
         {/* Collaborators */}
         {visibleMembers.map(m => {
           const name = m.profiles?.full_name || m.profiles?.username || 'Colaborador'
           const sections = (m.sections ?? []).map(s => SECTION_LABELS[s]).filter(Boolean)
           const cfg = statusCfg[m.status] || statusCfg.accepted
+          const hasSubRow = m.status === 'accepted' && sections.length > 0
           return (
-            <div key={m.user_id} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, opacity: cfg.dim ? 0.65 : 1 }}>
-              <div style={{ width: 32, height: 32, borderRadius: '50%', background: cfg.avatar, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
+            <div key={m.user_id} style={{ display: 'flex', alignItems: hasSubRow ? 'flex-start' : 'center', gap: 10, opacity: cfg.dim ? 0.65 : 1 }}>
+              <div style={{ width: 32, height: 32, borderRadius: '50%', flexShrink: 0, background: cfg.avatar, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#fff' }}>
                 {name[0]?.toUpperCase()}
               </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                  <span style={{ fontSize: 14, fontWeight: 600, color: colors.text }}>{name}</span>
-                  <span style={{ fontSize: 11, background: cfg.bg, border: `1px solid ${cfg.border}`, borderRadius: 5, padding: '1px 7px', color: cfg.color, fontWeight: 700 }}>{cfg.label}</span>
-                </div>
-                {m.status === 'accepted' && sections.length > 0 && (
+              {hasSubRow ? (
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: 14, fontWeight: 600, color: colors.text }}>{name}</span>
+                    <span style={{ fontSize: 11, background: cfg.bg, border: `1px solid ${cfg.border}`, borderRadius: 5, padding: '2px 8px', color: cfg.color, fontWeight: 700 }}>{cfg.label}</span>
+                  </div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 5 }}>
                     {sections.map(s => (
                       <span key={s} style={{ fontSize: 11, color: colors.muted, background: 'rgba(255,255,255,0.04)', border: `1px solid ${colors.border}`, borderRadius: 4, padding: '1px 6px' }}>{s}</span>
                     ))}
                   </div>
-                )}
-              </div>
+                </div>
+              ) : (
+                <>
+                  <span style={{ fontSize: 14, fontWeight: 600, color: colors.text, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</span>
+                  <span style={{ fontSize: 11, flexShrink: 0, background: cfg.bg, border: `1px solid ${cfg.border}`, borderRadius: 5, padding: '2px 8px', color: cfg.color, fontWeight: 700 }}>{cfg.label}</span>
+                </>
+              )}
             </div>
           )
         })}
@@ -629,7 +633,7 @@ export default function ProjectPage() {
       if (data.user_id) {
         supabase
           .from('profiles')
-          .select('id, username, full_name')
+          .select('id, username, full_name, avatar_url')
           .eq('id', data.user_id)
           .single()
           .then(({ data: prof }) => {
@@ -1114,6 +1118,15 @@ export default function ProjectPage() {
           .proj-fab-defense-label { display: inline !important; }
           /* Invite button: icon only on tablet */
           .proj-invite-label { display: none !important; }
+          /* Author: centered on tablet too */
+          .proj-author-bottom {
+            flex-direction: column !important;
+            align-items: center !important;
+            text-align: center !important;
+          }
+          .proj-author-links { margin-left: 0 !important; justify-content: center; }
+          /* Consistent card gap on tablet */
+          .proj-body > div { margin-bottom: 14px; }
         }
         @media (max-width: 600px) {
           .proj-wrap         { padding: 0 16px 80px !important; overflow-x: hidden !important; }
@@ -1132,6 +1145,17 @@ export default function ProjectPage() {
           .proj-fab-defense { padding: 0 !important; width: 52px !important; min-width: 52px !important; }
           /* Invite: icon only on mobile */
           .proj-invite-label { display: none !important; }
+          /* Author: centered on mobile */
+          .proj-author-bottom {
+            flex-direction: column !important;
+            align-items: center !important;
+            text-align: center !important;
+            padding-top: 24px !important;
+          }
+          .proj-author-bottom-text { text-align: center; }
+          .proj-author-links { margin-left: 0 !important; justify-content: center; }
+          /* Consistent card gap on mobile — override proj-body direct children */
+          .proj-body > div { margin-bottom: 14px; }
         }
       `}</style>
 
@@ -1899,31 +1923,41 @@ export default function ProjectPage() {
 
         {/* Author — bottom of page, subtle separator style */}
         {(project.creator_name || project.course || project.school_year || project.school) && (
-          <div style={{
+          <div className="proj-author-bottom" style={{
             borderTop: `1px solid ${colors.border}`,
             marginTop: 32, paddingTop: 20,
             display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap',
           }}>
-            <div style={{
-              width: 28, height: 28, flexShrink: 0,
-              background: `linear-gradient(135deg, ${colors.blue}44, #4f46e544)`,
-              border: `1px solid ${colors.border}`,
-              borderRadius: '50%',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 11, fontWeight: 800, color: colors.muted,
-            }}>
-              {project.creator_name ? project.creator_name[0].toUpperCase() : '?'}
-            </div>
-            <span style={{ fontSize: 13, color: colors.subtle, fontWeight: 500 }}>
-              {project.creator_name || 'Autor'}
+            {/* Avatar — real photo if available, else gradient initial */}
+            {ownerProfile?.avatar_url ? (
+              <img
+                src={ownerProfile.avatar_url}
+                alt={project.creator_name}
+                style={{ width: 32, height: 32, borderRadius: '50%', flexShrink: 0, objectFit: 'cover', border: `1px solid ${colors.border}` }}
+              />
+            ) : (
+              <div style={{
+                width: 32, height: 32, flexShrink: 0,
+                background: `linear-gradient(135deg, ${colors.blue}, #4f46e5)`,
+                borderRadius: '50%',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 12, fontWeight: 800, color: '#fff',
+              }}>
+                {project.creator_name ? project.creator_name[0].toUpperCase() : '?'}
+              </div>
+            )}
+            <div className="proj-author-bottom-text">
+              <div style={{ fontSize: 13, color: colors.text, fontWeight: 600 }}>
+                {project.creator_name || 'Autor'}
+              </div>
               {[project.course, project.school_year, project.school].filter(Boolean).length > 0 && (
-                <span style={{ color: colors.subtle, fontWeight: 400 }}>
-                  {' '}· {[project.course, project.school_year, project.school].filter(Boolean).join(' · ')}
-                </span>
+                <div style={{ fontSize: 12, color: colors.subtle, fontWeight: 400, marginTop: 1 }}>
+                  {[project.course, project.school_year, project.school].filter(Boolean).join(' · ')}
+                </div>
               )}
-            </span>
+            </div>
             {(project.linkedin_url || project.github_url || project.portfolio_url) && (
-              <div style={{ display: 'flex', gap: 8, marginLeft: 4 }}>
+              <div className="proj-author-links" style={{ display: 'flex', gap: 8, marginLeft: 'auto' }}>
                 {project.linkedin_url && (
                   <a href={project.linkedin_url} target="_blank" rel="noopener noreferrer"
                     style={{ fontSize: 12, color: colors.muted, fontWeight: 600, textDecoration: 'none', opacity: 0.75 }}
