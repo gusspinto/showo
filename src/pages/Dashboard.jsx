@@ -25,10 +25,11 @@ const C = {
 
 function getScoreColor(score) {
   if (score == null) return C.muted
-  if (score >= 90) return C.green
-  if (score >= 71) return C.blue
-  if (score >= 40) return C.yellow
-  return C.red
+  if (score >= 86) return '#22c55e'
+  if (score >= 71) return '#8b5cf6'
+  if (score >= 51) return '#3b82f6'
+  if (score >= 31) return '#f59e0b'
+  return '#ef4444'
 }
 
 function getDisplayName(user) {

@@ -23,10 +23,11 @@ const C = {
 
 // Tier color based on score — connects directly to the scoring system
 function getTierColor(score) {
-  if (score >= 90) return C.yellow   // gold — elite
-  if (score >= 70) return C.blue     // blue — advanced (brand primary)
-  if (score >= 50) return C.orange   // orange — growing
-  return C.subtle                     // subtle — developing
+  if (score >= 86) return '#22c55e'   // professional
+  if (score >= 71) return '#8b5cf6'   // almost professional
+  if (score >= 51) return '#3b82f6'   // gaining shape
+  if (score >= 31) return '#f59e0b'   // starting
+  return C.subtle                      // draft
 }
 
 // Rank position accent: 1st=yellow, 2nd=muted(silver-ish), 3rd=orange
@@ -173,10 +174,10 @@ export default function Ranking() {
         {/* Legend */}
         <div style={{ display: 'flex', gap: 16, marginBottom: 28, flexWrap: 'wrap' }}>
           {[
-            { color: C.yellow, label: 'Elite  90+' },
-            { color: C.blue,   label: 'Avançado  70+' },
-            { color: C.orange, label: 'A crescer  50+' },
-            { color: C.subtle, label: 'Em desenvolvimento' },
+            { color: '#22c55e', label: 'Nível profissional  86+' },
+            { color: '#8b5cf6', label: 'Quase profissional  71+' },
+            { color: '#3b82f6', label: 'A ganhar forma  51+' },
+            { color: '#f59e0b', label: 'A começar  31+' },
           ].map(t => (
             <div key={t.label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <div style={{ width: 3, height: 14, borderRadius: 99, background: t.color, flexShrink: 0 }} />

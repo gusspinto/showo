@@ -96,11 +96,11 @@ function progTrack(pct) {
 }
 
 function getLevelInfo(score) {
-  if (score === 100) return { label: 'Projeto completo!', color: colors.green }
-  if (score >= 81) return { label: 'Impressionante', color: colors.blue }
-  if (score >= 61) return { label: 'Quase pronto', color: colors.orange }
-  if (score >= 41) return { label: 'A ganhar forma', color: colors.yellow }
-  return { label: 'Em desenvolvimento', color: colors.muted }
+  if (score >= 86) return { label: 'Nível profissional', color: '#22c55e' }
+  if (score >= 71) return { label: 'Quase profissional', color: '#8b5cf6' }
+  if (score >= 51) return { label: 'A ganhar forma', color: '#3b82f6' }
+  if (score >= 31) return { label: 'A começar', color: '#f59e0b' }
+  return { label: 'Rascunho', color: '#ef4444' }
 }
 
 function ScoreRing({ score, size = 108 }) {

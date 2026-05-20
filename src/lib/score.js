@@ -1,32 +1,58 @@
 export function calculateScore(project) {
   let total = 0
-
   const val = (key) => String(project[key] || '').trim()
   const len = (key) => val(key).length
 
-  if (val('name')) total += 5
-  if (val('area')) total += 5
+  // Identity
+  if (val('name'))       total += 4
+  if (val('area'))       total += 3
+  if (val('ai_tagline')) total += 4
 
-  if (len('problem') >= 100) total += 15
-  else if (len('problem') >= 60) total += 6
+  // AI description (historia joined as one block)
+  const desc = len('ai_description')
+  if (desc > 300)      total += 10
+  else if (desc > 100) total += 5
 
-  if (len('solution') >= 100) total += 15
-  else if (len('solution') >= 60) total += 6
+  // Problem
+  const prob = len('problem')
+  if (prob > 300)      total += 10
+  else if (prob > 100) total += 5
 
-  if (len('target_audience') >= 50) total += 10
+  // Solution
+  const sol = len('solution')
+  if (sol > 300)      total += 10
+  else if (sol > 100) total += 5
 
-  if (len('features') >= 100) total += 10
-  else if (len('features') >= 60) total += 4
+  // Target audience
+  const ta = len('target_audience')
+  if (ta > 200)     total += 8
+  else if (ta > 80) total += 5
 
-  if (val('technologies')) total += 8
+  // Features
+  const feat = len('features')
+  if (feat > 400)      total += 10
+  else if (feat > 150) total += 6
 
-  if (len('challenges') >= 50) total += 8
+  // Technologies
+  if (val('technologies')) total += 5
 
-  if (len('results') >= 80) total += 12
-  else if (len('results') >= 50) total += 5
+  // Challenges
+  const chal = len('challenges')
+  if (chal > 300)      total += 8
+  else if (chal > 100) total += 5
 
-  if (len('learnings') >= 80) total += 12
-  else if (len('learnings') >= 50) total += 5
+  // Results
+  const res = len('results')
+  if (res > 300)      total += 10
+  else if (res > 100) total += 6
 
-  return { score: total }
+  // Learnings
+  const learn = len('learnings')
+  if (learn > 300)      total += 8
+  else if (learn > 100) total += 6
+
+  // Cover image
+  if (val('cover_url')) total += 8
+
+  return { score: Math.min(total, 100) }
 }
