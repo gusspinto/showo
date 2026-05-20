@@ -686,18 +686,16 @@ export default function ProjectPage() {
     const viewKey = `viewed_${project.slug}`
     if (!sessionStorage.getItem(viewKey)) {
       sessionStorage.setItem(viewKey, '1')
-      // keepalive ensures the request survives page refresh/navigation
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        fetch(`${supabaseUrl}/rest/v1/rpc/increment_project_views`, {
-          method: 'POST',
-          keepalive: true,
-          headers: {
-            'Content-Type': 'application/json',
-            apikey: supabaseAnonKey,
-            Authorization: `Bearer ${session?.access_token ?? supabaseAnonKey}`,
-          },
-          body: JSON.stringify({ project_id: project.id }),
-        })
+      // keepalive ensures the POST reaches the DB even if the user refreshes immediately
+      fetch(`${supabaseUrl}/rest/v1/rpc/increment_project_views`, {
+        method: 'POST',
+        keepalive: true,
+        headers: {
+          'Content-Type': 'application/json',
+          apikey: supabaseAnonKey,
+          Authorization: `Bearer ${supabaseAnonKey}`,
+        },
+        body: JSON.stringify({ project_id: project.id }),
       })
       setProject(prev => prev ? { ...prev, views: (prev.views ?? 0) + 1 } : prev)
     }
