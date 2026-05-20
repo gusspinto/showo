@@ -310,7 +310,7 @@ function JoinTurmaBar({ navigate }) {
   }
 
   return (
-    <div style={{ marginBottom: 36 }}>
+    <div>
       <div style={{
         background: `linear-gradient(135deg, rgba(59,130,246,0.06) 0%, rgba(79,70,229,0.04) 100%)`,
         border: `1px solid rgba(59,130,246,0.18)`,
@@ -744,6 +744,7 @@ export default function Dashboard() {
   const bestScore = scores.length ? Math.max(...scores) : null
   const avgScore = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null
   const totalViews = projects.reduce((sum, p) => sum + (p.views ?? 0), 0)
+  const isTeacher = profile?.role === 'professor'
 
   const greeting = (() => {
     const h = new Date().getHours()
@@ -844,7 +845,7 @@ export default function Dashboard() {
         {/* ── Header ── */}
         <div style={{ marginBottom: 40, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
           <div>
-            <h1 style={{ color: C.text, fontSize: 22, fontWeight: 800, margin: '0 0 4px', letterSpacing: '-0.4px' }}>
+            <h1 style={{ color: C.text, fontSize: 24, fontWeight: 800, margin: '0 0 4px', letterSpacing: '-0.5px' }}>
               {greeting}
             </h1>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -881,9 +882,12 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* ── Turmas (professor) ── */}
-        {profile?.role === 'professor' && (
-          <div style={{ marginBottom: 36 }}>
+        {/* ── All sections in one gap container ── */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+
+        {/* ── Turmas (professor only) ── */}
+        {isTeacher && (
+          <div>
             <div className="dash-sec-hd">
               <div className="dash-sec-label">
                 <Users2 size={13} />
@@ -924,30 +928,23 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Aluno: Entrar numa turma */}
-        {profile?.role !== 'professor' && (
-          <JoinTurmaBar navigate={navigate} />
-        )}
-
-        {/* ── Stats ── */}
-        {!loadingProjects && projects.length > 0 && (
-          <div className="dash-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 36 }}>
-            <StatCard icon={<Folder size={18} />} label="Projetos" value={projects.length} color={C.blue} />
-            <StatCard icon={<Trophy size={18} />} label="Melhor score" value={bestScore ?? '—'} color={getScoreColor(bestScore)} onClick={() => navigate('/ranking')} />
-            <StatCard icon={<BarChart2 size={18} />} label="Score médio" value={avgScore ?? '—'} color={getScoreColor(avgScore)} />
-            <StatCard icon={<Eye size={18} />} label="Visualizações" value={totalViews} color={C.purple} />
-          </div>
-        )}
+        {/* ── Stats — always visible ── */}
+        <div className="dash-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14 }}>
+          <StatCard icon={<Folder size={18} />} label="Projetos" value={loadingProjects ? '—' : projects.length} color={C.blue} />
+          <StatCard icon={<Trophy size={18} />} label="Melhor score" value={loadingProjects ? '—' : (bestScore ?? '—')} color={getScoreColor(bestScore)} onClick={() => navigate('/ranking')} />
+          <StatCard icon={<BarChart2 size={18} />} label="Score médio" value={loadingProjects ? '—' : (avgScore ?? '—')} color={getScoreColor(avgScore)} />
+          <StatCard icon={<Eye size={18} />} label="Visualizações" value={loadingProjects ? '—' : totalViews} color={C.purple} />
+        </div>
 
         {/* ── Os meus projetos — visible on ALL devices ── */}
-        <div style={{ marginBottom: 36 }} id="proj-list">
+        <div id="proj-list">
           <div className="dash-sec-hd">
             <div className="dash-sec-label">
               <Folder size={13} />
               Os meus projetos
-              {projects.length > 0 && <span className="dash-sec-count">{projects.length}</span>}
+              {!loadingProjects && projects.length > 0 && <span className="dash-sec-count">{projects.length}</span>}
             </div>
-            {projects.length > 0 && (
+            {!loadingProjects && projects.length > 0 && (
               <button
                 onClick={() => navigate('/interview')}
                 style={{
@@ -973,7 +970,7 @@ export default function Dashboard() {
             </div>
           ) : projects.length === 0 ? (
             <div style={{
-              background: `linear-gradient(135deg, ${C.card} 0%, rgba(27,120,247,0.04) 100%)`,
+              background: C.card,
               border: `1px dashed ${C.border}`,
               borderRadius: 16, padding: '48px 28px', textAlign: 'center',
             }}>
@@ -1015,21 +1012,21 @@ export default function Dashboard() {
         </div>
 
         {/* ── Criar novo projeto ── */}
-        <div style={{ marginBottom: 36 }}>
+        <div>
           <div className="dash-sec-hd">
             <div className="dash-sec-label">
               <Plus size={13} />
               Criar novo projeto
             </div>
           </div>
-          <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: '20px 22px', boxShadow: '0 2px 16px rgba(0,0,0,0.2)' }}>
+          <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: '22px 24px', boxShadow: '0 2px 16px rgba(0,0,0,0.15)' }}>
             <QuickCreateProject navigate={navigate} />
           </div>
         </div>
 
         {/* ── Partilhados comigo ── */}
         {collabProjects.length > 0 && (
-          <div style={{ marginBottom: 36 }}>
+          <div>
             <div className="dash-sec-hd">
               <div className="dash-sec-label">
                 <Users size={13} />
@@ -1069,6 +1066,20 @@ export default function Dashboard() {
           </div>
         )}
 
+        {/* ── Entrar numa turma — alunos only, bottom of page ── */}
+        {!isTeacher && (
+          <div>
+            <div className="dash-sec-hd">
+              <div className="dash-sec-label">
+                <Users2 size={13} />
+                A tua turma
+              </div>
+            </div>
+            <JoinTurmaBar navigate={navigate} />
+          </div>
+        )}
+
+        </div>{/* end sections gap container */}
       </div>
     </div>
   )

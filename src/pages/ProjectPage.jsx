@@ -146,11 +146,8 @@ function Section({ fieldKey, content, isOwner, onImprove }) {
   if (isEmpty && !isOwner) return null
 
   return (
-    <div className="proj-card-pad" style={{
-      background: colors.card,
+    <div className="proj-card-pad proj-card" style={{
       border: `1px solid ${isShort ? 'rgba(234,179,8,0.22)' : isEmpty ? colors.subtle + '55' : colors.border}`,
-      borderRadius: 16, padding: '20px 24px', marginBottom: 16,
-      boxShadow: '0 2px 16px rgba(0,0,0,0.2)',
     }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: isEmpty ? 0 : 12 }}>
         <h3 style={{
@@ -465,8 +462,8 @@ function MembersPanel({ ownerName, members, colors, isOwner }) {
 
   // Team project — show full Equipa card
   return (
-    <div style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 16, padding: '18px 22px', boxShadow: '0 2px 16px rgba(0,0,0,0.2)' }}>
-      <h3 style={{ margin: '0 0 14px', fontSize: 11, fontWeight: 700, color: colors.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Equipa</h3>
+    <div className="proj-card">
+      <h3 className="proj-sec-label">Equipa</h3>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {/* Owner */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -537,8 +534,8 @@ export default function ProjectPage() {
   const [analyzingAI, setAnalyzingAI] = useState(false)
   const [analyzeError, setAnalyzeError] = useState(null)
   const [aiModalOpen, setAiModalOpen] = useState(false)
-  const [completudeOpen, setCompletudeOpen] = useState(false)
-  const [tipsOpen, setTipsOpen] = useState(false)
+  const [completudeOpen, setCompletudeOpen] = useState(true)
+  const [tipsOpen, setTipsOpen] = useState(true)
   const [viewsExpanded, setViewsExpanded] = useState(false)
   const [sectionsOpen, setSectionsOpen] = useState(false)
   const [showInvite, setShowInvite] = useState(false)
@@ -1043,6 +1040,28 @@ export default function ProjectPage() {
           80% { opacity: 1; }
           100% { transform: translateY(105vh) rotate(720deg); opacity: 0; }
         }
+        /* ── Design system ── */
+        /* Base card: use on all proj-body cards */
+        .proj-card {
+          background: ${colors.card};
+          border: 1px solid ${colors.border};
+          border-radius: 16px;
+          padding: 20px 22px;
+          box-shadow: 0 2px 12px rgba(0,0,0,0.18);
+        }
+        /* Consistent section label (11px uppercase muted with icon) */
+        .proj-sec-label {
+          font-size: 11px; font-weight: 700; color: ${colors.muted};
+          text-transform: uppercase; letter-spacing: 0.08em;
+          display: flex; align-items: center; gap: 7px;
+          margin: 0 0 14px;
+        }
+
+        /* Body: flex column with uniform gap */
+        .proj-body {
+          display: flex; flex-direction: column; gap: 16px;
+        }
+
         .proj-layout {
           display: grid;
           grid-template-columns: 1fr 280px;
@@ -1093,10 +1112,8 @@ export default function ProjectPage() {
           .proj-ai-fab-label { display: none !important; }
           /* QR code centered on mobile */
           .proj-share-qr { align-self: center !important; }
-          /* Completude + tips: full-width stacked on mobile, proper spacing */
-          .proj-completude-grid { display: flex !important; flex-direction: column; gap: 10px; }
-          .proj-completude-grid > div { padding: 16px 18px !important; }
-          .proj-completude-grid h3 { font-size: 11px !important; letter-spacing: 0.06em !important; }
+          /* Completude + tips: full-width stacked on tablet */
+          .proj-completude-grid { display: flex !important; flex-direction: column; gap: 12px; }
           .proj-sections-toggle {
             display: flex !important;
             align-items: center; gap: 14px; text-align: left;
@@ -1125,8 +1142,8 @@ export default function ProjectPage() {
             text-align: center !important;
           }
           .proj-author-links { margin-left: 0 !important; justify-content: center; }
-          /* Consistent card gap on tablet */
-          .proj-body > div { margin-bottom: 14px; }
+          /* Body gap override on tablet */
+          .proj-body { gap: 14px; }
         }
         @media (max-width: 600px) {
           .proj-wrap         { padding: 0 16px 80px !important; overflow-x: hidden !important; }
@@ -1136,7 +1153,7 @@ export default function ProjectPage() {
           .proj-score-abs    { display: none !important; }
           .proj-dashboard    { display: flex !important; }
           .proj-tagline      { font-size: 15px !important; }
-          .proj-card-pad     { padding: 18px 16px !important; border-radius: 14px !important; }
+          .proj-card-pad, .proj-card { padding: 16px 18px !important; border-radius: 14px !important; }
           .proj-badges       { margin-bottom: 14px !important; }
           /* Mobile: AI FAB hidden, Defense FAB circular */
           .proj-ai-fab       { display: none !important; }
@@ -1154,8 +1171,8 @@ export default function ProjectPage() {
           }
           .proj-author-bottom-text { text-align: center; }
           .proj-author-links { margin-left: 0 !important; justify-content: center; }
-          /* Consistent card gap on mobile — override proj-body direct children */
-          .proj-body > div { margin-bottom: 14px; }
+          /* Body gap on mobile */
+          .proj-body { gap: 12px; }
         }
       `}</style>
 
@@ -1638,7 +1655,7 @@ export default function ProjectPage() {
           <div style={{
             background: 'linear-gradient(135deg, rgba(79,70,229,0.12), rgba(27,120,247,0.08))',
             border: '1px solid rgba(79,70,229,0.3)',
-            borderRadius: 16, padding: '18px 22px', marginBottom: 20,
+            borderRadius: 16, padding: '18px 22px',
             display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
           }}>
             <GraduationCap size={28} color="#c4b5fd" style={{ flexShrink: 0 }} />
@@ -1672,7 +1689,6 @@ export default function ProjectPage() {
               background: 'linear-gradient(135deg, rgba(109,40,217,0.07), rgba(79,70,229,0.05))',
               border: '1px solid rgba(129,140,248,0.2)',
               borderRadius: 16, padding: '16px 20px',
-              marginBottom: 16,
               display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
               cursor: 'pointer',
             }}
@@ -1703,7 +1719,7 @@ export default function ProjectPage() {
           <div style={{
             background: 'linear-gradient(135deg, #0e1830 0%, #0a1220 100%)',
             border: '1px solid rgba(129,140,248,0.15)',
-            borderRadius: 16, padding: '16px 20px', marginBottom: 16,
+            borderRadius: 16, padding: '16px 20px',
             display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
           }}>
             <Bot size={20} color="#818cf8" style={{ flexShrink: 0 }} />
@@ -1729,11 +1745,10 @@ export default function ProjectPage() {
 
         {/* AI Description */}
         {project.ai_description && (
-          <div className="proj-card-pad" style={{
+          <div className="proj-card-pad proj-card" style={{
             background: 'linear-gradient(135deg, #0e1f3e 0%, #0a1729 100%)',
-            border: '1px solid rgba(27,120,247,0.25)',
-            borderRadius: 18, padding: '24px 28px', marginBottom: 24,
-            boxShadow: '0 4px 24px rgba(27,120,247,0.08)',
+            border: '1px solid rgba(27,120,247,0.22)',
+            boxShadow: '0 4px 20px rgba(27,120,247,0.07)',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -1766,7 +1781,7 @@ export default function ProjectPage() {
           const hero = TYPE_HERO[project.project_type] ?? TYPE_HERO.personal
           const HlIcons = [Zap, TrendingUp, Lightbulb]
           return (
-            <div className="proj-highlights-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, marginBottom: 24 }}>
+            <div className="proj-highlights-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>
               {highlights.map((h, i) => {
                 const HlIcon = HlIcons[i] ?? Sparkles
                 return (
@@ -1787,7 +1802,7 @@ export default function ProjectPage() {
 
         {/* PAP details */}
         {isPap && (project.pap_supervisor || project.pap_date) && (
-          <div className="proj-card-pad" style={{ background: colors.yellowGlow, border: '1px solid rgba(234,179,8,0.18)', borderRadius: 16, padding: '20px 24px', marginBottom: 12 }}>
+          <div className="proj-card-pad proj-card" style={{ background: colors.yellowGlow, border: '1px solid rgba(234,179,8,0.18)' }}>
             <h3 style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 700, color: colors.yellow, textTransform: 'uppercase', letterSpacing: 0.8 }}>Detalhes da PAP</h3>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24 }}>
               {project.pap_supervisor && (
@@ -1831,12 +1846,12 @@ export default function ProjectPage() {
         </div>
 
         {/* Missions — owner only */}
-        {isOwner && <div id="missions-section" style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 18, padding: '22px 24px', marginBottom: 16, marginTop: 8, boxShadow: '0 4px 24px rgba(0,0,0,0.2)', scrollMarginTop: 88 }}>
+        {isOwner && <div id="missions-section" className="proj-card" style={{ scrollMarginTop: 88 }}>
           {/* Header */}
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 16, gap: 12 }}>
             <div>
-              <h3 style={{ margin: '0 0 4px', fontSize: 16, fontWeight: 800, letterSpacing: '-0.2px' }}>Missões</h3>
-              <p style={{ margin: 0, fontSize: 12, color: colors.muted }}>Completa missões para melhorar o score</p>
+              <h3 className="proj-sec-label" style={{ marginBottom: 4 }}>Missões</h3>
+              <p style={{ margin: 0, fontSize: 12, color: colors.muted }}>Completa missões para melhorar o teu score</p>
             </div>
             {/* XP card with progress bar inside */}
             <div style={{
@@ -1866,14 +1881,9 @@ export default function ProjectPage() {
         </div>}
 
         {/* Share */}
-        <div className="proj-card-pad" style={{
-          background: colors.card,
-          border: `1px solid ${colors.border}`,
-          borderRadius: 18, padding: '32px 28px', marginTop: 32,
-          boxShadow: '0 4px 24px rgba(0,0,0,0.3)',
-        }}>
-          <div style={{ marginBottom: 24 }}>
-            <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, letterSpacing: '-0.2px' }}>{isOwner ? 'Partilha o teu projeto' : 'Partilha este projeto'}</h3>
+        <div className="proj-card-pad proj-card" style={{ marginTop: 8 }}>
+          <div style={{ marginBottom: 20 }}>
+            <h3 className="proj-sec-label">{isOwner ? 'Partilha o teu projeto' : 'Partilha este projeto'}</h3>
           </div>
           <div style={{ display: 'flex', gap: 36, flexWrap: 'wrap', alignItems: 'flex-start' }}>
             <div style={{ flex: 1, minWidth: 220 }}>
@@ -1925,7 +1935,7 @@ export default function ProjectPage() {
         {(project.creator_name || project.course || project.school_year || project.school) && (
           <div className="proj-author-bottom" style={{
             borderTop: `1px solid ${colors.border}`,
-            marginTop: 32, paddingTop: 20,
+            paddingTop: 20,
             display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap',
           }}>
             {/* Avatar — real photo if available, else gradient initial */}
@@ -2092,9 +2102,9 @@ export default function ProjectPage() {
             const pct = Math.round((goodCount / fieldQuality.length) * 100)
 
             return (
-              <div style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 16, padding: '20px 22px' }}>
+              <div className="proj-card">
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: completudeOpen ? 14 : 0 }}>
-                  <h3 style={{ margin: 0, fontSize: 11, fontWeight: 800, color: colors.muted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Completude</h3>
+                  <h3 className="proj-sec-label" style={{ margin: 0 }}>Completude</h3>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <span style={{ fontSize: 13, fontWeight: 800, color: pct === 100 ? '#10b981' : pct > 60 ? colors.blue : colors.yellow }}>{pct}%</span>
                     <button
@@ -2145,9 +2155,9 @@ export default function ProjectPage() {
             )
 
             return (
-              <div style={{ background: 'linear-gradient(135deg, rgba(27,120,247,0.07), rgba(79,70,229,0.04))', border: '1px solid rgba(27,120,247,0.18)', borderRadius: 16, padding: '18px 20px' }}>
+              <div className="proj-card" style={{ background: 'linear-gradient(135deg, rgba(27,120,247,0.05), rgba(79,70,229,0.03))', border: '1px solid rgba(27,120,247,0.18)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: tipsOpen ? 14 : 0 }}>
-                  <h3 style={{ margin: 0, minWidth: 0, fontSize: 11, fontWeight: 800, color: '#5a9ff5', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'flex', alignItems: 'center', gap: 5, flex: 1, overflow: 'hidden' }}>
+                  <h3 className="proj-sec-label" style={{ margin: 0, color: '#5a9ff5', flex: 1, minWidth: 0, overflow: 'hidden' }}>
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#5a9ff5" strokeWidth="2.5" style={{ flexShrink: 0 }}><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
                     <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Como aumentar o score</span>
                   </h3>
