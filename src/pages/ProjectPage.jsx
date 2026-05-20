@@ -81,14 +81,18 @@ const SECTION_META = {
   learnings:       { Icon: Lightbulb,  label: 'Aprendizagens' },
 }
 
-// Progress bar gradient: white → blue, darker as pct increases (closer to goal = darker blue)
+// Progress bar: semantic color based on completion
+// <40% orange (needs attention), 40-89% blue (in progress), ≥90% green (done)
 function progBar(pct) {
-  const blue = pct >= 90 ? '#0f4ba0'
-             : pct >= 70 ? '#1348c0'
-             : pct >= 50 ? '#1564d4'
-             : pct >= 30 ? '#1b78f7'
-             :              '#60a5fa'
-  return `linear-gradient(90deg, rgba(255,255,255,0.85) 0%, ${blue} 100%)`
+  if (pct >= 90) return '#22c55e'
+  if (pct >= 40) return '#1b78f7'
+  return '#f97316'
+}
+// Translucent track that matches the fill colour (~12% opacity)
+function progTrack(pct) {
+  if (pct >= 90) return 'rgba(34,197,94,0.12)'
+  if (pct >= 40) return 'rgba(27,120,247,0.12)'
+  return 'rgba(249,115,22,0.12)'
 }
 
 function getLevelInfo(score) {
@@ -252,11 +256,12 @@ function MissionRow({ challenge, project, onImprove, isOwner }) {
         </div>
         {!isCompleted && val.length > 0 && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <div style={{ flex: 1, height: 3, background: colors.border, borderRadius: 99, overflow: 'hidden' }}>
+            <div style={{ flex: 1, height: 3, background: progTrack(Math.round(progress * 100)), borderRadius: 99, overflow: 'hidden' }}>
               <div style={{
                 height: '100%', borderRadius: 99,
                 width: `${progress * 100}%`,
                 background: progBar(Math.round(progress * 100)),
+                transition: 'width 0.4s ease-out',
               }} />
             </div>
             <span style={{ fontSize: 10, color: colors.subtle, flexShrink: 0 }}>{val.length}/{challenge.threshold}</span>
@@ -1068,7 +1073,6 @@ export default function ProjectPage() {
         .proj-sections-body {
           display: flex; flex-direction: column; gap: 12px;
         }
-        .proj-sections-body.collapsed { display: none; }
 
         .proj-layout {
           display: grid;
@@ -1615,7 +1619,7 @@ export default function ProjectPage() {
                 borderRadius: 999, padding: '3px 10px', fontSize: 12, fontWeight: 700,
                 border: `1px solid ${level.color}35`,
               }}>{level.label}</div>
-              <div style={{ height: 3, background: colors.border, borderRadius: 2, overflow: 'hidden', marginBottom: 5 }}>
+              <div style={{ height: 3, background: progTrack(Math.round((earnedXP / totalXP) * 100)), borderRadius: 2, overflow: 'hidden', marginBottom: 5 }}>
                 <div style={{
                   height: '100%', borderRadius: 2,
                   width: `${(earnedXP / totalXP) * 100}%`,
@@ -1739,7 +1743,7 @@ export default function ProjectPage() {
                 Cria o teu projeto e recebe análise por IA com feedback personalizado.
               </p>
               <button
-                onClick={() => window.location.href = '/novo'}
+                onClick={() => navigate('/novo')}
                 style={{
                   background: 'linear-gradient(135deg, #6d28d9, #4f46e5)',
                   border: 'none', borderRadius: 8, padding: '7px 16px',
@@ -1874,7 +1878,7 @@ export default function ProjectPage() {
               <div style={{ fontSize: 20, fontWeight: 800, color: colors.blue, letterSpacing: '-0.5px', marginBottom: 6 }}>
                 {earnedXP}<span style={{ fontSize: 12, color: colors.subtle, fontWeight: 500 }}>/{totalXP} pts</span>
               </div>
-              <div style={{ height: 4, background: colors.border, borderRadius: 99, overflow: 'hidden', marginBottom: 5 }}>
+              <div style={{ height: 4, background: progTrack(Math.round((earnedXP / totalXP) * 100)), borderRadius: 99, overflow: 'hidden', marginBottom: 5 }}>
                 <div style={{
                   height: '100%', borderRadius: 99,
                   width: `${(earnedXP / totalXP) * 100}%`,
@@ -2182,7 +2186,7 @@ export default function ProjectPage() {
                       </div>
                     ))}
                   </div>
-                  <div style={{ marginTop: 14, height: 4, background: colors.border, borderRadius: 99, overflow: 'hidden' }}>
+                  <div style={{ marginTop: 14, height: 4, background: progTrack(pct), borderRadius: 99, overflow: 'hidden' }}>
                     <div style={{ height: '100%', borderRadius: 99, width: `${pct}%`, background: progBar(pct), transition: 'width 0.5s' }} />
                   </div>
                 </div>

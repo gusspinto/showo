@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Globe, Bot, GraduationCap } from 'lucide-react'
+import { Globe, Bot, GraduationCap, Trophy, Sparkles, BadgeCheck, Users } from 'lucide-react'
 import { Navbar } from '../components/Navbar'
 import { supabase } from '../lib/supabase'
 import Onboarding from '../components/Onboarding'
@@ -260,10 +260,10 @@ export default function Home() {
 
           {/* Subheadline */}
           <p className="hero-sub" style={{
-            fontSize: 18, color: colors.muted, maxWidth: 560,
-            lineHeight: 1.6, margin: '0 auto 8px', fontWeight: 400,
+            fontSize: 15, color: colors.subtle, maxWidth: 400,
+            lineHeight: 1.5, margin: '0 auto 8px', fontWeight: 400,
           }}>
-            Cria uma página profissional em minutos. A IA analisa, pontua e prepara-te para a defesa.
+            Para estudantes que levam os projetos a sério.
           </p>
 
           {/* Widget */}
@@ -348,24 +348,26 @@ export default function Home() {
       {/* Social proof strip */}
       <div className="social-strip" style={{
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        gap: 24, padding: '18px 24px',
+        gap: 28, padding: '16px 24px',
         borderTop: `1px solid ${colors.border}`,
         borderBottom: `1px solid ${colors.border}`,
         background: 'rgba(21,32,48,0.5)',
         flexWrap: 'wrap',
-        fontSize: 13, color: colors.muted, fontWeight: 500,
       }}>
-        <span>
-          <span style={{ color: colors.text, fontWeight: 700 }}>
-            {projectCount != null ? `Já ${projectCount} projetos` : 'Vários projetos'} por estudantes portugueses
-          </span>
-        </span>
-        <span style={{ color: colors.subtle }}>·</span>
-        <span>Ranking público</span>
-        <span style={{ color: colors.subtle }}>·</span>
-        <span>Análise por IA</span>
-        <span style={{ color: colors.subtle }}>·</span>
-        <span>Certificados verificados</span>
+        {[
+          { Icon: Users,      color: colors.blue,         text: projectCount != null ? `${projectCount} projetos criados` : 'Centenas de projetos' },
+          { Icon: Trophy,     color: colors.yellow,       text: 'Ranking público' },
+          { Icon: Sparkles,   color: '#818cf8',           text: 'Análise por IA' },
+          { Icon: BadgeCheck, color: colors.green,        text: 'Certificados verificados' },
+        ].map(({ Icon, color, text }, i, arr) => (
+          <div key={text} style={{ display: 'flex', alignItems: 'center', gap: 28 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+              <Icon size={14} color={color} style={{ flexShrink: 0, opacity: 0.85 }} />
+              <span style={{ fontSize: 13, color: colors.muted, fontWeight: 500, whiteSpace: 'nowrap' }}>{text}</span>
+            </div>
+            {i < arr.length - 1 && <span style={{ color: colors.subtle, userSelect: 'none' }}>·</span>}
+          </div>
+        ))}
       </div>
 
       {/* Features */}

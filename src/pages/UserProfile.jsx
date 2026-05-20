@@ -5,42 +5,50 @@ import { QRCodeSVG } from 'qrcode.react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
-import { Mail, Search, FolderOpen, X, Check, Download, Rocket, QrCode } from 'lucide-react'
+import { Mail, Search, FolderOpen, X, Check, Download, Rocket, QrCode, Pencil, Globe, ExternalLink, Link } from 'lucide-react'
 
+// ── Design tokens (aligned with the rest of the app) ──────────────────────────
 const C = {
-  bg: '#0d1424',
-  card: '#111827',
-  cardHover: '#16213a',
-  border: '#1e3050',
-  blue: '#3b82f6',
-  muted: '#7d93b0',
-  text: '#e8f2ff',
-  subtle: '#3d5270',
-  green: '#34d399',
-  yellow: '#fbbf24',
-  red: '#f87171',
+  bg:           '#0d1424',
+  bgAlt:        '#111c32',
+  card:         '#152030',
+  cardHover:    '#1c2d44',
+  border:       '#1e3050',
+  borderBright: '#2a4275',
+  blue:         '#1b78f7',
+  blueHover:    '#1564d4',
+  text:         '#e8f2ff',
+  muted:        '#7d93b0',
+  subtle:       '#3d5270',
+  green:        '#22c55e',
+  yellow:       '#eab308',
+  orange:       '#f97316',
+  red:          '#ef4444',
 }
 
-function getAreaGradient(area) {
+// ── Helpers ────────────────────────────────────────────────────────────────────
+function areaGradient(area) {
   const a = (area || '').toLowerCase()
-  if (a.includes('educa')) return 'linear-gradient(135deg, #1e3a5f, #2d6a4f)'
-  if (a.includes('comercial') || a.includes('marketing') || a.includes('vendas')) return 'linear-gradient(135deg, #3d1a6e, #1a3a6e)'
-  if (a.includes('tecnolog') || a.includes('informátic') || a.includes('programaç') || a.includes('software')) return 'linear-gradient(135deg, #0d2137, #1a4a6e)'
-  if (a.includes('saúde') || a.includes('saude') || a.includes('medical') || a.includes('bio')) return 'linear-gradient(135deg, #1a4a2e, #2d6a4f)'
-  return 'linear-gradient(135deg, #2d1a4a, #1a2d6e)'
+  if (a.includes('educa'))                                                     return ['#1e3a5f', '#2d6a4f']
+  if (a.includes('comercial') || a.includes('marketing') || a.includes('vendas')) return ['#3d1a6e', '#1a3a6e']
+  if (a.includes('tecnolog') || a.includes('informátic') || a.includes('programaç') || a.includes('software')) return ['#0d2137', '#1a4a6e']
+  if (a.includes('saúde') || a.includes('saude') || a.includes('medical') || a.includes('bio')) return ['#1a4a2e', '#2d6a4f']
+  return ['#1a1a3a', '#1a2d4a']
 }
 
-function getScoreColor(score) {
+function scoreColor(score) {
   if (score == null) return C.muted
-  if (score >= 90) return C.green
-  if (score >= 71) return C.blue
-  if (score >= 40) return C.yellow
+  if (score >= 90)   return C.green
+  if (score >= 71)   return C.blue
+  if (score >= 40)   return C.yellow
   return C.red
 }
 
+// ── ProjectCard ────────────────────────────────────────────────────────────────
 function ProjectCard({ project, onClick }) {
   const [hovered, setHovered] = useState(false)
-  const color = getScoreColor(project.score)
+  const color = scoreColor(project.score)
+  const [c1, c2] = areaGradient(project.area)
 
   return (
     <div
@@ -49,14 +57,13 @@ function ProjectCard({ project, onClick }) {
       onMouseLeave={() => setHovered(false)}
       style={{
         background: hovered ? C.cardHover : C.card,
-        border: `1px solid ${hovered ? '#2a4070' : C.border}`,
+        border: `1px solid ${hovered ? C.borderBright : C.border}`,
         borderRadius: 14,
-        padding: 0,
         cursor: 'pointer',
         overflow: 'hidden',
-        transition: 'background 0.15s, border-color 0.15s, transform 0.15s',
+        transition: 'background 0.15s, border-color 0.15s, transform 0.15s, box-shadow 0.15s',
         transform: hovered ? 'translateY(-2px)' : 'none',
-        boxShadow: hovered ? '0 8px 32px rgba(0,0,0,0.3)' : '0 2px 8px rgba(0,0,0,0.2)',
+        boxShadow: hovered ? '0 8px 32px rgba(0,0,0,0.35)' : '0 2px 8px rgba(0,0,0,0.2)',
       }}
     >
       {/* Cover */}
@@ -67,36 +74,36 @@ function ProjectCard({ project, onClick }) {
       ) : (
         <div style={{
           height: 100,
-          background: getAreaGradient(project.area),
+          background: `linear-gradient(135deg, ${c1}, ${c2})`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
-          <span style={{ fontSize: 40, fontWeight: 900, color: 'rgba(255,255,255,0.25)', userSelect: 'none', lineHeight: 1 }}>
+          <span style={{ fontSize: 40, fontWeight: 900, color: 'rgba(255,255,255,0.2)', userSelect: 'none', lineHeight: 1 }}>
             {project.name ? project.name[0].toUpperCase() : '?'}
           </span>
         </div>
       )}
 
-      <div style={{ padding: '16px 18px 18px' }}>
+      <div style={{ padding: '14px 16px 16px' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 6 }}>
-          <span style={{ color: C.text, fontSize: 15, fontWeight: 700, lineHeight: 1.3, flex: 1 }}>
+          <span style={{ color: C.text, fontSize: 14, fontWeight: 700, lineHeight: 1.3, flex: 1 }}>
             {project.name}
           </span>
           {project.score != null && (
             <span style={{
               background: `${color}18`, border: `1px solid ${color}44`,
-              borderRadius: 6, padding: '2px 8px', color, fontSize: 12, fontWeight: 700, flexShrink: 0,
+              borderRadius: 6, padding: '2px 7px', color, fontSize: 12, fontWeight: 700, flexShrink: 0,
             }}>
               {project.score}
             </span>
           )}
         </div>
         {project.ai_tagline && (
-          <p style={{ margin: '0 0 10px', color: C.muted, fontSize: 13, lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+          <p style={{ margin: '0 0 10px', color: C.muted, fontSize: 12, lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
             {project.ai_tagline}
           </p>
         )}
         {project.area && (
-          <span style={{ fontSize: 12, color: C.muted, background: 'rgba(255,255,255,0.04)', border: `1px solid ${C.border}`, borderRadius: 5, padding: '2px 8px' }}>
+          <span style={{ fontSize: 11, color: C.muted, background: 'rgba(255,255,255,0.04)', border: `1px solid ${C.border}`, borderRadius: 5, padding: '2px 7px' }}>
             {project.area}
           </span>
         )}
@@ -105,6 +112,7 @@ function ProjectCard({ project, onClick }) {
   )
 }
 
+// ── QR Modal ───────────────────────────────────────────────────────────────────
 function QRModal({ profileUrl, username, onClose }) {
   const qrRef = useRef(null)
 
@@ -131,34 +139,38 @@ function QRModal({ profileUrl, username, onClose }) {
 
   return (
     <div
-      style={{ position: 'fixed', inset: 0, zIndex: 9800, background: 'rgba(5,9,18,0.88)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, fontFamily: 'Inter, sans-serif' }}
+      style={{ position: 'fixed', inset: 0, zIndex: 9800, background: 'rgba(5,9,18,0.88)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, fontFamily: 'Inter, sans-serif' }}
       onClick={e => e.target === e.currentTarget && onClose()}
     >
-      <div style={{ background: '#0d1829', border: '1px solid #1e3050', borderRadius: 20, width: '100%', maxWidth: 380, boxShadow: '0 32px 80px rgba(0,0,0,0.7)' }}>
-        <div style={{ padding: '24px 24px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: C.text }}>QR Code do perfil</h2>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: C.muted, cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center' }}>
-            <X size={20} />
-          </button>
+      <div style={{ background: C.card, border: `1px solid ${C.borderBright}`, borderRadius: 20, width: '100%', maxWidth: 340, boxShadow: '0 32px 80px rgba(0,0,0,0.7)', position: 'relative' }}>
+        <button onClick={onClose} style={{ position: 'absolute', top: 14, right: 14, background: 'rgba(255,255,255,0.06)', border: `1px solid ${C.border}`, borderRadius: 8, width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.muted, cursor: 'pointer' }}>
+          <X size={14} />
+        </button>
+
+        <div style={{ padding: '24px 24px 0' }}>
+          <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: C.text }}>QR Code do perfil</h2>
+          <p style={{ margin: '4px 0 0', fontSize: 12, color: C.muted }}>Aponta a câmara para abrir o teu portfólio</p>
         </div>
-        <div style={{ padding: '20px 24px 28px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20 }}>
-          <div ref={qrRef} style={{ background: '#fff', borderRadius: 16, padding: 16, boxShadow: '0 4px 24px rgba(0,0,0,0.4)' }}>
+
+        <div style={{ padding: '20px 24px 24px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18 }}>
+          <div ref={qrRef} style={{ background: '#fff', borderRadius: 16, padding: 16, boxShadow: '0 8px 32px rgba(0,0,0,0.4)' }}>
             <QRCodeSVG value={profileUrl} size={180} />
           </div>
-          <p style={{ margin: 0, fontSize: 13, color: C.muted, textAlign: 'center', lineHeight: 1.55 }}>
-            Aponta para: <span style={{ color: '#60a5fa', fontWeight: 600 }}>{profileUrl}</span><br />
-            Imprime e usa em apresentações, feiras ou CVs.
-          </p>
+          <div style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 8, padding: '8px 14px', fontSize: 11, color: C.subtle, textAlign: 'center', wordBreak: 'break-all', width: '100%', boxSizing: 'border-box' }}>
+            {profileUrl}
+          </div>
           <div style={{ display: 'flex', gap: 10, width: '100%' }}>
             <button
               onClick={downloadQR}
-              style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.25)', borderRadius: 10, padding: '11px 16px', color: '#60a5fa', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+              style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, background: 'rgba(27,120,247,0.08)', border: `1px solid rgba(27,120,247,0.2)`, borderRadius: 10, padding: '10px 0', color: C.blue, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'background 0.15s' }}
+              onMouseEnter={e => e.currentTarget.style.background = 'rgba(27,120,247,0.14)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'rgba(27,120,247,0.08)'}
             >
-              <Download size={15} /> Descarregar
+              <Download size={14} /> Descarregar
             </button>
             <button
               onClick={() => window.print()}
-              style={{ flex: 1, background: C.blue, border: 'none', borderRadius: 10, padding: '11px 16px', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+              style={{ flex: 1, background: C.blue, border: 'none', borderRadius: 10, padding: '10px 0', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
             >
               Imprimir
             </button>
@@ -169,6 +181,7 @@ function QRModal({ profileUrl, username, onClose }) {
   )
 }
 
+// ── Kit de Estágio Modal ───────────────────────────────────────────────────────
 function KitDeEstagioModal({ profile, projects, onClose }) {
   const [copiedField, setCopiedField] = useState(null)
   const [emailText, setEmailText] = useState('')
@@ -189,8 +202,7 @@ Chamo-me ${displayName} e estou a candidatar-me a uma oportunidade de estágio n
 Fico disponível para qualquer questão.
 
 Cumprimentos,
-${displayName}`
-    )
+${displayName}`)
   }, [displayName, username, projects.length])
 
   function copy(text, key) {
@@ -204,8 +216,7 @@ ${displayName}`
     if (!svg) return
     const canvas = document.createElement('canvas')
     const size = 300
-    canvas.width = size
-    canvas.height = size
+    canvas.width = size; canvas.height = size
     const ctx = canvas.getContext('2d')
     ctx.fillStyle = '#ffffff'
     ctx.fillRect(0, 0, size, size)
@@ -221,125 +232,79 @@ ${displayName}`
     img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)))
   }
 
+  const SectionLabel = ({ children }) => (
+    <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>
+      {children}
+    </div>
+  )
+
   return (
     <div
-      style={{
-        position: 'fixed', inset: 0, zIndex: 9800,
-        background: 'rgba(5,9,18,0.88)', backdropFilter: 'blur(6px)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: '16px', fontFamily: 'Inter, sans-serif',
-      }}
+      style={{ position: 'fixed', inset: 0, zIndex: 9800, background: 'rgba(5,9,18,0.88)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, fontFamily: 'Inter, sans-serif' }}
       onClick={e => e.target === e.currentTarget && onClose()}
     >
-      <div style={{
-        background: '#0d1829', border: '1px solid #1e3050',
-        borderRadius: 20, width: '100%', maxWidth: 560,
-        maxHeight: '90vh', overflow: 'auto',
-        boxShadow: '0 32px 80px rgba(0,0,0,0.7)',
-      }}>
+      <div style={{ background: C.card, border: `1px solid ${C.borderBright}`, borderRadius: 20, width: '100%', maxWidth: 560, maxHeight: '90vh', overflow: 'auto', boxShadow: '0 32px 80px rgba(0,0,0,0.7)' }}>
         {/* Header */}
-        <div style={{ padding: '24px 28px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div style={{ padding: '22px 24px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', position: 'sticky', top: 0, background: C.card, borderBottom: `1px solid ${C.border}`, paddingBottom: 16 }}>
           <div>
-            <h2 style={{ margin: '0 0 4px', fontSize: 20, fontWeight: 800, color: C.text }}>Kit de Estágio</h2>
-            <p style={{ margin: 0, fontSize: 13, color: C.muted }}>Tudo o que precisas para conseguir um estágio com os teus projetos Showo.</p>
+            <h2 style={{ margin: '0 0 3px', fontSize: 17, fontWeight: 800, color: C.text }}>Kit de Estágio</h2>
+            <p style={{ margin: 0, fontSize: 12, color: C.muted }}>Tudo o que precisas para conseguir um estágio com os teus projetos.</p>
           </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: C.muted, cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center' }}>
-            <X size={20} />
+          <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.06)', border: `1px solid ${C.border}`, borderRadius: 8, width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.muted, cursor: 'pointer', flexShrink: 0, marginTop: 2 }}>
+            <X size={14} />
           </button>
         </div>
 
-        <div style={{ padding: '20px 28px 28px', display: 'flex', flexDirection: 'column', gap: 24 }}>
+        <div style={{ padding: '20px 24px 28px', display: 'flex', flexDirection: 'column', gap: 24 }}>
 
-          {/* Section 1: Profile link */}
+          {/* Profile link */}
           <div>
-            <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>
-              O teu link de perfil
-            </div>
+            <SectionLabel>O teu link de perfil</SectionLabel>
             <div style={{ display: 'flex', gap: 8 }}>
-              <div style={{
-                flex: 1, background: '#060c16', border: '1px solid #1e3050',
-                borderRadius: 9, padding: '10px 14px',
-                fontSize: 14, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                fontFamily: 'inherit',
-              }}>
+              <div style={{ flex: 1, background: C.bg, border: `1px solid ${C.border}`, borderRadius: 9, padding: '9px 14px', fontSize: 13, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'inherit' }}>
                 {profileUrl}
               </div>
               <button
                 onClick={() => copy(profileUrl, 'profile')}
-                style={{
-                  background: copiedField === 'profile' ? 'rgba(52,211,153,0.1)' : 'rgba(59,130,246,0.1)',
-                  border: `1px solid ${copiedField === 'profile' ? 'rgba(52,211,153,0.3)' : 'rgba(59,130,246,0.2)'}`,
-                  borderRadius: 8, padding: '8px 14px',
-                  color: copiedField === 'profile' ? C.green : '#60a5fa',
-                  fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
-                  whiteSpace: 'nowrap',
-                  transition: 'all 0.15s',
-                }}
+                style={{ background: copiedField === 'profile' ? 'rgba(34,197,94,0.1)' : 'rgba(27,120,247,0.08)', border: `1px solid ${copiedField === 'profile' ? 'rgba(34,197,94,0.3)' : 'rgba(27,120,247,0.2)'}`, borderRadius: 8, padding: '8px 14px', color: copiedField === 'profile' ? C.green : C.blue, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap', transition: 'all 0.15s' }}
               >
                 {copiedField === 'profile' ? <><Check size={13} style={{ verticalAlign: 'middle', marginRight: 3 }} />Copiado</> : 'Copiar'}
               </button>
             </div>
           </div>
 
-          {/* Section 2: Email template */}
+          {/* Email template */}
           <div>
-            <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>
-              Email de candidatura
-            </div>
+            <SectionLabel>Email de candidatura</SectionLabel>
             <textarea
               value={emailText}
               onChange={e => setEmailText(e.target.value)}
               rows={10}
-              style={{
-                width: '100%', background: '#060c16',
-                border: '1.5px solid #1e3050', borderRadius: 10,
-                color: C.text, fontSize: 13, lineHeight: 1.7,
-                padding: '12px 14px', resize: 'vertical',
-                fontFamily: 'inherit', outline: 'none',
-                boxSizing: 'border-box',
-                transition: 'border-color 0.2s',
-              }}
-              onFocus={e => e.target.style.borderColor = '#3b82f6'}
-              onBlur={e => e.target.style.borderColor = '#1e3050'}
+              style={{ width: '100%', background: C.bg, border: `1.5px solid ${C.border}`, borderRadius: 10, color: C.text, fontSize: 13, lineHeight: 1.7, padding: '12px 14px', resize: 'vertical', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box', transition: 'border-color 0.2s' }}
+              onFocus={e => e.target.style.borderColor = C.blue}
+              onBlur={e => e.target.style.borderColor = C.border}
             />
             <button
               onClick={() => copy(emailText, 'email')}
-              style={{
-                marginTop: 8,
-                background: copiedField === 'email' ? 'rgba(52,211,153,0.1)' : 'rgba(59,130,246,0.1)',
-                border: `1px solid ${copiedField === 'email' ? 'rgba(52,211,153,0.3)' : 'rgba(59,130,246,0.2)'}`,
-                borderRadius: 8, padding: '9px 18px',
-                color: copiedField === 'email' ? C.green : '#60a5fa',
-                fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
-                transition: 'all 0.15s',
-              }}
+              style={{ marginTop: 8, background: copiedField === 'email' ? 'rgba(34,197,94,0.1)' : 'rgba(27,120,247,0.08)', border: `1px solid ${copiedField === 'email' ? 'rgba(34,197,94,0.3)' : 'rgba(27,120,247,0.2)'}`, borderRadius: 8, padding: '9px 18px', color: copiedField === 'email' ? C.green : C.blue, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s' }}
             >
               {copiedField === 'email' ? <><Check size={13} style={{ verticalAlign: 'middle', marginRight: 4 }} />Copiado</> : 'Copiar email'}
             </button>
           </div>
 
-          {/* Section 3: QR Code */}
+          {/* QR Code */}
           <div>
-            <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>
-              QR Code do teu perfil
-            </div>
+            <SectionLabel>QR Code do teu perfil</SectionLabel>
             <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
               <div ref={qrRef} style={{ background: '#fff', borderRadius: 12, padding: 12, boxShadow: '0 4px 20px rgba(0,0,0,0.3)', flexShrink: 0 }}>
                 <QRCodeSVG value={profileUrl} size={110} />
               </div>
-              <div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <button
                   onClick={downloadQR}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 7,
-                    background: 'rgba(59,130,246,0.1)',
-                    border: '1px solid rgba(59,130,246,0.2)',
-                    borderRadius: 8, padding: '9px 16px',
-                    color: '#60a5fa', fontSize: 13, fontWeight: 600,
-                    cursor: 'pointer', fontFamily: 'inherit',
-                    marginBottom: 10,
-                    transition: 'all 0.15s',
-                  }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 7, background: 'rgba(27,120,247,0.08)', border: `1px solid rgba(27,120,247,0.2)`, borderRadius: 8, padding: '9px 16px', color: C.blue, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'background 0.15s' }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(27,120,247,0.14)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'rgba(27,120,247,0.08)'}
                 >
                   <Download size={14} /> Descarregar QR
                 </button>
@@ -356,6 +321,7 @@ ${displayName}`
   )
 }
 
+// ── Main page ──────────────────────────────────────────────────────────────────
 export default function UserProfile() {
   const { username } = useParams()
   const navigate = useNavigate()
@@ -369,7 +335,6 @@ export default function UserProfile() {
 
   useEffect(() => {
     async function load() {
-      // Try by username first, then by id (uuid fallback)
       let profileData = null
       const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(username)
 
@@ -381,15 +346,10 @@ export default function UserProfile() {
         profileData = data
       }
 
-      if (!profileData) {
-        setNotFound(true)
-        setLoading(false)
-        return
-      }
+      if (!profileData) { setNotFound(true); setLoading(false); return }
 
       setProfile(profileData)
 
-      // Load public projects for this user
       const { data: projectsData } = await supabase
         .from('projects')
         .select('id, name, slug, score, area, ai_tagline, cover_url, created_at')
@@ -403,10 +363,11 @@ export default function UserProfile() {
   }, [username])
 
   const isOwnProfile = user?.id === profile?.id
-  const displayName = profile?.full_name || profile?.username || 'Utilizador'
-  const profileUrl = window.location.href
-  const scores = projects.map(p => p.score).filter(Boolean)
-  const bestScore = scores.length ? Math.max(...scores) : null
+  const displayName  = profile?.full_name || profile?.username || 'Utilizador'
+  const profileUrl   = window.location.href
+  const scores       = projects.map(p => p.score).filter(Boolean)
+  const bestScore    = scores.length ? Math.max(...scores) : null
+  const [c1, c2]     = areaGradient(profile?.area || profile?.course || '')
 
   if (loading) return (
     <div style={{ minHeight: '100vh', background: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -419,7 +380,7 @@ export default function UserProfile() {
     <div style={{ minHeight: '100vh', background: C.bg, fontFamily: 'Inter, sans-serif', display: 'flex', flexDirection: 'column' }}>
       <Navbar />
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, padding: 24, textAlign: 'center' }}>
-        <div style={{ marginBottom: 8 }}><Search size={48} color={C.muted} /></div>
+        <Search size={44} color={C.muted} />
         <h2 style={{ color: C.text, fontSize: 22, fontWeight: 800, margin: 0 }}>Perfil não encontrado</h2>
         <p style={{ color: C.muted, margin: 0, fontSize: 14 }}>O utilizador @{username} não existe.</p>
         <button onClick={() => navigate('/')} style={{ marginTop: 8, background: C.blue, border: 'none', borderRadius: 8, padding: '10px 24px', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
@@ -438,176 +399,308 @@ export default function UserProfile() {
         <meta property="og:description" content={profile.bio || `Projetos de ${displayName} no Showo`} />
         <meta property="og:url" content={profileUrl} />
       </Helmet>
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg) } }
+
+        .up-header {
+          background: ${C.card};
+          border: 1px solid ${C.border};
+          border-radius: 18px;
+          padding: 28px 28px 24px;
+          margin-bottom: 28px;
+          position: relative;
+          overflow: hidden;
+        }
+        /* Subtle area gradient glow in top-right corner */
+        .up-header::before {
+          content: '';
+          position: absolute;
+          top: -60px; right: -60px;
+          width: 280px; height: 280px;
+          border-radius: 50%;
+          background: radial-gradient(circle, ${c1}55 0%, transparent 70%);
+          pointer-events: none;
+        }
+
+        .up-avatar {
+          width: 88px; height: 88px;
+          border-radius: 50%;
+          object-fit: cover;
+          flex-shrink: 0;
+          border: 3px solid ${C.border};
+          box-shadow: 0 8px 28px rgba(0,0,0,0.35);
+        }
+        .up-avatar-placeholder {
+          width: 88px; height: 88px;
+          border-radius: 50%;
+          flex-shrink: 0;
+          background: linear-gradient(135deg, ${c1}, ${c2});
+          display: flex; align-items: center; justify-content: center;
+          font-size: 34px; font-weight: 900; color: rgba(255,255,255,0.85);
+          border: 3px solid ${C.border};
+          box-shadow: 0 8px 28px rgba(0,0,0,0.35);
+        }
+
+        .up-stat-pill {
+          display: inline-flex; align-items: center; gap: 5px;
+          background: rgba(255,255,255,0.04);
+          border: 1px solid ${C.border};
+          border-radius: 999px;
+          padding: 4px 12px;
+          font-size: 12px; color: ${C.muted};
+        }
+        .up-stat-pill strong {
+          color: ${C.text}; font-weight: 700;
+        }
+
+        .up-social-link {
+          display: inline-flex; align-items: center; gap: 5px;
+          background: rgba(255,255,255,0.04);
+          border: 1px solid ${C.border};
+          border-radius: 8px;
+          padding: 5px 12px;
+          font-size: 12px; color: ${C.muted};
+          text-decoration: none;
+          transition: border-color 0.15s, color 0.15s, background 0.15s;
+          cursor: pointer;
+        }
+        .up-social-link:hover {
+          border-color: ${C.borderBright};
+          color: ${C.text};
+          background: rgba(255,255,255,0.07);
+        }
+
+        .up-action-btn {
+          background: transparent;
+          border: 1px solid ${C.border};
+          border-radius: 9px;
+          padding: 8px 14px;
+          color: ${C.muted};
+          font-size: 13px; font-weight: 600;
+          cursor: pointer; font-family: inherit;
+          display: inline-flex; align-items: center; gap: 6px;
+          transition: border-color 0.15s, color 0.15s, background 0.15s;
+          white-space: nowrap;
+        }
+        .up-action-btn:hover {
+          border-color: ${C.borderBright};
+          color: ${C.text};
+          background: rgba(255,255,255,0.04);
+        }
+        .up-action-btn.kit {
+          background: rgba(234,179,8,0.07);
+          border-color: rgba(234,179,8,0.22);
+          color: ${C.yellow};
+        }
+        .up-action-btn.kit:hover {
+          background: rgba(234,179,8,0.13);
+          border-color: rgba(234,179,8,0.35);
+          color: ${C.yellow};
+        }
+        .up-action-btn.primary {
+          background: rgba(27,120,247,0.1);
+          border-color: rgba(27,120,247,0.25);
+          color: ${C.blue};
+        }
+        .up-action-btn.primary:hover {
+          background: rgba(27,120,247,0.17);
+          border-color: rgba(27,120,247,0.4);
+          color: ${C.blue};
+        }
+
+        .up-section-label {
+          font-size: 11px; font-weight: 700; color: ${C.muted};
+          text-transform: uppercase; letter-spacing: 0.08em;
+          margin: 0 0 14px;
+        }
+
+        .up-projects-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+          gap: 16px;
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 860px) {
+          .up-header { padding: 20px 18px 18px; border-radius: 14px; }
+          .up-header-inner { flex-direction: column !important; gap: 16px !important; }
+          .up-avatar, .up-avatar-placeholder { width: 72px !important; height: 72px !important; font-size: 28px !important; }
+          .up-actions { flex-wrap: wrap !important; }
+          .up-projects-grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+        }
+        @media (max-width: 600px) {
+          .up-header { padding: 16px 14px 14px; border-radius: 12px; margin-bottom: 18px; }
+          .up-projects-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+          .up-stat-pills { flex-wrap: wrap; gap: 6px !important; }
+        }
+        @media (max-width: 420px) {
+          .up-projects-grid { grid-template-columns: 1fr; }
+        }
+      `}</style>
+
       <Navbar />
 
-      <div style={{ maxWidth: 820, margin: '0 auto', padding: '52px 24px 80px' }}>
+      <div style={{ maxWidth: 820, margin: '0 auto', padding: '40px 20px 80px' }}>
 
-        {/* Profile header */}
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 24, marginBottom: 48, flexWrap: 'wrap' }}>
-          {/* Avatar */}
-          {profile.avatar_url ? (
-            <img
-              src={profile.avatar_url}
-              alt={displayName}
-              style={{ width: 80, height: 80, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, boxShadow: '0 8px 32px rgba(59,130,246,0.25)' }}
-            />
-          ) : (
-            <div style={{
-              width: 80, height: 80, borderRadius: '50%', flexShrink: 0,
-              background: `linear-gradient(135deg, ${C.blue}, #4f46e5)`,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 32, fontWeight: 900, color: '#fff',
-              boxShadow: '0 8px 32px rgba(59,130,246,0.25)',
-            }}>
-              {displayName[0].toUpperCase()}
-            </div>
-          )}
+        {/* ── Profile header card ── */}
+        <div className="up-header">
+          <div className="up-header-inner" style={{ display: 'flex', alignItems: 'flex-start', gap: 22, position: 'relative', zIndex: 1 }}>
 
-          <div style={{ flex: 1, minWidth: 200 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 4 }}>
-              <h1 style={{ color: C.text, fontSize: 24, fontWeight: 800, margin: 0, letterSpacing: '-0.3px' }}>
-                {displayName}
-              </h1>
-              {profile.username && (
-                <span style={{ color: C.subtle, fontSize: 15, fontWeight: 400 }}>@{profile.username}</span>
+            {/* Avatar */}
+            {profile.avatar_url
+              ? <img src={profile.avatar_url} alt={displayName} className="up-avatar" />
+              : <div className="up-avatar-placeholder">{displayName[0].toUpperCase()}</div>
+            }
+
+            {/* Info */}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              {/* Name + username */}
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap', marginBottom: 2 }}>
+                <h1 style={{ color: C.text, fontSize: 22, fontWeight: 800, margin: 0, letterSpacing: '-0.4px', lineHeight: 1.2 }}>
+                  {displayName}
+                </h1>
+                {profile.username && (
+                  <span style={{ color: C.subtle, fontSize: 14, fontWeight: 400 }}>@{profile.username}</span>
+                )}
+              </div>
+
+              {/* Area / school */}
+              {(profile.area || profile.course || profile.school) && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginBottom: 10, marginTop: 4 }}>
+                  {(profile.area || profile.course) && (
+                    <span style={{ fontSize: 12, color: C.muted, background: 'rgba(255,255,255,0.04)', border: `1px solid ${C.border}`, borderRadius: 5, padding: '2px 8px' }}>
+                      {profile.area || profile.course}
+                    </span>
+                  )}
+                  {profile.school && (
+                    <span style={{ fontSize: 12, color: C.muted }}>{profile.school}</span>
+                  )}
+                </div>
               )}
-            </div>
-            {profile.bio && (
-              <p style={{ color: C.muted, fontSize: 15, margin: '0 0 14px', lineHeight: 1.65, maxWidth: 520 }}>
-                {profile.bio}
-              </p>
-            )}
-            <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
-              <span style={{ color: C.muted, fontSize: 13 }}>
-                <span style={{ color: C.text, fontWeight: 700 }}>{projects.length}</span> projeto{projects.length !== 1 ? 's' : ''}
-              </span>
-              {bestScore != null && (
-                <span style={{ color: C.muted, fontSize: 13 }}>
-                  Melhor score: <span style={{ color: getScoreColor(bestScore), fontWeight: 700 }}>{bestScore}</span>
+
+              {/* Bio */}
+              {profile.bio && (
+                <p style={{ color: C.muted, fontSize: 13, margin: '0 0 12px', lineHeight: 1.65, maxWidth: 480 }}>
+                  {profile.bio}
+                </p>
+              )}
+
+              {/* Stats */}
+              <div className="up-stat-pills" style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+                <span className="up-stat-pill">
+                  <strong>{projects.length}</strong> projeto{projects.length !== 1 ? 's' : ''}
                 </span>
-              )}
-            </div>
-          </div>
+                {bestScore != null && (
+                  <span className="up-stat-pill">
+                    Melhor score: <strong style={{ color: scoreColor(bestScore) }}>{bestScore}</strong>
+                  </span>
+                )}
+                {profile.role === 'professor' && (
+                  <span className="up-stat-pill">
+                    <strong style={{ color: C.blue }}>Professor</strong>
+                  </span>
+                )}
+              </div>
 
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', flexShrink: 0 }}>
-            {isOwnProfile && projects.length > 0 && (
-              <button
-                onClick={() => setShowKitModal(true)}
-                style={{
-                  background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.25)',
-                  borderRadius: 8, padding: '9px 14px',
-                  color: '#fbbf24', fontSize: 13, fontWeight: 600,
-                  cursor: 'pointer', fontFamily: 'inherit',
-                  transition: 'background 0.15s',
-                }}
-                onMouseEnter={e => e.currentTarget.style.background = 'rgba(251,191,36,0.14)'}
-                onMouseLeave={e => e.currentTarget.style.background = 'rgba(251,191,36,0.08)'}
-              >
-                <Mail size={14} style={{ verticalAlign: 'middle', marginRight: 5 }} />Kit de estágio
-              </button>
-            )}
-            <button
-              onClick={() => setShowQR(true)}
-              style={{
-                background: 'transparent',
-                border: `1px solid ${C.border}`,
-                borderRadius: 8, padding: '9px 14px',
-                color: C.muted, fontSize: 13, fontWeight: 600,
-                cursor: 'pointer', fontFamily: 'inherit',
-                display: 'flex', alignItems: 'center', gap: 6,
-                transition: 'all 0.15s',
-              }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = '#2a4275'; e.currentTarget.style.color = C.text }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted }}
-            >
-              <QrCode size={14} /> QR
-            </button>
-            {isOwnProfile && (
-              <button
-                onClick={() => navigate('/settings')}
-                style={{
-                  background: 'transparent', border: `1px solid ${C.border}`,
-                  borderRadius: 8, padding: '9px 14px',
-                  color: C.muted, fontSize: 13, fontWeight: 600,
-                  cursor: 'pointer', fontFamily: 'inherit',
-                  transition: 'border-color 0.15s, color 0.15s',
-                }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = '#2a4275'; e.currentTarget.style.color = C.text }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted }}
-              >
-                Editar perfil
-              </button>
-            )}
+              {/* Social links */}
+              {(profile.linkedin || profile.github || profile.website) && (
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
+                  {profile.linkedin && (
+                    <a href={profile.linkedin} target="_blank" rel="noopener noreferrer" className="up-social-link">
+                      <ExternalLink size={12} /> LinkedIn
+                    </a>
+                  )}
+                  {profile.github && (
+                    <a href={profile.github} target="_blank" rel="noopener noreferrer" className="up-social-link">
+                      <Link size={12} /> GitHub
+                    </a>
+                  )}
+                  {profile.website && (
+                    <a href={profile.website} target="_blank" rel="noopener noreferrer" className="up-social-link">
+                      <Globe size={12} /> Website
+                    </a>
+                  )}
+                </div>
+              )}
+
+              {/* Action buttons */}
+              <div className="up-actions" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {isOwnProfile && projects.length > 0 && (
+                  <button className="up-action-btn kit" onClick={() => setShowKitModal(true)}>
+                    <Mail size={13} /> Kit de estágio
+                  </button>
+                )}
+                <button className="up-action-btn" onClick={() => setShowQR(true)}>
+                  <QrCode size={13} /> QR Code
+                </button>
+                {isOwnProfile && (
+                  <button className="up-action-btn" onClick={() => navigate('/settings')}>
+                    <Pencil size={13} /> Editar perfil
+                  </button>
+                )}
+                {isOwnProfile && (
+                  <button className="up-action-btn primary" onClick={() => navigate('/interview')}>
+                    <Rocket size={13} /> Novo projeto
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Projects */}
-        <h2 style={{ color: C.text, fontSize: 16, fontWeight: 700, margin: '0 0 18px', letterSpacing: '-0.2px' }}>
-          Projetos
-          {projects.length > 0 && (
-            <span style={{ color: C.muted, fontWeight: 400, fontSize: 14, marginLeft: 8 }}>({projects.length})</span>
-          )}
-        </h2>
+        {/* ── Projects ── */}
+        <div>
+          <p className="up-section-label">
+            Projetos
+            {projects.length > 0 && <span style={{ color: C.subtle, marginLeft: 6, fontWeight: 500, textTransform: 'none', letterSpacing: 0 }}>({projects.length})</span>}
+          </p>
 
-        {projects.length === 0 ? (
-          isOwnProfile ? (
-            <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: '48px 32px', textAlign: 'center' }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16, color: '#3b82f6' }}><Rocket size={40} /></div>
-              <p style={{ color: C.text, fontSize: 18, fontWeight: 700, margin: '0 0 8px' }}>O teu portfólio começa aqui</p>
-              <p style={{ color: C.muted, fontSize: 14, margin: '0 0 24px', maxWidth: 360, marginLeft: 'auto', marginRight: 'auto', lineHeight: 1.6 }}>
-                Adiciona o teu primeiro projeto escolar ou pessoal e transforma-o numa página profissional com a ajuda da IA.
-              </p>
-              <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-                <button
-                  onClick={() => navigate('/interview')}
-                  style={{ background: C.blue, border: 'none', borderRadius: 8, padding: '11px 24px', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
-                >
-                  Criar com IA →
-                </button>
-                <button
-                  onClick={() => navigate('/novo')}
-                  style={{ background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 8, padding: '11px 24px', color: C.muted, fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}
-                >
-                  Preencher manualmente
-                </button>
+          {projects.length === 0 ? (
+            isOwnProfile ? (
+              <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: '48px 32px', textAlign: 'center' }}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16, color: C.blue }}><Rocket size={40} /></div>
+                <p style={{ color: C.text, fontSize: 17, fontWeight: 700, margin: '0 0 8px' }}>O teu portfólio começa aqui</p>
+                <p style={{ color: C.muted, fontSize: 14, margin: '0 0 24px', maxWidth: 360, marginLeft: 'auto', marginRight: 'auto', lineHeight: 1.65 }}>
+                  Adiciona o teu primeiro projeto e transforma-o numa página profissional com a ajuda da IA.
+                </p>
+                <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
+                  <button onClick={() => navigate('/interview')} style={{ background: C.blue, border: 'none', borderRadius: 9, padding: '11px 24px', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                    Criar com IA →
+                  </button>
+                  <button onClick={() => navigate('/novo')} style={{ background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 9, padding: '11px 24px', color: C.muted, fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>
+                    Preencher manualmente
+                  </button>
+                </div>
               </div>
-            </div>
+            ) : (
+              <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: '48px 32px', textAlign: 'center' }}>
+                <FolderOpen size={40} color={C.subtle} style={{ marginBottom: 14 }} />
+                <p style={{ color: C.text, fontSize: 16, fontWeight: 700, margin: '0 0 8px' }}>Ainda sem projetos</p>
+                <p style={{ color: C.muted, fontSize: 14, margin: 0, lineHeight: 1.6 }}>
+                  {profile?.full_name?.split(' ')[0] || 'Este utilizador'} ainda não partilhou nenhum projeto.
+                </p>
+              </div>
+            )
           ) : (
-            <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: '48px 32px', textAlign: 'center' }}>
-              <div style={{ marginBottom: 14 }}><FolderOpen size={40} color={C.subtle} /></div>
-              <p style={{ color: C.text, fontSize: 16, fontWeight: 700, margin: '0 0 8px' }}>Ainda sem projetos</p>
-              <p style={{ color: C.muted, fontSize: 14, margin: 0, lineHeight: 1.6 }}>
-                {profile?.full_name?.split(' ')[0] || 'Este utilizador'} ainda não partilhou nenhum projeto.
-              </p>
+            <div className="up-projects-grid">
+              {projects.map(project => (
+                <ProjectCard
+                  key={project.id}
+                  project={project}
+                  onClick={() => navigate(`/projeto/${project.slug}`)}
+                />
+              ))}
             </div>
-          )
-        ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 16 }}>
-            {projects.map(project => (
-              <ProjectCard
-                key={project.id}
-                project={project}
-                onClick={() => navigate(`/projeto/${project.slug}`)}
-              />
-            ))}
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {showKitModal && (
-        <KitDeEstagioModal
-          profile={profile}
-          projects={projects}
-          onClose={() => setShowKitModal(false)}
-        />
+        <KitDeEstagioModal profile={profile} projects={projects} onClose={() => setShowKitModal(false)} />
       )}
       {showQR && (
-        <QRModal
-          profileUrl={profileUrl}
-          username={profile?.username || profile?.id || ''}
-          onClose={() => setShowQR(false)}
-        />
+        <QRModal profileUrl={profileUrl} username={profile?.username || profile?.id || ''} onClose={() => setShowQR(false)} />
       )}
     </div>
   )

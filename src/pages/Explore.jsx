@@ -231,8 +231,10 @@ export default function Explore() {
     <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: 'var(--font-body)' }}>
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
-        .explore-card { transition: all 0.2s ease !important; }
-        .explore-card:hover { border-color: #2a4275 !important; transform: translateY(-3px) !important; box-shadow: 0 12px 40px rgba(0,0,0,0.45) !important; }
+        .explore-card { transition: all 0.18s ease !important; }
+        .explore-card:hover { border-color: #2a4275 !important; transform: translateY(-3px) !important; box-shadow: 0 12px 40px rgba(0,0,0,0.45) !important; background: #1c2d44 !important; }
+        .explore-card-arrow { opacity: 0; transform: translateX(-4px); transition: opacity 0.15s, transform 0.15s; }
+        .explore-card:hover .explore-card-arrow { opacity: 1; transform: translateX(0); }
         .explore-grid { grid-template-columns: repeat(auto-fill, minmax(288px, 1fr)); }
         .explore-search { width: 100%; background: #152030; border: 1px solid #1e3050; border-radius: 12px; color: #e8f2ff; font-size: 15px; padding: 14px 16px 14px 48px; outline: none; font-family: var(--font-body); box-sizing: border-box; transition: border-color 0.2s, box-shadow 0.2s; }
         .explore-search:focus { border-color: #1b78f7 !important; box-shadow: 0 0 0 3px rgba(27,120,247,0.12) !important; }
@@ -430,16 +432,21 @@ export default function Explore() {
                     )}
                   </div>
 
-                  {/* Creator + school year */}
-                  {(project.creator_name || project.school_year) && (
-                    <div style={{ fontSize: 12, color: colors.subtle, fontWeight: 500 }}>
-                      {[project.creator_name, project.school_year].filter(Boolean).join(' · ')}
-                    </div>
-                  )}
+                  {/* Creator + school year + hover arrow */}
+                  <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                    {(project.creator_name || project.school_year) ? (
+                      <div style={{ fontSize: 12, color: colors.subtle, fontWeight: 500, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {[project.creator_name, project.school_year].filter(Boolean).join(' · ')}
+                      </div>
+                    ) : <div />}
+                    <svg className="explore-card-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={colors.blue} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                      <path d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
+                  </div>
 
                   {/* Technologies (recruiter mode) */}
                   {recruiterMode && project.technologies && (
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
                       {project.technologies.split(/[,\s·]+/).filter(Boolean).slice(0, 4).map((t, i) => (
                         <span key={i} style={{ fontSize: 11, color: colors.muted, background: 'rgba(255,255,255,0.04)', border: `1px solid ${colors.border}`, borderRadius: 5, padding: '2px 7px' }}>
                           {t.trim()}
@@ -447,28 +454,6 @@ export default function Explore() {
                       ))}
                     </div>
                   )}
-
-                  {/* CTA */}
-                  <div style={{ marginTop: 'auto', paddingTop: 10 }}>
-                    <button
-                      onClick={e => { e.stopPropagation(); handleProjectClick(project) }}
-                      style={{
-                        width: '100%',
-                        background: recruiterMode
-                          ? 'linear-gradient(135deg, #7c3aed, #4f46e5)'
-                          : 'rgba(27,120,247,0.1)',
-                        border: `1px solid ${recruiterMode ? 'rgba(124,58,237,0.4)' : 'rgba(27,120,247,0.25)'}`,
-                        color: recruiterMode ? '#fff' : '#60a5fa',
-                        borderRadius: 10, padding: '10px 0',
-                        fontSize: 13, fontWeight: 700,
-                        cursor: 'pointer', fontFamily: 'inherit',
-                        letterSpacing: '-0.1px',
-                        boxShadow: recruiterMode ? '0 2px 12px rgba(124,58,237,0.25)' : 'none',
-                      }}
-                    >
-                      {recruiterMode ? 'Ver candidato' : 'Ver projeto'}
-                    </button>
-                  </div>
                 </div>
               ))}
             </div>

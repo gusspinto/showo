@@ -7,18 +7,21 @@ import { Loader, Check, X, AlertTriangle, Camera, ArrowLeft, GraduationCap, Book
 import { CropModal } from '../components/CropModal'
 
 const C = {
-  bg: '#0d1424',
-  card: '#111827',
-  border: '#1e3050',
-  borderFocus: '#3b82f6',
-  blue: '#3b82f6',
-  blueHover: '#2563eb',
-  muted: '#7d93b0',
-  text: '#e8f2ff',
-  subtle: '#3d5270',
-  inputBg: '#0a1118',
-  red: '#f87171',
-  green: '#34d399',
+  bg:          '#0d1424',
+  bgAlt:       '#111c32',
+  card:        '#152030',
+  cardHover:   '#1c2d44',
+  border:      '#1e3050',
+  borderBright:'#2a4275',
+  borderFocus: '#1b78f7',
+  blue:        '#1b78f7',
+  blueHover:   '#1564d4',
+  muted:       '#7d93b0',
+  text:        '#e8f2ff',
+  subtle:      '#3d5270',
+  inputBg:     '#0d1424',
+  red:         '#ef4444',
+  green:       '#22c55e',
 }
 
 function Input({ label, value, onChange, placeholder, hint, type = 'text', prefix }) {
@@ -54,7 +57,7 @@ function Input({ label, value, onChange, placeholder, hint, type = 'text', prefi
             fontFamily: 'Inter, sans-serif',
             boxSizing: 'border-box',
             transition: 'border-color 0.2s, box-shadow 0.2s',
-            boxShadow: focused ? `0 0 0 3px rgba(59,130,246,0.12)` : 'none',
+            boxShadow: focused ? `0 0 0 3px rgba(27,120,247,0.12)` : 'none',
           }}
         />
       </div>
@@ -91,7 +94,7 @@ function Textarea({ label, value, onChange, placeholder, hint }) {
           resize: 'vertical',
           minHeight: 90,
           transition: 'border-color 0.2s, box-shadow 0.2s',
-          boxShadow: focused ? `0 0 0 3px rgba(59,130,246,0.12)` : 'none',
+          boxShadow: focused ? `0 0 0 3px rgba(27,120,247,0.12)` : 'none',
         }}
       />
       {hint && <p style={{ margin: '6px 0 0', fontSize: 12, color: C.subtle, lineHeight: 1.5 }}>{hint}</p>}
@@ -354,7 +357,7 @@ export default function Settings() {
                   style={{ width: 72, height: 72, borderRadius: '50%', objectFit: 'cover', border: `2px solid ${C.border}` }}
                 />
               ) : (
-                <div style={{ width: 72, height: 72, borderRadius: '50%', background: 'linear-gradient(135deg,#3b82f6,#4f46e5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, fontWeight: 800, color: '#fff', border: `2px solid ${C.border}` }}>
+                <div style={{ width: 72, height: 72, borderRadius: '50%', background: 'linear-gradient(135deg,#1b78f7,#4f46e5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, fontWeight: 800, color: '#fff', border: `2px solid ${C.border}` }}>
                   {fullName?.[0]?.toUpperCase() ?? user?.email?.[0]?.toUpperCase() ?? '?'}
                 </div>
               )}
@@ -493,7 +496,7 @@ export default function Settings() {
               fontSize: 14, fontWeight: 700,
               cursor: saving ? 'default' : 'pointer',
               fontFamily: 'inherit',
-              boxShadow: saving ? 'none' : '0 4px 16px rgba(59,130,246,0.3)',
+              boxShadow: saving ? 'none' : '0 4px 16px rgba(27,120,247,0.3)',
               transition: 'background 0.2s',
             }}
           >
