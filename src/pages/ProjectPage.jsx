@@ -550,6 +550,9 @@ export default function ProjectPage() {
   const [inviteInput, setInviteInput] = useState('')
   const [inviting, setInviting] = useState(false)
   const [inviteMsg, setInviteMsg] = useState(null) // { type: 'success'|'error', text }
+  const [milestoneCard, setMilestoneCard] = useState(null) // { score, tier }
+  const [defenseDate, setDefenseDate] = useState('')
+  const [savingDefense, setSavingDefense] = useState(false)
   const [teacherFeedback, setTeacherFeedback] = useState([])
   const [showFeedbackForm, setShowFeedbackForm] = useState(false)
   const [fbComment, setFbComment] = useState('')
@@ -598,6 +601,8 @@ export default function ProjectPage() {
 
       // Load cached AI feedback
       if (data.ai_feedback) setAiFeedback(data.ai_feedback)
+      // Load defense date
+      if (data.defense_date) setDefenseDate(data.defense_date)
 
       const isProjectOwner = !!(user?.id && data.user_id && user.id === data.user_id)
 
@@ -638,7 +643,7 @@ export default function ProjectPage() {
       if (data.user_id) {
         supabase
           .from('profiles')
-          .select('id, username, full_name, avatar_url')
+          .select('id, username, full_name, avatar_url, available_for_work')
           .eq('id', data.user_id)
           .single()
           .then(({ data: prof }) => {
@@ -808,6 +813,9 @@ export default function ProjectPage() {
       const updatedMilestones = [...current, ...newMilestones]
       supabase.from('projects').update({ notified_milestones: updatedMilestones }).eq('id', project.id)
       setProject(p => ({ ...p, notified_milestones: updatedMilestones }))
+      // Show shareable milestone card
+      const tier = m >= 90 ? 'Excelente' : m >= 70 ? 'Profissional' : 'Em progresso'
+      setMilestoneCard({ score: m, tier })
     }
 
     setEditModal(null)
@@ -971,6 +979,14 @@ export default function ProjectPage() {
   const level = getLevelInfo(displayScore)
   const internshipReady = score > 80 && !!project.technologies?.trim() && !!project.results?.trim()
   const isPap = project.is_pap || project.project_type === 'pap'
+
+  async function handleSaveDefenseDate(dateStr) {
+    setDefenseDate(dateStr)
+    setSavingDefense(true)
+    await supabase.from('projects').update({ defense_date: dateStr || null }).eq('id', project.id)
+    setProject(p => ({ ...p, defense_date: dateStr || null }))
+    setSavingDefense(false)
+  }
 
   const isOwner = (
     (user?.id && project.user_id && user.id === project.user_id) ||
@@ -1200,6 +1216,107 @@ export default function ProjectPage() {
 
       {showConfetti && <Confetti />}
       <Toast message={toast.message} visible={toast.visible} />
+
+      {/* ── Milestone shareable card overlay ── */}
+      {milestoneCard && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, zIndex: 600,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: '20px 16px',
+            background: 'rgba(0,0,0,0.85)',
+            backdropFilter: 'blur(12px)',
+          }}
+          onClick={() => setMilestoneCard(null)}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              width: '100%', maxWidth: 400,
+              background: 'linear-gradient(145deg, #0e1f3a 0%, #152030 60%, #0d1424 100%)',
+              border: '1px solid rgba(27,120,247,0.3)',
+              borderRadius: 24,
+              padding: '36px 32px',
+              textAlign: 'center',
+              position: 'relative',
+              boxShadow: '0 24px 80px rgba(27,120,247,0.2), 0 8px 32px rgba(0,0,0,0.6)',
+              overflow: 'hidden',
+            }}
+          >
+            {/* Glow blobs */}
+            <div style={{ position: 'absolute', top: -60, left: '50%', transform: 'translateX(-50%)', width: 300, height: 300, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(27,120,247,0.18) 0%, transparent 70%)', pointerEvents: 'none' }} />
+            <div style={{ position: 'absolute', bottom: -40, right: -40, width: 200, height: 200, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(79,70,229,0.15) 0%, transparent 70%)', pointerEvents: 'none' }} />
+
+            {/* Emoji */}
+            <div style={{ fontSize: 52, marginBottom: 12, lineHeight: 1, position: 'relative' }}>
+              {milestoneCard.score >= 90 ? '🏆' : milestoneCard.score >= 70 ? '🚀' : '🎯'}
+            </div>
+
+            {/* Title */}
+            <div style={{ fontSize: 13, fontWeight: 700, color: colors.muted, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8, position: 'relative' }}>
+              Marco desbloqueado
+            </div>
+            <div style={{ fontSize: 28, fontWeight: 900, color: colors.text, letterSpacing: '-0.5px', marginBottom: 6, position: 'relative' }}>
+              {milestoneCard.score} pontos!
+            </div>
+            <div style={{ fontSize: 15, color: colors.muted, marginBottom: 24, position: 'relative' }}>
+              {project.name}
+            </div>
+
+            {/* Score badge */}
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: 8,
+              background: milestoneCard.score >= 90 ? 'rgba(34,197,94,0.12)' : milestoneCard.score >= 70 ? 'rgba(27,120,247,0.12)' : 'rgba(251,191,36,0.12)',
+              border: `1px solid ${milestoneCard.score >= 90 ? 'rgba(34,197,94,0.3)' : milestoneCard.score >= 70 ? 'rgba(27,120,247,0.3)' : 'rgba(251,191,36,0.3)'}`,
+              borderRadius: 999, padding: '6px 20px', marginBottom: 28,
+              color: milestoneCard.score >= 90 ? '#34d399' : milestoneCard.score >= 70 ? '#60a5fa' : '#fbbf24',
+              fontSize: 13, fontWeight: 800, position: 'relative',
+            }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+              {milestoneCard.tier}
+            </div>
+
+            {/* URL pill */}
+            <div style={{ fontSize: 11, color: colors.subtle, marginBottom: 24, position: 'relative' }}>
+              showo.vercel.app/p/{project.slug}
+            </div>
+
+            {/* Buttons */}
+            <div style={{ display: 'flex', gap: 10, position: 'relative' }}>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(`${window.location.origin}/p/${project.slug}`)
+                  triggerToast('Link copiado! Partilha com orgulho 🚀')
+                  setMilestoneCard(null)
+                }}
+                style={{
+                  flex: 1,
+                  background: 'linear-gradient(135deg, #1b78f7, #4f46e5)',
+                  border: 'none', borderRadius: 12,
+                  padding: '13px 0', color: '#fff',
+                  fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                  boxShadow: '0 6px 20px rgba(27,120,247,0.35)',
+                }}
+              >
+                📤 Copiar link
+              </button>
+              <button
+                onClick={() => setMilestoneCard(null)}
+                style={{
+                  flex: 1,
+                  background: 'rgba(255,255,255,0.05)',
+                  border: `1px solid ${colors.border}`, borderRadius: 12,
+                  padding: '13px 0', color: colors.muted,
+                  fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+                }}
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {editModal && (
         <EditModal challenge={editModal} project={project} onClose={() => setEditModal(null)} onSave={handleSave} saving={saving} />
       )}
@@ -1656,12 +1773,74 @@ export default function ProjectPage() {
                 Pronto para estágio
               </div>
             )}
+            {ownerProfile?.available_for_work && (
+              <div style={{
+                background: 'rgba(16,185,129,0.1)', color: '#10b981',
+                border: '1px solid rgba(16,185,129,0.3)',
+                borderRadius: 999, padding: '4px 12px',
+                fontSize: 10, fontWeight: 700, textAlign: 'center', maxWidth: 140, lineHeight: 1.5,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+              }}>
+                💼 Disponível
+              </div>
+            )}
           </div>
           </div>{/* end flex row */}
         </div>{/* end proj-hero */}
 
         {/* proj-body: everything after hero — ordered after sidebar on tablet/mobile */}
         <div className="proj-body">
+
+        {/* Defense date countdown — owner only */}
+        {isOwner && (() => {
+          const today = new Date(); today.setHours(0,0,0,0)
+          const target = defenseDate ? new Date(defenseDate + 'T00:00:00') : null
+          const daysLeft = target ? Math.ceil((target - today) / 86400000) : null
+          const urgentColor = daysLeft != null && daysLeft <= 7 ? '#ef4444' : daysLeft != null && daysLeft <= 30 ? '#f97316' : '#1b78f7'
+          return (
+            <div style={{
+              background: 'linear-gradient(135deg, rgba(27,120,247,0.07), rgba(79,70,229,0.04))',
+              border: `1px solid ${defenseDate ? urgentColor + '40' : 'rgba(27,120,247,0.2)'}`,
+              borderRadius: 16, padding: '18px 22px',
+              display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
+            }}>
+              <div style={{ fontSize: 28, lineHeight: 1, flexShrink: 0 }}>📅</div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 14, fontWeight: 700, color: colors.text, marginBottom: 4 }}>
+                  {daysLeft === null ? 'Quando é a tua defesa?' :
+                   daysLeft < 0 ? 'Defesa concluída 🎉' :
+                   daysLeft === 0 ? '🔥 A defesa é hoje!' :
+                   daysLeft === 1 ? '⚡ A defesa é amanhã!' :
+                   `${daysLeft} dias para a defesa`}
+                </div>
+                {daysLeft != null && daysLeft > 0 && (
+                  <div style={{ fontSize: 12, color: colors.muted }}>
+                    {daysLeft <= 7 ? '🚨 Foca no que falta completar!' :
+                     daysLeft <= 30 ? '💪 Mantém o ritmo. Continua a melhorar o score.' :
+                     '✅ Tens tempo. Vai completando missão a missão.'}
+                  </div>
+                )}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                <input
+                  type="date"
+                  value={defenseDate}
+                  onChange={e => handleSaveDefenseDate(e.target.value)}
+                  style={{
+                    background: 'rgba(255,255,255,0.05)',
+                    border: `1px solid ${colors.border}`,
+                    borderRadius: 8, padding: '7px 10px',
+                    color: colors.text, fontSize: 13,
+                    fontFamily: 'inherit', cursor: 'pointer',
+                    outline: 'none',
+                    colorScheme: 'dark',
+                  }}
+                />
+                {savingDefense && <div style={{ width: 14, height: 14, border: `2px solid ${colors.border}`, borderTop: `2px solid ${colors.blue}`, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />}
+              </div>
+            </div>
+          )
+        })()}
 
         {/* Certificate banner — owner only, score >= 75 */}
         {isOwner && score >= 75 && (

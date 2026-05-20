@@ -586,6 +586,18 @@ export default function UserProfile() {
                 </p>
               )}
 
+              {/* Available for work badge */}
+              {profile.available_for_work && profile.role === 'aluno' && (
+                <div style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                  background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)',
+                  borderRadius: 999, padding: '5px 14px', marginBottom: 12,
+                  color: '#10b981', fontSize: 13, fontWeight: 700,
+                }}>
+                  💼 Disponível para estágio
+                </div>
+              )}
+
               {/* Stats */}
               <div className="up-stat-pills" style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
                 <span className="up-stat-pill">

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { Navbar } from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
-import { Search, Building2, Eye } from 'lucide-react'
+import { Search, Building2, Eye, Briefcase } from 'lucide-react'
 
 const colors = {
   bg: '#0d1424',
@@ -135,6 +135,7 @@ export default function Explore() {
   const [filterZone, setFilterZone] = useState('')
   const [areas, setAreas] = useState([])
   const [sortBy, setSortBy] = useState('score')
+  const [filterAvailable, setFilterAvailable] = useState(false)
 
   const recruiterMode = profile?.role === 'recrutador' || profile?.role === 'empresa'
   const roleInfo = ROLE_LABELS[profile?.role] ?? null
@@ -145,7 +146,7 @@ export default function Explore() {
     async function load() {
       const { data, error } = await supabase
         .from('projects')
-        .select('id,name,slug,area,creator_name,course,school_year,ai_tagline,project_type,is_pap,score,created_at,technologies,views,cover_url,user_id')
+        .select('id,name,slug,area,creator_name,course,school_year,ai_tagline,project_type,is_pap,score,created_at,technologies,views,cover_url,user_id,profiles(available_for_work)')
         .order('score', { ascending: false })
         .limit(300)
       if (!error && data) {
@@ -210,10 +211,11 @@ export default function Explore() {
     if (filterZone && filterZone !== 'Outro') {
       if (!p.school_year?.includes(filterZone) && !p.course?.includes(filterZone) && !p.creator_name?.includes(filterZone)) return false
     }
+    if (filterAvailable && !p.profiles?.available_for_work) return false
     return true
   })
 
-  const hasFilters = filterArea || filterType || filterMinScore > 0 || filterZone
+  const hasFilters = filterArea || filterType || filterMinScore > 0 || filterZone || filterAvailable
 
   const SORT_OPTIONS = [
     { id: 'score',   label: 'Melhor score' },
@@ -315,9 +317,26 @@ export default function Explore() {
 
           <SelectFilter value={sortBy} onChange={setSortBy} options={SORT_OPTIONS} label="Ordenar por" />
 
+          {/* Available for work toggle */}
+          <button
+            onClick={() => setFilterAvailable(v => !v)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 6,
+              background: filterAvailable ? 'rgba(16,185,129,0.1)' : colors.bgAlt,
+              border: `1px solid ${filterAvailable ? 'rgba(16,185,129,0.4)' : colors.border}`,
+              borderRadius: 10, padding: '9px 14px',
+              color: filterAvailable ? '#10b981' : colors.muted,
+              fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+              transition: 'all 0.15s', whiteSpace: 'nowrap',
+            }}
+          >
+            <Briefcase size={13} />
+            Disponível p/ estágio
+          </button>
+
           {hasFilters && (
             <button
-              onClick={() => { setFilterArea(''); setFilterType(''); setFilterMinScore(0); setFilterZone('') }}
+              onClick={() => { setFilterArea(''); setFilterType(''); setFilterMinScore(0); setFilterZone(''); setFilterAvailable(false) }}
               style={{ background: 'transparent', border: `1px solid ${colors.border}`, color: colors.muted, borderRadius: 10, padding: '9px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
             >
               Limpar filtros
@@ -333,7 +352,7 @@ export default function Explore() {
           <div style={{ textAlign: 'center', padding: '80px 0', color: colors.muted }}>
             <p style={{ fontSize: 16 }}>{(query || hasFilters) ? 'Nenhum projeto encontrado com esses filtros.' : 'Ainda não há projetos. Sê o primeiro!'}</p>
             {(query || hasFilters) && (
-              <button onClick={() => { setSearch(''); setFilterArea(''); setFilterType(''); setFilterMinScore(0); setFilterZone('') }}
+              <button onClick={() => { setSearch(''); setFilterArea(''); setFilterType(''); setFilterMinScore(0); setFilterZone(''); setFilterAvailable(false) }}
                 style={{ marginTop: 12, background: 'transparent', border: `1px solid ${colors.border}`, color: colors.muted, borderRadius: 10, padding: '10px 22px', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}>
                 Limpar pesquisa
               </button>
@@ -414,6 +433,11 @@ export default function Explore() {
                       {project.is_pap && (
                         <span style={{ fontSize: 11, color: colors.yellow, background: 'rgba(234,179,8,0.08)', border: '1px solid rgba(234,179,8,0.2)', borderRadius: 999, padding: '3px 10px', fontWeight: 600 }}>
                           PAP
+                        </span>
+                      )}
+                      {project.profiles?.available_for_work && (
+                        <span style={{ fontSize: 11, color: '#10b981', background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.25)', borderRadius: 999, padding: '3px 10px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                          💼 Disponível
                         </span>
                       )}
                     </div>

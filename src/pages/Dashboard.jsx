@@ -649,7 +649,7 @@ export default function Dashboard() {
     async function load() {
       const { data, error } = await supabase
         .from('projects')
-        .select('id, name, slug, score, area, created_at, ai_tagline, views')
+        .select('id, name, slug, score, area, created_at, ai_tagline, views, defense_date')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
       if (!error) setProjects(data || [])
@@ -935,6 +935,59 @@ export default function Dashboard() {
           <StatCard icon={<BarChart2 size={18} />} label="Score médio" value={loadingProjects ? '—' : (avgScore ?? '—')} color={getScoreColor(avgScore)} />
           <StatCard icon={<Eye size={18} />} label="Visualizações" value={loadingProjects ? '—' : totalViews} color={C.purple} />
         </div>
+
+        {/* ── Defense countdown widget — aluno with defense date ── */}
+        {!isTeacher && !loadingProjects && (() => {
+          const today = new Date(); today.setHours(0,0,0,0)
+          const upcoming = projects
+            .filter(p => p.defense_date)
+            .map(p => ({ ...p, daysLeft: Math.ceil((new Date(p.defense_date + 'T00:00:00') - today) / 86400000) }))
+            .sort((a, b) => a.daysLeft - b.daysLeft)
+          const next = upcoming[0]
+          if (!next) return null
+          const urgentColor = next.daysLeft <= 7 ? '#ef4444' : next.daysLeft <= 30 ? '#f97316' : C.blue
+          const urgentBg    = next.daysLeft <= 7 ? 'rgba(239,68,68,0.06)' : next.daysLeft <= 30 ? 'rgba(249,115,22,0.06)' : 'rgba(27,120,247,0.06)'
+          return (
+            <div
+              onClick={() => navigate(`/projeto/${next.slug}`)}
+              style={{
+                background: urgentBg,
+                border: `1px solid ${urgentColor}30`,
+                borderRadius: 16, padding: '18px 22px',
+                display: 'flex', alignItems: 'center', gap: 18, flexWrap: 'wrap',
+                cursor: 'pointer', transition: 'border-color 0.15s, background 0.15s',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = urgentColor + '55'; e.currentTarget.style.background = urgentBg.replace('0.06', '0.1') }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = urgentColor + '30'; e.currentTarget.style.background = urgentBg }}
+            >
+              {/* Countdown number */}
+              <div style={{ textAlign: 'center', flexShrink: 0 }}>
+                <div style={{ fontSize: 36, fontWeight: 900, color: urgentColor, lineHeight: 1, letterSpacing: '-1px' }}>
+                  {next.daysLeft <= 0 ? '🎉' : next.daysLeft}
+                </div>
+                {next.daysLeft > 0 && <div style={{ fontSize: 10, color: urgentColor, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: 2 }}>dias</div>}
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 3 }}>
+                  {next.daysLeft < 0 ? 'Defesa concluída 🎉' :
+                   next.daysLeft === 0 ? '🔥 A defesa é hoje!' :
+                   next.daysLeft === 1 ? '⚡ A defesa é amanhã!' :
+                   `Defesa do projeto${upcoming.length > 1 ? ` "${next.name}"` : ''}`}
+                </div>
+                <div style={{ fontSize: 12, color: C.muted }}>
+                  {next.daysLeft > 1
+                    ? (next.daysLeft <= 7 ? '🚨 Última semana — foca no que falta completar!'
+                       : next.daysLeft <= 30 ? '💪 Mantém o ritmo — melhora o score dia a dia.'
+                       : '✅ Mantém a consistência. Vai completando missão a missão.')
+                    : new Date(next.defense_date + 'T00:00:00').toLocaleDateString('pt-PT', { weekday: 'long', day: 'numeric', month: 'long' })}
+                </div>
+              </div>
+              <div style={{ fontSize: 11, color: C.muted, flexShrink: 0 }}>
+                Abrir projeto →
+              </div>
+            </div>
+          )
+        })()}
 
         {/* ── Os meus projetos — visible on ALL devices ── */}
         <div id="proj-list">

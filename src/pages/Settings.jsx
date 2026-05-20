@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
-import { Loader, Check, X, AlertTriangle, Camera, ArrowLeft, GraduationCap, BookOpen, Search, Building2, Lock } from 'lucide-react'
+import { Loader, Check, X, AlertTriangle, Camera, ArrowLeft, GraduationCap, BookOpen, Search, Building2, Lock, Briefcase } from 'lucide-react'
 import { CropModal } from '../components/CropModal'
 
 const C = {
@@ -140,6 +140,8 @@ export default function Settings() {
   const [avatarCropFile, setAvatarCropFile] = useState(null)
   const avatarInputRef = useRef(null)
 
+  const [availableForWork, setAvailableForWork] = useState(false)
+
   const [currentPw, setCurrentPw]     = useState('')
   const [newPw, setNewPw]             = useState('')
   const [confirmPw, setConfirmPw]     = useState('')
@@ -155,13 +157,14 @@ export default function Settings() {
     // Pre-fill from user_metadata
     setFullName(user.user_metadata?.full_name ?? '')
     // Load profile
-    supabase.from('profiles').select('username, bio, role, avatar_url').eq('id', user.id).single().then(({ data }) => {
+    supabase.from('profiles').select('username, bio, role, avatar_url, available_for_work').eq('id', user.id).single().then(({ data }) => {
       if (data) {
         setUsername(data.username ?? '')
         setOriginalUsername(data.username ?? '')
         setBio(data.bio ?? '')
         setRole(data.role ?? 'aluno')
         setAvatarUrl(data.avatar_url ?? '')
+        setAvailableForWork(data.available_for_work ?? false)
       }
     })
   }, [user])
@@ -266,6 +269,7 @@ export default function Settings() {
         username: username.trim() || null,
         bio: bio.trim() || null,
         role,
+        available_for_work: availableForWork,
       })
       if (profileError) {
         if (profileError.code === '23505') {
@@ -443,6 +447,52 @@ export default function Settings() {
             placeholder="Conta um pouco sobre ti e os teus projetos..."
             hint="Aparece no teu perfil público."
           />
+
+          {/* Available for work toggle — aluno only */}
+          {role === 'aluno' && (
+            <div style={{ marginBottom: 20 }}>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: C.muted, marginBottom: 10 }}>
+                Disponibilidade
+              </label>
+              <button
+                type="button"
+                onClick={() => setAvailableForWork(v => !v)}
+                style={{
+                  width: '100%', display: 'flex', alignItems: 'center', gap: 14,
+                  background: availableForWork ? 'rgba(34,197,94,0.07)' : C.inputBg,
+                  border: `1.5px solid ${availableForWork ? 'rgba(34,197,94,0.35)' : C.border}`,
+                  borderRadius: 10, padding: '13px 16px',
+                  cursor: 'pointer', fontFamily: 'inherit',
+                  transition: 'all 0.2s',
+                  textAlign: 'left',
+                }}
+              >
+                <div style={{
+                  width: 42, height: 24, borderRadius: 12, flexShrink: 0,
+                  background: availableForWork ? '#22c55e' : C.subtle,
+                  position: 'relative', transition: 'background 0.2s',
+                }}>
+                  <div style={{
+                    position: 'absolute', top: 3, left: availableForWork ? 21 : 3,
+                    width: 18, height: 18, borderRadius: '50%',
+                    background: '#fff', transition: 'left 0.2s',
+                    boxShadow: '0 1px 4px rgba(0,0,0,0.25)',
+                  }} />
+                </div>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: availableForWork ? '#22c55e' : C.text, marginBottom: 2, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <Briefcase size={14} style={{ flexShrink: 0 }} />
+                    {availableForWork ? 'Disponível para estágio' : 'Não disponível para estágio'}
+                  </div>
+                  <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.45 }}>
+                    {availableForWork
+                      ? 'O teu perfil aparece nos resultados de recrutadores e empresas.'
+                      : 'Ativa para aparecer em pesquisas de recrutadores.'}
+                  </div>
+                </div>
+              </button>
+            </div>
+          )}
 
           {/* Role — locked after registration */}
           {(() => {

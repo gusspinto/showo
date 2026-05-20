@@ -11,7 +11,7 @@ export function AuthProvider({ children }) {
   const fetchProfile = useCallback(async (uid) => {
     if (!uid) { setProfile(null); return }
     const [profileRes, userRes] = await Promise.all([
-      supabase.from('profiles').select('id, username, full_name, bio, is_admin, banned_at, role, avatar_url').eq('id', uid).single(),
+      supabase.from('profiles').select('id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work').eq('id', uid).single(),
       supabase.auth.getUser(),
     ])
     const meta = userRes.data?.user?.user_metadata ?? {}
@@ -23,7 +23,7 @@ export function AuthProvider({ children }) {
       const { data: created } = await supabase
         .from('profiles')
         .upsert({ id: uid, full_name: meta.full_name ?? null, role: metaRole ?? 'aluno' })
-        .select('id, username, full_name, bio, is_admin, banned_at, role, avatar_url')
+        .select('id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work')
         .single()
       data = created
     } else if (metaRole && data.role !== metaRole) {
