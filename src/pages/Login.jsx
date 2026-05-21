@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase'
 import { Mail, Check } from 'lucide-react'
 
 const C = {
-  bg:          '#0d1424',
+  bg:          '#060c18',
   card:        '#152030',
   border:      '#1e3050',
   borderBright:'#2a4275',
@@ -103,7 +103,7 @@ export default function Login() {
     <div style={{
       minHeight: '100vh', background: C.bg,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      padding: '24px 16px', fontFamily: 'Inter, sans-serif',
+      padding: '24px 16px', fontFamily: 'inherit',
       position: 'relative', overflow: 'hidden',
     }}>
       {/* Subtle background glow */}
@@ -143,7 +143,7 @@ export default function Login() {
             </div>
 
             {error && (
-              <div style={{ background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.25)', borderRadius: 10, padding: '10px 14px', color: C.error, fontSize: 14 }}>
+              <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 10, padding: '10px 14px', color: C.error, fontSize: 14 }}>
                 {error}
               </div>
             )}
@@ -157,7 +157,7 @@ export default function Login() {
                   Confirma o teu email antes de entrar. Se o link expirou, envia um novo.
                 </p>
                 {resendState === 'sent' ? (
-                  <p style={{ margin: 0, color: '#34d399', fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <p style={{ margin: 0, color: '#22c55e', fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
                     <Check size={14} style={{ display: 'inline-block', verticalAlign: 'middle', flexShrink: 0 }} /> Novo email enviado! Verifica a tua caixa de entrada.
                   </p>
                 ) : (

@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext'
 import { Trophy, ChevronRight } from 'lucide-react'
 
 const C = {
-  bg:          '#0d1424',
+  bg:          '#060c18',
   bgAlt:       '#111c32',
   card:        '#152030',
   cardHover:   '#1c2d44',
@@ -128,7 +128,7 @@ export default function Ranking() {
         </button>
       </Navbar>
 
-      <div style={{ maxWidth: 860, margin: '0 auto', padding: '44px 24px 80px' }}>
+      <div className="page-content">
 
         {/* Header */}
         <div style={{ marginBottom: 32 }}>

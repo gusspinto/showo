@@ -4,10 +4,10 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Pencil, ExternalLink } from 'lucide-react'
 import { Navbar } from '../components/Navbar'
-import { Folder, Trophy, BarChart2, Rocket, Eye, GraduationCap, Plus, X, Users, Users2, ChevronRight, User, Settings, Compass, Medal, LogOut, Globe, TrendingUp, MessageSquare, Star, Mail, Search, BookOpen, Trash2 } from 'lucide-react'
+import { Folder, Trophy, BarChart2, Rocket, Eye, GraduationCap, Plus, X, Users, Users2, ChevronRight, User, Settings, Compass, Medal, LogOut, Globe, TrendingUp, MessageSquare, Star, Mail, Search, BookOpen, Trash2, Check, Calendar } from 'lucide-react'
 
 const C = {
-  bg: '#0d1424',
+  bg: '#060c18',
   card: '#152030',
   cardHover: '#1c2d44',
   border: '#1e3050',
@@ -17,9 +17,9 @@ const C = {
   muted: '#7d93b0',
   text: '#e8f2ff',
   subtle: '#3d5270',
-  green: '#34d399',
+  green: '#22c55e',
   yellow: '#fbbf24',
-  red: '#f87171',
+  red: '#ef4444',
   purple: '#a78bfa',
 }
 
@@ -129,32 +129,29 @@ function ProjectRow({ project, onView, onEdit, onDelete }) {
     <div
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      onClick={(e) => { if (window.innerWidth <= 600 && !e.target.closest('button')) onView() }}
       style={{
         background: hovered ? C.cardHover : C.card,
         border: `1px solid ${hovered ? C.borderBright : C.border}`,
         borderRadius: 14, padding: '14px 18px',
         display: 'flex', alignItems: 'center', gap: 14,
-        transition: 'background 0.15s, border-color 0.15s',
+        transition: 'background 0.15s, border-color 0.15s, box-shadow 0.15s',
         cursor: 'default',
+        boxShadow: `inset 4px 0 0 ${scoreColor}${hovered ? 'cc' : '88'}`,
       }}
       className="dash-project-row"
     >
-      {/* Score ring */}
-      <div
-        onClick={onView}
-        style={{
-          width: 42, height: 42, borderRadius: '50%', flexShrink: 0, cursor: 'pointer',
-          background: `conic-gradient(${scoreColor} ${(project.score ?? 0) * 3.6}deg, #1e3050 0deg)`,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}
-      >
-        <div style={{
-          width: 32, height: 32, borderRadius: '50%',
-          background: hovered ? C.cardHover : C.card,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 10, fontWeight: 800, color: scoreColor,
-          transition: 'background 0.15s',
-        }}>
+      {/* Score ring — SVG stroke (matches Explore style) */}
+      <div onClick={onView} style={{ position: 'relative', width: 42, height: 42, flexShrink: 0, cursor: 'pointer' }}>
+        <svg width={42} height={42} style={{ transform: 'rotate(-90deg)', display: 'block' }}>
+          <circle cx={21} cy={21} r={17} fill="none" stroke="#1e3050" strokeWidth={3.5} />
+          <circle cx={21} cy={21} r={17} fill="none" stroke={scoreColor} strokeWidth={3.5}
+            strokeDasharray={`${((project.score ?? 0) / 100) * 2 * Math.PI * 17} ${2 * Math.PI * 17}`}
+            strokeLinecap="round"
+            style={{ filter: `drop-shadow(0 0 5px ${scoreColor}80)` }}
+          />
+        </svg>
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, color: scoreColor }}>
           {project.score ?? '—'}
         </div>
       </div>
@@ -182,19 +179,67 @@ function ProjectRow({ project, onView, onEdit, onDelete }) {
         <span style={{ color: C.subtle, fontSize: 11 }}>{date}</span>
       </div>
 
-      {/* Actions */}
+      {/* Actions — desktop icon buttons */}
       <div className="dash-project-actions">
         {confirmDelete ? (
           <>
             <span style={{ fontSize: 12, color: C.muted, alignSelf: 'center', whiteSpace: 'nowrap' }}>Apagar?</span>
-            <ActionBtn small onClick={() => { onDelete(project.id); setConfirmDelete(false) }} label="Sim" />
-            <ActionBtn small onClick={() => setConfirmDelete(false)} label="Não" primary />
+            <button
+              onClick={() => { onDelete(project.id); setConfirmDelete(false) }}
+              style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, padding: '7px 13px', color: '#ef4444', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+            >Sim</button>
+            <button
+              onClick={() => setConfirmDelete(false)}
+              style={{ background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.3)', borderRadius: 8, padding: '7px 13px', color: C.blue, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+            >Não</button>
           </>
         ) : (
           <>
-            <ActionBtn small onClick={() => setConfirmDelete(true)} label="Apagar" />
-            <ActionBtn small onClick={onEdit} label="Editar" />
-            <ActionBtn small onClick={onView} label="Ver →" primary />
+            <button
+              onClick={() => setConfirmDelete(true)}
+              title="Apagar"
+              style={{ width: 34, height: 34, borderRadius: 9, background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#ef4444', flexShrink: 0 }}
+            ><Trash2 size={14} /></button>
+            <button
+              onClick={onEdit}
+              title="Editar"
+              style={{ width: 34, height: 34, borderRadius: 9, background: 'rgba(255,255,255,0.05)', border: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: C.muted, flexShrink: 0 }}
+            ><Pencil size={14} /></button>
+            <button
+              onClick={onView}
+              title="Ver projeto"
+              style={{ width: 34, height: 34, borderRadius: 9, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.28)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: C.blue, flexShrink: 0 }}
+            ><ExternalLink size={14} /></button>
+          </>
+        )}
+      </div>
+
+      {/* Actions — mobile icon buttons */}
+      <div className="dash-proj-actions-mobile">
+        {confirmDelete ? (
+          <>
+            <span style={{ fontSize: 11, color: C.muted, whiteSpace: 'nowrap' }}>Apagar?</span>
+            <button
+              onClick={(e) => { e.stopPropagation(); onDelete(project.id); setConfirmDelete(false) }}
+              style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, padding: '7px 12px', color: '#ef4444', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+            >Sim</button>
+            <button
+              onClick={(e) => { e.stopPropagation(); setConfirmDelete(false) }}
+              style={{ background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.3)', borderRadius: 8, padding: '7px 12px', color: C.blue, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+            >Não</button>
+          </>
+        ) : (
+          <>
+            <button
+              onClick={(e) => { e.stopPropagation(); setConfirmDelete(true) }}
+              title="Apagar"
+              style={{ width: 36, height: 36, borderRadius: 9, background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#ef4444' }}
+            ><Trash2 size={14} /></button>
+            <button
+              onClick={(e) => { e.stopPropagation(); onEdit() }}
+              title="Editar"
+              style={{ width: 36, height: 36, borderRadius: 9, background: 'rgba(255,255,255,0.05)', border: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: C.muted }}
+            ><Pencil size={14} /></button>
           </>
         )}
       </div>
@@ -289,83 +334,6 @@ function QuickCreateProject({ navigate }) {
   )
 }
 
-function JoinTurmaBar({ navigate }) {
-  const [code, setCode] = useState('')
-  const [error, setError] = useState('')
-  const [checking, setChecking] = useState(false)
-
-  async function handleJoin(e) {
-    e.preventDefault()
-    const trimmed = code.trim().toUpperCase()
-    if (!trimmed) return
-    setChecking(true)
-    setError('')
-    const { data } = await supabase
-      .from('classes')
-      .select('code')
-      .eq('code', trimmed)
-      .single()
-    setChecking(false)
-    if (!data) { setError('Código inválido. Verifica com o professor.'); return }
-    navigate(`/turma/${trimmed}`)
-  }
-
-  return (
-    <div>
-      <div style={{
-        background: `linear-gradient(135deg, rgba(59,130,246,0.06) 0%, rgba(79,70,229,0.04) 100%)`,
-        border: `1px solid rgba(59,130,246,0.18)`,
-        borderRadius: 14, padding: '16px 20px',
-        display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
-      }}>
-        <div style={{
-          width: 36, height: 36, borderRadius: 10, flexShrink: 0,
-          background: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.2)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}>
-          <Users2 size={17} color="#3b82f6" />
-        </div>
-        <div style={{ flexShrink: 0 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>Entrar numa turma</div>
-          <div style={{ fontSize: 11, color: C.muted, marginTop: 1 }}>Insere o código do teu professor</div>
-        </div>
-        <form onSubmit={handleJoin} style={{ display: 'flex', gap: 8, flex: 1, minWidth: 200 }}>
-          <input
-            value={code}
-            onChange={e => { setCode(e.target.value.toUpperCase()); setError('') }}
-            placeholder="CÓDIGO"
-            maxLength={6}
-            style={{
-              flex: 1, background: C.bg,
-              border: `1px solid ${error ? '#f87171' : C.border}`,
-              borderRadius: 9, padding: '9px 14px',
-              color: C.text, fontSize: 15, fontFamily: 'inherit',
-              outline: 'none', letterSpacing: 4, fontWeight: 800,
-              textAlign: 'center', minWidth: 0, transition: 'border-color 0.15s',
-            }}
-            onFocus={e => e.target.style.borderColor = '#3b82f6'}
-            onBlur={e => e.target.style.borderColor = error ? '#f87171' : C.border}
-          />
-          <button
-            type="submit"
-            disabled={checking || !code.trim()}
-            style={{
-              background: 'rgba(59,130,246,0.15)', border: '1px solid rgba(59,130,246,0.3)',
-              borderRadius: 9, padding: '9px 18px', color: '#60a5fa',
-              fontSize: 13, fontWeight: 700, cursor: checking || !code.trim() ? 'default' : 'pointer',
-              opacity: checking || !code.trim() ? 0.5 : 1, fontFamily: 'inherit', flexShrink: 0,
-              transition: 'opacity 0.15s',
-            }}
-          >
-            {checking ? '…' : 'Entrar'}
-          </button>
-        </form>
-        {error && <span style={{ fontSize: 12, color: '#f87171', width: '100%', marginTop: -4 }}>{error}</span>}
-      </div>
-    </div>
-  )
-}
-
 function generateCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
   return Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join('')
@@ -412,7 +380,7 @@ function CreateTurmaModal({ onClose, onCreated }) {
             <input
               value={name} onChange={e => setName(e.target.value)} required
               placeholder="ex: Turma A — 11º ano"
-              style={{ width: '100%', background: '#0d1424', border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 12px', color: C.text, fontSize: 14, fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none' }}
+              style={{ width: '100%', background: C.bg, border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 12px', color: C.text, fontSize: 14, fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none' }}
             />
           </div>
           <div>
@@ -420,14 +388,170 @@ function CreateTurmaModal({ onClose, onCreated }) {
             <input
               value={subject} onChange={e => setSubject(e.target.value)}
               placeholder="ex: Programação e Sistemas de Informação"
-              style={{ width: '100%', background: '#0d1424', border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 12px', color: C.text, fontSize: 14, fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none' }}
+              style={{ width: '100%', background: C.bg, border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 12px', color: C.text, fontSize: 14, fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none' }}
             />
           </div>
-          {error && <p style={{ color: '#f87171', fontSize: 13, margin: 0 }}>{error}</p>}
-          <button type="submit" disabled={saving || !name.trim()} style={{ background: 'linear-gradient(135deg,#3b82f6,#4f46e5)', border: 'none', borderRadius: 8, padding: '11px', color: '#fff', fontSize: 14, fontWeight: 600, cursor: saving ? 'default' : 'pointer', opacity: saving ? 0.7 : 1, fontFamily: 'inherit', marginTop: 4 }}>
+          {error && <p style={{ color: '#ef4444', fontSize: 13, margin: 0 }}>{error}</p>}
+          <button type="submit" disabled={saving || !name.trim()} style={{ background: 'linear-gradient(135deg,#1b78f7,#4f46e5)', border: 'none', borderRadius: 8, padding: '11px', color: '#fff', fontSize: 14, fontWeight: 600, cursor: saving ? 'default' : 'pointer', opacity: saving ? 0.7 : 1, fontFamily: 'inherit', marginTop: 4 }}>
             {saving ? 'A criar…' : 'Criar turma'}
           </button>
         </form>
+      </div>
+    </div>
+  )
+}
+
+// ── Join Turma Modal ─────────────────────────────────────────────────────────
+function JoinTurmaModal({ onClose, navigate, onJoined }) {
+  const [code, setCode] = useState('')
+  const [error, setError] = useState('')
+  const [checking, setChecking] = useState(false)
+  const [joined, setJoined] = useState(null)
+
+  async function handleJoin(e) {
+    e.preventDefault()
+    const trimmed = code.trim().toUpperCase()
+    if (!trimmed) return
+    setChecking(true); setError('')
+    try {
+      const { data, error: sbErr } = await supabase.from('classes').select('id, name, code, teacher_name').eq('code', trimmed).single()
+      if (sbErr || !data) { setError('Código inválido. Verifica com o professor.'); return }
+      setJoined(data)
+      onJoined?.(data)
+    } catch {
+      setError('Erro de ligação. Tenta novamente.')
+    } finally {
+      setChecking(false)
+    }
+  }
+
+  return (
+    <div
+      style={{ position: 'fixed', inset: 0, zIndex: 3000, background: 'rgba(0,0,0,0.78)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
+      onClick={e => e.target === e.currentTarget && onClose()}
+    >
+      <div style={{ background: C.card, border: `1px solid ${C.borderBright}`, borderRadius: 22, padding: '36px 32px', width: '100%', maxWidth: 400, boxShadow: '0 32px 80px rgba(0,0,0,0.7)' }}>
+        {joined ? (
+          <>
+            <div style={{ textAlign: 'center', marginBottom: 28 }}>
+              <div style={{ width: 60, height: 60, borderRadius: 18, background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px' }}>
+                <Check size={30} color="#22c55e" />
+              </div>
+              <h3 style={{ color: C.text, margin: '0 0 6px', fontSize: 20, fontWeight: 800, letterSpacing: '-0.3px' }}>Turma encontrada!</h3>
+              <p style={{ color: C.muted, margin: 0, fontSize: 14, lineHeight: 1.5 }}>{joined.name}</p>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <button
+                onClick={() => { navigate(`/turma/${joined.code}`); onClose() }}
+                style={{ width: '100%', background: `linear-gradient(135deg, ${C.blue}, #4f46e5)`, border: 'none', borderRadius: 12, padding: '14px', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 20px rgba(27,120,247,0.35)' }}
+              >
+                Ir para a turma →
+              </button>
+              <button
+                onClick={onClose}
+                style={{ width: '100%', background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 12, padding: '12px', color: C.muted, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+              >
+                Fechar
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 28 }}>
+              <div>
+                <h3 style={{ color: C.text, margin: '0 0 4px', fontSize: 20, fontWeight: 800, letterSpacing: '-0.3px' }}>Entrar numa turma</h3>
+                <p style={{ color: C.muted, margin: 0, fontSize: 13 }}>Pede o código de 6 letras ao teu professor</p>
+              </div>
+              <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.muted, padding: 4, display: 'flex', marginTop: 2 }}><X size={18} /></button>
+            </div>
+            <form onSubmit={handleJoin} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <input
+                value={code}
+                onChange={e => { setCode(e.target.value.toUpperCase()); setError('') }}
+                placeholder="CÓDIGO"
+                maxLength={6}
+                autoFocus
+                style={{
+                  width: '100%', background: C.bg,
+                  border: `2px solid ${error ? '#ef4444' : code.length === 6 ? C.blue : C.border}`,
+                  borderRadius: 14, padding: '18px',
+                  color: C.text, fontSize: 28, fontWeight: 900, outline: 'none',
+                  letterSpacing: 10, textAlign: 'center', fontFamily: 'inherit',
+                  boxSizing: 'border-box', transition: 'border-color 0.15s',
+                  boxShadow: code.length === 6 && !error ? '0 0 0 4px rgba(27,120,247,0.1)' : 'none',
+                }}
+              />
+              {error && (
+                <p style={{ color: '#ef4444', fontSize: 13, margin: 0, textAlign: 'center' }}>{error}</p>
+              )}
+              <button
+                type="submit"
+                disabled={checking || code.trim().length < 2}
+                style={{
+                  width: '100%',
+                  background: code.trim() ? `linear-gradient(135deg, ${C.blue}, #4f46e5)` : C.border,
+                  border: 'none', borderRadius: 12, padding: '15px',
+                  color: '#fff', fontSize: 15, fontWeight: 700,
+                  cursor: code.trim() ? 'pointer' : 'not-allowed',
+                  fontFamily: 'inherit', opacity: checking ? 0.7 : 1,
+                  transition: 'all 0.15s',
+                  boxShadow: code.trim() ? '0 4px 20px rgba(27,120,247,0.35)' : 'none',
+                }}
+              >
+                {checking ? 'A verificar…' : 'Confirmar código'}
+              </button>
+            </form>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ── Turmas List Modal ─────────────────────────────────────────────────────────
+function TurmasListModal({ turmas, onClose, navigate, onJoin }) {
+  return (
+    <div
+      style={{ position: 'fixed', inset: 0, zIndex: 3000, background: 'rgba(0,0,0,0.78)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
+      onClick={e => e.target === e.currentTarget && onClose()}
+    >
+      <div style={{ background: C.card, border: `1px solid ${C.borderBright}`, borderRadius: 22, padding: '28px 24px', width: '100%', maxWidth: 420, boxShadow: '0 32px 80px rgba(0,0,0,0.7)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 22 }}>
+          <div>
+            <h3 style={{ color: C.text, margin: '0 0 2px', fontSize: 18, fontWeight: 800 }}>As minhas turmas</h3>
+            <p style={{ color: C.muted, margin: 0, fontSize: 13 }}>{turmas.length} turma{turmas.length !== 1 ? 's' : ''}</p>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.muted, padding: 4, display: 'flex' }}><X size={18} /></button>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
+          {turmas.map(t => (
+            <div
+              key={t.id}
+              onClick={() => { navigate(`/turma/${t.code}`); onClose() }}
+              style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${C.border}`, borderRadius: 14, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', transition: 'all 0.15s' }}
+              onMouseEnter={e => { e.currentTarget.style.background = C.cardHover; e.currentTarget.style.borderColor = C.borderBright }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; e.currentTarget.style.borderColor = C.border }}
+            >
+              <div style={{ width: 38, height: 38, borderRadius: 10, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <Users2 size={16} color="#1b78f7" />
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 14, fontWeight: 700, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.name}</div>
+                {t.teacher_name && <div style={{ fontSize: 12, color: C.muted, marginTop: 1 }}>{t.teacher_name}</div>}
+              </div>
+              <span style={{ fontSize: 11, fontWeight: 700, color: '#60a5fa', letterSpacing: 1, flexShrink: 0 }}>{t.code}</span>
+              <ChevronRight size={14} color={C.subtle} style={{ flexShrink: 0 }} />
+            </div>
+          ))}
+        </div>
+        <button
+          onClick={() => { onClose(); onJoin() }}
+          style={{ width: '100%', background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 12, padding: '12px', color: C.muted, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, transition: 'all 0.15s' }}
+          onMouseEnter={e => { e.currentTarget.style.borderColor = C.borderBright; e.currentTarget.style.color = C.text }}
+          onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted }}
+        >
+          <Plus size={14} /> Entrar noutra turma
+        </button>
       </div>
     </div>
   )
@@ -442,8 +566,8 @@ function TurmaCard({ turma, navigate }) {
       onMouseLeave={() => setHov(false)}
       style={{ background: hov ? C.cardHover : C.card, border: `1px solid ${hov ? C.borderBright : C.border}`, borderRadius: 12, padding: '16px 18px', cursor: 'pointer', transition: 'all 0.15s', display: 'flex', alignItems: 'center', gap: 14 }}
     >
-      <div style={{ width: 40, height: 40, borderRadius: 10, background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-        <Users2 size={18} color="#3b82f6" />
+      <div style={{ width: 40, height: 40, borderRadius: 10, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <Users2 size={18} color="#1b78f7" />
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ color: C.text, fontSize: 14, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{turma.name}</div>
@@ -451,10 +575,72 @@ function TurmaCard({ turma, navigate }) {
         <div style={{ color: C.subtle, fontSize: 11, marginTop: 4, display: 'flex', gap: 10, alignItems: 'center' }}>
           <span style={{ color: '#60a5fa', fontWeight: 700, letterSpacing: 1 }}>{turma.code}</span>
           {turma.project_count != null && <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}><Users size={10} />{turma.project_count} projeto{turma.project_count !== 1 ? 's' : ''}</span>}
-          {turma.avg_score != null && <span style={{ color: turma.avg_score >= 70 ? '#22c55e' : turma.avg_score >= 40 ? '#eab308' : '#f97316', fontWeight: 700 }}>⌀ {turma.avg_score}</span>}
+          {turma.avg_score != null && <span style={{ color: turma.avg_score >= 90 ? C.green : turma.avg_score >= 71 ? C.blue : turma.avg_score >= 40 ? C.yellow : C.red, fontWeight: 700 }}>⌀ {turma.avg_score}</span>}
         </div>
       </div>
       <ChevronRight size={16} color={C.subtle} />
+    </div>
+  )
+}
+
+function InsightsBlock({ projects }) {
+  const withScore = projects.filter(p => p.score != null)
+  if (!withScore.length) return null
+  const best = Math.max(...withScore.map(p => p.score))
+  const bestProj = withScore.find(p => p.score === best)
+  const avg = Math.round(withScore.reduce((s, p) => s + p.score, 0) / withScore.length)
+  const totalViews = projects.reduce((s, p) => s + (p.views ?? 0), 0)
+  const sorted = [...withScore].sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+  const trend = sorted.length > 1 ? sorted[sorted.length - 1].score - sorted[0].score : null
+
+  return (
+    <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: '18px 22px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 18 }}>
+        <TrendingUp size={13} color={C.muted} />
+        <span style={{ fontSize: 12, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Resumo</span>
+      </div>
+
+      {/* 3 big numbers */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 0, marginBottom: 20 }}>
+        <div style={{ textAlign: 'center', padding: '0 8px' }}>
+          <div style={{ fontSize: 38, fontWeight: 900, color: getScoreColor(best), letterSpacing: '-2px', lineHeight: 1 }}>{best}</div>
+          <div style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>Melhor score</div>
+          <div style={{ fontSize: 10, color: C.subtle, marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{bestProj?.name}</div>
+        </div>
+        <div style={{ textAlign: 'center', padding: '0 8px', borderLeft: `1px solid ${C.border}`, borderRight: `1px solid ${C.border}` }}>
+          <div style={{ fontSize: 38, fontWeight: 900, color: getScoreColor(avg), letterSpacing: '-2px', lineHeight: 1 }}>{avg}</div>
+          <div style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>Score médio</div>
+          <div style={{ fontSize: 10, color: C.subtle, marginTop: 1 }}>{withScore.length} projeto{withScore.length !== 1 ? 's' : ''}</div>
+        </div>
+        <div style={{ textAlign: 'center', padding: '0 8px' }}>
+          {totalViews > 0 ? (
+            <>
+              <div style={{ fontSize: 38, fontWeight: 900, color: C.blue, letterSpacing: '-2px', lineHeight: 1 }}>{totalViews}</div>
+              <div style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>Visualizações</div>
+              <div style={{ fontSize: 10, color: C.subtle, marginTop: 1 }}>total</div>
+            </>
+          ) : trend != null ? (
+            <>
+              <div style={{ fontSize: 38, fontWeight: 900, color: trend >= 0 ? C.green : C.red, letterSpacing: '-2px', lineHeight: 1 }}>{trend >= 0 ? '+' : ''}{trend}</div>
+              <div style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>Evolução</div>
+              <div style={{ fontSize: 10, color: C.subtle, marginTop: 1 }}>1º → último</div>
+            </>
+          ) : <div style={{ fontSize: 11, color: C.subtle, paddingTop: 12 }}>—</div>}
+        </div>
+      </div>
+
+      {/* Progress bars per project */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 9, paddingTop: 16, borderTop: `1px solid ${C.border}` }}>
+        {withScore.slice(0, 4).map(p => (
+          <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontSize: 11, color: C.muted, width: 100, flexShrink: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</span>
+            <div style={{ flex: 1, height: 5, background: C.border, borderRadius: 999, overflow: 'hidden' }}>
+              <div style={{ width: `${p.score}%`, height: '100%', background: getScoreColor(p.score), borderRadius: 999 }} />
+            </div>
+            <span style={{ fontSize: 11, fontWeight: 800, color: getScoreColor(p.score), width: 22, textAlign: 'right', flexShrink: 0 }}>{p.score}</span>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
@@ -530,10 +716,10 @@ function OnboardingModal({ user, profile, onDismiss, onCreateTurma }) {
       display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
     }}>
       <div style={{
-        background: '#111827', border: '1px solid #2a4275',
+        background: C.card, border: '1px solid #2a4275',
         borderRadius: 20, padding: '36px 32px', width: '100%', maxWidth: 440,
         boxShadow: '0 24px 64px rgba(0,0,0,0.7)',
-        fontFamily: 'Inter, sans-serif',
+        fontFamily: 'inherit',
       }}>
         {step === 0 ? (
           <>
@@ -618,7 +804,11 @@ export default function Dashboard() {
   const [projects, setProjects] = useState([])
   const [loadingProjects, setLoadingProjects] = useState(true)
   const [turmas, setTurmas] = useState([])
+  const [studentTurmas, setStudentTurmas] = useState([])
+  const [loadingStudentTurmas, setLoadingStudentTurmas] = useState(true)
   const [showCreateTurma, setShowCreateTurma] = useState(false)
+  const [showJoinModal, setShowJoinModal] = useState(false)
+  const [showTurmasModal, setShowTurmasModal] = useState(false)
   const [toast, setToast] = useState('')
   const [showOnboarding, setShowOnboarding] = useState(false)
   const [collabProjects, setCollabProjects] = useState([])
@@ -729,6 +919,36 @@ export default function Dashboard() {
     loadTurmas()
   }, [user, profile?.role])
 
+  // ── Student turmas (aluno only) ─────────────────────────────────────────────
+  useEffect(() => {
+    if (!user || profile?.role === 'professor') { setLoadingStudentTurmas(false); return }
+    async function loadStudentTurmas() {
+      // 1. Read turmas saved via code-entry (localStorage)
+      const lsKey = `showo_turmas_${user.id}`
+      let cached = []
+      try { cached = JSON.parse(localStorage.getItem(lsKey) || '[]') } catch {}
+
+      // 2. Load turmas via project linkage (class_projects)
+      let dbTurmas = []
+      const { data: myProjs } = await supabase.from('projects').select('id').eq('user_id', user.id)
+      if (myProjs?.length) {
+        const { data: cp } = await supabase.from('class_projects').select('class_id').in('project_id', myProjs.map(p => p.id))
+        if (cp?.length) {
+          const classIds = [...new Set(cp.map(r => r.class_id))]
+          const { data: classes } = await supabase.from('classes').select('id, name, code, teacher_name').in('id', classIds)
+          dbTurmas = classes || []
+        }
+      }
+
+      // 3. Merge — DB is source of truth, cached fills in turmas not yet linked via project
+      const dbIds = new Set(dbTurmas.map(t => t.id))
+      const merged = [...dbTurmas, ...cached.filter(t => !dbIds.has(t.id))]
+      setStudentTurmas(merged)
+      setLoadingStudentTurmas(false)
+    }
+    loadStudentTurmas()
+  }, [user, profile?.role])
+
   if (authLoading) {
     return (
       <div style={{ minHeight: '100vh', background: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -761,19 +981,27 @@ export default function Dashboard() {
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
-
-        /* Stat cards */
-        .stat-card-wrap { user-select: none; -webkit-tap-highlight-color: transparent; }
+        @keyframes shimmer {
+          0%   { background-position: -600px 0; }
+          100% { background-position:  600px 0; }
+        }
+        .dash-skeleton {
+          background: linear-gradient(90deg, ${C.card} 25%, ${C.cardHover} 50%, ${C.card} 75%);
+          background-size: 1200px 100%;
+          animation: shimmer 1.6s infinite linear;
+          border: 1px solid ${C.border};
+          border-radius: 14px;
+        }
 
         /* Section header pattern */
         .dash-sec-hd {
           display: flex; align-items: center; justify-content: space-between;
-          margin-bottom: 16px;
+          margin-bottom: 14px;
         }
         .dash-sec-label {
           display: flex; align-items: center; gap: 8px;
-          font-size: 11px; font-weight: 700; color: ${C.muted};
-          text-transform: uppercase; letter-spacing: 0.1em;
+          font-size: 12px; font-weight: 700; color: ${C.muted};
+          text-transform: uppercase; letter-spacing: 0.08em;
           font-family: var(--font-body);
         }
         .dash-sec-count {
@@ -781,32 +1009,54 @@ export default function Dashboard() {
           font-size: 10px; font-weight: 700; color: ${C.muted};
         }
 
+        /* Inline stat pills */
+        .dash-stat-pill {
+          display: inline-flex; align-items: center; gap: 5px;
+          background: rgba(255,255,255,0.03);
+          border: 1px solid ${C.border};
+          border-radius: 999px;
+          padding: 4px 11px;
+          font-size: 11px; font-weight: 600; color: ${C.muted};
+          white-space: nowrap;
+        }
+
         /* Project rows */
         .dash-project-actions { display: flex; gap: 6px; flex-shrink: 0; align-items: center; }
 
-        /* Divider used between sections */
-        .dash-divider { height: 1px; background: ${C.border}; margin: 36px 0; }
-
         @media (max-width: 860px) {
-          .dash-content { padding-left: 16px !important; padding-right: 16px !important; }
-          .dash-stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
-          .stat-card-wrap:active { background: #1c2d44 !important; }
           .dash-hd-btn-settings { display: none !important; }
         }
+        /* Mobile project icon actions — hidden by default (desktop shows text buttons) */
+        .dash-proj-actions-mobile { display: none; }
+        /* Chart hidden on mobile */
+        .dash-chart-wrap { }
+
         @media (max-width: 600px) {
-          .dash-project-row { flex-wrap: wrap; gap: 8px !important; }
-          .dash-project-info { min-width: 0; flex: 1 1 calc(100% - 56px); }
-          .dash-project-actions {
-            width: 100%; justify-content: flex-end;
-            border-top: 1px solid ${C.border}; padding-top: 10px; margin-top: 2px;
+          /* ── Chart ── */
+          .dash-chart-wrap { display: none; }
+
+          /* ── Project card — whole card tappable ── */
+          .dash-project-row { cursor: pointer; padding: 13px 14px !important; }
+          .dash-project-actions { display: none !important; }
+          .dash-proj-actions-mobile {
+            display: flex !important;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
           }
-          .qc-pills { gap: 5px !important; }
-          .qc-pill { font-size: 11px !important; padding: 5px 10px !important; }
-          .qc-input-row { gap: 8px !important; }
-          .qc-input { padding: 11px 13px !important; font-size: 13px !important; }
-          .qc-btn { width: 42px !important; height: 42px !important; }
-          .qc-footnote { display: none !important; }
+
+          /* ── Stat pills — slightly bigger touch feel ── */
+          .dash-stat-pill {
+            font-size: 12px !important;
+            padding: 5px 13px !important;
+          }
+
+          /* ── Section header buttons ── */
+          .dash-sec-hd button { padding: 8px 14px !important; font-size: 13px !important; }
+
+          /* ── Header ── */
           .dash-header-btns { gap: 6px !important; }
+          .dash-hd-btn-profile { display: none !important; }
         }
       `}</style>
       <Navbar />
@@ -838,32 +1088,82 @@ export default function Dashboard() {
         />
       )}
 
+      {showJoinModal && (
+        <JoinTurmaModal
+          onClose={() => setShowJoinModal(false)}
+          navigate={navigate}
+          onJoined={(turma) => {
+            setStudentTurmas(prev => prev.find(t => t.id === turma.id) ? prev : [...prev, turma])
+            try {
+              const lsKey = `showo_turmas_${user.id}`
+              const existing = JSON.parse(localStorage.getItem(lsKey) || '[]')
+              if (!existing.find(t => t.id === turma.id)) {
+                localStorage.setItem(lsKey, JSON.stringify([...existing, turma]))
+              }
+            } catch {}
+          }}
+        />
+      )}
+
+      {showTurmasModal && (
+        <TurmasListModal
+          turmas={studentTurmas}
+          onClose={() => setShowTurmasModal(false)}
+          navigate={navigate}
+          onJoin={() => setShowJoinModal(true)}
+        />
+      )}
+
       {/* Brand accent line */}
       <div style={{ height: 2, background: `linear-gradient(90deg, transparent 0%, ${C.blue}88 35%, #4f46e588 65%, transparent 100%)` }} />
 
-      <div className="dash-content" style={{ maxWidth: 820, margin: '0 auto', padding: '36px 24px 80px' }}>
+      <div className="dash-content page-content">
 
         {/* ── Header ── */}
-        <div style={{ marginBottom: 40, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
-          <div>
-            <h1 style={{ color: C.text, fontSize: 24, fontWeight: 800, margin: '0 0 4px', letterSpacing: '-0.5px' }}>
+        <div style={{ marginBottom: 36, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <h1 style={{ color: C.text, fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 900, margin: '0 0 6px', letterSpacing: '-0.5px', lineHeight: 1.15 }}>
               {greeting}
             </h1>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
               {profile?.role && (
-                <span style={{
-                  fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em',
-                  color: C.blue, background: `${C.blue}18`, border: `1px solid ${C.blue}30`,
-                  borderRadius: 5, padding: '2px 7px',
-                }}>
+                <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: C.blue, background: `${C.blue}18`, border: `1px solid ${C.blue}30`, borderRadius: 5, padding: '2px 7px' }}>
                   {{ aluno: 'Aluno', professor: 'Professor', recrutador: 'Recrutador', empresa: 'Empresa' }[profile.role] ?? 'Membro'}
                 </span>
               )}
-              <p style={{ color: C.subtle, fontSize: 12, margin: 0 }}>{user.email}</p>
+              <span style={{ color: C.subtle, fontSize: 12 }}>{user.email}</span>
             </div>
+            {/* Inline stat pills — appear once data loads */}
+            {!loadingProjects && (isTeacher ? turmas.length > 0 : projects.length > 0 || totalViews > 0) && (
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                {!isTeacher && (
+                  <>
+                    <span className="dash-stat-pill">
+                      <Folder size={11} /> {projects.length} projeto{projects.length !== 1 ? 's' : ''}
+                    </span>
+                    {bestScore != null && (
+                      <span className="dash-stat-pill" style={{ color: getScoreColor(bestScore), borderColor: `${getScoreColor(bestScore)}30`, background: `${getScoreColor(bestScore)}0c` }}>
+                        <Trophy size={11} /> {bestScore}
+                      </span>
+                    )}
+                    {totalViews > 0 && (
+                      <span className="dash-stat-pill">
+                        <Eye size={11} /> {totalViews} visualizações
+                      </span>
+                    )}
+                  </>
+                )}
+                {isTeacher && (
+                  <span className="dash-stat-pill">
+                    <Users2 size={11} /> {turmas.length} turma{turmas.length !== 1 ? 's' : ''}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
-          <div className="dash-header-btns" style={{ display: 'flex', gap: 8 }}>
+          <div className="dash-header-btns" style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
             <button
+              className="dash-hd-btn-profile"
               onClick={() => navigate(profile?.username ? `/u/${profile.username}` : `/u/${user.id}`)}
               style={{ background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 9, padding: '8px 16px', color: C.muted, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s' }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = C.borderBright; e.currentTarget.style.color = C.text }}
@@ -883,257 +1183,231 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* ── All sections in one gap container ── */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+        {/* ── All sections ── */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
 
-        {/* ── Turmas (professor only) ── */}
-        {isTeacher && (
-          <div>
+          {/* ── Turmas (professor only) ── */}
+          {isTeacher && (
+            <div>
+              <div className="dash-sec-hd">
+                <div className="dash-sec-label">
+                  <Users2 size={13} /> As minhas turmas
+                  {turmas.length > 0 && <span className="dash-sec-count">{turmas.length}</span>}
+                </div>
+                <button
+                  onClick={() => setShowCreateTurma(true)}
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.22)', borderRadius: 8, padding: '6px 12px', color: '#60a5fa', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s' }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(27,120,247,0.18)' }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(27,120,247,0.1)' }}
+                >
+                  <Plus size={13} /> Nova turma
+                </button>
+              </div>
+              {turmas.length === 0 ? (
+                <div style={{ background: C.card, border: `1px dashed ${C.border}`, borderRadius: 14, padding: '40px 28px', textAlign: 'center' }}>
+                  <div style={{ marginBottom: 14, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 52, height: 52, borderRadius: 14, background: 'rgba(27,120,247,0.08)', border: '1px solid rgba(27,120,247,0.15)' }}>
+                    <Users2 size={24} color="#1b78f7" />
+                  </div>
+                  <p style={{ color: C.text, fontSize: 15, fontWeight: 700, margin: '0 0 6px' }}>Ainda não tens turmas</p>
+                  <p style={{ color: C.muted, fontSize: 13, margin: '0 0 22px', lineHeight: 1.6 }}>Cria uma turma e partilha o código com os teus alunos.</p>
+                  <button onClick={() => setShowCreateTurma(true)} style={{ background: `linear-gradient(135deg, ${C.blue}, #4f46e5)`, border: 'none', borderRadius: 9, padding: '10px 24px', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 16px rgba(27,120,247,0.3)' }}>
+                    Criar primeira turma →
+                  </button>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {turmas.map(t => <TurmaCard key={t.id} turma={t} navigate={navigate} />)}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── Defense countdown strip (aluno only) ── */}
+          {!isTeacher && !loadingProjects && (() => {
+            const today = new Date(); today.setHours(0,0,0,0)
+            const upcoming = projects
+              .filter(p => p.defense_date)
+              .map(p => ({ ...p, daysLeft: Math.ceil((new Date(p.defense_date + 'T00:00:00') - today) / 86400000) }))
+              .sort((a, b) => a.daysLeft - b.daysLeft)
+            const next = upcoming[0]
+            if (!next) return null
+            const urgentColor = next.daysLeft <= 7 ? '#ef4444' : next.daysLeft <= 30 ? '#f97316' : C.blue
+            const defenseDate = new Date(next.defense_date + 'T00:00:00').toLocaleDateString('pt-PT', { weekday: 'short', day: 'numeric', month: 'long' })
+            const scoreVal = next.score ?? 0
+            const scoreCol = getScoreColor(next.score)
+            return (
+              <div
+                onClick={() => navigate(`/projeto/${next.slug}`)}
+                style={{ background: C.card, border: `1px solid ${urgentColor}35`, borderRadius: 16, overflow: 'hidden', cursor: 'pointer', transition: 'border-color 0.15s, box-shadow 0.15s', boxShadow: '0 2px 12px rgba(0,0,0,0.18)' }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = urgentColor + '70'; e.currentTarget.style.boxShadow = '0 4px 24px rgba(0,0,0,0.28)' }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = urgentColor + '35'; e.currentTarget.style.boxShadow = '0 2px 12px rgba(0,0,0,0.18)' }}
+              >
+                {/* Top accent */}
+                <div style={{ height: 3, background: `linear-gradient(90deg, ${urgentColor}, ${urgentColor}33)` }} />
+                <div style={{ padding: '14px 18px' }}>
+                  {/* Header row */}
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 10, fontWeight: 700, color: urgentColor, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 3 }}>
+                        {next.daysLeft < 0 ? 'Concluída' : next.daysLeft === 0 ? 'Hoje!' : next.daysLeft <= 7 ? 'Esta semana' : 'Defesa do projeto'}
+                      </div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{next.name}</div>
+                      <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{defenseDate}</div>
+                    </div>
+                    <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: 16 }}>
+                      <div style={{ fontSize: 32, fontWeight: 900, color: urgentColor, lineHeight: 1, letterSpacing: '-1.5px' }}>
+                        {next.daysLeft > 0 ? next.daysLeft : next.daysLeft === 0 ? '0' : <Medal size={24} />}
+                      </div>
+                      {next.daysLeft > 0 && <div style={{ fontSize: 10, color: urgentColor, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>dias</div>}
+                    </div>
+                  </div>
+                  {/* Score progress bar */}
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
+                      <span style={{ fontSize: 11, color: C.muted }}>Score atual</span>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: scoreCol }}>{next.score ?? '—'} / 100</span>
+                    </div>
+                    <div style={{ height: 5, background: C.border, borderRadius: 999, overflow: 'hidden' }}>
+                      <div style={{ width: `${scoreVal}%`, height: '100%', background: `linear-gradient(90deg, ${scoreCol}, ${scoreCol}99)`, borderRadius: 999, transition: 'width 0.6s ease' }} />
+                    </div>
+                    <div style={{ fontSize: 11, color: C.subtle, marginTop: 5 }}>
+                      {next.daysLeft > 7 ? 'Mantém o ritmo — completa mais secções para subir o score.' : next.daysLeft > 0 ? 'Última fase — foca no que falta para chegar ao máximo.' : 'Defesa concluída.'}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )
+          })()}
+
+          {/* ── Turma widget (alunos only) ── */}
+          {!isTeacher && !loadingStudentTurmas && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', background: studentTurmas.length > 0 ? 'rgba(27,120,247,0.05)' : 'rgba(255,255,255,0.02)', border: `1px solid ${studentTurmas.length > 0 ? 'rgba(27,120,247,0.18)' : C.border}`, borderRadius: 12, padding: '11px 14px', transition: 'all 0.2s' }}>
+              <div style={{ width: 32, height: 32, borderRadius: 9, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <Users2 size={14} color="#1b78f7" />
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                {studentTurmas.length > 0 ? (
+                  <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>
+                    {studentTurmas.length === 1 ? studentTurmas[0].name : `${studentTurmas.length} turmas`}
+                    {studentTurmas.length === 1 && studentTurmas[0].teacher_name && (
+                      <span style={{ color: C.muted, fontWeight: 400, marginLeft: 8, fontSize: 12 }}>· {studentTurmas[0].teacher_name}</span>
+                    )}
+                  </span>
+                ) : (
+                  <span style={{ fontSize: 13, color: C.muted }}>Ainda não entraste em nenhuma turma</span>
+                )}
+              </div>
+              <div style={{ display: 'flex', gap: 7, flexShrink: 0 }}>
+                {studentTurmas.length > 0 && (
+                  <button onClick={() => setShowTurmasModal(true)} style={{ background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.22)', borderRadius: 7, padding: '6px 12px', color: '#60a5fa', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s', whiteSpace: 'nowrap' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(27,120,247,0.18)'} onMouseLeave={e => e.currentTarget.style.background = 'rgba(27,120,247,0.1)'}>
+                    Ver turmas
+                  </button>
+                )}
+                <button
+                  onClick={() => setShowJoinModal(true)}
+                  style={{ background: studentTurmas.length === 0 ? `linear-gradient(135deg, ${C.blue}, #4f46e5)` : 'transparent', border: `1px solid ${studentTurmas.length === 0 ? 'transparent' : C.border}`, borderRadius: 7, padding: '6px 12px', color: studentTurmas.length === 0 ? '#fff' : C.muted, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s', whiteSpace: 'nowrap', boxShadow: studentTurmas.length === 0 ? '0 2px 10px rgba(27,120,247,0.3)' : 'none' }}
+                  onMouseEnter={e => { if (studentTurmas.length > 0) { e.currentTarget.style.borderColor = C.borderBright; e.currentTarget.style.color = C.text } }}
+                  onMouseLeave={e => { if (studentTurmas.length > 0) { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted } }}
+                >
+                  {studentTurmas.length === 0 ? 'Entrar numa turma' : 'Entrar noutra'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* ── Insights Block (desktop only, aluno with ≥1 scored project) ── */}
+          {!isTeacher && !loadingProjects && projects.filter(p => p.score != null).length >= 1 && (
+            <div className="dash-chart-wrap">
+              <InsightsBlock projects={projects} />
+            </div>
+          )}
+
+          {/* ── Projetos (dominant section) ── */}
+          {!isTeacher && <div id="proj-list">
             <div className="dash-sec-hd">
               <div className="dash-sec-label">
-                <Users2 size={13} />
-                As minhas turmas
-                {turmas.length > 0 && <span className="dash-sec-count">{turmas.length}</span>}
+                <Folder size={13} /> Os meus projetos
+                {!loadingProjects && projects.length > 0 && <span className="dash-sec-count">{projects.length}</span>}
               </div>
-              <button
-                onClick={() => setShowCreateTurma(true)}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 6,
-                  background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.22)',
-                  borderRadius: 8, padding: '6px 12px',
-                  color: '#60a5fa', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-                  transition: 'all 0.15s',
-                }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(59,130,246,0.18)' }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(59,130,246,0.1)' }}
-              >
-                <Plus size={13} /> Nova turma
-              </button>
+              {!loadingProjects && projects.length > 0 && (
+                <button
+                  onClick={() => navigate('/interview')}
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, background: `${C.blue}18`, border: `1px solid ${C.blue}30`, borderRadius: 8, padding: '6px 12px', color: '#60a5fa', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s' }}
+                  onMouseEnter={e => { e.currentTarget.style.background = `${C.blue}28`; e.currentTarget.style.borderColor = `${C.blue}55` }}
+                  onMouseLeave={e => { e.currentTarget.style.background = `${C.blue}18`; e.currentTarget.style.borderColor = `${C.blue}30` }}
+                >
+                  <Plus size={13} /> Novo projeto
+                </button>
+              )}
             </div>
-            {turmas.length === 0 ? (
-              <div style={{ background: C.card, border: `1px dashed ${C.border}`, borderRadius: 14, padding: '32px 24px', textAlign: 'center' }}>
-                <div style={{ marginBottom: 12, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 48, height: 48, borderRadius: 13, background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.15)' }}>
-                  <Users2 size={22} color="#3b82f6" />
+
+            {loadingProjects ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {[1,2,3].map(i => <div key={i} className="dash-skeleton" style={{ height: 72, opacity: 1 - i * 0.15 }} />)}
+              </div>
+            ) : projects.length === 0 ? (
+              <div style={{ background: C.card, border: `1px dashed ${C.border}`, borderRadius: 16, padding: '52px 28px', textAlign: 'center' }}>
+                <div style={{ marginBottom: 18, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 60, height: 60, borderRadius: 18, background: `${C.blue}18`, border: `1px solid ${C.blue}25` }}>
+                  <Rocket size={28} color={C.blue} />
                 </div>
-                <p style={{ color: C.text, fontSize: 15, fontWeight: 700, margin: '0 0 6px' }}>Ainda não tens turmas</p>
-                <p style={{ color: C.muted, fontSize: 13, margin: '0 0 20px', lineHeight: 1.6 }}>Cria uma turma e partilha o código com os teus alunos.</p>
-                <button onClick={() => setShowCreateTurma(true)} style={{ background: `linear-gradient(135deg, ${C.blue}, #4f46e5)`, border: 'none', borderRadius: 9, padding: '10px 22px', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 16px rgba(27,120,247,0.3)' }}>
-                  Criar primeira turma →
+                <p style={{ color: C.text, fontSize: 17, fontWeight: 700, margin: '0 0 8px' }}>O teu portfólio começa aqui</p>
+                <p style={{ color: C.muted, fontSize: 13, margin: '0 0 28px', lineHeight: 1.7, maxWidth: 300, marginLeft: 'auto', marginRight: 'auto' }}>
+                  Cria o teu primeiro projeto e partilha o que estás a construir com o mundo.
+                </p>
+                <button
+                  onClick={() => navigate('/interview')}
+                  style={{ background: `linear-gradient(135deg, ${C.blue}, #4f46e5)`, border: 'none', borderRadius: 10, padding: '13px 32px', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 20px rgba(27,120,247,0.35)' }}
+                >
+                  Criar com IA →
                 </button>
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {turmas.map(t => <TurmaCard key={t.id} turma={t} navigate={navigate} />)}
+                {projects.map(project => (
+                  <ProjectRow key={project.id} project={project} onView={() => navigate(`/projeto/${project.slug}`)} onEdit={() => navigate(`/editar/${project.slug}`)} onDelete={deleteProject} />
+                ))}
               </div>
             )}
-          </div>
-        )}
+          </div>}
 
-        {/* ── Stats — always visible ── */}
-        <div className="dash-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14 }}>
-          <StatCard icon={<Folder size={18} />} label="Projetos" value={loadingProjects ? '—' : projects.length} color={C.blue} />
-          <StatCard icon={<Trophy size={18} />} label="Melhor score" value={loadingProjects ? '—' : (bestScore ?? '—')} color={getScoreColor(bestScore)} onClick={() => navigate('/ranking')} />
-          <StatCard icon={<BarChart2 size={18} />} label="Score médio" value={loadingProjects ? '—' : (avgScore ?? '—')} color={getScoreColor(avgScore)} />
-          <StatCard icon={<Eye size={18} />} label="Visualizações" value={loadingProjects ? '—' : totalViews} color={C.purple} />
-        </div>
-
-        {/* ── Defense countdown widget — aluno with defense date ── */}
-        {!isTeacher && !loadingProjects && (() => {
-          const today = new Date(); today.setHours(0,0,0,0)
-          const upcoming = projects
-            .filter(p => p.defense_date)
-            .map(p => ({ ...p, daysLeft: Math.ceil((new Date(p.defense_date + 'T00:00:00') - today) / 86400000) }))
-            .sort((a, b) => a.daysLeft - b.daysLeft)
-          const next = upcoming[0]
-          if (!next) return null
-          const urgentColor = next.daysLeft <= 7 ? '#ef4444' : next.daysLeft <= 30 ? '#f97316' : C.blue
-          const urgentBg    = next.daysLeft <= 7 ? 'rgba(239,68,68,0.06)' : next.daysLeft <= 30 ? 'rgba(249,115,22,0.06)' : 'rgba(27,120,247,0.06)'
-          return (
-            <div
-              onClick={() => navigate(`/projeto/${next.slug}`)}
-              style={{
-                background: urgentBg,
-                border: `1px solid ${urgentColor}30`,
-                borderRadius: 16, padding: '18px 22px',
-                display: 'flex', alignItems: 'center', gap: 18, flexWrap: 'wrap',
-                cursor: 'pointer', transition: 'border-color 0.15s, background 0.15s',
-              }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = urgentColor + '55'; e.currentTarget.style.background = urgentBg.replace('0.06', '0.1') }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = urgentColor + '30'; e.currentTarget.style.background = urgentBg }}
-            >
-              {/* Countdown number */}
-              <div style={{ textAlign: 'center', flexShrink: 0 }}>
-                <div style={{ fontSize: 36, fontWeight: 900, color: urgentColor, lineHeight: 1, letterSpacing: '-1px' }}>
-                  {next.daysLeft <= 0 ? '🎉' : next.daysLeft}
-                </div>
-                {next.daysLeft > 0 && <div style={{ fontSize: 10, color: urgentColor, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: 2 }}>dias</div>}
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 3 }}>
-                  {next.daysLeft < 0 ? 'Defesa concluída 🎉' :
-                   next.daysLeft === 0 ? '🔥 A defesa é hoje!' :
-                   next.daysLeft === 1 ? '⚡ A defesa é amanhã!' :
-                   `Defesa do projeto${upcoming.length > 1 ? ` "${next.name}"` : ''}`}
-                </div>
-                <div style={{ fontSize: 12, color: C.muted }}>
-                  {next.daysLeft > 1
-                    ? (next.daysLeft <= 7 ? '🚨 Última semana — foca no que falta completar!'
-                       : next.daysLeft <= 30 ? '💪 Mantém o ritmo — melhora o score dia a dia.'
-                       : '✅ Mantém a consistência. Vai completando missão a missão.')
-                    : new Date(next.defense_date + 'T00:00:00').toLocaleDateString('pt-PT', { weekday: 'long', day: 'numeric', month: 'long' })}
+          {/* ── Partilhados comigo ── */}
+          {!isTeacher && collabProjects.length > 0 && (
+            <div>
+              <div className="dash-sec-hd">
+                <div className="dash-sec-label">
+                  <Users size={13} /> Partilhados comigo
+                  <span className="dash-sec-count">{collabProjects.length}</span>
                 </div>
               </div>
-              <div style={{ fontSize: 11, color: C.muted, flexShrink: 0 }}>
-                Abrir projeto →
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {collabProjects.map(p => (
+                  <div key={p.id} onClick={() => navigate(`/projeto/${p.slug}`)} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer', transition: 'all 0.15s' }}
+                    onMouseEnter={e => { e.currentTarget.style.background = C.cardHover; e.currentTarget.style.borderColor = C.borderBright }}
+                    onMouseLeave={e => { e.currentTarget.style.background = C.card; e.currentTarget.style.borderColor = C.border }}>
+                    <div style={{ position: 'relative', width: 38, height: 38, flexShrink: 0 }}>
+                      <svg width={38} height={38} style={{ transform: 'rotate(-90deg)', display: 'block' }}>
+                        <circle cx={19} cy={19} r={15} fill="none" stroke="#1e3050" strokeWidth={3} />
+                        <circle cx={19} cy={19} r={15} fill="none" stroke={getScoreColor(p.score)} strokeWidth={3}
+                          strokeDasharray={`${((p.score ?? 0) / 100) * 2 * Math.PI * 15} ${2 * Math.PI * 15}`}
+                          strokeLinecap="round"
+                          style={{ filter: `drop-shadow(0 0 4px ${getScoreColor(p.score)}80)` }}
+                        />
+                      </svg>
+                      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: getScoreColor(p.score) }}>{p.score ?? '—'}</div>
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ color: C.text, fontSize: 14, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
+                      {p.creator_name && <div style={{ color: C.muted, fontSize: 12, marginTop: 2 }}>de {p.creator_name}</div>}
+                    </div>
+                    {p.area && <span style={{ fontSize: 11, color: C.subtle, background: 'rgba(255,255,255,0.04)', border: `1px solid ${C.border}`, borderRadius: 5, padding: '2px 8px', flexShrink: 0 }}>{p.area}</span>}
+                    <ChevronRight size={15} color={C.subtle} style={{ flexShrink: 0 }} />
+                  </div>
+                ))}
               </div>
-            </div>
-          )
-        })()}
-
-        {/* ── Os meus projetos — visible on ALL devices ── */}
-        <div id="proj-list">
-          <div className="dash-sec-hd">
-            <div className="dash-sec-label">
-              <Folder size={13} />
-              Os meus projetos
-              {!loadingProjects && projects.length > 0 && <span className="dash-sec-count">{projects.length}</span>}
-            </div>
-            {!loadingProjects && projects.length > 0 && (
-              <button
-                onClick={() => navigate('/interview')}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 6,
-                  background: `${C.blue}18`, border: `1px solid ${C.blue}30`,
-                  borderRadius: 8, padding: '6px 12px',
-                  color: '#60a5fa', fontSize: 12, fontWeight: 700,
-                  cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s',
-                }}
-                onMouseEnter={e => { e.currentTarget.style.background = `${C.blue}28`; e.currentTarget.style.borderColor = `${C.blue}55` }}
-                onMouseLeave={e => { e.currentTarget.style.background = `${C.blue}18`; e.currentTarget.style.borderColor = `${C.blue}30` }}
-              >
-                <Plus size={13} /> Novo
-              </button>
-            )}
-          </div>
-
-          {loadingProjects ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {[1,2].map(i => (
-                <div key={i} style={{ height: 72, background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, opacity: 0.5 + i * 0.1 }} />
-              ))}
-            </div>
-          ) : projects.length === 0 ? (
-            <div style={{
-              background: C.card,
-              border: `1px dashed ${C.border}`,
-              borderRadius: 16, padding: '48px 28px', textAlign: 'center',
-            }}>
-              <div style={{ marginBottom: 16, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 56, height: 56, borderRadius: 16, background: `${C.blue}18`, border: `1px solid ${C.blue}25` }}>
-                <Rocket size={26} color={C.blue} />
-              </div>
-              <p style={{ color: C.text, fontSize: 16, fontWeight: 700, margin: '0 0 8px', fontFamily: 'var(--font-heading)' }}>
-                O teu portfólio começa aqui
-              </p>
-              <p style={{ color: C.muted, fontSize: 13, margin: '0 0 24px', lineHeight: 1.7, maxWidth: 320, marginLeft: 'auto', marginRight: 'auto' }}>
-                Cria o teu primeiro projeto e partilha o que estás a construir com o mundo.
-              </p>
-              <button
-                onClick={() => navigate('/interview')}
-                style={{
-                  background: `linear-gradient(135deg, ${C.blue}, #4f46e5)`,
-                  border: 'none', borderRadius: 10,
-                  padding: '12px 28px', color: '#fff', fontSize: 14, fontWeight: 700,
-                  cursor: 'pointer', fontFamily: 'inherit',
-                  boxShadow: '0 4px 20px rgba(27,120,247,0.35)',
-                }}
-              >
-                Criar primeiro projeto →
-              </button>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {projects.map(project => (
-                <ProjectRow
-                  key={project.id}
-                  project={project}
-                  onView={() => navigate(`/projeto/${project.slug}`)}
-                  onEdit={() => navigate(`/editar/${project.slug}`)}
-                  onDelete={deleteProject}
-                />
-              ))}
             </div>
           )}
-        </div>
 
-        {/* ── Criar novo projeto ── */}
-        <div>
-          <div className="dash-sec-hd">
-            <div className="dash-sec-label">
-              <Plus size={13} />
-              Criar novo projeto
-            </div>
-          </div>
-          <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: '22px 24px', boxShadow: '0 2px 16px rgba(0,0,0,0.15)' }}>
-            <QuickCreateProject navigate={navigate} />
-          </div>
-        </div>
-
-        {/* ── Partilhados comigo ── */}
-        {collabProjects.length > 0 && (
-          <div>
-            <div className="dash-sec-hd">
-              <div className="dash-sec-label">
-                <Users size={13} />
-                Partilhados comigo
-                <span className="dash-sec-count">{collabProjects.length}</span>
-              </div>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {collabProjects.map(p => (
-                <div
-                  key={p.id}
-                  onClick={() => navigate(`/projeto/${p.slug}`)}
-                  style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer', transition: 'all 0.15s' }}
-                  onMouseEnter={e => { e.currentTarget.style.background = C.cardHover; e.currentTarget.style.borderColor = C.borderBright }}
-                  onMouseLeave={e => { e.currentTarget.style.background = C.card; e.currentTarget.style.borderColor = C.border }}
-                >
-                  <div style={{ width: 38, height: 38, borderRadius: '50%', flexShrink: 0,
-                    background: `conic-gradient(${getScoreColor(p.score)} ${(p.score ?? 0) * 3.6}deg, #1e3050 0deg)`,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <div style={{ width: 28, height: 28, borderRadius: '50%', background: C.card, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: getScoreColor(p.score) }}>
-                      {p.score ?? '—'}
-                    </div>
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ color: C.text, fontSize: 14, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
-                    {p.creator_name && <div style={{ color: C.muted, fontSize: 12, marginTop: 2 }}>de {p.creator_name}</div>}
-                  </div>
-                  {p.area && (
-                    <span style={{ fontSize: 11, color: C.subtle, background: 'rgba(255,255,255,0.04)', border: `1px solid ${C.border}`, borderRadius: 5, padding: '2px 8px', flexShrink: 0 }}>
-                      {p.area}
-                    </span>
-                  )}
-                  <ChevronRight size={15} color={C.subtle} style={{ flexShrink: 0 }} />
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* ── Entrar numa turma — alunos only, bottom of page ── */}
-        {!isTeacher && (
-          <div>
-            <div className="dash-sec-hd">
-              <div className="dash-sec-label">
-                <Users2 size={13} />
-                A tua turma
-              </div>
-            </div>
-            <JoinTurmaBar navigate={navigate} />
-          </div>
-        )}
-
-        </div>{/* end sections gap container */}
+        </div>{/* end sections */}
       </div>
     </div>
   )

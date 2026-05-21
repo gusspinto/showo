@@ -7,7 +7,7 @@ import { Loader, Check, X, AlertTriangle, Camera, ArrowLeft, GraduationCap, Book
 import { CropModal } from '../components/CropModal'
 
 const C = {
-  bg:          '#0d1424',
+  bg:          '#060c18',
   bgAlt:       '#111c32',
   card:        '#152030',
   cardHover:   '#1c2d44',
@@ -19,7 +19,7 @@ const C = {
   muted:       '#7d93b0',
   text:        '#e8f2ff',
   subtle:      '#3d5270',
-  inputBg:     '#0d1424',
+  inputBg:     '#060c18',
   red:         '#ef4444',
   green:       '#22c55e',
 }
@@ -54,7 +54,7 @@ function Input({ label, value, onChange, placeholder, hint, type = 'text', prefi
             fontSize: 15,
             padding: prefix ? '12px 14px 12px 32px' : '12px 14px',
             outline: 'none',
-            fontFamily: 'Inter, sans-serif',
+            fontFamily: 'inherit',
             boxSizing: 'border-box',
             transition: 'border-color 0.2s, box-shadow 0.2s',
             boxShadow: focused ? `0 0 0 3px rgba(27,120,247,0.12)` : 'none',
@@ -89,7 +89,7 @@ function Textarea({ label, value, onChange, placeholder, hint }) {
           fontSize: 15,
           padding: '12px 14px',
           outline: 'none',
-          fontFamily: 'Inter, sans-serif',
+          fontFamily: 'inherit',
           boxSizing: 'border-box',
           resize: 'vertical',
           minHeight: 90,
@@ -322,14 +322,14 @@ export default function Settings() {
   if (!user) return null
 
   return (
-    <div style={{ minHeight: '100vh', background: C.bg, fontFamily: 'Inter, sans-serif' }}>
+    <div style={{ minHeight: '100vh', background: C.bg, fontFamily: 'inherit' }}>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
       <Navbar />
-      <div style={{ maxWidth: 600, margin: '0 auto', padding: '44px 24px 80px' }}>
+      <div className="page-content">
 
         <div style={{ marginBottom: 32, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
           <div>
-            <h1 style={{ color: C.text, fontSize: 26, fontWeight: 800, margin: '0 0 4px', letterSpacing: '-0.5px' }}>Definições</h1>
+            <h1 style={{ color: C.text, fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 900, margin: '0 0 4px', letterSpacing: '-0.5px' }}>Definições</h1>
             <p style={{ color: C.muted, fontSize: 14, margin: 0 }}>Gere o teu perfil e conta</p>
           </div>
           <button
@@ -527,8 +527,8 @@ export default function Settings() {
           {saveMsg && (
             <div style={{
               padding: '10px 14px', borderRadius: 8, marginBottom: 16,
-              background: saveMsg.type === 'ok' ? 'rgba(52,211,153,0.08)' : 'rgba(248,113,113,0.08)',
-              border: `1px solid ${saveMsg.type === 'ok' ? 'rgba(52,211,153,0.25)' : 'rgba(248,113,113,0.25)'}`,
+              background: saveMsg.type === 'ok' ? 'rgba(34,197,94,0.08)' : 'rgba(239,68,68,0.08)',
+              border: `1px solid ${saveMsg.type === 'ok' ? 'rgba(34,197,94,0.25)' : 'rgba(239,68,68,0.25)'}`,
               color: saveMsg.type === 'ok' ? C.green : C.red,
               fontSize: 13,
             }}>
@@ -561,7 +561,7 @@ export default function Settings() {
             <div style={{
               background: C.inputBg, border: `1.5px solid ${C.border}`,
               borderRadius: 10, padding: '12px 14px',
-              color: C.subtle, fontSize: 15, fontFamily: 'Inter, sans-serif',
+              color: C.subtle, fontSize: 15, fontFamily: 'inherit',
             }}>
               {user.email}
             </div>
@@ -577,8 +577,8 @@ export default function Settings() {
           {pwMsg && (
             <div style={{
               padding: '10px 14px', borderRadius: 8, marginBottom: 16,
-              background: pwMsg.type === 'ok' ? 'rgba(52,211,153,0.08)' : 'rgba(248,113,113,0.08)',
-              border: `1px solid ${pwMsg.type === 'ok' ? 'rgba(52,211,153,0.25)' : 'rgba(248,113,113,0.25)'}`,
+              background: pwMsg.type === 'ok' ? 'rgba(34,197,94,0.08)' : 'rgba(239,68,68,0.08)',
+              border: `1px solid ${pwMsg.type === 'ok' ? 'rgba(34,197,94,0.25)' : 'rgba(239,68,68,0.25)'}`,
               color: pwMsg.type === 'ok' ? C.green : C.red,
               fontSize: 13,
             }}>
@@ -616,15 +616,15 @@ export default function Settings() {
               navigate('/')
             }}
             style={{
-              background: 'rgba(248,113,113,0.08)',
-              border: '1px solid rgba(248,113,113,0.2)',
+              background: 'rgba(239,68,68,0.08)',
+              border: '1px solid rgba(239,68,68,0.2)',
               borderRadius: 10, padding: '11px 24px',
               color: C.red, fontSize: 14, fontWeight: 600,
               cursor: 'pointer', fontFamily: 'inherit',
               transition: 'background 0.15s',
             }}
-            onMouseEnter={e => e.currentTarget.style.background = 'rgba(248,113,113,0.14)'}
-            onMouseLeave={e => e.currentTarget.style.background = 'rgba(248,113,113,0.08)'}
+            onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.14)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'rgba(239,68,68,0.08)'}
           >
             Terminar sessão
           </button>

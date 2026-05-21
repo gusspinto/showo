@@ -5,8 +5,8 @@ import { saveProject } from '../lib/saveProject'
 import { AlertTriangle } from 'lucide-react'
 
 const C = {
-  bg:     '#0d1424',
-  card:   '#111c32',
+  bg:     '#060c18',
+  card:   '#152030',
   border: '#1e3050',
   bright: '#2a4275',
   blue:   '#1b78f7',
@@ -41,7 +41,7 @@ function ScoreBar({ score }) {
       <div style={{ height: 4, borderRadius: 99, background: C.border, overflow: 'hidden' }}>
         <div style={{
           height: '100%', borderRadius: 99,
-          background: score > 60 ? 'linear-gradient(90deg, #10b981, #34d399)' : score > 30 ? 'linear-gradient(90deg, #f59e0b, #fbbf24)' : 'linear-gradient(90deg, #1b78f7, #818cf8)',
+          background: score > 60 ? 'linear-gradient(90deg, #10b981, #22c55e)' : score > 30 ? 'linear-gradient(90deg, #f59e0b, #fbbf24)' : 'linear-gradient(90deg, #1b78f7, #818cf8)',
           width: `${score}%`, transition: 'width 0.6s cubic-bezier(0.4,0,0.2,1)',
         }} />
       </div>
@@ -314,7 +314,7 @@ export default function AIInterview() {
       </div>
 
       {/* Body */}
-      <div style={{ flex: 1, display: 'flex', gap: 32, padding: '0 32px 48px', maxWidth: 1100, margin: '0 auto', width: '100%', boxSizing: 'border-box', alignItems: 'flex-start' }}>
+      <div style={{ flex: 1, display: 'flex', gap: 32, padding: '0 32px 48px', maxWidth: 1000, margin: '0 auto', width: '100%', boxSizing: 'border-box', alignItems: 'flex-start' }}>
 
         {/* Left: interview */}
         <div className="iv-main" style={{ flex: 1, minWidth: 0, paddingTop: 40 }}>
@@ -346,8 +346,8 @@ export default function AIInterview() {
           {/* Error */}
           {phase === 'error' && (
             <div style={{ textAlign: 'center', paddingTop: 80, animation: 'fadeIn 0.4s ease' }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16, color: '#f87171' }}><AlertTriangle size={36} /></div>
-              <p style={{ color: '#f87171', fontSize: 15, marginBottom: 8, maxWidth: 400, margin: '0 auto 8px' }}>{errorMsg}</p>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16, color: '#ef4444' }}><AlertTriangle size={36} /></div>
+              <p style={{ color: '#ef4444', fontSize: 15, marginBottom: 8, maxWidth: 400, margin: '0 auto 8px' }}>{errorMsg}</p>
               <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginTop: 24, flexWrap: 'wrap' }}>
                 <button
                   onClick={() => generateAndSave(answers)}

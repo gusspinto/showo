@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase'
 import { Mail, GraduationCap, BookOpen, Search, Building2 } from 'lucide-react'
 
 const C = {
-  bg:          '#0d1424',
+  bg:          '#060c18',
   card:        '#152030',
   border:      '#1e3050',
   borderBright:'#2a4275',
@@ -156,7 +156,7 @@ export default function Register() {
     <div style={{
       minHeight: '100vh', background: C.bg,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      padding: '24px 16px', fontFamily: 'Inter, sans-serif',
+      padding: '24px 16px', fontFamily: 'inherit',
       position: 'relative', overflow: 'hidden',
     }}>
       <div style={{ position: 'absolute', top: '-10%', left: '50%', transform: 'translateX(-50%)', width: 600, height: 400, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(27,120,247,0.07) 0%, transparent 70%)', pointerEvents: 'none' }} />
@@ -300,7 +300,7 @@ export default function Register() {
               </Field>
 
               {error && (
-                <div style={{ background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.25)', borderRadius: 8, padding: '10px 14px', color: C.error, fontSize: 14 }}>
+                <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 8, padding: '10px 14px', color: C.error, fontSize: 14 }}>
                   {error}
                 </div>
               )}

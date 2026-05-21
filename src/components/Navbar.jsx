@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
-import { Check, X, FolderOpen, User, Settings as SettingsIcon, Shield, Globe, Trophy, LogOut, Bell, Eye, Target, TrendingUp, GraduationCap, UserPlus } from 'lucide-react'
+import { Check, X, FolderOpen, User, Settings as SettingsIcon, Shield, Globe, Trophy, LogOut, Bell, Eye, Target, TrendingUp, GraduationCap, UserPlus, Home, Plus, Compass } from 'lucide-react'
 
 const C = {
   bg: 'rgba(13, 20, 36, 0.88)',
@@ -62,7 +62,7 @@ function timeAgo(ts) {
   return new Date(ts).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' })
 }
 
-function InviteInbox({ userId }) {
+function InviteInbox({ userId, sidebar = false }) {
   const navigate = useNavigate()
   const [open, setOpen]     = useState(false)
   const [invites, setInvites] = useState([])
@@ -166,8 +166,8 @@ function InviteInbox({ userId }) {
   function viewMessage(n) {
     const isCompany = n.type === 'COMPANY_VIEW'
     const who = isCompany ? 'empresas/recrutadores' : 'pessoas'
-    if (n.count30m >= 2) return `🔥 ${n.count30m} ${who} nas últimas 30 min`
-    if (n.count1h >= 2)  return `👀 ${n.count1h} ${who} na última hora`
+    if (n.count30m >= 2) return `${n.count30m} ${who} nas últimas 30 min`
+    if (n.count1h >= 2)  return `${n.count1h} ${who} na última hora`
     if (n.count24h >= 2) return `${n.count24h} ${who} hoje`
     if (n.count > 1)     return `${n.count} ${who} viram o teu projeto`
     return n.message
@@ -304,40 +304,43 @@ function InviteInbox({ userId }) {
         onClick={() => setOpen(o => !o)}
         style={{
           position: 'relative',
-          background: open ? 'rgba(59,130,246,0.1)' : 'transparent',
-          border: `1px solid ${open ? 'rgba(59,130,246,0.35)' : C.border}`,
-          borderRadius: 8, width: 36, height: 36,
+          background: open ? 'rgba(27,120,247,0.1)' : 'transparent',
+          border: `1px solid ${open ? 'rgba(27,120,247,0.35)' : C.border}`,
+          borderRadius: 8, width: 32, height: 32,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           cursor: 'pointer', color: open ? '#60a5fa' : C.muted,
-          transition: 'all 0.15s',
+          transition: 'all 0.15s', flexShrink: 0,
         }}
         title="Notificações"
       >
-        <Bell size={16} />
+        <Bell size={15} />
         {count > 0 && (
           <span style={{
             position: 'absolute', top: -4, right: -4,
             background: '#ef4444', borderRadius: '50%',
-            width: 16, height: 16, fontSize: 9, fontWeight: 800,
+            width: 15, height: 15, fontSize: 8, fontWeight: 800,
             color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            border: '2px solid rgba(13,20,36,0.9)',
+            border: '2px solid #060c18',
           }}>
-            {count}
+            {count > 9 ? '9+' : count}
           </span>
         )}
       </button>
 
       {open && (
         <>
-          <div style={{ position: 'fixed', inset: 0, zIndex: 98 }} onClick={() => setOpen(false)} />
+          <div style={{ position: 'fixed', inset: 0, zIndex: 198 }} onClick={() => setOpen(false)} />
           <div style={{
-            position: 'absolute', top: 'calc(100% + 8px)', right: 0,
-            background: 'rgba(13,20,36,0.98)', border: `1px solid ${C.border}`,
+            ...(sidebar
+              ? { position: 'fixed', left: 224, bottom: 16 }
+              : { position: 'absolute', top: 'calc(100% + 8px)', right: 0 }
+            ),
+            background: 'rgba(6,12,24,0.98)', border: `1px solid ${C.border}`,
             borderRadius: 14, padding: '8px',
             boxShadow: '0 8px 40px rgba(0,0,0,0.6)',
             backdropFilter: 'blur(16px)',
-            zIndex: 99, width: 310,
-            maxHeight: 480, overflowY: 'auto',
+            zIndex: 199, width: 310,
+            maxHeight: 'calc(100vh - 80px)', overflowY: 'auto',
           }}>
 
             {/* Pending invites TO me */}
@@ -351,7 +354,7 @@ function InviteInbox({ userId }) {
                   const isActing = !!acting[invite.id]
                   return (
                     <div key={invite.id} style={{
-                      background: 'rgba(59,130,246,0.05)', border: '1px solid rgba(59,130,246,0.15)',
+                      background: 'rgba(27,120,247,0.05)', border: '1px solid rgba(27,120,247,0.15)',
                       borderRadius: 10, padding: '12px 14px', marginBottom: 6,
                     }}>
                       <p style={{ margin: '0 0 2px', fontSize: 14, fontWeight: 700, color: C.text }}>{invite.projectName}</p>
@@ -363,7 +366,7 @@ function InviteInbox({ userId }) {
                         >{acting[invite.id] === 'accepted' ? '...' : <><Check size={12} style={{ verticalAlign: 'middle', marginRight: 3 }} />Aceitar</>}</button>
                         <button
                           onClick={() => respond(invite, 'declined')} disabled={isActing}
-                          style={{ flex: 1, padding: '7px 0', background: 'transparent', border: '1px solid rgba(248,113,113,0.3)', borderRadius: 7, color: '#f87171', fontSize: 12, fontWeight: 600, cursor: isActing ? 'default' : 'pointer', fontFamily: 'inherit' }}
+                          style={{ flex: 1, padding: '7px 0', background: 'transparent', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 7, color: '#ef4444', fontSize: 12, fontWeight: 600, cursor: isActing ? 'default' : 'pointer', fontFamily: 'inherit' }}
                         >{acting[invite.id] === 'declined' ? '...' : 'Recusar'}</button>
                       </div>
                     </div>
@@ -380,15 +383,15 @@ function InviteInbox({ userId }) {
                 </p>
                 {responses.map(r => (
                   <div key={r.id} style={{
-                    background: r.status === 'accepted' ? 'rgba(34,197,94,0.05)' : 'rgba(248,113,113,0.05)',
-                    border: `1px solid ${r.status === 'accepted' ? 'rgba(34,197,94,0.2)' : 'rgba(248,113,113,0.2)'}`,
+                    background: r.status === 'accepted' ? 'rgba(34,197,94,0.05)' : 'rgba(239,68,68,0.05)',
+                    border: `1px solid ${r.status === 'accepted' ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.2)'}`,
                     borderRadius: 10, padding: '10px 14px', marginBottom: 6,
                     display: 'flex', alignItems: 'flex-start', gap: 10,
                   }}>
                     <span style={{ fontSize: 18, flexShrink: 0, marginTop: 1, display: 'flex', alignItems: 'center' }}>
                       {r.status === 'accepted'
                         ? <Check size={16} color="#22c55e" />
-                        : <X size={16} color="#f87171" />}
+                        : <X size={16} color="#ef4444" />}
                     </span>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <p style={{ margin: '0 0 2px', fontSize: 13, fontWeight: 700, color: C.text }}>
@@ -466,7 +469,7 @@ function InviteInbox({ userId }) {
                         onClick={() => deleteNotifs(n.groupIds)}
                         title="Apagar notificação"
                         style={{ background: 'none', border: 'none', color: C.muted, cursor: 'pointer', padding: '2px 3px', borderRadius: 4, display: 'flex', alignItems: 'center', opacity: 0.6, transition: 'opacity 0.12s, color 0.12s', lineHeight: 1 }}
-                        onMouseEnter={e => { e.currentTarget.style.opacity = 1; e.currentTarget.style.color = '#f87171' }}
+                        onMouseEnter={e => { e.currentTarget.style.opacity = 1; e.currentTarget.style.color = '#ef4444' }}
                         onMouseLeave={e => { e.currentTarget.style.opacity = 0.6; e.currentTarget.style.color = C.muted }}
                       >
                         <X size={13} />
@@ -502,7 +505,7 @@ function AvatarCircle({ avatarUrl, initial, size = 28, fontSize = 13 }) {
   ) : (
     <div style={{
       width: size, height: size, borderRadius: '50%',
-      background: 'linear-gradient(135deg, #3b82f6, #4f46e5)',
+      background: 'linear-gradient(135deg, #1b78f7, #4f46e5)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       fontSize, fontWeight: 700, color: '#fff', flexShrink: 0,
       userSelect: 'none',
@@ -598,8 +601,8 @@ function UserChip({ user, profile, onClick, onProfile, onSettings, onSignOut, on
             <div style={{ height: 1, background: C.border, margin: '4px 6px' }} />
             <button
               onClick={() => { onSignOut(); setOpen(false) }}
-              style={{ ...dropItemStyle, color: '#f87171' }}
-              onMouseEnter={e => e.currentTarget.style.background = 'rgba(248,113,113,0.08)'}
+              style={{ ...dropItemStyle, color: '#ef4444' }}
+              onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.08)'}
               onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
             >
               Sair
@@ -621,10 +624,17 @@ const dropItemStyle = {
 
 export function Navbar({ children, showLinks = true, showCreateProject = false }) {
   const navigate = useNavigate()
+  const location = useLocation()
   const { user, profile, signOut, isAdmin } = useAuth()
   const [open, setOpen] = useState(false)
 
   const profileUrl = profile?.username ? `/u/${profile.username}` : user ? `/u/${user.id}` : null
+
+  function isActive(path) {
+    if (path === '/dashboard') return location.pathname === '/dashboard'
+    if (path === 'profile') return location.pathname.startsWith('/u/')
+    return location.pathname === path || location.pathname.startsWith(path + '/')
+  }
 
   async function handleSignOut() {
     await signOut()
@@ -644,7 +654,70 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
         .nav-auth   { display: flex; align-items: center; gap: 8px; }
         .ham-btn    { display: none !important; }
 
-        /* Tablet: hamburger for nav-left links + page children; keep nav-auth visible */
+        /* ── Sidebar (desktop >860px) ── */
+        .sidebar {
+          display: none;
+          position: fixed;
+          left: 0; top: 0; bottom: 0;
+          width: 216px;
+          background: rgba(6,12,24,0.98);
+          border-right: 1px solid #1e3050;
+          flex-direction: column;
+          padding: 0;
+          z-index: 100;
+          overflow-y: auto;
+          overflow-x: hidden;
+        }
+        .sb-logo {
+          display: flex; align-items: center;
+          padding: 20px 16px 16px;
+          cursor: pointer; border: none; background: transparent;
+          font-family: inherit; text-align: left; width: 100%;
+        }
+        .sb-logo:hover { opacity: 0.85; }
+        .sb-section { padding: 0 8px; flex: 1; }
+        .sb-label {
+          font-size: 11px; font-weight: 700; color: #3d5270;
+          text-transform: uppercase; letter-spacing: 0.1em;
+          padding: 12px 10px 4px; display: block;
+        }
+        .sb-item {
+          display: flex; align-items: center; gap: 11px;
+          width: 100%; padding: 9px 12px;
+          border-radius: 9px; border: none;
+          background: transparent; color: #7d93b0;
+          font-size: 13px; font-weight: 600;
+          cursor: pointer; font-family: inherit;
+          transition: background 0.13s, color 0.13s;
+          text-align: left; white-space: nowrap;
+        }
+        .sb-item:hover { background: rgba(255,255,255,0.06); color: #e8f2ff; }
+        .sb-item.active { background: rgba(27,120,247,0.13); color: #1b78f7; }
+        .sb-item.danger { color: #ef4444; }
+        .sb-item.danger:hover { background: rgba(239,68,68,0.08); color: #ef4444; }
+        .sb-create {
+          display: flex; align-items: center; gap: 8px;
+          margin: 10px 8px 4px;
+          padding: 10px 14px;
+          background: linear-gradient(135deg, #1b78f7, #4f46e5);
+          border: none; border-radius: 10px;
+          color: #fff; font-size: 13px; font-weight: 700;
+          cursor: pointer; font-family: inherit;
+          box-shadow: 0 2px 14px rgba(27,120,247,0.3);
+          transition: opacity 0.15s; width: calc(100% - 16px);
+        }
+        .sb-create:hover { opacity: 0.88; }
+        .sb-divider { height: 1px; background: #1e3050; margin: 8px 8px; }
+        .sb-bottom { padding: 0 8px 16px; }
+
+        @media (min-width: 861px) {
+          .sidebar   { display: flex; }
+          .top-nav   { display: none !important; }
+          .bottom-nav { display: none !important; }
+          body { padding-left: 216px !important; padding-bottom: 0 !important; }
+        }
+
+        /* Tablet (601–860px): hamburger visible, bottom nav hidden */
         @media (max-width: 860px) {
           .nav-left          { display: none; }
           .nav-children-wrap { display: none !important; }
@@ -652,19 +725,24 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
           .mob-only-create   { display: none !important; }
         }
 
-        @media (max-width: 600px) {
-          .nav-mid          { flex: 1; justify-content: flex-start; }
-          .nav-right        { flex: none; }
-          .nav-auth         { display: none !important; }
-          .nav-logo         { height: 28px !important; width: auto !important; }
-          .showo-nav-pad    { padding-left: 20px !important; padding-right: 20px !important; }
-          .mob-only-create  { display: flex !important; }
-        }
-
         @media (min-width: 601px) and (max-width: 860px) {
           .nav-logo { height: 32px !important; width: auto !important; }
         }
 
+        /* Mobile (≤600px): bottom nav takes over — logo centrada, sem hamburger */
+        @media (max-width: 600px) {
+          .nav-mid       { position: absolute; left: 50%; transform: translateX(-50%); }
+          .nav-right     { flex: none; }
+          .nav-auth      { display: none !important; }
+          .nav-logo      { height: 28px !important; width: auto !important; }
+          .showo-nav-pad { padding-left: 20px !important; padding-right: 20px !important; }
+          .mob-only-create { display: none !important; }
+          .ham-btn       { display: none !important; }
+          .bottom-nav    { display: flex !important; }
+          body           { padding-bottom: 78px; }
+        }
+
+        /* Mobile drawer (tablet only) */
         .mobile-drawer {
           position: fixed;
           top: 62px; left: 0; right: 0;
@@ -692,7 +770,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
         }
         .mobile-drawer-btn:last-child { border-bottom: none; }
         .mobile-drawer-btn:hover { color: #e8f2ff; }
-        .mobile-drawer-btn.danger { color: #f87171 !important; }
+        .mobile-drawer-btn.danger { color: #ef4444 !important; }
         .mobile-drawer-pair { display: flex; gap: 8px; padding: 16px 0 4px; }
         .mobile-drawer-pair-btn {
           flex: 1; display: flex; align-items: center; justify-content: center; gap: 7px;
@@ -702,12 +780,63 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
           cursor: pointer; font-family: inherit; transition: background 0.15s, border-color 0.15s;
         }
         .mobile-drawer-pair-btn:hover { background: rgba(255,255,255,0.08); border-color: #2a4275; }
-        .mobile-drawer-pair-btn.danger { color: #f87171 !important; border-color: rgba(248,113,113,0.2) !important; }
-        .mobile-drawer-pair-btn.danger:hover { background: rgba(248,113,113,0.06) !important; }
-        /* On tablet the UserChip is visible — hide the profile section inside drawer */
+        .mobile-drawer-pair-btn.danger { color: #ef4444 !important; border-color: rgba(239,68,68,0.2) !important; }
+        .mobile-drawer-pair-btn.danger:hover { background: rgba(239,68,68,0.06) !important; }
         @media (min-width: 601px) {
           .nav-drawer-profile { display: none !important; }
         }
+
+        /* ── Bottom navigation bar (mobile only) ── */
+        .bottom-nav {
+          display: none;
+          position: fixed;
+          bottom: 0; left: 0; right: 0;
+          z-index: 100;
+          background: rgba(13,20,36,0.97);
+          border-top: 1px solid #1e3050;
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+          padding: 6px 0 max(10px, env(safe-area-inset-bottom, 10px));
+          box-shadow: 0 -4px 32px rgba(0,0,0,0.45);
+          align-items: stretch;
+        }
+        .bn-item {
+          flex: 1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: transparent;
+          border: none;
+          cursor: pointer;
+          padding: 0;
+          color: #7d93b0;
+          font-family: inherit;
+          transition: color 0.15s;
+          -webkit-tap-highlight-color: transparent;
+          min-height: 50px;
+        }
+        .bn-item.active { color: #1b78f7; }
+        .bn-item:active { opacity: 0.65; }
+        .bn-create-wrap {
+          flex: 1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .bn-create-btn {
+          width: 46px; height: 46px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, #1b78f7, #4f46e5);
+          border: none;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 4px 18px rgba(27,120,247,0.5);
+          -webkit-tap-highlight-color: transparent;
+          transition: opacity 0.15s, transform 0.15s;
+        }
+        .bn-create-btn:active { opacity: 0.8; transform: scale(0.93); }
       `}</style>
 
       {/* Mobile backdrop blur */}
@@ -782,7 +911,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
       )}
 
       <nav
-        className="showo-nav-pad"
+        className="top-nav showo-nav-pad"
         style={{
           position: 'sticky', top: 0, zIndex: 100,
           display: 'flex', alignItems: 'center',
@@ -901,7 +1030,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
               className="ham-btn" onClick={() => setOpen(o => !o)} aria-label="Menu"
               style={{
                 background: 'transparent',
-                border: `1px solid ${open ? '#3b82f6' : C.border}`,
+                border: `1px solid ${open ? '#1b78f7' : C.border}`,
                 borderRadius: 8, width: 38, height: 38,
                 flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                 gap: 5, cursor: 'pointer', padding: 0, transition: 'border-color 0.2s', flexShrink: 0,
@@ -925,6 +1054,154 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
           )}
         </div>
       </nav>
+
+      {/* ── Sidebar — desktop only (>860px) ── */}
+      <div className="sidebar">
+        {/* Logo */}
+        <button className="sb-logo" onClick={() => navigate(user ? '/dashboard' : '/')}>
+          <img src="/icon_logo.png" alt="Showo" style={{ height: 28, width: 'auto', objectFit: 'contain' }} />
+        </button>
+
+        {/* Main nav + Create */}
+        <div className="sb-section">
+          {user && (
+            <button className={`sb-item${isActive('/dashboard') ? ' active' : ''}`} onClick={() => navigate('/dashboard')}>
+              <Home size={16} /> Dashboard
+            </button>
+          )}
+          <button className={`sb-item${isActive('/explorar') ? ' active' : ''}`} onClick={() => navigate('/explorar')}>
+            <Compass size={16} /> Explorar
+          </button>
+          <button className={`sb-item${isActive('/ranking') ? ' active' : ''}`} onClick={() => navigate('/ranking')}>
+            <Trophy size={16} /> Ranking
+          </button>
+          {user && (
+            <button className="sb-create" onClick={() => navigate('/interview')}>
+              <Plus size={14} /> Criar projeto
+            </button>
+          )}
+        </div>
+
+        <div style={{ flex: 1 }} />
+        <div className="sb-divider" />
+
+        {/* Bottom — user section */}
+        <div className="sb-bottom">
+          {user ? (
+            <>
+              {/* Profile row + bell inline */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '0 4px 2px' }}>
+                {profileUrl && (
+                  <button className={`sb-item${isActive('profile') ? ' active' : ''}`} style={{ flex: 1, margin: 0 }} onClick={() => navigate(profileUrl)}>
+                    <AvatarCircle avatarUrl={profile?.avatar_url} initial={getInitial(user)} size={20} fontSize={9} />
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{getDisplayName(user)}</span>
+                  </button>
+                )}
+                <InviteInbox userId={user.id} sidebar={true} />
+              </div>
+              <button className="sb-item" onClick={() => navigate('/settings')}>
+                <SettingsIcon size={16} /> Definições
+              </button>
+              <button className="sb-item danger" onClick={handleSignOut}>
+                <LogOut size={16} /> Sair
+              </button>
+            </>
+          ) : (
+            <>
+              <button className="sb-item" onClick={() => navigate('/login')}>Entrar</button>
+              <button className="sb-item active" onClick={() => navigate('/register')}>Criar conta</button>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* ── Bottom navigation bar — mobile only (≤600px) ── */}
+      <div className="bottom-nav">
+        {user ? (
+          <>
+            {/* Dashboard */}
+            <button
+              className={`bn-item${isActive('/dashboard') ? ' active' : ''}`}
+              onClick={() => navigate('/dashboard')}
+            >
+              <Home size={24} strokeWidth={isActive('/dashboard') ? 2.5 : 1.8} />
+            </button>
+
+            {/* Explorar */}
+            <button
+              className={`bn-item${isActive('/explorar') ? ' active' : ''}`}
+              onClick={() => navigate('/explorar')}
+            >
+              <Compass size={24} strokeWidth={isActive('/explorar') ? 2.5 : 1.8} />
+            </button>
+
+            {/* Criar — botão central elevado */}
+            <div className="bn-create-wrap">
+              <button className="bn-create-btn" onClick={() => navigate('/interview')} aria-label="Criar projeto">
+                <Plus size={22} color="#fff" strokeWidth={2.5} />
+              </button>
+            </div>
+
+            {/* Ranking */}
+            <button
+              className={`bn-item${isActive('/ranking') ? ' active' : ''}`}
+              onClick={() => navigate('/ranking')}
+            >
+              <Trophy size={24} strokeWidth={isActive('/ranking') ? 2.5 : 1.8} />
+            </button>
+
+            {/* Perfil */}
+            <button
+              className={`bn-item${isActive('profile') ? ' active' : ''}`}
+              onClick={() => profileUrl && navigate(profileUrl)}
+            >
+              {profile?.avatar_url ? (
+                <img
+                  src={profile.avatar_url}
+                  alt=""
+                  style={{
+                    width: 26, height: 26, borderRadius: '50%', objectFit: 'cover',
+                    border: isActive('profile') ? '2px solid #1b78f7' : '2px solid transparent',
+                    transition: 'border-color 0.15s',
+                  }}
+                />
+              ) : (
+                <User size={24} strokeWidth={isActive('profile') ? 2.5 : 1.8} />
+              )}
+            </button>
+          </>
+        ) : (
+          <>
+            {/* Explorar */}
+            <button
+              className={`bn-item${isActive('/explorar') ? ' active' : ''}`}
+              onClick={() => navigate('/explorar')}
+            >
+              <Compass size={22} strokeWidth={isActive('/explorar') ? 2.5 : 1.8} />
+              <span>Explorar</span>
+            </button>
+
+            {/* Ranking */}
+            <button
+              className={`bn-item${isActive('/ranking') ? ' active' : ''}`}
+              onClick={() => navigate('/ranking')}
+            >
+              <Trophy size={22} strokeWidth={isActive('/ranking') ? 2.5 : 1.8} />
+              <span>Ranking</span>
+            </button>
+
+            {/* Entrar */}
+            <button
+              className={`bn-item${isActive('/login') ? ' active' : ''}`}
+              onClick={() => navigate('/login')}
+              style={{ color: isActive('/login') ? '#1b78f7' : '#e8f2ff' }}
+            >
+              <User size={22} strokeWidth={1.8} />
+              <span>Entrar</span>
+            </button>
+          </>
+        )}
+      </div>
     </>
   )
 }

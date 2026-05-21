@@ -61,11 +61,11 @@ function AuthErrorBanner() {
     <div style={{
       position: 'fixed', top: 16, left: '50%', transform: 'translateX(-50%)',
       zIndex: 99999, maxWidth: 480, width: 'calc(100% - 32px)',
-      background: '#1a0e0e', border: '1px solid rgba(248,113,113,0.35)',
+      background: '#1a0e0e', border: '1px solid rgba(239,68,68,0.35)',
       borderRadius: 12, padding: '14px 18px',
       display: 'flex', alignItems: 'flex-start', gap: 12,
       boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
-      fontFamily: 'Inter, sans-serif',
+      fontFamily: 'inherit',
     }}>
       <span style={{ flexShrink: 0, display: 'flex', alignItems: 'center' }}><AlertTriangle size={18} /></span>
       <div style={{ flex: 1 }}>

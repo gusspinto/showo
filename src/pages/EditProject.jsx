@@ -7,7 +7,7 @@ import { useAuth } from '../context/AuthContext'
 import { Sparkles, Lock, Search, Image } from 'lucide-react'
 
 const colors = {
-  bg: '#0d1424',
+  bg: '#060c18',
   bgAlt: '#111c32',
   card: '#152030',
   border: '#1e3050',
@@ -19,7 +19,7 @@ const colors = {
   subtle: '#3d5270',
   green: '#22c55e',
   red: '#f43f5e',
-  inputBg: '#0a1118',
+  inputBg: '#060c18',
 }
 
 const PROJECT_TYPES = [
@@ -274,9 +274,9 @@ export default function EditProject() {
         </button>
       </Navbar>
 
-      <div style={{ maxWidth: 700, margin: '0 auto', padding: '44px 24px 80px' }}>
+      <div className="page-content">
         <div style={{ marginBottom: 36 }}>
-          <h1 style={{ fontSize: 28, fontWeight: 800, margin: '0 0 6px', letterSpacing: '-0.5px' }}>Editar projeto</h1>
+          <h1 style={{ fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 900, margin: '0 0 6px', letterSpacing: '-0.5px' }}>Editar projeto</h1>
           <p style={{ color: colors.muted, margin: 0, fontSize: 15 }}>{project.name}</p>
         </div>
 

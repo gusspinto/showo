@@ -6,10 +6,10 @@ const SNOOZE_KEY    = 'showo_rest_snooze_until'
 const SNOOZE_MINS_KEY = 'showo_rest_snooze_mins'
 
 const C = {
-  bg:     'rgba(10,16,28,0.92)',
-  card:   '#111827',
+  bg:     'rgba(6,12,24,0.95)',
+  card:   '#152030',
   border: '#1e3050',
-  blue:   '#3b82f6',
+  blue:   '#1b78f7',
   muted:  '#7d93b0',
   text:   '#e8f2ff',
 }
@@ -93,7 +93,7 @@ export default function RestReminder() {
         borderRadius: 20,
         padding: '36px 32px',
         boxShadow: '0 24px 64px rgba(0,0,0,0.6)',
-        fontFamily: 'Inter, sans-serif',
+        fontFamily: 'inherit',
         animation: 'slideUp 0.25s cubic-bezier(0.22,1,0.36,1)',
       }}>
         <h2 style={{

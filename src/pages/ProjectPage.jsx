@@ -10,10 +10,10 @@ import { generateProject } from '../lib/generateProject'
 import { useAuth } from '../context/AuthContext'
 import DefenseMode from '../components/DefenseMode'
 import { analyzeProject } from '../lib/analyzeProject'
-import { Check, X, Loader, GraduationCap, Save, Sparkles, Bot, Lightbulb, Pencil, Search, Target, Wrench, Zap, TrendingUp, Briefcase, Users, Rocket, Trophy, BarChart2, CheckCircle, BookOpen, ChevronDown, Eye, UserPlus } from 'lucide-react'
+import { Check, X, Loader, GraduationCap, Save, Sparkles, Bot, Lightbulb, Pencil, Search, Target, Wrench, Zap, TrendingUp, Briefcase, Users, Rocket, Trophy, BarChart2, CheckCircle, BookOpen, ChevronDown, Eye, UserPlus, Calendar } from 'lucide-react'
 
 const colors = {
-  bg: '#0d1424',
+  bg: '#060c18',
   bgAlt: '#111c32',
   card: '#152030',
   cardHover: '#1c2d44',
@@ -30,13 +30,13 @@ const colors = {
   green: '#22c55e',
   greenGlow: 'rgba(34,197,94,0.12)',
   greenBg: '#061a0f',
-  yellow: '#eab308',
+  yellow: '#fbbf24',
   yellowGlow: 'rgba(234,179,8,0.12)',
   orange: '#f97316',
   orangeGlow: 'rgba(249,115,22,0.12)',
 }
 
-const CONFETTI_COLORS = ['#1b78f7', '#22c55e', '#eab308', '#f97316', '#a855f7', '#ec4899', '#06b6d4']
+const CONFETTI_COLORS = ['#1b78f7', '#22c55e', '#fbbf24', '#f97316', '#a855f7', '#ec4899', '#06b6d4']
 
 const PROJECT_TYPE_LABELS = {
   group: 'Trabalho de grupo',
@@ -245,18 +245,18 @@ function MissionRow({ challenge, project, onImprove, isOwner }) {
       style={{
         display: 'flex', alignItems: 'center', gap: 12,
         padding: '11px 14px', borderRadius: 12,
-        background: isCompleted ? 'rgba(52,211,153,0.03)' : colors.bgAlt,
-        border: `1px solid ${isCompleted ? 'rgba(52,211,153,0.14)' : colors.border}`,
+        background: isCompleted ? 'rgba(34,197,94,0.03)' : colors.bgAlt,
+        border: `1px solid ${isCompleted ? 'rgba(34,197,94,0.14)' : colors.border}`,
         transition: 'border-color 0.15s',
       }}
     >
       {/* Status dot / icon */}
       <div style={{
         width: 30, height: 30, borderRadius: 9, flexShrink: 0,
-        background: isCompleted ? 'rgba(52,211,153,0.1)' : 'rgba(255,255,255,0.03)',
-        border: `1px solid ${isCompleted ? 'rgba(52,211,153,0.22)' : colors.border}`,
+        background: isCompleted ? 'rgba(34,197,94,0.1)' : 'rgba(255,255,255,0.03)',
+        border: `1px solid ${isCompleted ? 'rgba(34,197,94,0.22)' : colors.border}`,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        color: isCompleted ? '#34d399' : colors.muted,
+        color: isCompleted ? '#22c55e' : colors.muted,
       }}>
         {isCompleted ? <Check size={13} strokeWidth={3} /> : <ChalIcon size={13} />}
       </div>
@@ -289,9 +289,9 @@ function MissionRow({ challenge, project, onImprove, isOwner }) {
       {/* Points badge */}
       <span style={{
         fontSize: 11, fontWeight: 700, flexShrink: 0, borderRadius: 999, padding: '2px 9px',
-        color: isCompleted ? '#34d399' : colors.blue,
-        background: isCompleted ? 'rgba(52,211,153,0.08)' : 'rgba(27,120,247,0.08)',
-        border: `1px solid ${isCompleted ? 'rgba(52,211,153,0.18)' : 'rgba(27,120,247,0.18)'}`,
+        color: isCompleted ? '#22c55e' : colors.blue,
+        background: isCompleted ? 'rgba(34,197,94,0.08)' : 'rgba(27,120,247,0.08)',
+        border: `1px solid ${isCompleted ? 'rgba(34,197,94,0.18)' : 'rgba(27,120,247,0.18)'}`,
       }}>
         {isCompleted ? <Check size={10} strokeWidth={3} /> : `+${realGain} XP`}
       </span>
@@ -473,9 +473,9 @@ function MembersPanel({ ownerName, members, colors, isOwner }) {
   const displayOwner = ownerName || 'Dono'
 
   const statusCfg = {
-    accepted: { label: 'Colaborador', color: '#34d399', bg: 'rgba(52,211,153,0.1)', border: 'rgba(52,211,153,0.25)', avatar: 'linear-gradient(135deg,#34d399,#059669)', dim: false },
-    pending:  { label: 'Pendente', color: '#eab308', bg: 'rgba(234,179,8,0.1)',  border: 'rgba(234,179,8,0.25)',  avatar: 'linear-gradient(135deg,#ca8a04,#92400e)', dim: true  },
-    declined: { label: 'Recusou',  color: '#f87171', bg: 'rgba(248,113,113,0.1)', border: 'rgba(248,113,113,0.25)', avatar: 'linear-gradient(135deg,#ef4444,#b91c1c)', dim: true  },
+    accepted: { label: 'Colaborador', color: '#22c55e', bg: 'rgba(34,197,94,0.1)', border: 'rgba(34,197,94,0.25)', avatar: 'linear-gradient(135deg,#22c55e,#059669)', dim: false },
+    pending:  { label: 'Pendente', color: '#fbbf24', bg: 'rgba(234,179,8,0.1)',  border: 'rgba(234,179,8,0.25)',  avatar: 'linear-gradient(135deg,#ca8a04,#92400e)', dim: true  },
+    declined: { label: 'Recusou',  color: '#ef4444', bg: 'rgba(239,68,68,0.1)', border: 'rgba(239,68,68,0.25)', avatar: 'linear-gradient(135deg,#ef4444,#b91c1c)', dim: true  },
   }
 
   // For non-owners, only show accepted; already filtered at query level but guard here too
@@ -491,7 +491,7 @@ function MembersPanel({ ownerName, members, colors, isOwner }) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {/* Owner */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ width: 32, height: 32, borderRadius: '50%', flexShrink: 0, background: 'linear-gradient(135deg, #3b82f6, #4f46e5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#fff' }}>
+          <div style={{ width: 32, height: 32, borderRadius: '50%', flexShrink: 0, background: 'linear-gradient(135deg, #1b78f7, #4f46e5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#fff' }}>
             {displayOwner[0]?.toUpperCase()}
           </div>
           <span style={{ fontSize: 14, fontWeight: 600, color: colors.text, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{displayOwner}</span>
@@ -1396,7 +1396,7 @@ export default function ProjectPage() {
             onClick={e => e.stopPropagation()}
             style={{
               width: '100%', maxWidth: 400,
-              background: 'linear-gradient(145deg, #0e1f3a 0%, #152030 60%, #0d1424 100%)',
+              background: 'linear-gradient(145deg, #0e1f3a 0%, #152030 60%, #060c18 100%)',
               border: '1px solid rgba(27,120,247,0.3)',
               borderRadius: 24,
               padding: '36px 32px',
@@ -1410,9 +1410,13 @@ export default function ProjectPage() {
             <div style={{ position: 'absolute', top: -60, left: '50%', transform: 'translateX(-50%)', width: 300, height: 300, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(27,120,247,0.18) 0%, transparent 70%)', pointerEvents: 'none' }} />
             <div style={{ position: 'absolute', bottom: -40, right: -40, width: 200, height: 200, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(79,70,229,0.15) 0%, transparent 70%)', pointerEvents: 'none' }} />
 
-            {/* Emoji */}
-            <div style={{ fontSize: 52, marginBottom: 12, lineHeight: 1, position: 'relative' }}>
-              {milestoneCard.score >= 90 ? '🏆' : milestoneCard.score >= 70 ? '🚀' : '🎯'}
+            {/* Icon */}
+            <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'center', position: 'relative' }}>
+              {milestoneCard.score >= 90
+                ? <Trophy size={52} color="#22c55e" />
+                : milestoneCard.score >= 70
+                ? <Rocket size={52} color="#60a5fa" />
+                : <Target size={52} color="#fbbf24" />}
             </div>
 
             {/* Title */}
@@ -1432,7 +1436,7 @@ export default function ProjectPage() {
               background: milestoneCard.score >= 90 ? 'rgba(34,197,94,0.12)' : milestoneCard.score >= 70 ? 'rgba(27,120,247,0.12)' : 'rgba(251,191,36,0.12)',
               border: `1px solid ${milestoneCard.score >= 90 ? 'rgba(34,197,94,0.3)' : milestoneCard.score >= 70 ? 'rgba(27,120,247,0.3)' : 'rgba(251,191,36,0.3)'}`,
               borderRadius: 999, padding: '6px 20px', marginBottom: 28,
-              color: milestoneCard.score >= 90 ? '#34d399' : milestoneCard.score >= 70 ? '#60a5fa' : '#fbbf24',
+              color: milestoneCard.score >= 90 ? '#22c55e' : milestoneCard.score >= 70 ? '#60a5fa' : '#fbbf24',
               fontSize: 13, fontWeight: 800, position: 'relative',
             }}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
@@ -1449,7 +1453,7 @@ export default function ProjectPage() {
               <button
                 onClick={() => {
                   navigator.clipboard.writeText(`${window.location.origin}/p/${project.slug}`)
-                  triggerToast('Link copiado! Partilha com orgulho 🚀')
+                  triggerToast('Link copiado!')
                   setMilestoneCard(null)
                 }}
                 style={{
@@ -1461,7 +1465,7 @@ export default function ProjectPage() {
                   boxShadow: '0 6px 20px rgba(27,120,247,0.35)',
                 }}
               >
-                📤 Copiar link
+                Copiar link
               </button>
               <button
                 onClick={() => setMilestoneCard(null)}
@@ -1542,7 +1546,7 @@ export default function ProjectPage() {
                   disabled={analyzingAI}
                   style={{
                     flexShrink: 0,
-                    background: analyzingAI ? 'rgba(27,120,247,0.08)' : aiFeedback ? 'rgba(27,120,247,0.1)' : 'linear-gradient(135deg,#3b82f6,#4f46e5)',
+                    background: analyzingAI ? 'rgba(27,120,247,0.08)' : aiFeedback ? 'rgba(27,120,247,0.1)' : 'linear-gradient(135deg,#1b78f7,#4f46e5)',
                     border: analyzingAI || aiFeedback ? `1px solid ${colors.blue}30` : 'none',
                     borderRadius: 9, padding: '8px 16px',
                     color: analyzingAI || aiFeedback ? '#60a5fa' : '#fff',
@@ -1561,7 +1565,7 @@ export default function ProjectPage() {
             </div>
 
             {analyzeError && (
-              <div style={{ background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.25)', borderRadius: 10, padding: '12px 16px', color: '#f87171', fontSize: 13, marginBottom: 16 }}>
+              <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 10, padding: '12px 16px', color: '#ef4444', fontSize: 13, marginBottom: 16 }}>
                 {analyzeError}
               </div>
             )}
@@ -1737,7 +1741,7 @@ export default function ProjectPage() {
         )
       })()}
 
-      <div className="proj-wrap" style={{ maxWidth: 1080, margin: '0 auto', padding: '0 24px 80px', overflowX: 'clip' }}>
+      <div className="proj-wrap page-content-wide" style={{ overflowX: 'clip', paddingTop: 24 }}>
 
         {/* Two-column layout: main content + sticky sidebar */}
         <div className="proj-layout">
@@ -1809,7 +1813,7 @@ export default function ProjectPage() {
                       onChange={e => { setInviteInput(e.target.value); setInviteMsg(null) }}
                       placeholder="username do colega"
                       style={{
-                        background: colors.bg, border: `1px solid ${inviteMsg?.type === 'error' ? '#f87171' : inviteMsg?.type === 'success' ? '#22c55e' : colors.borderBright}`,
+                        background: colors.bg, border: `1px solid ${inviteMsg?.type === 'error' ? '#ef4444' : inviteMsg?.type === 'success' ? '#22c55e' : colors.borderBright}`,
                         borderRadius: 8, padding: '5px 12px', color: colors.text,
                         fontSize: 12, fontFamily: 'inherit', outline: 'none',
                         width: 150, transition: 'border-color 0.15s',
@@ -1828,10 +1832,10 @@ export default function ProjectPage() {
                     <button
                       type="button"
                       onClick={() => { setShowInvite(false); setInviteInput(''); setInviteMsg(null) }}
-                      style={{ background: 'transparent', border: 'none', color: colors.subtle, cursor: 'pointer', padding: '4px 6px', borderRadius: 6, fontSize: 13 }}
-                    >✕</button>
+                      style={{ background: 'transparent', border: 'none', color: colors.subtle, cursor: 'pointer', padding: '4px 6px', borderRadius: 6, display: 'flex', alignItems: 'center' }}
+                    ><X size={14} /></button>
                     {inviteMsg && (
-                      <span style={{ fontSize: 11, fontWeight: 600, color: inviteMsg.type === 'success' ? '#22c55e' : '#f87171', width: '100%' }}>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: inviteMsg.type === 'success' ? '#22c55e' : '#ef4444', width: '100%' }}>
                         {inviteMsg.text}
                       </span>
                     )}
@@ -1989,20 +1993,20 @@ export default function ProjectPage() {
               borderRadius: 16, padding: '18px 22px',
               display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
             }}>
-              <div style={{ fontSize: 28, lineHeight: 1, flexShrink: 0 }}>📅</div>
+              <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', width: 44, height: 44, borderRadius: 12, background: `${urgentColor}15`, border: `1px solid ${urgentColor}30` }}><Calendar size={22} color={urgentColor} /></div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 14, fontWeight: 700, color: colors.text, marginBottom: 4 }}>
                   {daysLeft === null ? 'Quando é a tua defesa?' :
-                   daysLeft < 0 ? 'Defesa concluída 🎉' :
-                   daysLeft === 0 ? '🔥 A defesa é hoje!' :
-                   daysLeft === 1 ? '⚡ A defesa é amanhã!' :
+                   daysLeft < 0 ? 'Defesa concluída' :
+                   daysLeft === 0 ? 'A defesa é hoje!' :
+                   daysLeft === 1 ? 'A defesa é amanhã!' :
                    `${daysLeft} dias para a defesa`}
                 </div>
                 {daysLeft != null && daysLeft > 0 && (
                   <div style={{ fontSize: 12, color: colors.muted }}>
-                    {daysLeft <= 7 ? '🚨 Foca no que falta completar!' :
-                     daysLeft <= 30 ? '💪 Mantém o ritmo. Continua a melhorar o score.' :
-                     '✅ Tens tempo. Vai completando missão a missão.'}
+                    {daysLeft <= 7 ? 'Foca no que falta completar.' :
+                     daysLeft <= 30 ? 'Mantém o ritmo. Continua a melhorar o score.' :
+                     'Tens tempo. Vai completando missão a missão.'}
                   </div>
                 )}
               </div>
@@ -2082,7 +2086,7 @@ export default function ProjectPage() {
               background: aiFeedback ? 'rgba(34,197,94,0.1)' : 'linear-gradient(135deg,#6d28d9,#4f46e5)',
               border: aiFeedback ? '1px solid rgba(34,197,94,0.3)' : 'none',
               borderRadius: 10, padding: '8px 16px',
-              color: aiFeedback ? '#34d399' : '#fff',
+              color: aiFeedback ? '#22c55e' : '#fff',
               fontSize: 13, fontWeight: 700,
               flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6,
               boxShadow: aiFeedback ? 'none' : '0 4px 14px rgba(109,40,217,0.35)',
@@ -2557,7 +2561,7 @@ export default function ProjectPage() {
                             <button
                               onClick={() => handleFbDelete(f.id)}
                               title="Apagar"
-                              style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', padding: 3, display: 'flex', alignItems: 'center', borderRadius: 4 }}
+                              style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: 3, display: 'flex', alignItems: 'center', borderRadius: 4 }}
                             ><X size={11} /></button>
                           </div>
                         )}
@@ -2578,7 +2582,7 @@ export default function ProjectPage() {
                         <button key={k} onClick={() => setFbFieldKey(k)} style={{ fontSize: 11, padding: '3px 8px', borderRadius: 5, border: `1px solid ${fbFieldKey === k ? '#fbbf24' : colors.border}`, background: fbFieldKey === k ? 'rgba(251,191,36,0.12)' : 'transparent', color: fbFieldKey === k ? '#fbbf24' : colors.muted, cursor: 'pointer', fontFamily: 'inherit', fontWeight: fbFieldKey === k ? 700 : 400 }}>{l}</button>
                       ))}
                     </div>
-                    <textarea value={fbComment} onChange={e => setFbComment(e.target.value)} placeholder={`Feedback sobre ${FB_SECTION_LABELS[fbFieldKey]}…`} rows={3} style={{ width: '100%', background: '#0d1424', border: `1px solid ${colors.border}`, borderRadius: 8, padding: '9px 11px', color: colors.text, fontSize: 13, fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box', outline: 'none' }} />
+                    <textarea value={fbComment} onChange={e => setFbComment(e.target.value)} placeholder={`Feedback sobre ${FB_SECTION_LABELS[fbFieldKey]}…`} rows={3} style={{ width: '100%', background: '#060c18', border: `1px solid ${colors.border}`, borderRadius: 8, padding: '9px 11px', color: colors.text, fontSize: 13, fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box', outline: 'none' }} />
                     <div style={{ display: 'flex', gap: 8 }}>
                       <button onClick={handleFbSave} disabled={fbSaving || !fbComment.trim()} style={{ flex: 1, background: 'linear-gradient(135deg,#d97706,#b45309)', border: 'none', borderRadius: 8, padding: '9px', color: '#fff', fontSize: 13, fontWeight: 600, cursor: fbSaving || !fbComment.trim() ? 'default' : 'pointer', opacity: fbSaving || !fbComment.trim() ? 0.6 : 1, fontFamily: 'inherit' }}>
                         {fbSaving ? 'A guardar…' : fbEditing ? 'Atualizar' : 'Guardar'}
@@ -2626,7 +2630,7 @@ export default function ProjectPage() {
                       <div key={f.key} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <div style={{ width: 6, height: 6, borderRadius: '50%', flexShrink: 0, background: f.quality === 'good' ? '#10b981' : f.quality === 'short' ? colors.yellow : colors.subtle }} />
                         <span style={{ flex: 1, fontSize: 12, color: f.quality === 'good' ? colors.text : f.quality === 'short' ? '#d4a820' : colors.subtle, fontWeight: f.quality === 'good' ? 600 : 400 }}>{f.label}</span>
-                        {f.quality === 'good'  && <span style={{ fontSize: 11, color: '#10b981', fontWeight: 800 }}>✓</span>}
+                        {f.quality === 'good'  && <Check size={11} color="#10b981" strokeWidth={3} />}
                         {f.quality === 'short' && <span style={{ fontSize: 10, color: colors.yellow, fontWeight: 700 }}>curto</span>}
                         {f.quality === 'empty' && <span style={{ fontSize: 11, color: colors.subtle }}>—</span>}
                       </div>
@@ -2651,8 +2655,8 @@ export default function ProjectPage() {
 
             if (needsWork.length === 0) return (
               <div style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: 16, padding: '16px 20px', textAlign: 'center' }}>
-                <CheckCircle size={24} color="#34d399" style={{ marginBottom: 6 }} />
-                <p style={{ margin: 0, fontSize: 13, color: '#34d399', fontWeight: 700 }}>Perfil completo!</p>
+                <CheckCircle size={24} color="#22c55e" style={{ marginBottom: 6 }} />
+                <p style={{ margin: 0, fontSize: 13, color: '#22c55e', fontWeight: 700 }}>Perfil completo!</p>
               </div>
             )
 

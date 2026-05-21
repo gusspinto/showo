@@ -26,7 +26,7 @@ export default function SplashScreen({ visible }) {
   return (
     <div style={{
       position: 'fixed', inset: 0, zIndex: 999999,
-      backgroundColor: '#0d1424',
+      backgroundColor: '#060c18',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       opacity: visible ? 1 : 0,
       transform: visible ? 'none' : 'translateY(-10px)',

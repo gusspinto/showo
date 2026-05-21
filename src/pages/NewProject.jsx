@@ -11,7 +11,7 @@ import { useAuth } from '../context/AuthContext'
 import { CropModal } from '../components/CropModal'
 
 const colors = {
-  bg: '#0d1424',
+  bg: '#060c18',
   bgAlt: '#111c32',
   card: '#152030',
   cardHover: '#1c2d44',
@@ -26,11 +26,11 @@ const colors = {
   subtle: '#3d5270',
   green: '#22c55e',
   greenGlow: 'rgba(34,197,94,0.12)',
-  yellow: '#eab308',
+  yellow: '#fbbf24',
   yellowGlow: 'rgba(234,179,8,0.1)',
   orange: '#f97316',
   red: '#ef4444',
-  inputBg: '#0d1424',
+  inputBg: '#060c18',
 }
 
 const inputBase = {
@@ -42,7 +42,7 @@ const inputBase = {
   fontSize: 15,
   padding: '13px 16px',
   outline: 'none',
-  fontFamily: 'Inter, system-ui, sans-serif',
+  fontFamily: 'inherit',
   boxSizing: 'border-box',
   transition: 'border-color 0.2s, box-shadow 0.2s',
 }
@@ -275,7 +275,7 @@ export default function NewProject() {
   // ── GOAL ─────────────────────────────────────────────────
   if (phase === 'goal') {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: 'Inter, system-ui, sans-serif', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: 'inherit', display: 'flex', flexDirection: 'column' }}>
         <Navbar showLinks={false} />
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 24px' }}>
           <div style={{ width: '100%', maxWidth: 560 }}>
@@ -352,7 +352,7 @@ export default function NewProject() {
     }
 
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: 'Inter, system-ui, sans-serif', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: 'inherit', display: 'flex', flexDirection: 'column' }}>
         <Navbar showLinks={false} />
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 24px' }}>
           <div style={{ width: '100%', maxWidth: 560 }}>
@@ -402,7 +402,7 @@ export default function NewProject() {
                   onClick={() => copyLink(editUrl, 'edit')}
                   style={{
                     background: copiedLink === 'edit' ? `linear-gradient(135deg, ${colors.green}, #16a34a)` : colors.yellow,
-                    color: '#0d1424', border: 'none', borderRadius: 8,
+                    color: '#060c18', border: 'none', borderRadius: 8,
                     padding: '10px 16px', fontSize: 13, fontWeight: 700,
                     cursor: 'pointer', whiteSpace: 'nowrap',
                     transition: 'background 0.2s',
@@ -438,7 +438,7 @@ export default function NewProject() {
   // ── GENERATING ────────────────────────────────────────────
   if (phase === 'generating') {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: 'Inter, system-ui, sans-serif', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 24 }}>
+      <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: 'inherit', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 24 }}>
         <div style={{
           width: 64, height: 64,
           border: `3px solid ${colors.border}`,
@@ -465,7 +465,7 @@ export default function NewProject() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: 'Inter, system-ui, sans-serif', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: 'inherit', display: 'flex', flexDirection: 'column' }}>
       <Toast {...toast} />
 
       {/* Auth nudge modal */}
@@ -501,7 +501,7 @@ export default function NewProject() {
                   border: 'none', borderRadius: 10,
                   padding: '12px 0', color: '#fff',
                   fontSize: 15, fontWeight: 700,
-                  cursor: 'pointer', fontFamily: 'Inter, sans-serif',
+                  cursor: 'pointer', fontFamily: 'inherit',
                   boxShadow: '0 4px 16px rgba(27,120,247,0.3)',
                   transition: 'opacity 0.15s',
                 }}
@@ -517,7 +517,7 @@ export default function NewProject() {
                   border: '1px solid #1e3050', borderRadius: 10,
                   padding: '11px 0', color: '#e8f2ff',
                   fontSize: 15, fontWeight: 600,
-                  cursor: 'pointer', fontFamily: 'Inter, sans-serif',
+                  cursor: 'pointer', fontFamily: 'inherit',
                   transition: 'border-color 0.15s, background 0.15s',
                 }}
                 onMouseEnter={e => { e.currentTarget.style.borderColor = '#2a4275'; e.currentTarget.style.background = 'rgba(255,255,255,0.03)' }}
@@ -530,7 +530,7 @@ export default function NewProject() {
                 style={{
                   background: 'transparent', border: 'none',
                   color: '#4a6080', fontSize: 13, fontWeight: 500,
-                  cursor: 'pointer', fontFamily: 'Inter, sans-serif',
+                  cursor: 'pointer', fontFamily: 'inherit',
                   padding: '8px 0', marginTop: 2,
                   transition: 'color 0.15s',
                 }}

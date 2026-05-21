@@ -6,7 +6,7 @@ import { supabase } from '../lib/supabase'
 import { Link2, Check } from 'lucide-react'
 
 const C = {
-  bg: '#0d1424',
+  bg: '#060c18',
   border: '#1e3050',
   blue: '#1b78f7',
   text: '#e8f2ff',
@@ -166,7 +166,7 @@ export default function Certificate() {
             <div style={{ fontSize: 11, color: C.muted, fontWeight: 600, marginTop: 4, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Score</div>
           </div>
           <div style={{ background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.18)', borderRadius: 12, padding: '14px 20px' }}>
-            <div style={{ fontSize: 14, fontWeight: 700, color: '#34d399', lineHeight: 1.2 }}>Nível Profissional</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: '#22c55e', lineHeight: 1.2 }}>Nível Profissional</div>
             <div style={{ fontSize: 11, color: C.muted, fontWeight: 500, marginTop: 4 }}>Score ≥ 75</div>
           </div>
           <div style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${C.border}`, borderRadius: 12, padding: '14px 20px' }}>
@@ -217,7 +217,7 @@ export default function Certificate() {
           onClick={handleCopy}
           style={{
             background: 'transparent', border: `1px solid ${C.border}`,
-            color: copied ? '#34d399' : C.muted, borderRadius: 12,
+            color: copied ? '#22c55e' : C.muted, borderRadius: 12,
             padding: '14px 28px', fontSize: 15, fontWeight: 600,
             cursor: 'pointer', fontFamily: 'inherit',
           }}

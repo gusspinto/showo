@@ -7,10 +7,10 @@ const C = {
   bg: '#080e1a',
   card: '#0d1829',
   border: '#1e3050',
-  blue: '#3b82f6',
+  blue: '#1b78f7',
   yellow: '#fbbf24',
-  green: '#34d399',
-  red: '#f87171',
+  green: '#22c55e',
+  red: '#ef4444',
   muted: '#7d93b0',
   subtle: '#3d5270',
   text: '#e8f2ff',
@@ -38,12 +38,12 @@ function NotesPanel({ aiData, loadingAI, aiError, onRetry }) {
   )
 
   if (aiError) return (
-    <div style={{ background: 'rgba(248,113,113,0.06)', border: '1px solid rgba(248,113,113,0.2)', borderRadius: 14, padding: '28px', textAlign: 'center' }}>
+    <div style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 14, padding: '28px', textAlign: 'center' }}>
       <p style={{ color: C.red, fontSize: 15, margin: '0 0 6px', fontWeight: 600 }}>Não foi possível gerar as notas</p>
       <p style={{ color: C.muted, fontSize: 13, margin: '0 0 18px' }}>
         Faz deploy do Edge Function <code style={{ background: 'rgba(255,255,255,0.06)', padding: '2px 6px', borderRadius: 4 }}>defense-notes</code> no Supabase e tenta novamente.
       </p>
-      <button onClick={onRetry} style={{ background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.3)', borderRadius: 8, padding: '9px 20px', color: C.red, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+      <button onClick={onRetry} style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, padding: '9px 20px', color: C.red, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
         Tentar novamente
       </button>
     </div>
@@ -58,7 +58,7 @@ function NotesPanel({ aiData, loadingAI, aiError, onRetry }) {
   return (
     <div>
       {tip && (
-        <div style={{ background: 'rgba(59,130,246,0.07)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: 12, padding: '14px 18px', marginBottom: 24, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+        <div style={{ background: 'rgba(27,120,247,0.07)', border: '1px solid rgba(27,120,247,0.2)', borderRadius: 12, padding: '14px 18px', marginBottom: 24, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
           <Lightbulb size={18} color="#93c5fd" style={{ flexShrink: 0 }} />
           <p style={{ margin: 0, fontSize: 14, color: '#93c5fd', lineHeight: 1.6 }}>{tip}</p>
         </div>
@@ -95,10 +95,10 @@ function JuryPanel({ aiData, loadingAI, aiError, onRetry }) {
   )
 
   if (aiError) return (
-    <div style={{ background: 'rgba(248,113,113,0.06)', border: '1px solid rgba(248,113,113,0.2)', borderRadius: 14, padding: '28px', textAlign: 'center' }}>
+    <div style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 14, padding: '28px', textAlign: 'center' }}>
       <p style={{ color: C.red, fontSize: 15, margin: '0 0 6px', fontWeight: 600 }}>Não foi possível gerar as perguntas</p>
       <p style={{ color: C.muted, fontSize: 13, margin: '0 0 18px' }}>Faz deploy do Edge Function <code style={{ background: 'rgba(255,255,255,0.06)', padding: '2px 6px', borderRadius: 4 }}>defense-notes</code> no Supabase.</p>
-      <button onClick={onRetry} style={{ background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.3)', borderRadius: 8, padding: '9px 20px', color: C.red, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+      <button onClick={onRetry} style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, padding: '9px 20px', color: C.red, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
         Tentar novamente
       </button>
     </div>
@@ -149,8 +149,8 @@ function JuryPanel({ aiData, loadingAI, aiError, onRetry }) {
             <div
               key={i}
               style={{
-                background: isPracticed ? 'rgba(52,211,153,0.05)' : C.card,
-                border: `1px solid ${isPracticed ? 'rgba(52,211,153,0.25)' : C.border}`,
+                background: isPracticed ? 'rgba(34,197,94,0.05)' : C.card,
+                border: `1px solid ${isPracticed ? 'rgba(34,197,94,0.25)' : C.border}`,
                 borderRadius: 14, overflow: 'hidden',
                 transition: 'border-color 0.2s, background 0.2s',
               }}
@@ -159,8 +159,8 @@ function JuryPanel({ aiData, loadingAI, aiError, onRetry }) {
               <div style={{ padding: '18px 20px', display: 'flex', alignItems: 'flex-start', gap: 14 }}>
                 <span style={{
                   width: 26, height: 26, borderRadius: 8, flexShrink: 0,
-                  background: isPracticed ? 'rgba(52,211,153,0.12)' : 'rgba(251,191,36,0.08)',
-                  border: `1px solid ${isPracticed ? 'rgba(52,211,153,0.3)' : 'rgba(251,191,36,0.2)'}`,
+                  background: isPracticed ? 'rgba(34,197,94,0.12)' : 'rgba(251,191,36,0.08)',
+                  border: `1px solid ${isPracticed ? 'rgba(34,197,94,0.3)' : 'rgba(251,191,36,0.2)'}`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: 12, fontWeight: 700, color: isPracticed ? C.green : C.yellow,
                 }}>
@@ -199,7 +199,7 @@ function JuryPanel({ aiData, loadingAI, aiError, onRetry }) {
                   <button
                     onClick={() => setPracticed(p => ({ ...p, [i]: true }))}
                     style={{
-                      background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.2)',
+                      background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.2)',
                       borderRadius: 7, padding: '6px 14px',
                       color: C.green, fontSize: 12, fontWeight: 600,
                       cursor: 'pointer', fontFamily: 'inherit',
@@ -226,7 +226,7 @@ function JuryPanel({ aiData, loadingAI, aiError, onRetry }) {
       </div>
 
       {practicedCount === questions.length && (
-        <div style={{ marginTop: 24, background: 'rgba(52,211,153,0.07)', border: '1px solid rgba(52,211,153,0.2)', borderRadius: 14, padding: '20px', textAlign: 'center' }}>
+        <div style={{ marginTop: 24, background: 'rgba(34,197,94,0.07)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 14, padding: '20px', textAlign: 'center' }}>
           <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: C.green }}>Preparação completa</p>
           <p style={{ margin: '4px 0 0', fontSize: 13, color: C.muted }}>Treinaste todas as perguntas. Boa defesa!</p>
         </div>
@@ -240,14 +240,14 @@ function JuryPanel({ aiData, loadingAI, aiError, onRetry }) {
 // ─── Presenter guide (phone companion) ───────────────────────────────────────
 
 const SECTIONS = [
-  { id: 'cover',        label: 'Introdução',      Icon: Hand,     accent: '#3b82f6' },
+  { id: 'cover',        label: 'Introdução',      Icon: Hand,     accent: '#1b78f7' },
   { id: 'problem',      label: 'O Problema',       Icon: Search,   accent: '#f97316' },
   { id: 'solution',     label: 'A Solução',        Icon: Lightbulb,accent: '#22c55e' },
   { id: 'features',     label: 'Funcionalidades',  Icon: Settings, accent: '#06b6d4' },
   { id: 'technologies', label: 'Tecnologias',      Icon: Wrench,   accent: '#818cf8' },
-  { id: 'results',      label: 'Resultados',       Icon: Trophy,   accent: '#34d399' },
+  { id: 'results',      label: 'Resultados',       Icon: Trophy,   accent: '#22c55e' },
   { id: 'learnings',    label: 'Aprendizagens',    Icon: BookOpen, accent: '#f472b6' },
-  { id: 'closing',      label: 'Encerramento',     Icon: Mic,      accent: '#3b82f6' },
+  { id: 'closing',      label: 'Encerramento',     Icon: Mic,      accent: '#1b78f7' },
 ]
 
 function hasContent(project, id) {
@@ -339,7 +339,7 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
     const timeStr = mins > 0 ? `${mins}m ${String(secs).padStart(2,'0')}s` : `${secs}s`
 
     return (
-      <div style={{ position: 'fixed', inset: 0, zIndex: 10000, background: '#060c18', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: 'Inter, system-ui, sans-serif', color: C.text, padding: 32, textAlign: 'center' }}>
+      <div style={{ position: 'fixed', inset: 0, zIndex: 10000, background: '#060c18', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit', color: C.text, padding: 32, textAlign: 'center' }}>
         <style>{`@keyframes pop{0%{transform:scale(0.5);opacity:0}60%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}} @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}`}</style>
 
         <div style={{ marginBottom: 4, animation: 'pop 0.5s ease-out' }}><GraduationCap size={80} color={C.blue} /></div>
@@ -367,7 +367,7 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%', maxWidth: 320, animation: 'fadeUp 0.4s 0.6s ease-out both' }}>
           <button
             onClick={() => { setFinished(false); setTimer(0); setTimerOn(false); setCurrent(0); setChecked({}); setShowNote(false) }}
-            style={{ padding: '14px 0', background: 'linear-gradient(135deg, #3b82f6, #4f46e5)', border: 'none', borderRadius: 14, color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 6px 24px rgba(59,130,246,0.35)' }}
+            style={{ padding: '14px 0', background: 'linear-gradient(135deg, #1b78f7, #4f46e5)', border: 'none', borderRadius: 14, color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 6px 24px rgba(27,120,247,0.35)' }}
           >
             Recomeçar do início
           </button>
@@ -386,12 +386,12 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
   if (!started) {
     const juryCount = aiData?.jury_questions?.length ?? 0
     return (
-      <div style={{ position: 'fixed', inset: 0, zIndex: 10000, background: '#060c18', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: 'Inter, system-ui, sans-serif', color: C.text, padding: 24 }}>
+      <div style={{ position: 'fixed', inset: 0, zIndex: 10000, background: '#060c18', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit', color: C.text, padding: 24 }}>
         <style>{`@keyframes spin{to{transform:rotate(360deg)}} @keyframes pop{0%{transform:scale(0.92)}60%{transform:scale(1.04)}100%{transform:scale(1)}} @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}`}</style>
 
         <div style={{ maxWidth: 360, width: '100%', textAlign: 'center', animation: 'fadeUp 0.3s ease-out' }}>
           {/* Icon */}
-          <div style={{ width: 72, height: 72, borderRadius: 20, background: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+          <div style={{ width: 72, height: 72, borderRadius: 20, background: 'rgba(27,120,247,0.12)', border: '1px solid rgba(27,120,247,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
             <Mic size={34} color={C.blue} />
           </div>
 
@@ -424,7 +424,7 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
 
           {loadingAI && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center', marginBottom: 16 }}>
-              <div style={{ width: 14, height: 14, border: '2px solid #1e3050', borderTop: '2px solid #3b82f6', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+              <div style={{ width: 14, height: 14, border: '2px solid #1e3050', borderTop: '2px solid #1b78f7', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
               <span style={{ fontSize: 13, color: C.muted }}>A preparar pontos-chave com IA...</span>
             </div>
           )}
@@ -433,11 +433,11 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
             onClick={() => { setStarted(true); setTimerOn(true) }}
             style={{
               width: '100%', padding: '16px 0',
-              background: 'linear-gradient(135deg, #3b82f6, #4f46e5)',
+              background: 'linear-gradient(135deg, #1b78f7, #4f46e5)',
               border: 'none', borderRadius: 14,
               color: '#fff', fontSize: 17, fontWeight: 700,
               cursor: 'pointer', fontFamily: 'inherit',
-              boxShadow: '0 8px 32px rgba(59,130,246,0.4)',
+              boxShadow: '0 8px 32px rgba(27,120,247,0.4)',
             }}
           >
             Começar apresentação →
@@ -454,7 +454,7 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
   // ── Active guide ──────────────────────────────────────────────────────────
   return (
     <div
-      style={{ position: 'fixed', inset: 0, zIndex: 10000, background: '#060c18', display: 'flex', flexDirection: 'column', fontFamily: 'Inter, system-ui, sans-serif', color: C.text }}
+      style={{ position: 'fixed', inset: 0, zIndex: 10000, background: '#060c18', display: 'flex', flexDirection: 'column', fontFamily: 'inherit', color: C.text }}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
@@ -519,9 +519,9 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
             </div>
           </div>
         ) : aiError ? (
-          <div style={{ background: 'rgba(248,113,113,0.06)', border: '1px solid rgba(248,113,113,0.2)', borderRadius: 12, padding: '20px', textAlign: 'center' }}>
+          <div style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 12, padding: '20px', textAlign: 'center' }}>
             <p style={{ color: C.red, margin: '0 0 12px', fontSize: 14 }}>Não foi possível carregar os pontos-chave.</p>
-            <button onClick={onRetry} style={{ background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.3)', borderRadius: 8, padding: '8px 18px', color: C.red, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Tentar novamente</button>
+            <button onClick={onRetry} style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, padding: '8px 18px', color: C.red, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Tentar novamente</button>
           </div>
         ) : keyPoints.length > 0 ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -575,7 +575,7 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
                   {showNote ? '▲ Esconder nota' : '▼ Ver nota completa'}
                 </button>
                 {showNote && (
-                  <div style={{ marginTop: 10, background: 'rgba(59,130,246,0.05)', border: '1px solid rgba(59,130,246,0.15)', borderRadius: 12, padding: '14px 16px', animation: 'pop 0.2s ease-out' }}>
+                  <div style={{ marginTop: 10, background: 'rgba(27,120,247,0.05)', border: '1px solid rgba(27,120,247,0.15)', borderRadius: 12, padding: '14px 16px', animation: 'pop 0.2s ease-out' }}>
                     <p style={{ margin: 0, fontSize: 14, color: '#93c5fd', lineHeight: 1.75 }}>{speakerNote}</p>
                   </div>
                 )}
@@ -804,7 +804,7 @@ function GrupoPanel({ project }) {
         <button
           onClick={doSearch}
           disabled={!search.trim() || searching}
-          style={{ background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.25)', borderRadius: 10, padding: '10px 16px', color: '#60a5fa', fontSize: 13, fontWeight: 600, cursor: search.trim() ? 'pointer' : 'default', fontFamily: 'inherit' }}
+          style={{ background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.25)', borderRadius: 10, padding: '10px 16px', color: '#60a5fa', fontSize: 13, fontWeight: 600, cursor: search.trim() ? 'pointer' : 'default', fontFamily: 'inherit' }}
         >
           {searching ? '...' : 'Procurar'}
         </button>
@@ -813,14 +813,14 @@ function GrupoPanel({ project }) {
       {searchErr && <p style={{ color: C.red, fontSize: 13, margin: '0 0 16px' }}>{searchErr}</p>}
 
       {searchResult && (
-        <div style={{ background: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: 12, padding: '14px 16px', marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ background: 'rgba(27,120,247,0.06)', border: '1px solid rgba(27,120,247,0.2)', borderRadius: 12, padding: '14px 16px', marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
             <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{searchResult.full_name || searchResult.username}</div>
             <div style={{ fontSize: 12, color: C.muted }}>@{searchResult.username}</div>
           </div>
           <button
             onClick={addCollaborator}
-            style={{ background: 'linear-gradient(135deg, #3b82f6, #4f46e5)', border: 'none', borderRadius: 8, padding: '8px 16px', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+            style={{ background: 'linear-gradient(135deg, #1b78f7, #4f46e5)', border: 'none', borderRadius: 8, padding: '8px 16px', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
           >
             Adicionar
           </button>
@@ -839,10 +839,10 @@ function GrupoPanel({ project }) {
             const assigned = pendingSections[collab.user_id] ?? []
             const isPending  = collab.status === 'pending'
             const isDeclined = collab.status === 'declined'
-            const statusColor = isPending ? '#fbbf24' : isDeclined ? '#f87171' : C.green
+            const statusColor = isPending ? '#fbbf24' : isDeclined ? '#ef4444' : C.green
             const statusLabel = isPending ? 'Convite pendente' : isDeclined ? 'Recusou o convite' : 'Aceite'
             return (
-              <div key={collab.user_id} style={{ background: C.card, border: `1px solid ${isDeclined ? 'rgba(248,113,113,0.2)' : C.border}`, borderRadius: 14, padding: '18px 20px' }}>
+              <div key={collab.user_id} style={{ background: C.card, border: `1px solid ${isDeclined ? 'rgba(239,68,68,0.2)' : C.border}`, borderRadius: 14, padding: '18px 20px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: isPending || isDeclined ? 6 : 14 }}>
                   <div>
                     <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{name}</div>
@@ -876,8 +876,8 @@ function GrupoPanel({ project }) {
                             key={s.id}
                             onClick={() => toggleSection(collab.user_id, s.id)}
                             style={{
-                              background: on ? 'rgba(59,130,246,0.12)' : 'transparent',
-                              border: `1px solid ${on ? 'rgba(59,130,246,0.4)' : C.border}`,
+                              background: on ? 'rgba(27,120,247,0.12)' : 'transparent',
+                              border: `1px solid ${on ? 'rgba(27,120,247,0.4)' : C.border}`,
                               borderRadius: 7, padding: '5px 10px',
                               color: on ? '#60a5fa' : C.muted,
                               fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
@@ -901,8 +901,8 @@ function GrupoPanel({ project }) {
               disabled={saving}
               style={{
                 padding: '12px 0', width: '100%',
-                background: saved ? 'rgba(52,211,153,0.1)' : 'linear-gradient(135deg, #3b82f6, #4f46e5)',
-                border: saved ? '1px solid rgba(52,211,153,0.3)' : 'none',
+                background: saved ? 'rgba(34,197,94,0.1)' : 'linear-gradient(135deg, #1b78f7, #4f46e5)',
+                border: saved ? '1px solid rgba(34,197,94,0.3)' : 'none',
                 borderRadius: 12,
                 color: saved ? C.green : '#fff',
                 fontSize: 14, fontWeight: 700, cursor: saving ? 'default' : 'pointer', fontFamily: 'inherit',
@@ -975,7 +975,7 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
   ].filter(t => t.show)
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 9900, background: 'rgba(5,9,18,0.92)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, fontFamily: 'Inter, system-ui, sans-serif' }}
+    <div style={{ position: 'fixed', inset: 0, zIndex: 9900, background: 'rgba(5,9,18,0.92)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, fontFamily: 'inherit' }}
       onClick={e => e.target === e.currentTarget && onClose()}
     >
       <style>{`@keyframes spin{to{transform:rotate(360deg)}} @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}`}</style>
@@ -998,8 +998,8 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
               key={t.id}
               onClick={() => setTab(t.id)}
               style={{
-                background: tab === t.id ? 'rgba(59,130,246,0.12)' : 'transparent',
-                border: `1px solid ${tab === t.id ? 'rgba(59,130,246,0.35)' : C.border}`,
+                background: tab === t.id ? 'rgba(27,120,247,0.12)' : 'transparent',
+                border: `1px solid ${tab === t.id ? 'rgba(27,120,247,0.35)' : C.border}`,
                 borderRadius: 9, padding: '8px 16px',
                 color: tab === t.id ? '#60a5fa' : C.muted,
                 fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
@@ -1014,7 +1014,7 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
         {/* Content */}
         <div style={{ flex: 1, overflow: 'auto', padding: '20px 28px 28px' }}>
           {!canSeeFullPrep && (
-            <div style={{ background: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.15)', borderRadius: 12, padding: '20px', textAlign: 'center' }}>
+            <div style={{ background: 'rgba(27,120,247,0.06)', border: '1px solid rgba(27,120,247,0.15)', borderRadius: 12, padding: '20px', textAlign: 'center' }}>
               <p style={{ margin: 0, color: C.muted, fontSize: 14 }}>A preparação completa está disponível para o criador e colaboradores do projeto.</p>
             </div>
           )}
@@ -1024,7 +1024,7 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
           {tab === 'guide' && (
             <div>
               {/* Preview card */}
-              <div style={{ background: 'linear-gradient(135deg, rgba(59,130,246,0.08), rgba(79,70,229,0.06))', border: '1px solid rgba(59,130,246,0.2)', borderRadius: 16, padding: '22px 24px', marginBottom: 20 }}>
+              <div style={{ background: 'linear-gradient(135deg, rgba(27,120,247,0.08), rgba(79,70,229,0.06))', border: '1px solid rgba(27,120,247,0.2)', borderRadius: 16, padding: '22px 24px', marginBottom: 20 }}>
                 <div style={{ marginBottom: 10 }}><Smartphone size={28} color={C.blue} /></div>
                 <h3 style={{ margin: '0 0 8px', fontSize: 16, fontWeight: 800, color: C.text }}>Guia do Apresentador</h3>
                 <p style={{ margin: '0 0 16px', fontSize: 14, color: C.muted, lineHeight: 1.6 }}>
@@ -1032,18 +1032,18 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
                 </p>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
                   {['Pontos-chave interativos', 'Nota completa por secção', 'Temporizador', 'Navegação por swipe'].map(f => (
-                    <span key={f} style={{ background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.18)', borderRadius: 6, padding: '4px 10px', fontSize: 12, color: '#93c5fd' }}>{f}</span>
+                    <span key={f} style={{ background: 'rgba(27,120,247,0.08)', border: '1px solid rgba(27,120,247,0.18)', borderRadius: 6, padding: '4px 10px', fontSize: 12, color: '#93c5fd' }}>{f}</span>
                   ))}
                 </div>
                 <button
                   onClick={() => setGuideMode(true)}
                   style={{
                     width: '100%', padding: '14px 0',
-                    background: 'linear-gradient(135deg, #3b82f6, #4f46e5)',
+                    background: 'linear-gradient(135deg, #1b78f7, #4f46e5)',
                     border: 'none', borderRadius: 12,
                     color: '#fff', fontSize: 15, fontWeight: 700,
                     cursor: 'pointer', fontFamily: 'inherit',
-                    boxShadow: '0 6px 24px rgba(59,130,246,0.35)',
+                    boxShadow: '0 6px 24px rgba(27,120,247,0.35)',
                   }}
                 >
                   Abrir guia →
