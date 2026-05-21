@@ -437,7 +437,7 @@ export default function Explore() {
                       )}
                       {project.profiles?.available_for_work && (
                         <span style={{ fontSize: 11, color: '#10b981', background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.25)', borderRadius: 999, padding: '3px 10px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                          💼 Disponível
+                          <Briefcase size={10} style={{ flexShrink: 0 }} /> Disponível
                         </span>
                       )}
                     </div>

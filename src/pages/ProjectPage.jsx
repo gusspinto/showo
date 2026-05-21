@@ -10,7 +10,7 @@ import { generateProject } from '../lib/generateProject'
 import { useAuth } from '../context/AuthContext'
 import DefenseMode from '../components/DefenseMode'
 import { analyzeProject } from '../lib/analyzeProject'
-import { Check, X, Loader, GraduationCap, Save, Sparkles, Bot, Lightbulb, Pencil, Search, Target, Wrench, Zap, TrendingUp, Briefcase, Users, Rocket, Trophy, BarChart2, CheckCircle, BookOpen, ChevronDown, Eye, UserPlus } from 'lucide-react'
+import { Check, X, Loader, GraduationCap, Save, Sparkles, Bot, Lightbulb, Pencil, Search, Target, Wrench, Zap, TrendingUp, Briefcase, Users, Rocket, Trophy, BarChart2, CheckCircle, BookOpen, ChevronDown, Eye, UserPlus, Calendar } from 'lucide-react'
 
 const colors = {
   bg: '#0d1424',
@@ -1247,9 +1247,13 @@ export default function ProjectPage() {
             <div style={{ position: 'absolute', top: -60, left: '50%', transform: 'translateX(-50%)', width: 300, height: 300, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(27,120,247,0.18) 0%, transparent 70%)', pointerEvents: 'none' }} />
             <div style={{ position: 'absolute', bottom: -40, right: -40, width: 200, height: 200, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(79,70,229,0.15) 0%, transparent 70%)', pointerEvents: 'none' }} />
 
-            {/* Emoji */}
-            <div style={{ fontSize: 52, marginBottom: 12, lineHeight: 1, position: 'relative' }}>
-              {milestoneCard.score >= 90 ? '🏆' : milestoneCard.score >= 70 ? '🚀' : '🎯'}
+            {/* Icon */}
+            <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'center', position: 'relative' }}>
+              {milestoneCard.score >= 90
+                ? <Trophy size={52} color="#22c55e" />
+                : milestoneCard.score >= 70
+                ? <Rocket size={52} color="#60a5fa" />
+                : <Target size={52} color="#fbbf24" />}
             </div>
 
             {/* Title */}
@@ -1286,7 +1290,7 @@ export default function ProjectPage() {
               <button
                 onClick={() => {
                   navigator.clipboard.writeText(`${window.location.origin}/p/${project.slug}`)
-                  triggerToast('Link copiado! Partilha com orgulho 🚀')
+                  triggerToast('Link copiado!')
                   setMilestoneCard(null)
                 }}
                 style={{
@@ -1298,7 +1302,7 @@ export default function ProjectPage() {
                   boxShadow: '0 6px 20px rgba(27,120,247,0.35)',
                 }}
               >
-                📤 Copiar link
+                Copiar link
               </button>
               <button
                 onClick={() => setMilestoneCard(null)}
@@ -1661,8 +1665,8 @@ export default function ProjectPage() {
                     <button
                       type="button"
                       onClick={() => { setShowInvite(false); setInviteInput(''); setInviteMsg(null) }}
-                      style={{ background: 'transparent', border: 'none', color: colors.subtle, cursor: 'pointer', padding: '4px 6px', borderRadius: 6, fontSize: 13 }}
-                    >✕</button>
+                      style={{ background: 'transparent', border: 'none', color: colors.subtle, cursor: 'pointer', padding: '4px 6px', borderRadius: 6, display: 'flex', alignItems: 'center' }}
+                    ><X size={14} /></button>
                     {inviteMsg && (
                       <span style={{ fontSize: 11, fontWeight: 600, color: inviteMsg.type === 'success' ? '#22c55e' : '#ef4444', width: '100%' }}>
                         {inviteMsg.text}
@@ -1781,7 +1785,7 @@ export default function ProjectPage() {
                 fontSize: 10, fontWeight: 700, textAlign: 'center', maxWidth: 140, lineHeight: 1.5,
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
               }}>
-                💼 Disponível
+                <Briefcase size={11} style={{ flexShrink: 0 }} /> Disponível
               </div>
             )}
           </div>
@@ -1804,20 +1808,20 @@ export default function ProjectPage() {
               borderRadius: 16, padding: '18px 22px',
               display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
             }}>
-              <div style={{ fontSize: 28, lineHeight: 1, flexShrink: 0 }}>📅</div>
+              <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', width: 44, height: 44, borderRadius: 12, background: `${urgentColor}15`, border: `1px solid ${urgentColor}30` }}><Calendar size={22} color={urgentColor} /></div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 14, fontWeight: 700, color: colors.text, marginBottom: 4 }}>
                   {daysLeft === null ? 'Quando é a tua defesa?' :
-                   daysLeft < 0 ? 'Defesa concluída 🎉' :
-                   daysLeft === 0 ? '🔥 A defesa é hoje!' :
-                   daysLeft === 1 ? '⚡ A defesa é amanhã!' :
+                   daysLeft < 0 ? 'Defesa concluída' :
+                   daysLeft === 0 ? 'A defesa é hoje!' :
+                   daysLeft === 1 ? 'A defesa é amanhã!' :
                    `${daysLeft} dias para a defesa`}
                 </div>
                 {daysLeft != null && daysLeft > 0 && (
                   <div style={{ fontSize: 12, color: colors.muted }}>
-                    {daysLeft <= 7 ? '🚨 Foca no que falta completar!' :
-                     daysLeft <= 30 ? '💪 Mantém o ritmo. Continua a melhorar o score.' :
-                     '✅ Tens tempo. Vai completando missão a missão.'}
+                    {daysLeft <= 7 ? 'Foca no que falta completar.' :
+                     daysLeft <= 30 ? 'Mantém o ritmo. Continua a melhorar o score.' :
+                     'Tens tempo. Vai completando missão a missão.'}
                   </div>
                 )}
               </div>
@@ -2357,7 +2361,7 @@ export default function ProjectPage() {
                       <div key={f.key} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <div style={{ width: 6, height: 6, borderRadius: '50%', flexShrink: 0, background: f.quality === 'good' ? '#10b981' : f.quality === 'short' ? colors.yellow : colors.subtle }} />
                         <span style={{ flex: 1, fontSize: 12, color: f.quality === 'good' ? colors.text : f.quality === 'short' ? '#d4a820' : colors.subtle, fontWeight: f.quality === 'good' ? 600 : 400 }}>{f.label}</span>
-                        {f.quality === 'good'  && <span style={{ fontSize: 11, color: '#10b981', fontWeight: 800 }}>✓</span>}
+                        {f.quality === 'good'  && <Check size={11} color="#10b981" strokeWidth={3} />}
                         {f.quality === 'short' && <span style={{ fontSize: 10, color: colors.yellow, fontWeight: 700 }}>curto</span>}
                         {f.quality === 'empty' && <span style={{ fontSize: 11, color: colors.subtle }}>—</span>}
                       </div>

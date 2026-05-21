@@ -5,7 +5,7 @@ import { QRCodeSVG } from 'qrcode.react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
-import { Mail, Search, FolderOpen, X, Check, Download, Rocket, QrCode, Pencil, Globe, ExternalLink, Link } from 'lucide-react'
+import { Mail, Search, FolderOpen, X, Check, Download, Rocket, QrCode, Pencil, Globe, ExternalLink, Link, Briefcase } from 'lucide-react'
 
 // ── Design tokens (aligned with the rest of the app) ──────────────────────────
 const C = {
@@ -594,7 +594,7 @@ export default function UserProfile() {
                   borderRadius: 999, padding: '5px 14px', marginBottom: 12,
                   color: '#10b981', fontSize: 13, fontWeight: 700,
                 }}>
-                  💼 Disponível para estágio
+                  <Briefcase size={13} style={{ flexShrink: 0 }} /> Disponível para estágio
                 </div>
               )}
 

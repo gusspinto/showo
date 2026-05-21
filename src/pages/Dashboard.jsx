@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Pencil, ExternalLink } from 'lucide-react'
 import { Navbar } from '../components/Navbar'
-import { Folder, Trophy, BarChart2, Rocket, Eye, GraduationCap, Plus, X, Users, Users2, ChevronRight, User, Settings, Compass, Medal, LogOut, Globe, TrendingUp, MessageSquare, Star, Mail, Search, BookOpen, Trash2 } from 'lucide-react'
+import { Folder, Trophy, BarChart2, Rocket, Eye, GraduationCap, Plus, X, Users, Users2, ChevronRight, User, Settings, Compass, Medal, LogOut, Globe, TrendingUp, MessageSquare, Star, Mail, Search, BookOpen, Trash2, Check, Calendar } from 'lucide-react'
 
 const C = {
   bg: '#0d1424',
@@ -962,23 +962,23 @@ export default function Dashboard() {
             >
               {/* Countdown number */}
               <div style={{ textAlign: 'center', flexShrink: 0 }}>
-                <div style={{ fontSize: 36, fontWeight: 900, color: urgentColor, lineHeight: 1, letterSpacing: '-1px' }}>
-                  {next.daysLeft <= 0 ? '🎉' : next.daysLeft}
+                <div style={{ fontSize: 36, fontWeight: 900, color: urgentColor, lineHeight: 1, letterSpacing: '-1px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {next.daysLeft <= 0 ? <Medal size={32} color={urgentColor} /> : next.daysLeft}
                 </div>
                 {next.daysLeft > 0 && <div style={{ fontSize: 10, color: urgentColor, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: 2 }}>dias</div>}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 3 }}>
-                  {next.daysLeft < 0 ? 'Defesa concluída 🎉' :
-                   next.daysLeft === 0 ? '🔥 A defesa é hoje!' :
-                   next.daysLeft === 1 ? '⚡ A defesa é amanhã!' :
+                  {next.daysLeft < 0 ? 'Defesa concluída' :
+                   next.daysLeft === 0 ? 'A defesa é hoje!' :
+                   next.daysLeft === 1 ? 'A defesa é amanhã!' :
                    `Defesa do projeto${upcoming.length > 1 ? ` "${next.name}"` : ''}`}
                 </div>
                 <div style={{ fontSize: 12, color: C.muted }}>
                   {next.daysLeft > 1
-                    ? (next.daysLeft <= 7 ? '🚨 Última semana — foca no que falta completar!'
-                       : next.daysLeft <= 30 ? '💪 Mantém o ritmo — melhora o score dia a dia.'
-                       : '✅ Mantém a consistência. Vai completando missão a missão.')
+                    ? (next.daysLeft <= 7 ? 'Última semana — foca no que falta completar!'
+                       : next.daysLeft <= 30 ? 'Mantém o ritmo — melhora o score dia a dia.'
+                       : 'Mantém a consistência. Vai completando missão a missão.')
                     : new Date(next.defense_date + 'T00:00:00').toLocaleDateString('pt-PT', { weekday: 'long', day: 'numeric', month: 'long' })}
                 </div>
               </div>

@@ -166,8 +166,8 @@ function InviteInbox({ userId }) {
   function viewMessage(n) {
     const isCompany = n.type === 'COMPANY_VIEW'
     const who = isCompany ? 'empresas/recrutadores' : 'pessoas'
-    if (n.count30m >= 2) return `🔥 ${n.count30m} ${who} nas últimas 30 min`
-    if (n.count1h >= 2)  return `👀 ${n.count1h} ${who} na última hora`
+    if (n.count30m >= 2) return `${n.count30m} ${who} nas últimas 30 min`
+    if (n.count1h >= 2)  return `${n.count1h} ${who} na última hora`
     if (n.count24h >= 2) return `${n.count24h} ${who} hoje`
     if (n.count > 1)     return `${n.count} ${who} viram o teu projeto`
     return n.message
