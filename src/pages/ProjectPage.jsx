@@ -13,7 +13,7 @@ import { analyzeProject } from '../lib/analyzeProject'
 import { Check, X, Loader, GraduationCap, Save, Sparkles, Bot, Lightbulb, Pencil, Search, Target, Wrench, Zap, TrendingUp, Briefcase, Users, Rocket, Trophy, BarChart2, CheckCircle, BookOpen, ChevronDown, Eye, UserPlus, Calendar } from 'lucide-react'
 
 const colors = {
-  bg: '#0d1424',
+  bg: '#060c18',
   bgAlt: '#111c32',
   card: '#152030',
   cardHover: '#1c2d44',
@@ -30,13 +30,13 @@ const colors = {
   green: '#22c55e',
   greenGlow: 'rgba(34,197,94,0.12)',
   greenBg: '#061a0f',
-  yellow: '#eab308',
+  yellow: '#fbbf24',
   yellowGlow: 'rgba(234,179,8,0.12)',
   orange: '#f97316',
   orangeGlow: 'rgba(249,115,22,0.12)',
 }
 
-const CONFETTI_COLORS = ['#1b78f7', '#22c55e', '#eab308', '#f97316', '#a855f7', '#ec4899', '#06b6d4']
+const CONFETTI_COLORS = ['#1b78f7', '#22c55e', '#fbbf24', '#f97316', '#a855f7', '#ec4899', '#06b6d4']
 
 const PROJECT_TYPE_LABELS = {
   group: 'Trabalho de grupo',
@@ -97,10 +97,10 @@ function progTrack(pct) {
 
 function getLevelInfo(score) {
   if (score === 100) return { label: 'Projeto completo!', color: colors.green }
-  if (score >= 81) return { label: 'Impressionante', color: colors.blue }
-  if (score >= 61) return { label: 'Quase pronto', color: colors.orange }
-  if (score >= 41) return { label: 'A ganhar forma', color: colors.yellow }
-  return { label: 'Em desenvolvimento', color: colors.muted }
+  if (score >= 90) return { label: 'Excelente',          color: colors.green }
+  if (score >= 71) return { label: 'Impressionante',     color: colors.blue }
+  if (score >= 40) return { label: 'A ganhar forma',     color: colors.yellow }
+  return { label: 'Em desenvolvimento', color: colors.red }
 }
 
 function ScoreRing({ score, size = 108 }) {
@@ -457,7 +457,7 @@ function MembersPanel({ ownerName, members, colors, isOwner }) {
 
   const statusCfg = {
     accepted: { label: 'Colaborador', color: '#22c55e', bg: 'rgba(34,197,94,0.1)', border: 'rgba(34,197,94,0.25)', avatar: 'linear-gradient(135deg,#22c55e,#059669)', dim: false },
-    pending:  { label: 'Pendente', color: '#eab308', bg: 'rgba(234,179,8,0.1)',  border: 'rgba(234,179,8,0.25)',  avatar: 'linear-gradient(135deg,#ca8a04,#92400e)', dim: true  },
+    pending:  { label: 'Pendente', color: '#fbbf24', bg: 'rgba(234,179,8,0.1)',  border: 'rgba(234,179,8,0.25)',  avatar: 'linear-gradient(135deg,#ca8a04,#92400e)', dim: true  },
     declined: { label: 'Recusou',  color: '#ef4444', bg: 'rgba(239,68,68,0.1)', border: 'rgba(239,68,68,0.25)', avatar: 'linear-gradient(135deg,#ef4444,#b91c1c)', dim: true  },
   }
 
@@ -1233,7 +1233,7 @@ export default function ProjectPage() {
             onClick={e => e.stopPropagation()}
             style={{
               width: '100%', maxWidth: 400,
-              background: 'linear-gradient(145deg, #0e1f3a 0%, #152030 60%, #0d1424 100%)',
+              background: 'linear-gradient(145deg, #0e1f3a 0%, #152030 60%, #060c18 100%)',
               border: '1px solid rgba(27,120,247,0.3)',
               borderRadius: 24,
               padding: '36px 32px',
@@ -1557,24 +1557,24 @@ export default function ProjectPage() {
             {project.cover_url ? (
               <div className="proj-cover" style={{ width: '100%', height: 300, position: 'relative' }}>
                 <img src={project.cover_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 20%, #0d1424 100%)' }} />
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 20%, #060c18 100%)' }} />
               </div>
             ) : (
               <div style={{
                 width: '100%', height: 220,
-                background: `linear-gradient(135deg, ${hero.c1}22 0%, ${hero.c2}55 50%, #0d1424 100%)`,
+                background: `linear-gradient(135deg, ${hero.c1}22 0%, ${hero.c2}55 50%, #060c18 100%)`,
                 position: 'relative', overflow: 'hidden',
               }}>
                 <div style={{ position: 'absolute', top: -60, left: '10%', width: 400, height: 400, borderRadius: '50%', background: `radial-gradient(ellipse, ${hero.c1}28 0%, transparent 65%)`, pointerEvents: 'none' }} />
                 <div style={{ position: 'absolute', top: -20, right: '5%', width: 250, height: 250, borderRadius: '50%', background: `radial-gradient(ellipse, ${hero.c2}22 0%, transparent 65%)`, pointerEvents: 'none' }} />
-                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 40%, #0d1424 100%)' }} />
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 40%, #060c18 100%)' }} />
               </div>
             )}
           </div>
         )
       })()}
 
-      <div className="proj-wrap" style={{ maxWidth: 1080, margin: '0 auto', padding: '0 24px 80px', overflowX: 'clip' }}>
+      <div className="proj-wrap page-content-wide" style={{ overflowX: 'clip', paddingTop: 24 }}>
 
         {/* Two-column layout: main content + sticky sidebar */}
         <div className="proj-layout">
@@ -2313,7 +2313,7 @@ export default function ProjectPage() {
                         <button key={k} onClick={() => setFbFieldKey(k)} style={{ fontSize: 11, padding: '3px 8px', borderRadius: 5, border: `1px solid ${fbFieldKey === k ? '#fbbf24' : colors.border}`, background: fbFieldKey === k ? 'rgba(251,191,36,0.12)' : 'transparent', color: fbFieldKey === k ? '#fbbf24' : colors.muted, cursor: 'pointer', fontFamily: 'inherit', fontWeight: fbFieldKey === k ? 700 : 400 }}>{l}</button>
                       ))}
                     </div>
-                    <textarea value={fbComment} onChange={e => setFbComment(e.target.value)} placeholder={`Feedback sobre ${FB_SECTION_LABELS[fbFieldKey]}…`} rows={3} style={{ width: '100%', background: '#0d1424', border: `1px solid ${colors.border}`, borderRadius: 8, padding: '9px 11px', color: colors.text, fontSize: 13, fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box', outline: 'none' }} />
+                    <textarea value={fbComment} onChange={e => setFbComment(e.target.value)} placeholder={`Feedback sobre ${FB_SECTION_LABELS[fbFieldKey]}…`} rows={3} style={{ width: '100%', background: '#060c18', border: `1px solid ${colors.border}`, borderRadius: 8, padding: '9px 11px', color: colors.text, fontSize: 13, fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box', outline: 'none' }} />
                     <div style={{ display: 'flex', gap: 8 }}>
                       <button onClick={handleFbSave} disabled={fbSaving || !fbComment.trim()} style={{ flex: 1, background: 'linear-gradient(135deg,#d97706,#b45309)', border: 'none', borderRadius: 8, padding: '9px', color: '#fff', fontSize: 13, fontWeight: 600, cursor: fbSaving || !fbComment.trim() ? 'default' : 'pointer', opacity: fbSaving || !fbComment.trim() ? 0.6 : 1, fontFamily: 'inherit' }}>
                         {fbSaving ? 'A guardar…' : fbEditing ? 'Atualizar' : 'Guardar'}

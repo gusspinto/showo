@@ -6,7 +6,7 @@ import { supabase } from '../lib/supabase'
 import { Link2, Check } from 'lucide-react'
 
 const C = {
-  bg: '#0d1424',
+  bg: '#060c18',
   border: '#1e3050',
   blue: '#1b78f7',
   text: '#e8f2ff',

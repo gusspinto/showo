@@ -11,7 +11,7 @@ import { useAuth } from '../context/AuthContext'
 import { CropModal } from '../components/CropModal'
 
 const colors = {
-  bg: '#0d1424',
+  bg: '#060c18',
   bgAlt: '#111c32',
   card: '#152030',
   cardHover: '#1c2d44',
@@ -26,11 +26,11 @@ const colors = {
   subtle: '#3d5270',
   green: '#22c55e',
   greenGlow: 'rgba(34,197,94,0.12)',
-  yellow: '#eab308',
+  yellow: '#fbbf24',
   yellowGlow: 'rgba(234,179,8,0.1)',
   orange: '#f97316',
   red: '#ef4444',
-  inputBg: '#0d1424',
+  inputBg: '#060c18',
 }
 
 const inputBase = {
@@ -402,7 +402,7 @@ export default function NewProject() {
                   onClick={() => copyLink(editUrl, 'edit')}
                   style={{
                     background: copiedLink === 'edit' ? `linear-gradient(135deg, ${colors.green}, #16a34a)` : colors.yellow,
-                    color: '#0d1424', border: 'none', borderRadius: 8,
+                    color: '#060c18', border: 'none', borderRadius: 8,
                     padding: '10px 16px', fontSize: 13, fontWeight: 700,
                     cursor: 'pointer', whiteSpace: 'nowrap',
                     transition: 'background 0.2s',

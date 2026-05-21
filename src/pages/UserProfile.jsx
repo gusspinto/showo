@@ -9,7 +9,7 @@ import { Mail, Search, FolderOpen, X, Check, Download, Rocket, QrCode, Pencil, G
 
 // ── Design tokens (aligned with the rest of the app) ──────────────────────────
 const C = {
-  bg:           '#0d1424',
+  bg:           '#060c18',
   bgAlt:        '#111c32',
   card:         '#152030',
   cardHover:    '#1c2d44',
@@ -21,7 +21,7 @@ const C = {
   muted:        '#7d93b0',
   subtle:       '#3d5270',
   green:        '#22c55e',
-  yellow:       '#eab308',
+  yellow:       '#fbbf24',
   orange:       '#f97316',
   red:          '#ef4444',
 }
@@ -411,6 +411,7 @@ export default function UserProfile() {
           margin-bottom: 28px;
           position: relative;
           overflow: hidden;
+          box-shadow: 0 8px 40px rgba(0,0,0,0.35), 0 1px 0 rgba(255,255,255,0.03) inset;
         }
         /* Subtle area gradient glow in top-right corner */
         .up-header::before {
@@ -419,27 +420,27 @@ export default function UserProfile() {
           top: -60px; right: -60px;
           width: 280px; height: 280px;
           border-radius: 50%;
-          background: radial-gradient(circle, ${c1}55 0%, transparent 70%);
+          background: radial-gradient(circle, ${c1}bb 0%, transparent 60%);
           pointer-events: none;
         }
 
         .up-avatar {
-          width: 88px; height: 88px;
+          width: 112px; height: 112px;
           border-radius: 50%;
           object-fit: cover;
           flex-shrink: 0;
-          border: 3px solid ${C.border};
-          box-shadow: 0 8px 28px rgba(0,0,0,0.35);
+          border: 3px solid ${c1};
+          box-shadow: 0 8px 28px rgba(0,0,0,0.4), 0 0 0 1px ${c1}44;
         }
         .up-avatar-placeholder {
-          width: 88px; height: 88px;
+          width: 112px; height: 112px;
           border-radius: 50%;
           flex-shrink: 0;
           background: linear-gradient(135deg, ${c1}, ${c2});
           display: flex; align-items: center; justify-content: center;
-          font-size: 34px; font-weight: 900; color: rgba(255,255,255,0.85);
-          border: 3px solid ${C.border};
-          box-shadow: 0 8px 28px rgba(0,0,0,0.35);
+          font-size: 42px; font-weight: 900; color: rgba(255,255,255,0.85);
+          border: 3px solid ${c1};
+          box-shadow: 0 8px 28px rgba(0,0,0,0.4), 0 0 0 1px ${c1}44;
         }
 
         .up-stat-pill {
@@ -499,19 +500,21 @@ export default function UserProfile() {
           color: ${C.yellow};
         }
         .up-action-btn.primary {
-          background: rgba(27,120,247,0.1);
-          border-color: rgba(27,120,247,0.25);
-          color: ${C.blue};
+          background: linear-gradient(135deg, #1b78f7, #4f46e5);
+          border-color: transparent;
+          color: #fff;
+          box-shadow: 0 2px 14px rgba(27,120,247,0.32);
         }
         .up-action-btn.primary:hover {
-          background: rgba(27,120,247,0.17);
-          border-color: rgba(27,120,247,0.4);
-          color: ${C.blue};
+          background: linear-gradient(135deg, #1564d4, #4338ca);
+          border-color: transparent;
+          color: #fff;
+          box-shadow: 0 4px 18px rgba(27,120,247,0.44);
         }
 
         .up-section-label {
-          font-size: 11px; font-weight: 700; color: ${C.muted};
-          text-transform: uppercase; letter-spacing: 0.08em;
+          font-size: 12px; font-weight: 700; color: ${C.muted};
+          text-transform: uppercase; letter-spacing: 0.07em;
           margin: 0 0 14px;
         }
 
@@ -525,10 +528,13 @@ export default function UserProfile() {
         @media (max-width: 860px) {
           .up-header { padding: 20px 18px 18px; border-radius: 14px; }
           .up-header-inner { flex-direction: column !important; gap: 16px !important; }
-          .up-avatar, .up-avatar-placeholder { width: 72px !important; height: 72px !important; font-size: 28px !important; }
+          .up-avatar, .up-avatar-placeholder { width: 80px !important; height: 80px !important; font-size: 32px !important; }
           .up-actions { flex-wrap: wrap !important; }
           .up-projects-grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
         }
+        /* QR + Edit always as icon buttons in card corner — hide text versions everywhere */
+        .up-action-btn.up-hide-mobile { display: none !important; }
+
         @media (max-width: 600px) {
           .up-header { padding: 16px 14px 14px; border-radius: 12px; margin-bottom: 18px; }
           .up-projects-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -541,10 +547,33 @@ export default function UserProfile() {
 
       <Navbar />
 
-      <div style={{ maxWidth: 820, margin: '0 auto', padding: '40px 20px 80px' }}>
+      <div className="page-content">
 
         {/* ── Profile header card ── */}
         <div className="up-header">
+          {/* Mobile-only: Edit + QR icon buttons in top-right corner of card */}
+          <div
+            className="up-card-btns-mobile"
+            style={{ display: 'flex', position: 'absolute', top: 14, right: 14, zIndex: 2, gap: 6 }}
+          >
+            <button
+              onClick={() => setShowQR(true)}
+              style={{ background: 'rgba(255,255,255,0.06)', border: `1px solid ${C.border}`, borderRadius: 8, width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: C.muted }}
+              title="QR Code"
+            >
+              <QrCode size={15} />
+            </button>
+            {isOwnProfile && (
+              <button
+                onClick={() => navigate('/settings')}
+                style={{ background: 'rgba(255,255,255,0.06)', border: `1px solid ${C.border}`, borderRadius: 8, width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: C.muted }}
+                title="Editar perfil"
+              >
+                <Pencil size={15} />
+              </button>
+            )}
+          </div>
+
           <div className="up-header-inner" style={{ display: 'flex', alignItems: 'flex-start', gap: 22, position: 'relative', zIndex: 1 }}>
 
             {/* Avatar */}
@@ -556,20 +585,20 @@ export default function UserProfile() {
             {/* Info */}
             <div style={{ flex: 1, minWidth: 0 }}>
               {/* Name + username */}
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap', marginBottom: 2 }}>
-                <h1 style={{ color: C.text, fontSize: 22, fontWeight: 800, margin: 0, letterSpacing: '-0.4px', lineHeight: 1.2 }}>
+              <div style={{ marginBottom: 6 }}>
+                <h1 style={{ color: C.text, fontSize: 26, fontWeight: 900, margin: '0 0 3px', letterSpacing: '-0.6px', lineHeight: 1.15 }}>
                   {displayName}
                 </h1>
                 {profile.username && (
-                  <span style={{ color: C.subtle, fontSize: 14, fontWeight: 400 }}>@{profile.username}</span>
+                  <span style={{ color: C.muted, fontSize: 13, fontWeight: 400 }}>@{profile.username}</span>
                 )}
               </div>
 
               {/* Area / school */}
               {(profile.area || profile.course || profile.school) && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginBottom: 10, marginTop: 4 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginBottom: 10, marginTop: 6 }}>
                   {(profile.area || profile.course) && (
-                    <span style={{ fontSize: 12, color: C.muted, background: 'rgba(255,255,255,0.04)', border: `1px solid ${C.border}`, borderRadius: 5, padding: '2px 8px' }}>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: c1, background: `${c1}18`, border: `1px solid ${c1}40`, borderRadius: 6, padding: '3px 10px' }}>
                       {profile.area || profile.course}
                     </span>
                   )}
@@ -581,7 +610,7 @@ export default function UserProfile() {
 
               {/* Bio */}
               {profile.bio && (
-                <p style={{ color: C.muted, fontSize: 13, margin: '0 0 12px', lineHeight: 1.65, maxWidth: 480 }}>
+                <p style={{ color: '#a8bdd6', fontSize: 14, margin: '0 0 12px', lineHeight: 1.6, maxWidth: 480 }}>
                   {profile.bio}
                 </p>
               )}
@@ -643,11 +672,11 @@ export default function UserProfile() {
                     <Mail size={13} /> Kit de estágio
                   </button>
                 )}
-                <button className="up-action-btn" onClick={() => setShowQR(true)}>
+                <button className="up-action-btn up-hide-mobile" onClick={() => setShowQR(true)}>
                   <QrCode size={13} /> QR Code
                 </button>
                 {isOwnProfile && (
-                  <button className="up-action-btn" onClick={() => navigate('/settings')}>
+                  <button className="up-action-btn up-hide-mobile" onClick={() => navigate('/settings')}>
                     <Pencil size={13} /> Editar perfil
                   </button>
                 )}

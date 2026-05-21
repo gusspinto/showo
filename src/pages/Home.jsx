@@ -6,7 +6,7 @@ import { supabase } from '../lib/supabase'
 import Onboarding from '../components/Onboarding'
 
 const colors = {
-  bg:           '#0d1424',
+  bg:           '#060c18',
   card:         '#152030',
   border:       '#1e3050',
   borderBright: '#2a4275',

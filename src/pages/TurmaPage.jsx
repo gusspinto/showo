@@ -6,17 +6,18 @@ import { Navbar } from '../components/Navbar'
 import { Folder, Check, Search, Users2, User, Copy, Inbox, Download, MessageSquare, X, ChevronUp, ChevronDown } from 'lucide-react'
 
 const C = {
-  bg: '#0d1424', bgAlt: '#111c32', card: '#152030', cardHover: '#1c2d44',
+  bg: '#060c18', bgAlt: '#111c32', card: '#152030', cardHover: '#1c2d44',
   border: '#1e3050', borderBright: '#2a4275',
   blue: '#1b78f7', text: '#e8f2ff', muted: '#7d93b0', subtle: '#3d5270',
-  green: '#22c55e', yellow: '#eab308', red: '#ef4444',
+  green: '#22c55e', yellow: '#fbbf24', red: '#ef4444',
 }
 
 function scoreColor(s) {
-  if (!s) return C.muted
-  if (s >= 80) return C.green
-  if (s >= 50) return C.yellow
-  return '#f97316'
+  if (s == null) return C.muted
+  if (s >= 90) return C.green
+  if (s >= 71) return C.blue
+  if (s >= 40) return C.yellow
+  return C.red
 }
 
 function ProjectCard({ project, navigate }) {
@@ -131,7 +132,7 @@ function FeedbackModal({ project, teacherId, onClose }) {
         {existing.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 18 }}>
             {existing.map(f => (
-              <div key={f.id} style={{ background: '#0d1424', border: `1px solid ${C.border}`, borderRadius: 10, padding: '12px 14px' }}>
+              <div key={f.id} style={{ background: '#060c18', border: `1px solid ${C.border}`, borderRadius: 10, padding: '12px 14px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
                   <span style={{ fontSize: 11, fontWeight: 700, color: '#60a5fa', textTransform: 'uppercase', letterSpacing: 0.5 }}>{SECTION_LABELS[f.field_key] || f.field_key}</span>
                   <div style={{ display: 'flex', gap: 8 }}>
@@ -157,7 +158,7 @@ function FeedbackModal({ project, teacherId, onClose }) {
             value={comment} onChange={e => setComment(e.target.value)}
             placeholder={`Comentário sobre ${SECTION_LABELS[fieldKey] || fieldKey}…`}
             rows={3}
-            style={{ width: '100%', background: '#0d1424', border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 12px', color: C.text, fontSize: 13, fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box', outline: 'none' }}
+            style={{ width: '100%', background: '#060c18', border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 12px', color: C.text, fontSize: 13, fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box', outline: 'none' }}
           />
           <div style={{ display: 'flex', gap: 8 }}>
             <button onClick={handleSave} disabled={saving || !comment.trim()} style={{ flex: 1, background: 'linear-gradient(135deg,#1b78f7,#4f46e5)', border: 'none', borderRadius: 8, padding: '10px', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: saving || !comment.trim() ? 0.6 : 1, fontFamily: 'inherit' }}>
@@ -427,7 +428,7 @@ export default function TurmaPage() {
         </div>
       )}
 
-      <div style={{ maxWidth: 960, margin: '0 auto', padding: '40px 24px 80px' }}>
+      <div className="page-content">
         {/* Header */}
         <div style={{ marginBottom: 32 }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
@@ -437,7 +438,7 @@ export default function TurmaPage() {
                   <Users2 size={22} color="#1b78f7" />
                 </div>
                 <div>
-                  <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, letterSpacing: '-0.3px' }}>{turma.name}</h1>
+                  <h1 style={{ margin: 0, fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 900, letterSpacing: '-0.5px' }}>{turma.name}</h1>
                   {turma.subject && <p style={{ margin: 0, fontSize: 14, color: C.muted }}>{turma.subject}</p>}
                 </div>
               </div>
@@ -505,7 +506,7 @@ export default function TurmaPage() {
           <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, overflow: 'hidden' }}>
             <div style={{ overflowX: 'auto' }}>
             {/* Table header */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(160px,1fr) 64px 120px 88px 130px', gap: 0, padding: '10px 16px', borderBottom: `1px solid ${C.border}`, background: '#0d1424', minWidth: 580 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(160px,1fr) 64px 120px 88px 130px', gap: 0, padding: '10px 16px', borderBottom: `1px solid ${C.border}`, background: '#060c18', minWidth: 580 }}>
               {[['name','Projeto'], ['score','Score'], ['completude','Completude'], ['updated','Data'], [null,'Ações']].map(([field, label]) => (
                 <div key={label} onClick={() => field && toggleSort(field)} style={{ fontSize: 11, fontWeight: 700, color: field ? (sortBy === field ? '#60a5fa' : C.muted) : C.muted, textTransform: 'uppercase', letterSpacing: 0.5, cursor: field ? 'pointer' : 'default', display: 'flex', alignItems: 'center', gap: 4, userSelect: 'none' }}>
                   {label}

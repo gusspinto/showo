@@ -9,7 +9,7 @@ import {
 } from 'lucide-react'
 
 const C = {
-  bg: '#0d1424',
+  bg: '#060c18',
   bgAlt: '#0a1018',
   card: '#152030',
   cardHover: '#1c2d44',
@@ -26,8 +26,8 @@ const C = {
   red: '#ef4444',
   redSoft: 'rgba(239,68,68,0.08)',
   redBorder: 'rgba(239,68,68,0.25)',
-  yellow: '#eab308',
-  yellowSoft: 'rgba(234,179,8,0.08)',
+  yellow: '#fbbf24',
+  yellowSoft: 'rgba(251,191,36,0.08)',
   purple: '#a855f7',
   purpleSoft: 'rgba(168,85,247,0.08)',
   orange: '#f97316',
@@ -312,7 +312,7 @@ function ProjectsTab({ projects, users, onDeleteProject }) {
     )
   })
 
-  const scoreColor = s => s >= 80 ? C.green : s >= 50 ? C.yellow : s >= 20 ? C.orange : C.subtle
+  const scoreColor = s => s >= 90 ? C.green : s >= 71 ? C.blue : s >= 40 ? C.yellow : s > 0 ? C.red : C.subtle
 
   return (
     <div>
@@ -493,7 +493,7 @@ export default function Admin() {
         boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
       }}>{toast}</div>
 
-      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '32px 24px 80px' }}>
+      <div className="page-content">
         {/* Header */}
         <div style={{ marginBottom: 28 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 6 }}>

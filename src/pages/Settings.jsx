@@ -7,7 +7,7 @@ import { Loader, Check, X, AlertTriangle, Camera, ArrowLeft, GraduationCap, Book
 import { CropModal } from '../components/CropModal'
 
 const C = {
-  bg:          '#0d1424',
+  bg:          '#060c18',
   bgAlt:       '#111c32',
   card:        '#152030',
   cardHover:   '#1c2d44',
@@ -19,7 +19,7 @@ const C = {
   muted:       '#7d93b0',
   text:        '#e8f2ff',
   subtle:      '#3d5270',
-  inputBg:     '#0d1424',
+  inputBg:     '#060c18',
   red:         '#ef4444',
   green:       '#22c55e',
 }
@@ -325,11 +325,11 @@ export default function Settings() {
     <div style={{ minHeight: '100vh', background: C.bg, fontFamily: 'inherit' }}>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
       <Navbar />
-      <div style={{ maxWidth: 600, margin: '0 auto', padding: '44px 24px 80px' }}>
+      <div className="page-content">
 
         <div style={{ marginBottom: 32, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
           <div>
-            <h1 style={{ color: C.text, fontSize: 26, fontWeight: 800, margin: '0 0 4px', letterSpacing: '-0.5px' }}>Definições</h1>
+            <h1 style={{ color: C.text, fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 900, margin: '0 0 4px', letterSpacing: '-0.5px' }}>Definições</h1>
             <p style={{ color: C.muted, fontSize: 14, margin: 0 }}>Gere o teu perfil e conta</p>
           </div>
           <button

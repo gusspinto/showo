@@ -68,7 +68,7 @@ const STEPS = [
             borderRadius: '50%', width: 30, height: 30, flexShrink: 0,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
-            <div style={{ background: '#0d1424', borderRadius: '50%', width: 22, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 800, color: '#22c55e' }}>85</div>
+            <div style={{ background: '#060c18', borderRadius: '50%', width: 22, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 800, color: '#22c55e' }}>85</div>
           </div>
           <div style={{ flex: 1, fontSize: 11, color: '#7d93b0' }}>
             showo.app/projeto/<span style={{ color: '#60a5fa' }}>gestao-horarios</span>
@@ -131,7 +131,7 @@ export default function Onboarding({ onDone }) {
         opacity: visible ? 1 : 0,
         transition: 'all 0.35s cubic-bezier(0.34,1.56,0.64,1)',
         width: 'calc(100% - 40px)', maxWidth: 400,
-        background: 'linear-gradient(160deg,#111c32,#0d1424)',
+        background: 'linear-gradient(160deg,#111c32,#060c18)',
         border: '1px solid rgba(27,120,247,0.2)',
         borderRadius: 20,
         padding: '22px 22px 22px',

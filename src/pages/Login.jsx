@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase'
 import { Mail, Check } from 'lucide-react'
 
 const C = {
-  bg:          '#0d1424',
+  bg:          '#060c18',
   card:        '#152030',
   border:      '#1e3050',
   borderBright:'#2a4275',

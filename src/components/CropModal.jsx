@@ -169,7 +169,7 @@ export function CropModal({ file, imageUrl, aspectRatio, circular = false, onCon
   }, [crop, circular, onConfirm])
 
   const C = {
-    bg:    '#0d1424',
+    bg:    '#060c18',
     card:  '#152030',
     border:'rgba(255,255,255,0.1)',
     text:  '#e8f2ff',

@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext'
 import { Search, Building2, Eye, Briefcase } from 'lucide-react'
 
 const colors = {
-  bg: '#0d1424',
+  bg: '#060c18',
   bgAlt: '#111c32',
   card: '#152030',
   cardHover: '#1c2d44',
@@ -18,8 +18,9 @@ const colors = {
   muted: '#7d93b0',
   subtle: '#3d5270',
   green: '#22c55e',
-  yellow: '#eab308',
+  yellow: '#fbbf24',
   orange: '#f97316',
+  red: '#ef4444',
 }
 
 const PROJECT_TYPES = [
@@ -59,11 +60,11 @@ function getAreaGradient(area) {
 }
 
 function getLevelColor(score) {
-  if (score === 100) return colors.green
-  if (score >= 81)  return colors.blue
-  if (score >= 61)  return colors.orange
-  if (score >= 41)  return colors.yellow
-  return colors.muted
+  if (score == null) return colors.muted
+  if (score >= 90)  return colors.green
+  if (score >= 71)  return colors.blue
+  if (score >= 40)  return colors.yellow
+  return colors.red
 }
 
 function ScoreRingSmall({ score }) {
@@ -105,7 +106,7 @@ function SelectFilter({ value, onChange, options, label }) {
         aria-label={label}
       >
         {options.map(o => (
-          <option key={o.id} value={o.id} style={{ background: '#0d1424', color: colors.text }}>
+          <option key={o.id} value={o.id} style={{ background: colors.bg, color: colors.text }}>
             {o.label}
           </option>
         ))}
@@ -144,13 +145,22 @@ export default function Explore() {
 
   useEffect(() => {
     async function load() {
+      // Main projects query — no FK join to avoid PostgREST relationship errors
       const { data, error } = await supabase
         .from('projects')
-        .select('id,name,slug,area,creator_name,course,school_year,ai_tagline,project_type,is_pap,score,created_at,technologies,views,cover_url,user_id,profiles(available_for_work)')
+        .select('id,name,slug,area,creator_name,course,school_year,ai_tagline,project_type,is_pap,score,created_at,technologies,views,cover_url,user_id')
         .order('score', { ascending: false })
         .limit(300)
+
       if (!error && data) {
-        // Use fresh DB values, but keep highest seen value this hour (avoids flickering down)
+        // Fetch available-for-work users separately (avoids FK join requirement)
+        const { data: availProfs } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('available_for_work', true)
+        const availIds = new Set(availProfs?.map(p => p.id) ?? [])
+
+        // Use fresh DB values, keep highest seen this hour (avoids flickering)
         let viewCache = {}
         try { viewCache = JSON.parse(localStorage.getItem(VIEWS_KEY) || '{}') } catch {}
         const merged = data.map(p => {
@@ -158,7 +168,7 @@ export default function Explore() {
           const fresh = p.views ?? 0
           const best = Math.max(cached, fresh)
           viewCache[p.slug] = best
-          return { ...p, views: best }
+          return { ...p, views: best, available_for_work: availIds.has(p.user_id) }
         })
         try { localStorage.setItem(VIEWS_KEY, JSON.stringify(viewCache)) } catch {}
         setProjects(merged)
@@ -211,7 +221,7 @@ export default function Explore() {
     if (filterZone && filterZone !== 'Outro') {
       if (!p.school_year?.includes(filterZone) && !p.course?.includes(filterZone) && !p.creator_name?.includes(filterZone)) return false
     }
-    if (filterAvailable && !p.profiles?.available_for_work) return false
+    if (filterAvailable && !p.available_for_work) return false
     return true
   })
 
@@ -233,6 +243,17 @@ export default function Explore() {
     <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: 'var(--font-body)' }}>
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes shimmer {
+          0%   { background-position: -600px 0; }
+          100% { background-position:  600px 0; }
+        }
+        .explore-skeleton {
+          background: linear-gradient(90deg, #152030 25%, #1c2d44 50%, #152030 75%);
+          background-size: 1200px 100%;
+          animation: shimmer 1.6s infinite linear;
+          border: 1px solid #1e3050;
+          border-radius: 14px;
+        }
         .explore-card { transition: all 0.18s ease !important; }
         .explore-card:hover { border-color: #2a4275 !important; transform: translateY(-3px) !important; box-shadow: 0 12px 40px rgba(0,0,0,0.45) !important; background: #1c2d44 !important; }
         .explore-card-arrow { opacity: 0; transform: translateX(-4px); transition: opacity 0.15s, transform 0.15s; }
@@ -260,7 +281,7 @@ export default function Explore() {
         </button>
       </Navbar>
 
-      <div style={{ maxWidth: 1080, margin: '0 auto', padding: '44px 24px 80px' }}>
+      <div className="page-content">
         {/* Header */}
         <div style={{ marginBottom: 28 }}>
           <h1 style={{ fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 900, margin: '0 0 8px', letterSpacing: '-0.5px' }}>
@@ -345,8 +366,10 @@ export default function Explore() {
         </div>
 
         {loading ? (
-          <div style={{ display: 'flex', justifyContent: 'center', padding: '80px 0' }}>
-            <div style={{ width: 36, height: 36, border: `3px solid ${colors.border}`, borderTop: `3px solid ${colors.blue}`, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(288px, 1fr))', gap: 16 }}>
+            {[1,2,3,4,5,6].map(i => (
+              <div key={i} className="explore-skeleton" style={{ height: 240, opacity: 1 - (i % 3) * 0.12 }} />
+            ))}
           </div>
         ) : filtered.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '80px 0', color: colors.muted }}>
@@ -435,7 +458,7 @@ export default function Explore() {
                           PAP
                         </span>
                       )}
-                      {project.profiles?.available_for_work && (
+                      {project.available_for_work && (
                         <span style={{ fontSize: 11, color: '#10b981', background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.25)', borderRadius: 999, padding: '3px 10px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                           <Briefcase size={10} style={{ flexShrink: 0 }} /> Disponível
                         </span>

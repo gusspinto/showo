@@ -5,7 +5,7 @@ import { saveProject } from '../lib/saveProject'
 import { AlertTriangle } from 'lucide-react'
 
 const C = {
-  bg:     '#0d1424',
+  bg:     '#060c18',
   card:   '#152030',
   border: '#1e3050',
   bright: '#2a4275',
@@ -314,7 +314,7 @@ export default function AIInterview() {
       </div>
 
       {/* Body */}
-      <div style={{ flex: 1, display: 'flex', gap: 32, padding: '0 32px 48px', maxWidth: 1100, margin: '0 auto', width: '100%', boxSizing: 'border-box', alignItems: 'flex-start' }}>
+      <div style={{ flex: 1, display: 'flex', gap: 32, padding: '0 32px 48px', maxWidth: 1000, margin: '0 auto', width: '100%', boxSizing: 'border-box', alignItems: 'flex-start' }}>
 
         {/* Left: interview */}
         <div className="iv-main" style={{ flex: 1, minWidth: 0, paddingTop: 40 }}>

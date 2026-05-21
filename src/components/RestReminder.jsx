@@ -6,8 +6,8 @@ const SNOOZE_KEY    = 'showo_rest_snooze_until'
 const SNOOZE_MINS_KEY = 'showo_rest_snooze_mins'
 
 const C = {
-  bg:     'rgba(10,16,28,0.92)',
-  card:   '#111827',
+  bg:     'rgba(6,12,24,0.95)',
+  card:   '#152030',
   border: '#1e3050',
   blue:   '#1b78f7',
   muted:  '#7d93b0',
