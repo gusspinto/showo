@@ -149,8 +149,8 @@ function JuryPanel({ aiData, loadingAI, aiError, onRetry }) {
             <div
               key={i}
               style={{
-                background: isPracticed ? 'rgba(52,211,153,0.05)' : C.card,
-                border: `1px solid ${isPracticed ? 'rgba(52,211,153,0.25)' : C.border}`,
+                background: isPracticed ? 'rgba(34,197,94,0.05)' : C.card,
+                border: `1px solid ${isPracticed ? 'rgba(34,197,94,0.25)' : C.border}`,
                 borderRadius: 14, overflow: 'hidden',
                 transition: 'border-color 0.2s, background 0.2s',
               }}
@@ -159,8 +159,8 @@ function JuryPanel({ aiData, loadingAI, aiError, onRetry }) {
               <div style={{ padding: '18px 20px', display: 'flex', alignItems: 'flex-start', gap: 14 }}>
                 <span style={{
                   width: 26, height: 26, borderRadius: 8, flexShrink: 0,
-                  background: isPracticed ? 'rgba(52,211,153,0.12)' : 'rgba(251,191,36,0.08)',
-                  border: `1px solid ${isPracticed ? 'rgba(52,211,153,0.3)' : 'rgba(251,191,36,0.2)'}`,
+                  background: isPracticed ? 'rgba(34,197,94,0.12)' : 'rgba(251,191,36,0.08)',
+                  border: `1px solid ${isPracticed ? 'rgba(34,197,94,0.3)' : 'rgba(251,191,36,0.2)'}`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: 12, fontWeight: 700, color: isPracticed ? C.green : C.yellow,
                 }}>
@@ -199,7 +199,7 @@ function JuryPanel({ aiData, loadingAI, aiError, onRetry }) {
                   <button
                     onClick={() => setPracticed(p => ({ ...p, [i]: true }))}
                     style={{
-                      background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.2)',
+                      background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.2)',
                       borderRadius: 7, padding: '6px 14px',
                       color: C.green, fontSize: 12, fontWeight: 600,
                       cursor: 'pointer', fontFamily: 'inherit',
@@ -226,7 +226,7 @@ function JuryPanel({ aiData, loadingAI, aiError, onRetry }) {
       </div>
 
       {practicedCount === questions.length && (
-        <div style={{ marginTop: 24, background: 'rgba(52,211,153,0.07)', border: '1px solid rgba(52,211,153,0.2)', borderRadius: 14, padding: '20px', textAlign: 'center' }}>
+        <div style={{ marginTop: 24, background: 'rgba(34,197,94,0.07)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 14, padding: '20px', textAlign: 'center' }}>
           <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: C.green }}>Preparação completa</p>
           <p style={{ margin: '4px 0 0', fontSize: 13, color: C.muted }}>Treinaste todas as perguntas. Boa defesa!</p>
         </div>
@@ -245,7 +245,7 @@ const SECTIONS = [
   { id: 'solution',     label: 'A Solução',        Icon: Lightbulb,accent: '#22c55e' },
   { id: 'features',     label: 'Funcionalidades',  Icon: Settings, accent: '#06b6d4' },
   { id: 'technologies', label: 'Tecnologias',      Icon: Wrench,   accent: '#818cf8' },
-  { id: 'results',      label: 'Resultados',       Icon: Trophy,   accent: '#34d399' },
+  { id: 'results',      label: 'Resultados',       Icon: Trophy,   accent: '#22c55e' },
   { id: 'learnings',    label: 'Aprendizagens',    Icon: BookOpen, accent: '#f472b6' },
   { id: 'closing',      label: 'Encerramento',     Icon: Mic,      accent: '#1b78f7' },
 ]
@@ -339,7 +339,7 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
     const timeStr = mins > 0 ? `${mins}m ${String(secs).padStart(2,'0')}s` : `${secs}s`
 
     return (
-      <div style={{ position: 'fixed', inset: 0, zIndex: 10000, background: '#060c18', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: 'Inter, system-ui, sans-serif', color: C.text, padding: 32, textAlign: 'center' }}>
+      <div style={{ position: 'fixed', inset: 0, zIndex: 10000, background: '#060c18', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit', color: C.text, padding: 32, textAlign: 'center' }}>
         <style>{`@keyframes pop{0%{transform:scale(0.5);opacity:0}60%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}} @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}`}</style>
 
         <div style={{ marginBottom: 4, animation: 'pop 0.5s ease-out' }}><GraduationCap size={80} color={C.blue} /></div>
@@ -386,7 +386,7 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
   if (!started) {
     const juryCount = aiData?.jury_questions?.length ?? 0
     return (
-      <div style={{ position: 'fixed', inset: 0, zIndex: 10000, background: '#060c18', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: 'Inter, system-ui, sans-serif', color: C.text, padding: 24 }}>
+      <div style={{ position: 'fixed', inset: 0, zIndex: 10000, background: '#060c18', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit', color: C.text, padding: 24 }}>
         <style>{`@keyframes spin{to{transform:rotate(360deg)}} @keyframes pop{0%{transform:scale(0.92)}60%{transform:scale(1.04)}100%{transform:scale(1)}} @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}`}</style>
 
         <div style={{ maxWidth: 360, width: '100%', textAlign: 'center', animation: 'fadeUp 0.3s ease-out' }}>
@@ -454,7 +454,7 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
   // ── Active guide ──────────────────────────────────────────────────────────
   return (
     <div
-      style={{ position: 'fixed', inset: 0, zIndex: 10000, background: '#060c18', display: 'flex', flexDirection: 'column', fontFamily: 'Inter, system-ui, sans-serif', color: C.text }}
+      style={{ position: 'fixed', inset: 0, zIndex: 10000, background: '#060c18', display: 'flex', flexDirection: 'column', fontFamily: 'inherit', color: C.text }}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
@@ -901,8 +901,8 @@ function GrupoPanel({ project }) {
               disabled={saving}
               style={{
                 padding: '12px 0', width: '100%',
-                background: saved ? 'rgba(52,211,153,0.1)' : 'linear-gradient(135deg, #1b78f7, #4f46e5)',
-                border: saved ? '1px solid rgba(52,211,153,0.3)' : 'none',
+                background: saved ? 'rgba(34,197,94,0.1)' : 'linear-gradient(135deg, #1b78f7, #4f46e5)',
+                border: saved ? '1px solid rgba(34,197,94,0.3)' : 'none',
                 borderRadius: 12,
                 color: saved ? C.green : '#fff',
                 fontSize: 14, fontWeight: 700, cursor: saving ? 'default' : 'pointer', fontFamily: 'inherit',
@@ -975,7 +975,7 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
   ].filter(t => t.show)
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 9900, background: 'rgba(5,9,18,0.92)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, fontFamily: 'Inter, system-ui, sans-serif' }}
+    <div style={{ position: 'fixed', inset: 0, zIndex: 9900, background: 'rgba(5,9,18,0.92)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, fontFamily: 'inherit' }}
       onClick={e => e.target === e.currentTarget && onClose()}
     >
       <style>{`@keyframes spin{to{transform:rotate(360deg)}} @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}`}</style>

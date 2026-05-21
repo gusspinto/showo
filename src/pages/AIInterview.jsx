@@ -41,7 +41,7 @@ function ScoreBar({ score }) {
       <div style={{ height: 4, borderRadius: 99, background: C.border, overflow: 'hidden' }}>
         <div style={{
           height: '100%', borderRadius: 99,
-          background: score > 60 ? 'linear-gradient(90deg, #10b981, #34d399)' : score > 30 ? 'linear-gradient(90deg, #f59e0b, #fbbf24)' : 'linear-gradient(90deg, #1b78f7, #818cf8)',
+          background: score > 60 ? 'linear-gradient(90deg, #10b981, #22c55e)' : score > 30 ? 'linear-gradient(90deg, #f59e0b, #fbbf24)' : 'linear-gradient(90deg, #1b78f7, #818cf8)',
           width: `${score}%`, transition: 'width 0.6s cubic-bezier(0.4,0,0.2,1)',
         }} />
       </div>

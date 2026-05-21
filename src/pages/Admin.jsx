@@ -476,7 +476,7 @@ export default function Admin() {
   ]
 
   return (
-    <div style={{ minHeight: '100vh', background: C.bg, color: C.text, fontFamily: 'Inter, system-ui, sans-serif' }}>
+    <div style={{ minHeight: '100vh', background: C.bg, color: C.text, fontFamily: 'inherit' }}>
       <Navbar>
         <div style={{ fontSize: 12, color: C.purple, fontWeight: 700, background: C.purpleSoft, border: `1px solid ${C.purple}30`, borderRadius: 6, padding: '4px 10px' }}>
           <Shield size={12} style={{ verticalAlign: 'middle', marginRight: 4 }} />Admin

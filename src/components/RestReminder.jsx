@@ -93,7 +93,7 @@ export default function RestReminder() {
         borderRadius: 20,
         padding: '36px 32px',
         boxShadow: '0 24px 64px rgba(0,0,0,0.6)',
-        fontFamily: 'Inter, sans-serif',
+        fontFamily: 'inherit',
         animation: 'slideUp 0.25s cubic-bezier(0.22,1,0.36,1)',
       }}>
         <h2 style={{

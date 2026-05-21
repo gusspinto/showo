@@ -139,7 +139,7 @@ function QRModal({ profileUrl, username, onClose }) {
 
   return (
     <div
-      style={{ position: 'fixed', inset: 0, zIndex: 9800, background: 'rgba(5,9,18,0.88)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, fontFamily: 'Inter, sans-serif' }}
+      style={{ position: 'fixed', inset: 0, zIndex: 9800, background: 'rgba(5,9,18,0.88)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, fontFamily: 'inherit' }}
       onClick={e => e.target === e.currentTarget && onClose()}
     >
       <div style={{ background: C.card, border: `1px solid ${C.borderBright}`, borderRadius: 20, width: '100%', maxWidth: 340, boxShadow: '0 32px 80px rgba(0,0,0,0.7)', position: 'relative' }}>
@@ -240,7 +240,7 @@ ${displayName}`)
 
   return (
     <div
-      style={{ position: 'fixed', inset: 0, zIndex: 9800, background: 'rgba(5,9,18,0.88)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, fontFamily: 'Inter, sans-serif' }}
+      style={{ position: 'fixed', inset: 0, zIndex: 9800, background: 'rgba(5,9,18,0.88)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, fontFamily: 'inherit' }}
       onClick={e => e.target === e.currentTarget && onClose()}
     >
       <div style={{ background: C.card, border: `1px solid ${C.borderBright}`, borderRadius: 20, width: '100%', maxWidth: 560, maxHeight: '90vh', overflow: 'auto', boxShadow: '0 32px 80px rgba(0,0,0,0.7)' }}>
@@ -377,7 +377,7 @@ export default function UserProfile() {
   )
 
   if (notFound) return (
-    <div style={{ minHeight: '100vh', background: C.bg, fontFamily: 'Inter, sans-serif', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ minHeight: '100vh', background: C.bg, fontFamily: 'inherit', display: 'flex', flexDirection: 'column' }}>
       <Navbar />
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, padding: 24, textAlign: 'center' }}>
         <Search size={44} color={C.muted} />
@@ -391,7 +391,7 @@ export default function UserProfile() {
   )
 
   return (
-    <div style={{ minHeight: '100vh', background: C.bg, fontFamily: 'Inter, sans-serif' }}>
+    <div style={{ minHeight: '100vh', background: C.bg, fontFamily: 'inherit' }}>
       <Helmet>
         <title>{displayName} — Showo</title>
         <meta name="description" content={profile.bio || `Projetos de ${displayName} no Showo`} />

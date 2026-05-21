@@ -41,7 +41,7 @@ export function Toast({ message, type = 'success', visible }) {
       maxWidth: 340,
       boxShadow: '0 8px 40px rgba(0,0,0,0.5)',
       pointerEvents: 'none',
-      fontFamily: 'Inter, system-ui, sans-serif',
+      fontFamily: 'inherit',
       display: 'flex', alignItems: 'center', gap: 12,
     }}>
       <div style={{

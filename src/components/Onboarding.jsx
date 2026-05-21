@@ -136,7 +136,7 @@ export default function Onboarding({ onDone }) {
         borderRadius: 20,
         padding: '22px 22px 22px',
         boxShadow: '0 20px 60px rgba(0,0,0,0.6)',
-        fontFamily: 'Inter, system-ui, sans-serif',
+        fontFamily: 'inherit',
       }}>
 
         {/* Header row: badge + fechar */}

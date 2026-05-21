@@ -228,18 +228,18 @@ function MissionRow({ challenge, project, onImprove, isOwner }) {
       style={{
         display: 'flex', alignItems: 'center', gap: 12,
         padding: '11px 14px', borderRadius: 12,
-        background: isCompleted ? 'rgba(52,211,153,0.03)' : colors.bgAlt,
-        border: `1px solid ${isCompleted ? 'rgba(52,211,153,0.14)' : colors.border}`,
+        background: isCompleted ? 'rgba(34,197,94,0.03)' : colors.bgAlt,
+        border: `1px solid ${isCompleted ? 'rgba(34,197,94,0.14)' : colors.border}`,
         transition: 'border-color 0.15s',
       }}
     >
       {/* Status dot / icon */}
       <div style={{
         width: 30, height: 30, borderRadius: 9, flexShrink: 0,
-        background: isCompleted ? 'rgba(52,211,153,0.1)' : 'rgba(255,255,255,0.03)',
-        border: `1px solid ${isCompleted ? 'rgba(52,211,153,0.22)' : colors.border}`,
+        background: isCompleted ? 'rgba(34,197,94,0.1)' : 'rgba(255,255,255,0.03)',
+        border: `1px solid ${isCompleted ? 'rgba(34,197,94,0.22)' : colors.border}`,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        color: isCompleted ? '#34d399' : colors.muted,
+        color: isCompleted ? '#22c55e' : colors.muted,
       }}>
         {isCompleted ? <Check size={13} strokeWidth={3} /> : <ChalIcon size={13} />}
       </div>
@@ -272,9 +272,9 @@ function MissionRow({ challenge, project, onImprove, isOwner }) {
       {/* Points badge */}
       <span style={{
         fontSize: 11, fontWeight: 700, flexShrink: 0, borderRadius: 999, padding: '2px 9px',
-        color: isCompleted ? '#34d399' : colors.blue,
-        background: isCompleted ? 'rgba(52,211,153,0.08)' : 'rgba(27,120,247,0.08)',
-        border: `1px solid ${isCompleted ? 'rgba(52,211,153,0.18)' : 'rgba(27,120,247,0.18)'}`,
+        color: isCompleted ? '#22c55e' : colors.blue,
+        background: isCompleted ? 'rgba(34,197,94,0.08)' : 'rgba(27,120,247,0.08)',
+        border: `1px solid ${isCompleted ? 'rgba(34,197,94,0.18)' : 'rgba(27,120,247,0.18)'}`,
       }}>
         {isCompleted ? <Check size={10} strokeWidth={3} /> : `+${realGain} XP`}
       </span>
@@ -456,7 +456,7 @@ function MembersPanel({ ownerName, members, colors, isOwner }) {
   const displayOwner = ownerName || 'Dono'
 
   const statusCfg = {
-    accepted: { label: 'Colaborador', color: '#34d399', bg: 'rgba(52,211,153,0.1)', border: 'rgba(52,211,153,0.25)', avatar: 'linear-gradient(135deg,#34d399,#059669)', dim: false },
+    accepted: { label: 'Colaborador', color: '#22c55e', bg: 'rgba(34,197,94,0.1)', border: 'rgba(34,197,94,0.25)', avatar: 'linear-gradient(135deg,#22c55e,#059669)', dim: false },
     pending:  { label: 'Pendente', color: '#eab308', bg: 'rgba(234,179,8,0.1)',  border: 'rgba(234,179,8,0.25)',  avatar: 'linear-gradient(135deg,#ca8a04,#92400e)', dim: true  },
     declined: { label: 'Recusou',  color: '#ef4444', bg: 'rgba(239,68,68,0.1)', border: 'rgba(239,68,68,0.25)', avatar: 'linear-gradient(135deg,#ef4444,#b91c1c)', dim: true  },
   }
@@ -1269,7 +1269,7 @@ export default function ProjectPage() {
               background: milestoneCard.score >= 90 ? 'rgba(34,197,94,0.12)' : milestoneCard.score >= 70 ? 'rgba(27,120,247,0.12)' : 'rgba(251,191,36,0.12)',
               border: `1px solid ${milestoneCard.score >= 90 ? 'rgba(34,197,94,0.3)' : milestoneCard.score >= 70 ? 'rgba(27,120,247,0.3)' : 'rgba(251,191,36,0.3)'}`,
               borderRadius: 999, padding: '6px 20px', marginBottom: 28,
-              color: milestoneCard.score >= 90 ? '#34d399' : milestoneCard.score >= 70 ? '#60a5fa' : '#fbbf24',
+              color: milestoneCard.score >= 90 ? '#22c55e' : milestoneCard.score >= 70 ? '#60a5fa' : '#fbbf24',
               fontSize: 13, fontWeight: 800, position: 'relative',
             }}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
@@ -1897,7 +1897,7 @@ export default function ProjectPage() {
               background: aiFeedback ? 'rgba(34,197,94,0.1)' : 'linear-gradient(135deg,#6d28d9,#4f46e5)',
               border: aiFeedback ? '1px solid rgba(34,197,94,0.3)' : 'none',
               borderRadius: 10, padding: '8px 16px',
-              color: aiFeedback ? '#34d399' : '#fff',
+              color: aiFeedback ? '#22c55e' : '#fff',
               fontSize: 13, fontWeight: 700,
               flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6,
               boxShadow: aiFeedback ? 'none' : '0 4px 14px rgba(109,40,217,0.35)',
@@ -2382,8 +2382,8 @@ export default function ProjectPage() {
 
             if (needsWork.length === 0) return (
               <div style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: 16, padding: '16px 20px', textAlign: 'center' }}>
-                <CheckCircle size={24} color="#34d399" style={{ marginBottom: 6 }} />
-                <p style={{ margin: 0, fontSize: 13, color: '#34d399', fontWeight: 700 }}>Perfil completo!</p>
+                <CheckCircle size={24} color="#22c55e" style={{ marginBottom: 6 }} />
+                <p style={{ margin: 0, fontSize: 13, color: '#22c55e', fontWeight: 700 }}>Perfil completo!</p>
               </div>
             )
 

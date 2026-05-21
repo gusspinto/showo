@@ -103,7 +103,7 @@ export default function Login() {
     <div style={{
       minHeight: '100vh', background: C.bg,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      padding: '24px 16px', fontFamily: 'Inter, sans-serif',
+      padding: '24px 16px', fontFamily: 'inherit',
       position: 'relative', overflow: 'hidden',
     }}>
       {/* Subtle background glow */}
@@ -157,7 +157,7 @@ export default function Login() {
                   Confirma o teu email antes de entrar. Se o link expirou, envia um novo.
                 </p>
                 {resendState === 'sent' ? (
-                  <p style={{ margin: 0, color: '#34d399', fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <p style={{ margin: 0, color: '#22c55e', fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
                     <Check size={14} style={{ display: 'inline-block', verticalAlign: 'middle', flexShrink: 0 }} /> Novo email enviado! Verifica a tua caixa de entrada.
                   </p>
                 ) : (

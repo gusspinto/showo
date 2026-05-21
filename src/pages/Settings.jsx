@@ -54,7 +54,7 @@ function Input({ label, value, onChange, placeholder, hint, type = 'text', prefi
             fontSize: 15,
             padding: prefix ? '12px 14px 12px 32px' : '12px 14px',
             outline: 'none',
-            fontFamily: 'Inter, sans-serif',
+            fontFamily: 'inherit',
             boxSizing: 'border-box',
             transition: 'border-color 0.2s, box-shadow 0.2s',
             boxShadow: focused ? `0 0 0 3px rgba(27,120,247,0.12)` : 'none',
@@ -89,7 +89,7 @@ function Textarea({ label, value, onChange, placeholder, hint }) {
           fontSize: 15,
           padding: '12px 14px',
           outline: 'none',
-          fontFamily: 'Inter, sans-serif',
+          fontFamily: 'inherit',
           boxSizing: 'border-box',
           resize: 'vertical',
           minHeight: 90,
@@ -322,7 +322,7 @@ export default function Settings() {
   if (!user) return null
 
   return (
-    <div style={{ minHeight: '100vh', background: C.bg, fontFamily: 'Inter, sans-serif' }}>
+    <div style={{ minHeight: '100vh', background: C.bg, fontFamily: 'inherit' }}>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
       <Navbar />
       <div style={{ maxWidth: 600, margin: '0 auto', padding: '44px 24px 80px' }}>
@@ -527,8 +527,8 @@ export default function Settings() {
           {saveMsg && (
             <div style={{
               padding: '10px 14px', borderRadius: 8, marginBottom: 16,
-              background: saveMsg.type === 'ok' ? 'rgba(52,211,153,0.08)' : 'rgba(239,68,68,0.08)',
-              border: `1px solid ${saveMsg.type === 'ok' ? 'rgba(52,211,153,0.25)' : 'rgba(239,68,68,0.25)'}`,
+              background: saveMsg.type === 'ok' ? 'rgba(34,197,94,0.08)' : 'rgba(239,68,68,0.08)',
+              border: `1px solid ${saveMsg.type === 'ok' ? 'rgba(34,197,94,0.25)' : 'rgba(239,68,68,0.25)'}`,
               color: saveMsg.type === 'ok' ? C.green : C.red,
               fontSize: 13,
             }}>
@@ -561,7 +561,7 @@ export default function Settings() {
             <div style={{
               background: C.inputBg, border: `1.5px solid ${C.border}`,
               borderRadius: 10, padding: '12px 14px',
-              color: C.subtle, fontSize: 15, fontFamily: 'Inter, sans-serif',
+              color: C.subtle, fontSize: 15, fontFamily: 'inherit',
             }}>
               {user.email}
             </div>
@@ -577,8 +577,8 @@ export default function Settings() {
           {pwMsg && (
             <div style={{
               padding: '10px 14px', borderRadius: 8, marginBottom: 16,
-              background: pwMsg.type === 'ok' ? 'rgba(52,211,153,0.08)' : 'rgba(239,68,68,0.08)',
-              border: `1px solid ${pwMsg.type === 'ok' ? 'rgba(52,211,153,0.25)' : 'rgba(239,68,68,0.25)'}`,
+              background: pwMsg.type === 'ok' ? 'rgba(34,197,94,0.08)' : 'rgba(239,68,68,0.08)',
+              border: `1px solid ${pwMsg.type === 'ok' ? 'rgba(34,197,94,0.25)' : 'rgba(239,68,68,0.25)'}`,
               color: pwMsg.type === 'ok' ? C.green : C.red,
               fontSize: 13,
             }}>

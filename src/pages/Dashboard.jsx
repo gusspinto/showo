@@ -532,7 +532,7 @@ function OnboardingModal({ user, profile, onDismiss, onCreateTurma }) {
         background: C.card, border: '1px solid #2a4275',
         borderRadius: 20, padding: '36px 32px', width: '100%', maxWidth: 440,
         boxShadow: '0 24px 64px rgba(0,0,0,0.7)',
-        fontFamily: 'Inter, sans-serif',
+        fontFamily: 'inherit',
       }}>
         {step === 0 ? (
           <>

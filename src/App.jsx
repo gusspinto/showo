@@ -65,7 +65,7 @@ function AuthErrorBanner() {
       borderRadius: 12, padding: '14px 18px',
       display: 'flex', alignItems: 'flex-start', gap: 12,
       boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
-      fontFamily: 'Inter, sans-serif',
+      fontFamily: 'inherit',
     }}>
       <span style={{ flexShrink: 0, display: 'flex', alignItems: 'center' }}><AlertTriangle size={18} /></span>
       <div style={{ flex: 1 }}>

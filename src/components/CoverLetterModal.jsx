@@ -10,7 +10,7 @@ const C = {
   muted: '#7d93b0',
   text: '#e8f2ff',
   subtle: '#3d5270',
-  green: '#34d399',
+  green: '#22c55e',
   inputBg: '#060c16',
 }
 
@@ -25,7 +25,7 @@ function Btn({ children, onClick, primary, disabled, style = {} }) {
         borderRadius: 9, padding: '11px 20px',
         color: disabled ? '#3d5270' : primary ? '#fff' : C.muted,
         fontSize: 14, fontWeight: 600, cursor: disabled ? 'default' : 'pointer',
-        fontFamily: 'Inter, sans-serif',
+        fontFamily: 'inherit',
         boxShadow: primary && !disabled ? '0 4px 16px rgba(27,120,247,0.3)' : 'none',
         transition: 'opacity 0.15s',
         ...style,
@@ -52,8 +52,8 @@ function CopyField({ label, value }) {
         <button
           onClick={copy}
           style={{
-            background: copied ? 'rgba(52,211,153,0.1)' : 'rgba(27,120,247,0.1)',
-            border: `1px solid ${copied ? 'rgba(52,211,153,0.3)' : 'rgba(27,120,247,0.2)'}`,
+            background: copied ? 'rgba(34,197,94,0.1)' : 'rgba(27,120,247,0.1)',
+            border: `1px solid ${copied ? 'rgba(34,197,94,0.3)' : 'rgba(27,120,247,0.2)'}`,
             borderRadius: 6, padding: '3px 10px',
             color: copied ? C.green : '#60a5fa',
             fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
@@ -66,7 +66,7 @@ function CopyField({ label, value }) {
         background: C.inputBg, border: `1px solid ${C.border}`,
         borderRadius: 10, padding: '12px 14px',
         color: C.text, fontSize: 14, lineHeight: 1.7,
-        whiteSpace: 'pre-wrap', fontFamily: 'Inter, sans-serif',
+        whiteSpace: 'pre-wrap', fontFamily: 'inherit',
       }}>
         {value}
       </div>
@@ -104,7 +104,7 @@ export default function CoverLetterModal({ projects, studentName, onClose }) {
         position: 'fixed', inset: 0, zIndex: 9800,
         background: 'rgba(5,9,18,0.88)', backdropFilter: 'blur(6px)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: '16px', fontFamily: 'Inter, sans-serif',
+        padding: '16px', fontFamily: 'inherit',
       }}
       onClick={e => e.target === e.currentTarget && onClose()}
     >
@@ -210,7 +210,7 @@ export default function CoverLetterModal({ projects, studentName, onClose }) {
             <>
               {result.highlight && (
                 <div style={{ background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 10, padding: '10px 14px', marginBottom: 18 }}>
-                  <p style={{ margin: 0, fontSize: 13, color: '#34d399', display: 'flex', alignItems: 'flex-start', gap: 6 }}><Lightbulb size={14} style={{ flexShrink: 0, marginTop: 1 }} />{result.highlight}</p>
+                  <p style={{ margin: 0, fontSize: 13, color: '#22c55e', display: 'flex', alignItems: 'flex-start', gap: 6 }}><Lightbulb size={14} style={{ flexShrink: 0, marginTop: 1 }} />{result.highlight}</p>
                 </div>
               )}
 
