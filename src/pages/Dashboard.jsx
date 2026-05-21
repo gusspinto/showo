@@ -288,83 +288,6 @@ function QuickCreateProject({ navigate }) {
   )
 }
 
-function JoinTurmaBar({ navigate }) {
-  const [code, setCode] = useState('')
-  const [error, setError] = useState('')
-  const [checking, setChecking] = useState(false)
-
-  async function handleJoin(e) {
-    e.preventDefault()
-    const trimmed = code.trim().toUpperCase()
-    if (!trimmed) return
-    setChecking(true)
-    setError('')
-    const { data } = await supabase
-      .from('classes')
-      .select('code')
-      .eq('code', trimmed)
-      .single()
-    setChecking(false)
-    if (!data) { setError('Código inválido. Verifica com o professor.'); return }
-    navigate(`/turma/${trimmed}`)
-  }
-
-  return (
-    <div>
-      <div style={{
-        background: `linear-gradient(135deg, rgba(27,120,247,0.06) 0%, rgba(79,70,229,0.04) 100%)`,
-        border: `1px solid rgba(27,120,247,0.18)`,
-        borderRadius: 14, padding: '16px 20px',
-        display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
-      }}>
-        <div style={{
-          width: 36, height: 36, borderRadius: 10, flexShrink: 0,
-          background: 'rgba(27,120,247,0.12)', border: '1px solid rgba(27,120,247,0.2)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}>
-          <Users2 size={17} color="#1b78f7" />
-        </div>
-        <div style={{ flexShrink: 0 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>Entrar numa turma</div>
-          <div style={{ fontSize: 11, color: C.muted, marginTop: 1 }}>Insere o código do teu professor</div>
-        </div>
-        <form onSubmit={handleJoin} style={{ display: 'flex', gap: 8, flex: 1, minWidth: 200 }}>
-          <input
-            value={code}
-            onChange={e => { setCode(e.target.value.toUpperCase()); setError('') }}
-            placeholder="CÓDIGO"
-            maxLength={6}
-            style={{
-              flex: 1, background: C.bg,
-              border: `1px solid ${error ? '#ef4444' : C.border}`,
-              borderRadius: 9, padding: '9px 14px',
-              color: C.text, fontSize: 15, fontFamily: 'inherit',
-              outline: 'none', letterSpacing: 4, fontWeight: 800,
-              textAlign: 'center', minWidth: 0, transition: 'border-color 0.15s',
-            }}
-            onFocus={e => e.target.style.borderColor = '#1b78f7'}
-            onBlur={e => e.target.style.borderColor = error ? '#ef4444' : C.border}
-          />
-          <button
-            type="submit"
-            disabled={checking || !code.trim()}
-            style={{
-              background: 'rgba(27,120,247,0.15)', border: '1px solid rgba(27,120,247,0.3)',
-              borderRadius: 9, padding: '9px 18px', color: '#60a5fa',
-              fontSize: 13, fontWeight: 700, cursor: checking || !code.trim() ? 'default' : 'pointer',
-              opacity: checking || !code.trim() ? 0.5 : 1, fontFamily: 'inherit', flexShrink: 0,
-              transition: 'opacity 0.15s',
-            }}
-          >
-            {checking ? '…' : 'Entrar'}
-          </button>
-        </form>
-        {error && <span style={{ fontSize: 12, color: '#ef4444', width: '100%', marginTop: -4 }}>{error}</span>}
-      </div>
-    </div>
-  )
-}
-
 function generateCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
   return Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join('')
@@ -427,6 +350,156 @@ function CreateTurmaModal({ onClose, onCreated }) {
             {saving ? 'A criar…' : 'Criar turma'}
           </button>
         </form>
+      </div>
+    </div>
+  )
+}
+
+// ── Join Turma Modal ─────────────────────────────────────────────────────────
+function JoinTurmaModal({ onClose, navigate }) {
+  const [code, setCode] = useState('')
+  const [error, setError] = useState('')
+  const [checking, setChecking] = useState(false)
+  const [joined, setJoined] = useState(null)
+
+  async function handleJoin(e) {
+    e.preventDefault()
+    const trimmed = code.trim().toUpperCase()
+    if (!trimmed) return
+    setChecking(true); setError('')
+    const { data } = await supabase.from('classes').select('name, code').eq('code', trimmed).single()
+    setChecking(false)
+    if (!data) { setError('Código inválido. Verifica com o professor.'); return }
+    setJoined(data)
+  }
+
+  return (
+    <div
+      style={{ position: 'fixed', inset: 0, zIndex: 3000, background: 'rgba(0,0,0,0.78)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
+      onClick={e => e.target === e.currentTarget && onClose()}
+    >
+      <div style={{ background: C.card, border: `1px solid ${C.borderBright}`, borderRadius: 22, padding: '36px 32px', width: '100%', maxWidth: 400, boxShadow: '0 32px 80px rgba(0,0,0,0.7)' }}>
+        {joined ? (
+          <>
+            <div style={{ textAlign: 'center', marginBottom: 28 }}>
+              <div style={{ width: 60, height: 60, borderRadius: 18, background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px' }}>
+                <Check size={30} color="#22c55e" />
+              </div>
+              <h3 style={{ color: C.text, margin: '0 0 6px', fontSize: 20, fontWeight: 800, letterSpacing: '-0.3px' }}>Turma encontrada!</h3>
+              <p style={{ color: C.muted, margin: 0, fontSize: 14, lineHeight: 1.5 }}>{joined.name}</p>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <button
+                onClick={() => { navigate(`/turma/${joined.code}`); onClose() }}
+                style={{ width: '100%', background: `linear-gradient(135deg, ${C.blue}, #4f46e5)`, border: 'none', borderRadius: 12, padding: '14px', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 20px rgba(27,120,247,0.35)' }}
+              >
+                Ir para a turma →
+              </button>
+              <button
+                onClick={onClose}
+                style={{ width: '100%', background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 12, padding: '12px', color: C.muted, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+              >
+                Fechar
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 28 }}>
+              <div>
+                <h3 style={{ color: C.text, margin: '0 0 4px', fontSize: 20, fontWeight: 800, letterSpacing: '-0.3px' }}>Entrar numa turma</h3>
+                <p style={{ color: C.muted, margin: 0, fontSize: 13 }}>Pede o código de 6 letras ao teu professor</p>
+              </div>
+              <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.muted, padding: 4, display: 'flex', marginTop: 2 }}><X size={18} /></button>
+            </div>
+            <form onSubmit={handleJoin} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <input
+                value={code}
+                onChange={e => { setCode(e.target.value.toUpperCase()); setError('') }}
+                placeholder="CÓDIGO"
+                maxLength={6}
+                autoFocus
+                style={{
+                  width: '100%', background: C.bg,
+                  border: `2px solid ${error ? '#ef4444' : code.length === 6 ? C.blue : C.border}`,
+                  borderRadius: 14, padding: '18px',
+                  color: C.text, fontSize: 28, fontWeight: 900, outline: 'none',
+                  letterSpacing: 10, textAlign: 'center', fontFamily: 'inherit',
+                  boxSizing: 'border-box', transition: 'border-color 0.15s',
+                  boxShadow: code.length === 6 && !error ? '0 0 0 4px rgba(27,120,247,0.1)' : 'none',
+                }}
+              />
+              {error && (
+                <p style={{ color: '#ef4444', fontSize: 13, margin: 0, textAlign: 'center' }}>{error}</p>
+              )}
+              <button
+                type="submit"
+                disabled={checking || code.trim().length < 2}
+                style={{
+                  width: '100%',
+                  background: code.trim() ? `linear-gradient(135deg, ${C.blue}, #4f46e5)` : C.border,
+                  border: 'none', borderRadius: 12, padding: '15px',
+                  color: '#fff', fontSize: 15, fontWeight: 700,
+                  cursor: code.trim() ? 'pointer' : 'not-allowed',
+                  fontFamily: 'inherit', opacity: checking ? 0.7 : 1,
+                  transition: 'all 0.15s',
+                  boxShadow: code.trim() ? '0 4px 20px rgba(27,120,247,0.35)' : 'none',
+                }}
+              >
+                {checking ? 'A verificar…' : 'Confirmar código'}
+              </button>
+            </form>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ── Turmas List Modal ─────────────────────────────────────────────────────────
+function TurmasListModal({ turmas, onClose, navigate, onJoin }) {
+  return (
+    <div
+      style={{ position: 'fixed', inset: 0, zIndex: 3000, background: 'rgba(0,0,0,0.78)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
+      onClick={e => e.target === e.currentTarget && onClose()}
+    >
+      <div style={{ background: C.card, border: `1px solid ${C.borderBright}`, borderRadius: 22, padding: '28px 24px', width: '100%', maxWidth: 420, boxShadow: '0 32px 80px rgba(0,0,0,0.7)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 22 }}>
+          <div>
+            <h3 style={{ color: C.text, margin: '0 0 2px', fontSize: 18, fontWeight: 800 }}>As minhas turmas</h3>
+            <p style={{ color: C.muted, margin: 0, fontSize: 13 }}>{turmas.length} turma{turmas.length !== 1 ? 's' : ''}</p>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.muted, padding: 4, display: 'flex' }}><X size={18} /></button>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
+          {turmas.map(t => (
+            <div
+              key={t.id}
+              onClick={() => { navigate(`/turma/${t.code}`); onClose() }}
+              style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${C.border}`, borderRadius: 14, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', transition: 'all 0.15s' }}
+              onMouseEnter={e => { e.currentTarget.style.background = C.cardHover; e.currentTarget.style.borderColor = C.borderBright }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; e.currentTarget.style.borderColor = C.border }}
+            >
+              <div style={{ width: 38, height: 38, borderRadius: 10, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <Users2 size={16} color="#1b78f7" />
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 14, fontWeight: 700, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.name}</div>
+                {t.teacher_name && <div style={{ fontSize: 12, color: C.muted, marginTop: 1 }}>{t.teacher_name}</div>}
+              </div>
+              <span style={{ fontSize: 11, fontWeight: 700, color: '#60a5fa', letterSpacing: 1, flexShrink: 0 }}>{t.code}</span>
+              <ChevronRight size={14} color={C.subtle} style={{ flexShrink: 0 }} />
+            </div>
+          ))}
+        </div>
+        <button
+          onClick={() => { onClose(); onJoin() }}
+          style={{ width: '100%', background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 12, padding: '12px', color: C.muted, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, transition: 'all 0.15s' }}
+          onMouseEnter={e => { e.currentTarget.style.borderColor = C.borderBright; e.currentTarget.style.color = C.text }}
+          onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted }}
+        >
+          <Plus size={14} /> Entrar noutra turma
+        </button>
       </div>
     </div>
   )
@@ -617,7 +690,11 @@ export default function Dashboard() {
   const [projects, setProjects] = useState([])
   const [loadingProjects, setLoadingProjects] = useState(true)
   const [turmas, setTurmas] = useState([])
+  const [studentTurmas, setStudentTurmas] = useState([])
+  const [loadingStudentTurmas, setLoadingStudentTurmas] = useState(true)
   const [showCreateTurma, setShowCreateTurma] = useState(false)
+  const [showJoinModal, setShowJoinModal] = useState(false)
+  const [showTurmasModal, setShowTurmasModal] = useState(false)
   const [toast, setToast] = useState('')
   const [showOnboarding, setShowOnboarding] = useState(false)
   const [collabProjects, setCollabProjects] = useState([])
@@ -726,6 +803,22 @@ export default function Dashboard() {
       }))
     }
     loadTurmas()
+  }, [user, profile?.role])
+
+  // ── Student turmas (aluno only) ─────────────────────────────────────────────
+  useEffect(() => {
+    if (!user || profile?.role === 'professor') { setLoadingStudentTurmas(false); return }
+    async function loadStudentTurmas() {
+      const { data: myProjs } = await supabase.from('projects').select('id').eq('user_id', user.id)
+      if (!myProjs?.length) { setLoadingStudentTurmas(false); return }
+      const { data: cp } = await supabase.from('class_projects').select('class_id').in('project_id', myProjs.map(p => p.id))
+      if (!cp?.length) { setLoadingStudentTurmas(false); return }
+      const classIds = [...new Set(cp.map(r => r.class_id))]
+      const { data: classes } = await supabase.from('classes').select('id, name, code, teacher_name').in('id', classIds)
+      setStudentTurmas(classes || [])
+      setLoadingStudentTurmas(false)
+    }
+    loadStudentTurmas()
   }, [user, profile?.role])
 
   if (authLoading) {
@@ -837,6 +930,22 @@ export default function Dashboard() {
         />
       )}
 
+      {showJoinModal && (
+        <JoinTurmaModal
+          onClose={() => setShowJoinModal(false)}
+          navigate={navigate}
+        />
+      )}
+
+      {showTurmasModal && (
+        <TurmasListModal
+          turmas={studentTurmas}
+          onClose={() => setShowTurmasModal(false)}
+          navigate={navigate}
+          onJoin={() => setShowJoinModal(true)}
+        />
+      )}
+
       {/* Brand accent line */}
       <div style={{ height: 2, background: `linear-gradient(90deg, transparent 0%, ${C.blue}88 35%, #4f46e588 65%, transparent 100%)` }} />
 
@@ -935,6 +1044,55 @@ export default function Dashboard() {
           <StatCard icon={<BarChart2 size={18} />} label="Score médio" value={loadingProjects ? '—' : (avgScore ?? '—')} color={getScoreColor(avgScore)} />
           <StatCard icon={<Eye size={18} />} label="Visualizações" value={loadingProjects ? '—' : totalViews} color={C.purple} />
         </div>
+
+        {/* ── Turma widget — alunos only ── */}
+        {!isTeacher && !loadingStudentTurmas && (
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap',
+            background: studentTurmas.length > 0 ? 'rgba(27,120,247,0.05)' : 'rgba(255,255,255,0.02)',
+            border: `1px solid ${studentTurmas.length > 0 ? 'rgba(27,120,247,0.18)' : C.border}`,
+            borderRadius: 14, padding: '12px 16px',
+            transition: 'all 0.2s',
+          }}>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <Users2 size={16} color="#1b78f7" />
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              {studentTurmas.length > 0 ? (
+                <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>
+                  {studentTurmas.length === 1 ? studentTurmas[0].name : `${studentTurmas.length} turmas`}
+                  {studentTurmas.length === 1 && studentTurmas[0].teacher_name && (
+                    <span style={{ color: C.muted, fontWeight: 400, marginLeft: 8, fontSize: 12 }}>
+                      · {studentTurmas[0].teacher_name}
+                    </span>
+                  )}
+                </div>
+              ) : (
+                <div style={{ fontSize: 13, color: C.muted }}>Ainda não entraste em nenhuma turma</div>
+              )}
+            </div>
+            <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+              {studentTurmas.length > 0 && (
+                <button
+                  onClick={() => setShowTurmasModal(true)}
+                  style={{ background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.22)', borderRadius: 8, padding: '7px 14px', color: '#60a5fa', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s', whiteSpace: 'nowrap' }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(27,120,247,0.18)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'rgba(27,120,247,0.1)'}
+                >
+                  Ver turmas
+                </button>
+              )}
+              <button
+                onClick={() => setShowJoinModal(true)}
+                style={{ background: studentTurmas.length === 0 ? `linear-gradient(135deg, ${C.blue}, #4f46e5)` : 'transparent', border: `1px solid ${studentTurmas.length === 0 ? 'transparent' : C.border}`, borderRadius: 8, padding: '7px 14px', color: studentTurmas.length === 0 ? '#fff' : C.muted, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s', whiteSpace: 'nowrap', boxShadow: studentTurmas.length === 0 ? '0 2px 12px rgba(27,120,247,0.3)' : 'none' }}
+                onMouseEnter={e => { if (studentTurmas.length > 0) { e.currentTarget.style.borderColor = C.borderBright; e.currentTarget.style.color = C.text } }}
+                onMouseLeave={e => { if (studentTurmas.length > 0) { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted } }}
+              >
+                {studentTurmas.length === 0 ? 'Entrar numa turma' : 'Entrar noutra'}
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* ── Defense countdown widget — aluno with defense date ── */}
         {!isTeacher && !loadingProjects && (() => {
@@ -1119,18 +1277,6 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* ── Entrar numa turma — alunos only, bottom of page ── */}
-        {!isTeacher && (
-          <div>
-            <div className="dash-sec-hd">
-              <div className="dash-sec-label">
-                <Users2 size={13} />
-                A tua turma
-              </div>
-            </div>
-            <JoinTurmaBar navigate={navigate} />
-          </div>
-        )}
 
         </div>{/* end sections gap container */}
       </div>
