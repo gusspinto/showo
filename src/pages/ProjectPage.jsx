@@ -458,7 +458,7 @@ function MembersPanel({ ownerName, members, colors, isOwner }) {
   const statusCfg = {
     accepted: { label: 'Colaborador', color: '#34d399', bg: 'rgba(52,211,153,0.1)', border: 'rgba(52,211,153,0.25)', avatar: 'linear-gradient(135deg,#34d399,#059669)', dim: false },
     pending:  { label: 'Pendente', color: '#eab308', bg: 'rgba(234,179,8,0.1)',  border: 'rgba(234,179,8,0.25)',  avatar: 'linear-gradient(135deg,#ca8a04,#92400e)', dim: true  },
-    declined: { label: 'Recusou',  color: '#f87171', bg: 'rgba(248,113,113,0.1)', border: 'rgba(248,113,113,0.25)', avatar: 'linear-gradient(135deg,#ef4444,#b91c1c)', dim: true  },
+    declined: { label: 'Recusou',  color: '#ef4444', bg: 'rgba(239,68,68,0.1)', border: 'rgba(239,68,68,0.25)', avatar: 'linear-gradient(135deg,#ef4444,#b91c1c)', dim: true  },
   }
 
   // For non-owners, only show accepted; already filtered at query level but guard here too
@@ -474,7 +474,7 @@ function MembersPanel({ ownerName, members, colors, isOwner }) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {/* Owner */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ width: 32, height: 32, borderRadius: '50%', flexShrink: 0, background: 'linear-gradient(135deg, #3b82f6, #4f46e5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#fff' }}>
+          <div style={{ width: 32, height: 32, borderRadius: '50%', flexShrink: 0, background: 'linear-gradient(135deg, #1b78f7, #4f46e5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#fff' }}>
             {displayOwner[0]?.toUpperCase()}
           </div>
           <span style={{ fontSize: 14, fontWeight: 600, color: colors.text, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{displayOwner}</span>
@@ -1379,7 +1379,7 @@ export default function ProjectPage() {
                   disabled={analyzingAI}
                   style={{
                     flexShrink: 0,
-                    background: analyzingAI ? 'rgba(27,120,247,0.08)' : aiFeedback ? 'rgba(27,120,247,0.1)' : 'linear-gradient(135deg,#3b82f6,#4f46e5)',
+                    background: analyzingAI ? 'rgba(27,120,247,0.08)' : aiFeedback ? 'rgba(27,120,247,0.1)' : 'linear-gradient(135deg,#1b78f7,#4f46e5)',
                     border: analyzingAI || aiFeedback ? `1px solid ${colors.blue}30` : 'none',
                     borderRadius: 9, padding: '8px 16px',
                     color: analyzingAI || aiFeedback ? '#60a5fa' : '#fff',
@@ -1398,7 +1398,7 @@ export default function ProjectPage() {
             </div>
 
             {analyzeError && (
-              <div style={{ background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.25)', borderRadius: 10, padding: '12px 16px', color: '#f87171', fontSize: 13, marginBottom: 16 }}>
+              <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 10, padding: '12px 16px', color: '#ef4444', fontSize: 13, marginBottom: 16 }}>
                 {analyzeError}
               </div>
             )}
@@ -1642,7 +1642,7 @@ export default function ProjectPage() {
                       onChange={e => { setInviteInput(e.target.value); setInviteMsg(null) }}
                       placeholder="username do colega"
                       style={{
-                        background: colors.bg, border: `1px solid ${inviteMsg?.type === 'error' ? '#f87171' : inviteMsg?.type === 'success' ? '#22c55e' : colors.borderBright}`,
+                        background: colors.bg, border: `1px solid ${inviteMsg?.type === 'error' ? '#ef4444' : inviteMsg?.type === 'success' ? '#22c55e' : colors.borderBright}`,
                         borderRadius: 8, padding: '5px 12px', color: colors.text,
                         fontSize: 12, fontFamily: 'inherit', outline: 'none',
                         width: 150, transition: 'border-color 0.15s',
@@ -1664,7 +1664,7 @@ export default function ProjectPage() {
                       style={{ background: 'transparent', border: 'none', color: colors.subtle, cursor: 'pointer', padding: '4px 6px', borderRadius: 6, fontSize: 13 }}
                     >✕</button>
                     {inviteMsg && (
-                      <span style={{ fontSize: 11, fontWeight: 600, color: inviteMsg.type === 'success' ? '#22c55e' : '#f87171', width: '100%' }}>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: inviteMsg.type === 'success' ? '#22c55e' : '#ef4444', width: '100%' }}>
                         {inviteMsg.text}
                       </span>
                     )}
@@ -2288,7 +2288,7 @@ export default function ProjectPage() {
                             <button
                               onClick={() => handleFbDelete(f.id)}
                               title="Apagar"
-                              style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', padding: 3, display: 'flex', alignItems: 'center', borderRadius: 4 }}
+                              style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: 3, display: 'flex', alignItems: 'center', borderRadius: 4 }}
                             ><X size={11} /></button>
                           </div>
                         )}

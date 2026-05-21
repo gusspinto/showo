@@ -17,9 +17,9 @@ const C = {
   muted: '#7d93b0',
   text: '#e8f2ff',
   subtle: '#3d5270',
-  green: '#34d399',
+  green: '#22c55e',
   yellow: '#fbbf24',
-  red: '#f87171',
+  red: '#ef4444',
   purple: '#a78bfa',
 }
 
@@ -312,17 +312,17 @@ function JoinTurmaBar({ navigate }) {
   return (
     <div>
       <div style={{
-        background: `linear-gradient(135deg, rgba(59,130,246,0.06) 0%, rgba(79,70,229,0.04) 100%)`,
-        border: `1px solid rgba(59,130,246,0.18)`,
+        background: `linear-gradient(135deg, rgba(27,120,247,0.06) 0%, rgba(79,70,229,0.04) 100%)`,
+        border: `1px solid rgba(27,120,247,0.18)`,
         borderRadius: 14, padding: '16px 20px',
         display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
       }}>
         <div style={{
           width: 36, height: 36, borderRadius: 10, flexShrink: 0,
-          background: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.2)',
+          background: 'rgba(27,120,247,0.12)', border: '1px solid rgba(27,120,247,0.2)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
-          <Users2 size={17} color="#3b82f6" />
+          <Users2 size={17} color="#1b78f7" />
         </div>
         <div style={{ flexShrink: 0 }}>
           <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>Entrar numa turma</div>
@@ -336,20 +336,20 @@ function JoinTurmaBar({ navigate }) {
             maxLength={6}
             style={{
               flex: 1, background: C.bg,
-              border: `1px solid ${error ? '#f87171' : C.border}`,
+              border: `1px solid ${error ? '#ef4444' : C.border}`,
               borderRadius: 9, padding: '9px 14px',
               color: C.text, fontSize: 15, fontFamily: 'inherit',
               outline: 'none', letterSpacing: 4, fontWeight: 800,
               textAlign: 'center', minWidth: 0, transition: 'border-color 0.15s',
             }}
-            onFocus={e => e.target.style.borderColor = '#3b82f6'}
-            onBlur={e => e.target.style.borderColor = error ? '#f87171' : C.border}
+            onFocus={e => e.target.style.borderColor = '#1b78f7'}
+            onBlur={e => e.target.style.borderColor = error ? '#ef4444' : C.border}
           />
           <button
             type="submit"
             disabled={checking || !code.trim()}
             style={{
-              background: 'rgba(59,130,246,0.15)', border: '1px solid rgba(59,130,246,0.3)',
+              background: 'rgba(27,120,247,0.15)', border: '1px solid rgba(27,120,247,0.3)',
               borderRadius: 9, padding: '9px 18px', color: '#60a5fa',
               fontSize: 13, fontWeight: 700, cursor: checking || !code.trim() ? 'default' : 'pointer',
               opacity: checking || !code.trim() ? 0.5 : 1, fontFamily: 'inherit', flexShrink: 0,
@@ -359,7 +359,7 @@ function JoinTurmaBar({ navigate }) {
             {checking ? '…' : 'Entrar'}
           </button>
         </form>
-        {error && <span style={{ fontSize: 12, color: '#f87171', width: '100%', marginTop: -4 }}>{error}</span>}
+        {error && <span style={{ fontSize: 12, color: '#ef4444', width: '100%', marginTop: -4 }}>{error}</span>}
       </div>
     </div>
   )
@@ -422,8 +422,8 @@ function CreateTurmaModal({ onClose, onCreated }) {
               style={{ width: '100%', background: '#0d1424', border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 12px', color: C.text, fontSize: 14, fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none' }}
             />
           </div>
-          {error && <p style={{ color: '#f87171', fontSize: 13, margin: 0 }}>{error}</p>}
-          <button type="submit" disabled={saving || !name.trim()} style={{ background: 'linear-gradient(135deg,#3b82f6,#4f46e5)', border: 'none', borderRadius: 8, padding: '11px', color: '#fff', fontSize: 14, fontWeight: 600, cursor: saving ? 'default' : 'pointer', opacity: saving ? 0.7 : 1, fontFamily: 'inherit', marginTop: 4 }}>
+          {error && <p style={{ color: '#ef4444', fontSize: 13, margin: 0 }}>{error}</p>}
+          <button type="submit" disabled={saving || !name.trim()} style={{ background: 'linear-gradient(135deg,#1b78f7,#4f46e5)', border: 'none', borderRadius: 8, padding: '11px', color: '#fff', fontSize: 14, fontWeight: 600, cursor: saving ? 'default' : 'pointer', opacity: saving ? 0.7 : 1, fontFamily: 'inherit', marginTop: 4 }}>
             {saving ? 'A criar…' : 'Criar turma'}
           </button>
         </form>
@@ -441,8 +441,8 @@ function TurmaCard({ turma, navigate }) {
       onMouseLeave={() => setHov(false)}
       style={{ background: hov ? C.cardHover : C.card, border: `1px solid ${hov ? C.borderBright : C.border}`, borderRadius: 12, padding: '16px 18px', cursor: 'pointer', transition: 'all 0.15s', display: 'flex', alignItems: 'center', gap: 14 }}
     >
-      <div style={{ width: 40, height: 40, borderRadius: 10, background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-        <Users2 size={18} color="#3b82f6" />
+      <div style={{ width: 40, height: 40, borderRadius: 10, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <Users2 size={18} color="#1b78f7" />
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ color: C.text, fontSize: 14, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{turma.name}</div>
@@ -529,7 +529,7 @@ function OnboardingModal({ user, profile, onDismiss, onCreateTurma }) {
       display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
     }}>
       <div style={{
-        background: '#111827', border: '1px solid #2a4275',
+        background: C.card, border: '1px solid #2a4275',
         borderRadius: 20, padding: '36px 32px', width: '100%', maxWidth: 440,
         boxShadow: '0 24px 64px rgba(0,0,0,0.7)',
         fontFamily: 'Inter, sans-serif',
@@ -898,21 +898,21 @@ export default function Dashboard() {
                 onClick={() => setShowCreateTurma(true)}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 6,
-                  background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.22)',
+                  background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.22)',
                   borderRadius: 8, padding: '6px 12px',
                   color: '#60a5fa', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
                   transition: 'all 0.15s',
                 }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(59,130,246,0.18)' }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(59,130,246,0.1)' }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(27,120,247,0.18)' }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(27,120,247,0.1)' }}
               >
                 <Plus size={13} /> Nova turma
               </button>
             </div>
             {turmas.length === 0 ? (
               <div style={{ background: C.card, border: `1px dashed ${C.border}`, borderRadius: 14, padding: '32px 24px', textAlign: 'center' }}>
-                <div style={{ marginBottom: 12, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 48, height: 48, borderRadius: 13, background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.15)' }}>
-                  <Users2 size={22} color="#3b82f6" />
+                <div style={{ marginBottom: 12, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 48, height: 48, borderRadius: 13, background: 'rgba(27,120,247,0.08)', border: '1px solid rgba(27,120,247,0.15)' }}>
+                  <Users2 size={22} color="#1b78f7" />
                 </div>
                 <p style={{ color: C.text, fontSize: 15, fontWeight: 700, margin: '0 0 6px' }}>Ainda não tens turmas</p>
                 <p style={{ color: C.muted, fontSize: 13, margin: '0 0 20px', lineHeight: 1.6 }}>Cria uma turma e partilha o código com os teus alunos.</p>

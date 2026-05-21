@@ -6,7 +6,7 @@ import { AlertTriangle } from 'lucide-react'
 
 const C = {
   bg:     '#0d1424',
-  card:   '#111c32',
+  card:   '#152030',
   border: '#1e3050',
   bright: '#2a4275',
   blue:   '#1b78f7',
@@ -346,8 +346,8 @@ export default function AIInterview() {
           {/* Error */}
           {phase === 'error' && (
             <div style={{ textAlign: 'center', paddingTop: 80, animation: 'fadeIn 0.4s ease' }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16, color: '#f87171' }}><AlertTriangle size={36} /></div>
-              <p style={{ color: '#f87171', fontSize: 15, marginBottom: 8, maxWidth: 400, margin: '0 auto 8px' }}>{errorMsg}</p>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16, color: '#ef4444' }}><AlertTriangle size={36} /></div>
+              <p style={{ color: '#ef4444', fontSize: 15, marginBottom: 8, maxWidth: 400, margin: '0 auto 8px' }}>{errorMsg}</p>
               <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginTop: 24, flexWrap: 'wrap' }}>
                 <button
                   onClick={() => generateAndSave(answers)}

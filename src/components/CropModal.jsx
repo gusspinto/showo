@@ -287,10 +287,10 @@ export function CropModal({ file, imageUrl, aspectRatio, circular = false, onCon
             Cancelar
           </button>
           <button type="button" onClick={handleConfirm}
-            style={{ background: 'linear-gradient(135deg,#3b82f6,#4f46e5)', border: 'none',
+            style={{ background: 'linear-gradient(135deg,#1b78f7,#4f46e5)', border: 'none',
                      borderRadius: 8, padding: '9px 22px', color: '#fff',
                      fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-                     boxShadow: '0 4px 16px rgba(59,130,246,0.35)' }}>
+                     boxShadow: '0 4px 16px rgba(27,120,247,0.35)' }}>
             Recortar
           </button>
         </div>

@@ -19,7 +19,7 @@ const colors = {
   subtle: '#3d5270',
   green: '#22c55e',
   red: '#f43f5e',
-  inputBg: '#0a1118',
+  inputBg: '#0d1424',
 }
 
 const PROJECT_TYPES = [

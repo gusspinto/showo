@@ -527,8 +527,8 @@ export default function Settings() {
           {saveMsg && (
             <div style={{
               padding: '10px 14px', borderRadius: 8, marginBottom: 16,
-              background: saveMsg.type === 'ok' ? 'rgba(52,211,153,0.08)' : 'rgba(248,113,113,0.08)',
-              border: `1px solid ${saveMsg.type === 'ok' ? 'rgba(52,211,153,0.25)' : 'rgba(248,113,113,0.25)'}`,
+              background: saveMsg.type === 'ok' ? 'rgba(52,211,153,0.08)' : 'rgba(239,68,68,0.08)',
+              border: `1px solid ${saveMsg.type === 'ok' ? 'rgba(52,211,153,0.25)' : 'rgba(239,68,68,0.25)'}`,
               color: saveMsg.type === 'ok' ? C.green : C.red,
               fontSize: 13,
             }}>
@@ -577,8 +577,8 @@ export default function Settings() {
           {pwMsg && (
             <div style={{
               padding: '10px 14px', borderRadius: 8, marginBottom: 16,
-              background: pwMsg.type === 'ok' ? 'rgba(52,211,153,0.08)' : 'rgba(248,113,113,0.08)',
-              border: `1px solid ${pwMsg.type === 'ok' ? 'rgba(52,211,153,0.25)' : 'rgba(248,113,113,0.25)'}`,
+              background: pwMsg.type === 'ok' ? 'rgba(52,211,153,0.08)' : 'rgba(239,68,68,0.08)',
+              border: `1px solid ${pwMsg.type === 'ok' ? 'rgba(52,211,153,0.25)' : 'rgba(239,68,68,0.25)'}`,
               color: pwMsg.type === 'ok' ? C.green : C.red,
               fontSize: 13,
             }}>
@@ -616,15 +616,15 @@ export default function Settings() {
               navigate('/')
             }}
             style={{
-              background: 'rgba(248,113,113,0.08)',
-              border: '1px solid rgba(248,113,113,0.2)',
+              background: 'rgba(239,68,68,0.08)',
+              border: '1px solid rgba(239,68,68,0.2)',
               borderRadius: 10, padding: '11px 24px',
               color: C.red, fontSize: 14, fontWeight: 600,
               cursor: 'pointer', fontFamily: 'inherit',
               transition: 'background 0.15s',
             }}
-            onMouseEnter={e => e.currentTarget.style.background = 'rgba(248,113,113,0.14)'}
-            onMouseLeave={e => e.currentTarget.style.background = 'rgba(248,113,113,0.08)'}
+            onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.14)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'rgba(239,68,68,0.08)'}
           >
             Terminar sessão
           </button>

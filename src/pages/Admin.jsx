@@ -11,21 +11,21 @@ import {
 const C = {
   bg: '#0d1424',
   bgAlt: '#0a1018',
-  card: '#111c32',
-  cardHover: '#152030',
+  card: '#152030',
+  cardHover: '#1c2d44',
   border: '#1e3050',
   borderBright: '#2a4275',
-  blue: '#3b82f6',
-  blueHover: '#2563eb',
-  blueSoft: 'rgba(59,130,246,0.08)',
+  blue: '#1b78f7',
+  blueHover: '#1564d4',
+  blueSoft: 'rgba(27,120,247,0.08)',
   text: '#e8f2ff',
   muted: '#7d93b0',
   subtle: '#3d5270',
   green: '#22c55e',
   greenSoft: 'rgba(34,197,94,0.08)',
-  red: '#f87171',
-  redSoft: 'rgba(248,113,113,0.08)',
-  redBorder: 'rgba(248,113,113,0.25)',
+  red: '#ef4444',
+  redSoft: 'rgba(239,68,68,0.08)',
+  redBorder: 'rgba(239,68,68,0.25)',
   yellow: '#eab308',
   yellowSoft: 'rgba(234,179,8,0.08)',
   purple: '#a855f7',
@@ -64,7 +64,7 @@ function Badge({ children, color = C.blue, bg }) {
   )
 }
 
-function Avatar({ name, color = 'linear-gradient(135deg,#3b82f6,#4f46e5)', size = 32 }) {
+function Avatar({ name, color = 'linear-gradient(135deg,#1b78f7,#4f46e5)', size = 32 }) {
   return (
     <div style={{
       width: size, height: size, borderRadius: '50%', flexShrink: 0,
@@ -91,7 +91,7 @@ function ConfirmModal({ title, body, onConfirm, onCancel, danger = true }) {
         boxShadow: '0 16px 48px rgba(0,0,0,0.6)',
       }}>
         <div style={{ fontSize: 28, marginBottom: 12, textAlign: 'center', display: 'flex', justifyContent: 'center' }}>
-          {danger ? <AlertTriangle size={28} color="#f87171" /> : <HelpCircle size={28} color="#3b82f6" />}
+          {danger ? <AlertTriangle size={28} color="#ef4444" /> : <HelpCircle size={28} color="#1b78f7" />}
         </div>
         <h3 style={{ margin: '0 0 10px', fontSize: 17, fontWeight: 700, color: C.text, textAlign: 'center' }}>{title}</h3>
         <p style={{ margin: '0 0 24px', fontSize: 14, color: C.muted, textAlign: 'center', lineHeight: 1.6 }}>{body}</p>
@@ -167,7 +167,7 @@ function OverviewTab({ users, projects }) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {recentUsers.map(u => (
               <div key={u.id} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <Avatar name={u.full_name || u.username} color={u.is_admin ? 'linear-gradient(135deg,#a855f7,#7c3aed)' : 'linear-gradient(135deg,#3b82f6,#4f46e5)'} />
+                <Avatar name={u.full_name || u.username} color={u.is_admin ? 'linear-gradient(135deg,#a855f7,#7c3aed)' : 'linear-gradient(135deg,#1b78f7,#4f46e5)'} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{u.full_name || u.username || 'Sem nome'}</div>
                   <div style={{ fontSize: 11, color: C.subtle }}>{u.email || '—'}</div>
@@ -248,7 +248,7 @@ function UsersTab({ users, projects, onToggleAdmin, onDeleteUser }) {
             }}>
               <Avatar
                 name={name}
-                color={u.is_admin ? 'linear-gradient(135deg,#a855f7,#7c3aed)' : 'linear-gradient(135deg,#3b82f6,#4f46e5)'}
+                color={u.is_admin ? 'linear-gradient(135deg,#a855f7,#7c3aed)' : 'linear-gradient(135deg,#1b78f7,#4f46e5)'}
                 size={38}
               />
               <div style={{ flex: 1, minWidth: 180 }}>

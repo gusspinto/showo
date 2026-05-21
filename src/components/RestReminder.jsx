@@ -9,7 +9,7 @@ const C = {
   bg:     'rgba(10,16,28,0.92)',
   card:   '#111827',
   border: '#1e3050',
-  blue:   '#3b82f6',
+  blue:   '#1b78f7',
   muted:  '#7d93b0',
   text:   '#e8f2ff',
 }

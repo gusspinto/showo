@@ -3,7 +3,7 @@ import { Check, X, Info } from 'lucide-react'
 
 const BORDER = {
   error: '#f43f5e',
-  info: '#3b82f6',
+  info: '#1b78f7',
   success: '#22c55e',
 }
 
@@ -16,7 +16,7 @@ function ToastIcon({ type, color }) {
 
 const ICON_BG = {
   error: 'rgba(244,63,94,0.15)',
-  info: 'rgba(59,130,246,0.15)',
+  info: 'rgba(27,120,247,0.15)',
   success: 'rgba(34,197,94,0.15)',
 }
 
@@ -29,7 +29,7 @@ export function Toast({ message, type = 'success', visible }) {
       position: 'fixed', bottom: 28, right: 28,
       transform: `translateY(${visible ? 0 : 120}px)`,
       opacity: visible ? 1 : 0,
-      background: '#111c32',
+      background: '#152030',
       border: `1px solid ${border}40`,
       borderLeft: `3px solid ${border}`,
       borderRadius: 12,

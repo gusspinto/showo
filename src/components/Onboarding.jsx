@@ -3,12 +3,12 @@ import { Edit3, Zap, Link, BookOpen, X } from 'lucide-react'
 
 const STEPS = [
   {
-    icon: <Edit3 size={32} color="#3b82f6" strokeWidth={2} />,
+    icon: <Edit3 size={32} color="#1b78f7" strokeWidth={2} />,
     title: 'Descreve o teu projeto',
     desc: 'Escreve umas palavras sobre o que estás a construir — a IA percebe o contexto sozinha.',
     preview: (
       <div style={{
-        background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(59,130,246,0.15)',
+        background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(27,120,247,0.15)',
         borderRadius: 10, padding: '12px 14px', marginTop: 14,
         display: 'flex', alignItems: 'center', gap: 10,
       }}>
@@ -17,7 +17,7 @@ const STEPS = [
         </span>
         <div style={{
           width: 30, height: 30, borderRadius: 8, flexShrink: 0,
-          background: 'linear-gradient(135deg,#3b82f6,#4f46e5)',
+          background: 'linear-gradient(135deg,#1b78f7,#4f46e5)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: 14,
         }}>→</div>
@@ -25,22 +25,22 @@ const STEPS = [
     ),
   },
   {
-    icon: <Zap size={32} color="#3b82f6" strokeWidth={2} />,
+    icon: <Zap size={32} color="#1b78f7" strokeWidth={2} />,
     title: 'A IA preenche tudo',
     desc: 'O Claude analisa a descrição e pré-preenche o objetivo, problema, solução, tecnologias e muito mais.',
     preview: (
       <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 6 }}>
         {['Objetivo', 'Problema', 'Solução', 'Tecnologias'].map((label, i) => (
           <div key={label} style={{
-            background: 'rgba(59,130,246,0.05)', border: '1px solid rgba(59,130,246,0.12)',
+            background: 'rgba(27,120,247,0.05)', border: '1px solid rgba(27,120,247,0.12)',
             borderRadius: 7, padding: '7px 11px',
             display: 'flex', alignItems: 'center', gap: 8,
             animation: `guide-fade-up 0.35s ${i * 0.08}s both`,
           }}>
             <span style={{ fontSize: 11, color: '#60a5fa', fontWeight: 700, minWidth: 74 }}>{label}</span>
-            <div style={{ flex: 1, height: 5, background: 'rgba(59,130,246,0.12)', borderRadius: 3, overflow: 'hidden' }}>
+            <div style={{ flex: 1, height: 5, background: 'rgba(27,120,247,0.12)', borderRadius: 3, overflow: 'hidden' }}>
               <div style={{
-                height: '100%', background: 'linear-gradient(90deg,#3b82f6,#818cf8)',
+                height: '100%', background: 'linear-gradient(90deg,#1b78f7,#818cf8)',
                 borderRadius: 3, width: `${[72, 58, 85, 64][i]}%`,
               }} />
             </div>
@@ -50,15 +50,15 @@ const STEPS = [
     ),
   },
   {
-    icon: <Link size={32} color="#3b82f6" strokeWidth={2} />,
+    icon: <Link size={32} color="#1b78f7" strokeWidth={2} />,
     title: 'A tua página profissional',
     desc: 'O resultado é uma página com design profissional, score, análise IA e link único para partilhares.',
     preview: (
       <div style={{
         marginTop: 14, background: 'rgba(13,20,36,0.8)',
-        border: '1px solid rgba(59,130,246,0.15)', borderRadius: 10, overflow: 'hidden',
+        border: '1px solid rgba(27,120,247,0.15)', borderRadius: 10, overflow: 'hidden',
       }}>
-        <div style={{ background: 'linear-gradient(135deg,rgba(59,130,246,0.12),rgba(79,70,229,0.08))', padding: '12px 14px' }}>
+        <div style={{ background: 'linear-gradient(135deg,rgba(27,120,247,0.12),rgba(79,70,229,0.08))', padding: '12px 14px' }}>
           <div style={{ fontSize: 12, fontWeight: 700, color: '#e8f2ff', marginBottom: 3 }}>Gestão de Horários</div>
           <div style={{ fontSize: 11, color: '#7d93b0' }}>João Silva · Desenvolvimento de Aplicações</div>
         </div>
@@ -132,7 +132,7 @@ export default function Onboarding({ onDone }) {
         transition: 'all 0.35s cubic-bezier(0.34,1.56,0.64,1)',
         width: 'calc(100% - 40px)', maxWidth: 400,
         background: 'linear-gradient(160deg,#111c32,#0d1424)',
-        border: '1px solid rgba(59,130,246,0.2)',
+        border: '1px solid rgba(27,120,247,0.2)',
         borderRadius: 20,
         padding: '22px 22px 22px',
         boxShadow: '0 20px 60px rgba(0,0,0,0.6)',
@@ -143,15 +143,15 @@ export default function Onboarding({ onDone }) {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
           <div style={{
             display: 'flex', alignItems: 'center', gap: 7,
-            background: 'rgba(59,130,246,0.1)',
-            border: '1px solid rgba(59,130,246,0.25)',
+            background: 'rgba(27,120,247,0.1)',
+            border: '1px solid rgba(27,120,247,0.25)',
             borderRadius: 20, padding: '4px 10px 4px 7px',
           }}>
             <BookOpen size={13} color="#60a5fa" />
             <span style={{ fontSize: 12, fontWeight: 700, color: '#60a5fa', letterSpacing: 0.2 }}>Guia rápido</span>
             <span style={{
-              fontSize: 10, fontWeight: 700, color: '#3b82f6',
-              background: 'rgba(59,130,246,0.15)', borderRadius: 10,
+              fontSize: 10, fontWeight: 700, color: '#1b78f7',
+              background: 'rgba(27,120,247,0.15)', borderRadius: 10,
               padding: '1px 6px', marginLeft: 2,
             }}>{step + 1}/{STEPS.length}</span>
           </div>
@@ -179,8 +179,8 @@ export default function Onboarding({ onDone }) {
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, marginBottom: 4 }}>
           <div style={{
             width: 48, height: 48, borderRadius: 12, flexShrink: 0,
-            background: 'rgba(59,130,246,0.08)',
-            border: '1px solid rgba(59,130,246,0.18)',
+            background: 'rgba(27,120,247,0.08)',
+            border: '1px solid rgba(27,120,247,0.18)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
             {s.icon}
@@ -206,7 +206,7 @@ export default function Onboarding({ onDone }) {
                 onClick={() => setStep(i)}
                 style={{
                   width: i === step ? 18 : 5, height: 5, borderRadius: 3,
-                  background: i === step ? '#3b82f6' : '#1e3050',
+                  background: i === step ? '#1b78f7' : '#1e3050',
                   transition: 'all 0.25s', cursor: 'pointer',
                 }}
               />
@@ -217,11 +217,11 @@ export default function Onboarding({ onDone }) {
             onClick={next}
             style={{
               padding: '9px 20px',
-              background: 'linear-gradient(135deg,#3b82f6,#4f46e5)',
+              background: 'linear-gradient(135deg,#1b78f7,#4f46e5)',
               border: 'none', borderRadius: 10,
               color: '#fff', fontSize: 13, fontWeight: 700,
               cursor: 'pointer', fontFamily: 'inherit',
-              boxShadow: '0 4px 16px rgba(59,130,246,0.3)',
+              boxShadow: '0 4px 16px rgba(27,120,247,0.3)',
               transition: 'opacity 0.15s',
             }}
             onMouseEnter={e => e.currentTarget.style.opacity = '0.9'}

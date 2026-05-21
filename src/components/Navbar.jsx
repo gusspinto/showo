@@ -304,8 +304,8 @@ function InviteInbox({ userId }) {
         onClick={() => setOpen(o => !o)}
         style={{
           position: 'relative',
-          background: open ? 'rgba(59,130,246,0.1)' : 'transparent',
-          border: `1px solid ${open ? 'rgba(59,130,246,0.35)' : C.border}`,
+          background: open ? 'rgba(27,120,247,0.1)' : 'transparent',
+          border: `1px solid ${open ? 'rgba(27,120,247,0.35)' : C.border}`,
           borderRadius: 8, width: 36, height: 36,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           cursor: 'pointer', color: open ? '#60a5fa' : C.muted,
@@ -351,7 +351,7 @@ function InviteInbox({ userId }) {
                   const isActing = !!acting[invite.id]
                   return (
                     <div key={invite.id} style={{
-                      background: 'rgba(59,130,246,0.05)', border: '1px solid rgba(59,130,246,0.15)',
+                      background: 'rgba(27,120,247,0.05)', border: '1px solid rgba(27,120,247,0.15)',
                       borderRadius: 10, padding: '12px 14px', marginBottom: 6,
                     }}>
                       <p style={{ margin: '0 0 2px', fontSize: 14, fontWeight: 700, color: C.text }}>{invite.projectName}</p>
@@ -363,7 +363,7 @@ function InviteInbox({ userId }) {
                         >{acting[invite.id] === 'accepted' ? '...' : <><Check size={12} style={{ verticalAlign: 'middle', marginRight: 3 }} />Aceitar</>}</button>
                         <button
                           onClick={() => respond(invite, 'declined')} disabled={isActing}
-                          style={{ flex: 1, padding: '7px 0', background: 'transparent', border: '1px solid rgba(248,113,113,0.3)', borderRadius: 7, color: '#f87171', fontSize: 12, fontWeight: 600, cursor: isActing ? 'default' : 'pointer', fontFamily: 'inherit' }}
+                          style={{ flex: 1, padding: '7px 0', background: 'transparent', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 7, color: '#ef4444', fontSize: 12, fontWeight: 600, cursor: isActing ? 'default' : 'pointer', fontFamily: 'inherit' }}
                         >{acting[invite.id] === 'declined' ? '...' : 'Recusar'}</button>
                       </div>
                     </div>
@@ -380,15 +380,15 @@ function InviteInbox({ userId }) {
                 </p>
                 {responses.map(r => (
                   <div key={r.id} style={{
-                    background: r.status === 'accepted' ? 'rgba(34,197,94,0.05)' : 'rgba(248,113,113,0.05)',
-                    border: `1px solid ${r.status === 'accepted' ? 'rgba(34,197,94,0.2)' : 'rgba(248,113,113,0.2)'}`,
+                    background: r.status === 'accepted' ? 'rgba(34,197,94,0.05)' : 'rgba(239,68,68,0.05)',
+                    border: `1px solid ${r.status === 'accepted' ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.2)'}`,
                     borderRadius: 10, padding: '10px 14px', marginBottom: 6,
                     display: 'flex', alignItems: 'flex-start', gap: 10,
                   }}>
                     <span style={{ fontSize: 18, flexShrink: 0, marginTop: 1, display: 'flex', alignItems: 'center' }}>
                       {r.status === 'accepted'
                         ? <Check size={16} color="#22c55e" />
-                        : <X size={16} color="#f87171" />}
+                        : <X size={16} color="#ef4444" />}
                     </span>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <p style={{ margin: '0 0 2px', fontSize: 13, fontWeight: 700, color: C.text }}>
@@ -466,7 +466,7 @@ function InviteInbox({ userId }) {
                         onClick={() => deleteNotifs(n.groupIds)}
                         title="Apagar notificação"
                         style={{ background: 'none', border: 'none', color: C.muted, cursor: 'pointer', padding: '2px 3px', borderRadius: 4, display: 'flex', alignItems: 'center', opacity: 0.6, transition: 'opacity 0.12s, color 0.12s', lineHeight: 1 }}
-                        onMouseEnter={e => { e.currentTarget.style.opacity = 1; e.currentTarget.style.color = '#f87171' }}
+                        onMouseEnter={e => { e.currentTarget.style.opacity = 1; e.currentTarget.style.color = '#ef4444' }}
                         onMouseLeave={e => { e.currentTarget.style.opacity = 0.6; e.currentTarget.style.color = C.muted }}
                       >
                         <X size={13} />
@@ -502,7 +502,7 @@ function AvatarCircle({ avatarUrl, initial, size = 28, fontSize = 13 }) {
   ) : (
     <div style={{
       width: size, height: size, borderRadius: '50%',
-      background: 'linear-gradient(135deg, #3b82f6, #4f46e5)',
+      background: 'linear-gradient(135deg, #1b78f7, #4f46e5)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       fontSize, fontWeight: 700, color: '#fff', flexShrink: 0,
       userSelect: 'none',
@@ -598,8 +598,8 @@ function UserChip({ user, profile, onClick, onProfile, onSettings, onSignOut, on
             <div style={{ height: 1, background: C.border, margin: '4px 6px' }} />
             <button
               onClick={() => { onSignOut(); setOpen(false) }}
-              style={{ ...dropItemStyle, color: '#f87171' }}
-              onMouseEnter={e => e.currentTarget.style.background = 'rgba(248,113,113,0.08)'}
+              style={{ ...dropItemStyle, color: '#ef4444' }}
+              onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.08)'}
               onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
             >
               Sair
@@ -692,7 +692,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
         }
         .mobile-drawer-btn:last-child { border-bottom: none; }
         .mobile-drawer-btn:hover { color: #e8f2ff; }
-        .mobile-drawer-btn.danger { color: #f87171 !important; }
+        .mobile-drawer-btn.danger { color: #ef4444 !important; }
         .mobile-drawer-pair { display: flex; gap: 8px; padding: 16px 0 4px; }
         .mobile-drawer-pair-btn {
           flex: 1; display: flex; align-items: center; justify-content: center; gap: 7px;
@@ -702,8 +702,8 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
           cursor: pointer; font-family: inherit; transition: background 0.15s, border-color 0.15s;
         }
         .mobile-drawer-pair-btn:hover { background: rgba(255,255,255,0.08); border-color: #2a4275; }
-        .mobile-drawer-pair-btn.danger { color: #f87171 !important; border-color: rgba(248,113,113,0.2) !important; }
-        .mobile-drawer-pair-btn.danger:hover { background: rgba(248,113,113,0.06) !important; }
+        .mobile-drawer-pair-btn.danger { color: #ef4444 !important; border-color: rgba(239,68,68,0.2) !important; }
+        .mobile-drawer-pair-btn.danger:hover { background: rgba(239,68,68,0.06) !important; }
         /* On tablet the UserChip is visible — hide the profile section inside drawer */
         @media (min-width: 601px) {
           .nav-drawer-profile { display: none !important; }
@@ -901,7 +901,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
               className="ham-btn" onClick={() => setOpen(o => !o)} aria-label="Menu"
               style={{
                 background: 'transparent',
-                border: `1px solid ${open ? '#3b82f6' : C.border}`,
+                border: `1px solid ${open ? '#1b78f7' : C.border}`,
                 borderRadius: 8, width: 38, height: 38,
                 flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                 gap: 5, cursor: 'pointer', padding: 0, transition: 'border-color 0.2s', flexShrink: 0,
