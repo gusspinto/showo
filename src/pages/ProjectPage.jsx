@@ -1542,6 +1542,30 @@ export default function ProjectPage() {
     return () => cancelAnimationFrame(rafRef.current)
   }, [score])
 
+  // ── Memoised derived values — must be before any early returns ──
+  const level = useMemo(() => getLevelInfo(displayScore), [displayScore])
+  const internshipReady = useMemo(
+    () => !!(project && score > 80 && project.technologies?.trim() && project.results?.trim()),
+    [score, project]
+  )
+  const sortedChallenges = useMemo(() => {
+    if (!project) return [...CHALLENGES]
+    return [...CHALLENGES].sort((a, b) => {
+      const aCompleted = getChallengeStatus(a, project) === 'completed' ? 1 : 0
+      const bCompleted = getChallengeStatus(b, project) === 'completed' ? 1 : 0
+      return aCompleted - bCompleted
+    })
+  }, [project])
+  const completedCount = useMemo(
+    () => project ? CHALLENGES.filter(c => getChallengeStatus(c, project) === 'completed').length : 0,
+    [project]
+  )
+  const earnedXP = useMemo(
+    () => project ? CHALLENGES.reduce((sum, c) => sum + (getChallengeStatus(c, project) === 'completed' ? c.scoreGain : 0), 0) : 0,
+    [project]
+  )
+  const totalXP = useMemo(() => CHALLENGES.reduce((sum, c) => sum + c.scoreGain, 0), [])
+
   function triggerToast(message) {
     clearTimeout(toastTimerRef.current)
     setToast({ visible: true, message })
@@ -1766,8 +1790,6 @@ export default function ProjectPage() {
   }
 
   const highlights = Array.isArray(project.ai_highlights) ? project.ai_highlights : []
-  const level = useMemo(() => getLevelInfo(displayScore), [displayScore])
-  const internshipReady = useMemo(() => score > 80 && !!project.technologies?.trim() && !!project.results?.trim(), [score, project])
   const isPap = project.is_pap || project.project_type === 'pap'
 
   async function handleSaveDefenseDate(dateStr) {
@@ -1816,15 +1838,6 @@ export default function ProjectPage() {
     await supabase.from('teacher_feedback').delete().eq('id', id)
     setTeacherFeedback(prev => prev.filter(f => f.id !== id))
   }
-
-  const sortedChallenges = useMemo(() => [...CHALLENGES].sort((a, b) => {
-    const aCompleted = getChallengeStatus(a, project) === 'completed' ? 1 : 0
-    const bCompleted = getChallengeStatus(b, project) === 'completed' ? 1 : 0
-    return aCompleted - bCompleted
-  }), [project])
-  const completedCount = useMemo(() => CHALLENGES.filter(c => getChallengeStatus(c, project) === 'completed').length, [project])
-  const earnedXP = useMemo(() => CHALLENGES.reduce((sum, c) => sum + (getChallengeStatus(c, project) === 'completed' ? c.scoreGain : 0), 0), [project])
-  const totalXP = useMemo(() => CHALLENGES.reduce((sum, c) => sum + c.scoreGain, 0), [])
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: 'var(--font-body)', overflowX: 'clip' }}>
