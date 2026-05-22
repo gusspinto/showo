@@ -62,19 +62,19 @@ body {
 
 /* ── Light mode ── */
 body.light {
-  background-color: #e4e3e3;
+  background-color: #dde2ea;
   color: #0f172a;
 
-  --c-bg:           #e4e3e3;
-  --c-bg-alt:       #d8d7d7;
-  --c-card:         #f0efef;
-  --c-card-hover:   #e8e7e7;
-  --c-border:       #d1d5db;
-  --c-border-bright:#b0b7c3;
-  --c-muted:        #4b5563;
+  --c-bg:           #dde2ea;
+  --c-bg-alt:       #d0d5de;
+  --c-card:         #ffffff;
+  --c-card-hover:   #f0f5ff;
+  --c-border:       #c8d3e8;
+  --c-border-bright:#a0b0cc;
+  --c-muted:        #4b5a72;
   --c-text:         #0f172a;
-  --c-subtle:       #6b7280;
-  --c-input-bg:     #f5f4f4;
+  --c-subtle:       #64748b;
+  --c-input-bg:     #f8faff;
   --c-blue-bg:      #dbeafe;
   --c-green-bg:     #dcfce7;
 }
@@ -101,13 +101,28 @@ body.light nav {
 body.light input,
 body.light textarea,
 body.light select {
-  background: #f5f4f4 !important;
-  color: #0f172a !important;
-  border-color: #c9cdd6 !important;
+  background: var(--c-input-bg) !important;
+  color: var(--c-text) !important;
+  border-color: var(--c-border) !important;
 }
 body.light input::placeholder,
 body.light textarea::placeholder {
-  color: #9ca3af !important;
+  color: var(--c-subtle) !important;
+}
+
+/* Light mode — sidebar styling (uses CSS vars, so sidebar bg is already correct) */
+body.light .sidebar {
+  box-shadow: 2px 0 16px rgba(27,120,247,0.07);
+}
+
+/* Nav / sidebar active item in light mode */
+body.light .sb-item.active {
+  background: rgba(27,120,247,0.1) !important;
+  color: #1b78f7 !important;
+}
+body.light .sb-item:hover {
+  background: rgba(27,120,247,0.06) !important;
+  color: #0f172a !important;
 }
 
 h1, h2, h3, h4 {

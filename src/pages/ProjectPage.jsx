@@ -1141,8 +1141,8 @@ export default function ProjectPage() {
         .proj-dashboard      { display: none; }
         .proj-ai-fab         { display: none; }
         .proj-ai-fab-label   { display: inline; }
-        .proj-fab-area       { display: flex; }
-        .proj-ai-fab         { display: flex; }
+        /* FABs: visible on mobile, hidden on desktop (controls are in sidebar) */
+        .proj-fab-area       { display: none; }
         .proj-fab-defense-label { display: inline; }
         .proj-invite-label   { display: inline; }
         /* Sidebar section toggles */
@@ -1180,10 +1180,9 @@ export default function ProjectPage() {
           .proj-sections-toggle:active { background: ${colors.cardHover} !important; }
           .proj-sections-body.collapsed { display: none !important; }
           .proj-nav-btns     { display: none !important; }
+          /* FABs visible on mobile (no sidebar available) */
           .proj-fab-area     { display: flex !important; }
-          /* AI FAB — hidden on tablet too; AI card in body is sufficient */
-          .proj-ai-fab       { display: none !important; }
-          .proj-ai-fab-label { display: none !important; }
+          .proj-ai-fab       { display: flex !important; }
           /* Defense FAB — pill com label no tablet */
           .proj-fab-defense-label { display: inline !important; }
           /* Invite button: icon only on tablet */

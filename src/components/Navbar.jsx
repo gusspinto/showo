@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
 import { useSidebar } from '../context/SidebarContext'
 import { supabase } from '../lib/supabase'
-import { Check, X, FolderOpen, User, Settings as SettingsIcon, Shield, Globe, Trophy, LogOut, Bell, Eye, Target, TrendingUp, GraduationCap, UserPlus, Home, Plus, Compass, Sun, Moon, Sparkles, Pencil } from 'lucide-react'
+import { Check, X, FolderOpen, User, Settings as SettingsIcon, Shield, Globe, Trophy, LogOut, Bell, Eye, Target, TrendingUp, GraduationCap, UserPlus, Home, Plus, Compass, Sun, Moon, Sparkles, Pencil, ArrowLeft } from 'lucide-react'
 import CreateProjectModal from './CreateProjectModal'
 
 const C = {
@@ -1068,7 +1068,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
           <img src={theme === 'light' ? '/light_mode_LI.png' : '/icon_logo.png'} alt="Showo" style={{ height: 28, width: 'auto', objectFit: 'contain' }} />
         </button>
 
-        {/* Main nav */}
+        {/* Main nav + project controls in one scrollable section */}
         <div className="sb-section">
           {user && (
             <button className={`sb-item${isActive('/dashboard') ? ' active' : ''}`} onClick={() => navigate('/dashboard')}>
@@ -1081,58 +1081,64 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
           <button className={`sb-item${isActive('/ranking') ? ' active' : ''}`} onClick={() => navigate('/ranking')}>
             <Trophy size={16} /> Ranking
           </button>
-          {/* Only show Criar projeto when NOT in a project context */}
           {user && !extras && (
             <button className="sb-create" onClick={() => setCreateModal(true)}>
               <Plus size={14} /> Criar projeto
             </button>
           )}
-        </div>
 
-        {/* Project controls — shown when viewing own project */}
-        {extras?.type === 'project' && (
-          <>
-            <div className="sb-divider" style={{ margin: '8px 8px 4px' }} />
-            <div style={{ padding: '0 8px' }}>
+          {/* Project controls — immediately after nav, no gap */}
+          {extras?.type === 'project' && (
+            <>
+              <div className="sb-divider" style={{ margin: '10px 0 6px' }} />
+              {/* Back to project (shown when on sub-page like edit/cert) */}
+              {extras.showBack && (
+                <button className="sb-item" onClick={() => navigate(`/projeto/${extras.slug}`)}>
+                  <ArrowLeft size={16} /> Ver projeto
+                </button>
+              )}
               <span className="sb-label">Gerir projeto</span>
-              <button className="sb-item" onClick={() => navigate(`/editar/${extras.slug}`)}>
-                <Pencil size={16} /> Editar
-              </button>
-              <button
-                className="sb-item"
-                onClick={extras.onDefense}
-              >
-                <GraduationCap size={16} />
-                Modo defesa
-                {extras.defenseDate && (
-                  <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--c-muted)', fontWeight: 500 }}>
-                    {new Date(extras.defenseDate).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' })}
-                  </span>
-                )}
-              </button>
-              <button
-                className="sb-item"
-                onClick={extras.onAnalyze}
-                disabled={extras.analyzingAI}
-                style={{ opacity: extras.analyzingAI ? 0.6 : 1 }}
-              >
-                <Sparkles size={16} />
-                {extras.analyzingAI ? 'A analisar…' : 'Análise IA'}
-                {extras.aiScore != null && !extras.analyzingAI && (
-                  <span style={{
-                    marginLeft: 'auto', fontSize: 11, fontWeight: 700,
-                    color: extras.aiScore >= 90 ? '#22c55e' : extras.aiScore >= 71 ? '#1b78f7' : extras.aiScore >= 40 ? '#fbbf24' : '#ef4444',
-                  }}>
-                    {extras.aiScore}
-                  </span>
-                )}
-              </button>
+              {!extras.showBack && (
+                <button className="sb-item" onClick={() => navigate(`/editar/${extras.slug}`)}>
+                  <Pencil size={16} /> Editar
+                </button>
+              )}
+              {extras.onDefense && (
+                <button className="sb-item" onClick={extras.onDefense}>
+                  <GraduationCap size={16} />
+                  Modo defesa
+                  {extras.defenseDate && (
+                    <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--c-muted)', fontWeight: 500 }}>
+                      {new Date(extras.defenseDate).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' })}
+                    </span>
+                  )}
+                </button>
+              )}
+              {extras.onAnalyze && (
+                <button
+                  className="sb-item"
+                  onClick={extras.onAnalyze}
+                  disabled={extras.analyzingAI}
+                  style={{ opacity: extras.analyzingAI ? 0.6 : 1 }}
+                >
+                  <Sparkles size={16} />
+                  {extras.analyzingAI ? 'A analisar…' : 'Análise IA'}
+                  {extras.aiScore != null && !extras.analyzingAI && (
+                    <span style={{
+                      marginLeft: 'auto', fontSize: 11, fontWeight: 700,
+                      color: extras.aiScore >= 90 ? '#22c55e' : extras.aiScore >= 71 ? '#1b78f7' : extras.aiScore >= 40 ? '#fbbf24' : '#ef4444',
+                    }}>
+                      {extras.aiScore}
+                    </span>
+                  )}
+                </button>
+              )}
               <button className="sb-item" onClick={() => navigate(`/certificado/${extras.slug}`)}>
                 <Trophy size={16} /> Certificado
               </button>
-            </div>
-          </>
-        )}
+            </>
+          )}
+        </div>
 
         <div style={{ flex: 1 }} />
         <div className="sb-divider" />

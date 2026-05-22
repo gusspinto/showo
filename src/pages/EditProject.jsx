@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import { updateProject } from '../lib/updateProject'
 import { Navbar } from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
+import { useSidebar } from '../context/SidebarContext'
 import { Sparkles, Lock, Search, Image } from 'lucide-react'
 
 const colors = {
@@ -111,6 +112,7 @@ export default function EditProject() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const { user } = useAuth()
+  const { setExtras } = useSidebar()
   const [project, setProject] = useState(null)
   const [form, setForm] = useState({})
   const [loading, setLoading] = useState(true)
@@ -186,6 +188,13 @@ export default function EditProject() {
     }
     load()
   }, [slug])
+
+  // Keep sidebar showing project controls while editing
+  useEffect(() => {
+    if (!project) return
+    setExtras({ type: 'project', slug: project.slug, title: project.name, showBack: true })
+    return () => setExtras(null)
+  }, [project?.id])
 
   function set(key, value) {
     setForm(f => ({ ...f, [key]: value }))

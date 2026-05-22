@@ -1,5 +1,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
+import { useSidebar } from '../context/SidebarContext'
 import { Helmet } from 'react-helmet-async'
 import { QRCodeSVG } from 'qrcode.react'
 import { supabase } from '../lib/supabase'
@@ -16,6 +18,8 @@ const C = {
 export default function Certificate() {
   const { slug } = useParams()
   const navigate = useNavigate()
+  const { user } = useAuth()
+  const { setExtras } = useSidebar()
   const certRef = useRef(null)
   const [project, setProject] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -34,6 +38,13 @@ export default function Certificate() {
     }
     load()
   }, [slug])
+
+  // Keep sidebar project controls while on cert page (only if it's the user's project)
+  useEffect(() => {
+    if (!project || !user) return
+    setExtras({ type: 'project', slug: project.slug, title: project.name, showBack: true })
+    return () => setExtras(null)
+  }, [project?.slug, user?.id])
 
   async function handleDownload() {
     if (!certRef.current) return
