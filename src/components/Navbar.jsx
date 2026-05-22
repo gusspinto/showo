@@ -666,7 +666,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
           position: fixed;
           left: 0; top: 0; bottom: 0;
           width: 216px;
-          background: var(--c-bg);
+          background: var(--c-sidebar-bg);
           border-right: 1px solid var(--c-border);
           flex-direction: column;
           padding: 0;

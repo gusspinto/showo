@@ -27,6 +27,7 @@
   --c-input-bg:     #060c18;
   --c-blue-bg:      #0a1729;
   --c-green-bg:     #061a0f;
+  --c-sidebar-bg:   #0b1628;  /* slightly more blue than page bg */
 
   /* ── Typography scale ── */
   --text-xs:   11px;   /* captions, badges, tiny labels */
@@ -62,21 +63,22 @@ body {
 
 /* ── Light mode ── */
 body.light {
-  background-color: #dde2ea;
+  background-color: #e6eaf2;
   color: #0f172a;
 
-  --c-bg:           #dde2ea;
-  --c-bg-alt:       #d0d5de;
-  --c-card:         #ffffff;
-  --c-card-hover:   #f0f5ff;
-  --c-border:       #c8d3e8;
-  --c-border-bright:#a0b0cc;
-  --c-muted:        #4b5a72;
+  --c-bg:           #e6eaf2;
+  --c-bg-alt:       #d9dfe9;
+  --c-card:         #f2f5fb;
+  --c-card-hover:   #eaeffa;
+  --c-border:       #cad3e5;
+  --c-border-bright:#a8b8d4;
+  --c-muted:        #526180;
   --c-text:         #0f172a;
-  --c-subtle:       #64748b;
-  --c-input-bg:     #f8faff;
+  --c-subtle:       #6b7c9a;
+  --c-input-bg:     #f5f7fd;
   --c-blue-bg:      #dbeafe;
   --c-green-bg:     #dcfce7;
+  --c-sidebar-bg:   #d4dced;  /* deeper, more blue than page bg */
 }
 
 body.light ::-webkit-scrollbar-track { background: #d4d3d3; }

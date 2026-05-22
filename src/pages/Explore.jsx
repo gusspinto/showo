@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import { Navbar } from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
 import { Search, Building2, Eye, Briefcase } from 'lucide-react'
+import CreateProjectModal from '../components/CreateProjectModal'
 
 const colors = {
   bg: 'var(--c-bg)',
@@ -274,7 +275,7 @@ export default function Explore() {
 
       <Navbar>
         <button
-          onClick={() => navigate('/novo')}
+          onClick={() => setShowCreateModal(true)}
           style={{ background: `linear-gradient(135deg, ${colors.blue}, #4f46e5)`, color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 16px rgba(27,120,247,0.3)' }}
         >
           Criar projeto
@@ -507,6 +508,7 @@ export default function Explore() {
           </>
         )}
       </div>
+      {showCreateModal && <CreateProjectModal onClose={() => setShowCreateModal(false)} />}
     </div>
   )
 }

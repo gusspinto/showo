@@ -4,6 +4,7 @@ import { Globe, Bot, GraduationCap, Trophy, Sparkles, BadgeCheck, Users } from '
 import { Navbar } from '../components/Navbar'
 import { supabase } from '../lib/supabase'
 import Onboarding from '../components/Onboarding'
+import CreateProjectModal from '../components/CreateProjectModal'
 
 const colors = {
   bg:           '#060c18',
@@ -214,7 +215,7 @@ export default function Home() {
 
       <Navbar>
         <button
-          onClick={() => navigate('/novo')}
+          onClick={() => setShowCreateModal(true)}
           style={{
             background: 'linear-gradient(135deg, #1b78f7, #4f46e5)',
             color: '#fff', border: 'none', borderRadius: 12,
@@ -396,7 +397,7 @@ export default function Home() {
       {/* Bottom CTA */}
       <div style={{ padding: '0 24px 80px', textAlign: 'center' }}>
         <button
-          onClick={() => navigate('/novo')}
+          onClick={() => setShowCreateModal(true)}
           className="home-cta-btn"
           style={{
             background: 'linear-gradient(135deg, #1b78f7, #4f46e5)',
@@ -420,6 +421,7 @@ export default function Home() {
           </button>
         </div>
       </div>
+      {showCreateModal && <CreateProjectModal onClose={() => setShowCreateModal(false)} />}
     </div>
   )
 }

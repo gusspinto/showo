@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import { Navbar } from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
 import { Trophy, ChevronRight } from 'lucide-react'
+import CreateProjectModal from '../components/CreateProjectModal'
 
 const C = {
   bg:          'var(--c-bg)',
@@ -114,7 +115,7 @@ export default function Ranking() {
 
       <Navbar>
         <button
-          onClick={() => navigate('/novo')}
+          onClick={() => setShowCreateModal(true)}
           style={{
             background: `linear-gradient(135deg, ${C.blue}, #4f46e5)`,
             color: '#fff', border: 'none', borderRadius: 8,
@@ -341,6 +342,7 @@ export default function Ranking() {
           </div>
         )}
       </div>
+      {showCreateModal && <CreateProjectModal onClose={() => setShowCreateModal(false)} />}
     </div>
   )
 }

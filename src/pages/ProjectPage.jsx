@@ -9,6 +9,7 @@ import { Navbar } from '../components/Navbar'
 import { generateProject } from '../lib/generateProject'
 import { useAuth } from '../context/AuthContext'
 import { useSidebar } from '../context/SidebarContext'
+import CreateProjectModal from '../components/CreateProjectModal'
 import DefenseMode from '../components/DefenseMode'
 import { analyzeProject } from '../lib/analyzeProject'
 import { Check, X, Loader, GraduationCap, Save, Sparkles, Bot, Lightbulb, Pencil, Search, Target, Wrench, Zap, TrendingUp, Briefcase, Users, Rocket, Trophy, BarChart2, CheckCircle, BookOpen, ChevronDown, Eye, UserPlus, Calendar, Mail } from 'lucide-react'
@@ -562,6 +563,7 @@ export default function ProjectPage() {
   const [fbEditing, setFbEditing] = useState(null)
 
   const { setExtras } = useSidebar()
+  const [showCreateModal, setShowCreateModal] = useState(false)
 
   const prevScoreRef = useRef(null)
   const rafRef = useRef(null)
@@ -984,11 +986,12 @@ export default function ProjectPage() {
         <h2 style={{ margin: 0, fontSize: 24, fontWeight: 700 }}>Este projeto não existe ou foi removido</h2>
         <p style={{ color: colors.muted, margin: 0 }}>O link pode estar incorrecto ou o projeto foi eliminado.</p>
         <button
-          onClick={() => navigate('/novo')}
+          onClick={() => setShowCreateModal(true)}
           style={{ background: `linear-gradient(135deg, ${colors.blue}, #4f46e5)`, color: '#fff', border: 'none', borderRadius: 10, padding: '12px 28px', fontSize: 16, fontWeight: 700, cursor: 'pointer', marginTop: 8, boxShadow: '0 4px 20px rgba(27,120,247,0.3)', fontFamily: 'inherit' }}
         >
           Criar o meu projeto →
         </button>
+        {showCreateModal && <CreateProjectModal onClose={() => setShowCreateModal(false)} />}
         <button
           onClick={() => navigate('/')}
           style={{ background: 'transparent', border: `1px solid ${colors.border}`, color: colors.muted, borderRadius: 8, padding: '10px 22px', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}
@@ -1240,6 +1243,7 @@ export default function ProjectPage() {
 
       {showConfetti && <Confetti />}
       <Toast message={toast.message} visible={toast.visible} />
+      {showCreateModal && <CreateProjectModal onClose={() => setShowCreateModal(false)} />}
 
       {/* ── Milestone shareable card overlay ── */}
       {milestoneCard && (
@@ -1949,7 +1953,7 @@ export default function ProjectPage() {
                 Cria o teu projeto e recebe análise por IA com feedback personalizado.
               </p>
               <button
-                onClick={() => navigate('/novo')}
+                onClick={() => setShowCreateModal(true)}
                 style={{
                   background: 'linear-gradient(135deg, #6d28d9, #4f46e5)',
                   border: 'none', borderRadius: 8, padding: '7px 16px',

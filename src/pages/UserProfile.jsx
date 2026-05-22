@@ -5,6 +5,7 @@ import { QRCodeSVG } from 'qrcode.react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
+import CreateProjectModal from '../components/CreateProjectModal'
 import { Mail, Search, FolderOpen, X, Check, Download, Rocket, QrCode, Pencil, Globe, ExternalLink, Link, Briefcase } from 'lucide-react'
 
 // ── Design tokens (aligned with the rest of the app) ──────────────────────────
@@ -326,6 +327,7 @@ export default function UserProfile() {
   const { username } = useParams()
   const navigate = useNavigate()
   const { user } = useAuth()
+  const [showCreateModal, setShowCreateModal] = useState(false)
   const [profile, setProfile] = useState(null)
   const [projects, setProjects] = useState([])
   const [loading, setLoading] = useState(true)
@@ -681,7 +683,7 @@ export default function UserProfile() {
                   </button>
                 )}
                 {isOwnProfile && (
-                  <button className="up-action-btn primary" onClick={() => navigate('/interview')}>
+                  <button className="up-action-btn primary" onClick={() => setShowCreateModal(true)}>
                     <Rocket size={13} /> Novo projeto
                   </button>
                 )}
@@ -706,11 +708,8 @@ export default function UserProfile() {
                   Adiciona o teu primeiro projeto e transforma-o numa página profissional com a ajuda da IA.
                 </p>
                 <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
-                  <button onClick={() => navigate('/interview')} style={{ background: C.blue, border: 'none', borderRadius: 9, padding: '11px 24px', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
-                    Criar com IA →
-                  </button>
-                  <button onClick={() => navigate('/novo')} style={{ background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 9, padding: '11px 24px', color: C.muted, fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>
-                    Preencher manualmente
+                  <button onClick={() => setShowCreateModal(true)} style={{ background: C.blue, border: 'none', borderRadius: 9, padding: '11px 24px', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                    Criar projeto →
                   </button>
                 </div>
               </div>
@@ -743,6 +742,7 @@ export default function UserProfile() {
       {showQR && (
         <QRModal profileUrl={profileUrl} username={profile?.username || profile?.id || ''} onClose={() => setShowQR(false)} />
       )}
+      {showCreateModal && <CreateProjectModal onClose={() => setShowCreateModal(false)} />}
     </div>
   )
 }
