@@ -5,11 +5,11 @@ import { Check, X, GraduationCap, Briefcase, Sparkles, Lightbulb } from 'lucide-
 const C = {
   bg: '#080e1a',
   card: '#0d1829',
-  border: '#1e3050',
+  border: 'var(--c-border)',
   blue: '#1b78f7',
-  muted: '#7d93b0',
-  text: '#e8f2ff',
-  subtle: '#3d5270',
+  muted: 'var(--c-muted)',
+  text: 'var(--c-text)',
+  subtle: 'var(--c-subtle)',
   green: '#22c55e',
   inputBg: '#060c16',
 }
@@ -20,10 +20,10 @@ function Btn({ children, onClick, primary, disabled, style = {} }) {
       onClick={onClick}
       disabled={disabled}
       style={{
-        background: disabled ? '#1e3050' : primary ? 'linear-gradient(135deg, #1b78f7, #4f46e5)' : 'transparent',
+        background: disabled ? 'var(--c-border)' : primary ? 'linear-gradient(135deg, #1b78f7, #4f46e5)' : 'transparent',
         border: primary ? 'none' : `1px solid ${C.border}`,
         borderRadius: 9, padding: '11px 20px',
-        color: disabled ? '#3d5270' : primary ? '#fff' : C.muted,
+        color: disabled ? 'var(--c-subtle)' : primary ? '#fff' : C.muted,
         fontSize: 14, fontWeight: 600, cursor: disabled ? 'default' : 'pointer',
         fontFamily: 'inherit',
         boxShadow: primary && !disabled ? '0 4px 16px rgba(27,120,247,0.3)' : 'none',

@@ -8,28 +8,29 @@ import { CHALLENGES, getChallengeStatus } from '../lib/challenges'
 import { Navbar } from '../components/Navbar'
 import { generateProject } from '../lib/generateProject'
 import { useAuth } from '../context/AuthContext'
+import { useSidebar } from '../context/SidebarContext'
 import DefenseMode from '../components/DefenseMode'
 import { analyzeProject } from '../lib/analyzeProject'
 import { Check, X, Loader, GraduationCap, Save, Sparkles, Bot, Lightbulb, Pencil, Search, Target, Wrench, Zap, TrendingUp, Briefcase, Users, Rocket, Trophy, BarChart2, CheckCircle, BookOpen, ChevronDown, Eye, UserPlus, Calendar } from 'lucide-react'
 
 const colors = {
-  bg: '#060c18',
-  bgAlt: '#111c32',
-  card: '#152030',
-  cardHover: '#1c2d44',
-  border: '#1e3050',
-  borderBright: '#2a4275',
+  bg: 'var(--c-bg)',
+  bgAlt: 'var(--c-bg-alt)',
+  card: 'var(--c-card)',
+  cardHover: 'var(--c-card-hover)',
+  border: 'var(--c-border)',
+  borderBright: 'var(--c-border-bright)',
   blue: '#1b78f7',
   blueHover: '#1564d4',
   blueGlow: 'rgba(27,120,247,0.15)',
   blueSubtle: 'rgba(27,120,247,0.08)',
-  blueBg: '#0a1729',
-  text: '#e8f2ff',
-  muted: '#7d93b0',
-  subtle: '#3d5270',
+  blueBg: 'var(--c-blue-bg)',
+  text: 'var(--c-text)',
+  muted: 'var(--c-muted)',
+  subtle: 'var(--c-subtle)',
   green: '#22c55e',
   greenGlow: 'rgba(34,197,94,0.12)',
-  greenBg: '#061a0f',
+  greenBg: 'var(--c-green-bg)',
   yellow: '#fbbf24',
   yellowGlow: 'rgba(234,179,8,0.12)',
   orange: '#f97316',
@@ -560,6 +561,8 @@ export default function ProjectPage() {
   const [fbSaving, setFbSaving] = useState(false)
   const [fbEditing, setFbEditing] = useState(null)
 
+  const { setExtras } = useSidebar()
+
   const prevScoreRef = useRef(null)
   const rafRef = useRef(null)
   const toastTimerRef = useRef(null)
@@ -572,6 +575,27 @@ export default function ProjectPage() {
       window.history.replaceState({}, '')
     }
   }, [])
+
+  // Populate sidebar with project controls when this is the owner's project
+  useEffect(() => {
+    if (!project || !user) { setExtras(null); return }
+    const owned = (user.id === project.user_id) || !!localStorage.getItem(`edit_token_${project.slug}`)
+    if (owned) {
+      setExtras({
+        type: 'project',
+        slug: project.slug,
+        title: project.name,
+        defenseDate: project.defense_date,
+        aiScore: project.ai_score,
+        analyzingAI,
+        onDefense: () => setDefenseMode(true),
+        onAnalyze: handleAnalyzeAI,
+      })
+    } else {
+      setExtras(null)
+    }
+    return () => setExtras(null)
+  }, [project?.id, project?.defense_date, project?.ai_score, user?.id, analyzingAI])
 
   const pageUrl = window.location.href
 
@@ -1116,9 +1140,10 @@ export default function ProjectPage() {
         .proj-h1-row         { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; flex-wrap: nowrap; }
         .proj-dashboard      { display: none; }
         .proj-ai-fab         { display: none; }
-        .proj-ai-fab-label   { display: none; }
-        .proj-fab-area       { display: none; }
-        .proj-fab-defense-label { display: none; }
+        .proj-ai-fab-label   { display: inline; }
+        .proj-fab-area       { display: flex; }
+        .proj-ai-fab         { display: flex; }
+        .proj-fab-defense-label { display: inline; }
         .proj-invite-label   { display: inline; }
         /* Sidebar section toggles */
         .sidebar-section-toggle { display: flex; }
@@ -1410,7 +1435,7 @@ export default function ProjectPage() {
             {aiFeedback && !analyzingAI && (
               <div>
                 <div style={{ background: 'rgba(27,120,247,0.06)', border: '1px solid rgba(27,120,247,0.15)', borderRadius: 12, padding: '14px 16px', marginBottom: 16 }}>
-                  <div style={{ fontSize: 13, color: '#e8f2ff', lineHeight: 1.65, marginBottom: aiFeedback.score_hint ? 8 : 0 }}>
+                  <div style={{ fontSize: 13, color: 'var(--c-text)', lineHeight: 1.65, marginBottom: aiFeedback.score_hint ? 8 : 0 }}>
                     {aiFeedback.overall}
                   </div>
                   {aiFeedback.score_hint && (
@@ -1466,18 +1491,19 @@ export default function ProjectPage() {
             title="Análise com IA"
             disabled={analyzingAI}
             style={{
-              width: 52, height: 52, borderRadius: '50%',
+              height: 52, borderRadius: 999, padding: '0 18px',
               background: 'linear-gradient(135deg, #6d28d9, #4f46e5)',
               border: 'none',
               color: '#fff', cursor: analyzingAI ? 'default' : 'pointer',
-              alignItems: 'center', justifyContent: 'center',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
               animation: analyzingAI ? 'none' : 'sparkle-pulse 2s ease-in-out infinite',
               opacity: analyzingAI ? 0.7 : 1,
-              backdropFilter: 'blur(8px)',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
+              fontFamily: 'inherit', fontSize: 14, fontWeight: 700,
             }}
           >
-            <Sparkles size={22} />
-            <span className="proj-ai-fab-label">Análise</span>
+            <Sparkles size={20} />
+            <span className="proj-ai-fab-label">{analyzingAI ? 'A analisar…' : 'Análise IA'}</span>
           </button>
         )}
         {/* Defense FAB — circular on mobile, pill with text on tablet */}
@@ -2313,7 +2339,7 @@ export default function ProjectPage() {
                         <button key={k} onClick={() => setFbFieldKey(k)} style={{ fontSize: 11, padding: '3px 8px', borderRadius: 5, border: `1px solid ${fbFieldKey === k ? '#fbbf24' : colors.border}`, background: fbFieldKey === k ? 'rgba(251,191,36,0.12)' : 'transparent', color: fbFieldKey === k ? '#fbbf24' : colors.muted, cursor: 'pointer', fontFamily: 'inherit', fontWeight: fbFieldKey === k ? 700 : 400 }}>{l}</button>
                       ))}
                     </div>
-                    <textarea value={fbComment} onChange={e => setFbComment(e.target.value)} placeholder={`Feedback sobre ${FB_SECTION_LABELS[fbFieldKey]}…`} rows={3} style={{ width: '100%', background: '#060c18', border: `1px solid ${colors.border}`, borderRadius: 8, padding: '9px 11px', color: colors.text, fontSize: 13, fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box', outline: 'none' }} />
+                    <textarea value={fbComment} onChange={e => setFbComment(e.target.value)} placeholder={`Feedback sobre ${FB_SECTION_LABELS[fbFieldKey]}…`} rows={3} style={{ width: '100%', background: 'var(--c-bg)', border: `1px solid ${colors.border}`, borderRadius: 8, padding: '9px 11px', color: colors.text, fontSize: 13, fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box', outline: 'none' }} />
                     <div style={{ display: 'flex', gap: 8 }}>
                       <button onClick={handleFbSave} disabled={fbSaving || !fbComment.trim()} style={{ flex: 1, background: 'linear-gradient(135deg,#d97706,#b45309)', border: 'none', borderRadius: 8, padding: '9px', color: '#fff', fontSize: 13, fontWeight: 600, cursor: fbSaving || !fbComment.trim() ? 'default' : 'pointer', opacity: fbSaving || !fbComment.trim() ? 0.6 : 1, fontFamily: 'inherit' }}>
                         {fbSaving ? 'A guardar…' : fbEditing ? 'Atualizar' : 'Guardar'}

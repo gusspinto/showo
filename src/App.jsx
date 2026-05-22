@@ -4,6 +4,8 @@ import { AlertTriangle, X as XIcon } from 'lucide-react'
 import { supabase } from './lib/supabase'
 import { HelmetProvider } from 'react-helmet-async'
 import { AuthProvider, useAuth } from './context/AuthContext'
+import { ThemeProvider } from './context/ThemeContext'
+import { SidebarProvider } from './context/SidebarContext'
 import RestReminder from './components/RestReminder'
 import Home from './pages/Home'
 import NewProject from './pages/NewProject'
@@ -91,30 +93,34 @@ export default function App() {
 
   return (
     <HelmetProvider>
-      <AuthProvider>
-        <AuthErrorBanner />
-        {splashMounted && <SplashScreen visible={splashVisible} />}
-        <RestReminder />
-        <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-          <Routes>
-            <Route path="/"              element={<HomeRoute />}   />
-            <Route path="/novo"          element={<NewProject />}  />
-            <Route path="/projeto/:slug" element={<ProjectPage />} />
-            <Route path="/editar/:slug"  element={<EditProject />} />
-            <Route path="/ranking"       element={<Ranking />}     />
-            <Route path="/explorar"      element={<Explore />}     />
-            <Route path="/login"         element={<Login />}       />
-            <Route path="/register"      element={<Register />}    />
-            <Route path="/dashboard"     element={<Dashboard />}   />
-            <Route path="/settings"      element={<Settings />}    />
-            <Route path="/u/:username"   element={<UserProfile />} />
-            <Route path="/admin"         element={<Admin />}       />
-            <Route path="/turma/:code"   element={<TurmaPage />}   />
-            <Route path="/interview"          element={<AIInterview />}  />
-            <Route path="/certificado/:slug"  element={<Certificate />}  />
-          </Routes>
-        </BrowserRouter>
-      </AuthProvider>
+      <ThemeProvider>
+        <SidebarProvider>
+        <AuthProvider>
+          <AuthErrorBanner />
+          {splashMounted && <SplashScreen visible={splashVisible} />}
+          <RestReminder />
+          <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+            <Routes>
+              <Route path="/"              element={<HomeRoute />}   />
+              <Route path="/novo"          element={<NewProject />}  />
+              <Route path="/projeto/:slug" element={<ProjectPage />} />
+              <Route path="/editar/:slug"  element={<EditProject />} />
+              <Route path="/ranking"       element={<Ranking />}     />
+              <Route path="/explorar"      element={<Explore />}     />
+              <Route path="/login"         element={<Login />}       />
+              <Route path="/register"      element={<Register />}    />
+              <Route path="/dashboard"     element={<Dashboard />}   />
+              <Route path="/settings"      element={<Settings />}    />
+              <Route path="/u/:username"   element={<UserProfile />} />
+              <Route path="/admin"         element={<Admin />}       />
+              <Route path="/turma/:code"   element={<TurmaPage />}   />
+              <Route path="/interview"          element={<AIInterview />}  />
+              <Route path="/certificado/:slug"  element={<Certificate />}  />
+            </Routes>
+          </BrowserRouter>
+        </AuthProvider>
+        </SidebarProvider>
+      </ThemeProvider>
     </HelmetProvider>
   )
 }

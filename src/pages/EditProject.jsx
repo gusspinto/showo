@@ -7,19 +7,19 @@ import { useAuth } from '../context/AuthContext'
 import { Sparkles, Lock, Search, Image } from 'lucide-react'
 
 const colors = {
-  bg: '#060c18',
-  bgAlt: '#111c32',
-  card: '#152030',
-  border: '#1e3050',
-  borderBright: '#2a4275',
+  bg: 'var(--c-bg)',
+  bgAlt: 'var(--c-bg-alt)',
+  card: 'var(--c-card)',
+  border: 'var(--c-border)',
+  borderBright: 'var(--c-border-bright)',
   blue: '#1b78f7',
   blueHover: '#1564d4',
-  text: '#e8f2ff',
-  muted: '#7d93b0',
-  subtle: '#3d5270',
+  text: 'var(--c-text)',
+  muted: 'var(--c-muted)',
+  subtle: 'var(--c-subtle)',
   green: '#22c55e',
   red: '#f43f5e',
-  inputBg: '#060c18',
+  inputBg: 'var(--c-bg)',
 }
 
 const PROJECT_TYPES = [

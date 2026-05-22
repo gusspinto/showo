@@ -1,15 +1,18 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useTheme } from '../context/ThemeContext'
+import { useSidebar } from '../context/SidebarContext'
 import { supabase } from '../lib/supabase'
-import { Check, X, FolderOpen, User, Settings as SettingsIcon, Shield, Globe, Trophy, LogOut, Bell, Eye, Target, TrendingUp, GraduationCap, UserPlus, Home, Plus, Compass } from 'lucide-react'
+import { Check, X, FolderOpen, User, Settings as SettingsIcon, Shield, Globe, Trophy, LogOut, Bell, Eye, Target, TrendingUp, GraduationCap, UserPlus, Home, Plus, Compass, Sun, Moon, Sparkles, Pencil } from 'lucide-react'
+import CreateProjectModal from './CreateProjectModal'
 
 const C = {
   bg: 'rgba(13, 20, 36, 0.88)',
-  border: '#1e3050',
+  border: 'var(--c-border)',
   blue: '#1b78f7',
-  muted: '#7d93b0',
-  text: '#e8f2ff',
+  muted: 'var(--c-muted)',
+  text: 'var(--c-text)',
 }
 
 const btnStyle = {
@@ -335,9 +338,9 @@ function InviteInbox({ userId, sidebar = false }) {
               ? { position: 'fixed', left: 224, bottom: 16 }
               : { position: 'absolute', top: 'calc(100% + 8px)', right: 0 }
             ),
-            background: 'rgba(6,12,24,0.98)', border: `1px solid ${C.border}`,
+            background: 'var(--c-card)', border: `1px solid var(--c-border)`,
             borderRadius: 14, padding: '8px',
-            boxShadow: '0 8px 40px rgba(0,0,0,0.6)',
+            boxShadow: '0 8px 40px rgba(0,0,0,0.45)',
             backdropFilter: 'blur(16px)',
             zIndex: 199, width: 310,
             maxHeight: 'calc(100vh - 80px)', overflowY: 'auto',
@@ -626,7 +629,10 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
   const navigate = useNavigate()
   const location = useLocation()
   const { user, profile, signOut, isAdmin } = useAuth()
+  const { theme, toggleTheme } = useTheme()
+  const { extras } = useSidebar()
   const [open, setOpen] = useState(false)
+  const [createModal, setCreateModal] = useState(false)
 
   const profileUrl = profile?.username ? `/u/${profile.username}` : user ? `/u/${user.id}` : null
 
@@ -660,8 +666,8 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
           position: fixed;
           left: 0; top: 0; bottom: 0;
           width: 216px;
-          background: rgba(6,12,24,0.98);
-          border-right: 1px solid #1e3050;
+          background: var(--c-bg);
+          border-right: 1px solid var(--c-border);
           flex-direction: column;
           padding: 0;
           z-index: 100;
@@ -677,7 +683,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
         .sb-logo:hover { opacity: 0.85; }
         .sb-section { padding: 0 8px; flex: 1; }
         .sb-label {
-          font-size: 11px; font-weight: 700; color: #3d5270;
+          font-size: 11px; font-weight: 700; color: var(--c-subtle);
           text-transform: uppercase; letter-spacing: 0.1em;
           padding: 12px 10px 4px; display: block;
         }
@@ -685,13 +691,13 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
           display: flex; align-items: center; gap: 11px;
           width: 100%; padding: 9px 12px;
           border-radius: 9px; border: none;
-          background: transparent; color: #7d93b0;
+          background: transparent; color: var(--c-muted);
           font-size: 13px; font-weight: 600;
           cursor: pointer; font-family: inherit;
           transition: background 0.13s, color 0.13s;
           text-align: left; white-space: nowrap;
         }
-        .sb-item:hover { background: rgba(255,255,255,0.06); color: #e8f2ff; }
+        .sb-item:hover { background: rgba(128,128,128,0.1); color: var(--c-text); }
         .sb-item.active { background: rgba(27,120,247,0.13); color: #1b78f7; }
         .sb-item.danger { color: #ef4444; }
         .sb-item.danger:hover { background: rgba(239,68,68,0.08); color: #ef4444; }
@@ -707,7 +713,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
           transition: opacity 0.15s; width: calc(100% - 16px);
         }
         .sb-create:hover { opacity: 0.88; }
-        .sb-divider { height: 1px; background: #1e3050; margin: 8px 8px; }
+        .sb-divider { height: 1px; background: var(--c-border); margin: 8px 8px; }
         .sb-bottom { padding: 0 8px 16px; }
 
         @media (min-width: 861px) {
@@ -869,8 +875,8 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 4px 0' }}>
                 <AvatarCircle avatarUrl={profile?.avatar_url} initial={getInitial(user)} size={36} fontSize={14} />
                 <div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: '#e8f2ff', lineHeight: 1.2 }}>{getDisplayName(user)}</div>
-                  <div style={{ fontSize: 11, color: '#7d93b0', marginTop: 2 }}>{user.email}</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--c-text)', lineHeight: 1.2 }}>{getDisplayName(user)}</div>
+                  <div style={{ fontSize: 11, color: 'var(--c-muted)', marginTop: 2 }}>{user.email}</div>
                 </div>
               </div>
 
@@ -899,7 +905,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
             <div style={{ display: 'flex', gap: 8, padding: '16px 0 4px', borderTop: '1px solid #1e3050', marginTop: 4 }}>
               <button
                 onClick={() => { navigate('/login'); setOpen(false) }}
-                style={{ flex: 1, padding: '12px 0', background: 'transparent', border: '1px solid #1e3050', borderRadius: 10, color: '#e8f2ff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+                style={{ flex: 1, padding: '12px 0', background: 'transparent', border: '1px solid #1e3050', borderRadius: 10, color: 'var(--c-text)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
               >Entrar</button>
               <button
                 onClick={() => { navigate('/register'); setOpen(false) }}
@@ -979,7 +985,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
                   onProfile={profileUrl ? () => navigate(profileUrl) : null}
                   onSettings={() => navigate('/settings')}
                   onSignOut={handleSignOut}
-                  onCreateProject={showCreateProject ? () => navigate('/novo') : undefined}
+                  onCreateProject={showCreateProject ? () => setCreateModal(true) : undefined}
                 />
               </>
             ) : (
@@ -1007,7 +1013,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
           {showLinks && (
             <button
               className="ham-btn mob-only-create"
-              onClick={() => navigate('/novo')}
+              onClick={() => setCreateModal(true)}
               aria-label="Criar projeto"
               style={{
                 background: 'linear-gradient(135deg, #1b78f7, #4f46e5)',
@@ -1059,10 +1065,10 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
       <div className="sidebar">
         {/* Logo */}
         <button className="sb-logo" onClick={() => navigate(user ? '/dashboard' : '/')}>
-          <img src="/icon_logo.png" alt="Showo" style={{ height: 28, width: 'auto', objectFit: 'contain' }} />
+          <img src={theme === 'light' ? '/light_mode_LI.png' : '/icon_logo.png'} alt="Showo" style={{ height: 28, width: 'auto', objectFit: 'contain' }} />
         </button>
 
-        {/* Main nav + Create */}
+        {/* Main nav */}
         <div className="sb-section">
           {user && (
             <button className={`sb-item${isActive('/dashboard') ? ' active' : ''}`} onClick={() => navigate('/dashboard')}>
@@ -1075,12 +1081,58 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
           <button className={`sb-item${isActive('/ranking') ? ' active' : ''}`} onClick={() => navigate('/ranking')}>
             <Trophy size={16} /> Ranking
           </button>
-          {user && (
-            <button className="sb-create" onClick={() => navigate('/interview')}>
+          {/* Only show Criar projeto when NOT in a project context */}
+          {user && !extras && (
+            <button className="sb-create" onClick={() => setCreateModal(true)}>
               <Plus size={14} /> Criar projeto
             </button>
           )}
         </div>
+
+        {/* Project controls — shown when viewing own project */}
+        {extras?.type === 'project' && (
+          <>
+            <div className="sb-divider" style={{ margin: '8px 8px 4px' }} />
+            <div style={{ padding: '0 8px' }}>
+              <span className="sb-label">Gerir projeto</span>
+              <button className="sb-item" onClick={() => navigate(`/editar/${extras.slug}`)}>
+                <Pencil size={16} /> Editar
+              </button>
+              <button
+                className="sb-item"
+                onClick={extras.onDefense}
+              >
+                <GraduationCap size={16} />
+                Modo defesa
+                {extras.defenseDate && (
+                  <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--c-muted)', fontWeight: 500 }}>
+                    {new Date(extras.defenseDate).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' })}
+                  </span>
+                )}
+              </button>
+              <button
+                className="sb-item"
+                onClick={extras.onAnalyze}
+                disabled={extras.analyzingAI}
+                style={{ opacity: extras.analyzingAI ? 0.6 : 1 }}
+              >
+                <Sparkles size={16} />
+                {extras.analyzingAI ? 'A analisar…' : 'Análise IA'}
+                {extras.aiScore != null && !extras.analyzingAI && (
+                  <span style={{
+                    marginLeft: 'auto', fontSize: 11, fontWeight: 700,
+                    color: extras.aiScore >= 90 ? '#22c55e' : extras.aiScore >= 71 ? '#1b78f7' : extras.aiScore >= 40 ? '#fbbf24' : '#ef4444',
+                  }}>
+                    {extras.aiScore}
+                  </span>
+                )}
+              </button>
+              <button className="sb-item" onClick={() => navigate(`/certificado/${extras.slug}`)}>
+                <Trophy size={16} /> Certificado
+              </button>
+            </div>
+          </>
+        )}
 
         <div style={{ flex: 1 }} />
         <div className="sb-divider" />
@@ -1089,7 +1141,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
         <div className="sb-bottom">
           {user ? (
             <>
-              {/* Profile row + bell inline */}
+              {/* Profile row + notifications + theme toggle */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '0 4px 2px' }}>
                 {profileUrl && (
                   <button className={`sb-item${isActive('profile') ? ' active' : ''}`} style={{ flex: 1, margin: 0 }} onClick={() => navigate(profileUrl)}>
@@ -1098,6 +1150,22 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
                   </button>
                 )}
                 <InviteInbox userId={user.id} sidebar={true} />
+                {/* Theme toggle — small icon next to bell */}
+                <button
+                  onClick={toggleTheme}
+                  title={theme === 'dark' ? 'Modo claro' : 'Modo escuro'}
+                  style={{
+                    flexShrink: 0, width: 32, height: 32, borderRadius: 8,
+                    background: 'transparent', border: 'none',
+                    color: 'var(--c-muted)', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    transition: 'background 0.13s, color 0.13s',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.07)'; e.currentTarget.style.color = 'var(--c-text)' }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--c-muted)' }}
+                >
+                  {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
+                </button>
               </div>
               <button className="sb-item" onClick={() => navigate('/settings')}>
                 <SettingsIcon size={16} /> Definições
@@ -1137,7 +1205,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
 
             {/* Criar — botão central elevado */}
             <div className="bn-create-wrap">
-              <button className="bn-create-btn" onClick={() => navigate('/interview')} aria-label="Criar projeto">
+              <button className="bn-create-btn" onClick={() => setCreateModal(true)} aria-label="Criar projeto">
                 <Plus size={22} color="#fff" strokeWidth={2.5} />
               </button>
             </div>
@@ -1194,7 +1262,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
             <button
               className={`bn-item${isActive('/login') ? ' active' : ''}`}
               onClick={() => navigate('/login')}
-              style={{ color: isActive('/login') ? '#1b78f7' : '#e8f2ff' }}
+              style={{ color: isActive('/login') ? '#1b78f7' : 'var(--c-text)' }}
             >
               <User size={22} strokeWidth={1.8} />
               <span>Entrar</span>
@@ -1202,6 +1270,8 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
           </>
         )}
       </div>
+
+      {createModal && <CreateProjectModal onClose={() => setCreateModal(false)} />}
     </>
   )
 }

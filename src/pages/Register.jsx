@@ -4,15 +4,15 @@ import { supabase } from '../lib/supabase'
 import { Mail, GraduationCap, BookOpen, Search, Building2 } from 'lucide-react'
 
 const C = {
-  bg:          '#060c18',
-  card:        '#152030',
-  border:      '#1e3050',
-  borderBright:'#2a4275',
+  bg:          'var(--c-bg)',
+  card:        'var(--c-card)',
+  border:      'var(--c-border)',
+  borderBright:'var(--c-border-bright)',
   blue:        '#1b78f7',
   blueHover:   '#1564d4',
-  muted:       '#7d93b0',
-  subtle:      '#3d5270',
-  text:        '#e8f2ff',
+  muted:       'var(--c-muted)',
+  subtle:      'var(--c-subtle)',
+  text:        'var(--c-text)',
   error:       '#ef4444',
 }
 
@@ -249,7 +249,7 @@ export default function Register() {
               disabled={!role}
               style={{
                 width: '100%',
-                background: role ? `linear-gradient(135deg, ${selectedRole?.color ?? C.blue}, #4f46e5)` : '#1e3050',
+                background: role ? `linear-gradient(135deg, ${selectedRole?.color ?? C.blue}, #4f46e5)` : 'var(--c-border)',
                 color: '#fff', border: 'none', borderRadius: 10, padding: '13px',
                 fontSize: 15, fontWeight: 700, cursor: role ? 'pointer' : 'not-allowed',
                 fontFamily: 'inherit', transition: 'all 0.15s',
@@ -308,7 +308,7 @@ export default function Register() {
               <button
                 type="submit" disabled={loading}
                 style={{
-                  background: loading ? '#1e3050' : 'linear-gradient(135deg, #1b78f7, #4f46e5)',
+                  background: loading ? 'var(--c-border)' : 'linear-gradient(135deg, #1b78f7, #4f46e5)',
                   color: '#fff', border: 'none',
                   borderRadius: 10, padding: '13px', fontSize: 15, fontWeight: 700,
                   cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit', marginTop: 4,

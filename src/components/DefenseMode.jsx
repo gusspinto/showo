@@ -6,14 +6,14 @@ import { Hand, Search, Lightbulb, Settings, Wrench, Trophy, BookOpen, Mic, Gradu
 const C = {
   bg: '#080e1a',
   card: '#0d1829',
-  border: '#1e3050',
+  border: 'var(--c-border)',
   blue: '#1b78f7',
   yellow: '#fbbf24',
   green: '#22c55e',
   red: '#ef4444',
-  muted: '#7d93b0',
-  subtle: '#3d5270',
-  text: '#e8f2ff',
+  muted: 'var(--c-muted)',
+  subtle: 'var(--c-subtle)',
+  text: 'var(--c-text)',
 }
 
 // ─── Notes summary (all sections in one view) ───────────────────────────────
@@ -339,7 +339,7 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
     const timeStr = mins > 0 ? `${mins}m ${String(secs).padStart(2,'0')}s` : `${secs}s`
 
     return (
-      <div style={{ position: 'fixed', inset: 0, zIndex: 10000, background: '#060c18', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit', color: C.text, padding: 32, textAlign: 'center' }}>
+      <div style={{ position: 'fixed', inset: 0, zIndex: 10000, background: 'var(--c-bg)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit', color: C.text, padding: 32, textAlign: 'center' }}>
         <style>{`@keyframes pop{0%{transform:scale(0.5);opacity:0}60%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}} @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}`}</style>
 
         <div style={{ marginBottom: 4, animation: 'pop 0.5s ease-out' }}><GraduationCap size={80} color={C.blue} /></div>
@@ -386,7 +386,7 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
   if (!started) {
     const juryCount = aiData?.jury_questions?.length ?? 0
     return (
-      <div style={{ position: 'fixed', inset: 0, zIndex: 10000, background: '#060c18', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit', color: C.text, padding: 24 }}>
+      <div style={{ position: 'fixed', inset: 0, zIndex: 10000, background: 'var(--c-bg)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit', color: C.text, padding: 24 }}>
         <style>{`@keyframes spin{to{transform:rotate(360deg)}} @keyframes pop{0%{transform:scale(0.92)}60%{transform:scale(1.04)}100%{transform:scale(1)}} @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}`}</style>
 
         <div style={{ maxWidth: 360, width: '100%', textAlign: 'center', animation: 'fadeUp 0.3s ease-out' }}>
@@ -454,7 +454,7 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
   // ── Active guide ──────────────────────────────────────────────────────────
   return (
     <div
-      style={{ position: 'fixed', inset: 0, zIndex: 10000, background: '#060c18', display: 'flex', flexDirection: 'column', fontFamily: 'inherit', color: C.text }}
+      style={{ position: 'fixed', inset: 0, zIndex: 10000, background: 'var(--c-bg)', display: 'flex', flexDirection: 'column', fontFamily: 'inherit', color: C.text }}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
@@ -466,7 +466,7 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
           {/* Timer — tap to pause/resume */}
           <button
             onClick={() => setTimerOn(s => !s)}
-            style={{ background: timerOn ? `${accent}18` : 'rgba(255,255,255,0.04)', border: `1px solid ${timerOn ? accent + '44' : '#1e3050'}`, borderRadius: 8, padding: '6px 12px', color: timerOn ? accent : C.subtle, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', minWidth: 60, textAlign: 'center' }}
+            style={{ background: timerOn ? `${accent}18` : 'rgba(255,255,255,0.04)', border: `1px solid ${timerOn ? accent + '44' : 'var(--c-border)'}`, borderRadius: 8, padding: '6px 12px', color: timerOn ? accent : C.subtle, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', minWidth: 60, textAlign: 'center' }}
           >
             {fmt(timer)}
           </button>
@@ -476,7 +476,7 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
         <div style={{ display: 'flex', gap: 5 }}>
           {sections.map((s, i) => (
             <button key={s.id} onClick={() => { setCurrent(i); setChecked({}); setShowNote(false) }}
-              style={{ width: i === current ? 18 : 6, height: 6, borderRadius: 3, border: 'none', cursor: 'pointer', padding: 0, background: i === current ? accent : i < current ? '#2a4070' : '#1e3050', transition: 'all 0.2s' }}
+              style={{ width: i === current ? 18 : 6, height: 6, borderRadius: 3, border: 'none', cursor: 'pointer', padding: 0, background: i === current ? accent : i < current ? '#2a4070' : 'var(--c-border)', transition: 'all 0.2s' }}
             />
           ))}
         </div>
@@ -501,7 +501,7 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
           </div>
         </div>
         {/* Progress bar */}
-        <div style={{ height: 3, background: '#1e3050', borderRadius: 2, overflow: 'hidden', marginTop: 8 }}>
+        <div style={{ height: 3, background: 'var(--c-border)', borderRadius: 2, overflow: 'hidden', marginTop: 8 }}>
           <div style={{ height: '100%', background: accent, borderRadius: 2, width: `${((current + 1) / sections.length) * 100}%`, transition: 'width 0.3s' }} />
         </div>
       </div>
@@ -536,7 +536,7 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
                   style={{
                     display: 'flex', alignItems: 'center', gap: 14, width: '100%',
                     background: done ? `${accent}10` : '#0d1829',
-                    border: `1.5px solid ${done ? accent + '50' : '#1e3050'}`,
+                    border: `1.5px solid ${done ? accent + '50' : 'var(--c-border)'}`,
                     borderRadius: 14, padding: '16px 18px', cursor: 'pointer',
                     textAlign: 'left', fontFamily: 'inherit',
                     transition: 'all 0.15s',
@@ -570,7 +570,7 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
               <div style={{ marginTop: 4 }}>
                 <button
                   onClick={() => setShowNote(s => !s)}
-                  style={{ background: 'transparent', border: `1px solid ${showNote ? '#2a4275' : '#1e3050'}`, borderRadius: 9, padding: '7px 14px', color: showNote ? '#60a5fa' : C.subtle, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s' }}
+                  style={{ background: 'transparent', border: `1px solid ${showNote ? 'var(--c-border-bright)' : 'var(--c-border)'}`, borderRadius: 9, padding: '7px 14px', color: showNote ? '#60a5fa' : C.subtle, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s' }}
                 >
                   {showNote ? '▲ Esconder nota' : '▼ Ver nota completa'}
                 </button>
@@ -605,7 +605,7 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
         <button
           onClick={prev}
           disabled={current === 0}
-          style={{ flex: 1, padding: '16px 0', background: 'rgba(255,255,255,0.03)', border: '1px solid #1e3050', borderRadius: 14, color: current === 0 ? '#1e3050' : C.muted, fontSize: 20, cursor: current === 0 ? 'default' : 'pointer', fontFamily: 'inherit' }}
+          style={{ flex: 1, padding: '16px 0', background: 'rgba(255,255,255,0.03)', border: '1px solid #1e3050', borderRadius: 14, color: current === 0 ? 'var(--c-border)' : C.muted, fontSize: 20, cursor: current === 0 ? 'default' : 'pointer', fontFamily: 'inherit' }}
         >←</button>
         <button
           onClick={() => {

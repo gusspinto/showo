@@ -5,14 +5,14 @@ import { saveProject } from '../lib/saveProject'
 import { AlertTriangle } from 'lucide-react'
 
 const C = {
-  bg:     '#060c18',
-  card:   '#152030',
-  border: '#1e3050',
-  bright: '#2a4275',
+  bg:     'var(--c-bg)',
+  card:   'var(--c-card)',
+  border: 'var(--c-border)',
+  bright: 'var(--c-border-bright)',
   blue:   '#1b78f7',
-  text:   '#e8f2ff',
-  muted:  '#7d93b0',
-  subtle: '#3d5270',
+  text:   'var(--c-text)',
+  muted:  'var(--c-muted)',
+  subtle: 'var(--c-subtle)',
 }
 
 const TYPE_LABELS = {
@@ -459,7 +459,7 @@ export default function AIInterview() {
                   {/* Input */}
                   <div style={{
                     display: 'flex', gap: 10, alignItems: 'flex-end',
-                    background: '#111c32', border: `1.5px solid ${C.bright}`,
+                    background: 'var(--c-bg-alt)', border: `1.5px solid ${C.bright}`,
                     borderRadius: 14, padding: '8px 8px 8px 16px',
                     boxShadow: '0 4px 24px rgba(0,0,0,0.3)',
                   }}

@@ -11,26 +11,26 @@ import { useAuth } from '../context/AuthContext'
 import { CropModal } from '../components/CropModal'
 
 const colors = {
-  bg: '#060c18',
-  bgAlt: '#111c32',
-  card: '#152030',
-  cardHover: '#1c2d44',
-  border: '#1e3050',
-  borderBright: '#2a4275',
+  bg: 'var(--c-bg)',
+  bgAlt: 'var(--c-bg-alt)',
+  card: 'var(--c-card)',
+  cardHover: 'var(--c-card-hover)',
+  border: 'var(--c-border)',
+  borderBright: 'var(--c-border-bright)',
   blue: '#1b78f7',
   blueHover: '#1564d4',
   blueGlow: 'rgba(27,120,247,0.15)',
   blueSubtle: 'rgba(27,120,247,0.08)',
-  text: '#e8f2ff',
-  muted: '#7d93b0',
-  subtle: '#3d5270',
+  text: 'var(--c-text)',
+  muted: 'var(--c-muted)',
+  subtle: 'var(--c-subtle)',
   green: '#22c55e',
   greenGlow: 'rgba(34,197,94,0.12)',
   yellow: '#fbbf24',
   yellowGlow: 'rgba(234,179,8,0.1)',
   orange: '#f97316',
   red: '#ef4444',
-  inputBg: '#060c18',
+  inputBg: 'var(--c-bg)',
 }
 
 const inputBase = {
@@ -402,7 +402,7 @@ export default function NewProject() {
                   onClick={() => copyLink(editUrl, 'edit')}
                   style={{
                     background: copiedLink === 'edit' ? `linear-gradient(135deg, ${colors.green}, #16a34a)` : colors.yellow,
-                    color: '#060c18', border: 'none', borderRadius: 8,
+                    color: 'var(--c-bg)', border: 'none', borderRadius: 8,
                     padding: '10px 16px', fontSize: 13, fontWeight: 700,
                     cursor: 'pointer', whiteSpace: 'nowrap',
                     transition: 'background 0.2s',
@@ -487,10 +487,10 @@ export default function NewProject() {
             textAlign: 'center',
           }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}><Save size={36} color={colors.blue} /></div>
-            <h2 style={{ color: '#e8f2ff', fontSize: 20, fontWeight: 800, margin: '0 0 10px', letterSpacing: '-0.3px' }}>
+            <h2 style={{ color: 'var(--c-text)', fontSize: 20, fontWeight: 800, margin: '0 0 10px', letterSpacing: '-0.3px' }}>
               Guarda o teu projeto
             </h2>
-            <p style={{ color: '#7d93b0', fontSize: 14, lineHeight: 1.65, margin: '0 0 28px' }}>
+            <p style={{ color: 'var(--c-muted)', fontSize: 14, lineHeight: 1.65, margin: '0 0 28px' }}>
               Sem conta, o teu projeto fica guardado apenas com um link privado — se o perderes, não há forma de recuperar. Com conta, fica sempre acessível.
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -515,13 +515,13 @@ export default function NewProject() {
                 style={{
                   background: 'transparent',
                   border: '1px solid #1e3050', borderRadius: 10,
-                  padding: '11px 0', color: '#e8f2ff',
+                  padding: '11px 0', color: 'var(--c-text)',
                   fontSize: 15, fontWeight: 600,
                   cursor: 'pointer', fontFamily: 'inherit',
                   transition: 'border-color 0.15s, background 0.15s',
                 }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = '#2a4275'; e.currentTarget.style.background = 'rgba(255,255,255,0.03)' }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = '#1e3050'; e.currentTarget.style.background = 'transparent' }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--c-border-bright)'; e.currentTarget.style.background = 'rgba(255,255,255,0.03)' }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--c-border)'; e.currentTarget.style.background = 'transparent' }}
               >
                 Iniciar sessão
               </button>
@@ -534,7 +534,7 @@ export default function NewProject() {
                   padding: '8px 0', marginTop: 2,
                   transition: 'color 0.15s',
                 }}
-                onMouseEnter={e => e.currentTarget.style.color = '#7d93b0'}
+                onMouseEnter={e => e.currentTarget.style.color = 'var(--c-muted)'}
                 onMouseLeave={e => e.currentTarget.style.color = '#4a6080'}
               >
                 Continuar sem conta
@@ -586,7 +586,7 @@ export default function NewProject() {
               </span>
               <button
                 onClick={() => setPrefillBanner(false)}
-                style={{ background: 'none', border: 'none', color: '#7d93b0', cursor: 'pointer', fontSize: 16, padding: 0, flexShrink: 0 }}
+                style={{ background: 'none', border: 'none', color: 'var(--c-muted)', cursor: 'pointer', fontSize: 16, padding: 0, flexShrink: 0 }}
               ><X size={14} /></button>
             </div>
           )}

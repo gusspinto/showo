@@ -6,11 +6,11 @@ import { supabase } from '../lib/supabase'
 import { Link2, Check } from 'lucide-react'
 
 const C = {
-  bg: '#060c18',
-  border: '#1e3050',
+  bg: 'var(--c-bg)',
+  border: 'var(--c-border)',
   blue: '#1b78f7',
-  text: '#e8f2ff',
-  muted: '#7d93b0',
+  text: 'var(--c-text)',
+  muted: 'var(--c-muted)',
 }
 
 export default function Certificate() {
@@ -150,7 +150,7 @@ export default function Certificate() {
         {/* Main content */}
         <div style={{ marginBottom: 36 }}>
           <div style={{ fontSize: 13, color: C.muted, marginBottom: 10, fontWeight: 500 }}>Este certificado comprova que</div>
-          <div style={{ fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 900, color: '#e8f2ff', letterSpacing: '-1px', lineHeight: 1.1, marginBottom: 20, fontFamily: 'var(--font-heading)' }}>
+          <div style={{ fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 900, color: 'var(--c-text)', letterSpacing: '-1px', lineHeight: 1.1, marginBottom: 20, fontFamily: 'var(--font-heading)' }}>
             {project.creator_name || 'Estudante'}
           </div>
           <div style={{ fontSize: 14, color: C.muted, marginBottom: 8, fontWeight: 500 }}>concluiu com sucesso o projeto</div>
@@ -170,7 +170,7 @@ export default function Certificate() {
             <div style={{ fontSize: 11, color: C.muted, fontWeight: 500, marginTop: 4 }}>Score ≥ 75</div>
           </div>
           <div style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${C.border}`, borderRadius: 12, padding: '14px 20px' }}>
-            <div style={{ fontSize: 14, fontWeight: 600, color: '#e8f2ff', lineHeight: 1.2 }}>{date}</div>
+            <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--c-text)', lineHeight: 1.2 }}>{date}</div>
             <div style={{ fontSize: 11, color: C.muted, fontWeight: 500, marginTop: 4 }}>Data de emissão</div>
           </div>
         </div>

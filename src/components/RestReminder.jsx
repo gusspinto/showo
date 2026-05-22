@@ -7,11 +7,11 @@ const SNOOZE_MINS_KEY = 'showo_rest_snooze_mins'
 
 const C = {
   bg:     'rgba(6,12,24,0.95)',
-  card:   '#152030',
-  border: '#1e3050',
+  card:   'var(--c-card)',
+  border: 'var(--c-border)',
   blue:   '#1b78f7',
-  muted:  '#7d93b0',
-  text:   '#e8f2ff',
+  muted:  'var(--c-muted)',
+  text:   'var(--c-text)',
 }
 
 export default function RestReminder() {

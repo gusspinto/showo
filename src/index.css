@@ -14,6 +14,20 @@
   --font-heading: 'Croogla', 'Poppins', 'Inter', sans-serif;
   --font-body: 'Montserrat', 'Inter', system-ui, -apple-system, sans-serif;
 
+  /* ── Colour tokens — dark (default) ── */
+  --c-bg:           #060c18;
+  --c-bg-alt:       #111c32;
+  --c-card:         #152030;
+  --c-card-hover:   #1c2d44;
+  --c-border:       #1e3050;
+  --c-border-bright:#2a4275;
+  --c-muted:        #7d93b0;
+  --c-text:         #e8f2ff;
+  --c-subtle:       #3d5270;
+  --c-input-bg:     #060c18;
+  --c-blue-bg:      #0a1729;
+  --c-green-bg:     #061a0f;
+
   /* ── Typography scale ── */
   --text-xs:   11px;   /* captions, badges, tiny labels */
   --text-sm:   12px;   /* section labels, secondary meta */
@@ -35,6 +49,7 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* ── Dark mode (default) ── */
 body {
   margin: 0;
   padding: 0;
@@ -42,6 +57,57 @@ body {
   background-color: #060c18;
   color: #e8f2ff;
   font-family: var(--font-body);
+  transition: background-color 0.25s, color 0.25s;
+}
+
+/* ── Light mode ── */
+body.light {
+  background-color: #e4e3e3;
+  color: #0f172a;
+
+  --c-bg:           #e4e3e3;
+  --c-bg-alt:       #d8d7d7;
+  --c-card:         #f0efef;
+  --c-card-hover:   #e8e7e7;
+  --c-border:       #d1d5db;
+  --c-border-bright:#b0b7c3;
+  --c-muted:        #4b5563;
+  --c-text:         #0f172a;
+  --c-subtle:       #6b7280;
+  --c-input-bg:     #f5f4f4;
+  --c-blue-bg:      #dbeafe;
+  --c-green-bg:     #dcfce7;
+}
+
+body.light ::-webkit-scrollbar-track { background: #d4d3d3; }
+body.light ::-webkit-scrollbar-thumb { background: #9ca3af; }
+body.light ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+
+/* Light mode bottom nav */
+body.light .bottom-nav {
+  background: rgba(228,227,227,0.96) !important;
+  border-top-color: var(--c-border) !important;
+}
+body.light .bn-item { color: var(--c-muted) !important; }
+body.light .bn-item.active { color: #1b78f7 !important; }
+
+/* Light mode top nav */
+body.light nav {
+  background: rgba(228,227,227,0.95) !important;
+  border-bottom-color: var(--c-border) !important;
+}
+
+/* Light mode — form elements */
+body.light input,
+body.light textarea,
+body.light select {
+  background: #f5f4f4 !important;
+  color: #0f172a !important;
+  border-color: #c9cdd6 !important;
+}
+body.light input::placeholder,
+body.light textarea::placeholder {
+  color: #9ca3af !important;
 }
 
 h1, h2, h3, h4 {
