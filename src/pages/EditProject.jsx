@@ -4,22 +4,23 @@ import { supabase } from '../lib/supabase'
 import { updateProject } from '../lib/updateProject'
 import { Navbar } from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
-import { Sparkles, Lock, Search, Image } from 'lucide-react'
+import { useSidebar } from '../context/SidebarContext'
+import { Sparkles, Lock, Search, Image, ArrowLeft } from 'lucide-react'
 
 const colors = {
-  bg: '#060c18',
-  bgAlt: '#111c32',
-  card: '#152030',
-  border: '#1e3050',
-  borderBright: '#2a4275',
+  bg: 'var(--c-bg)',
+  bgAlt: 'var(--c-bg-alt)',
+  card: 'var(--c-card)',
+  border: 'var(--c-border)',
+  borderBright: 'var(--c-border-bright)',
   blue: '#1b78f7',
   blueHover: '#1564d4',
-  text: '#e8f2ff',
-  muted: '#7d93b0',
-  subtle: '#3d5270',
+  text: 'var(--c-text)',
+  muted: 'var(--c-muted)',
+  subtle: 'var(--c-subtle)',
   green: '#22c55e',
   red: '#f43f5e',
-  inputBg: '#060c18',
+  inputBg: 'var(--c-bg)',
 }
 
 const PROJECT_TYPES = [
@@ -111,6 +112,7 @@ export default function EditProject() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const { user } = useAuth()
+  const { setExtras } = useSidebar()
   const [project, setProject] = useState(null)
   const [form, setForm] = useState({})
   const [loading, setLoading] = useState(true)
@@ -186,6 +188,13 @@ export default function EditProject() {
     }
     load()
   }, [slug])
+
+  // Keep sidebar showing project controls while editing
+  useEffect(() => {
+    if (!project) return
+    setExtras({ type: 'project', slug: project.slug, title: project.name, showBack: true })
+    return () => setExtras(null)
+  }, [project?.id])
 
   function set(key, value) {
     setForm(f => ({ ...f, [key]: value }))
@@ -270,7 +279,7 @@ export default function EditProject() {
             transition: 'border-color 0.2s',
           }}
         >
-          ← Cancelar
+          <><ArrowLeft size={14} style={{marginRight:5,verticalAlign:"middle"}} />Cancelar</>
         </button>
       </Navbar>
 

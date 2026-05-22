@@ -4,15 +4,15 @@ import { supabase } from '../lib/supabase'
 import { Mail, Check } from 'lucide-react'
 
 const C = {
-  bg:          '#060c18',
-  card:        '#152030',
-  border:      '#1e3050',
-  borderBright:'#2a4275',
+  bg:          'var(--c-bg)',
+  card:        'var(--c-card)',
+  border:      'var(--c-border)',
+  borderBright:'var(--c-border-bright)',
   blue:        '#1b78f7',
   blueHover:   '#1564d4',
-  muted:       '#7d93b0',
-  subtle:      '#3d5270',
-  text:        '#e8f2ff',
+  muted:       'var(--c-muted)',
+  subtle:      'var(--c-subtle)',
+  text:        'var(--c-text)',
   error:       '#ef4444',
 }
 
@@ -153,7 +153,7 @@ export default function Login() {
                 <p style={{ margin: '0 0 10px', color: '#fbbf24', fontSize: 14, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
                   <Mail size={14} style={{ display: 'inline-block', verticalAlign: 'middle', flexShrink: 0 }} /> Email ainda não confirmado
                 </p>
-                <p style={{ margin: '0 0 12px', color: '#7d93b0', fontSize: 13, lineHeight: 1.5 }}>
+                <p style={{ margin: '0 0 12px', color: 'var(--c-muted)', fontSize: 13, lineHeight: 1.5 }}>
                   Confirma o teu email antes de entrar. Se o link expirou, envia um novo.
                 </p>
                 {resendState === 'sent' ? (
@@ -181,7 +181,7 @@ export default function Login() {
             <button
               type="submit" disabled={loading}
               style={{
-                background: loading ? '#1e3050' : 'linear-gradient(135deg, #1b78f7, #4f46e5)',
+                background: loading ? 'var(--c-border)' : 'linear-gradient(135deg, #1b78f7, #4f46e5)',
                 color: '#fff', border: 'none',
                 borderRadius: 10, padding: '13px', fontSize: 15, fontWeight: 700,
                 cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit',

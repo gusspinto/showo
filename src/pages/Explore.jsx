@@ -4,19 +4,20 @@ import { supabase } from '../lib/supabase'
 import { Navbar } from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
 import { Search, Building2, Eye, Briefcase } from 'lucide-react'
+import CreateProjectModal from '../components/CreateProjectModal'
 
 const colors = {
-  bg: '#060c18',
-  bgAlt: '#111c32',
-  card: '#152030',
-  cardHover: '#1c2d44',
-  border: '#1e3050',
-  borderBright: '#2a4275',
+  bg: 'var(--c-bg)',
+  bgAlt: 'var(--c-bg-alt)',
+  card: 'var(--c-card)',
+  cardHover: 'var(--c-card-hover)',
+  border: 'var(--c-border)',
+  borderBright: 'var(--c-border-bright)',
   blue: '#1b78f7',
   blueSubtle: 'rgba(27,120,247,0.08)',
-  text: '#e8f2ff',
-  muted: '#7d93b0',
-  subtle: '#3d5270',
+  text: 'var(--c-text)',
+  muted: 'var(--c-muted)',
+  subtle: 'var(--c-subtle)',
   green: '#22c55e',
   yellow: '#fbbf24',
   orange: '#f97316',
@@ -130,6 +131,7 @@ export default function Explore() {
   const [projects, setProjects] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
+  const [showCreateModal, setShowCreateModal] = useState(false)
   const [filterArea, setFilterArea] = useState('')
   const [filterType, setFilterType] = useState('')
   const [filterMinScore, setFilterMinScore] = useState(0)
@@ -255,11 +257,11 @@ export default function Explore() {
           border-radius: 14px;
         }
         .explore-card { transition: all 0.18s ease !important; }
-        .explore-card:hover { border-color: #2a4275 !important; transform: translateY(-3px) !important; box-shadow: 0 12px 40px rgba(0,0,0,0.45) !important; background: #1c2d44 !important; }
+        .explore-card:hover { border-color: var(--c-border-bright) !important; transform: translateY(-3px) !important; box-shadow: 0 12px 40px rgba(0,0,0,0.3) !important; background: var(--c-card-hover) !important; }
         .explore-card-arrow { opacity: 0; transform: translateX(-4px); transition: opacity 0.15s, transform 0.15s; }
         .explore-card:hover .explore-card-arrow { opacity: 1; transform: translateX(0); }
         .explore-grid { grid-template-columns: repeat(auto-fill, minmax(288px, 1fr)); }
-        .explore-search { width: 100%; background: #152030; border: 1px solid #1e3050; border-radius: 12px; color: #e8f2ff; font-size: 15px; padding: 14px 16px 14px 48px; outline: none; font-family: var(--font-body); box-sizing: border-box; transition: border-color 0.2s, box-shadow 0.2s; }
+        .explore-search { width: 100%; background: var(--c-card); border: 1px solid var(--c-border); border-radius: 12px; color: var(--c-text); font-size: 15px; padding: 14px 16px 14px 48px; outline: none; font-family: var(--font-body); box-sizing: border-box; transition: border-color 0.2s, box-shadow 0.2s; }
         .explore-search:focus { border-color: #1b78f7 !important; box-shadow: 0 0 0 3px rgba(27,120,247,0.12) !important; }
         .filter-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
         @media (max-width: 680px) {
@@ -274,7 +276,7 @@ export default function Explore() {
 
       <Navbar>
         <button
-          onClick={() => navigate('/novo')}
+          onClick={() => setShowCreateModal(true)}
           style={{ background: `linear-gradient(135deg, ${colors.blue}, #4f46e5)`, color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 16px rgba(27,120,247,0.3)' }}
         >
           Criar projeto
@@ -495,7 +497,7 @@ export default function Explore() {
                   {recruiterMode && project.technologies && (
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
                       {project.technologies.split(/[,\s·]+/).filter(Boolean).slice(0, 4).map((t, i) => (
-                        <span key={i} style={{ fontSize: 11, color: colors.muted, background: 'rgba(255,255,255,0.04)', border: `1px solid ${colors.border}`, borderRadius: 5, padding: '2px 7px' }}>
+                        <span key={i} style={{ fontSize: 11, color: colors.muted, background: 'var(--c-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: 5, padding: '2px 7px' }}>
                           {t.trim()}
                         </span>
                       ))}
@@ -507,6 +509,7 @@ export default function Explore() {
           </>
         )}
       </div>
+      {showCreateModal && <CreateProjectModal onClose={() => setShowCreateModal(false)} />}
     </div>
   )
 }

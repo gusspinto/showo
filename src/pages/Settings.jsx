@@ -2,24 +2,25 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
+import { useTheme } from '../context/ThemeContext'
 import { Navbar } from '../components/Navbar'
-import { Loader, Check, X, AlertTriangle, Camera, ArrowLeft, GraduationCap, BookOpen, Search, Building2, Lock, Briefcase } from 'lucide-react'
+import { Loader, Check, X, AlertTriangle, Camera, ArrowLeft, GraduationCap, BookOpen, Search, Building2, Lock, Briefcase, Sun, Moon } from 'lucide-react'
 import { CropModal } from '../components/CropModal'
 
 const C = {
-  bg:          '#060c18',
-  bgAlt:       '#111c32',
-  card:        '#152030',
-  cardHover:   '#1c2d44',
-  border:      '#1e3050',
-  borderBright:'#2a4275',
+  bg:          'var(--c-bg)',
+  bgAlt:       'var(--c-bg-alt)',
+  card:        'var(--c-card)',
+  cardHover:   'var(--c-card-hover)',
+  border:      'var(--c-border)',
+  borderBright:'var(--c-border-bright)',
   borderFocus: '#1b78f7',
   blue:        '#1b78f7',
   blueHover:   '#1564d4',
-  muted:       '#7d93b0',
-  text:        '#e8f2ff',
-  subtle:      '#3d5270',
-  inputBg:     '#060c18',
+  muted:       'var(--c-muted)',
+  text:        'var(--c-text)',
+  subtle:      'var(--c-subtle)',
+  inputBg:     'var(--c-bg)',
   red:         '#ef4444',
   green:       '#22c55e',
 }
@@ -121,6 +122,7 @@ function SectionCard({ title, children }) {
 
 export default function Settings() {
   const { user, loading: authLoading, refreshProfile } = useAuth()
+  const { theme, toggleTheme } = useTheme()
   const navigate = useNavigate()
 
   const [fullName, setFullName]           = useState('')
@@ -342,7 +344,7 @@ export default function Settings() {
               cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0, marginTop: 4,
               transition: 'border-color 0.15s, color 0.15s',
             }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = '#2a4275'; e.currentTarget.style.color = C.text }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--c-border-bright)'; e.currentTarget.style.color = C.text }}
             onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted }}
           >
             <ArrowLeft size={14} /> Dashboard
@@ -598,11 +600,42 @@ export default function Settings() {
               fontFamily: 'inherit',
               transition: 'border-color 0.2s, background 0.2s',
             }}
-            onMouseEnter={e => { if (!pwSaving) { e.currentTarget.style.borderColor = '#2a4275'; e.currentTarget.style.background = 'rgba(255,255,255,0.03)' }}}
+            onMouseEnter={e => { if (!pwSaving) { e.currentTarget.style.borderColor = 'var(--c-border-bright)'; e.currentTarget.style.background = 'var(--c-bg-alt)' }}}
             onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.background = 'transparent' }}
           >
             {pwSaving ? 'A alterar...' : 'Alterar password'}
           </button>
+        </SectionCard>
+
+        {/* Appearance */}
+        <SectionCard title="Aparência">
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 3 }}>Tema</div>
+              <div style={{ fontSize: 13, color: C.muted }}>
+                {theme === 'dark' ? 'Modo escuro ativo' : 'Modo claro ativo'}
+              </div>
+            </div>
+            <button
+              onClick={toggleTheme}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 8,
+                background: theme === 'dark' ? 'rgba(27,120,247,0.1)' : 'rgba(251,191,36,0.1)',
+                border: `1.5px solid ${theme === 'dark' ? 'rgba(27,120,247,0.3)' : 'rgba(251,191,36,0.3)'}`,
+                borderRadius: 10, padding: '10px 18px',
+                color: theme === 'dark' ? C.blue : '#d97706',
+                fontSize: 14, fontWeight: 600,
+                cursor: 'pointer', fontFamily: 'inherit',
+                transition: 'all 0.2s',
+                flexShrink: 0,
+              }}
+            >
+              {theme === 'dark'
+                ? <><Sun size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} />Modo claro</>
+                : <><Moon size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} />Modo escuro</>
+              }
+            </button>
+          </div>
         </SectionCard>
 
         {/* Danger zone */}

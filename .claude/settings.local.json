@@ -3,7 +3,9 @@
     "allow": [
       "Bash(npm install *)",
       "Bash(git push *)",
-      "Bash(git pull *)"
+      "Bash(git pull *)",
+      "Bash(npx vite *)",
+      "Bash(node_modules/.bin/vite build *)"
     ]
   }
 }

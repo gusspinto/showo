@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Edit3, Zap, Link, BookOpen, X } from 'lucide-react'
+import { Edit3, Zap, Link, BookOpen, X, ArrowRight, ChevronRight } from 'lucide-react'
 
 const STEPS = [
   {
@@ -20,7 +20,7 @@ const STEPS = [
           background: 'linear-gradient(135deg,#1b78f7,#4f46e5)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: 14,
-        }}>→</div>
+        }}><ArrowRight size={16} color="#fff" /></div>
       </div>
     ),
   },
@@ -64,11 +64,11 @@ const STEPS = [
         </div>
         <div style={{ padding: '9px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{
-            background: 'conic-gradient(#22c55e 306deg,#1e3050 0deg)',
+            background: 'conic-gradient(#22c55e 306deg,var(--c-border) 0deg)',
             borderRadius: '50%', width: 30, height: 30, flexShrink: 0,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
-            <div style={{ background: '#060c18', borderRadius: '50%', width: 22, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 800, color: '#22c55e' }}>85</div>
+            <div style={{ background: 'var(--c-bg)', borderRadius: '50%', width: 22, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 800, color: '#22c55e' }}>85</div>
           </div>
           <div style={{ flex: 1, fontSize: 11, color: '#7d93b0' }}>
             showo.app/projeto/<span style={{ color: '#60a5fa' }}>gestao-horarios</span>
@@ -131,8 +131,8 @@ export default function Onboarding({ onDone }) {
         opacity: visible ? 1 : 0,
         transition: 'all 0.35s cubic-bezier(0.34,1.56,0.64,1)',
         width: 'calc(100% - 40px)', maxWidth: 400,
-        background: 'linear-gradient(160deg,#111c32,#060c18)',
-        border: '1px solid rgba(27,120,247,0.2)',
+        background: 'var(--c-card)',
+        border: '1px solid var(--c-border-bright)',
         borderRadius: 20,
         padding: '22px 22px 22px',
         boxShadow: '0 20px 60px rgba(0,0,0,0.6)',
@@ -160,15 +160,15 @@ export default function Onboarding({ onDone }) {
             onClick={handleDone}
             style={{
               display: 'flex', alignItems: 'center', gap: 5,
-              background: 'rgba(255,255,255,0.04)',
-              border: '1px solid rgba(255,255,255,0.08)',
+              background: 'var(--c-bg-alt)',
+              border: '1px solid var(--c-border)',
               borderRadius: 8, padding: '5px 10px',
-              color: '#7d93b0', cursor: 'pointer',
+              color: 'var(--c-muted)', cursor: 'pointer',
               fontSize: 12, fontFamily: 'inherit',
               transition: 'all 0.15s',
             }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.color = '#e8f2ff' }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.color = '#7d93b0' }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'var(--c-card-hover)'; e.currentTarget.style.color = 'var(--c-text)' }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'var(--c-bg-alt)'; e.currentTarget.style.color = 'var(--c-muted)' }}
           >
             <X size={14} />
             <span>Saltar guia</span>
@@ -206,7 +206,7 @@ export default function Onboarding({ onDone }) {
                 onClick={() => setStep(i)}
                 style={{
                   width: i === step ? 18 : 5, height: 5, borderRadius: 3,
-                  background: i === step ? '#1b78f7' : '#1e3050',
+                  background: i === step ? '#1b78f7' : 'var(--c-border)',
                   transition: 'all 0.25s', cursor: 'pointer',
                 }}
               />
@@ -227,7 +227,9 @@ export default function Onboarding({ onDone }) {
             onMouseEnter={e => e.currentTarget.style.opacity = '0.9'}
             onMouseLeave={e => e.currentTarget.style.opacity = '1'}
           >
-            {isLast ? 'Começar →' : 'Próximo →'}
+            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              {isLast ? 'Começar' : 'Próximo'} <ChevronRight size={15} />
+            </span>
           </button>
         </div>
       </div>

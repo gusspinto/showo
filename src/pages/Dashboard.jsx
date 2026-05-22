@@ -4,19 +4,20 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Pencil, ExternalLink } from 'lucide-react'
 import { Navbar } from '../components/Navbar'
-import { Folder, Trophy, BarChart2, Rocket, Eye, GraduationCap, Plus, X, Users, Users2, ChevronRight, User, Settings, Compass, Medal, LogOut, Globe, TrendingUp, MessageSquare, Star, Mail, Search, BookOpen, Trash2, Check, Calendar } from 'lucide-react'
+import CreateProjectModal from '../components/CreateProjectModal'
+import { Folder, Trophy, BarChart2, Rocket, Eye, GraduationCap, Plus, X, Users, Users2, ChevronRight, User, Settings, Compass, Medal, LogOut, Globe, TrendingUp, MessageSquare, Star, Mail, Search, BookOpen, Trash2, Check, Calendar, ArrowRight } from 'lucide-react'
 
 const C = {
-  bg: '#060c18',
-  card: '#152030',
-  cardHover: '#1c2d44',
-  border: '#1e3050',
-  borderBright: '#2a4275',
+  bg: 'var(--c-bg)',
+  card: 'var(--c-card)',
+  cardHover: 'var(--c-card-hover)',
+  border: 'var(--c-border)',
+  borderBright: 'var(--c-border-bright)',
   blue: '#1b78f7',
   blueHover: '#1564d4',
-  muted: '#7d93b0',
-  text: '#e8f2ff',
-  subtle: '#3d5270',
+  muted: 'var(--c-muted)',
+  text: 'var(--c-text)',
+  subtle: 'var(--c-subtle)',
   green: '#22c55e',
   yellow: '#fbbf24',
   red: '#ef4444',
@@ -100,7 +101,7 @@ function ActionBtn({ onClick, label, primary, small }) {
       style={{
         background: primary
           ? (hovered ? C.blueHover : C.blue)
-          : (hovered ? 'rgba(255,255,255,0.06)' : 'transparent'),
+          : (hovered ? 'var(--c-card-hover)' : 'transparent'),
         border: primary ? 'none' : `1px solid ${C.border}`,
         borderRadius: 8,
         padding: small ? '6px 12px' : '8px 16px',
@@ -144,7 +145,7 @@ function ProjectRow({ project, onView, onEdit, onDelete }) {
       {/* Score ring — SVG stroke (matches Explore style) */}
       <div onClick={onView} style={{ position: 'relative', width: 42, height: 42, flexShrink: 0, cursor: 'pointer' }}>
         <svg width={42} height={42} style={{ transform: 'rotate(-90deg)', display: 'block' }}>
-          <circle cx={21} cy={21} r={17} fill="none" stroke="#1e3050" strokeWidth={3.5} />
+          <circle cx={21} cy={21} r={17} fill="none" stroke="var(--c-border)" strokeWidth={3.5} />
           <circle cx={21} cy={21} r={17} fill="none" stroke={scoreColor} strokeWidth={3.5}
             strokeDasharray={`${((project.score ?? 0) / 100) * 2 * Math.PI * 17} ${2 * Math.PI * 17}`}
             strokeLinecap="round"
@@ -166,7 +167,7 @@ function ProjectRow({ project, onView, onEdit, onDelete }) {
             {project.name}
           </span>
           {project.area && (
-            <span style={{ color: C.subtle, fontSize: 11, background: 'rgba(255,255,255,0.04)', border: `1px solid ${C.border}`, borderRadius: 5, padding: '1px 7px', flexShrink: 0 }}>
+            <span style={{ color: C.subtle, fontSize: 11, background: 'var(--c-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 5, padding: '1px 7px', flexShrink: 0 }}>
               {project.area}
             </span>
           )}
@@ -203,7 +204,7 @@ function ProjectRow({ project, onView, onEdit, onDelete }) {
             <button
               onClick={onEdit}
               title="Editar"
-              style={{ width: 34, height: 34, borderRadius: 9, background: 'rgba(255,255,255,0.05)', border: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: C.muted, flexShrink: 0 }}
+              style={{ width: 34, height: 34, borderRadius: 9, background: 'var(--c-card-hover)', border: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: C.muted, flexShrink: 0 }}
             ><Pencil size={14} /></button>
             <button
               onClick={onView}
@@ -238,7 +239,7 @@ function ProjectRow({ project, onView, onEdit, onDelete }) {
             <button
               onClick={(e) => { e.stopPropagation(); onEdit() }}
               title="Editar"
-              style={{ width: 36, height: 36, borderRadius: 9, background: 'rgba(255,255,255,0.05)', border: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: C.muted }}
+              style={{ width: 36, height: 36, borderRadius: 9, background: 'var(--c-card-hover)', border: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: C.muted }}
             ><Pencil size={14} /></button>
           </>
         )}
@@ -445,7 +446,7 @@ function JoinTurmaModal({ onClose, navigate, onJoined }) {
                 onClick={() => { navigate(`/turma/${joined.code}`); onClose() }}
                 style={{ width: '100%', background: `linear-gradient(135deg, ${C.blue}, #4f46e5)`, border: 'none', borderRadius: 12, padding: '14px', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 20px rgba(27,120,247,0.35)' }}
               >
-                Ir para a turma →
+                <span style={{display:'flex',alignItems:'center',gap:6,justifyContent:'center'}}>Ir para a turma <ArrowRight size={15} /></span>
               </button>
               <button
                 onClick={onClose}
@@ -528,9 +529,9 @@ function TurmasListModal({ turmas, onClose, navigate, onJoin }) {
             <div
               key={t.id}
               onClick={() => { navigate(`/turma/${t.code}`); onClose() }}
-              style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${C.border}`, borderRadius: 14, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', transition: 'all 0.15s' }}
+              style={{ background: 'var(--c-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 14, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', transition: 'all 0.15s' }}
               onMouseEnter={e => { e.currentTarget.style.background = C.cardHover; e.currentTarget.style.borderColor = C.borderBright }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; e.currentTarget.style.borderColor = C.border }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'var(--c-bg-alt)'; e.currentTarget.style.borderColor = C.border }}
             >
               <div style={{ width: 38, height: 38, borderRadius: 10, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <Users2 size={16} color="#1b78f7" />
@@ -650,9 +651,9 @@ const ONBOARDING = {
     title: 'Bem-vindo ao Showo!',
     subtitle: 'O teu portfólio profissional começa aqui.',
     steps: [
-      { icon: <Pencil size={20} color="#7d93b0" />, title: 'Cria o teu projeto', desc: 'Responde a algumas perguntas sobre o teu trabalho — a IA trata do resto.' },
-      { icon: <Globe size={20} color="#7d93b0" />, title: 'Partilha a tua página', desc: 'Cada projeto ganha uma página pública pronta a enviar a recrutadores e professores.' },
-      { icon: <TrendingUp size={20} color="#7d93b0" />, title: 'Acompanha o crescimento', desc: 'Vê o score, visualizações e feedback em tempo real.' },
+      { icon: <Pencil size={20} color="var(--c-muted)" />, title: 'Cria o teu projeto', desc: 'Responde a algumas perguntas sobre o teu trabalho — a IA trata do resto.' },
+      { icon: <Globe size={20} color="var(--c-muted)" />, title: 'Partilha a tua página', desc: 'Cada projeto ganha uma página pública pronta a enviar a recrutadores e professores.' },
+      { icon: <TrendingUp size={20} color="var(--c-muted)" />, title: 'Acompanha o crescimento', desc: 'Vê o score, visualizações e feedback em tempo real.' },
     ],
     cta: 'Criar o meu primeiro projeto',
     ctaPath: '/interview',
@@ -662,9 +663,9 @@ const ONBOARDING = {
     title: 'Bem-vindo ao Showo!',
     subtitle: 'Acompanha e avalia os projetos dos teus alunos.',
     steps: [
-      { icon: <GraduationCap size={20} color="#7d93b0" />, title: 'Cria uma turma', desc: 'Gera um código único e partilha-o com os teus alunos para que se juntem.' },
-      { icon: <BarChart2 size={20} color="#7d93b0" />, title: 'Acompanha o progresso', desc: 'Vê scores, completude e evolução de cada aluno numa tabela clara.' },
-      { icon: <MessageSquare size={20} color="#7d93b0" />, title: 'Dá feedback', desc: 'Deixa comentários por secção diretamente nos projetos dos alunos.' },
+      { icon: <GraduationCap size={20} color="var(--c-muted)" />, title: 'Cria uma turma', desc: 'Gera um código único e partilha-o com os teus alunos para que se juntem.' },
+      { icon: <BarChart2 size={20} color="var(--c-muted)" />, title: 'Acompanha o progresso', desc: 'Vê scores, completude e evolução de cada aluno numa tabela clara.' },
+      { icon: <MessageSquare size={20} color="var(--c-muted)" />, title: 'Dá feedback', desc: 'Deixa comentários por secção diretamente nos projetos dos alunos.' },
     ],
     cta: 'Criar a minha primeira turma',
     ctaAction: 'createTurma',
@@ -673,9 +674,9 @@ const ONBOARDING = {
     title: 'Bem-vindo ao Showo!',
     subtitle: 'Descobre talentos reais com projetos reais.',
     steps: [
-      { icon: <Compass size={20} color="#7d93b0" />, title: 'Explora projetos', desc: 'Navega por projetos de estudantes organizados por área e score.' },
-      { icon: <Star size={20} color="#7d93b0" />, title: 'Perfis completos', desc: 'Cada aluno tem uma página com links, tecnologias e contexto do projeto.' },
-      { icon: <Mail size={20} color="#7d93b0" />, title: 'Contacta diretamente', desc: 'Encontra o LinkedIn ou email de cada candidato no perfil.' },
+      { icon: <Compass size={20} color="var(--c-muted)" />, title: 'Explora projetos', desc: 'Navega por projetos de estudantes organizados por área e score.' },
+      { icon: <Star size={20} color="var(--c-muted)" />, title: 'Perfis completos', desc: 'Cada aluno tem uma página com links, tecnologias e contexto do projeto.' },
+      { icon: <Mail size={20} color="var(--c-muted)" />, title: 'Contacta diretamente', desc: 'Encontra o LinkedIn ou email de cada candidato no perfil.' },
     ],
     cta: 'Explorar projetos',
     ctaPath: '/explorar',
@@ -684,9 +685,9 @@ const ONBOARDING = {
     title: 'Bem-vindo ao Showo!',
     subtitle: 'Encontra o talento certo para a tua empresa.',
     steps: [
-      { icon: <Search size={20} color="#7d93b0" />, title: 'Descobre talento jovem', desc: 'Acede a projetos reais de estudantes do ensino profissional e universitário.' },
-      { icon: <Trophy size={20} color="#7d93b0" />, title: 'Filtra pelos melhores', desc: 'O ranking e os scores ajudam-te a identificar rapidamente os candidatos de destaque.' },
-      { icon: <Users size={20} color="#7d93b0" />, title: 'Estabelece contacto', desc: 'Cada perfil inclui links de contacto direto com o estudante.' },
+      { icon: <Search size={20} color="var(--c-muted)" />, title: 'Descobre talento jovem', desc: 'Acede a projetos reais de estudantes do ensino profissional e universitário.' },
+      { icon: <Trophy size={20} color="var(--c-muted)" />, title: 'Filtra pelos melhores', desc: 'O ranking e os scores ajudam-te a identificar rapidamente os candidatos de destaque.' },
+      { icon: <Users size={20} color="var(--c-muted)" />, title: 'Estabelece contacto', desc: 'Cada perfil inclui links de contacto direto com o estudante.' },
     ],
     cta: 'Ver ranking',
     ctaPath: '/ranking',
@@ -725,18 +726,18 @@ function OnboardingModal({ user, profile, onDismiss, onCreateTurma }) {
           <>
             <div style={{ textAlign: 'center', marginBottom: 28 }}>
               <img src="/icon.png" alt="Showo" style={{ width: 60, height: 60, objectFit: 'contain', marginBottom: 14, display: 'block', margin: '0 auto 14px' }} />
-              <h2 style={{ color: '#e8f2ff', fontSize: 22, fontWeight: 800, margin: '0 0 8px', letterSpacing: '-0.3px' }}>
+              <h2 style={{ color: 'var(--c-text)', fontSize: 22, fontWeight: 800, margin: '0 0 8px', letterSpacing: '-0.3px' }}>
                 {cfg.title}
               </h2>
-              <p style={{ color: '#7d93b0', fontSize: 15, margin: 0, lineHeight: 1.5 }}>{cfg.subtitle}</p>
+              <p style={{ color: 'var(--c-muted)', fontSize: 15, margin: 0, lineHeight: 1.5 }}>{cfg.subtitle}</p>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 28 }}>
               {cfg.steps.map((s, i) => (
-                <div key={i} style={{ display: 'flex', gap: 14, alignItems: 'flex-start', background: 'rgba(255,255,255,0.03)', border: '1px solid #1e3050', borderRadius: 12, padding: '14px 16px' }}>
+                <div key={i} style={{ display: 'flex', gap: 14, alignItems: 'flex-start', background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)', borderRadius: 12, padding: '14px 16px' }}>
                   <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1, width: 24, height: 24 }}>{s.icon}</span>
                   <div>
-                    <div style={{ color: '#e8f2ff', fontSize: 14, fontWeight: 600, marginBottom: 3 }}>{s.title}</div>
-                    <div style={{ color: '#7d93b0', fontSize: 13, lineHeight: 1.4 }}>{s.desc}</div>
+                    <div style={{ color: 'var(--c-text)', fontSize: 14, fontWeight: 600, marginBottom: 3 }}>{s.title}</div>
+                    <div style={{ color: 'var(--c-muted)', fontSize: 13, lineHeight: 1.4 }}>{s.desc}</div>
                   </div>
                 </div>
               ))}
@@ -746,12 +747,12 @@ function OnboardingModal({ user, profile, onDismiss, onCreateTurma }) {
                 onClick={() => setStep(1)}
                 style={{ flex: 1, background: 'linear-gradient(135deg,#1b78f7,#4f46e5)', border: 'none', borderRadius: 10, padding: '13px', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 20px rgba(27,120,247,0.35)' }}
               >
-                Continuar →
+                <span style={{display:'flex',alignItems:'center',gap:6,justifyContent:'center'}}>Continuar <ArrowRight size={15} /></span>
               </button>
             </div>
             <button
               onClick={onDismiss}
-              style={{ display: 'block', width: '100%', background: 'none', border: 'none', color: '#3d5270', fontSize: 13, cursor: 'pointer', marginTop: 14, fontFamily: 'inherit', padding: 0 }}
+              style={{ display: 'block', width: '100%', background: 'none', border: 'none', color: 'var(--c-subtle)', fontSize: 13, cursor: 'pointer', marginTop: 14, fontFamily: 'inherit', padding: 0 }}
             >
               Saltar introdução
             </button>
@@ -760,10 +761,10 @@ function OnboardingModal({ user, profile, onDismiss, onCreateTurma }) {
           <>
             <div style={{ textAlign: 'center', marginBottom: 28 }}>
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 14 }}><Rocket size={44} color="#1b78f7" /></div>
-              <h2 style={{ color: '#e8f2ff', fontSize: 20, fontWeight: 800, margin: '0 0 8px', letterSpacing: '-0.3px' }}>
+              <h2 style={{ color: 'var(--c-text)', fontSize: 20, fontWeight: 800, margin: '0 0 8px', letterSpacing: '-0.3px' }}>
                 Pronto para começar?
               </h2>
-              <p style={{ color: '#7d93b0', fontSize: 14, margin: 0, lineHeight: 1.55, maxWidth: 320, marginLeft: 'auto', marginRight: 'auto' }}>
+              <p style={{ color: 'var(--c-muted)', fontSize: 14, margin: 0, lineHeight: 1.55, maxWidth: 320, marginLeft: 'auto', marginRight: 'auto' }}>
                 {role === 'aluno' && 'A IA vai guiar-te passo a passo para transformar o teu projeto numa página profissional.'}
                 {role === 'professor' && 'Cria a tua turma agora e partilha o código com os teus alunos.'}
                 {role === 'recrutador' && 'Explora os projetos e descobre os talentos que procuras.'}
@@ -775,11 +776,11 @@ function OnboardingModal({ user, profile, onDismiss, onCreateTurma }) {
                 onClick={handleCta}
                 style={{ background: 'linear-gradient(135deg,#1b78f7,#4f46e5)', border: 'none', borderRadius: 10, padding: '14px', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 20px rgba(27,120,247,0.35)' }}
               >
-                {cfg.cta} →
+                <span style={{display:'flex',alignItems:'center',gap:6,justifyContent:'center'}}>{cfg.cta} <ArrowRight size={15} /></span>
               </button>
               <button
                 onClick={onDismiss}
-                style={{ background: 'transparent', border: '1px solid #1e3050', borderRadius: 10, padding: '13px', color: '#7d93b0', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}
+                style={{ background: 'transparent', border: '1px solid var(--c-border)', borderRadius: 10, padding: '13px', color: 'var(--c-muted)', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}
               >
                 Explorar primeiro
               </button>
@@ -790,7 +791,7 @@ function OnboardingModal({ user, profile, onDismiss, onCreateTurma }) {
         {/* Dots */}
         <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginTop: 20 }}>
           {Array.from({ length: totalSteps }).map((_, i) => (
-            <div key={i} style={{ width: i === step ? 20 : 6, height: 6, borderRadius: 3, background: i === step ? '#1b78f7' : '#1e3050', transition: 'all 0.2s' }} />
+            <div key={i} style={{ width: i === step ? 20 : 6, height: 6, borderRadius: 3, background: i === step ? '#1b78f7' : 'var(--c-border)', transition: 'all 0.2s' }} />
           ))}
         </div>
       </div>
@@ -811,6 +812,7 @@ export default function Dashboard() {
   const [showTurmasModal, setShowTurmasModal] = useState(false)
   const [toast, setToast] = useState('')
   const [showOnboarding, setShowOnboarding] = useState(false)
+  const [showCreateModal, setShowCreateModal] = useState(false)
   const [collabProjects, setCollabProjects] = useState([])
 
   function showToast(msg) {
@@ -1012,7 +1014,7 @@ export default function Dashboard() {
         /* Inline stat pills */
         .dash-stat-pill {
           display: inline-flex; align-items: center; gap: 5px;
-          background: rgba(255,255,255,0.03);
+          background: var(--c-bg-alt);
           border: 1px solid ${C.border};
           border-radius: 999px;
           padding: 4px 11px;
@@ -1075,7 +1077,7 @@ export default function Dashboard() {
         position: 'fixed', bottom: 28, left: '50%',
         transform: `translateX(-50%) translateY(${toast ? 0 : 80}px)`,
         opacity: toast ? 1 : 0, transition: 'all 0.3s cubic-bezier(0.34,1.56,0.64,1)',
-        background: '#111c32', border: `1px solid ${C.borderBright}`, borderRadius: 12,
+        background: 'var(--c-bg-alt)', border: `1px solid ${C.borderBright}`, borderRadius: 12,
         padding: '12px 24px', fontSize: 14, fontWeight: 600, color: C.text,
         zIndex: 3000, pointerEvents: 'none', whiteSpace: 'nowrap',
         boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
@@ -1211,7 +1213,7 @@ export default function Dashboard() {
                   <p style={{ color: C.text, fontSize: 15, fontWeight: 700, margin: '0 0 6px' }}>Ainda não tens turmas</p>
                   <p style={{ color: C.muted, fontSize: 13, margin: '0 0 22px', lineHeight: 1.6 }}>Cria uma turma e partilha o código com os teus alunos.</p>
                   <button onClick={() => setShowCreateTurma(true)} style={{ background: `linear-gradient(135deg, ${C.blue}, #4f46e5)`, border: 'none', borderRadius: 9, padding: '10px 24px', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 16px rgba(27,120,247,0.3)' }}>
-                    Criar primeira turma →
+                    <span style={{display:'flex',alignItems:'center',gap:6}}>Criar primeira turma <ArrowRight size={14} /></span>
                   </button>
                 </div>
               ) : (
@@ -1281,7 +1283,7 @@ export default function Dashboard() {
 
           {/* ── Turma widget (alunos only) ── */}
           {!isTeacher && !loadingStudentTurmas && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', background: studentTurmas.length > 0 ? 'rgba(27,120,247,0.05)' : 'rgba(255,255,255,0.02)', border: `1px solid ${studentTurmas.length > 0 ? 'rgba(27,120,247,0.18)' : C.border}`, borderRadius: 12, padding: '11px 14px', transition: 'all 0.2s' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', background: studentTurmas.length > 0 ? 'rgba(27,120,247,0.05)' : 'var(--c-bg-alt)', border: `1px solid ${studentTurmas.length > 0 ? 'rgba(27,120,247,0.18)' : C.border}`, borderRadius: 12, padding: '11px 14px', transition: 'all 0.2s' }}>
               <div style={{ width: 32, height: 32, borderRadius: 9, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <Users2 size={14} color="#1b78f7" />
               </div>
@@ -1331,7 +1333,7 @@ export default function Dashboard() {
               </div>
               {!loadingProjects && projects.length > 0 && (
                 <button
-                  onClick={() => navigate('/interview')}
+                  onClick={() => setShowCreateModal(true)}
                   style={{ display: 'flex', alignItems: 'center', gap: 6, background: `${C.blue}18`, border: `1px solid ${C.blue}30`, borderRadius: 8, padding: '6px 12px', color: '#60a5fa', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s' }}
                   onMouseEnter={e => { e.currentTarget.style.background = `${C.blue}28`; e.currentTarget.style.borderColor = `${C.blue}55` }}
                   onMouseLeave={e => { e.currentTarget.style.background = `${C.blue}18`; e.currentTarget.style.borderColor = `${C.blue}30` }}
@@ -1355,10 +1357,10 @@ export default function Dashboard() {
                   Cria o teu primeiro projeto e partilha o que estás a construir com o mundo.
                 </p>
                 <button
-                  onClick={() => navigate('/interview')}
+                  onClick={() => setShowCreateModal(true)}
                   style={{ background: `linear-gradient(135deg, ${C.blue}, #4f46e5)`, border: 'none', borderRadius: 10, padding: '13px 32px', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 20px rgba(27,120,247,0.35)' }}
                 >
-                  Criar com IA →
+                  Criar projeto
                 </button>
               </div>
             ) : (
@@ -1386,7 +1388,7 @@ export default function Dashboard() {
                     onMouseLeave={e => { e.currentTarget.style.background = C.card; e.currentTarget.style.borderColor = C.border }}>
                     <div style={{ position: 'relative', width: 38, height: 38, flexShrink: 0 }}>
                       <svg width={38} height={38} style={{ transform: 'rotate(-90deg)', display: 'block' }}>
-                        <circle cx={19} cy={19} r={15} fill="none" stroke="#1e3050" strokeWidth={3} />
+                        <circle cx={19} cy={19} r={15} fill="none" stroke="var(--c-border)" strokeWidth={3} />
                         <circle cx={19} cy={19} r={15} fill="none" stroke={getScoreColor(p.score)} strokeWidth={3}
                           strokeDasharray={`${((p.score ?? 0) / 100) * 2 * Math.PI * 15} ${2 * Math.PI * 15}`}
                           strokeLinecap="round"
@@ -1399,7 +1401,7 @@ export default function Dashboard() {
                       <div style={{ color: C.text, fontSize: 14, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
                       {p.creator_name && <div style={{ color: C.muted, fontSize: 12, marginTop: 2 }}>de {p.creator_name}</div>}
                     </div>
-                    {p.area && <span style={{ fontSize: 11, color: C.subtle, background: 'rgba(255,255,255,0.04)', border: `1px solid ${C.border}`, borderRadius: 5, padding: '2px 8px', flexShrink: 0 }}>{p.area}</span>}
+                    {p.area && <span style={{ fontSize: 11, color: C.subtle, background: 'var(--c-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 5, padding: '2px 8px', flexShrink: 0 }}>{p.area}</span>}
                     <ChevronRight size={15} color={C.subtle} style={{ flexShrink: 0 }} />
                   </div>
                 ))}
@@ -1409,6 +1411,7 @@ export default function Dashboard() {
 
         </div>{/* end sections */}
       </div>
+      {showCreateModal && <CreateProjectModal onClose={() => setShowCreateModal(false)} />}
     </div>
   )
 }

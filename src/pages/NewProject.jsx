@@ -1,36 +1,36 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { GraduationCap, Briefcase, Rocket, Users, ClipboardList, BarChart2, Monitor, Trophy, Sparkles, Check, Lock, Camera, X, Save } from 'lucide-react'
+import { GraduationCap, Briefcase, Rocket, Users, ClipboardList, BarChart2, Monitor, Trophy, Sparkles, Check, Lock, Camera, X, Save, ArrowRight, ArrowLeft, ChevronRight, ShieldAlert } from 'lucide-react'
 import { generateProject } from '../lib/generateProject'
 import { saveProject } from '../lib/saveProject'
-import { calculateScore } from '../lib/score'
+import { calculateScore, looksLikeSpam } from '../lib/score'
 import { Toast, useToast } from '../components/Toast'
 import { Navbar } from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
 import { CropModal } from '../components/CropModal'
 
 const colors = {
-  bg: '#060c18',
-  bgAlt: '#111c32',
-  card: '#152030',
-  cardHover: '#1c2d44',
-  border: '#1e3050',
-  borderBright: '#2a4275',
+  bg: 'var(--c-bg)',
+  bgAlt: 'var(--c-bg-alt)',
+  card: 'var(--c-card)',
+  cardHover: 'var(--c-card-hover)',
+  border: 'var(--c-border)',
+  borderBright: 'var(--c-border-bright)',
   blue: '#1b78f7',
   blueHover: '#1564d4',
   blueGlow: 'rgba(27,120,247,0.15)',
   blueSubtle: 'rgba(27,120,247,0.08)',
-  text: '#e8f2ff',
-  muted: '#7d93b0',
-  subtle: '#3d5270',
+  text: 'var(--c-text)',
+  muted: 'var(--c-muted)',
+  subtle: 'var(--c-subtle)',
   green: '#22c55e',
   greenGlow: 'rgba(34,197,94,0.12)',
   yellow: '#fbbf24',
   yellowGlow: 'rgba(234,179,8,0.1)',
   orange: '#f97316',
   red: '#ef4444',
-  inputBg: '#060c18',
+  inputBg: 'var(--c-bg)',
 }
 
 const inputBase = {
@@ -129,7 +129,6 @@ export default function NewProject() {
   const fileInputRef = useRef(null)
   const [dragOver, setDragOver] = useState(false)
   const [cropFile, setCropFile] = useState(null) // File waiting to be cropped
-
   // Show auth nudge for anonymous users (once per session)
   useEffect(() => {
     if (authLoading) return
@@ -192,8 +191,36 @@ export default function NewProject() {
     setAnswers(p => ({ ...p, [key]: val }))
   }
 
+  // Returns the text values that should be spam-checked for the current step
+  function getCurrentFieldValues() {
+    if (phase === 'goal') return []
+    switch (s.type) {
+      case 'dual_text':     return s.keys.map(k => answers[k] ?? '')
+      case 'text':
+      case 'textarea':      return [answers[s.key] ?? '']
+      case 'dual_textarea': return s.keys.map(k => answers[k] ?? '')
+      default:              return []
+    }
+  }
+
+  function hasSpamInCurrent() {
+    return getCurrentFieldValues().some(v => v.trim().length > 0 && looksLikeSpam(v))
+  }
+
+  function isFieldSpam(key) {
+    const v = answers[key] ?? ''
+    return v.trim().length > 0 && looksLikeSpam(v)
+  }
+
+  function spamBorder(key) {
+    return isFieldSpam(key)
+      ? `1.5px solid rgba(239,68,68,0.6)`
+      : `1.5px solid ${colors.border}`
+  }
+
   function canProceed() {
     if (phase === 'goal') return !!formGoal
+    if (hasSpamInCurrent()) return false
     switch (s.type) {
       case 'dual_text':     return s.keys.every(k => (answers[k] ?? '').trim().length > 0)
       case 'text':
@@ -210,6 +237,10 @@ export default function NewProject() {
 
   async function handleNext() {
     if (phase === 'goal') { setPhase('form'); return }
+
+    // Spam guard — also catches attempts to bypass with Enter key
+    if (hasSpamInCurrent()) return
+
     if (step < TOTAL_STEPS - 1) { setStep(n => n + 1); return }
 
     setPhase('generating')
@@ -304,7 +335,7 @@ export default function NewProject() {
                   >
                     <div style={{
                       width: 42, height: 42, borderRadius: 10, marginBottom: 12,
-                      background: sel ? 'rgba(27,120,247,0.15)' : 'rgba(255,255,255,0.04)',
+                      background: sel ? 'rgba(27,120,247,0.15)' : 'var(--c-bg-alt)',
                       border: `1px solid ${sel ? 'rgba(27,120,247,0.25)' : colors.border}`,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                     }}>
@@ -329,9 +360,10 @@ export default function NewProject() {
                 fontFamily: 'inherit',
                 boxShadow: formGoal ? '0 4px 20px rgba(27,120,247,0.3)' : 'none',
                 letterSpacing: '-0.2px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}
             >
-              Continuar →
+              <span style={{display:'flex',alignItems:'center',gap:6}}>Continuar <ArrowRight size={15} /></span>
             </button>
           </div>
         </div>
@@ -402,7 +434,7 @@ export default function NewProject() {
                   onClick={() => copyLink(editUrl, 'edit')}
                   style={{
                     background: copiedLink === 'edit' ? `linear-gradient(135deg, ${colors.green}, #16a34a)` : colors.yellow,
-                    color: '#060c18', border: 'none', borderRadius: 8,
+                    color: 'var(--c-bg)', border: 'none', borderRadius: 8,
                     padding: '10px 16px', fontSize: 13, fontWeight: 700,
                     cursor: 'pointer', whiteSpace: 'nowrap',
                     transition: 'background 0.2s',
@@ -427,7 +459,7 @@ export default function NewProject() {
                 letterSpacing: '-0.2px',
               }}
             >
-              Ver o meu projeto →
+              <span style={{display:'flex',alignItems:'center',gap:6}}>Ver o meu projeto <ArrowRight size={15} /></span>
             </button>
           </div>
         </div>
@@ -487,10 +519,10 @@ export default function NewProject() {
             textAlign: 'center',
           }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}><Save size={36} color={colors.blue} /></div>
-            <h2 style={{ color: '#e8f2ff', fontSize: 20, fontWeight: 800, margin: '0 0 10px', letterSpacing: '-0.3px' }}>
+            <h2 style={{ color: 'var(--c-text)', fontSize: 20, fontWeight: 800, margin: '0 0 10px', letterSpacing: '-0.3px' }}>
               Guarda o teu projeto
             </h2>
-            <p style={{ color: '#7d93b0', fontSize: 14, lineHeight: 1.65, margin: '0 0 28px' }}>
+            <p style={{ color: 'var(--c-muted)', fontSize: 14, lineHeight: 1.65, margin: '0 0 28px' }}>
               Sem conta, o teu projeto fica guardado apenas com um link privado — se o perderes, não há forma de recuperar. Com conta, fica sempre acessível.
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -515,13 +547,13 @@ export default function NewProject() {
                 style={{
                   background: 'transparent',
                   border: '1px solid #1e3050', borderRadius: 10,
-                  padding: '11px 0', color: '#e8f2ff',
+                  padding: '11px 0', color: 'var(--c-text)',
                   fontSize: 15, fontWeight: 600,
                   cursor: 'pointer', fontFamily: 'inherit',
                   transition: 'border-color 0.15s, background 0.15s',
                 }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = '#2a4275'; e.currentTarget.style.background = 'rgba(255,255,255,0.03)' }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = '#1e3050'; e.currentTarget.style.background = 'transparent' }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--c-border-bright)'; e.currentTarget.style.background = 'var(--c-bg-alt)' }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--c-border)'; e.currentTarget.style.background = 'transparent' }}
               >
                 Iniciar sessão
               </button>
@@ -534,7 +566,7 @@ export default function NewProject() {
                   padding: '8px 0', marginTop: 2,
                   transition: 'color 0.15s',
                 }}
-                onMouseEnter={e => e.currentTarget.style.color = '#7d93b0'}
+                onMouseEnter={e => e.currentTarget.style.color = 'var(--c-muted)'}
                 onMouseLeave={e => e.currentTarget.style.color = '#4a6080'}
               >
                 Continuar sem conta
@@ -571,8 +603,8 @@ export default function NewProject() {
         }} />
       </div>
 
-      <div style={{ flex: 1, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '44px 24px 40px', overflowY: 'auto' }}>
-        <div style={{ width: '100%', maxWidth: 600 }}>
+      <div style={{ flex: 1, display: 'flex', alignItems: isFinalize ? 'flex-start' : 'center', justifyContent: 'center', padding: isFinalize ? '40px 24px 60px' : '32px 24px', overflowY: 'auto' }}>
+        <div style={{ width: '100%', maxWidth: 580 }}>
 
           {/* Prefill banner */}
           {prefillBanner && (
@@ -586,7 +618,7 @@ export default function NewProject() {
               </span>
               <button
                 onClick={() => setPrefillBanner(false)}
-                style={{ background: 'none', border: 'none', color: '#7d93b0', cursor: 'pointer', fontSize: 16, padding: 0, flexShrink: 0 }}
+                style={{ background: 'none', border: 'none', color: 'var(--c-muted)', cursor: 'pointer', fontSize: 16, padding: 0, flexShrink: 0 }}
               ><X size={14} /></button>
             </div>
           )}
@@ -598,7 +630,7 @@ export default function NewProject() {
           {/* ── dual_text ── */}
           {s.type === 'dual_text' && (
             <>
-              <h2 style={{ fontSize: 'clamp(20px, 4vw, 28px)', fontWeight: 800, marginBottom: 24, marginTop: 6, lineHeight: 1.25, letterSpacing: '-0.3px' }}>{s.label}</h2>
+              <h2 style={{ fontSize: 'clamp(26px, 4.5vw, 36px)', fontWeight: 900, marginBottom: 28, marginTop: 6, lineHeight: 1.2, letterSpacing: '-0.5px' }}>{s.label}</h2>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 {s.keys.map((key, i) => (
                   <div key={key}>
@@ -610,7 +642,7 @@ export default function NewProject() {
                       onKeyDown={i === s.keys.length - 1 ? handleKeyDown : undefined}
                       placeholder={s.placeholders[i]}
                       autoFocus={i === 0}
-                      style={{ ...inputBase, fontSize: 17 }}
+                      style={{ ...inputBase, fontSize: 17, border: spamBorder(key) }}
                       {...sharedInputHandlers}
                     />
                   </div>
@@ -622,7 +654,7 @@ export default function NewProject() {
           {/* ── text ── */}
           {s.type === 'text' && (
             <>
-              <h2 style={{ fontSize: 'clamp(20px, 4vw, 28px)', fontWeight: 800, marginBottom: 24, marginTop: 6, lineHeight: 1.25, letterSpacing: '-0.3px' }}>{s.label}</h2>
+              <h2 style={{ fontSize: 'clamp(26px, 4.5vw, 36px)', fontWeight: 900, marginBottom: 28, marginTop: 6, lineHeight: 1.2, letterSpacing: '-0.5px' }}>{s.label}</h2>
               <input
                 key={s.key}
                 type="text"
@@ -631,7 +663,7 @@ export default function NewProject() {
                 onKeyDown={handleKeyDown}
                 placeholder={s.placeholder}
                 autoFocus
-                style={{ ...inputBase, fontSize: 18, padding: '15px 16px' }}
+                style={{ ...inputBase, fontSize: 18, padding: '15px 16px', border: spamBorder(s.key) }}
                 {...sharedInputHandlers}
               />
             </>
@@ -640,7 +672,7 @@ export default function NewProject() {
           {/* ── textarea ── */}
           {s.type === 'textarea' && (
             <>
-              <h2 style={{ fontSize: 'clamp(20px, 4vw, 28px)', fontWeight: 800, marginBottom: 24, marginTop: 6, lineHeight: 1.25, letterSpacing: '-0.3px' }}>{s.label}</h2>
+              <h2 style={{ fontSize: 'clamp(26px, 4.5vw, 36px)', fontWeight: 900, marginBottom: 28, marginTop: 6, lineHeight: 1.2, letterSpacing: '-0.5px' }}>{s.label}</h2>
               <textarea
                 key={s.key}
                 value={answers[s.key] ?? ''}
@@ -648,7 +680,7 @@ export default function NewProject() {
                 placeholder={s.placeholder}
                 rows={5}
                 autoFocus
-                style={{ ...inputBase, fontSize: 16, padding: '14px 16px', resize: 'vertical', lineHeight: 1.65, border: `1.5px solid ${colors.border}` }}
+                style={{ ...inputBase, fontSize: 16, padding: '14px 16px', resize: 'vertical', lineHeight: 1.65, border: spamBorder(s.key) }}
                 {...sharedInputHandlers}
               />
             </>
@@ -657,7 +689,7 @@ export default function NewProject() {
           {/* ── dual_textarea ── */}
           {s.type === 'dual_textarea' && (
             <>
-              <h2 style={{ fontSize: 'clamp(20px, 4vw, 28px)', fontWeight: 800, marginBottom: 24, marginTop: 6, lineHeight: 1.25, letterSpacing: '-0.3px' }}>{s.label}</h2>
+              <h2 style={{ fontSize: 'clamp(26px, 4.5vw, 36px)', fontWeight: 900, marginBottom: 28, marginTop: 6, lineHeight: 1.2, letterSpacing: '-0.5px' }}>{s.label}</h2>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 {s.keys.map((key, i) => (
                   <div key={key}>
@@ -668,7 +700,7 @@ export default function NewProject() {
                       placeholder={s.placeholders[i]}
                       rows={4}
                       autoFocus={i === 0}
-                      style={{ ...inputBase, fontSize: 15, resize: 'vertical', lineHeight: 1.65, border: `1.5px solid ${colors.border}` }}
+                      style={{ ...inputBase, fontSize: 15, resize: 'vertical', lineHeight: 1.65, border: spamBorder(key) }}
                       {...sharedInputHandlers}
                     />
                   </div>
@@ -680,7 +712,7 @@ export default function NewProject() {
           {/* ── finalize ── */}
           {isFinalize && (
             <>
-              <h2 style={{ fontSize: 'clamp(20px, 4vw, 28px)', fontWeight: 800, marginBottom: 6, marginTop: 6, lineHeight: 1.25, letterSpacing: '-0.3px' }}>Quase pronto!</h2>
+              <h2 style={{ fontSize: 'clamp(26px, 4.5vw, 36px)', fontWeight: 900, marginBottom: 6, marginTop: 6, lineHeight: 1.2, letterSpacing: '-0.5px' }}>Quase pronto!</h2>
               <p style={{ color: colors.muted, fontSize: 14, marginBottom: 28, marginTop: 0 }}>
                 Todos os campos abaixo são opcionais — podes preencher agora ou depois.
               </p>
@@ -829,6 +861,31 @@ export default function NewProject() {
             <p style={{ color: colors.red, fontSize: 14, marginTop: 12, fontWeight: 500 }}>{error}</p>
           )}
 
+          {hasSpamInCurrent() && (
+            <div style={{
+              background: 'rgba(239,68,68,0.07)',
+              border: '1px solid rgba(239,68,68,0.3)',
+              borderRadius: 12, padding: '14px 16px', marginTop: 14,
+              display: 'flex', alignItems: 'flex-start', gap: 12,
+            }}>
+              <div style={{
+                width: 32, height: 32, borderRadius: 8, flexShrink: 0,
+                background: 'rgba(239,68,68,0.12)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <ShieldAlert size={16} color="#ef4444" />
+              </div>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: '#ef4444', marginBottom: 3 }}>
+                  Texto inválido detetado
+                </div>
+                <div style={{ fontSize: 12, color: 'var(--c-muted)', lineHeight: 1.5 }}>
+                  O texto parece aleatório ou sem sentido. Escreve conteúdo real para continuar — campos com spam não contam para o score.
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Navigation */}
           <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
             {step > 0 && (
@@ -843,7 +900,7 @@ export default function NewProject() {
                   transition: 'border-color 0.2s',
                 }}
               >
-                ← Anterior
+                <span style={{display:'flex',alignItems:'center',gap:6}}><ArrowLeft size={15} />Anterior</span>
               </button>
             )}
             <button
@@ -861,7 +918,9 @@ export default function NewProject() {
                 letterSpacing: '-0.1px',
               }}
             >
-              {step === TOTAL_STEPS - 1 ? 'Gerar página →' : 'Próximo →'}
+              <span style={{display:'flex',alignItems:'center',gap:6}}>
+                {step === TOTAL_STEPS - 1 ? 'Gerar página' : 'Próximo'} <ChevronRight size={15} />
+              </span>
             </button>
           </div>
 

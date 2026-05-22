@@ -4,18 +4,19 @@ import { supabase } from '../lib/supabase'
 import { Navbar } from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
 import { Trophy, ChevronRight } from 'lucide-react'
+import CreateProjectModal from '../components/CreateProjectModal'
 
 const C = {
-  bg:          '#060c18',
-  bgAlt:       '#111c32',
-  card:        '#152030',
-  cardHover:   '#1c2d44',
-  border:      '#1e3050',
-  borderBright:'#2a4275',
+  bg:          'var(--c-bg)',
+  bgAlt:       'var(--c-bg-alt)',
+  card:        'var(--c-card)',
+  cardHover:   'var(--c-card-hover)',
+  border:      'var(--c-border)',
+  borderBright:'var(--c-border-bright)',
   blue:        '#1b78f7',
-  text:        '#e8f2ff',
-  muted:       '#7d93b0',
-  subtle:      '#3d5270',
+  text:        'var(--c-text)',
+  muted:       'var(--c-muted)',
+  subtle:      'var(--c-subtle)',
   green:       '#22c55e',
   yellow:      '#fbbf24',
   orange:      '#f97316',
@@ -64,6 +65,7 @@ export default function Ranking() {
   const [loading, setLoading]     = useState(true)
   const [areaFilter, setAreaFilter] = useState('')
   const [yearFilter, setYearFilter] = useState('')
+  const [showCreateModal, setShowCreateModal] = useState(false)
 
   useEffect(() => {
     async function load() {
@@ -115,7 +117,7 @@ export default function Ranking() {
 
       <Navbar>
         <button
-          onClick={() => navigate('/novo')}
+          onClick={() => setShowCreateModal(true)}
           style={{
             background: `linear-gradient(135deg, ${C.blue}, #4f46e5)`,
             color: '#fff', border: 'none', borderRadius: 8,
@@ -342,6 +344,7 @@ export default function Ranking() {
           </div>
         )}
       </div>
+      {showCreateModal && <CreateProjectModal onClose={() => setShowCreateModal(false)} />}
     </div>
   )
 }

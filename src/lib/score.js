@@ -1,58 +1,65 @@
+/**
+ * Detects if text looks like random keyboard mashing or spam.
+ * Returns true if the text should NOT count toward the score.
+ *
+ * Heuristics:
+ *  1. Average word length > 20 chars  (e.g. "dfgdfgdfgdfgdfgdfg...")
+ *  2. Unique-character ratio < 12%    (e.g. "aaaaaaaaaaaaa" or "dfdfdfdfdfdf")
+ *  3. Single word that's pure gibberish (no vowels in a long word)
+ */
+export function looksLikeSpam(text) {
+  if (!text) return false
+  const str = text.trim()
+  if (str.length < 8) return false  // too short to judge
+
+  const words = str.split(/\s+/).filter(w => w.length > 0)
+  if (words.length === 0) return true
+
+  // Heuristic 1: long unbroken strings (avg word length)
+  const avgWordLen = words.reduce((s, w) => s + w.length, 0) / words.length
+  if (avgWordLen > 20) return true
+
+  // Heuristic 2: very low unique character ratio (repetitive/cyclic spam)
+  const stripped = str.toLowerCase().replace(/\s/g, '')
+  const uniqueRatio = new Set(stripped).size / stripped.length
+  if (stripped.length > 20 && uniqueRatio < 0.12) return true
+
+  // Heuristic 3: long word with almost no vowels (random consonant runs)
+  const longWords = words.filter(w => w.length > 12)
+  for (const w of longWords) {
+    const vowels = (w.match(/[aeiouáéíóúàèìòùâêîôûãõ]/gi) || []).length
+    if (vowels / w.length < 0.08) return true  // <8% vowels = gibberish
+  }
+
+  return false
+}
+
 export function calculateScore(project) {
   let total = 0
-  const val = (key) => String(project[key] || '').trim()
+
+  const raw = (key) => String(project[key] || '').trim()
+  const val = (key) => {
+    const v = raw(key)
+    return looksLikeSpam(v) ? '' : v
+  }
   const len = (key) => val(key).length
 
-  // Identity
-  if (val('name'))       total += 4
-  if (val('area'))       total += 3
-  if (val('ai_tagline')) total += 4
+  if (raw('name') && !looksLikeSpam(raw('name'))) total += 5
+  if (raw('area') && !looksLikeSpam(raw('area'))) total += 5
 
-  // AI description (historia joined as one block)
-  const desc = len('ai_description')
-  if (desc > 300)      total += 10
-  else if (desc > 100) total += 5
+  // Each threshold exactly matches the CHALLENGES definitions — no partial credit
+  // so ScoreRing and earnedXP are always the same number.
+  if (len('problem') >= 100)        total += 15
+  if (len('solution') >= 100)       total += 15
+  if (len('target_audience') >= 50) total += 10
+  if (len('features') >= 100)       total += 10
+  if (val('technologies'))           total += 8
+  if (len('challenges') >= 50)      total += 8
+  if (len('results') >= 80)         total += 12
+  if (len('learnings') >= 80)       total += 12
 
-  // Problem
-  const prob = len('problem')
-  if (prob > 300)      total += 10
-  else if (prob > 100) total += 5
-
-  // Solution
-  const sol = len('solution')
-  if (sol > 300)      total += 10
-  else if (sol > 100) total += 5
-
-  // Target audience
-  const ta = len('target_audience')
-  if (ta > 200)     total += 8
-  else if (ta > 80) total += 5
-
-  // Features
-  const feat = len('features')
-  if (feat > 400)      total += 10
-  else if (feat > 150) total += 6
-
-  // Technologies
-  if (val('technologies')) total += 5
-
-  // Challenges
-  const chal = len('challenges')
-  if (chal > 300)      total += 8
-  else if (chal > 100) total += 5
-
-  // Results
-  const res = len('results')
-  if (res > 300)      total += 10
-  else if (res > 100) total += 6
-
-  // Learnings
-  const learn = len('learnings')
-  if (learn > 300)      total += 8
-  else if (learn > 100) total += 6
-
-  // Cover image
-  if (val('cover_url')) total += 8
+  // Cover image (bonus — capped at 100 anyway)
+  if (raw('cover_url')) total += 10
 
   return { score: Math.min(total, 100) }
 }

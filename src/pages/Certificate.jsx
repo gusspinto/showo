@@ -1,21 +1,25 @@
 import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
+import { useSidebar } from '../context/SidebarContext'
 import { Helmet } from 'react-helmet-async'
 import { QRCodeSVG } from 'qrcode.react'
 import { supabase } from '../lib/supabase'
-import { Link2, Check } from 'lucide-react'
+import { Link2, Check, Sparkles, Download, ArrowLeft } from 'lucide-react'
 
 const C = {
-  bg: '#060c18',
-  border: '#1e3050',
+  bg: 'var(--c-bg)',
+  border: 'var(--c-border)',
   blue: '#1b78f7',
-  text: '#e8f2ff',
-  muted: '#7d93b0',
+  text: 'var(--c-text)',
+  muted: 'var(--c-muted)',
 }
 
 export default function Certificate() {
   const { slug } = useParams()
   const navigate = useNavigate()
+  const { user } = useAuth()
+  const { setExtras } = useSidebar()
   const certRef = useRef(null)
   const [project, setProject] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -34,6 +38,13 @@ export default function Certificate() {
     }
     load()
   }, [slug])
+
+  // Keep sidebar project controls while on cert page (only if it's the user's project)
+  useEffect(() => {
+    if (!project || !user) return
+    setExtras({ type: 'project', slug: project.slug, title: project.name, showBack: true })
+    return () => setExtras(null)
+  }, [project?.slug, user?.id])
 
   async function handleDownload() {
     if (!certRef.current) return
@@ -110,9 +121,9 @@ export default function Certificate() {
       {/* Back */}
       <button
         onClick={() => navigate(`/projeto/${slug}`)}
-        style={{ alignSelf: 'flex-start', background: 'transparent', border: `1px solid ${C.border}`, color: C.muted, borderRadius: 8, padding: '8px 16px', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', marginBottom: 32 }}
+        style={{ alignSelf: 'flex-start', background: 'transparent', border: `1px solid ${C.border}`, color: C.muted, borderRadius: 8, padding: '8px 16px', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', marginBottom: 32, display: 'flex', alignItems: 'center', gap: 6 }}
       >
-        ← Voltar ao projeto
+        <ArrowLeft size={14} /> Voltar ao projeto
       </button>
 
       {/* Certificate card */}
@@ -150,7 +161,7 @@ export default function Certificate() {
         {/* Main content */}
         <div style={{ marginBottom: 36 }}>
           <div style={{ fontSize: 13, color: C.muted, marginBottom: 10, fontWeight: 500 }}>Este certificado comprova que</div>
-          <div style={{ fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 900, color: '#e8f2ff', letterSpacing: '-1px', lineHeight: 1.1, marginBottom: 20, fontFamily: 'var(--font-heading)' }}>
+          <div style={{ fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 900, color: 'var(--c-text)', letterSpacing: '-1px', lineHeight: 1.1, marginBottom: 20, fontFamily: 'var(--font-heading)' }}>
             {project.creator_name || 'Estudante'}
           </div>
           <div style={{ fontSize: 14, color: C.muted, marginBottom: 8, fontWeight: 500 }}>concluiu com sucesso o projeto</div>
@@ -169,8 +180,8 @@ export default function Certificate() {
             <div style={{ fontSize: 14, fontWeight: 700, color: '#22c55e', lineHeight: 1.2 }}>Nível Profissional</div>
             <div style={{ fontSize: 11, color: C.muted, fontWeight: 500, marginTop: 4 }}>Score ≥ 75</div>
           </div>
-          <div style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${C.border}`, borderRadius: 12, padding: '14px 20px' }}>
-            <div style={{ fontSize: 14, fontWeight: 600, color: '#e8f2ff', lineHeight: 1.2 }}>{date}</div>
+          <div style={{ background: 'var(--c-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 12, padding: '14px 20px' }}>
+            <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--c-text)', lineHeight: 1.2 }}>{date}</div>
             <div style={{ fontSize: 11, color: C.muted, fontWeight: 500, marginTop: 4 }}>Data de emissão</div>
           </div>
         </div>
@@ -186,7 +197,7 @@ export default function Certificate() {
           </div>
           <div style={{ textAlign: 'right' }}>
             <div style={{ fontSize: 11, color: C.muted, marginBottom: 6 }}>Autenticado por</div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: '#818cf8' }}>✦ Showo AI</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: '#818cf8', display: 'flex', alignItems: 'center', gap: 5 }}><Sparkles size={13} /> Showo AI</div>
             <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>Análise automática por IA</div>
           </div>
         </div>
@@ -210,7 +221,10 @@ export default function Certificate() {
             opacity: downloading ? 0.7 : 1,
           }}
         >
-          {downloading ? 'A exportar...' : '⬇ Descarregar PNG'}
+          {downloading
+            ? 'A exportar...'
+            : <><Download size={15} style={{ verticalAlign: 'middle', marginRight: 6 }} />Descarregar PNG</>
+          }
         </button>
         <button
           className="cert-action-btn"

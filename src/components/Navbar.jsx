@@ -1,15 +1,24 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useTheme } from '../context/ThemeContext'
+import { useSidebar } from '../context/SidebarContext'
 import { supabase } from '../lib/supabase'
-import { Check, X, FolderOpen, User, Settings as SettingsIcon, Shield, Globe, Trophy, LogOut, Bell, Eye, Target, TrendingUp, GraduationCap, UserPlus, Home, Plus, Compass } from 'lucide-react'
+import { Check, X, FolderOpen, User, Settings as SettingsIcon, Shield, Globe, Trophy, LogOut, Bell, Eye, Target, TrendingUp, GraduationCap, UserPlus, LayoutDashboard, Plus, Compass, Sun, Moon, Sparkles, Pencil, ArrowLeft, Briefcase, Medal, Users2, Swords } from 'lucide-react'
+
+// Strip emoji characters from notification messages coming from the DB
+function stripEmoji(str) {
+  if (!str) return str
+  return str.replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27FF}\u{2900}-\u{297F}\u{1F300}-\u{1F9FF}\u{FE00}-\u{FEFF}]/gu, '').replace(/\s{2,}/g, ' ').trim()
+}
+import CreateProjectModal from './CreateProjectModal'
 
 const C = {
   bg: 'rgba(13, 20, 36, 0.88)',
-  border: '#1e3050',
+  border: 'var(--c-border)',
   blue: '#1b78f7',
-  muted: '#7d93b0',
-  text: '#e8f2ff',
+  muted: 'var(--c-muted)',
+  text: 'var(--c-text)',
 }
 
 const btnStyle = {
@@ -170,7 +179,7 @@ function InviteInbox({ userId, sidebar = false }) {
     if (n.count1h >= 2)  return `${n.count1h} ${who} na última hora`
     if (n.count24h >= 2) return `${n.count24h} ${who} hoje`
     if (n.count > 1)     return `${n.count} ${who} viram o teu projeto`
-    return n.message
+    return stripEmoji(n.message)
   }
 
   useEffect(() => {
@@ -320,7 +329,7 @@ function InviteInbox({ userId, sidebar = false }) {
             background: '#ef4444', borderRadius: '50%',
             width: 15, height: 15, fontSize: 8, fontWeight: 800,
             color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            border: '2px solid #060c18',
+            border: '2px solid var(--c-bg)',
           }}>
             {count > 9 ? '9+' : count}
           </span>
@@ -335,9 +344,9 @@ function InviteInbox({ userId, sidebar = false }) {
               ? { position: 'fixed', left: 224, bottom: 16 }
               : { position: 'absolute', top: 'calc(100% + 8px)', right: 0 }
             ),
-            background: 'rgba(6,12,24,0.98)', border: `1px solid ${C.border}`,
+            background: 'var(--c-card)', border: `1px solid var(--c-border)`,
             borderRadius: 14, padding: '8px',
-            boxShadow: '0 8px 40px rgba(0,0,0,0.6)',
+            boxShadow: '0 8px 40px rgba(0,0,0,0.45)',
             backdropFilter: 'blur(16px)',
             zIndex: 199, width: 310,
             maxHeight: 'calc(100vh - 80px)', overflowY: 'auto',
@@ -453,7 +462,7 @@ function InviteInbox({ userId, sidebar = false }) {
                     <span style={{ display: 'flex', flexShrink: 0, marginTop: 1, color: C.muted }}>{getNotifIcon(n.type)}</span>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <p style={{ margin: '0 0 2px', fontSize: 13, color: n.anyUnread ? C.text : C.muted, lineHeight: 1.45, fontWeight: n.anyUnread ? 500 : 400 }}>
-                        {VIEW_TYPES.includes(n.type) ? viewMessage(n) : n.message}
+                        {VIEW_TYPES.includes(n.type) ? viewMessage(n) : stripEmoji(n.message)}
                       </p>
                       {n.project_slug && VIEW_TYPES.includes(n.type) && (
                         <p style={{ margin: '0 0 2px', fontSize: 11, color: '#60a5fa', opacity: 0.8, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -526,13 +535,13 @@ function UserChip({ user, profile, onClick, onProfile, onSettings, onSignOut, on
         onClick={() => setOpen(o => !o)}
         style={{
           display: 'flex', alignItems: 'center', gap: 8,
-          background: open ? 'rgba(255,255,255,0.08)' : 'transparent',
-          border: `1px solid ${open ? '#2a4070' : C.border}`,
+          background: open ? 'var(--c-card-hover)' : 'transparent',
+          border: `1px solid ${open ? 'var(--c-border-bright)' : C.border}`,
           borderRadius: 24, padding: '5px 12px 5px 6px',
           cursor: 'pointer', fontFamily: 'inherit',
           transition: 'background 0.15s, border-color 0.15s',
         }}
-        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.borderColor = '#2a4070' }}
+        onMouseEnter={e => { e.currentTarget.style.background = 'var(--c-card-hover)'; e.currentTarget.style.borderColor = 'var(--c-border-bright)' }}
         onMouseLeave={e => { if (!open) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = C.border } }}
       >
         <AvatarCircle avatarUrl={profile?.avatar_url} initial={initial} size={28} fontSize={13} />
@@ -550,9 +559,9 @@ function UserChip({ user, profile, onClick, onProfile, onSettings, onSignOut, on
           <div style={{ position: 'fixed', inset: 0, zIndex: 98 }} onClick={() => setOpen(false)} />
           <div style={{
             position: 'absolute', top: 'calc(100% + 8px)', right: 0,
-            background: 'rgba(13,20,36,0.98)', border: `1px solid ${C.border}`,
+            background: 'var(--c-card)', border: `1px solid ${C.border}`,
             borderRadius: 12, padding: '6px',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
             backdropFilter: 'blur(16px)',
             zIndex: 99, minWidth: 160,
           }}>
@@ -575,7 +584,7 @@ function UserChip({ user, profile, onClick, onProfile, onSettings, onSignOut, on
             <button
               onClick={() => { onClick(); setOpen(false) }}
               style={{ ...dropItemStyle, color: C.text }}
-              onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.07)'}
+              onMouseEnter={e => e.currentTarget.style.background = 'var(--c-card-hover)'}
               onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
             >
               <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><FolderOpen size={15} /> Dashboard</span>
@@ -584,7 +593,7 @@ function UserChip({ user, profile, onClick, onProfile, onSettings, onSignOut, on
               <button
                 onClick={() => { onProfile(); setOpen(false) }}
                 style={{ ...dropItemStyle, color: C.text }}
-                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.07)'}
+                onMouseEnter={e => e.currentTarget.style.background = 'var(--c-card-hover)'}
                 onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
               >
                 <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><User size={15} /> Meu perfil</span>
@@ -593,7 +602,7 @@ function UserChip({ user, profile, onClick, onProfile, onSettings, onSignOut, on
             <button
               onClick={() => { onSettings(); setOpen(false) }}
               style={{ ...dropItemStyle, color: C.text }}
-              onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.07)'}
+              onMouseEnter={e => e.currentTarget.style.background = 'var(--c-card-hover)'}
               onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
             >
               <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><SettingsIcon size={15} /> Definições</span>
@@ -626,7 +635,10 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
   const navigate = useNavigate()
   const location = useLocation()
   const { user, profile, signOut, isAdmin } = useAuth()
+  const { theme, toggleTheme } = useTheme()
+  const { extras } = useSidebar()
   const [open, setOpen] = useState(false)
+  const [createModal, setCreateModal] = useState(false)
 
   const profileUrl = profile?.username ? `/u/${profile.username}` : user ? `/u/${user.id}` : null
 
@@ -644,7 +656,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
   return (
     <>
       <style>{`
-        .nav-btn:hover { color: #e8f2ff !important; background: rgba(255,255,255,0.06) !important; }
+        .nav-btn:hover { color: var(--c-text) !important; background: var(--c-card-hover) !important; }
         .nav-logo { transition: opacity 0.15s; }
         .nav-logo:hover { opacity: 0.85; }
 
@@ -660,24 +672,64 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
           position: fixed;
           left: 0; top: 0; bottom: 0;
           width: 216px;
-          background: rgba(6,12,24,0.98);
-          border-right: 1px solid #1e3050;
+          background: var(--c-sidebar-bg);
+          border-right: 1px solid var(--c-border);
           flex-direction: column;
           padding: 0;
           z-index: 100;
-          overflow-y: auto;
-          overflow-x: hidden;
+          overflow: hidden;
         }
         .sb-logo {
           display: flex; align-items: center;
-          padding: 20px 16px 16px;
+          padding: 20px 16px 18px;
           cursor: pointer; border: none; background: transparent;
           font-family: inherit; text-align: left; width: 100%;
         }
         .sb-logo:hover { opacity: 0.85; }
-        .sb-section { padding: 0 8px; flex: 1; }
+        .sb-logo-divider {
+          height: 1px; background: var(--c-border);
+          margin: 0 12px 10px; opacity: 0.6;
+        }
+        .sb-section { padding: 0 8px; flex: 1; overflow-y: auto; overflow-x: hidden; min-height: 0; }
+        .sb-section::-webkit-scrollbar { width: 3px; }
+        .sb-section::-webkit-scrollbar-track { background: transparent; }
+        .sb-section::-webkit-scrollbar-thumb { background: var(--c-border); border-radius: 99px; }
+
+        /* Sidebar animation keyframes */
+        @keyframes sb-fade-slide-in {
+          from { opacity: 0; transform: translateY(-6px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes sb-fade-slide-out {
+          from { opacity: 1; transform: translateY(0); max-height: 400px; }
+          to   { opacity: 0; transform: translateY(-6px); max-height: 0; }
+        }
+        .sb-create-wrap {
+          display: grid;
+          grid-template-rows: 1fr;
+          transition: grid-template-rows 0.32s cubic-bezier(0.16,1,0.3,1),
+                      opacity 0.24s ease;
+          opacity: 1;
+        }
+        .sb-create-wrap.hidden {
+          grid-template-rows: 0fr;
+          opacity: 0;
+          pointer-events: none;
+        }
+        .sb-create-inner {
+          overflow: hidden;
+          min-height: 0;
+        }
+        .sb-soon {
+          display: inline-flex; align-items: center;
+          margin-left: auto; font-size: 9px; font-weight: 700;
+          color: var(--c-subtle); background: var(--c-bg-alt);
+          border: 1px solid var(--c-border); border-radius: 4px;
+          padding: 1px 5px; text-transform: uppercase; letter-spacing: 0.05em;
+          flex-shrink: 0;
+        }
         .sb-label {
-          font-size: 11px; font-weight: 700; color: #3d5270;
+          font-size: 11px; font-weight: 700; color: var(--c-subtle);
           text-transform: uppercase; letter-spacing: 0.1em;
           padding: 12px 10px 4px; display: block;
         }
@@ -685,13 +737,13 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
           display: flex; align-items: center; gap: 11px;
           width: 100%; padding: 9px 12px;
           border-radius: 9px; border: none;
-          background: transparent; color: #7d93b0;
+          background: transparent; color: var(--c-muted);
           font-size: 13px; font-weight: 600;
           cursor: pointer; font-family: inherit;
           transition: background 0.13s, color 0.13s;
           text-align: left; white-space: nowrap;
         }
-        .sb-item:hover { background: rgba(255,255,255,0.06); color: #e8f2ff; }
+        .sb-item:hover { background: rgba(128,128,128,0.1); color: var(--c-text); }
         .sb-item.active { background: rgba(27,120,247,0.13); color: #1b78f7; }
         .sb-item.danger { color: #ef4444; }
         .sb-item.danger:hover { background: rgba(239,68,68,0.08); color: #ef4444; }
@@ -707,7 +759,27 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
           transition: opacity 0.15s; width: calc(100% - 16px);
         }
         .sb-create:hover { opacity: 0.88; }
-        .sb-divider { height: 1px; background: #1e3050; margin: 8px 8px; }
+        .sb-divider { height: 1px; background: var(--c-border); margin: 8px 8px; }
+        .sb-project-section {
+          background: rgba(27,120,247,0.07);
+          border: 1px solid rgba(27,120,247,0.18);
+          border-radius: 12px;
+          padding: 4px 0 6px;
+          margin: 8px 0 4px;
+          animation: sb-fade-slide-in 0.3s cubic-bezier(0.16,1,0.3,1) both;
+        }
+        .sb-project-section .sb-label {
+          color: #60a5fa;
+          padding-top: 8px;
+        }
+        .sb-project-section .sb-item:hover {
+          background: rgba(27,120,247,0.12);
+          color: #e8f2ff;
+        }
+        body.light .sb-project-section {
+          background: rgba(27,120,247,0.06);
+          border-color: rgba(27,120,247,0.2);
+        }
         .sb-bottom { padding: 0 8px 16px; }
 
         @media (min-width: 861px) {
@@ -746,8 +818,8 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
         .mobile-drawer {
           position: fixed;
           top: 62px; left: 0; right: 0;
-          background: rgba(13,20,36,0.98);
-          border-bottom: 1px solid #1e3050;
+          background: var(--c-card);
+          border-bottom: 1px solid var(--c-border);
           backdrop-filter: blur(16px);
           -webkit-backdrop-filter: blur(16px);
           padding: 8px 20px 16px;
@@ -761,25 +833,25 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
         .mobile-drawer.is-open { transform: translateY(0); visibility: visible; transition: transform 0.25s cubic-bezier(0.4,0,0.2,1), visibility 0s; }
         .mobile-drawer-btn {
           background: transparent; border: none;
-          color: #7d93b0; font-size: 15px; font-weight: 500;
+          color: var(--c-muted); font-size: 15px; font-weight: 500;
           cursor: pointer; padding: 13px 4px; text-align: left;
-          font-family: inherit; border-bottom: 1px solid #1e3050;
+          font-family: inherit; border-bottom: 1px solid var(--c-border);
           transition: color 0.15s;
           display: flex; align-items: center; gap: 12px;
           width: 100%;
         }
         .mobile-drawer-btn:last-child { border-bottom: none; }
-        .mobile-drawer-btn:hover { color: #e8f2ff; }
+        .mobile-drawer-btn:hover { color: var(--c-text); }
         .mobile-drawer-btn.danger { color: #ef4444 !important; }
         .mobile-drawer-pair { display: flex; gap: 8px; padding: 16px 0 4px; }
         .mobile-drawer-pair-btn {
           flex: 1; display: flex; align-items: center; justify-content: center; gap: 7px;
-          background: rgba(255,255,255,0.04); border: 1px solid #1e3050;
+          background: var(--c-bg-alt); border: 1px solid var(--c-border);
           border-radius: 10px; padding: 11px 8px;
-          color: #e8f2ff; font-size: 13px; font-weight: 600;
+          color: var(--c-text); font-size: 13px; font-weight: 600;
           cursor: pointer; font-family: inherit; transition: background 0.15s, border-color 0.15s;
         }
-        .mobile-drawer-pair-btn:hover { background: rgba(255,255,255,0.08); border-color: #2a4275; }
+        .mobile-drawer-pair-btn:hover { background: var(--c-card-hover); border-color: var(--c-border-bright); }
         .mobile-drawer-pair-btn.danger { color: #ef4444 !important; border-color: rgba(239,68,68,0.2) !important; }
         .mobile-drawer-pair-btn.danger:hover { background: rgba(239,68,68,0.06) !important; }
         @media (min-width: 601px) {
@@ -869,8 +941,8 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 4px 0' }}>
                 <AvatarCircle avatarUrl={profile?.avatar_url} initial={getInitial(user)} size={36} fontSize={14} />
                 <div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: '#e8f2ff', lineHeight: 1.2 }}>{getDisplayName(user)}</div>
-                  <div style={{ fontSize: 11, color: '#7d93b0', marginTop: 2 }}>{user.email}</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--c-text)', lineHeight: 1.2 }}>{getDisplayName(user)}</div>
+                  <div style={{ fontSize: 11, color: 'var(--c-muted)', marginTop: 2 }}>{user.email}</div>
                 </div>
               </div>
 
@@ -896,10 +968,10 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
               </button>
             </div>
           ) : (
-            <div style={{ display: 'flex', gap: 8, padding: '16px 0 4px', borderTop: '1px solid #1e3050', marginTop: 4 }}>
+            <div style={{ display: 'flex', gap: 8, padding: '16px 0 4px', borderTop: '1px solid var(--c-border)', marginTop: 4 }}>
               <button
                 onClick={() => { navigate('/login'); setOpen(false) }}
-                style={{ flex: 1, padding: '12px 0', background: 'transparent', border: '1px solid #1e3050', borderRadius: 10, color: '#e8f2ff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+                style={{ flex: 1, padding: '12px 0', background: 'transparent', border: '1px solid var(--c-border)', borderRadius: 10, color: 'var(--c-text)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
               >Entrar</button>
               <button
                 onClick={() => { navigate('/register'); setOpen(false) }}
@@ -979,7 +1051,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
                   onProfile={profileUrl ? () => navigate(profileUrl) : null}
                   onSettings={() => navigate('/settings')}
                   onSignOut={handleSignOut}
-                  onCreateProject={showCreateProject ? () => navigate('/novo') : undefined}
+                  onCreateProject={showCreateProject ? () => setCreateModal(true) : undefined}
                 />
               </>
             ) : (
@@ -1007,7 +1079,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
           {showLinks && (
             <button
               className="ham-btn mob-only-create"
-              onClick={() => navigate('/novo')}
+              onClick={() => setCreateModal(true)}
               aria-label="Criar projeto"
               style={{
                 background: 'linear-gradient(135deg, #1b78f7, #4f46e5)',
@@ -1059,14 +1131,15 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
       <div className="sidebar">
         {/* Logo */}
         <button className="sb-logo" onClick={() => navigate(user ? '/dashboard' : '/')}>
-          <img src="/icon_logo.png" alt="Showo" style={{ height: 28, width: 'auto', objectFit: 'contain' }} />
+          <img src={theme === 'light' ? '/light_mode_LI.png' : '/icon_logo.png'} alt="Showo" style={{ height: 28, width: 'auto', objectFit: 'contain' }} />
         </button>
+        <div className="sb-logo-divider" />
 
-        {/* Main nav + Create */}
+        {/* Main nav + project controls in one scrollable section */}
         <div className="sb-section">
           {user && (
             <button className={`sb-item${isActive('/dashboard') ? ' active' : ''}`} onClick={() => navigate('/dashboard')}>
-              <Home size={16} /> Dashboard
+              <LayoutDashboard size={16} /> Dashboard
             </button>
           )}
           <button className={`sb-item${isActive('/explorar') ? ' active' : ''}`} onClick={() => navigate('/explorar')}>
@@ -1075,21 +1148,111 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
           <button className={`sb-item${isActive('/ranking') ? ' active' : ''}`} onClick={() => navigate('/ranking')}>
             <Trophy size={16} /> Ranking
           </button>
+
+          {/* Future sections */}
           {user && (
-            <button className="sb-create" onClick={() => navigate('/interview')}>
-              <Plus size={14} /> Criar projeto
-            </button>
+            <>
+              <div className="sb-divider" style={{ margin: '8px 0 4px' }} />
+              <span className="sb-label">Em breve</span>
+              <button className="sb-item" disabled style={{ opacity: 0.5, cursor: 'default' }}>
+                <FolderOpen size={16} /> Portfólio
+                <span className="sb-soon">breve</span>
+              </button>
+              <button className="sb-item" disabled style={{ opacity: 0.5, cursor: 'default' }}>
+                <Briefcase size={16} /> Estágio
+                <span className="sb-soon">breve</span>
+              </button>
+              <button className={`sb-item${isActive('/missoes') ? ' active' : ''}`} onClick={() => navigate('/missoes')}>
+                <Swords size={16} /> Missões
+              </button>
+              <button className={`sb-item${isActive('/turmas') ? ' active' : ''}`} onClick={() => navigate('/turmas')}>
+                <Users2 size={16} /> Turmas
+              </button>
+              <button className={`sb-item${isActive('/conquistas') ? ' active' : ''}`} onClick={() => navigate('/conquistas')}>
+                <Medal size={16} /> Conquistas
+              </button>
+            </>
+          )}
+
+          {user && (
+            <div className={`sb-create-wrap ${extras ? 'hidden' : 'visible'}`}>
+              <div className="sb-create-inner">
+                <button className="sb-create" onClick={() => setCreateModal(true)}>
+                  <Plus size={14} /> Criar projeto
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Project controls — immediately after nav, no gap */}
+          {extras?.type === 'project' && (
+            <div className="sb-project-section">
+              {/* Back to project (shown when on sub-page like edit/cert) */}
+              {extras.showBack && (
+                <button className="sb-item" onClick={() => navigate(`/projeto/${extras.slug}`)}>
+                  <ArrowLeft size={16} /> Ver projeto
+                </button>
+              )}
+              <span className="sb-label">Gerir projeto</span>
+              {!extras.showBack && (
+                <button className="sb-item" onClick={() => navigate(`/editar/${extras.slug}`)}>
+                  <Pencil size={16} /> Editar
+                </button>
+              )}
+              {extras.onDefense && (
+                <button className="sb-item" onClick={extras.onDefense}>
+                  <GraduationCap size={16} />
+                  Modo defesa
+                  {extras.defenseDate && (
+                    <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--c-muted)', fontWeight: 500 }}>
+                      {new Date(extras.defenseDate).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' })}
+                    </span>
+                  )}
+                </button>
+              )}
+              {extras.onAnalyze && (
+                <button
+                  className="sb-item"
+                  onClick={extras.onAnalyze}
+                  disabled={extras.analyzingAI}
+                  style={{ opacity: extras.analyzingAI ? 0.6 : 1 }}
+                >
+                  <Sparkles size={16} />
+                  {extras.analyzingAI ? 'A analisar…' : 'Análise IA'}
+                  {extras.aiScore != null && !extras.analyzingAI && (
+                    <span style={{
+                      marginLeft: 'auto', fontSize: 11, fontWeight: 700,
+                      color: extras.aiScore >= 90 ? '#22c55e' : extras.aiScore >= 71 ? '#1b78f7' : extras.aiScore >= 40 ? '#fbbf24' : '#ef4444',
+                    }}>
+                      {extras.aiScore}
+                    </span>
+                  )}
+                </button>
+              )}
+              <button className="sb-item" onClick={() => navigate(`/certificado/${extras.slug}`)}>
+                <Trophy size={16} /> Certificado
+              </button>
+              {extras.onTogglePublicView && (
+                <button
+                  className="sb-item"
+                  onClick={extras.onTogglePublicView}
+                  style={{ color: extras.viewAsPublic ? '#60a5fa' : 'var(--c-muted)' }}
+                >
+                  <Globe size={16} />
+                  {extras.viewAsPublic ? 'Sair da preview' : 'Preview visitante'}
+                </button>
+              )}
+            </div>
           )}
         </div>
 
-        <div style={{ flex: 1 }} />
         <div className="sb-divider" />
 
         {/* Bottom — user section */}
         <div className="sb-bottom">
           {user ? (
             <>
-              {/* Profile row + bell inline */}
+              {/* Profile row + notifications + theme toggle */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '0 4px 2px' }}>
                 {profileUrl && (
                   <button className={`sb-item${isActive('profile') ? ' active' : ''}`} style={{ flex: 1, margin: 0 }} onClick={() => navigate(profileUrl)}>
@@ -1097,6 +1260,22 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
                     <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{getDisplayName(user)}</span>
                   </button>
                 )}
+                {/* Theme toggle — left of bell */}
+                <button
+                  onClick={toggleTheme}
+                  title={theme === 'dark' ? 'Modo claro' : 'Modo escuro'}
+                  style={{
+                    flexShrink: 0, width: 32, height: 32, borderRadius: 8,
+                    background: 'transparent', border: 'none',
+                    color: 'var(--c-muted)', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    transition: 'background 0.13s, color 0.13s',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'var(--c-card-hover)'; e.currentTarget.style.color = 'var(--c-text)' }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--c-muted)' }}
+                >
+                  {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
+                </button>
                 <InviteInbox userId={user.id} sidebar={true} />
               </div>
               <button className="sb-item" onClick={() => navigate('/settings')}>
@@ -1124,7 +1303,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
               className={`bn-item${isActive('/dashboard') ? ' active' : ''}`}
               onClick={() => navigate('/dashboard')}
             >
-              <Home size={24} strokeWidth={isActive('/dashboard') ? 2.5 : 1.8} />
+              <LayoutDashboard size={24} strokeWidth={isActive('/dashboard') ? 2.5 : 1.8} />
             </button>
 
             {/* Explorar */}
@@ -1137,7 +1316,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
 
             {/* Criar — botão central elevado */}
             <div className="bn-create-wrap">
-              <button className="bn-create-btn" onClick={() => navigate('/interview')} aria-label="Criar projeto">
+              <button className="bn-create-btn" onClick={() => setCreateModal(true)} aria-label="Criar projeto">
                 <Plus size={22} color="#fff" strokeWidth={2.5} />
               </button>
             </div>
@@ -1194,7 +1373,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
             <button
               className={`bn-item${isActive('/login') ? ' active' : ''}`}
               onClick={() => navigate('/login')}
-              style={{ color: isActive('/login') ? '#1b78f7' : '#e8f2ff' }}
+              style={{ color: isActive('/login') ? '#1b78f7' : 'var(--c-text)' }}
             >
               <User size={22} strokeWidth={1.8} />
               <span>Entrar</span>
@@ -1202,6 +1381,8 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
           </>
         )}
       </div>
+
+      {createModal && <CreateProjectModal onClose={() => setCreateModal(false)} />}
     </>
   )
 }
