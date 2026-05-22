@@ -14,7 +14,7 @@ import { useTheme } from '../context/ThemeContext'
 import CreateProjectModal from '../components/CreateProjectModal'
 import DefenseMode from '../components/DefenseMode'
 import { analyzeProject } from '../lib/analyzeProject'
-import { Check, X, Loader, GraduationCap, Save, Sparkles, Bot, Lightbulb, Pencil, Search, Target, Wrench, Zap, TrendingUp, Briefcase, Users, Rocket, Trophy, BarChart2, CheckCircle, BookOpen, ChevronDown, Eye, UserPlus, Calendar, Mail, ArrowRight, ChevronRight, Globe, Image, MessageSquare, Quote, Layout, Type, Link, GripVertical, Plus, AlignLeft, Star, Camera, FileText, ClipboardList, Copy } from 'lucide-react'
+import { Check, X, Loader, GraduationCap, Save, Sparkles, Bot, Lightbulb, Pencil, Search, Target, Wrench, Zap, TrendingUp, Briefcase, Users, Rocket, Trophy, BarChart2, CheckCircle, BookOpen, ChevronDown, Eye, UserPlus, Calendar, Mail, ArrowRight, ChevronRight, Globe, Image, MessageSquare, Quote, Layout, Type, Link, GripVertical, Plus, AlignLeft, Star, Camera, FileText, ClipboardList, Copy, Monitor, Tablet, Smartphone } from 'lucide-react'
 
 const colors = {
   bg: 'var(--c-bg)',
@@ -561,6 +561,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
   const dragIdx    = useRef(null)
   const dragOver   = useRef(null)
   const [dragOverIdx, setDragOverIdx] = useState(null)
+  const [previewDevice, setPreviewDevice] = useState('desktop')
 
   function onDragStart(i) { dragIdx.current = i }
   function onDragEnter(i) { dragOver.current = i; setDragOverIdx(i) }
@@ -620,22 +621,60 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
   }
   const hero = TYPE_HERO_PUBLIC[project.project_type] ?? TYPE_HERO_PUBLIC.personal
 
+  const DEVICES = [
+    { id: 'desktop',  Icon: Monitor,    label: 'Desktop',   title: 'Vista desktop' },
+    { id: 'tablet',   Icon: Tablet,     label: 'Tablet',    title: 'Vista tablet (768px)' },
+    { id: 'mobile',   Icon: Smartphone, label: 'Mobile',    title: 'Vista mobile (390px)' },
+  ]
+  const deviceMaxWidth = previewDevice === 'mobile' ? 390 : previewDevice === 'tablet' ? 768 : undefined
+
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--c-bg)', fontFamily: 'var(--font-body)' }}>
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 50,
+      overflowY: 'auto', overflowX: 'hidden',
+      background: 'var(--c-bg)', fontFamily: 'var(--font-body)',
+      paddingRight: isOwner && previewEditing ? 356 : 0,
+      transition: 'padding-right 0.3s ease',
+    }}>
       {/* ── Owner preview banner — sticky ── */}
       {isOwner && (
         <div style={{
           position: 'sticky', top: 0, zIndex: 300,
-          background: theme === 'light' ? 'rgba(248,250,252,0.92)' : 'rgba(6,12,24,0.92)',
+          background: theme === 'light' ? 'rgba(248,250,252,0.97)' : 'rgba(6,12,24,0.97)',
           backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)',
           borderBottom: theme === 'light' ? '1px solid rgba(0,0,0,0.09)' : '1px solid rgba(27,120,247,0.15)',
-          padding: '7px 16px',
+          padding: '6px 16px',
           display: 'flex', alignItems: 'center', gap: 8,
         }}>
           <Globe size={13} color={colors.blue} style={{ flexShrink: 0 }} />
-          <span style={{ fontSize: 12, color: 'var(--c-muted)', fontWeight: 500, flex: 1 }}>
+          <span style={{ fontSize: 12, color: 'var(--c-muted)', fontWeight: 500 }}>
             Preview do visitante
           </span>
+
+          {/* Device size toggles */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 2, marginLeft: 8, background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)', borderRadius: 8, padding: '2px' }}>
+            {DEVICES.map(({ id, Icon, title }) => (
+              <button
+                key={id}
+                title={title}
+                onClick={() => setPreviewDevice(id)}
+                style={{
+                  background: previewDevice === id ? (theme === 'light' ? '#fff' : 'rgba(27,120,247,0.15)') : 'transparent',
+                  border: previewDevice === id ? `1px solid ${theme === 'light' ? 'rgba(0,0,0,0.12)' : 'rgba(27,120,247,0.3)'}` : '1px solid transparent',
+                  borderRadius: 6, width: 28, height: 26,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer',
+                  color: previewDevice === id ? colors.blue : 'var(--c-muted)',
+                  transition: 'all 0.15s',
+                }}
+              >
+                <Icon size={13} strokeWidth={2} />
+              </button>
+            ))}
+          </div>
+
+          <div style={{ flex: 1 }} />
+
           <button
             onClick={() => setPreviewEditing(e => !e)}
             style={{
@@ -666,6 +705,18 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
           </button>
         </div>
       )}
+
+      {/* ── Device frame wrapper ── */}
+      <div style={{
+        margin: previewDevice !== 'desktop' ? `${isOwner ? 16 : 40}px auto 0` : '0 auto',
+        maxWidth: deviceMaxWidth,
+        width: '100%',
+        boxShadow: previewDevice !== 'desktop' ? '0 0 0 1px var(--c-border), 0 12px 60px rgba(0,0,0,0.35)' : 'none',
+        borderRadius: previewDevice !== 'desktop' ? 20 : 0,
+        overflow: previewDevice !== 'desktop' ? 'hidden' : 'visible',
+        transition: 'max-width 0.3s ease, box-shadow 0.3s ease, border-radius 0.3s ease',
+        background: 'var(--c-bg)',
+      }}>
 
       {/* ── Hero ── */}
       <div style={{ position: 'relative', overflow: 'hidden' }}>
@@ -980,7 +1031,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
       )}
 
       {/* ── Story sections ── */}
-      <div style={{ maxWidth: 860, margin: '60px auto 0', padding: `0 28px 80px`, marginRight: isOwner && previewEditing ? '356px' : '0', display: 'flex', flexDirection: 'column', gap: 32, transition: 'margin-right 0.3s ease' }}>
+      <div style={{ maxWidth: deviceMaxWidth ? Math.min(860, deviceMaxWidth) : 860, margin: '60px auto 0', padding: `0 ${previewDevice === 'mobile' ? '16px' : '28px'} 80px`, display: 'flex', flexDirection: 'column', gap: 32 }}>
 
         {/* Custom blocks — workspace blocks shown first */}
         {previewBlocks.map(block => {
@@ -1194,6 +1245,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
         )}
 
       </div>
+      </div>{/* end device-frame */}
     </div>
   )
 }

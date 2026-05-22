@@ -1,6 +1,6 @@
-import { useState, useEffect, lazy, Suspense } from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { AlertTriangle, X as XIcon } from 'lucide-react'
+import { useState, useEffect, lazy, Suspense, Component } from 'react'
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
+import { AlertTriangle, X as XIcon, Frown, RefreshCw, ArrowLeft } from 'lucide-react'
 import { HelmetProvider } from 'react-helmet-async'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
@@ -39,7 +39,128 @@ function PageLoader() {
   )
 }
 
-// Animation timeline:
+// ── Error Boundary ────────────────────────────────────────────────────────────
+class ErrorBoundary extends Component {
+  constructor(props) {
+    super(props)
+    this.state = { hasError: false, error: null }
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error }
+  }
+  render() {
+    if (!this.state.hasError) return this.props.children
+    return <ErrorFallback error={this.state.error} onReset={() => this.setState({ hasError: false, error: null })} />
+  }
+}
+
+function ErrorFallback({ error, onReset }) {
+  return (
+    <div style={{
+      minHeight: '100vh', background: 'var(--c-bg)', color: 'var(--c-text)',
+      display: 'flex', flexDirection: 'column', alignItems: 'center',
+      justifyContent: 'center', padding: 32, fontFamily: 'var(--font-body)', gap: 20,
+    }}>
+      <div style={{
+        width: 56, height: 56, borderRadius: 16,
+        background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        <Frown size={26} color="#ef4444" />
+      </div>
+      <div style={{ textAlign: 'center', maxWidth: 400 }}>
+        <h2 style={{ margin: '0 0 8px', fontSize: 20, fontWeight: 800, fontFamily: 'var(--font-heading)', letterSpacing: '-0.3px' }}>
+          Algo correu mal
+        </h2>
+        <p style={{ margin: 0, fontSize: 14, color: 'var(--c-muted)', lineHeight: 1.6 }}>
+          Ocorreu um erro inesperado. Tenta recarregar a página.
+        </p>
+      </div>
+      <div style={{ display: 'flex', gap: 10 }}>
+        <button
+          onClick={() => { onReset(); window.location.href = '/' }}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 6,
+            background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)',
+            borderRadius: 10, padding: '10px 18px',
+            color: 'var(--c-muted)', fontSize: 14, fontWeight: 600,
+            cursor: 'pointer', fontFamily: 'inherit',
+          }}
+        >
+          <ArrowLeft size={14} /> Início
+        </button>
+        <button
+          onClick={() => window.location.reload()}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 6,
+            background: 'linear-gradient(135deg, #1b78f7, #4f46e5)',
+            border: 'none', borderRadius: 10, padding: '10px 18px',
+            color: '#fff', fontSize: 14, fontWeight: 700,
+            cursor: 'pointer', fontFamily: 'inherit',
+            boxShadow: '0 4px 16px rgba(27,120,247,0.3)',
+          }}
+        >
+          <RefreshCw size={14} /> Recarregar
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// ── 404 Not Found ─────────────────────────────────────────────────────────────
+function NotFound() {
+  const navigate = useNavigate()
+  return (
+    <div style={{
+      minHeight: '100vh', background: 'var(--c-bg)', color: 'var(--c-text)',
+      display: 'flex', flexDirection: 'column', alignItems: 'center',
+      justifyContent: 'center', padding: 32, fontFamily: 'var(--font-body)', gap: 20,
+    }}>
+      <div style={{
+        fontSize: 'clamp(64px, 12vw, 96px)', fontWeight: 900,
+        fontFamily: 'var(--font-heading)', letterSpacing: '-4px', lineHeight: 1,
+        background: 'linear-gradient(135deg, #1b78f7, #4f46e5)',
+        WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+      }}>404</div>
+      <div style={{ textAlign: 'center', maxWidth: 360 }}>
+        <h2 style={{ margin: '0 0 8px', fontSize: 20, fontWeight: 800, fontFamily: 'var(--font-heading)', letterSpacing: '-0.3px' }}>
+          Página não encontrada
+        </h2>
+        <p style={{ margin: 0, fontSize: 14, color: 'var(--c-muted)', lineHeight: 1.6 }}>
+          A página que procuras não existe ou foi movida.
+        </p>
+      </div>
+      <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
+        <button
+          onClick={() => navigate(-1)}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 6,
+            background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)',
+            borderRadius: 10, padding: '10px 18px',
+            color: 'var(--c-muted)', fontSize: 14, fontWeight: 600,
+            cursor: 'pointer', fontFamily: 'inherit',
+          }}
+        >
+          <ArrowLeft size={14} /> Voltar
+        </button>
+        <button
+          onClick={() => navigate('/')}
+          style={{
+            background: 'linear-gradient(135deg, #1b78f7, #4f46e5)',
+            border: 'none', borderRadius: 10, padding: '10px 18px',
+            color: '#fff', fontSize: 14, fontWeight: 700,
+            cursor: 'pointer', fontFamily: 'inherit',
+            boxShadow: '0 4px 16px rgba(27,120,247,0.3)',
+          }}
+        >
+          Ir para o início
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// ── Animation timeline ────────────────────────────────────────────────────────
 // 1.9s  — splash animation plays
 // 1.0s  — hold at final state so the user can read it
 // 0.65s — fade out transition (handled by CSS on SplashScreen)
@@ -47,6 +168,7 @@ function PageLoader() {
 
 const HOLD_MS    = 1900 + 1800   // when to start fading (3700ms)
 const UNMOUNT_MS = HOLD_MS + 700 // when to remove from DOM (4400ms)
+const SPLASH_KEY = 'showo_seen_splash'
 
 function HomeRoute() {
   const { user, loading } = useAuth()
@@ -97,10 +219,14 @@ function AuthErrorBanner() {
 }
 
 export default function App() {
-  const [splashVisible,  setSplashVisible]  = useState(true)
-  const [splashMounted,  setSplashMounted]  = useState(true)
+  // Skip splash on repeat visits — only show it the first time
+  const firstVisit = !localStorage.getItem(SPLASH_KEY)
+  const [splashVisible,  setSplashVisible]  = useState(firstVisit)
+  const [splashMounted,  setSplashMounted]  = useState(firstVisit)
 
   useEffect(() => {
+    if (!firstVisit) return
+    localStorage.setItem(SPLASH_KEY, '1')
     const fadeTimer    = setTimeout(() => setSplashVisible(false), HOLD_MS)
     const unmountTimer = setTimeout(() => setSplashMounted(false), UNMOUNT_MS)
     return () => { clearTimeout(fadeTimer); clearTimeout(unmountTimer) }
@@ -115,6 +241,7 @@ export default function App() {
           {splashMounted && <SplashScreen visible={splashVisible} />}
           <RestReminder />
           <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+            <ErrorBoundary>
             <Suspense fallback={<PageLoader />}>
             <Routes>
               <Route path="/"              element={<HomeRoute />}   />
@@ -135,8 +262,10 @@ export default function App() {
               <Route path="/conquistas"    element={<Conquistas />}  />
               <Route path="/interview"          element={<AIInterview />}  />
               <Route path="/certificado/:slug"  element={<Certificate />}  />
+              <Route path="*"                   element={<NotFound />}     />
             </Routes>
             </Suspense>
+            </ErrorBoundary>
           </BrowserRouter>
         </AuthProvider>
         </SidebarProvider>
