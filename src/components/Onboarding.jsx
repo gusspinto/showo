@@ -37,7 +37,7 @@ const STEPS = [
             display: 'flex', alignItems: 'center', gap: 8,
             animation: `guide-fade-up 0.35s ${i * 0.08}s both`,
           }}>
-            <span style={{ fontSize: 11, color: '#60a5fa', fontWeight: 700, minWidth: 74 }}>{label}</span>
+            <span style={{ fontSize: 11, color: '#1b78f7', fontWeight: 700, minWidth: 74 }}>{label}</span>
             <div style={{ flex: 1, height: 5, background: 'rgba(27,120,247,0.12)', borderRadius: 3, overflow: 'hidden' }}>
               <div style={{
                 height: '100%', background: 'linear-gradient(90deg,#1b78f7,#818cf8)',
@@ -71,7 +71,7 @@ const STEPS = [
             <div style={{ background: 'var(--c-bg)', borderRadius: '50%', width: 22, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 800, color: '#22c55e' }}>85</div>
           </div>
           <div style={{ flex: 1, fontSize: 11, color: '#7d93b0' }}>
-            showo.app/projeto/<span style={{ color: '#60a5fa' }}>gestao-horarios</span>
+            showo.app/projeto/<span style={{ color: '#1b78f7' }}>gestao-horarios</span>
           </div>
         </div>
       </div>
@@ -147,8 +147,8 @@ export default function Onboarding({ onDone }) {
             border: '1px solid rgba(27,120,247,0.25)',
             borderRadius: 20, padding: '4px 10px 4px 7px',
           }}>
-            <BookOpen size={13} color="#60a5fa" />
-            <span style={{ fontSize: 12, fontWeight: 700, color: '#60a5fa', letterSpacing: 0.2 }}>Guia rápido</span>
+            <BookOpen size={13} color="#1b78f7" />
+            <span style={{ fontSize: 12, fontWeight: 700, color: '#1b78f7', letterSpacing: 0.2 }}>Guia rápido</span>
             <span style={{
               fontSize: 10, fontWeight: 700, color: '#1b78f7',
               background: 'rgba(27,120,247,0.15)', borderRadius: 10,

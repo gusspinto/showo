@@ -570,7 +570,7 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
               <div style={{ marginTop: 4 }}>
                 <button
                   onClick={() => setShowNote(s => !s)}
-                  style={{ background: 'transparent', border: `1px solid ${showNote ? 'var(--c-border-bright)' : 'var(--c-border)'}`, borderRadius: 9, padding: '7px 14px', color: showNote ? '#60a5fa' : C.subtle, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s' }}
+                  style={{ background: 'transparent', border: `1px solid ${showNote ? 'var(--c-border-bright)' : 'var(--c-border)'}`, borderRadius: 9, padding: '7px 14px', color: showNote ? C.blue : C.subtle, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s' }}
                 >
                   {showNote
                     ? <><ChevronUp size={13} style={{ verticalAlign: 'middle', marginRight: 4 }} />Esconder nota</>
@@ -730,7 +730,7 @@ function GrupoPanel({ project }) {
     })
     setSearchResult(null)
     setSearch('')
-    pushEvent(`${name} recebeu o convite`, '#60a5fa')
+    pushEvent(`${name} recebeu o convite`, C.blue)
     loadCollaborators()
   }
 
@@ -810,7 +810,7 @@ function GrupoPanel({ project }) {
         <button
           onClick={doSearch}
           disabled={!search.trim() || searching}
-          style={{ background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.25)', borderRadius: 10, padding: '10px 16px', color: '#60a5fa', fontSize: 13, fontWeight: 600, cursor: search.trim() ? 'pointer' : 'default', fontFamily: 'inherit' }}
+          style={{ background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.25)', borderRadius: 10, padding: '10px 16px', color: C.blue, fontSize: 13, fontWeight: 600, cursor: search.trim() ? 'pointer' : 'default', fontFamily: 'inherit' }}
         >
           {searching ? '...' : 'Procurar'}
         </button>
@@ -885,7 +885,7 @@ function GrupoPanel({ project }) {
                               background: on ? 'rgba(27,120,247,0.12)' : 'transparent',
                               border: `1px solid ${on ? 'rgba(27,120,247,0.4)' : C.border}`,
                               borderRadius: 7, padding: '5px 10px',
-                              color: on ? '#60a5fa' : C.muted,
+                              color: on ? C.blue : C.muted,
                               fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
                               transition: 'all 0.12s',
                             }}
@@ -1007,7 +1007,7 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
                 background: tab === t.id ? 'rgba(27,120,247,0.12)' : 'transparent',
                 border: `1px solid ${tab === t.id ? 'rgba(27,120,247,0.35)' : C.border}`,
                 borderRadius: 9, padding: '8px 16px',
-                color: tab === t.id ? '#60a5fa' : C.muted,
+                color: tab === t.id ? C.blue : C.muted,
                 fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
                 transition: 'all 0.15s',
               }}

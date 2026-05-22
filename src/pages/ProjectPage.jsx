@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useMemo, memo } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import { QRCodeSVG } from 'qrcode.react'
@@ -107,7 +107,7 @@ function getLevelInfo(score) {
   return { label: 'Em desenvolvimento', color: colors.red }
 }
 
-function ScoreRing({ score, size = 108 }) {
+const ScoreRing = memo(function ScoreRing({ score, size = 108 }) {
   const stroke = size <= 80 ? 6 : 8
   const r = (size - stroke) / 2
   const circ = 2 * Math.PI * r
@@ -141,12 +141,12 @@ function ScoreRing({ score, size = 108 }) {
       </div>
     </div>
   )
-}
+})
 
 const SECTION_CLAMP_LINES = 8  // max lines before "ver mais"
 const APPROX_CHARS_PER_LINE = 70
 
-function Section({ fieldKey, content, isOwner, onImprove }) {
+const Section = memo(function Section({ fieldKey, content, isOwner, onImprove }) {
   const meta    = SECTION_META[fieldKey] ?? { Icon: Wrench, label: fieldKey }
   const fieldCfg = PROFILE_SCORE_FIELDS.find(f => f.key === fieldKey)
   const len     = (content || '').trim().length
@@ -179,7 +179,7 @@ function Section({ fieldKey, content, isOwner, onImprove }) {
         {isOwner && challenge && !isEmpty && (
           <button
             onClick={() => onImprove(challenge)}
-            style={{ background: `${colors.blue}10`, border: `1px solid ${colors.blue}22`, color: '#60a5fa', cursor: 'pointer', fontSize: 11, fontWeight: 700, fontFamily: 'inherit', padding: '3px 9px', borderRadius: 6, flexShrink: 0, transition: 'all 0.15s' }}
+            style={{ background: `${colors.blue}10`, border: `1px solid ${colors.blue}22`, color: colors.blue, cursor: 'pointer', fontSize: 11, fontWeight: 700, fontFamily: 'inherit', padding: '3px 9px', borderRadius: 6, flexShrink: 0, transition: 'all 0.15s' }}
             onMouseEnter={e => { e.currentTarget.style.background = `${colors.blue}1e`; e.currentTarget.style.borderColor = `${colors.blue}44` }}
             onMouseLeave={e => { e.currentTarget.style.background = `${colors.blue}10`; e.currentTarget.style.borderColor = `${colors.blue}22` }}
           >
@@ -195,7 +195,7 @@ function Section({ fieldKey, content, isOwner, onImprove }) {
             {challenge && (
               <button
                 onClick={() => onImprove(challenge)}
-                style={{ background: `${colors.blue}10`, border: `1px solid ${colors.blue}22`, color: '#60a5fa', borderRadius: 6, padding: '3px 9px', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0, transition: 'all 0.15s' }}
+                style={{ background: `${colors.blue}10`, border: `1px solid ${colors.blue}22`, color: colors.blue, borderRadius: 6, padding: '3px 9px', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0, transition: 'all 0.15s' }}
                 onMouseEnter={e => { e.currentTarget.style.background = `${colors.blue}1e`; e.currentTarget.style.borderColor = `${colors.blue}44` }}
                 onMouseLeave={e => { e.currentTarget.style.background = `${colors.blue}10`; e.currentTarget.style.borderColor = `${colors.blue}22` }}
               >
@@ -232,7 +232,7 @@ function Section({ fieldKey, content, isOwner, onImprove }) {
               onClick={() => setExpanded(e => !e)}
               style={{
                 marginTop: 8, background: 'none', border: 'none',
-                color: '#60a5fa', fontSize: 12, fontWeight: 700,
+                color: colors.blue, fontSize: 12, fontWeight: 700,
                 cursor: 'pointer', padding: 0, fontFamily: 'inherit',
                 display: 'flex', alignItems: 'center', gap: 4,
               }}
@@ -250,9 +250,9 @@ function Section({ fieldKey, content, isOwner, onImprove }) {
       )}
     </div>
   )
-}
+})
 
-function MissionRow({ challenge, project, onImprove, isOwner }) {
+const MissionRow = memo(function MissionRow({ challenge, project, onImprove, isOwner }) {
   const isCompleted = getChallengeStatus(challenge, project) === 'completed'
   const val         = String(project[challenge.field] || '').trim()
   const progress    = Math.min(val.length / challenge.threshold, 1)
@@ -327,7 +327,7 @@ function MissionRow({ challenge, project, onImprove, isOwner }) {
           onClick={() => onImprove(challenge)}
           style={{
             background: 'rgba(27,120,247,0.08)', border: '1px solid rgba(27,120,247,0.18)',
-            color: '#5a9ff5', borderRadius: 8, padding: '5px 12px',
+            color: colors.blue, borderRadius: 8, padding: '5px 12px',
             fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0,
           }}
         >
@@ -336,7 +336,7 @@ function MissionRow({ challenge, project, onImprove, isOwner }) {
       )}
     </div>
   )
-}
+})
 
 function EditModal({ challenge, project, onClose, onSave, saving }) {
   const [value, setValue] = useState(String(project[challenge.field] || ''))
@@ -632,7 +632,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
           padding: '7px 16px',
           display: 'flex', alignItems: 'center', gap: 8,
         }}>
-          <Globe size={13} color="#60a5fa" style={{ flexShrink: 0 }} />
+          <Globe size={13} color={colors.blue} style={{ flexShrink: 0 }} />
           <span style={{ fontSize: 12, color: 'var(--c-muted)', fontWeight: 500, flex: 1 }}>
             Preview do visitante
           </span>
@@ -699,7 +699,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
             )}
             {project.area && (
               <span style={{
-                background: 'rgba(27,120,247,0.1)', color: '#60a5fa',
+                background: 'rgba(27,120,247,0.1)', color: colors.blue,
                 border: '1px solid rgba(27,120,247,0.2)',
                 borderRadius: 6, padding: '4px 12px', fontSize: 12, fontWeight: 600,
               }}>{project.area}</span>
@@ -880,7 +880,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
                             <input value={block.imageUrl || ''} onChange={e => upd(block.id, 'imageUrl', e.target.value)}
                               placeholder="URL da imagem..." style={{ ...wsInput, flex: 1, margin: 0 }} />
                             <button onClick={() => uploadImage(block.id, 'imageUrl')}
-                              style={{ background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.25)', borderRadius: 7, padding: '0 10px', color: '#60a5fa', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+                              style={{ background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.25)', borderRadius: 7, padding: '0 10px', color: colors.blue, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
                               <Camera size={13} />
                             </button>
                           </div>
@@ -893,7 +893,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
                               <input value={block[field] || ''} onChange={e => upd(block.id, field, e.target.value)}
                                 placeholder={`Imagem ${gi+1} (URL ou upload)`} style={{ ...wsInput, flex: 1, margin: 0 }} />
                               <button onClick={() => uploadImage(block.id, field)}
-                                style={{ background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.25)', borderRadius: 7, padding: '0 10px', color: '#60a5fa', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+                                style={{ background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.25)', borderRadius: 7, padding: '0 10px', color: colors.blue, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
                                 <Camera size={13} />
                               </button>
                             </div>
@@ -1090,7 +1090,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
             border: '1px solid var(--c-border)',
             borderRadius: 16, padding: '28px 32px',
           }}>
-            <div style={{ fontSize: 11, fontWeight: 800, color: '#60a5fa', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ fontSize: 11, fontWeight: 800, color: colors.blue, textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
               <Zap size={13} /> A solução
             </div>
             <p style={{ margin: 0, fontSize: 'clamp(15px, 2vw, 18px)', color: 'var(--c-text)', lineHeight: 1.8, fontWeight: 400, overflowWrap: 'break-word' }}>
@@ -1225,7 +1225,7 @@ function MembersPanel({ ownerName, members, colors, isOwner }) {
             {displayOwner[0]?.toUpperCase()}
           </div>
           <span style={{ fontSize: 14, fontWeight: 600, color: colors.text, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{displayOwner}</span>
-          <span style={{ fontSize: 11, flexShrink: 0, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.25)', borderRadius: 5, padding: '2px 8px', color: '#60a5fa', fontWeight: 700 }}>Dono</span>
+          <span style={{ fontSize: 11, flexShrink: 0, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.25)', borderRadius: 5, padding: '2px 8px', color: colors.blue, fontWeight: 700 }}>Dono</span>
         </div>
         {/* Collaborators */}
         {visibleMembers.map(m => {
@@ -1766,8 +1766,8 @@ export default function ProjectPage() {
   }
 
   const highlights = Array.isArray(project.ai_highlights) ? project.ai_highlights : []
-  const level = getLevelInfo(displayScore)
-  const internshipReady = score > 80 && !!project.technologies?.trim() && !!project.results?.trim()
+  const level = useMemo(() => getLevelInfo(displayScore), [displayScore])
+  const internshipReady = useMemo(() => score > 80 && !!project.technologies?.trim() && !!project.results?.trim(), [score, project])
   const isPap = project.is_pap || project.project_type === 'pap'
 
   async function handleSaveDefenseDate(dateStr) {
@@ -1817,14 +1817,14 @@ export default function ProjectPage() {
     setTeacherFeedback(prev => prev.filter(f => f.id !== id))
   }
 
-  const sortedChallenges = [...CHALLENGES].sort((a, b) => {
+  const sortedChallenges = useMemo(() => [...CHALLENGES].sort((a, b) => {
     const aCompleted = getChallengeStatus(a, project) === 'completed' ? 1 : 0
     const bCompleted = getChallengeStatus(b, project) === 'completed' ? 1 : 0
     return aCompleted - bCompleted
-  })
-  const completedCount = CHALLENGES.filter(c => getChallengeStatus(c, project) === 'completed').length
-  const earnedXP = CHALLENGES.reduce((sum, c) => sum + (getChallengeStatus(c, project) === 'completed' ? c.scoreGain : 0), 0)
-  const totalXP = CHALLENGES.reduce((sum, c) => sum + c.scoreGain, 0)
+  }), [project])
+  const completedCount = useMemo(() => CHALLENGES.filter(c => getChallengeStatus(c, project) === 'completed').length, [project])
+  const earnedXP = useMemo(() => CHALLENGES.reduce((sum, c) => sum + (getChallengeStatus(c, project) === 'completed' ? c.scoreGain : 0), 0), [project])
+  const totalXP = useMemo(() => CHALLENGES.reduce((sum, c) => sum + c.scoreGain, 0), [])
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: 'var(--font-body)', overflowX: 'clip' }}>
@@ -1993,6 +1993,13 @@ export default function ProjectPage() {
           /* Body gap on mobile */
           .proj-body { gap: 12px; }
         }
+        ${viewAsPublic ? `
+          /* ── Preview mode: full-width, no sidebar ── */
+          .sidebar          { display: none !important; }
+          body              { padding-left: 0 !important; }
+          .top-nav          { display: none !important; }
+          .bottom-nav       { display: none !important; }
+        ` : ''}
       `}</style>
 
       {defenseMode && (
@@ -2120,7 +2127,7 @@ export default function ProjectPage() {
               {milestoneCard.score >= 90
                 ? <Trophy size={52} color="#22c55e" />
                 : milestoneCard.score >= 70
-                ? <Rocket size={52} color="#60a5fa" />
+                ? <Rocket size={52} color={colors.blue} />
                 : <Target size={52} color="#fbbf24" />}
             </div>
 
@@ -2141,7 +2148,7 @@ export default function ProjectPage() {
               background: milestoneCard.score >= 90 ? 'rgba(34,197,94,0.12)' : milestoneCard.score >= 70 ? 'rgba(27,120,247,0.12)' : 'rgba(251,191,36,0.12)',
               border: `1px solid ${milestoneCard.score >= 90 ? 'rgba(34,197,94,0.3)' : milestoneCard.score >= 70 ? 'rgba(27,120,247,0.3)' : 'rgba(251,191,36,0.3)'}`,
               borderRadius: 999, padding: '6px 20px', marginBottom: 28,
-              color: milestoneCard.score >= 90 ? '#22c55e' : milestoneCard.score >= 70 ? '#60a5fa' : '#fbbf24',
+              color: milestoneCard.score >= 90 ? '#22c55e' : milestoneCard.score >= 70 ? colors.blue : '#fbbf24',
               fontSize: 13, fontWeight: 800, position: 'relative',
             }}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
@@ -2254,7 +2261,7 @@ export default function ProjectPage() {
                     background: analyzingAI ? 'rgba(27,120,247,0.08)' : aiFeedback ? 'rgba(27,120,247,0.1)' : 'linear-gradient(135deg,#1b78f7,#4f46e5)',
                     border: analyzingAI || aiFeedback ? `1px solid ${colors.blue}30` : 'none',
                     borderRadius: 9, padding: '8px 16px',
-                    color: analyzingAI || aiFeedback ? '#60a5fa' : '#fff',
+                    color: analyzingAI || aiFeedback ? colors.blue : '#fff',
                     fontSize: 12, fontWeight: 700,
                     cursor: analyzingAI ? 'default' : 'pointer',
                     fontFamily: 'inherit',
@@ -2282,7 +2289,7 @@ export default function ProjectPage() {
                     {aiFeedback.overall}
                   </div>
                   {aiFeedback.score_hint && (
-                    <div style={{ fontSize: 12, color: '#60a5fa', fontWeight: 600, display: 'flex', alignItems: 'flex-start', gap: 6 }}>
+                    <div style={{ fontSize: 12, color: colors.blue, fontWeight: 600, display: 'flex', alignItems: 'flex-start', gap: 6 }}>
                       <Lightbulb size={14} style={{ flexShrink: 0, marginTop: 1 }} />
                       <span>{aiFeedback.score_hint}</span>
                     </div>
@@ -2302,7 +2309,7 @@ export default function ProjectPage() {
                           </div>
                           <p style={{ margin: '0 0 4px', fontSize: 12, color: '#afc3dc', lineHeight: 1.55 }}>{sec.feedback}</p>
                           {sec.tip && (
-                            <p style={{ margin: 0, fontSize: 12, color: '#60a5fa', lineHeight: 1.55, display: 'flex', alignItems: 'center', gap: 5 }}><ChevronRight size={12} /> {sec.tip}</p>
+                            <p style={{ margin: 0, fontSize: 12, color: colors.blue, lineHeight: 1.55, display: 'flex', alignItems: 'center', gap: 5 }}><ChevronRight size={12} /> {sec.tip}</p>
                           )}
                         </div>
                       )
@@ -2489,7 +2496,7 @@ export default function ProjectPage() {
                 )}
                 {project.area && (
                   <div style={{
-                    background: colors.blueSubtle, color: '#60a5fa',
+                    background: colors.blueSubtle, color: colors.blue,
                     border: '1px solid rgba(27,120,247,0.2)',
                     borderRadius: 8, padding: '5px 14px', fontSize: 12, fontWeight: 600,
                   }}>
@@ -2543,7 +2550,7 @@ export default function ProjectPage() {
                       disabled={inviting || !inviteInput.trim()}
                       style={{
                         background: `${colors.blue}18`, border: `1px solid ${colors.blue}30`,
-                        borderRadius: 8, padding: '5px 12px', color: '#60a5fa',
+                        borderRadius: 8, padding: '5px 12px', color: colors.blue,
                         fontSize: 12, fontWeight: 700, cursor: inviting ? 'default' : 'pointer',
                         fontFamily: 'inherit', opacity: inviting ? 0.6 : 1,
                       }}
@@ -2602,20 +2609,21 @@ export default function ProjectPage() {
                   Pronto para estágio
                 </div>
               )}
-              {/* "Disponível" — subtle green dot icon add-on */}
+              {/* "Disponível" — briefcase badge */}
               {ownerProfile?.available_for_work && (
                 <div
                   title="Disponível para trabalho / estágio"
                   style={{
-                    width: 22, height: 22, borderRadius: '50%',
-                    background: 'rgba(16,185,129,0.12)',
-                    border: '1.5px solid rgba(16,185,129,0.35)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    display: 'inline-flex', alignItems: 'center', gap: 5,
+                    background: 'rgba(16,185,129,0.1)', color: '#10b981',
+                    border: '1px solid rgba(16,185,129,0.25)',
+                    borderRadius: 999, padding: '4px 12px',
+                    fontSize: 11, fontWeight: 700, lineHeight: 1.5,
                     cursor: 'default',
                   }}
                 >
-                  {/* Green pulse dot */}
-                  <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#10b981', boxShadow: '0 0 0 2px rgba(16,185,129,0.25)' }} />
+                  <Briefcase size={11} strokeWidth={2.5} />
+                  Disponivel para estágio
                 </div>
               )}
             </div>
@@ -3020,7 +3028,7 @@ export default function ProjectPage() {
               style={{
                 background: copied ? `${colors.green}18` : `${colors.blue}18`,
                 border: `1px solid ${copied ? colors.green + '35' : colors.blue + '30'}`,
-                color: copied ? colors.green : '#60a5fa',
+                color: copied ? colors.green : colors.blue,
                 borderRadius: 8, padding: '7px 14px',
                 fontSize: 12, fontWeight: 700,
                 cursor: 'pointer', whiteSpace: 'nowrap',

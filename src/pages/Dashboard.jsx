@@ -280,7 +280,7 @@ function QuickCreateProject({ navigate }) {
                 fontSize: 12, padding: '6px 14px', borderRadius: 20,
                 border: `1px solid ${sel ? C.blue : C.border}`,
                 background: sel ? `${C.blue}20` : 'transparent',
-                color: sel ? '#60a5fa' : C.muted,
+                color: sel ? C.blue : C.muted,
                 cursor: 'pointer', fontFamily: 'inherit',
                 fontWeight: sel ? 700 : 500,
                 transition: 'all 0.12s',
@@ -539,7 +539,7 @@ function TurmasListModal({ turmas, onClose, navigate, onJoin }) {
                 <div style={{ fontSize: 14, fontWeight: 700, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.name}</div>
                 {t.teacher_name && <div style={{ fontSize: 12, color: C.muted, marginTop: 1 }}>{t.teacher_name}</div>}
               </div>
-              <span style={{ fontSize: 11, fontWeight: 700, color: '#60a5fa', letterSpacing: 1, flexShrink: 0 }}>{t.code}</span>
+              <span style={{ fontSize: 11, fontWeight: 700, color: C.blue, letterSpacing: 1, flexShrink: 0 }}>{t.code}</span>
               <ChevronRight size={14} color={C.subtle} style={{ flexShrink: 0 }} />
             </div>
           ))}
@@ -573,7 +573,7 @@ function TurmaCard({ turma, navigate }) {
         <div style={{ color: C.text, fontSize: 14, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{turma.name}</div>
         {turma.subject && <div style={{ color: C.muted, fontSize: 12, marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{turma.subject}</div>}
         <div style={{ color: C.subtle, fontSize: 11, marginTop: 4, display: 'flex', gap: 10, alignItems: 'center' }}>
-          <span style={{ color: '#60a5fa', fontWeight: 700, letterSpacing: 1 }}>{turma.code}</span>
+          <span style={{ color: C.blue, fontWeight: 700, letterSpacing: 1 }}>{turma.code}</span>
           {turma.project_count != null && <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}><Users size={10} />{turma.project_count} projeto{turma.project_count !== 1 ? 's' : ''}</span>}
           {turma.avg_score != null && <span style={{ color: turma.avg_score >= 90 ? C.green : turma.avg_score >= 71 ? C.blue : turma.avg_score >= 40 ? C.yellow : C.red, fontWeight: 700 }}>⌀ {turma.avg_score}</span>}
         </div>
@@ -1197,7 +1197,7 @@ export default function Dashboard() {
                 </div>
                 <button
                   onClick={() => setShowCreateTurma(true)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.22)', borderRadius: 8, padding: '6px 12px', color: '#60a5fa', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s' }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.22)', borderRadius: 8, padding: '6px 12px', color: C.blue, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s' }}
                   onMouseEnter={e => { e.currentTarget.style.background = 'rgba(27,120,247,0.18)' }}
                   onMouseLeave={e => { e.currentTarget.style.background = 'rgba(27,120,247,0.1)' }}
                 >
@@ -1300,7 +1300,7 @@ export default function Dashboard() {
               </div>
               <div style={{ display: 'flex', gap: 7, flexShrink: 0 }}>
                 {studentTurmas.length > 0 && (
-                  <button onClick={() => setShowTurmasModal(true)} style={{ background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.22)', borderRadius: 7, padding: '6px 12px', color: '#60a5fa', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s', whiteSpace: 'nowrap' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(27,120,247,0.18)'} onMouseLeave={e => e.currentTarget.style.background = 'rgba(27,120,247,0.1)'}>
+                  <button onClick={() => setShowTurmasModal(true)} style={{ background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.22)', borderRadius: 7, padding: '6px 12px', color: C.blue, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s', whiteSpace: 'nowrap' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(27,120,247,0.18)'} onMouseLeave={e => e.currentTarget.style.background = 'rgba(27,120,247,0.1)'}>
                     Ver turmas
                   </button>
                 )}
@@ -1333,7 +1333,7 @@ export default function Dashboard() {
               {!loadingProjects && projects.length > 0 && (
                 <button
                   onClick={() => setShowCreateModal(true)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 6, background: `${C.blue}18`, border: `1px solid ${C.blue}30`, borderRadius: 8, padding: '6px 12px', color: '#60a5fa', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s' }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, background: `${C.blue}18`, border: `1px solid ${C.blue}30`, borderRadius: 8, padding: '6px 12px', color: C.blue, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s' }}
                   onMouseEnter={e => { e.currentTarget.style.background = `${C.blue}28`; e.currentTarget.style.borderColor = `${C.blue}55` }}
                   onMouseLeave={e => { e.currentTarget.style.background = `${C.blue}18`; e.currentTarget.style.borderColor = `${C.blue}30` }}
                 >

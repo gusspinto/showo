@@ -580,7 +580,7 @@ export default function NewProject() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           {formGoal && (
             <span style={{
-              fontSize: 11, color: '#60a5fa',
+              fontSize: 11, color: colors.blue,
               background: 'rgba(27,120,247,0.08)',
               border: '1px solid rgba(27,120,247,0.15)',
               borderRadius: 999, padding: '3px 10px', fontWeight: 600,
@@ -613,7 +613,7 @@ export default function NewProject() {
               background: 'rgba(27,120,247,0.08)', border: '1px solid rgba(27,120,247,0.2)',
               borderRadius: 10, padding: '10px 14px', marginBottom: 20, gap: 10,
             }}>
-              <span style={{ color: '#60a5fa', fontSize: 13, fontWeight: 500 }}>
+              <span style={{ color: colors.blue, fontSize: 13, fontWeight: 500 }}>
                 A IA pré-preencheu alguns campos com base na tua descrição. Revê e corrige o que precisares.
               </span>
               <button

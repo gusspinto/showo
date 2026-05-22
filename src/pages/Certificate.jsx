@@ -165,7 +165,7 @@ export default function Certificate() {
             {project.creator_name || 'Estudante'}
           </div>
           <div style={{ fontSize: 14, color: C.muted, marginBottom: 8, fontWeight: 500 }}>concluiu com sucesso o projeto</div>
-          <div style={{ fontSize: 'clamp(20px, 3vw, 32px)', fontWeight: 800, color: '#60a5fa', letterSpacing: '-0.5px', lineHeight: 1.2, fontFamily: 'var(--font-heading)' }}>
+          <div style={{ fontSize: 'clamp(20px, 3vw, 32px)', fontWeight: 800, color: '#1b78f7', letterSpacing: '-0.5px', lineHeight: 1.2, fontFamily: 'var(--font-heading)' }}>
             {project.name}
           </div>
         </div>

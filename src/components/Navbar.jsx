@@ -317,7 +317,7 @@ function InviteInbox({ userId, sidebar = false }) {
           border: `1px solid ${open ? 'rgba(27,120,247,0.35)' : C.border}`,
           borderRadius: 8, width: 32, height: 32,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          cursor: 'pointer', color: open ? '#60a5fa' : C.muted,
+          cursor: 'pointer', color: open ? C.blue : C.muted,
           transition: 'all 0.15s', flexShrink: 0,
         }}
         title="Notificações"
@@ -411,7 +411,7 @@ function InviteInbox({ userId, sidebar = false }) {
                         {r.status === 'accepted' && r.projectSlug && (
                           <span
                             onClick={() => { navigate(`/projeto/${r.projectSlug}`); setOpen(false) }}
-                            style={{ marginLeft: 8, color: '#60a5fa', cursor: 'pointer', textDecoration: 'underline' }}
+                            style={{ marginLeft: 8, color: C.blue, cursor: 'pointer', textDecoration: 'underline' }}
                           >Ver projeto</span>
                         )}
                       </p>
@@ -435,7 +435,7 @@ function InviteInbox({ userId, sidebar = false }) {
                   {unreadDbCount > 0 && (
                     <button
                       onClick={markAllRead}
-                      style={{ background: 'none', border: 'none', color: '#60a5fa', fontSize: 11, fontWeight: 600, cursor: 'pointer', padding: 0, fontFamily: 'inherit' }}
+                      style={{ background: 'none', border: 'none', color: C.blue, fontSize: 11, fontWeight: 600, cursor: 'pointer', padding: 0, fontFamily: 'inherit' }}
                     >
                       Marcar todas como lidas
                     </button>
@@ -465,7 +465,7 @@ function InviteInbox({ userId, sidebar = false }) {
                         {VIEW_TYPES.includes(n.type) ? viewMessage(n) : stripEmoji(n.message)}
                       </p>
                       {n.project_slug && VIEW_TYPES.includes(n.type) && (
-                        <p style={{ margin: '0 0 2px', fontSize: 11, color: '#60a5fa', opacity: 0.8, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <p style={{ margin: '0 0 2px', fontSize: 11, color: C.blue, opacity: 0.8, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {n.project_slug}
                         </p>
                       )}
@@ -569,7 +569,7 @@ function UserChip({ user, profile, onClick, onProfile, onSettings, onSignOut, on
               <>
                 <button
                   onClick={() => { onCreateProject(); setOpen(false) }}
-                  style={{ ...dropItemStyle, color: '#60a5fa' }}
+                  style={{ ...dropItemStyle, color: C.blue }}
                   onMouseEnter={e => e.currentTarget.style.background = 'rgba(27,120,247,0.08)'}
                   onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                 >
@@ -769,7 +769,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
           animation: sb-fade-slide-in 0.3s cubic-bezier(0.16,1,0.3,1) both;
         }
         .sb-project-section .sb-label {
-          color: #60a5fa;
+          color: #1b78f7;
           padding-top: 8px;
         }
         .sb-project-section .sb-item:hover {
@@ -779,6 +779,12 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
         body.light .sb-project-section {
           background: rgba(27,120,247,0.06);
           border-color: rgba(27,120,247,0.2);
+        }
+        body.light .sb-project-section .sb-label {
+          color: #1b78f7;
+        }
+        body.light .sb-project-section .sb-item:hover {
+          color: #1b78f7;
         }
         .sb-bottom { padding: 0 8px 16px; }
 
@@ -1236,7 +1242,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
                 <button
                   className="sb-item"
                   onClick={extras.onTogglePublicView}
-                  style={{ color: extras.viewAsPublic ? '#60a5fa' : 'var(--c-muted)' }}
+                  style={{ color: extras.viewAsPublic ? C.blue : 'var(--c-muted)' }}
                 >
                   <Globe size={16} />
                   {extras.viewAsPublic ? 'Sair da preview' : 'Preview visitante'}
