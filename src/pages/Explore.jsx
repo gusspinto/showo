@@ -451,7 +451,7 @@ export default function Explore() {
                   <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                       {project.area && (
-                        <span style={{ fontSize: 11, color: C.blue, background: 'rgba(27,120,247,0.08)', border: '1px solid rgba(27,120,247,0.15)', borderRadius: 999, padding: '3px 10px', fontWeight: 600 }}>
+                        <span style={{ fontSize: 11, color: colors.blue, background: 'rgba(27,120,247,0.08)', border: '1px solid rgba(27,120,247,0.15)', borderRadius: 999, padding: '3px 10px', fontWeight: 600 }}>
                           {project.area}
                         </span>
                       )}
