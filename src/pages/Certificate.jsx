@@ -5,7 +5,7 @@ import { useSidebar } from '../context/SidebarContext'
 import { Helmet } from 'react-helmet-async'
 import { QRCodeSVG } from 'qrcode.react'
 import { supabase } from '../lib/supabase'
-import { Link2, Check } from 'lucide-react'
+import { Link2, Check, Sparkles, Download, ArrowLeft } from 'lucide-react'
 
 const C = {
   bg: 'var(--c-bg)',
@@ -121,9 +121,9 @@ export default function Certificate() {
       {/* Back */}
       <button
         onClick={() => navigate(`/projeto/${slug}`)}
-        style={{ alignSelf: 'flex-start', background: 'transparent', border: `1px solid ${C.border}`, color: C.muted, borderRadius: 8, padding: '8px 16px', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', marginBottom: 32 }}
+        style={{ alignSelf: 'flex-start', background: 'transparent', border: `1px solid ${C.border}`, color: C.muted, borderRadius: 8, padding: '8px 16px', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', marginBottom: 32, display: 'flex', alignItems: 'center', gap: 6 }}
       >
-        ← Voltar ao projeto
+        <ArrowLeft size={14} /> Voltar ao projeto
       </button>
 
       {/* Certificate card */}
@@ -180,7 +180,7 @@ export default function Certificate() {
             <div style={{ fontSize: 14, fontWeight: 700, color: '#22c55e', lineHeight: 1.2 }}>Nível Profissional</div>
             <div style={{ fontSize: 11, color: C.muted, fontWeight: 500, marginTop: 4 }}>Score ≥ 75</div>
           </div>
-          <div style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${C.border}`, borderRadius: 12, padding: '14px 20px' }}>
+          <div style={{ background: 'var(--c-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 12, padding: '14px 20px' }}>
             <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--c-text)', lineHeight: 1.2 }}>{date}</div>
             <div style={{ fontSize: 11, color: C.muted, fontWeight: 500, marginTop: 4 }}>Data de emissão</div>
           </div>
@@ -197,7 +197,7 @@ export default function Certificate() {
           </div>
           <div style={{ textAlign: 'right' }}>
             <div style={{ fontSize: 11, color: C.muted, marginBottom: 6 }}>Autenticado por</div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: '#818cf8' }}>✦ Showo AI</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: '#818cf8', display: 'flex', alignItems: 'center', gap: 5 }}><Sparkles size={13} /> Showo AI</div>
             <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>Análise automática por IA</div>
           </div>
         </div>
@@ -221,7 +221,10 @@ export default function Certificate() {
             opacity: downloading ? 0.7 : 1,
           }}
         >
-          {downloading ? 'A exportar...' : '⬇ Descarregar PNG'}
+          {downloading
+            ? 'A exportar...'
+            : <><Download size={15} style={{ verticalAlign: 'middle', marginRight: 6 }} />Descarregar PNG</>
+          }
         </button>
         <button
           className="cert-action-btn"

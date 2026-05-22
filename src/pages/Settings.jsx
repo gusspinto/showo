@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
 import { Navbar } from '../components/Navbar'
-import { Loader, Check, X, AlertTriangle, Camera, ArrowLeft, GraduationCap, BookOpen, Search, Building2, Lock, Briefcase } from 'lucide-react'
+import { Loader, Check, X, AlertTriangle, Camera, ArrowLeft, GraduationCap, BookOpen, Search, Building2, Lock, Briefcase, Sun, Moon } from 'lucide-react'
 import { CropModal } from '../components/CropModal'
 
 const C = {
@@ -600,7 +600,7 @@ export default function Settings() {
               fontFamily: 'inherit',
               transition: 'border-color 0.2s, background 0.2s',
             }}
-            onMouseEnter={e => { if (!pwSaving) { e.currentTarget.style.borderColor = 'var(--c-border-bright)'; e.currentTarget.style.background = 'rgba(255,255,255,0.03)' }}}
+            onMouseEnter={e => { if (!pwSaving) { e.currentTarget.style.borderColor = 'var(--c-border-bright)'; e.currentTarget.style.background = 'var(--c-bg-alt)' }}}
             onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.background = 'transparent' }}
           >
             {pwSaving ? 'A alterar...' : 'Alterar password'}
@@ -630,7 +630,10 @@ export default function Settings() {
                 flexShrink: 0,
               }}
             >
-              {theme === 'dark' ? '☀️ Modo claro' : '🌙 Modo escuro'}
+              {theme === 'dark'
+                ? <><Sun size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} />Modo claro</>
+                : <><Moon size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} />Modo escuro</>
+              }
             </button>
           </div>
         </SectionCard>

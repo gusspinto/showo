@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
-import { Hand, Search, Lightbulb, Settings, Wrench, Trophy, BookOpen, Mic, GraduationCap, Check, X, Smartphone } from 'lucide-react'
+import { Hand, Search, Lightbulb, Settings, Wrench, Trophy, BookOpen, Mic, GraduationCap, Check, X, Smartphone, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react'
 
 const C = {
-  bg: '#080e1a',
-  card: '#0d1829',
+  bg: 'var(--c-bg)',
+  card: 'var(--c-card)',
   border: 'var(--c-border)',
   blue: '#1b78f7',
   yellow: '#fbbf24',
@@ -41,7 +41,7 @@ function NotesPanel({ aiData, loadingAI, aiError, onRetry }) {
     <div style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 14, padding: '28px', textAlign: 'center' }}>
       <p style={{ color: C.red, fontSize: 15, margin: '0 0 6px', fontWeight: 600 }}>Não foi possível gerar as notas</p>
       <p style={{ color: C.muted, fontSize: 13, margin: '0 0 18px' }}>
-        Faz deploy do Edge Function <code style={{ background: 'rgba(255,255,255,0.06)', padding: '2px 6px', borderRadius: 4 }}>defense-notes</code> no Supabase e tenta novamente.
+        Faz deploy do Edge Function <code style={{ background: 'var(--c-card-hover)', padding: '2px 6px', borderRadius: 4 }}>defense-notes</code> no Supabase e tenta novamente.
       </p>
       <button onClick={onRetry} style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, padding: '9px 20px', color: C.red, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
         Tentar novamente
@@ -97,7 +97,7 @@ function JuryPanel({ aiData, loadingAI, aiError, onRetry }) {
   if (aiError) return (
     <div style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 14, padding: '28px', textAlign: 'center' }}>
       <p style={{ color: C.red, fontSize: 15, margin: '0 0 6px', fontWeight: 600 }}>Não foi possível gerar as perguntas</p>
-      <p style={{ color: C.muted, fontSize: 13, margin: '0 0 18px' }}>Faz deploy do Edge Function <code style={{ background: 'rgba(255,255,255,0.06)', padding: '2px 6px', borderRadius: 4 }}>defense-notes</code> no Supabase.</p>
+      <p style={{ color: C.muted, fontSize: 13, margin: '0 0 18px' }}>Faz deploy do Edge Function <code style={{ background: 'var(--c-card-hover)', padding: '2px 6px', borderRadius: 4 }}>defense-notes</code> no Supabase.</p>
       <button onClick={onRetry} style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, padding: '9px 20px', color: C.red, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
         Tentar novamente
       </button>
@@ -173,7 +173,7 @@ function JuryPanel({ aiData, loadingAI, aiError, onRetry }) {
 
               {/* Answer (revealed) */}
               {isRevealed && (
-                <div style={{ borderTop: `1px solid ${C.border}`, padding: '16px 20px 16px 60px', background: 'rgba(255,255,255,0.02)' }}>
+                <div style={{ borderTop: `1px solid ${C.border}`, padding: '16px 20px 16px 60px', background: 'var(--c-bg-alt)' }}>
                   <p style={{ margin: 0, fontSize: 14, color: C.muted, lineHeight: 1.7 }}>{item.a}</p>
                 </div>
               )}
@@ -354,11 +354,11 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
         </p>
 
         <div style={{ display: 'flex', gap: 12, marginBottom: 32, animation: 'fadeUp 0.4s 0.5s ease-out both' }}>
-          <div style={{ background: '#0d1829', border: '1px solid #1e3050', borderRadius: 12, padding: '16px 24px' }}>
+          <div style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 12, padding: '16px 24px' }}>
             <div style={{ fontSize: 22, fontWeight: 800, color: C.text }}>{timeStr}</div>
             <div style={{ fontSize: 11, color: C.subtle, marginTop: 2 }}>duração</div>
           </div>
-          <div style={{ background: '#0d1829', border: '1px solid #1e3050', borderRadius: 12, padding: '16px 24px' }}>
+          <div style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 12, padding: '16px 24px' }}>
             <div style={{ fontSize: 22, fontWeight: 800, color: C.text }}>{sections.length}</div>
             <div style={{ fontSize: 11, color: C.subtle, marginTop: 2 }}>secções</div>
           </div>
@@ -373,7 +373,7 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
           </button>
           <button
             onClick={onClose}
-            style={{ padding: '14px 0', background: 'transparent', border: '1px solid #1e3050', borderRadius: 14, color: C.muted, fontSize: 15, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+            style={{ padding: '14px 0', background: 'transparent', border: '1px solid var(--c-border)', borderRadius: 14, color: C.muted, fontSize: 15, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
           >
             Fechar
           </button>
@@ -407,7 +407,7 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
               { n: `~${totalMins}m`, label: 'duração' },
               { n: juryCount || '—', label: 'perguntas' },
             ].map(({ n, label }) => (
-              <div key={label} style={{ background: '#0d1829', border: '1px solid #1e3050', borderRadius: 12, padding: '14px 8px' }}>
+              <div key={label} style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 12, padding: '14px 8px' }}>
                 <div style={{ fontSize: 22, fontWeight: 800, color: C.text }}>{n}</div>
                 <div style={{ fontSize: 11, color: C.subtle, marginTop: 2 }}>{label}</div>
               </div>
@@ -440,7 +440,7 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
               boxShadow: '0 8px 32px rgba(27,120,247,0.4)',
             }}
           >
-            Começar apresentação →
+            Começar apresentação <ArrowRight size={16} style={{ verticalAlign: 'middle', marginLeft: 4 }} />
           </button>
 
           <button onClick={onClose} style={{ marginTop: 14, background: 'none', border: 'none', color: C.subtle, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>
@@ -466,7 +466,7 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
           {/* Timer — tap to pause/resume */}
           <button
             onClick={() => setTimerOn(s => !s)}
-            style={{ background: timerOn ? `${accent}18` : 'rgba(255,255,255,0.04)', border: `1px solid ${timerOn ? accent + '44' : 'var(--c-border)'}`, borderRadius: 8, padding: '6px 12px', color: timerOn ? accent : C.subtle, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', minWidth: 60, textAlign: 'center' }}
+            style={{ background: timerOn ? `${accent}18` : 'var(--c-bg-alt)', border: `1px solid ${timerOn ? accent + '44' : 'var(--c-border)'}`, borderRadius: 8, padding: '6px 12px', color: timerOn ? accent : C.subtle, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', minWidth: 60, textAlign: 'center' }}
           >
             {fmt(timer)}
           </button>
@@ -480,7 +480,7 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
             />
           ))}
         </div>
-        <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid #1e3050', borderRadius: 8, padding: '6px 10px', color: C.subtle, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={16} /></button>
+        <button onClick={onClose} style={{ background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)', borderRadius: 8, padding: '6px 10px', color: C.subtle, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={16} /></button>
       </div>
 
       {/* Section header */}
@@ -496,7 +496,7 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
             </div>
           </div>
           {/* Time estimate badge */}
-          <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid #1e3050', borderRadius: 8, padding: '4px 10px', textAlign: 'center' }}>
+          <div style={{ background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)', borderRadius: 8, padding: '4px 10px', textAlign: 'center' }}>
             <div style={{ fontSize: 14, fontWeight: 700, color: C.muted }}>~{sectionMins}m</div>
           </div>
         </div>
@@ -511,10 +511,10 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
         {loadingAI ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {[0,1,2].map(i => (
-              <div key={i} style={{ height: 56, background: '#0d1829', border: '1px solid #1e3050', borderRadius: 12, opacity: 0.5 + i * 0.15 }} />
+              <div key={i} style={{ height: 56, background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 12, opacity: 0.5 + i * 0.15 }} />
             ))}
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
-              <div style={{ width: 14, height: 14, border: '2px solid #1e3050', borderTop: `2px solid ${accent}`, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+              <div style={{ width: 14, height: 14, border: '2px solid var(--c-border)', borderTop: `2px solid ${accent}`, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
               <span style={{ fontSize: 13, color: C.subtle }}>A gerar pontos-chave...</span>
             </div>
           </div>
@@ -535,7 +535,7 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
                   onClick={() => setChecked(c => ({ ...c, [key]: !done }))}
                   style={{
                     display: 'flex', alignItems: 'center', gap: 14, width: '100%',
-                    background: done ? `${accent}10` : '#0d1829',
+                    background: done ? `${accent}10` : 'var(--c-card)',
                     border: `1.5px solid ${done ? accent + '50' : 'var(--c-border)'}`,
                     borderRadius: 14, padding: '16px 18px', cursor: 'pointer',
                     textAlign: 'left', fontFamily: 'inherit',
@@ -544,8 +544,8 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
                 >
                   <span style={{
                     width: 28, height: 28, borderRadius: 8, flexShrink: 0,
-                    background: done ? accent : 'rgba(255,255,255,0.04)',
-                    border: `1.5px solid ${done ? accent : '#2a4070'}`,
+                    background: done ? accent : 'var(--c-bg-alt)',
+                    border: `1.5px solid ${done ? accent : 'var(--c-border)'}`,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: 13, color: done ? '#fff' : C.subtle, fontWeight: 700,
                     transition: 'all 0.15s',
@@ -561,7 +561,7 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
 
             {allChecked && (
               <div style={{ background: `${accent}0d`, border: `1px solid ${accent}30`, borderRadius: 12, padding: '14px 18px', textAlign: 'center', animation: 'pop 0.3s ease-out' }}>
-                <span style={{ fontSize: 14, fontWeight: 700, color: accent }}>Secção completa — avança! →</span>
+                <span style={{ fontSize: 14, fontWeight: 700, color: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>Secção completa — avança! <ChevronRight size={16} /></span>
               </div>
             )}
 
@@ -572,7 +572,10 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
                   onClick={() => setShowNote(s => !s)}
                   style={{ background: 'transparent', border: `1px solid ${showNote ? 'var(--c-border-bright)' : 'var(--c-border)'}`, borderRadius: 9, padding: '7px 14px', color: showNote ? '#60a5fa' : C.subtle, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s' }}
                 >
-                  {showNote ? '▲ Esconder nota' : '▼ Ver nota completa'}
+                  {showNote
+                    ? <><ChevronUp size={13} style={{ verticalAlign: 'middle', marginRight: 4 }} />Esconder nota</>
+                    : <><ChevronDown size={13} style={{ verticalAlign: 'middle', marginRight: 4 }} />Ver nota completa</>
+                  }
                 </button>
                 {showNote && (
                   <div style={{ marginTop: 10, background: 'rgba(27,120,247,0.05)', border: '1px solid rgba(27,120,247,0.15)', borderRadius: 12, padding: '14px 16px', animation: 'pop 0.2s ease-out' }}>
@@ -584,7 +587,7 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
           </div>
         ) : (
           /* No AI data — show raw content as fallback */
-          <div style={{ background: '#0d1829', border: '1px solid #1e3050', borderRadius: 12, padding: '18px' }}>
+          <div style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 12, padding: '18px' }}>
             <p style={{ margin: '0 0 8px', fontSize: 11, fontWeight: 700, color: C.subtle, textTransform: 'uppercase', letterSpacing: 1 }}>Conteúdo</p>
             <p style={{ margin: 0, fontSize: 15, color: C.muted, lineHeight: 1.7 }}>
               {section.id === 'cover'        && (project.ai_tagline || project.goal || project.name)}
@@ -605,16 +608,19 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
         <button
           onClick={prev}
           disabled={current === 0}
-          style={{ flex: 1, padding: '16px 0', background: 'rgba(255,255,255,0.03)', border: '1px solid #1e3050', borderRadius: 14, color: current === 0 ? 'var(--c-border)' : C.muted, fontSize: 20, cursor: current === 0 ? 'default' : 'pointer', fontFamily: 'inherit' }}
-        >←</button>
+          style={{ flex: 1, padding: '16px 0', background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)', borderRadius: 14, color: current === 0 ? 'var(--c-border)' : C.muted, fontSize: 20, cursor: current === 0 ? 'default' : 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+        ><ChevronLeft size={20} /></button>
         <button
           onClick={() => {
             if (current === sections.length - 1) { setTimerOn(false); setFinished(true) }
             else next()
           }}
-          style={{ flex: 3, padding: '16px 0', background: `linear-gradient(135deg, ${current === sections.length - 1 ? '#22c55e, #16a34a' : `${accent}, ${accent}bb`})`, border: 'none', borderRadius: 14, color: '#fff', fontSize: 16, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: `0 4px 20px ${current === sections.length - 1 ? 'rgba(34,197,94,0.4)' : accent + '44'}` }}
+          style={{ flex: 3, padding: '16px 0', background: `linear-gradient(135deg, ${current === sections.length - 1 ? '#22c55e, #16a34a' : `${accent}, ${accent}bb`})`, border: 'none', borderRadius: 14, color: '#fff', fontSize: 16, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: `0 4px 20px ${current === sections.length - 1 ? 'rgba(34,197,94,0.4)' : accent + '44'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
         >
-          {current === sections.length - 1 ? 'Terminar apresentação' : 'Próxima secção →'}
+          {current === sections.length - 1
+            ? 'Terminar apresentação'
+            : <>Próxima secção <ChevronRight size={16} /></>
+          }
         </button>
       </div>
     </div>
@@ -980,7 +986,7 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
     >
       <style>{`@keyframes spin{to{transform:rotate(360deg)}} @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}`}</style>
 
-      <div style={{ background: '#0a1220', border: '1px solid #1e3050', borderRadius: 20, width: '100%', maxWidth: 720, maxHeight: '90vh', display: 'flex', flexDirection: 'column', boxShadow: '0 32px 80px rgba(0,0,0,0.7)', animation: 'fadeIn 0.2s ease-out' }}>
+      <div style={{ background: '#0a1220', border: '1px solid var(--c-border)', borderRadius: 20, width: '100%', maxWidth: 720, maxHeight: '90vh', display: 'flex', flexDirection: 'column', boxShadow: '0 32px 80px rgba(0,0,0,0.7)', animation: 'fadeIn 0.2s ease-out' }}>
 
         {/* Header */}
         <div style={{ padding: '22px 28px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
@@ -988,7 +994,7 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
             <h2 style={{ margin: '0 0 2px', fontSize: 18, fontWeight: 800, color: C.text }}>Preparar defesa</h2>
             <p style={{ margin: 0, fontSize: 13, color: C.subtle }}>{project.name}</p>
           </div>
-          <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid #1e3050', borderRadius: 8, padding: '7px 10px', color: C.muted, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={18} /></button>
+          <button onClick={onClose} style={{ background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)', borderRadius: 8, padding: '7px 10px', color: C.muted, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={18} /></button>
         </div>
 
         {/* Tabs */}
@@ -1046,7 +1052,7 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
                     boxShadow: '0 6px 24px rgba(27,120,247,0.35)',
                   }}
                 >
-                  Abrir guia →
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 7 }}>Abrir guia <ArrowRight size={15} /></span>
                 </button>
               </div>
 

@@ -1,28 +1,43 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AlertTriangle, X as XIcon } from 'lucide-react'
-import { supabase } from './lib/supabase'
 import { HelmetProvider } from 'react-helmet-async'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { SidebarProvider } from './context/SidebarContext'
 import RestReminder from './components/RestReminder'
+import SplashScreen from './components/SplashScreen'
+
+// Eagerly loaded — visible on first paint
 import Home from './pages/Home'
-import NewProject from './pages/NewProject'
-import ProjectPage from './pages/ProjectPage'
-import EditProject from './pages/EditProject'
-import Ranking from './pages/Ranking'
-import Explore from './pages/Explore'
 import Login from './pages/Login'
 import Register from './pages/Register'
-import Dashboard from './pages/Dashboard'
-import Settings from './pages/Settings'
-import UserProfile from './pages/UserProfile'
-import Admin from './pages/Admin'
-import TurmaPage from './pages/TurmaPage'
-import AIInterview from './pages/AIInterview'
-import Certificate from './pages/Certificate'
-import SplashScreen from './components/SplashScreen'
+
+// Lazy loaded — only fetched when the route is actually visited
+const NewProject   = lazy(() => import('./pages/NewProject'))
+const ProjectPage  = lazy(() => import('./pages/ProjectPage'))
+const EditProject  = lazy(() => import('./pages/EditProject'))
+const Ranking      = lazy(() => import('./pages/Ranking'))
+const Explore      = lazy(() => import('./pages/Explore'))
+const Dashboard    = lazy(() => import('./pages/Dashboard'))
+const Settings     = lazy(() => import('./pages/Settings'))
+const UserProfile  = lazy(() => import('./pages/UserProfile'))
+const Admin        = lazy(() => import('./pages/Admin'))
+const TurmaPage    = lazy(() => import('./pages/TurmaPage'))
+const Missoes      = lazy(() => import('./pages/Missoes'))
+const Turmas       = lazy(() => import('./pages/Turmas'))
+const Conquistas   = lazy(() => import('./pages/Conquistas'))
+const AIInterview  = lazy(() => import('./pages/AIInterview'))
+const Certificate  = lazy(() => import('./pages/Certificate'))
+
+function PageLoader() {
+  return (
+    <div style={{ minHeight: '100vh', background: 'var(--c-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ width: 28, height: 28, border: '2px solid var(--c-border)', borderTop: '2px solid #1b78f7', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
+  )
+}
 
 // Animation timeline:
 // 1.9s  — splash animation plays
@@ -100,6 +115,7 @@ export default function App() {
           {splashMounted && <SplashScreen visible={splashVisible} />}
           <RestReminder />
           <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+            <Suspense fallback={<PageLoader />}>
             <Routes>
               <Route path="/"              element={<HomeRoute />}   />
               <Route path="/novo"          element={<NewProject />}  />
@@ -114,9 +130,13 @@ export default function App() {
               <Route path="/u/:username"   element={<UserProfile />} />
               <Route path="/admin"         element={<Admin />}       />
               <Route path="/turma/:code"   element={<TurmaPage />}   />
+              <Route path="/missoes"       element={<Missoes />}     />
+              <Route path="/turmas"        element={<Turmas />}      />
+              <Route path="/conquistas"    element={<Conquistas />}  />
               <Route path="/interview"          element={<AIInterview />}  />
               <Route path="/certificado/:slug"  element={<Certificate />}  />
             </Routes>
+            </Suspense>
           </BrowserRouter>
         </AuthProvider>
         </SidebarProvider>

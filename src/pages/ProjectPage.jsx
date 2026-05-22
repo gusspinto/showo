@@ -7,12 +7,14 @@ import { calculateScore } from '../lib/score'
 import { CHALLENGES, getChallengeStatus } from '../lib/challenges'
 import { Navbar } from '../components/Navbar'
 import { generateProject } from '../lib/generateProject'
+import { generateReport } from '../lib/generateReport'
 import { useAuth } from '../context/AuthContext'
 import { useSidebar } from '../context/SidebarContext'
+import { useTheme } from '../context/ThemeContext'
 import CreateProjectModal from '../components/CreateProjectModal'
 import DefenseMode from '../components/DefenseMode'
 import { analyzeProject } from '../lib/analyzeProject'
-import { Check, X, Loader, GraduationCap, Save, Sparkles, Bot, Lightbulb, Pencil, Search, Target, Wrench, Zap, TrendingUp, Briefcase, Users, Rocket, Trophy, BarChart2, CheckCircle, BookOpen, ChevronDown, Eye, UserPlus, Calendar, Mail } from 'lucide-react'
+import { Check, X, Loader, GraduationCap, Save, Sparkles, Bot, Lightbulb, Pencil, Search, Target, Wrench, Zap, TrendingUp, Briefcase, Users, Rocket, Trophy, BarChart2, CheckCircle, BookOpen, ChevronDown, Eye, UserPlus, Calendar, Mail, ArrowRight, ChevronRight, Globe, Image, MessageSquare, Quote, Layout, Type, Link, GripVertical, Plus, AlignLeft, Star, Camera, FileText, ClipboardList, Copy } from 'lucide-react'
 
 const colors = {
   bg: 'var(--c-bg)',
@@ -141,6 +143,9 @@ function ScoreRing({ score, size = 108 }) {
   )
 }
 
+const SECTION_CLAMP_LINES = 8  // max lines before "ver mais"
+const APPROX_CHARS_PER_LINE = 70
+
 function Section({ fieldKey, content, isOwner, onImprove }) {
   const meta    = SECTION_META[fieldKey] ?? { Icon: Wrench, label: fieldKey }
   const fieldCfg = PROFILE_SCORE_FIELDS.find(f => f.key === fieldKey)
@@ -148,6 +153,8 @@ function Section({ fieldKey, content, isOwner, onImprove }) {
   const isEmpty = len === 0
   const isShort = len > 0 && len < (fieldCfg?.minLen ?? QUALITY_MIN)
   const challenge = CHALLENGES.find(c => c.field === fieldKey)
+  const isTruncatable = len > SECTION_CLAMP_LINES * APPROX_CHARS_PER_LINE
+  const [expanded, setExpanded] = useState(false)
 
   if (isEmpty && !isOwner) return null
 
@@ -169,14 +176,14 @@ function Section({ fieldKey, content, isOwner, onImprove }) {
             </span>
           )}
         </h3>
-        {isOwner && challenge && (
+        {isOwner && challenge && !isEmpty && (
           <button
             onClick={() => onImprove(challenge)}
             style={{ background: `${colors.blue}10`, border: `1px solid ${colors.blue}22`, color: '#60a5fa', cursor: 'pointer', fontSize: 11, fontWeight: 700, fontFamily: 'inherit', padding: '3px 9px', borderRadius: 6, flexShrink: 0, transition: 'all 0.15s' }}
             onMouseEnter={e => { e.currentTarget.style.background = `${colors.blue}1e`; e.currentTarget.style.borderColor = `${colors.blue}44` }}
             onMouseLeave={e => { e.currentTarget.style.background = `${colors.blue}10`; e.currentTarget.style.borderColor = `${colors.blue}22` }}
           >
-            Editar →
+            <span style={{display:'flex',alignItems:'center',gap:4}}>Editar <ChevronRight size={12} /></span>
           </button>
         )}
       </div>
@@ -199,7 +206,40 @@ function Section({ fieldKey, content, isOwner, onImprove }) {
         )
       ) : (
         <>
-          <p style={{ margin: 0, color: isShort ? '#afc3dc' : colors.text, fontSize: 15, lineHeight: 1.75, whiteSpace: 'pre-wrap' }}>{content}</p>
+          <div style={{ position: 'relative' }}>
+            <p style={{
+              margin: 0, color: isShort ? '#afc3dc' : colors.text,
+              fontSize: 15, lineHeight: 1.75,
+              whiteSpace: 'pre-wrap', overflowWrap: 'break-word', wordBreak: 'break-word',
+              ...(isTruncatable && !expanded ? {
+                display: '-webkit-box',
+                WebkitLineClamp: SECTION_CLAMP_LINES,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden',
+              } : {}),
+            }}>{content}</p>
+            {isTruncatable && !expanded && (
+              <div style={{
+                position: 'absolute', bottom: 0, left: 0, right: 0,
+                height: 48,
+                background: `linear-gradient(to bottom, transparent, ${colors.card})`,
+                pointerEvents: 'none',
+              }} />
+            )}
+          </div>
+          {isTruncatable && (
+            <button
+              onClick={() => setExpanded(e => !e)}
+              style={{
+                marginTop: 8, background: 'none', border: 'none',
+                color: '#60a5fa', fontSize: 12, fontWeight: 700,
+                cursor: 'pointer', padding: 0, fontFamily: 'inherit',
+                display: 'flex', alignItems: 'center', gap: 4,
+              }}
+            >
+              {expanded ? 'Ver menos' : 'Ver mais'}
+            </button>
+          )}
           {isOwner && isShort && fieldCfg?.tip && (
             <div style={{ marginTop: 12, display: 'flex', alignItems: 'flex-start', gap: 8, background: 'rgba(234,179,8,0.05)', border: '1px solid rgba(234,179,8,0.14)', borderRadius: 8, padding: '9px 12px' }}>
               <Lightbulb size={13} color="#d4a820" style={{ flexShrink: 0 }} />
@@ -238,7 +278,7 @@ function MissionRow({ challenge, project, onImprove, isOwner }) {
       {/* Status dot / icon */}
       <div style={{
         width: 30, height: 30, borderRadius: 9, flexShrink: 0,
-        background: isCompleted ? 'rgba(34,197,94,0.1)' : 'rgba(255,255,255,0.03)',
+        background: isCompleted ? 'rgba(34,197,94,0.1)' : 'var(--c-bg-alt)',
         border: `1px solid ${isCompleted ? 'rgba(34,197,94,0.22)' : colors.border}`,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         color: isCompleted ? '#22c55e' : colors.muted,
@@ -291,7 +331,7 @@ function MissionRow({ challenge, project, onImprove, isOwner }) {
             fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0,
           }}
         >
-          Fazer →
+          <span style={{display:'flex',alignItems:'center',gap:4}}>Fazer <ChevronRight size={12} /></span>
         </button>
       )}
     </div>
@@ -334,7 +374,7 @@ function EditModal({ challenge, project, onClose, onSave, saving }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <div style={{
               width: 42, height: 42, borderRadius: 12,
-              background: 'rgba(255,255,255,0.05)',
+              background: 'var(--c-card-hover)',
               border: `1px solid ${colors.border}`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               color: colors.muted,
@@ -453,6 +493,711 @@ function Confetti() {
 
 const SECTION_LABELS = { cover: 'Introdução', problem: 'Problema', solution: 'Solução', features: 'Funcionalidades', technologies: 'Tecnologias', results: 'Resultados', learnings: 'Aprendizagens', closing: 'Encerramento' }
 
+// ── Block types for preview workspace ─────────────────────────────────────────
+const BLOCK_TYPES = [
+  { type: 'note',    label: 'Nota pessoal',  Icon: AlignLeft,     desc: 'Uma mensagem tua para quem visita o projeto' },
+  { type: 'image',   label: 'Imagem',        Icon: Image,         desc: 'Adiciona uma imagem por URL ou upload' },
+  { type: 'callout', label: 'Destaque',      Icon: Sparkles,      desc: 'Caixa em destaque para informação importante' },
+  { type: 'quote',   label: 'Citação',       Icon: Quote,         desc: 'Uma frase ou citação marcante' },
+  { type: 'link',    label: 'Link',          Icon: Link,          desc: 'Um link externo (GitHub, demo, etc.)' },
+  { type: 'heading', label: 'Título',        Icon: Type,          desc: 'Um título de secção personalizado' },
+  { type: 'metric',  label: 'Métrica',       Icon: Star,          desc: 'Um número ou dado relevante do projeto' },
+  { type: 'gallery', label: 'Galeria',       Icon: Layout,        desc: 'Até 3 imagens lado a lado' },
+]
+
+function newBlock(type) {
+  return {
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2),
+    type, content: '', imageUrl: '', imageUrl2: '', imageUrl3: '',
+    label: '', url: '', color: '', align: 'left',
+  }
+}
+
+const BLOCK_ACCENT_COLORS = [
+  { label: 'Azul',    value: '#1b78f7' },
+  { label: 'Verde',   value: '#22c55e' },
+  { label: 'Roxo',    value: '#a78bfa' },
+  { label: 'Laranja', value: '#f97316' },
+  { label: 'Rosa',    value: '#ec4899' },
+  { label: 'Cinza',   value: '#6b7280' },
+]
+
+// ── Drag-and-drop block reorder hook ──────────────────────────────────────────
+function useDragBlocks(blocks, setBlocks) {
+  const dragIdx = useRef(null)
+  const dragOver = useRef(null)
+
+  function onDragStart(i) { dragIdx.current = i }
+  function onDragEnter(i) { dragOver.current = i }
+  function onDragEnd() {
+    if (dragIdx.current === null || dragOver.current === null || dragIdx.current === dragOver.current) {
+      dragIdx.current = null; dragOver.current = null; return
+    }
+    setBlocks(bs => {
+      const arr = [...bs]
+      const [moved] = arr.splice(dragIdx.current, 1)
+      arr.splice(dragOver.current, 0, moved)
+      dragIdx.current = null; dragOver.current = null
+      return arr
+    })
+  }
+  return { onDragStart, onDragEnter, onDragEnd }
+}
+
+// ── Public visitor view ────────────────────────────────────────────────────────
+const wsInput = {
+  width: '100%', boxSizing: 'border-box',
+  background: 'var(--c-card)', border: '1px solid var(--c-border)',
+  borderRadius: 7, padding: '7px 9px',
+  fontSize: 12, color: 'var(--c-text)', outline: 'none', fontFamily: 'inherit',
+  display: 'block', marginBottom: 0,
+}
+
+function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBlocks, setPreviewBlocks, previewEditing, setPreviewEditing }) {
+  const navigate = useNavigate()
+  const { theme } = useTheme()
+
+  // Hooks must be at top level — never inside conditionals or IIFEs
+  const dragIdx    = useRef(null)
+  const dragOver   = useRef(null)
+  const [dragOverIdx, setDragOverIdx] = useState(null)
+
+  function onDragStart(i) { dragIdx.current = i }
+  function onDragEnter(i) { dragOver.current = i; setDragOverIdx(i) }
+  function onDragEnd() {
+    setDragOverIdx(null)
+    if (dragIdx.current === null || dragOver.current === null || dragIdx.current === dragOver.current) {
+      dragIdx.current = null; dragOver.current = null; return
+    }
+    const from = dragIdx.current
+    const to   = dragOver.current
+    dragIdx.current = null; dragOver.current = null
+    setPreviewBlocks(bs => {
+      const arr = [...bs]
+      const [moved] = arr.splice(from, 1)
+      arr.splice(to, 0, moved)
+      return arr
+    })
+  }
+
+  function uploadImage(blockId, field) {
+    const input = document.createElement('input')
+    input.type = 'file'; input.accept = 'image/*'
+    input.onchange = async (e) => {
+      const file = e.target.files[0]; if (!file) return
+      const ext = file.name.split('.').pop()
+      const path = `preview/${project.id}/${blockId}_${field}_${Date.now()}.${ext}`
+      const { data, error } = await supabase.storage.from('project-images').upload(path, file, { upsert: true })
+      if (!error && data) {
+        const { data: { publicUrl } } = supabase.storage.from('project-images').getPublicUrl(path)
+        setPreviewBlocks(bs => bs.map(b => b.id === blockId ? { ...b, [field]: publicUrl } : b))
+      }
+    }
+    input.click()
+  }
+
+  function upd(blockId, field, val) {
+    setPreviewBlocks(bs => bs.map(b => b.id === blockId ? { ...b, [field]: val } : b))
+  }
+
+  const tech = (project.technologies || '')
+    .split(/[,\n•\-]+/).map(t => t.trim()).filter(t => t.length > 0 && t.length < 40)
+
+  const features = (project.features || '')
+    .split(/\n/).map(f => f.trim().replace(/^[-•*]\s*/, '')).filter(f => f.length > 1)
+
+  const displayName = ownerProfile?.full_name || ownerProfile?.username || project.creator_name || null
+  const avatarUrl   = ownerProfile?.avatar_url || null
+  const course      = project.course || ownerProfile?.course || null
+  const school      = project.school || ownerProfile?.school || null
+
+  const TYPE_HERO_PUBLIC = {
+    pap:       { c1: '#1e40af', c2: '#7c3aed' },
+    internship:{ c1: '#065f46', c2: '#0369a1' },
+    group:     { c1: '#7c2d12', c2: '#701a75' },
+    personal:  { c1: '#1e3a5f', c2: '#312e81' },
+    competition:{ c1: '#713f12', c2: '#831843' },
+  }
+  const hero = TYPE_HERO_PUBLIC[project.project_type] ?? TYPE_HERO_PUBLIC.personal
+
+  return (
+    <div style={{ minHeight: '100vh', background: 'var(--c-bg)', fontFamily: 'var(--font-body)' }}>
+      {/* ── Owner preview banner — sticky ── */}
+      {isOwner && (
+        <div style={{
+          position: 'sticky', top: 0, zIndex: 300,
+          background: theme === 'light' ? 'rgba(248,250,252,0.92)' : 'rgba(6,12,24,0.92)',
+          backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)',
+          borderBottom: theme === 'light' ? '1px solid rgba(0,0,0,0.09)' : '1px solid rgba(27,120,247,0.15)',
+          padding: '7px 16px',
+          display: 'flex', alignItems: 'center', gap: 8,
+        }}>
+          <Globe size={13} color="#60a5fa" style={{ flexShrink: 0 }} />
+          <span style={{ fontSize: 12, color: 'var(--c-muted)', fontWeight: 500, flex: 1 }}>
+            Preview do visitante
+          </span>
+          <button
+            onClick={() => setPreviewEditing(e => !e)}
+            style={{
+              background: previewEditing ? '#1b78f7' : 'transparent',
+              border: `1px solid ${previewEditing ? '#1b78f7' : 'rgba(27,120,247,0.4)'}`,
+              borderRadius: 7, padding: '5px 12px',
+              color: previewEditing ? '#fff' : '#1b78f7',
+              fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+              display: 'flex', alignItems: 'center', gap: 5, transition: 'all 0.15s',
+            }}
+          >
+            <Pencil size={11} /> {previewEditing ? 'Fechar workspace' : 'Editar workspace'}
+          </button>
+          <button
+            onClick={onExitPreview}
+            style={{
+              background: 'transparent',
+              border: '1px solid rgba(239,68,68,0.3)',
+              borderRadius: 7, padding: '5px 10px',
+              color: '#ef4444', fontSize: 12, fontWeight: 600,
+              cursor: 'pointer', fontFamily: 'inherit',
+              display: 'flex', alignItems: 'center', gap: 4, transition: 'all 0.15s',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.08)' }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
+          >
+            <X size={12} /> Sair
+          </button>
+        </div>
+      )}
+
+      {/* ── Hero ── */}
+      <div style={{ position: 'relative', overflow: 'hidden' }}>
+        {project.cover_url ? (
+          <div style={{ width: '100%', height: 320, position: 'relative' }}>
+            <img src={project.cover_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, var(--c-bg) 100%)' }} />
+          </div>
+        ) : (
+          <div style={{
+            width: '100%', height: 280, position: 'relative',
+            background: `linear-gradient(135deg, ${hero.c1}44 0%, ${hero.c2}66 60%, transparent 100%)`,
+          }}>
+            <div style={{ position: 'absolute', top: -40, left: '5%', width: 500, height: 500, borderRadius: '50%', background: `radial-gradient(ellipse, ${hero.c1}22 0%, transparent 65%)`, pointerEvents: 'none' }} />
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 30%, var(--c-bg) 100%)' }} />
+          </div>
+        )}
+
+        {/* Title block over hero */}
+        <div style={{ maxWidth: 860, margin: '0 auto', padding: '0 28px', position: 'relative', marginTop: project.cover_url ? -100 : -80 }}>
+          {/* Area / type chips */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 18 }}>
+            {project.project_type && (
+              <span style={{
+                background: `linear-gradient(135deg, ${hero.c1}, ${hero.c2})`,
+                color: '#fff', borderRadius: 6, padding: '4px 12px',
+                fontSize: 11, fontWeight: 800, letterSpacing: '0.06em',
+              }}>
+                {project.project_type.toUpperCase()}
+              </span>
+            )}
+            {project.area && (
+              <span style={{
+                background: 'rgba(27,120,247,0.1)', color: '#60a5fa',
+                border: '1px solid rgba(27,120,247,0.2)',
+                borderRadius: 6, padding: '4px 12px', fontSize: 12, fontWeight: 600,
+              }}>{project.area}</span>
+            )}
+          </div>
+
+          <h1 style={{
+            fontSize: 'clamp(36px, 6vw, 64px)', fontWeight: 900,
+            letterSpacing: '-1.5px', lineHeight: 1.0,
+            margin: '0 0 14px', color: 'var(--c-text)',
+            fontFamily: 'var(--font-heading)',
+          }}>
+            {project.name}
+          </h1>
+
+          {project.ai_tagline && (
+            <p style={{ fontSize: 'clamp(16px, 2.2vw, 20px)', color: 'var(--c-muted)', margin: '0 0 28px', maxWidth: 600, lineHeight: 1.5, fontWeight: 400 }}>
+              {project.ai_tagline}
+            </p>
+          )}
+
+          {/* Creator pill */}
+          {displayName && (
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 999, padding: '6px 16px 6px 6px' }}>
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="" style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+              ) : (
+                <div style={{ width: 28, height: 28, borderRadius: '50%', flexShrink: 0, background: `linear-gradient(135deg, ${hero.c1}, ${hero.c2})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: '#fff' }}>
+                  {displayName[0]?.toUpperCase()}
+                </div>
+              )}
+              <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--c-text)' }}>{displayName}</span>
+              {course && <span style={{ fontSize: 12, color: 'var(--c-muted)' }}>· {course}</span>}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ── Workspace editor panel ── */}
+      {isOwner && previewEditing && (
+          <div style={{
+            position: 'fixed', right: 0, top: 34, bottom: 0, zIndex: 200,
+            width: 340, background: 'var(--c-card)',
+            borderLeft: '1px solid var(--c-border)',
+            display: 'flex', flexDirection: 'column',
+            boxShadow: '-10px 0 40px rgba(0,0,0,0.35)',
+          }}>
+            {/* Header */}
+            <div style={{ padding: '12px 14px 10px', borderBottom: '1px solid var(--c-border)', flexShrink: 0, background: 'linear-gradient(135deg, rgba(27,120,247,0.08), rgba(79,70,229,0.04))' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Layout size={15} color="#1b78f7" />
+                <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--c-text)', flex: 1 }}>Área de trabalho</span>
+                <button
+                  onClick={() => setPreviewEditing(false)}
+                  title="Fechar workspace"
+                  style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 6, padding: '4px 8px', color: '#ef4444', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600, transition: 'all 0.14s' }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.15)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'rgba(239,68,68,0.08)'}
+                >
+                  <X size={12} /> Fechar
+                </button>
+              </div>
+              <div style={{ fontSize: 11, color: 'var(--c-muted)', lineHeight: 1.4, marginTop: 6 }}>
+                Arrasta para reordenar · visível pelos visitantes
+              </div>
+            </div>
+
+            {/* Add block grid */}
+            <div style={{ padding: '12px 12px 10px', borderBottom: '1px solid var(--c-border)', flexShrink: 0 }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--c-subtle)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>Adicionar bloco</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+                {BLOCK_TYPES.map(bt => {
+                  const BtIcon = bt.Icon
+                  return (
+                    <button
+                      key={bt.type}
+                      onClick={() => setPreviewBlocks(bs => [...bs, newBlock(bt.type)])}
+                      style={{
+                        background: 'var(--c-bg)', border: '1px solid var(--c-border)',
+                        borderRadius: 9, padding: '9px 10px',
+                        cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
+                        transition: 'all 0.14s', display: 'flex', alignItems: 'center', gap: 8,
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.background = 'rgba(27,120,247,0.09)'; e.currentTarget.style.borderColor = 'rgba(27,120,247,0.3)' }}
+                      onMouseLeave={e => { e.currentTarget.style.background = 'var(--c-bg)'; e.currentTarget.style.borderColor = 'var(--c-border)' }}
+                    >
+                      <div style={{ width: 28, height: 28, borderRadius: 7, background: 'rgba(27,120,247,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <BtIcon size={13} color="#1b78f7" />
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--c-text)', marginBottom: 1 }}>{bt.label}</div>
+                        <div style={{ fontSize: 10, color: 'var(--c-muted)', lineHeight: 1.3 }}>{bt.desc.slice(0, 28)}…</div>
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Blocks list — draggable */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '10px 12px' }}>
+              {previewBlocks.length === 0 ? (
+                <div style={{ textAlign: 'center', color: 'var(--c-subtle)', fontSize: 13, padding: '32px 0', lineHeight: 1.7 }}>
+                  <Layout size={28} color="var(--c-border)" style={{ display: 'block', margin: '0 auto 10px' }} />
+                  Nenhum bloco ainda.<br/>Adiciona o primeiro acima.
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {previewBlocks.map((block, idx) => {
+                    const bt = BLOCK_TYPES.find(b => b.type === block.type) || BLOCK_TYPES[0]
+                    const BtIcon = bt.Icon
+                    const isDragTarget = dragOverIdx === idx
+                    const accentColor = block.color || '#1b78f7'
+                    const hasText = ['heading','note','quote','callout','metric'].includes(block.type)
+
+                    return (
+                      <div
+                        key={block.id}
+                        draggable
+                        onDragStart={() => onDragStart(idx)}
+                        onDragEnter={() => onDragEnter(idx)}
+                        onDragEnd={onDragEnd}
+                        onDragOver={e => e.preventDefault()}
+                        style={{
+                          background: isDragTarget ? 'rgba(27,120,247,0.08)' : 'var(--c-bg)',
+                          border: isDragTarget ? '1.5px solid rgba(27,120,247,0.45)' : '1px solid var(--c-border)',
+                          borderRadius: 11, padding: '10px',
+                          cursor: 'grab', transition: 'border-color 0.1s, background 0.1s',
+                          transform: isDragTarget ? 'scale(1.01)' : 'none',
+                        }}
+                      >
+                        {/* Block header */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 9 }}>
+                          <GripVertical size={13} color="var(--c-muted)" style={{ flexShrink: 0, cursor: 'grab' }} />
+                          <BtIcon size={12} color={accentColor} style={{ flexShrink: 0 }} />
+                          <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--c-text)', flex: 1 }}>{bt.label}</span>
+                          <button
+                            onClick={() => setPreviewBlocks(bs => bs.filter(b => b.id !== block.id))}
+                            style={{ background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.2)', color: '#ef4444', cursor: 'pointer', padding: '2px 6px', display: 'flex', alignItems: 'center', borderRadius: 5, transition: 'all 0.12s' }}
+                            onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.15)'}
+                            onMouseLeave={e => e.currentTarget.style.background = 'rgba(239,68,68,0.07)'}
+                          ><X size={11} /></button>
+                        </div>
+
+                        {/* Block fields */}
+                        {block.type === 'heading' && (
+                          <input value={block.content || ''} onChange={e => upd(block.id, 'content', e.target.value)}
+                            placeholder="Título da secção..." style={wsInput} />
+                        )}
+                        {block.type === 'note' && (
+                          <textarea value={block.content || ''} onChange={e => upd(block.id, 'content', e.target.value)}
+                            placeholder="A tua mensagem para quem visita..." rows={3} style={{ ...wsInput, resize: 'vertical', lineHeight: 1.5 }} />
+                        )}
+                        {block.type === 'quote' && (
+                          <textarea value={block.content || ''} onChange={e => upd(block.id, 'content', e.target.value)}
+                            placeholder="A tua frase ou citação..." rows={2} style={{ ...wsInput, resize: 'vertical', lineHeight: 1.5 }} />
+                        )}
+                        {block.type === 'callout' && (<>
+                          <input value={block.label || ''} onChange={e => upd(block.id, 'label', e.target.value)}
+                            placeholder="Título do destaque (opcional)" style={{ ...wsInput, marginBottom: 6 }} />
+                          <textarea value={block.content || ''} onChange={e => upd(block.id, 'content', e.target.value)}
+                            placeholder="Conteúdo do destaque..." rows={2} style={{ ...wsInput, resize: 'vertical', lineHeight: 1.5 }} />
+                        </>)}
+                        {block.type === 'link' && (<>
+                          <input value={block.label || ''} onChange={e => upd(block.id, 'label', e.target.value)}
+                            placeholder="Texto do link (ex: Ver demo)" style={{ ...wsInput, marginBottom: 6 }} />
+                          <input value={block.url || ''} onChange={e => upd(block.id, 'url', e.target.value)}
+                            placeholder="URL (https://...)" style={wsInput} />
+                        </>)}
+                        {block.type === 'metric' && (<>
+                          <input value={block.label || ''} onChange={e => upd(block.id, 'label', e.target.value)}
+                            placeholder="Número ou valor (ex: 2.500)" style={{ ...wsInput, marginBottom: 6, fontWeight: 800, fontSize: 16 }} />
+                          <input value={block.content || ''} onChange={e => upd(block.id, 'content', e.target.value)}
+                            placeholder="Descrição (ex: utilizadores activos)" style={wsInput} />
+                        </>)}
+                        {block.type === 'image' && (<>
+                          <div style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
+                            <input value={block.imageUrl || ''} onChange={e => upd(block.id, 'imageUrl', e.target.value)}
+                              placeholder="URL da imagem..." style={{ ...wsInput, flex: 1, margin: 0 }} />
+                            <button onClick={() => uploadImage(block.id, 'imageUrl')}
+                              style={{ background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.25)', borderRadius: 7, padding: '0 10px', color: '#60a5fa', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+                              <Camera size={13} />
+                            </button>
+                          </div>
+                          <input value={block.content || ''} onChange={e => upd(block.id, 'content', e.target.value)}
+                            placeholder="Legenda (opcional)" style={wsInput} />
+                        </>)}
+                        {block.type === 'gallery' && (<>
+                          {['imageUrl','imageUrl2','imageUrl3'].map((field, gi) => (
+                            <div key={field} style={{ display: 'flex', gap: 6, marginBottom: gi < 2 ? 6 : 0 }}>
+                              <input value={block[field] || ''} onChange={e => upd(block.id, field, e.target.value)}
+                                placeholder={`Imagem ${gi+1} (URL ou upload)`} style={{ ...wsInput, flex: 1, margin: 0 }} />
+                              <button onClick={() => uploadImage(block.id, field)}
+                                style={{ background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.25)', borderRadius: 7, padding: '0 10px', color: '#60a5fa', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+                                <Camera size={13} />
+                              </button>
+                            </div>
+                          ))}
+                        </>)}
+
+                        {/* ── Colour + alignment controls ── */}
+                        <div style={{ marginTop: 10, paddingTop: 9, borderTop: '1px solid var(--c-border)', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                          {/* Colour swatches */}
+                          <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+                            {BLOCK_ACCENT_COLORS.map(c => (
+                              <button
+                                key={c.value}
+                                title={c.label}
+                                onClick={() => upd(block.id, 'color', block.color === c.value ? '' : c.value)}
+                                style={{
+                                  width: 18, height: 18, borderRadius: '50%',
+                                  background: c.value, border: block.color === c.value ? `2.5px solid var(--c-text)` : '2px solid transparent',
+                                  cursor: 'pointer', padding: 0, outline: 'none', flexShrink: 0,
+                                  boxShadow: block.color === c.value ? `0 0 0 1px ${c.value}` : 'none',
+                                  transition: 'transform 0.1s',
+                                }}
+                                onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.2)'}
+                                onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                              />
+                            ))}
+                          </div>
+                          {/* Alignment — only for text blocks */}
+                          {hasText && (
+                            <div style={{ display: 'flex', gap: 3, marginLeft: 'auto' }}>
+                              {[
+                                { val: 'left',   label: '≡', title: 'Esquerda' },
+                                { val: 'center', label: '≡', title: 'Centro' },
+                                { val: 'right',  label: '≡', title: 'Direita' },
+                              ].map((a, ai) => (
+                                <button
+                                  key={a.val}
+                                  title={a.title}
+                                  onClick={() => upd(block.id, 'align', a.val)}
+                                  style={{
+                                    width: 26, height: 22, borderRadius: 5,
+                                    background: (block.align || 'left') === a.val ? '#1b78f7' : 'var(--c-bg)',
+                                    border: `1px solid ${(block.align || 'left') === a.val ? '#1b78f7' : 'var(--c-border)'}`,
+                                    cursor: 'pointer', fontSize: 11, fontWeight: 700,
+                                    color: (block.align || 'left') === a.val ? '#fff' : 'var(--c-muted)',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    transition: 'all 0.12s', padding: 0,
+                                  }}
+                                >
+                                  {ai === 0 ? '◀' : ai === 1 ? '■' : '▶'}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Save */}
+            <div style={{ padding: '10px 12px 14px', borderTop: '1px solid var(--c-border)', flexShrink: 0 }}>
+              <button
+                onClick={async () => {
+                  await supabase.from('projects').update({ preview_blocks: previewBlocks }).eq('id', project.id)
+                  setPreviewEditing(false)
+                }}
+                style={{
+                  width: '100%', padding: '12px',
+                  background: 'linear-gradient(135deg, #1b78f7, #4f46e5)',
+                  border: 'none', borderRadius: 10,
+                  color: '#fff', fontSize: 13, fontWeight: 700,
+                  cursor: 'pointer', fontFamily: 'inherit',
+                  boxShadow: '0 4px 16px rgba(27,120,247,0.3)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                }}
+              >
+                <Check size={15} /> Guardar preview
+              </button>
+            </div>
+          </div>
+      )}
+
+      {/* ── Story sections ── */}
+      <div style={{ maxWidth: 860, margin: '60px auto 0', padding: `0 28px 80px`, marginRight: isOwner && previewEditing ? '356px' : '0', display: 'flex', flexDirection: 'column', gap: 32, transition: 'margin-right 0.3s ease' }}>
+
+        {/* Custom blocks — workspace blocks shown first */}
+        {previewBlocks.map(block => {
+          const accent = block.color || '#1b78f7'
+          const align  = block.align  || 'left'
+
+          if (block.type === 'heading' && block.content) return (
+            <div key={block.id} style={{ textAlign: align }}>
+              <h2 style={{ margin: 0, fontSize: 'clamp(22px,3.5vw,32px)', fontWeight: 900, color: block.color || 'var(--c-text)', letterSpacing: '-0.5px', lineHeight: 1.15 }}>
+                {block.content}
+              </h2>
+            </div>
+          )
+
+          if (block.type === 'note' && block.content) return (
+            <div key={block.id} style={{ background: 'var(--c-card)', border: `1px solid ${accent}33`, borderLeft: `4px solid ${accent}`, borderRadius: '0 16px 16px 0', padding: '22px 26px', textAlign: align }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: accent, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6, justifyContent: align === 'right' ? 'flex-end' : align === 'center' ? 'center' : 'flex-start' }}>
+                <AlignLeft size={11} /> Nota do criador
+              </div>
+              <p style={{ margin: 0, fontSize: 16, color: 'var(--c-text)', lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>{block.content}</p>
+            </div>
+          )
+
+          if (block.type === 'quote' && block.content) return (
+            <div key={block.id} style={{ borderLeft: `4px solid ${accent}`, padding: '20px 28px', background: `${accent}08`, borderRadius: '0 12px 12px 0', textAlign: align }}>
+              <p style={{ margin: 0, fontSize: 'clamp(16px,2.2vw,22px)', color: 'var(--c-text)', fontStyle: 'italic', lineHeight: 1.7, fontWeight: 500 }}>
+                "{block.content}"
+              </p>
+            </div>
+          )
+
+          if (block.type === 'callout' && block.content) return (
+            <div key={block.id} style={{ background: `${accent}0d`, border: `1px solid ${accent}33`, borderRadius: 16, padding: '20px 24px', display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+              <div style={{ width: 36, height: 36, borderRadius: 10, flexShrink: 0, background: `${accent}22`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Sparkles size={17} color={accent} />
+              </div>
+              <div style={{ flex: 1, textAlign: align }}>
+                {block.label && <div style={{ fontSize: 12, fontWeight: 800, color: accent, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{block.label}</div>}
+                <p style={{ margin: 0, fontSize: 15, color: 'var(--c-text)', lineHeight: 1.7 }}>{block.content}</p>
+              </div>
+            </div>
+          )
+
+          if (block.type === 'link' && block.url) return (
+            <div key={block.id} style={{ textAlign: align }}>
+              <a href={block.url} target="_blank" rel="noopener noreferrer" style={{
+                display: 'inline-flex', alignItems: 'center', gap: 8,
+                background: `${accent}18`, border: `1px solid ${accent}44`,
+                borderRadius: 10, padding: '11px 20px',
+                color: accent, fontSize: 14, fontWeight: 700, textDecoration: 'none',
+                transition: 'all 0.15s',
+              }}>
+                <Link size={14} /> {block.label || block.url}
+              </a>
+            </div>
+          )
+
+          if (block.type === 'metric' && block.label) return (
+            <div key={block.id} style={{ background: 'var(--c-card)', border: `1px solid ${accent}33`, borderRadius: 16, padding: '24px 28px', textAlign: align }}>
+              <div style={{ fontSize: 'clamp(36px,5vw,56px)', fontWeight: 900, color: accent, letterSpacing: '-2px', lineHeight: 1, marginBottom: 8 }}>{block.label}</div>
+              {block.content && <div style={{ fontSize: 15, color: 'var(--c-muted)', fontWeight: 500 }}>{block.content}</div>}
+            </div>
+          )
+
+          if (block.type === 'image' && block.imageUrl) return (
+            <div key={block.id} style={{ borderRadius: 16, overflow: 'hidden' }}>
+              <img src={block.imageUrl} alt={block.content || ''} style={{ width: '100%', maxHeight: 480, objectFit: 'cover', display: 'block' }} onError={e => { e.target.style.display = 'none' }} />
+              {block.content && <div style={{ padding: '10px 16px', background: 'var(--c-card)', fontSize: 13, color: 'var(--c-muted)', fontStyle: 'italic', textAlign: align }}>{block.content}</div>}
+            </div>
+          )
+
+          if (block.type === 'gallery') {
+            const imgs = [block.imageUrl, block.imageUrl2, block.imageUrl3].filter(Boolean)
+            if (!imgs.length) return null
+            return (
+              <div key={block.id} style={{ display: 'grid', gridTemplateColumns: `repeat(${imgs.length}, 1fr)`, gap: 8, borderRadius: 16, overflow: 'hidden' }}>
+                {imgs.map((src, gi) => (
+                  <img key={gi} src={src} alt="" style={{ width: '100%', height: 200, objectFit: 'cover', display: 'block' }} onError={e => { e.target.style.display = 'none' }} />
+                ))}
+              </div>
+            )
+          }
+
+          return null
+        })}
+
+        {/* Problem */}
+        {project.problem && (
+          <div style={{
+            background: 'var(--c-card)', border: '1px solid var(--c-border)',
+            borderLeft: `4px solid ${hero.c1}`,
+            borderRadius: '0 16px 16px 0', padding: '28px 32px',
+          }}>
+            <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--c-muted)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Target size={13} /> O problema que resolve
+            </div>
+            <p style={{ margin: 0, fontSize: 'clamp(15px, 2vw, 18px)', color: 'var(--c-text)', lineHeight: 1.8, fontWeight: 400, overflowWrap: 'break-word' }}>
+              {project.problem}
+            </p>
+          </div>
+        )}
+
+        {/* Solution */}
+        {project.solution && (
+          <div style={{
+            background: `linear-gradient(135deg, ${hero.c2}10 0%, var(--c-card) 100%)`,
+            border: '1px solid var(--c-border)',
+            borderRadius: 16, padding: '28px 32px',
+          }}>
+            <div style={{ fontSize: 11, fontWeight: 800, color: '#60a5fa', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Zap size={13} /> A solução
+            </div>
+            <p style={{ margin: 0, fontSize: 'clamp(15px, 2vw, 18px)', color: 'var(--c-text)', lineHeight: 1.8, fontWeight: 400, overflowWrap: 'break-word' }}>
+              {project.solution}
+            </p>
+          </div>
+        )}
+
+        {/* Features */}
+        {features.length > 0 && (
+          <div style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 16, padding: '28px 32px' }}>
+            <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--c-muted)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Wrench size={13} /> O que faz
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {features.slice(0, 8).map((f, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                  <div style={{
+                    width: 22, height: 22, borderRadius: 6, flexShrink: 0, marginTop: 1,
+                    background: `${hero.c1}22`, border: `1px solid ${hero.c1}44`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    <CheckCircle size={12} color={`${hero.c1}cc`} />
+                  </div>
+                  <span style={{ fontSize: 15, color: 'var(--c-text)', lineHeight: 1.6, overflowWrap: 'break-word' }}>{f}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Technologies */}
+        {tech.length > 0 && (
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--c-muted)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 14 }}>
+              Tecnologias
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              {tech.map((t, i) => (
+                <span key={i} style={{
+                  background: 'var(--c-card)', border: '1px solid var(--c-border)',
+                  borderRadius: 8, padding: '6px 14px',
+                  fontSize: 13, fontWeight: 600, color: 'var(--c-text)',
+                }}>{t}</span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Results */}
+        {project.results && (
+          <div style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 16, padding: '28px 32px' }}>
+            <div style={{ fontSize: 11, fontWeight: 800, color: '#22c55e', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <BarChart2 size={13} /> Resultados
+            </div>
+            <p style={{ margin: 0, fontSize: 15, color: 'var(--c-text)', lineHeight: 1.8, overflowWrap: 'break-word' }}>
+              {project.results}
+            </p>
+          </div>
+        )}
+
+        {/* Creator card */}
+        {(displayName || course || school) && (
+          <div style={{
+            background: 'var(--c-card)', border: '1px solid var(--c-border)',
+            borderRadius: 16, padding: '28px 32px',
+            display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap',
+          }}>
+            {avatarUrl ? (
+              <img src={avatarUrl} alt="" style={{ width: 56, height: 56, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+            ) : displayName && (
+              <div style={{
+                width: 56, height: 56, borderRadius: '50%', flexShrink: 0,
+                background: `linear-gradient(135deg, ${hero.c1}, ${hero.c2})`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 22, fontWeight: 800, color: '#fff',
+              }}>{displayName[0]?.toUpperCase()}</div>
+            )}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--c-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>
+                A história de {project.name}
+              </div>
+              {displayName && <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--c-text)', marginBottom: 4 }}>{displayName}</div>}
+              {course && <div style={{ fontSize: 14, color: 'var(--c-muted)' }}>{course}{school ? ` · ${school}` : ''}</div>}
+            </div>
+            {ownerProfile?.username && (
+              <button
+                onClick={() => navigate(`/u/${ownerProfile.username}`)}
+                style={{
+                  background: 'linear-gradient(135deg, #1b78f7, #4f46e5)',
+                  border: 'none', borderRadius: 10, padding: '10px 22px',
+                  color: '#fff', fontSize: 13, fontWeight: 700,
+                  cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0,
+                  boxShadow: '0 4px 16px rgba(27,120,247,0.3)',
+                }}
+              >
+                Ver perfil
+              </button>
+            )}
+          </div>
+        )}
+
+      </div>
+    </div>
+  )
+}
+
 function MembersPanel({ ownerName, members, colors, isOwner }) {
   if (!ownerName && members.length === 0) return null
   const displayOwner = ownerName || 'Dono'
@@ -501,7 +1246,7 @@ function MembersPanel({ ownerName, members, colors, isOwner }) {
                   </div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 5 }}>
                     {sections.map(s => (
-                      <span key={s} style={{ fontSize: 11, color: colors.muted, background: 'rgba(255,255,255,0.04)', border: `1px solid ${colors.border}`, borderRadius: 4, padding: '1px 6px' }}>{s}</span>
+                      <span key={s} style={{ fontSize: 11, color: colors.muted, background: 'var(--c-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: 4, padding: '1px 6px' }}>{s}</span>
                     ))}
                   </div>
                 </div>
@@ -563,7 +1308,21 @@ export default function ProjectPage() {
   const [fbEditing, setFbEditing] = useState(null)
 
   const { setExtras } = useSidebar()
+  const { theme } = useTheme()
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [viewAsPublic, setViewAsPublic] = useState(false)
+  const [previewEditing, setPreviewEditing] = useState(false)
+  const [previewBlocks, setPreviewBlocks] = useState([])
+  // Jury / professor ratings state
+  const [juryRatings, setJuryRatings] = useState({})        // { criteriaId: 0-10 }
+  const [juryNote, setJuryNote] = useState('')
+  const [jurySaving, setJurySaving] = useState(false)
+  const [jurySaved, setJurySaved] = useState(false)
+  // Report generation state
+  const [reportModal, setReportModal] = useState(false)
+  const [reportData, setReportData] = useState(null)
+  const [reportLoading, setReportLoading] = useState(false)
+  const [reportError, setReportError] = useState(null)
 
   const prevScoreRef = useRef(null)
   const rafRef = useRef(null)
@@ -590,14 +1349,16 @@ export default function ProjectPage() {
         defenseDate: project.defense_date,
         aiScore: project.ai_score,
         analyzingAI,
+        viewAsPublic,
         onDefense: () => setDefenseMode(true),
-        onAnalyze: handleAnalyzeAI,
+        onAnalyze: handleAIClick,
+        onTogglePublicView: () => setViewAsPublic(v => !v),
       })
     } else {
       setExtras(null)
     }
     return () => setExtras(null)
-  }, [project?.id, project?.defense_date, project?.ai_score, user?.id, analyzingAI])
+  }, [project?.id, project?.defense_date, project?.ai_score, user?.id, analyzingAI, aiFeedback, viewAsPublic])
 
   const pageUrl = window.location.href
 
@@ -629,6 +1390,8 @@ export default function ProjectPage() {
       if (data.ai_feedback) setAiFeedback(data.ai_feedback)
       // Load defense date
       if (data.defense_date) setDefenseDate(data.defense_date)
+      // Load preview blocks
+      if (Array.isArray(data.preview_blocks)) setPreviewBlocks(data.preview_blocks)
 
       const isProjectOwner = !!(user?.id && data.user_id && user.id === data.user_id)
 
@@ -989,7 +1752,7 @@ export default function ProjectPage() {
           onClick={() => setShowCreateModal(true)}
           style={{ background: `linear-gradient(135deg, ${colors.blue}, #4f46e5)`, color: '#fff', border: 'none', borderRadius: 10, padding: '12px 28px', fontSize: 16, fontWeight: 700, cursor: 'pointer', marginTop: 8, boxShadow: '0 4px 20px rgba(27,120,247,0.3)', fontFamily: 'inherit' }}
         >
-          Criar o meu projeto →
+          <span style={{display:"flex",alignItems:"center",gap:6}}>Criar o meu projeto <ArrowRight size={15} /></span>
         </button>
         {showCreateModal && <CreateProjectModal onClose={() => setShowCreateModal(false)} />}
         <button
@@ -1245,6 +2008,83 @@ export default function ProjectPage() {
       <Toast message={toast.message} visible={toast.visible} />
       {showCreateModal && <CreateProjectModal onClose={() => setShowCreateModal(false)} />}
 
+      {/* ── Report Generation Modal ── */}
+      {reportModal && (
+        <div
+          style={{ position: 'fixed', inset: 0, zIndex: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px 16px', background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)' }}
+          onClick={() => setReportModal(false)}
+        >
+          <div
+            style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 20, padding: '28px', maxWidth: 660, width: '100%', maxHeight: '88vh', overflowY: 'auto', position: 'relative', boxShadow: '0 24px 80px rgba(0,0,0,0.6)' }}
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+              <div style={{ width: 40, height: 40, borderRadius: 12, background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <FileText size={18} color="#10b981" />
+              </div>
+              <div style={{ flex: 1 }}>
+                <h2 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: colors.text }}>
+                  Rascunho de {project.project_type === 'pap' ? 'Relatório PAP' : 'Relatório de Estágio'}
+                </h2>
+                <p style={{ margin: '2px 0 0', fontSize: 12, color: colors.muted }}>Gerado por IA · revê e adapta antes de entregar</p>
+              </div>
+              <button onClick={() => setReportModal(false)} style={{ background: 'none', border: 'none', color: colors.muted, cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center' }}><X size={18} /></button>
+            </div>
+
+            {reportLoading && (
+              <div style={{ textAlign: 'center', padding: '48px 0', color: colors.muted }}>
+                <div style={{ width: 32, height: 32, border: `2px solid ${colors.border}`, borderTop: '2px solid #10b981', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 14px' }} />
+                <p style={{ margin: 0, fontSize: 14 }}>A gerar rascunho com IA…<br/><span style={{ fontSize: 12 }}>Pode demorar até 30 segundos</span></p>
+              </div>
+            )}
+
+            {reportError && (
+              <div style={{ background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 12, padding: '16px', color: '#ef4444', fontSize: 13 }}>
+                {reportError}
+                <button onClick={async () => { setReportError(null); setReportLoading(true); try { const d = await generateReport(project, project.project_type); setReportData(d) } catch(e) { setReportError(e.message) } setReportLoading(false) }} style={{ marginLeft: 12, background: 'none', border: '1px solid rgba(239,68,68,0.4)', borderRadius: 6, padding: '3px 10px', color: '#ef4444', cursor: 'pointer', fontFamily: 'inherit', fontSize: 12 }}>Tentar novamente</button>
+              </div>
+            )}
+
+            {reportData && !reportLoading && (() => {
+              const sections = [
+                { key: 'resumo',        label: 'Resumo Executivo' },
+                { key: 'introducao',    label: '1. Introdução' },
+                { key: 'problema',      label: '2. Identificação do Problema' },
+                { key: 'solucao',       label: '3. Solução Desenvolvida' },
+                { key: 'desenvolvimento', label: '4. Desenvolvimento' },
+                { key: 'resultados',    label: '5. Resultados' },
+                { key: 'reflexao',      label: '6. Reflexão Crítica' },
+                { key: 'conclusao',     label: '7. Conclusão' },
+              ]
+              const fullText = sections.map(s => `${s.label}\n\n${reportData[s.key] || ''}`).join('\n\n───\n\n')
+              return (
+                <>
+                  <button
+                    onClick={() => { navigator.clipboard.writeText(fullText); triggerToast('Relatório copiado!') }}
+                    style={{ display: 'flex', alignItems: 'center', gap: 7, background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)', borderRadius: 9, padding: '8px 16px', color: '#10b981', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', marginBottom: 20, transition: 'all 0.14s' }}
+                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(16,185,129,0.16)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'rgba(16,185,129,0.1)'}
+                  >
+                    <Copy size={13} /> Copiar relatório completo
+                  </button>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+                    {sections.map((s, i) => reportData[s.key] ? (
+                      <div key={s.key} style={{ paddingBottom: 22, borderBottom: i < sections.length - 1 ? `1px solid ${colors.border}` : 'none', marginBottom: i < sections.length - 1 ? 22 : 0 }}>
+                        <h3 style={{ margin: '0 0 10px', fontSize: 13, fontWeight: 800, color: '#10b981', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{s.label}</h3>
+                        <p style={{ margin: 0, fontSize: 14, color: colors.text, lineHeight: 1.85, whiteSpace: 'pre-wrap' }}>{reportData[s.key]}</p>
+                      </div>
+                    ) : null)}
+                  </div>
+                  <p style={{ margin: '20px 0 0', fontSize: 11, color: colors.subtle, lineHeight: 1.5, fontStyle: 'italic' }}>
+                    Este é um rascunho gerado por IA. Revê com atenção, adapta ao teu estilo e verifica com o teu orientador antes de entregar.
+                  </p>
+                </>
+              )
+            })()}</div>
+        </div>
+      )}
+
       {/* ── Milestone shareable card overlay ── */}
       {milestoneCard && (
         <div
@@ -1336,7 +2176,7 @@ export default function ProjectPage() {
                 onClick={() => setMilestoneCard(null)}
                 style={{
                   flex: 1,
-                  background: 'rgba(255,255,255,0.05)',
+                  background: 'var(--c-card-hover)',
                   border: `1px solid ${colors.border}`, borderRadius: 12,
                   padding: '13px 0', color: colors.muted,
                   fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
@@ -1385,7 +2225,7 @@ export default function ProjectPage() {
               onClick={() => setAiModalOpen(false)}
               style={{
                 position: 'absolute', top: 16, right: 16,
-                background: 'rgba(255,255,255,0.05)',
+                background: 'var(--c-card-hover)',
                 border: `1px solid ${colors.border}`,
                 borderRadius: 8, width: 32, height: 32,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -1462,7 +2302,7 @@ export default function ProjectPage() {
                           </div>
                           <p style={{ margin: '0 0 4px', fontSize: 12, color: '#afc3dc', lineHeight: 1.55 }}>{sec.feedback}</p>
                           {sec.tip && (
-                            <p style={{ margin: 0, fontSize: 12, color: '#60a5fa', lineHeight: 1.55 }}>→ {sec.tip}</p>
+                            <p style={{ margin: 0, fontSize: 12, color: '#60a5fa', lineHeight: 1.55, display: 'flex', alignItems: 'center', gap: 5 }}><ChevronRight size={12} /> {sec.tip}</p>
                           )}
                         </div>
                       )
@@ -1577,6 +2417,23 @@ export default function ProjectPage() {
           )}
         </div>
       </Navbar>
+
+      {/* ── Public visitor view (pure visitors + owners in preview mode) ── */}
+      {((!isOwner && collaboratorSections === null && !isProfessor) || (isOwner && viewAsPublic)) && (
+        <PublicView
+          project={project}
+          ownerProfile={ownerProfile}
+          isOwner={isOwner}
+          onExitPreview={() => { setViewAsPublic(false); setPreviewEditing(false) }}
+          previewBlocks={previewBlocks}
+          setPreviewBlocks={setPreviewBlocks}
+          previewEditing={previewEditing}
+          setPreviewEditing={setPreviewEditing}
+        />
+      )}
+
+      {/* ── Owner / collaborator / professor view ── */}
+      {(isOwner || collaboratorSections !== null || isProfessor) && !viewAsPublic && (<>
 
       {/* Full-width gradient hero — always shown, adapts to project type */}
       {(() => {
@@ -1724,32 +2581,44 @@ export default function ProjectPage() {
                 {project.views ?? 0}
               </span>
             </div>
-            {isOwner && (
-              <button
-                className="proj-edit-inline"
-                onClick={() => {
-                  const token = localStorage.getItem(`edit_token_${project.slug}`)
-                  navigate(`/editar/${project.slug}${token ? `?token=${token}` : ''}`)
-                }}
-                title="Editar projeto"
-                style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  width: 34, height: 34, borderRadius: 9, flexShrink: 0,
-                  background: 'rgba(255,255,255,0.05)',
-                  border: `1px solid ${colors.border}`,
-                  color: colors.muted, cursor: 'pointer',
-                  transition: 'all 0.15s',
-                }}
-              >
-                <Pencil size={15} />
-              </button>
-            )}
           </div>
 
           {project.ai_tagline && (
-            <p className="proj-tagline" style={{ fontSize: 18, color: colors.muted, lineHeight: 1.6, margin: '12px 0 24px', maxWidth: 580, fontWeight: 400 }}>
+            <p className="proj-tagline" style={{ fontSize: 18, color: colors.muted, lineHeight: 1.6, margin: '12px 0 16px', maxWidth: 580, fontWeight: 400 }}>
               {project.ai_tagline}
             </p>
+          )}
+
+          {/* Status badges — shown inline below tagline */}
+          {(internshipReady || ownerProfile?.available_for_work) && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 16, alignItems: 'center' }}>
+              {internshipReady && (
+                <div style={{
+                  background: colors.greenGlow, color: colors.green,
+                  border: '1px solid rgba(34,197,94,0.25)',
+                  borderRadius: 999, padding: '4px 12px',
+                  fontSize: 11, fontWeight: 700, lineHeight: 1.5,
+                }}>
+                  Pronto para estágio
+                </div>
+              )}
+              {/* "Disponível" — subtle green dot icon add-on */}
+              {ownerProfile?.available_for_work && (
+                <div
+                  title="Disponível para trabalho / estágio"
+                  style={{
+                    width: 22, height: 22, borderRadius: '50%',
+                    background: 'rgba(16,185,129,0.12)',
+                    border: '1.5px solid rgba(16,185,129,0.35)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    cursor: 'default',
+                  }}
+                >
+                  {/* Green pulse dot */}
+                  <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#10b981', boxShadow: '0 0 0 2px rgba(16,185,129,0.25)' }} />
+                </div>
+              )}
+            </div>
           )}
 
           {/* Mobile dashboard — score + level (hidden on desktop, shown on mobile) */}
@@ -1796,27 +2665,6 @@ export default function ProjectPage() {
             }}>
               {level.label}
             </div>
-            {internshipReady && (
-              <div style={{
-                background: colors.greenGlow, color: colors.green,
-                border: '1px solid rgba(34,197,94,0.25)',
-                borderRadius: 999, padding: '4px 12px',
-                fontSize: 10, fontWeight: 700, textAlign: 'center', maxWidth: 120, lineHeight: 1.5,
-              }}>
-                Pronto para estágio
-              </div>
-            )}
-            {ownerProfile?.available_for_work && (
-              <div style={{
-                background: 'rgba(16,185,129,0.1)', color: '#10b981',
-                border: '1px solid rgba(16,185,129,0.3)',
-                borderRadius: 999, padding: '4px 12px',
-                fontSize: 10, fontWeight: 700, textAlign: 'center', maxWidth: 140, lineHeight: 1.5,
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
-              }}>
-                <Briefcase size={11} style={{ flexShrink: 0 }} /> Disponível
-              </div>
-            )}
           </div>
           </div>{/* end flex row */}
         </div>{/* end proj-hero */}
@@ -1860,7 +2708,7 @@ export default function ProjectPage() {
                   value={defenseDate}
                   onChange={e => handleSaveDefenseDate(e.target.value)}
                   style={{
-                    background: 'rgba(255,255,255,0.05)',
+                    background: 'var(--c-card-hover)',
                     border: `1px solid ${colors.border}`,
                     borderRadius: 8, padding: '7px 10px',
                     color: colors.text, fontSize: 13,
@@ -1902,7 +2750,7 @@ export default function ProjectPage() {
                 boxShadow: '0 4px 16px rgba(79,70,229,0.3)',
               }}
             >
-              Ver certificado →
+              <span style={{display:'flex',alignItems:'center',gap:6}}>Ver certificado <ArrowRight size={14} /></span>
             </button>
           </div>
         )}
@@ -1962,21 +2810,64 @@ export default function ProjectPage() {
                   boxShadow: '0 4px 14px rgba(109,40,217,0.35)',
                 }}
               >
-                Criar o meu projeto →
+                <span style={{display:"flex",alignItems:"center",gap:6}}>Criar o meu projeto <ArrowRight size={15} /></span>
               </button>
             </div>
           </div>
         )}
 
-        {/* AI Description */}
+        {/* ── Report generation button (owner only, PAP or internship) ── */}
+        {isOwner && (project.project_type === 'pap' || project.project_type === 'internship') && (
+          <button
+            onClick={async () => {
+              if (reportData) { setReportModal(true); return }
+              setReportLoading(true); setReportError(null); setReportModal(true)
+              try {
+                const data = await generateReport(project, project.project_type)
+                setReportData(data)
+              } catch (e) {
+                setReportError(e.message || 'Erro ao gerar relatório')
+              }
+              setReportLoading(false)
+            }}
+            style={{
+              width: '100%', background: 'linear-gradient(135deg, rgba(16,185,129,0.08), rgba(5,150,105,0.04))',
+              border: '1px solid rgba(16,185,129,0.25)', borderRadius: 16, padding: '14px 18px',
+              display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', fontFamily: 'inherit',
+              textAlign: 'left', transition: 'all 0.15s',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'linear-gradient(135deg, rgba(16,185,129,0.13), rgba(5,150,105,0.07))'; e.currentTarget.style.borderColor = 'rgba(16,185,129,0.4)' }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'linear-gradient(135deg, rgba(16,185,129,0.08), rgba(5,150,105,0.04))'; e.currentTarget.style.borderColor = 'rgba(16,185,129,0.25)' }}
+          >
+            <div style={{ width: 40, height: 40, borderRadius: 12, background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <FileText size={18} color="#10b981" />
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: colors.text, marginBottom: 2 }}>
+                Gerar rascunho de {project.project_type === 'pap' ? 'relatório PAP' : 'relatório de estágio'}
+              </div>
+              <div style={{ fontSize: 12, color: colors.muted }}>
+                {reportData ? 'Rascunho gerado · clica para ver' : 'A IA gera um rascunho completo com base no teu projeto'}
+              </div>
+            </div>
+            <div style={{ background: reportData ? 'rgba(16,185,129,0.12)' : 'rgba(16,185,129,0.15)', border: `1px solid rgba(16,185,129,0.3)`, borderRadius: 8, padding: '6px 14px', color: '#10b981', fontSize: 12, fontWeight: 700, flexShrink: 0 }}>
+              {reportData ? 'Ver' : 'Gerar'}
+            </div>
+          </button>
+        )}
+
+        {/* AI Description — "A tua história" with strong brand gradient */}
         {project.ai_description && (
           <div className="proj-card-pad proj-card" style={{
-            background: `linear-gradient(135deg, rgba(129,140,248,0.04) 0%, rgba(27,120,247,0.02) 100%)`,
-            border: '1px solid rgba(129,140,248,0.18)',
+            background: 'linear-gradient(135deg, #1b78f7 0%, #4f46e5 100%)',
+            border: '1px solid rgba(79,70,229,0.5)',
+            position: 'relative', overflow: 'hidden',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
-              <span style={{ fontSize: 11, fontWeight: 700, color: '#818cf8', textTransform: 'uppercase', letterSpacing: '0.1em', display: 'flex', alignItems: 'center', gap: 6 }}>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#818cf8" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            {/* Subtle radial glow */}
+            <div style={{ position: 'absolute', top: -40, right: -40, width: 220, height: 220, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(255,255,255,0.07) 0%, transparent 70%)', pointerEvents: 'none' }} />
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 16, flexWrap: 'wrap', position: 'relative' }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', letterSpacing: '0.1em', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
                 A tua história
               </span>
               {isOwner && (
@@ -1984,42 +2875,49 @@ export default function ProjectPage() {
                   onClick={handleRegenerate}
                   disabled={regenerating || regenCooldown > 0}
                   style={{
-                    background: 'transparent',
-                    border: `1px solid rgba(129,140,248,0.22)`,
-                    color: '#818cf8',
+                    background: 'rgba(255,255,255,0.12)',
+                    border: '1px solid rgba(255,255,255,0.2)',
+                    color: 'rgba(255,255,255,0.85)',
                     borderRadius: 7, padding: '4px 10px',
                     fontSize: 11, fontWeight: 600,
                     cursor: (regenerating || regenCooldown > 0) ? 'default' : 'pointer',
-                    opacity: (regenerating || regenCooldown > 0) ? 0.5 : 0.8,
+                    opacity: (regenerating || regenCooldown > 0) ? 0.5 : 1,
                     whiteSpace: 'nowrap',
                     fontFamily: 'inherit',
-                    transition: 'opacity 0.15s',
+                    transition: 'all 0.15s',
                   }}
-                  onMouseEnter={e => { if (!(regenerating || regenCooldown > 0)) e.currentTarget.style.opacity = '1' }}
-                  onMouseLeave={e => { e.currentTarget.style.opacity = (regenerating || regenCooldown > 0) ? '0.5' : '0.8' }}
+                  onMouseEnter={e => { if (!(regenerating || regenCooldown > 0)) e.currentTarget.style.background = 'rgba(255,255,255,0.2)' }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.12)' }}
                 >
                   {regenerating ? 'A gerar...' : regenCooldown > 0 ? `${regenCooldown}s` : 'Regenerar'}
                 </button>
               )}
             </div>
-            <p style={{ margin: 0, fontSize: 17, lineHeight: 1.85, color: colors.text, fontWeight: 400 }}>{project.ai_description}</p>
+            <p style={{ margin: 0, fontSize: 17, lineHeight: 1.85, color: 'rgba(255,255,255,0.92)', fontWeight: 400, position: 'relative' }}>{project.ai_description}</p>
           </div>
         )}
 
-        {/* Highlights — 3 column cards */}
+        {/* Highlights — 3 column cards — blue branded */}
         {highlights.length > 0 && (() => {
-          const hero = TYPE_HERO[project.project_type] ?? TYPE_HERO.personal
           const HlIcons = [Zap, TrendingUp, Lightbulb]
+          const hlAccents = ['#1b78f7', '#1d6fe8', '#2563eb']
           return (
             <div className="proj-highlights-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>
               {highlights.map((h, i) => {
                 const HlIcon = HlIcons[i] ?? Sparkles
+                const acc = hlAccents[i] ?? '#1b78f7'
                 return (
-                  <div key={i} className="proj-card" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                    <div style={{ width: 32, height: 32, borderRadius: 9, flexShrink: 0, background: `${hero.c1}14`, border: `1px solid ${hero.c1}28`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <HlIcon size={15} color={hero.c1} />
+                  <div key={i} className="proj-card" style={{
+                    display: 'flex', flexDirection: 'column', gap: 12,
+                    background: `linear-gradient(145deg, ${acc}18 0%, ${acc}08 100%)`,
+                    border: `1px solid ${acc}30`,
+                    position: 'relative', overflow: 'hidden',
+                  }}>
+                    <div style={{ position: 'absolute', bottom: -20, right: -16, width: 80, height: 80, borderRadius: '50%', background: `radial-gradient(ellipse, ${acc}14 0%, transparent 70%)`, pointerEvents: 'none' }} />
+                    <div style={{ width: 32, height: 32, borderRadius: 9, flexShrink: 0, background: `${acc}18`, border: `1px solid ${acc}30`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <HlIcon size={15} color={acc} />
                     </div>
-                    <p style={{ margin: 0, fontSize: 13, color: colors.muted, lineHeight: 1.65 }}>{h}</p>
+                    <p style={{ margin: 0, fontSize: 13, color: colors.text, lineHeight: 1.65, position: 'relative' }}>{h}</p>
                   </div>
                 )
               })}
@@ -2137,7 +3035,7 @@ export default function ProjectPage() {
               onClick={() => setShowQR(true)}
               title="Ver QR Code"
               style={{
-                background: 'rgba(255,255,255,0.04)',
+                background: 'var(--c-bg-alt)',
                 border: `1px solid ${colors.border}`,
                 borderRadius: 8, padding: '7px 10px',
                 color: colors.muted, cursor: 'pointer',
@@ -2235,7 +3133,7 @@ export default function ProjectPage() {
             >
               <button
                 onClick={() => setShowQR(false)}
-                style={{ position: 'absolute', top: 14, right: 14, background: 'rgba(255,255,255,0.05)', border: `1px solid ${colors.border}`, borderRadius: 8, width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: colors.muted }}
+                style={{ position: 'absolute', top: 14, right: 14, background: 'var(--c-card-hover)', border: `1px solid ${colors.border}`, borderRadius: 8, width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: colors.muted }}
               ><X size={14} /></button>
               <div>
                 <div style={{ fontSize: 15, fontWeight: 700, color: colors.text, textAlign: 'center', marginBottom: 4 }}>{project.name}</div>
@@ -2288,21 +3186,21 @@ export default function ProjectPage() {
               <div className="proj-author-links" style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
                 {project.linkedin_url && (
                   <a href={project.linkedin_url} target="_blank" rel="noopener noreferrer"
-                    style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: colors.muted, fontWeight: 600, textDecoration: 'none', background: 'rgba(255,255,255,0.04)', border: `1px solid ${colors.border}`, borderRadius: 7, padding: '5px 10px', transition: 'all 0.15s' }}
+                    style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: colors.muted, fontWeight: 600, textDecoration: 'none', background: 'var(--c-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: 7, padding: '5px 10px', transition: 'all 0.15s' }}
                     onMouseEnter={e => { e.currentTarget.style.borderColor = colors.borderBright; e.currentTarget.style.color = colors.text }}
                     onMouseLeave={e => { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.color = colors.muted }}
                   >LinkedIn</a>
                 )}
                 {project.github_url && (
                   <a href={project.github_url} target="_blank" rel="noopener noreferrer"
-                    style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: colors.muted, fontWeight: 600, textDecoration: 'none', background: 'rgba(255,255,255,0.04)', border: `1px solid ${colors.border}`, borderRadius: 7, padding: '5px 10px', transition: 'all 0.15s' }}
+                    style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: colors.muted, fontWeight: 600, textDecoration: 'none', background: 'var(--c-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: 7, padding: '5px 10px', transition: 'all 0.15s' }}
                     onMouseEnter={e => { e.currentTarget.style.borderColor = colors.borderBright; e.currentTarget.style.color = colors.text }}
                     onMouseLeave={e => { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.color = colors.muted }}
                   >GitHub</a>
                 )}
                 {project.portfolio_url && (
                   <a href={project.portfolio_url} target="_blank" rel="noopener noreferrer"
-                    style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: colors.muted, fontWeight: 600, textDecoration: 'none', background: 'rgba(255,255,255,0.04)', border: `1px solid ${colors.border}`, borderRadius: 7, padding: '5px 10px', transition: 'all 0.15s' }}
+                    style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: colors.muted, fontWeight: 600, textDecoration: 'none', background: 'var(--c-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: 7, padding: '5px 10px', transition: 'all 0.15s' }}
                     onMouseEnter={e => { e.currentTarget.style.borderColor = colors.borderBright; e.currentTarget.style.color = colors.text }}
                     onMouseLeave={e => { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.color = colors.muted }}
                   >Portfólio</a>
@@ -2314,7 +3212,7 @@ export default function ProjectPage() {
 
         <div style={{ textAlign: 'center', padding: '40px 0 0', color: colors.subtle, fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, flexWrap: 'wrap' }}>
           Criado com{' '}
-          <img src="/logo.png" alt="Showo" style={{ height: 16, width: 'auto', verticalAlign: 'middle', opacity: 0.7 }} />
+          <img src={theme === 'light' ? '/light_mode_LI.png' : '/logo.png'} alt="Showo" style={{ height: 16, width: 'auto', verticalAlign: 'middle', opacity: 0.7 }} />
           {' '}· Transforma projetos em páginas profissionais
         </div>
         </div>{/* end proj-body */}
@@ -2328,6 +3226,110 @@ export default function ProjectPage() {
             colors={colors}
             isOwner={isOwner}
           />
+
+          {/* ── Jury evaluation card (professors only) ── */}
+          {isProfessor && (() => {
+            const JURY_CRITERIA = [
+              { id: 'problem',        label: 'Problema',        desc: 'Clareza e relevância' },
+              { id: 'solution',       label: 'Solução',         desc: 'Adequação e criatividade' },
+              { id: 'tech',           label: 'Tecnologia',      desc: 'Profundidade técnica' },
+              { id: 'results',        label: 'Resultados',      desc: 'Evidência e impacto' },
+              { id: 'presentation',   label: 'Apresentação',    desc: 'Qualidade do projeto' },
+            ]
+            const totalRated = JURY_CRITERIA.filter(c => juryRatings[c.id] != null).length
+            const avgScore   = totalRated === 0 ? null : Math.round(JURY_CRITERIA.reduce((s, c) => s + (juryRatings[c.id] ?? 0), 0) / JURY_CRITERIA.length * 10) / 10
+
+            return (
+              <div style={{ background: 'linear-gradient(135deg, rgba(99,102,241,0.06), rgba(79,70,229,0.03))', border: '1px solid rgba(99,102,241,0.22)', borderRadius: 16, overflow: 'hidden', marginBottom: 4 }}>
+                {/* Header */}
+                <div style={{ padding: '13px 16px 10px', borderBottom: '1px solid rgba(99,102,241,0.12)', display: 'flex', alignItems: 'center', gap: 9 }}>
+                  <ClipboardList size={14} color="#818cf8" />
+                  <span style={{ fontSize: 13, fontWeight: 700, color: colors.text, flex: 1 }}>Avaliação Júri</span>
+                  {avgScore != null && (
+                    <span style={{ fontSize: 18, fontWeight: 900, color: avgScore >= 7 ? '#22c55e' : avgScore >= 5 ? '#1b78f7' : '#f97316', letterSpacing: '-0.5px' }}>{avgScore}<span style={{ fontSize: 11, color: colors.muted, fontWeight: 500 }}>/10</span></span>
+                  )}
+                </div>
+
+                {/* Criteria rating */}
+                <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {JURY_CRITERIA.map(c => (
+                    <div key={c.id}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 5 }}>
+                        <span style={{ fontSize: 12, fontWeight: 700, color: colors.text }}>{c.label}</span>
+                        <span style={{ fontSize: 10, color: colors.muted }}>{c.desc}</span>
+                      </div>
+                      <div style={{ display: 'flex', gap: 4 }}>
+                        {[1,2,3,4,5,6,7,8,9,10].map(n => {
+                          const val = juryRatings[c.id] ?? 0
+                          const active = n <= val
+                          return (
+                            <button
+                              key={n}
+                              onClick={() => setJuryRatings(r => ({ ...r, [c.id]: r[c.id] === n ? 0 : n }))}
+                              style={{
+                                flex: 1, height: 20, borderRadius: 4, border: 'none', cursor: 'pointer', padding: 0,
+                                background: active ? (val >= 7 ? '#22c55e' : val >= 5 ? '#1b78f7' : '#f97316') : 'var(--c-bg)',
+                                transition: 'background 0.1s',
+                              }}
+                              title={`${n}/10`}
+                            />
+                          )
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Note */}
+                <div style={{ padding: '0 16px 12px' }}>
+                  <textarea
+                    value={juryNote}
+                    onChange={e => setJuryNote(e.target.value)}
+                    placeholder="Nota geral para o aluno (opcional)…"
+                    rows={2}
+                    style={{ width: '100%', background: 'var(--c-bg)', border: `1px solid ${colors.border}`, borderRadius: 8, padding: '8px 10px', color: colors.text, fontSize: 12, fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box', outline: 'none', lineHeight: 1.5 }}
+                  />
+                </div>
+
+                {/* Save button */}
+                <div style={{ padding: '0 16px 14px' }}>
+                  <button
+                    disabled={jurySaving || totalRated === 0}
+                    onClick={async () => {
+                      if (totalRated === 0) return
+                      setJurySaving(true)
+                      const payload = { ratings: juryRatings, avg: avgScore, note: juryNote }
+                      // Save as a teacher feedback entry
+                      await supabase.from('teacher_feedback').upsert({
+                        project_id: project.id, teacher_id: user.id, field_key: 'jury_eval',
+                        comment: JSON.stringify(payload),
+                      }, { onConflict: 'project_id,teacher_id,field_key' })
+                      if (project.user_id) {
+                        supabase.from('notifications').insert({
+                          user_id: project.user_id, type: 'TEACHER_FEEDBACK',
+                          message: `O júri avaliou o teu projeto "${project.name}": ${avgScore}/10`,
+                          project_slug: project.slug, read: false,
+                        })
+                      }
+                      setJurySaving(false); setJurySaved(true)
+                      setTimeout(() => setJurySaved(false), 3000)
+                    }}
+                    style={{
+                      width: '100%', padding: '10px', borderRadius: 9,
+                      background: jurySaved ? 'rgba(34,197,94,0.12)' : 'linear-gradient(135deg, #6366f1, #4f46e5)',
+                      border: jurySaved ? '1px solid rgba(34,197,94,0.3)' : 'none',
+                      color: jurySaved ? '#22c55e' : '#fff',
+                      fontSize: 13, fontWeight: 700, cursor: totalRated === 0 || jurySaving ? 'default' : 'pointer',
+                      opacity: totalRated === 0 ? 0.5 : 1, fontFamily: 'inherit',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                    }}
+                  >
+                    {jurySaved ? <><Check size={13} /> Avaliação guardada</> : jurySaving ? 'A guardar…' : <><ClipboardList size={13} /> Guardar avaliação</>}
+                  </button>
+                </div>
+              </div>
+            )
+          })()}
 
           {/* Teacher feedback — sidebar: desktop first/second slot, mobile above author */}
           {(isOwner || isProfessor) && (teacherFeedback.length > 0 || isProfessor) && (() => {
@@ -2508,7 +3510,7 @@ export default function ProjectPage() {
                       onClick={() => document.getElementById('missions-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
                       style={{ marginTop: 14, width: '100%', background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.2)', color: '#5a9ff5', borderRadius: 10, padding: '9px 0', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
                     >
-                      Ver missões ↓
+                      <span style={{display:'flex',alignItems:'center',gap:6,justifyContent:'center'}}>Ver missões <ChevronDown size={14} /></span>
                     </button>
                   )}
                 </div>
@@ -2520,6 +3522,8 @@ export default function ProjectPage() {
         </div>{/* end proj-layout */}
 
       </div>
+
+      </>)}{/* end owner/collaborator conditional */}
     </div>
   )
 }

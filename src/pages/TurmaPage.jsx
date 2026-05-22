@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
-import { Folder, Check, Search, Users2, User, Copy, Inbox, Download, MessageSquare, X, ChevronUp, ChevronDown } from 'lucide-react'
+import { Folder, Check, Search, Users2, User, Copy, Inbox, Download, MessageSquare, X, ChevronUp, ChevronDown, ArrowRight } from 'lucide-react'
 import CreateProjectModal from '../components/CreateProjectModal'
 
 const C = {
@@ -52,7 +52,7 @@ function ProjectCard({ project, navigate }) {
         )}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           {project.area && (
-            <span style={{ fontSize: 11, color: C.muted, background: 'rgba(255,255,255,0.04)', border: `1px solid ${C.border}`, borderRadius: 4, padding: '2px 7px' }}>
+            <span style={{ fontSize: 11, color: C.muted, background: 'var(--c-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 4, padding: '2px 7px' }}>
               {project.area}
             </span>
           )}
@@ -191,6 +191,7 @@ export default function TurmaPage() {
   const [sortAsc, setSortAsc] = useState(false)
   const [feedbackProject, setFeedbackProject] = useState(null)
   const [copiedLink, setCopiedLink] = useState(false)
+  const [showCreateModal, setShowCreateModal] = useState(false)
 
   function showToast(msg) {
     setToast(msg)
@@ -398,7 +399,7 @@ export default function TurmaPage() {
                 {myProjects.length === 0 && (
                   <div style={{ marginTop: 12 }}>
                     <button onClick={() => setShowCreateModal(true)} style={{ background: C.blue, border: 'none', borderRadius: 8, padding: '9px 20px', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
-                      Criar projeto →
+                      <span style={{display:'flex',alignItems:'center',gap:6}}>Criar projeto <ArrowRight size={14} /></span>
                     </button>
                   </div>
                 )}

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { saveProject } from '../lib/saveProject'
-import { AlertTriangle } from 'lucide-react'
+import { AlertTriangle, ArrowRight } from 'lucide-react'
 
 const C = {
   bg:     'var(--c-bg)',
@@ -513,7 +513,7 @@ export default function AIInterview() {
                       onClick={() => submitAnswer('')}
                       style={{ background: 'none', border: 'none', fontSize: 12, color: C.subtle, fontFamily: 'inherit', padding: 0 }}
                     >
-                      Saltar →
+                      <span style={{display:'flex',alignItems:'center',gap:4}}>Saltar <ArrowRight size={12} /></span>
                     </button>
                   </div>
                 </div>

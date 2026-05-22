@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext'
 import { Pencil, ExternalLink } from 'lucide-react'
 import { Navbar } from '../components/Navbar'
 import CreateProjectModal from '../components/CreateProjectModal'
-import { Folder, Trophy, BarChart2, Rocket, Eye, GraduationCap, Plus, X, Users, Users2, ChevronRight, User, Settings, Compass, Medal, LogOut, Globe, TrendingUp, MessageSquare, Star, Mail, Search, BookOpen, Trash2, Check, Calendar } from 'lucide-react'
+import { Folder, Trophy, BarChart2, Rocket, Eye, GraduationCap, Plus, X, Users, Users2, ChevronRight, User, Settings, Compass, Medal, LogOut, Globe, TrendingUp, MessageSquare, Star, Mail, Search, BookOpen, Trash2, Check, Calendar, ArrowRight } from 'lucide-react'
 
 const C = {
   bg: 'var(--c-bg)',
@@ -100,7 +100,7 @@ function ActionBtn({ onClick, label, primary, small }) {
       style={{
         background: primary
           ? (hovered ? C.blueHover : C.blue)
-          : (hovered ? 'rgba(255,255,255,0.06)' : 'transparent'),
+          : (hovered ? 'var(--c-card-hover)' : 'transparent'),
         border: primary ? 'none' : `1px solid ${C.border}`,
         borderRadius: 8,
         padding: small ? '6px 12px' : '8px 16px',
@@ -166,7 +166,7 @@ function ProjectRow({ project, onView, onEdit, onDelete }) {
             {project.name}
           </span>
           {project.area && (
-            <span style={{ color: C.subtle, fontSize: 11, background: 'rgba(255,255,255,0.04)', border: `1px solid ${C.border}`, borderRadius: 5, padding: '1px 7px', flexShrink: 0 }}>
+            <span style={{ color: C.subtle, fontSize: 11, background: 'var(--c-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 5, padding: '1px 7px', flexShrink: 0 }}>
               {project.area}
             </span>
           )}
@@ -203,7 +203,7 @@ function ProjectRow({ project, onView, onEdit, onDelete }) {
             <button
               onClick={onEdit}
               title="Editar"
-              style={{ width: 34, height: 34, borderRadius: 9, background: 'rgba(255,255,255,0.05)', border: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: C.muted, flexShrink: 0 }}
+              style={{ width: 34, height: 34, borderRadius: 9, background: 'var(--c-card-hover)', border: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: C.muted, flexShrink: 0 }}
             ><Pencil size={14} /></button>
             <button
               onClick={onView}
@@ -238,7 +238,7 @@ function ProjectRow({ project, onView, onEdit, onDelete }) {
             <button
               onClick={(e) => { e.stopPropagation(); onEdit() }}
               title="Editar"
-              style={{ width: 36, height: 36, borderRadius: 9, background: 'rgba(255,255,255,0.05)', border: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: C.muted }}
+              style={{ width: 36, height: 36, borderRadius: 9, background: 'var(--c-card-hover)', border: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: C.muted }}
             ><Pencil size={14} /></button>
           </>
         )}
@@ -445,7 +445,7 @@ function JoinTurmaModal({ onClose, navigate, onJoined }) {
                 onClick={() => { navigate(`/turma/${joined.code}`); onClose() }}
                 style={{ width: '100%', background: `linear-gradient(135deg, ${C.blue}, #4f46e5)`, border: 'none', borderRadius: 12, padding: '14px', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 20px rgba(27,120,247,0.35)' }}
               >
-                Ir para a turma →
+                <span style={{display:'flex',alignItems:'center',gap:6,justifyContent:'center'}}>Ir para a turma <ArrowRight size={15} /></span>
               </button>
               <button
                 onClick={onClose}
@@ -528,9 +528,9 @@ function TurmasListModal({ turmas, onClose, navigate, onJoin }) {
             <div
               key={t.id}
               onClick={() => { navigate(`/turma/${t.code}`); onClose() }}
-              style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${C.border}`, borderRadius: 14, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', transition: 'all 0.15s' }}
+              style={{ background: 'var(--c-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 14, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', transition: 'all 0.15s' }}
               onMouseEnter={e => { e.currentTarget.style.background = C.cardHover; e.currentTarget.style.borderColor = C.borderBright }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; e.currentTarget.style.borderColor = C.border }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'var(--c-bg-alt)'; e.currentTarget.style.borderColor = C.border }}
             >
               <div style={{ width: 38, height: 38, borderRadius: 10, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <Users2 size={16} color="#1b78f7" />
@@ -732,7 +732,7 @@ function OnboardingModal({ user, profile, onDismiss, onCreateTurma }) {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 28 }}>
               {cfg.steps.map((s, i) => (
-                <div key={i} style={{ display: 'flex', gap: 14, alignItems: 'flex-start', background: 'rgba(255,255,255,0.03)', border: '1px solid #1e3050', borderRadius: 12, padding: '14px 16px' }}>
+                <div key={i} style={{ display: 'flex', gap: 14, alignItems: 'flex-start', background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)', borderRadius: 12, padding: '14px 16px' }}>
                   <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1, width: 24, height: 24 }}>{s.icon}</span>
                   <div>
                     <div style={{ color: 'var(--c-text)', fontSize: 14, fontWeight: 600, marginBottom: 3 }}>{s.title}</div>
@@ -746,7 +746,7 @@ function OnboardingModal({ user, profile, onDismiss, onCreateTurma }) {
                 onClick={() => setStep(1)}
                 style={{ flex: 1, background: 'linear-gradient(135deg,#1b78f7,#4f46e5)', border: 'none', borderRadius: 10, padding: '13px', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 20px rgba(27,120,247,0.35)' }}
               >
-                Continuar →
+                <span style={{display:'flex',alignItems:'center',gap:6,justifyContent:'center'}}>Continuar <ArrowRight size={15} /></span>
               </button>
             </div>
             <button
@@ -775,11 +775,11 @@ function OnboardingModal({ user, profile, onDismiss, onCreateTurma }) {
                 onClick={handleCta}
                 style={{ background: 'linear-gradient(135deg,#1b78f7,#4f46e5)', border: 'none', borderRadius: 10, padding: '14px', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 20px rgba(27,120,247,0.35)' }}
               >
-                {cfg.cta} →
+                <span style={{display:'flex',alignItems:'center',gap:6,justifyContent:'center'}}>{cfg.cta} <ArrowRight size={15} /></span>
               </button>
               <button
                 onClick={onDismiss}
-                style={{ background: 'transparent', border: '1px solid #1e3050', borderRadius: 10, padding: '13px', color: 'var(--c-muted)', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}
+                style={{ background: 'transparent', border: '1px solid var(--c-border)', borderRadius: 10, padding: '13px', color: 'var(--c-muted)', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}
               >
                 Explorar primeiro
               </button>
@@ -1013,7 +1013,7 @@ export default function Dashboard() {
         /* Inline stat pills */
         .dash-stat-pill {
           display: inline-flex; align-items: center; gap: 5px;
-          background: rgba(255,255,255,0.03);
+          background: var(--c-bg-alt);
           border: 1px solid ${C.border};
           border-radius: 999px;
           padding: 4px 11px;
@@ -1212,7 +1212,7 @@ export default function Dashboard() {
                   <p style={{ color: C.text, fontSize: 15, fontWeight: 700, margin: '0 0 6px' }}>Ainda não tens turmas</p>
                   <p style={{ color: C.muted, fontSize: 13, margin: '0 0 22px', lineHeight: 1.6 }}>Cria uma turma e partilha o código com os teus alunos.</p>
                   <button onClick={() => setShowCreateTurma(true)} style={{ background: `linear-gradient(135deg, ${C.blue}, #4f46e5)`, border: 'none', borderRadius: 9, padding: '10px 24px', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 16px rgba(27,120,247,0.3)' }}>
-                    Criar primeira turma →
+                    <span style={{display:'flex',alignItems:'center',gap:6}}>Criar primeira turma <ArrowRight size={14} /></span>
                   </button>
                 </div>
               ) : (
@@ -1282,7 +1282,7 @@ export default function Dashboard() {
 
           {/* ── Turma widget (alunos only) ── */}
           {!isTeacher && !loadingStudentTurmas && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', background: studentTurmas.length > 0 ? 'rgba(27,120,247,0.05)' : 'rgba(255,255,255,0.02)', border: `1px solid ${studentTurmas.length > 0 ? 'rgba(27,120,247,0.18)' : C.border}`, borderRadius: 12, padding: '11px 14px', transition: 'all 0.2s' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', background: studentTurmas.length > 0 ? 'rgba(27,120,247,0.05)' : 'var(--c-bg-alt)', border: `1px solid ${studentTurmas.length > 0 ? 'rgba(27,120,247,0.18)' : C.border}`, borderRadius: 12, padding: '11px 14px', transition: 'all 0.2s' }}>
               <div style={{ width: 32, height: 32, borderRadius: 9, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <Users2 size={14} color="#1b78f7" />
               </div>
@@ -1400,7 +1400,7 @@ export default function Dashboard() {
                       <div style={{ color: C.text, fontSize: 14, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
                       {p.creator_name && <div style={{ color: C.muted, fontSize: 12, marginTop: 2 }}>de {p.creator_name}</div>}
                     </div>
-                    {p.area && <span style={{ fontSize: 11, color: C.subtle, background: 'rgba(255,255,255,0.04)', border: `1px solid ${C.border}`, borderRadius: 5, padding: '2px 8px', flexShrink: 0 }}>{p.area}</span>}
+                    {p.area && <span style={{ fontSize: 11, color: C.subtle, background: 'var(--c-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 5, padding: '2px 8px', flexShrink: 0 }}>{p.area}</span>}
                     <ChevronRight size={15} color={C.subtle} style={{ flexShrink: 0 }} />
                   </div>
                 ))}

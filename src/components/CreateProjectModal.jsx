@@ -92,18 +92,18 @@ export default function CreateProjectModal({ onClose }) {
             onClick={() => go('/novo')}
             style={{
               display: 'flex', alignItems: 'center', gap: 16,
-              background: 'rgba(255,255,255,0.03)',
+              background: 'var(--c-bg-alt)',
               border: `1px solid ${C.border}`,
               borderRadius: 14, padding: '18px 20px',
               cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
               transition: 'all 0.15s', width: '100%',
             }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.borderColor = C.borderBright }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; e.currentTarget.style.borderColor = C.border }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'var(--c-card-hover)'; e.currentTarget.style.borderColor = C.borderBright }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'var(--c-bg-alt)'; e.currentTarget.style.borderColor = C.border }}
           >
             <div style={{
               width: 44, height: 44, borderRadius: 12, flexShrink: 0,
-              background: 'rgba(255,255,255,0.06)', border: `1px solid ${C.border}`,
+              background: 'var(--c-card-hover)', border: `1px solid ${C.border}`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
               <PenLine size={20} color={C.muted} />

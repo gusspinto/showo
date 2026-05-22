@@ -1,20 +1,23 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Globe, Bot, GraduationCap, Trophy, Sparkles, BadgeCheck, Users } from 'lucide-react'
+import { Globe, Bot, GraduationCap, Trophy, Sparkles, BadgeCheck, Users, ArrowRight } from 'lucide-react'
 import { Navbar } from '../components/Navbar'
 import { supabase } from '../lib/supabase'
 import Onboarding from '../components/Onboarding'
 import CreateProjectModal from '../components/CreateProjectModal'
+import { looksLikeSpam } from '../lib/score'
 
 const colors = {
-  bg:           '#060c18',
-  card:         '#152030',
-  border:       '#1e3050',
-  borderBright: '#2a4275',
+  bg:           'var(--c-bg)',
+  card:         'var(--c-card)',
+  border:       'var(--c-border)',
+  borderBright: 'var(--c-border-bright)',
   blue:         '#1b78f7',
-  text:         '#e8f2ff',
-  muted:        '#7d93b0',
-  subtle:       '#3d5270',
+  yellow:       '#fbbf24',
+  green:        '#22c55e',
+  text:         'var(--c-text)',
+  muted:        'var(--c-muted)',
+  subtle:       'var(--c-subtle)',
 }
 
 const PHRASES = [
@@ -130,6 +133,8 @@ export default function Home() {
   const [inputText, setInputText] = useState('')
   const [showOnboarding, setShowOnboarding] = useState(() => !localStorage.getItem('showo_seen_onboarding'))
   const [projectCount, setProjectCount] = useState(null)
+  const [showCreateModal, setShowCreateModal] = useState(false)
+  const [spamError, setSpamError] = useState(false)
 
   useEffect(() => {
     async function fetchCount() {
@@ -143,10 +148,16 @@ export default function Home() {
 
   function handleStart(e) {
     e.preventDefault()
+    const text = inputText.trim()
+    if (text && looksLikeSpam(text)) {
+      setSpamError(true)
+      return
+    }
+    setSpamError(false)
     navigate('/interview', {
       state: {
         type:        selectedGoal ?? 'personal',
-        description: inputText.trim(),
+        description: text,
       },
     })
   }
@@ -156,7 +167,7 @@ export default function Home() {
     : 'Descreve o teu projeto em poucas palavras...'
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: 'var(--font-body)' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: 'var(--c-bg)', color: 'var(--c-text)', fontFamily: 'var(--font-body)' }}>
       {showOnboarding && <Onboarding onDone={() => setShowOnboarding(false)} />}
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -167,14 +178,15 @@ export default function Home() {
         .goal-pill { transition: all 0.15s !important; cursor: pointer; }
         .goal-pill:hover {
           border-color: #1b78f7 !important;
-          color: #e8f2ff !important;
+          color: var(--c-text) !important;
           background: rgba(27,120,247,0.08) !important;
         }
         .feature-card { transition: all 0.2s ease !important; cursor: default; }
         .feature-card:hover {
-          border-color: #2a4275 !important;
+          border-color: var(--c-border-bright) !important;
           transform: translateY(-3px) !important;
-          box-shadow: 0 16px 48px rgba(0,0,0,0.45) !important;
+          box-shadow: 0 16px 48px rgba(0,0,0,0.25) !important;
+          background: var(--c-card-hover) !important;
         }
         .submit-btn:hover { background: #1564d4 !important; }
         .submit-btn { transition: background 0.15s !important; }
@@ -183,7 +195,7 @@ export default function Home() {
         .home-sec-btn { transition: all 0.15s !important; }
         .home-sec-btn:hover {
           border-color: #1b78f7 !important;
-          color: #e8f2ff !important;
+          color: var(--c-text) !important;
           background: rgba(27,120,247,0.06) !important;
         }
 
@@ -299,7 +311,7 @@ export default function Home() {
               className="widget-box"
               style={{
                 display: 'flex', alignItems: 'center',
-                background: '#111c32',
+                background: 'var(--c-bg-alt)',
                 border: `1.5px solid ${colors.borderBright}`,
                 borderRadius: 16, padding: '6px 6px 6px 20px',
                 boxShadow: '0 8px 40px rgba(0,0,0,0.45)',
@@ -315,7 +327,7 @@ export default function Home() {
                 placeholder={placeholder}
                 style={{
                   flex: 1, background: 'transparent', border: 'none',
-                  color: colors.text, fontSize: 16, fontFamily: 'inherit',
+                  color: 'var(--c-text)', fontSize: 16, fontFamily: 'inherit',
                   outline: 'none', minWidth: 0, padding: '10px 0',
                 }}
               />
@@ -339,9 +351,15 @@ export default function Home() {
               </button>
             </div>
 
-            <p className="hero-note" style={{ color: colors.subtle, fontSize: 12, marginTop: 14, fontWeight: 500 }}>
-              Sem registo · Sem cartão de crédito
-            </p>
+            {spamError ? (
+              <p style={{ color: '#ef4444', fontSize: 12, marginTop: 10, fontWeight: 600, textAlign: 'center' }}>
+                Texto inválido — escreve uma descrição real do teu projeto.
+              </p>
+            ) : (
+              <p className="hero-note" style={{ color: colors.subtle, fontSize: 12, marginTop: 14, fontWeight: 500 }}>
+                Sem registo · Sem cartão de crédito
+              </p>
+            )}
           </form>
         </div>
       </div>
@@ -352,7 +370,7 @@ export default function Home() {
         gap: 28, padding: '16px 24px',
         borderTop: `1px solid ${colors.border}`,
         borderBottom: `1px solid ${colors.border}`,
-        background: 'rgba(21,32,48,0.5)',
+        background: 'var(--c-bg-alt)',
         flexWrap: 'wrap',
       }}>
         {[
@@ -408,7 +426,7 @@ export default function Home() {
             letterSpacing: '-0.2px',
           }}
         >
-          Criar o meu projeto →
+          <span style={{display:"flex",alignItems:"center",gap:6}}>Criar o meu projeto <ArrowRight size={15} /></span>
         </button>
         <div className="home-ctas" style={{ marginTop: 20, display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
           <button onClick={() => navigate('/explorar')} className="home-sec-btn"

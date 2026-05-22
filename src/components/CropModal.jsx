@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect, useCallback } from 'react'
+import { X } from 'lucide-react'
 
 const MIN_SIZE = 40
 
@@ -169,11 +170,11 @@ export function CropModal({ file, imageUrl, aspectRatio, circular = false, onCon
   }, [crop, circular, onConfirm])
 
   const C = {
-    bg:    '#060c18',
-    card:  '#152030',
-    border:'rgba(255,255,255,0.1)',
-    text:  '#e8f2ff',
-    muted: '#7d93b0',
+    bg:    'var(--c-bg)',
+    card:  'var(--c-card)',
+    border:'var(--c-border)',
+    text:  'var(--c-text)',
+    muted: 'var(--c-muted)',
     blue:  '#1b78f7',
   }
 
@@ -202,10 +203,10 @@ export function CropModal({ file, imageUrl, aspectRatio, circular = false, onCon
                       display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <span style={{ fontWeight: 700, color: C.text, fontSize: 15 }}>Recortar imagem</span>
           <button type="button" onClick={onCancel}
-            style={{ background: 'rgba(255,255,255,0.06)', border: `1px solid ${C.border}`,
+            style={{ background: 'var(--c-card-hover)', border: `1px solid ${C.border}`,
                      borderRadius: 8, width: 30, height: 30, display: 'flex', alignItems: 'center',
-                     justifyContent: 'center', color: C.muted, cursor: 'pointer', fontSize: 16 }}>
-            ✕
+                     justifyContent: 'center', color: C.muted, cursor: 'pointer' }}>
+            <X size={16} />
           </button>
         </div>
 

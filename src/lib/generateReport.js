@@ -1,22 +1,22 @@
 import { supabase } from './supabase'
 
-const TIMEOUT_MS = 45_000 // 45 s — edge functions can be slow on cold start
+const TIMEOUT_MS = 55_000
 
-export async function analyzeProject(projectData) {
+export async function generateReport(project, type = 'pap') {
   let timeoutId
 
   const timeoutPromise = new Promise((_, reject) => {
     timeoutId = setTimeout(
-      () => reject(new Error('A análise demorou demasiado. Tenta novamente.')),
+      () => reject(new Error('A geração demorou demasiado. Tenta novamente.')),
       TIMEOUT_MS,
     )
   })
 
   const invokePromise = supabase.functions
-    .invoke('analyze-project', { body: { data: projectData } })
+    .invoke('generate-report', { body: { project, type } })
     .then(({ data, error }) => {
       if (error) throw error
-      if (!data) throw new Error('Sem resposta da IA. Verifica a tua ligação.')
+      if (!data) throw new Error('Sem resposta da IA.')
       return data
     })
 

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { Mail, GraduationCap, BookOpen, Search, Building2 } from 'lucide-react'
+import { Mail, GraduationCap, BookOpen, Search, Building2, ArrowLeft } from 'lucide-react'
 
 const C = {
   bg:          'var(--c-bg)',
@@ -216,7 +216,7 @@ export default function Register() {
                     className="role-card"
                     onClick={() => setRole(r.id)}
                     style={{
-                      background: selected ? r.bg : 'rgba(255,255,255,0.025)',
+                      background: selected ? r.bg : 'var(--c-bg-alt)',
                       border: `2px solid ${selected ? r.border : C.border}`,
                       borderRadius: 14, padding: '18px 16px',
                       display: 'flex', flexDirection: 'column', gap: 8,
@@ -279,7 +279,7 @@ export default function Register() {
                 onClick={() => setStep('role')}
                 style={{ background: 'none', border: 'none', color: C.muted, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}
               >
-                ← Alterar
+                <><ArrowLeft size={14} style={{marginRight:5,verticalAlign:"middle"}} />Alterar</>
               </button>
             </div>
 

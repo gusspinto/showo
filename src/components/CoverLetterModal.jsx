@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
-import { Check, X, GraduationCap, Briefcase, Sparkles, Lightbulb } from 'lucide-react'
+import { Check, X, GraduationCap, Briefcase, Sparkles, Lightbulb, ArrowLeft } from 'lucide-react'
 
 const C = {
-  bg: '#080e1a',
-  card: '#0d1829',
+  bg: 'var(--c-bg)',
+  card: 'var(--c-card)',
   border: 'var(--c-border)',
   blue: '#1b78f7',
   muted: 'var(--c-muted)',
@@ -109,7 +109,7 @@ export default function CoverLetterModal({ projects, studentName, onClose }) {
       onClick={e => e.target === e.currentTarget && onClose()}
     >
       <div style={{
-        background: '#0d1829', border: '1px solid #1e3050',
+        background: 'var(--c-card)', border: `1px solid var(--c-border)`,
         borderRadius: 20, width: '100%', maxWidth: 620,
         maxHeight: '90vh', overflow: 'auto',
         boxShadow: '0 32px 80px rgba(0,0,0,0.7)',
@@ -219,7 +219,7 @@ export default function CoverLetterModal({ projects, studentName, onClose }) {
               <CopyField label="Mensagem LinkedIn" value={result.linkedin_message} />
 
               <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                <Btn onClick={() => setResult(null)} style={{ flex: 1 }}>← Gerar outra</Btn>
+                <Btn onClick={() => setResult(null)} style={{ flex: 1 }}><ArrowLeft size={14} style={{ verticalAlign: 'middle', marginRight: 5 }} />Gerar outra</Btn>
                 <Btn primary onClick={onClose} style={{ flex: 1 }}>Fechar</Btn>
               </div>
             </>

@@ -64,6 +64,7 @@ export default function Ranking() {
   const [loading, setLoading]     = useState(true)
   const [areaFilter, setAreaFilter] = useState('')
   const [yearFilter, setYearFilter] = useState('')
+  const [showCreateModal, setShowCreateModal] = useState(false)
 
   useEffect(() => {
     async function load() {

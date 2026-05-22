@@ -6,7 +6,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
 import CreateProjectModal from '../components/CreateProjectModal'
-import { Mail, Search, FolderOpen, X, Check, Download, Rocket, QrCode, Pencil, Globe, ExternalLink, Link, Briefcase } from 'lucide-react'
+import { Mail, Search, FolderOpen, X, Check, Download, Rocket, QrCode, Pencil, Globe, ExternalLink, Link, Briefcase, ArrowRight } from 'lucide-react'
 
 // ── Design tokens (aligned with the rest of the app) ──────────────────────────
 const C = {
@@ -104,7 +104,7 @@ function ProjectCard({ project, onClick }) {
           </p>
         )}
         {project.area && (
-          <span style={{ fontSize: 11, color: C.muted, background: 'rgba(255,255,255,0.04)', border: `1px solid ${C.border}`, borderRadius: 5, padding: '2px 7px' }}>
+          <span style={{ fontSize: 11, color: C.muted, background: 'var(--c-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 5, padding: '2px 7px' }}>
             {project.area}
           </span>
         )}
@@ -144,7 +144,7 @@ function QRModal({ profileUrl, username, onClose }) {
       onClick={e => e.target === e.currentTarget && onClose()}
     >
       <div style={{ background: C.card, border: `1px solid ${C.borderBright}`, borderRadius: 20, width: '100%', maxWidth: 340, boxShadow: '0 32px 80px rgba(0,0,0,0.7)', position: 'relative' }}>
-        <button onClick={onClose} style={{ position: 'absolute', top: 14, right: 14, background: 'rgba(255,255,255,0.06)', border: `1px solid ${C.border}`, borderRadius: 8, width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.muted, cursor: 'pointer' }}>
+        <button onClick={onClose} style={{ position: 'absolute', top: 14, right: 14, background: 'var(--c-card-hover)', border: `1px solid ${C.border}`, borderRadius: 8, width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.muted, cursor: 'pointer' }}>
           <X size={14} />
         </button>
 
@@ -251,7 +251,7 @@ ${displayName}`)
             <h2 style={{ margin: '0 0 3px', fontSize: 17, fontWeight: 800, color: C.text }}>Kit de Estágio</h2>
             <p style={{ margin: 0, fontSize: 12, color: C.muted }}>Tudo o que precisas para conseguir um estágio com os teus projetos.</p>
           </div>
-          <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.06)', border: `1px solid ${C.border}`, borderRadius: 8, width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.muted, cursor: 'pointer', flexShrink: 0, marginTop: 2 }}>
+          <button onClick={onClose} style={{ background: 'var(--c-card-hover)', border: `1px solid ${C.border}`, borderRadius: 8, width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.muted, cursor: 'pointer', flexShrink: 0, marginTop: 2 }}>
             <X size={14} />
           </button>
         </div>
@@ -415,7 +415,7 @@ export default function UserProfile() {
           overflow: hidden;
           box-shadow: 0 8px 40px rgba(0,0,0,0.35), 0 1px 0 rgba(255,255,255,0.03) inset;
         }
-        /* Subtle area gradient glow in top-right corner */
+        /* Subtle area gradient glow in top-right corner — dark mode only */
         .up-header::before {
           content: '';
           position: absolute;
@@ -424,6 +424,9 @@ export default function UserProfile() {
           border-radius: 50%;
           background: radial-gradient(circle, ${c1}bb 0%, transparent 60%);
           pointer-events: none;
+        }
+        body.light .up-header::before {
+          display: none;
         }
 
         .up-avatar {
@@ -447,7 +450,7 @@ export default function UserProfile() {
 
         .up-stat-pill {
           display: inline-flex; align-items: center; gap: 5px;
-          background: rgba(255,255,255,0.04);
+          background: var(--c-bg-alt);
           border: 1px solid ${C.border};
           border-radius: 999px;
           padding: 4px 12px;
@@ -459,7 +462,7 @@ export default function UserProfile() {
 
         .up-social-link {
           display: inline-flex; align-items: center; gap: 5px;
-          background: rgba(255,255,255,0.04);
+          background: var(--c-bg-alt);
           border: 1px solid ${C.border};
           border-radius: 8px;
           padding: 5px 12px;
@@ -471,7 +474,7 @@ export default function UserProfile() {
         .up-social-link:hover {
           border-color: ${C.borderBright};
           color: ${C.text};
-          background: rgba(255,255,255,0.07);
+          background: var(--c-card-hover);
         }
 
         .up-action-btn {
@@ -489,7 +492,7 @@ export default function UserProfile() {
         .up-action-btn:hover {
           border-color: ${C.borderBright};
           color: ${C.text};
-          background: rgba(255,255,255,0.04);
+          background: var(--c-card-hover);
         }
         .up-action-btn.kit {
           background: rgba(234,179,8,0.07);
@@ -560,7 +563,7 @@ export default function UserProfile() {
           >
             <button
               onClick={() => setShowQR(true)}
-              style={{ background: 'rgba(255,255,255,0.06)', border: `1px solid ${C.border}`, borderRadius: 8, width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: C.muted }}
+              style={{ background: 'var(--c-card-hover)', border: `1px solid ${C.border}`, borderRadius: 8, width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: C.muted }}
               title="QR Code"
             >
               <QrCode size={15} />
@@ -568,7 +571,7 @@ export default function UserProfile() {
             {isOwnProfile && (
               <button
                 onClick={() => navigate('/settings')}
-                style={{ background: 'rgba(255,255,255,0.06)', border: `1px solid ${C.border}`, borderRadius: 8, width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: C.muted }}
+                style={{ background: 'var(--c-card-hover)', border: `1px solid ${C.border}`, borderRadius: 8, width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: C.muted }}
                 title="Editar perfil"
               >
                 <Pencil size={15} />
@@ -709,7 +712,7 @@ export default function UserProfile() {
                 </p>
                 <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
                   <button onClick={() => setShowCreateModal(true)} style={{ background: C.blue, border: 'none', borderRadius: 9, padding: '11px 24px', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
-                    Criar projeto →
+                    <span style={{display:'flex',alignItems:'center',gap:6}}>Criar projeto <ArrowRight size={14} /></span>
                   </button>
                 </div>
               </div>

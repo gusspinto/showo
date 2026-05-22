@@ -5,7 +5,7 @@ import { updateProject } from '../lib/updateProject'
 import { Navbar } from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
 import { useSidebar } from '../context/SidebarContext'
-import { Sparkles, Lock, Search, Image } from 'lucide-react'
+import { Sparkles, Lock, Search, Image, ArrowLeft } from 'lucide-react'
 
 const colors = {
   bg: 'var(--c-bg)',
@@ -279,7 +279,7 @@ export default function EditProject() {
             transition: 'border-color 0.2s',
           }}
         >
-          ← Cancelar
+          <><ArrowLeft size={14} style={{marginRight:5,verticalAlign:"middle"}} />Cancelar</>
         </button>
       </Navbar>
 

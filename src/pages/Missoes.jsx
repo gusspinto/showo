@@ -1,0 +1,398 @@
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { supabase } from '../lib/supabase'
+import { useAuth } from '../context/AuthContext'
+import { Navbar } from '../components/Navbar'
+import {
+  Swords, Lock, CheckCircle2, Circle, ChevronRight,
+  Zap, Star, Target, BookOpen, Users, Globe, TrendingUp,
+  Folder, Award, Lightbulb, ArrowRight,
+} from 'lucide-react'
+
+const C = {
+  bg: 'var(--c-bg)',
+  bgAlt: 'var(--c-bg-alt)',
+  card: 'var(--c-card)',
+  cardHover: 'var(--c-card-hover)',
+  border: 'var(--c-border)',
+  borderBright: 'var(--c-border-bright)',
+  text: 'var(--c-text)',
+  muted: 'var(--c-muted)',
+  subtle: 'var(--c-subtle)',
+  blue: '#1b78f7',
+  green: '#22c55e',
+  yellow: '#fbbf24',
+  purple: '#a78bfa',
+  red: '#ef4444',
+}
+
+// Mission definitions — keyed so ProjectPage can also reference them
+export const MISSIONS = [
+  {
+    id: 'first_project',
+    title: 'Primeiro projeto',
+    description: 'Cria o teu primeiro projeto na plataforma.',
+    xp: 20,
+    icon: Folder,
+    color: C.blue,
+    category: 'Início',
+  },
+  {
+    id: 'complete_profile',
+    title: 'Perfil completo',
+    description: 'Preenche o teu perfil com foto, bio e escola.',
+    xp: 15,
+    icon: Star,
+    color: C.yellow,
+    category: 'Perfil',
+  },
+  {
+    id: 'score_60',
+    title: 'Score 60+',
+    description: 'Alcança um score de 60 ou mais num projeto.',
+    xp: 25,
+    icon: Target,
+    color: C.green,
+    category: 'Qualidade',
+  },
+  {
+    id: 'score_90',
+    title: 'Score 90+',
+    description: 'Alcança um score de 90 ou mais num projeto.',
+    xp: 50,
+    icon: Zap,
+    color: '#f97316',
+    category: 'Qualidade',
+  },
+  {
+    id: 'share_project',
+    title: 'Partilhado',
+    description: 'Partilha o link do teu projeto com alguém.',
+    xp: 10,
+    icon: Globe,
+    color: '#06b6d4',
+    category: 'Partilha',
+  },
+  {
+    id: '50_views',
+    title: '50 Visualizações',
+    description: 'O teu projeto foi visto 50 vezes.',
+    xp: 20,
+    icon: TrendingUp,
+    color: C.purple,
+    category: 'Alcance',
+  },
+  {
+    id: '200_views',
+    title: '200 Visualizações',
+    description: 'O teu projeto foi visto 200 vezes.',
+    xp: 40,
+    icon: TrendingUp,
+    color: C.purple,
+    category: 'Alcance',
+  },
+  {
+    id: 'add_collaborator',
+    title: 'Equipa',
+    description: 'Adiciona um colaborador ao teu projeto.',
+    xp: 15,
+    icon: Users,
+    color: '#10b981',
+    category: 'Colaboração',
+  },
+  {
+    id: 'ai_analysis',
+    title: 'Análise IA',
+    description: 'Usa a análise de IA num dos teus projetos.',
+    xp: 10,
+    icon: Lightbulb,
+    color: '#f59e0b',
+    category: 'IA',
+  },
+  {
+    id: 'three_projects',
+    title: 'Portfólio',
+    description: 'Cria 3 projetos diferentes.',
+    xp: 30,
+    icon: BookOpen,
+    color: C.blue,
+    category: 'Portfólio',
+  },
+  {
+    id: 'internship_ready',
+    title: 'Pronto para estágio',
+    description: 'Um dos teus projetos atinge "Pronto para estágio".',
+    xp: 60,
+    icon: Award,
+    color: '#f59e0b',
+    category: 'Carreira',
+  },
+]
+
+function checkMissionProgress(mission, projects, profile, user) {
+  if (!projects) return false
+
+  switch (mission.id) {
+    case 'first_project':
+      return projects.length >= 1
+
+    case 'complete_profile':
+      return !!(
+        profile?.avatar_url &&
+        profile?.bio &&
+        (profile?.escola || profile?.school)
+      )
+
+    case 'score_60':
+      return projects.some(p => (p.score ?? 0) >= 60)
+
+    case 'score_90':
+      return projects.some(p => (p.score ?? 0) >= 90)
+
+    case 'share_project':
+      // We consider it done if they have a project (they can share it)
+      return projects.length >= 1
+
+    case '50_views':
+      return projects.reduce((s, p) => s + (p.views ?? 0), 0) >= 50
+
+    case '200_views':
+      return projects.reduce((s, p) => s + (p.views ?? 0), 0) >= 200
+
+    case 'add_collaborator':
+      return projects.some(p => (p.collaborator_count ?? 0) > 0)
+
+    case 'ai_analysis':
+      return projects.some(p => p.ai_feedback)
+
+    case 'three_projects':
+      return projects.length >= 3
+
+    case 'internship_ready':
+      return projects.some(p => (p.score ?? 0) >= 90)
+
+    default:
+      return false
+  }
+}
+
+function MissionCard({ mission, done, xpEarned }) {
+  const [hov, setHov] = useState(false)
+  const Icon = mission.icon
+  const accent = mission.color
+
+  return (
+    <div
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{
+        background: hov && !done ? C.cardHover : C.card,
+        border: `1px solid ${done ? accent + '55' : hov ? C.borderBright : C.border}`,
+        borderRadius: 14,
+        padding: '16px 18px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 16,
+        transition: 'all 0.18s',
+        opacity: done ? 1 : 0.75,
+        boxShadow: done ? `0 0 0 1px ${accent}22` : 'none',
+        position: 'relative',
+        overflow: 'hidden',
+      }}
+    >
+      {/* top accent line if done */}
+      {done && (
+        <div style={{
+          position: 'absolute', top: 0, left: 0, right: 0, height: 2,
+          background: `linear-gradient(90deg,${accent}88,${accent}22)`,
+          borderRadius: '14px 14px 0 0',
+        }} />
+      )}
+
+      {/* Icon */}
+      <div style={{
+        width: 44, height: 44, borderRadius: 12, flexShrink: 0,
+        background: `${accent}18`,
+        border: `1px solid ${accent}30`,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        <Icon size={20} color={accent} />
+      </div>
+
+      {/* Text */}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
+          <span style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{mission.title}</span>
+          <span style={{
+            fontSize: 10, fontWeight: 700, letterSpacing: '0.06em',
+            background: `${accent}18`, border: `1px solid ${accent}30`,
+            borderRadius: 4, padding: '1px 6px', color: accent,
+          }}>{mission.category}</span>
+        </div>
+        <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.4 }}>{mission.description}</div>
+      </div>
+
+      {/* XP + Status */}
+      <div style={{ textAlign: 'right', flexShrink: 0 }}>
+        <div style={{ fontSize: 15, fontWeight: 800, color: done ? accent : C.subtle, marginBottom: 4 }}>
+          +{mission.xp} XP
+        </div>
+        {done
+          ? <CheckCircle2 size={18} color={accent} />
+          : <Circle size={18} color={C.subtle} />
+        }
+      </div>
+    </div>
+  )
+}
+
+export default function Missoes() {
+  const { user } = useAuth()
+  const navigate = useNavigate()
+  const [projects, setProjects] = useState(null)
+  const [profile, setProfile] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!user) { navigate('/login'); return }
+
+    async function load() {
+      const [{ data: projs }, { data: prof }] = await Promise.all([
+        supabase.from('projects')
+          .select('id, score, views, ai_feedback, collaborator_count:project_members(count)')
+          .eq('user_id', user.id),
+        supabase.from('profiles')
+          .select('avatar_url, bio, escola, school')
+          .eq('id', user.id)
+          .single(),
+      ])
+
+      // Flatten collaborator_count from aggregate
+      const normalized = (projs || []).map(p => ({
+        ...p,
+        collaborator_count: Array.isArray(p.collaborator_count)
+          ? (p.collaborator_count[0]?.count ?? 0)
+          : (p.collaborator_count ?? 0),
+      }))
+
+      setProjects(normalized)
+      setProfile(prof)
+      setLoading(false)
+    }
+
+    load()
+  }, [user])
+
+  if (!user) return null
+
+  const missions = MISSIONS.map(m => ({
+    ...m,
+    done: loading ? false : checkMissionProgress(m, projects, profile, user),
+  }))
+
+  const doneMissions = missions.filter(m => m.done)
+  const pendingMissions = missions.filter(m => !m.done)
+  const totalXP = missions.reduce((s, m) => s + m.xp, 0)
+  const earnedXP = doneMissions.reduce((s, m) => s + m.xp, 0)
+  const pct = totalXP > 0 ? Math.round((earnedXP / totalXP) * 100) : 0
+
+  const categories = [...new Set(MISSIONS.map(m => m.category))]
+
+  return (
+    <div style={{ minHeight: '100vh', background: C.bg }}>
+      <Navbar />
+      <div style={{ maxWidth: 720, margin: '0 auto', padding: '32px 20px 80px' }}>
+
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 8 }}>
+          <div style={{
+            width: 48, height: 48, borderRadius: 14,
+            background: 'rgba(27,120,247,0.12)', border: '1px solid rgba(27,120,247,0.25)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <Swords size={24} color="#1b78f7" />
+          </div>
+          <div>
+            <h1 style={{ margin: 0, fontSize: 'clamp(22px,4vw,28px)', fontWeight: 900, color: C.text, letterSpacing: '-0.5px' }}>
+              Missões
+            </h1>
+            <p style={{ margin: 0, fontSize: 13, color: C.muted }}>
+              Completa missões para ganhar XP e desbloquear conquistas
+            </p>
+          </div>
+        </div>
+
+        {/* XP Progress card */}
+        <div style={{
+          background: C.card, border: `1px solid ${C.border}`,
+          borderRadius: 16, padding: '20px 24px', marginBottom: 28, marginTop: 24,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+            <div>
+              <div style={{ fontSize: 13, color: C.muted, marginBottom: 4, fontWeight: 600 }}>XP Total</div>
+              <div style={{ fontSize: 28, fontWeight: 900, color: C.blue, letterSpacing: '-1px' }}>
+                {loading ? '—' : earnedXP}
+                <span style={{ fontSize: 14, color: C.subtle, fontWeight: 500 }}>/{totalXP} XP</span>
+              </div>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: 13, color: C.muted, marginBottom: 4, fontWeight: 600 }}>Completas</div>
+              <div style={{ fontSize: 28, fontWeight: 900, color: C.green, letterSpacing: '-1px' }}>
+                {loading ? '—' : doneMissions.length}
+                <span style={{ fontSize: 14, color: C.subtle, fontWeight: 500 }}>/{missions.length}</span>
+              </div>
+            </div>
+          </div>
+          {/* Progress bar */}
+          <div style={{ height: 6, background: C.bgAlt, borderRadius: 99, overflow: 'hidden' }}>
+            <div style={{
+              height: '100%', borderRadius: 99,
+              width: `${loading ? 0 : pct}%`,
+              background: pct >= 80 ? C.green : pct >= 50 ? C.blue : C.yellow,
+              transition: 'width 0.8s cubic-bezier(0.16,1,0.3,1)',
+            }} />
+          </div>
+          <div style={{ fontSize: 11, color: C.subtle, marginTop: 6, fontWeight: 600 }}>{pct}% concluído</div>
+        </div>
+
+        {loading ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {[...Array(6)].map((_, i) => (
+              <div key={i} style={{ height: 76, borderRadius: 14, background: C.card, border: `1px solid ${C.border}`, opacity: 0.5 }} />
+            ))}
+          </div>
+        ) : (
+          <>
+            {/* Completed */}
+            {doneMissions.length > 0 && (
+              <div style={{ marginBottom: 28 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 12 }}>
+                  Concluídas · {doneMissions.length}
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {doneMissions.map(m => (
+                    <MissionCard key={m.id} mission={m} done={true} />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Pending */}
+            {pendingMissions.length > 0 && (
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 12 }}>
+                  Por completar · {pendingMissions.length}
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {pendingMissions.map(m => (
+                    <MissionCard key={m.id} mission={m} done={false} />
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
