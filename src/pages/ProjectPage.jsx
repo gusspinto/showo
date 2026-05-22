@@ -1340,7 +1340,9 @@ export default function ProjectPage() {
   // Populate sidebar with project controls when this is the owner's project
   useEffect(() => {
     if (!project || !user) { setExtras(null); return }
-    const owned = (user.id === project.user_id) || !!localStorage.getItem(`edit_token_${project.slug}`)
+    // When logged in, only user_id match counts. Token is fallback for anonymous (no user_id) projects only.
+    const owned = user.id === project.user_id ||
+      (!project.user_id && !!localStorage.getItem(`edit_token_${project.slug}`))
     if (owned) {
       setExtras({
         type: 'project',
@@ -1473,9 +1475,9 @@ export default function ProjectPage() {
     if (!project) return
     if (authLoading) return
     if (!user?.id) return
+    // Logged-in users: only real owner skips view count. Token is irrelevant when authenticated.
     const isOwner = !!(project.user_id && user.id === project.user_id)
-    const editToken = localStorage.getItem(`edit_token_${project.slug}`)
-    if (isOwner || editToken) return
+    if (isOwner) return
 
     const viewKey = `viewed_${project.slug}`
     if (!sessionStorage.getItem(viewKey)) {
@@ -1800,10 +1802,9 @@ export default function ProjectPage() {
     setSavingDefense(false)
   }
 
-  const isOwner = (
-    (user?.id && project.user_id && user.id === project.user_id) ||
-    !!localStorage.getItem(`edit_token_${project.slug}`)
-  )
+  const isOwner = user?.id
+    ? (user.id === project.user_id)  // logged-in: only user_id match
+    : !!localStorage.getItem(`edit_token_${project.slug}`)  // anonymous: token fallback
   const isProfessor = profile?.role === 'professor' && !isOwner && !!user?.id
 
   async function handleFbSave() {
