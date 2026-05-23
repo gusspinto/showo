@@ -256,7 +256,7 @@ export default function Ranking() {
                             )}
                             {project.area && (
                               <div style={{ marginTop: 6 }}>
-                                <span style={{ fontSize: 10, color: '#60a5fa', background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.18)', borderRadius: 999, padding: '2px 7px', fontWeight: 600 }}>
+                                <span style={{ fontSize: 10, color: C.blue, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.18)', borderRadius: 999, padding: '2px 7px', fontWeight: 600 }}>
                                   {project.area}
                                 </span>
                               </div>

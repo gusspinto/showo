@@ -68,7 +68,7 @@ function TypedHero() {
         <>
           {before}
           <span style={{
-            background: 'linear-gradient(135deg, #1b78f7 0%, #818cf8 60%, #60a5fa 100%)',
+            background: 'linear-gradient(135deg, #1b78f7 0%, #818cf8 60%, #a78bfa 100%)',
             WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
           }}>{hl}</span>
         </>

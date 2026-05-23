@@ -135,7 +135,7 @@ function FeedbackModal({ project, teacherId, onClose }) {
             {existing.map(f => (
               <div key={f.id} style={{ background: 'var(--c-bg)', border: `1px solid ${C.border}`, borderRadius: 10, padding: '12px 14px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: '#60a5fa', textTransform: 'uppercase', letterSpacing: 0.5 }}>{SECTION_LABELS[f.field_key] || f.field_key}</span>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: C.blue, textTransform: 'uppercase', letterSpacing: 0.5 }}>{SECTION_LABELS[f.field_key] || f.field_key}</span>
                   <div style={{ display: 'flex', gap: 8 }}>
                     <button onClick={() => { setEditing(f.id); setFieldKey(f.field_key); setComment(f.comment) }} style={{ background: 'none', border: 'none', color: C.muted, cursor: 'pointer', fontSize: 12, padding: 0, fontFamily: 'inherit' }}>Editar</button>
                     <button onClick={() => handleDelete(f.id)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: 12, padding: 0, fontFamily: 'inherit' }}>Apagar</button>
@@ -150,7 +150,7 @@ function FeedbackModal({ project, teacherId, onClose }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {Object.entries(SECTION_LABELS).map(([k, l]) => (
-              <button key={k} onClick={() => setFieldKey(k)} style={{ fontSize: 12, padding: '4px 10px', borderRadius: 6, border: `1px solid ${fieldKey === k ? '#1b78f7' : C.border}`, background: fieldKey === k ? 'rgba(27,120,247,0.15)' : 'transparent', color: fieldKey === k ? '#60a5fa' : C.muted, cursor: 'pointer', fontFamily: 'inherit', fontWeight: fieldKey === k ? 700 : 400 }}>
+              <button key={k} onClick={() => setFieldKey(k)} style={{ fontSize: 12, padding: '4px 10px', borderRadius: 6, border: `1px solid ${fieldKey === k ? '#1b78f7' : C.border}`, background: fieldKey === k ? 'rgba(27,120,247,0.15)' : 'transparent', color: fieldKey === k ? C.blue : C.muted, cursor: 'pointer', fontFamily: 'inherit', fontWeight: fieldKey === k ? 700 : 400 }}>
                 {l}
               </button>
             ))}
@@ -456,7 +456,7 @@ export default function TurmaPage() {
                 style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(27,120,247,0.06)', border: `1px solid rgba(27,120,247,0.2)`, borderRadius: 10, padding: '8px 14px', cursor: 'pointer', fontFamily: 'inherit' }}
               >
                 <span style={{ fontSize: 11, color: C.muted, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>Código</span>
-                <span style={{ fontSize: 16, fontWeight: 800, color: '#60a5fa', letterSpacing: 2 }}>{turma.code}</span>
+                <span style={{ fontSize: 16, fontWeight: 800, color: C.blue, letterSpacing: 2 }}>{turma.code}</span>
                 <span style={{ color: copied ? C.green : C.muted }}>{copied ? <Check size={12} /> : <Copy size={12} />}</span>
               </button>
               {/* Copy link */}
@@ -487,7 +487,7 @@ export default function TurmaPage() {
               ) : (
                 <button
                   onClick={() => navigate('/login')}
-                  style={{ background: 'rgba(27,120,247,0.08)', border: `1px solid rgba(27,120,247,0.2)`, borderRadius: 10, padding: '9px 18px', color: '#60a5fa', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+                  style={{ background: 'rgba(27,120,247,0.08)', border: `1px solid rgba(27,120,247,0.2)`, borderRadius: 10, padding: '9px 18px', color: C.blue, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
                 >
                   Entrar para adicionar
                 </button>
@@ -501,7 +501,7 @@ export default function TurmaPage() {
           <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: '60px 32px', textAlign: 'center' }}>
             <div style={{ marginBottom: 14 }}><Inbox size={44} color="var(--c-subtle)" /></div>
             <p style={{ color: C.text, fontSize: 17, fontWeight: 700, margin: '0 0 8px' }}>Ainda não há projetos</p>
-            <p style={{ color: C.muted, fontSize: 14, margin: '0 0 24px' }}>Partilha o código <strong style={{ color: '#60a5fa' }}>{turma.code}</strong> com os teus alunos para que adicionem os seus projetos.</p>
+            <p style={{ color: C.muted, fontSize: 14, margin: '0 0 24px' }}>Partilha o código <strong style={{ color: C.blue }}>{turma.code}</strong> com os teus alunos para que adicionem os seus projetos.</p>
           </div>
         ) : isTeacher ? (
           /* Professor table view */
@@ -510,7 +510,7 @@ export default function TurmaPage() {
             {/* Table header */}
             <div style={{ display: 'grid', gridTemplateColumns: 'minmax(160px,1fr) 64px 120px 88px 130px', gap: 0, padding: '10px 16px', borderBottom: `1px solid ${C.border}`, background: 'var(--c-bg)', minWidth: 580 }}>
               {[['name','Projeto'], ['score','Score'], ['completude','Completude'], ['updated','Data'], [null,'Ações']].map(([field, label]) => (
-                <div key={label} onClick={() => field && toggleSort(field)} style={{ fontSize: 11, fontWeight: 700, color: field ? (sortBy === field ? '#60a5fa' : C.muted) : C.muted, textTransform: 'uppercase', letterSpacing: 0.5, cursor: field ? 'pointer' : 'default', display: 'flex', alignItems: 'center', gap: 4, userSelect: 'none' }}>
+                <div key={label} onClick={() => field && toggleSort(field)} style={{ fontSize: 11, fontWeight: 700, color: field ? (sortBy === field ? C.blue : C.muted) : C.muted, textTransform: 'uppercase', letterSpacing: 0.5, cursor: field ? 'pointer' : 'default', display: 'flex', alignItems: 'center', gap: 4, userSelect: 'none' }}>
                   {label}
                   {field && sortBy === field && (sortAsc ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}
                 </div>
@@ -539,7 +539,7 @@ export default function TurmaPage() {
                   <div style={{ fontSize: 12, color: C.muted }}>{updated}</div>
                   <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
                     <button onClick={() => navigate(`/projeto/${p.slug}`)} style={{ fontSize: 12, padding: '5px 11px', borderRadius: 6, border: `1px solid ${C.border}`, background: 'transparent', color: C.muted, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>Ver</button>
-                    <button onClick={() => setFeedbackProject(p)} title="Feedback" style={{ padding: '5px 8px', borderRadius: 6, border: '1px solid rgba(27,120,247,0.3)', background: 'rgba(27,120,247,0.08)', color: '#60a5fa', cursor: 'pointer', display: 'flex', alignItems: 'center', flexShrink: 0 }}><MessageSquare size={12} /></button>
+                    <button onClick={() => setFeedbackProject(p)} title="Feedback" style={{ padding: '5px 8px', borderRadius: 6, border: '1px solid rgba(27,120,247,0.3)', background: 'rgba(27,120,247,0.08)', color: C.blue, cursor: 'pointer', display: 'flex', alignItems: 'center', flexShrink: 0 }}><MessageSquare size={12} /></button>
                     <button onClick={() => removeProject(p.id)} title="Remover" style={{ padding: '5px 8px', borderRadius: 6, border: '1px solid rgba(239,68,68,0.3)', background: 'transparent', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', flexShrink: 0 }}><X size={12} /></button>
                   </div>
                 </div>

@@ -55,7 +55,7 @@ function CopyField({ label, value }) {
             background: copied ? 'rgba(34,197,94,0.1)' : 'rgba(27,120,247,0.1)',
             border: `1px solid ${copied ? 'rgba(34,197,94,0.3)' : 'rgba(27,120,247,0.2)'}`,
             borderRadius: 6, padding: '3px 10px',
-            color: copied ? C.green : '#60a5fa',
+            color: copied ? C.green : C.blue,
             fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
           }}
         >
@@ -139,7 +139,7 @@ export default function CoverLetterModal({ projects, studentName, onClose }) {
                       flex: 1, padding: '10px 0',
                       background: type === val ? 'rgba(27,120,247,0.12)' : 'transparent',
                       border: `1.5px solid ${type === val ? '#1b78f7' : C.border}`,
-                      borderRadius: 10, color: type === val ? '#60a5fa' : C.muted,
+                      borderRadius: 10, color: type === val ? C.blue : C.muted,
                       fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
                       transition: 'all 0.15s',
                       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
@@ -191,7 +191,7 @@ export default function CoverLetterModal({ projects, studentName, onClose }) {
 
               {/* Projects used */}
               <div style={{ background: 'rgba(27,120,247,0.06)', border: '1px solid rgba(27,120,247,0.15)', borderRadius: 10, padding: '12px 14px', marginBottom: 20 }}>
-                <p style={{ margin: '0 0 6px', fontSize: 12, fontWeight: 700, color: '#60a5fa', textTransform: 'uppercase', letterSpacing: 0.8 }}>
+                <p style={{ margin: '0 0 6px', fontSize: 12, fontWeight: 700, color: C.blue, textTransform: 'uppercase', letterSpacing: 0.8 }}>
                   Projetos incluídos
                 </p>
                 {projects.slice(0, 3).map((p, i) => (
