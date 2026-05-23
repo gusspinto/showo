@@ -173,6 +173,20 @@ function FeedbackModal({ project, teacherId, onClose }) {
   )
 }
 
+function Avatar({ avatarUrl, name, size = 40 }) {
+  const initial = (name || '?')[0].toUpperCase()
+  const colors = ['#1b78f7','#8b5cf6','#0d9488','#f59e0b','#ec4899','#10b981']
+  const bg = colors[(initial.charCodeAt(0) || 0) % colors.length]
+  if (avatarUrl) return (
+    <img src={avatarUrl} alt={name} style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+  )
+  return (
+    <div style={{ width: size, height: size, borderRadius: '50%', background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: size * 0.4, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
+      {initial}
+    </div>
+  )
+}
+
 export default function TurmaPage() {
   const { code } = useParams()
   const navigate = useNavigate()
@@ -192,6 +206,7 @@ export default function TurmaPage() {
   const [feedbackProject, setFeedbackProject] = useState(null)
   const [copiedLink, setCopiedLink] = useState(false)
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [members, setMembers] = useState([]) // { user_id, full_name, avatar_url, role, projectCount }
 
   function showToast(msg) {
     setToast(msg)
@@ -215,13 +230,43 @@ export default function TurmaPage() {
         .select('project_id')
         .eq('class_id', cls.id)
 
+      let projs = []
       if (cp?.length) {
         const ids = cp.map(r => r.project_id)
-        const { data: projs } = await supabase
+        const { data } = await supabase
           .from('projects')
           .select('id, name, slug, score, area, creator_name, cover_url, ai_tagline, created_at, user_id, goal, problem, solution, features, technologies, results, linkedin_url, github_url, portfolio_url')
           .in('id', ids)
-        setProjects(projs || [])
+        projs = data || []
+        setProjects(projs)
+      }
+
+      // Fetch member profiles: teacher + students from projects
+      const studentUserIds = [...new Set(projs.map(p => p.user_id).filter(Boolean))]
+      const allIds = cls.teacher_id ? [...new Set([cls.teacher_id, ...studentUserIds])] : studentUserIds
+      if (allIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, full_name, username, avatar_url, role')
+          .in('id', allIds)
+        const profileMap = {}
+        ;(profiles || []).forEach(p => { profileMap[p.id] = p })
+        const memberList = allIds.map(uid => {
+          const prof = profileMap[uid] || {}
+          const projCount = projs.filter(p => p.user_id === uid).length
+          return {
+            user_id: uid,
+            full_name: prof.full_name || prof.username || (uid === cls.teacher_id ? cls.teacher_name : 'Aluno'),
+            avatar_url: prof.avatar_url || null,
+            role: uid === cls.teacher_id ? 'professor' : 'aluno',
+            projectCount: projCount,
+          }
+        })
+        // professor first
+        memberList.sort((a, b) => (a.role === 'professor' ? -1 : 1) - (b.role === 'professor' ? -1 : 1))
+        setMembers(memberList)
+      } else if (cls.teacher_name) {
+        setMembers([{ user_id: cls.teacher_id || 'teacher', full_name: cls.teacher_name, avatar_url: null, role: 'professor', projectCount: 0 }])
       }
 
       setLoading(false)
@@ -495,6 +540,48 @@ export default function TurmaPage() {
             </div>
           </div>
         </div>
+
+        {/* Members */}
+        {members.length > 0 && (
+          <div style={{ marginBottom: 32 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+              <Users2 size={15} color={C.muted} />
+              <span style={{ fontSize: 13, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.07em' }}>
+                Membros
+              </span>
+              <span style={{ fontSize: 11, fontWeight: 700, color: C.subtle, background: 'var(--c-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 999, padding: '1px 8px' }}>
+                {members.length}
+              </span>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 10 }}>
+              {members.map(m => (
+                <div key={m.user_id} style={{
+                  background: C.card, border: `1px solid ${C.border}`,
+                  borderRadius: 12, padding: '14px 16px',
+                  display: 'flex', alignItems: 'center', gap: 12,
+                }}>
+                  <Avatar avatarUrl={m.avatar_url} name={m.full_name} size={38} />
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {m.full_name}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 3 }}>
+                      {m.role === 'professor' ? (
+                        <span style={{ fontSize: 11, fontWeight: 700, color: '#1b78f7', background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.2)', borderRadius: 999, padding: '1px 8px' }}>
+                          Professor
+                        </span>
+                      ) : (
+                        <span style={{ fontSize: 11, color: C.muted }}>
+                          {m.projectCount === 0 ? 'Sem projetos' : `${m.projectCount} projeto${m.projectCount !== 1 ? 's' : ''}`}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Projects */}
         {sortedProjects.length === 0 ? (
