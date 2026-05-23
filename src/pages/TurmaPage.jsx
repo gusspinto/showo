@@ -241,9 +241,18 @@ export default function TurmaPage() {
         setProjects(projs)
       }
 
-      // Fetch member profiles: teacher + students from projects
-      const studentUserIds = [...new Set(projs.map(p => p.user_id).filter(Boolean))]
-      const allIds = cls.teacher_id ? [...new Set([cls.teacher_id, ...studentUserIds])] : studentUserIds
+      // Fetch all members from class_members table (source of truth)
+      const { data: classMembers } = await supabase
+        .from('class_members')
+        .select('user_id, joined_at')
+        .eq('class_id', cls.id)
+
+      const memberUserIds = (classMembers || []).map(m => m.user_id)
+      // Always include teacher even if not in class_members
+      const allIds = cls.teacher_id
+        ? [...new Set([cls.teacher_id, ...memberUserIds])]
+        : [...new Set(memberUserIds)]
+
       if (allIds.length > 0) {
         const { data: profiles } = await supabase
           .from('profiles')
@@ -254,19 +263,25 @@ export default function TurmaPage() {
         const memberList = allIds.map(uid => {
           const prof = profileMap[uid] || {}
           const projCount = projs.filter(p => p.user_id === uid).length
+          const joinedAt = (classMembers || []).find(m => m.user_id === uid)?.joined_at || null
           return {
             user_id: uid,
             full_name: prof.full_name || prof.username || (uid === cls.teacher_id ? cls.teacher_name : 'Aluno'),
             avatar_url: prof.avatar_url || null,
             role: uid === cls.teacher_id ? 'professor' : 'aluno',
             projectCount: projCount,
+            joinedAt,
           }
         })
-        // professor first
-        memberList.sort((a, b) => (a.role === 'professor' ? -1 : 1) - (b.role === 'professor' ? -1 : 1))
+        // professor first, then by join date
+        memberList.sort((a, b) => {
+          if (a.role === 'professor') return -1
+          if (b.role === 'professor') return 1
+          return (a.joinedAt || '') < (b.joinedAt || '') ? -1 : 1
+        })
         setMembers(memberList)
       } else if (cls.teacher_name) {
-        setMembers([{ user_id: cls.teacher_id || 'teacher', full_name: cls.teacher_name, avatar_url: null, role: 'professor', projectCount: 0 }])
+        setMembers([{ user_id: cls.teacher_id || 'teacher', full_name: cls.teacher_name, avatar_url: null, role: 'professor', projectCount: 0, joinedAt: null }])
       }
 
       setLoading(false)
@@ -291,6 +306,14 @@ export default function TurmaPage() {
     const { error } = await supabase
       .from('class_projects')
       .insert({ class_id: turma.id, project_id: projectId })
+
+    // Ensure student is registered as a member
+    if (!error && user?.id) {
+      supabase.from('class_members').upsert(
+        { class_id: turma.id, user_id: user.id },
+        { onConflict: 'class_id,user_id' }
+      )
+    }
 
     if (error) {
       if (error.code === '23505') showToast('Este projeto já está na turma.')

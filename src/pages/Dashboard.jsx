@@ -1096,6 +1096,7 @@ export default function Dashboard() {
           navigate={navigate}
           onJoined={(turma) => {
             setStudentTurmas(prev => prev.find(t => t.id === turma.id) ? prev : [...prev, turma])
+            // Persist in localStorage (fallback)
             try {
               const lsKey = `showo_turmas_${user.id}`
               const existing = JSON.parse(localStorage.getItem(lsKey) || '[]')
@@ -1103,6 +1104,13 @@ export default function Dashboard() {
                 localStorage.setItem(lsKey, JSON.stringify([...existing, turma]))
               }
             } catch {}
+            // Persist in DB so teacher can see all members
+            if (user?.id) {
+              supabase.from('class_members').upsert(
+                { class_id: turma.id, user_id: user.id },
+                { onConflict: 'class_id,user_id' }
+              )
+            }
           }}
         />
       )}
