@@ -6,6 +6,7 @@ import { supabase } from '../lib/supabase'
 import Onboarding from '../components/Onboarding'
 import CreateProjectModal from '../components/CreateProjectModal'
 import { looksLikeSpam } from '../lib/score'
+import { useAuth } from '../context/AuthContext'
 
 const colors = {
   bg:           'var(--c-bg)',
@@ -129,6 +130,7 @@ const FEATURES = [
 
 export default function Home() {
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [selectedGoal, setSelectedGoal] = useState(null)
   const [inputText, setInputText] = useState('')
   const [showOnboarding, setShowOnboarding] = useState(() => !localStorage.getItem('showo_seen_onboarding'))
@@ -355,9 +357,32 @@ export default function Home() {
               <p style={{ color: '#ef4444', fontSize: 12, marginTop: 10, fontWeight: 600, textAlign: 'center' }}>
                 Texto inválido — escreve uma descrição real do teu projeto.
               </p>
+            ) : !user ? (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 14 }}>
+                <div style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 8,
+                  background: 'rgba(251,191,36,0.08)',
+                  border: '1px solid rgba(251,191,36,0.25)',
+                  borderRadius: 10, padding: '8px 14px',
+                  fontSize: 13, color: '#fbbf24', fontWeight: 500,
+                }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                    <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                  </svg>
+                  Sem conta o projeto não fica guardado —&nbsp;
+                  <button
+                    type="button"
+                    onClick={() => navigate('/register')}
+                    style={{ background: 'none', border: 'none', color: '#fbbf24', fontWeight: 700, fontSize: 13, cursor: 'pointer', padding: 0, fontFamily: 'inherit', textDecoration: 'underline', textUnderlineOffset: 2 }}
+                  >
+                    cria conta grátis
+                  </button>
+                </div>
+              </div>
             ) : (
               <p className="hero-note" style={{ color: colors.subtle, fontSize: 12, marginTop: 14, fontWeight: 500 }}>
-                Sem registo · Sem cartão de crédito
+                Sem cartão de crédito
               </p>
             )}
           </form>
