@@ -207,6 +207,8 @@ export default function TurmaPage() {
   const [copiedLink, setCopiedLink] = useState(false)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [members, setMembers] = useState([]) // { user_id, full_name, avatar_url, role, projectCount }
+  const [leavingClass, setLeavingClass] = useState(false)
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false)
 
   function showToast(msg) {
     setToast(msg)
@@ -424,6 +426,20 @@ export default function TurmaPage() {
     )
   }
 
+  async function leaveClass() {
+    if (!turma || !user) return
+    setLeavingClass(true)
+    await supabase.from('class_members').delete().eq('class_id', turma.id).eq('user_id', user.id)
+    // Clean localStorage
+    try {
+      const lsKey = `showo_turmas_${user.id}`
+      const existing = JSON.parse(localStorage.getItem(lsKey) || '[]')
+      localStorage.setItem(lsKey, JSON.stringify(existing.filter(t => t.id !== turma.id)))
+    } catch {}
+    setLeavingClass(false)
+    navigate('/dashboard')
+  }
+
   const alreadyAdded = new Set(projects.map(p => p.id))
   const addableProjects = myProjects.filter(p => !alreadyAdded.has(p.id))
 
@@ -451,6 +467,31 @@ export default function TurmaPage() {
         zIndex: 3000, pointerEvents: 'none', whiteSpace: 'nowrap',
         boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
       }}>{toast}</div>
+
+      {/* Leave class confirm */}
+      {showLeaveConfirm && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
+          onClick={() => setShowLeaveConfirm(false)}>
+          <div style={{ background: C.card, border: `1px solid ${C.borderBright}`, borderRadius: 18, padding: '32px 28px', width: '100%', maxWidth: 360, boxShadow: '0 16px 48px rgba(0,0,0,0.6)', textAlign: 'center' }}
+            onClick={e => e.stopPropagation()}>
+            <div style={{ width: 52, height: 52, borderRadius: 16, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px' }}>
+              <X size={24} color="#ef4444" />
+            </div>
+            <h3 style={{ margin: '0 0 8px', fontSize: 17, fontWeight: 700, color: C.text }}>Sair da turma?</h3>
+            <p style={{ margin: '0 0 24px', fontSize: 14, color: C.muted, lineHeight: 1.5 }}>
+              Vais sair de <strong style={{ color: C.text }}>{turma?.name}</strong>. Os teus projetos ficam, mas deixas de aparecer na lista de membros.
+            </p>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button onClick={() => setShowLeaveConfirm(false)} style={{ flex: 1, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 10, padding: '11px', color: C.muted, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                Cancelar
+              </button>
+              <button onClick={() => { setShowLeaveConfirm(false); leaveClass() }} disabled={leavingClass} style={{ flex: 1, background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 10, padding: '11px', color: '#ef4444', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', opacity: leavingClass ? 0.6 : 1 }}>
+                {leavingClass ? 'A sair…' : 'Sair'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Add project modal */}
       {showAdd && (
@@ -542,6 +583,17 @@ export default function TurmaPage() {
                   style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 10, padding: '9px 14px', color: '#4ade80', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
                 >
                   <Download size={14} /> Exportar CSV
+                </button>
+              )}
+              {/* Leave class (students only) */}
+              {!isTeacher && user && (
+                <button
+                  onClick={() => setShowLeaveConfirm(true)}
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 10, padding: '9px 14px', color: '#ef4444', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s' }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.12)'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.35)' }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.06)'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.2)' }}
+                >
+                  <X size={13} /> Sair da turma
                 </button>
               )}
               {/* Add project (students only) */}
