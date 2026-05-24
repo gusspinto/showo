@@ -607,6 +607,29 @@ export default function UserProfile() {
             )}
           </div>
 
+          {/* Message button — shown for non-own profiles, positioned at bottom-right of header */}
+          {!isOwnProfile && user && (
+            <div style={{ position: 'absolute', bottom: 22, right: 22, zIndex: 3 }}>
+              <button
+                onClick={() => navigate(`/mensagens?to=${profile.id}`)}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 7,
+                  background: '#1b78f7', border: 'none',
+                  borderRadius: 10, padding: '9px 18px',
+                  color: '#fff', fontSize: 13, fontWeight: 700,
+                  cursor: 'pointer', fontFamily: 'inherit',
+                  whiteSpace: 'nowrap',
+                  boxShadow: '0 4px 14px rgba(27,120,247,0.3)',
+                  transition: 'background 0.15s, box-shadow 0.15s',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = '#1564d4'; e.currentTarget.style.boxShadow = '0 4px 18px rgba(27,120,247,0.45)' }}
+                onMouseLeave={e => { e.currentTarget.style.background = '#1b78f7'; e.currentTarget.style.boxShadow = '0 4px 14px rgba(27,120,247,0.3)' }}
+              >
+                <MessageSquare size={14} /> Mensagem
+              </button>
+            </div>
+          )}
+
           <div className="up-header-inner" style={{ display: 'flex', alignItems: 'flex-start', gap: 22, position: 'relative', zIndex: 1 }}>
 
             {/* Avatar */}
@@ -754,28 +777,6 @@ export default function UserProfile() {
               </div>
             </div>
 
-            {/* Message button — right side of header, only when viewing someone else's profile */}
-            {!isOwnProfile && user && (
-              <div style={{ flexShrink: 0, paddingTop: 2 }}>
-                <button
-                  onClick={() => navigate(`/mensagens?to=${profile.id}`)}
-                  style={{
-                    display: 'inline-flex', alignItems: 'center', gap: 7,
-                    background: '#1b78f7', border: 'none',
-                    borderRadius: 10, padding: '10px 18px',
-                    color: '#fff', fontSize: 13, fontWeight: 700,
-                    cursor: 'pointer', fontFamily: 'inherit',
-                    whiteSpace: 'nowrap',
-                    boxShadow: '0 4px 14px rgba(27,120,247,0.3)',
-                    transition: 'background 0.15s, box-shadow 0.15s',
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.background = '#1564d4'; e.currentTarget.style.boxShadow = '0 4px 18px rgba(27,120,247,0.45)' }}
-                  onMouseLeave={e => { e.currentTarget.style.background = '#1b78f7'; e.currentTarget.style.boxShadow = '0 4px 14px rgba(27,120,247,0.3)' }}
-                >
-                  <MessageSquare size={14} /> Mensagem
-                </button>
-              </div>
-            )}
           </div>
         </div>
 

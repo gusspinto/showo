@@ -287,6 +287,12 @@ export default function AIInterview() {
 
   const q = questions[currentQ]
 
+  function cleanSuggestion(s) {
+    return s
+      .replace(/,?\s*(etc\.?|e\.g\.?|ex\.|por exemplo|entre outros|\.\.\.)\s*$/gi, '')
+      .trim()
+  }
+
   return (
     <div style={{ minHeight: '100vh', background: C.bg, color: C.text, fontFamily: 'var(--font-body)', display: 'flex', flexDirection: 'column' }}>
       <style>{`
@@ -334,7 +340,7 @@ export default function AIInterview() {
       <div style={{ flex: 1, display: 'flex', gap: 32, padding: '0 32px 48px', maxWidth: 1000, margin: '0 auto', width: '100%', boxSizing: 'border-box', alignItems: phase === 'interview' ? 'flex-start' : 'center', justifyContent: 'center' }}>
 
         {/* Left: interview */}
-        <div className="iv-main" style={{ flex: 1, minWidth: 0, paddingTop: 40 }}>
+        <div className="iv-main" style={{ flex: 1, minWidth: 0, paddingTop: 40, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
 
           {/* Setup */}
           {phase === 'setup' && (
@@ -348,7 +354,7 @@ export default function AIInterview() {
                 }}>
                   <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
                 </div>
-                <h1 style={{ margin: '0 0 8px', fontSize: 28, fontWeight: 900, color: C.text, letterSpacing: '-0.5px', lineHeight: 1.2 }}>Criar com IA</h1>
+                <h1 style={{ margin: '0 0 8px', fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 900, color: C.text, letterSpacing: '-0.5px', lineHeight: 1.15 }}>Criar com IA</h1>
                 <p style={{ margin: 0, fontSize: 15, color: C.muted, lineHeight: 1.6 }}>
                   Descreve brevemente o teu projeto e a IA fará as perguntas certas para o construir.
                 </p>
@@ -424,7 +430,7 @@ export default function AIInterview() {
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                 }}
               >
-                Começar entrevista
+                Criar projeto
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
               </button>
             </div>
@@ -498,7 +504,7 @@ export default function AIInterview() {
 
           {/* Interview */}
           {phase === 'interview' && (
-            <div style={{ animation: 'fadeIn 0.4s ease' }}>
+            <div style={{ animation: 'fadeIn 0.4s ease', width: '100%', maxWidth: 560 }}>
               {/* Understanding card */}
               {understanding && (
                 <div style={{
@@ -544,26 +550,30 @@ export default function AIInterview() {
                   {/* Suggestions */}
                   {q.suggestions?.length > 0 && (
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 14 }}>
-                      {q.suggestions.map(s => (
-                        <button
-                          key={s}
-                          type="button"
-                          className="sug-chip"
-                          onClick={() => {
-                            const v = inputValue ? `${inputValue}, ${s}` : s
-                            setInputValue(v)
-                            setCurrentValue(v)
-                            inputRef.current?.focus()
-                          }}
-                          style={{
-                            background: 'rgba(27,120,247,0.07)', border: `1px solid ${C.border}`,
-                            color: C.muted, borderRadius: 999, padding: '5px 14px',
-                            fontSize: 12, fontWeight: 600, fontFamily: 'inherit',
-                          }}
-                        >
-                          + {s}
-                        </button>
-                      ))}
+                      {q.suggestions.map(s => {
+                        const label = cleanSuggestion(s)
+                        if (!label) return null
+                        return (
+                          <button
+                            key={s}
+                            type="button"
+                            className="sug-chip"
+                            onClick={() => {
+                              const v = inputValue ? `${inputValue}, ${label}` : label
+                              setInputValue(v)
+                              setCurrentValue(v)
+                              inputRef.current?.focus()
+                            }}
+                            style={{
+                              background: 'rgba(27,120,247,0.07)', border: `1px solid ${C.border}`,
+                              color: C.muted, borderRadius: 999, padding: '5px 14px',
+                              fontSize: 12, fontWeight: 600, fontFamily: 'inherit',
+                            }}
+                          >
+                            + {label}
+                          </button>
+                        )
+                      })}
                     </div>
                   )}
 
