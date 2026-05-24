@@ -1703,6 +1703,11 @@ export default function ProjectPage() {
     const from = prevScoreRef.current
     const to = score
     prevScoreRef.current = to
+    // Show score-gain toast when score increases during the session
+    if (to > from) {
+      const gain = to - from
+      setTimeout(() => showToast(`Score subiu +${gain} ${gain === 1 ? 'ponto' : 'pontos'}`), 900)
+    }
     cancelAnimationFrame(rafRef.current)
     const duration = 800
     const startTime = performance.now()

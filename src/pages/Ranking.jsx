@@ -64,6 +64,7 @@ export default function Ranking() {
   const [loading, setLoading]     = useState(true)
   const [areaFilter, setAreaFilter] = useState('')
   const [yearFilter, setYearFilter] = useState('')
+  const [courseFilter, setCourseFilter] = useState('')
   const [showCreateModal, setShowCreateModal] = useState(false)
 
   useEffect(() => {
@@ -79,12 +80,14 @@ export default function Ranking() {
     load()
   }, [])
 
-  const areas = [...new Set(projects.map(p => p.area).filter(Boolean))].sort()
-  const years = [...new Set(projects.map(p => p.school_year).filter(Boolean))].sort()
+  const areas   = [...new Set(projects.map(p => p.area).filter(Boolean))].sort()
+  const years   = [...new Set(projects.map(p => p.school_year).filter(Boolean))].sort()
+  const courses = [...new Set(projects.map(p => p.course).filter(Boolean))].sort()
 
   const filtered = projects.filter(p => {
-    if (areaFilter && p.area !== areaFilter) return false
-    if (yearFilter && p.school_year !== yearFilter) return false
+    if (areaFilter   && p.area        !== areaFilter)   return false
+    if (yearFilter   && p.school_year !== yearFilter)   return false
+    if (courseFilter && p.course      !== courseFilter) return false
     return true
   })
 
@@ -159,9 +162,19 @@ export default function Ranking() {
               {years.map(y => <option key={y} value={y}>{y}</option>)}
             </select>
           </div>
-          {(areaFilter || yearFilter) && (
+          {courses.length > 0 && (
+            <div style={{ position: 'relative' }}>
+              <select value={courseFilter} onChange={e => setCourseFilter(e.target.value)} style={selectStyle}
+                onFocus={e => (e.target.style.borderColor = C.blue)}
+                onBlur={e => (e.target.style.borderColor = C.border)}>
+                <option value="">Todos os cursos</option>
+                {courses.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+          )}
+          {(areaFilter || yearFilter || courseFilter) && (
             <button
-              onClick={() => { setAreaFilter(''); setYearFilter('') }}
+              onClick={() => { setAreaFilter(''); setYearFilter(''); setCourseFilter('') }}
               style={{ background: 'transparent', border: `1px solid ${C.border}`, color: C.muted, borderRadius: 8, padding: '9px 14px', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}
             >
               Limpar ×

@@ -6,7 +6,7 @@ import { Navbar } from '../components/Navbar'
 import {
   Swords, Lock, CheckCircle2, Circle, ChevronRight,
   Zap, Star, Target, BookOpen, Users, Globe, TrendingUp,
-  Folder, Award, Lightbulb, ArrowRight,
+  Folder, Award, Lightbulb, ArrowRight, Medal,
 } from 'lucide-react'
 
 const C = {
@@ -176,10 +176,26 @@ function checkMissionProgress(mission, projects, profile, user) {
   }
 }
 
-function MissionCard({ mission, done, xpEarned }) {
+// Returns { current, max } for missions with measurable progress, null for binary ones
+function getMissionProgress(missionId, projects) {
+  if (!projects) return null
+  const totalViews = projects.reduce((s, p) => s + (p.views ?? 0), 0)
+  const bestScore  = projects.length ? Math.max(0, ...projects.map(p => p.score ?? 0)) : 0
+  switch (missionId) {
+    case 'score_60':      return { current: Math.min(bestScore, 60),  max: 60  }
+    case 'score_90':      return { current: Math.min(bestScore, 90),  max: 90  }
+    case '50_views':      return { current: Math.min(totalViews, 50), max: 50  }
+    case '200_views':     return { current: Math.min(totalViews, 200), max: 200 }
+    case 'three_projects':return { current: Math.min(projects.length, 3), max: 3 }
+    default:              return null
+  }
+}
+
+function MissionCard({ mission, done, progress }) {
   const [hov, setHov] = useState(false)
   const Icon = mission.icon
   const accent = mission.color
+  const pct = progress ? Math.round((progress.current / progress.max) * 100) : 0
 
   return (
     <div
@@ -194,7 +210,7 @@ function MissionCard({ mission, done, xpEarned }) {
         alignItems: 'center',
         gap: 16,
         transition: 'all 0.18s',
-        opacity: done ? 1 : 0.75,
+        opacity: done ? 1 : 0.8,
         boxShadow: done ? `0 0 0 1px ${accent}22` : 'none',
         position: 'relative',
         overflow: 'hidden',
@@ -229,7 +245,29 @@ function MissionCard({ mission, done, xpEarned }) {
             borderRadius: 4, padding: '1px 6px', color: accent,
           }}>{mission.category}</span>
         </div>
-        <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.4 }}>{mission.description}</div>
+        <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.4, marginBottom: progress && !done ? 8 : 0 }}>
+          {mission.description}
+        </div>
+        {/* Progress bar — only for quantifiable missions not yet done */}
+        {progress && !done && (
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+              <span style={{ fontSize: 10, color: C.subtle, fontWeight: 600 }}>
+                {progress.current} / {progress.max}
+              </span>
+              <span style={{ fontSize: 10, color: pct >= 75 ? accent : C.subtle, fontWeight: 700 }}>
+                {pct}%
+              </span>
+            </div>
+            <div style={{ height: 4, background: `${accent}20`, borderRadius: 99, overflow: 'hidden' }}>
+              <div style={{
+                height: '100%', width: `${pct}%`,
+                background: `linear-gradient(90deg, ${accent}bb, ${accent})`,
+                borderRadius: 99, transition: 'width 0.6s ease',
+              }} />
+            </div>
+          </div>
+        )}
       </div>
 
       {/* XP + Status */}
@@ -385,12 +423,39 @@ export default function Missoes() {
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {pendingMissions.map(m => (
-                    <MissionCard key={m.id} mission={m} done={false} />
+                    <MissionCard key={m.id} mission={m} done={false} progress={getMissionProgress(m.id, projects)} />
                   ))}
                 </div>
               </div>
             )}
           </>
+        )}
+
+        {/* ── Cross-link to Conquistas ── */}
+        {!loading && (
+          <div
+            onClick={() => navigate('/conquistas')}
+            style={{
+              marginTop: 32, padding: '16px 20px',
+              background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.2)',
+              borderRadius: 14, cursor: 'pointer',
+              display: 'flex', alignItems: 'center', gap: 14,
+              transition: 'background 0.15s, border-color 0.15s',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(251,191,36,0.1)'; e.currentTarget.style.borderColor = 'rgba(251,191,36,0.35)' }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(251,191,36,0.06)'; e.currentTarget.style.borderColor = 'rgba(251,191,36,0.2)' }}
+          >
+            <div style={{ width: 40, height: 40, borderRadius: 10, flexShrink: 0, background: 'rgba(251,191,36,0.12)', border: '1px solid rgba(251,191,36,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Medal size={20} color={C.yellow} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 2 }}>Ver as minhas conquistas</div>
+              <div style={{ fontSize: 12, color: C.muted }}>
+                Missões completadas desbloqueiam conquistas e badges permanentes no teu perfil.
+              </div>
+            </div>
+            <ArrowRight size={16} color={C.muted} style={{ flexShrink: 0 }} />
+          </div>
         )}
       </div>
     </div>

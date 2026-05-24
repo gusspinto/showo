@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext'
 import { Pencil, ExternalLink } from 'lucide-react'
 import { Navbar } from '../components/Navbar'
 import CreateProjectModal from '../components/CreateProjectModal'
-import { Folder, Trophy, BarChart2, Rocket, Eye, GraduationCap, Plus, X, Users, Users2, ChevronRight, User, Settings, Compass, Medal, LogOut, Globe, TrendingUp, MessageSquare, Star, Mail, Search, BookOpen, Trash2, Check, Calendar, ArrowRight } from 'lucide-react'
+import { Folder, Trophy, BarChart2, Rocket, Eye, GraduationCap, Plus, X, Users, Users2, ChevronRight, User, Settings, Compass, Medal, LogOut, Globe, TrendingUp, MessageSquare, Star, Mail, Search, BookOpen, Trash2, Check, Calendar, ArrowRight, Target, Zap, Sparkles } from 'lucide-react'
 
 const C = {
   bg: 'var(--c-bg)',
@@ -1191,6 +1191,108 @@ export default function Dashboard() {
             </button>
           </div>
         </div>
+
+        {/* ── Próximos passos (aluno only) ── */}
+        {!isTeacher && !loadingProjects && (() => {
+          const steps = []
+
+          if (projects.length === 0) {
+            steps.push({
+              id: 'create', Icon: Plus, color: C.blue,
+              title: 'Cria o teu primeiro projeto',
+              desc: 'Começa a construir o teu portfólio. Leva menos de 2 minutos.',
+              cta: 'Criar projeto', action: () => setShowCreateModal(true),
+            })
+          } else {
+            if (!profile?.avatar_url) {
+              steps.push({
+                id: 'avatar', Icon: User, color: '#8b5cf6',
+                title: 'Adiciona uma foto de perfil',
+                desc: 'Perfis com foto têm mais visibilidade no ranking e mais credibilidade.',
+                cta: 'Ir para Definições', action: () => navigate('/settings'),
+              })
+            }
+            if (bestScore !== null && bestScore < 60) {
+              steps.push({
+                id: 'score60', Icon: Target, color: '#22c55e',
+                title: `Score ${bestScore} → tenta chegar a 60`,
+                desc: 'Adiciona tecnologias, links e uma boa descrição ao projeto para subir.',
+                cta: 'Editar projeto', action: () => navigate(`/editar/${projects[0]?.slug}`),
+              })
+            } else if (bestScore !== null && bestScore >= 60 && bestScore < 90) {
+              steps.push({
+                id: 'score90', Icon: Zap, color: '#f97316',
+                title: `Score ${bestScore} → vai para 90+`,
+                desc: 'Usa análise de IA, adiciona colaboradores ou mais detalhes ao projeto.',
+                cta: 'Ver projeto', action: () => navigate(`/projeto/${projects[0]?.slug}`),
+              })
+            }
+            if (!projects.some(p => p.ai_tagline)) {
+              steps.push({
+                id: 'ai', Icon: Sparkles, color: '#a78bfa',
+                title: 'Experimenta a análise de IA',
+                desc: 'A IA analisa o teu projeto e sugere melhorias concretas para subir o score.',
+                cta: 'Analisar agora', action: () => navigate(`/projeto/${projects[0]?.slug}`),
+              })
+            }
+            if (totalViews < 10) {
+              steps.push({
+                id: 'share', Icon: Globe, color: '#06b6d4',
+                title: 'Partilha o teu projeto',
+                desc: `Só tens ${totalViews} visualizações. Partilha o link nas redes sociais.`,
+                cta: 'Ver projeto', action: () => navigate(`/projeto/${projects[0]?.slug}`),
+              })
+            }
+          }
+
+          const shown = steps.slice(0, 2)
+          if (shown.length === 0) return null
+
+          return (
+            <div style={{ display: 'grid', gridTemplateColumns: `repeat(${shown.length}, 1fr)`, gap: 12, marginBottom: 8 }}>
+              {shown.map(s => {
+                const SIcon = s.Icon
+                return (
+                  <div key={s.id} style={{
+                    background: C.card, border: `1px solid ${C.border}`,
+                    borderRadius: 14, padding: '16px 18px',
+                    display: 'flex', gap: 14, alignItems: 'flex-start',
+                    transition: 'border-color 0.15s',
+                  }}
+                    onMouseEnter={e => e.currentTarget.style.borderColor = s.color + '55'}
+                    onMouseLeave={e => e.currentTarget.style.borderColor = C.border}
+                  >
+                    <div style={{
+                      width: 38, height: 38, borderRadius: 10, flexShrink: 0,
+                      background: s.color + '18', border: `1px solid ${s.color}30`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      <SIcon size={17} color={s.color} />
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 3 }}>{s.title}</div>
+                      <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.45, marginBottom: 10 }}>{s.desc}</div>
+                      <button
+                        onClick={s.action}
+                        style={{
+                          background: s.color + '18', border: `1px solid ${s.color}30`,
+                          borderRadius: 7, padding: '5px 12px',
+                          color: s.color, fontSize: 12, fontWeight: 700,
+                          cursor: 'pointer', fontFamily: 'inherit',
+                          transition: 'background 0.12s',
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.background = s.color + '2e'}
+                        onMouseLeave={e => e.currentTarget.style.background = s.color + '18'}
+                      >
+                        {s.cta} →
+                      </button>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )
+        })()}
 
         {/* ── All sections ── */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
