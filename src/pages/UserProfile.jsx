@@ -616,7 +616,7 @@ export default function UserProfile() {
             }
 
             {/* Info */}
-            <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ flex: 1, minWidth: 0, paddingRight: 8 }}>
               {/* Name + username */}
               <div style={{ marginBottom: 6 }}>
                 <h1 style={{ color: C.text, fontSize: 26, fontWeight: 900, margin: '0 0 3px', letterSpacing: '-0.6px', lineHeight: 1.15 }}>
@@ -643,7 +643,7 @@ export default function UserProfile() {
 
               {/* Bio */}
               {profile.bio && (
-                <p style={{ color: '#a8bdd6', fontSize: 14, margin: '0 0 12px', lineHeight: 1.6, maxWidth: 480 }}>
+                <p style={{ color: C.muted, fontSize: 14, margin: '0 0 12px', lineHeight: 1.6, maxWidth: 480 }}>
                   {profile.bio}
                 </p>
               )}
@@ -738,25 +738,33 @@ export default function UserProfile() {
                       <Star size={13} fill={saved ? '#f59e0b' : 'none'} />
                       {saved ? 'Guardado' : 'Guardar'}
                     </button>
-                    <button
-                      onClick={() => navigate(`/mensagens?to=${profile.id}`)}
-                      className="up-action-btn primary"
-                    >
-                      <MessageSquare size={13} /> Mensagem
-                    </button>
                   </>
-                )}
-                {/* Non-recruiter, not own profile — show message button if logged in */}
-                {!isOwnProfile && !isRecruiter && user && (
-                  <button
-                    onClick={() => navigate(`/mensagens?to=${profile.id}`)}
-                    className="up-action-btn"
-                  >
-                    <MessageSquare size={13} /> Mensagem
-                  </button>
                 )}
               </div>
             </div>
+
+            {/* Message button — right side of header, only when viewing someone else's profile */}
+            {!isOwnProfile && user && (
+              <div style={{ flexShrink: 0, paddingTop: 2 }}>
+                <button
+                  onClick={() => navigate(`/mensagens?to=${profile.id}`)}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 7,
+                    background: '#1b78f7', border: 'none',
+                    borderRadius: 10, padding: '10px 18px',
+                    color: '#fff', fontSize: 13, fontWeight: 700,
+                    cursor: 'pointer', fontFamily: 'inherit',
+                    whiteSpace: 'nowrap',
+                    boxShadow: '0 4px 14px rgba(27,120,247,0.3)',
+                    transition: 'background 0.15s, box-shadow 0.15s',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.background = '#1564d4'; e.currentTarget.style.boxShadow = '0 4px 18px rgba(27,120,247,0.45)' }}
+                  onMouseLeave={e => { e.currentTarget.style.background = '#1b78f7'; e.currentTarget.style.boxShadow = '0 4px 14px rgba(27,120,247,0.3)' }}
+                >
+                  <MessageSquare size={14} /> Mensagem
+                </button>
+              </div>
+            )}
           </div>
         </div>
 

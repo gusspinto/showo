@@ -610,19 +610,20 @@ export default function Explore() {
                 <p style={{ fontSize: 13, color: colors.subtle, margin: '0 0 16px' }}>
                   {filteredPeople.length} pessoa{filteredPeople.length !== 1 ? 's' : ''}{peopleQuery && ` para "${peopleSearch}"`}
                 </p>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 12 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 14 }}>
                   {filteredPeople.map(p => {
                     const ROLE_COLORS = {
-                      aluno:      { color: '#1b78f7', bg: 'rgba(27,120,247,0.1)',   label: 'Aluno',      icon: <GraduationCap size={11} /> },
-                      professor:  { color: '#10b981', bg: 'rgba(16,185,129,0.1)',   label: 'Professor',  icon: <BookOpen size={11} /> },
-                      recrutador: { color: '#8b5cf6', bg: 'rgba(139,92,246,0.1)',   label: 'Recrutador', icon: <Search size={11} /> },
-                      empresa:    { color: '#f59e0b', bg: 'rgba(245,158,11,0.1)',   label: 'Empresa',    icon: <Building2 size={11} /> },
+                      aluno:      { color: '#1b78f7', bg: 'rgba(27,120,247,0.1)',  label: 'Aluno',      icon: <GraduationCap size={11} /> },
+                      professor:  { color: '#10b981', bg: 'rgba(16,185,129,0.1)',  label: 'Professor',  icon: <BookOpen size={11} /> },
+                      recrutador: { color: '#8b5cf6', bg: 'rgba(139,92,246,0.1)',  label: 'Recrutador', icon: <Search size={11} /> },
+                      empresa:    { color: '#f59e0b', bg: 'rgba(245,158,11,0.1)',  label: 'Empresa',    icon: <Building2 size={11} /> },
                     }
                     const rc = ROLE_COLORS[p.role] ?? ROLE_COLORS.aluno
                     const initial = (p.full_name || p.username || '?')[0].toUpperCase()
                     const avatarColors = ['#1b78f7','#8b5cf6','#0d9488','#f59e0b','#ec4899','#10b981']
                     const avatarBg = avatarColors[(initial.charCodeAt(0) || 0) % avatarColors.length]
                     const profileUrl = p.username ? `/u/${p.username}` : null
+                    const displayName = p.full_name || p.username || 'Utilizador'
 
                     return (
                       <div
@@ -632,44 +633,74 @@ export default function Explore() {
                         style={{
                           background: colors.card,
                           border: `1px solid ${colors.border}`,
-                          borderRadius: 14,
-                          padding: '18px 20px',
+                          borderRadius: 16,
+                          overflow: 'hidden',
                           cursor: profileUrl ? 'pointer' : 'default',
-                          display: 'flex', flexDirection: 'column', gap: 12,
+                          display: 'flex', flexDirection: 'column',
+                          transition: 'border-color 0.15s, transform 0.15s, box-shadow 0.15s',
                         }}
                       >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                          {/* Avatar */}
-                          {p.avatar_url ? (
-                            <img src={p.avatar_url} alt={p.full_name} style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
-                          ) : (
-                            <div style={{ width: 44, height: 44, borderRadius: '50%', background: avatarBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
-                              {initial}
-                            </div>
-                          )}
-                          <div style={{ minWidth: 0, flex: 1 }}>
-                            <div style={{ fontSize: 14, fontWeight: 700, color: colors.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                              {p.full_name || p.username || 'Utilizador'}
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 3, flexWrap: 'wrap' }}>
-                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, color: rc.color, background: rc.bg, borderRadius: 999, padding: '2px 8px' }}>
-                                {rc.icon} {rc.label}
-                              </span>
-                              {p.available_for_work && (
-                                <span style={{ fontSize: 11, fontWeight: 600, color: '#10b981', background: 'rgba(16,185,129,0.1)', borderRadius: 999, padding: '2px 8px' }}>
-                                  Disponível
-                                </span>
+                        {/* Accent bar */}
+                        <div style={{ height: 3, background: `linear-gradient(90deg, ${rc.color}, ${rc.color}44)` }} />
+
+                        <div style={{ padding: '18px 20px 20px', display: 'flex', flexDirection: 'column', gap: 14, flex: 1 }}>
+                          {/* Top row: avatar + name + badge */}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                            {/* Avatar with ring */}
+                            <div style={{ flexShrink: 0, padding: 2, borderRadius: '50%', background: `linear-gradient(135deg, ${rc.color}, ${rc.color}55)` }}>
+                              {p.avatar_url ? (
+                                <img src={p.avatar_url} alt={displayName} style={{ width: 52, height: 52, borderRadius: '50%', objectFit: 'cover', display: 'block', border: `2px solid ${colors.card}` }} />
+                              ) : (
+                                <div style={{ width: 52, height: 52, borderRadius: '50%', background: `linear-gradient(135deg, ${avatarBg}, ${avatarBg}cc)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, fontWeight: 800, color: '#fff', border: `2px solid ${colors.card}`, letterSpacing: '-0.5px' }}>
+                                  {initial}
+                                </div>
                               )}
                             </div>
-                          </div>
-                        </div>
 
-                        {/* Bio / company info */}
-                        {(p.company || p.bio || p.looking_for) && (
-                          <p style={{ margin: 0, fontSize: 13, color: colors.muted, lineHeight: 1.55, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                            {p.company ? `${p.company}${p.company_role ? ` · ${p.company_role}` : ''}` : (p.looking_for || p.bio)}
-                          </p>
-                        )}
+                            <div style={{ minWidth: 0, flex: 1 }}>
+                              <div style={{ fontSize: 15, fontWeight: 800, color: colors.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', letterSpacing: '-0.2px', marginBottom: 4 }}>
+                                {displayName}
+                              </div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}>
+                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, color: rc.color, background: rc.bg, borderRadius: 999, padding: '3px 9px' }}>
+                                  {rc.icon} {rc.label}
+                                </span>
+                                {p.available_for_work && (
+                                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 11, fontWeight: 600, color: '#10b981', background: 'rgba(16,185,129,0.1)', borderRadius: 999, padding: '3px 9px' }}>
+                                    <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#10b981' }} />
+                                    Disponível
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Area / school */}
+                          {(p.area || p.school || p.course) && (
+                            <div style={{ fontSize: 12, color: colors.subtle, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {[p.area || p.course, p.school].filter(Boolean).join(' · ')}
+                            </div>
+                          )}
+
+                          {/* Bio / company */}
+                          {(p.company || p.bio || p.looking_for) && (
+                            <p style={{ margin: 0, fontSize: 13, color: colors.muted, lineHeight: 1.6, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                              {p.company ? `${p.company}${p.company_role ? ` · ${p.company_role}` : ''}` : (p.looking_for || p.bio)}
+                            </p>
+                          )}
+
+                          {/* Footer: "Ver perfil" CTA */}
+                          {profileUrl && (
+                            <div style={{ marginTop: 'auto', paddingTop: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                              {p.username && (
+                                <span style={{ fontSize: 12, color: colors.subtle, fontWeight: 500 }}>@{p.username}</span>
+                              )}
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 700, color: rc.color, marginLeft: 'auto' }}>
+                                Ver perfil <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                              </span>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     )
                   })}

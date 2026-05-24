@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase'
 import { GraduationCap, Briefcase, Rocket, Users, ClipboardList, BarChart2, Monitor, Trophy, Sparkles, Check, Lock, Camera, X, Save, ArrowRight, ArrowLeft, ChevronRight, ShieldAlert } from 'lucide-react'
 import { generateProject } from '../lib/generateProject'
 import { saveProject } from '../lib/saveProject'
-import { calculateScore, looksLikeSpam } from '../lib/score'
+import { calculateScore, looksLikeSpam, isTooShortForContent } from '../lib/score'
 import { Toast, useToast } from '../components/Toast'
 import { Navbar } from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
@@ -203,8 +203,22 @@ export default function NewProject() {
     }
   }
 
+  // Steps where content must be >= 20 chars (real descriptions, not identifiers)
+  const SHORT_CONTENT_TYPES = new Set(['textarea', 'dual_textarea'])
+
   function hasSpamInCurrent() {
     return getCurrentFieldValues().some(v => v.trim().length > 0 && looksLikeSpam(v))
+  }
+
+  function hasTooShortContent() {
+    if (!SHORT_CONTENT_TYPES.has(s?.type)) return false
+    return getCurrentFieldValues().some(v => isTooShortForContent(v))
+  }
+
+  function currentContentIssue() {
+    if (hasSpamInCurrent()) return 'spam'
+    if (hasTooShortContent()) return 'short'
+    return null
   }
 
   function isFieldSpam(key) {
@@ -212,8 +226,14 @@ export default function NewProject() {
     return v.trim().length > 0 && looksLikeSpam(v)
   }
 
+  function isFieldTooShort(key) {
+    if (!SHORT_CONTENT_TYPES.has(s?.type)) return false
+    const v = answers[key] ?? ''
+    return isTooShortForContent(v)
+  }
+
   function spamBorder(key) {
-    return isFieldSpam(key)
+    return (isFieldSpam(key) || isFieldTooShort(key))
       ? `1.5px solid rgba(239,68,68,0.6)`
       : `1.5px solid ${colors.border}`
   }
@@ -221,6 +241,7 @@ export default function NewProject() {
   function canProceed() {
     if (phase === 'goal') return !!formGoal
     if (hasSpamInCurrent()) return false
+    if (hasTooShortContent()) return false
     switch (s.type) {
       case 'dual_text':     return s.keys.every(k => (answers[k] ?? '').trim().length > 0)
       case 'text':
@@ -238,8 +259,8 @@ export default function NewProject() {
   async function handleNext() {
     if (phase === 'goal') { setPhase('form'); return }
 
-    // Spam guard — also catches attempts to bypass with Enter key
-    if (hasSpamInCurrent()) return
+    // Content guard — blocks spam and too-short content
+    if (hasSpamInCurrent() || hasTooShortContent()) return
 
     if (step < TOTAL_STEPS - 1) { setStep(n => n + 1); return }
 
@@ -861,7 +882,7 @@ export default function NewProject() {
             <p style={{ color: colors.red, fontSize: 14, marginTop: 12, fontWeight: 500 }}>{error}</p>
           )}
 
-          {hasSpamInCurrent() && (
+          {currentContentIssue() && (
             <div style={{
               background: 'rgba(239,68,68,0.07)',
               border: '1px solid rgba(239,68,68,0.3)',
@@ -877,10 +898,13 @@ export default function NewProject() {
               </div>
               <div>
                 <div style={{ fontSize: 13, fontWeight: 700, color: '#ef4444', marginBottom: 3 }}>
-                  Texto inválido detetado
+                  {currentContentIssue() === 'short' ? 'Conteúdo demasiado curto' : 'Texto inválido detetado'}
                 </div>
                 <div style={{ fontSize: 12, color: 'var(--c-muted)', lineHeight: 1.5 }}>
-                  O texto parece aleatório ou sem sentido. Escreve conteúdo real para continuar — campos com spam não contam para o score.
+                  {currentContentIssue() === 'short'
+                    ? 'Escreve pelo menos 20 caracteres. Palavras como "oi", "sim", "ok" não são conteúdo válido — descreve o teu projeto com detalhe.'
+                    : 'O texto parece aleatório ou sem sentido. Escreve conteúdo real para continuar — campos com spam não contam para o score.'
+                  }
                 </div>
               </div>
             </div>

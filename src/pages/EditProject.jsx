@@ -285,7 +285,7 @@ export default function EditProject() {
 
       <div className="page-content">
         <div style={{ marginBottom: 36 }}>
-          <h1 style={{ fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 900, margin: '0 0 6px', letterSpacing: '-0.5px' }}>Editar projeto</h1>
+          <h1 style={{ fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 900, margin: '0 0 6px', letterSpacing: '-0.5px', color: colors.text }}>Editar projeto</h1>
           <p style={{ color: colors.muted, margin: 0, fontSize: 15 }}>{project.name}</p>
         </div>
 

@@ -7,6 +7,16 @@
  *  2. Unique-character ratio < 12%    (e.g. "aaaaaaaaaaaaa" or "dfdfdfdfdfdf")
  *  3. Single word that's pure gibberish (no vowels in a long word)
  */
+/**
+ * Returns true if the text is non-empty but too short to be real content.
+ * Used for description/textarea fields — NOT for short identifiers like project name.
+ */
+export function isTooShortForContent(text) {
+  if (!text) return false
+  const str = text.trim()
+  return str.length > 0 && str.length < 20
+}
+
 export function looksLikeSpam(text) {
   if (!text) return false
   const str = text.trim()

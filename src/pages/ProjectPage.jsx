@@ -2850,7 +2850,7 @@ export default function ProjectPage() {
                             <span style={{ fontSize: 12, fontWeight: 700, color: colors.muted }}>{LABELS[key] || key}</span>
                             <span style={{ fontSize: 11, fontWeight: 700, color: ratingColor, background: ratingBg, borderRadius: 5, padding: '2px 7px', textTransform: 'uppercase', flexShrink: 0 }}>{sec.rating}</span>
                           </div>
-                          <p style={{ margin: '0 0 4px', fontSize: 12, color: '#afc3dc', lineHeight: 1.55 }}>{sec.feedback}</p>
+                          <p style={{ margin: '0 0 4px', fontSize: 12, color: colors.text, lineHeight: 1.55 }}>{sec.feedback}</p>
                           {sec.tip && (
                             <p style={{ margin: 0, fontSize: 12, color: colors.blue, lineHeight: 1.55, display: 'flex', alignItems: 'center', gap: 5 }}><ChevronRight size={12} /> {sec.tip}</p>
                           )}

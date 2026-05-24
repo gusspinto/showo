@@ -59,8 +59,8 @@ function NotesPanel({ aiData, loadingAI, aiError, onRetry }) {
     <div>
       {tip && (
         <div style={{ background: 'rgba(27,120,247,0.07)', border: '1px solid rgba(27,120,247,0.2)', borderRadius: 12, padding: '14px 18px', marginBottom: 24, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-          <Lightbulb size={18} color="#93c5fd" style={{ flexShrink: 0 }} />
-          <p style={{ margin: 0, fontSize: 14, color: '#93c5fd', lineHeight: 1.6 }}>{tip}</p>
+          <Lightbulb size={18} color={C.blue} style={{ flexShrink: 0 }} />
+          <p style={{ margin: 0, fontSize: 14, color: C.muted, lineHeight: 1.6 }}>{tip}</p>
         </div>
       )}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -70,7 +70,7 @@ function NotesPanel({ aiData, loadingAI, aiError, onRetry }) {
               <section.Icon size={16} color={C.muted} />
               <span style={{ fontSize: 12, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>{section.label}</span>
             </div>
-            <p style={{ margin: 0, fontSize: 15, color: '#a0b4cc', lineHeight: 1.7 }}>{notes[section.id]}</p>
+            <p style={{ margin: 0, fontSize: 15, color: C.text, lineHeight: 1.7 }}>{notes[section.id]}</p>
           </div>
         ))}
         {filled.length === 0 && (
@@ -346,7 +346,7 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
         <h2 style={{ fontSize: 28, fontWeight: 800, margin: '16px 0 8px', letterSpacing: '-0.5px', animation: 'fadeUp 0.4s 0.2s ease-out both' }}>
           Boa apresentação{firstName ? `, ${firstName}` : ''}!
         </h2>
-        <p style={{ fontSize: 18, color: '#93c5fd', margin: '0 0 8px', animation: 'fadeUp 0.4s 0.35s ease-out both' }}>
+        <p style={{ fontSize: 18, color: C.muted, margin: '0 0 8px', animation: 'fadeUp 0.4s 0.35s ease-out both' }}>
           Vês como foi fácil?
         </p>
         <p style={{ fontSize: 14, color: C.muted, margin: '0 0 32px', lineHeight: 1.6, maxWidth: 300, animation: 'fadeUp 0.4s 0.45s ease-out both' }}>
@@ -461,7 +461,7 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
       <style>{`@keyframes spin{to{transform:rotate(360deg)}} @keyframes pop{0%{transform:scale(0.92)}60%{transform:scale(1.04)}100%{transform:scale(1)}}`}</style>
 
       {/* Top bar */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 20px', borderBottom: '1px solid #0f1e35', flexShrink: 0, background: '#07101e' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 20px', borderBottom: '1px solid var(--c-border)', flexShrink: 0, background: 'var(--c-card)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           {/* Timer — tap to pause/resume */}
           <button
@@ -579,7 +579,7 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
                 </button>
                 {showNote && (
                   <div style={{ marginTop: 10, background: 'rgba(27,120,247,0.05)', border: '1px solid rgba(27,120,247,0.15)', borderRadius: 12, padding: '14px 16px', animation: 'pop 0.2s ease-out' }}>
-                    <p style={{ margin: 0, fontSize: 14, color: '#93c5fd', lineHeight: 1.75 }}>{speakerNote}</p>
+                    <p style={{ margin: 0, fontSize: 14, color: C.muted, lineHeight: 1.75 }}>{speakerNote}</p>
                   </div>
                 )}
               </div>
@@ -604,7 +604,7 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
       </div>
 
       {/* Nav buttons */}
-      <div style={{ display: 'flex', gap: 10, padding: '16px 24px', borderTop: '1px solid #0f1e35', flexShrink: 0, background: '#07101e' }}>
+      <div style={{ display: 'flex', gap: 10, padding: '16px 24px', borderTop: '1px solid var(--c-border)', flexShrink: 0, background: 'var(--c-card)' }}>
         <button
           onClick={prev}
           disabled={current === 0}
@@ -805,7 +805,7 @@ function GrupoPanel({ project }) {
           onChange={e => { setSearch(e.target.value); setSearchErr(''); setSearchResult(null) }}
           onKeyDown={e => e.key === 'Enter' && doSearch()}
           placeholder="Username do colega (ex: joaosilva)"
-          style={{ flex: 1, background: '#060c16', border: `1.5px solid ${C.border}`, borderRadius: 10, color: C.text, fontSize: 14, padding: '10px 14px', outline: 'none', fontFamily: 'inherit' }}
+          style={{ flex: 1, background: 'var(--c-bg)', border: `1.5px solid ${C.border}`, borderRadius: 10, color: C.text, fontSize: 14, padding: '10px 14px', outline: 'none', fontFamily: 'inherit' }}
         />
         <button
           onClick={doSearch}
@@ -986,7 +986,7 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
     >
       <style>{`@keyframes spin{to{transform:rotate(360deg)}} @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}`}</style>
 
-      <div style={{ background: '#0a1220', border: '1px solid var(--c-border)', borderRadius: 20, width: '100%', maxWidth: 720, maxHeight: '90vh', display: 'flex', flexDirection: 'column', boxShadow: '0 32px 80px rgba(0,0,0,0.7)', animation: 'fadeIn 0.2s ease-out' }}>
+      <div style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 20, width: '100%', maxWidth: 720, maxHeight: '90vh', display: 'flex', flexDirection: 'column', boxShadow: '0 32px 80px rgba(0,0,0,0.7)', animation: 'fadeIn 0.2s ease-out' }}>
 
         {/* Header */}
         <div style={{ padding: '22px 28px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
@@ -1038,7 +1038,7 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
                 </p>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
                   {['Pontos-chave interativos', 'Nota completa por secção', 'Temporizador', 'Navegação por swipe'].map(f => (
-                    <span key={f} style={{ background: 'rgba(27,120,247,0.08)', border: '1px solid rgba(27,120,247,0.18)', borderRadius: 6, padding: '4px 10px', fontSize: 12, color: '#93c5fd' }}>{f}</span>
+                    <span key={f} style={{ background: 'rgba(27,120,247,0.08)', border: '1px solid rgba(27,120,247,0.18)', borderRadius: 6, padding: '4px 10px', fontSize: 12, color: C.blue }}>{f}</span>
                   ))}
                 </div>
                 <button

@@ -119,12 +119,25 @@ function LivePreview({ projectType, answers, currentField, currentValue }) {
   )
 }
 
+const PROJECT_TYPES = [
+  { id: 'pap',         label: 'PAP',          color: '#6366f1' },
+  { id: 'personal',    label: 'Pessoal',       color: '#1b78f7' },
+  { id: 'group',       label: 'Grupo',         color: '#f59e0b' },
+  { id: 'competition', label: 'Competição',    color: '#ef4444' },
+  { id: 'internship',  label: 'Estágio',       color: '#10b981' },
+  { id: 'presentation',label: 'Apresentação',  color: '#8b5cf6' },
+]
+
 export default function AIInterview() {
   const navigate   = useNavigate()
   const location   = useLocation()
-  const { type: projectType = 'personal', description = '' } = location.state ?? {}
+  const { type: initType = 'personal', description: initDesc = '' } = location.state ?? {}
 
-  const [phase,        setPhase]        = useState('loading')   // loading | interview | generating | error
+  // Setup state
+  const [setupDesc,    setSetupDesc]    = useState(initDesc)
+  const [setupType,    setSetupType]    = useState(initType)
+
+  const [phase,        setPhase]        = useState('setup')     // setup | loading | interview | generating | error
   const [understanding,setUnderstanding]= useState('')
   const [questions,    setQuestions]    = useState([])
   const [currentQ,     setCurrentQ]     = useState(0)
@@ -134,28 +147,32 @@ export default function AIInterview() {
   const [errorMsg,     setErrorMsg]     = useState('')
   const [currentValue, setCurrentValue] = useState('')
 
+  // Derive active projectType/description from setup
+  const [projectType, setProjectType]   = useState(initType)
+  const [description, setDescription]   = useState(initDesc)
+
   const inputRef  = useRef(null)
   const bottomRef = useRef(null)
 
-  // Load questions from AI
-  useEffect(() => {
-    async function load() {
-      try {
-        const { data, error } = await supabase.functions.invoke('interview-project', {
-          body: { description, projectType },
-        })
-        if (error) throw error
-        setUnderstanding(data.understanding ?? '')
-        setQuestions(data.questions ?? [])
-        setPhase('interview')
-      } catch (e) {
-        console.error(e)
-        setErrorMsg('Erro ao carregar a entrevista. Tenta novamente.')
-        setPhase('error')
-      }
+  // Start interview — called from setup phase
+  async function startInterview(desc, type) {
+    setDescription(desc)
+    setProjectType(type)
+    setPhase('loading')
+    try {
+      const { data, error } = await supabase.functions.invoke('interview-project', {
+        body: { description: desc, projectType: type },
+      })
+      if (error) throw error
+      setUnderstanding(data.understanding ?? '')
+      setQuestions(data.questions ?? [])
+      setPhase('interview')
+    } catch (e) {
+      console.error(e)
+      setErrorMsg('Erro ao carregar a entrevista. Tenta novamente.')
+      setPhase('error')
     }
-    load()
-  }, [])
+  }
 
   useEffect(() => {
     if (phase === 'interview') {
@@ -292,7 +309,7 @@ export default function AIInterview() {
       <div style={{ height: 3, background: C.border, position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100 }}>
         <div style={{
           height: '100%', background: 'linear-gradient(90deg, #1b78f7, #818cf8)',
-          width: `${phase === 'loading' ? 10 : phase === 'generating' ? 95 : progress}%`,
+          width: `${phase === 'setup' ? 0 : phase === 'loading' ? 10 : phase === 'generating' ? 95 : progress}%`,
           transition: 'width 0.5s cubic-bezier(0.4,0,0.2,1)',
         }} />
       </div>
@@ -314,10 +331,104 @@ export default function AIInterview() {
       </div>
 
       {/* Body */}
-      <div style={{ flex: 1, display: 'flex', gap: 32, padding: '0 32px 48px', maxWidth: 1000, margin: '0 auto', width: '100%', boxSizing: 'border-box', alignItems: 'flex-start' }}>
+      <div style={{ flex: 1, display: 'flex', gap: 32, padding: '0 32px 48px', maxWidth: 1000, margin: '0 auto', width: '100%', boxSizing: 'border-box', alignItems: phase === 'interview' ? 'flex-start' : 'center', justifyContent: 'center' }}>
 
         {/* Left: interview */}
         <div className="iv-main" style={{ flex: 1, minWidth: 0, paddingTop: 40 }}>
+
+          {/* Setup */}
+          {phase === 'setup' && (
+            <div style={{ maxWidth: 520, margin: '0 auto', animation: 'fadeIn 0.4s ease' }}>
+              <div style={{ marginBottom: 32 }}>
+                <div style={{
+                  width: 56, height: 56, borderRadius: 16, margin: '0 0 20px',
+                  background: 'linear-gradient(135deg, #1b78f7, #818cf8)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  boxShadow: '0 8px 32px rgba(27,120,247,0.35)',
+                }}>
+                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                </div>
+                <h1 style={{ margin: '0 0 8px', fontSize: 28, fontWeight: 900, color: C.text, letterSpacing: '-0.5px', lineHeight: 1.2 }}>Criar com IA</h1>
+                <p style={{ margin: 0, fontSize: 15, color: C.muted, lineHeight: 1.6 }}>
+                  Descreve brevemente o teu projeto e a IA fará as perguntas certas para o construir.
+                </p>
+              </div>
+
+              {/* Description textarea */}
+              <div style={{ marginBottom: 24 }}>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
+                  Descreve o teu projeto
+                </label>
+                <textarea
+                  value={setupDesc}
+                  onChange={e => setSetupDesc(e.target.value)}
+                  placeholder="Ex: Uma plataforma web que ajuda alunos a criar portfólios profissionais com ajuda de IA..."
+                  rows={4}
+                  autoFocus
+                  style={{
+                    width: '100%', boxSizing: 'border-box',
+                    background: 'var(--c-bg-alt)', border: `1.5px solid ${C.bright}`,
+                    borderRadius: 14, color: C.text, fontSize: 15,
+                    fontFamily: 'inherit', outline: 'none', resize: 'none',
+                    padding: '14px 16px', lineHeight: 1.65,
+                    transition: 'border-color 0.15s',
+                  }}
+                  onFocus={e => e.target.style.borderColor = C.blue}
+                  onBlur={e => e.target.style.borderColor = C.bright}
+                />
+              </div>
+
+              {/* Project type selector */}
+              <div style={{ marginBottom: 32 }}>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>
+                  Tipo de projeto
+                </label>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+                  {PROJECT_TYPES.map(t => {
+                    const selected = setupType === t.id
+                    return (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() => setSetupType(t.id)}
+                        style={{
+                          background: selected ? `${t.color}15` : 'var(--c-bg-alt)',
+                          border: `1.5px solid ${selected ? t.color : C.border}`,
+                          borderRadius: 10, padding: '10px 12px',
+                          color: selected ? t.color : C.muted,
+                          fontSize: 13, fontWeight: 700, fontFamily: 'inherit',
+                          cursor: 'pointer', transition: 'all 0.12s',
+                          textAlign: 'center',
+                        }}
+                      >
+                        {t.label}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* CTA */}
+              <button
+                type="button"
+                onClick={() => startInterview(setupDesc, setupType)}
+                disabled={!setupDesc.trim()}
+                style={{
+                  width: '100%',
+                  background: setupDesc.trim() ? 'linear-gradient(135deg, #1b78f7, #4f46e5)' : C.border,
+                  border: 'none', borderRadius: 14,
+                  color: '#fff', fontSize: 16, fontWeight: 700,
+                  padding: '16px 0', cursor: setupDesc.trim() ? 'pointer' : 'not-allowed',
+                  fontFamily: 'inherit', transition: 'background 0.15s',
+                  boxShadow: setupDesc.trim() ? '0 4px 20px rgba(27,120,247,0.35)' : 'none',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                }}
+              >
+                Começar entrevista
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+              </button>
+            </div>
+          )}
 
           {/* Loading */}
           {phase === 'loading' && (
@@ -524,8 +635,8 @@ export default function AIInterview() {
           )}
         </div>
 
-        {/* Right: live preview */}
-        <div className="iv-preview" style={{ width: 320, flexShrink: 0, position: 'sticky', top: 80, paddingTop: 40 }}>
+        {/* Right: live preview — only shown during interview */}
+        <div className="iv-preview" style={{ width: 320, flexShrink: 0, position: 'sticky', top: 80, paddingTop: 40, display: phase === 'setup' ? 'none' : undefined }}>
           <p style={{ margin: '0 0 12px', fontSize: 11, color: C.subtle, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Pré-visualização</p>
           <LivePreview
             projectType={projectType}
