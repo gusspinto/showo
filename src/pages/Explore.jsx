@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { Navbar } from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
@@ -127,6 +127,7 @@ const ROLE_LABELS = {
 
 export default function Explore() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { profile } = useAuth()
   const [projects, setProjects] = useState([])
   const [loading, setLoading] = useState(true)
@@ -145,8 +146,8 @@ export default function Explore() {
 
   const VIEWS_KEY = `showo_views_${new Date().toISOString().slice(0, 13)}`
 
-  // People tab
-  const [tab, setTab] = useState('projetos')
+  // People tab — default to 'pessoas' if URL param says so
+  const [tab, setTab] = useState(() => searchParams.get('tab') === 'pessoas' ? 'pessoas' : 'projetos')
   const [people, setPeople] = useState([])
   const [peopleLoading, setPeopleLoading] = useState(false)
   const [peopleLoaded, setPeopleLoaded] = useState(false)

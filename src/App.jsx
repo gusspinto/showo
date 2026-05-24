@@ -29,6 +29,7 @@ const Turmas       = lazy(() => import('./pages/Turmas'))
 const Conquistas   = lazy(() => import('./pages/Conquistas'))
 const AIInterview  = lazy(() => import('./pages/AIInterview'))
 const Certificate  = lazy(() => import('./pages/Certificate'))
+const Vagas        = lazy(() => import('./pages/Vagas'))
 
 function PageLoader() {
   return (
@@ -262,6 +263,7 @@ export default function App() {
               <Route path="/conquistas"    element={<Conquistas />}  />
               <Route path="/interview"          element={<AIInterview />}  />
               <Route path="/certificado/:slug"  element={<Certificate />}  />
+              <Route path="/vagas"              element={<Vagas />}        />
               <Route path="*"                   element={<NotFound />}     />
             </Routes>
             </Suspense>

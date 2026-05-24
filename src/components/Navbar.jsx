@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
 import { useSidebar } from '../context/SidebarContext'
 import { supabase } from '../lib/supabase'
-import { Check, X, FolderOpen, User, Settings as SettingsIcon, Shield, Globe, Trophy, LogOut, Bell, Eye, Target, TrendingUp, GraduationCap, UserPlus, LayoutDashboard, Plus, Compass, Sun, Moon, Sparkles, Pencil, ArrowLeft, Briefcase, Medal, Users2, Swords } from 'lucide-react'
+import { Check, X, FolderOpen, User, Settings as SettingsIcon, Shield, Globe, Trophy, LogOut, Bell, Eye, Target, TrendingUp, GraduationCap, UserPlus, LayoutDashboard, Plus, Compass, Sun, Moon, Sparkles, Pencil, ArrowLeft, Briefcase, Medal, Users2, Swords, Building2, Search, Star } from 'lucide-react'
 
 // Strip emoji characters from notification messages coming from the DB
 function stripEmoji(str) {
@@ -640,6 +640,9 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
   const [open, setOpen] = useState(false)
   const [createModal, setCreateModal] = useState(false)
 
+  const isRecruiter = profile?.role === 'recrutador' || profile?.role === 'empresa'
+  const recruiterAccent = profile?.role === 'empresa' ? '#f59e0b' : '#8b5cf6'
+
   const profileUrl = profile?.username ? `/u/${profile.username}` : user ? `/u/${user.id}` : null
 
   function isActive(path) {
@@ -1143,51 +1146,90 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
 
         {/* Main nav + project controls in one scrollable section */}
         <div className="sb-section">
-          {user && (
-            <button className={`sb-item${isActive('/dashboard') ? ' active' : ''}`} onClick={() => navigate('/dashboard')}>
-              <LayoutDashboard size={16} /> Dashboard
-            </button>
-          )}
-          <button className={`sb-item${isActive('/explorar') ? ' active' : ''}`} onClick={() => navigate('/explorar')}>
-            <Compass size={16} /> Explorar
-          </button>
-          <button className={`sb-item${isActive('/ranking') ? ' active' : ''}`} onClick={() => navigate('/ranking')}>
-            <Trophy size={16} /> Ranking
-          </button>
-
-          {/* Future sections */}
-          {user && (
+          {user && isRecruiter ? (
+            /* ── RECRUITER / EMPRESA sidebar ── */
             <>
-              <div className="sb-divider" style={{ margin: '8px 0 4px' }} />
-              <span className="sb-label">Em breve</span>
-              <button className="sb-item" disabled style={{ opacity: 0.5, cursor: 'default' }}>
-                <FolderOpen size={16} /> Portfólio
-                <span className="sb-soon">breve</span>
+              <button className={`sb-item${isActive('/dashboard') ? ' active' : ''}`} onClick={() => navigate('/dashboard')}>
+                <LayoutDashboard size={16} /> Dashboard
               </button>
-              <button className="sb-item" disabled style={{ opacity: 0.5, cursor: 'default' }}>
-                <Briefcase size={16} /> Estágio
-                <span className="sb-soon">breve</span>
-              </button>
-              <button className={`sb-item${isActive('/missoes') ? ' active' : ''}`} onClick={() => navigate('/missoes')}>
-                <Swords size={16} /> Missões
-              </button>
-              <button className={`sb-item${isActive('/turmas') ? ' active' : ''}`} onClick={() => navigate('/turmas')}>
-                <Users2 size={16} /> Turmas
-              </button>
-              <button className={`sb-item${isActive('/conquistas') ? ' active' : ''}`} onClick={() => navigate('/conquistas')}>
-                <Medal size={16} /> Conquistas
-              </button>
-            </>
-          )}
 
-          {user && (
-            <div className={`sb-create-wrap ${extras ? 'hidden' : 'visible'}`}>
-              <div className="sb-create-inner">
-                <button className="sb-create" onClick={() => setCreateModal(true)}>
-                  <Plus size={14} /> Criar projeto
+              <div className="sb-divider" style={{ margin: '8px 0 4px' }} />
+              <span className="sb-label">Recrutamento</span>
+
+              <button className={`sb-item${location.pathname === '/explorar' && new URLSearchParams(location.search).get('tab') === 'pessoas' ? ' active' : ''}`}
+                onClick={() => navigate('/explorar?tab=pessoas')}
+                style={{ color: isActive('/explorar') && new URLSearchParams(location.search).get('tab') === 'pessoas' ? recruiterAccent : undefined }}>
+                <Users2 size={16} /> Candidatos
+              </button>
+
+              <button className={`sb-item${isActive('/vagas') ? ' active' : ''}`} onClick={() => navigate('/vagas')}>
+                <Briefcase size={16} /> Vagas
+              </button>
+
+              <div className="sb-divider" style={{ margin: '8px 0 4px' }} />
+              <span className="sb-label">Explorar</span>
+
+              <button className={`sb-item${isActive('/explorar') && !new URLSearchParams(location.search).get('tab') ? ' active' : ''}`}
+                onClick={() => navigate('/explorar')}>
+                <Compass size={16} /> Projetos
+              </button>
+
+              {/* New vaga button */}
+              <div style={{ margin: '10px 0 4px', padding: '0 0' }}>
+                <button onClick={() => navigate('/vagas')}
+                  style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '10px 0 4px', padding: '10px 14px', background: `linear-gradient(135deg, ${recruiterAccent}, #4f46e5)`, border: 'none', borderRadius: 10, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: `0 2px 14px ${recruiterAccent}44`, width: '100%' }}>
+                  <Plus size={14} /> Nova vaga
                 </button>
               </div>
-            </div>
+            </>
+          ) : (
+            /* ── ALUNO / PROFESSOR sidebar ── */
+            <>
+              {user && (
+                <button className={`sb-item${isActive('/dashboard') ? ' active' : ''}`} onClick={() => navigate('/dashboard')}>
+                  <LayoutDashboard size={16} /> Dashboard
+                </button>
+              )}
+              <button className={`sb-item${isActive('/explorar') ? ' active' : ''}`} onClick={() => navigate('/explorar')}>
+                <Compass size={16} /> Explorar
+              </button>
+              <button className={`sb-item${isActive('/ranking') ? ' active' : ''}`} onClick={() => navigate('/ranking')}>
+                <Trophy size={16} /> Ranking
+              </button>
+
+              {user && (
+                <>
+                  <div className="sb-divider" style={{ margin: '8px 0 4px' }} />
+                  <span className="sb-label">Em breve</span>
+                  <button className="sb-item" disabled style={{ opacity: 0.5, cursor: 'default' }}>
+                    <FolderOpen size={16} /> Portfólio
+                    <span className="sb-soon">breve</span>
+                  </button>
+                  <button className={`sb-item${isActive('/vagas') ? ' active' : ''}`} onClick={() => navigate('/vagas')}>
+                    <Briefcase size={16} /> Vagas
+                  </button>
+                  <button className={`sb-item${isActive('/missoes') ? ' active' : ''}`} onClick={() => navigate('/missoes')}>
+                    <Swords size={16} /> Missões
+                  </button>
+                  <button className={`sb-item${isActive('/turmas') ? ' active' : ''}`} onClick={() => navigate('/turmas')}>
+                    <Users2 size={16} /> Turmas
+                  </button>
+                  <button className={`sb-item${isActive('/conquistas') ? ' active' : ''}`} onClick={() => navigate('/conquistas')}>
+                    <Medal size={16} /> Conquistas
+                  </button>
+                </>
+              )}
+
+              {user && (
+                <div className={`sb-create-wrap ${extras ? 'hidden' : 'visible'}`}>
+                  <div className="sb-create-inner">
+                    <button className="sb-create" onClick={() => setCreateModal(true)}>
+                      <Plus size={14} /> Criar projeto
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
 
           {/* Project controls — immediately after nav, no gap */}
