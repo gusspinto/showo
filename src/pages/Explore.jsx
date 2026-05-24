@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { Navbar } from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
-import { Search, Building2, Eye, Briefcase } from 'lucide-react'
+import { Search, Building2, Eye, Briefcase, Users, GraduationCap, BookOpen } from 'lucide-react'
 import CreateProjectModal from '../components/CreateProjectModal'
 
 const colors = {
@@ -145,6 +145,13 @@ export default function Explore() {
 
   const VIEWS_KEY = `showo_views_${new Date().toISOString().slice(0, 13)}`
 
+  // People tab
+  const [tab, setTab] = useState('projetos')
+  const [people, setPeople] = useState([])
+  const [peopleLoading, setPeopleLoading] = useState(false)
+  const [peopleLoaded, setPeopleLoaded] = useState(false)
+  const [peopleSearch, setPeopleSearch] = useState('')
+
   useEffect(() => {
     async function load() {
       // Main projects query — no FK join to avoid PostgREST relationship errors
@@ -181,6 +188,25 @@ export default function Explore() {
     }
     load()
   }, [])
+
+  async function loadPeople() {
+    if (peopleLoaded) return
+    setPeopleLoading(true)
+    const { data } = await supabase
+      .from('profiles')
+      .select('id, full_name, username, bio, role, avatar_url, company, company_role, looking_for, available_for_work')
+      .not('full_name', 'is', null)
+      .order('created_at', { ascending: false })
+      .limit(200)
+    setPeople(data || [])
+    setPeopleLoaded(true)
+    setPeopleLoading(false)
+  }
+
+  function handleTabChange(t) {
+    setTab(t)
+    if (t === 'pessoas') loadPeople()
+  }
 
   function handleProjectClick(project) {
     const role = profile?.role ?? null
@@ -228,6 +254,18 @@ export default function Explore() {
   })
 
   const hasFilters = filterArea || filterType || filterMinScore > 0 || filterZone || filterAvailable
+
+  const peopleQuery = peopleSearch.toLowerCase().trim()
+  const filteredPeople = people.filter(p => {
+    if (!peopleQuery) return true
+    return (
+      p.full_name?.toLowerCase().includes(peopleQuery) ||
+      p.username?.toLowerCase().includes(peopleQuery) ||
+      p.bio?.toLowerCase().includes(peopleQuery) ||
+      p.company?.toLowerCase().includes(peopleQuery) ||
+      p.looking_for?.toLowerCase().includes(peopleQuery)
+    )
+  })
 
   const SORT_OPTIONS = [
     { id: 'score',   label: 'Melhor score' },
@@ -285,12 +323,37 @@ export default function Explore() {
 
       <div className="page-content">
         {/* Header */}
-        <div style={{ marginBottom: 28 }}>
+        <div style={{ marginBottom: 24 }}>
           <h1 style={{ fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 900, margin: '0 0 8px', letterSpacing: '-0.5px' }}>
-            Explorar Projetos
+            Explorar
           </h1>
-          <p style={{ color: colors.muted, margin: 0, fontSize: 15 }}>Descobre o que outros estudantes estão a construir</p>
+          <p style={{ color: colors.muted, margin: 0, fontSize: 15 }}>Descobre projetos e pessoas da comunidade Showo</p>
         </div>
+
+        {/* Tabs */}
+        <div style={{ display: 'flex', gap: 4, marginBottom: 28, background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 12, padding: 4, width: 'fit-content' }}>
+          {[
+            { id: 'projetos', label: 'Projetos', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg> },
+            { id: 'pessoas',  label: 'Pessoas',  icon: <Users size={14} /> },
+          ].map(t => (
+            <button
+              key={t.id}
+              onClick={() => handleTabChange(t.id)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 6,
+                padding: '8px 18px', borderRadius: 9, border: 'none',
+                background: tab === t.id ? colors.blue : 'transparent',
+                color: tab === t.id ? '#fff' : colors.muted,
+                fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                fontFamily: 'inherit', transition: 'all 0.15s',
+              }}
+            >
+              {t.icon} {t.label}
+            </button>
+          ))}
+        </div>
+
+        {tab === 'projetos' && (<>
 
         {/* Recruiter/Empresa banner — shown automatically based on account role */}
         {recruiterMode && roleInfo && (
@@ -508,6 +571,114 @@ export default function Explore() {
             </div>
           </>
         )}
+
+        </>)}
+
+        {/* ── Pessoas tab ── */}
+        {tab === 'pessoas' && (
+          <>
+            {/* Search */}
+            <div style={{ position: 'relative', marginBottom: 24 }}>
+              <svg style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}
+                width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={colors.subtle} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+              <input
+                type="text"
+                className="explore-search"
+                placeholder="Pesquisar por nome, empresa, área..."
+                value={peopleSearch}
+                onChange={e => setPeopleSearch(e.target.value)}
+              />
+            </div>
+
+            {peopleLoading ? (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 12 }}>
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <div key={i} className="explore-skeleton" style={{ height: 100 }} />
+                ))}
+              </div>
+            ) : filteredPeople.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '64px 24px', color: colors.muted }}>
+                <Users size={44} color={colors.subtle} style={{ marginBottom: 16 }} />
+                <p style={{ fontSize: 16, fontWeight: 600, margin: '0 0 8px', color: colors.text }}>
+                  {peopleQuery ? 'Nenhuma pessoa encontrada.' : 'Ainda não há perfis públicos.'}
+                </p>
+              </div>
+            ) : (
+              <>
+                <p style={{ fontSize: 13, color: colors.subtle, margin: '0 0 16px' }}>
+                  {filteredPeople.length} pessoa{filteredPeople.length !== 1 ? 's' : ''}{peopleQuery && ` para "${peopleSearch}"`}
+                </p>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 12 }}>
+                  {filteredPeople.map(p => {
+                    const ROLE_COLORS = {
+                      aluno:      { color: '#1b78f7', bg: 'rgba(27,120,247,0.1)',   label: 'Aluno',      icon: <GraduationCap size={11} /> },
+                      professor:  { color: '#10b981', bg: 'rgba(16,185,129,0.1)',   label: 'Professor',  icon: <BookOpen size={11} /> },
+                      recrutador: { color: '#8b5cf6', bg: 'rgba(139,92,246,0.1)',   label: 'Recrutador', icon: <Search size={11} /> },
+                      empresa:    { color: '#f59e0b', bg: 'rgba(245,158,11,0.1)',   label: 'Empresa',    icon: <Building2 size={11} /> },
+                    }
+                    const rc = ROLE_COLORS[p.role] ?? ROLE_COLORS.aluno
+                    const initial = (p.full_name || p.username || '?')[0].toUpperCase()
+                    const avatarColors = ['#1b78f7','#8b5cf6','#0d9488','#f59e0b','#ec4899','#10b981']
+                    const avatarBg = avatarColors[(initial.charCodeAt(0) || 0) % avatarColors.length]
+                    const profileUrl = p.username ? `/u/${p.username}` : null
+
+                    return (
+                      <div
+                        key={p.id}
+                        className="explore-card"
+                        onClick={() => profileUrl && navigate(profileUrl)}
+                        style={{
+                          background: colors.card,
+                          border: `1px solid ${colors.border}`,
+                          borderRadius: 14,
+                          padding: '18px 20px',
+                          cursor: profileUrl ? 'pointer' : 'default',
+                          display: 'flex', flexDirection: 'column', gap: 12,
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                          {/* Avatar */}
+                          {p.avatar_url ? (
+                            <img src={p.avatar_url} alt={p.full_name} style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+                          ) : (
+                            <div style={{ width: 44, height: 44, borderRadius: '50%', background: avatarBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
+                              {initial}
+                            </div>
+                          )}
+                          <div style={{ minWidth: 0, flex: 1 }}>
+                            <div style={{ fontSize: 14, fontWeight: 700, color: colors.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {p.full_name || p.username || 'Utilizador'}
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 3, flexWrap: 'wrap' }}>
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, color: rc.color, background: rc.bg, borderRadius: 999, padding: '2px 8px' }}>
+                                {rc.icon} {rc.label}
+                              </span>
+                              {p.available_for_work && (
+                                <span style={{ fontSize: 11, fontWeight: 600, color: '#10b981', background: 'rgba(16,185,129,0.1)', borderRadius: 999, padding: '2px 8px' }}>
+                                  Disponível
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Bio / company info */}
+                        {(p.company || p.bio || p.looking_for) && (
+                          <p style={{ margin: 0, fontSize: 13, color: colors.muted, lineHeight: 1.55, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                            {p.company ? `${p.company}${p.company_role ? ` · ${p.company_role}` : ''}` : (p.looking_for || p.bio)}
+                          </p>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              </>
+            )}
+          </>
+        )}
+
       </div>
       {showCreateModal && <CreateProjectModal onClose={() => setShowCreateModal(false)} />}
     </div>
