@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
-import { Send, ArrowLeft, MessageSquare, Search } from 'lucide-react'
+import { Send, ArrowLeft, MessageSquare, Search, Plus, X } from 'lucide-react'
 
 const C = {
   bg:     'var(--c-bg)',
@@ -39,6 +39,71 @@ function Avatar({ profile, size = 36 }) {
   )
 }
 
+function NovaConversa({ onSelect, onClose }) {
+  const [q, setQ] = useState('')
+  const [results, setResults] = useState([])
+  const [searching, setSearching] = useState(false)
+  const debounce = useRef(null)
+
+  useEffect(() => {
+    clearTimeout(debounce.current)
+    if (!q.trim()) { setResults([]); return }
+    setSearching(true)
+    debounce.current = setTimeout(async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('id, full_name, username, avatar_url, role')
+        .or(`full_name.ilike.%${q}%,username.ilike.%${q}%`)
+        .limit(8)
+      setResults(data ?? [])
+      setSearching(false)
+    }, 300)
+    return () => clearTimeout(debounce.current)
+  }, [q])
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+      <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(6px)' }} onClick={onClose} />
+      <div style={{ position: 'relative', background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, width: '100%', maxWidth: 420, zIndex: 1, overflow: 'hidden' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 16px', borderBottom: `1px solid ${C.border}` }}>
+          <Search size={15} color={C.muted} style={{ flexShrink: 0 }} />
+          <input
+            autoFocus
+            value={q}
+            onChange={e => setQ(e.target.value)}
+            placeholder="Procurar utilizador..."
+            style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', color: C.text, fontSize: 15, fontFamily: 'inherit' }}
+          />
+          <button onClick={onClose} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: C.muted, display: 'flex', padding: 2 }}><X size={16} /></button>
+        </div>
+        <div style={{ maxHeight: 320, overflowY: 'auto' }}>
+          {!q.trim() && (
+            <p style={{ margin: 0, padding: '24px 16px', textAlign: 'center', fontSize: 13, color: C.muted }}>Escreve o nome ou @username</p>
+          )}
+          {searching && (
+            <p style={{ margin: 0, padding: '20px 16px', textAlign: 'center', fontSize: 13, color: C.muted }}>A procurar...</p>
+          )}
+          {!searching && q.trim() && results.length === 0 && (
+            <p style={{ margin: 0, padding: '20px 16px', textAlign: 'center', fontSize: 13, color: C.muted }}>Nenhum utilizador encontrado</p>
+          )}
+          {results.map(p => (
+            <button key={p.id} onClick={() => onSelect(p)}
+              style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', transition: 'background 0.12s' }}
+              onMouseEnter={e => e.currentTarget.style.background = 'var(--c-bg-alt)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+              <Avatar profile={p} size={38} />
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{p.full_name || p.username || 'Utilizador'}</div>
+                {p.username && <div style={{ fontSize: 12, color: C.muted }}>@{p.username}</div>}
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function Mensagens() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -52,6 +117,7 @@ export default function Mensagens() {
   const [sending, setSending]           = useState(false)
   const [search, setSearch]             = useState('')
   const [loading, setLoading]           = useState(true)
+  const [showNova, setShowNova]         = useState(false)
   const [mobileView, setMobileView]     = useState('list') // 'list' | 'thread'
   const bottomRef = useRef(null)
   const channelRef = useRef(null)
@@ -183,6 +249,14 @@ export default function Mensagens() {
     ensureProfile(otherId)
   }
 
+  function selectNewConversation(profile) {
+    setProfiles(p => ({ ...p, [profile.id]: profile }))
+    setActiveId(profile.id)
+    setMobileView('thread')
+    setShowNova(false)
+    loadThread(profile.id)
+  }
+
   const filteredConvs = conversations.filter(c => {
     const p = profiles[c.otherId]
     if (!search) return true
@@ -219,13 +293,17 @@ export default function Mensagens() {
             }}
               className="msg-list"
             >
-              {/* Search */}
-              <div style={{ padding: '12px 12px 8px', borderBottom: `1px solid ${C.border}` }}>
-                <div style={{ position: 'relative' }}>
+              {/* Search + Nova */}
+              <div style={{ padding: '12px 12px 8px', borderBottom: `1px solid ${C.border}`, display: 'flex', gap: 6 }}>
+                <div style={{ position: 'relative', flex: 1 }}>
                   <Search size={14} color={C.muted} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
                   <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Pesquisar..."
                     style={{ width: '100%', background: 'var(--c-bg)', border: `1px solid ${C.border}`, borderRadius: 8, color: C.text, fontSize: 13, padding: '8px 10px 8px 30px', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }} />
                 </div>
+                <button onClick={() => setShowNova(true)} title="Nova mensagem"
+                  style={{ flexShrink: 0, width: 34, height: 34, borderRadius: 8, background: C.blue, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(27,120,247,0.3)' }}>
+                  <Plus size={16} color="#fff" />
+                </button>
               </div>
 
               <div style={{ flex: 1, overflowY: 'auto' }}>
@@ -356,6 +434,8 @@ export default function Mensagens() {
           </div>
         </div>
       </div>
+
+      {showNova && <NovaConversa onSelect={selectNewConversation} onClose={() => setShowNova(false)} />}
 
       <style>{`
         @media (max-width: 640px) {
