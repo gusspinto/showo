@@ -125,6 +125,8 @@ export default function Settings() {
   const { theme, toggleTheme } = useTheme()
   const navigate = useNavigate()
 
+  const [activeTab, setActiveTab]         = useState('perfil')
+
   const [fullName, setFullName]           = useState('')
   const [username, setUsername]           = useState('')
   const [originalUsername, setOriginalUsername] = useState('')
@@ -342,394 +344,325 @@ export default function Settings() {
   )
   if (!user) return null
 
+  const isRecruiter = role === 'recrutador' || role === 'empresa'
+  const accentColor = role === 'empresa' ? '#f59e0b' : '#8b5cf6'
+
+  // Tab definitions for recruiter/empresa
+  const recruiterTabs = [
+    { id: 'perfil',       label: 'Perfil',       icon: <Camera size={15} /> },
+    { id: 'empresa',      label: 'Empresa',       icon: <Building2 size={15} /> },
+    { id: 'recrutamento', label: 'Recrutamento',  icon: <Search size={15} /> },
+    { id: 'conta',        label: 'Conta',         icon: <Lock size={15} /> },
+  ]
+
+  /* ── shared: avatar block ── */
+  const avatarBlock = (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 24 }}>
+      <div style={{ position: 'relative', flexShrink: 0 }}>
+        {avatarUrl ? (
+          <img src={avatarUrl} alt="Avatar" style={{ width: 72, height: 72, borderRadius: '50%', objectFit: 'cover', border: `2px solid ${C.border}` }} />
+        ) : (
+          <div style={{ width: 72, height: 72, borderRadius: '50%', background: `linear-gradient(135deg,${accentColor},#4f46e5)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, fontWeight: 800, color: '#fff', border: `2px solid ${C.border}` }}>
+            {fullName?.[0]?.toUpperCase() ?? user?.email?.[0]?.toUpperCase() ?? '?'}
+          </div>
+        )}
+        <button type="button" onClick={() => avatarInputRef.current?.click()} disabled={avatarUploading}
+          style={{ position: 'absolute', bottom: 0, right: 0, width: 26, height: 26, borderRadius: '50%', background: accentColor, border: `2px solid ${C.inputBg}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: avatarUploading ? 'default' : 'pointer', opacity: avatarUploading ? 0.6 : 1 }}>
+          <Camera size={13} color="#fff" />
+        </button>
+        <input ref={avatarInputRef} type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }} onChange={handleAvatarChange} />
+        {avatarCropFile && <CropModal file={avatarCropFile} circular={true} onConfirm={handleAvatarCropConfirm} onCancel={() => setAvatarCropFile(null)} />}
+      </div>
+      <div>
+        <button type="button" onClick={() => avatarInputRef.current?.click()} disabled={avatarUploading}
+          style={{ display: 'block', background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 8, padding: '8px 16px', color: C.text, fontSize: 13, fontWeight: 600, cursor: avatarUploading ? 'default' : 'pointer', fontFamily: 'inherit', marginBottom: 8, opacity: avatarUploading ? 0.6 : 1 }}>
+          {avatarUploading ? 'A carregar…' : 'Alterar foto'}
+        </button>
+        {avatarUrl && (
+          <button type="button" onClick={handleRemoveAvatar} disabled={avatarUploading}
+            style={{ display: 'block', background: 'none', border: 'none', color: C.muted, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}>
+            Remover foto
+          </button>
+        )}
+        <p style={{ margin: '8px 0 0', fontSize: 12, color: C.subtle }}>JPG, PNG ou WebP · máx. 5 MB</p>
+      </div>
+    </div>
+  )
+
+  /* ── shared: save button + msg ── */
+  const saveBlock = (
+    <>
+      {saveMsg && (
+        <div style={{ padding: '10px 14px', borderRadius: 8, marginBottom: 16, background: saveMsg.type === 'ok' ? 'rgba(34,197,94,0.08)' : 'rgba(239,68,68,0.08)', border: `1px solid ${saveMsg.type === 'ok' ? 'rgba(34,197,94,0.25)' : 'rgba(239,68,68,0.25)'}`, color: saveMsg.type === 'ok' ? C.green : C.red, fontSize: 13 }}>
+          {saveMsg.text}
+        </div>
+      )}
+      <button onClick={handleSaveProfile} disabled={saving}
+        style={{ background: saving ? C.border : `linear-gradient(135deg, ${accentColor}, #4f46e5)`, border: 'none', borderRadius: 10, padding: '12px 24px', color: '#fff', fontSize: 14, fontWeight: 700, cursor: saving ? 'default' : 'pointer', fontFamily: 'inherit', boxShadow: saving ? 'none' : `0 4px 16px ${accentColor}55`, transition: 'background 0.2s' }}>
+        {saving ? 'A guardar...' : 'Guardar'}
+      </button>
+    </>
+  )
+
+  /* ── role badge ── */
+  const ROLE_INFO = {
+    aluno:      { icon: <GraduationCap size={18} />, label: 'Aluno',      color: '#1b78f7' },
+    professor:  { icon: <BookOpen size={18} />,      label: 'Professor',  color: '#10b981' },
+    recrutador: { icon: <Search size={18} />,        label: 'Recrutador', color: '#8b5cf6' },
+    empresa:    { icon: <Building2 size={18} />,     label: 'Empresa',    color: '#f59e0b' },
+  }
+  const r = ROLE_INFO[role] ?? ROLE_INFO.aluno
+  const roleBadge = (
+    <div style={{ marginBottom: 20 }}>
+      <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: C.muted, marginBottom: 10 }}>Tipo de conta</label>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: `${r.color}0d`, border: `1.5px solid ${r.color}40`, borderRadius: 10, padding: '12px 16px' }}>
+        <span style={{ color: r.color, display: 'flex', alignItems: 'center' }}>{r.icon}</span>
+        <span style={{ fontSize: 14, fontWeight: 700, color: r.color }}>{r.label}</span>
+        <span style={{ marginLeft: 'auto', fontSize: 11, color: C.subtle, display: 'flex', alignItems: 'center', gap: 4 }}><Lock size={11} /> Definido no registo</span>
+      </div>
+    </div>
+  )
+
   return (
     <div style={{ minHeight: '100vh', background: C.bg, fontFamily: 'inherit' }}>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
       <Navbar />
       <div className="page-content">
 
-        <div style={{ marginBottom: 32, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+        {/* Header */}
+        <div style={{ marginBottom: 28, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
           <div>
             <h1 style={{ color: C.text, fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 900, margin: '0 0 4px', letterSpacing: '-0.5px' }}>Definições</h1>
             <p style={{ color: C.muted, fontSize: 14, margin: 0 }}>Gere o teu perfil e conta</p>
           </div>
-          <button
-            onClick={() => navigate('/dashboard')}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 6,
-              background: 'transparent', border: `1px solid ${C.border}`,
-              borderRadius: 8, padding: '8px 14px',
-              color: C.muted, fontSize: 13, fontWeight: 500,
-              cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0, marginTop: 4,
-              transition: 'border-color 0.15s, color 0.15s',
-            }}
+          <button onClick={() => navigate('/dashboard')}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 8, padding: '8px 14px', color: C.muted, fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0, marginTop: 4, transition: 'border-color 0.15s, color 0.15s' }}
             onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--c-border-bright)'; e.currentTarget.style.color = C.text }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted }}
-          >
+            onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted }}>
             <ArrowLeft size={14} /> Dashboard
           </button>
         </div>
 
-        {/* Profile */}
-        <SectionCard title="Perfil público">
-          {/* Avatar upload */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 24 }}>
-            <div style={{ position: 'relative', flexShrink: 0 }}>
-              {avatarUrl ? (
-                <img
-                  src={avatarUrl}
-                  alt="Avatar"
-                  style={{ width: 72, height: 72, borderRadius: '50%', objectFit: 'cover', border: `2px solid ${C.border}` }}
+        {/* ═══ RECRUITER / EMPRESA: tabbed layout ═══ */}
+        {isRecruiter ? (
+          <>
+            {/* Tab bar */}
+            <div style={{ display: 'flex', gap: 4, marginBottom: 24, background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 5, overflowX: 'auto' }}>
+              {recruiterTabs.map(t => {
+                const active = activeTab === t.id
+                return (
+                  <button key={t.id} onClick={() => setActiveTab(t.id)}
+                    style={{ flex: 1, minWidth: 90, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '10px 14px', borderRadius: 8, border: 'none', fontFamily: 'inherit', fontSize: 13, fontWeight: active ? 700 : 500, cursor: 'pointer', transition: 'all 0.18s', background: active ? accentColor : 'transparent', color: active ? '#fff' : C.muted, boxShadow: active ? `0 2px 8px ${accentColor}44` : 'none', whiteSpace: 'nowrap' }}>
+                    {t.icon} {t.label}
+                  </button>
+                )
+              })}
+            </div>
+
+            {/* ── Tab: Perfil ── */}
+            {activeTab === 'perfil' && (
+              <SectionCard title="Perfil público">
+                {avatarBlock}
+                <Input label="Nome" value={fullName} onChange={setFullName} placeholder="O teu nome" />
+                <Input label="Username" value={username} onChange={v => setUsername(v.toLowerCase().replace(/[^a-z0-9_]/g, ''))} placeholder="ex: rh_empresa" prefix="@"
+                  hint={
+                    usernameStatus === 'checking'  ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Loader size={12} /> A verificar...</span> :
+                    usernameStatus === 'available' ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Check size={12} /> Disponível!</span> :
+                    usernameStatus === 'taken'     ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><X size={12} /> Já está a ser usado.</span> :
+                    usernameStatus === 'invalid'   ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><AlertTriangle size={12} /> Só letras minúsculas, números e _.</span> :
+                    `showo.vercel.app/u/${username || 'username'}`
+                  }
                 />
-              ) : (
-                <div style={{ width: 72, height: 72, borderRadius: '50%', background: 'linear-gradient(135deg,#1b78f7,#4f46e5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, fontWeight: 800, color: '#fff', border: `2px solid ${C.border}` }}>
-                  {fullName?.[0]?.toUpperCase() ?? user?.email?.[0]?.toUpperCase() ?? '?'}
-                </div>
-              )}
-              {/* Camera overlay */}
-              <button
-                type="button"
-                onClick={() => avatarInputRef.current?.click()}
-                disabled={avatarUploading}
-                style={{
-                  position: 'absolute', bottom: 0, right: 0,
-                  width: 26, height: 26, borderRadius: '50%',
-                  background: C.blue, border: `2px solid ${C.inputBg}`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  cursor: avatarUploading ? 'default' : 'pointer',
-                  opacity: avatarUploading ? 0.6 : 1,
-                }}
-              >
-                <Camera size={13} color="#fff" />
-              </button>
-              <input
-                ref={avatarInputRef}
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                style={{ display: 'none' }}
-                onChange={handleAvatarChange}
-              />
-              {avatarCropFile && (
-                <CropModal
-                  file={avatarCropFile}
-                  circular={true}
-                  onConfirm={handleAvatarCropConfirm}
-                  onCancel={() => setAvatarCropFile(null)}
-                />
-              )}
-            </div>
-            <div>
-              <button
-                type="button"
-                onClick={() => avatarInputRef.current?.click()}
-                disabled={avatarUploading}
-                style={{ display: 'block', background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 8, padding: '8px 16px', color: C.text, fontSize: 13, fontWeight: 600, cursor: avatarUploading ? 'default' : 'pointer', fontFamily: 'inherit', marginBottom: 8, opacity: avatarUploading ? 0.6 : 1 }}
-              >
-                {avatarUploading ? 'A carregar…' : 'Alterar foto'}
-              </button>
-              {avatarUrl && (
-                <button
-                  type="button"
-                  onClick={handleRemoveAvatar}
-                  disabled={avatarUploading}
-                  style={{ display: 'block', background: 'none', border: 'none', color: C.muted, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}
-                >
-                  Remover foto
-                </button>
-              )}
-              <p style={{ margin: '8px 0 0', fontSize: 12, color: C.subtle }}>JPG, PNG ou WebP · máx. 5 MB</p>
-            </div>
-          </div>
+                <Textarea label="Apresentação" value={bio} onChange={setBio} placeholder="Apresenta a tua empresa ou o teu trabalho como recrutador..." hint="Aparece no teu perfil público — os alunos vêem isto." />
+                {roleBadge}
+                {saveBlock}
+              </SectionCard>
+            )}
 
-          <Input
-            label="Nome"
-            value={fullName}
-            onChange={setFullName}
-            placeholder="O teu nome"
-          />
-          <Input
-            label="Username"
-            value={username}
-            onChange={v => setUsername(v.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
-            placeholder="ex: gustavo_silva"
-            prefix="@"
-            hint={
-              usernameStatus === 'checking'  ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Loader size={12} style={{ display: 'inline-block', verticalAlign: 'middle' }} /> A verificar disponibilidade...</span> :
-              usernameStatus === 'available' ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Check size={12} style={{ display: 'inline-block', verticalAlign: 'middle' }} /> Username disponível!</span> :
-              usernameStatus === 'taken'     ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><X size={12} style={{ display: 'inline-block', verticalAlign: 'middle' }} /> Este username já está a ser usado.</span> :
-              usernameStatus === 'invalid'   ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><AlertTriangle size={12} style={{ display: 'inline-block', verticalAlign: 'middle' }} /> Só letras minúsculas, números e _ (mín. 3 caracteres).</span> :
-              `Link público: showo.vercel.app/u/${username || 'username'}`
-            }
-          />
-          <Textarea
-            label="Bio"
-            value={bio}
-            onChange={setBio}
-            placeholder="Conta um pouco sobre ti e os teus projetos..."
-            hint="Aparece no teu perfil público."
-          />
-
-          {/* Recruiter / empresa fields */}
-          {(role === 'recrutador' || role === 'empresa') && (
-            <div style={{ marginBottom: 4 }}>
-              <div style={{
-                display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20,
-                padding: '10px 14px',
-                background: 'rgba(139,92,246,0.06)',
-                border: '1px solid rgba(139,92,246,0.2)',
-                borderRadius: 10,
-              }}>
-                <Search size={14} color="#8b5cf6" />
-                <span style={{ fontSize: 13, color: '#8b5cf6', fontWeight: 600 }}>
-                  Perfil de {role === 'recrutador' ? 'recrutador' : 'empresa'} — visível para os estudantes
-                </span>
-              </div>
-              <Input
-                label="Empresa"
-                value={company}
-                onChange={setCompany}
-                placeholder="Ex: Google, NOS, Altice..."
-              />
-              <Input
-                label="Cargo"
-                value={companyRole}
-                onChange={setCompanyRole}
-                placeholder="Ex: Talent Acquisition, HR Manager..."
-              />
-              <Input
-                label="Website da empresa"
-                value={companyWebsite}
-                onChange={setCompanyWebsite}
-                placeholder="https://empresa.com"
-              />
-              <Input
-                label="LinkedIn"
-                value={linkedinUrl}
-                onChange={setLinkedinUrl}
-                placeholder="https://linkedin.com/in/..."
-              />
-              <Textarea
-                label="O que procuras"
-                value={lookingFor}
-                onChange={setLookingFor}
-                placeholder="Ex: Procuro estagiários de Tecnologia e Programação com projetos na área de mobile ou web..."
-                hint="Aparece no teu perfil público e ajuda os estudantes a perceber se se encaixam."
-              />
-            </div>
-          )}
-
-          {/* Available for work toggle — aluno only */}
-          {role === 'aluno' && (
-            <div style={{ marginBottom: 20 }}>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: C.muted, marginBottom: 10 }}>
-                Disponibilidade
-              </label>
-              <button
-                type="button"
-                onClick={() => setAvailableForWork(v => !v)}
-                style={{
-                  width: '100%', display: 'flex', alignItems: 'center', gap: 14,
-                  background: availableForWork ? 'rgba(34,197,94,0.07)' : C.inputBg,
-                  border: `1.5px solid ${availableForWork ? 'rgba(34,197,94,0.35)' : C.border}`,
-                  borderRadius: 10, padding: '13px 16px',
-                  cursor: 'pointer', fontFamily: 'inherit',
-                  transition: 'all 0.2s',
-                  textAlign: 'left',
-                }}
-              >
-                <div style={{
-                  width: 42, height: 24, borderRadius: 12, flexShrink: 0,
-                  background: availableForWork ? '#22c55e' : C.subtle,
-                  position: 'relative', transition: 'background 0.2s',
-                }}>
-                  <div style={{
-                    position: 'absolute', top: 3, left: availableForWork ? 21 : 3,
-                    width: 18, height: 18, borderRadius: '50%',
-                    background: '#fff', transition: 'left 0.2s',
-                    boxShadow: '0 1px 4px rgba(0,0,0,0.25)',
-                  }} />
-                </div>
-                <div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: availableForWork ? '#22c55e' : C.text, marginBottom: 2, display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <Briefcase size={14} style={{ flexShrink: 0 }} />
-                    {availableForWork ? 'Disponível para estágio' : 'Não disponível para estágio'}
-                  </div>
-                  <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.45 }}>
-                    {availableForWork
-                      ? 'O teu perfil aparece nos resultados de recrutadores e empresas.'
-                      : 'Ativa para aparecer em pesquisas de recrutadores.'}
-                  </div>
-                </div>
-              </button>
-            </div>
-          )}
-
-          {/* Role — locked after registration */}
-          {(() => {
-            const ROLE_INFO = {
-              aluno:      { icon: <GraduationCap size={18} />, label: 'Aluno',      color: '#1b78f7' },
-              professor:  { icon: <BookOpen size={18} />,      label: 'Professor',  color: '#10b981' },
-              recrutador: { icon: <Search size={18} />,        label: 'Recrutador', color: '#8b5cf6' },
-              empresa:    { icon: <Building2 size={18} />,     label: 'Empresa',    color: '#f59e0b' },
-            }
-            const r = ROLE_INFO[role] ?? ROLE_INFO.aluno
-            return (
-              <div style={{ marginBottom: 20 }}>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: C.muted, marginBottom: 10 }}>
-                  Tipo de conta
-                </label>
-                <div style={{
-                  display: 'flex', alignItems: 'center', gap: 10,
-                  background: `${r.color}0d`,
-                  border: `1.5px solid ${r.color}40`,
-                  borderRadius: 10, padding: '12px 16px',
-                }}>
-                  <span style={{ color: r.color, display: 'flex', alignItems: 'center' }}>{r.icon}</span>
-                  <span style={{ fontSize: 14, fontWeight: 700, color: r.color }}>{r.label}</span>
-                  <span style={{ marginLeft: 'auto', fontSize: 11, color: C.subtle, display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <Lock size={11} /> Definido no registo
+            {/* ── Tab: Empresa ── */}
+            {activeTab === 'empresa' && (
+              <SectionCard title="Dados da empresa">
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24, padding: '10px 14px', background: `${accentColor}0d`, border: `1px solid ${accentColor}33`, borderRadius: 10 }}>
+                  <Building2 size={14} color={accentColor} />
+                  <span style={{ fontSize: 13, color: accentColor, fontWeight: 600 }}>
+                    Estes dados ficam visíveis no teu perfil público
                   </span>
                 </div>
-              </div>
-            )
-          })()}
+                <Input label="Nome da empresa" value={company} onChange={setCompany} placeholder="Ex: Google, NOS, Altice..." />
+                <Input label="O teu cargo" value={companyRole} onChange={setCompanyRole} placeholder="Ex: Talent Acquisition, HR Manager, CEO..." />
+                <Input label="Website" value={companyWebsite} onChange={setCompanyWebsite} placeholder="https://empresa.com" />
+                <Input label="LinkedIn" value={linkedinUrl} onChange={setLinkedinUrl} placeholder="https://linkedin.com/in/..." hint="O LinkedIn da empresa ou o teu perfil pessoal." />
+                {saveBlock}
+              </SectionCard>
+            )}
 
-          {saveMsg && (
-            <div style={{
-              padding: '10px 14px', borderRadius: 8, marginBottom: 16,
-              background: saveMsg.type === 'ok' ? 'rgba(34,197,94,0.08)' : 'rgba(239,68,68,0.08)',
-              border: `1px solid ${saveMsg.type === 'ok' ? 'rgba(34,197,94,0.25)' : 'rgba(239,68,68,0.25)'}`,
-              color: saveMsg.type === 'ok' ? C.green : C.red,
-              fontSize: 13,
-            }}>
-              {saveMsg.text}
-            </div>
-          )}
+            {/* ── Tab: Recrutamento ── */}
+            {activeTab === 'recrutamento' && (
+              <SectionCard title="O que procuras">
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24, padding: '10px 14px', background: `${accentColor}0d`, border: `1px solid ${accentColor}33`, borderRadius: 10 }}>
+                  <Search size={14} color={accentColor} />
+                  <span style={{ fontSize: 13, color: accentColor, fontWeight: 600, lineHeight: 1.4 }}>
+                    Esta informação ajuda os alunos a perceber se o teu perfil é relevante para eles
+                  </span>
+                </div>
+                <Textarea label="Perfil que procuras" value={lookingFor} onChange={setLookingFor} placeholder="Ex: Procuro estagiários de Engenharia Informática com projetos na área de mobile ou web. Valorizamos iniciativa e projetos pessoais..." hint="Aparece no teu perfil público. Quanto mais detalhe deres, mais facilmente os alunos percebem se se encaixam." />
+                {saveBlock}
+              </SectionCard>
+            )}
 
-          <button
-            onClick={handleSaveProfile}
-            disabled={saving}
-            style={{
-              background: saving ? C.border : `linear-gradient(135deg, ${C.blue}, #4f46e5)`,
-              border: 'none', borderRadius: 10,
-              padding: '12px 24px', color: '#fff',
-              fontSize: 14, fontWeight: 700,
-              cursor: saving ? 'default' : 'pointer',
-              fontFamily: 'inherit',
-              boxShadow: saving ? 'none' : '0 4px 16px rgba(27,120,247,0.3)',
-              transition: 'background 0.2s',
-            }}
-          >
-            {saving ? 'A guardar...' : 'Guardar perfil'}
-          </button>
-        </SectionCard>
+            {/* ── Tab: Conta ── */}
+            {activeTab === 'conta' && (
+              <>
+                <SectionCard title="Email">
+                  <div style={{ marginBottom: 4 }}>
+                    <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: C.muted, marginBottom: 7 }}>Email</label>
+                    <div style={{ background: C.inputBg, border: `1.5px solid ${C.border}`, borderRadius: 10, padding: '12px 14px', color: C.subtle, fontSize: 15, fontFamily: 'inherit' }}>{user.email}</div>
+                    <p style={{ margin: '6px 0 0', fontSize: 12, color: C.subtle }}>O email não pode ser alterado.</p>
+                  </div>
+                </SectionCard>
 
-        {/* Email */}
-        <SectionCard title="Conta">
-          <div style={{ marginBottom: 20 }}>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: C.muted, marginBottom: 7 }}>Email</label>
-            <div style={{
-              background: C.inputBg, border: `1.5px solid ${C.border}`,
-              borderRadius: 10, padding: '12px 14px',
-              color: C.subtle, fontSize: 15, fontFamily: 'inherit',
-            }}>
-              {user.email}
-            </div>
-            <p style={{ margin: '6px 0 0', fontSize: 12, color: C.subtle }}>O email não pode ser alterado.</p>
-          </div>
-        </SectionCard>
+                <SectionCard title="Alterar password">
+                  <Input label="Nova password" type="password" value={newPw} onChange={setNewPw} placeholder="Mínimo 6 caracteres" />
+                  <Input label="Confirmar nova password" type="password" value={confirmPw} onChange={setConfirmPw} placeholder="Repete a nova password" />
+                  {pwMsg && (
+                    <div style={{ padding: '10px 14px', borderRadius: 8, marginBottom: 16, background: pwMsg.type === 'ok' ? 'rgba(34,197,94,0.08)' : 'rgba(239,68,68,0.08)', border: `1px solid ${pwMsg.type === 'ok' ? 'rgba(34,197,94,0.25)' : 'rgba(239,68,68,0.25)'}`, color: pwMsg.type === 'ok' ? C.green : C.red, fontSize: 13 }}>
+                      {pwMsg.text}
+                    </div>
+                  )}
+                  <button onClick={handleChangePassword} disabled={pwSaving}
+                    style={{ background: pwSaving ? C.border : 'transparent', border: `1px solid ${C.border}`, borderRadius: 10, padding: '11px 24px', color: C.text, fontSize: 14, fontWeight: 600, cursor: pwSaving ? 'default' : 'pointer', fontFamily: 'inherit', transition: 'border-color 0.2s, background 0.2s' }}
+                    onMouseEnter={e => { if (!pwSaving) { e.currentTarget.style.borderColor = 'var(--c-border-bright)'; e.currentTarget.style.background = 'var(--c-bg-alt)' }}}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.background = 'transparent' }}>
+                    {pwSaving ? 'A alterar...' : 'Alterar password'}
+                  </button>
+                </SectionCard>
 
-        {/* Password */}
-        <SectionCard title="Alterar password">
-          <Input label="Nova password" type="password" value={newPw} onChange={setNewPw} placeholder="Mínimo 6 caracteres" />
-          <Input label="Confirmar nova password" type="password" value={confirmPw} onChange={setConfirmPw} placeholder="Repete a nova password" />
+                <SectionCard title="Aparência">
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+                    <div>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 3 }}>Tema</div>
+                      <div style={{ fontSize: 13, color: C.muted }}>{theme === 'dark' ? 'Modo escuro ativo' : 'Modo claro ativo'}</div>
+                    </div>
+                    <button onClick={toggleTheme}
+                      style={{ display: 'flex', alignItems: 'center', gap: 8, background: theme === 'dark' ? 'rgba(27,120,247,0.1)' : 'rgba(251,191,36,0.1)', border: `1.5px solid ${theme === 'dark' ? 'rgba(27,120,247,0.3)' : 'rgba(251,191,36,0.3)'}`, borderRadius: 10, padding: '10px 18px', color: theme === 'dark' ? C.blue : '#d97706', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.2s', flexShrink: 0 }}>
+                      {theme === 'dark'
+                        ? <><Sun size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} />Modo claro</>
+                        : <><Moon size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} />Modo escuro</>}
+                    </button>
+                  </div>
+                </SectionCard>
 
-          {pwMsg && (
-            <div style={{
-              padding: '10px 14px', borderRadius: 8, marginBottom: 16,
-              background: pwMsg.type === 'ok' ? 'rgba(34,197,94,0.08)' : 'rgba(239,68,68,0.08)',
-              border: `1px solid ${pwMsg.type === 'ok' ? 'rgba(34,197,94,0.25)' : 'rgba(239,68,68,0.25)'}`,
-              color: pwMsg.type === 'ok' ? C.green : C.red,
-              fontSize: 13,
-            }}>
-              {pwMsg.text}
-            </div>
-          )}
+                <SectionCard title="Sessão">
+                  <p style={{ color: C.muted, fontSize: 14, margin: '0 0 16px', lineHeight: 1.65 }}>Terminar sessão em todos os dispositivos.</p>
+                  <button onClick={async () => { await supabase.auth.signOut(); navigate('/') }}
+                    style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 10, padding: '11px 24px', color: C.red, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'background 0.15s' }}
+                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.14)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'rgba(239,68,68,0.08)'}>
+                    Terminar sessão
+                  </button>
+                </SectionCard>
+              </>
+            )}
+          </>
+        ) : (
 
-          <button
-            onClick={handleChangePassword}
-            disabled={pwSaving}
-            style={{
-              background: pwSaving ? C.border : 'transparent',
-              border: `1px solid ${C.border}`, borderRadius: 10,
-              padding: '11px 24px', color: C.text,
-              fontSize: 14, fontWeight: 600,
-              cursor: pwSaving ? 'default' : 'pointer',
-              fontFamily: 'inherit',
-              transition: 'border-color 0.2s, background 0.2s',
-            }}
-            onMouseEnter={e => { if (!pwSaving) { e.currentTarget.style.borderColor = 'var(--c-border-bright)'; e.currentTarget.style.background = 'var(--c-bg-alt)' }}}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.background = 'transparent' }}
-          >
-            {pwSaving ? 'A alterar...' : 'Alterar password'}
-          </button>
-        </SectionCard>
-
-        {/* Appearance */}
-        <SectionCard title="Aparência">
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
-            <div>
-              <div style={{ fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 3 }}>Tema</div>
-              <div style={{ fontSize: 13, color: C.muted }}>
-                {theme === 'dark' ? 'Modo escuro ativo' : 'Modo claro ativo'}
-              </div>
-            </div>
-            <button
-              onClick={toggleTheme}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 8,
-                background: theme === 'dark' ? 'rgba(27,120,247,0.1)' : 'rgba(251,191,36,0.1)',
-                border: `1.5px solid ${theme === 'dark' ? 'rgba(27,120,247,0.3)' : 'rgba(251,191,36,0.3)'}`,
-                borderRadius: 10, padding: '10px 18px',
-                color: theme === 'dark' ? C.blue : '#d97706',
-                fontSize: 14, fontWeight: 600,
-                cursor: 'pointer', fontFamily: 'inherit',
-                transition: 'all 0.2s',
-                flexShrink: 0,
-              }}
-            >
-              {theme === 'dark'
-                ? <><Sun size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} />Modo claro</>
-                : <><Moon size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} />Modo escuro</>
+        /* ═══ ALUNO / PROFESSOR: original single-page layout ═══ */
+        <>
+          {/* Profile */}
+          <SectionCard title="Perfil público">
+            {avatarBlock}
+            <Input label="Nome" value={fullName} onChange={setFullName} placeholder="O teu nome" />
+            <Input label="Username" value={username} onChange={v => setUsername(v.toLowerCase().replace(/[^a-z0-9_]/g, ''))} placeholder="ex: gustavo_silva" prefix="@"
+              hint={
+                usernameStatus === 'checking'  ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Loader size={12} style={{ display: 'inline-block', verticalAlign: 'middle' }} /> A verificar disponibilidade...</span> :
+                usernameStatus === 'available' ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Check size={12} style={{ display: 'inline-block', verticalAlign: 'middle' }} /> Username disponível!</span> :
+                usernameStatus === 'taken'     ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><X size={12} style={{ display: 'inline-block', verticalAlign: 'middle' }} /> Este username já está a ser usado.</span> :
+                usernameStatus === 'invalid'   ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><AlertTriangle size={12} style={{ display: 'inline-block', verticalAlign: 'middle' }} /> Só letras minúsculas, números e _ (mín. 3 caracteres).</span> :
+                `Link público: showo.vercel.app/u/${username || 'username'}`
               }
-            </button>
-          </div>
-        </SectionCard>
+            />
+            <Textarea label="Bio" value={bio} onChange={setBio} placeholder="Conta um pouco sobre ti e os teus projetos..." hint="Aparece no teu perfil público." />
 
-        {/* Danger zone */}
-        <SectionCard title="Zona de perigo">
-          <p style={{ color: C.muted, fontSize: 14, margin: '0 0 16px', lineHeight: 1.65 }}>
-            Terminar sessão em todos os dispositivos.
-          </p>
-          <button
-            onClick={async () => {
-              await supabase.auth.signOut()
-              navigate('/')
-            }}
-            style={{
-              background: 'rgba(239,68,68,0.08)',
-              border: '1px solid rgba(239,68,68,0.2)',
-              borderRadius: 10, padding: '11px 24px',
-              color: C.red, fontSize: 14, fontWeight: 600,
-              cursor: 'pointer', fontFamily: 'inherit',
-              transition: 'background 0.15s',
-            }}
-            onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.14)'}
-            onMouseLeave={e => e.currentTarget.style.background = 'rgba(239,68,68,0.08)'}
-          >
-            Terminar sessão
-          </button>
-        </SectionCard>
+            {/* Available for work toggle — aluno only */}
+            {role === 'aluno' && (
+              <div style={{ marginBottom: 20 }}>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: C.muted, marginBottom: 10 }}>Disponibilidade</label>
+                <button type="button" onClick={() => setAvailableForWork(v => !v)}
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 14, background: availableForWork ? 'rgba(34,197,94,0.07)' : C.inputBg, border: `1.5px solid ${availableForWork ? 'rgba(34,197,94,0.35)' : C.border}`, borderRadius: 10, padding: '13px 16px', cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.2s', textAlign: 'left' }}>
+                  <div style={{ width: 42, height: 24, borderRadius: 12, flexShrink: 0, background: availableForWork ? '#22c55e' : C.subtle, position: 'relative', transition: 'background 0.2s' }}>
+                    <div style={{ position: 'absolute', top: 3, left: availableForWork ? 21 : 3, width: 18, height: 18, borderRadius: '50%', background: '#fff', transition: 'left 0.2s', boxShadow: '0 1px 4px rgba(0,0,0,0.25)' }} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: availableForWork ? '#22c55e' : C.text, marginBottom: 2, display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <Briefcase size={14} style={{ flexShrink: 0 }} />
+                      {availableForWork ? 'Disponível para estágio' : 'Não disponível para estágio'}
+                    </div>
+                    <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.45 }}>
+                      {availableForWork ? 'O teu perfil aparece nos resultados de recrutadores e empresas.' : 'Ativa para aparecer em pesquisas de recrutadores.'}
+                    </div>
+                  </div>
+                </button>
+              </div>
+            )}
+
+            {roleBadge}
+            {saveBlock}
+          </SectionCard>
+
+          {/* Email */}
+          <SectionCard title="Conta">
+            <div style={{ marginBottom: 20 }}>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: C.muted, marginBottom: 7 }}>Email</label>
+              <div style={{ background: C.inputBg, border: `1.5px solid ${C.border}`, borderRadius: 10, padding: '12px 14px', color: C.subtle, fontSize: 15, fontFamily: 'inherit' }}>{user.email}</div>
+              <p style={{ margin: '6px 0 0', fontSize: 12, color: C.subtle }}>O email não pode ser alterado.</p>
+            </div>
+          </SectionCard>
+
+          {/* Password */}
+          <SectionCard title="Alterar password">
+            <Input label="Nova password" type="password" value={newPw} onChange={setNewPw} placeholder="Mínimo 6 caracteres" />
+            <Input label="Confirmar nova password" type="password" value={confirmPw} onChange={setConfirmPw} placeholder="Repete a nova password" />
+            {pwMsg && (
+              <div style={{ padding: '10px 14px', borderRadius: 8, marginBottom: 16, background: pwMsg.type === 'ok' ? 'rgba(34,197,94,0.08)' : 'rgba(239,68,68,0.08)', border: `1px solid ${pwMsg.type === 'ok' ? 'rgba(34,197,94,0.25)' : 'rgba(239,68,68,0.25)'}`, color: pwMsg.type === 'ok' ? C.green : C.red, fontSize: 13 }}>
+                {pwMsg.text}
+              </div>
+            )}
+            <button onClick={handleChangePassword} disabled={pwSaving}
+              style={{ background: pwSaving ? C.border : 'transparent', border: `1px solid ${C.border}`, borderRadius: 10, padding: '11px 24px', color: C.text, fontSize: 14, fontWeight: 600, cursor: pwSaving ? 'default' : 'pointer', fontFamily: 'inherit', transition: 'border-color 0.2s, background 0.2s' }}
+              onMouseEnter={e => { if (!pwSaving) { e.currentTarget.style.borderColor = 'var(--c-border-bright)'; e.currentTarget.style.background = 'var(--c-bg-alt)' }}}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.background = 'transparent' }}>
+              {pwSaving ? 'A alterar...' : 'Alterar password'}
+            </button>
+          </SectionCard>
+
+          {/* Appearance */}
+          <SectionCard title="Aparência">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 3 }}>Tema</div>
+                <div style={{ fontSize: 13, color: C.muted }}>{theme === 'dark' ? 'Modo escuro ativo' : 'Modo claro ativo'}</div>
+              </div>
+              <button onClick={toggleTheme}
+                style={{ display: 'flex', alignItems: 'center', gap: 8, background: theme === 'dark' ? 'rgba(27,120,247,0.1)' : 'rgba(251,191,36,0.1)', border: `1.5px solid ${theme === 'dark' ? 'rgba(27,120,247,0.3)' : 'rgba(251,191,36,0.3)'}`, borderRadius: 10, padding: '10px 18px', color: theme === 'dark' ? C.blue : '#d97706', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.2s', flexShrink: 0 }}>
+                {theme === 'dark'
+                  ? <><Sun size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} />Modo claro</>
+                  : <><Moon size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} />Modo escuro</>}
+              </button>
+            </div>
+          </SectionCard>
+
+          {/* Danger zone */}
+          <SectionCard title="Zona de perigo">
+            <p style={{ color: C.muted, fontSize: 14, margin: '0 0 16px', lineHeight: 1.65 }}>Terminar sessão em todos os dispositivos.</p>
+            <button onClick={async () => { await supabase.auth.signOut(); navigate('/') }}
+              style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 10, padding: '11px 24px', color: C.red, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'background 0.15s' }}
+              onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.14)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'rgba(239,68,68,0.08)'}>
+              Terminar sessão
+            </button>
+          </SectionCard>
+        </>
+        )}
       </div>
     </div>
   )
