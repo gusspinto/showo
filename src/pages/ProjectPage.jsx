@@ -133,20 +133,21 @@ const ScoreRing = memo(function ScoreRing({ score, size = 108 }) {
   const { color } = getLevelInfo(score)
 
   return (
-    <div style={{ position: 'relative', width: size, height: size }}>
+    <div style={{ position: 'relative', width: size, height: size, filter: `drop-shadow(0 0 6px ${color}80)` }}>
       {/* Outer glow ring */}
       <div style={{
         position: 'absolute', inset: -6, borderRadius: '50%',
         background: `radial-gradient(circle, ${color}18 0%, transparent 70%)`,
         pointerEvents: 'none',
+        filter: 'none',
       }} />
-      <svg width={size} height={size} style={{ transform: 'rotate(-90deg)', display: 'block', position: 'relative', zIndex: 1 }}>
+      <svg width={size} height={size} overflow="visible" style={{ transform: 'rotate(-90deg)', display: 'block', position: 'relative', zIndex: 1 }}>
         <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={colors.border} strokeWidth={stroke} />
         <circle
           cx={size / 2} cy={size / 2} r={r} fill="none"
           stroke={color} strokeWidth={stroke}
           strokeDasharray={dasharray} strokeLinecap="round"
-          style={{ transition: 'stroke-dasharray 0.6s ease-out, stroke 0.4s', filter: `drop-shadow(0 0 6px ${color}80)` }}
+          style={{ transition: 'stroke-dasharray 0.6s ease-out, stroke 0.4s' }}
         />
       </svg>
       <div style={{

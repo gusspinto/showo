@@ -143,13 +143,12 @@ function ProjectRow({ project, onView, onEdit, onDelete }) {
       className="dash-project-row"
     >
       {/* Score ring — SVG stroke (matches Explore style) */}
-      <div onClick={onView} style={{ position: 'relative', width: 42, height: 42, flexShrink: 0, cursor: 'pointer' }}>
-        <svg width={42} height={42} style={{ transform: 'rotate(-90deg)', display: 'block' }}>
+      <div onClick={onView} style={{ position: 'relative', width: 42, height: 42, flexShrink: 0, cursor: 'pointer', filter: `drop-shadow(0 0 5px ${scoreColor}80)` }}>
+        <svg width={42} height={42} overflow="visible" style={{ transform: 'rotate(-90deg)', display: 'block' }}>
           <circle cx={21} cy={21} r={17} fill="none" stroke="var(--c-border)" strokeWidth={3.5} />
           <circle cx={21} cy={21} r={17} fill="none" stroke={scoreColor} strokeWidth={3.5}
             strokeDasharray={`${((project.score ?? 0) / 100) * 2 * Math.PI * 17} ${2 * Math.PI * 17}`}
             strokeLinecap="round"
-            style={{ filter: `drop-shadow(0 0 5px ${scoreColor}80)` }}
           />
         </svg>
         <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, color: scoreColor }}>
@@ -1394,13 +1393,12 @@ export default function Dashboard() {
                   <div key={p.id} onClick={() => navigate(`/projeto/${p.slug}`)} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer', transition: 'all 0.15s' }}
                     onMouseEnter={e => { e.currentTarget.style.background = C.cardHover; e.currentTarget.style.borderColor = C.borderBright }}
                     onMouseLeave={e => { e.currentTarget.style.background = C.card; e.currentTarget.style.borderColor = C.border }}>
-                    <div style={{ position: 'relative', width: 38, height: 38, flexShrink: 0 }}>
-                      <svg width={38} height={38} style={{ transform: 'rotate(-90deg)', display: 'block' }}>
+                    <div style={{ position: 'relative', width: 38, height: 38, flexShrink: 0, filter: `drop-shadow(0 0 4px ${getScoreColor(p.score)}80)` }}>
+                      <svg width={38} height={38} overflow="visible" style={{ transform: 'rotate(-90deg)', display: 'block' }}>
                         <circle cx={19} cy={19} r={15} fill="none" stroke="var(--c-border)" strokeWidth={3} />
                         <circle cx={19} cy={19} r={15} fill="none" stroke={getScoreColor(p.score)} strokeWidth={3}
                           strokeDasharray={`${((p.score ?? 0) / 100) * 2 * Math.PI * 15} ${2 * Math.PI * 15}`}
                           strokeLinecap="round"
-                          style={{ filter: `drop-shadow(0 0 4px ${getScoreColor(p.score)}80)` }}
                         />
                       </svg>
                       <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: getScoreColor(p.score) }}>{p.score ?? '—'}</div>

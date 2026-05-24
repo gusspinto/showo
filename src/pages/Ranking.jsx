@@ -40,14 +40,13 @@ function ScoreRing({ score, size = 64, strokeW = 5 }) {
   const dash = (score / 100) * circ
   const color = getTierColor(score)
   return (
-    <div style={{ position: 'relative', width: size, height: size, flexShrink: 0 }}>
-      <svg width={size} height={size} style={{ transform: 'rotate(-90deg)', display: 'block' }}>
+    <div style={{ position: 'relative', width: size, height: size, flexShrink: 0, filter: `drop-shadow(0 0 5px ${color}80)` }}>
+      <svg width={size} height={size} overflow="visible" style={{ transform: 'rotate(-90deg)', display: 'block' }}>
         <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={C.border} strokeWidth={strokeW} />
         <circle
           cx={size/2} cy={size/2} r={r} fill="none"
           stroke={color} strokeWidth={strokeW}
           strokeDasharray={`${dash} ${circ - dash}`} strokeLinecap="round"
-          style={{ filter: `drop-shadow(0 0 5px ${color}80)` }}
         />
       </svg>
       <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>

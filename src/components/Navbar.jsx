@@ -341,7 +341,7 @@ function InviteInbox({ userId, sidebar = false }) {
           <div style={{ position: 'fixed', inset: 0, zIndex: 198 }} onClick={() => setOpen(false)} />
           <div style={{
             ...(sidebar
-              ? { position: 'fixed', left: 224, bottom: 16 }
+              ? { position: 'fixed', left: 248, bottom: 16 }
               : { position: 'absolute', top: 'calc(100% + 8px)', right: 0 }
             ),
             background: 'var(--c-card)', border: `1px solid var(--c-border)`,
@@ -695,7 +695,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
           display: none;
           position: fixed;
           left: 0; top: 0; bottom: 0;
-          width: 216px;
+          width: 240px;
           background: var(--c-sidebar-bg);
           border-right: 1px solid var(--c-border);
           flex-direction: column;
@@ -816,7 +816,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
           .sidebar   { display: flex; }
           .top-nav   { display: none !important; }
           .bottom-nav { display: none !important; }
-          body { padding-left: 216px !important; padding-bottom: 0 !important; }
+          body { padding-left: 240px !important; padding-bottom: 0 !important; }
         }
 
         /* Tablet (601–860px): hamburger visible, bottom nav hidden */

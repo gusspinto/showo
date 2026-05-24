@@ -283,7 +283,7 @@ export default function Conquistas() {
   return (
     <div style={{ minHeight: '100vh', background: C.bg }}>
       <Navbar />
-      <div style={{ maxWidth: 860, margin: '0 auto', padding: '32px 20px 80px' }}>
+      <div className="page-content">
 
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 8 }}>
@@ -295,7 +295,7 @@ export default function Conquistas() {
             <Medal size={24} color="#fbbf24" />
           </div>
           <div>
-            <h1 style={{ margin: 0, fontSize: 'clamp(22px,4vw,28px)', fontWeight: 900, color: C.text, letterSpacing: '-0.5px' }}>
+            <h1 style={{ margin: 0, fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 900, color: C.text, letterSpacing: '-0.5px' }}>
               Conquistas
             </h1>
             <p style={{ margin: 0, fontSize: 13, color: C.muted }}>

@@ -75,12 +75,11 @@ function ScoreRingSmall({ score }) {
   const dash = (score / 100) * circ
   const color = getLevelColor(score)
   return (
-    <div style={{ position: 'relative', width: size, height: size }}>
-      <svg width={size} height={size} style={{ transform: 'rotate(-90deg)', display: 'block' }}>
+    <div style={{ position: 'relative', width: size, height: size, filter: `drop-shadow(0 0 4px ${color}70)` }}>
+      <svg width={size} height={size} overflow="visible" style={{ transform: 'rotate(-90deg)', display: 'block' }}>
         <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={colors.border} strokeWidth={stroke} />
         <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth={stroke}
-          strokeDasharray={`${dash} ${circ-dash}`} strokeLinecap="round"
-          style={{ filter: `drop-shadow(0 0 4px ${color}70)` }} />
+          strokeDasharray={`${dash} ${circ-dash}`} strokeLinecap="round" />
       </svg>
       <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <span style={{ fontSize: 12, fontWeight: 800, color, letterSpacing: '-0.3px' }}>{score}</span>

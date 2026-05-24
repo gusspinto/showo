@@ -445,7 +445,7 @@ export default function Vagas() {
               <Briefcase size={24} color="#1b78f7" />
             </div>
             <div>
-              <h1 style={{ color: C.text, fontSize: 'clamp(22px,4vw,28px)', fontWeight: 900, margin: '0 0 4px', letterSpacing: '-0.5px' }}>Vagas</h1>
+              <h1 style={{ color: C.text, fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 900, margin: '0 0 6px', letterSpacing: '-0.5px' }}>Vagas</h1>
               <p style={{ color: C.muted, fontSize: 13, margin: 0 }}>
                 {isRecruiter ? 'Gere as tuas ofertas e encontra candidatos' : 'Ofertas de estágio e emprego de empresas e recrutadores'}
               </p>

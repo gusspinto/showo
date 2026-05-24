@@ -299,7 +299,7 @@ export default function Mensagens() {
         <div style={{ maxWidth: 920, margin: '0 auto', padding: '0 clamp(8px,3vw,24px)', paddingTop: 28 }}>
 
           <div style={{ marginBottom: 20 }}>
-            <h1 style={{ color: C.text, fontSize: 'clamp(22px,4vw,28px)', fontWeight: 900, margin: '0 0 4px', letterSpacing: '-0.5px' }}>
+            <h1 style={{ color: C.text, fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 900, margin: '0 0 6px', letterSpacing: '-0.5px' }}>
               Mensagens {totalUnread > 0 && <span style={{ fontSize: 15, fontWeight: 700, background: C.blue, color: '#fff', borderRadius: 99, padding: '2px 9px', verticalAlign: 'middle', marginLeft: 6 }}>{totalUnread}</span>}
             </h1>
             <p style={{ color: C.muted, fontSize: 13, margin: 0 }}>Conversas com recrutadores e candidatos</p>
