@@ -144,6 +144,13 @@ export default function Settings() {
 
   const [availableForWork, setAvailableForWork] = useState(false)
 
+  // Recruiter fields
+  const [company, setCompany]               = useState('')
+  const [companyRole, setCompanyRole]       = useState('')
+  const [companyWebsite, setCompanyWebsite] = useState('')
+  const [linkedinUrl, setLinkedinUrl]       = useState('')
+  const [lookingFor, setLookingFor]         = useState('')
+
   const [currentPw, setCurrentPw]     = useState('')
   const [newPw, setNewPw]             = useState('')
   const [confirmPw, setConfirmPw]     = useState('')
@@ -159,7 +166,7 @@ export default function Settings() {
     // Pre-fill from user_metadata
     setFullName(user.user_metadata?.full_name ?? '')
     // Load profile
-    supabase.from('profiles').select('username, bio, role, avatar_url, available_for_work').eq('id', user.id).single().then(({ data }) => {
+    supabase.from('profiles').select('username, bio, role, avatar_url, available_for_work, company, company_role, company_website, linkedin_url, looking_for').eq('id', user.id).single().then(({ data }) => {
       if (data) {
         setUsername(data.username ?? '')
         setOriginalUsername(data.username ?? '')
@@ -167,6 +174,11 @@ export default function Settings() {
         setRole(data.role ?? 'aluno')
         setAvatarUrl(data.avatar_url ?? '')
         setAvailableForWork(data.available_for_work ?? false)
+        setCompany(data.company ?? '')
+        setCompanyRole(data.company_role ?? '')
+        setCompanyWebsite(data.company_website ?? '')
+        setLinkedinUrl(data.linkedin_url ?? '')
+        setLookingFor(data.looking_for ?? '')
       }
     })
   }, [user])
@@ -272,6 +284,13 @@ export default function Settings() {
         bio: bio.trim() || null,
         role,
         available_for_work: availableForWork,
+        ...(role === 'recrutador' || role === 'empresa' ? {
+          company: company.trim() || null,
+          company_role: companyRole.trim() || null,
+          company_website: companyWebsite.trim() || null,
+          linkedin_url: linkedinUrl.trim() || null,
+          looking_for: lookingFor.trim() || null,
+        } : {}),
       })
       if (profileError) {
         if (profileError.code === '23505') {
@@ -449,6 +468,55 @@ export default function Settings() {
             placeholder="Conta um pouco sobre ti e os teus projetos..."
             hint="Aparece no teu perfil público."
           />
+
+          {/* Recruiter / empresa fields */}
+          {(role === 'recrutador' || role === 'empresa') && (
+            <div style={{ marginBottom: 4 }}>
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20,
+                padding: '10px 14px',
+                background: 'rgba(139,92,246,0.06)',
+                border: '1px solid rgba(139,92,246,0.2)',
+                borderRadius: 10,
+              }}>
+                <Search size={14} color="#8b5cf6" />
+                <span style={{ fontSize: 13, color: '#8b5cf6', fontWeight: 600 }}>
+                  Perfil de {role === 'recrutador' ? 'recrutador' : 'empresa'} — visível para os estudantes
+                </span>
+              </div>
+              <Input
+                label="Empresa"
+                value={company}
+                onChange={setCompany}
+                placeholder="Ex: Google, NOS, Altice..."
+              />
+              <Input
+                label="Cargo"
+                value={companyRole}
+                onChange={setCompanyRole}
+                placeholder="Ex: Talent Acquisition, HR Manager..."
+              />
+              <Input
+                label="Website da empresa"
+                value={companyWebsite}
+                onChange={setCompanyWebsite}
+                placeholder="https://empresa.com"
+              />
+              <Input
+                label="LinkedIn"
+                value={linkedinUrl}
+                onChange={setLinkedinUrl}
+                placeholder="https://linkedin.com/in/..."
+              />
+              <Textarea
+                label="O que procuras"
+                value={lookingFor}
+                onChange={setLookingFor}
+                placeholder="Ex: Procuro estagiários de Tecnologia e Programação com projetos na área de mobile ou web..."
+                hint="Aparece no teu perfil público e ajuda os estudantes a perceber se se encaixam."
+              />
+            </div>
+          )}
 
           {/* Available for work toggle — aluno only */}
           {role === 'aluno' && (
