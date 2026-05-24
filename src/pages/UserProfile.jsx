@@ -6,7 +6,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
 import CreateProjectModal from '../components/CreateProjectModal'
-import { Mail, Search, FolderOpen, X, Check, Download, Rocket, QrCode, Pencil, Globe, ExternalLink, Link, Briefcase, ArrowRight } from 'lucide-react'
+import { Mail, Search, FolderOpen, X, Check, Download, Rocket, QrCode, Pencil, Globe, ExternalLink, Link, Briefcase, ArrowRight, Star, MessageSquare } from 'lucide-react'
 
 // ── Design tokens (aligned with the rest of the app) ──────────────────────────
 const C = {
@@ -326,7 +326,8 @@ ${displayName}`)
 export default function UserProfile() {
   const { username } = useParams()
   const navigate = useNavigate()
-  const { user } = useAuth()
+  const { user, profile: myProfile } = useAuth()
+  const isRecruiter = myProfile?.role === 'recrutador' || myProfile?.role === 'empresa'
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [profile, setProfile] = useState(null)
   const [projects, setProjects] = useState([])
@@ -334,6 +335,8 @@ export default function UserProfile() {
   const [notFound, setNotFound] = useState(false)
   const [showKitModal, setShowKitModal] = useState(false)
   const [showQR, setShowQR] = useState(false)
+  const [saved, setSaved] = useState(false)
+  const [savingCandidate, setSavingCandidate] = useState(false)
 
   useEffect(() => {
     async function load() {
@@ -359,10 +362,35 @@ export default function UserProfile() {
         .order('score', { ascending: false })
 
       setProjects(projectsData ?? [])
+
+      // Check if recruiter already saved this student
+      if (user && (myProfile?.role === 'recrutador' || myProfile?.role === 'empresa') && profileData.id !== user.id) {
+        const { data: sc } = await supabase
+          .from('saved_candidates')
+          .select('id')
+          .eq('recruiter_id', user.id)
+          .eq('student_id', profileData.id)
+          .maybeSingle()
+        setSaved(!!sc)
+      }
+
       setLoading(false)
     }
     load()
   }, [username])
+
+  async function toggleSave() {
+    if (!user || !profile || savingCandidate) return
+    setSavingCandidate(true)
+    if (saved) {
+      await supabase.from('saved_candidates').delete().eq('recruiter_id', user.id).eq('student_id', profile.id)
+      setSaved(false)
+    } else {
+      await supabase.from('saved_candidates').upsert({ recruiter_id: user.id, student_id: profile.id }, { onConflict: 'recruiter_id,student_id' })
+      setSaved(true)
+    }
+    setSavingCandidate(false)
+  }
 
   const isOwnProfile = user?.id === profile?.id
   const displayName  = profile?.full_name || profile?.username || 'Utilizador'
@@ -688,6 +716,43 @@ export default function UserProfile() {
                 {isOwnProfile && (
                   <button className="up-action-btn primary" onClick={() => setShowCreateModal(true)}>
                     <Rocket size={13} /> Novo projeto
+                  </button>
+                )}
+                {/* Recruiter actions — only when viewing someone else's profile */}
+                {!isOwnProfile && isRecruiter && (
+                  <>
+                    <button
+                      onClick={toggleSave}
+                      disabled={savingCandidate}
+                      style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 6,
+                        background: saved ? 'rgba(245,158,11,0.12)' : 'transparent',
+                        border: `1px solid ${saved ? 'rgba(245,158,11,0.4)' : C.border}`,
+                        borderRadius: 9, padding: '8px 14px',
+                        color: saved ? '#f59e0b' : C.muted,
+                        fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+                        transition: 'all 0.15s',
+                      }}
+                      title={saved ? 'Remover dos guardados' : 'Guardar candidato'}
+                    >
+                      <Star size={13} fill={saved ? '#f59e0b' : 'none'} />
+                      {saved ? 'Guardado' : 'Guardar'}
+                    </button>
+                    <button
+                      onClick={() => navigate(`/mensagens?to=${profile.id}`)}
+                      className="up-action-btn primary"
+                    >
+                      <MessageSquare size={13} /> Mensagem
+                    </button>
+                  </>
+                )}
+                {/* Non-recruiter, not own profile — show message button if logged in */}
+                {!isOwnProfile && !isRecruiter && user && (
+                  <button
+                    onClick={() => navigate(`/mensagens?to=${profile.id}`)}
+                    className="up-action-btn"
+                  >
+                    <MessageSquare size={13} /> Mensagem
                   </button>
                 )}
               </div>

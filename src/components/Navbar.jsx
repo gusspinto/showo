@@ -643,6 +643,27 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
   const isRecruiter = profile?.role === 'recrutador' || profile?.role === 'empresa'
   const recruiterAccent = profile?.role === 'empresa' ? '#f59e0b' : '#8b5cf6'
 
+  const [unreadMsgs, setUnreadMsgs] = useState(0)
+  useEffect(() => {
+    if (!user) return
+    // Count unread messages
+    supabase.from('mensagens').select('id', { count: 'exact', head: true })
+      .eq('to_id', user.id).is('read_at', null)
+      .then(({ count }) => setUnreadMsgs(count || 0))
+    // Subscribe for new messages
+    const ch = supabase.channel(`unread-${user.id}`)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'mensagens', filter: `to_id=eq.${user.id}` },
+        () => setUnreadMsgs(n => n + 1))
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'mensagens', filter: `to_id=eq.${user.id}` },
+        () => {
+          supabase.from('mensagens').select('id', { count: 'exact', head: true })
+            .eq('to_id', user.id).is('read_at', null)
+            .then(({ count }) => setUnreadMsgs(count || 0))
+        })
+      .subscribe()
+    return () => supabase.removeChannel(ch)
+  }, [user])
+
   const profileUrl = profile?.username ? `/u/${profile.username}` : user ? `/u/${user.id}` : null
 
   function isActive(path) {
@@ -1166,6 +1187,20 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
                 <Briefcase size={16} /> Vagas
               </button>
 
+              <button className={`sb-item${isActive('/candidatos') ? ' active' : ''}`} onClick={() => navigate('/candidatos')}>
+                <Star size={16} /> Guardados
+              </button>
+
+              <button className={`sb-item${isActive('/mensagens') ? ' active' : ''}`} onClick={() => navigate('/mensagens')}
+                style={{ position: 'relative' }}>
+                <MessageSquare size={16} /> Mensagens
+                {unreadMsgs > 0 && (
+                  <span style={{ marginLeft: 'auto', background: '#1b78f7', color: '#fff', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>
+                    {unreadMsgs > 9 ? '9+' : unreadMsgs}
+                  </span>
+                )}
+              </button>
+
               <div className="sb-divider" style={{ margin: '8px 0 4px' }} />
               <span className="sb-label">Explorar</span>
 
@@ -1208,6 +1243,15 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
                   <button className="sb-item" disabled style={{ opacity: 0.5, cursor: 'default' }}>
                     <Briefcase size={16} /> Estágio
                     <span className="sb-soon">breve</span>
+                  </button>
+                  <button className={`sb-item${isActive('/mensagens') ? ' active' : ''}`} onClick={() => navigate('/mensagens')}
+                    style={{ position: 'relative' }}>
+                    <MessageSquare size={16} /> Mensagens
+                    {unreadMsgs > 0 && (
+                      <span style={{ marginLeft: 'auto', background: '#1b78f7', color: '#fff', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>
+                        {unreadMsgs > 9 ? '9+' : unreadMsgs}
+                      </span>
+                    )}
                   </button>
                   <button className={`sb-item${isActive('/vagas') ? ' active' : ''}`} onClick={() => navigate('/vagas')}>
                     <Briefcase size={16} /> Vagas

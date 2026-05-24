@@ -30,6 +30,8 @@ const Conquistas   = lazy(() => import('./pages/Conquistas'))
 const AIInterview  = lazy(() => import('./pages/AIInterview'))
 const Certificate  = lazy(() => import('./pages/Certificate'))
 const Vagas        = lazy(() => import('./pages/Vagas'))
+const Mensagens    = lazy(() => import('./pages/Mensagens'))
+const Candidatos   = lazy(() => import('./pages/Candidatos'))
 
 function PageLoader() {
   return (
@@ -264,6 +266,8 @@ export default function App() {
               <Route path="/interview"          element={<AIInterview />}  />
               <Route path="/certificado/:slug"  element={<Certificate />}  />
               <Route path="/vagas"              element={<Vagas />}        />
+              <Route path="/mensagens"          element={<Mensagens />}    />
+              <Route path="/candidatos"         element={<Candidatos />}   />
               <Route path="*"                   element={<NotFound />}     />
             </Routes>
             </Suspense>
