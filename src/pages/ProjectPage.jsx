@@ -726,8 +726,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
       position: 'fixed', inset: 0, zIndex: 50,
       overflowY: 'auto', overflowX: 'hidden',
       background: resolvedBg,
-      fontFamily: selectedFont.css,
-      paddingRight: isOwner && previewEditing ? 380 : 0,
+      paddingRight: isOwner && previewEditing ? 340 : 0,
       transition: 'padding-right 0.3s ease',
     }}>
       {/* ── Owner preview banner — sticky ── */}
@@ -858,6 +857,18 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
             fontFamily: 'var(--font-heading)',
           }}>
             {project.name}
+            {(project.score || 0) >= 100 && (
+              <span title="Score perfeito" style={{
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                marginLeft: 14, verticalAlign: 'middle',
+                width: 32, height: 32, borderRadius: 10,
+                background: 'linear-gradient(135deg, #1b78f7, #4f46e5)',
+                boxShadow: '0 4px 14px rgba(27,120,247,0.5)',
+                flexShrink: 0,
+              }}>
+                <GraduationCap size={17} color="#fff" />
+              </span>
+            )}
           </h1>
 
           {project.ai_tagline && (
@@ -887,10 +898,11 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
       {isOwner && previewEditing && (
           <div style={{
             position: 'fixed', right: 0, top: 34, bottom: 0, zIndex: 200,
-            width: 360, background: 'var(--c-card)',
+            width: 340, background: 'var(--c-card)',
             borderLeft: '1px solid var(--c-border)',
             display: 'flex', flexDirection: 'column',
-            boxShadow: '-10px 0 40px rgba(0,0,0,0.35)',
+            boxShadow: '-8px 0 32px rgba(0,0,0,0.25)',
+            fontFamily: 'var(--font-body)',
           }}>
             {/* Header */}
             <div style={{ padding: '12px 14px 10px', borderBottom: '1px solid var(--c-border)', flexShrink: 0, background: 'linear-gradient(135deg, rgba(27,120,247,0.08), rgba(79,70,229,0.04))' }}>
@@ -917,9 +929,9 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
               <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--c-subtle)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 10 }}>Aparência</div>
 
               {/* Accent color */}
-              <div style={{ marginBottom: 10 }}>
-                <div style={{ fontSize: 11, color: 'var(--c-muted)', fontWeight: 600, marginBottom: 6 }}>Cor de destaque</div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              <div style={{ marginBottom: 12 }}>
+                <div style={{ fontSize: 11, color: 'var(--c-muted)', fontWeight: 600, marginBottom: 7 }}>Cor de destaque</div>
+                <div style={{ display: 'flex', gap: 7 }}>
                   {ACCENT_PALETTES.map(p => {
                     const isSelected = (previewStyle.accent || 'default') === p.key
                     return (
@@ -928,7 +940,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
                         title={p.label}
                         onClick={() => setPreviewStyle(s => ({ ...s, accent: p.key }))}
                         style={{
-                          width: 26, height: 26, borderRadius: 7, border: 'none',
+                          flex: 1, height: 28, borderRadius: 8, border: 'none',
                           cursor: 'pointer', padding: 0, position: 'relative',
                           background: p.swatch
                             ? `linear-gradient(135deg, ${p.c1}, ${p.c2})`
@@ -936,7 +948,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
                           outline: isSelected ? '2px solid var(--c-text)' : '2px solid transparent',
                           outlineOffset: 2,
                           transition: 'outline 0.12s, transform 0.1s',
-                          transform: isSelected ? 'scale(1.12)' : 'scale(1)',
+                          transform: isSelected ? 'scale(1.06)' : 'scale(1)',
                         }}
                       >
                         {isSelected && (
@@ -950,43 +962,71 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
                 </div>
               </div>
 
-              {/* Hero size */}
-              <div style={{ marginBottom: 10 }}>
-                <div style={{ fontSize: 11, color: 'var(--c-muted)', fontWeight: 600, marginBottom: 6 }}>Tamanho do hero</div>
-                <div style={{ display: 'flex', gap: 4 }}>
-                  {HERO_SIZES.map(s => {
-                    const isSelected = (previewStyle.heroSize || 'default') === s.key
-                    return (
-                      <button
-                        key={s.key}
-                        onClick={() => setPreviewStyle(ps => ({ ...ps, heroSize: s.key }))}
-                        style={{
-                          flex: 1, padding: '6px 4px', borderRadius: 7,
-                          border: `1px solid ${isSelected ? '#1b78f7' : 'var(--c-border)'}`,
-                          background: isSelected ? 'rgba(27,120,247,0.1)' : 'var(--c-bg)',
-                          color: isSelected ? '#1b78f7' : 'var(--c-muted)',
-                          fontSize: 11, fontWeight: isSelected ? 700 : 500,
-                          cursor: 'pointer', fontFamily: 'inherit',
-                          transition: 'all 0.12s',
-                        }}
-                      >
-                        {s.label}
-                      </button>
-                    )
-                  })}
+              {/* Hero size + Title alignment — side by side */}
+              <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 11, color: 'var(--c-muted)', fontWeight: 600, marginBottom: 6 }}>Hero</div>
+                  <div style={{ display: 'flex', gap: 4 }}>
+                    {HERO_SIZES.map(s => {
+                      const isSelected = (previewStyle.heroSize || 'default') === s.key
+                      return (
+                        <button
+                          key={s.key}
+                          onClick={() => setPreviewStyle(ps => ({ ...ps, heroSize: s.key }))}
+                          style={{
+                            flex: 1, padding: '6px 2px', borderRadius: 7,
+                            border: `1px solid ${isSelected ? '#1b78f7' : 'var(--c-border)'}`,
+                            background: isSelected ? 'rgba(27,120,247,0.1)' : 'var(--c-bg)',
+                            color: isSelected ? '#1b78f7' : 'var(--c-muted)',
+                            fontSize: 10, fontWeight: isSelected ? 700 : 500,
+                            cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.12s',
+                          }}
+                        >
+                          {s.label}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 11, color: 'var(--c-muted)', fontWeight: 600, marginBottom: 6 }}>Alinhamento</div>
+                  <div style={{ display: 'flex', gap: 4 }}>
+                    {[
+                      { val: 'left',   Icon: AlignLeft   },
+                      { val: 'center', Icon: AlignCenter  },
+                      { val: 'right',  Icon: AlignRight   },
+                    ].map(a => {
+                      const isSel = (previewStyle.titleAlign || 'left') === a.val
+                      return (
+                        <button key={a.val} onClick={() => setPreviewStyle(ps => ({ ...ps, titleAlign: a.val }))}
+                          style={{
+                            flex: 1, padding: '6px 0', borderRadius: 7, cursor: 'pointer',
+                            border: `1px solid ${isSel ? '#1b78f7' : 'var(--c-border)'}`,
+                            background: isSel ? 'rgba(27,120,247,0.1)' : 'var(--c-bg)',
+                            color: isSel ? '#1b78f7' : 'var(--c-muted)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            transition: 'all 0.12s',
+                          }}
+                        >
+                          <a.Icon size={13} />
+                        </button>
+                      )
+                    })}
+                  </div>
                 </div>
               </div>
 
               {/* Font */}
-              <div style={{ marginBottom: 10 }}>
-                <div style={{ fontSize: 11, color: 'var(--c-muted)', fontWeight: 600, marginBottom: 6 }}>Fonte</div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 4 }}>
+              <div>
+                <div style={{ fontSize: 11, color: 'var(--c-muted)', fontWeight: 600, marginBottom: 6 }}>Fonte do texto</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 4 }}>
                   {FONT_OPTIONS.map(f => {
                     const isSel = (previewStyle.font || 'default') === f.key
                     return (
                       <button key={f.key} onClick={() => setPreviewStyle(ps => ({ ...ps, font: f.key }))}
+                        title={f.label}
                         style={{
-                          padding: '7px 4px', borderRadius: 7, cursor: 'pointer', fontFamily: 'inherit',
+                          padding: '7px 2px', borderRadius: 7, cursor: 'pointer', fontFamily: 'var(--font-body)',
                           border: `1px solid ${isSel ? '#1b78f7' : 'var(--c-border)'}`,
                           background: isSel ? 'rgba(27,120,247,0.1)' : 'var(--c-bg)',
                           color: isSel ? '#1b78f7' : 'var(--c-muted)',
@@ -994,70 +1034,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
                         }}
                       >
                         <div style={{ fontSize: 13, fontWeight: 700, fontFamily: f.css, lineHeight: 1 }}>{f.sample}</div>
-                        <div style={{ fontSize: 9, marginTop: 3, fontWeight: isSel ? 700 : 500, letterSpacing: '0.02em' }}>{f.label}</div>
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-
-              {/* Background */}
-              <div style={{ marginBottom: 10 }}>
-                <div style={{ fontSize: 11, color: 'var(--c-muted)', fontWeight: 600, marginBottom: 6 }}>Fundo</div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                  {BG_OPTIONS.map(b => {
-                    const isSel = (previewStyle.bg || 'default') === b.key
-                    return (
-                      <button key={b.key} title={b.label} onClick={() => setPreviewStyle(ps => ({ ...ps, bg: b.key }))}
-                        style={{
-                          width: 28, height: 28, borderRadius: 8, cursor: 'pointer', padding: 0, flexShrink: 0,
-                          background: b.preview
-                            ? (b.bg && b.bg.includes('gradient') ? b.bg : b.preview)
-                            : 'var(--c-bg-alt)',
-                          border: isSel ? '2.5px solid #1b78f7' : `1.5px solid var(--c-border)`,
-                          outline: isSel ? '1.5px solid rgba(27,120,247,0.4)' : 'none',
-                          outlineOffset: 2,
-                          transform: isSel ? 'scale(1.12)' : 'scale(1)',
-                          transition: 'all 0.12s',
-                          position: 'relative',
-                        }}
-                      >
-                        {isSel && (
-                          <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <Check size={12} color="#fff" strokeWidth={3} />
-                          </span>
-                        )}
-                        {!b.preview && (
-                          <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, color: 'var(--c-muted)', fontWeight: 700 }}>P</span>
-                        )}
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-
-              {/* Title alignment */}
-              <div>
-                <div style={{ fontSize: 11, color: 'var(--c-muted)', fontWeight: 600, marginBottom: 6 }}>Alinhamento do título</div>
-                <div style={{ display: 'flex', gap: 4 }}>
-                  {[
-                    { val: 'left',   Icon: AlignLeft,   label: 'Esquerda' },
-                    { val: 'center', Icon: AlignCenter, label: 'Centro' },
-                    { val: 'right',  Icon: AlignRight,  label: 'Direita' },
-                  ].map(a => {
-                    const isSel = (previewStyle.titleAlign || 'left') === a.val
-                    return (
-                      <button key={a.val} title={a.label} onClick={() => setPreviewStyle(ps => ({ ...ps, titleAlign: a.val }))}
-                        style={{
-                          flex: 1, padding: '7px 0', borderRadius: 7, cursor: 'pointer',
-                          border: `1px solid ${isSel ? '#1b78f7' : 'var(--c-border)'}`,
-                          background: isSel ? 'rgba(27,120,247,0.1)' : 'var(--c-bg)',
-                          color: isSel ? '#1b78f7' : 'var(--c-muted)',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          transition: 'all 0.12s',
-                        }}
-                      >
-                        <a.Icon size={14} />
+                        <div style={{ fontSize: 8, marginTop: 3, fontWeight: isSel ? 700 : 500, letterSpacing: '0.02em', fontFamily: 'var(--font-body)' }}>{f.label}</div>
                       </button>
                     )
                   })}
@@ -1254,25 +1231,25 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
                           {hasText && (
                             <div style={{ display: 'flex', gap: 3, marginLeft: 'auto' }}>
                               {[
-                                { val: 'left',   label: '≡', title: 'Esquerda' },
-                                { val: 'center', label: '≡', title: 'Centro' },
-                                { val: 'right',  label: '≡', title: 'Direita' },
-                              ].map((a, ai) => (
+                                { val: 'left',   Icon: AlignLeft,   title: 'Esquerda' },
+                                { val: 'center', Icon: AlignCenter, title: 'Centro' },
+                                { val: 'right',  Icon: AlignRight,  title: 'Direita' },
+                              ].map(a => (
                                 <button
                                   key={a.val}
                                   title={a.title}
                                   onClick={() => upd(block.id, 'align', a.val)}
                                   style={{
-                                    width: 26, height: 22, borderRadius: 5,
+                                    width: 26, height: 24, borderRadius: 5,
                                     background: (block.align || 'left') === a.val ? '#1b78f7' : 'var(--c-bg)',
                                     border: `1px solid ${(block.align || 'left') === a.val ? '#1b78f7' : 'var(--c-border)'}`,
-                                    cursor: 'pointer', fontSize: 11, fontWeight: 700,
+                                    cursor: 'pointer',
                                     color: (block.align || 'left') === a.val ? '#fff' : 'var(--c-muted)',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                                     transition: 'all 0.12s', padding: 0,
                                   }}
                                 >
-                                  {ai === 0 ? '◀' : ai === 1 ? '■' : '▶'}
+                                  <a.Icon size={12} />
                                 </button>
                               ))}
                             </div>
@@ -1309,7 +1286,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
       )}
 
       {/* ── Story sections ── */}
-      <div style={{ maxWidth: deviceMaxWidth ? Math.min(860, deviceMaxWidth) : 860, margin: '60px auto 0', padding: `0 ${previewDevice === 'mobile' ? '16px' : '28px'} 80px`, display: 'flex', flexDirection: 'column', gap: 32 }}>
+      <div style={{ maxWidth: deviceMaxWidth ? Math.min(860, deviceMaxWidth) : 860, margin: '60px auto 0', padding: `0 ${previewDevice === 'mobile' ? '16px' : '28px'} 80px`, display: 'flex', flexDirection: 'column', gap: 32, fontFamily: selectedFont.css }}>
 
         {/* Custom blocks — workspace blocks shown first */}
         {previewBlocks.map(block => {
@@ -3147,7 +3124,7 @@ export default function ProjectPage() {
           </div>
 
           {project.ai_tagline && (
-            <p className="proj-tagline" style={{ fontSize: 20, color: 'rgba(232,242,255,0.75)', lineHeight: 1.55, margin: '16px 0 18px', maxWidth: 600, fontWeight: 400, letterSpacing: '-0.1px' }}>
+            <p className="proj-tagline" style={{ fontSize: 20, color: 'var(--c-muted)', lineHeight: 1.55, margin: '16px 0 18px', maxWidth: 600, fontWeight: 400, letterSpacing: '-0.1px' }}>
               {project.ai_tagline}
             </p>
           )}
@@ -3306,31 +3283,31 @@ export default function ProjectPage() {
           )
         })()}
 
-        {/* Certificate banner — owner only, score >= 75 */}
-        {isOwner && score >= 75 && (
+        {/* Certificate banner — owner only, score = 100 (perfection badge) */}
+        {isOwner && score >= 100 && (
           <div style={{
-            background: 'linear-gradient(135deg, rgba(79,70,229,0.12), rgba(27,120,247,0.08))',
-            border: '1px solid rgba(79,70,229,0.3)',
+            background: 'linear-gradient(135deg, rgba(27,120,247,0.1), rgba(79,70,229,0.07))',
+            border: '1px solid rgba(27,120,247,0.3)',
             borderRadius: 16, padding: '18px 22px',
             display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
           }}>
-            <GraduationCap size={28} color="#c4b5fd" style={{ flexShrink: 0 }} />
+            <GraduationCap size={28} color={colors.blue} style={{ flexShrink: 0 }} />
             <div style={{ flex: 1, minWidth: 200 }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: '#c4b5fd', marginBottom: 2 }}>
-                O teu projeto atingiu nível profissional.
+              <div style={{ fontSize: 14, fontWeight: 700, color: colors.blue, marginBottom: 2 }}>
+                Score perfeito — projeto certificado.
               </div>
               <div style={{ fontSize: 13, color: colors.muted }}>
-                O teu certificado verificado por IA está disponível.
+                O teu projeto atingiu o máximo. O certificado verificado por IA está disponível.
               </div>
             </div>
             <button
               onClick={() => navigate(`/certificado/${project.slug}`)}
               style={{
-                background: 'linear-gradient(135deg, #4f46e5, #1b78f7)',
+                background: 'linear-gradient(135deg, #1b78f7, #4f46e5)',
                 color: '#fff', border: 'none', borderRadius: 10,
                 padding: '10px 20px', fontSize: 13, fontWeight: 700,
                 cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0,
-                boxShadow: '0 4px 16px rgba(79,70,229,0.3)',
+                boxShadow: '0 4px 16px rgba(27,120,247,0.3)',
               }}
             >
               <span style={{display:'flex',alignItems:'center',gap:6}}>Ver certificado <ArrowRight size={14} /></span>

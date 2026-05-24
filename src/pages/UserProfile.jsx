@@ -6,7 +6,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
 import CreateProjectModal from '../components/CreateProjectModal'
-import { Mail, Search, FolderOpen, X, Check, Download, Rocket, QrCode, Pencil, Globe, ExternalLink, Link, Briefcase, ArrowRight, Star, MessageSquare } from 'lucide-react'
+import { Mail, Search, FolderOpen, X, Check, Download, Rocket, QrCode, Pencil, Globe, ExternalLink, Link, Briefcase, ArrowRight, Star, MessageSquare, GraduationCap } from 'lucide-react'
 
 // ── Design tokens (aligned with the rest of the app) ──────────────────────────
 const C = {
@@ -619,8 +619,19 @@ export default function UserProfile() {
             <div style={{ flex: 1, minWidth: 0, paddingRight: 8 }}>
               {/* Name + username */}
               <div style={{ marginBottom: 6 }}>
-                <h1 style={{ color: C.text, fontSize: 26, fontWeight: 900, margin: '0 0 3px', letterSpacing: '-0.6px', lineHeight: 1.15 }}>
+                <h1 style={{ color: C.text, fontSize: 26, fontWeight: 900, margin: '0 0 3px', letterSpacing: '-0.6px', lineHeight: 1.15, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                   {displayName}
+                  {projects.some(p => (p.score || 0) >= 100) && (
+                    <span title="Tem um projeto com score perfeito" style={{
+                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                      width: 28, height: 28, borderRadius: 8,
+                      background: 'linear-gradient(135deg, #1b78f7, #4f46e5)',
+                      boxShadow: '0 3px 10px rgba(27,120,247,0.45)',
+                      flexShrink: 0,
+                    }}>
+                      <GraduationCap size={15} color="#fff" />
+                    </span>
+                  )}
                 </h1>
                 {profile.username && (
                   <span style={{ color: C.muted, fontSize: 13, fontWeight: 400 }}>@{profile.username}</span>
