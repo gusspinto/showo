@@ -73,20 +73,20 @@ function StatCard({ icon, label, value, color, onClick }) {
         position: 'relative', overflow: 'hidden',
       }}
     >
-      {/* subtle top accent stripe */}
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, ${accent}88, ${accent}22)`, borderRadius: '16px 16px 0 0' }} />
-      <div style={{
-        width: 34, height: 34, borderRadius: 10, flexShrink: 0,
-        background: `${accent}18`, border: `1px solid ${accent}30`,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        color: accent,
-      }}>
-        {icon}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{
+          width: 32, height: 32, borderRadius: 9, flexShrink: 0,
+          background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          color: accent,
+        }}>
+          {icon}
+        </div>
+        <span style={{ color: C.muted, fontSize: 12, fontWeight: 500 }}>{label}</span>
       </div>
-      <span style={{ color: accent, fontSize: 28, fontWeight: 800, letterSpacing: '-1px', lineHeight: 1 }}>
+      <span style={{ color: accent, fontSize: 30, fontWeight: 900, letterSpacing: '-1.5px', lineHeight: 1, marginTop: 4 }}>
         {value}
       </span>
-      <span style={{ color: C.muted, fontSize: 12, fontWeight: 500, letterSpacing: '0.02em' }}>{label}</span>
     </div>
   )
 }
@@ -138,7 +138,7 @@ function ProjectRow({ project, onView, onEdit, onDelete }) {
         display: 'flex', alignItems: 'center', gap: 14,
         transition: 'background 0.15s, border-color 0.15s, box-shadow 0.15s',
         cursor: 'default',
-        boxShadow: `inset 4px 0 0 ${scoreColor}${hovered ? 'cc' : '88'}`,
+        boxShadow: hovered ? '0 2px 12px rgba(0,0,0,0.12)' : 'none',
       }}
       className="dash-project-row"
     >

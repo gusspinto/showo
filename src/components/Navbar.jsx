@@ -1235,27 +1235,17 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
               {user && (
                 <>
                   <div className="sb-divider" style={{ margin: '8px 0 4px' }} />
-                  <span className="sb-label">Em breve</span>
-                  <button className="sb-item" disabled style={{ opacity: 0.5, cursor: 'default' }}>
-                    <FolderOpen size={16} /> Portfólio
-                    <span className="sb-soon">breve</span>
-                  </button>
-                  <button className="sb-item" disabled style={{ opacity: 0.5, cursor: 'default' }}>
-                    <Briefcase size={16} /> Estágio
-                    <span className="sb-soon">breve</span>
-                  </button>
-                  <button className={`sb-item${isActive('/mensagens') ? ' active' : ''}`} onClick={() => navigate('/mensagens')}
-                    style={{ position: 'relative' }}>
-                    <MessageSquare size={16} /> Mensagens
-                    {unreadMsgs > 0 && (
-                      <span style={{ marginLeft: 'auto', background: '#1b78f7', color: '#fff', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>
-                        {unreadMsgs > 9 ? '9+' : unreadMsgs}
-                      </span>
-                    )}
-                  </button>
+                  <span className="sb-label">Oportunidades</span>
                   <button className={`sb-item${isActive('/vagas') ? ' active' : ''}`} onClick={() => navigate('/vagas')}>
                     <Briefcase size={16} /> Vagas
                   </button>
+                  <button className="sb-item" disabled style={{ opacity: 0.45, cursor: 'default' }}>
+                    <Building2 size={16} /> Estágio
+                    <span className="sb-soon">breve</span>
+                  </button>
+
+                  <div className="sb-divider" style={{ margin: '8px 0 4px' }} />
+                  <span className="sb-label">Comunidade</span>
                   <button className={`sb-item${isActive('/missoes') ? ' active' : ''}`} onClick={() => navigate('/missoes')}>
                     <Swords size={16} /> Missões
                   </button>
@@ -1264,6 +1254,12 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
                   </button>
                   <button className={`sb-item${isActive('/conquistas') ? ' active' : ''}`} onClick={() => navigate('/conquistas')}>
                     <Medal size={16} /> Conquistas
+                  </button>
+
+                  <div className="sb-divider" style={{ margin: '8px 0 4px' }} />
+                  <button className="sb-item" disabled style={{ opacity: 0.45, cursor: 'default' }}>
+                    <FolderOpen size={16} /> Portfólio
+                    <span className="sb-soon">breve</span>
                   </button>
                 </>
               )}
@@ -1356,7 +1352,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
                     <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{getDisplayName(user)}</span>
                   </button>
                 )}
-                {/* Theme toggle — left of bell */}
+                {/* Theme toggle */}
                 <button
                   onClick={toggleTheme}
                   title={theme === 'dark' ? 'Modo claro' : 'Modo escuro'}
@@ -1371,6 +1367,31 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
                   onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--c-muted)' }}
                 >
                   {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
+                </button>
+                {/* Mensagens — compact icon with badge */}
+                <button
+                  onClick={() => navigate('/mensagens')}
+                  title="Mensagens"
+                  style={{
+                    flexShrink: 0, width: 32, height: 32, borderRadius: 8,
+                    background: isActive('/mensagens') ? 'rgba(27,120,247,0.13)' : 'transparent',
+                    border: 'none',
+                    color: isActive('/mensagens') ? '#1b78f7' : 'var(--c-muted)',
+                    cursor: 'pointer', position: 'relative',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    transition: 'background 0.13s, color 0.13s',
+                  }}
+                  onMouseEnter={e => { if (!isActive('/mensagens')) { e.currentTarget.style.background = 'var(--c-card-hover)'; e.currentTarget.style.color = 'var(--c-text)' } }}
+                  onMouseLeave={e => { if (!isActive('/mensagens')) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--c-muted)' } }}
+                >
+                  <MessageSquare size={15} />
+                  {unreadMsgs > 0 && (
+                    <span style={{
+                      position: 'absolute', top: 3, right: 3,
+                      width: 8, height: 8, borderRadius: '50%',
+                      background: '#1b78f7', border: '1.5px solid var(--c-sidebar-bg)',
+                    }} />
+                  )}
                 </button>
                 <InviteInbox userId={user.id} sidebar={true} />
               </div>

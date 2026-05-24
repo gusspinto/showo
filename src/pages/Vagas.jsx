@@ -435,12 +435,21 @@ export default function Vagas() {
       <div className="page-content">
 
         {/* Header */}
-        <div style={{ marginBottom: 28, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-          <div>
-            <h1 style={{ color: C.text, fontSize: 'clamp(26px,4vw,38px)', fontWeight: 900, margin: '0 0 6px', letterSpacing: '-0.5px' }}>Vagas</h1>
-            <p style={{ color: C.muted, fontSize: 14, margin: 0 }}>
-              {isRecruiter ? 'Gere as tuas ofertas e encontra candidatos' : 'Ofertas de estágio e emprego de empresas e recrutadores'}
-            </p>
+        <div style={{ marginBottom: 28, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            <div style={{
+              width: 48, height: 48, borderRadius: 14,
+              background: 'rgba(27,120,247,0.12)', border: '1px solid rgba(27,120,247,0.25)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+            }}>
+              <Briefcase size={24} color="#1b78f7" />
+            </div>
+            <div>
+              <h1 style={{ color: C.text, fontSize: 'clamp(22px,4vw,28px)', fontWeight: 900, margin: '0 0 4px', letterSpacing: '-0.5px' }}>Vagas</h1>
+              <p style={{ color: C.muted, fontSize: 13, margin: 0 }}>
+                {isRecruiter ? 'Gere as tuas ofertas e encontra candidatos' : 'Ofertas de estágio e emprego de empresas e recrutadores'}
+              </p>
+            </div>
           </div>
           {isRecruiter && (
             <button onClick={() => { setEditVaga(null); setShowModal(true) }}

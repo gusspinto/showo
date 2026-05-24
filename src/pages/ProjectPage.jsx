@@ -579,6 +579,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
   const dragOver   = useRef(null)
   const [dragOverIdx, setDragOverIdx] = useState(null)
   const [previewDevice, setPreviewDevice] = useState('desktop')
+  const [previewStyle, setPreviewStyle] = useState(() => project.preview_style || {})
 
   function onDragStart(i) { dragIdx.current = i }
   function onDragEnter(i) { dragOver.current = i; setDragOverIdx(i) }
@@ -636,7 +637,33 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
     personal:  { c1: '#1e3a5f', c2: '#312e81' },
     competition:{ c1: '#713f12', c2: '#831843' },
   }
-  const hero = TYPE_HERO_PUBLIC[project.project_type] ?? TYPE_HERO_PUBLIC.personal
+
+  // Accent palettes — each swatch maps to a gradient pair
+  const ACCENT_PALETTES = [
+    { key: 'default', label: 'Padrão',   swatch: null,      c1: null,       c2: null       },
+    { key: 'blue',    label: 'Azul',     swatch: '#1b78f7', c1: '#1e40af',  c2: '#4f46e5'  },
+    { key: 'purple',  label: 'Roxo',     swatch: '#7c3aed', c1: '#4c1d95',  c2: '#831843'  },
+    { key: 'teal',    label: 'Teal',     swatch: '#0d9488', c1: '#065f46',  c2: '#0369a1'  },
+    { key: 'crimson', label: 'Carmim',   swatch: '#dc2626', c1: '#7f1d1d',  c2: '#92400e'  },
+    { key: 'amber',   label: 'Âmbar',   swatch: '#d97706', c1: '#78350f',  c2: '#6d28d9'  },
+    { key: 'pink',    label: 'Rosa',     swatch: '#db2777', c1: '#831843',  c2: '#701a75'  },
+    { key: 'green',   label: 'Verde',    swatch: '#16a34a', c1: '#14532d',  c2: '#164e63'  },
+    { key: 'slate',   label: 'Pizarra',  swatch: '#475569', c1: '#1e293b',  c2: '#0f172a'  },
+  ]
+
+  const HERO_SIZES = [
+    { key: 'default', label: 'Normal',    height: 280 },
+    { key: 'compact', label: 'Compacto',  height: 180 },
+    { key: 'full',    label: 'Impactante', height: 400 },
+  ]
+
+  const selectedPalette = ACCENT_PALETTES.find(p => p.key === previewStyle.accent) || ACCENT_PALETTES[0]
+  const typeHero = TYPE_HERO_PUBLIC[project.project_type] ?? TYPE_HERO_PUBLIC.personal
+  const hero = selectedPalette.c1
+    ? { c1: selectedPalette.c1, c2: selectedPalette.c2 }
+    : typeHero
+
+  const heroHeight = (HERO_SIZES.find(s => s.key === previewStyle.heroSize) || HERO_SIZES[0]).height
 
   const DEVICES = [
     { id: 'desktop',  Icon: Monitor,    label: 'Desktop',   title: 'Vista desktop' },
@@ -738,13 +765,13 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
       {/* ── Hero ── */}
       <div style={{ position: 'relative', overflow: 'hidden' }}>
         {project.cover_url ? (
-          <div style={{ width: '100%', height: 320, position: 'relative' }}>
+          <div style={{ width: '100%', height: Math.round(heroHeight * 1.14), position: 'relative' }}>
             <img src={project.cover_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
             <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, var(--c-bg) 100%)' }} />
           </div>
         ) : (
           <div style={{
-            width: '100%', height: 280, position: 'relative',
+            width: '100%', height: heroHeight, position: 'relative',
             background: `linear-gradient(135deg, ${hero.c1}44 0%, ${hero.c2}66 60%, transparent 100%)`,
           }}>
             <div style={{ position: 'absolute', top: -40, left: '5%', width: 500, height: 500, borderRadius: '50%', background: `radial-gradient(ellipse, ${hero.c1}22 0%, transparent 65%)`, pointerEvents: 'none' }} />
@@ -832,6 +859,72 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
               </div>
               <div style={{ fontSize: 11, color: 'var(--c-muted)', lineHeight: 1.4, marginTop: 6 }}>
                 Arrasta para reordenar · visível pelos visitantes
+              </div>
+            </div>
+
+            {/* ── Aparência ── */}
+            <div style={{ padding: '12px 12px 10px', borderBottom: '1px solid var(--c-border)', flexShrink: 0 }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--c-subtle)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 10 }}>Aparência</div>
+
+              {/* Accent color */}
+              <div style={{ marginBottom: 10 }}>
+                <div style={{ fontSize: 11, color: 'var(--c-muted)', fontWeight: 600, marginBottom: 6 }}>Cor de destaque</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {ACCENT_PALETTES.map(p => {
+                    const isSelected = (previewStyle.accent || 'default') === p.key
+                    return (
+                      <button
+                        key={p.key}
+                        title={p.label}
+                        onClick={() => setPreviewStyle(s => ({ ...s, accent: p.key }))}
+                        style={{
+                          width: 26, height: 26, borderRadius: 7, border: 'none',
+                          cursor: 'pointer', padding: 0, position: 'relative',
+                          background: p.swatch
+                            ? `linear-gradient(135deg, ${p.c1}, ${p.c2})`
+                            : 'conic-gradient(#1e40af 0deg 90deg, #7c3aed 90deg 180deg, #065f46 180deg 270deg, #7c2d12 270deg 360deg)',
+                          outline: isSelected ? '2px solid var(--c-text)' : '2px solid transparent',
+                          outlineOffset: 2,
+                          transition: 'outline 0.12s, transform 0.1s',
+                          transform: isSelected ? 'scale(1.12)' : 'scale(1)',
+                        }}
+                      >
+                        {isSelected && (
+                          <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <Check size={12} color="#fff" strokeWidth={3} />
+                          </span>
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* Hero size */}
+              <div>
+                <div style={{ fontSize: 11, color: 'var(--c-muted)', fontWeight: 600, marginBottom: 6 }}>Tamanho do hero</div>
+                <div style={{ display: 'flex', gap: 4 }}>
+                  {HERO_SIZES.map(s => {
+                    const isSelected = (previewStyle.heroSize || 'default') === s.key
+                    return (
+                      <button
+                        key={s.key}
+                        onClick={() => setPreviewStyle(ps => ({ ...ps, heroSize: s.key }))}
+                        style={{
+                          flex: 1, padding: '6px 4px', borderRadius: 7,
+                          border: `1px solid ${isSelected ? '#1b78f7' : 'var(--c-border)'}`,
+                          background: isSelected ? 'rgba(27,120,247,0.1)' : 'var(--c-bg)',
+                          color: isSelected ? '#1b78f7' : 'var(--c-muted)',
+                          fontSize: 11, fontWeight: isSelected ? 700 : 500,
+                          cursor: 'pointer', fontFamily: 'inherit',
+                          transition: 'all 0.12s',
+                        }}
+                      >
+                        {s.label}
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
             </div>
 
@@ -1028,7 +1121,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
             <div style={{ padding: '10px 12px 14px', borderTop: '1px solid var(--c-border)', flexShrink: 0 }}>
               <button
                 onClick={async () => {
-                  await supabase.from('projects').update({ preview_blocks: previewBlocks }).eq('id', project.id)
+                  await supabase.from('projects').update({ preview_blocks: previewBlocks, preview_style: previewStyle }).eq('id', project.id)
                   setPreviewEditing(false)
                 }}
                 style={{

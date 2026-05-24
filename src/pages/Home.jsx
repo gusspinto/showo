@@ -7,6 +7,7 @@ import Onboarding from '../components/Onboarding'
 import CreateProjectModal from '../components/CreateProjectModal'
 import { looksLikeSpam } from '../lib/score'
 import { useAuth } from '../context/AuthContext'
+import { useTheme } from '../context/ThemeContext'
 
 const colors = {
   bg:           'var(--c-bg)',
@@ -131,6 +132,7 @@ const FEATURES = [
 export default function Home() {
   const navigate = useNavigate()
   const { user } = useAuth()
+  const { theme } = useTheme()
   const [selectedGoal, setSelectedGoal] = useState(null)
   const [inputText, setInputText] = useState('')
   const [showOnboarding, setShowOnboarding] = useState(() => !localStorage.getItem('showo_seen_onboarding'))
@@ -262,8 +264,9 @@ export default function Home() {
           {/* Badge */}
           <div className="hero-badge" style={{
             display: 'inline-flex', alignItems: 'center', gap: 8,
-            background: 'rgba(27,120,247,0.07)', border: '1px solid rgba(27,120,247,0.18)',
-            color: '#5a9ff5', borderRadius: 999,
+            background: theme === 'light' ? 'rgba(27,120,247,0.08)' : 'rgba(27,120,247,0.07)',
+            border: `1px solid ${theme === 'light' ? 'rgba(27,120,247,0.25)' : 'rgba(27,120,247,0.18)'}`,
+            color: '#1b78f7', borderRadius: 999,
             padding: '5px 16px', fontSize: 12, fontWeight: 600, marginBottom: 28,
           }}>
             <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#1b78f7', display: 'inline-block', animation: 'pulse-glow 2s ease-in-out infinite' }} />
@@ -298,7 +301,7 @@ export default function Home() {
                   style={{
                     background: selectedGoal === g.id ? 'rgba(27,120,247,0.12)' : 'transparent',
                     border: `1px solid ${selectedGoal === g.id ? '#1b78f7' : colors.border}`,
-                    color: selectedGoal === g.id ? '#5a9ff5' : colors.muted,
+                    color: selectedGoal === g.id ? '#1b78f7' : colors.muted,
                     borderRadius: 999, padding: '6px 15px',
                     fontSize: 12, fontWeight: 600, fontFamily: 'inherit',
                   }}
@@ -316,7 +319,7 @@ export default function Home() {
                 background: 'var(--c-bg-alt)',
                 border: `1.5px solid ${colors.borderBright}`,
                 borderRadius: 16, padding: '6px 6px 6px 20px',
-                boxShadow: '0 8px 40px rgba(0,0,0,0.45)',
+                boxShadow: theme === 'light' ? '0 4px 24px rgba(0,0,0,0.09)' : '0 8px 40px rgba(0,0,0,0.45)',
               }}
               onFocusCapture={e => { e.currentTarget.style.borderColor = '#1b78f7' }}
               onBlurCapture={e => { if (!e.currentTarget.contains(e.relatedTarget)) e.currentTarget.style.borderColor = colors.borderBright }}
