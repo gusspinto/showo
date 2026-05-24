@@ -1205,6 +1205,10 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
                     <FolderOpen size={16} /> Portfólio
                     <span className="sb-soon">breve</span>
                   </button>
+                  <button className="sb-item" disabled style={{ opacity: 0.5, cursor: 'default' }}>
+                    <Briefcase size={16} /> Estágio
+                    <span className="sb-soon">breve</span>
+                  </button>
                   <button className={`sb-item${isActive('/vagas') ? ' active' : ''}`} onClick={() => navigate('/vagas')}>
                     <Briefcase size={16} /> Vagas
                   </button>
