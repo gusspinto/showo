@@ -14,7 +14,7 @@ import { useTheme } from '../context/ThemeContext'
 import CreateProjectModal from '../components/CreateProjectModal'
 import DefenseMode from '../components/DefenseMode'
 import { analyzeProject } from '../lib/analyzeProject'
-import { Check, X, Loader, GraduationCap, Save, Sparkles, Bot, Lightbulb, Pencil, Search, Target, Wrench, Zap, TrendingUp, Briefcase, Users, Rocket, Trophy, BarChart2, CheckCircle, BookOpen, ChevronDown, Eye, UserPlus, Calendar, Mail, ArrowRight, ChevronRight, Globe, Image, MessageSquare, Quote, Layout, Type, Link, GripVertical, Plus, AlignLeft, Star, Camera, FileText, ClipboardList, Copy, Monitor, Tablet, Smartphone } from 'lucide-react'
+import { Check, X, Loader, GraduationCap, Save, Sparkles, Bot, Lightbulb, Pencil, Search, Target, Wrench, Zap, TrendingUp, Briefcase, Users, Rocket, Trophy, BarChart2, CheckCircle, BookOpen, ChevronDown, Eye, UserPlus, Calendar, Mail, ArrowRight, ChevronRight, Globe, Image, MessageSquare, Quote, Layout, Type, Link, GripVertical, Plus, AlignLeft, Star, Camera, FileText, ClipboardList, Copy, Monitor, Tablet, Smartphone, Minus, Video, AlignCenter, AlignRight, Palette } from 'lucide-react'
 
 const colors = {
   bg: 'var(--c-bg)',
@@ -474,7 +474,7 @@ function Toast({ message, visible }) {
       background: 'linear-gradient(135deg, #111c32, #0a1729)',
       border: `1px solid ${colors.borderBright}`,
       borderRadius: 14, padding: '14px 28px',
-      color: colors.text, fontSize: 15, fontWeight: 600,
+      color: '#e8f2ff', fontSize: 15, fontWeight: 600,
       zIndex: 2000,
       transition: 'transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s',
       whiteSpace: 'nowrap',
@@ -513,14 +513,17 @@ const SECTION_LABELS = { cover: 'Introdução', problem: 'Problema', solution: '
 
 // ── Block types for preview workspace ─────────────────────────────────────────
 const BLOCK_TYPES = [
-  { type: 'note',    label: 'Nota pessoal',  Icon: AlignLeft,     desc: 'Uma mensagem tua para quem visita o projeto' },
-  { type: 'image',   label: 'Imagem',        Icon: Image,         desc: 'Adiciona uma imagem por URL ou upload' },
-  { type: 'callout', label: 'Destaque',      Icon: Sparkles,      desc: 'Caixa em destaque para informação importante' },
-  { type: 'quote',   label: 'Citação',       Icon: Quote,         desc: 'Uma frase ou citação marcante' },
-  { type: 'link',    label: 'Link',          Icon: Link,          desc: 'Um link externo (GitHub, demo, etc.)' },
-  { type: 'heading', label: 'Título',        Icon: Type,          desc: 'Um título de secção personalizado' },
-  { type: 'metric',  label: 'Métrica',       Icon: Star,          desc: 'Um número ou dado relevante do projeto' },
-  { type: 'gallery', label: 'Galeria',       Icon: Layout,        desc: 'Até 3 imagens lado a lado' },
+  { type: 'note',    label: 'Nota',          Icon: AlignLeft,  desc: 'Mensagem tua para visitantes' },
+  { type: 'heading', label: 'Título',        Icon: Type,       desc: 'Título de secção personalizado' },
+  { type: 'callout', label: 'Destaque',      Icon: Sparkles,   desc: 'Caixa em destaque colorida' },
+  { type: 'quote',   label: 'Citação',       Icon: Quote,      desc: 'Frase ou citação marcante' },
+  { type: 'metric',  label: 'Métrica',       Icon: Star,       desc: 'Número ou dado relevante' },
+  { type: 'stats',   label: 'Estatísticas',  Icon: BarChart2,  desc: '3 métricas lado a lado' },
+  { type: 'image',   label: 'Imagem',        Icon: Image,      desc: 'Imagem por URL ou upload' },
+  { type: 'gallery', label: 'Galeria',       Icon: Layout,     desc: 'Até 3 imagens lado a lado' },
+  { type: 'video',   label: 'Vídeo',         Icon: Video,      desc: 'YouTube ou Vimeo embed' },
+  { type: 'link',    label: 'Link',          Icon: Link,       desc: 'GitHub, demo, portfolio...' },
+  { type: 'divider', label: 'Divisor',       Icon: Minus,      desc: 'Linha separadora de secções' },
 ]
 
 function newBlock(type) {
@@ -528,6 +531,11 @@ function newBlock(type) {
     id: Date.now().toString(36) + Math.random().toString(36).slice(2),
     type, content: '', imageUrl: '', imageUrl2: '', imageUrl3: '',
     label: '', url: '', color: '', align: 'left',
+    videoUrl: '',
+    stat1Value: '', stat1Label: '',
+    stat2Value: '', stat2Label: '',
+    stat3Value: '', stat3Label: '',
+    dividerStyle: 'solid',
   }
 }
 
@@ -539,6 +547,42 @@ const BLOCK_ACCENT_COLORS = [
   { label: 'Rosa',    value: '#ec4899' },
   { label: 'Cinza',   value: '#6b7280' },
 ]
+
+// ── Preview style options ──────────────────────────────────────────────────────
+const FONT_OPTIONS = [
+  { key: 'default',  label: 'Montserrat', css: 'Montserrat, sans-serif',    sample: 'Aa' },
+  { key: 'inter',    label: 'Inter',      css: 'Inter, sans-serif',          sample: 'Aa' },
+  { key: 'syne',     label: 'Syne',       css: 'Syne, sans-serif',           sample: 'Aa' },
+  { key: 'fredoka',  label: 'Fredoka',    css: '"Fredoka One", cursive',     sample: 'Aa' },
+  { key: 'mono',     label: 'Mono',       css: '"Courier New", monospace',   sample: 'Aa' },
+  { key: 'serif',    label: 'Serif',      css: 'Georgia, serif',             sample: 'Aa' },
+]
+
+const BG_OPTIONS = [
+  { key: 'default',  label: 'Padrão',   bg: null,      preview: null },
+  { key: 'midnight', label: 'Midnight', bg: '#030508', preview: '#030508' },
+  { key: 'navy',     label: 'Navy',
+    bg: 'radial-gradient(ellipse at 25% 60%, #0c1e38 0%, #060d1a 100%)',
+    preview: '#0c1e38' },
+  { key: 'cosmic',   label: 'Cosmic',
+    bg: 'radial-gradient(ellipse at 75% 25%, #160b2a 0%, #08031a 100%)',
+    preview: '#160b2a' },
+  { key: 'forest',   label: 'Floresta',
+    bg: 'radial-gradient(ellipse at 50% 0%, #081408 0%, #04090a 100%)',
+    preview: '#081408' },
+  { key: 'warm',     label: 'Quente',   bg: '#140c02', preview: '#140c02' },
+  { key: 'slate',    label: 'Ardósia',  bg: '#0c1018', preview: '#0c1018' },
+]
+
+function getVideoEmbedUrl(url) {
+  if (!url) return null
+  const yt = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/)
+  if (yt) return `https://www.youtube.com/embed/${yt[1]}`
+  const vm = url.match(/vimeo\.com\/(\d+)/)
+  if (vm) return `https://player.vimeo.com/video/${vm[1]}`
+  if (url.includes('/embed/')) return url
+  return null
+}
 
 // ── Drag-and-drop block reorder hook ──────────────────────────────────────────
 function useDragBlocks(blocks, setBlocks) {
@@ -665,6 +709,10 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
     : typeHero
 
   const heroHeight = (HERO_SIZES.find(s => s.key === previewStyle.heroSize) || HERO_SIZES[0]).height
+  const selectedFont = FONT_OPTIONS.find(f => f.key === (previewStyle.font || 'default')) || FONT_OPTIONS[0]
+  const selectedBg   = BG_OPTIONS.find(b => b.key === (previewStyle.bg || 'default')) || BG_OPTIONS[0]
+  const resolvedBg   = selectedBg.bg || 'var(--c-bg)'
+  const titleAlign   = previewStyle.titleAlign || 'left'
 
   const DEVICES = [
     { id: 'desktop',  Icon: Monitor,    label: 'Desktop',   title: 'Vista desktop' },
@@ -677,8 +725,9 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
     <div style={{
       position: 'fixed', inset: 0, zIndex: 50,
       overflowY: 'auto', overflowX: 'hidden',
-      background: 'var(--c-bg)', fontFamily: 'var(--font-body)',
-      paddingRight: isOwner && previewEditing ? 356 : 0,
+      background: resolvedBg,
+      fontFamily: selectedFont.css,
+      paddingRight: isOwner && previewEditing ? 380 : 0,
       transition: 'padding-right 0.3s ease',
     }}>
       {/* ── Owner preview banner — sticky ── */}
@@ -781,9 +830,9 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
         )}
 
         {/* Title block over hero */}
-        <div style={{ maxWidth: 860, margin: '0 auto', padding: '0 28px', position: 'relative', marginTop: project.cover_url ? -100 : -80 }}>
+        <div style={{ maxWidth: 860, margin: '0 auto', padding: '0 28px', position: 'relative', marginTop: project.cover_url ? -100 : -80, textAlign: titleAlign }}>
           {/* Area / type chips */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 18 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 18, justifyContent: titleAlign === 'center' ? 'center' : titleAlign === 'right' ? 'flex-end' : 'flex-start' }}>
             {project.project_type && (
               <span style={{
                 background: `linear-gradient(135deg, ${hero.c1}, ${hero.c2})`,
@@ -838,7 +887,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
       {isOwner && previewEditing && (
           <div style={{
             position: 'fixed', right: 0, top: 34, bottom: 0, zIndex: 200,
-            width: 340, background: 'var(--c-card)',
+            width: 360, background: 'var(--c-card)',
             borderLeft: '1px solid var(--c-border)',
             display: 'flex', flexDirection: 'column',
             boxShadow: '-10px 0 40px rgba(0,0,0,0.35)',
@@ -902,7 +951,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
               </div>
 
               {/* Hero size */}
-              <div>
+              <div style={{ marginBottom: 10 }}>
                 <div style={{ fontSize: 11, color: 'var(--c-muted)', fontWeight: 600, marginBottom: 6 }}>Tamanho do hero</div>
                 <div style={{ display: 'flex', gap: 4 }}>
                   {HERO_SIZES.map(s => {
@@ -922,6 +971,93 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
                         }}
                       >
                         {s.label}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* Font */}
+              <div style={{ marginBottom: 10 }}>
+                <div style={{ fontSize: 11, color: 'var(--c-muted)', fontWeight: 600, marginBottom: 6 }}>Fonte</div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 4 }}>
+                  {FONT_OPTIONS.map(f => {
+                    const isSel = (previewStyle.font || 'default') === f.key
+                    return (
+                      <button key={f.key} onClick={() => setPreviewStyle(ps => ({ ...ps, font: f.key }))}
+                        style={{
+                          padding: '7px 4px', borderRadius: 7, cursor: 'pointer', fontFamily: 'inherit',
+                          border: `1px solid ${isSel ? '#1b78f7' : 'var(--c-border)'}`,
+                          background: isSel ? 'rgba(27,120,247,0.1)' : 'var(--c-bg)',
+                          color: isSel ? '#1b78f7' : 'var(--c-muted)',
+                          transition: 'all 0.12s', textAlign: 'center',
+                        }}
+                      >
+                        <div style={{ fontSize: 13, fontWeight: 700, fontFamily: f.css, lineHeight: 1 }}>{f.sample}</div>
+                        <div style={{ fontSize: 9, marginTop: 3, fontWeight: isSel ? 700 : 500, letterSpacing: '0.02em' }}>{f.label}</div>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* Background */}
+              <div style={{ marginBottom: 10 }}>
+                <div style={{ fontSize: 11, color: 'var(--c-muted)', fontWeight: 600, marginBottom: 6 }}>Fundo</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {BG_OPTIONS.map(b => {
+                    const isSel = (previewStyle.bg || 'default') === b.key
+                    return (
+                      <button key={b.key} title={b.label} onClick={() => setPreviewStyle(ps => ({ ...ps, bg: b.key }))}
+                        style={{
+                          width: 28, height: 28, borderRadius: 8, cursor: 'pointer', padding: 0, flexShrink: 0,
+                          background: b.preview
+                            ? (b.bg && b.bg.includes('gradient') ? b.bg : b.preview)
+                            : 'var(--c-bg-alt)',
+                          border: isSel ? '2.5px solid #1b78f7' : `1.5px solid var(--c-border)`,
+                          outline: isSel ? '1.5px solid rgba(27,120,247,0.4)' : 'none',
+                          outlineOffset: 2,
+                          transform: isSel ? 'scale(1.12)' : 'scale(1)',
+                          transition: 'all 0.12s',
+                          position: 'relative',
+                        }}
+                      >
+                        {isSel && (
+                          <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <Check size={12} color="#fff" strokeWidth={3} />
+                          </span>
+                        )}
+                        {!b.preview && (
+                          <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, color: 'var(--c-muted)', fontWeight: 700 }}>P</span>
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* Title alignment */}
+              <div>
+                <div style={{ fontSize: 11, color: 'var(--c-muted)', fontWeight: 600, marginBottom: 6 }}>Alinhamento do título</div>
+                <div style={{ display: 'flex', gap: 4 }}>
+                  {[
+                    { val: 'left',   Icon: AlignLeft,   label: 'Esquerda' },
+                    { val: 'center', Icon: AlignCenter, label: 'Centro' },
+                    { val: 'right',  Icon: AlignRight,  label: 'Direita' },
+                  ].map(a => {
+                    const isSel = (previewStyle.titleAlign || 'left') === a.val
+                    return (
+                      <button key={a.val} title={a.label} onClick={() => setPreviewStyle(ps => ({ ...ps, titleAlign: a.val }))}
+                        style={{
+                          flex: 1, padding: '7px 0', borderRadius: 7, cursor: 'pointer',
+                          border: `1px solid ${isSel ? '#1b78f7' : 'var(--c-border)'}`,
+                          background: isSel ? 'rgba(27,120,247,0.1)' : 'var(--c-bg)',
+                          color: isSel ? '#1b78f7' : 'var(--c-muted)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          transition: 'all 0.12s',
+                        }}
+                      >
+                        <a.Icon size={14} />
                       </button>
                     )
                   })}
@@ -975,7 +1111,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
                     const BtIcon = bt.Icon
                     const isDragTarget = dragOverIdx === idx
                     const accentColor = block.color || '#1b78f7'
-                    const hasText = ['heading','note','quote','callout','metric'].includes(block.type)
+                    const hasText = ['heading','note','quote','callout','metric','stats'].includes(block.type)
 
                     return (
                       <div
@@ -1061,6 +1197,37 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
                             </div>
                           ))}
                         </>)}
+                        {block.type === 'video' && (
+                          <input value={block.videoUrl || ''} onChange={e => upd(block.id, 'videoUrl', e.target.value)}
+                            placeholder="URL do YouTube ou Vimeo..." style={wsInput} />
+                        )}
+                        {block.type === 'stats' && (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                            {[1,2,3].map(n => (
+                              <div key={n} style={{ display: 'flex', gap: 5 }}>
+                                <input value={block[`stat${n}Value`] || ''} onChange={e => upd(block.id, `stat${n}Value`, e.target.value)}
+                                  placeholder={`Valor ${n}`} style={{ ...wsInput, margin: 0, flex: '0 0 42%', fontWeight: 800, fontSize: 14 }} />
+                                <input value={block[`stat${n}Label`] || ''} onChange={e => upd(block.id, `stat${n}Label`, e.target.value)}
+                                  placeholder={`Descrição ${n}`} style={{ ...wsInput, margin: 0, flex: 1 }} />
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        {block.type === 'divider' && (
+                          <div style={{ display: 'flex', gap: 4 }}>
+                            {['solid','dashed','dotted','gradient'].map(s => (
+                              <button key={s} onClick={() => upd(block.id, 'dividerStyle', s)}
+                                style={{
+                                  flex: 1, padding: '5px 0', borderRadius: 6, cursor: 'pointer',
+                                  border: `1px solid ${(block.dividerStyle || 'solid') === s ? '#1b78f7' : 'var(--c-border)'}`,
+                                  background: (block.dividerStyle || 'solid') === s ? 'rgba(27,120,247,0.1)' : 'var(--c-bg)',
+                                  color: (block.dividerStyle || 'solid') === s ? '#1b78f7' : 'var(--c-muted)',
+                                  fontSize: 10, fontWeight: 700, fontFamily: 'inherit', transition: 'all 0.12s',
+                                }}
+                              >{s.charAt(0).toUpperCase() + s.slice(1)}</button>
+                            ))}
+                          </div>
+                        )}
 
                         {/* ── Colour + alignment controls ── */}
                         <div style={{ marginTop: 10, paddingTop: 9, borderTop: '1px solid var(--c-border)', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
@@ -1223,6 +1390,54 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
                   <img key={gi} src={src} alt="" style={{ width: '100%', height: 200, objectFit: 'cover', display: 'block' }} onError={e => { e.target.style.display = 'none' }} />
                 ))}
               </div>
+            )
+          }
+
+          if (block.type === 'video') {
+            const embedUrl = getVideoEmbedUrl(block.videoUrl)
+            if (!embedUrl) return null
+            return (
+              <div key={block.id} style={{ borderRadius: 16, overflow: 'hidden', background: '#000', aspectRatio: '16/9', position: 'relative' }}>
+                <iframe
+                  src={embedUrl}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 'none' }}
+                />
+              </div>
+            )
+          }
+
+          if (block.type === 'stats') {
+            const stats = [
+              { value: block.stat1Value, label: block.stat1Label },
+              { value: block.stat2Value, label: block.stat2Label },
+              { value: block.stat3Value, label: block.stat3Label },
+            ].filter(s => s.value)
+            if (!stats.length) return null
+            return (
+              <div key={block.id} style={{ display: 'grid', gridTemplateColumns: `repeat(${stats.length}, 1fr)`, gap: 12 }}>
+                {stats.map((s, si) => (
+                  <div key={si} style={{
+                    background: 'var(--c-card)', border: `1px solid ${accent}33`,
+                    borderRadius: 16, padding: '24px 20px', textAlign: 'center',
+                    borderTop: `3px solid ${accent}`,
+                  }}>
+                    <div style={{ fontSize: 'clamp(28px,4.5vw,44px)', fontWeight: 900, color: accent, letterSpacing: '-1.5px', lineHeight: 1, marginBottom: 8 }}>{s.value}</div>
+                    {s.label && <div style={{ fontSize: 13, color: 'var(--c-muted)', fontWeight: 500, lineHeight: 1.4 }}>{s.label}</div>}
+                  </div>
+                ))}
+              </div>
+            )
+          }
+
+          if (block.type === 'divider') {
+            const ds = block.dividerStyle || 'solid'
+            if (ds === 'gradient') return (
+              <div key={block.id} style={{ height: 2, borderRadius: 99, background: `linear-gradient(90deg, transparent, ${accent}, transparent)` }} />
+            )
+            return (
+              <div key={block.id} style={{ borderTop: `1.5px ${ds} ${accent}44`, borderRadius: 99 }} />
             )
           }
 
@@ -2779,7 +2994,7 @@ export default function ProjectPage() {
               <div className="proj-cover" style={{ width: '100%', height: 320, position: 'relative' }}>
                 <img src={project.cover_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                 {/* Strong dark gradient overlay for text legibility */}
-                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(13,20,36,0.35) 0%, rgba(13,20,36,0.6) 50%, #0d1424 100%)' }} />
+                <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(to bottom, transparent 0%, var(--c-bg) 100%)` }} />
               </div>
             ) : (
               <div style={{
@@ -2792,7 +3007,7 @@ export default function ProjectPage() {
                 <div style={{ position: 'absolute', top: -40, right: '-5%', width: 380, height: 380, borderRadius: '50%', background: `radial-gradient(ellipse, ${ag.accent2}18 0%, transparent 60%)`, pointerEvents: 'none' }} />
                 <div style={{ position: 'absolute', bottom: -60, left: '30%', width: 300, height: 300, borderRadius: '50%', background: `radial-gradient(ellipse, ${ag.accent1}14 0%, transparent 70%)`, pointerEvents: 'none' }} />
                 {/* Fade to page background at bottom */}
-                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 35%, #0d1424 100%)' }} />
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 35%, var(--c-bg) 100%)' }} />
               </div>
             )}
           </div>
@@ -3040,8 +3255,8 @@ export default function ProjectPage() {
         {/* proj-body: everything after hero — ordered after sidebar on tablet/mobile */}
         <div className="proj-body">
 
-        {/* Defense date countdown — owner only */}
-        {isOwner && (() => {
+        {/* Defense date countdown — PAP projects only */}
+        {isOwner && project?.project_type === 'pap' && (() => {
           const today = new Date(); today.setHours(0,0,0,0)
           const target = defenseDate ? new Date(defenseDate + 'T00:00:00') : null
           const daysLeft = target ? Math.ceil((target - today) / 86400000) : null
@@ -3082,7 +3297,7 @@ export default function ProjectPage() {
                     color: colors.text, fontSize: 13,
                     fontFamily: 'inherit', cursor: 'pointer',
                     outline: 'none',
-                    colorScheme: 'dark',
+                    colorScheme: theme === 'light' ? 'light' : 'dark',
                   }}
                 />
                 {savingDefense && <div style={{ width: 14, height: 14, border: `2px solid ${colors.border}`, borderTop: `2px solid ${colors.blue}`, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />}
@@ -3158,14 +3373,14 @@ export default function ProjectPage() {
         ) : (
           /* Teaser for non-owners */
           <div style={{
-            background: 'linear-gradient(135deg, #0e1830 0%, #0a1220 100%)',
-            border: '1px solid rgba(129,140,248,0.15)',
+            background: colors.card,
+            border: `1px solid ${colors.border}`,
             borderRadius: 16, padding: '16px 20px',
             display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
           }}>
-            <Bot size={20} color="#818cf8" style={{ flexShrink: 0 }} />
+            <Bot size={20} color={colors.blue} style={{ flexShrink: 0 }} />
             <div style={{ flex: 1, minWidth: 200 }}>
-              <p style={{ margin: '0 0 8px', fontSize: 13, color: '#c4b5fd', lineHeight: 1.55 }}>
+              <p style={{ margin: '0 0 8px', fontSize: 13, color: colors.muted, lineHeight: 1.55 }}>
                 Cria o teu projeto e recebe análise por IA com feedback personalizado.
               </p>
               <button
