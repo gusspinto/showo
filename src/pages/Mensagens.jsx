@@ -119,8 +119,8 @@ export default function Mensagens() {
   const [loading, setLoading]           = useState(true)
   const [showNova, setShowNova]         = useState(false)
   const [mobileView, setMobileView]     = useState('list') // 'list' | 'thread'
-  const bottomRef = useRef(null)
-  const channelRef = useRef(null)
+  const bottomRef  = useRef(null)
+  const activeIdRef = useRef(null) // ref para usar dentro das subscriptions
 
   // Load or create profile in cache
   async function ensureProfile(id) {
@@ -144,9 +144,48 @@ export default function Mensagens() {
     return Object.values(map).sort((a, b) => new Date(b.lastMsg.created_at) - new Date(a.lastMsg.created_at))
   }, [])
 
+  // Manter ref sincronizado com o estado
+  useEffect(() => { activeIdRef.current = activeId }, [activeId])
+
   useEffect(() => {
     if (!user) { navigate('/login'); return }
     loadAll()
+
+    // Subscrição global: mensagens RECEBIDAS por mim
+    const inboxCh = supabase
+      .channel(`inbox-${user.id}`)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'mensagens',
+        filter: `to_id=eq.${user.id}`,
+      }, async (payload) => {
+        const m = payload.new
+        const fromId = m.from_id
+
+        // Garantir que o perfil do remetente está em cache
+        if (!profiles[fromId]) {
+          const { data } = await supabase.from('profiles').select('id, full_name, username, avatar_url, role').eq('id', fromId).single()
+          if (data) setProfiles(p => ({ ...p, [data.id]: data }))
+        }
+
+        // Adicionar à thread se for a conversa ativa
+        if (activeIdRef.current === fromId) {
+          setMessages(prev => prev.some(x => x.id === m.id) ? prev : [...prev, m])
+          markRead(fromId)
+        }
+
+        // Atualizar lista de conversas em tempo real (sem fetch completo)
+        setConversations(prev => {
+          const existing = prev.find(c => c.otherId === fromId)
+          const updated = { otherId: fromId, lastMsg: m, unread: activeIdRef.current === fromId ? 0 : (existing?.unread || 0) + 1 }
+          const rest = prev.filter(c => c.otherId !== fromId)
+          return [updated, ...rest]
+        })
+      })
+      .subscribe()
+
+    return () => supabase.removeChannel(inboxCh)
   }, [user])
 
   // Open conversation from URL param (?to=ID)
@@ -164,9 +203,7 @@ export default function Mensagens() {
     if (activeId) {
       loadThread(activeId)
       markRead(activeId)
-      subscribeThread(activeId)
     }
-    return () => { if (channelRef.current) supabase.removeChannel(channelRef.current) }
   }, [activeId])
 
   useEffect(() => {
@@ -205,20 +242,6 @@ export default function Mensagens() {
     setMessages(data ?? [])
   }
 
-  function subscribeThread(otherId) {
-    if (channelRef.current) supabase.removeChannel(channelRef.current)
-    channelRef.current = supabase
-      .channel(`thread-${user.id}-${otherId}`)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'mensagens' }, (payload) => {
-        const m = payload.new
-        if ((m.from_id === user.id && m.to_id === otherId) || (m.from_id === otherId && m.to_id === user.id)) {
-          setMessages(prev => [...prev, m])
-          if (m.to_id === user.id) markRead(otherId)
-          loadAll() // refresh conversation list
-        }
-      })
-      .subscribe()
-  }
 
   async function markRead(otherId) {
     await supabase
