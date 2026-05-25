@@ -1566,7 +1566,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
         )}
 
         {/* ── Engagement: Gostos / Interesse + Comentários ── */}
-        <div style={{ maxWidth: 860, margin: '0 auto', padding: '12px 0 48px' }}>
+        <div style={{ maxWidth: deviceMaxWidth ? Math.min(860, deviceMaxWidth) : 860, margin: '0 auto', padding: `12px ${previewDevice === 'mobile' ? '16px' : '28px'} 48px` }}>
 
           {/* Barra de gostos / interesse */}
           {!isOwner && (
