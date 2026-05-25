@@ -1594,28 +1594,84 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
               )}
 
               {/* ⭐ Tenho interesse — recrutadores e empresas */}
-              {isRecruiterRole && (
+              {isRecruiterRole && !hasInterest && (
+                <button
+                  onClick={onInterest}
+                  disabled={interestLoading}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 8,
+                    background: 'var(--c-card)',
+                    border: '1.5px solid var(--c-border)',
+                    borderRadius: 10, padding: '9px 20px',
+                    color: 'var(--c-muted)',
+                    fontSize: 14, fontWeight: 700, cursor: interestLoading ? 'default' : 'pointer',
+                    fontFamily: 'inherit', transition: 'all 0.2s',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(245,158,11,0.4)'; e.currentTarget.style.color = '#f59e0b'; e.currentTarget.style.background = 'rgba(245,158,11,0.07)' }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--c-border)'; e.currentTarget.style.color = 'var(--c-muted)'; e.currentTarget.style.background = 'var(--c-card)' }}
+                >
+                  <Star size={16} fill="none" />
+                  {interestLoading ? 'A guardar…' : 'Tenho interesse'}
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Confirmação de interesse: card com ações */}
+          {isRecruiterRole && hasInterest && !isOwner && (
+            <div style={{
+              background: 'linear-gradient(135deg, rgba(245,158,11,0.1), rgba(251,191,36,0.06))',
+              border: '1.5px solid rgba(245,158,11,0.35)',
+              borderRadius: 14, padding: '16px 20px',
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              flexWrap: 'wrap', gap: 12,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Star size={18} fill="#f59e0b" color="#f59e0b" />
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: 14, color: '#f59e0b' }}>Interesse guardado!</div>
+                  <div style={{ fontSize: 12, color: 'var(--c-muted)', marginTop: 1 }}>
+                    {ownerProfile?.full_name || ownerProfile?.username || 'O estudante'} foi notificado.
+                  </div>
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {ownerProfile?.username && (
+                  <a
+                    href={`/u/${ownerProfile.username}`}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 6,
+                      padding: '7px 14px', borderRadius: 8, fontSize: 13, fontWeight: 600,
+                      background: 'var(--c-card)', border: '1px solid var(--c-border)',
+                      color: 'var(--c-text)', textDecoration: 'none',
+                    }}
+                  >
+                    <UserPlus size={14} /> Ver perfil
+                  </a>
+                )}
+                <a
+                  href={`/mensagens${ownerProfile?.id ? `?to=${ownerProfile.id}` : ''}`}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 6,
+                    padding: '7px 14px', borderRadius: 8, fontSize: 13, fontWeight: 600,
+                    background: '#f59e0b', border: 'none',
+                    color: '#000', textDecoration: 'none',
+                  }}
+                >
+                  <MessageSquare size={14} /> Enviar mensagem
+                </a>
                 <button
                   onClick={onInterest}
                   style={{
-                    display: 'flex', alignItems: 'center', gap: 8,
-                    background: hasInterest
-                      ? 'linear-gradient(135deg, rgba(245,158,11,0.15), rgba(251,191,36,0.1))'
-                      : 'var(--c-card)',
-                    border: `1.5px solid ${hasInterest ? 'rgba(245,158,11,0.5)' : 'var(--c-border)'}`,
-                    borderRadius: 10, padding: '9px 20px',
-                    color: hasInterest ? '#f59e0b' : 'var(--c-muted)',
-                    fontSize: 14, fontWeight: 700, cursor: interestLoading ? 'default' : 'pointer',
-                    fontFamily: 'inherit', transition: 'all 0.2s',
-                    boxShadow: hasInterest ? '0 4px 16px rgba(245,158,11,0.2)' : 'none',
+                    display: 'flex', alignItems: 'center', gap: 6,
+                    padding: '7px 14px', borderRadius: 8, fontSize: 12, fontWeight: 600,
+                    background: 'none', border: '1px solid rgba(245,158,11,0.3)',
+                    color: 'rgba(245,158,11,0.7)', cursor: 'pointer', fontFamily: 'inherit',
                   }}
-                  onMouseEnter={e => { if (!hasInterest) { e.currentTarget.style.borderColor = 'rgba(245,158,11,0.4)'; e.currentTarget.style.color = '#f59e0b'; e.currentTarget.style.background = 'rgba(245,158,11,0.07)' }}}
-                  onMouseLeave={e => { if (!hasInterest) { e.currentTarget.style.borderColor = 'var(--c-border)'; e.currentTarget.style.color = 'var(--c-muted)'; e.currentTarget.style.background = 'var(--c-card)' }}}
                 >
-                  <Star size={16} fill={hasInterest ? '#f59e0b' : 'none'} color={hasInterest ? '#f59e0b' : 'currentColor'} />
-                  {hasInterest ? 'Interesse guardado' : 'Tenho interesse'}
+                  <X size={12} /> Remover
                 </button>
-              )}
+              </div>
             </div>
           )}
 
@@ -1768,6 +1824,8 @@ export default function ProjectPage() {
   const [interestCount, setInterestCount]     = useState(0)
   const [hasInterest, setHasInterest]         = useState(false)
   const [interestLoading, setInterestLoading] = useState(false)
+  const [interestors, setInterestors]         = useState([])   // recruiter profiles for owner modal
+  const [showInterestors, setShowInterestors] = useState(false)
 
   const prevScoreRef = useRef(null)
   const rafRef = useRef(null)
@@ -1850,14 +1908,25 @@ export default function ProjectPage() {
         })
       }
 
-      // Load recruiter interests count
-      supabase.from('recruiter_interests').select('recruiter_id', { count: 'exact' }).eq('project_id', data.id).then(({ count }) => {
-        setInterestCount(count || 0)
-      })
-      if (user?.id) {
-        supabase.from('recruiter_interests').select('recruiter_id').eq('project_id', data.id).eq('recruiter_id', user.id).single().then(({ data: ri }) => {
-          setHasInterest(!!ri)
+      // Load recruiter interests count (+ recruiter profiles for owner)
+      const isOwnerLoad = !!(user?.id && data.user_id && user.id === data.user_id)
+      if (isOwnerLoad) {
+        supabase.from('recruiter_interests')
+          .select('recruiter_id, profiles!recruiter_id(id, full_name, username, avatar_url, company, role)')
+          .eq('project_id', data.id)
+          .then(({ data: rows }) => {
+            setInterestCount(rows?.length || 0)
+            setInterestors((rows || []).map(r => r.profiles).filter(Boolean))
+          })
+      } else {
+        supabase.from('recruiter_interests').select('recruiter_id', { count: 'exact' }).eq('project_id', data.id).then(({ count }) => {
+          setInterestCount(count || 0)
         })
+        if (user?.id) {
+          supabase.from('recruiter_interests').select('recruiter_id').eq('project_id', data.id).eq('recruiter_id', user.id).single().then(({ data: ri }) => {
+            setHasInterest(!!ri)
+          })
+        }
       }
 
       const isProjectOwner = !!(user?.id && data.user_id && user.id === data.user_id)
@@ -2317,15 +2386,7 @@ export default function ProjectPage() {
       await supabase.from('recruiter_interests').insert({ project_id: project.id, recruiter_id: user.id })
       setHasInterest(true)
       setInterestCount(c => c + 1)
-      if (project.user_id && project.user_id !== user.id) {
-        const recruiterName = profile?.full_name || profile?.username || 'Um recrutador'
-        const company = profile?.company ? ` (${profile.company})` : ''
-        supabase.from('mensagens').insert({
-          from_id: user.id,
-          to_id: project.user_id,
-          content: `⭐ ${recruiterName}${company} marcou o teu projeto "${project.name}" como interessante! Podes ver o meu perfil e iniciar uma conversa.`,
-        })
-      }
+      // mensagem + bell notification geradas automaticamente pelo trigger notify_on_recruiter_interest()
     }
     setInterestLoading(false)
   }
@@ -4297,19 +4358,85 @@ export default function ProjectPage() {
               </button>
             )}
 
-            {/* Contador de interesse — dono do projeto */}
+            {/* Contador de interesse — dono do projeto (clicável) */}
             {isOwner && interestCount > 0 && (
-              <div style={{
+              <button onClick={() => setShowInterestors(true)} style={{
                 display: 'flex', alignItems: 'center', gap: 6,
                 background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)',
                 borderRadius: 10, padding: '8px 14px',
                 color: '#f59e0b', fontSize: 13, fontWeight: 700,
-              }}>
+                cursor: 'pointer',
+              }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(245,158,11,0.15)' }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(245,158,11,0.08)' }}
+              >
                 <Star size={14} fill="#f59e0b" />
                 {interestCount} recrutador{interestCount !== 1 ? 'es' : ''} com interesse
-              </div>
+              </button>
             )}
           </div>
+
+          {/* Modal: lista de recrutadores com interesse */}
+          {showInterestors && (
+            <div onClick={() => setShowInterestors(false)} style={{
+              position: 'fixed', inset: 0, zIndex: 200,
+              background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <div onClick={e => e.stopPropagation()} style={{
+                background: 'var(--c-card)', border: '1px solid var(--c-border)',
+                borderRadius: 18, padding: '28px 28px 24px', maxWidth: 440, width: '90%',
+                maxHeight: '70vh', overflowY: 'auto',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <Star size={18} fill="#f59e0b" color="#f59e0b" />
+                    <span style={{ fontWeight: 700, fontSize: 16 }}>Recrutadores interessados</span>
+                  </div>
+                  <button onClick={() => setShowInterestors(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--c-muted)', padding: 4 }}>
+                    <X size={18} />
+                  </button>
+                </div>
+                {interestors.length === 0 ? (
+                  <p style={{ color: 'var(--c-muted)', fontSize: 14, textAlign: 'center', padding: '16px 0' }}>Ainda nenhum recrutador.</p>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    {interestors.map(rec => (
+                      <div key={rec.id} style={{
+                        display: 'flex', alignItems: 'center', gap: 12,
+                        padding: '12px 14px', borderRadius: 12,
+                        background: 'var(--c-bg)', border: '1px solid var(--c-border)',
+                      }}>
+                        <div style={{
+                          width: 40, height: 40, borderRadius: '50%', flexShrink: 0,
+                          background: 'var(--c-border)',
+                          overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        }}>
+                          {rec.avatar_url
+                            ? <img src={rec.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            : <span style={{ fontSize: 18 }}>👤</span>
+                          }
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--c-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {rec.full_name || rec.username || 'Recrutador'}
+                          </div>
+                          {rec.company && (
+                            <div style={{ fontSize: 12, color: 'var(--c-muted)', marginTop: 1 }}>{rec.company}</div>
+                          )}
+                        </div>
+                        <a href={`/u/${rec.username || rec.id}`} style={{
+                          padding: '6px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600,
+                          background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)',
+                          color: 'var(--c-text)', textDecoration: 'none', flexShrink: 0,
+                        }}>Ver perfil</a>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Comments */}
           <div style={{
