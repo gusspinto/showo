@@ -330,45 +330,63 @@ export default function Explore() {
           <p style={{ color: colors.muted, margin: 0, fontSize: 15 }}>Descobre projetos e pessoas da comunidade Showo</p>
         </div>
 
-        {/* Tabs — animated sliding switch */}
-        <div style={{
-          position: 'relative', display: 'inline-flex', marginBottom: 28,
-          background: 'var(--c-card)', border: '1px solid var(--c-border)',
-          borderRadius: 12, padding: 4,
-        }}>
-          {/* Sliding pill */}
+        {/* Search + Tab row */}
+        <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 16 }}>
+          {/* Animated tab switch */}
           <div style={{
-            position: 'absolute', top: 4, bottom: 4, left: 4,
-            width: 'calc(50% - 4px)',
-            background: 'linear-gradient(135deg, #1b78f7, #4f46e5)',
-            borderRadius: 9,
-            transform: `translateX(${tab === 'projetos' ? 0 : 100}%)`,
-            transition: 'transform 0.32s cubic-bezier(0.4, 0, 0.2, 1)',
-            boxShadow: '0 4px 18px rgba(27,120,247,0.45)',
-            zIndex: 0,
-          }} />
-          {[
-            { id: 'projetos', label: 'Projetos', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg> },
-            { id: 'pessoas',  label: 'Pessoas',  icon: <Users size={14} /> },
-          ].map(t => (
-            <button
-              key={t.id}
-              onClick={() => handleTabChange(t.id)}
-              style={{
-                position: 'relative', zIndex: 1,
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                padding: '9px 0', minWidth: 116, borderRadius: 9, border: 'none',
-                background: 'transparent',
-                color: tab === t.id ? '#fff' : colors.muted,
-                fontSize: 13, fontWeight: 600, cursor: 'pointer',
-                fontFamily: 'inherit',
-                transition: 'color 0.25s cubic-bezier(0.4,0,0.2,1)',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              {t.icon} {t.label}
-            </button>
-          ))}
+            position: 'relative', display: 'inline-flex', flexShrink: 0,
+            background: 'var(--c-card)', border: '1px solid var(--c-border)',
+            borderRadius: 12, padding: 4,
+          }}>
+            {/* Sliding pill */}
+            <div style={{
+              position: 'absolute', top: 4, bottom: 4, left: 4,
+              width: 'calc(50% - 4px)',
+              background: 'linear-gradient(135deg, #1b78f7, #4f46e5)',
+              borderRadius: 9,
+              transform: `translateX(${tab === 'projetos' ? 0 : 100}%)`,
+              transition: 'transform 0.32s cubic-bezier(0.4, 0, 0.2, 1)',
+              boxShadow: '0 4px 18px rgba(27,120,247,0.45)',
+              zIndex: 0,
+            }} />
+            {[
+              { id: 'projetos', label: 'Projetos', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg> },
+              { id: 'pessoas',  label: 'Pessoas',  icon: <Users size={14} /> },
+            ].map(t => (
+              <button
+                key={t.id}
+                onClick={() => handleTabChange(t.id)}
+                style={{
+                  position: 'relative', zIndex: 1,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                  padding: '9px 0', minWidth: 108, borderRadius: 9, border: 'none',
+                  background: 'transparent',
+                  color: tab === t.id ? '#fff' : colors.muted,
+                  fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                  fontFamily: 'inherit',
+                  transition: 'color 0.25s cubic-bezier(0.4,0,0.2,1)',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {t.icon} {t.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Unified search input */}
+          <div style={{ position: 'relative', flex: 1 }}>
+            <svg style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}
+              width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={colors.subtle} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input
+              type="text"
+              className="explore-search"
+              placeholder={tab === 'projetos' ? 'Pesquisar por nome, área ou curso...' : 'Pesquisar por nome, empresa, área...'}
+              value={tab === 'projetos' ? search : peopleSearch}
+              onChange={e => tab === 'projetos' ? setSearch(e.target.value) : setPeopleSearch(e.target.value)}
+            />
+          </div>
         </div>
 
         {tab === 'projetos' && (<>
@@ -388,17 +406,6 @@ export default function Explore() {
             </p>
           </div>
         )}
-
-        {/* Search */}
-        <div style={{ position: 'relative', marginBottom: 16 }}>
-          <svg style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}
-            width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={colors.subtle} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-          </svg>
-          <input type="text" className="explore-search"
-            placeholder="Pesquisar por nome, área ou curso..."
-            value={search} onChange={e => setSearch(e.target.value)} />
-        </div>
 
         {/* Filters */}
         <div className="filter-row" style={{ marginBottom: 28 }}>
@@ -595,21 +602,6 @@ export default function Explore() {
         {/* ── Pessoas tab ── */}
         {tab === 'pessoas' && (
           <>
-            {/* Search */}
-            <div style={{ position: 'relative', marginBottom: 24 }}>
-              <svg style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}
-                width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={colors.subtle} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-              </svg>
-              <input
-                type="text"
-                className="explore-search"
-                placeholder="Pesquisar por nome, empresa, área..."
-                value={peopleSearch}
-                onChange={e => setPeopleSearch(e.target.value)}
-              />
-            </div>
-
             {peopleLoading ? (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(288px, 1fr))', gap: 16 }}>
                 {Array.from({ length: 8 }).map((_, i) => (

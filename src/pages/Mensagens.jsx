@@ -4,6 +4,8 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
 import { Send, ArrowLeft, MessageSquare, Search, Plus, X } from 'lucide-react'
+import { containsProfanity } from '../lib/profanity'
+import { looksLikeSpam } from '../lib/score'
 
 const C = {
   bg:     'var(--c-bg)',
@@ -255,8 +257,12 @@ export default function Mensagens() {
 
   async function send() {
     if (!draft.trim() || !activeId || sending) return
-    setSending(true)
     const content = draft.trim()
+    if (containsProfanity(content) || looksLikeSpam(content)) {
+      setDraft('')
+      return
+    }
+    setSending(true)
     setDraft('')
     const { data } = await supabase.from('mensagens').insert({ from_id: user.id, to_id: activeId, content }).select().single()
     if (data) {

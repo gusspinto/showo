@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { saveProject } from '../lib/saveProject'
-import { AlertTriangle, ArrowRight } from 'lucide-react'
+import { AlertTriangle, ArrowRight, RotateCcw } from 'lucide-react'
 import { looksLikeSpam } from '../lib/score'
 import { containsProfanity } from '../lib/profanity'
 
@@ -153,13 +153,40 @@ export default function AIInterview() {
   const [projectType, setProjectType]   = useState(initType)
   const [description, setDescription]   = useState(initDesc)
 
-  const [inputError, setInputError] = useState('')
+  const [inputError,  setInputError]  = useState('')
+  const [setupError,  setSetupError]  = useState('')
+  const [goingBack,   setGoingBack]   = useState(false)
 
   const inputRef  = useRef(null)
   const bottomRef = useRef(null)
 
+  // Go back one question
+  function goBack() {
+    if (history.length === 0) return
+    const prev = history[history.length - 1]
+    const prevQ = questions[currentQ - 1]
+    setGoingBack(true)
+    setTimeout(() => setGoingBack(false), 400)
+    const prevAnswer = prev.answer === '(pulado)' ? '' : prev.answer
+    setInputValue(prevAnswer)
+    setCurrentValue(prevAnswer)
+    if (prevQ) setAnswers(a => { const c = { ...a }; delete c[prevQ.field]; return c })
+    setHistory(h => h.slice(0, -1))
+    setCurrentQ(i => i - 1)
+    setInputError('')
+  }
+
   // Start interview — called from setup phase
   async function startInterview(desc, type) {
+    if (containsProfanity(desc)) {
+      setSetupError('Linguagem inapropriada na descrição. A Showo é uma plataforma para estudantes.')
+      return
+    }
+    if (looksLikeSpam(desc)) {
+      setSetupError('A descrição parece inválida. Descreve o teu projeto de forma real.')
+      return
+    }
+    setSetupError('')
     setDescription(desc)
     setProjectType(type)
     setPhase('loading')
@@ -312,6 +339,7 @@ export default function AIInterview() {
         @keyframes pulse-p { 0%,100%{opacity:0.4} 50%{opacity:0.7} }
         @keyframes spin { to{transform:rotate(360deg)} }
         @keyframes fadeSlideUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes fadeSlideDown { from{opacity:0;transform:translateY(-12px)} to{opacity:1;transform:translateY(0)} }
         @keyframes fadeIn { from{opacity:0} to{opacity:1} }
         @keyframes glow { 0%,100%{opacity:0.4} 50%{opacity:0.8} }
         .sug-chip { transition: all 0.12s !important; cursor: pointer; }
@@ -350,7 +378,7 @@ export default function AIInterview() {
       </div>
 
       {/* Body */}
-      <div style={{ flex: 1, display: 'flex', gap: 32, padding: '0 32px 48px', maxWidth: 1000, margin: '0 auto', width: '100%', boxSizing: 'border-box', alignItems: phase === 'interview' ? 'flex-start' : 'center', justifyContent: 'center' }}>
+      <div style={{ flex: 1, display: 'flex', gap: 32, padding: '0 32px 48px', maxWidth: 1000, margin: '0 auto', width: '100%', boxSizing: 'border-box', alignItems: 'center', justifyContent: 'center' }}>
 
         {/* Left: interview */}
         <div className="iv-main" style={{ flex: 1, minWidth: 0, paddingTop: 40, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
@@ -358,9 +386,9 @@ export default function AIInterview() {
           {/* Setup */}
           {phase === 'setup' && (
             <div style={{ maxWidth: 520, margin: '0 auto', animation: 'fadeIn 0.4s ease' }}>
-              <div style={{ marginBottom: 32 }}>
+              <div style={{ marginBottom: 32, textAlign: 'center' }}>
                 <div style={{
-                  width: 56, height: 56, borderRadius: 16, margin: '0 0 20px',
+                  width: 56, height: 56, borderRadius: 16, margin: '0 auto 20px',
                   background: 'linear-gradient(135deg, #1b78f7, #818cf8)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   boxShadow: '0 8px 32px rgba(27,120,247,0.35)',
@@ -368,7 +396,7 @@ export default function AIInterview() {
                   <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
                 </div>
                 <h1 style={{ margin: '0 0 8px', fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 900, color: C.text, letterSpacing: '-0.5px', lineHeight: 1.15 }}>Criar com IA</h1>
-                <p style={{ margin: 0, fontSize: 15, color: C.muted, lineHeight: 1.6 }}>
+                <p style={{ margin: 0, fontSize: 13, color: C.subtle, lineHeight: 1.6 }}>
                   Descreve brevemente o teu projeto e a IA fará as perguntas certas para o construir.
                 </p>
               </div>
@@ -395,6 +423,11 @@ export default function AIInterview() {
                   onFocus={e => e.target.style.borderColor = C.blue}
                   onBlur={e => e.target.style.borderColor = C.bright}
                 />
+                {setupError && (
+                  <p style={{ margin: '8px 0 0', fontSize: 12, color: '#ef4444', display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <AlertTriangle size={12} /> {setupError}
+                  </p>
+                )}
               </div>
 
               {/* Project type selector */}
@@ -517,143 +550,173 @@ export default function AIInterview() {
 
           {/* Interview */}
           {phase === 'interview' && (
-            <div style={{ animation: 'fadeIn 0.4s ease', width: '100%', maxWidth: 560 }}>
-              {/* Understanding card */}
+            <div style={{ animation: 'fadeIn 0.4s ease', width: '100%', maxWidth: 560, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+
+              {/* Understanding banner */}
               {understanding && (
                 <div style={{
                   background: 'linear-gradient(135deg, rgba(27,120,247,0.08), rgba(129,140,248,0.06))',
                   border: '1px solid rgba(27,120,247,0.2)',
-                  borderRadius: 16, padding: '16px 20px', marginBottom: 36,
-                  animation: 'fadeSlideUp 0.5s ease',
+                  borderRadius: 14, padding: '12px 16px', marginBottom: 28,
+                  animation: 'fadeSlideUp 0.5s ease', width: '100%', boxSizing: 'border-box',
                 }}>
-                  <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                  <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
                     <div style={{
-                      width: 32, height: 32, borderRadius: 10, flexShrink: 0,
+                      width: 28, height: 28, borderRadius: 8, flexShrink: 0,
                       background: 'linear-gradient(135deg, #1b78f7, #818cf8)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                     }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
                     </div>
-                    <p style={{ margin: 0, fontSize: 14, color: C.text, lineHeight: 1.65, fontStyle: 'italic' }}>"{understanding}"</p>
+                    <p style={{ margin: 0, fontSize: 13, color: C.muted, lineHeight: 1.6, fontStyle: 'italic' }}>"{understanding}"</p>
                   </div>
                 </div>
               )}
 
-              {/* History */}
-              {history.map((item, i) => (
-                <div key={i} style={{ marginBottom: 28, animation: 'fadeSlideUp 0.3s ease' }}>
-                  <p style={{ margin: '0 0 6px', fontSize: 12, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{item.label}</p>
-                  <p style={{ margin: '0 0 4px', fontSize: 14, color: C.muted }}>{item.question}</p>
-                  <div style={{
-                    background: C.card, border: `1px solid ${C.border}`,
-                    borderRadius: 12, padding: '10px 14px',
-                    fontSize: 15, color: C.text, fontWeight: 500,
-                  }}>
-                    {item.answer}
-                  </div>
-                </div>
-              ))}
-
-              {/* Current question */}
+              {/* Stacked question cards */}
               {q && (
-                <div key={currentQ} style={{ animation: 'fadeSlideUp 0.4s ease' }}>
-                  <p style={{ margin: '0 0 6px', fontSize: 12, color: C.blue, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{q.label}</p>
-                  <p style={{ margin: '0 0 16px', fontSize: 20, fontWeight: 700, color: C.text, lineHeight: 1.4, letterSpacing: '-0.2px' }}>{q.question}</p>
+                <div style={{ position: 'relative', width: '100%', paddingTop: 20 }}>
+                  {/* Ghost card — furthest back */}
+                  {history.length >= 2 && (
+                    <div style={{
+                      position: 'absolute', top: 2, left: '6%', right: '6%', height: 64,
+                      background: C.card, border: `1px solid ${C.border}`,
+                      borderRadius: 20, opacity: 0.13, zIndex: 1, pointerEvents: 'none',
+                    }} />
+                  )}
+                  {/* Ghost card — one behind */}
+                  {history.length >= 1 && (
+                    <div style={{
+                      position: 'absolute', top: 11, left: '3%', right: '3%', height: 64,
+                      background: C.card, border: `1px solid ${C.border}`,
+                      borderRadius: 20, opacity: 0.30, zIndex: 2, pointerEvents: 'none',
+                    }} />
+                  )}
 
-                  {/* Suggestions */}
-                  {q.suggestions?.length > 0 && (
-                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 14 }}>
-                      {q.suggestions.map(s => {
-                        const label = cleanSuggestion(s)
-                        if (!label) return null
-                        return (
-                          <button
-                            key={s}
-                            type="button"
-                            className="sug-chip"
-                            onClick={() => {
-                              const v = inputValue ? `${inputValue}, ${label}` : label
-                              setInputValue(v)
-                              setCurrentValue(v)
-                              inputRef.current?.focus()
-                            }}
-                            style={{
-                              background: 'rgba(27,120,247,0.07)', border: `1px solid ${C.border}`,
-                              color: C.muted, borderRadius: 999, padding: '5px 14px',
-                              fontSize: 12, fontWeight: 600, fontFamily: 'inherit',
-                            }}
-                          >
-                            + {label}
-                          </button>
-                        )
-                      })}
+                  {/* Current question card */}
+                  <div key={currentQ} style={{
+                    position: 'relative', zIndex: 3,
+                    background: C.card, border: `1.5px solid ${C.bright}`,
+                    borderRadius: 20, padding: '28px 28px 20px',
+                    boxShadow: '0 16px 48px rgba(0,0,0,0.22)',
+                    animation: goingBack ? 'fadeSlideDown 0.35s ease' : 'fadeSlideUp 0.4s ease',
+                  }}>
+                    {/* Label */}
+                    <p style={{ margin: '0 0 4px', fontSize: 11, color: C.blue, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{q.label}</p>
+
+                    {/* Question text */}
+                    <p style={{ margin: '0 0 20px', fontSize: 19, fontWeight: 700, color: C.text, lineHeight: 1.4, letterSpacing: '-0.2px' }}>{q.question}</p>
+
+                    {/* Suggestions */}
+                    {q.suggestions?.length > 0 && (
+                      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 14 }}>
+                        {q.suggestions.map(s => {
+                          const label = cleanSuggestion(s)
+                          if (!label) return null
+                          return (
+                            <button
+                              key={s}
+                              type="button"
+                              className="sug-chip"
+                              onClick={() => {
+                                const v = inputValue ? `${inputValue}, ${label}` : label
+                                setInputValue(v)
+                                setCurrentValue(v)
+                                inputRef.current?.focus()
+                              }}
+                              style={{
+                                background: 'rgba(27,120,247,0.07)', border: `1px solid ${C.border}`,
+                                color: C.muted, borderRadius: 999, padding: '5px 14px',
+                                fontSize: 12, fontWeight: 600, fontFamily: 'inherit',
+                              }}
+                            >
+                              + {label}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    )}
+
+                    {/* Input — inside the card, no white border line */}
+                    <div
+                      style={{
+                        display: 'flex', gap: 10, alignItems: 'flex-end',
+                        background: C.bg, border: `1.5px solid ${C.bright}`,
+                        borderRadius: 14, padding: '8px 8px 8px 16px',
+                      }}
+                      onFocusCapture={e => e.currentTarget.style.borderColor = C.blue}
+                      onBlurCapture={e => { if (!e.currentTarget.contains(e.relatedTarget)) e.currentTarget.style.borderColor = C.bright }}
+                    >
+                      <textarea
+                        ref={inputRef}
+                        value={inputValue}
+                        onChange={e => { setInputValue(e.target.value); setCurrentValue(e.target.value); setInputError('') }}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitAnswer(inputValue) }
+                        }}
+                        placeholder={q.placeholder || 'Escreve aqui...'}
+                        rows={1}
+                        style={{
+                          flex: 1, background: 'transparent', border: 'none', color: C.text,
+                          fontSize: 15, fontFamily: 'inherit', outline: 'none',
+                          resize: 'none', padding: '6px 0', lineHeight: 1.5,
+                          overflowY: 'hidden', minHeight: 34,
+                        }}
+                        onInput={e => {
+                          e.target.style.height = 'auto'
+                          e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px'
+                        }}
+                      />
+                      <button
+                        type="button"
+                        className="send-btn"
+                        onClick={() => submitAnswer(inputValue)}
+                        style={{
+                          background: C.blue, border: 'none', borderRadius: 10,
+                          color: '#fff', width: 42, height: 42, flexShrink: 0,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <line x1="5" y1="12" x2="19" y2="12"/>
+                          <polyline points="12 5 19 12 12 19"/>
+                        </svg>
+                      </button>
                     </div>
-                  )}
 
-                  {/* Input */}
-                  <div style={{
-                    display: 'flex', gap: 10, alignItems: 'flex-end',
-                    background: 'var(--c-bg-alt)', border: `1.5px solid ${C.bright}`,
-                    borderRadius: 14, padding: '8px 8px 8px 16px',
-                    boxShadow: '0 4px 24px rgba(0,0,0,0.3)',
-                  }}
-                    onFocusCapture={e => e.currentTarget.style.borderColor = C.blue}
-                    onBlurCapture={e => { if (!e.currentTarget.contains(e.relatedTarget)) e.currentTarget.style.borderColor = C.bright }}
-                  >
-                    <textarea
-                      ref={inputRef}
-                      value={inputValue}
-                      onChange={e => { setInputValue(e.target.value); setCurrentValue(e.target.value); setInputError('') }}
-                      onKeyDown={e => {
-                        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitAnswer(inputValue) }
-                      }}
-                      placeholder={q.placeholder || 'Escreve aqui...'}
-                      rows={1}
-                      style={{
-                        flex: 1, background: 'transparent', border: 'none', color: C.text,
-                        fontSize: 15, fontFamily: 'inherit', outline: 'none',
-                        resize: 'none', padding: '6px 0', lineHeight: 1.5,
-                        overflowY: 'hidden',
-                        minHeight: 34,
-                      }}
-                      onInput={e => {
-                        e.target.style.height = 'auto'
-                        e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px'
-                      }}
-                    />
-                    <button
-                      type="button"
-                      className="send-btn"
-                      onClick={() => submitAnswer(inputValue)}
-                      style={{
-                        background: C.blue, border: 'none', borderRadius: 10,
-                        color: '#fff', width: 42, height: 42, flexShrink: 0,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <line x1="5" y1="12" x2="19" y2="12"/>
-                        <polyline points="12 5 19 12 12 19"/>
-                      </svg>
-                    </button>
-                  </div>
+                    {inputError && (
+                      <p style={{ margin: '8px 0 0', fontSize: 12, color: '#ef4444', display: 'flex', alignItems: 'center', gap: 5 }}>
+                        <AlertTriangle size={12} /> {inputError}
+                      </p>
+                    )}
 
-                  {inputError && (
-                    <p style={{ margin: '8px 0 0', fontSize: 12, color: '#ef4444', display: 'flex', alignItems: 'center', gap: 5 }}>
-                      <AlertTriangle size={12} /> {inputError}
-                    </p>
-                  )}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 10 }}>
-                    <p style={{ margin: 0, fontSize: 12, color: C.subtle }}>Enter para continuar · Shift+Enter para nova linha</p>
-                    <button
-                      type="button"
-                      className="skip-btn"
-                      onClick={() => submitAnswer('')}
-                      style={{ background: 'none', border: 'none', fontSize: 12, color: C.subtle, fontFamily: 'inherit', padding: 0 }}
-                    >
-                      <span style={{display:'flex',alignItems:'center',gap:4}}>Saltar <ArrowRight size={12} /></span>
-                    </button>
+                    {/* Card footer */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 14 }}>
+                      <button
+                        type="button"
+                        onClick={goBack}
+                        disabled={history.length === 0}
+                        style={{
+                          background: 'none', border: 'none', padding: 0, fontFamily: 'inherit',
+                          fontSize: 12, color: history.length > 0 ? C.muted : C.subtle,
+                          cursor: history.length > 0 ? 'pointer' : 'default',
+                          display: 'flex', alignItems: 'center', gap: 4,
+                          transition: 'color 0.15s', opacity: history.length === 0 ? 0.4 : 1,
+                        }}
+                      >
+                        <RotateCcw size={12} /> Voltar atrás
+                      </button>
+                      <p style={{ margin: 0, fontSize: 11, color: C.subtle }}>Enter para continuar</p>
+                      <button
+                        type="button"
+                        className="skip-btn"
+                        onClick={() => submitAnswer('')}
+                        style={{ background: 'none', border: 'none', fontSize: 12, color: C.subtle, fontFamily: 'inherit', padding: 0 }}
+                      >
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>Saltar <ArrowRight size={12} /></span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}
