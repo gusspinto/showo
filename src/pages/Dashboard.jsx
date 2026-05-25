@@ -815,7 +815,8 @@ export default function Dashboard() {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [collabProjects, setCollabProjects] = useState([])
   const [savedTalents, setSavedTalents] = useState([])
-  const [savedTalentsLoading, setSavedTalentsLoading] = useState(false)
+  const [savedTalentsLoading, setSavedTalentsLoading] = useState(true)
+  const [savedTalentsKey, setSavedTalentsKey] = useState(0)
   // Student: recruiters who showed interest
   const [myInterests, setMyInterests] = useState([])
   const [myInterestsLoading, setMyInterestsLoading] = useState(false)
@@ -888,7 +889,11 @@ export default function Dashboard() {
 
   // Load saved talents for recruiters/empresas
   useEffect(() => {
-    if (!user || (profile?.role !== 'recrutador' && profile?.role !== 'empresa')) return
+    if (!user) return
+    if (profile?.role !== 'recrutador' && profile?.role !== 'empresa') {
+      setSavedTalentsLoading(false)
+      return
+    }
     setSavedTalentsLoading(true)
     async function loadSavedTalents() {
       const { data: interests } = await supabase
@@ -928,7 +933,7 @@ export default function Dashboard() {
       setSavedTalentsLoading(false)
     }
     loadSavedTalents()
-  }, [user, profile?.role])
+  }, [user, profile?.role, savedTalentsKey])
 
   // Load interests for student (recruiters who marked interest on their projects)
   useEffect(() => {
@@ -1738,12 +1743,23 @@ export default function Dashboard() {
                     <span className="dash-sec-count">{savedTalents.length}</span>
                   )}
                 </span>
-                <button
-                  onClick={() => navigate('/explorar')}
-                  style={{ background: 'none', border: 'none', color: C.blue, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 4 }}
-                >
-                  Explorar <ChevronRight size={13} />
-                </button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <button
+                    onClick={() => setSavedTalentsKey(k => k + 1)}
+                    title="Atualizar lista"
+                    style={{ background: 'none', border: 'none', color: C.muted, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 4, padding: '2px 6px', borderRadius: 6 }}
+                    onMouseEnter={e => e.currentTarget.style.color = C.text}
+                    onMouseLeave={e => e.currentTarget.style.color = C.muted}
+                  >
+                    ↻
+                  </button>
+                  <button
+                    onClick={() => navigate('/explorar')}
+                    style={{ background: 'none', border: 'none', color: C.blue, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 4 }}
+                  >
+                    Explorar <ChevronRight size={13} />
+                  </button>
+                </div>
               </div>
 
               {savedTalentsLoading ? (
