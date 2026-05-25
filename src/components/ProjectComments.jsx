@@ -114,12 +114,17 @@ export default function ProjectComments({ projectId, projectAuthorId }) {
     if (!content || !user) return
     if (containsProfanity(content)) { setDraft(''); return }
     setSending(true)
-    await supabase.from('project_comments').insert({
-      project_id: projectId,
-      user_id: user.id,
-      content,
-    })
     setDraft('')
+    const { data: newComment } = await supabase
+      .from('project_comments')
+      .insert({ project_id: projectId, user_id: user.id, content })
+      .select()
+      .single()
+    if (newComment) {
+      setComments(prev => prev.find(x => x.id === newComment.id) ? prev : [...prev, newComment])
+      // Garante que o perfil do autor está no mapa
+      if (profile) setProfiles(prev => prev[user.id] ? prev : { ...prev, [user.id]: profile })
+    }
     setSending(false)
   }
 
@@ -127,17 +132,17 @@ export default function ProjectComments({ projectId, projectAuthorId }) {
     const content = editDraft.trim()
     if (!content) return
     if (containsProfanity(content)) { setEditDraft(''); return }
-    await supabase.from('project_comments').update({
-      content,
-      edited_at: new Date().toISOString(),
-    }).eq('id', id)
+    const edited_at = new Date().toISOString()
+    setComments(prev => prev.map(c => c.id === id ? { ...c, content, edited_at } : c))
     setEditingId(null)
     setEditDraft('')
+    await supabase.from('project_comments').update({ content, edited_at }).eq('id', id)
   }
 
   async function deleteComment(id) {
-    await supabase.from('project_comments').delete().eq('id', id)
+    setComments(prev => prev.filter(c => c.id !== id))
     setDeletingId(null)
+    await supabase.from('project_comments').delete().eq('id', id)
   }
 
   function canModify(comment) {
