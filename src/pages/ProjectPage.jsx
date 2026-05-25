@@ -3,7 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import { QRCodeSVG } from 'qrcode.react'
 import { supabase, supabaseUrl, supabaseAnonKey } from '../lib/supabase'
-import { calculateScore } from '../lib/score'
+import { calculateScore, looksLikeSpam } from '../lib/score'
 import { CHALLENGES, getChallengeStatus } from '../lib/challenges'
 import { Navbar } from '../components/Navbar'
 import { generateProject } from '../lib/generateProject'
@@ -14,7 +14,7 @@ import { useTheme } from '../context/ThemeContext'
 import CreateProjectModal from '../components/CreateProjectModal'
 import DefenseMode from '../components/DefenseMode'
 import { analyzeProject } from '../lib/analyzeProject'
-import { Check, X, Loader, GraduationCap, Save, Sparkles, Bot, Lightbulb, Pencil, Search, Target, Wrench, Zap, TrendingUp, Briefcase, Users, Rocket, Trophy, BarChart2, CheckCircle, BookOpen, ChevronDown, Eye, UserPlus, Calendar, Mail, ArrowRight, ChevronRight, Globe, Image, MessageSquare, Quote, Layout, Type, Link, GripVertical, Plus, AlignLeft, Star, Camera, FileText, ClipboardList, Copy, Monitor, Tablet, Smartphone, Minus, Video, AlignCenter, AlignRight, Palette } from 'lucide-react'
+import { Check, X, Loader, GraduationCap, Save, Sparkles, Bot, Lightbulb, Pencil, Search, Target, Wrench, Zap, TrendingUp, Briefcase, Users, Rocket, Trophy, BarChart2, CheckCircle, BookOpen, ChevronDown, Eye, UserPlus, Calendar, Mail, ArrowRight, ChevronRight, Globe, Image, MessageSquare, Quote, Layout, Type, Link, GripVertical, Plus, AlignLeft, Star, Camera, FileText, ClipboardList, Copy, Monitor, Tablet, Smartphone, Minus, Video, AlignCenter, AlignRight, Palette, AlertTriangle } from 'lucide-react'
 
 const colors = {
   bg: 'var(--c-bg)',
@@ -360,6 +360,7 @@ function EditModal({ challenge, project, onClose, onSave, saving }) {
   const [value, setValue] = useState(String(project[challenge.field] || ''))
   const len = value.trim().length
   const isComplete = len >= challenge.threshold
+  const isSpam = looksLikeSpam(value)
   const ChalIcon = challenge.icon
   const progress = Math.min(len / challenge.threshold, 1)
 
@@ -414,7 +415,7 @@ function EditModal({ challenge, project, onClose, onSave, saving }) {
           style={{
             width: '100%', minHeight: 150,
             background: colors.bg,
-            border: `1.5px solid ${isComplete ? colors.green : colors.border}`,
+            border: `1.5px solid ${isSpam ? '#ef4444' : isComplete ? colors.green : colors.border}`,
             borderRadius: 10, padding: '12px 14px',
             color: colors.text, fontSize: 15, lineHeight: 1.65,
             resize: 'vertical', fontFamily: 'var(--font-body)',
@@ -423,6 +424,11 @@ function EditModal({ challenge, project, onClose, onSave, saving }) {
           }}
           placeholder={`Escreve sobre ${challenge.fieldLabel.toLowerCase()}...`}
         />
+        {isSpam && (
+          <p style={{ margin: '6px 0 0', fontSize: 12, color: '#ef4444', display: 'flex', alignItems: 'center', gap: 5 }}>
+            <AlertTriangle size={12} /> Texto inválido — escreve conteúdo real.
+          </p>
+        )}
         <div style={{ margin: '10px 0 20px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
             <span style={{ fontSize: 12, color: isComplete ? colors.green : colors.muted, fontWeight: isComplete ? 600 : 400, display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -443,19 +449,22 @@ function EditModal({ challenge, project, onClose, onSave, saving }) {
         </div>
         <button
           onClick={() => onSave(value)}
-          disabled={saving}
+          disabled={saving || isSpam}
           style={{
             width: '100%',
-            background: isComplete
-              ? `linear-gradient(135deg, ${colors.green}, #16a34a)`
-              : `linear-gradient(135deg, ${colors.blue}, #4f46e5)`,
-            color: '#fff', border: 'none', borderRadius: 10,
+            background: isSpam
+              ? colors.border
+              : isComplete
+                ? `linear-gradient(135deg, ${colors.green}, #16a34a)`
+                : `linear-gradient(135deg, ${colors.blue}, #4f46e5)`,
+            color: isSpam ? colors.muted : '#fff',
+            border: 'none', borderRadius: 10,
             padding: '14px 0', fontSize: 16, fontWeight: 700,
-            cursor: saving ? 'default' : 'pointer',
+            cursor: saving || isSpam ? 'not-allowed' : 'pointer',
             opacity: saving ? 0.75 : 1,
-            transition: 'opacity 0.2s',
+            transition: 'background 0.2s',
             fontFamily: 'inherit',
-            boxShadow: isComplete ? '0 4px 20px rgba(34,197,94,0.3)' : '0 4px 20px rgba(27,120,247,0.3)',
+            boxShadow: isSpam ? 'none' : isComplete ? '0 4px 20px rgba(34,197,94,0.3)' : '0 4px 20px rgba(27,120,247,0.3)',
           }}
         >
           {saving ? 'A guardar...' : `Guardar e ganhar +${challenge.scoreGain} XP`}
@@ -2628,19 +2637,19 @@ export default function ProjectPage() {
             onClick={e => e.stopPropagation()}
             style={{
               width: '100%', maxWidth: 400,
-              background: 'linear-gradient(145deg, #0e1f3a 0%, #152030 60%, #060c18 100%)',
-              border: '1px solid rgba(27,120,247,0.3)',
+              background: 'var(--c-card)',
+              border: '1px solid rgba(27,120,247,0.35)',
               borderRadius: 24,
               padding: '36px 32px',
               textAlign: 'center',
               position: 'relative',
-              boxShadow: '0 24px 80px rgba(27,120,247,0.2), 0 8px 32px rgba(0,0,0,0.6)',
+              boxShadow: '0 24px 80px rgba(27,120,247,0.18), 0 8px 32px rgba(0,0,0,0.35)',
               overflow: 'hidden',
             }}
           >
             {/* Glow blobs */}
-            <div style={{ position: 'absolute', top: -60, left: '50%', transform: 'translateX(-50%)', width: 300, height: 300, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(27,120,247,0.18) 0%, transparent 70%)', pointerEvents: 'none' }} />
-            <div style={{ position: 'absolute', bottom: -40, right: -40, width: 200, height: 200, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(79,70,229,0.15) 0%, transparent 70%)', pointerEvents: 'none' }} />
+            <div style={{ position: 'absolute', top: -60, left: '50%', transform: 'translateX(-50%)', width: 300, height: 300, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(27,120,247,0.12) 0%, transparent 70%)', pointerEvents: 'none' }} />
+            <div style={{ position: 'absolute', bottom: -40, right: -40, width: 200, height: 200, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(79,70,229,0.1) 0%, transparent 70%)', pointerEvents: 'none' }} />
 
             {/* Icon */}
             <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'center', position: 'relative' }}>
