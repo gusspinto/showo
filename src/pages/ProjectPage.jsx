@@ -1700,6 +1700,11 @@ export default function ProjectPage() {
   const [liked, setLiked]           = useState(false)
   const [likeLoading, setLikeLoading] = useState(false)
 
+  // Recruiter interest
+  const [interestCount, setInterestCount]     = useState(0)
+  const [hasInterest, setHasInterest]         = useState(false)
+  const [interestLoading, setInterestLoading] = useState(false)
+
   const prevScoreRef = useRef(null)
   const rafRef = useRef(null)
   const toastTimerRef = useRef(null)
@@ -1778,6 +1783,16 @@ export default function ProjectPage() {
       if (user?.id) {
         supabase.from('project_likes').select('user_id').eq('project_id', data.id).eq('user_id', user.id).single().then(({ data: l }) => {
           setLiked(!!l)
+        })
+      }
+
+      // Load recruiter interests count
+      supabase.from('recruiter_interests').select('recruiter_id', { count: 'exact' }).eq('project_id', data.id).then(({ count }) => {
+        setInterestCount(count || 0)
+      })
+      if (user?.id) {
+        supabase.from('recruiter_interests').select('recruiter_id').eq('project_id', data.id).eq('recruiter_id', user.id).single().then(({ data: ri }) => {
+          setHasInterest(!!ri)
         })
       }
 
@@ -3822,42 +3837,133 @@ export default function ProjectPage() {
           </div>
         )}
 
-        {/* ── Likes bar ── */}
-        {project && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 0 4px' }}>
-            <button
-              onClick={async () => {
-                if (!user) { window.location.href = '/login'; return }
-                if (likeLoading) return
-                setLikeLoading(true)
-                if (liked) {
-                  await supabase.from('project_likes').delete().eq('project_id', project.id).eq('user_id', user.id)
-                  setLiked(false)
-                  setLikeCount(c => Math.max(0, c - 1))
-                } else {
-                  await supabase.from('project_likes').insert({ project_id: project.id, user_id: user.id })
-                  setLiked(true)
-                  setLikeCount(c => c + 1)
-                }
-                setLikeLoading(false)
-              }}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 7,
-                background: liked ? 'rgba(239,68,68,0.1)' : 'var(--c-bg-alt)',
-                border: `1.5px solid ${liked ? 'rgba(239,68,68,0.35)' : 'var(--c-border)'}`,
-                borderRadius: 10, padding: '8px 16px',
-                color: liked ? '#ef4444' : 'var(--c-muted)',
-                fontSize: 14, fontWeight: 700, cursor: 'pointer',
-                fontFamily: 'inherit', transition: 'all 0.15s',
-              }}
-              onMouseEnter={e => { if (!liked) { e.currentTarget.style.borderColor = 'rgba(239,68,68,0.3)'; e.currentTarget.style.color = '#ef4444' }}}
-              onMouseLeave={e => { if (!liked) { e.currentTarget.style.borderColor = 'var(--c-border)'; e.currentTarget.style.color = 'var(--c-muted)' }}}
-            >
-              <Heart size={16} fill={liked ? '#ef4444' : 'none'} />
-              {likeCount > 0 ? likeCount : ''} {likeCount === 1 ? 'gosto' : 'gostos'}
-            </button>
-          </div>
-        )}
+        {/* ── Likes + Recruiter Interest bar ── */}
+        {project && (() => {
+          const isRecruiterRole = profile?.role === 'recrutador' || profile?.role === 'empresa'
+          return (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '16px 0 4px', flexWrap: 'wrap' }}>
+
+              {/* ❤️ Like — everyone */}
+              {!isRecruiterRole && (
+                <button
+                  onClick={async () => {
+                    if (!user) { window.location.href = '/login'; return }
+                    if (likeLoading) return
+                    setLikeLoading(true)
+                    if (liked) {
+                      await supabase.from('project_likes').delete().eq('project_id', project.id).eq('user_id', user.id)
+                      setLiked(false)
+                      setLikeCount(c => Math.max(0, c - 1))
+                    } else {
+                      await supabase.from('project_likes').insert({ project_id: project.id, user_id: user.id })
+                      setLiked(true)
+                      setLikeCount(c => c + 1)
+                    }
+                    setLikeLoading(false)
+                  }}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 7,
+                    background: liked ? 'rgba(239,68,68,0.1)' : 'var(--c-bg-alt)',
+                    border: `1.5px solid ${liked ? 'rgba(239,68,68,0.35)' : 'var(--c-border)'}`,
+                    borderRadius: 10, padding: '8px 16px',
+                    color: liked ? '#ef4444' : 'var(--c-muted)',
+                    fontSize: 14, fontWeight: 700, cursor: 'pointer',
+                    fontFamily: 'inherit', transition: 'all 0.15s',
+                  }}
+                  onMouseEnter={e => { if (!liked) { e.currentTarget.style.borderColor = 'rgba(239,68,68,0.3)'; e.currentTarget.style.color = '#ef4444' }}}
+                  onMouseLeave={e => { if (!liked) { e.currentTarget.style.borderColor = 'var(--c-border)'; e.currentTarget.style.color = 'var(--c-muted)' }}}
+                >
+                  <Heart size={16} fill={liked ? '#ef4444' : 'none'} />
+                  {likeCount > 0 ? likeCount : ''} {likeCount === 1 ? 'gosto' : 'gostos'}
+                </button>
+              )}
+
+              {/* ⭐ Tenho interesse — recrutadores e empresas */}
+              {isRecruiterRole && (
+                <button
+                  onClick={async () => {
+                    if (!user) { window.location.href = '/login'; return }
+                    if (interestLoading) return
+                    setInterestLoading(true)
+                    if (hasInterest) {
+                      await supabase.from('recruiter_interests').delete()
+                        .eq('project_id', project.id).eq('recruiter_id', user.id)
+                      setHasInterest(false)
+                      setInterestCount(c => Math.max(0, c - 1))
+                    } else {
+                      await supabase.from('recruiter_interests').insert({
+                        project_id: project.id,
+                        recruiter_id: user.id,
+                      })
+                      setHasInterest(true)
+                      setInterestCount(c => c + 1)
+                      // Notify the project owner via mensagem automática
+                      if (project.user_id && project.user_id !== user.id) {
+                        const recruiterName = profile?.full_name || profile?.username || 'Um recrutador'
+                        const company = profile?.company ? ` (${profile.company})` : ''
+                        supabase.from('mensagens').insert({
+                          from_id: user.id,
+                          to_id: project.user_id,
+                          content: `⭐ ${recruiterName}${company} marcou o teu projeto "${project.name}" como interessante! Clica aqui para ver o teu perfil e iniciar conversa.`,
+                        })
+                      }
+                    }
+                    setInterestLoading(false)
+                  }}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 8,
+                    background: hasInterest
+                      ? 'linear-gradient(135deg, rgba(245,158,11,0.15), rgba(251,191,36,0.1))'
+                      : 'var(--c-bg-alt)',
+                    border: `1.5px solid ${hasInterest ? 'rgba(245,158,11,0.5)' : 'var(--c-border)'}`,
+                    borderRadius: 10, padding: '9px 20px',
+                    color: hasInterest ? '#f59e0b' : 'var(--c-muted)',
+                    fontSize: 14, fontWeight: 700, cursor: 'pointer',
+                    fontFamily: 'inherit', transition: 'all 0.2s',
+                    boxShadow: hasInterest ? '0 4px 16px rgba(245,158,11,0.2)' : 'none',
+                  }}
+                  onMouseEnter={e => {
+                    if (!hasInterest) {
+                      e.currentTarget.style.borderColor = 'rgba(245,158,11,0.4)'
+                      e.currentTarget.style.color = '#f59e0b'
+                      e.currentTarget.style.background = 'rgba(245,158,11,0.07)'
+                    }
+                  }}
+                  onMouseLeave={e => {
+                    if (!hasInterest) {
+                      e.currentTarget.style.borderColor = 'var(--c-border)'
+                      e.currentTarget.style.color = 'var(--c-muted)'
+                      e.currentTarget.style.background = 'var(--c-bg-alt)'
+                    }
+                  }}
+                >
+                  <Star size={16} fill={hasInterest ? '#f59e0b' : 'none'} color={hasInterest ? '#f59e0b' : 'currentColor'} />
+                  {hasInterest ? 'Interesse guardado' : 'Tenho interesse'}
+                </button>
+              )}
+
+              {/* Contador de interesse — visível ao dono do projeto */}
+              {isOwner && interestCount > 0 && (
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)',
+                  borderRadius: 10, padding: '8px 14px',
+                  color: '#f59e0b', fontSize: 13, fontWeight: 700,
+                }}>
+                  <Star size={14} fill="#f59e0b" />
+                  {interestCount} recrutador{interestCount !== 1 ? 'es' : ''} com interesse
+                </div>
+              )}
+
+              {/* Gostos — visível para todos quando não é recrutador */}
+              {!isRecruiterRole && likeCount > 0 && isOwner && (
+                <span style={{ fontSize: 12, color: 'var(--c-muted)', marginLeft: 4 }}>
+                  {likeCount} {likeCount === 1 ? 'gosto' : 'gostos'}
+                </span>
+              )}
+            </div>
+          )
+        })()}
 
         {/* ── Comments ── */}
         {project && (

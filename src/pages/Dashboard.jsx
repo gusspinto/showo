@@ -813,6 +813,8 @@ export default function Dashboard() {
   const [showOnboarding, setShowOnboarding] = useState(false)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [collabProjects, setCollabProjects] = useState([])
+  const [savedTalents, setSavedTalents] = useState([])
+  const [savedTalentsLoading, setSavedTalentsLoading] = useState(false)
 
   function showToast(msg) {
     setToast(msg)
@@ -875,6 +877,50 @@ export default function Dashboard() {
     }
     loadCollabProjects()
   }, [user])
+
+  // Load saved talents for recruiters/empresas
+  useEffect(() => {
+    if (!user || (profile?.role !== 'recrutador' && profile?.role !== 'empresa')) return
+    setSavedTalentsLoading(true)
+    async function loadSavedTalents() {
+      const { data: interests } = await supabase
+        .from('recruiter_interests')
+        .select('project_id, created_at')
+        .eq('recruiter_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(20)
+      if (!interests?.length) { setSavedTalents([]); setSavedTalentsLoading(false); return }
+
+      const ids = interests.map(i => i.project_id)
+      const { data: projects } = await supabase
+        .from('projects')
+        .select('id, name, slug, score, area, creator_name, course, school_year, avatar_url, user_id, ai_tagline')
+        .in('id', ids)
+      if (!projects?.length) { setSavedTalents([]); setSavedTalentsLoading(false); return }
+
+      // Load owner profiles
+      const ownerIds = [...new Set(projects.map(p => p.user_id).filter(Boolean))]
+      let profileMap = {}
+      if (ownerIds.length) {
+        const { data: profs } = await supabase
+          .from('profiles')
+          .select('id, full_name, username, avatar_url')
+          .in('id', ownerIds)
+        profs?.forEach(p => { profileMap[p.id] = p })
+      }
+
+      // Order by interest date
+      const ordered = interests.map(i => {
+        const p = projects.find(p => p.id === i.project_id)
+        if (!p) return null
+        return { ...p, savedAt: i.created_at, ownerProfile: profileMap[p.user_id] }
+      }).filter(Boolean)
+
+      setSavedTalents(ordered)
+      setSavedTalentsLoading(false)
+    }
+    loadSavedTalents()
+  }, [user, profile?.role])
 
   useEffect(() => {
     if (!user || profile?.role !== 'professor') return
@@ -967,6 +1013,7 @@ export default function Dashboard() {
   const avgScore = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null
   const totalViews = projects.reduce((sum, p) => sum + (p.views ?? 0), 0)
   const isTeacher = profile?.role === 'professor'
+  const isRecruiter = profile?.role === 'recrutador' || profile?.role === 'empresa'
 
   const greeting = (() => {
     const h = new Date().getHours()
@@ -1514,6 +1561,104 @@ export default function Dashboard() {
                   </div>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* ── Talentos guardados (recrutadores) ── */}
+          {isRecruiter && (
+            <div style={{ marginTop: 32 }}>
+              <div className="dash-sec-hd">
+                <span className="dash-sec-label">
+                  <Star size={14} color="#f59e0b" />
+                  Talentos guardados
+                  {savedTalents.length > 0 && (
+                    <span className="dash-sec-count">{savedTalents.length}</span>
+                  )}
+                </span>
+                <button
+                  onClick={() => navigate('/explorar')}
+                  style={{ background: 'none', border: 'none', color: C.blue, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 4 }}
+                >
+                  Explorar <ChevronRight size={13} />
+                </button>
+              </div>
+
+              {savedTalentsLoading ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {[1,2,3].map(i => <div key={i} className="dash-skeleton" style={{ height: 72, opacity: 1 - i * 0.15 }} />)}
+                </div>
+              ) : savedTalents.length === 0 ? (
+                <div style={{
+                  background: C.card, border: `1px solid ${C.border}`,
+                  borderRadius: 14, padding: '24px 20px', textAlign: 'center',
+                }}>
+                  <Star size={28} color="var(--c-subtle)" style={{ marginBottom: 10 }} />
+                  <p style={{ margin: '0 0 6px', fontSize: 14, fontWeight: 600, color: C.text }}>
+                    Ainda sem talentos guardados
+                  </p>
+                  <p style={{ margin: '0 0 14px', fontSize: 13, color: C.muted }}>
+                    Abre um projeto e clica em "⭐ Tenho interesse" para guardar.
+                  </p>
+                  <button
+                    onClick={() => navigate('/explorar')}
+                    style={{ background: `linear-gradient(135deg,${C.blue},#4f46e5)`, border: 'none', borderRadius: 9, padding: '9px 20px', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+                  >
+                    Explorar projetos
+                  </button>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {savedTalents.map(p => {
+                    const ownerName = p.ownerProfile?.full_name || p.creator_name || 'Sem nome'
+                    const ownerUsername = p.ownerProfile?.username
+                    const scoreColor = getScoreColor(p.score)
+                    return (
+                      <div
+                        key={p.id}
+                        style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer', transition: 'all 0.15s' }}
+                        onClick={() => navigate(`/projeto/${p.slug}`)}
+                        onMouseEnter={e => { e.currentTarget.style.background = C.cardHover; e.currentTarget.style.borderColor = C.borderBright }}
+                        onMouseLeave={e => { e.currentTarget.style.background = C.card; e.currentTarget.style.borderColor = C.border }}
+                      >
+                        {/* Score ring */}
+                        <svg width="38" height="38" viewBox="0 0 38 38" style={{ flexShrink: 0 }}>
+                          <circle cx={19} cy={19} r={15} fill="none" stroke={C.border} strokeWidth={3} />
+                          <circle cx={19} cy={19} r={15} fill="none" stroke={scoreColor} strokeWidth={3}
+                            strokeDasharray={`${((p.score ?? 0) / 100) * 2 * Math.PI * 15} ${2 * Math.PI * 15}`}
+                            strokeLinecap="round" strokeDashoffset={2 * Math.PI * 15 * 0.25}
+                            style={{ transform: 'rotate(-90deg)', transformOrigin: '50% 50%' }}
+                          />
+                          <text x="19" y="23" textAnchor="middle" fontSize="9" fontWeight="800" fill={scoreColor}>{p.score ?? '—'}</text>
+                        </svg>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 14, fontWeight: 700, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {p.name}
+                          </div>
+                          <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>
+                            {ownerName}{p.area ? ` · ${p.area}` : ''}{p.course ? ` · ${p.course}` : ''}
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                          {ownerUsername && (
+                            <button
+                              onClick={e => { e.stopPropagation(); navigate(`/u/${ownerUsername}`) }}
+                              style={{ background: 'none', border: `1px solid ${C.border}`, borderRadius: 8, padding: '5px 10px', fontSize: 12, color: C.muted, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}
+                            >
+                              Perfil
+                            </button>
+                          )}
+                          <button
+                            onClick={e => { e.stopPropagation(); navigate(`/mensagens?to=${p.user_id}`) }}
+                            style={{ background: `${C.blue}15`, border: `1px solid ${C.blue}30`, borderRadius: 8, padding: '5px 10px', fontSize: 12, color: C.blue, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4 }}
+                          >
+                            <MessageSquare size={12} /> Mensagem
+                          </button>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
             </div>
           )}
 
