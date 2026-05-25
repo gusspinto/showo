@@ -22,33 +22,46 @@ export function looksLikeSpam(text) {
   const str = text.trim()
   if (str.length === 0) return false
 
-  // Heuristic A: no letters at all — pure numbers, ?, *, +, etc.
+  // A: no letters at all — pure numbers, ?, *, +, etc.
   if (!/[a-zA-ZÀ-ɏ]/.test(str)) return true
 
-  if (str.length < 8) return false  // rest needs enough text to judge
+  const words = str.split(/\s+/).filter(Boolean)
 
-  const words = str.split(/\s+/).filter(w => w.length > 0)
-  if (words.length === 0) return true
+  // B: word with letters AND ≥2 embedded digits — e.g. "wuid238j28", "abc123def"
+  for (const w of words) {
+    if (/[a-zA-ZÀ-ɏ]/.test(w) && (w.match(/\d/g) || []).length >= 2) return true
+  }
 
-  // Heuristic 1: long unbroken strings (avg word length)
+  // C: 4+ consecutive vowels — not found in real PT/EN words ("aeuiedah", "ooouuu")
+  if (/[aeiouáéíóúàèìòùâêîôûãõ]{4,}/i.test(str)) return true
+
+  // D: lowercase words ≥5 chars with zero vowels — consonant gibberish
+  //    Uppercase excluded so HTML, HTTPS, JWT, SSL etc. are allowed
+  const lowWords = words.filter(w => {
+    const l = w.replace(/[^a-zA-ZÀ-ɏ]/g, '')
+    return l.length >= 5 && l === l.toLowerCase()
+  })
+  if (lowWords.length > 0) {
+    const hasVowel = w => !!(w.replace(/[^a-zA-ZÀ-ɏ]/g, '').match(/[aeiouáéíóúàèìòùâêîôûãõ]/gi) || []).length
+    const noVowelLow = lowWords.filter(w => !hasVowel(w))
+    if (noVowelLow.length / lowWords.length > 0.5) return true
+  }
+
+  if (str.length < 8) return false
+
+  // 1: avg word length > 20 — long unbroken run
   const avgWordLen = words.reduce((s, w) => s + w.length, 0) / words.length
   if (avgWordLen > 20) return true
 
-  // Heuristic 2: very low unique character ratio (repetitive/cyclic spam)
+  // 2: very low unique character ratio — repetitive/cyclic mashing
   const stripped = str.toLowerCase().replace(/\s/g, '')
-  const uniqueRatio = new Set(stripped).size / stripped.length
-  if (stripped.length > 20 && uniqueRatio < 0.12) return true
+  if (stripped.length > 20 && new Set(stripped).size / stripped.length < 0.12) return true
 
-  // Heuristic 3: words with almost no vowels (consonant gibberish)
-  // Covers words ≥ 6 letters — catches "sdfjsk", "qwrtpl" etc.
-  // Skips short acronyms (css, npm, html < 6 chars) to avoid false positives
-  const letterWords = words.map(w => w.replace(/[^a-zA-ZÀ-ɏ]/g, '')).filter(w => w.length >= 6)
-  if (letterWords.length > 0) {
-    const noVowelCount = letterWords.filter(w => {
-      const vowels = (w.match(/[aeiouáéíóúàèìòùâêîôûãõ]/gi) || []).length
-      return vowels / w.length < 0.10  // <10% vowels = consonant dump
-    }).length
-    if (noVowelCount / letterWords.length > 0.6) return true
+  // 3: words ≥6 chars with no vowels (>60% of such words)
+  const longLetterWords = words.map(w => w.replace(/[^a-zA-ZÀ-ɏ]/g, '')).filter(w => w.length >= 6)
+  if (longLetterWords.length > 0) {
+    const noVowelLong = longLetterWords.filter(w => !(w.match(/[aeiouáéíóúàèìòùâêîôûãõ]/gi) || []).length)
+    if (noVowelLong.length / longLetterWords.length > 0.6) return true
   }
 
   return false

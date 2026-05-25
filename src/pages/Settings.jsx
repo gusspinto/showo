@@ -6,6 +6,7 @@ import { useTheme } from '../context/ThemeContext'
 import { Navbar } from '../components/Navbar'
 import { Loader, Check, X, AlertTriangle, Camera, ArrowLeft, GraduationCap, BookOpen, Search, Building2, Lock, Briefcase, Sun, Moon } from 'lucide-react'
 import { CropModal } from '../components/CropModal'
+import { containsProfanity } from '../lib/profanity'
 
 const C = {
   bg:          'var(--c-bg)',
@@ -258,6 +259,13 @@ export default function Settings() {
     if (!user) return
     setSaving(true)
     setSaveMsg(null)
+
+    // Profanity check on name and bio
+    if (containsProfanity(fullName) || containsProfanity(bio)) {
+      setSaveMsg({ type: 'err', text: 'Linguagem inapropriada detetada. A Showo é uma plataforma para estudantes — mantém o perfil respeitoso.' })
+      setSaving(false)
+      return
+    }
 
     // Validate username
     if (username && !/^[a-z0-9_]{3,30}$/.test(username)) {

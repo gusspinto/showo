@@ -6,6 +6,8 @@ import { Navbar } from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
 import { useSidebar } from '../context/SidebarContext'
 import { Sparkles, Lock, Search, Image, ArrowLeft } from 'lucide-react'
+import { looksLikeSpam } from '../lib/score'
+import { containsProfanity } from '../lib/profanity'
 
 const colors = {
   bg: 'var(--c-bg)',
@@ -222,6 +224,15 @@ export default function EditProject() {
   async function handleSubmit(e) {
     e.preventDefault()
     if (!form.name?.trim() || !form.area?.trim()) return
+
+    // Content moderation — check all text fields
+    const textFields = ['name', 'area', 'goal', 'problem', 'solution', 'target_audience', 'features', 'technologies', 'challenges', 'results', 'learnings']
+    for (const key of textFields) {
+      const v = String(form[key] || '')
+      if (containsProfanity(v)) { setError('Linguagem inapropriada detetada. Remove o conteúdo impróprio antes de guardar.'); return }
+      if (looksLikeSpam(v))     { setError('Texto inválido detetado. Escreve conteúdo real nos campos do projeto.'); return }
+    }
+
     setSaving(true)
     setError(null)
     try {

@@ -5,6 +5,7 @@ import { GraduationCap, Briefcase, Rocket, Users, ClipboardList, BarChart2, Moni
 import { generateProject } from '../lib/generateProject'
 import { saveProject } from '../lib/saveProject'
 import { calculateScore, looksLikeSpam, isTooShortForContent } from '../lib/score'
+import { containsProfanity } from '../lib/profanity'
 import { Toast, useToast } from '../components/Toast'
 import { Navbar } from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
@@ -215,7 +216,12 @@ export default function NewProject() {
     return getCurrentFieldValues().some(v => isTooShortForContent(v))
   }
 
+  function hasProfanityInCurrent() {
+    return getCurrentFieldValues().some(v => containsProfanity(v))
+  }
+
   function currentContentIssue() {
+    if (hasProfanityInCurrent()) return 'profanity'
     if (hasSpamInCurrent()) return 'spam'
     if (hasTooShortContent()) return 'short'
     return null
@@ -240,6 +246,7 @@ export default function NewProject() {
 
   function canProceed() {
     if (phase === 'goal') return !!formGoal
+    if (hasProfanityInCurrent()) return false
     if (hasSpamInCurrent()) return false
     if (hasTooShortContent()) return false
     switch (s.type) {
@@ -259,8 +266,8 @@ export default function NewProject() {
   async function handleNext() {
     if (phase === 'goal') { setPhase('form'); return }
 
-    // Content guard — blocks spam and too-short content
-    if (hasSpamInCurrent() || hasTooShortContent()) return
+    // Content guard — blocks profanity, spam and too-short content
+    if (hasProfanityInCurrent() || hasSpamInCurrent() || hasTooShortContent()) return
 
     if (step < TOTAL_STEPS - 1) { setStep(n => n + 1); return }
 
@@ -898,11 +905,13 @@ export default function NewProject() {
               </div>
               <div>
                 <div style={{ fontSize: 13, fontWeight: 700, color: '#ef4444', marginBottom: 3 }}>
-                  {currentContentIssue() === 'short' ? 'Conteúdo demasiado curto' : 'Texto inválido detetado'}
+                  {currentContentIssue() === 'short' ? 'Conteúdo demasiado curto' : currentContentIssue() === 'profanity' ? 'Linguagem imprópria detetada' : 'Texto inválido detetado'}
                 </div>
                 <div style={{ fontSize: 12, color: 'var(--c-muted)', lineHeight: 1.5 }}>
                   {currentContentIssue() === 'short'
                     ? 'Escreve pelo menos 20 caracteres. Palavras como "oi", "sim", "ok" não são conteúdo válido — descreve o teu projeto com detalhe.'
+                    : currentContentIssue() === 'profanity'
+                    ? 'Este campo contém linguagem inapropriada. A Showo é uma plataforma para estudantes — mantém o conteúdo respeitoso.'
                     : 'O texto parece aleatório ou sem sentido. Escreve conteúdo real para continuar — campos com spam não contam para o score.'
                   }
                 </div>

@@ -3,6 +3,8 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { saveProject } from '../lib/saveProject'
 import { AlertTriangle, ArrowRight } from 'lucide-react'
+import { looksLikeSpam } from '../lib/score'
+import { containsProfanity } from '../lib/profanity'
 
 const C = {
   bg:     'var(--c-bg)',
@@ -151,6 +153,8 @@ export default function AIInterview() {
   const [projectType, setProjectType]   = useState(initType)
   const [description, setDescription]   = useState(initDesc)
 
+  const [inputError, setInputError] = useState('')
+
   const inputRef  = useRef(null)
   const bottomRef = useRef(null)
 
@@ -188,6 +192,15 @@ export default function AIInterview() {
     const trimmed = val.trim()
     const q = questions[currentQ]
     if (!q) return
+    if (trimmed && containsProfanity(trimmed)) {
+      setInputError('Linguagem inapropriada — mantém o conteúdo respeitoso.')
+      return
+    }
+    if (trimmed && looksLikeSpam(trimmed)) {
+      setInputError('Texto inválido — escreve uma resposta real.')
+      return
+    }
+    setInputError('')
 
     const newAnswers = { ...answers, [q.field]: trimmed }
     setAnswers(newAnswers)
@@ -590,7 +603,7 @@ export default function AIInterview() {
                     <textarea
                       ref={inputRef}
                       value={inputValue}
-                      onChange={e => { setInputValue(e.target.value); setCurrentValue(e.target.value) }}
+                      onChange={e => { setInputValue(e.target.value); setCurrentValue(e.target.value); setInputError('') }}
                       onKeyDown={e => {
                         if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitAnswer(inputValue) }
                       }}
@@ -626,6 +639,11 @@ export default function AIInterview() {
                     </button>
                   </div>
 
+                  {inputError && (
+                    <p style={{ margin: '8px 0 0', fontSize: 12, color: '#ef4444', display: 'flex', alignItems: 'center', gap: 5 }}>
+                      <AlertTriangle size={12} /> {inputError}
+                    </p>
+                  )}
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 10 }}>
                     <p style={{ margin: 0, fontSize: 12, color: C.subtle }}>Enter para continuar · Shift+Enter para nova linha</p>
                     <button

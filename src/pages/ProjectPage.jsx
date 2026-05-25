@@ -4,6 +4,7 @@ import { Helmet } from 'react-helmet-async'
 import { QRCodeSVG } from 'qrcode.react'
 import { supabase, supabaseUrl, supabaseAnonKey } from '../lib/supabase'
 import { calculateScore, looksLikeSpam } from '../lib/score'
+import { containsProfanity } from '../lib/profanity'
 import { CHALLENGES, getChallengeStatus } from '../lib/challenges'
 import { Navbar } from '../components/Navbar'
 import { generateProject } from '../lib/generateProject'
@@ -360,7 +361,10 @@ function EditModal({ challenge, project, onClose, onSave, saving }) {
   const [value, setValue] = useState(String(project[challenge.field] || ''))
   const len = value.trim().length
   const isComplete = len >= challenge.threshold
-  const isSpam = looksLikeSpam(value)
+  const isSpam = looksLikeSpam(value) || containsProfanity(value)
+  const spamMsg = containsProfanity(value)
+    ? 'Linguagem inapropriada. A Showo é uma plataforma para estudantes — mantém o conteúdo respeitoso.'
+    : 'Texto inválido — escreve conteúdo real.'
   const ChalIcon = challenge.icon
   const progress = Math.min(len / challenge.threshold, 1)
 
@@ -426,7 +430,7 @@ function EditModal({ challenge, project, onClose, onSave, saving }) {
         />
         {isSpam && (
           <p style={{ margin: '6px 0 0', fontSize: 12, color: '#ef4444', display: 'flex', alignItems: 'center', gap: 5 }}>
-            <AlertTriangle size={12} /> Texto inválido — escreve conteúdo real.
+            <AlertTriangle size={12} /> {spamMsg}
           </p>
         )}
         <div style={{ margin: '10px 0 20px' }}>
