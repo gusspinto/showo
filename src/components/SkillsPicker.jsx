@@ -1,0 +1,161 @@
+import { useState, useRef } from 'react'
+import { X, Plus } from 'lucide-react'
+
+const POPULAR_SKILLS = [
+  // Dev
+  'JavaScript', 'TypeScript', 'React', 'Vue.js', 'Angular', 'Node.js', 'Python',
+  'Java', 'C#', 'C++', 'Go', 'Rust', 'PHP', 'Ruby', 'Swift', 'Kotlin',
+  'HTML', 'CSS', 'Tailwind CSS', 'Next.js', 'Nuxt.js', 'Express', 'Django',
+  'Laravel', 'Spring Boot', 'Flutter', 'React Native',
+  // Data / AI
+  'Machine Learning', 'Deep Learning', 'Data Science', 'SQL', 'PostgreSQL',
+  'MongoDB', 'Redis', 'Elasticsearch', 'TensorFlow', 'PyTorch', 'Pandas',
+  // Tools & Infra
+  'Git', 'Docker', 'Kubernetes', 'AWS', 'GCP', 'Azure', 'Linux', 'CI/CD',
+  'GraphQL', 'REST API', 'Supabase', 'Firebase',
+  // Design / Product
+  'Figma', 'UI/UX Design', 'Product Management', 'Agile', 'Scrum',
+  // Soft
+  'Comunicação', 'Trabalho em equipa', 'Liderança', 'Resolução de problemas',
+]
+
+export default function SkillsPicker({ value = [], onChange, max = 10, label = 'Competências' }) {
+  const [input, setInput] = useState('')
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const inputRef = useRef(null)
+
+  const selected = Array.isArray(value) ? value : []
+
+  const suggestions = input.trim().length > 0
+    ? POPULAR_SKILLS.filter(s =>
+        s.toLowerCase().includes(input.toLowerCase()) &&
+        !selected.includes(s)
+      ).slice(0, 6)
+    : POPULAR_SKILLS.filter(s => !selected.includes(s)).slice(0, 8)
+
+  function add(skill) {
+    const trimmed = skill.trim()
+    if (!trimmed || selected.includes(trimmed) || selected.length >= max) return
+    onChange([...selected, trimmed])
+    setInput('')
+    setShowSuggestions(false)
+    inputRef.current?.focus()
+  }
+
+  function remove(skill) {
+    onChange(selected.filter(s => s !== skill))
+  }
+
+  function handleKey(e) {
+    if ((e.key === 'Enter' || e.key === ',') && input.trim()) {
+      e.preventDefault()
+      add(input)
+    }
+    if (e.key === 'Backspace' && !input && selected.length > 0) {
+      remove(selected[selected.length - 1])
+    }
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {label && (
+        <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--c-text)' }}>
+          {label}
+          <span style={{ fontWeight: 400, color: 'var(--c-muted)', marginLeft: 6 }}>
+            (máx. {max})
+          </span>
+        </label>
+      )}
+
+      {/* Tags area */}
+      <div
+        onClick={() => { setShowSuggestions(true); inputRef.current?.focus() }}
+        style={{
+          display: 'flex', flexWrap: 'wrap', gap: 6,
+          padding: '8px 10px', minHeight: 44,
+          background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)',
+          borderRadius: 10, cursor: 'text',
+        }}
+      >
+        {selected.map(skill => (
+          <span
+            key={skill}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 4,
+              background: 'rgba(27,120,247,0.12)', color: '#1b78f7',
+              border: '1px solid rgba(27,120,247,0.25)',
+              borderRadius: 20, padding: '3px 10px 3px 10px',
+              fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap',
+            }}
+          >
+            {skill}
+            <button
+              type="button"
+              onClick={e => { e.stopPropagation(); remove(skill) }}
+              style={{
+                background: 'none', border: 'none', padding: 0,
+                cursor: 'pointer', color: '#1b78f7', display: 'flex',
+                alignItems: 'center', lineHeight: 1,
+              }}
+            >
+              <X size={11} />
+            </button>
+          </span>
+        ))}
+        {selected.length < max && (
+          <input
+            ref={inputRef}
+            value={input}
+            onChange={e => { setInput(e.target.value); setShowSuggestions(true) }}
+            onKeyDown={handleKey}
+            onFocus={() => setShowSuggestions(true)}
+            onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+            placeholder={selected.length === 0 ? 'Adiciona competências…' : ''}
+            style={{
+              flex: 1, minWidth: 120, background: 'none', border: 'none', outline: 'none',
+              fontSize: 13, color: 'var(--c-text)', fontFamily: 'inherit',
+            }}
+          />
+        )}
+      </div>
+
+      {/* Suggestions dropdown */}
+      {showSuggestions && suggestions.length > 0 && (
+        <div style={{
+          display: 'flex', flexWrap: 'wrap', gap: 6, padding: '8px 0',
+        }}>
+          {suggestions.map(s => (
+            <button
+              key={s}
+              type="button"
+              onMouseDown={e => { e.preventDefault(); add(s) }}
+              style={{
+                background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)',
+                borderRadius: 20, padding: '4px 12px',
+                fontSize: 12, fontWeight: 500, color: 'var(--c-muted)',
+                cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4,
+                transition: 'all 0.15s',
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.borderColor = '#1b78f7'
+                e.currentTarget.style.color = '#1b78f7'
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.borderColor = 'var(--c-border)'
+                e.currentTarget.style.color = 'var(--c-muted)'
+              }}
+            >
+              <Plus size={10} /> {s}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {selected.length > 0 && (
+        <p style={{ margin: 0, fontSize: 11, color: 'var(--c-muted)' }}>
+          {selected.length}/{max} · Carrega Enter ou vírgula para adicionar
+        </p>
+      )}
+    </div>
+  )
+}

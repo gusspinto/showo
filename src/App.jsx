@@ -32,6 +32,8 @@ const Certificate  = lazy(() => import('./pages/Certificate'))
 const Vagas        = lazy(() => import('./pages/Vagas'))
 const Mensagens    = lazy(() => import('./pages/Mensagens'))
 const Candidatos   = lazy(() => import('./pages/Candidatos'))
+const Pipeline     = lazy(() => import('./pages/Pipeline'))
+const EmpresaPage  = lazy(() => import('./pages/EmpresaPage'))
 
 function PageLoader() {
   return (
@@ -268,6 +270,8 @@ export default function App() {
               <Route path="/vagas"              element={<Vagas />}        />
               <Route path="/mensagens"          element={<Mensagens />}    />
               <Route path="/candidatos"         element={<Candidatos />}   />
+              <Route path="/pipeline"           element={<Pipeline />}     />
+              <Route path="/empresa/:id"        element={<EmpresaPage />}  />
               <Route path="*"                   element={<NotFound />}     />
             </Routes>
             </Suspense>

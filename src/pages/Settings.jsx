@@ -7,6 +7,7 @@ import { Navbar } from '../components/Navbar'
 import { Loader, Check, X, AlertTriangle, Camera, ArrowLeft, GraduationCap, BookOpen, Search, Building2, Lock, Briefcase, Sun, Moon } from 'lucide-react'
 import { CropModal } from '../components/CropModal'
 import { containsProfanity } from '../lib/profanity'
+import SkillsPicker from '../components/SkillsPicker'
 
 const C = {
   bg:          'var(--c-bg)',
@@ -148,11 +149,18 @@ export default function Settings() {
   const [availableForWork, setAvailableForWork] = useState(false)
 
   // Recruiter fields
-  const [company, setCompany]               = useState('')
-  const [companyRole, setCompanyRole]       = useState('')
-  const [companyWebsite, setCompanyWebsite] = useState('')
-  const [linkedinUrl, setLinkedinUrl]       = useState('')
-  const [lookingFor, setLookingFor]         = useState('')
+  const [company, setCompany]                   = useState('')
+  const [companyRole, setCompanyRole]           = useState('')
+  const [companyWebsite, setCompanyWebsite]     = useState('')
+  const [linkedinUrl, setLinkedinUrl]           = useState('')
+  const [lookingFor, setLookingFor]             = useState('')
+  const [companyDescription, setCompanyDescription] = useState('')
+  const [companyLocation, setCompanyLocation]   = useState('')
+  const [companyIndustry, setCompanyIndustry]   = useState('')
+  const [companySize, setCompanySize]           = useState('')
+
+  // Skills (aluno/professor)
+  const [skills, setSkills] = useState([])
 
   const [currentPw, setCurrentPw]     = useState('')
   const [newPw, setNewPw]             = useState('')
@@ -169,7 +177,7 @@ export default function Settings() {
     // Pre-fill from user_metadata
     setFullName(user.user_metadata?.full_name ?? '')
     // Load profile
-    supabase.from('profiles').select('username, bio, role, avatar_url, available_for_work, company, company_role, company_website, linkedin_url, looking_for').eq('id', user.id).single().then(({ data }) => {
+    supabase.from('profiles').select('username, bio, role, avatar_url, available_for_work, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size, skills').eq('id', user.id).single().then(({ data }) => {
       if (data) {
         setUsername(data.username ?? '')
         setOriginalUsername(data.username ?? '')
@@ -182,6 +190,11 @@ export default function Settings() {
         setCompanyWebsite(data.company_website ?? '')
         setLinkedinUrl(data.linkedin_url ?? '')
         setLookingFor(data.looking_for ?? '')
+        setCompanyDescription(data.company_description ?? '')
+        setCompanyLocation(data.company_location ?? '')
+        setCompanyIndustry(data.company_industry ?? '')
+        setCompanySize(data.company_size ?? '')
+        setSkills(data.skills ?? [])
       }
     })
   }, [user])
@@ -294,12 +307,19 @@ export default function Settings() {
         bio: bio.trim() || null,
         role,
         available_for_work: availableForWork,
+        ...((role === 'aluno' || role === 'professor') ? {
+          skills,
+        } : {}),
         ...(role === 'recrutador' || role === 'empresa' ? {
           company: company.trim() || null,
           company_role: companyRole.trim() || null,
           company_website: companyWebsite.trim() || null,
           linkedin_url: linkedinUrl.trim() || null,
           looking_for: lookingFor.trim() || null,
+          company_description: companyDescription.trim() || null,
+          company_location: companyLocation.trim() || null,
+          company_industry: companyIndustry.trim() || null,
+          company_size: companySize.trim() || null,
         } : {}),
       })
       if (profileError) {
@@ -498,6 +518,22 @@ export default function Settings() {
                 </div>
                 <Input label="Nome da empresa" value={company} onChange={setCompany} placeholder="Ex: Google, NOS, Altice..." />
                 <Input label="O teu cargo" value={companyRole} onChange={setCompanyRole} placeholder="Ex: Talent Acquisition, HR Manager, CEO..." />
+                <Textarea label="Sobre a empresa" value={companyDescription} onChange={setCompanyDescription} placeholder="Descreve a empresa, a cultura, os projetos, o ambiente de trabalho..." hint="Aparece na página pública da empresa." />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                  <Input label="Localização" value={companyLocation} onChange={setCompanyLocation} placeholder="Ex: Lisboa, Porto, Remote..." />
+                  <Input label="Setor / Indústria" value={companyIndustry} onChange={setCompanyIndustry} placeholder="Ex: Tecnologia, Saúde..." />
+                </div>
+                <div style={{ marginBottom: 20 }}>
+                  <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: C.muted, marginBottom: 7 }}>Dimensão da empresa</label>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    {['1–10', '11–50', '51–200', '201–500', '500+'].map(s => (
+                      <button key={s} type="button" onClick={() => setCompanySize(s)}
+                        style={{ padding: '8px 14px', borderRadius: 8, border: `1.5px solid ${companySize === s ? accentColor : C.border}`, background: companySize === s ? `${accentColor}15` : 'transparent', color: companySize === s ? accentColor : C.muted, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s' }}>
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                </div>
                 <Input label="Website" value={companyWebsite} onChange={setCompanyWebsite} placeholder="https://empresa.com" />
                 <Input label="LinkedIn" value={linkedinUrl} onChange={setLinkedinUrl} placeholder="https://linkedin.com/in/..." hint="O LinkedIn da empresa ou o teu perfil pessoal." />
                 {saveBlock}
@@ -612,6 +648,11 @@ export default function Settings() {
                 </button>
               </div>
             )}
+
+            {/* Skills picker — aluno & professor */}
+            <div style={{ marginBottom: 20 }}>
+              <SkillsPicker value={skills} onChange={setSkills} max={12} label="Competências" />
+            </div>
 
             {roleBadge}
             {saveBlock}

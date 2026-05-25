@@ -14,8 +14,9 @@ import { useSidebar } from '../context/SidebarContext'
 import { useTheme } from '../context/ThemeContext'
 import CreateProjectModal from '../components/CreateProjectModal'
 import DefenseMode from '../components/DefenseMode'
+import ProjectComments from '../components/ProjectComments'
 import { analyzeProject } from '../lib/analyzeProject'
-import { Check, X, Loader, GraduationCap, Save, Sparkles, Bot, Lightbulb, Pencil, Search, Target, Wrench, Zap, TrendingUp, Briefcase, Users, Rocket, Trophy, BarChart2, CheckCircle, BookOpen, ChevronDown, Eye, UserPlus, Calendar, Mail, ArrowRight, ChevronRight, Globe, Image, MessageSquare, Quote, Layout, Type, Link, GripVertical, Plus, AlignLeft, Star, Camera, FileText, ClipboardList, Copy, Monitor, Tablet, Smartphone, Minus, Video, AlignCenter, AlignRight, Palette, AlertTriangle } from 'lucide-react'
+import { Check, X, Loader, GraduationCap, Save, Sparkles, Bot, Lightbulb, Pencil, Search, Target, Wrench, Zap, TrendingUp, Briefcase, Users, Rocket, Trophy, BarChart2, CheckCircle, BookOpen, ChevronDown, Eye, UserPlus, Calendar, Mail, ArrowRight, ChevronRight, Globe, Image, MessageSquare, Quote, Layout, Type, Link, GripVertical, Plus, AlignLeft, Star, Camera, FileText, ClipboardList, Copy, Monitor, Tablet, Smartphone, Minus, Video, AlignCenter, AlignRight, Palette, AlertTriangle, Heart } from 'lucide-react'
 
 const colors = {
   bg: 'var(--c-bg)',
@@ -1694,6 +1695,11 @@ export default function ProjectPage() {
   const [reportLoading, setReportLoading] = useState(false)
   const [reportError, setReportError] = useState(null)
 
+  // Likes
+  const [likeCount, setLikeCount]   = useState(0)
+  const [liked, setLiked]           = useState(false)
+  const [likeLoading, setLikeLoading] = useState(false)
+
   const prevScoreRef = useRef(null)
   const rafRef = useRef(null)
   const toastTimerRef = useRef(null)
@@ -1764,6 +1770,16 @@ export default function ProjectPage() {
       if (data.defense_date) setDefenseDate(data.defense_date)
       // Load preview blocks
       if (Array.isArray(data.preview_blocks)) setPreviewBlocks(data.preview_blocks)
+
+      // Load likes count + user's like
+      supabase.from('project_likes').select('user_id', { count: 'exact' }).eq('project_id', data.id).then(({ count }) => {
+        setLikeCount(count || 0)
+      })
+      if (user?.id) {
+        supabase.from('project_likes').select('user_id').eq('project_id', data.id).eq('user_id', user.id).single().then(({ data: l }) => {
+          setLiked(!!l)
+        })
+      }
 
       const isProjectOwner = !!(user?.id && data.user_id && user.id === data.user_id)
 
@@ -3041,6 +3057,17 @@ export default function ProjectPage() {
                   </div>
                 )}
 
+                {/* Tags */}
+                {project.tags && project.tags.length > 0 && project.tags.map(tag => (
+                  <span key={tag} style={{
+                    background: 'var(--c-bg-alt)', color: 'var(--c-muted)',
+                    border: '1px solid var(--c-border)',
+                    borderRadius: 8, padding: '5px 12px', fontSize: 12, fontWeight: 500,
+                  }}>
+                    {tag}
+                  </span>
+                ))}
+
                 {/* Invite collaborator — owner only */}
                 {isOwner && !showInvite && (
                   <button
@@ -3792,6 +3819,50 @@ export default function ProjectPage() {
                 )}
               </div>
             )}
+          </div>
+        )}
+
+        {/* ── Likes bar ── */}
+        {project && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 0 4px' }}>
+            <button
+              onClick={async () => {
+                if (!user) { window.location.href = '/login'; return }
+                if (likeLoading) return
+                setLikeLoading(true)
+                if (liked) {
+                  await supabase.from('project_likes').delete().eq('project_id', project.id).eq('user_id', user.id)
+                  setLiked(false)
+                  setLikeCount(c => Math.max(0, c - 1))
+                } else {
+                  await supabase.from('project_likes').insert({ project_id: project.id, user_id: user.id })
+                  setLiked(true)
+                  setLikeCount(c => c + 1)
+                }
+                setLikeLoading(false)
+              }}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 7,
+                background: liked ? 'rgba(239,68,68,0.1)' : 'var(--c-bg-alt)',
+                border: `1.5px solid ${liked ? 'rgba(239,68,68,0.35)' : 'var(--c-border)'}`,
+                borderRadius: 10, padding: '8px 16px',
+                color: liked ? '#ef4444' : 'var(--c-muted)',
+                fontSize: 14, fontWeight: 700, cursor: 'pointer',
+                fontFamily: 'inherit', transition: 'all 0.15s',
+              }}
+              onMouseEnter={e => { if (!liked) { e.currentTarget.style.borderColor = 'rgba(239,68,68,0.3)'; e.currentTarget.style.color = '#ef4444' }}}
+              onMouseLeave={e => { if (!liked) { e.currentTarget.style.borderColor = 'var(--c-border)'; e.currentTarget.style.color = 'var(--c-muted)' }}}
+            >
+              <Heart size={16} fill={liked ? '#ef4444' : 'none'} />
+              {likeCount > 0 ? likeCount : ''} {likeCount === 1 ? 'gosto' : 'gostos'}
+            </button>
+          </div>
+        )}
+
+        {/* ── Comments ── */}
+        {project && (
+          <div className="proj-card" style={{ padding: '22px 24px' }}>
+            <ProjectComments projectId={project.id} projectAuthorId={project.user_id} />
           </div>
         )}
 

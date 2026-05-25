@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
 import { useSidebar } from '../context/SidebarContext'
 import { supabase } from '../lib/supabase'
-import { Check, X, FolderOpen, User, Settings as SettingsIcon, Shield, Globe, Trophy, LogOut, Bell, Eye, Target, TrendingUp, GraduationCap, UserPlus, LayoutDashboard, Plus, Compass, Sun, Moon, Sparkles, Pencil, ArrowLeft, Briefcase, Medal, Users2, Swords, Building2, Search, Star, MessageSquare } from 'lucide-react'
+import { Check, X, FolderOpen, User, Settings as SettingsIcon, Shield, Globe, Trophy, LogOut, Bell, Eye, Target, TrendingUp, GraduationCap, UserPlus, LayoutDashboard, Plus, Compass, Sun, Moon, Sparkles, Pencil, ArrowLeft, Briefcase, Medal, Users2, Swords, Building2, Search, Star, MessageSquare, Kanban } from 'lucide-react'
 
 // Strip emoji characters from notification messages coming from the DB
 function stripEmoji(str) {
@@ -1187,6 +1187,10 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
                 <Briefcase size={16} /> Vagas
               </button>
 
+              <button className={`sb-item${isActive('/pipeline') ? ' active' : ''}`} onClick={() => navigate('/pipeline')}>
+                <Kanban size={16} /> Pipeline
+              </button>
+
               <button className={`sb-item${isActive('/candidatos') ? ' active' : ''}`} onClick={() => navigate('/candidatos')}>
                 <Star size={16} /> Guardados
               </button>
@@ -1200,6 +1204,13 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
                   </span>
                 )}
               </button>
+
+              {user && (
+                <button className={`sb-item${location.pathname === `/empresa/${user.id}` ? ' active' : ''}`}
+                  onClick={() => navigate(`/empresa/${user.id}`)}>
+                  <Building2 size={16} /> Minha empresa
+                </button>
+              )}
 
               <div className="sb-divider" style={{ margin: '8px 0 4px' }} />
               <span className="sb-label">Explorar</span>

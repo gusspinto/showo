@@ -151,13 +151,14 @@ export default function Explore() {
   const [peopleLoading, setPeopleLoading] = useState(false)
   const [peopleLoaded, setPeopleLoaded] = useState(false)
   const [peopleSearch, setPeopleSearch] = useState('')
+  const [filterSkill, setFilterSkill] = useState('')
 
   useEffect(() => {
     async function load() {
       // Main projects query — no FK join to avoid PostgREST relationship errors
       const { data, error } = await supabase
         .from('projects')
-        .select('id,name,slug,area,creator_name,course,school_year,ai_tagline,project_type,is_pap,score,created_at,technologies,views,cover_url,user_id')
+        .select('id,name,slug,area,creator_name,course,school_year,ai_tagline,project_type,is_pap,score,created_at,technologies,views,cover_url,user_id,tags')
         .order('score', { ascending: false })
         .limit(300)
 
@@ -194,7 +195,7 @@ export default function Explore() {
     setPeopleLoading(true)
     const { data } = await supabase
       .from('profiles')
-      .select('id, full_name, username, bio, role, avatar_url, company, company_role, looking_for, available_for_work')
+      .select('id, full_name, username, bio, role, avatar_url, company, company_role, looking_for, available_for_work, skills')
       .not('full_name', 'is', null)
       .order('created_at', { ascending: false })
       .limit(200)
@@ -257,14 +258,15 @@ export default function Explore() {
 
   const peopleQuery = peopleSearch.toLowerCase().trim()
   const filteredPeople = people.filter(p => {
-    if (!peopleQuery) return true
-    return (
+    if (peopleQuery && !(
       p.full_name?.toLowerCase().includes(peopleQuery) ||
       p.username?.toLowerCase().includes(peopleQuery) ||
       p.bio?.toLowerCase().includes(peopleQuery) ||
       p.company?.toLowerCase().includes(peopleQuery) ||
       p.looking_for?.toLowerCase().includes(peopleQuery)
-    )
+    )) return false
+    if (filterSkill && !(p.skills || []).includes(filterSkill)) return false
+    return true
   })
 
   const SORT_OPTIONS = [
@@ -447,7 +449,7 @@ export default function Explore() {
 
           {hasFilters && (
             <button
-              onClick={() => { setFilterArea(''); setFilterType(''); setFilterMinScore(0); setFilterZone(''); setFilterAvailable(false) }}
+              onClick={() => { setFilterArea(''); setFilterType(''); setFilterMinScore(0); setFilterZone(''); setFilterAvailable(false); setFilterSkill('') }}
               style={{ background: 'transparent', border: `1px solid ${colors.border}`, color: colors.muted, borderRadius: 10, padding: '9px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
             >
               Limpar filtros
@@ -581,8 +583,19 @@ export default function Explore() {
                     </svg>
                   </div>
 
+                  {/* Tags */}
+                  {project.tags && project.tags.length > 0 && (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
+                      {project.tags.slice(0, 4).map(tag => (
+                        <span key={tag} style={{ fontSize: 11, color: colors.muted, background: 'var(--c-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: 5, padding: '2px 7px' }}>
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
                   {/* Technologies (recruiter mode) */}
-                  {recruiterMode && project.technologies && (
+                  {recruiterMode && !project.tags?.length && project.technologies && (
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
                       {project.technologies.split(/[,\s·]+/).filter(Boolean).slice(0, 4).map((t, i) => (
                         <span key={i} style={{ fontSize: 11, color: colors.muted, background: 'var(--c-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: 5, padding: '2px 7px' }}>
@@ -602,6 +615,32 @@ export default function Explore() {
         {/* ── Pessoas tab ── */}
         {tab === 'pessoas' && (
           <>
+            {/* Skill filter chips */}
+            {!peopleLoading && people.length > 0 && (() => {
+              const allSkills = [...new Set(people.flatMap(p => p.skills || []))].sort()
+              if (allSkills.length === 0) return null
+              return (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 20 }}>
+                  {[{ id: '', label: 'Todas as competências' }, ...allSkills.map(s => ({ id: s, label: s }))].map(s => (
+                    <button
+                      key={s.id}
+                      onClick={() => setFilterSkill(s.id)}
+                      style={{
+                        padding: '6px 14px', borderRadius: 20,
+                        border: `1.5px solid ${filterSkill === s.id ? colors.blue : colors.border}`,
+                        background: filterSkill === s.id ? 'rgba(27,120,247,0.1)' : colors.bgAlt,
+                        color: filterSkill === s.id ? colors.blue : colors.muted,
+                        fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                        fontFamily: 'inherit', transition: 'all 0.15s',
+                      }}
+                    >
+                      {s.label}
+                    </button>
+                  ))}
+                </div>
+              )
+            })()}
+
             {peopleLoading ? (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(288px, 1fr))', gap: 16 }}>
                 {Array.from({ length: 8 }).map((_, i) => (
@@ -681,6 +720,24 @@ export default function Explore() {
                               </span>
                             )}
                           </div>
+                          {p.skills && p.skills.length > 0 && (
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 6 }}>
+                              {p.skills.slice(0, 4).map(skill => (
+                                <span key={skill} style={{
+                                  fontSize: 10, fontWeight: 600,
+                                  color: filterSkill === skill ? colors.blue : colors.muted,
+                                  background: filterSkill === skill ? 'rgba(27,120,247,0.1)' : colors.bgAlt,
+                                  border: `1px solid ${filterSkill === skill ? 'rgba(27,120,247,0.3)' : colors.border}`,
+                                  borderRadius: 20, padding: '2px 8px',
+                                }}>
+                                  {skill}
+                                </span>
+                              ))}
+                              {p.skills.length > 4 && (
+                                <span style={{ fontSize: 10, color: colors.subtle }}>+{p.skills.length - 4}</span>
+                              )}
+                            </div>
+                          )}
                         </div>
 
                         {/* Arrow */}

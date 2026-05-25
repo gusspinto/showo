@@ -732,6 +732,23 @@ export default function UserProfile() {
                 </div>
               )}
 
+              {/* Skills chips */}
+              {profile.skills && profile.skills.length > 0 && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
+                  {profile.skills.map(skill => (
+                    <span key={skill} style={{
+                      display: 'inline-flex', alignItems: 'center',
+                      background: 'rgba(27,120,247,0.08)', color: '#1b78f7',
+                      border: '1px solid rgba(27,120,247,0.2)',
+                      borderRadius: 20, padding: '3px 12px',
+                      fontSize: 12, fontWeight: 600,
+                    }}>
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              )}
+
               {/* Action buttons */}
               <div className="up-actions" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 {isOwnProfile && projects.length > 0 && (

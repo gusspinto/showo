@@ -29,6 +29,7 @@ export async function updateProject(id, formData) {
     pap_supervisor: formData.pap_supervisor || null,
     pap_date: formData.pap_date || null,
     project_type: formData.project_type || null,
+    tags: formData.tags || [],
     score,
   }
 

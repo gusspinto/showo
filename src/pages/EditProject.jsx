@@ -8,6 +8,7 @@ import { useSidebar } from '../context/SidebarContext'
 import { Sparkles, Lock, Search, Image, ArrowLeft } from 'lucide-react'
 import { looksLikeSpam } from '../lib/score'
 import { containsProfanity } from '../lib/profanity'
+import SkillsPicker from '../components/SkillsPicker'
 
 const colors = {
   bg: 'var(--c-bg)',
@@ -185,6 +186,7 @@ export default function EditProject() {
         linkedin_url: data.linkedin_url || '',
         github_url: data.github_url || '',
         portfolio_url: data.portfolio_url || '',
+        tags: data.tags || [],
       })
       setLoading(false)
     }
@@ -324,6 +326,14 @@ export default function EditProject() {
                 )}
               </Field>
             ))}
+            <Field label="Tags / Tecnologias">
+              <SkillsPicker
+                value={form.tags || []}
+                onChange={v => set('tags', v)}
+                max={8}
+                label=""
+              />
+            </Field>
           </SectionCard>
 
           {/* Creator */}

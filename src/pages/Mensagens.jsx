@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
-import { Send, ArrowLeft, MessageSquare, Search, Plus, X, Pencil, Trash2, Check } from 'lucide-react'
+import { Send, ArrowLeft, MessageSquare, Search, Plus, X, Pencil, Trash2, Check, CheckCheck } from 'lucide-react'
 import { containsProfanity } from '../lib/profanity'
 import { looksLikeSpam } from '../lib/score'
 
@@ -111,23 +111,34 @@ export default function Mensagens() {
   const [searchParams] = useSearchParams()
   const { user } = useAuth()
 
-  const [profiles, setProfiles]         = useState({}) // id → profile
-  const [conversations, setConversations] = useState([]) // [{ otherId, lastMsg, unread }]
-  const [activeId, setActiveId]         = useState(null) // other user's id
-  const [messages, setMessages]         = useState([])
-  const [draft, setDraft]               = useState('')
-  const [sending, setSending]           = useState(false)
-  const [search, setSearch]             = useState('')
-  const [loading, setLoading]           = useState(true)
-  const [showNova, setShowNova]         = useState(false)
-  const [mobileView, setMobileView]     = useState('list') // 'list' | 'thread'
-  const [hoveredMsgId, setHoveredMsgId] = useState(null)
-  const [editingId, setEditingId]       = useState(null)
-  const [editDraft, setEditDraft]       = useState('')
-  const bottomRef  = useRef(null)
-  const activeIdRef = useRef(null) // ref para usar dentro das subscriptions
+  const [profiles, setProfiles]           = useState({})
+  const [conversations, setConversations] = useState([])
+  const [activeId, setActiveId]           = useState(null)
+  const [messages, setMessages]           = useState([])
+  const [draft, setDraft]                 = useState('')
+  const [sending, setSending]             = useState(false)
+  const [search, setSearch]               = useState('')
+  const [loading, setLoading]             = useState(true)
+  const [showNova, setShowNova]           = useState(false)
+  const [mobileView, setMobileView]       = useState('list')
 
-  // Load or create profile in cache
+  // Edit / Delete states
+  const [editingId, setEditingId]         = useState(null)
+  const [editDraft, setEditDraft]         = useState('')
+  const [hoveredMsgId, setHoveredMsgId]   = useState(null)
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null)
+
+  const bottomRef   = useRef(null)
+  const editInputRef = useRef(null)
+  const activeIdRef  = useRef(null)
+
+  useEffect(() => { activeIdRef.current = activeId }, [activeId])
+
+  // Focus edit input when editing starts
+  useEffect(() => {
+    if (editingId) editInputRef.current?.focus()
+  }, [editingId])
+
   async function ensureProfile(id) {
     if (!id || profiles[id]) return profiles[id]
     const { data } = await supabase.from('profiles').select('id, full_name, username, avatar_url, role').eq('id', id).single()
@@ -135,7 +146,6 @@ export default function Mensagens() {
     return data
   }
 
-  // Build conversations from all messages
   const buildConversations = useCallback((msgs, myId) => {
     const map = {}
     for (const m of msgs) {
@@ -149,14 +159,11 @@ export default function Mensagens() {
     return Object.values(map).sort((a, b) => new Date(b.lastMsg.created_at) - new Date(a.lastMsg.created_at))
   }, [])
 
-  // Manter ref sincronizado com o estado
-  useEffect(() => { activeIdRef.current = activeId }, [activeId])
-
   useEffect(() => {
     if (!user) { navigate('/login'); return }
     loadAll()
 
-    // Subscrição global: mensagens RECEBIDAS por mim
+    // ── Inbox: mensagens recebidas (INSERT + UPDATE + DELETE)
     const inboxCh = supabase
       .channel(`inbox-${user.id}`)
       .on('postgres_changes', {
@@ -167,33 +174,69 @@ export default function Mensagens() {
       }, async (payload) => {
         const m = payload.new
         const fromId = m.from_id
-
-        // Garantir que o perfil do remetente está em cache
         if (!profiles[fromId]) {
           const { data } = await supabase.from('profiles').select('id, full_name, username, avatar_url, role').eq('id', fromId).single()
           if (data) setProfiles(p => ({ ...p, [data.id]: data }))
         }
-
-        // Adicionar à thread se for a conversa ativa
         if (activeIdRef.current === fromId) {
           setMessages(prev => prev.some(x => x.id === m.id) ? prev : [...prev, m])
           markRead(fromId)
         }
-
-        // Atualizar lista de conversas em tempo real (sem fetch completo)
         setConversations(prev => {
           const existing = prev.find(c => c.otherId === fromId)
           const updated = { otherId: fromId, lastMsg: m, unread: activeIdRef.current === fromId ? 0 : (existing?.unread || 0) + 1 }
-          const rest = prev.filter(c => c.otherId !== fromId)
-          return [updated, ...rest]
+          return [updated, ...prev.filter(c => c.otherId !== fromId)]
         })
+      })
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'mensagens',
+        filter: `to_id=eq.${user.id}`,
+      }, (payload) => {
+        const m = payload.new
+        setMessages(prev => prev.map(x => x.id === m.id ? { ...x, ...m } : x))
+        setConversations(prev => prev.map(c =>
+          c.lastMsg?.id === m.id ? { ...c, lastMsg: { ...c.lastMsg, ...m } } : c
+        ))
+      })
+      .on('postgres_changes', {
+        event: 'DELETE',
+        schema: 'public',
+        table: 'mensagens',
+        filter: `to_id=eq.${user.id}`,
+      }, (payload) => {
+        const id = payload.old?.id
+        if (!id) return
+        setMessages(prev => prev.filter(x => x.id !== id))
+        // Reload conversations to update last message
+        loadAll()
       })
       .subscribe()
 
-    return () => supabase.removeChannel(inboxCh)
+    // ── Sent: mensagens enviadas por mim (UPDATE — read receipts + edits confirmados)
+    const sentCh = supabase
+      .channel(`sent-${user.id}`)
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'mensagens',
+        filter: `from_id=eq.${user.id}`,
+      }, (payload) => {
+        const m = payload.new
+        setMessages(prev => prev.map(x => x.id === m.id ? { ...x, ...m } : x))
+        setConversations(prev => prev.map(c =>
+          c.lastMsg?.id === m.id ? { ...c, lastMsg: { ...c.lastMsg, ...m } } : c
+        ))
+      })
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(inboxCh)
+      supabase.removeChannel(sentCh)
+    }
   }, [user])
 
-  // Open conversation from URL param (?to=ID)
   useEffect(() => {
     const toId = searchParams.get('to')
     if (toId && user && toId !== user.id) {
@@ -222,12 +265,9 @@ export default function Mensagens() {
       .select('*')
       .or(`from_id.eq.${user.id},to_id.eq.${user.id}`)
       .order('created_at', { ascending: false })
-
     const msgs = data ?? []
     const convs = buildConversations(msgs, user.id)
     setConversations(convs)
-
-    // Fetch all other-party profiles
     const ids = [...new Set(convs.map(c => c.otherId))]
     if (ids.length) {
       const { data: profs } = await supabase.from('profiles').select('id, full_name, username, avatar_url, role').in('id', ids)
@@ -246,7 +286,6 @@ export default function Mensagens() {
       .order('created_at', { ascending: true })
     setMessages(data ?? [])
   }
-
 
   async function markRead(otherId) {
     await supabase
@@ -270,29 +309,52 @@ export default function Mensagens() {
     const { data } = await supabase.from('mensagens').insert({ from_id: user.id, to_id: activeId, content }).select().single()
     if (data) {
       setMessages(prev => [...prev, data])
-      loadAll()
+      setConversations(prev => {
+        const updated = { otherId: activeId, lastMsg: data, unread: 0 }
+        return [updated, ...prev.filter(c => c.otherId !== activeId)]
+      })
     }
     setSending(false)
   }
 
-  async function editMessage(id, newContent) {
-    const content = newContent.trim()
-    if (!content || content === editDraft) { setEditingId(null); return }
-    if (containsProfanity(content) || looksLikeSpam(content)) { setEditingId(null); return }
+  async function saveEdit(msgId) {
+    const content = editDraft.trim()
+    if (!content) return
+    if (containsProfanity(content) || looksLikeSpam(content)) { setEditingId(null); setEditDraft(''); return }
     const { data } = await supabase
-      .from('mensagens').update({ content }).eq('id', id).eq('from_id', user.id).select().single()
-    if (data) setMessages(prev => prev.map(m => m.id === id ? { ...m, content } : m))
+      .from('mensagens')
+      .update({ content, edited_at: new Date().toISOString() })
+      .eq('id', msgId)
+      .eq('from_id', user.id)
+      .select()
+      .single()
+    if (data) {
+      setMessages(prev => prev.map(x => x.id === msgId ? { ...x, ...data } : x))
+      setConversations(prev => prev.map(c =>
+        c.lastMsg?.id === msgId ? { ...c, lastMsg: { ...c.lastMsg, content: data.content, edited_at: data.edited_at } } : c
+      ))
+    }
     setEditingId(null)
     setEditDraft('')
   }
 
-  async function deleteMessage(id) {
-    await supabase.from('mensagens').delete().eq('id', id).eq('from_id', user.id)
-    setMessages(prev => prev.filter(m => m.id !== id))
-    setConversations(prev => prev.map(c => {
-      if (c.lastMsg?.id === id) return { ...c, lastMsg: { ...c.lastMsg, content: '(mensagem apagada)' } }
-      return c
-    }))
+  async function deleteMsg(msgId) {
+    await supabase.from('mensagens').delete().eq('id', msgId).eq('from_id', user.id)
+    setMessages(prev => prev.filter(x => x.id !== msgId))
+    setConfirmDeleteId(null)
+    // Reload conversations to fix last message
+    loadAll()
+  }
+
+  function startEdit(m) {
+    setEditingId(m.id)
+    setEditDraft(m.content)
+    setConfirmDeleteId(null)
+  }
+
+  function cancelEdit() {
+    setEditingId(null)
+    setEditDraft('')
   }
 
   function openConversation(otherId) {
@@ -319,6 +381,9 @@ export default function Mensagens() {
   const activeProfile = profiles[activeId]
   const totalUnread = conversations.reduce((s, c) => s + (c.unread || 0), 0)
 
+  // Last message sent by me in this conversation (for read receipt)
+  const lastSentMsg = [...messages].reverse().find(m => m.from_id === user?.id)
+
   if (!user) return null
 
   return (
@@ -328,7 +393,7 @@ export default function Mensagens() {
         <div style={{ maxWidth: 920, margin: '0 auto', padding: '0 clamp(8px,3vw,24px)', paddingTop: 28 }}>
 
           <div style={{ marginBottom: 20 }}>
-            <h1 style={{ color: C.text, fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 900, margin: '0 0 6px', letterSpacing: '-0.5px' }}>
+            <h1 style={{ color: C.text, fontSize: 'clamp(22px,4vw,32px)', fontWeight: 900, margin: '0 0 4px', letterSpacing: '-0.4px' }}>
               Mensagens {totalUnread > 0 && <span style={{ fontSize: 15, fontWeight: 700, background: C.blue, color: '#fff', borderRadius: 99, padding: '2px 9px', verticalAlign: 'middle', marginLeft: 6 }}>{totalUnread}</span>}
             </h1>
             <p style={{ color: C.muted, fontSize: 13, margin: 0 }}>Conversas com recrutadores e candidatos</p>
@@ -342,10 +407,7 @@ export default function Mensagens() {
               background: C.card, border: `1px solid ${C.border}`,
               borderRadius: 14, display: 'flex', flexDirection: 'column', overflow: 'hidden',
               ...(mobileView === 'thread' ? { display: 'none' } : {}),
-            }}
-              className="msg-list"
-            >
-              {/* Search + Nova */}
+            }} className="msg-list">
               <div style={{ padding: '12px 12px 8px', borderBottom: `1px solid ${C.border}`, display: 'flex', gap: 6 }}>
                 <div style={{ position: 'relative', flex: 1 }}>
                   <Search size={14} color={C.muted} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
@@ -398,7 +460,7 @@ export default function Mensagens() {
               </div>
             </div>
 
-            {/* ── Thread / empty state ── */}
+            {/* ── Thread ── */}
             <div style={{ flex: 1, background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, display: 'flex', flexDirection: 'column', overflow: 'hidden', ...(mobileView === 'list' && !activeId ? { display: 'none' } : {}) }} className="msg-thread">
 
               {!activeId ? (
@@ -431,7 +493,7 @@ export default function Mensagens() {
                   </div>
 
                   {/* Messages */}
-                  <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 8px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 8px', display: 'flex', flexDirection: 'column', gap: 4 }}>
                     {messages.length === 0 && (
                       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, textAlign: 'center', padding: 32 }}>
                         <Avatar profile={activeProfile} size={52} />
@@ -439,107 +501,114 @@ export default function Mensagens() {
                         <p style={{ color: C.muted, fontSize: 13, margin: 0 }}>Começa a conversa!</p>
                       </div>
                     )}
+
                     {messages.map((m, i) => {
                       const isMine = m.from_id === user.id
                       const prevIsMine = i > 0 && messages[i-1].from_id === user.id
+                      const isLastSent = isMine && m.id === lastSentMsg?.id
                       const isHovered = hoveredMsgId === m.id
+                      const isConfirmingDelete = confirmDeleteId === m.id
                       const isEditing = editingId === m.id
-                      const ageSeconds = (Date.now() - new Date(m.created_at)) / 1000
-                      const canEditThis = isMine && ageSeconds < 300
 
                       return (
                         <div key={m.id}
                           style={{ display: 'flex', justifyContent: isMine ? 'flex-end' : 'flex-start', marginTop: isMine === prevIsMine ? 2 : 10, position: 'relative' }}
-                          onMouseEnter={() => isMine && !isEditing && setHoveredMsgId(m.id)}
-                          onMouseLeave={() => setHoveredMsgId(null)}
-                        >
-                          <div style={{ maxWidth: '72%', position: 'relative' }}>
+                          onMouseEnter={() => { setHoveredMsgId(m.id) }}
+                          onMouseLeave={() => { setHoveredMsgId(null); if (confirmDeleteId === m.id && !isEditing) setConfirmDeleteId(null) }}>
 
-                            {/* Hover action menu */}
+                          <div style={{ maxWidth: '72%' }}>
+
+                            {/* Action buttons for own messages */}
                             {isMine && isHovered && !isEditing && (
                               <div style={{
-                                position: 'absolute', top: -34, right: 0, zIndex: 20,
-                                display: 'flex', gap: 2, alignItems: 'center',
-                                background: C.card, border: `1px solid ${C.border}`,
-                                borderRadius: 9, padding: '3px 4px',
-                                boxShadow: '0 4px 16px rgba(0,0,0,0.2)',
-                                whiteSpace: 'nowrap',
+                                display: 'flex', alignItems: 'center', gap: 4,
+                                justifyContent: 'flex-end', marginBottom: 4,
                               }}>
-                                {canEditThis && (
-                                  <button
-                                    onClick={() => { setEditingId(m.id); setEditDraft(m.content); setHoveredMsgId(null) }}
-                                    style={{ background: 'none', border: 'none', borderRadius: 6, padding: '4px 8px', cursor: 'pointer', color: C.muted, display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontFamily: 'inherit', transition: 'all 0.1s' }}
-                                    onMouseEnter={e => { e.currentTarget.style.background = 'var(--c-bg-alt)'; e.currentTarget.style.color = C.text }}
-                                    onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = C.muted }}
-                                  >
-                                    <Pencil size={11} /> Editar
-                                  </button>
+                                {isConfirmingDelete ? (
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'var(--c-bg)', border: `1px solid ${C.border}`, borderRadius: 8, padding: '3px 8px', fontSize: 12, color: C.muted }}>
+                                    <span>Apagar?</span>
+                                    <button onClick={() => deleteMsg(m.id)}
+                                      style={{ background: '#ef4444', border: 'none', borderRadius: 5, color: '#fff', fontSize: 11, fontWeight: 700, padding: '2px 7px', cursor: 'pointer', fontFamily: 'inherit' }}>
+                                      Sim
+                                    </button>
+                                    <button onClick={() => setConfirmDeleteId(null)}
+                                      style={{ background: 'transparent', border: 'none', color: C.muted, fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', padding: '2px 4px' }}>
+                                      Não
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <>
+                                    <button onClick={() => startEdit(m)} title="Editar"
+                                      style={{ background: 'var(--c-bg)', border: `1px solid ${C.border}`, borderRadius: 7, padding: '4px 7px', cursor: 'pointer', display: 'flex', alignItems: 'center', color: C.muted, transition: 'color 0.1s' }}
+                                      onMouseEnter={e => e.currentTarget.style.color = C.text}
+                                      onMouseLeave={e => e.currentTarget.style.color = C.muted}>
+                                      <Pencil size={12} />
+                                    </button>
+                                    <button onClick={() => setConfirmDeleteId(m.id)} title="Eliminar"
+                                      style={{ background: 'var(--c-bg)', border: `1px solid ${C.border}`, borderRadius: 7, padding: '4px 7px', cursor: 'pointer', display: 'flex', alignItems: 'center', color: C.muted, transition: 'color 0.1s' }}
+                                      onMouseEnter={e => e.currentTarget.style.color = '#ef4444'}
+                                      onMouseLeave={e => e.currentTarget.style.color = C.muted}>
+                                      <Trash2 size={12} />
+                                    </button>
+                                  </>
                                 )}
-                                {canEditThis && <div style={{ width: 1, height: 14, background: C.border }} />}
-                                <button
-                                  onClick={() => deleteMessage(m.id)}
-                                  style={{ background: 'none', border: 'none', borderRadius: 6, padding: '4px 8px', cursor: 'pointer', color: C.muted, display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontFamily: 'inherit', transition: 'all 0.1s' }}
-                                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.1)'; e.currentTarget.style.color = '#ef4444' }}
-                                  onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = C.muted }}
-                                >
-                                  <Trash2 size={11} /> Apagar
-                                </button>
                               </div>
                             )}
 
-                            {/* Edit mode */}
+                            {/* Message bubble or edit input */}
                             {isEditing ? (
-                              <div style={{
-                                background: 'var(--c-bg-alt)', border: `1.5px solid ${C.blue}`,
-                                borderRadius: 14, padding: '10px 12px', minWidth: 200,
-                              }}>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                                 <textarea
-                                  autoFocus
+                                  ref={editInputRef}
                                   value={editDraft}
                                   onChange={e => setEditDraft(e.target.value)}
                                   onKeyDown={e => {
-                                    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); editMessage(m.id, editDraft) }
-                                    if (e.key === 'Escape') { setEditingId(null); setEditDraft('') }
+                                    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveEdit(m.id) }
+                                    if (e.key === 'Escape') cancelEdit()
                                   }}
+                                  rows={Math.min(editDraft.split('\n').length + 1, 6)}
                                   style={{
-                                    width: '100%', background: 'transparent', border: 'none',
-                                    outline: 'none', color: C.text, fontSize: 14,
-                                    fontFamily: 'inherit', resize: 'none', lineHeight: 1.5,
-                                    boxSizing: 'border-box',
+                                    background: 'var(--c-bg)', border: `1.5px solid ${C.blue}`,
+                                    borderRadius: 10, color: C.text, fontSize: 14,
+                                    padding: '9px 13px', outline: 'none', fontFamily: 'inherit',
+                                    resize: 'none', minWidth: 180,
                                   }}
-                                  rows={1}
-                                  onInput={e => { e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px' }}
                                 />
-                                <div style={{ display: 'flex', gap: 6, marginTop: 8, justifyContent: 'flex-end' }}>
-                                  <button
-                                    onClick={() => { setEditingId(null); setEditDraft('') }}
-                                    style={{ background: 'none', border: `1px solid ${C.border}`, borderRadius: 7, padding: '4px 10px', color: C.muted, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 4 }}
-                                  >
-                                    <X size={11} /> Cancelar
+                                <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
+                                  <button onClick={cancelEdit}
+                                    style={{ background: 'var(--c-bg)', border: `1px solid ${C.border}`, borderRadius: 7, padding: '5px 12px', color: C.muted, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                                    Cancelar
                                   </button>
-                                  <button
-                                    onClick={() => editMessage(m.id, editDraft)}
-                                    style={{ background: C.blue, border: 'none', borderRadius: 7, padding: '4px 10px', color: '#fff', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 4 }}
-                                  >
-                                    <Check size={11} /> Guardar
+                                  <button onClick={() => saveEdit(m.id)} disabled={!editDraft.trim()}
+                                    style={{ background: editDraft.trim() ? C.blue : 'var(--c-border)', border: 'none', borderRadius: 7, padding: '5px 12px', color: '#fff', fontSize: 12, fontWeight: 700, cursor: editDraft.trim() ? 'pointer' : 'default', fontFamily: 'inherit' }}>
+                                    Guardar
                                   </button>
                                 </div>
                               </div>
                             ) : (
-                              /* Normal bubble */
                               <div style={{
                                 background: isMine ? C.blue : 'var(--c-bg-alt)',
                                 color: isMine ? '#fff' : C.text,
                                 borderRadius: isMine ? '14px 14px 4px 14px' : '14px 14px 14px 4px',
-                                padding: '9px 13px', fontSize: 14, lineHeight: 1.5, wordBreak: 'break-word',
+                                padding: '9px 13px',
+                                fontSize: 14,
+                                lineHeight: 1.5,
+                                wordBreak: 'break-word',
                               }}>
                                 {m.content}
                               </div>
                             )}
 
+                            {/* Timestamp + edited + read receipt */}
                             {!isEditing && (
-                              <div style={{ fontSize: 10, color: C.subtle, textAlign: isMine ? 'right' : 'left', marginTop: 3, paddingInline: 4 }}>
-                                {timeAgo(m.created_at)}
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 4, justifyContent: isMine ? 'flex-end' : 'flex-start', marginTop: 3, paddingInline: 4 }}>
+                                <span style={{ fontSize: 10, color: C.subtle }}>{timeAgo(m.created_at)}</span>
+                                {m.edited_at && <span style={{ fontSize: 10, color: C.subtle }}>· editado</span>}
+                                {isMine && isLastSent && (
+                                  m.read_at
+                                    ? <CheckCheck size={12} color={C.blue} style={{ flexShrink: 0 }} />
+                                    : <Check size={12} color={C.subtle} style={{ flexShrink: 0 }} />
+                                )}
                               </div>
                             )}
                           </div>
@@ -574,15 +643,15 @@ export default function Mensagens() {
 
       <style>{`
         @media (max-width: 640px) {
-          .msg-list  { display: flex !important; width: 100% !important; }
+          .msg-list   { display: flex !important; width: 100% !important; }
           .msg-thread { display: none !important; }
           .msg-thread.active { display: flex !important; }
-          .msg-back  { display: flex !important; }
+          .msg-back   { display: flex !important; }
         }
         @media (min-width: 641px) {
-          .msg-list  { display: flex !important; }
+          .msg-list   { display: flex !important; }
           .msg-thread { display: flex !important; }
-          .msg-back  { display: none !important; }
+          .msg-back   { display: none !important; }
         }
       `}</style>
     </div>
