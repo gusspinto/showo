@@ -343,9 +343,9 @@ export default function AIInterview() {
         @keyframes fadeIn { from{opacity:0} to{opacity:1} }
         @keyframes glow { 0%,100%{opacity:0.4} 50%{opacity:0.8} }
         .sug-chip { transition: all 0.12s !important; cursor: pointer; }
-        .sug-chip:hover { background: rgba(27,120,247,0.15) !important; border-color: #1b78f7 !important; color: #e8f2ff !important; }
+        .sug-chip:hover { background: rgba(27,120,247,0.14) !important; border-color: #1b78f7 !important; color: #1b78f7 !important; }
         .skip-btn { transition: all 0.12s !important; cursor: pointer; }
-        .skip-btn:hover { color: #e8f2ff !important; }
+        .skip-btn:hover { color: var(--c-text) !important; }
         .send-btn:hover { background: #1564d4 !important; }
         .send-btn { transition: background 0.12s !important; }
         @media (max-width: 900px) { .iv-preview { display: none !important; } }
@@ -607,8 +607,8 @@ export default function AIInterview() {
                     {/* Question text */}
                     <p style={{ margin: '0 0 20px', fontSize: 19, fontWeight: 700, color: C.text, lineHeight: 1.4, letterSpacing: '-0.2px' }}>{q.question}</p>
 
-                    {/* Suggestions */}
-                    {q.suggestions?.length > 0 && (
+                    {/* Suggestions — hidden for free-text fields where chips make no sense */}
+                    {q.suggestions?.length > 0 && !['name','creator_name','pap_supervisor','school','course'].includes(q.field) && (
                       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 14 }}>
                         {q.suggestions.map(s => {
                           const label = cleanSuggestion(s)
@@ -637,15 +637,15 @@ export default function AIInterview() {
                       </div>
                     )}
 
-                    {/* Input — inside the card, no white border line */}
+                    {/* Input — inside the card */}
                     <div
                       style={{
                         display: 'flex', gap: 10, alignItems: 'flex-end',
-                        background: C.bg, border: `1.5px solid ${C.bright}`,
+                        background: 'var(--c-bg-alt)', border: `1.5px solid ${C.border}`,
                         borderRadius: 14, padding: '8px 8px 8px 16px',
                       }}
                       onFocusCapture={e => e.currentTarget.style.borderColor = C.blue}
-                      onBlurCapture={e => { if (!e.currentTarget.contains(e.relatedTarget)) e.currentTarget.style.borderColor = C.bright }}
+                      onBlurCapture={e => { if (!e.currentTarget.contains(e.relatedTarget)) e.currentTarget.style.borderColor = C.border }}
                     >
                       <textarea
                         ref={inputRef}
