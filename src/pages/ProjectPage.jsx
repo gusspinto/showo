@@ -1621,7 +1621,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
 
           {/* Comentários */}
           <div style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 16, padding: '22px 24px' }}>
-            <ProjectComments projectId={project.id} projectAuthorId={project.user_id} />
+            <ProjectComments projectId={project.id} projectAuthorId={project.user_id} projectName={project.name} projectSlug={project.slug} />
           </div>
         </div>
 
@@ -2300,6 +2300,17 @@ export default function ProjectPage() {
       await supabase.from('project_likes').insert({ project_id: project.id, user_id: user.id })
       setLiked(true)
       setLikeCount(c => c + 1)
+      // Notificar o dono (não notificar a si próprio)
+      if (project.user_id && project.user_id !== user.id) {
+        const name = profile?.full_name || profile?.username || 'Alguém'
+        supabase.from('notifications').insert({
+          user_id: project.user_id,
+          type: 'PROJECT_LIKE',
+          message: `${name} gostou do teu projeto "${project.name}"`,
+          project_slug: project.slug,
+          read: false,
+        })
+      }
     }
     setLikeLoading(false)
   }
@@ -4315,7 +4326,7 @@ export default function ProjectPage() {
             background: 'var(--c-card)', border: '1px solid var(--c-border)',
             borderRadius: 16, padding: '22px 24px',
           }}>
-            <ProjectComments projectId={project.id} projectAuthorId={project.user_id} />
+            <ProjectComments projectId={project.id} projectAuthorId={project.user_id} projectName={project.name} projectSlug={project.slug} />
           </div>
         </div>
       )}
