@@ -20,7 +20,12 @@ export function isTooShortForContent(text) {
 export function looksLikeSpam(text) {
   if (!text) return false
   const str = text.trim()
-  if (str.length < 8) return false  // too short to judge
+  if (str.length === 0) return false
+
+  // Heuristic A: no letters at all — pure numbers, ?, *, +, etc.
+  if (!/[a-zA-ZÀ-ɏ]/.test(str)) return true
+
+  if (str.length < 8) return false  // rest needs enough text to judge
 
   const words = str.split(/\s+/).filter(w => w.length > 0)
   if (words.length === 0) return true
@@ -34,11 +39,16 @@ export function looksLikeSpam(text) {
   const uniqueRatio = new Set(stripped).size / stripped.length
   if (stripped.length > 20 && uniqueRatio < 0.12) return true
 
-  // Heuristic 3: long word with almost no vowels (random consonant runs)
-  const longWords = words.filter(w => w.length > 12)
-  for (const w of longWords) {
-    const vowels = (w.match(/[aeiouáéíóúàèìòùâêîôûãõ]/gi) || []).length
-    if (vowels / w.length < 0.08) return true  // <8% vowels = gibberish
+  // Heuristic 3: words with almost no vowels (consonant gibberish)
+  // Covers words ≥ 6 letters — catches "sdfjsk", "qwrtpl" etc.
+  // Skips short acronyms (css, npm, html < 6 chars) to avoid false positives
+  const letterWords = words.map(w => w.replace(/[^a-zA-ZÀ-ɏ]/g, '')).filter(w => w.length >= 6)
+  if (letterWords.length > 0) {
+    const noVowelCount = letterWords.filter(w => {
+      const vowels = (w.match(/[aeiouáéíóúàèìòùâêîôûãõ]/gi) || []).length
+      return vowels / w.length < 0.10  // <10% vowels = consonant dump
+    }).length
+    if (noVowelCount / letterWords.length > 0.6) return true
   }
 
   return false
