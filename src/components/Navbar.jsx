@@ -64,6 +64,7 @@ function getNotifIcon(type) {
     case 'NEW_CANDIDATURA':     return <Briefcase {...s} />
     case 'CANDIDATURA_ACEITE':  return <CheckCircle {...s} />
     case 'CANDIDATURA_RECUSADA':return <XCircle {...s} />
+    case 'VAGA_INVITE':         return <Mail {...s} />
     default:                    return <Bell {...s} />
   }
 }

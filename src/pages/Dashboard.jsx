@@ -5,7 +5,8 @@ import { useAuth } from '../context/AuthContext'
 import { Pencil, ExternalLink } from 'lucide-react'
 import { Navbar } from '../components/Navbar'
 import CreateProjectModal from '../components/CreateProjectModal'
-import { Folder, Trophy, BarChart2, Rocket, Eye, GraduationCap, Plus, X, Users, Users2, ChevronRight, User, Settings, Compass, Medal, LogOut, Globe, TrendingUp, MessageSquare, Star, Mail, Search, BookOpen, Trash2, Check, Calendar, ArrowRight, Target, Zap, Sparkles } from 'lucide-react'
+import { Folder, Trophy, BarChart2, Rocket, Eye, GraduationCap, Plus, X, Users, Users2, ChevronRight, User, Settings, Compass, Medal, LogOut, Globe, TrendingUp, MessageSquare, Star, Mail, Search, BookOpen, Trash2, Check, Calendar, ArrowRight, Target, Zap, Sparkles, Briefcase, Building2, Send } from 'lucide-react'
+import ConvidarVagaModal from '../components/ConvidarVagaModal'
 
 const C = {
   bg: 'var(--c-bg)',
@@ -815,6 +816,13 @@ export default function Dashboard() {
   const [collabProjects, setCollabProjects] = useState([])
   const [savedTalents, setSavedTalents] = useState([])
   const [savedTalentsLoading, setSavedTalentsLoading] = useState(false)
+  // Student: recruiters who showed interest
+  const [myInterests, setMyInterests] = useState([])
+  const [myInterestsLoading, setMyInterestsLoading] = useState(false)
+  // Recruiter: active vagas (for ConvidarVagaModal)
+  const [recruiterVagas, setRecruiterVagas] = useState([])
+  // Invite modal target
+  const [inviteTarget, setInviteTarget] = useState(null) // { studentId, studentName }
 
   function showToast(msg) {
     setToast(msg)
@@ -920,6 +928,58 @@ export default function Dashboard() {
       setSavedTalentsLoading(false)
     }
     loadSavedTalents()
+  }, [user, profile?.role])
+
+  // Load interests for student (recruiters who marked interest on their projects)
+  useEffect(() => {
+    const role = profile?.role
+    if (!user || role === 'professor' || role === 'recrutador' || role === 'empresa') return
+    setMyInterestsLoading(true)
+    async function loadMyInterests() {
+      const { data: myProjs } = await supabase
+        .from('projects')
+        .select('id, name, slug')
+        .eq('user_id', user.id)
+      if (!myProjs?.length) { setMyInterests([]); setMyInterestsLoading(false); return }
+
+      const projMap = {}
+      myProjs.forEach(p => { projMap[p.id] = p })
+
+      const { data: interests } = await supabase
+        .from('recruiter_interests')
+        .select('recruiter_id, project_id, created_at')
+        .in('project_id', myProjs.map(p => p.id))
+        .order('created_at', { ascending: false })
+      if (!interests?.length) { setMyInterests([]); setMyInterestsLoading(false); return }
+
+      const recruiterIds = [...new Set(interests.map(i => i.recruiter_id))]
+      const { data: profs } = await supabase
+        .from('profiles')
+        .select('id, full_name, username, avatar_url, company, role')
+        .in('id', recruiterIds)
+      const profMap = {}
+      profs?.forEach(p => { profMap[p.id] = p })
+
+      setMyInterests(
+        interests
+          .map(i => ({ ...i, recruiterProfile: profMap[i.recruiter_id], project: projMap[i.project_id] }))
+          .filter(i => i.recruiterProfile && i.project)
+      )
+      setMyInterestsLoading(false)
+    }
+    loadMyInterests()
+  }, [user, profile?.role])
+
+  // Load recruiter's active vagas (for invite modal)
+  useEffect(() => {
+    if (!user || (profile?.role !== 'recrutador' && profile?.role !== 'empresa')) return
+    supabase
+      .from('vagas')
+      .select('id, title, location, type')
+      .eq('recruiter_id', user.id)
+      .eq('is_active', true)
+      .order('created_at', { ascending: false })
+      .then(({ data }) => setRecruiterVagas(data || []))
   }, [user, profile?.role])
 
   useEffect(() => {
@@ -1564,6 +1624,109 @@ export default function Dashboard() {
             </div>
           )}
 
+          {/* ── Recrutadores com interesse (alunos) ── */}
+          {!isTeacher && !isRecruiter && (
+            <div style={{ marginTop: 32 }}>
+              <div className="dash-sec-hd">
+                <span className="dash-sec-label">
+                  <Star size={14} color="#f59e0b" />
+                  Recrutadores com interesse
+                  {myInterests.length > 0 && (
+                    <span className="dash-sec-count">{myInterests.length}</span>
+                  )}
+                </span>
+              </div>
+
+              {myInterestsLoading ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {[1, 2].map(i => <div key={i} className="dash-skeleton" style={{ height: 72, opacity: 1 - i * 0.2 }} />)}
+                </div>
+              ) : myInterests.length === 0 ? (
+                <div style={{
+                  background: C.card, border: `1px solid ${C.border}`,
+                  borderRadius: 14, padding: '22px 20px', textAlign: 'center',
+                }}>
+                  <Star size={26} color="var(--c-subtle)" style={{ marginBottom: 8 }} />
+                  <p style={{ margin: '0 0 4px', fontSize: 14, fontWeight: 600, color: C.text }}>
+                    Ainda sem interesse de recrutadores
+                  </p>
+                  <p style={{ margin: 0, fontSize: 13, color: C.muted, lineHeight: 1.55 }}>
+                    Quando um recrutador marcar interesse num teu projeto, aparece aqui.
+                  </p>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {myInterests.map((item, idx) => {
+                    const rec = item.recruiterProfile
+                    const displayName = rec.full_name || rec.username || 'Recrutador'
+                    return (
+                      <div key={idx} style={{
+                        background: C.card, border: `1px solid ${C.border}`,
+                        borderRadius: 14, padding: '14px 18px',
+                        display: 'flex', alignItems: 'center', gap: 14,
+                      }}>
+                        {/* Avatar */}
+                        <div style={{
+                          width: 40, height: 40, borderRadius: '50%', flexShrink: 0,
+                          background: 'linear-gradient(135deg, rgba(245,158,11,0.2), rgba(251,191,36,0.1))',
+                          border: '1.5px solid rgba(245,158,11,0.3)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          overflow: 'hidden',
+                        }}>
+                          {rec.avatar_url
+                            ? <img src={rec.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            : <Building2 size={17} color="#f59e0b" />
+                          }
+                        </div>
+                        {/* Info */}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 14, fontWeight: 700, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {displayName}
+                          </div>
+                          <div style={{ fontSize: 12, color: C.muted, marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {rec.company
+                              ? <><span style={{ color: '#f59e0b' }}>{rec.company}</span> · </>
+                              : null
+                            }
+                            interessa-se por{' '}
+                            <span
+                              style={{ color: C.blue, cursor: 'pointer' }}
+                              onClick={() => navigate(`/projeto/${item.project.slug}`)}
+                            >
+                              {item.project.name}
+                            </span>
+                          </div>
+                        </div>
+                        {/* Actions */}
+                        <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                          {rec.username && (
+                            <button
+                              onClick={() => navigate(`/u/${rec.username}`)}
+                              style={{ background: 'none', border: `1px solid ${C.border}`, borderRadius: 8, padding: '5px 10px', fontSize: 12, color: C.muted, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}
+                            >
+                              Perfil
+                            </button>
+                          )}
+                          <button
+                            onClick={() => navigate(`/mensagens?to=${rec.id}`)}
+                            style={{
+                              background: `${C.blue}15`, border: `1px solid ${C.blue}30`,
+                              borderRadius: 8, padding: '5px 10px', fontSize: 12, color: C.blue,
+                              cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700,
+                              display: 'flex', alignItems: 'center', gap: 4,
+                            }}
+                          >
+                            <MessageSquare size={12} /> Mensagem
+                          </button>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* ── Talentos guardados (recrutadores) ── */}
           {isRecruiter && (
             <div style={{ marginTop: 32 }}>
@@ -1638,7 +1801,7 @@ export default function Dashboard() {
                             {ownerName}{p.area ? ` · ${p.area}` : ''}{p.course ? ` · ${p.course}` : ''}
                           </div>
                         </div>
-                        <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                        <div style={{ display: 'flex', gap: 6, flexShrink: 0, flexWrap: 'wrap' }}>
                           {ownerUsername && (
                             <button
                               onClick={e => { e.stopPropagation(); navigate(`/u/${ownerUsername}`) }}
@@ -1653,6 +1816,20 @@ export default function Dashboard() {
                           >
                             <MessageSquare size={12} /> Mensagem
                           </button>
+                          <button
+                            onClick={e => {
+                              e.stopPropagation()
+                              setInviteTarget({ studentId: p.user_id, studentName: ownerName })
+                            }}
+                            style={{
+                              background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)',
+                              borderRadius: 8, padding: '5px 10px', fontSize: 12, color: '#f59e0b',
+                              cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700,
+                              display: 'flex', alignItems: 'center', gap: 4,
+                            }}
+                          >
+                            <Send size={12} /> Convidar
+                          </button>
                         </div>
                       </div>
                     )
@@ -1665,6 +1842,14 @@ export default function Dashboard() {
         </div>{/* end sections */}
       </div>
       {showCreateModal && <CreateProjectModal onClose={() => setShowCreateModal(false)} />}
+      {inviteTarget && (
+        <ConvidarVagaModal
+          studentId={inviteTarget.studentId}
+          studentName={inviteTarget.studentName}
+          vagas={recruiterVagas}
+          onClose={() => setInviteTarget(null)}
+        />
+      )}
     </div>
   )
 }

@@ -6,7 +6,8 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
 import CreateProjectModal from '../components/CreateProjectModal'
-import { Mail, Search, FolderOpen, X, Check, Download, Rocket, QrCode, Pencil, Globe, ExternalLink, Link, Briefcase, ArrowRight, Star, MessageSquare, GraduationCap } from 'lucide-react'
+import { Mail, Search, FolderOpen, X, Check, Download, Rocket, QrCode, Pencil, Globe, ExternalLink, Link, Briefcase, ArrowRight, Star, MessageSquare, GraduationCap, Send } from 'lucide-react'
+import ConvidarVagaModal from '../components/ConvidarVagaModal'
 
 // ── Design tokens (aligned with the rest of the app) ──────────────────────────
 const C = {
@@ -337,6 +338,8 @@ export default function UserProfile() {
   const [showQR, setShowQR] = useState(false)
   const [saved, setSaved] = useState(false)
   const [savingCandidate, setSavingCandidate] = useState(false)
+  const [recruiterVagas, setRecruiterVagas] = useState([])
+  const [showInvite, setShowInvite] = useState(false)
 
   useEffect(() => {
     async function load() {
@@ -378,6 +381,18 @@ export default function UserProfile() {
     }
     load()
   }, [username])
+
+  // Load recruiter's vagas for invite modal
+  useEffect(() => {
+    if (!user || !isRecruiter) return
+    supabase
+      .from('vagas')
+      .select('id, title, location, type')
+      .eq('recruiter_id', user.id)
+      .eq('is_active', true)
+      .order('created_at', { ascending: false })
+      .then(({ data }) => setRecruiterVagas(data || []))
+  }, [user, isRecruiter])
 
   async function toggleSave() {
     if (!user || !profile || savingCandidate) return
@@ -789,6 +804,23 @@ export default function UserProfile() {
                       <Star size={13} fill={saved ? '#f59e0b' : 'none'} />
                       {saved ? 'Guardado' : 'Guardar'}
                     </button>
+                    <button
+                      onClick={() => setShowInvite(true)}
+                      style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 6,
+                        background: 'linear-gradient(135deg, #1b78f7, #4f46e5)',
+                        border: 'none',
+                        borderRadius: 9, padding: '8px 16px',
+                        color: '#fff',
+                        fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                        boxShadow: '0 2px 12px rgba(27,120,247,0.3)',
+                        transition: 'all 0.15s',
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.background = 'linear-gradient(135deg,#1564d4,#4338ca)' }}
+                      onMouseLeave={e => { e.currentTarget.style.background = 'linear-gradient(135deg,#1b78f7,#4f46e5)' }}
+                    >
+                      <Send size={13} /> Convidar para vaga
+                    </button>
                   </>
                 )}
               </div>
@@ -848,6 +880,14 @@ export default function UserProfile() {
         <QRModal profileUrl={profileUrl} username={profile?.username || profile?.id || ''} onClose={() => setShowQR(false)} />
       )}
       {showCreateModal && <CreateProjectModal onClose={() => setShowCreateModal(false)} />}
+      {showInvite && profile && (
+        <ConvidarVagaModal
+          studentId={profile.id}
+          studentName={profile.full_name || profile.username || 'Estudante'}
+          vagas={recruiterVagas}
+          onClose={() => setShowInvite(false)}
+        />
+      )}
     </div>
   )
 }

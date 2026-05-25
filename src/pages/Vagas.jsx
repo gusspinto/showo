@@ -345,6 +345,10 @@ export default function Vagas() {
   const [activeTab, setActiveTab] = useState(isRecruiter ? 'minhas' : 'todas')
   const [candidatarVaga, setCandidatarVaga] = useState(null)
   const [sendingCandidatura, setSendingCandidatura] = useState(false)
+  // Student invites
+  const [myInvites, setMyInvites] = useState([])
+  const [loadingInvites, setLoadingInvites] = useState(false)
+  const [respondingInvite, setRespondingInvite] = useState(null) // invite id being processed
 
   useEffect(() => { load() }, [user, profile])
 
@@ -407,6 +411,65 @@ export default function Vagas() {
     }
 
     setLoading(false)
+  }
+
+  // Load student invites
+  useEffect(() => {
+    if (!user || !isAluno) return
+    setLoadingInvites(true)
+    async function loadInvites() {
+      const { data: invites } = await supabase
+        .from('vaga_invites')
+        .select('id, vaga_id, recruiter_id, message, status, created_at')
+        .eq('student_id', user.id)
+        .eq('status', 'pendente')
+        .order('created_at', { ascending: false })
+      if (!invites?.length) { setMyInvites([]); setLoadingInvites(false); return }
+
+      // Load vaga + recruiter info
+      const vagaIds = [...new Set(invites.map(i => i.vaga_id))]
+      const recruiterIds = [...new Set(invites.map(i => i.recruiter_id))]
+      const [{ data: vagasData }, { data: profsData }] = await Promise.all([
+        supabase.from('vagas').select('id, title, type, location, area').in('id', vagaIds),
+        supabase.from('profiles').select('id, full_name, username, company, avatar_url').in('id', recruiterIds),
+      ])
+      const vagaMap = {}
+      vagasData?.forEach(v => { vagaMap[v.id] = v })
+      const profMap = {}
+      profsData?.forEach(p => { profMap[p.id] = p })
+
+      setMyInvites(
+        invites
+          .map(i => ({ ...i, vaga: vagaMap[i.vaga_id], recruiter: profMap[i.recruiter_id] }))
+          .filter(i => i.vaga)
+      )
+      setLoadingInvites(false)
+    }
+    loadInvites()
+  }, [user, isAluno])
+
+  async function acceptInvite(invite) {
+    if (respondingInvite) return
+    setRespondingInvite(invite.id)
+    // Update invite status
+    await supabase.from('vaga_invites').update({ status: 'aceite' }).eq('id', invite.id)
+    // Create candidatura (upsert in case already exists)
+    await supabase.from('candidaturas').upsert({
+      vaga_id: invite.vaga_id,
+      student_id: user.id,
+      status: 'pendente',
+    }, { onConflict: 'vaga_id,student_id' })
+    setMyInvites(prev => prev.filter(i => i.id !== invite.id))
+    setMyCandidaturas(prev => ({ ...prev, [invite.vaga_id]: { status: 'pendente' } }))
+    setRespondingInvite(null)
+  }
+
+  async function declineInvite(invite) {
+    if (respondingInvite) return
+    setRespondingInvite(invite.id)
+    await supabase.from('vaga_invites').update({ status: 'recusada' }).eq('id', invite.id)
+    setMyInvites(prev => prev.filter(i => i.id !== invite.id))
+    setRespondingInvite(null)
   }
 
   async function submitCandidatura(msg) {
@@ -492,6 +555,111 @@ export default function Vagas() {
             </button>
           )}
         </div>
+
+        {/* ── Convites (alunos) ── */}
+        {isAluno && (loadingInvites || myInvites.length > 0) && (
+          <div style={{ marginBottom: 28 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+              <Send size={14} color="#1b78f7" />
+              <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--c-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                Convites para ti
+              </span>
+              {myInvites.length > 0 && (
+                <span style={{ background: '#1b78f720', border: '1px solid #1b78f740', borderRadius: 20, padding: '2px 8px', fontSize: 10, fontWeight: 700, color: '#1b78f7' }}>
+                  {myInvites.length}
+                </span>
+              )}
+            </div>
+
+            {loadingInvites ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {[1, 2].map(i => (
+                  <div key={i} style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 14, height: 80, opacity: 0.5 }} />
+                ))}
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {myInvites.map(invite => {
+                  const isResponding = respondingInvite === invite.id
+                  const recruiterName = invite.recruiter?.full_name || invite.recruiter?.company || 'Recrutador'
+                  const company = invite.recruiter?.company
+                  const alreadyCandidated = !!myCandidaturas[invite.vaga_id]
+                  return (
+                    <div key={invite.id} style={{
+                      background: 'linear-gradient(135deg, rgba(27,120,247,0.07), rgba(79,70,229,0.04))',
+                      border: '1.5px solid rgba(27,120,247,0.25)',
+                      borderRadius: 14, padding: '14px 18px',
+                      display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
+                    }}>
+                      {/* Icon */}
+                      <div style={{
+                        width: 40, height: 40, borderRadius: 10, flexShrink: 0,
+                        background: 'rgba(27,120,247,0.12)', border: '1px solid rgba(27,120,247,0.2)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        overflow: 'hidden',
+                      }}>
+                        {invite.recruiter?.avatar_url
+                          ? <img src={invite.recruiter.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          : <Building2 size={18} color="#1b78f7" />
+                        }
+                      </div>
+                      {/* Info */}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--c-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {invite.vaga?.title}
+                        </div>
+                        <div style={{ fontSize: 12, color: 'var(--c-muted)', marginTop: 2 }}>
+                          {company ? <><span style={{ color: '#1b78f7', fontWeight: 600 }}>{company}</span> · </> : null}
+                          {recruiterName}
+                          {invite.vaga?.location ? ` · ${invite.vaga.location}` : ''}
+                        </div>
+                        {invite.message && (
+                          <div style={{ fontSize: 12, color: 'var(--c-muted)', marginTop: 4, fontStyle: 'italic', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            "{invite.message}"
+                          </div>
+                        )}
+                      </div>
+                      {/* Actions */}
+                      <div style={{ display: 'flex', gap: 8, flexShrink: 0, flexWrap: 'wrap' }}>
+                        {alreadyCandidated ? (
+                          <span style={{ fontSize: 12, color: '#22c55e', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <Check size={13} /> Já candidatado
+                          </span>
+                        ) : (
+                          <button
+                            onClick={() => acceptInvite(invite)}
+                            disabled={isResponding}
+                            style={{
+                              display: 'flex', alignItems: 'center', gap: 6,
+                              padding: '7px 14px', borderRadius: 8, fontSize: 13, fontWeight: 700,
+                              background: 'linear-gradient(135deg,#1b78f7,#4f46e5)', border: 'none',
+                              color: '#fff', cursor: 'pointer', fontFamily: 'inherit',
+                              boxShadow: '0 2px 10px rgba(27,120,247,0.3)',
+                            }}
+                          >
+                            <Check size={13} />
+                            {isResponding ? 'A aceitar…' : 'Aceitar convite'}
+                          </button>
+                        )}
+                        <button
+                          onClick={() => declineInvite(invite)}
+                          disabled={isResponding}
+                          style={{
+                            padding: '7px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600,
+                            background: 'none', border: '1px solid var(--c-border)',
+                            color: 'var(--c-muted)', cursor: 'pointer', fontFamily: 'inherit',
+                          }}
+                        >
+                          Recusar
+                        </button>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Tabs */}
         {isRecruiter && (
