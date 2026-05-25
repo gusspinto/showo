@@ -330,8 +330,23 @@ export default function Explore() {
           <p style={{ color: colors.muted, margin: 0, fontSize: 15 }}>Descobre projetos e pessoas da comunidade Showo</p>
         </div>
 
-        {/* Tabs */}
-        <div style={{ display: 'flex', gap: 4, marginBottom: 28, background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 12, padding: 4, width: 'fit-content' }}>
+        {/* Tabs — animated sliding switch */}
+        <div style={{
+          position: 'relative', display: 'inline-flex', marginBottom: 28,
+          background: 'var(--c-card)', border: '1px solid var(--c-border)',
+          borderRadius: 12, padding: 4,
+        }}>
+          {/* Sliding pill */}
+          <div style={{
+            position: 'absolute', top: 4, bottom: 4, left: 4,
+            width: 'calc(50% - 4px)',
+            background: 'linear-gradient(135deg, #1b78f7, #4f46e5)',
+            borderRadius: 9,
+            transform: `translateX(${tab === 'projetos' ? 0 : 100}%)`,
+            transition: 'transform 0.32s cubic-bezier(0.4, 0, 0.2, 1)',
+            boxShadow: '0 4px 18px rgba(27,120,247,0.45)',
+            zIndex: 0,
+          }} />
           {[
             { id: 'projetos', label: 'Projetos', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg> },
             { id: 'pessoas',  label: 'Pessoas',  icon: <Users size={14} /> },
@@ -340,12 +355,15 @@ export default function Explore() {
               key={t.id}
               onClick={() => handleTabChange(t.id)}
               style={{
-                display: 'flex', alignItems: 'center', gap: 6,
-                padding: '8px 18px', borderRadius: 9, border: 'none',
-                background: tab === t.id ? colors.blue : 'transparent',
+                position: 'relative', zIndex: 1,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                padding: '9px 0', minWidth: 116, borderRadius: 9, border: 'none',
+                background: 'transparent',
                 color: tab === t.id ? '#fff' : colors.muted,
                 fontSize: 13, fontWeight: 600, cursor: 'pointer',
-                fontFamily: 'inherit', transition: 'all 0.15s',
+                fontFamily: 'inherit',
+                transition: 'color 0.25s cubic-bezier(0.4,0,0.2,1)',
+                whiteSpace: 'nowrap',
               }}
             >
               {t.icon} {t.label}
@@ -593,7 +611,7 @@ export default function Explore() {
             </div>
 
             {peopleLoading ? (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 12 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(288px, 1fr))', gap: 16 }}>
                 {Array.from({ length: 8 }).map((_, i) => (
                   <div key={i} className="explore-skeleton" style={{ height: 100 }} />
                 ))}
@@ -610,7 +628,7 @@ export default function Explore() {
                 <p style={{ fontSize: 13, color: colors.subtle, margin: '0 0 16px' }}>
                   {filteredPeople.length} pessoa{filteredPeople.length !== 1 ? 's' : ''}{peopleQuery && ` para "${peopleSearch}"`}
                 </p>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 10 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(288px, 1fr))', gap: 16 }}>
                   {filteredPeople.map(p => {
                     const ROLE_MAP = {
                       aluno:      { color: '#1b78f7', bg: 'rgba(27,120,247,0.1)',  label: 'Aluno',      icon: <GraduationCap size={11} /> },
