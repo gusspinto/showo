@@ -629,7 +629,11 @@ const wsInput = {
   display: 'block', marginBottom: 0,
 }
 
-function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBlocks, setPreviewBlocks, previewEditing, setPreviewEditing }) {
+function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBlocks, setPreviewBlocks, previewEditing, setPreviewEditing,
+  liked, likeCount, likeLoading, onLike,
+  hasInterest, interestCount, interestLoading, onInterest,
+  isRecruiterRole,
+}) {
   const navigate = useNavigate()
   const { theme } = useTheme()
 
@@ -1561,6 +1565,66 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
           </div>
         )}
 
+        {/* ── Engagement: Gostos / Interesse + Comentários ── */}
+        <div style={{ maxWidth: 860, margin: '0 auto', padding: '12px 0 48px' }}>
+
+          {/* Barra de gostos / interesse */}
+          {!isOwner && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0 16px', flexWrap: 'wrap' }}>
+
+              {/* ❤️ Gostos — alunos, professores, visitantes */}
+              {!isRecruiterRole && (
+                <button
+                  onClick={onLike}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 7,
+                    background: liked ? 'rgba(239,68,68,0.1)' : 'var(--c-card)',
+                    border: `1.5px solid ${liked ? 'rgba(239,68,68,0.35)' : 'var(--c-border)'}`,
+                    borderRadius: 10, padding: '8px 16px',
+                    color: liked ? '#ef4444' : 'var(--c-muted)',
+                    fontSize: 14, fontWeight: 700, cursor: likeLoading ? 'default' : 'pointer',
+                    fontFamily: 'inherit', transition: 'all 0.15s',
+                  }}
+                  onMouseEnter={e => { if (!liked) { e.currentTarget.style.borderColor = 'rgba(239,68,68,0.3)'; e.currentTarget.style.color = '#ef4444' }}}
+                  onMouseLeave={e => { if (!liked) { e.currentTarget.style.borderColor = 'var(--c-border)'; e.currentTarget.style.color = 'var(--c-muted)' }}}
+                >
+                  <Heart size={16} fill={liked ? '#ef4444' : 'none'} />
+                  {likeCount > 0 ? likeCount : ''} {likeCount === 1 ? 'gosto' : 'gostos'}
+                </button>
+              )}
+
+              {/* ⭐ Tenho interesse — recrutadores e empresas */}
+              {isRecruiterRole && (
+                <button
+                  onClick={onInterest}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 8,
+                    background: hasInterest
+                      ? 'linear-gradient(135deg, rgba(245,158,11,0.15), rgba(251,191,36,0.1))'
+                      : 'var(--c-card)',
+                    border: `1.5px solid ${hasInterest ? 'rgba(245,158,11,0.5)' : 'var(--c-border)'}`,
+                    borderRadius: 10, padding: '9px 20px',
+                    color: hasInterest ? '#f59e0b' : 'var(--c-muted)',
+                    fontSize: 14, fontWeight: 700, cursor: interestLoading ? 'default' : 'pointer',
+                    fontFamily: 'inherit', transition: 'all 0.2s',
+                    boxShadow: hasInterest ? '0 4px 16px rgba(245,158,11,0.2)' : 'none',
+                  }}
+                  onMouseEnter={e => { if (!hasInterest) { e.currentTarget.style.borderColor = 'rgba(245,158,11,0.4)'; e.currentTarget.style.color = '#f59e0b'; e.currentTarget.style.background = 'rgba(245,158,11,0.07)' }}}
+                  onMouseLeave={e => { if (!hasInterest) { e.currentTarget.style.borderColor = 'var(--c-border)'; e.currentTarget.style.color = 'var(--c-muted)'; e.currentTarget.style.background = 'var(--c-card)' }}}
+                >
+                  <Star size={16} fill={hasInterest ? '#f59e0b' : 'none'} color={hasInterest ? '#f59e0b' : 'currentColor'} />
+                  {hasInterest ? 'Interesse guardado' : 'Tenho interesse'}
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Comentários */}
+          <div style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 16, padding: '22px 24px' }}>
+            <ProjectComments projectId={project.id} projectAuthorId={project.user_id} />
+          </div>
+        </div>
+
       </div>
       </div>{/* end device-frame */}
     </div>
@@ -2222,6 +2286,48 @@ export default function ProjectPage() {
     ? (user.id === project.user_id)  // logged-in: only user_id match
     : !!localStorage.getItem(`edit_token_${project.slug}`)  // anonymous: token fallback
   const isProfessor = profile?.role === 'professor' && !isOwner && !!user?.id
+  const isRecruiterRole = profile?.role === 'recrutador' || profile?.role === 'empresa'
+
+  async function handleLike() {
+    if (!user) { window.location.href = '/login'; return }
+    if (likeLoading) return
+    setLikeLoading(true)
+    if (liked) {
+      await supabase.from('project_likes').delete().eq('project_id', project.id).eq('user_id', user.id)
+      setLiked(false)
+      setLikeCount(c => Math.max(0, c - 1))
+    } else {
+      await supabase.from('project_likes').insert({ project_id: project.id, user_id: user.id })
+      setLiked(true)
+      setLikeCount(c => c + 1)
+    }
+    setLikeLoading(false)
+  }
+
+  async function handleInterest() {
+    if (!user) { window.location.href = '/login'; return }
+    if (interestLoading) return
+    setInterestLoading(true)
+    if (hasInterest) {
+      await supabase.from('recruiter_interests').delete().eq('project_id', project.id).eq('recruiter_id', user.id)
+      setHasInterest(false)
+      setInterestCount(c => Math.max(0, c - 1))
+    } else {
+      await supabase.from('recruiter_interests').insert({ project_id: project.id, recruiter_id: user.id })
+      setHasInterest(true)
+      setInterestCount(c => c + 1)
+      if (project.user_id && project.user_id !== user.id) {
+        const recruiterName = profile?.full_name || profile?.username || 'Um recrutador'
+        const company = profile?.company ? ` (${profile.company})` : ''
+        supabase.from('mensagens').insert({
+          from_id: user.id,
+          to_id: project.user_id,
+          content: `⭐ ${recruiterName}${company} marcou o teu projeto "${project.name}" como interessante! Podes ver o meu perfil e iniciar uma conversa.`,
+        })
+      }
+    }
+    setInterestLoading(false)
+  }
 
   async function handleFbSave() {
     if (!fbComment.trim() || !project) return
@@ -3000,6 +3106,15 @@ export default function ProjectPage() {
           setPreviewBlocks={setPreviewBlocks}
           previewEditing={previewEditing}
           setPreviewEditing={setPreviewEditing}
+          liked={liked}
+          likeCount={likeCount}
+          likeLoading={likeLoading}
+          onLike={handleLike}
+          hasInterest={hasInterest}
+          interestCount={interestCount}
+          interestLoading={interestLoading}
+          onInterest={handleInterest}
+          isRecruiterRole={isRecruiterRole}
         />
       )}
 
@@ -4157,114 +4272,43 @@ export default function ProjectPage() {
       {project && (
         <div style={{ maxWidth: 860, margin: '0 auto', padding: '0 24px 40px' }}>
 
-          {/* Likes / Recruiter Interest bar */}
-          {(() => {
-            const isRecruiterRole = profile?.role === 'recrutador' || profile?.role === 'empresa'
-            return (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '20px 0 8px', flexWrap: 'wrap' }}>
+          {/* Barra de gostos / interesse (owner view) */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '20px 0 8px', flexWrap: 'wrap' }}>
 
-                {/* ❤️ Like — alunos, professores, visitantes */}
-                {!isRecruiterRole && (
-                  <button
-                    onClick={async () => {
-                      if (!user) { window.location.href = '/login'; return }
-                      if (likeLoading) return
-                      setLikeLoading(true)
-                      if (liked) {
-                        await supabase.from('project_likes').delete().eq('project_id', project.id).eq('user_id', user.id)
-                        setLiked(false)
-                        setLikeCount(c => Math.max(0, c - 1))
-                      } else {
-                        await supabase.from('project_likes').insert({ project_id: project.id, user_id: user.id })
-                        setLiked(true)
-                        setLikeCount(c => c + 1)
-                      }
-                      setLikeLoading(false)
-                    }}
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: 7,
-                      background: liked ? 'rgba(239,68,68,0.1)' : 'var(--c-bg-alt)',
-                      border: `1.5px solid ${liked ? 'rgba(239,68,68,0.35)' : 'var(--c-border)'}`,
-                      borderRadius: 10, padding: '8px 16px',
-                      color: liked ? '#ef4444' : 'var(--c-muted)',
-                      fontSize: 14, fontWeight: 700, cursor: 'pointer',
-                      fontFamily: 'inherit', transition: 'all 0.15s',
-                    }}
-                    onMouseEnter={e => { if (!liked) { e.currentTarget.style.borderColor = 'rgba(239,68,68,0.3)'; e.currentTarget.style.color = '#ef4444' }}}
-                    onMouseLeave={e => { if (!liked) { e.currentTarget.style.borderColor = 'var(--c-border)'; e.currentTarget.style.color = 'var(--c-muted)' }}}
-                  >
-                    <Heart size={16} fill={liked ? '#ef4444' : 'none'} />
-                    {likeCount > 0 ? likeCount : ''} {likeCount === 1 ? 'gosto' : 'gostos'}
-                  </button>
-                )}
+            {/* ❤️ Gostos — alunos e professores */}
+            {!isRecruiterRole && (
+              <button
+                onClick={handleLike}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 7,
+                  background: liked ? 'rgba(239,68,68,0.1)' : 'var(--c-bg-alt)',
+                  border: `1.5px solid ${liked ? 'rgba(239,68,68,0.35)' : 'var(--c-border)'}`,
+                  borderRadius: 10, padding: '8px 16px',
+                  color: liked ? '#ef4444' : 'var(--c-muted)',
+                  fontSize: 14, fontWeight: 700, cursor: likeLoading ? 'default' : 'pointer',
+                  fontFamily: 'inherit', transition: 'all 0.15s',
+                }}
+                onMouseEnter={e => { if (!liked) { e.currentTarget.style.borderColor = 'rgba(239,68,68,0.3)'; e.currentTarget.style.color = '#ef4444' }}}
+                onMouseLeave={e => { if (!liked) { e.currentTarget.style.borderColor = 'var(--c-border)'; e.currentTarget.style.color = 'var(--c-muted)' }}}
+              >
+                <Heart size={16} fill={liked ? '#ef4444' : 'none'} />
+                {likeCount > 0 ? likeCount : ''} {likeCount === 1 ? 'gosto' : 'gostos'}
+              </button>
+            )}
 
-                {/* ⭐ Tenho interesse — recrutadores e empresas */}
-                {isRecruiterRole && (
-                  <button
-                    onClick={async () => {
-                      if (!user) { window.location.href = '/login'; return }
-                      if (interestLoading) return
-                      setInterestLoading(true)
-                      if (hasInterest) {
-                        await supabase.from('recruiter_interests').delete()
-                          .eq('project_id', project.id).eq('recruiter_id', user.id)
-                        setHasInterest(false)
-                        setInterestCount(c => Math.max(0, c - 1))
-                      } else {
-                        await supabase.from('recruiter_interests').insert({
-                          project_id: project.id,
-                          recruiter_id: user.id,
-                        })
-                        setHasInterest(true)
-                        setInterestCount(c => c + 1)
-                        // Notificar o dono do projeto
-                        if (project.user_id && project.user_id !== user.id) {
-                          const recruiterName = profile?.full_name || profile?.username || 'Um recrutador'
-                          const company = profile?.company ? ` (${profile.company})` : ''
-                          supabase.from('mensagens').insert({
-                            from_id: user.id,
-                            to_id: project.user_id,
-                            content: `⭐ ${recruiterName}${company} marcou o teu projeto "${project.name}" como interessante! Podes ver o meu perfil e iniciar uma conversa.`,
-                          })
-                        }
-                      }
-                      setInterestLoading(false)
-                    }}
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: 8,
-                      background: hasInterest
-                        ? 'linear-gradient(135deg, rgba(245,158,11,0.15), rgba(251,191,36,0.1))'
-                        : 'var(--c-bg-alt)',
-                      border: `1.5px solid ${hasInterest ? 'rgba(245,158,11,0.5)' : 'var(--c-border)'}`,
-                      borderRadius: 10, padding: '9px 20px',
-                      color: hasInterest ? '#f59e0b' : 'var(--c-muted)',
-                      fontSize: 14, fontWeight: 700, cursor: 'pointer',
-                      fontFamily: 'inherit', transition: 'all 0.2s',
-                      boxShadow: hasInterest ? '0 4px 16px rgba(245,158,11,0.2)' : 'none',
-                    }}
-                    onMouseEnter={e => { if (!hasInterest) { e.currentTarget.style.borderColor = 'rgba(245,158,11,0.4)'; e.currentTarget.style.color = '#f59e0b'; e.currentTarget.style.background = 'rgba(245,158,11,0.07)' }}}
-                    onMouseLeave={e => { if (!hasInterest) { e.currentTarget.style.borderColor = 'var(--c-border)'; e.currentTarget.style.color = 'var(--c-muted)'; e.currentTarget.style.background = 'var(--c-bg-alt)' }}}
-                  >
-                    <Star size={16} fill={hasInterest ? '#f59e0b' : 'none'} color={hasInterest ? '#f59e0b' : 'currentColor'} />
-                    {hasInterest ? 'Interesse guardado' : 'Tenho interesse'}
-                  </button>
-                )}
-
-                {/* Contador de interesse — dono do projeto */}
-                {isOwner && interestCount > 0 && (
-                  <div style={{
-                    display: 'flex', alignItems: 'center', gap: 6,
-                    background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)',
-                    borderRadius: 10, padding: '8px 14px',
-                    color: '#f59e0b', fontSize: 13, fontWeight: 700,
-                  }}>
-                    <Star size={14} fill="#f59e0b" />
-                    {interestCount} recrutador{interestCount !== 1 ? 'es' : ''} com interesse
-                  </div>
-                )}
+            {/* Contador de interesse — dono do projeto */}
+            {isOwner && interestCount > 0 && (
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 6,
+                background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)',
+                borderRadius: 10, padding: '8px 14px',
+                color: '#f59e0b', fontSize: 13, fontWeight: 700,
+              }}>
+                <Star size={14} fill="#f59e0b" />
+                {interestCount} recrutador{interestCount !== 1 ? 'es' : ''} com interesse
               </div>
-            )
-          })()}
+            )}
+          </div>
 
           {/* Comments */}
           <div style={{
