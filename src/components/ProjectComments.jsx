@@ -17,7 +17,7 @@ function timeAgo(dateStr) {
   return new Date(dateStr).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' })
 }
 
-export default function ProjectComments({ projectId, projectAuthorId, projectName, projectSlug }) {
+export default function ProjectComments({ projectId, projectAuthorId }) {
   const { user, profile } = useAuth()
   const [comments, setComments]     = useState([])
   const [loading, setLoading]       = useState(true)
@@ -124,18 +124,7 @@ export default function ProjectComments({ projectId, projectAuthorId, projectNam
       setComments(prev => prev.find(x => x.id === newComment.id) ? prev : [...prev, newComment])
       // Garante que o perfil do autor está no mapa
       if (profile) setProfiles(prev => prev[user.id] ? prev : { ...prev, [user.id]: profile })
-      // Notificar o dono do projeto (não notificar a si próprio)
-      if (projectAuthorId && projectAuthorId !== user.id) {
-        const name = profile?.full_name || profile?.username || 'Alguém'
-        const snippet = content.length > 60 ? content.slice(0, 60) + '…' : content
-        supabase.from('notifications').insert({
-          user_id: projectAuthorId,
-          type: 'PROJECT_COMMENT',
-          message: `${name} comentou no teu projeto${projectName ? ` "${projectName}"` : ''}: «${snippet}»`,
-          project_slug: projectSlug || null,
-          read: false,
-        })
-      }
+      // Notificação gerada automaticamente pelo trigger notify_on_comment() na DB
     }
     setSending(false)
   }
