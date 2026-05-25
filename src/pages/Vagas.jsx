@@ -3,7 +3,27 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
-import { Briefcase, MapPin, Globe, Plus, X, Check, Clock, Building2, ChevronRight, Pencil, Trash2, ExternalLink, Send, Users, ChevronDown, ChevronUp } from 'lucide-react'
+import { Briefcase, MapPin, Globe, Plus, X, Check, Clock, Building2, ChevronRight, Pencil, Trash2, ExternalLink, Send, Users, ChevronDown, ChevronUp, Zap } from 'lucide-react'
+import SkillsPicker from '../components/SkillsPicker'
+
+// % de compatibilidade: skills do aluno vs skills requeridas pela vaga
+function matchScore(studentSkills, vagaSkills) {
+  if (!vagaSkills?.length || !studentSkills?.length) return null
+  const student = new Set((studentSkills).map(s => s.toLowerCase().trim()))
+  const matches = vagaSkills.filter(s => student.has(s.toLowerCase().trim())).length
+  return Math.round((matches / vagaSkills.length) * 100)
+}
+
+function MatchBadge({ score }) {
+  if (score === null) return null
+  const color = score >= 70 ? '#22c55e' : score >= 40 ? '#f59e0b' : '#7d93b0'
+  const bg    = score >= 70 ? 'rgba(34,197,94,0.1)' : score >= 40 ? 'rgba(245,158,11,0.1)' : 'rgba(125,147,176,0.1)'
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, color, background: bg, borderRadius: 6, padding: '3px 8px', flexShrink: 0 }}>
+      <Zap size={10} />{score}% match
+    </span>
+  )
+}
 
 const C = {
   bg:     'var(--c-bg)',
@@ -100,6 +120,7 @@ function RecruiterCard({ vaga, cands, onEdit, onToggle, onDelete, expanded, onTo
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 3 }}>
                     <span style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{p?.full_name || p?.username || 'Candidato'}</span>
                     <span style={{ fontSize: 11, fontWeight: 700, color: st.color, background: st.bg, borderRadius: 5, padding: '1px 7px' }}>{st.label}</span>
+                    <MatchBadge score={matchScore(p?.skills, vaga.skills)} />
                   </div>
                   {c.message && <p style={{ margin: '0 0 8px', fontSize: 13, color: C.muted, lineHeight: 1.5 }}>{c.message}</p>}
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
@@ -124,13 +145,14 @@ function RecruiterCard({ vaga, cands, onEdit, onToggle, onDelete, expanded, onTo
   )
 }
 
-function PublicCard({ vaga, recruiterProfile, myStatus, onCandidatar, isAluno }) {
+function PublicCard({ vaga, recruiterProfile, myStatus, onCandidatar, isAluno, userSkills }) {
   const navigate = useNavigate()
   const tipo = TIPO_INFO[vaga.tipo] ?? TIPO_INFO.estagio
   const days = daysDiff(vaga.deadline)
   if (vaga.deadline && days < 0) return null
 
   const st = myStatus ? STATUS_INFO[myStatus] : null
+  const score = matchScore(userSkills, vaga.skills)
 
   return (
     <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: '20px 22px', transition: 'border-color 0.15s', display: 'flex', flexDirection: 'column', gap: 12 }}
@@ -147,7 +169,10 @@ function PublicCard({ vaga, recruiterProfile, myStatus, onCandidatar, isAluno })
           </div>
           {recruiterProfile?.company_role && <div style={{ fontSize: 11, color: C.muted }}>{recruiterProfile.company_role}</div>}
         </div>
-        <span style={{ fontSize: 11, fontWeight: 700, color: tipo.color, background: tipo.bg, borderRadius: 6, padding: '2px 8px', flexShrink: 0 }}>{tipo.label}</span>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+          <span style={{ fontSize: 11, fontWeight: 700, color: tipo.color, background: tipo.bg, borderRadius: 6, padding: '2px 8px' }}>{tipo.label}</span>
+          {score !== null && <MatchBadge score={score} />}
+        </div>
       </div>
 
       <div>
@@ -188,7 +213,7 @@ function PublicCard({ vaga, recruiterProfile, myStatus, onCandidatar, isAluno })
   )
 }
 
-const EMPTY_FORM = { titulo: '', tipo: 'estagio', area: '', descricao: '', requisitos: '', localizacao: '', is_remote: false, deadline: '' }
+const EMPTY_FORM = { titulo: '', tipo: 'estagio', area: '', descricao: '', requisitos: '', localizacao: '', is_remote: false, deadline: '', skills: [] }
 
 function VagaModal({ initial, onSave, onClose, saving }) {
   const [form, setForm] = useState(initial ?? EMPTY_FORM)
@@ -243,7 +268,7 @@ function VagaModal({ initial, onSave, onClose, saving }) {
 
         {[
           { label: 'Descrição', key: 'descricao', placeholder: 'Descreve a vaga, o projeto, o ambiente de trabalho...' },
-          { label: 'Requisitos', key: 'requisitos', placeholder: 'Ex: Conhecimentos de React, interesse em startups...' },
+          { label: 'Requisitos (texto livre)', key: 'requisitos', placeholder: 'Ex: Conhecimentos de React, interesse em startups...' },
         ].map(({ label, key, placeholder }) => (
           <div key={key} style={{ marginBottom: 16 }}>
             <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: C.muted, marginBottom: 6 }}>{label}</label>
@@ -251,6 +276,15 @@ function VagaModal({ initial, onSave, onClose, saving }) {
               style={{ width: '100%', background: 'var(--c-bg)', border: `1.5px solid ${C.border}`, borderRadius: 10, color: C.text, fontSize: 14, padding: '10px 14px', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', resize: 'vertical', minHeight: 80 }} />
           </div>
         ))}
+
+        <div style={{ marginBottom: 20 }}>
+          <SkillsPicker
+            label="Skills requeridas (para matching automático)"
+            value={form.skills ?? []}
+            onChange={v => set('skills', v)}
+            max={15}
+          />
+        </div>
 
         <button onClick={() => onSave(form)} disabled={saving || !form.titulo.trim()}
           style={{ width: '100%', background: saving || !form.titulo.trim() ? C.border : `linear-gradient(135deg, ${C.blue}, #4f46e5)`, border: 'none', borderRadius: 10, padding: '13px 0', color: '#fff', fontSize: 15, fontWeight: 700, cursor: saving || !form.titulo.trim() ? 'default' : 'pointer', fontFamily: 'inherit', boxShadow: saving ? 'none' : '0 4px 16px rgba(27,120,247,0.3)' }}>
@@ -352,7 +386,7 @@ export default function Vagas() {
         const vagaIds = mine.map(v => v.id)
         const { data: cands } = await supabase
           .from('candidaturas')
-          .select('*, profiles:student_id(id, full_name, username, avatar_url, bio, available_for_work)')
+          .select('*, profiles:student_id(id, full_name, username, avatar_url, bio, available_for_work, skills)')
           .in('vaga_id', vagaIds)
           .order('created_at', { ascending: false })
         const map = {}
@@ -520,6 +554,7 @@ export default function Vagas() {
                 myStatus={myCandidaturas[v.id]?.status}
                 isAluno={isAluno}
                 onCandidatar={setCandidatarVaga}
+                userSkills={profile?.skills}
               />
             ))}
           </div>
@@ -538,7 +573,7 @@ export default function Vagas() {
 
       {showModal && (
         <VagaModal
-          initial={editVaga ? { titulo: editVaga.titulo, tipo: editVaga.tipo, area: editVaga.area ?? '', descricao: editVaga.descricao ?? '', requisitos: editVaga.requisitos ?? '', localizacao: editVaga.localizacao ?? '', is_remote: editVaga.is_remote ?? false, deadline: editVaga.deadline ?? '' } : undefined}
+          initial={editVaga ? { titulo: editVaga.titulo, tipo: editVaga.tipo, area: editVaga.area ?? '', descricao: editVaga.descricao ?? '', requisitos: editVaga.requisitos ?? '', localizacao: editVaga.localizacao ?? '', is_remote: editVaga.is_remote ?? false, deadline: editVaga.deadline ?? '', skills: editVaga.skills ?? [] } : undefined}
           onSave={saveVaga}
           onClose={() => { setShowModal(false); setEditVaga(null) }}
           saving={saving}
