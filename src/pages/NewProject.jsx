@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import SkillsPicker from '../components/SkillsPicker'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { GraduationCap, Briefcase, Rocket, Users, ClipboardList, BarChart2, Monitor, Trophy, Sparkles, Check, Lock, Camera, X, Save, ArrowRight, ArrowLeft, ChevronRight, ShieldAlert } from 'lucide-react'
@@ -816,6 +817,16 @@ export default function NewProject() {
                     )
                   })}
                 </div>
+              </div>
+
+              {/* Tags / Skills */}
+              <div style={{ marginBottom: 28 }}>
+                <SkillsPicker
+                  label="Tags do projeto (opcional)"
+                  value={answers.tags ?? []}
+                  onChange={v => set('tags', v)}
+                  max={10}
+                />
               </div>
 
               {/* Image */}
