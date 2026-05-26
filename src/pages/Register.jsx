@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { Mail, GraduationCap, BookOpen, Search, Building2, ArrowLeft } from 'lucide-react'
+import { useTheme } from '../context/ThemeContext'
 
 const C = {
   bg:          'var(--c-bg)',
@@ -116,6 +117,7 @@ function Input({ type = 'text', value, onChange, placeholder, required }) {
 
 export default function Register() {
   const navigate = useNavigate()
+  const { theme } = useTheme()
   const [step, setStep] = useState('role') // 'role' | 'form'
   const [role, setRole] = useState('')
   const [name, setName] = useState('')
@@ -154,12 +156,15 @@ export default function Register() {
 
   return (
     <div style={{
-      minHeight: '100vh', background: C.bg,
+      minHeight: '100vh',
+      background: theme === 'light'
+        ? 'linear-gradient(135deg, #c8d5ea 0%, #d9e2f0 30%, #e6eaf2 60%, #dcd8ef 100%)'
+        : C.bg,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       padding: '24px 16px', fontFamily: 'inherit',
       position: 'relative', overflow: 'hidden',
     }}>
-      <div style={{ position: 'absolute', top: '-10%', left: '50%', transform: 'translateX(-50%)', width: 600, height: 400, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(27,120,247,0.07) 0%, transparent 70%)', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', top: '-10%', left: '50%', transform: 'translateX(-50%)', width: 600, height: 400, borderRadius: '50%', background: `radial-gradient(ellipse, rgba(27,120,247,${theme === 'light' ? '0.1' : '0.07'}) 0%, transparent 70%)`, pointerEvents: 'none' }} />
       <style>{`
         .role-card { transition: all 0.15s; cursor: pointer; }
         .role-card:hover { transform: translateY(-2px); }
@@ -168,7 +173,7 @@ export default function Register() {
 
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <img
-            src="/icon_logo.png" alt="Showo"
+            src={theme === 'light' ? '/light_mode_LI.png' : '/icon_logo.png'} alt="Showo"
             style={{ height: 'clamp(44px, 10vw, 56px)', width: 'auto', cursor: 'pointer' }}
             onClick={() => navigate('/')}
           />

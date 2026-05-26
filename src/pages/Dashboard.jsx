@@ -262,6 +262,7 @@ function QuickCreateProject({ navigate }) {
 
   function handleSubmit(e) {
     e.preventDefault()
+    if (!desc.trim()) return
     navigate('/interview', { state: { type: type || 'personal', description: desc.trim() } })
   }
 
@@ -311,16 +312,17 @@ function QuickCreateProject({ navigate }) {
         <button
           type="submit"
           className="qc-btn"
+          disabled={!desc.trim()}
           style={{
-            background: `linear-gradient(135deg, ${C.blue}, #4f46e5)`,
+            background: desc.trim() ? `linear-gradient(135deg, ${C.blue}, #4f46e5)` : C.border,
             border: 'none', borderRadius: 12,
             width: 46, height: 46,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            cursor: 'pointer', flexShrink: 0,
-            boxShadow: '0 4px 20px rgba(27,120,247,0.4)',
-            transition: 'opacity 0.15s',
+            cursor: desc.trim() ? 'pointer' : 'not-allowed', flexShrink: 0,
+            boxShadow: desc.trim() ? '0 4px 20px rgba(27,120,247,0.4)' : 'none',
+            transition: 'all 0.15s',
           }}
-          onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
+          onMouseEnter={e => { if (desc.trim()) e.currentTarget.style.opacity = '0.85' }}
           onMouseLeave={e => e.currentTarget.style.opacity = '1'}
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">

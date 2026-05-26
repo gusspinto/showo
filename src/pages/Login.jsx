@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { Mail, Check } from 'lucide-react'
+import { useTheme } from '../context/ThemeContext'
 
 const C = {
   bg:          'var(--c-bg)',
@@ -67,6 +68,7 @@ function PasswordInput({ value, onChange, placeholder }) {
 
 export default function Login() {
   const navigate = useNavigate()
+  const { theme } = useTheme()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -101,18 +103,21 @@ export default function Login() {
 
   return (
     <div style={{
-      minHeight: '100vh', background: C.bg,
+      minHeight: '100vh',
+      background: theme === 'light'
+        ? 'linear-gradient(135deg, #c8d5ea 0%, #d9e2f0 30%, #e6eaf2 60%, #dcd8ef 100%)'
+        : C.bg,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       padding: '24px 16px', fontFamily: 'inherit',
       position: 'relative', overflow: 'hidden',
     }}>
-      {/* Subtle background glow */}
-      <div style={{ position: 'absolute', top: '-10%', left: '50%', transform: 'translateX(-50%)', width: 600, height: 400, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(27,120,247,0.07) 0%, transparent 70%)', pointerEvents: 'none' }} />
+      {/* Background glow */}
+      <div style={{ position: 'absolute', top: '-10%', left: '50%', transform: 'translateX(-50%)', width: 600, height: 400, borderRadius: '50%', background: `radial-gradient(ellipse, rgba(27,120,247,${theme === 'light' ? '0.1' : '0.07'}) 0%, transparent 70%)`, pointerEvents: 'none' }} />
       <div style={{ width: '100%', maxWidth: 400, position: 'relative' }}>
 
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <img
-            src="/icon_logo.png" alt="Showo"
+            src={theme === 'light' ? '/light_mode_LI.png' : '/icon_logo.png'} alt="Showo"
             style={{ height: 'clamp(44px, 10vw, 56px)', width: 'auto', cursor: 'pointer' }}
             onClick={() => navigate('/')}
           />

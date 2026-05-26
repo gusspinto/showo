@@ -15,6 +15,7 @@
   --font-body: 'Montserrat', 'Inter', system-ui, -apple-system, sans-serif;
 
   /* ── Colour tokens — dark (default) ── */
+  --c-warn:         #fbbf24;  /* amber yellow — readable on dark backgrounds */
   --c-bg:           #060c18;
   --c-bg-alt:       #111c32;
   --c-card:         #152030;
@@ -75,11 +76,17 @@ body.light {
   --c-muted:        #526180;
   --c-text:         #0f172a;
   --c-subtle:       #6b7c9a;
-  --c-input-bg:     #f5f7fd;
+  --c-input-bg:     #d5dce8;   /* darker than card → sunken-in look, no white block */
   --c-blue-bg:      #dbeafe;
   --c-green-bg:     #dcfce7;
   --c-sidebar-bg:   #d4dced;  /* deeper, more blue than page bg */
+  --c-warn:         #92400e;  /* amber in light mode — readable on light backgrounds */
 }
+
+/* Warn color utilities for light mode */
+body.light .warn-text { color: #92400e !important; }
+body.light .warn-border { border-color: rgba(146,64,14,0.35) !important; }
+body.light .warn-bg { background: rgba(146,64,14,0.07) !important; }
 
 body.light ::-webkit-scrollbar-track { background: #d4d3d3; }
 body.light ::-webkit-scrollbar-thumb { background: #9ca3af; }

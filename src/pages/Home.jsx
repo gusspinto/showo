@@ -153,7 +153,8 @@ export default function Home() {
   function handleStart(e) {
     e.preventDefault()
     const text = inputText.trim()
-    if (text && looksLikeSpam(text)) {
+    if (!text) return
+    if (looksLikeSpam(text)) {
       setSpamError(true)
       return
     }
@@ -339,12 +340,14 @@ export default function Home() {
               <button
                 type="submit"
                 className="submit-btn"
+                disabled={!inputText.trim()}
                 style={{
-                  background: '#1b78f7', border: 'none', borderRadius: 12,
+                  background: inputText.trim() ? '#1b78f7' : 'var(--c-border)',
+                  border: 'none', borderRadius: 12,
                   color: '#fff', width: 48, height: 48,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  cursor: 'pointer', flexShrink: 0,
-                  transition: 'background 0.15s',
+                  cursor: inputText.trim() ? 'pointer' : 'not-allowed', flexShrink: 0,
+                  transition: 'all 0.15s',
                 }}
               >
                 {(
@@ -364,12 +367,13 @@ export default function Home() {
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 14 }}>
                 <div style={{
                   display: 'inline-flex', alignItems: 'center', gap: 8,
-                  background: 'rgba(251,191,36,0.08)',
-                  border: '1px solid rgba(251,191,36,0.25)',
+                  background: 'rgba(var(--c-warn-rgb, 251,191,36),0.08)',
+                  border: '1px solid var(--c-warn, #fbbf24)',
                   borderRadius: 10, padding: '8px 14px',
-                  fontSize: 13, color: '#fbbf24', fontWeight: 500,
+                  fontSize: 13, color: 'var(--c-warn, #fbbf24)', fontWeight: 500,
+                  borderColor: 'color-mix(in srgb, var(--c-warn, #fbbf24) 35%, transparent)',
                 }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--c-warn, #fbbf24)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
                     <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
                   </svg>
@@ -377,7 +381,7 @@ export default function Home() {
                   <button
                     type="button"
                     onClick={() => navigate('/register')}
-                    style={{ background: 'none', border: 'none', color: '#fbbf24', fontWeight: 700, fontSize: 13, cursor: 'pointer', padding: 0, fontFamily: 'inherit', textDecoration: 'underline', textUnderlineOffset: 2 }}
+                    style={{ background: 'none', border: 'none', color: 'var(--c-warn, #fbbf24)', fontWeight: 700, fontSize: 13, cursor: 'pointer', padding: 0, fontFamily: 'inherit', textDecoration: 'underline', textUnderlineOffset: 2 }}
                   >
                     cria conta grátis
                   </button>
