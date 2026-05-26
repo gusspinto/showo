@@ -1609,51 +1609,81 @@ export default function Dashboard() {
             }
           }
 
-          const shown = steps.slice(0, 2)
-          if (shown.length === 0) return null
+          if (steps.length === 0) return null
+          const primary = steps[0]
+          const secondary = steps.slice(1, 3)
+          const PIcon = primary.Icon
 
           return (
-            <div style={{ display: 'grid', gridTemplateColumns: `repeat(${shown.length}, 1fr)`, gap: 12, marginBottom: 8 }}>
-              {shown.map(s => {
-                const SIcon = s.Icon
-                return (
-                  <div key={s.id} style={{
-                    background: C.card, border: `1px solid ${C.border}`,
-                    borderRadius: 14, padding: '16px 18px',
-                    display: 'flex', gap: 14, alignItems: 'flex-start',
-                    transition: 'border-color 0.15s',
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 8 }}>
+              {/* Primary action — full width, accent left border */}
+              <div
+                style={{
+                  background: C.card,
+                  border: `1px solid ${primary.color}30`,
+                  borderLeft: `3px solid ${primary.color}`,
+                  borderRadius: 14, padding: '18px 20px',
+                  display: 'flex', gap: 16, alignItems: 'center',
+                  transition: 'border-color 0.15s, box-shadow 0.15s',
+                  boxShadow: `0 2px 16px ${primary.color}12`,
+                }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = primary.color + '55'; e.currentTarget.style.boxShadow = `0 4px 24px ${primary.color}22` }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = primary.color + '30'; e.currentTarget.style.boxShadow = `0 2px 16px ${primary.color}12` }}
+              >
+                <div style={{ width: 44, height: 44, borderRadius: 12, flexShrink: 0, background: primary.color + '18', border: `1px solid ${primary.color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <PIcon size={20} color={primary.color} />
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: C.text, marginBottom: 2 }}>{primary.title}</div>
+                  <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.5 }}>{primary.desc}</div>
+                </div>
+                <button
+                  onClick={primary.action}
+                  style={{
+                    background: `linear-gradient(135deg, ${primary.color}, ${primary.color}cc)`,
+                    border: 'none', borderRadius: 9, padding: '9px 18px',
+                    color: '#fff', fontSize: 13, fontWeight: 700,
+                    cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0,
+                    boxShadow: `0 4px 14px ${primary.color}44`,
+                    transition: 'opacity 0.12s',
+                    whiteSpace: 'nowrap',
                   }}
-                    onMouseEnter={e => e.currentTarget.style.borderColor = s.color + '55'}
-                    onMouseLeave={e => e.currentTarget.style.borderColor = C.border}
-                  >
-                    <div style={{
-                      width: 38, height: 38, borderRadius: 10, flexShrink: 0,
-                      background: s.color + '18', border: `1px solid ${s.color}30`,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    }}>
-                      <SIcon size={17} color={s.color} />
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 3 }}>{s.title}</div>
-                      <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.45, marginBottom: 10 }}>{s.desc}</div>
+                  onMouseEnter={e => e.currentTarget.style.opacity = '0.88'}
+                  onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+                >
+                  {primary.cta}
+                </button>
+              </div>
+
+              {/* Secondary steps — compact inline row */}
+              {secondary.length > 0 && (
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  {secondary.map(s => {
+                    const SIcon = s.Icon
+                    return (
                       <button
+                        key={s.id}
                         onClick={s.action}
                         style={{
-                          background: s.color + '18', border: `1px solid ${s.color}30`,
-                          borderRadius: 7, padding: '5px 12px',
-                          color: s.color, fontSize: 12, fontWeight: 700,
+                          display: 'flex', alignItems: 'center', gap: 8,
+                          background: C.card, border: `1px solid ${C.border}`,
+                          borderRadius: 10, padding: '9px 14px',
+                          color: C.muted, fontSize: 12, fontWeight: 600,
                           cursor: 'pointer', fontFamily: 'inherit',
-                          transition: 'background 0.12s',
+                          transition: 'border-color 0.12s, color 0.12s',
+                          flex: 1, minWidth: 160,
                         }}
-                        onMouseEnter={e => e.currentTarget.style.background = s.color + '2e'}
-                        onMouseLeave={e => e.currentTarget.style.background = s.color + '18'}
+                        onMouseEnter={e => { e.currentTarget.style.borderColor = s.color + '55'; e.currentTarget.style.color = C.text }}
+                        onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted }}
                       >
-                        {s.cta} →
+                        <SIcon size={13} color={s.color} style={{ flexShrink: 0 }} />
+                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</span>
+                        <ChevronRight size={12} style={{ marginLeft: 'auto', flexShrink: 0 }} />
                       </button>
-                    </div>
-                  </div>
-                )
-              })}
+                    )
+                  })}
+                </div>
+              )}
             </div>
           )
         })()}
@@ -1790,13 +1820,6 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* ── Insights Block (desktop only, aluno with ≥1 scored project) ── */}
-          {!isTeacher && !loadingProjects && projects.filter(p => p.score != null).length >= 1 && (
-            <div className="dash-chart-wrap">
-              <InsightsBlock projects={projects} />
-            </div>
-          )}
-
           {/* ── Projetos (dominant section) ── */}
           {!isTeacher && <div id="proj-list">
             <div className="dash-sec-hd">
@@ -1845,6 +1868,13 @@ export default function Dashboard() {
             )}
           </div>}
 
+          {/* ── Insights Block (depois dos projetos, desktop only) ── */}
+          {!isTeacher && !loadingProjects && projects.filter(p => p.score != null).length >= 1 && (
+            <div className="dash-chart-wrap">
+              <InsightsBlock projects={projects} />
+            </div>
+          )}
+
           {/* ── Partilhados comigo ── */}
           {!isTeacher && collabProjects.length > 0 && (
             <div>
@@ -1881,8 +1911,8 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* ── Recrutadores com interesse (alunos) ── */}
-          {!isTeacher && !isRecruiter && (
+          {/* ── Recrutadores com interesse (alunos — só mostra quando há dados) ── */}
+          {!isTeacher && !isRecruiter && myInterests.length > 0 && (
             <div style={{ marginTop: 32 }}>
               <div className="dash-sec-hd">
                 <span className="dash-sec-label">
@@ -1897,19 +1927,6 @@ export default function Dashboard() {
               {myInterestsLoading ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {[1, 2].map(i => <div key={i} className="dash-skeleton" style={{ height: 72, opacity: 1 - i * 0.2 }} />)}
-                </div>
-              ) : myInterests.length === 0 ? (
-                <div style={{
-                  background: C.card, border: `1px solid ${C.border}`,
-                  borderRadius: 14, padding: '22px 20px', textAlign: 'center',
-                }}>
-                  <Star size={26} color="var(--c-subtle)" style={{ marginBottom: 8 }} />
-                  <p style={{ margin: '0 0 4px', fontSize: 14, fontWeight: 600, color: C.text }}>
-                    Ainda sem interesse de recrutadores
-                  </p>
-                  <p style={{ margin: 0, fontSize: 13, color: C.muted, lineHeight: 1.55 }}>
-                    Quando um recrutador marcar interesse num teu projeto, aparece aqui.
-                  </p>
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
