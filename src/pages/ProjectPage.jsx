@@ -16,7 +16,7 @@ import CreateProjectModal from '../components/CreateProjectModal'
 import DefenseMode from '../components/DefenseMode'
 import ProjectComments from '../components/ProjectComments'
 import { analyzeProject } from '../lib/analyzeProject'
-import { Check, X, Loader, GraduationCap, Save, Sparkles, Bot, Lightbulb, Pencil, Search, Target, Wrench, Zap, TrendingUp, Briefcase, Users, Rocket, Trophy, BarChart2, CheckCircle, BookOpen, ChevronDown, Eye, EyeOff, UserPlus, Calendar, Mail, ArrowRight, ChevronRight, Globe, Image, MessageSquare, Quote, Layout, Type, Link, GripVertical, Plus, AlignLeft, Star, Camera, FileText, ClipboardList, Copy, Monitor, Tablet, Smartphone, Minus, Video, AlignCenter, AlignRight, Palette, AlertTriangle, Heart } from 'lucide-react'
+import { Check, X, Loader, GraduationCap, Save, Sparkles, Bot, Lightbulb, Pencil, Search, Target, Wrench, Zap, TrendingUp, Briefcase, Users, Rocket, Trophy, BarChart2, CheckCircle, BookOpen, ChevronDown, Eye, EyeOff, UserPlus, Calendar, Mail, ArrowRight, ChevronRight, Globe, Image, MessageSquare, Quote, Layout, Type, Link, GripVertical, Plus, AlignLeft, Star, Camera, FileText, ClipboardList, Copy, Monitor, Tablet, Smartphone, Minus, Video, AlignCenter, AlignRight, Palette, AlertTriangle, Heart, User } from 'lucide-react'
 
 const colors = {
   bg: 'var(--c-bg)',
@@ -3498,16 +3498,6 @@ export default function ProjectPage() {
           {/* Student identity line — name · area · course + status badges */}
           {(project.creator_name || project.area || project.course || internshipReady || ownerProfile?.available_for_work) && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
-              {internshipReady && (
-                <div style={{
-                  background: colors.greenGlow, color: colors.green,
-                  border: '1px solid rgba(34,197,94,0.25)',
-                  borderRadius: 999, padding: '4px 12px',
-                  fontSize: 11, fontWeight: 700, lineHeight: 1.5,
-                }}>
-                  Pronto para estágio
-                </div>
-              )}
               {/* "Disponível" — briefcase badge */}
               {ownerProfile?.available_for_work && (
                 <div
@@ -3581,16 +3571,6 @@ export default function ProjectPage() {
             }}>
               {level.label}
             </div>
-            {internshipReady && (
-              <div style={{
-                background: colors.greenGlow, color: colors.green,
-                border: '1px solid rgba(34,197,94,0.25)',
-                borderRadius: 999, padding: '3px 10px',
-                fontSize: 9, fontWeight: 700, textAlign: 'center', maxWidth: 120, lineHeight: 1.5,
-              }}>
-                Pronto para estágio
-              </div>
-            )}
           </div>
           </div>{/* end flex row */}
         </div>{/* end proj-hero */}
@@ -3616,7 +3596,7 @@ export default function ProjectPage() {
           }
 
           return (
-            <div style={{ display: 'grid', gridTemplateColumns: `repeat(${score >= 100 ? (isPapOrInternship ? (project.project_type === 'pap' ? 4 : 3) : 2) : (isPapOrInternship ? (project.project_type === 'pap' ? 3 : 2) : 1)}, 1fr)`, gap: 10 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(0, 220px))', justifyContent: 'center', gap: 10, marginBottom: 4 }}>
 
               {/* Certificate — score = 100 */}
               {score >= 100 && (
@@ -3677,7 +3657,7 @@ export default function ProjectPage() {
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
                   <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(109,40,217,0.12)', border: '1px solid rgba(129,140,248,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <Bot size={14} color="#818cf8" />
+                    <Sparkles size={14} color="#818cf8" />
                   </div>
                   <div style={{ fontSize: 12, fontWeight: 700, color: '#818cf8' }}>Análise IA</div>
                   {aiFeedback && <Check size={11} color="#22c55e" style={{ marginLeft: 'auto' }} />}
@@ -4537,7 +4517,7 @@ export default function ProjectPage() {
                         }}>
                           {rec.avatar_url
                             ? <img src={rec.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                            : <span style={{ fontSize: 18 }}>👤</span>
+                            : <User size={18} color="var(--c-muted)" />
                           }
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>

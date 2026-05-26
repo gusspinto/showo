@@ -62,9 +62,9 @@ function getAreaGradient(area) {
 
 function getLevelColor(score) {
   if (score == null) return colors.muted
-  if (score >= 90)  return colors.green
+  if (score >= 86)  return colors.green
   if (score >= 71)  return colors.blue
-  if (score >= 40)  return colors.yellow
+  if (score >= 31)  return colors.yellow
   return colors.red
 }
 

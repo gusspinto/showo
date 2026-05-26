@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
-import { Send, ArrowLeft, MessageSquare, Search, Plus, X, Pencil, Trash2, Check, CheckCheck } from 'lucide-react'
+import { Send, ArrowLeft, MessageSquare, Search, Plus, X, Pencil, Trash2, Check, CheckCheck, AlertTriangle } from 'lucide-react'
 import { containsProfanity } from '../lib/profanity'
 import { looksLikeSpam } from '../lib/score'
 
@@ -117,6 +117,7 @@ export default function Mensagens() {
   const [messages, setMessages]           = useState([])
   const [draft, setDraft]                 = useState('')
   const [sending, setSending]             = useState(false)
+  const [sendError, setSendError]         = useState('')
   const [search, setSearch]               = useState('')
   const [loading, setLoading]             = useState(true)
   const [showNova, setShowNova]           = useState(false)
@@ -300,10 +301,9 @@ export default function Mensagens() {
   async function send() {
     if (!draft.trim() || !activeId || sending) return
     const content = draft.trim()
-    if (containsProfanity(content) || looksLikeSpam(content)) {
-      setDraft('')
-      return
-    }
+    if (containsProfanity(content)) { setSendError('Linguagem inapropriada detetada.'); return }
+    if (looksLikeSpam(content)) { setSendError('Mensagem detetada como spam. Escreve algo mais elaborado.'); return }
+    setSendError('')
     setSending(true)
     setDraft('')
     const { data } = await supabase.from('mensagens').insert({ from_id: user.id, to_id: activeId, content }).select().single()
@@ -320,7 +320,7 @@ export default function Mensagens() {
   async function saveEdit(msgId) {
     const content = editDraft.trim()
     if (!content) return
-    if (containsProfanity(content) || looksLikeSpam(content)) { setEditingId(null); setEditDraft(''); return }
+    if (containsProfanity(content) || looksLikeSpam(content)) { setSendError('Conteúdo inapropriado ou spam.'); return }
     const { data } = await supabase
       .from('mensagens')
       .update({ content, edited_at: new Date().toISOString() })
@@ -619,18 +619,25 @@ export default function Mensagens() {
                   </div>
 
                   {/* Input */}
-                  <div style={{ padding: '8px 12px 12px', borderTop: `1px solid ${C.border}`, display: 'flex', gap: 8, flexShrink: 0 }}>
+                  <div style={{ padding: '8px 12px 12px', borderTop: `1px solid ${C.border}`, flexShrink: 0 }}>
+                    {sendError && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#ef4444', fontSize: 11, fontWeight: 600, marginBottom: 6, padding: '5px 10px', background: 'rgba(239,68,68,0.08)', borderRadius: 7, border: '1px solid rgba(239,68,68,0.2)' }}>
+                        <AlertTriangle size={11} /> {sendError}
+                      </div>
+                    )}
+                    <div style={{ display: 'flex', gap: 8 }}>
                     <input
                       value={draft}
-                      onChange={e => setDraft(e.target.value)}
+                      onChange={e => { setDraft(e.target.value); if (sendError) setSendError('') }}
                       onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }}
                       placeholder="Escreve uma mensagem..."
-                      style={{ flex: 1, background: 'var(--c-bg)', border: `1.5px solid ${C.border}`, borderRadius: 10, color: C.text, fontSize: 14, padding: '10px 14px', outline: 'none', fontFamily: 'inherit' }}
+                      style={{ flex: 1, background: 'var(--c-bg)', border: `1.5px solid ${sendError ? '#ef4444' : C.border}`, borderRadius: 10, color: C.text, fontSize: 14, padding: '10px 14px', outline: 'none', fontFamily: 'inherit', transition: 'border-color 0.15s' }}
                     />
                     <button onClick={send} disabled={!draft.trim() || sending}
                       style={{ background: draft.trim() ? C.blue : 'var(--c-border)', border: 'none', borderRadius: 10, width: 42, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: draft.trim() ? 'pointer' : 'default', transition: 'background 0.15s', flexShrink: 0 }}>
                       <Send size={16} color="#fff" />
                     </button>
+                    </div>
                   </div>
                 </>
               )}

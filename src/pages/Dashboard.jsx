@@ -1778,7 +1778,7 @@ export default function Dashboard() {
                     Ainda sem talentos guardados
                   </p>
                   <p style={{ margin: '0 0 14px', fontSize: 13, color: C.muted }}>
-                    Abre um projeto e clica em "⭐ Tenho interesse" para guardar.
+                    Abre um projeto e clica em "Tenho interesse" para guardar.
                   </p>
                   <button
                     onClick={() => navigate('/explorar')}
