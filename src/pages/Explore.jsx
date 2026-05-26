@@ -309,11 +309,13 @@ export default function Explore() {
     { id: 'score',   label: 'Melhor score' },
     { id: 'recent',  label: 'Mais recentes' },
     { id: 'views',   label: 'Mais vistos' },
+    { id: 'likes',   label: 'Mais gostos' },
   ]
 
   const sorted = [...filtered].sort((a, b) => {
     if (sortBy === 'recent') return new Date(b.created_at) - new Date(a.created_at)
     if (sortBy === 'views')  return (b.views ?? 0) - (a.views ?? 0)
+    if (sortBy === 'likes')  return (likeCounts[b.id] || 0) - (likeCounts[a.id] || 0)
     return (b.score ?? 0) - (a.score ?? 0)
   })
 

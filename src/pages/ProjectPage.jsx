@@ -641,6 +641,8 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
   const dragIdx    = useRef(null)
   const dragOver   = useRef(null)
   const [dragOverIdx, setDragOverIdx] = useState(null)
+  const sectionDragRef = useRef(null)
+  const [dragOverSectionIdx, setDragOverSectionIdx] = useState(null)
   const [previewDevice, setPreviewDevice] = useState('desktop')
   const [previewStyle, setPreviewStyle] = useState(() => project.preview_style || {})
   const [previewTab, setPreviewTab] = useState('estilo')  // 'estilo' | 'blocos' | 'seccoes'
@@ -733,6 +735,8 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
   const resolvedBg   = selectedBg.bg || 'var(--c-bg)'
   const titleAlign   = previewStyle.titleAlign || 'left'
   const hiddenSections = new Set(previewStyle.hiddenSections || [])
+  const DEFAULT_SECTION_ORDER = ['problem','solution','target_audience','features','technologies','challenges','results','learnings']
+  const orderedSections = previewStyle.sectionOrder?.length ? previewStyle.sectionOrder : DEFAULT_SECTION_ORDER
 
   const DEVICES = [
     { id: 'desktop',  Icon: Monitor,    label: 'Desktop',   title: 'Vista desktop' },
@@ -1348,67 +1352,92 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
 
             {/* Tab: Secções */}
             {previewTab === 'seccoes' && (() => {
-              const NATIVE_SECTIONS = [
-                { key: 'problem',         label: 'Problema',         Icon: Search    },
-                { key: 'solution',        label: 'Solução',          Icon: Lightbulb },
-                { key: 'target_audience', label: 'Público-alvo',     Icon: Target    },
-                { key: 'features',        label: 'Funcionalidades',  Icon: Wrench    },
-                { key: 'technologies',    label: 'Tecnologias',      Icon: Zap       },
-                { key: 'challenges',      label: 'Desafios',         Icon: Zap       },
-                { key: 'results',         label: 'Resultados',       Icon: TrendingUp},
-                { key: 'learnings',       label: 'Aprendizagens',    Icon: Lightbulb },
-              ]
+              const NATIVE_SECTIONS_MAP = {
+                problem:         { label: 'Problema',        Icon: Search     },
+                solution:        { label: 'Solução',         Icon: Lightbulb  },
+                target_audience: { label: 'Público-alvo',    Icon: Target     },
+                features:        { label: 'Funcionalidades', Icon: Wrench     },
+                technologies:    { label: 'Tecnologias',     Icon: Zap        },
+                challenges:      { label: 'Desafios',        Icon: Zap        },
+                results:         { label: 'Resultados',      Icon: TrendingUp },
+                learnings:       { label: 'Aprendizagens',   Icon: BookOpen   },
+              }
               const hidden = new Set(previewStyle.hiddenSections || [])
               return (
                 <div style={{ flex: 1, overflowY: 'auto', padding: '12px' }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--c-subtle)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 10 }}>Secções visíveis na preview</div>
-                  <p style={{ margin: '0 0 14px', fontSize: 11, color: 'var(--c-muted)', lineHeight: 1.5 }}>Controla quais secções do projeto aparecem para os visitantes.</p>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    {NATIVE_SECTIONS.map(s => {
-                      const isHidden = hidden.has(s.key)
-                      const hasContent = !!(project[s.key]?.trim())
+                  <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--c-subtle)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>Secções da preview</div>
+                  <p style={{ margin: '0 0 12px', fontSize: 11, color: 'var(--c-muted)', lineHeight: 1.5 }}>
+                    Arrasta <GripVertical size={10} style={{ verticalAlign: 'middle' }} /> para reordenar. Clica em <Eye size={10} style={{ verticalAlign: 'middle' }} /> para ocultar.
+                  </p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                    {orderedSections.map((key, idx) => {
+                      const s = NATIVE_SECTIONS_MAP[key]
+                      if (!s) return null
+                      const isHidden = hidden.has(key)
+                      const hasContent = key === 'features' ? features.length > 0 : key === 'technologies' ? tech.length > 0 : !!(project[key]?.trim())
                       const SIcon = s.Icon
+                      const isOver = dragOverSectionIdx === idx
                       return (
-                        <button
-                          key={s.key}
-                          onClick={() => {
-                            const newHidden = new Set(hidden)
-                            isHidden ? newHidden.delete(s.key) : newHidden.add(s.key)
-                            setPreviewStyle(ps => ({ ...ps, hiddenSections: [...newHidden] }))
+                        <div
+                          key={key}
+                          draggable
+                          onDragStart={() => { sectionDragRef.current = idx }}
+                          onDragOver={e => { e.preventDefault(); if (dragOverSectionIdx !== idx) setDragOverSectionIdx(idx) }}
+                          onDragLeave={() => setDragOverSectionIdx(null)}
+                          onDrop={e => {
+                            e.preventDefault()
+                            setDragOverSectionIdx(null)
+                            const from = sectionDragRef.current
+                            if (from === null || from === idx) return
+                            const newOrder = [...orderedSections]
+                            newOrder.splice(idx, 0, newOrder.splice(from, 1)[0])
+                            setPreviewStyle(ps => ({ ...ps, sectionOrder: newOrder }))
                           }}
+                          onDragEnd={() => setDragOverSectionIdx(null)}
                           style={{
-                            display: 'flex', alignItems: 'center', gap: 10,
-                            background: isHidden ? 'var(--c-bg)' : hasContent ? 'rgba(27,120,247,0.05)' : 'var(--c-bg)',
-                            border: `1px solid ${isHidden ? 'var(--c-border)' : hasContent ? 'rgba(27,120,247,0.18)' : 'var(--c-border)'}`,
-                            borderRadius: 9, padding: '9px 12px',
-                            cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
-                            opacity: hasContent ? 1 : 0.5,
-                            transition: 'all 0.14s',
+                            display: 'flex', alignItems: 'center', gap: 7,
+                            background: isOver ? 'rgba(27,120,247,0.1)' : isHidden ? 'var(--c-bg)' : hasContent ? 'rgba(27,120,247,0.05)' : 'var(--c-bg)',
+                            border: `1px solid ${isOver ? '#1b78f7' : isHidden ? 'var(--c-border)' : hasContent ? 'rgba(27,120,247,0.18)' : 'var(--c-border)'}`,
+                            borderRadius: 9, padding: '7px 10px 7px 4px',
+                            opacity: hasContent ? 1 : 0.45,
+                            transition: 'background 0.12s, border-color 0.12s',
+                            cursor: 'default',
+                            userSelect: 'none',
                           }}
                         >
-                          <div style={{
-                            width: 26, height: 26, borderRadius: 7, flexShrink: 0,
-                            background: isHidden ? 'var(--c-bg-alt)' : 'rgba(27,120,247,0.1)',
-                            border: `1px solid ${isHidden ? 'var(--c-border)' : 'rgba(27,120,247,0.2)'}`,
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            color: isHidden ? 'var(--c-subtle)' : '#1b78f7',
-                          }}>
-                            <SIcon size={12} strokeWidth={2} />
+                          {/* Grip */}
+                          <div style={{ cursor: 'grab', color: 'var(--c-subtle)', display: 'flex', padding: '0 2px', flexShrink: 0 }}>
+                            <GripVertical size={13} />
                           </div>
+                          {/* Section icon */}
+                          <div style={{ width: 24, height: 24, borderRadius: 6, flexShrink: 0, background: isHidden ? 'var(--c-bg-alt)' : 'rgba(27,120,247,0.1)', border: `1px solid ${isHidden ? 'var(--c-border)' : 'rgba(27,120,247,0.2)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: isHidden ? 'var(--c-subtle)' : '#1b78f7' }}>
+                            <SIcon size={11} strokeWidth={2} />
+                          </div>
+                          {/* Label */}
                           <span style={{ fontSize: 12, fontWeight: 600, flex: 1, color: isHidden ? 'var(--c-muted)' : 'var(--c-text)', textDecoration: isHidden ? 'line-through' : 'none' }}>
                             {s.label}
                           </span>
-                          {!hasContent && <span style={{ fontSize: 10, color: 'var(--c-subtle)' }}>vazio</span>}
-                          {isHidden
-                            ? <EyeOff size={13} color="var(--c-subtle)" />
-                            : <Eye size={13} color="#1b78f7" />
-                          }
-                        </button>
+                          {!hasContent && <span style={{ fontSize: 9, color: 'var(--c-subtle)', fontWeight: 600 }}>vazio</span>}
+                          {/* Eye toggle */}
+                          <button
+                            onClick={() => {
+                              const newHidden = new Set(hidden)
+                              isHidden ? newHidden.delete(key) : newHidden.add(key)
+                              setPreviewStyle(ps => ({ ...ps, hiddenSections: [...newHidden] }))
+                            }}
+                            title={isHidden ? 'Mostrar' : 'Ocultar'}
+                            style={{ background: 'none', border: 'none', padding: '2px 3px', cursor: 'pointer', display: 'flex', color: isHidden ? 'var(--c-subtle)' : '#1b78f7', flexShrink: 0, borderRadius: 5, transition: 'background 0.12s' }}
+                            onMouseEnter={e => e.currentTarget.style.background = 'rgba(27,120,247,0.1)'}
+                            onMouseLeave={e => e.currentTarget.style.background = 'none'}
+                          >
+                            {isHidden ? <EyeOff size={13} /> : <Eye size={13} />}
+                          </button>
+                        </div>
                       )
                     })}
                   </div>
-                  <p style={{ margin: '14px 0 0', fontSize: 11, color: 'var(--c-subtle)', lineHeight: 1.5 }}>
-                    Clica numa secção para a ocultar ou mostrar.
+                  <p style={{ margin: '12px 0 0', fontSize: 10, color: 'var(--c-subtle)', lineHeight: 1.5 }}>
+                    A ordem é guardada ao clicar em "Guardar preview".
                   </p>
                 </div>
               )
@@ -1573,90 +1602,103 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
           return null
         })}
 
-        {/* Problem */}
-        {project.problem && !hiddenSections.has('problem') && (
-          <div style={{
-            background: 'var(--c-card)', border: '1px solid var(--c-border)',
-            borderLeft: `4px solid ${hero.c1}`,
-            borderRadius: '0 16px 16px 0', padding: '28px 32px',
-          }}>
-            <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--c-muted)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Target size={13} /> O problema que resolve
-            </div>
-            <p style={{ margin: 0, fontSize: 'clamp(15px, 2vw, 18px)', color: 'var(--c-text)', lineHeight: 1.8, fontWeight: 400, overflowWrap: 'break-word' }}>
-              {project.problem}
-            </p>
-          </div>
-        )}
+        {/* Native sections — rendered in user-defined order */}
+        {orderedSections.map(key => {
+          if (hiddenSections.has(key)) return null
 
-        {/* Solution */}
-        {project.solution && !hiddenSections.has('solution') && (
-          <div style={{
-            background: `linear-gradient(135deg, ${hero.c2}10 0%, var(--c-card) 100%)`,
-            border: '1px solid var(--c-border)',
-            borderRadius: 16, padding: '28px 32px',
-          }}>
-            <div style={{ fontSize: 11, fontWeight: 800, color: colors.blue, textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Zap size={13} /> A solução
-            </div>
-            <p style={{ margin: 0, fontSize: 'clamp(15px, 2vw, 18px)', color: 'var(--c-text)', lineHeight: 1.8, fontWeight: 400, overflowWrap: 'break-word' }}>
-              {project.solution}
-            </p>
-          </div>
-        )}
-
-        {/* Features */}
-        {features.length > 0 && !hiddenSections.has('features') && (
-          <div style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 16, padding: '28px 32px' }}>
-            <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--c-muted)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Wrench size={13} /> O que faz
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {features.slice(0, 8).map((f, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-                  <div style={{
-                    width: 22, height: 22, borderRadius: 6, flexShrink: 0, marginTop: 1,
-                    background: `${hero.c1}22`, border: `1px solid ${hero.c1}44`,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}>
-                    <CheckCircle size={12} color={`${hero.c1}cc`} />
-                  </div>
-                  <span style={{ fontSize: 15, color: 'var(--c-text)', lineHeight: 1.6, overflowWrap: 'break-word' }}>{f}</span>
+          if (key === 'problem')
+            return !project.problem ? null : (
+              <div key="problem" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderLeft: `4px solid ${hero.c1}`, borderRadius: '0 16px 16px 0', padding: '28px 32px' }}>
+                <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--c-muted)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Target size={13} /> O problema que resolve
                 </div>
-              ))}
-            </div>
-          </div>
-        )}
+                <p style={{ margin: 0, fontSize: 'clamp(15px,2vw,18px)', color: 'var(--c-text)', lineHeight: 1.8, fontWeight: 400, overflowWrap: 'break-word' }}>{project.problem}</p>
+              </div>
+            )
 
-        {/* Technologies */}
-        {tech.length > 0 && !hiddenSections.has('technologies') && (
-          <div>
-            <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--c-muted)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 14 }}>
-              Tecnologias
-            </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-              {tech.map((t, i) => (
-                <span key={i} style={{
-                  background: 'var(--c-card)', border: '1px solid var(--c-border)',
-                  borderRadius: 8, padding: '6px 14px',
-                  fontSize: 13, fontWeight: 600, color: 'var(--c-text)',
-                }}>{t}</span>
-              ))}
-            </div>
-          </div>
-        )}
+          if (key === 'solution')
+            return !project.solution ? null : (
+              <div key="solution" style={{ background: `linear-gradient(135deg, ${hero.c2}10 0%, var(--c-card) 100%)`, border: '1px solid var(--c-border)', borderRadius: 16, padding: '28px 32px' }}>
+                <div style={{ fontSize: 11, fontWeight: 800, color: colors.blue, textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Zap size={13} /> A solução
+                </div>
+                <p style={{ margin: 0, fontSize: 'clamp(15px,2vw,18px)', color: 'var(--c-text)', lineHeight: 1.8, fontWeight: 400, overflowWrap: 'break-word' }}>{project.solution}</p>
+              </div>
+            )
 
-        {/* Results */}
-        {project.results && !hiddenSections.has('results') && (
-          <div style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 16, padding: '28px 32px' }}>
-            <div style={{ fontSize: 11, fontWeight: 800, color: '#22c55e', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
-              <BarChart2 size={13} /> Resultados
-            </div>
-            <p style={{ margin: 0, fontSize: 15, color: 'var(--c-text)', lineHeight: 1.8, overflowWrap: 'break-word' }}>
-              {project.results}
-            </p>
-          </div>
-        )}
+          if (key === 'target_audience')
+            return !project.target_audience ? null : (
+              <div key="target_audience" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 16, padding: '28px 32px' }}>
+                <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--c-muted)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Users size={13} /> Público-alvo
+                </div>
+                <p style={{ margin: 0, fontSize: 'clamp(15px,2vw,18px)', color: 'var(--c-text)', lineHeight: 1.8, fontWeight: 400, overflowWrap: 'break-word' }}>{project.target_audience}</p>
+              </div>
+            )
+
+          if (key === 'features')
+            return features.length === 0 ? null : (
+              <div key="features" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 16, padding: '28px 32px' }}>
+                <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--c-muted)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Wrench size={13} /> O que faz
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {features.slice(0, 8).map((f, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                      <div style={{ width: 22, height: 22, borderRadius: 6, flexShrink: 0, marginTop: 1, background: `${hero.c1}22`, border: `1px solid ${hero.c1}44`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <CheckCircle size={12} color={`${hero.c1}cc`} />
+                      </div>
+                      <span style={{ fontSize: 15, color: 'var(--c-text)', lineHeight: 1.6, overflowWrap: 'break-word' }}>{f}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )
+
+          if (key === 'technologies')
+            return tech.length === 0 ? null : (
+              <div key="technologies">
+                <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--c-muted)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 14 }}>Tecnologias</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  {tech.map((t, i) => (
+                    <span key={i} style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 8, padding: '6px 14px', fontSize: 13, fontWeight: 600, color: 'var(--c-text)' }}>{t}</span>
+                  ))}
+                </div>
+              </div>
+            )
+
+          if (key === 'challenges')
+            return !project.challenges ? null : (
+              <div key="challenges" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderLeft: '4px solid #f97316', borderRadius: '0 16px 16px 0', padding: '28px 32px' }}>
+                <div style={{ fontSize: 11, fontWeight: 800, color: '#f97316', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Zap size={13} /> Desafios
+                </div>
+                <p style={{ margin: 0, fontSize: 'clamp(15px,2vw,18px)', color: 'var(--c-text)', lineHeight: 1.8, fontWeight: 400, overflowWrap: 'break-word' }}>{project.challenges}</p>
+              </div>
+            )
+
+          if (key === 'results')
+            return !project.results ? null : (
+              <div key="results" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 16, padding: '28px 32px' }}>
+                <div style={{ fontSize: 11, fontWeight: 800, color: '#22c55e', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <BarChart2 size={13} /> Resultados
+                </div>
+                <p style={{ margin: 0, fontSize: 15, color: 'var(--c-text)', lineHeight: 1.8, overflowWrap: 'break-word' }}>{project.results}</p>
+              </div>
+            )
+
+          if (key === 'learnings')
+            return !project.learnings ? null : (
+              <div key="learnings" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 16, padding: '28px 32px' }}>
+                <div style={{ fontSize: 11, fontWeight: 800, color: '#8b5cf6', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <BookOpen size={13} /> Aprendizagens
+                </div>
+                <p style={{ margin: 0, fontSize: 15, color: 'var(--c-text)', lineHeight: 1.8, overflowWrap: 'break-word' }}>{project.learnings}</p>
+              </div>
+            )
+
+          return null
+        })}
 
         {/* Creator card */}
         {(displayName || course || school) && (
