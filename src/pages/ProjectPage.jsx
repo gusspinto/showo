@@ -4226,39 +4226,65 @@ export default function ProjectPage() {
             const goodCount  = fieldQuality.filter(f => f.quality === 'good').length
             const pct = Math.round((goodCount / fieldQuality.length) * 100)
 
+            const isComplete = pct === 100
             return (
-              <div className="proj-card">
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: completudeOpen ? 14 : 0 }}>
-                  <h3 className="proj-sec-label" style={{ margin: 0 }}>Completude</h3>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ fontSize: 13, fontWeight: 800, color: pct === 100 ? '#10b981' : pct > 60 ? colors.blue : colors.yellow }}>{pct}%</span>
-                    <button
-                      className="sidebar-section-toggle"
-                      onClick={() => setCompletudeOpen(o => !o)}
-                      style={{ background: 'none', border: 'none', color: colors.muted, cursor: 'pointer', padding: '2px 4px', alignItems: 'center' }}
-                    >
-                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: completudeOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
-                        <path d="M2 4l4 4 4-4"/>
-                      </svg>
-                    </button>
+              <div className="proj-card" style={isComplete ? {
+                background: 'rgba(34,197,94,0.04)',
+                border: '1px solid rgba(34,197,94,0.22)',
+              } : {}}>
+                {isComplete ? (
+                  /* ── Completude 100%: celebratory completed state ── */
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{
+                      width: 32, height: 32, borderRadius: 9, flexShrink: 0,
+                      background: 'rgba(34,197,94,0.12)',
+                      border: '1px solid rgba(34,197,94,0.25)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      <Check size={15} color="#22c55e" strokeWidth={3} />
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: '#22c55e', marginBottom: 2 }}>Perfil 100% completo</div>
+                      <div style={{ fontSize: 12, color: colors.subtle }}>Todos os campos preenchidos com qualidade</div>
+                    </div>
+                    <span style={{ fontSize: 13, fontWeight: 800, color: '#22c55e', flexShrink: 0 }}>100%</span>
                   </div>
-                </div>
-                <div className={`sidebar-section-body${completudeOpen ? '' : ' collapsed'}`}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    {fieldQuality.map(f => (
-                      <div key={f.key} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <div style={{ width: 6, height: 6, borderRadius: '50%', flexShrink: 0, background: f.quality === 'good' ? '#10b981' : f.quality === 'short' ? colors.yellow : colors.subtle }} />
-                        <span style={{ flex: 1, fontSize: 12, color: f.quality === 'good' ? colors.text : f.quality === 'short' ? '#d4a820' : colors.subtle, fontWeight: f.quality === 'good' ? 600 : 400 }}>{f.label}</span>
-                        {f.quality === 'good'  && <Check size={11} color="#10b981" strokeWidth={3} />}
-                        {f.quality === 'short' && <span style={{ fontSize: 10, color: colors.yellow, fontWeight: 700 }}>curto</span>}
-                        {f.quality === 'empty' && <span style={{ fontSize: 11, color: colors.subtle }}>—</span>}
+                ) : (
+                  /* ── Normal state: collapsible checklist ── */
+                  <>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: completudeOpen ? 14 : 0 }}>
+                      <h3 className="proj-sec-label" style={{ margin: 0 }}>Completude</h3>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span style={{ fontSize: 13, fontWeight: 800, color: pct > 60 ? colors.blue : colors.yellow }}>{pct}%</span>
+                        <button
+                          className="sidebar-section-toggle"
+                          onClick={() => setCompletudeOpen(o => !o)}
+                          style={{ background: 'none', border: 'none', color: colors.muted, cursor: 'pointer', padding: '2px 4px', alignItems: 'center' }}
+                        >
+                          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: completudeOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
+                            <path d="M2 4l4 4 4-4"/>
+                          </svg>
+                        </button>
                       </div>
-                    ))}
-                  </div>
-                  <div style={{ marginTop: 14, height: 4, background: progTrack(pct), borderRadius: 99, overflow: 'hidden' }}>
-                    <div style={{ height: '100%', borderRadius: 99, width: `${pct}%`, background: progBar(pct), transition: 'width 0.5s' }} />
-                  </div>
-                </div>
+                    </div>
+                    <div className={`sidebar-section-body${completudeOpen ? '' : ' collapsed'}`}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        {fieldQuality.map(f => (
+                          <div key={f.key} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <div style={{ width: 6, height: 6, borderRadius: '50%', flexShrink: 0, background: f.quality === 'good' ? '#10b981' : f.quality === 'short' ? colors.yellow : colors.subtle }} />
+                            <span style={{ flex: 1, fontSize: 12, color: f.quality === 'good' ? colors.text : f.quality === 'short' ? '#d4a820' : colors.subtle, fontWeight: f.quality === 'good' ? 600 : 400 }}>{f.label}</span>
+                            {f.quality === 'good'  && <Check size={11} color="#10b981" strokeWidth={3} />}
+                            {f.quality === 'short' && <span style={{ fontSize: 10, color: colors.yellow, fontWeight: 700 }}>curto</span>}
+                            {f.quality === 'empty' && <span style={{ fontSize: 11, color: colors.subtle }}>—</span>}
+                          </div>
+                        ))}
+                      </div>
+                      <div style={{ marginTop: 14, height: 4, background: progTrack(pct), borderRadius: 99, overflow: 'hidden' }}>
+                        <div style={{ height: '100%', borderRadius: 99, width: `${pct}%`, background: progBar(pct), transition: 'width 0.5s' }} />
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             )
           })()}
@@ -4332,7 +4358,7 @@ export default function ProjectPage() {
 
       {/* ── Likes + Interest + Comments — visible to ALL (owners, recruiters, visitors) ── */}
       {project && (
-        <div style={{ maxWidth: 860, margin: '0 auto', padding: '0 24px 40px' }}>
+        <div style={{ maxWidth: 1000, margin: '0 auto', padding: '0 32px 40px' }}>
 
           {/* Barra de gostos / interesse (owner view) */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '20px 0 8px', flexWrap: 'wrap' }}>

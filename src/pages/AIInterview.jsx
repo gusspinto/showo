@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { saveProject } from '../lib/saveProject'
-import { AlertTriangle, ArrowRight, RotateCcw } from 'lucide-react'
+import { AlertTriangle, ArrowRight, RotateCcw, GraduationCap, Rocket, Users, Trophy, Briefcase, BarChart2 } from 'lucide-react'
 import { looksLikeSpam } from '../lib/score'
 import { containsProfanity } from '../lib/profanity'
 
@@ -122,12 +122,12 @@ function LivePreview({ projectType, answers, currentField, currentValue }) {
 }
 
 const PROJECT_TYPES = [
-  { id: 'pap',         label: 'PAP',          color: '#6366f1' },
-  { id: 'personal',    label: 'Pessoal',       color: '#1b78f7' },
-  { id: 'group',       label: 'Grupo',         color: '#f59e0b' },
-  { id: 'competition', label: 'Competição',    color: '#ef4444' },
-  { id: 'internship',  label: 'Estágio',       color: '#10b981' },
-  { id: 'presentation',label: 'Apresentação',  color: '#8b5cf6' },
+  { id: 'pap',         label: 'PAP',           desc: 'Projeto final de curso',  color: '#6366f1', Icon: GraduationCap },
+  { id: 'personal',    label: 'Pessoal',        desc: 'Projeto próprio',         color: '#1b78f7', Icon: Rocket        },
+  { id: 'group',       label: 'Grupo',          desc: 'Trabalho colaborativo',   color: '#f59e0b', Icon: Users         },
+  { id: 'competition', label: 'Competição',     desc: 'Hackathon ou concurso',   color: '#ef4444', Icon: Trophy        },
+  { id: 'internship',  label: 'Estágio',        desc: 'Projeto de estágio',      color: '#10b981', Icon: Briefcase     },
+  { id: 'presentation',label: 'Apresentação',   desc: 'Slides ou pitch',         color: '#8b5cf6', Icon: BarChart2     },
 ]
 
 export default function AIInterview() {
@@ -430,7 +430,7 @@ export default function AIInterview() {
                 )}
               </div>
 
-              {/* Project type selector */}
+              {/* Project type selector — mini-dashboard grid */}
               <div style={{ marginBottom: 32 }}>
                 <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>
                   Tipo de projeto
@@ -444,16 +444,31 @@ export default function AIInterview() {
                         type="button"
                         onClick={() => setSetupType(t.id)}
                         style={{
-                          background: selected ? `${t.color}15` : 'var(--c-bg-alt)',
+                          background: selected ? `${t.color}12` : 'var(--c-bg-alt)',
                           border: `1.5px solid ${selected ? t.color : C.border}`,
-                          borderRadius: 10, padding: '10px 12px',
+                          borderRadius: 12, padding: '12px 10px',
                           color: selected ? t.color : C.muted,
-                          fontSize: 13, fontWeight: 700, fontFamily: 'inherit',
+                          fontFamily: 'inherit',
                           cursor: 'pointer', transition: 'all 0.12s',
                           textAlign: 'center',
+                          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+                          boxShadow: selected ? `0 0 0 3px ${t.color}18` : 'none',
                         }}
+                        onMouseEnter={e => { if (!selected) { e.currentTarget.style.borderColor = t.color + '60'; e.currentTarget.style.color = t.color } }}
+                        onMouseLeave={e => { if (!selected) { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted } }}
                       >
-                        {t.label}
+                        <div style={{
+                          width: 32, height: 32, borderRadius: 9, flexShrink: 0,
+                          background: selected ? `${t.color}20` : 'var(--c-card)',
+                          border: `1px solid ${selected ? t.color + '40' : C.border}`,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          color: selected ? t.color : C.subtle,
+                          transition: 'all 0.12s',
+                        }}>
+                          <t.Icon size={15} strokeWidth={2} />
+                        </div>
+                        <span style={{ fontSize: 12, fontWeight: 700, lineHeight: 1.2, display: 'block' }}>{t.label}</span>
+                        <span style={{ fontSize: 10, color: selected ? t.color + 'cc' : C.subtle, lineHeight: 1.2, display: 'block', fontWeight: 500 }}>{t.desc}</span>
                       </button>
                     )
                   })}
