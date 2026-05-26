@@ -40,10 +40,12 @@ const PATTERNS = [
   /vai\s+te\s+fod/,
   /toma(r)?\s+no\s+cu/,
   /que\s+te\s+fod/,        // "que te fodas", "que te foda"
+  /mata(r)?\s+te/,          // "matar-te" threats
+  /vou\s+te\s+mat/,
 
   // PT words / insults
   /\bfodas?\b/,             // foda, fodas
-  /fod[ae]\s*te/,           // fode-te, foda-te, fode te (catches with or without space)
+  /fod[ae]\s*te/,           // fode-te, foda-te, fode te
   /\bmerda\b/,
   /\bcaralho\b/,
   /\bporra\b/,
@@ -58,14 +60,34 @@ const PATTERNS = [
   /\bcuzao\b/,
   /\bcu\b/,
   /retardad[ao]/,           // retardado, retardada
+  /mongol(oid[ae]?)?/,      // mongolóide
   /\bimbecil\b/,
   /\bcretino\b/,
   /\bidiota\b/,
+  /\bburro\b/,
+  /\bparvo\b/,
+  /\btrouxa\b/,
+  /\bescroto\b/,
+  /\bestupido\b/,
+  /\blixo\b/,               // "lixo humano"
+  /\bescoria\b/,
 
-  // Racial / hateful slurs — includes vowel-swap evasion (niogger, n0gger, nugger, etc.)
+  // Racial / hateful slurs — includes vowel-swap evasion
   /\bnigga(s)?\b/,
   /\bnigger(s)?\b/,
   /n[iouae]gg[ae]r/,        // fuzzy: niogger, nuggur, noggur, etc.
+  /\bpreto\s*sujo\b/,
+  /\bpreta\s*suja\b/,
+  /\bgitano\b/,
+  /\bciganada\b/,
+  /\bgitanos\b/,
+  /\bzionist[ao]\b/,        // hateful slurs
+
+  // Hate speech / threats
+  /morre(r)?/,               // "morre" standalone threats
+  /suicid[ae]/,              // encouraging self-harm
+  /\bkys\b/,                 // EN "kill yourself"
+  /kill\s*your\s*self/,
 
   // EN profanity
   /\bfuck(ing|ed|er|s)?\b/,
@@ -77,6 +99,11 @@ const PATTERNS = [
   /\basshole\b/,
   /\bwhore\b/,
   /\bbastard\b/,
+  /\bfaggot(s)?\b/,
+  /\bslut(s|ty)?\b/,
+  /\bjizz\b/,
+  /\bmotherfuck/,
+  /\bsonofabitch\b/,
 ]
 
 // Compact patterns — catches evasion via spaces/dashes/dots between letters
@@ -96,6 +123,10 @@ const COMPACT_PATTERNS = [
   /imbecil/,
   /nigger/,
   /nigga/,
+  /mongol/,
+  /matarate/,         // "mata-te"
+  /killurself/,
+  /killyourself/,
 ]
 
 export function containsProfanity(text) {

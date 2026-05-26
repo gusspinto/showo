@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { Navbar } from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
-import { Search, Building2, Eye, Briefcase, Users, GraduationCap, BookOpen } from 'lucide-react'
+import { Search, Building2, Eye, Briefcase, Users, GraduationCap, BookOpen, Heart } from 'lucide-react'
 import CreateProjectModal from '../components/CreateProjectModal'
 
 const colors = {
@@ -153,6 +153,11 @@ export default function Explore() {
   const [peopleSearch, setPeopleSearch] = useState('')
   const [filterSkill, setFilterSkill] = useState('')
 
+  // Likes
+  const [likeCounts, setLikeCounts]   = useState({})  // { projectId: number }
+  const [userLiked,  setUserLiked]    = useState(new Set())
+  const [likeLoading, setLikeLoading] = useState(new Set())
+
   useEffect(() => {
     async function load() {
       // Main projects query — no FK join to avoid PostgREST relationship errors
@@ -184,11 +189,25 @@ export default function Explore() {
         setProjects(merged)
         const areaSet = [...new Set(merged.map(p => p.area).filter(Boolean))].sort()
         setAreas([{ id: '', label: 'Todas as áreas' }, ...areaSet.map(a => ({ id: a, label: a }))])
+
+        // Load like counts for all projects
+        const ids = merged.map(p => p.id)
+        supabase.from('project_likes').select('project_id').in('project_id', ids).then(({ data: likeRows }) => {
+          const counts = {}
+          likeRows?.forEach(l => { counts[l.project_id] = (counts[l.project_id] || 0) + 1 })
+          setLikeCounts(counts)
+        })
+        // Load user's own likes (if logged in — profile is available after auth resolves)
+        if (profile?.id) {
+          supabase.from('project_likes').select('project_id').in('project_id', ids).eq('user_id', profile.id).then(({ data: ul }) => {
+            setUserLiked(new Set(ul?.map(l => l.project_id) || []))
+          })
+        }
       }
       setLoading(false)
     }
     load()
-  }, [])
+  }, [profile?.id])
 
   async function loadPeople() {
     if (peopleLoaded) return
@@ -202,6 +221,23 @@ export default function Explore() {
     setPeople(data || [])
     setPeopleLoaded(true)
     setPeopleLoading(false)
+  }
+
+  async function toggleLike(e, projectId) {
+    e.stopPropagation()
+    if (!profile?.id) { navigate('/login'); return }
+    if (likeLoading.has(projectId)) return
+    setLikeLoading(prev => new Set([...prev, projectId]))
+    const isLiked = userLiked.has(projectId)
+    // Optimistic update
+    setUserLiked(prev => { const s = new Set(prev); isLiked ? s.delete(projectId) : s.add(projectId); return s })
+    setLikeCounts(prev => ({ ...prev, [projectId]: Math.max(0, (prev[projectId] || 0) + (isLiked ? -1 : 1)) }))
+    if (isLiked) {
+      await supabase.from('project_likes').delete().eq('project_id', projectId).eq('user_id', profile.id)
+    } else {
+      await supabase.from('project_likes').insert({ project_id: projectId, user_id: profile.id })
+    }
+    setLikeLoading(prev => { const s = new Set(prev); s.delete(projectId); return s })
   }
 
   function handleTabChange(t) {
@@ -571,16 +607,37 @@ export default function Explore() {
                     )}
                   </div>
 
-                  {/* Creator + school year + hover arrow */}
+                  {/* Creator + school year + like button + hover arrow */}
                   <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
                     {(project.creator_name || project.school_year) ? (
                       <div style={{ fontSize: 12, color: colors.subtle, fontWeight: 500, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {[project.creator_name, project.school_year].filter(Boolean).join(' · ')}
                       </div>
                     ) : <div />}
-                    <svg className="explore-card-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={colors.blue} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
-                      <path d="M5 12h14M12 5l7 7-7 7"/>
-                    </svg>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                      {/* Like button */}
+                      <button
+                        onClick={e => toggleLike(e, project.id)}
+                        title={userLiked.has(project.id) ? 'Remover gosto' : 'Dar gosto'}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: 4,
+                          background: 'none', border: 'none',
+                          padding: '2px 0', cursor: 'pointer',
+                          color: userLiked.has(project.id) ? '#ef4444' : colors.subtle,
+                          transition: 'color 0.15s',
+                        }}
+                        onMouseEnter={e => { if (!userLiked.has(project.id)) e.currentTarget.style.color = '#ef4444' }}
+                        onMouseLeave={e => { if (!userLiked.has(project.id)) e.currentTarget.style.color = colors.subtle }}
+                      >
+                        <Heart size={13} fill={userLiked.has(project.id) ? '#ef4444' : 'none'} strokeWidth={2} />
+                        {(likeCounts[project.id] || 0) > 0 && (
+                          <span style={{ fontSize: 11, fontWeight: 600 }}>{likeCounts[project.id]}</span>
+                        )}
+                      </button>
+                      <svg className="explore-card-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={colors.blue} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                      </svg>
+                    </div>
                   </div>
 
                   {/* Tags */}

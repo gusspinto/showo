@@ -16,7 +16,7 @@ import CreateProjectModal from '../components/CreateProjectModal'
 import DefenseMode from '../components/DefenseMode'
 import ProjectComments from '../components/ProjectComments'
 import { analyzeProject } from '../lib/analyzeProject'
-import { Check, X, Loader, GraduationCap, Save, Sparkles, Bot, Lightbulb, Pencil, Search, Target, Wrench, Zap, TrendingUp, Briefcase, Users, Rocket, Trophy, BarChart2, CheckCircle, BookOpen, ChevronDown, Eye, UserPlus, Calendar, Mail, ArrowRight, ChevronRight, Globe, Image, MessageSquare, Quote, Layout, Type, Link, GripVertical, Plus, AlignLeft, Star, Camera, FileText, ClipboardList, Copy, Monitor, Tablet, Smartphone, Minus, Video, AlignCenter, AlignRight, Palette, AlertTriangle, Heart } from 'lucide-react'
+import { Check, X, Loader, GraduationCap, Save, Sparkles, Bot, Lightbulb, Pencil, Search, Target, Wrench, Zap, TrendingUp, Briefcase, Users, Rocket, Trophy, BarChart2, CheckCircle, BookOpen, ChevronDown, Eye, EyeOff, UserPlus, Calendar, Mail, ArrowRight, ChevronRight, Globe, Image, MessageSquare, Quote, Layout, Type, Link, GripVertical, Plus, AlignLeft, Star, Camera, FileText, ClipboardList, Copy, Monitor, Tablet, Smartphone, Minus, Video, AlignCenter, AlignRight, Palette, AlertTriangle, Heart } from 'lucide-react'
 
 const colors = {
   bg: 'var(--c-bg)',
@@ -643,6 +643,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
   const [dragOverIdx, setDragOverIdx] = useState(null)
   const [previewDevice, setPreviewDevice] = useState('desktop')
   const [previewStyle, setPreviewStyle] = useState(() => project.preview_style || {})
+  const [previewTab, setPreviewTab] = useState('estilo')  // 'estilo' | 'blocos' | 'seccoes'
 
   function onDragStart(i) { dragIdx.current = i }
   function onDragEnter(i) { dragOver.current = i; setDragOverIdx(i) }
@@ -731,6 +732,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
   const selectedBg   = BG_OPTIONS.find(b => b.key === (previewStyle.bg || 'default')) || BG_OPTIONS[0]
   const resolvedBg   = selectedBg.bg || 'var(--c-bg)'
   const titleAlign   = previewStyle.titleAlign || 'left'
+  const hiddenSections = new Set(previewStyle.hiddenSections || [])
 
   const DEVICES = [
     { id: 'desktop',  Icon: Monitor,    label: 'Desktop',   title: 'Vista desktop' },
@@ -923,8 +925,8 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
             fontFamily: 'var(--font-body)',
           }}>
             {/* Header */}
-            <div style={{ padding: '12px 14px 10px', borderBottom: '1px solid var(--c-border)', flexShrink: 0, background: 'linear-gradient(135deg, rgba(27,120,247,0.08), rgba(79,70,229,0.04))' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ padding: '10px 14px 0', borderBottom: '1px solid var(--c-border)', flexShrink: 0, background: 'linear-gradient(135deg, rgba(27,120,247,0.06), rgba(79,70,229,0.03))' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
                 <Layout size={15} color="#1b78f7" />
                 <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--c-text)', flex: 1 }}>Área de trabalho</span>
                 <button
@@ -937,13 +939,36 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
                   <X size={12} /> Fechar
                 </button>
               </div>
-              <div style={{ fontSize: 11, color: 'var(--c-muted)', lineHeight: 1.4, marginTop: 6 }}>
-                Arrasta para reordenar · visível pelos visitantes
+              {/* Tab switcher */}
+              <div style={{ display: 'flex', gap: 0, marginBottom: 0 }}>
+                {[
+                  { id: 'estilo',   label: 'Estilo',   Icon: Palette },
+                  { id: 'blocos',   label: 'Blocos',   Icon: Layout  },
+                  { id: 'seccoes',  label: 'Secções',  Icon: Eye     },
+                ].map(t => (
+                  <button
+                    key={t.id}
+                    onClick={() => setPreviewTab(t.id)}
+                    style={{
+                      flex: 1, padding: '8px 4px', border: 'none',
+                      borderBottom: previewTab === t.id ? '2px solid #1b78f7' : '2px solid transparent',
+                      background: 'transparent',
+                      color: previewTab === t.id ? '#1b78f7' : 'var(--c-muted)',
+                      fontSize: 11, fontWeight: previewTab === t.id ? 700 : 500,
+                      cursor: 'pointer', fontFamily: 'inherit',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+                      transition: 'color 0.15s, border-color 0.15s',
+                    }}
+                  >
+                    <t.Icon size={11} /> {t.label}
+                  </button>
+                ))}
               </div>
             </div>
 
-            {/* ── Aparência ── */}
-            <div style={{ padding: '12px 12px 10px', borderBottom: '1px solid var(--c-border)', flexShrink: 0 }}>
+            {/* ── Tab: Estilo ── */}
+            {previewTab === 'estilo' && <div style={{ flex: 1, overflowY: 'auto' }}>
+            <div style={{ padding: '12px 12px 10px', borderBottom: '1px solid var(--c-border)' }}>
               <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--c-subtle)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 10 }}>Aparência</div>
 
               {/* Accent color */}
@@ -1058,10 +1083,50 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
                   })}
                 </div>
               </div>
+
+              {/* Cover image upload */}
+              <div style={{ paddingTop: 10, borderTop: '1px solid var(--c-border)', marginTop: 4 }}>
+                <div style={{ fontSize: 11, color: 'var(--c-muted)', fontWeight: 600, marginBottom: 6 }}>Imagem de capa</div>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <input
+                    value={project.cover_url || ''}
+                    onChange={e => {/* handled in project page */}}
+                    placeholder="URL da capa..."
+                    readOnly
+                    style={{ ...wsInput, flex: 1, margin: 0, fontSize: 11, color: project.cover_url ? 'var(--c-text)' : 'var(--c-subtle)', cursor: 'default' }}
+                  />
+                  <button
+                    onClick={() => {
+                      const input = document.createElement('input')
+                      input.type = 'file'; input.accept = 'image/*'
+                      input.onchange = async () => {
+                        const file = input.files[0]; if (!file) return
+                        const ext = file.name.split('.').pop()
+                        const path = `covers/${project.id}/cover_${Date.now()}.${ext}`
+                        const { error: upErr } = await supabase.storage.from('project-assets').upload(path, file, { upsert: true })
+                        if (!upErr) {
+                          const { data: { publicUrl } } = supabase.storage.from('project-assets').getPublicUrl(path)
+                          await supabase.from('projects').update({ cover_url: publicUrl }).eq('id', project.id)
+                          window.location.reload()
+                        }
+                      }
+                      input.click()
+                    }}
+                    style={{ background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.25)', borderRadius: 7, padding: '0 10px', color: colors.blue, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', flexShrink: 0 }}
+                    title="Carregar capa"
+                  >
+                    <Camera size={13} />
+                  </button>
+                </div>
+              </div>
             </div>
+            </div>}{/* end estilo tab */}
+
+            {/* Tab: Blocos */}
+            {previewTab === 'blocos' && <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
 
             {/* Add block grid */}
-            <div style={{ padding: '12px 12px 10px', borderBottom: '1px solid var(--c-border)', flexShrink: 0 }}>
+            <div style={{ padding: '12px 12px 10px', borderBottom: '1px solid var(--c-border)' }}>
               <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--c-subtle)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>Adicionar bloco</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
                 {BLOCK_TYPES.map(bt => {
@@ -1279,6 +1344,75 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
                 </div>
               )}
             </div>
+            </div>}{/* end blocos tab */}
+
+            {/* Tab: Secções */}
+            {previewTab === 'seccoes' && (() => {
+              const NATIVE_SECTIONS = [
+                { key: 'problem',         label: 'Problema',         Icon: Search    },
+                { key: 'solution',        label: 'Solução',          Icon: Lightbulb },
+                { key: 'target_audience', label: 'Público-alvo',     Icon: Target    },
+                { key: 'features',        label: 'Funcionalidades',  Icon: Wrench    },
+                { key: 'technologies',    label: 'Tecnologias',      Icon: Zap       },
+                { key: 'challenges',      label: 'Desafios',         Icon: Zap       },
+                { key: 'results',         label: 'Resultados',       Icon: TrendingUp},
+                { key: 'learnings',       label: 'Aprendizagens',    Icon: Lightbulb },
+              ]
+              const hidden = new Set(previewStyle.hiddenSections || [])
+              return (
+                <div style={{ flex: 1, overflowY: 'auto', padding: '12px' }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--c-subtle)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 10 }}>Secções visíveis na preview</div>
+                  <p style={{ margin: '0 0 14px', fontSize: 11, color: 'var(--c-muted)', lineHeight: 1.5 }}>Controla quais secções do projeto aparecem para os visitantes.</p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {NATIVE_SECTIONS.map(s => {
+                      const isHidden = hidden.has(s.key)
+                      const hasContent = !!(project[s.key]?.trim())
+                      const SIcon = s.Icon
+                      return (
+                        <button
+                          key={s.key}
+                          onClick={() => {
+                            const newHidden = new Set(hidden)
+                            isHidden ? newHidden.delete(s.key) : newHidden.add(s.key)
+                            setPreviewStyle(ps => ({ ...ps, hiddenSections: [...newHidden] }))
+                          }}
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: 10,
+                            background: isHidden ? 'var(--c-bg)' : hasContent ? 'rgba(27,120,247,0.05)' : 'var(--c-bg)',
+                            border: `1px solid ${isHidden ? 'var(--c-border)' : hasContent ? 'rgba(27,120,247,0.18)' : 'var(--c-border)'}`,
+                            borderRadius: 9, padding: '9px 12px',
+                            cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
+                            opacity: hasContent ? 1 : 0.5,
+                            transition: 'all 0.14s',
+                          }}
+                        >
+                          <div style={{
+                            width: 26, height: 26, borderRadius: 7, flexShrink: 0,
+                            background: isHidden ? 'var(--c-bg-alt)' : 'rgba(27,120,247,0.1)',
+                            border: `1px solid ${isHidden ? 'var(--c-border)' : 'rgba(27,120,247,0.2)'}`,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            color: isHidden ? 'var(--c-subtle)' : '#1b78f7',
+                          }}>
+                            <SIcon size={12} strokeWidth={2} />
+                          </div>
+                          <span style={{ fontSize: 12, fontWeight: 600, flex: 1, color: isHidden ? 'var(--c-muted)' : 'var(--c-text)', textDecoration: isHidden ? 'line-through' : 'none' }}>
+                            {s.label}
+                          </span>
+                          {!hasContent && <span style={{ fontSize: 10, color: 'var(--c-subtle)' }}>vazio</span>}
+                          {isHidden
+                            ? <EyeOff size={13} color="var(--c-subtle)" />
+                            : <Eye size={13} color="#1b78f7" />
+                          }
+                        </button>
+                      )
+                    })}
+                  </div>
+                  <p style={{ margin: '14px 0 0', fontSize: 11, color: 'var(--c-subtle)', lineHeight: 1.5 }}>
+                    Clica numa secção para a ocultar ou mostrar.
+                  </p>
+                </div>
+              )
+            })()}
 
             {/* Save */}
             <div style={{ padding: '10px 12px 14px', borderTop: '1px solid var(--c-border)', flexShrink: 0 }}>
@@ -1440,7 +1574,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
         })}
 
         {/* Problem */}
-        {project.problem && (
+        {project.problem && !hiddenSections.has('problem') && (
           <div style={{
             background: 'var(--c-card)', border: '1px solid var(--c-border)',
             borderLeft: `4px solid ${hero.c1}`,
@@ -1456,7 +1590,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
         )}
 
         {/* Solution */}
-        {project.solution && (
+        {project.solution && !hiddenSections.has('solution') && (
           <div style={{
             background: `linear-gradient(135deg, ${hero.c2}10 0%, var(--c-card) 100%)`,
             border: '1px solid var(--c-border)',
@@ -1472,7 +1606,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
         )}
 
         {/* Features */}
-        {features.length > 0 && (
+        {features.length > 0 && !hiddenSections.has('features') && (
           <div style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 16, padding: '28px 32px' }}>
             <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--c-muted)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
               <Wrench size={13} /> O que faz
@@ -1495,7 +1629,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
         )}
 
         {/* Technologies */}
-        {tech.length > 0 && (
+        {tech.length > 0 && !hiddenSections.has('technologies') && (
           <div>
             <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--c-muted)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 14 }}>
               Tecnologias
@@ -1513,7 +1647,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
         )}
 
         {/* Results */}
-        {project.results && (
+        {project.results && !hiddenSections.has('results') && (
           <div style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 16, padding: '28px 32px' }}>
             <div style={{ fontSize: 11, fontWeight: 800, color: '#22c55e', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
               <BarChart2 size={13} /> Resultados
@@ -3464,123 +3598,131 @@ export default function ProjectPage() {
         {/* proj-body: everything after hero — ordered after sidebar on tablet/mobile */}
         <div className="proj-body">
 
-        {/* Defense date countdown — PAP projects only */}
-        {isOwner && project?.project_type === 'pap' && (() => {
+        {/* ── Owner mini-dashboard: defense / AI analysis / report ── */}
+        {isOwner && (() => {
+          const isPapOrInternship = project.project_type === 'pap' || project.project_type === 'internship'
           const today = new Date(); today.setHours(0,0,0,0)
           const target = defenseDate ? new Date(defenseDate + 'T00:00:00') : null
           const daysLeft = target ? Math.ceil((target - today) / 86400000) : null
           const urgentColor = daysLeft != null && daysLeft <= 7 ? '#ef4444' : daysLeft != null && daysLeft <= 30 ? '#f97316' : '#1b78f7'
+
+          const miniCardBase = {
+            borderRadius: 12, padding: '12px 14px',
+            display: 'flex', flexDirection: 'column', gap: 6,
+            cursor: 'pointer', fontFamily: 'inherit',
+            textAlign: 'left', transition: 'all 0.15s',
+            border: '1px solid var(--c-border)',
+            background: 'var(--c-bg-alt)',
+          }
+
           return (
-            <div style={{
-              background: 'linear-gradient(135deg, rgba(27,120,247,0.07), rgba(79,70,229,0.04))',
-              border: `1px solid ${defenseDate ? urgentColor + '40' : 'rgba(27,120,247,0.2)'}`,
-              borderRadius: 16, padding: '18px 22px',
-              display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
-            }}>
-              <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', width: 44, height: 44, borderRadius: 12, background: `${urgentColor}15`, border: `1px solid ${urgentColor}30` }}><Calendar size={22} color={urgentColor} /></div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 14, fontWeight: 700, color: colors.text, marginBottom: 4 }}>
-                  {daysLeft === null ? 'Quando é a tua defesa?' :
-                   daysLeft < 0 ? 'Defesa concluída' :
-                   daysLeft === 0 ? 'A defesa é hoje!' :
-                   daysLeft === 1 ? 'A defesa é amanhã!' :
-                   `${daysLeft} dias para a defesa`}
-                </div>
-                {daysLeft != null && daysLeft > 0 && (
-                  <div style={{ fontSize: 12, color: colors.muted }}>
-                    {daysLeft <= 7 ? 'Foca no que falta completar.' :
-                     daysLeft <= 30 ? 'Mantém o ritmo. Continua a melhorar o score.' :
-                     'Tens tempo. Vai completando missão a missão.'}
+            <div style={{ display: 'grid', gridTemplateColumns: `repeat(${score >= 100 ? (isPapOrInternship ? (project.project_type === 'pap' ? 4 : 3) : 2) : (isPapOrInternship ? (project.project_type === 'pap' ? 3 : 2) : 1)}, 1fr)`, gap: 10 }}>
+
+              {/* Certificate — score = 100 */}
+              {score >= 100 && (
+                <button
+                  onClick={() => navigate(`/certificado/${project.slug}`)}
+                  style={{ ...miniCardBase, background: 'rgba(27,120,247,0.06)', border: '1px solid rgba(27,120,247,0.22)' }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(27,120,247,0.12)'; e.currentTarget.style.borderColor = 'rgba(27,120,247,0.4)' }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(27,120,247,0.06)'; e.currentTarget.style.borderColor = 'rgba(27,120,247,0.22)' }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                    <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(27,120,247,0.12)', border: '1px solid rgba(27,120,247,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <GraduationCap size={14} color={colors.blue} />
+                    </div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: colors.blue }}>Certificado</div>
                   </div>
-                )}
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-                <input
-                  type="date"
-                  value={defenseDate}
-                  onChange={e => handleSaveDefenseDate(e.target.value)}
-                  style={{
-                    background: 'var(--c-card-hover)',
-                    border: `1px solid ${colors.border}`,
-                    borderRadius: 8, padding: '7px 10px',
-                    color: colors.text, fontSize: 13,
-                    fontFamily: 'inherit', cursor: 'pointer',
-                    outline: 'none',
-                    colorScheme: theme === 'light' ? 'light' : 'dark',
+                  <div style={{ fontSize: 11, color: colors.muted, lineHeight: 1.4 }}>Score perfeito · ver certificado</div>
+                </button>
+              )}
+
+              {/* PAP defense date */}
+              {project.project_type === 'pap' && (
+                <div style={{ ...miniCardBase, background: `rgba(${urgentColor === '#ef4444' ? '239,68,68' : urgentColor === '#f97316' ? '249,115,22' : '27,120,247'},0.05)`, border: `1px solid ${urgentColor}30`, position: 'relative' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                    <div style={{ width: 28, height: 28, borderRadius: 8, background: `${urgentColor}15`, border: `1px solid ${urgentColor}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <Calendar size={13} color={urgentColor} />
+                    </div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: daysLeft != null && daysLeft <= 7 ? '#ef4444' : colors.text, flex: 1, minWidth: 0 }}>
+                      {daysLeft === null ? 'Data de defesa' :
+                       daysLeft < 0 ? 'Defesa concluída' :
+                       daysLeft === 0 ? 'Hoje!' :
+                       daysLeft === 1 ? 'Amanhã!' :
+                       `${daysLeft}d restantes`}
+                    </div>
+                  </div>
+                  <input
+                    type="date"
+                    value={defenseDate}
+                    onChange={e => handleSaveDefenseDate(e.target.value)}
+                    onClick={e => e.stopPropagation()}
+                    style={{
+                      width: '100%', boxSizing: 'border-box',
+                      background: 'var(--c-card)', border: `1px solid ${colors.border}`,
+                      borderRadius: 6, padding: '5px 8px', color: colors.text,
+                      fontSize: 11, fontFamily: 'inherit', cursor: 'pointer', outline: 'none',
+                      colorScheme: theme === 'light' ? 'light' : 'dark',
+                    }}
+                  />
+                  {savingDefense && <div style={{ position: 'absolute', top: 8, right: 8, width: 10, height: 10, border: `1.5px solid ${colors.border}`, borderTop: `1.5px solid ${colors.blue}`, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />}
+                </div>
+              )}
+
+              {/* AI Analysis */}
+              <button
+                onClick={handleAIClick}
+                style={{ ...miniCardBase, background: 'rgba(109,40,217,0.05)', border: '1px solid rgba(129,140,248,0.2)' }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(109,40,217,0.1)'; e.currentTarget.style.borderColor = 'rgba(129,140,248,0.4)' }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(109,40,217,0.05)'; e.currentTarget.style.borderColor = 'rgba(129,140,248,0.2)' }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                  <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(109,40,217,0.12)', border: '1px solid rgba(129,140,248,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <Bot size={14} color="#818cf8" />
+                  </div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: '#818cf8' }}>Análise IA</div>
+                  {aiFeedback && <Check size={11} color="#22c55e" style={{ marginLeft: 'auto' }} />}
+                </div>
+                <div style={{ fontSize: 11, color: colors.muted, lineHeight: 1.4 }}>
+                  {aiFeedback ? 'Ver feedback guardado' : 'Analisar e melhorar score'}
+                </div>
+              </button>
+
+              {/* Report generation */}
+              {isPapOrInternship && (
+                <button
+                  onClick={async () => {
+                    if (reportData) { setReportModal(true); return }
+                    setReportLoading(true); setReportError(null); setReportModal(true)
+                    try {
+                      const data = await generateReport(project, project.project_type)
+                      setReportData(data)
+                    } catch (e) {
+                      setReportError(e.message || 'Erro ao gerar relatório')
+                    }
+                    setReportLoading(false)
                   }}
-                />
-                {savingDefense && <div style={{ width: 14, height: 14, border: `2px solid ${colors.border}`, borderTop: `2px solid ${colors.blue}`, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />}
-              </div>
+                  style={{ ...miniCardBase, background: 'rgba(16,185,129,0.05)', border: '1px solid rgba(16,185,129,0.2)' }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(16,185,129,0.1)'; e.currentTarget.style.borderColor = 'rgba(16,185,129,0.35)' }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(16,185,129,0.05)'; e.currentTarget.style.borderColor = 'rgba(16,185,129,0.2)' }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                    <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <FileText size={14} color="#10b981" />
+                    </div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: '#10b981' }}>Rascunho</div>
+                    {reportData && <Check size={11} color="#22c55e" style={{ marginLeft: 'auto' }} />}
+                  </div>
+                  <div style={{ fontSize: 11, color: colors.muted, lineHeight: 1.4 }}>
+                    {reportData ? 'Ver rascunho gerado' : `Gerar relatório ${project.project_type === 'pap' ? 'PAP' : 'estágio'}`}
+                  </div>
+                </button>
+              )}
             </div>
           )
         })()}
 
-        {/* Certificate banner — owner only, score = 100 (perfection badge) */}
-        {isOwner && score >= 100 && (
-          <div style={{
-            background: 'linear-gradient(135deg, rgba(27,120,247,0.1), rgba(79,70,229,0.07))',
-            border: '1px solid rgba(27,120,247,0.3)',
-            borderRadius: 16, padding: '18px 22px',
-            display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
-          }}>
-            <GraduationCap size={28} color={colors.blue} style={{ flexShrink: 0 }} />
-            <div style={{ flex: 1, minWidth: 200 }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: colors.blue, marginBottom: 2 }}>
-                Score perfeito — projeto certificado.
-              </div>
-              <div style={{ fontSize: 13, color: colors.muted }}>
-                O teu projeto atingiu o máximo. O certificado verificado por IA está disponível.
-              </div>
-            </div>
-            <button
-              onClick={() => navigate(`/certificado/${project.slug}`)}
-              style={{
-                background: 'linear-gradient(135deg, #1b78f7, #4f46e5)',
-                color: '#fff', border: 'none', borderRadius: 10,
-                padding: '10px 20px', fontSize: 13, fontWeight: 700,
-                cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0,
-                boxShadow: '0 4px 16px rgba(27,120,247,0.3)',
-              }}
-            >
-              <span style={{display:'flex',alignItems:'center',gap:6}}>Ver certificado <ArrowRight size={14} /></span>
-            </button>
-          </div>
-        )}
-
-        {/* AI Analysis — compact trigger card (opens modal) — above AI description */}
-        {isOwner ? (
-          <div
-            style={{
-              background: 'linear-gradient(135deg, rgba(109,40,217,0.07), rgba(79,70,229,0.05))',
-              border: '1px solid rgba(129,140,248,0.2)',
-              borderRadius: 16, padding: '16px 20px',
-              display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
-              cursor: 'pointer',
-            }}
-            onClick={handleAIClick}
-          >
-            <Bot size={22} color="#818cf8" style={{ flexShrink: 0 }} />
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: colors.text, marginBottom: 2 }}>Análise da IA</div>
-              <div style={{ fontSize: 12, color: colors.muted }}>
-                {aiFeedback ? 'Feedback guardado · clica para ver' : 'Recebe feedback personalizado para melhorar o score'}
-              </div>
-            </div>
-            <div style={{
-              background: aiFeedback ? 'rgba(34,197,94,0.1)' : 'linear-gradient(135deg,#6d28d9,#4f46e5)',
-              border: aiFeedback ? '1px solid rgba(34,197,94,0.3)' : 'none',
-              borderRadius: 10, padding: '8px 16px',
-              color: aiFeedback ? '#22c55e' : '#fff',
-              fontSize: 13, fontWeight: 700,
-              flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6,
-              boxShadow: aiFeedback ? 'none' : '0 4px 14px rgba(109,40,217,0.35)',
-            }}>
-              <Sparkles size={13} />
-              {aiFeedback ? 'Ver análise' : 'Analisar'}
-            </div>
-          </div>
-        ) : (
-          /* Teaser for non-owners */
+        {/* AI Analysis teaser for non-owners */}
+        {!isOwner && (
           <div style={{
             background: colors.card,
             border: `1px solid ${colors.border}`,
@@ -3606,46 +3748,6 @@ export default function ProjectPage() {
               </button>
             </div>
           </div>
-        )}
-
-        {/* ── Report generation button (owner only, PAP or internship) ── */}
-        {isOwner && (project.project_type === 'pap' || project.project_type === 'internship') && (
-          <button
-            onClick={async () => {
-              if (reportData) { setReportModal(true); return }
-              setReportLoading(true); setReportError(null); setReportModal(true)
-              try {
-                const data = await generateReport(project, project.project_type)
-                setReportData(data)
-              } catch (e) {
-                setReportError(e.message || 'Erro ao gerar relatório')
-              }
-              setReportLoading(false)
-            }}
-            style={{
-              width: '100%', background: 'linear-gradient(135deg, rgba(16,185,129,0.08), rgba(5,150,105,0.04))',
-              border: '1px solid rgba(16,185,129,0.25)', borderRadius: 16, padding: '14px 18px',
-              display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', fontFamily: 'inherit',
-              textAlign: 'left', transition: 'all 0.15s',
-            }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'linear-gradient(135deg, rgba(16,185,129,0.13), rgba(5,150,105,0.07))'; e.currentTarget.style.borderColor = 'rgba(16,185,129,0.4)' }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'linear-gradient(135deg, rgba(16,185,129,0.08), rgba(5,150,105,0.04))'; e.currentTarget.style.borderColor = 'rgba(16,185,129,0.25)' }}
-          >
-            <div style={{ width: 40, height: 40, borderRadius: 12, background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <FileText size={18} color="#10b981" />
-            </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: colors.text, marginBottom: 2 }}>
-                Gerar rascunho de {project.project_type === 'pap' ? 'relatório PAP' : 'relatório de estágio'}
-              </div>
-              <div style={{ fontSize: 12, color: colors.muted }}>
-                {reportData ? 'Rascunho gerado · clica para ver' : 'A IA gera um rascunho completo com base no teu projeto'}
-              </div>
-            </div>
-            <div style={{ background: reportData ? 'rgba(16,185,129,0.12)' : 'rgba(16,185,129,0.15)', border: `1px solid rgba(16,185,129,0.3)`, borderRadius: 8, padding: '6px 14px', color: '#10b981', fontSize: 12, fontWeight: 700, flexShrink: 0 }}>
-              {reportData ? 'Ver' : 'Gerar'}
-            </div>
-          </button>
         )}
 
         {/* A tua história — AI narrative with blue gradient */}
@@ -4298,12 +4400,7 @@ export default function ProjectPage() {
               return { ...f, quality }
             }).filter(f => f.quality !== 'good').slice(0, 3)
 
-            if (needsWork.length === 0) return (
-              <div style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: 16, padding: '16px 20px', textAlign: 'center' }}>
-                <CheckCircle size={24} color="#22c55e" style={{ marginBottom: 6 }} />
-                <p style={{ margin: 0, fontSize: 13, color: '#22c55e', fontWeight: 700 }}>Perfil completo!</p>
-              </div>
-            )
+            if (needsWork.length === 0) return null // completude card already shows 100% state
 
             return (
               <div className="proj-card" style={{ background: 'linear-gradient(135deg, rgba(27,120,247,0.05), rgba(79,70,229,0.03))', border: '1px solid rgba(27,120,247,0.18)' }}>

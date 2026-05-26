@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
-import { MessageSquare, Send, Pencil, Trash2, X, Check } from 'lucide-react'
+import { MessageSquare, Send, Pencil, Trash2, X, Check, AlertTriangle } from 'lucide-react'
 import { containsProfanity } from '../lib/profanity'
+import { looksLikeSpam } from '../lib/score'
 
 function timeAgo(dateStr) {
   if (!dateStr) return ''
@@ -23,8 +24,10 @@ export default function ProjectComments({ projectId, projectAuthorId }) {
   const [loading, setLoading]       = useState(true)
   const [draft, setDraft]           = useState('')
   const [sending, setSending]       = useState(false)
+  const [sendError, setSendError]   = useState('')
   const [editingId, setEditingId]   = useState(null)
   const [editDraft, setEditDraft]   = useState('')
+  const [editError, setEditError]   = useState('')
   const [deletingId, setDeletingId] = useState(null)
   const [profiles, setProfiles]     = useState({})
   const textareaRef = useRef(null)
@@ -112,7 +115,9 @@ export default function ProjectComments({ projectId, projectAuthorId }) {
   async function send() {
     const content = draft.trim()
     if (!content || !user) return
-    if (containsProfanity(content)) { setDraft(''); return }
+    if (containsProfanity(content)) { setSendError('Linguagem inapropriada detetada. Os comentários são um espaço respeitoso.'); return }
+    if (looksLikeSpam(content)) { setSendError('Comentário detetado como spam. Escreve algo mais elaborado.'); return }
+    setSendError('')
     setSending(true)
     setDraft('')
     const { data: newComment } = await supabase
@@ -132,7 +137,9 @@ export default function ProjectComments({ projectId, projectAuthorId }) {
   async function saveEdit(id) {
     const content = editDraft.trim()
     if (!content) return
-    if (containsProfanity(content)) { setEditDraft(''); return }
+    if (containsProfanity(content)) { setEditError('Linguagem inapropriada detetada.'); return }
+    if (looksLikeSpam(content)) { setEditError('Comentário detetado como spam.'); return }
+    setEditError('')
     const edited_at = new Date().toISOString()
     setComments(prev => prev.map(c => c.id === id ? { ...c, content, edited_at } : c))
     setEditingId(null)
@@ -290,20 +297,25 @@ export default function ProjectComments({ projectId, projectAuthorId }) {
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                         <textarea
                           value={editDraft}
-                          onChange={e => setEditDraft(e.target.value)}
+                          onChange={e => { setEditDraft(e.target.value); if (editError) setEditError('') }}
                           autoFocus
                           rows={3}
                           style={{
                             width: '100%', resize: 'none',
-                            background: 'var(--c-bg)', border: '1px solid var(--c-border)',
+                            background: 'var(--c-bg)', border: `1px solid ${editError ? 'rgba(239,68,68,0.5)' : 'var(--c-border)'}`,
                             borderRadius: 8, padding: '8px 10px',
                             fontSize: 13, color: 'var(--c-text)', fontFamily: 'inherit',
                             outline: 'none', boxSizing: 'border-box',
                           }}
                         />
+                        {editError && (
+                          <p style={{ margin: 0, fontSize: 12, color: '#ef4444', display: 'flex', alignItems: 'center', gap: 5 }}>
+                            <AlertTriangle size={12} /> {editError}
+                          </p>
+                        )}
                         <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
                           <button
-                            onClick={() => { setEditingId(null); setEditDraft('') }}
+                            onClick={() => { setEditingId(null); setEditDraft(''); setEditError('') }}
                             style={{
                               background: 'var(--c-bg)', border: '1px solid var(--c-border)',
                               borderRadius: 8, padding: '5px 12px', fontSize: 12,
@@ -348,42 +360,49 @@ export default function ProjectComments({ projectId, projectAuthorId }) {
               {initials(profile)}
             </div>
           )}
-          <div style={{ flex: 1, display: 'flex', gap: 8, alignItems: 'flex-end' }}>
-            <textarea
-              ref={textareaRef}
-              value={draft}
-              onChange={e => setDraft(e.target.value)}
-              onKeyDown={e => {
-                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() }
-              }}
-              placeholder="Escreve um comentário…"
-              rows={2}
-              maxLength={1000}
-              style={{
-                flex: 1, resize: 'none',
-                background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)',
-                borderRadius: 10, padding: '10px 12px',
-                fontSize: 13, color: 'var(--c-text)', fontFamily: 'inherit',
-                outline: 'none', lineHeight: 1.5,
-                transition: 'border-color 0.15s',
-              }}
-              onFocus={e => { e.currentTarget.style.borderColor = '#1b78f7' }}
-              onBlur={e => { e.currentTarget.style.borderColor = 'var(--c-border)' }}
-            />
-            <button
-              onClick={send}
-              disabled={!draft.trim() || sending}
-              style={{
-                flexShrink: 0, width: 38, height: 38,
-                background: draft.trim() ? 'linear-gradient(135deg,#1b78f7,#4f46e5)' : 'var(--c-bg-alt)',
-                border: '1px solid var(--c-border)',
-                borderRadius: 10, cursor: draft.trim() ? 'pointer' : 'default',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                transition: 'all 0.15s',
-              }}
-            >
-              <Send size={16} color={draft.trim() ? '#fff' : 'var(--c-muted)'} />
-            </button>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
+              <textarea
+                ref={textareaRef}
+                value={draft}
+                onChange={e => { setDraft(e.target.value); if (sendError) setSendError('') }}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() }
+                }}
+                placeholder="Escreve um comentário…"
+                rows={2}
+                maxLength={1000}
+                style={{
+                  flex: 1, resize: 'none',
+                  background: 'var(--c-bg-alt)', border: `1px solid ${sendError ? 'rgba(239,68,68,0.5)' : 'var(--c-border)'}`,
+                  borderRadius: 10, padding: '10px 12px',
+                  fontSize: 13, color: 'var(--c-text)', fontFamily: 'inherit',
+                  outline: 'none', lineHeight: 1.5,
+                  transition: 'border-color 0.15s',
+                }}
+                onFocus={e => { if (!sendError) e.currentTarget.style.borderColor = '#1b78f7' }}
+                onBlur={e => { if (!sendError) e.currentTarget.style.borderColor = 'var(--c-border)' }}
+              />
+              <button
+                onClick={send}
+                disabled={!draft.trim() || sending}
+                style={{
+                  flexShrink: 0, width: 38, height: 38,
+                  background: draft.trim() ? 'linear-gradient(135deg,#1b78f7,#4f46e5)' : 'var(--c-bg-alt)',
+                  border: '1px solid var(--c-border)',
+                  borderRadius: 10, cursor: draft.trim() ? 'pointer' : 'default',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  transition: 'all 0.15s',
+                }}
+              >
+                <Send size={16} color={draft.trim() ? '#fff' : 'var(--c-muted)'} />
+              </button>
+            </div>
+            {sendError && (
+              <p style={{ margin: 0, fontSize: 12, color: '#ef4444', display: 'flex', alignItems: 'center', gap: 5 }}>
+                <AlertTriangle size={12} /> {sendError}
+              </p>
+            )}
           </div>
         </div>
       ) : (
