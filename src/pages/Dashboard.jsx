@@ -707,7 +707,7 @@ function OnboardingAlunoModal({ user, profile, onDismiss, firstProject }) {
   const [copied, setCopied] = useState(false)
 
   const resolvedUsername = username.trim() || profile?.username || user?.id
-  const profileUrl = `https://showo.app/u/${resolvedUsername}`
+  const profileUrl = `${window.location.origin}/u/${resolvedUsername}`
 
   async function saveProfile() {
     setSaving(true)
