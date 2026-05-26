@@ -94,6 +94,18 @@ const STEPS = [
 
 const TOTAL_STEPS = STEPS.length
 
+const EXAMPLES = {
+  goal: 'Criar uma plataforma que permita a alunos do ensino profissional mostrar os seus projetos a recrutadores e conseguir o primeiro estágio ou emprego.',
+  problem: 'Os alunos de curso profissional não têm forma de mostrar o que construíram a empresas. O CV deles está vazio mas o projecto não.',
+  solution: 'Criei uma aplicação web que transforma qualquer projecto escolar numa página profissional com análise por IA e score de qualidade.',
+  target_audience: 'Alunos do ensino profissional entre 16-20 anos que querem conseguir estágio ou primeiro emprego.',
+  features: 'Formulário guiado, score automático 0-100, página pública partilhável, QR code, análise por IA campo a campo.',
+  technologies: 'React, Supabase, Claude AI, Vercel',
+  challenges: 'O maior desafio foi fazer o formulário simples o suficiente para qualquer aluno usar sem ajuda.',
+  results: '5 alunos testaram e todos partilharam a página por iniciativa própria.',
+  learnings: 'Aprendi que o design é tão importante quanto o código. A primeira versão era funcional mas ninguém a queria usar.',
+}
+
 const GOAL_LABELS = {
   school: 'Projeto escolar', internship: 'Para recrutadores',
   show: 'Partilha pública', clients: 'Prova profissional',
@@ -131,6 +143,21 @@ export default function NewProject() {
   const fileInputRef = useRef(null)
   const [dragOver, setDragOver] = useState(false)
   const [cropFile, setCropFile] = useState(null) // File waiting to be cropped
+  const [shownExamples, setShownExamples] = useState(new Set())
+
+  function toggleExample(key) {
+    setShownExamples(prev => {
+      const next = new Set(prev)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      return next
+    })
+  }
+
+  function useExample(key, value) {
+    set(key, value)
+    setShownExamples(prev => { const next = new Set(prev); next.delete(key); return next })
+  }
   // Show auth nudge for anonymous users (once per session)
   useEffect(() => {
     if (authLoading) return
@@ -683,7 +710,29 @@ export default function NewProject() {
           {/* ── text ── */}
           {s.type === 'text' && (
             <>
-              <h2 style={{ fontSize: 'clamp(26px, 4.5vw, 36px)', fontWeight: 900, marginBottom: 28, marginTop: 6, lineHeight: 1.2, letterSpacing: '-0.5px' }}>{s.label}</h2>
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 28, marginTop: 6 }}>
+                <h2 style={{ fontSize: 'clamp(26px, 4.5vw, 36px)', fontWeight: 900, margin: 0, lineHeight: 1.2, letterSpacing: '-0.5px' }}>{s.label}</h2>
+                {EXAMPLES[s.key] && (
+                  <button
+                    onClick={() => toggleExample(s.key)}
+                    style={{ flexShrink: 0, marginTop: 6, background: shownExamples.has(s.key) ? 'rgba(27,120,247,0.12)' : 'transparent', border: `1px solid ${shownExamples.has(s.key) ? 'rgba(27,120,247,0.4)' : colors.border}`, borderRadius: 8, padding: '5px 12px', fontSize: 12, fontWeight: 600, color: shownExamples.has(s.key) ? colors.blue : colors.muted, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap', transition: 'all 0.15s' }}
+                  >
+                    {shownExamples.has(s.key) ? 'Fechar exemplo' : 'Ver exemplo'}
+                  </button>
+                )}
+              </div>
+              {shownExamples.has(s.key) && EXAMPLES[s.key] && (
+                <div style={{ marginBottom: 14, padding: '12px 14px', background: 'rgba(27,120,247,0.06)', border: '1px solid rgba(27,120,247,0.2)', borderRadius: 10 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: colors.blue, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>Exemplo</div>
+                  <p style={{ margin: 0, fontSize: 13, color: colors.muted, lineHeight: 1.6, fontStyle: 'italic' }}>{EXAMPLES[s.key]}</p>
+                  <button
+                    onClick={() => useExample(s.key, EXAMPLES[s.key])}
+                    style={{ marginTop: 10, background: 'none', border: `1px solid rgba(27,120,247,0.35)`, borderRadius: 7, padding: '5px 12px', fontSize: 12, fontWeight: 600, color: colors.blue, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s' }}
+                  >
+                    Usar este exemplo
+                  </button>
+                </div>
+              )}
               <input
                 key={s.key}
                 type="text"
@@ -701,7 +750,29 @@ export default function NewProject() {
           {/* ── textarea ── */}
           {s.type === 'textarea' && (
             <>
-              <h2 style={{ fontSize: 'clamp(26px, 4.5vw, 36px)', fontWeight: 900, marginBottom: 28, marginTop: 6, lineHeight: 1.2, letterSpacing: '-0.5px' }}>{s.label}</h2>
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 28, marginTop: 6 }}>
+                <h2 style={{ fontSize: 'clamp(26px, 4.5vw, 36px)', fontWeight: 900, margin: 0, lineHeight: 1.2, letterSpacing: '-0.5px' }}>{s.label}</h2>
+                {EXAMPLES[s.key] && (
+                  <button
+                    onClick={() => toggleExample(s.key)}
+                    style={{ flexShrink: 0, marginTop: 6, background: shownExamples.has(s.key) ? 'rgba(27,120,247,0.12)' : 'transparent', border: `1px solid ${shownExamples.has(s.key) ? 'rgba(27,120,247,0.4)' : colors.border}`, borderRadius: 8, padding: '5px 12px', fontSize: 12, fontWeight: 600, color: shownExamples.has(s.key) ? colors.blue : colors.muted, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap', transition: 'all 0.15s' }}
+                  >
+                    {shownExamples.has(s.key) ? 'Fechar exemplo' : 'Ver exemplo'}
+                  </button>
+                )}
+              </div>
+              {shownExamples.has(s.key) && EXAMPLES[s.key] && (
+                <div style={{ marginBottom: 14, padding: '12px 14px', background: 'rgba(27,120,247,0.06)', border: '1px solid rgba(27,120,247,0.2)', borderRadius: 10 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: colors.blue, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>Exemplo</div>
+                  <p style={{ margin: 0, fontSize: 13, color: colors.muted, lineHeight: 1.6, fontStyle: 'italic' }}>{EXAMPLES[s.key]}</p>
+                  <button
+                    onClick={() => useExample(s.key, EXAMPLES[s.key])}
+                    style={{ marginTop: 10, background: 'none', border: `1px solid rgba(27,120,247,0.35)`, borderRadius: 7, padding: '5px 12px', fontSize: 12, fontWeight: 600, color: colors.blue, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s' }}
+                  >
+                    Usar este exemplo
+                  </button>
+                </div>
+              )}
               <textarea
                 key={s.key}
                 value={answers[s.key] ?? ''}
@@ -722,7 +793,28 @@ export default function NewProject() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 {s.keys.map((key, i) => (
                   <div key={key}>
-                    <label style={{ display: 'block', fontSize: 12, color: colors.muted, fontWeight: 600, marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>{s.labels[i]}</label>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                      <label style={{ fontSize: 12, color: colors.muted, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>{s.labels[i]}</label>
+                      {EXAMPLES[key] && (
+                        <button
+                          onClick={() => toggleExample(key)}
+                          style={{ background: shownExamples.has(key) ? 'rgba(27,120,247,0.12)' : 'transparent', border: `1px solid ${shownExamples.has(key) ? 'rgba(27,120,247,0.4)' : colors.border}`, borderRadius: 7, padding: '3px 10px', fontSize: 11, fontWeight: 600, color: shownExamples.has(key) ? colors.blue : colors.muted, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap', transition: 'all 0.15s' }}
+                        >
+                          {shownExamples.has(key) ? 'Fechar' : 'Ver exemplo'}
+                        </button>
+                      )}
+                    </div>
+                    {shownExamples.has(key) && EXAMPLES[key] && (
+                      <div style={{ marginBottom: 8, padding: '10px 12px', background: 'rgba(27,120,247,0.06)', border: '1px solid rgba(27,120,247,0.2)', borderRadius: 9 }}>
+                        <p style={{ margin: 0, fontSize: 12, color: colors.muted, lineHeight: 1.6, fontStyle: 'italic' }}>{EXAMPLES[key]}</p>
+                        <button
+                          onClick={() => useExample(key, EXAMPLES[key])}
+                          style={{ marginTop: 8, background: 'none', border: `1px solid rgba(27,120,247,0.35)`, borderRadius: 6, padding: '4px 10px', fontSize: 11, fontWeight: 600, color: colors.blue, cursor: 'pointer', fontFamily: 'inherit' }}
+                        >
+                          Usar este exemplo
+                        </button>
+                      </div>
+                    )}
                     <textarea
                       value={answers[key] ?? ''}
                       onChange={e => set(key, e.target.value)}

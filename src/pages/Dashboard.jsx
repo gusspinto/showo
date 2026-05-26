@@ -3,9 +3,10 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Pencil, ExternalLink } from 'lucide-react'
+import SkillsPicker from '../components/SkillsPicker'
 import { Navbar } from '../components/Navbar'
 import CreateProjectModal from '../components/CreateProjectModal'
-import { Folder, Trophy, BarChart2, Rocket, Eye, GraduationCap, Plus, X, Users, Users2, ChevronRight, User, Settings, Compass, Medal, LogOut, Globe, TrendingUp, MessageSquare, Star, Mail, Search, BookOpen, Trash2, Check, Calendar, ArrowRight, Target, Zap, Sparkles, Briefcase, Building2, Send } from 'lucide-react'
+import { Folder, Trophy, BarChart2, Rocket, Eye, GraduationCap, Plus, X, Users, Users2, ChevronRight, User, Settings, Compass, Medal, LogOut, Globe, TrendingUp, MessageSquare, Star, Mail, Search, BookOpen, Trash2, Check, Calendar, ArrowRight, Target, Zap, Sparkles, Briefcase, Building2, Send, Copy, Share2, Link } from 'lucide-react'
 import ConvidarVagaModal from '../components/ConvidarVagaModal'
 
 const C = {
@@ -694,6 +695,230 @@ const ONBOARDING = {
   },
 }
 
+/* ─────────── 3-step aluno onboarding ─────────── */
+function OnboardingAlunoModal({ user, profile, onDismiss, firstProject }) {
+  const navigate = useNavigate()
+  const [step, setStep] = useState(0) // 0=perfil 1=projeto 2=partilhar
+  const [username, setUsername] = useState(profile?.username ?? '')
+  const [bio, setBio] = useState(profile?.bio ?? '')
+  const [skills, setSkills] = useState(profile?.skills ?? [])
+  const [saving, setSaving] = useState(false)
+  const [saveErr, setSaveErr] = useState(null)
+  const [copied, setCopied] = useState(false)
+
+  const resolvedUsername = username.trim() || profile?.username || user?.id
+  const profileUrl = `https://showo.app/u/${resolvedUsername}`
+
+  async function saveProfile() {
+    setSaving(true)
+    setSaveErr(null)
+    const { error } = await supabase.from('profiles').upsert({
+      id: user.id,
+      username: username.trim() || null,
+      bio: bio.trim() || null,
+      skills,
+    }, { onConflict: 'id' })
+    setSaving(false)
+    if (error) {
+      if (error.code === '23505') setSaveErr('Este username já está a ser usado.')
+      else setSaveErr('Erro ao guardar. Tenta novamente.')
+      return
+    }
+    setStep(1)
+  }
+
+  function copyUrl() {
+    navigator.clipboard.writeText(profileUrl).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2500)
+    })
+  }
+
+  function skip() {
+    if (step < 2) setStep(s => s + 1)
+    else onDismiss()
+  }
+
+  const TOTAL = 3
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 4000,
+      background: 'rgba(0,0,0,0.78)', backdropFilter: 'blur(8px)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
+      fontFamily: 'inherit',
+    }}>
+      <div style={{
+        background: C.card, border: '1px solid #2a4275',
+        borderRadius: 22, width: '100%', maxWidth: 460,
+        boxShadow: '0 28px 80px rgba(0,0,0,0.75)',
+        animation: 'onbFadeUp 0.25s ease',
+        maxHeight: '90vh', overflowY: 'auto',
+      }}>
+        <style>{`@keyframes onbFadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}`}</style>
+
+        {/* ── Step 0: Perfil ── */}
+        {step === 0 && (
+          <div style={{ padding: '36px 30px 28px' }}>
+            <div style={{ textAlign: 'center', marginBottom: 26 }}>
+              <div style={{ width: 54, height: 54, borderRadius: '50%', background: 'rgba(27,120,247,0.12)', border: '1px solid rgba(27,120,247,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
+                <User size={24} color={C.blue} />
+              </div>
+              <h2 style={{ margin: '0 0 6px', fontSize: 20, fontWeight: 800, color: C.text, letterSpacing: '-0.3px' }}>Completa o teu perfil</h2>
+              <p style={{ margin: 0, fontSize: 14, color: C.muted, lineHeight: 1.5 }}>
+                O teu perfil é o teu cartão de visita para recrutadores.
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 20 }}>
+              {/* Username */}
+              <div>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>Username</label>
+                <div style={{ position: 'relative' }}>
+                  <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 14, color: C.muted, fontWeight: 500, pointerEvents: 'none' }}>@</span>
+                  <input
+                    type="text"
+                    value={username}
+                    onChange={e => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+                    placeholder="o_teu_username"
+                    maxLength={30}
+                    style={{ width: '100%', background: C.bg, border: `1.5px solid ${C.border}`, borderRadius: 10, color: C.text, fontSize: 14, padding: '11px 14px 11px 30px', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }}
+                  />
+                </div>
+                <p style={{ margin: '5px 0 0', fontSize: 11, color: C.muted }}>Apenas letras minúsculas, números e _</p>
+              </div>
+
+              {/* Bio */}
+              <div>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>Bio <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(opcional)</span></label>
+                <textarea
+                  value={bio}
+                  onChange={e => setBio(e.target.value)}
+                  placeholder="Estudante de Informática no 12º ano, apaixonado por desenvolvimento web e IA…"
+                  rows={3}
+                  maxLength={200}
+                  style={{ width: '100%', background: C.bg, border: `1.5px solid ${C.border}`, borderRadius: 10, color: C.text, fontSize: 14, padding: '11px 14px', outline: 'none', fontFamily: 'inherit', resize: 'none', lineHeight: 1.6, boxSizing: 'border-box' }}
+                />
+              </div>
+
+              {/* Skills */}
+              <div>
+                <SkillsPicker
+                  label="Competências (opcional)"
+                  value={skills}
+                  onChange={setSkills}
+                  max={8}
+                />
+              </div>
+            </div>
+
+            {saveErr && (
+              <div style={{ fontSize: 12, color: '#ef4444', padding: '8px 12px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 8, marginBottom: 12 }}>
+                {saveErr}
+              </div>
+            )}
+
+            <button
+              onClick={saveProfile}
+              disabled={saving}
+              style={{ width: '100%', background: 'linear-gradient(135deg,#1b78f7,#4f46e5)', border: 'none', borderRadius: 11, padding: '13px', color: '#fff', fontSize: 15, fontWeight: 700, cursor: saving ? 'default' : 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 20px rgba(27,120,247,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, opacity: saving ? 0.7 : 1 }}
+            >
+              {saving ? 'A guardar…' : <><span>Guardar perfil</span><ArrowRight size={15} /></>}
+            </button>
+            <button onClick={skip} style={{ display: 'block', width: '100%', background: 'none', border: 'none', color: C.muted, fontSize: 13, cursor: 'pointer', marginTop: 12, fontFamily: 'inherit', padding: 0 }}>
+              Saltar por agora
+            </button>
+          </div>
+        )}
+
+        {/* ── Step 1: Criar projeto ── */}
+        {step === 1 && (
+          <div style={{ padding: '36px 30px 28px', textAlign: 'center' }}>
+            <div style={{ width: 54, height: 54, borderRadius: '50%', background: 'rgba(27,120,247,0.12)', border: '1px solid rgba(27,120,247,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
+              <Rocket size={24} color={C.blue} />
+            </div>
+            <h2 style={{ margin: '0 0 10px', fontSize: 20, fontWeight: 800, color: C.text, letterSpacing: '-0.3px' }}>Cria o teu primeiro projecto</h2>
+            <p style={{ margin: '0 auto 24px', fontSize: 14, color: C.muted, lineHeight: 1.6, maxWidth: 340 }}>
+              Responde a algumas perguntas sobre o teu trabalho — a IA transforma as tuas respostas numa página profissional pronta a partilhar.
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, background: 'var(--c-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 14, padding: '16px 18px', textAlign: 'left', marginBottom: 8 }}>
+                {[
+                  { icon: <Pencil size={15} color={C.blue} />, text: 'Formulário guiado passo a passo' },
+                  { icon: <Sparkles size={15} color={C.blue} />, text: 'IA analisa e melhora cada resposta' },
+                  { icon: <Globe size={15} color={C.blue} />, text: 'Página pública partilhável em segundos' },
+                ].map((item, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, color: C.muted }}>
+                    <span style={{ flexShrink: 0 }}>{item.icon}</span>
+                    {item.text}
+                  </div>
+                ))}
+              </div>
+              <button
+                onClick={() => { onDismiss(); navigate('/novo') }}
+                style={{ background: 'linear-gradient(135deg,#1b78f7,#4f46e5)', border: 'none', borderRadius: 11, padding: '13px', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 20px rgba(27,120,247,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}
+              >
+                <span>Criar projecto</span><ArrowRight size={15} />
+              </button>
+              <button
+                onClick={() => setStep(2)}
+                style={{ background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 11, padding: '12px', color: C.muted, fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}
+              >
+                Já tenho projecto, avançar →
+              </button>
+            </div>
+            <button onClick={onDismiss} style={{ display: 'block', width: '100%', background: 'none', border: 'none', color: C.muted, fontSize: 13, cursor: 'pointer', marginTop: 12, fontFamily: 'inherit', padding: 0 }}>
+              Saltar introdução
+            </button>
+          </div>
+        )}
+
+        {/* ── Step 2: Partilhar ── */}
+        {step === 2 && (
+          <div style={{ padding: '36px 30px 28px', textAlign: 'center' }}>
+            <div style={{ width: 54, height: 54, borderRadius: '50%', background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
+              <Share2 size={24} color={C.green} />
+            </div>
+            <h2 style={{ margin: '0 0 10px', fontSize: 20, fontWeight: 800, color: C.text, letterSpacing: '-0.3px' }}>Partilha a tua página</h2>
+            <p style={{ margin: '0 auto 24px', fontSize: 14, color: C.muted, lineHeight: 1.6, maxWidth: 340 }}>
+              A tua página de perfil está pronta. Envia-a a recrutadores, professores ou amigos.
+            </p>
+            {/* URL box */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--c-bg-alt)', border: `1.5px solid ${C.border}`, borderRadius: 12, padding: '10px 14px', marginBottom: 20, textAlign: 'left' }}>
+              <Link size={14} color={C.muted} style={{ flexShrink: 0 }} />
+              <span style={{ flex: 1, fontSize: 13, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{profileUrl}</span>
+              <button
+                onClick={copyUrl}
+                style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 5, background: copied ? 'rgba(34,197,94,0.12)' : 'rgba(27,120,247,0.1)', border: `1px solid ${copied ? 'rgba(34,197,94,0.3)' : 'rgba(27,120,247,0.3)'}`, borderRadius: 8, padding: '5px 12px', fontSize: 12, fontWeight: 600, color: copied ? C.green : C.blue, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.2s', whiteSpace: 'nowrap' }}
+              >
+                {copied ? <><Check size={12} /> Copiado!</> : <><Copy size={12} /> Copiar</>}
+              </button>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <button
+                onClick={() => { onDismiss(); navigate(`/u/${resolvedUsername}`) }}
+                style={{ background: 'linear-gradient(135deg,#1b78f7,#4f46e5)', border: 'none', borderRadius: 11, padding: '13px', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 20px rgba(27,120,247,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}
+              >
+                <span>Ver a minha página</span><ArrowRight size={15} />
+              </button>
+              <button onClick={onDismiss} style={{ background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 11, padding: '12px', color: C.muted, fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>
+                Ir para o dashboard
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Dots */}
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 6, paddingBottom: 22 }}>
+          {Array.from({ length: TOTAL }).map((_, i) => (
+            <div key={i} style={{ width: i === step ? 20 : 6, height: 6, borderRadius: 3, background: i === step ? C.blue : C.border, transition: 'all 0.2s' }} />
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function OnboardingModal({ user, profile, onDismiss, onCreateTurma }) {
   const navigate = useNavigate()
   const [step, setStep] = useState(0)
@@ -812,6 +1037,7 @@ export default function Dashboard() {
   const [showTurmasModal, setShowTurmasModal] = useState(false)
   const [toast, setToast] = useState('')
   const [showOnboarding, setShowOnboarding] = useState(false)
+  const [showOnboardingAluno, setShowOnboardingAluno] = useState(false)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [collabProjects, setCollabProjects] = useState([])
   const [savedTalents, setSavedTalents] = useState([])
@@ -835,17 +1061,32 @@ export default function Dashboard() {
     setShowOnboarding(false)
   }
 
+  function dismissOnboardingAluno() {
+    localStorage.setItem(`showo_onb_v2_${user.id}`, '1')
+    setShowOnboardingAluno(false)
+  }
+
   useEffect(() => {
     if (!authLoading && !user) navigate('/login')
   }, [user, authLoading, navigate])
 
   useEffect(() => {
-    if (!user) return
-    const key = `showo_onboarded_${user.id}`
-    if (!localStorage.getItem(key)) {
-      setShowOnboarding(true)
+    if (!user || !profile) return
+    const isAluno = !profile.role || profile.role === 'aluno'
+    if (isAluno) {
+      // New 3-step onboarding for alunos
+      const v2Key = `showo_onb_v2_${user.id}`
+      if (!localStorage.getItem(v2Key)) {
+        setShowOnboardingAluno(true)
+      }
+    } else {
+      // Legacy 2-step onboarding for other roles
+      const key = `showo_onboarded_${user.id}`
+      if (!localStorage.getItem(key)) {
+        setShowOnboarding(true)
+      }
     }
-  }, [user])
+  }, [user, profile])
 
   useEffect(() => {
     if (!user) return
@@ -1173,6 +1414,15 @@ export default function Dashboard() {
         }
       `}</style>
       <Navbar />
+
+      {showOnboardingAluno && (
+        <OnboardingAlunoModal
+          user={user}
+          profile={profile}
+          onDismiss={dismissOnboardingAluno}
+          firstProject={projects[0] ?? null}
+        />
+      )}
 
       {showOnboarding && (
         <OnboardingModal
