@@ -573,6 +573,21 @@ const FONT_OPTIONS = [
   { key: 'serif',    label: 'Serif',      css: 'Georgia, serif',             sample: 'Aa' },
 ]
 
+const TITLE_FONT_OPTIONS = [
+  { key: 'croogla',  label: 'Croogla',  css: 'Croogla, sans-serif',                    sample: 'Aw' },
+  { key: 'syne',     label: 'Syne',     css: 'Syne, sans-serif',                        sample: 'Aw' },
+  { key: 'playfair', label: 'Playfair', css: '"Playfair Display", serif',               sample: 'Aw' },
+  { key: 'space',    label: 'Space',    css: '"Space Grotesk", sans-serif',              sample: 'Aw' },
+  { key: 'fredoka',  label: 'Fredoka',  css: '"Fredoka One", cursive',                  sample: 'Aw' },
+  { key: 'inter',    label: 'Inter',    css: 'Inter, sans-serif',                        sample: 'Aw' },
+]
+
+const TITLE_STYLE_OPTIONS = [
+  { key: 'normal',   label: 'Normal'    },
+  { key: 'caps',     label: 'CAPS'      },
+  { key: 'gradient', label: 'Gradiente' },
+]
+
 const BG_OPTIONS = [
   { key: 'default',  label: 'Padrão',   bg: null,      preview: null },
   { key: 'midnight', label: 'Midnight', bg: '#030508', preview: '#030508' },
@@ -730,11 +745,13 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
     ? { c1: selectedPalette.c1, c2: selectedPalette.c2 }
     : typeHero
 
-  const heroHeight = (HERO_SIZES.find(s => s.key === previewStyle.heroSize) || HERO_SIZES[0]).height
-  const selectedFont = FONT_OPTIONS.find(f => f.key === (previewStyle.font || 'default')) || FONT_OPTIONS[0]
-  const selectedBg   = BG_OPTIONS.find(b => b.key === (previewStyle.bg || 'default')) || BG_OPTIONS[0]
-  const resolvedBg   = selectedBg.bg || 'var(--c-bg)'
-  const titleAlign   = previewStyle.titleAlign || 'left'
+  const heroHeight      = (HERO_SIZES.find(s => s.key === previewStyle.heroSize) || HERO_SIZES[0]).height
+  const selectedFont    = FONT_OPTIONS.find(f => f.key === (previewStyle.font || 'default')) || FONT_OPTIONS[0]
+  const selectedTitleFont = TITLE_FONT_OPTIONS.find(f => f.key === (previewStyle.titleFont || 'croogla')) || TITLE_FONT_OPTIONS[0]
+  const titleStyle      = previewStyle.titleStyle || 'normal'
+  const selectedBg      = BG_OPTIONS.find(b => b.key === (previewStyle.bg || 'default')) || BG_OPTIONS[0]
+  const resolvedBg      = selectedBg.bg || 'var(--c-bg)'
+  const titleAlign      = previewStyle.titleAlign || 'left'
   const hiddenSections = new Set(previewStyle.hiddenSections || [])
   const DEFAULT_SECTION_ORDER = ['problem','solution','target_audience','features','technologies','challenges','results','learnings']
   const orderedSections = previewStyle.sectionOrder?.length ? previewStyle.sectionOrder : DEFAULT_SECTION_ORDER
@@ -877,9 +894,16 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
 
           <h1 style={{
             fontSize: 'clamp(36px, 6vw, 64px)', fontWeight: 900,
-            letterSpacing: '-1.5px', lineHeight: 1.0,
-            margin: '0 0 14px', color: 'var(--c-text)',
-            fontFamily: 'var(--font-heading)',
+            letterSpacing: titleStyle === 'caps' ? '0.04em' : '-1.5px', lineHeight: 1.0,
+            margin: '0 0 14px',
+            fontFamily: selectedTitleFont.css,
+            textTransform: titleStyle === 'caps' ? 'uppercase' : 'none',
+            ...(titleStyle === 'gradient' ? {
+              background: `linear-gradient(135deg, ${hero.c1}, ${hero.c2})`,
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+            } : { color: 'var(--c-text)' }),
           }}>
             {project.name}
             {(project.score || 0) >= 100 && (
@@ -890,6 +914,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
                 background: 'linear-gradient(135deg, #1b78f7, #4f46e5)',
                 boxShadow: '0 4px 14px rgba(27,120,247,0.5)',
                 flexShrink: 0,
+                WebkitTextFillColor: 'initial',
               }}>
                 <GraduationCap size={17} color="#fff" />
               </span>
@@ -1099,7 +1124,51 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
                 </div>
               </div>
 
-              {/* Font */}
+              {/* Title font */}
+              <div>
+                <div style={{ fontSize: 11, color: 'var(--c-muted)', fontWeight: 600, marginBottom: 6 }}>Fonte do título</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 4, marginBottom: 8 }}>
+                  {TITLE_FONT_OPTIONS.map(f => {
+                    const isSel = (previewStyle.titleFont || 'croogla') === f.key
+                    return (
+                      <button key={f.key} onClick={() => setPreviewStyle(ps => ({ ...ps, titleFont: f.key }))}
+                        title={f.label}
+                        style={{
+                          padding: '7px 2px', borderRadius: 7, cursor: 'pointer',
+                          border: `1px solid ${isSel ? '#1b78f7' : 'var(--c-border)'}`,
+                          background: isSel ? 'rgba(27,120,247,0.1)' : 'var(--c-bg)',
+                          color: isSel ? '#1b78f7' : 'var(--c-muted)',
+                          transition: 'all 0.12s', textAlign: 'center',
+                        }}
+                      >
+                        <div style={{ fontSize: 13, fontWeight: 700, fontFamily: f.css, lineHeight: 1 }}>{f.sample}</div>
+                        <div style={{ fontSize: 8, marginTop: 3, fontWeight: isSel ? 700 : 500, letterSpacing: '0.02em', fontFamily: 'var(--font-body)' }}>{f.label}</div>
+                      </button>
+                    )
+                  })}
+                </div>
+                {/* Title style */}
+                <div style={{ display: 'flex', gap: 4 }}>
+                  {TITLE_STYLE_OPTIONS.map(s => {
+                    const isSel = (previewStyle.titleStyle || 'normal') === s.key
+                    return (
+                      <button key={s.key}
+                        onClick={() => setPreviewStyle(ps => ({ ...ps, titleStyle: s.key }))}
+                        style={{
+                          flex: 1, padding: '6px 4px', borderRadius: 7, cursor: 'pointer',
+                          border: `1px solid ${isSel ? '#1b78f7' : 'var(--c-border)'}`,
+                          background: isSel ? 'rgba(27,120,247,0.1)' : 'var(--c-bg)',
+                          color: isSel ? '#1b78f7' : 'var(--c-muted)',
+                          fontSize: 10, fontWeight: 700, fontFamily: 'var(--font-body)',
+                          transition: 'all 0.12s',
+                        }}
+                      >{s.label}</button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* Body font */}
               <div>
                 <div style={{ fontSize: 11, color: 'var(--c-muted)', fontWeight: 600, marginBottom: 6 }}>Fonte do texto</div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 4 }}>
