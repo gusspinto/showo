@@ -33,7 +33,8 @@ const Vagas        = lazy(() => import('./pages/Vagas'))
 const Mensagens    = lazy(() => import('./pages/Mensagens'))
 const Candidatos   = lazy(() => import('./pages/Candidatos'))
 const Pipeline     = lazy(() => import('./pages/Pipeline'))
-const EmpresaPage  = lazy(() => import('./pages/EmpresaPage'))
+const EmpresaPage    = lazy(() => import('./pages/EmpresaPage'))
+const ProjectManage  = lazy(() => import('./pages/ProjectManage'))
 
 function PageLoader() {
   return (
@@ -271,8 +272,9 @@ export default function App() {
               <Route path="/mensagens"          element={<Mensagens />}    />
               <Route path="/candidatos"         element={<Candidatos />}   />
               <Route path="/pipeline"           element={<Pipeline />}     />
-              <Route path="/empresa/:id"        element={<EmpresaPage />}  />
-              <Route path="*"                   element={<NotFound />}     />
+              <Route path="/empresa/:id"        element={<EmpresaPage />}   />
+              <Route path="/projeto/:slug/gerir" element={<ProjectManage />} />
+              <Route path="*"                   element={<NotFound />}      />
             </Routes>
             </Suspense>
             </ErrorBoundary>

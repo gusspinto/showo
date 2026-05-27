@@ -3396,6 +3396,26 @@ export default function ProjectPage() {
         <div className="proj-nav-btns" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {isOwner && (
             <button
+              onClick={() => navigate(`/projeto/${project.slug}/gerir`)}
+              style={{
+                background: 'rgba(27,120,247,0.08)',
+                border: '1px solid rgba(27,120,247,0.25)',
+                color: '#1b78f7',
+                borderRadius: 8, padding: '8px 14px',
+                fontSize: 13, fontWeight: 600,
+                cursor: 'pointer', fontFamily: 'inherit',
+                display: 'flex', alignItems: 'center', gap: 6,
+                transition: 'background 0.15s',
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = 'rgba(27,120,247,0.14)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'rgba(27,120,247,0.08)'}
+              title="Gerir projeto"
+            >
+              <Settings size={15} /> Gerir
+            </button>
+          )}
+          {isOwner && (
+            <button
               onClick={handleAIClick}
               style={{
                 background: 'rgba(109,40,217,0.08)',
