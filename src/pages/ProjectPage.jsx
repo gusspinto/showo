@@ -589,19 +589,23 @@ const TITLE_STYLE_OPTIONS = [
 ]
 
 const BG_OPTIONS = [
-  { key: 'default',  label: 'Padrão',   bg: null,      preview: null },
-  { key: 'midnight', label: 'Midnight', bg: '#030508', preview: '#030508' },
+  { key: 'default',  label: 'Padrão',   bg: null,      preview: '#060c18',
+    previewGradient: 'linear-gradient(135deg, #060c18 0%, #111c32 100%)' },
+  { key: 'midnight', label: 'Midnight', bg: '#030508', preview: '#030508',
+    previewGradient: 'linear-gradient(135deg, #030508 0%, #0a0a12 100%)' },
   { key: 'navy',     label: 'Navy',
     bg: 'radial-gradient(ellipse at 25% 60%, #0c1e38 0%, #060d1a 100%)',
-    preview: '#0c1e38' },
+    preview: '#0c1e38', previewGradient: 'linear-gradient(135deg, #0c1e38 0%, #060d1a 100%)' },
   { key: 'cosmic',   label: 'Cosmic',
     bg: 'radial-gradient(ellipse at 75% 25%, #160b2a 0%, #08031a 100%)',
-    preview: '#160b2a' },
+    preview: '#160b2a', previewGradient: 'linear-gradient(135deg, #160b2a 0%, #08031a 100%)' },
   { key: 'forest',   label: 'Floresta',
     bg: 'radial-gradient(ellipse at 50% 0%, #081408 0%, #04090a 100%)',
-    preview: '#081408' },
-  { key: 'warm',     label: 'Quente',   bg: '#140c02', preview: '#140c02' },
-  { key: 'slate',    label: 'Ardósia',  bg: '#0c1018', preview: '#0c1018' },
+    preview: '#081408', previewGradient: 'linear-gradient(135deg, #0a1a0a 0%, #04090a 100%)' },
+  { key: 'warm',     label: 'Quente',   bg: '#140c02', preview: '#140c02',
+    previewGradient: 'linear-gradient(135deg, #1e1004 0%, #0e0702 100%)' },
+  { key: 'slate',    label: 'Ardósia',  bg: '#0c1018', preview: '#0c1018',
+    previewGradient: 'linear-gradient(135deg, #0c1018 0%, #070b10 100%)' },
 ]
 
 function getVideoEmbedUrl(url) {
@@ -1070,50 +1074,69 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
               {/* Group: Identidade visual */}
               <div style={wsGroup}>
                 <div style={wsGroupLabel}>Identidade visual</div>
-                <div style={{ marginBottom: 12 }}>
+
+                {/* Accent color — 5-col grid */}
+                <div style={{ marginBottom: 14 }}>
                   <div style={wsControlLabel}>Cor de destaque</div>
-                  <div style={{ display: 'flex', gap: 6 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 6 }}>
                     {ACCENT_PALETTES.map(p => {
                       const isSelected = (previewStyle.accent || 'default') === p.key
                       return (
                         <button key={p.key} title={p.label}
                           onClick={() => setPreviewStyle(s => ({ ...s, accent: p.key }))}
                           style={{
-                            flex: 1, height: 34, borderRadius: 9, border: 'none',
+                            height: 36, borderRadius: 9, border: 'none',
                             cursor: 'pointer', padding: 0, position: 'relative',
                             background: p.swatch
                               ? `linear-gradient(135deg, ${p.c1}, ${p.c2})`
-                              : 'conic-gradient(#1e40af 0deg 90deg, #7c3aed 90deg 180deg, #065f46 180deg 270deg, #7c2d12 270deg 360deg)',
-                            outline: isSelected ? '2.5px solid var(--c-text)' : '2px solid transparent',
-                            outlineOffset: 2, transition: 'all 0.12s',
-                            transform: isSelected ? 'scale(1.08)' : 'scale(1)',
+                              : 'conic-gradient(#1e40af 0deg 60deg,#7c3aed 60deg 120deg,#065f46 120deg 180deg,#7c2d12 180deg 240deg,#d97706 240deg 300deg,#db2777 300deg 360deg)',
+                            outline: isSelected ? '2px solid rgba(255,255,255,0.8)' : '2px solid transparent',
+                            outlineOffset: 2, transition: 'all 0.15s',
+                            transform: isSelected ? 'scale(1.07)' : 'scale(1)',
+                            boxShadow: isSelected ? '0 2px 12px rgba(0,0,0,0.4)' : 'none',
                           }}
                         >
-                          {isSelected && <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Check size={12} color="#fff" strokeWidth={3} /></span>}
+                          {isSelected && (
+                            <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <Check size={13} color="#fff" strokeWidth={3} />
+                            </span>
+                          )}
                         </button>
                       )
                     })}
                   </div>
+                  <div style={{ fontSize: 10, color: 'var(--c-subtle)', marginTop: 5, textAlign: 'right' }}>
+                    {(ACCENT_PALETTES.find(p => p.key === (previewStyle.accent || 'default')) || ACCENT_PALETTES[0]).label}
+                  </div>
                 </div>
+
+                {/* Background — 4-col grid */}
                 <div>
                   <div style={wsControlLabel}>Fundo da página</div>
-                  <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6 }}>
                     {BG_OPTIONS.map(b => {
                       const isSel = (previewStyle.bg || 'default') === b.key
                       return (
                         <button key={b.key} title={b.label}
                           onClick={() => setPreviewStyle(ps => ({ ...ps, bg: b.key }))}
                           style={{
-                            flex: 1, minWidth: 40, height: 32, borderRadius: 8, border: 'none',
-                            cursor: 'pointer', position: 'relative',
-                            background: b.preview || 'var(--c-bg)',
-                            outline: isSel ? '2.5px solid var(--c-text)' : '1px solid var(--c-border)',
-                            outlineOffset: isSel ? 2 : 0,
-                            transition: 'all 0.12s', transform: isSel ? 'scale(1.08)' : 'scale(1)',
-                            fontSize: 8, fontWeight: 700, color: b.preview ? '#fff' : 'var(--c-muted)',
-                            letterSpacing: '0.03em',
+                            borderRadius: 9, border: 'none', cursor: 'pointer', padding: 0, overflow: 'hidden',
+                            background: b.previewGradient || '#060c18',
+                            outline: isSel ? '2px solid #1b78f7' : '2px solid transparent',
+                            outlineOffset: 2, transition: 'all 0.15s',
+                            boxShadow: isSel ? '0 0 0 3px rgba(27,120,247,0.25)' : 'none',
                           }}
-                        >{b.label}</button>
+                        >
+                          <div style={{ height: 30, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            {isSel && <Check size={12} color="rgba(255,255,255,0.9)" strokeWidth={3} />}
+                          </div>
+                          <div style={{
+                            padding: '4px 2px 5px', background: 'rgba(0,0,0,0.4)',
+                            fontSize: 9, fontWeight: isSel ? 700 : 600,
+                            color: isSel ? '#fff' : 'rgba(255,255,255,0.65)',
+                            textAlign: 'center', lineHeight: 1,
+                          }}>{b.label}</div>
+                        </button>
                       )
                     })}
                   </div>
