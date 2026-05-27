@@ -50,21 +50,21 @@ const inputBase = {
 }
 
 const GOAL_OPTIONS = [
-  { id: 'school',     Icon: GraduationCap, title: 'Apresentar um projeto escolar', subtitle: 'PAP, trabalho de grupo ou apresentação' },
-  { id: 'internship', Icon: Briefcase,     title: 'Conseguir um estágio',           subtitle: 'Mostra o teu trabalho a recrutadores' },
-  { id: 'show',       Icon: Rocket,        title: 'Mostrar o meu projeto',          subtitle: 'Partilha o que construíste com o mundo' },
-  { id: 'clients',    Icon: Users,         title: 'Conseguir clientes',             subtitle: 'Transforma projetos em prova profissional' },
+  { id: 'school',     Icon: GraduationCap, title: 'Apresentar um projeto escolar', subtitle: 'PAP, trabalho de grupo ou apresentação', color: '#6366f1', bg: 'rgba(99,102,241,0.1)',   glow: 'rgba(99,102,241,0.18)'  },
+  { id: 'internship', Icon: Briefcase,     title: 'Conseguir um estágio',           subtitle: 'Mostra o teu trabalho a recrutadores',  color: '#10b981', bg: 'rgba(16,185,129,0.1)',  glow: 'rgba(16,185,129,0.18)'  },
+  { id: 'show',       Icon: Rocket,        title: 'Mostrar o meu projeto',          subtitle: 'Partilha o que construíste com o mundo', color: '#1b78f7', bg: 'rgba(27,120,247,0.1)',  glow: 'rgba(27,120,247,0.18)'  },
+  { id: 'clients',    Icon: Users,         title: 'Conseguir clientes',             subtitle: 'Transforma projetos em prova profissional', color: '#f97316', bg: 'rgba(249,115,22,0.1)', glow: 'rgba(249,115,22,0.18)' },
 ]
 
 const SCHOOL_YEARS = ['10º ano', '11º ano', '12º ano', 'Licenciatura', 'Mestrado', 'Outro']
 
 const PROJECT_TYPES = [
-  { id: 'pap',          Icon: GraduationCap, label: 'PAP',          sub: 'Projeto final de curso' },
-  { id: 'personal',     Icon: Rocket,        label: 'Pessoal',      sub: 'Projeto próprio' },
-  { id: 'group',        Icon: Users,         label: 'Grupo',        sub: 'Trabalho colaborativo' },
-  { id: 'competition',  Icon: Trophy,        label: 'Competição',   sub: 'Hackathon ou concurso' },
-  { id: 'internship',   Icon: Briefcase,     label: 'Estágio',      sub: 'Projeto de estágio' },
-  { id: 'presentation', Icon: BarChart2,     label: 'Apresentação', sub: 'Slides ou pitch' },
+  { id: 'pap',          Icon: GraduationCap, label: 'PAP',          sub: 'Projeto final de curso',  color: '#6366f1', bg: 'rgba(99,102,241,0.1)',   glow: 'rgba(99,102,241,0.18)'  },
+  { id: 'personal',     Icon: Rocket,        label: 'Pessoal',      sub: 'Projeto próprio',          color: '#1b78f7', bg: 'rgba(27,120,247,0.1)',   glow: 'rgba(27,120,247,0.18)'  },
+  { id: 'group',        Icon: Users,         label: 'Grupo',        sub: 'Trabalho colaborativo',    color: '#f59e0b', bg: 'rgba(245,158,11,0.1)',   glow: 'rgba(245,158,11,0.18)'  },
+  { id: 'competition',  Icon: Trophy,        label: 'Competição',   sub: 'Hackathon ou concurso',    color: '#ef4444', bg: 'rgba(239,68,68,0.1)',    glow: 'rgba(239,68,68,0.18)'   },
+  { id: 'internship',   Icon: Briefcase,     label: 'Estágio',      sub: 'Projeto de estágio',       color: '#10b981', bg: 'rgba(16,185,129,0.1)',   glow: 'rgba(16,185,129,0.18)'  },
+  { id: 'presentation', Icon: BarChart2,     label: 'Apresentação', sub: 'Slides ou pitch',          color: '#a855f7', bg: 'rgba(168,85,247,0.1)',   glow: 'rgba(168,85,247,0.18)'  },
 ]
 
 const STEPS = [
@@ -537,22 +537,23 @@ export default function NewProject() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12, marginBottom: 24 }}>
               {GOAL_OPTIONS.map(opt => {
                 const sel = formGoal === opt.id
+                const c = opt.color
                 return (
                   <button
                     key={opt.id}
                     onClick={() => setFormGoal(opt.id)}
                     style={{
-                      background: sel ? 'rgba(27,120,247,0.08)' : colors.card,
-                      border: `2px solid ${sel ? colors.blue : colors.border}`,
+                      background: sel ? opt.bg : colors.card,
+                      border: `2px solid ${sel ? c : colors.border}`,
                       borderRadius: 16, padding: '20px 16px',
                       color: colors.text, cursor: 'pointer', textAlign: 'left',
                       transition: 'all 0.18s cubic-bezier(0.4,0,0.2,1)',
-                      boxShadow: sel ? `0 0 0 4px rgba(27,120,247,0.12), 0 4px 20px rgba(27,120,247,0.2)` : '0 1px 4px rgba(0,0,0,0.1)',
+                      boxShadow: sel ? `0 0 0 4px ${opt.glow}, 0 4px 20px ${opt.glow}` : '0 1px 4px rgba(0,0,0,0.1)',
                       fontFamily: 'inherit',
                       transform: sel ? 'scale(1.02)' : 'scale(1)',
                       position: 'relative',
                     }}
-                    onMouseEnter={e => { if (!sel) { e.currentTarget.style.borderColor = 'rgba(27,120,247,0.4)'; e.currentTarget.style.transform = 'scale(1.015)'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.15)' }}}
+                    onMouseEnter={e => { if (!sel) { e.currentTarget.style.borderColor = `${c}66`; e.currentTarget.style.transform = 'scale(1.015)'; e.currentTarget.style.boxShadow = `0 4px 16px ${opt.glow}` }}}
                     onMouseLeave={e => { if (!sel) { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 1px 4px rgba(0,0,0,0.1)' }}}
                   >
                     {/* Checkmark badge */}
@@ -560,25 +561,25 @@ export default function NewProject() {
                       <div style={{
                         position: 'absolute', top: 10, right: 10,
                         width: 20, height: 20, borderRadius: '50%',
-                        background: colors.blue,
+                        background: c,
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                       }}>
                         <Check size={11} color="#fff" strokeWidth={3} />
                       </div>
                     )}
-                    {/* Icon container — fixed size so all icons align */}
+                    {/* Icon container */}
                     <div style={{
                       width: 44, height: 44, borderRadius: 12, marginBottom: 12,
-                      background: sel ? 'rgba(27,120,247,0.15)' : 'var(--c-bg-alt)',
-                      border: `1.5px solid ${sel ? 'rgba(27,120,247,0.3)' : colors.border}`,
+                      background: sel ? opt.bg : 'var(--c-bg-alt)',
+                      border: `1.5px solid ${sel ? `${c}55` : colors.border}`,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       flexShrink: 0,
                       transition: 'background 0.18s, border-color 0.18s',
                     }}>
-                      <opt.Icon size={22} color={sel ? colors.blue : colors.muted} strokeWidth={sel ? 2.2 : 1.8} />
+                      <opt.Icon size={22} color={sel ? c : colors.muted} strokeWidth={sel ? 2.2 : 1.8} />
                     </div>
-                    <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 5, letterSpacing: '-0.1px', color: sel ? colors.text : colors.text }}>{opt.title}</div>
-                    <div style={{ fontSize: 12, color: sel ? colors.blue : colors.muted, lineHeight: 1.45, fontWeight: sel ? 500 : 400, transition: 'color 0.18s' }}>{opt.subtitle}</div>
+                    <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 5, letterSpacing: '-0.1px' }}>{opt.title}</div>
+                    <div style={{ fontSize: 12, color: sel ? c : colors.muted, lineHeight: 1.45, fontWeight: sel ? 500 : 400, transition: 'color 0.18s' }}>{opt.subtitle}</div>
                   </button>
                 )
               })}
@@ -1070,22 +1071,23 @@ export default function NewProject() {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
                   {PROJECT_TYPES.map(t => {
                     const sel = answers.project_type === t.id
+                    const c = t.color
                     return (
                       <button
                         key={t.id}
                         onClick={() => set('project_type', sel ? null : t.id)}
                         style={{
-                          background: sel ? 'rgba(27,120,247,0.08)' : colors.card,
-                          border: `2px solid ${sel ? colors.blue : colors.border}`,
+                          background: sel ? t.bg : colors.card,
+                          border: `2px solid ${sel ? c : colors.border}`,
                           borderRadius: 14, padding: '16px 10px 14px',
                           color: colors.text, cursor: 'pointer', textAlign: 'center',
                           transition: 'all 0.18s cubic-bezier(0.4,0,0.2,1)',
-                          boxShadow: sel ? `0 0 0 4px rgba(27,120,247,0.12), 0 4px 16px rgba(27,120,247,0.18)` : '0 1px 4px rgba(0,0,0,0.08)',
+                          boxShadow: sel ? `0 0 0 4px ${t.glow}, 0 4px 16px ${t.glow}` : '0 1px 4px rgba(0,0,0,0.08)',
                           fontFamily: 'inherit',
                           transform: sel ? 'scale(1.04)' : 'scale(1)',
                           position: 'relative',
                         }}
-                        onMouseEnter={e => { if (!sel) { e.currentTarget.style.borderColor = 'rgba(27,120,247,0.4)'; e.currentTarget.style.transform = 'scale(1.02)'; e.currentTarget.style.boxShadow = '0 4px 14px rgba(0,0,0,0.12)' }}}
+                        onMouseEnter={e => { if (!sel) { e.currentTarget.style.borderColor = `${c}66`; e.currentTarget.style.transform = 'scale(1.02)'; e.currentTarget.style.boxShadow = `0 4px 14px ${t.glow}` }}}
                         onMouseLeave={e => { if (!sel) { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 1px 4px rgba(0,0,0,0.08)' }}}
                       >
                         {/* Checkmark badge */}
@@ -1093,26 +1095,26 @@ export default function NewProject() {
                           <div style={{
                             position: 'absolute', top: 8, right: 8,
                             width: 18, height: 18, borderRadius: '50%',
-                            background: colors.blue,
+                            background: c,
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                           }}>
                             <Check size={10} color="#fff" strokeWidth={3} />
                           </div>
                         )}
-                        {/* Fixed-size icon container — all icons centre-aligned regardless of glyph shape */}
+                        {/* Fixed-size icon container */}
                         <div style={{
                           width: 40, height: 40, borderRadius: 10,
-                          background: sel ? 'rgba(27,120,247,0.15)' : 'var(--c-bg-alt)',
-                          border: `1.5px solid ${sel ? 'rgba(27,120,247,0.3)' : colors.border}`,
+                          background: sel ? t.bg : 'var(--c-bg-alt)',
+                          border: `1.5px solid ${sel ? `${c}55` : colors.border}`,
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
                           margin: '0 auto 10px',
                           transition: 'background 0.18s, border-color 0.18s',
                           flexShrink: 0,
                         }}>
-                          <t.Icon size={18} color={sel ? colors.blue : colors.muted} strokeWidth={sel ? 2.2 : 1.8} />
+                          <t.Icon size={18} color={sel ? c : colors.muted} strokeWidth={sel ? 2.2 : 1.8} />
                         </div>
-                        <div style={{ fontSize: 12, fontWeight: 700, lineHeight: 1.3, color: sel ? colors.blue : colors.text, transition: 'color 0.18s' }}>{t.label}</div>
-                        {t.sub && <div style={{ fontSize: 10, color: sel ? colors.blue : colors.subtle, marginTop: 3, lineHeight: 1.3, transition: 'color 0.18s', fontWeight: sel ? 500 : 400 }}>{t.sub}</div>}
+                        <div style={{ fontSize: 12, fontWeight: 700, lineHeight: 1.3, color: sel ? c : colors.text, transition: 'color 0.18s' }}>{t.label}</div>
+                        {t.sub && <div style={{ fontSize: 10, color: sel ? c : colors.subtle, marginTop: 3, lineHeight: 1.3, transition: 'color 0.18s', fontWeight: sel ? 500 : 400 }}>{t.sub}</div>}
                       </button>
                     )
                   })}
