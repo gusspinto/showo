@@ -59,12 +59,12 @@ const GOAL_OPTIONS = [
 const SCHOOL_YEARS = ['10º ano', '11º ano', '12º ano', 'Licenciatura', 'Mestrado', 'Outro']
 
 const PROJECT_TYPES = [
-  { id: 'group',        Icon: ClipboardList, label: 'Trabalho de grupo' },
-  { id: 'pap',          Icon: GraduationCap, label: 'PAP / Projeto final' },
-  { id: 'presentation', Icon: BarChart2,     label: 'Apresentação' },
-  { id: 'personal',     Icon: Monitor,       label: 'Projeto pessoal' },
-  { id: 'competition',  Icon: Trophy,        label: 'Projeto de competição' },
-  { id: 'other',        Icon: Sparkles,      label: 'Outro' },
+  { id: 'pap',          Icon: GraduationCap, label: 'PAP',          sub: 'Projeto final de curso' },
+  { id: 'personal',     Icon: Rocket,        label: 'Pessoal',      sub: 'Projeto próprio' },
+  { id: 'group',        Icon: Users,         label: 'Grupo',        sub: 'Trabalho colaborativo' },
+  { id: 'competition',  Icon: Trophy,        label: 'Competição',   sub: 'Hackathon ou concurso' },
+  { id: 'internship',   Icon: Briefcase,     label: 'Estágio',      sub: 'Projeto de estágio' },
+  { id: 'presentation', Icon: BarChart2,     label: 'Apresentação', sub: 'Slides ou pitch' },
 ]
 
 const STEPS = [
@@ -542,25 +542,43 @@ export default function NewProject() {
                     key={opt.id}
                     onClick={() => setFormGoal(opt.id)}
                     style={{
-                      background: sel ? 'rgba(27,120,247,0.1)' : colors.card,
+                      background: sel ? 'rgba(27,120,247,0.08)' : colors.card,
                       border: `2px solid ${sel ? colors.blue : colors.border}`,
                       borderRadius: 16, padding: '20px 16px',
                       color: colors.text, cursor: 'pointer', textAlign: 'left',
-                      transition: 'border-color 0.15s, background 0.15s',
-                      boxShadow: sel ? '0 4px 20px rgba(27,120,247,0.15)' : '0 2px 10px rgba(0,0,0,0.25)',
+                      transition: 'all 0.18s cubic-bezier(0.4,0,0.2,1)',
+                      boxShadow: sel ? `0 0 0 4px rgba(27,120,247,0.12), 0 4px 20px rgba(27,120,247,0.2)` : '0 1px 4px rgba(0,0,0,0.1)',
                       fontFamily: 'inherit',
+                      transform: sel ? 'scale(1.02)' : 'scale(1)',
+                      position: 'relative',
                     }}
+                    onMouseEnter={e => { if (!sel) { e.currentTarget.style.borderColor = 'rgba(27,120,247,0.4)'; e.currentTarget.style.transform = 'scale(1.015)'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.15)' }}}
+                    onMouseLeave={e => { if (!sel) { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 1px 4px rgba(0,0,0,0.1)' }}}
                   >
+                    {/* Checkmark badge */}
+                    {sel && (
+                      <div style={{
+                        position: 'absolute', top: 10, right: 10,
+                        width: 20, height: 20, borderRadius: '50%',
+                        background: colors.blue,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      }}>
+                        <Check size={11} color="#fff" strokeWidth={3} />
+                      </div>
+                    )}
+                    {/* Icon container — fixed size so all icons align */}
                     <div style={{
-                      width: 42, height: 42, borderRadius: 10, marginBottom: 12,
+                      width: 44, height: 44, borderRadius: 12, marginBottom: 12,
                       background: sel ? 'rgba(27,120,247,0.15)' : 'var(--c-bg-alt)',
-                      border: `1px solid ${sel ? 'rgba(27,120,247,0.25)' : colors.border}`,
+                      border: `1.5px solid ${sel ? 'rgba(27,120,247,0.3)' : colors.border}`,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      flexShrink: 0,
+                      transition: 'background 0.18s, border-color 0.18s',
                     }}>
-                      <opt.Icon size={22} color={sel ? colors.blue : colors.muted} />
+                      <opt.Icon size={22} color={sel ? colors.blue : colors.muted} strokeWidth={sel ? 2.2 : 1.8} />
                     </div>
-                    <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 5, letterSpacing: '-0.1px' }}>{opt.title}</div>
-                    <div style={{ fontSize: 12, color: colors.muted, lineHeight: 1.45 }}>{opt.subtitle}</div>
+                    <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 5, letterSpacing: '-0.1px', color: sel ? colors.text : colors.text }}>{opt.title}</div>
+                    <div style={{ fontSize: 12, color: sel ? colors.blue : colors.muted, lineHeight: 1.45, fontWeight: sel ? 500 : 400, transition: 'color 0.18s' }}>{opt.subtitle}</div>
                   </button>
                 )
               })}
@@ -1057,16 +1075,44 @@ export default function NewProject() {
                         key={t.id}
                         onClick={() => set('project_type', sel ? null : t.id)}
                         style={{
-                          background: sel ? 'rgba(27,120,247,0.1)' : colors.card,
+                          background: sel ? 'rgba(27,120,247,0.08)' : colors.card,
                           border: `2px solid ${sel ? colors.blue : colors.border}`,
-                          borderRadius: 10, padding: '14px 10px',
+                          borderRadius: 14, padding: '16px 10px 14px',
                           color: colors.text, cursor: 'pointer', textAlign: 'center',
-                          transition: 'border-color 0.15s, background 0.15s',
+                          transition: 'all 0.18s cubic-bezier(0.4,0,0.2,1)',
+                          boxShadow: sel ? `0 0 0 4px rgba(27,120,247,0.12), 0 4px 16px rgba(27,120,247,0.18)` : '0 1px 4px rgba(0,0,0,0.08)',
                           fontFamily: 'inherit',
+                          transform: sel ? 'scale(1.04)' : 'scale(1)',
+                          position: 'relative',
                         }}
+                        onMouseEnter={e => { if (!sel) { e.currentTarget.style.borderColor = 'rgba(27,120,247,0.4)'; e.currentTarget.style.transform = 'scale(1.02)'; e.currentTarget.style.boxShadow = '0 4px 14px rgba(0,0,0,0.12)' }}}
+                        onMouseLeave={e => { if (!sel) { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 1px 4px rgba(0,0,0,0.08)' }}}
                       >
-                        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 5 }}><t.Icon size={20} color={sel ? colors.blue : colors.muted} /></div>
-                        <div style={{ fontSize: 12, fontWeight: 600, lineHeight: 1.35, color: sel ? colors.text : colors.muted }}>{t.label}</div>
+                        {/* Checkmark badge */}
+                        {sel && (
+                          <div style={{
+                            position: 'absolute', top: 8, right: 8,
+                            width: 18, height: 18, borderRadius: '50%',
+                            background: colors.blue,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          }}>
+                            <Check size={10} color="#fff" strokeWidth={3} />
+                          </div>
+                        )}
+                        {/* Fixed-size icon container — all icons centre-aligned regardless of glyph shape */}
+                        <div style={{
+                          width: 40, height: 40, borderRadius: 10,
+                          background: sel ? 'rgba(27,120,247,0.15)' : 'var(--c-bg-alt)',
+                          border: `1.5px solid ${sel ? 'rgba(27,120,247,0.3)' : colors.border}`,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          margin: '0 auto 10px',
+                          transition: 'background 0.18s, border-color 0.18s',
+                          flexShrink: 0,
+                        }}>
+                          <t.Icon size={18} color={sel ? colors.blue : colors.muted} strokeWidth={sel ? 2.2 : 1.8} />
+                        </div>
+                        <div style={{ fontSize: 12, fontWeight: 700, lineHeight: 1.3, color: sel ? colors.blue : colors.text, transition: 'color 0.18s' }}>{t.label}</div>
+                        {t.sub && <div style={{ fontSize: 10, color: sel ? colors.blue : colors.subtle, marginTop: 3, lineHeight: 1.3, transition: 'color 0.18s', fontWeight: sel ? 500 : 400 }}>{t.sub}</div>}
                       </button>
                     )
                   })}
