@@ -142,8 +142,11 @@ export default function NewProject() {
   const { toast, show: showToast } = useToast()
   const fileInputRef = useRef(null)
   const [dragOver, setDragOver] = useState(false)
-  const [cropFile, setCropFile] = useState(null) // File waiting to be cropped
+  const [cropFile, setCropFile] = useState(null)
   const [shownExamples, setShownExamples] = useState(new Set())
+  // Draft recovery
+  const [draftModal, setDraftModal] = useState(null) // { answers, formGoal, step, savedAt }
+  const syncTimerRef = useRef(null)
 
   function toggleExample(key) {
     setShownExamples(prev => {
@@ -158,59 +161,107 @@ export default function NewProject() {
     set(key, value)
     setShownExamples(prev => { const next = new Set(prev); next.delete(key); return next })
   }
-  // Show auth nudge for anonymous users (once per session)
-  useEffect(() => {
-    if (authLoading) return
-    if (!user && !sessionStorage.getItem('showo_auth_nudge_dismissed')) {
-      setShowAuthNudge(true)
+
+  // ── Draft helpers ──────────────────────────────────────────────────────────
+
+  function applyDraft(draft) {
+    setAnswers(draft.answers || {})
+    if (draft.formGoal) { setFormGoal(draft.formGoal); setPhase('form') }
+    if (typeof draft.step === 'number') setStep(draft.step)
+  }
+
+  async function clearDraft() {
+    try { localStorage.removeItem('showo_new_project_draft') } catch {}
+    if (user) {
+      await supabase.from('profiles').update({ project_draft: null }).eq('id', user.id)
     }
-    if (user) setShowAuthNudge(false)
-  }, [user, authLoading])
+  }
 
-  // On mount: restore draft from localStorage (if no widget prefill)
+  async function saveDraftRemote(draft) {
+    if (!user) return
+    await supabase.from('profiles').update({ project_draft: draft }).eq('id', user.id)
+  }
+
+  // ── On mount: check for widget prefill first, then draft recovery ──────────
+
   useEffect(() => {
-    const hasPrefill = !!location.state?.prefill?.fromWidget
-    if (hasPrefill) return
-    try {
-      const raw = localStorage.getItem('showo_new_project_draft')
-      if (!raw) return
-      const draft = JSON.parse(raw)
-      if (draft.answers && Object.keys(draft.answers).length > 0) {
-        setAnswers(draft.answers)
-        if (draft.formGoal) { setFormGoal(draft.formGoal); setPhase('form') }
-        if (typeof draft.step === 'number') setStep(draft.step)
-      }
-    } catch {}
-  }, [])
+    // Widget prefill takes priority — skip draft recovery entirely
+    const state = location.state?.prefill
+    if (state?.fromWidget) {
+      setFormGoal(state.formGoal ?? 'show')
+      setAnswers(state.answers ?? {})
+      setPhase('form')
+      const firstEmpty = STEPS.findIndex(s => {
+        if (s.type === 'finalize') return false
+        if (s.type === 'dual_text')     return s.keys.some(k => !(state.answers?.[k] ?? '').trim())
+        if (s.type === 'dual_textarea') return !(state.answers?.[s.keys[0]] ?? '').trim()
+        return !(state.answers?.[s.key] ?? '').trim()
+      })
+      setStep(firstEmpty === -1 ? STEPS.length - 1 : firstEmpty)
+      if (Object.values(state.answers ?? {}).some(v => v)) setPrefillBanner(true)
+      window.history.replaceState({}, '')
+      return
+    }
 
-  // Persist draft to localStorage whenever answers/step/formGoal change
+    // Draft recovery: logged-in users → Supabase first; anonymous → localStorage
+    async function checkDraft() {
+      let draft = null
+
+      if (user) {
+        const { data } = await supabase
+          .from('profiles')
+          .select('project_draft')
+          .eq('id', user.id)
+          .single()
+        draft = data?.project_draft || null
+      }
+
+      // Fallback to localStorage (also covers anonymous users)
+      if (!draft) {
+        try {
+          const raw = localStorage.getItem('showo_new_project_draft')
+          if (raw) draft = JSON.parse(raw)
+        } catch {}
+      }
+
+      if (!draft || !draft.answers || Object.keys(draft.answers).length === 0) return
+
+      // Show recovery modal
+      setDraftModal(draft)
+    }
+
+    if (!authLoading) checkDraft()
+  }, [authLoading, user]) // eslint-disable-line
+
+  // ── Persist draft on every meaningful change (debounced 1.5s) ─────────────
   useEffect(() => {
     if (phase !== 'form' && phase !== 'goal') return
-    try {
-      const { cover_url: _omit, ...answersWithoutCover } = answers
-      localStorage.setItem('showo_new_project_draft', JSON.stringify({ answers: answersWithoutCover, formGoal, step }))
-    } catch {}
-  }, [answers, formGoal, step, phase])
+    if (draftModal) return // don't overwrite while showing recovery dialog
 
-  // On mount: check for widget prefill state
+    const { cover_url: _omit, ...answersWithoutCover } = answers
+    const draft = {
+      answers: answersWithoutCover,
+      formGoal,
+      step,
+      savedAt: new Date().toISOString(),
+    }
+
+    // Always save to localStorage immediately
+    try { localStorage.setItem('showo_new_project_draft', JSON.stringify(draft)) } catch {}
+
+    // Debounce the Supabase write (1.5s)
+    clearTimeout(syncTimerRef.current)
+    syncTimerRef.current = setTimeout(() => saveDraftRemote(draft), 1500)
+
+    return () => clearTimeout(syncTimerRef.current)
+  }, [answers, formGoal, step, phase]) // eslint-disable-line
+
+  // ── Auth nudge for anonymous users ────────────────────────────────────────
   useEffect(() => {
-    const state = location.state?.prefill
-    if (!state?.fromWidget) return
-    setFormGoal(state.formGoal ?? 'show')
-    setAnswers(state.answers ?? {})
-    setPhase('form')
-    // Find first step that isn't already filled — start there
-    const firstEmpty = STEPS.findIndex(s => {
-      if (s.type === 'finalize') return false
-      if (s.type === 'dual_text')     return s.keys.some(k => !(state.answers?.[k] ?? '').trim())
-      if (s.type === 'dual_textarea') return !(state.answers?.[s.keys[0]] ?? '').trim()
-      return !(state.answers?.[s.key] ?? '').trim()
-    })
-    setStep(firstEmpty === -1 ? STEPS.length - 1 : firstEmpty)
-    if (Object.values(state.answers ?? {}).some(v => v)) setPrefillBanner(true)
-    // Clear state so refresh doesn't re-apply
-    window.history.replaceState({}, '')
-  }, [])
+    if (authLoading) return
+    if (!user && !sessionStorage.getItem('showo_auth_nudge_dismissed')) setShowAuthNudge(true)
+    if (user) setShowAuthNudge(false)
+  }, [user, authLoading])
 
   const progress = phase === 'goal' ? 0 : ((step + 1) / TOTAL_STEPS) * 100
   const estimatedScore = calculateScore(answers).score
@@ -305,7 +356,7 @@ export default function NewProject() {
       const aiResult = await generateProject(answers)
       const project = await saveProject(answers, aiResult, user?.id ?? null)
       localStorage.setItem(`edit_token_${project.slug}`, project.edit_token)
-      localStorage.removeItem('showo_new_project_draft')
+      await clearDraft()
       navigate(`/projeto/${project.slug}`, {
         state: { newProject: true, message: 'Projeto criado! Começa a melhorar o teu score.' }
       })
@@ -357,6 +408,117 @@ export default function NewProject() {
       e.target.style.borderColor = colors.border
       e.target.style.boxShadow = 'none'
     },
+  }
+
+  // ── DRAFT RECOVERY MODAL ─────────────────────────────────
+  if (draftModal) {
+    const { answers: da, formGoal: dg, step: ds, savedAt } = draftModal
+    const projectName = da?.name?.trim()
+    const projectArea = da?.area?.trim()
+    const totalFilled = Object.values(da || {}).filter(v => v && String(v).trim()).length
+    const stepsCompleted = typeof ds === 'number' ? ds : 0
+
+    function timeAgo(iso) {
+      if (!iso) return ''
+      const diff = Date.now() - new Date(iso).getTime()
+      const mins = Math.floor(diff / 60000)
+      if (mins < 2) return 'agora mesmo'
+      if (mins < 60) return `há ${mins} min`
+      const hrs = Math.floor(mins / 60)
+      if (hrs < 24) return `há ${hrs}h`
+      return `há ${Math.floor(hrs / 24)}d`
+    }
+
+    return (
+      <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: 'inherit', display: 'flex', flexDirection: 'column' }}>
+        <Navbar showLinks={false} />
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 24px' }}>
+          <div style={{ width: '100%', maxWidth: 480 }}>
+
+            {/* Icon */}
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
+              <div style={{ width: 64, height: 64, borderRadius: 18, background: 'rgba(27,120,247,0.12)', border: '1px solid rgba(27,120,247,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Save size={28} color={colors.blue} />
+              </div>
+            </div>
+
+            <h2 style={{ fontSize: 'clamp(20px, 3.5vw, 28px)', fontWeight: 800, textAlign: 'center', margin: '0 0 10px', letterSpacing: '-0.4px' }}>
+              Tens um projeto por terminar
+            </h2>
+            <p style={{ color: colors.muted, textAlign: 'center', fontSize: 14, margin: '0 0 28px', lineHeight: 1.6 }}>
+              Encontrámos um rascunho guardado na tua conta. Queres continuar de onde paraste?
+            </p>
+
+            {/* Draft info card */}
+            <div style={{ background: colors.card, border: `1px solid ${colors.border}`, borderLeft: `4px solid ${colors.blue}`, borderRadius: 14, padding: '18px 20px', marginBottom: 24 }}>
+              {projectName && (
+                <div style={{ fontSize: 16, fontWeight: 800, color: colors.text, marginBottom: 4, letterSpacing: '-0.2px' }}>
+                  {projectName}
+                </div>
+              )}
+              {projectArea && (
+                <div style={{ fontSize: 13, color: colors.muted, marginBottom: 10 }}>{projectArea}</div>
+              )}
+              <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <span style={{ fontSize: 11, color: colors.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Progresso</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: colors.text }}>Passo {stepsCompleted + 1} de {TOTAL_STEPS}</span>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <span style={{ fontSize: 11, color: colors.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Campos preenchidos</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: colors.text }}>{totalFilled}</span>
+                </div>
+                {savedAt && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <span style={{ fontSize: 11, color: colors.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Guardado</span>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: colors.text }}>{timeAgo(savedAt)}</span>
+                  </div>
+                )}
+              </div>
+              {/* Progress bar */}
+              <div style={{ marginTop: 14, height: 4, background: colors.border, borderRadius: 99, overflow: 'hidden' }}>
+                <div style={{ height: '100%', width: `${((stepsCompleted + 1) / TOTAL_STEPS) * 100}%`, background: `linear-gradient(90deg, ${colors.blue}, #4f46e5)`, borderRadius: 99, transition: 'width 0.4s' }} />
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <button
+                onClick={() => { applyDraft(draftModal); setDraftModal(null) }}
+                style={{
+                  width: '100%', padding: '15px', borderRadius: 12,
+                  background: `linear-gradient(135deg, ${colors.blue}, #4f46e5)`,
+                  border: 'none', color: '#fff', fontSize: 15, fontWeight: 700,
+                  cursor: 'pointer', fontFamily: 'inherit',
+                  boxShadow: '0 4px 20px rgba(27,120,247,0.3)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                  transition: 'opacity 0.15s',
+                }}
+                onMouseEnter={e => e.currentTarget.style.opacity = '0.9'}
+                onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+              >
+                <ArrowRight size={16} /> Continuar onde parei
+              </button>
+              <button
+                onClick={async () => { await clearDraft(); setDraftModal(null) }}
+                style={{
+                  width: '100%', padding: '13px', borderRadius: 12,
+                  background: 'transparent', border: `1px solid ${colors.border}`,
+                  color: colors.muted, fontSize: 14, fontWeight: 600,
+                  cursor: 'pointer', fontFamily: 'inherit',
+                  transition: 'border-color 0.15s, color 0.15s',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = colors.borderBright; e.currentTarget.style.color = colors.text }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.color = colors.muted }}
+              >
+                Começar de novo
+              </button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    )
   }
 
   // ── GOAL ─────────────────────────────────────────────────
