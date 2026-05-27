@@ -606,6 +606,10 @@ const BG_OPTIONS = [
     previewGradient: 'linear-gradient(135deg, #1e1004 0%, #0e0702 100%)' },
   { key: 'slate',    label: 'Ardósia',  bg: '#0c1018', preview: '#0c1018',
     previewGradient: 'linear-gradient(135deg, #0c1018 0%, #070b10 100%)' },
+  { key: 'paper',    label: 'Papel',    bg: '#f5f0e8', preview: '#f5f0e8', isLight: true,
+    previewGradient: 'linear-gradient(135deg, #f5f0e8 0%, #ece5d8 100%)' },
+  { key: 'chalk',    label: 'Cinza',    bg: '#eff0f2', preview: '#eff0f2', isLight: true,
+    previewGradient: 'linear-gradient(135deg, #eff0f2 0%, #e2e4e9 100%)' },
 ]
 
 function getVideoEmbedUrl(url) {
@@ -780,6 +784,8 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
   const titleStyle        = previewStyle.titleStyle || 'normal'
   const selectedBg        = BG_OPTIONS.find(b => b.key === (previewStyle.bg || 'default')) || BG_OPTIONS[0]
   const resolvedBg        = selectedBg.bg || 'var(--c-bg)'
+  // pvTheme: force dark/light CSS vars inside preview regardless of app theme
+  const pvTheme           = selectedBg.isLight ? 'light' : selectedBg.key !== 'default' ? 'dark' : null
   const titleAlign        = previewStyle.titleAlign || 'left'
   const coverAsHero       = !!(previewStyle.coverAsHero && project.cover_url)
   const customTagline     = previewStyle.customTagline || ''
@@ -796,17 +802,28 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
   const deviceMaxWidth = previewDevice === 'mobile' ? 390 : previewDevice === 'tablet' ? 768 : undefined
 
   return (
-    <div style={{
-      position: 'fixed', inset: 0, zIndex: 50,
-      overflowY: 'auto', overflowX: 'hidden',
-      background: resolvedBg,
-      paddingRight: isOwner && previewEditing ? 360 : 0,
-      transition: 'padding-right 0.3s ease',
-    }}>
-      {/* ── Owner preview banner — sticky ── */}
+    <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', flexDirection: 'column' }}>
+
+      {/* ── Card style + preview theme scoped CSS ── */}
+      <style>{`
+        [data-pv-cs="flat"] .proj-card { background: transparent !important; border-color: transparent !important; box-shadow: none !important; }
+        [data-pv-cs="glass"] .proj-card { background: rgba(255,255,255,0.05) !important; backdrop-filter: blur(16px) !important; -webkit-backdrop-filter: blur(16px) !important; border: 1px solid rgba(255,255,255,0.09) !important; }
+        [data-pv-theme="dark"] {
+          --c-bg:#060c18; --c-bg-alt:#111c32; --c-card:#152030; --c-card-hover:#1c2d44;
+          --c-border:#1e3050; --c-border-bright:#2a4275; --c-muted:#7d93b0;
+          --c-text:#e8f2ff; --c-subtle:#3d5270; --c-input-bg:#060c18;
+        }
+        [data-pv-theme="light"] {
+          --c-bg:#f5f0e8; --c-bg-alt:#ede6d8; --c-card:#faf7f2; --c-card-hover:#f0ebe1;
+          --c-border:#d8d0c4; --c-border-bright:#bdb4a6; --c-muted:#6b6158;
+          --c-text:#1c1714; --c-subtle:#8c8278; --c-input-bg:#e8e1d6;
+        }
+      `}</style>
+
+      {/* ── Owner preview banner ── */}
       {isOwner && (
         <div style={{
-          position: 'sticky', top: 0, zIndex: 300,
+          flexShrink: 0, zIndex: 300,
           background: theme === 'light' ? 'rgba(248,250,252,0.97)' : 'rgba(6,12,24,0.97)',
           backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)',
           borderBottom: theme === 'light' ? '1px solid rgba(0,0,0,0.09)' : '1px solid rgba(27,120,247,0.15)',
@@ -875,21 +892,23 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
         </div>
       )}
 
-      {/* ── Card style scoped CSS ── */}
-      <style>{`
-        [data-pv-cs="flat"] .proj-card { background: transparent !important; border-color: transparent !important; box-shadow: none !important; }
-        [data-pv-cs="glass"] .proj-card { background: rgba(255,255,255,0.05) !important; backdrop-filter: blur(16px) !important; -webkit-backdrop-filter: blur(16px) !important; border: 1px solid rgba(255,255,255,0.09) !important; }
-      `}</style>
+      {/* ── Scrollable preview area — full height, background set here ── */}
+      <div style={{
+        flex: 1, overflowY: 'auto', overflowX: 'hidden',
+        background: resolvedBg,
+        paddingRight: isOwner && previewEditing ? 360 : 0,
+        transition: 'padding-right 0.3s ease',
+      }}>
 
-      {/* ── Device frame wrapper ── */}
-      <div data-pv-cs={cardStyleVal} style={{
+      {/* ── Device frame + CSS scope (data-pv-cs, data-pv-theme) ── */}
+      <div data-pv-cs={cardStyleVal} data-pv-theme={pvTheme || undefined} style={{
         margin: previewDevice !== 'desktop' ? `${isOwner ? 16 : 40}px auto 0` : '0 auto',
         maxWidth: deviceMaxWidth,
         width: '100%',
-        boxShadow: previewDevice !== 'desktop' ? '0 0 0 1px var(--c-border), 0 12px 60px rgba(0,0,0,0.35)' : 'none',
+        boxShadow: previewDevice !== 'desktop' ? '0 0 0 1px rgba(0,0,0,0.2), 0 12px 60px rgba(0,0,0,0.35)' : 'none',
         borderRadius: previewDevice !== 'desktop' ? 20 : 0,
         overflow: previewDevice !== 'desktop' ? 'hidden' : 'visible',
-        transition: 'max-width 0.3s ease, box-shadow 0.3s ease, border-radius 0.3s ease',
+        transition: 'max-width 0.3s ease',
         background: resolvedBg,
       }}>
 
@@ -988,18 +1007,41 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
               {course && <span style={{ fontSize: 12, color: 'var(--c-muted)' }}>· {course}</span>}
             </div>
           )}
+
+          {/* Social / project links */}
+          {(previewStyle.linkDemo || previewStyle.linkGithub || previewStyle.linkLinkedin) && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 16, justifyContent: titleAlign === 'center' ? 'center' : titleAlign === 'right' ? 'flex-end' : 'flex-start' }}>
+              {previewStyle.linkDemo && (
+                <a href={previewStyle.linkDemo} target="_blank" rel="noopener noreferrer"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: `linear-gradient(135deg, ${hero.c1}, ${hero.c2})`, color: '#fff', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 700, textDecoration: 'none', boxShadow: `0 4px 14px ${hero.c1}44` }}>
+                  <Globe size={13} /> Ver demo
+                </a>
+              )}
+              {previewStyle.linkGithub && (
+                <a href={previewStyle.linkGithub} target="_blank" rel="noopener noreferrer"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'var(--c-card)', border: '1px solid var(--c-border)', color: 'var(--c-text)', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>
+                  <FileText size={13} /> GitHub
+                </a>
+              )}
+              {previewStyle.linkLinkedin && (
+                <a href={previewStyle.linkLinkedin} target="_blank" rel="noopener noreferrer"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'rgba(10,102,194,0.1)', border: '1px solid rgba(10,102,194,0.3)', color: '#0a66c2', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>
+                  <User size={13} /> LinkedIn
+                </a>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
-      {/* ── Workspace editor panel ── */}
+      {/* ── Workspace panel — fixed right sidebar, flush with banner ── */}
       {isOwner && previewEditing && (
         <div style={{
-          position: 'fixed', right: 0, top: 34, bottom: 0, zIndex: 200,
+          position: 'fixed', right: 0, top: 40, bottom: 0, zIndex: 200,
           width: 360,
           background: 'var(--c-sidebar-bg)',
-          borderLeft: '1px solid var(--c-border)',
+          borderLeft: '2px solid var(--c-border)',
           display: 'flex', flexDirection: 'column',
-          boxShadow: '-16px 0 48px rgba(0,0,0,0.4)',
           fontFamily: 'var(--font-body)',
         }}>
 
@@ -1121,27 +1163,30 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
                 {/* Background — 4-col grid */}
                 <div>
                   <div style={wsControlLabel}>Fundo da página</div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 5 }}>
                     {BG_OPTIONS.map(b => {
                       const isSel = (previewStyle.bg || 'default') === b.key
+                      const labelColor = b.isLight ? 'rgba(0,0,0,0.55)' : 'rgba(255,255,255,0.65)'
+                      const labelColorSel = b.isLight ? '#0f172a' : '#fff'
+                      const checkColor = b.isLight ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.9)'
                       return (
                         <button key={b.key} title={b.label}
                           onClick={() => setPreviewStyle(ps => ({ ...ps, bg: b.key }))}
                           style={{
-                            borderRadius: 9, border: 'none', cursor: 'pointer', padding: 0, overflow: 'hidden',
+                            borderRadius: 9, border: isSel ? '2px solid #1b78f7' : '2px solid transparent', cursor: 'pointer', padding: 0, overflow: 'hidden',
                             background: b.previewGradient || '#060c18',
-                            outline: isSel ? '2px solid #1b78f7' : '2px solid transparent',
+                            outline: isSel ? '2px solid rgba(27,120,247,0.3)' : '2px solid transparent',
                             outlineOffset: 2, transition: 'all 0.15s',
-                            boxShadow: isSel ? '0 0 0 3px rgba(27,120,247,0.25)' : 'none',
                           }}
                         >
-                          <div style={{ height: 30, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            {isSel && <Check size={12} color="rgba(255,255,255,0.9)" strokeWidth={3} />}
+                          <div style={{ height: 28, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            {isSel && <Check size={11} color={checkColor} strokeWidth={3} />}
                           </div>
                           <div style={{
-                            padding: '4px 2px 5px', background: 'rgba(0,0,0,0.4)',
+                            padding: '3px 2px 4px',
+                            background: b.isLight ? 'rgba(0,0,0,0.08)' : 'rgba(0,0,0,0.35)',
                             fontSize: 9, fontWeight: isSel ? 700 : 600,
-                            color: isSel ? '#fff' : 'rgba(255,255,255,0.65)',
+                            color: isSel ? labelColorSel : labelColor,
                             textAlign: 'center', lineHeight: 1,
                           }}>{b.label}</div>
                         </button>
@@ -1299,6 +1344,31 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
                     })}
                   </div>
                 </div>
+              </div>
+
+              {/* Group: Links do projeto */}
+              <div style={wsGroup}>
+                <div style={wsGroupLabel}>Links</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {[
+                    { key: 'linkDemo',     Icon: Globe,       placeholder: 'Demo / site (https://...)' },
+                    { key: 'linkGithub',   Icon: FileText,    placeholder: 'GitHub (https://github.com/...)' },
+                    { key: 'linkLinkedin', Icon: User,        placeholder: 'LinkedIn (https://linkedin.com/...)' },
+                  ].map(({ key, Icon, placeholder }) => (
+                    <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                      <div style={{ width: 26, height: 26, borderRadius: 7, background: 'var(--c-bg)', border: '1px solid var(--c-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <Icon size={12} color="var(--c-muted)" />
+                      </div>
+                      <input
+                        value={previewStyle[key] || ''}
+                        onChange={e => setPreviewStyle(ps => ({ ...ps, [key]: e.target.value }))}
+                        placeholder={placeholder}
+                        style={{ ...wsInputNew, flex: 1 }}
+                      />
+                    </div>
+                  ))}
+                </div>
+                <div style={{ fontSize: 10, color: 'var(--c-subtle)', marginTop: 6 }}>Aparecem no hero como botões de acção.</div>
               </div>
 
               {/* Group: Estilo dos cards */}
@@ -2092,9 +2162,10 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
           </div>
         )}
 
-      </div>
-      </div>{/* end device-frame */}
-    </div>
+      </div>{/* end story-sections wrapper */}
+      </div>{/* end device-frame / CSS scope */}
+      </div>{/* end preview scroll area */}
+    </div>{/* end outer flex-column */}
   )
 }
 
@@ -2270,7 +2341,11 @@ export default function ProjectPage() {
         viewAsPublic,
         onDefense: () => setDefenseMode(true),
         onAnalyze: handleAIClick,
-        onTogglePublicView: () => setViewAsPublic(v => !v),
+        onTogglePublicView: () => {
+          const entering = !viewAsPublic
+          setViewAsPublic(entering)
+          if (entering) setPreviewEditing(true)
+        },
       })
     } else {
       setExtras(null)
