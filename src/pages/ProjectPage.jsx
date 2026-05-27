@@ -645,6 +645,31 @@ const wsInput = {
   display: 'block', marginBottom: 0,
 }
 
+// ── Workspace panel design tokens ─────────────────────────────────────────────
+const wsGroup = {
+  background: 'var(--c-bg-alt)',
+  border: '1px solid var(--c-border)',
+  borderRadius: 12, padding: '13px 14px',
+}
+const wsGroupLabel = {
+  fontSize: 10, fontWeight: 700,
+  color: 'var(--c-subtle)',
+  textTransform: 'uppercase', letterSpacing: '0.1em',
+  marginBottom: 11,
+}
+const wsControlLabel = {
+  fontSize: 11, fontWeight: 600,
+  color: 'var(--c-muted)', marginBottom: 6,
+}
+const wsInputNew = {
+  width: '100%', boxSizing: 'border-box',
+  background: 'var(--c-bg)', border: '1px solid var(--c-border)',
+  borderRadius: 8, padding: '8px 11px',
+  color: 'var(--c-text)', fontSize: 12,
+  fontFamily: 'inherit', outline: 'none',
+  transition: 'border-color 0.2s',
+}
+
 function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBlocks, setPreviewBlocks, previewStyle, setPreviewStyle, previewEditing, setPreviewEditing,
   liked, likeCount, likeLoading, onLike,
   hasInterest, interestCount, interestLoading, onInterest,
@@ -745,13 +770,16 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
     ? { c1: selectedPalette.c1, c2: selectedPalette.c2 }
     : typeHero
 
-  const heroHeight      = (HERO_SIZES.find(s => s.key === previewStyle.heroSize) || HERO_SIZES[0]).height
-  const selectedFont    = FONT_OPTIONS.find(f => f.key === (previewStyle.font || 'default')) || FONT_OPTIONS[0]
+  const heroHeight        = (HERO_SIZES.find(s => s.key === previewStyle.heroSize) || HERO_SIZES[0]).height
+  const selectedFont      = FONT_OPTIONS.find(f => f.key === (previewStyle.font || 'default')) || FONT_OPTIONS[0]
   const selectedTitleFont = TITLE_FONT_OPTIONS.find(f => f.key === (previewStyle.titleFont || 'croogla')) || TITLE_FONT_OPTIONS[0]
-  const titleStyle      = previewStyle.titleStyle || 'normal'
-  const selectedBg      = BG_OPTIONS.find(b => b.key === (previewStyle.bg || 'default')) || BG_OPTIONS[0]
-  const resolvedBg      = selectedBg.bg || 'var(--c-bg)'
-  const titleAlign      = previewStyle.titleAlign || 'left'
+  const titleStyle        = previewStyle.titleStyle || 'normal'
+  const selectedBg        = BG_OPTIONS.find(b => b.key === (previewStyle.bg || 'default')) || BG_OPTIONS[0]
+  const resolvedBg        = selectedBg.bg || 'var(--c-bg)'
+  const titleAlign        = previewStyle.titleAlign || 'left'
+  const coverAsHero       = !!(previewStyle.coverAsHero && project.cover_url)
+  const customTagline     = previewStyle.customTagline || ''
+  const cardStyleVal      = previewStyle.cardStyle || 'border'
   const hiddenSections = new Set(previewStyle.hiddenSections || [])
   const DEFAULT_SECTION_ORDER = ['problem','solution','target_audience','features','technologies','challenges','results','learnings']
   const orderedSections = previewStyle.sectionOrder?.length ? previewStyle.sectionOrder : DEFAULT_SECTION_ORDER
@@ -768,7 +796,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
       position: 'fixed', inset: 0, zIndex: 50,
       overflowY: 'auto', overflowX: 'hidden',
       background: resolvedBg,
-      paddingRight: isOwner && previewEditing ? 340 : 0,
+      paddingRight: isOwner && previewEditing ? 360 : 0,
       transition: 'padding-right 0.3s ease',
     }}>
       {/* ── Owner preview banner — sticky ── */}
@@ -855,7 +883,14 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
 
       {/* ── Hero ── */}
       <div style={{ position: 'relative', overflow: 'hidden' }}>
-        {project.cover_url ? (
+        {coverAsHero ? (
+          /* Cover full-bleed hero */
+          <div style={{ width: '100%', height: Math.round(heroHeight * 1.4), position: 'relative' }}>
+            <img src={project.cover_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.1) 40%, var(--c-bg) 100%)' }} />
+            <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(135deg, ${hero.c1}22, transparent 60%)` }} />
+          </div>
+        ) : project.cover_url ? (
           <div style={{ width: '100%', height: Math.round(heroHeight * 1.14), position: 'relative' }}>
             <img src={project.cover_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
             <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, var(--c-bg) 100%)' }} />
@@ -871,7 +906,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
         )}
 
         {/* Title block over hero */}
-        <div style={{ maxWidth: 860, margin: '0 auto', padding: '0 28px', position: 'relative', marginTop: project.cover_url ? -100 : -80, textAlign: titleAlign }}>
+        <div style={{ maxWidth: 860, margin: '0 auto', padding: '0 28px', position: 'relative', marginTop: coverAsHero ? -160 : project.cover_url ? -100 : -80, textAlign: titleAlign }}>
           {/* Area / type chips */}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 18, justifyContent: titleAlign === 'center' ? 'center' : titleAlign === 'right' ? 'flex-end' : 'flex-start' }}>
             {project.project_type && (
@@ -921,9 +956,9 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
             )}
           </h1>
 
-          {project.ai_tagline && (
-            <p style={{ fontSize: 'clamp(16px, 2.2vw, 20px)', color: 'var(--c-muted)', margin: '0 0 28px', maxWidth: 600, lineHeight: 1.5, fontWeight: 400 }}>
-              {project.ai_tagline}
+          {(customTagline || project.ai_tagline) && (
+            <p style={{ fontSize: 'clamp(16px, 2.2vw, 20px)', color: coverAsHero ? 'rgba(255,255,255,0.75)' : 'var(--c-muted)', margin: '0 0 28px', maxWidth: 600, lineHeight: 1.5, fontWeight: 400 }}>
+              {customTagline || project.ai_tagline}
             </p>
           )}
 
@@ -946,177 +981,288 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
 
       {/* ── Workspace editor panel ── */}
       {isOwner && previewEditing && (
+        <div style={{
+          position: 'fixed', right: 0, top: 34, bottom: 0, zIndex: 200,
+          width: 360,
+          background: 'var(--c-sidebar-bg)',
+          borderLeft: '1px solid var(--c-border)',
+          display: 'flex', flexDirection: 'column',
+          boxShadow: '-16px 0 48px rgba(0,0,0,0.4)',
+          fontFamily: 'var(--font-body)',
+        }}>
+
+          {/* ── Panel header ── */}
           <div style={{
-            position: 'fixed', right: 0, top: 34, bottom: 0, zIndex: 200,
-            width: 340, background: 'var(--c-card)',
-            borderLeft: '1px solid var(--c-border)',
-            display: 'flex', flexDirection: 'column',
-            boxShadow: '-8px 0 32px rgba(0,0,0,0.25)',
-            fontFamily: 'var(--font-body)',
+            padding: '14px 16px 0',
+            background: 'linear-gradient(160deg, rgba(27,120,247,0.1) 0%, rgba(79,70,229,0.04) 100%)',
+            borderBottom: '1px solid var(--c-border)',
+            flexShrink: 0,
           }}>
-            {/* Header */}
-            <div style={{ padding: '10px 14px 0', borderBottom: '1px solid var(--c-border)', flexShrink: 0, background: 'linear-gradient(135deg, rgba(27,120,247,0.06), rgba(79,70,229,0.03))' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                <Layout size={15} color="#1b78f7" />
-                <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--c-text)', flex: 1 }}>Área de trabalho</span>
-                {previewSaved && (
-                  <span style={{ fontSize: 10, fontWeight: 700, color: '#22c55e', display: 'flex', alignItems: 'center', gap: 3, background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.25)', borderRadius: 6, padding: '2px 7px' }}>
-                    <Check size={10} /> Guardado
-                  </span>
-                )}
-                <button
-                  onClick={() => setPreviewEditing(false)}
-                  title="Fechar workspace"
-                  style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 6, padding: '4px 8px', color: '#ef4444', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600, transition: 'all 0.14s' }}
-                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.15)'}
-                  onMouseLeave={e => e.currentTarget.style.background = 'rgba(239,68,68,0.08)'}
-                >
-                  <X size={12} /> Fechar
-                </button>
+            {/* Top row */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 13 }}>
+              <div style={{
+                width: 32, height: 32, borderRadius: 9,
+                background: 'linear-gradient(135deg, #1b78f7, #4f46e5)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0, boxShadow: '0 4px 14px rgba(27,120,247,0.35)',
+              }}>
+                <Layout size={15} color="#fff" />
               </div>
-              {/* Tab switcher */}
-              <div style={{ display: 'flex', gap: 0, marginBottom: 0 }}>
-                {[
-                  { id: 'estilo',   label: 'Estilo',   Icon: Palette },
-                  { id: 'blocos',   label: 'Blocos',   Icon: Layout  },
-                  { id: 'seccoes',  label: 'Secções',  Icon: Eye     },
-                ].map(t => (
-                  <button
-                    key={t.id}
-                    onClick={() => setPreviewTab(t.id)}
-                    style={{
-                      flex: 1, padding: '8px 4px', border: 'none',
-                      borderBottom: previewTab === t.id ? '2px solid #1b78f7' : '2px solid transparent',
-                      background: 'transparent',
-                      color: previewTab === t.id ? '#1b78f7' : 'var(--c-muted)',
-                      fontSize: 11, fontWeight: previewTab === t.id ? 700 : 500,
-                      cursor: 'pointer', fontFamily: 'inherit',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
-                      transition: 'color 0.15s, border-color 0.15s',
-                    }}
-                  >
-                    <t.Icon size={11} /> {t.label}
-                  </button>
-                ))}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--c-text)', letterSpacing: '-0.2px' }}>Workspace</div>
+                <div style={{ fontSize: 10, color: 'var(--c-muted)', marginTop: 1 }}>Editor de preview público</div>
               </div>
+              {previewSaved && (
+                <span style={{
+                  fontSize: 10, fontWeight: 700, color: '#22c55e',
+                  display: 'flex', alignItems: 'center', gap: 4,
+                  background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.25)',
+                  borderRadius: 99, padding: '3px 10px', flexShrink: 0,
+                }}>
+                  <Check size={9} strokeWidth={3} /> Guardado
+                </span>
+              )}
+              <button
+                onClick={() => setPreviewEditing(false)}
+                style={{
+                  width: 30, height: 30, borderRadius: 8,
+                  background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)',
+                  color: '#ef4444', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  transition: 'all 0.14s', flexShrink: 0,
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.18)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'rgba(239,68,68,0.08)'}
+              ><X size={13} /></button>
             </div>
 
-            {/* ── Tab: Estilo ── */}
-            {previewTab === 'estilo' && <div style={{ flex: 1, overflowY: 'auto' }}>
-            <div style={{ padding: '12px 12px 10px', borderBottom: '1px solid var(--c-border)' }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--c-subtle)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 10 }}>Aparência</div>
+            {/* Tab segmented control */}
+            <div style={{
+              display: 'flex', gap: 3, marginBottom: 13,
+              background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)',
+              borderRadius: 11, padding: '3px',
+            }}>
+              {[
+                { id: 'estilo',  label: 'Estilo',  Icon: Palette },
+                { id: 'blocos',  label: 'Blocos',  Icon: Layout  },
+                { id: 'seccoes', label: 'Secções', Icon: Eye     },
+              ].map(t => (
+                <button key={t.id} onClick={() => setPreviewTab(t.id)} style={{
+                  flex: 1, padding: '7px 4px', borderRadius: 8, border: 'none',
+                  cursor: 'pointer', fontFamily: 'inherit',
+                  background: previewTab === t.id ? 'linear-gradient(135deg, #1b78f7, #4f46e5)' : 'transparent',
+                  color: previewTab === t.id ? '#fff' : 'var(--c-muted)',
+                  fontSize: 11, fontWeight: previewTab === t.id ? 700 : 500,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+                  transition: 'all 0.15s',
+                  boxShadow: previewTab === t.id ? '0 2px 10px rgba(27,120,247,0.3)' : 'none',
+                }}>
+                  <t.Icon size={11} /> {t.label}
+                </button>
+              ))}
+            </div>
+          </div>
 
-              {/* Accent color */}
-              <div style={{ marginBottom: 12 }}>
-                <div style={{ fontSize: 11, color: 'var(--c-muted)', fontWeight: 600, marginBottom: 7 }}>Cor de destaque</div>
-                <div style={{ display: 'flex', gap: 7 }}>
-                  {ACCENT_PALETTES.map(p => {
-                    const isSelected = (previewStyle.accent || 'default') === p.key
-                    return (
-                      <button
-                        key={p.key}
-                        title={p.label}
-                        onClick={() => setPreviewStyle(s => ({ ...s, accent: p.key }))}
-                        style={{
-                          flex: 1, height: 28, borderRadius: 8, border: 'none',
-                          cursor: 'pointer', padding: 0, position: 'relative',
-                          background: p.swatch
-                            ? `linear-gradient(135deg, ${p.c1}, ${p.c2})`
-                            : 'conic-gradient(#1e40af 0deg 90deg, #7c3aed 90deg 180deg, #065f46 180deg 270deg, #7c2d12 270deg 360deg)',
-                          outline: isSelected ? '2px solid var(--c-text)' : '2px solid transparent',
-                          outlineOffset: 2,
-                          transition: 'outline 0.12s, transform 0.1s',
-                          transform: isSelected ? 'scale(1.06)' : 'scale(1)',
-                        }}
-                      >
-                        {isSelected && (
-                          <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <Check size={12} color="#fff" strokeWidth={3} />
-                          </span>
-                        )}
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
+          {/* ── TAB: ESTILO ── */}
+          {previewTab === 'estilo' && (
+            <div style={{ flex: 1, overflowY: 'auto', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
 
-              {/* Background */}
-              <div style={{ marginBottom: 12 }}>
-                <div style={{ fontSize: 11, color: 'var(--c-muted)', fontWeight: 600, marginBottom: 7 }}>Fundo da página</div>
-                <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
-                  {BG_OPTIONS.map(b => {
-                    const isSel = (previewStyle.bg || 'default') === b.key
-                    return (
-                      <button
-                        key={b.key}
-                        title={b.label}
-                        onClick={() => setPreviewStyle(ps => ({ ...ps, bg: b.key }))}
-                        style={{
-                          flex: 1, minWidth: 36, height: 28, borderRadius: 7, border: 'none',
-                          cursor: 'pointer', padding: 0, position: 'relative',
-                          background: b.preview ? b.preview : 'var(--c-bg)',
-                          outline: isSel ? '2px solid var(--c-text)' : '1px solid var(--c-border)',
-                          outlineOffset: isSel ? 2 : 0,
-                          transition: 'outline 0.12s, transform 0.1s',
-                          transform: isSel ? 'scale(1.08)' : 'scale(1)',
-                          fontSize: 8, fontWeight: 700, color: b.preview ? '#fff' : 'var(--c-muted)',
-                          letterSpacing: '0.03em',
-                        }}
-                      >
-                        {b.label}
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-
-              {/* Hero size + Title alignment — side by side */}
-              <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 11, color: 'var(--c-muted)', fontWeight: 600, marginBottom: 6 }}>Hero</div>
-                  <div style={{ display: 'flex', gap: 4 }}>
-                    {HERO_SIZES.map(s => {
-                      const isSelected = (previewStyle.heroSize || 'default') === s.key
+              {/* Group: Identidade visual */}
+              <div style={wsGroup}>
+                <div style={wsGroupLabel}>Identidade visual</div>
+                <div style={{ marginBottom: 12 }}>
+                  <div style={wsControlLabel}>Cor de destaque</div>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    {ACCENT_PALETTES.map(p => {
+                      const isSelected = (previewStyle.accent || 'default') === p.key
                       return (
-                        <button
-                          key={s.key}
-                          onClick={() => setPreviewStyle(ps => ({ ...ps, heroSize: s.key }))}
+                        <button key={p.key} title={p.label}
+                          onClick={() => setPreviewStyle(s => ({ ...s, accent: p.key }))}
                           style={{
-                            flex: 1, padding: '6px 2px', borderRadius: 7,
-                            border: `1px solid ${isSelected ? '#1b78f7' : 'var(--c-border)'}`,
-                            background: isSelected ? 'rgba(27,120,247,0.1)' : 'var(--c-bg)',
-                            color: isSelected ? '#1b78f7' : 'var(--c-muted)',
-                            fontSize: 10, fontWeight: isSelected ? 700 : 500,
-                            cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.12s',
+                            flex: 1, height: 34, borderRadius: 9, border: 'none',
+                            cursor: 'pointer', padding: 0, position: 'relative',
+                            background: p.swatch
+                              ? `linear-gradient(135deg, ${p.c1}, ${p.c2})`
+                              : 'conic-gradient(#1e40af 0deg 90deg, #7c3aed 90deg 180deg, #065f46 180deg 270deg, #7c2d12 270deg 360deg)',
+                            outline: isSelected ? '2.5px solid var(--c-text)' : '2px solid transparent',
+                            outlineOffset: 2, transition: 'all 0.12s',
+                            transform: isSelected ? 'scale(1.08)' : 'scale(1)',
                           }}
                         >
-                          {s.label}
+                          {isSelected && <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Check size={12} color="#fff" strokeWidth={3} /></span>}
                         </button>
                       )
                     })}
                   </div>
                 </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 11, color: 'var(--c-muted)', fontWeight: 600, marginBottom: 6 }}>Alinhamento</div>
+                <div>
+                  <div style={wsControlLabel}>Fundo da página</div>
+                  <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+                    {BG_OPTIONS.map(b => {
+                      const isSel = (previewStyle.bg || 'default') === b.key
+                      return (
+                        <button key={b.key} title={b.label}
+                          onClick={() => setPreviewStyle(ps => ({ ...ps, bg: b.key }))}
+                          style={{
+                            flex: 1, minWidth: 40, height: 32, borderRadius: 8, border: 'none',
+                            cursor: 'pointer', position: 'relative',
+                            background: b.preview || 'var(--c-bg)',
+                            outline: isSel ? '2.5px solid var(--c-text)' : '1px solid var(--c-border)',
+                            outlineOffset: isSel ? 2 : 0,
+                            transition: 'all 0.12s', transform: isSel ? 'scale(1.08)' : 'scale(1)',
+                            fontSize: 8, fontWeight: 700, color: b.preview ? '#fff' : 'var(--c-muted)',
+                            letterSpacing: '0.03em',
+                          }}
+                        >{b.label}</button>
+                      )
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              {/* Group: Hero & Capa */}
+              <div style={wsGroup}>
+                <div style={wsGroupLabel}>Hero & capa</div>
+                <div style={{ marginBottom: 12 }}>
+                  <div style={wsControlLabel}>Tamanho do hero</div>
+                  <div style={{ display: 'flex', gap: 4 }}>
+                    {HERO_SIZES.map(s => {
+                      const isSelected = (previewStyle.heroSize || 'default') === s.key
+                      return (
+                        <button key={s.key} onClick={() => setPreviewStyle(ps => ({ ...ps, heroSize: s.key }))}
+                          style={{
+                            flex: 1, padding: '8px 4px', borderRadius: 8,
+                            border: `1px solid ${isSelected ? '#1b78f7' : 'var(--c-border)'}`,
+                            background: isSelected ? 'rgba(27,120,247,0.12)' : 'var(--c-bg)',
+                            color: isSelected ? '#1b78f7' : 'var(--c-muted)',
+                            fontSize: 11, fontWeight: isSelected ? 700 : 500,
+                            cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.12s',
+                          }}
+                        >{s.label}</button>
+                      )
+                    })}
+                  </div>
+                </div>
+                <div style={{ marginBottom: 12 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                    <div>
+                      <div style={wsControlLabel}>Capa como fundo do hero</div>
+                      <div style={{ fontSize: 10, color: 'var(--c-subtle)', marginTop: 1 }}>
+                        {project.cover_url ? 'Usa a imagem de capa no hero' : 'Adiciona uma capa primeiro'}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => project.cover_url && setPreviewStyle(ps => ({ ...ps, coverAsHero: !ps.coverAsHero }))}
+                      style={{
+                        width: 42, height: 24, borderRadius: 99, flexShrink: 0,
+                        background: previewStyle.coverAsHero && project.cover_url ? 'linear-gradient(135deg, #1b78f7, #4f46e5)' : 'var(--c-border)',
+                        border: 'none', cursor: project.cover_url ? 'pointer' : 'not-allowed',
+                        transition: 'background 0.2s', position: 'relative',
+                        opacity: project.cover_url ? 1 : 0.4,
+                      }}
+                    >
+                      <div style={{
+                        width: 18, height: 18, borderRadius: '50%', background: '#fff',
+                        position: 'absolute', top: 3,
+                        left: previewStyle.coverAsHero && project.cover_url ? 21 : 3,
+                        transition: 'left 0.2s', boxShadow: '0 1px 4px rgba(0,0,0,0.35)',
+                      }} />
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <div style={wsControlLabel}>Tagline personalizada</div>
+                  <input
+                    value={previewStyle.customTagline || ''}
+                    onChange={e => setPreviewStyle(ps => ({ ...ps, customTagline: e.target.value }))}
+                    placeholder={project.ai_tagline || 'Escreve uma tagline...'}
+                    style={wsInputNew}
+                    maxLength={120}
+                  />
+                  <div style={{ fontSize: 10, color: 'var(--c-subtle)', marginTop: 5 }}>Substitui a tagline gerada pela IA.</div>
+                </div>
+              </div>
+
+              {/* Group: Tipografia */}
+              <div style={wsGroup}>
+                <div style={wsGroupLabel}>Tipografia</div>
+                <div style={{ marginBottom: 12 }}>
+                  <div style={wsControlLabel}>Fonte do título</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 4, marginBottom: 8 }}>
+                    {TITLE_FONT_OPTIONS.map(f => {
+                      const isSel = (previewStyle.titleFont || 'croogla') === f.key
+                      return (
+                        <button key={f.key} title={f.label}
+                          onClick={() => setPreviewStyle(ps => ({ ...ps, titleFont: f.key }))}
+                          style={{
+                            padding: '8px 2px', borderRadius: 8, cursor: 'pointer', textAlign: 'center',
+                            border: `1px solid ${isSel ? '#1b78f7' : 'var(--c-border)'}`,
+                            background: isSel ? 'rgba(27,120,247,0.12)' : 'var(--c-bg)',
+                            color: isSel ? '#1b78f7' : 'var(--c-muted)',
+                            transition: 'all 0.12s',
+                          }}
+                        >
+                          <div style={{ fontSize: 14, fontWeight: 700, fontFamily: f.css, lineHeight: 1 }}>{f.sample}</div>
+                          <div style={{ fontSize: 8, marginTop: 3, fontWeight: isSel ? 700 : 500, fontFamily: 'var(--font-body)' }}>{f.label}</div>
+                        </button>
+                      )
+                    })}
+                  </div>
+                  <div style={{ display: 'flex', gap: 4 }}>
+                    {TITLE_STYLE_OPTIONS.map(s => {
+                      const isSel = (previewStyle.titleStyle || 'normal') === s.key
+                      return (
+                        <button key={s.key} onClick={() => setPreviewStyle(ps => ({ ...ps, titleStyle: s.key }))}
+                          style={{
+                            flex: 1, padding: '7px 4px', borderRadius: 8, cursor: 'pointer',
+                            border: `1px solid ${isSel ? '#1b78f7' : 'var(--c-border)'}`,
+                            background: isSel ? 'rgba(27,120,247,0.12)' : 'var(--c-bg)',
+                            color: isSel ? '#1b78f7' : 'var(--c-muted)',
+                            fontSize: 11, fontWeight: 700, fontFamily: 'var(--font-body)', transition: 'all 0.12s',
+                          }}
+                        >{s.label}</button>
+                      )
+                    })}
+                  </div>
+                </div>
+                <div style={{ marginBottom: 12 }}>
+                  <div style={wsControlLabel}>Alinhamento do título</div>
                   <div style={{ display: 'flex', gap: 4 }}>
                     {[
-                      { val: 'left',   Icon: AlignLeft   },
-                      { val: 'center', Icon: AlignCenter  },
-                      { val: 'right',  Icon: AlignRight   },
+                      { val: 'left', Icon: AlignLeft }, { val: 'center', Icon: AlignCenter }, { val: 'right', Icon: AlignRight },
                     ].map(a => {
                       const isSel = (previewStyle.titleAlign || 'left') === a.val
                       return (
                         <button key={a.val} onClick={() => setPreviewStyle(ps => ({ ...ps, titleAlign: a.val }))}
                           style={{
-                            flex: 1, padding: '6px 0', borderRadius: 7, cursor: 'pointer',
+                            flex: 1, padding: '8px 0', borderRadius: 8, cursor: 'pointer',
                             border: `1px solid ${isSel ? '#1b78f7' : 'var(--c-border)'}`,
-                            background: isSel ? 'rgba(27,120,247,0.1)' : 'var(--c-bg)',
+                            background: isSel ? 'rgba(27,120,247,0.12)' : 'var(--c-bg)',
                             color: isSel ? '#1b78f7' : 'var(--c-muted)',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            transition: 'all 0.12s',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.12s',
+                          }}
+                        ><a.Icon size={14} /></button>
+                      )
+                    })}
+                  </div>
+                </div>
+                <div>
+                  <div style={wsControlLabel}>Fonte do texto</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 4 }}>
+                    {FONT_OPTIONS.map(f => {
+                      const isSel = (previewStyle.font || 'default') === f.key
+                      return (
+                        <button key={f.key} title={f.label}
+                          onClick={() => setPreviewStyle(ps => ({ ...ps, font: f.key }))}
+                          style={{
+                            padding: '8px 2px', borderRadius: 8, cursor: 'pointer', textAlign: 'center',
+                            border: `1px solid ${isSel ? '#1b78f7' : 'var(--c-border)'}`,
+                            background: isSel ? 'rgba(27,120,247,0.12)' : 'var(--c-bg)',
+                            color: isSel ? '#1b78f7' : 'var(--c-muted)', transition: 'all 0.12s',
                           }}
                         >
-                          <a.Icon size={13} />
+                          <div style={{ fontSize: 14, fontWeight: 700, fontFamily: f.css, lineHeight: 1 }}>{f.sample}</div>
+                          <div style={{ fontSize: 8, marginTop: 3, fontWeight: isSel ? 700 : 500, fontFamily: 'var(--font-body)' }}>{f.label}</div>
                         </button>
                       )
                     })}
@@ -1124,99 +1270,41 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
                 </div>
               </div>
 
-              {/* Title font */}
-              <div>
-                <div style={{ fontSize: 11, color: 'var(--c-muted)', fontWeight: 600, marginBottom: 6 }}>Fonte do título</div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 4, marginBottom: 8 }}>
-                  {TITLE_FONT_OPTIONS.map(f => {
-                    const isSel = (previewStyle.titleFont || 'croogla') === f.key
-                    return (
-                      <button key={f.key} onClick={() => setPreviewStyle(ps => ({ ...ps, titleFont: f.key }))}
-                        title={f.label}
-                        style={{
-                          padding: '7px 2px', borderRadius: 7, cursor: 'pointer',
-                          border: `1px solid ${isSel ? '#1b78f7' : 'var(--c-border)'}`,
-                          background: isSel ? 'rgba(27,120,247,0.1)' : 'var(--c-bg)',
-                          color: isSel ? '#1b78f7' : 'var(--c-muted)',
-                          transition: 'all 0.12s', textAlign: 'center',
-                        }}
-                      >
-                        <div style={{ fontSize: 13, fontWeight: 700, fontFamily: f.css, lineHeight: 1 }}>{f.sample}</div>
-                        <div style={{ fontSize: 8, marginTop: 3, fontWeight: isSel ? 700 : 500, letterSpacing: '0.02em', fontFamily: 'var(--font-body)' }}>{f.label}</div>
-                      </button>
-                    )
-                  })}
-                </div>
-                {/* Title style */}
-                <div style={{ display: 'flex', gap: 4 }}>
-                  {TITLE_STYLE_OPTIONS.map(s => {
-                    const isSel = (previewStyle.titleStyle || 'normal') === s.key
-                    return (
-                      <button key={s.key}
-                        onClick={() => setPreviewStyle(ps => ({ ...ps, titleStyle: s.key }))}
-                        style={{
-                          flex: 1, padding: '6px 4px', borderRadius: 7, cursor: 'pointer',
-                          border: `1px solid ${isSel ? '#1b78f7' : 'var(--c-border)'}`,
-                          background: isSel ? 'rgba(27,120,247,0.1)' : 'var(--c-bg)',
-                          color: isSel ? '#1b78f7' : 'var(--c-muted)',
-                          fontSize: 10, fontWeight: 700, fontFamily: 'var(--font-body)',
-                          transition: 'all 0.12s',
-                        }}
-                      >{s.label}</button>
-                    )
-                  })}
-                </div>
-              </div>
-
-              {/* Body font */}
-              <div>
-                <div style={{ fontSize: 11, color: 'var(--c-muted)', fontWeight: 600, marginBottom: 6 }}>Fonte do texto</div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 4 }}>
-                  {FONT_OPTIONS.map(f => {
-                    const isSel = (previewStyle.font || 'default') === f.key
-                    return (
-                      <button key={f.key} onClick={() => setPreviewStyle(ps => ({ ...ps, font: f.key }))}
-                        title={f.label}
-                        style={{
-                          padding: '7px 2px', borderRadius: 7, cursor: 'pointer', fontFamily: 'var(--font-body)',
-                          border: `1px solid ${isSel ? '#1b78f7' : 'var(--c-border)'}`,
-                          background: isSel ? 'rgba(27,120,247,0.1)' : 'var(--c-bg)',
-                          color: isSel ? '#1b78f7' : 'var(--c-muted)',
-                          transition: 'all 0.12s', textAlign: 'center',
-                        }}
-                      >
-                        <div style={{ fontSize: 13, fontWeight: 700, fontFamily: f.css, lineHeight: 1 }}>{f.sample}</div>
-                        <div style={{ fontSize: 8, marginTop: 3, fontWeight: isSel ? 700 : 500, letterSpacing: '0.02em', fontFamily: 'var(--font-body)' }}>{f.label}</div>
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-
-              {/* Footer text */}
-              <div style={{ paddingTop: 10, borderTop: '1px solid var(--c-border)', marginTop: 4 }}>
-                <div style={{ fontSize: 11, color: 'var(--c-muted)', fontWeight: 600, marginBottom: 6 }}>Rodapé personalizado</div>
-                <input
-                  value={previewStyle.footerText || ''}
-                  onChange={e => setPreviewStyle(ps => ({ ...ps, footerText: e.target.value }))}
-                  placeholder="Ex: Projeto desenvolvido em 2025 · ETIC Lisboa"
-                  style={{ ...wsInput, fontSize: 12 }}
-                  maxLength={120}
-                />
-                <div style={{ fontSize: 10, color: 'var(--c-subtle)', marginTop: 4 }}>Aparece no fundo da preview. Máx. 120 caracteres.</div>
-              </div>
-
-              {/* Cover image upload */}
-              <div style={{ paddingTop: 10, borderTop: '1px solid var(--c-border)', marginTop: 4 }}>
-                <div style={{ fontSize: 11, color: 'var(--c-muted)', fontWeight: 600, marginBottom: 6 }}>Imagem de capa</div>
+              {/* Group: Estilo dos cards */}
+              <div style={wsGroup}>
+                <div style={wsGroupLabel}>Estilo dos cards</div>
                 <div style={{ display: 'flex', gap: 6 }}>
-                  <input
-                    value={project.cover_url || ''}
-                    onChange={e => {/* handled in project page */}}
-                    placeholder="URL da capa..."
-                    readOnly
-                    style={{ ...wsInput, flex: 1, margin: 0, fontSize: 11, color: project.cover_url ? 'var(--c-text)' : 'var(--c-subtle)', cursor: 'default' }}
-                  />
+                  {[
+                    { key: 'border', label: 'Padrão',  desc: 'Com bordas'    },
+                    { key: 'flat',   label: 'Flat',    desc: 'Sem bordas'    },
+                    { key: 'glass',  label: 'Glass',   desc: 'Transparente'  },
+                  ].map(c => {
+                    const isSel = (previewStyle.cardStyle || 'border') === c.key
+                    return (
+                      <button key={c.key} onClick={() => setPreviewStyle(ps => ({ ...ps, cardStyle: c.key }))}
+                        style={{
+                          flex: 1, padding: '10px 4px', borderRadius: 9, cursor: 'pointer', textAlign: 'center',
+                          border: `1px solid ${isSel ? '#1b78f7' : 'var(--c-border)'}`,
+                          background: isSel ? 'rgba(27,120,247,0.12)' : 'var(--c-bg)',
+                          color: isSel ? '#1b78f7' : 'var(--c-muted)',
+                          fontFamily: 'inherit', transition: 'all 0.12s',
+                        }}
+                      >
+                        <div style={{ fontSize: 12, fontWeight: 700 }}>{c.label}</div>
+                        <div style={{ fontSize: 9, marginTop: 3, color: isSel ? 'rgba(27,120,247,0.65)' : 'var(--c-subtle)' }}>{c.desc}</div>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* Group: Imagem de capa */}
+              <div style={wsGroup}>
+                <div style={wsGroupLabel}>Imagem de capa</div>
+                <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                  {project.cover_url && (
+                    <img src={project.cover_url} alt="" style={{ width: 58, height: 42, borderRadius: 8, objectFit: 'cover', flexShrink: 0, border: '1px solid var(--c-border)' }} />
+                  )}
                   <button
                     onClick={() => {
                       const input = document.createElement('input')
@@ -1234,368 +1322,322 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
                       }
                       input.click()
                     }}
-                    style={{ background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.25)', borderRadius: 7, padding: '0 10px', color: colors.blue, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', flexShrink: 0 }}
-                    title="Carregar capa"
+                    style={{
+                      flex: 1, padding: '11px 14px', borderRadius: 9,
+                      background: 'rgba(27,120,247,0.06)', border: '1.5px dashed rgba(27,120,247,0.3)',
+                      color: '#1b78f7', cursor: 'pointer', fontFamily: 'inherit',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                      fontSize: 12, fontWeight: 600, transition: 'all 0.15s',
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(27,120,247,0.12)'; e.currentTarget.style.borderColor = 'rgba(27,120,247,0.5)' }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'rgba(27,120,247,0.06)'; e.currentTarget.style.borderColor = 'rgba(27,120,247,0.3)' }}
                   >
-                    <Camera size={13} />
+                    <Camera size={14} />
+                    {project.cover_url ? 'Alterar capa' : 'Carregar capa'}
                   </button>
                 </div>
               </div>
+
+              {/* Group: Rodapé */}
+              <div style={{ ...wsGroup, marginBottom: 4 }}>
+                <div style={wsGroupLabel}>Rodapé</div>
+                <input
+                  value={previewStyle.footerText || ''}
+                  onChange={e => setPreviewStyle(ps => ({ ...ps, footerText: e.target.value }))}
+                  placeholder="Ex: Projeto desenvolvido em 2025 · ETIC Lisboa"
+                  style={wsInputNew}
+                  maxLength={120}
+                />
+                <div style={{ fontSize: 10, color: 'var(--c-subtle)', marginTop: 5 }}>Aparece no fundo da preview pública.</div>
+              </div>
             </div>
-            </div>}{/* end estilo tab */}
+          )}
 
-            {/* Tab: Blocos */}
-            {previewTab === 'blocos' && <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+          {/* ── TAB: BLOCOS ── */}
+          {previewTab === 'blocos' && (
+            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+              <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--c-border)' }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--c-subtle)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 10 }}>Adicionar bloco</div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+                  {BLOCK_TYPES.map(bt => {
+                    const BtIcon = bt.Icon
+                    return (
+                      <button key={bt.type} onClick={() => setPreviewBlocks(bs => [...bs, newBlock(bt.type)])}
+                        style={{
+                          background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)',
+                          borderRadius: 10, padding: '10px 12px',
+                          cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
+                          transition: 'all 0.14s', display: 'flex', alignItems: 'center', gap: 10,
+                        }}
+                        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(27,120,247,0.08)'; e.currentTarget.style.borderColor = 'rgba(27,120,247,0.3)' }}
+                        onMouseLeave={e => { e.currentTarget.style.background = 'var(--c-bg-alt)'; e.currentTarget.style.borderColor = 'var(--c-border)' }}
+                      >
+                        <div style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(27,120,247,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          <BtIcon size={14} color="#1b78f7" />
+                        </div>
+                        <div>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--c-text)', marginBottom: 2 }}>{bt.label}</div>
+                          <div style={{ fontSize: 9, color: 'var(--c-muted)', lineHeight: 1.3 }}>{bt.desc.slice(0, 26)}…</div>
+                        </div>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
 
-            {/* Add block grid */}
-            <div style={{ padding: '12px 12px 10px', borderBottom: '1px solid var(--c-border)' }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--c-subtle)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>Adicionar bloco</div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
-                {BLOCK_TYPES.map(bt => {
+              <div style={{ flex: 1, overflowY: 'auto', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {previewBlocks.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '40px 0' }}>
+                    <div style={{ width: 48, height: 48, borderRadius: 14, background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
+                      <Layout size={22} color="var(--c-border)" />
+                    </div>
+                    <div style={{ fontSize: 13, color: 'var(--c-muted)', fontWeight: 600 }}>Nenhum bloco ainda</div>
+                    <div style={{ fontSize: 11, color: 'var(--c-subtle)', marginTop: 4 }}>Adiciona o primeiro bloco acima.</div>
+                  </div>
+                ) : previewBlocks.map((block, idx) => {
+                  const bt = BLOCK_TYPES.find(b => b.type === block.type) || BLOCK_TYPES[0]
                   const BtIcon = bt.Icon
+                  const isDragTarget = dragOverIdx === idx
+                  const accentColor = block.color || '#1b78f7'
+                  const hasText = ['heading','note','quote','callout','metric','stats'].includes(block.type)
                   return (
-                    <button
-                      key={bt.type}
-                      onClick={() => setPreviewBlocks(bs => [...bs, newBlock(bt.type)])}
+                    <div key={block.id} draggable
+                      onDragStart={() => onDragStart(idx)} onDragEnter={() => onDragEnter(idx)}
+                      onDragEnd={onDragEnd} onDragOver={e => e.preventDefault()}
                       style={{
-                        background: 'var(--c-bg)', border: '1px solid var(--c-border)',
-                        borderRadius: 9, padding: '9px 10px',
-                        cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
-                        transition: 'all 0.14s', display: 'flex', alignItems: 'center', gap: 8,
+                        background: isDragTarget ? 'rgba(27,120,247,0.06)' : 'var(--c-bg-alt)',
+                        border: `1px solid ${isDragTarget ? 'rgba(27,120,247,0.45)' : 'var(--c-border)'}`,
+                        borderLeft: `3px solid ${accentColor}`,
+                        borderRadius: 10, padding: '11px 12px',
+                        cursor: 'grab', transition: 'all 0.1s',
+                        transform: isDragTarget ? 'scale(1.01)' : 'none',
                       }}
-                      onMouseEnter={e => { e.currentTarget.style.background = 'rgba(27,120,247,0.09)'; e.currentTarget.style.borderColor = 'rgba(27,120,247,0.3)' }}
-                      onMouseLeave={e => { e.currentTarget.style.background = 'var(--c-bg)'; e.currentTarget.style.borderColor = 'var(--c-border)' }}
                     >
-                      <div style={{ width: 28, height: 28, borderRadius: 7, background: 'rgba(27,120,247,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <BtIcon size={13} color="#1b78f7" />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 10 }}>
+                        <GripVertical size={13} color="var(--c-muted)" style={{ flexShrink: 0 }} />
+                        <div style={{ width: 22, height: 22, borderRadius: 6, background: `${accentColor}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          <BtIcon size={11} color={accentColor} />
+                        </div>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--c-text)', flex: 1 }}>{bt.label}</span>
+                        <button onClick={() => setPreviewBlocks(bs => bs.filter(b => b.id !== block.id))}
+                          style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', color: '#ef4444', cursor: 'pointer', padding: '3px 7px', display: 'flex', alignItems: 'center', borderRadius: 6, transition: 'all 0.12s' }}
+                          onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.18)'}
+                          onMouseLeave={e => e.currentTarget.style.background = 'rgba(239,68,68,0.08)'}
+                        ><X size={10} /></button>
                       </div>
-                      <div>
-                        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--c-text)', marginBottom: 1 }}>{bt.label}</div>
-                        <div style={{ fontSize: 10, color: 'var(--c-muted)', lineHeight: 1.3 }}>{bt.desc.slice(0, 28)}…</div>
+
+                      {block.type === 'heading' && <input value={block.content || ''} onChange={e => upd(block.id, 'content', e.target.value)} placeholder="Título da secção..." style={wsInputNew} />}
+                      {block.type === 'note' && <textarea value={block.content || ''} onChange={e => upd(block.id, 'content', e.target.value)} placeholder="A tua mensagem para quem visita..." rows={3} style={{ ...wsInputNew, resize: 'vertical', lineHeight: 1.5 }} />}
+                      {block.type === 'quote' && <textarea value={block.content || ''} onChange={e => upd(block.id, 'content', e.target.value)} placeholder="A tua frase ou citação..." rows={2} style={{ ...wsInputNew, resize: 'vertical', lineHeight: 1.5 }} />}
+                      {block.type === 'callout' && (<>
+                        <input value={block.label || ''} onChange={e => upd(block.id, 'label', e.target.value)} placeholder="Título do destaque (opcional)" style={{ ...wsInputNew, marginBottom: 6 }} />
+                        <textarea value={block.content || ''} onChange={e => upd(block.id, 'content', e.target.value)} placeholder="Conteúdo do destaque..." rows={2} style={{ ...wsInputNew, resize: 'vertical', lineHeight: 1.5 }} />
+                      </>)}
+                      {block.type === 'link' && (<>
+                        <input value={block.label || ''} onChange={e => upd(block.id, 'label', e.target.value)} placeholder="Texto do link (ex: Ver demo)" style={{ ...wsInputNew, marginBottom: 6 }} />
+                        <input value={block.url || ''} onChange={e => upd(block.id, 'url', e.target.value)} placeholder="URL (https://...)" style={wsInputNew} />
+                      </>)}
+                      {block.type === 'metric' && (<>
+                        <input value={block.label || ''} onChange={e => upd(block.id, 'label', e.target.value)} placeholder="Número ou valor (ex: 2.500)" style={{ ...wsInputNew, marginBottom: 6, fontWeight: 800, fontSize: 16 }} />
+                        <input value={block.content || ''} onChange={e => upd(block.id, 'content', e.target.value)} placeholder="Descrição (ex: utilizadores activos)" style={wsInputNew} />
+                      </>)}
+                      {block.type === 'image' && (<>
+                        <div style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
+                          <input value={block.imageUrl || ''} onChange={e => upd(block.id, 'imageUrl', e.target.value)} placeholder="URL da imagem..." style={{ ...wsInputNew, flex: 1 }} />
+                          <button onClick={() => uploadImage(block.id, 'imageUrl')} style={{ background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.25)', borderRadius: 7, padding: '0 10px', color: colors.blue, cursor: 'pointer', display: 'flex', alignItems: 'center', flexShrink: 0 }}><Camera size={13} /></button>
+                        </div>
+                        <input value={block.content || ''} onChange={e => upd(block.id, 'content', e.target.value)} placeholder="Legenda (opcional)" style={wsInputNew} />
+                      </>)}
+                      {block.type === 'gallery' && (<>
+                        {['imageUrl','imageUrl2','imageUrl3'].map((field, gi) => (
+                          <div key={field} style={{ display: 'flex', gap: 6, marginBottom: gi < 2 ? 6 : 0 }}>
+                            <input value={block[field] || ''} onChange={e => upd(block.id, field, e.target.value)} placeholder={`Imagem ${gi+1} (URL ou upload)`} style={{ ...wsInputNew, flex: 1 }} />
+                            <button onClick={() => uploadImage(block.id, field)} style={{ background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.25)', borderRadius: 7, padding: '0 10px', color: colors.blue, cursor: 'pointer', display: 'flex', alignItems: 'center', flexShrink: 0 }}><Camera size={13} /></button>
+                          </div>
+                        ))}
+                      </>)}
+                      {block.type === 'video' && <input value={block.videoUrl || ''} onChange={e => upd(block.id, 'videoUrl', e.target.value)} placeholder="URL do YouTube ou Vimeo..." style={wsInputNew} />}
+                      {block.type === 'stats' && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                          {[1,2,3].map(n => (
+                            <div key={n} style={{ display: 'flex', gap: 5 }}>
+                              <input value={block[`stat${n}Value`] || ''} onChange={e => upd(block.id, `stat${n}Value`, e.target.value)} placeholder={`Valor ${n}`} style={{ ...wsInputNew, flex: '0 0 42%', fontWeight: 800, fontSize: 14 }} />
+                              <input value={block[`stat${n}Label`] || ''} onChange={e => upd(block.id, `stat${n}Label`, e.target.value)} placeholder={`Descrição ${n}`} style={{ ...wsInputNew, flex: 1 }} />
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      {block.type === 'cta' && (<>
+                        <input value={block.content || ''} onChange={e => upd(block.id, 'content', e.target.value)} placeholder="Texto do botão (ex: Ver demo ao vivo)" style={{ ...wsInputNew, marginBottom: 6, fontWeight: 700 }} />
+                        <input value={block.url || ''} onChange={e => upd(block.id, 'url', e.target.value)} placeholder="URL de destino (https://...)" style={wsInputNew} />
+                        <div style={{ fontSize: 10, color: 'var(--c-muted)', marginTop: 5 }}>A cor segue a cor de destaque.</div>
+                      </>)}
+                      {block.type === 'divider' && (
+                        <div style={{ display: 'flex', gap: 4 }}>
+                          {['solid','dashed','dotted','gradient'].map(s => (
+                            <button key={s} onClick={() => upd(block.id, 'dividerStyle', s)}
+                              style={{
+                                flex: 1, padding: '6px 0', borderRadius: 7, cursor: 'pointer',
+                                border: `1px solid ${(block.dividerStyle || 'solid') === s ? '#1b78f7' : 'var(--c-border)'}`,
+                                background: (block.dividerStyle || 'solid') === s ? 'rgba(27,120,247,0.1)' : 'var(--c-bg)',
+                                color: (block.dividerStyle || 'solid') === s ? '#1b78f7' : 'var(--c-muted)',
+                                fontSize: 10, fontWeight: 700, fontFamily: 'inherit',
+                              }}
+                            >{s.charAt(0).toUpperCase() + s.slice(1)}</button>
+                          ))}
+                        </div>
+                      )}
+
+                      <div style={{ marginTop: 10, paddingTop: 8, borderTop: '1px solid var(--c-border)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <div style={{ display: 'flex', gap: 5, flex: 1 }}>
+                          {BLOCK_ACCENT_COLORS.map(c => (
+                            <button key={c.value} title={c.label}
+                              onClick={() => upd(block.id, 'color', block.color === c.value ? '' : c.value)}
+                              style={{
+                                width: 20, height: 20, borderRadius: '50%', background: c.value,
+                                border: block.color === c.value ? '2.5px solid var(--c-text)' : '2px solid transparent',
+                                cursor: 'pointer', padding: 0, flexShrink: 0,
+                                boxShadow: block.color === c.value ? `0 0 0 1px ${c.value}` : 'none',
+                                transition: 'transform 0.1s',
+                              }}
+                              onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.25)'}
+                              onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                            />
+                          ))}
+                        </div>
+                        {hasText && (
+                          <div style={{ display: 'flex', gap: 3 }}>
+                            {[{ val: 'left', Icon: AlignLeft }, { val: 'center', Icon: AlignCenter }, { val: 'right', Icon: AlignRight }].map(a => (
+                              <button key={a.val} onClick={() => upd(block.id, 'align', a.val)}
+                                style={{
+                                  width: 26, height: 24, borderRadius: 6,
+                                  background: (block.align || 'left') === a.val ? '#1b78f7' : 'var(--c-bg)',
+                                  border: `1px solid ${(block.align || 'left') === a.val ? '#1b78f7' : 'var(--c-border)'}`,
+                                  cursor: 'pointer', color: (block.align || 'left') === a.val ? '#fff' : 'var(--c-muted)',
+                                  display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
+                                }}
+                              ><a.Icon size={12} /></button>
+                            ))}
+                          </div>
+                        )}
                       </div>
-                    </button>
+                    </div>
                   )
                 })}
               </div>
             </div>
+          )}
 
-            {/* Blocks list — draggable */}
-            <div style={{ flex: 1, overflowY: 'auto', padding: '10px 12px' }}>
-              {previewBlocks.length === 0 ? (
-                <div style={{ textAlign: 'center', color: 'var(--c-subtle)', fontSize: 13, padding: '32px 0', lineHeight: 1.7 }}>
-                  <Layout size={28} color="var(--c-border)" style={{ display: 'block', margin: '0 auto 10px' }} />
-                  Nenhum bloco ainda.<br/>Adiciona o primeiro acima.
-                </div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {previewBlocks.map((block, idx) => {
-                    const bt = BLOCK_TYPES.find(b => b.type === block.type) || BLOCK_TYPES[0]
-                    const BtIcon = bt.Icon
-                    const isDragTarget = dragOverIdx === idx
-                    const accentColor = block.color || '#1b78f7'
-                    const hasText = ['heading','note','quote','callout','metric','stats'].includes(block.type)
-
+          {/* ── TAB: SECÇÕES ── */}
+          {previewTab === 'seccoes' && (() => {
+            const NATIVE_SECTIONS_MAP = {
+              problem:         { label: 'Problema',        Icon: Search     },
+              solution:        { label: 'Solução',         Icon: Lightbulb  },
+              target_audience: { label: 'Público-alvo',    Icon: Target     },
+              features:        { label: 'Funcionalidades', Icon: Wrench     },
+              technologies:    { label: 'Tecnologias',     Icon: Zap        },
+              challenges:      { label: 'Desafios',        Icon: Zap        },
+              results:         { label: 'Resultados',      Icon: TrendingUp },
+              learnings:       { label: 'Aprendizagens',   Icon: BookOpen   },
+            }
+            const hidden = new Set(previewStyle.hiddenSections || [])
+            return (
+              <div style={{ flex: 1, overflowY: 'auto', padding: '12px 14px' }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--c-subtle)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>Secções da preview</div>
+                <p style={{ margin: '0 0 12px', fontSize: 11, color: 'var(--c-muted)', lineHeight: 1.5 }}>
+                  Arrasta para reordenar. Toca em <Eye size={10} style={{ verticalAlign: 'middle' }} /> para ocultar.
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {orderedSections.map((key, idx) => {
+                    const s = NATIVE_SECTIONS_MAP[key]
+                    if (!s) return null
+                    const isHidden = hidden.has(key)
+                    const hasContent = key === 'features' ? features.length > 0 : key === 'technologies' ? tech.length > 0 : !!(project[key]?.trim())
+                    const SIcon = s.Icon
+                    const isOver = dragOverSectionIdx === idx
                     return (
-                      <div
-                        key={block.id}
-                        draggable
-                        onDragStart={() => onDragStart(idx)}
-                        onDragEnter={() => onDragEnter(idx)}
-                        onDragEnd={onDragEnd}
-                        onDragOver={e => e.preventDefault()}
+                      <div key={key} draggable
+                        onDragStart={() => { sectionDragRef.current = idx }}
+                        onDragOver={e => { e.preventDefault(); if (dragOverSectionIdx !== idx) setDragOverSectionIdx(idx) }}
+                        onDragLeave={() => setDragOverSectionIdx(null)}
+                        onDrop={e => {
+                          e.preventDefault(); setDragOverSectionIdx(null)
+                          const from = sectionDragRef.current
+                          if (from === null || from === idx) return
+                          const newOrder = [...orderedSections]
+                          newOrder.splice(idx, 0, newOrder.splice(from, 1)[0])
+                          setPreviewStyle(ps => ({ ...ps, sectionOrder: newOrder }))
+                        }}
+                        onDragEnd={() => setDragOverSectionIdx(null)}
                         style={{
-                          background: isDragTarget ? 'rgba(27,120,247,0.08)' : 'var(--c-bg)',
-                          border: isDragTarget ? '1.5px solid rgba(27,120,247,0.45)' : '1px solid var(--c-border)',
-                          borderRadius: 11, padding: '10px',
-                          cursor: 'grab', transition: 'border-color 0.1s, background 0.1s',
-                          transform: isDragTarget ? 'scale(1.01)' : 'none',
+                          display: 'flex', alignItems: 'center', gap: 8,
+                          background: isOver ? 'rgba(27,120,247,0.08)' : isHidden ? 'var(--c-bg)' : hasContent ? 'var(--c-bg-alt)' : 'var(--c-bg)',
+                          border: `1px solid ${isOver ? '#1b78f7' : isHidden ? 'var(--c-border)' : hasContent ? 'rgba(27,120,247,0.15)' : 'var(--c-border)'}`,
+                          borderLeft: `3px solid ${hasContent && !isHidden ? '#1b78f7' : 'var(--c-border)'}`,
+                          borderRadius: 10, padding: '8px 10px',
+                          opacity: hasContent ? 1 : 0.45, transition: 'all 0.12s',
+                          userSelect: 'none', cursor: 'default',
                         }}
                       >
-                        {/* Block header */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 9 }}>
-                          <GripVertical size={13} color="var(--c-muted)" style={{ flexShrink: 0, cursor: 'grab' }} />
-                          <BtIcon size={12} color={accentColor} style={{ flexShrink: 0 }} />
-                          <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--c-text)', flex: 1 }}>{bt.label}</span>
-                          <button
-                            onClick={() => setPreviewBlocks(bs => bs.filter(b => b.id !== block.id))}
-                            style={{ background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.2)', color: '#ef4444', cursor: 'pointer', padding: '2px 6px', display: 'flex', alignItems: 'center', borderRadius: 5, transition: 'all 0.12s' }}
-                            onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.15)'}
-                            onMouseLeave={e => e.currentTarget.style.background = 'rgba(239,68,68,0.07)'}
-                          ><X size={11} /></button>
+                        <div style={{ cursor: 'grab', color: 'var(--c-subtle)', display: 'flex', flexShrink: 0 }}>
+                          <GripVertical size={14} />
                         </div>
-
-                        {/* Block fields */}
-                        {block.type === 'heading' && (
-                          <input value={block.content || ''} onChange={e => upd(block.id, 'content', e.target.value)}
-                            placeholder="Título da secção..." style={wsInput} />
-                        )}
-                        {block.type === 'note' && (
-                          <textarea value={block.content || ''} onChange={e => upd(block.id, 'content', e.target.value)}
-                            placeholder="A tua mensagem para quem visita..." rows={3} style={{ ...wsInput, resize: 'vertical', lineHeight: 1.5 }} />
-                        )}
-                        {block.type === 'quote' && (
-                          <textarea value={block.content || ''} onChange={e => upd(block.id, 'content', e.target.value)}
-                            placeholder="A tua frase ou citação..." rows={2} style={{ ...wsInput, resize: 'vertical', lineHeight: 1.5 }} />
-                        )}
-                        {block.type === 'callout' && (<>
-                          <input value={block.label || ''} onChange={e => upd(block.id, 'label', e.target.value)}
-                            placeholder="Título do destaque (opcional)" style={{ ...wsInput, marginBottom: 6 }} />
-                          <textarea value={block.content || ''} onChange={e => upd(block.id, 'content', e.target.value)}
-                            placeholder="Conteúdo do destaque..." rows={2} style={{ ...wsInput, resize: 'vertical', lineHeight: 1.5 }} />
-                        </>)}
-                        {block.type === 'link' && (<>
-                          <input value={block.label || ''} onChange={e => upd(block.id, 'label', e.target.value)}
-                            placeholder="Texto do link (ex: Ver demo)" style={{ ...wsInput, marginBottom: 6 }} />
-                          <input value={block.url || ''} onChange={e => upd(block.id, 'url', e.target.value)}
-                            placeholder="URL (https://...)" style={wsInput} />
-                        </>)}
-                        {block.type === 'metric' && (<>
-                          <input value={block.label || ''} onChange={e => upd(block.id, 'label', e.target.value)}
-                            placeholder="Número ou valor (ex: 2.500)" style={{ ...wsInput, marginBottom: 6, fontWeight: 800, fontSize: 16 }} />
-                          <input value={block.content || ''} onChange={e => upd(block.id, 'content', e.target.value)}
-                            placeholder="Descrição (ex: utilizadores activos)" style={wsInput} />
-                        </>)}
-                        {block.type === 'image' && (<>
-                          <div style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
-                            <input value={block.imageUrl || ''} onChange={e => upd(block.id, 'imageUrl', e.target.value)}
-                              placeholder="URL da imagem..." style={{ ...wsInput, flex: 1, margin: 0 }} />
-                            <button onClick={() => uploadImage(block.id, 'imageUrl')}
-                              style={{ background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.25)', borderRadius: 7, padding: '0 10px', color: colors.blue, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
-                              <Camera size={13} />
-                            </button>
+                        <div style={{ width: 26, height: 26, borderRadius: 7, flexShrink: 0, background: isHidden ? 'var(--c-bg-alt)' : 'rgba(27,120,247,0.1)', border: `1px solid ${isHidden ? 'var(--c-border)' : 'rgba(27,120,247,0.2)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: isHidden ? 'var(--c-subtle)' : '#1b78f7' }}>
+                          <SIcon size={12} strokeWidth={2} />
                           </div>
-                          <input value={block.content || ''} onChange={e => upd(block.id, 'content', e.target.value)}
-                            placeholder="Legenda (opcional)" style={wsInput} />
-                        </>)}
-                        {block.type === 'gallery' && (<>
-                          {['imageUrl','imageUrl2','imageUrl3'].map((field, gi) => (
-                            <div key={field} style={{ display: 'flex', gap: 6, marginBottom: gi < 2 ? 6 : 0 }}>
-                              <input value={block[field] || ''} onChange={e => upd(block.id, field, e.target.value)}
-                                placeholder={`Imagem ${gi+1} (URL ou upload)`} style={{ ...wsInput, flex: 1, margin: 0 }} />
-                              <button onClick={() => uploadImage(block.id, field)}
-                                style={{ background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.25)', borderRadius: 7, padding: '0 10px', color: colors.blue, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
-                                <Camera size={13} />
-                              </button>
-                            </div>
-                          ))}
-                        </>)}
-                        {block.type === 'video' && (
-                          <input value={block.videoUrl || ''} onChange={e => upd(block.id, 'videoUrl', e.target.value)}
-                            placeholder="URL do YouTube ou Vimeo..." style={wsInput} />
-                        )}
-                        {block.type === 'stats' && (
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                            {[1,2,3].map(n => (
-                              <div key={n} style={{ display: 'flex', gap: 5 }}>
-                                <input value={block[`stat${n}Value`] || ''} onChange={e => upd(block.id, `stat${n}Value`, e.target.value)}
-                                  placeholder={`Valor ${n}`} style={{ ...wsInput, margin: 0, flex: '0 0 42%', fontWeight: 800, fontSize: 14 }} />
-                                <input value={block[`stat${n}Label`] || ''} onChange={e => upd(block.id, `stat${n}Label`, e.target.value)}
-                                  placeholder={`Descrição ${n}`} style={{ ...wsInput, margin: 0, flex: 1 }} />
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                        {block.type === 'cta' && (<>
-                          <input value={block.content || ''} onChange={e => upd(block.id, 'content', e.target.value)}
-                            placeholder="Texto do botão (ex: Ver demo ao vivo)" style={{ ...wsInput, marginBottom: 6, fontWeight: 700 }} />
-                          <input value={block.url || ''} onChange={e => upd(block.id, 'url', e.target.value)}
-                            placeholder="URL de destino (https://...)" style={wsInput} />
-                          <div style={{ fontSize: 10, color: 'var(--c-muted)', marginTop: 5 }}>A cor do botão segue a cor de destaque selecionada acima.</div>
-                        </>)}
-                        {block.type === 'divider' && (
-                          <div style={{ display: 'flex', gap: 4 }}>
-                            {['solid','dashed','dotted','gradient'].map(s => (
-                              <button key={s} onClick={() => upd(block.id, 'dividerStyle', s)}
-                                style={{
-                                  flex: 1, padding: '5px 0', borderRadius: 6, cursor: 'pointer',
-                                  border: `1px solid ${(block.dividerStyle || 'solid') === s ? '#1b78f7' : 'var(--c-border)'}`,
-                                  background: (block.dividerStyle || 'solid') === s ? 'rgba(27,120,247,0.1)' : 'var(--c-bg)',
-                                  color: (block.dividerStyle || 'solid') === s ? '#1b78f7' : 'var(--c-muted)',
-                                  fontSize: 10, fontWeight: 700, fontFamily: 'inherit', transition: 'all 0.12s',
-                                }}
-                              >{s.charAt(0).toUpperCase() + s.slice(1)}</button>
-                            ))}
-                          </div>
-                        )}
-
-                        {/* ── Colour + alignment controls ── */}
-                        <div style={{ marginTop: 10, paddingTop: 9, borderTop: '1px solid var(--c-border)', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                          {/* Colour swatches */}
-                          <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
-                            {BLOCK_ACCENT_COLORS.map(c => (
-                              <button
-                                key={c.value}
-                                title={c.label}
-                                onClick={() => upd(block.id, 'color', block.color === c.value ? '' : c.value)}
-                                style={{
-                                  width: 18, height: 18, borderRadius: '50%',
-                                  background: c.value, border: block.color === c.value ? `2.5px solid var(--c-text)` : '2px solid transparent',
-                                  cursor: 'pointer', padding: 0, outline: 'none', flexShrink: 0,
-                                  boxShadow: block.color === c.value ? `0 0 0 1px ${c.value}` : 'none',
-                                  transition: 'transform 0.1s',
-                                }}
-                                onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.2)'}
-                                onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
-                              />
-                            ))}
-                          </div>
-                          {/* Alignment — only for text blocks */}
-                          {hasText && (
-                            <div style={{ display: 'flex', gap: 3, marginLeft: 'auto' }}>
-                              {[
-                                { val: 'left',   Icon: AlignLeft,   title: 'Esquerda' },
-                                { val: 'center', Icon: AlignCenter, title: 'Centro' },
-                                { val: 'right',  Icon: AlignRight,  title: 'Direita' },
-                              ].map(a => (
-                                <button
-                                  key={a.val}
-                                  title={a.title}
-                                  onClick={() => upd(block.id, 'align', a.val)}
-                                  style={{
-                                    width: 26, height: 24, borderRadius: 5,
-                                    background: (block.align || 'left') === a.val ? '#1b78f7' : 'var(--c-bg)',
-                                    border: `1px solid ${(block.align || 'left') === a.val ? '#1b78f7' : 'var(--c-border)'}`,
-                                    cursor: 'pointer',
-                                    color: (block.align || 'left') === a.val ? '#fff' : 'var(--c-muted)',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    transition: 'all 0.12s', padding: 0,
-                                  }}
-                                >
-                                  <a.Icon size={12} />
-                                </button>
-                              ))}
-                            </div>
-                          )}
-                        </div>
+                        <span style={{ fontSize: 12, fontWeight: 600, flex: 1, color: isHidden ? 'var(--c-subtle)' : 'var(--c-text)', textDecoration: isHidden ? 'line-through' : 'none' }}>
+                          {s.label}
+                        </span>
+                        {!hasContent && <span style={{ fontSize: 9, color: 'var(--c-subtle)', fontWeight: 600, background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)', borderRadius: 4, padding: '1px 5px' }}>vazio</span>}
+                        <button
+                          onClick={() => {
+                            const newHidden = new Set(hidden)
+                            isHidden ? newHidden.delete(key) : newHidden.add(key)
+                            setPreviewStyle(ps => ({ ...ps, hiddenSections: [...newHidden] }))
+                          }}
+                          title={isHidden ? 'Mostrar' : 'Ocultar'}
+                          style={{ background: 'none', border: 'none', padding: '3px 4px', cursor: 'pointer', display: 'flex', color: isHidden ? 'var(--c-subtle)' : '#1b78f7', flexShrink: 0, borderRadius: 6, transition: 'background 0.12s' }}
+                          onMouseEnter={e => e.currentTarget.style.background = 'rgba(27,120,247,0.1)'}
+                          onMouseLeave={e => e.currentTarget.style.background = 'none'}
+                        >
+                          {isHidden ? <EyeOff size={14} /> : <Eye size={14} />}
+                        </button>
                       </div>
                     )
                   })}
                 </div>
-              )}
-            </div>
-            </div>}{/* end blocos tab */}
+                <p style={{ margin: '12px 0 0', fontSize: 10, color: 'var(--c-subtle)', lineHeight: 1.5 }}>
+                  A ordem é guardada ao clicar em "Guardar alterações".
+                </p>
+              </div>
+            )
+          })()}
 
-            {/* Tab: Secções */}
-            {previewTab === 'seccoes' && (() => {
-              const NATIVE_SECTIONS_MAP = {
-                problem:         { label: 'Problema',        Icon: Search     },
-                solution:        { label: 'Solução',         Icon: Lightbulb  },
-                target_audience: { label: 'Público-alvo',    Icon: Target     },
-                features:        { label: 'Funcionalidades', Icon: Wrench     },
-                technologies:    { label: 'Tecnologias',     Icon: Zap        },
-                challenges:      { label: 'Desafios',        Icon: Zap        },
-                results:         { label: 'Resultados',      Icon: TrendingUp },
-                learnings:       { label: 'Aprendizagens',   Icon: BookOpen   },
-              }
-              const hidden = new Set(previewStyle.hiddenSections || [])
-              return (
-                <div style={{ flex: 1, overflowY: 'auto', padding: '12px' }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--c-subtle)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>Secções da preview</div>
-                  <p style={{ margin: '0 0 12px', fontSize: 11, color: 'var(--c-muted)', lineHeight: 1.5 }}>
-                    Arrasta <GripVertical size={10} style={{ verticalAlign: 'middle' }} /> para reordenar. Clica em <Eye size={10} style={{ verticalAlign: 'middle' }} /> para ocultar.
-                  </p>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-                    {orderedSections.map((key, idx) => {
-                      const s = NATIVE_SECTIONS_MAP[key]
-                      if (!s) return null
-                      const isHidden = hidden.has(key)
-                      const hasContent = key === 'features' ? features.length > 0 : key === 'technologies' ? tech.length > 0 : !!(project[key]?.trim())
-                      const SIcon = s.Icon
-                      const isOver = dragOverSectionIdx === idx
-                      return (
-                        <div
-                          key={key}
-                          draggable
-                          onDragStart={() => { sectionDragRef.current = idx }}
-                          onDragOver={e => { e.preventDefault(); if (dragOverSectionIdx !== idx) setDragOverSectionIdx(idx) }}
-                          onDragLeave={() => setDragOverSectionIdx(null)}
-                          onDrop={e => {
-                            e.preventDefault()
-                            setDragOverSectionIdx(null)
-                            const from = sectionDragRef.current
-                            if (from === null || from === idx) return
-                            const newOrder = [...orderedSections]
-                            newOrder.splice(idx, 0, newOrder.splice(from, 1)[0])
-                            setPreviewStyle(ps => ({ ...ps, sectionOrder: newOrder }))
-                          }}
-                          onDragEnd={() => setDragOverSectionIdx(null)}
-                          style={{
-                            display: 'flex', alignItems: 'center', gap: 7,
-                            background: isOver ? 'rgba(27,120,247,0.1)' : isHidden ? 'var(--c-bg)' : hasContent ? 'rgba(27,120,247,0.05)' : 'var(--c-bg)',
-                            border: `1px solid ${isOver ? '#1b78f7' : isHidden ? 'var(--c-border)' : hasContent ? 'rgba(27,120,247,0.18)' : 'var(--c-border)'}`,
-                            borderRadius: 9, padding: '7px 10px 7px 4px',
-                            opacity: hasContent ? 1 : 0.45,
-                            transition: 'background 0.12s, border-color 0.12s',
-                            cursor: 'default',
-                            userSelect: 'none',
-                          }}
-                        >
-                          {/* Grip */}
-                          <div style={{ cursor: 'grab', color: 'var(--c-subtle)', display: 'flex', padding: '0 2px', flexShrink: 0 }}>
-                            <GripVertical size={13} />
-                          </div>
-                          {/* Section icon */}
-                          <div style={{ width: 24, height: 24, borderRadius: 6, flexShrink: 0, background: isHidden ? 'var(--c-bg-alt)' : 'rgba(27,120,247,0.1)', border: `1px solid ${isHidden ? 'var(--c-border)' : 'rgba(27,120,247,0.2)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: isHidden ? 'var(--c-subtle)' : '#1b78f7' }}>
-                            <SIcon size={11} strokeWidth={2} />
-                          </div>
-                          {/* Label */}
-                          <span style={{ fontSize: 12, fontWeight: 600, flex: 1, color: isHidden ? 'var(--c-muted)' : 'var(--c-text)', textDecoration: isHidden ? 'line-through' : 'none' }}>
-                            {s.label}
-                          </span>
-                          {!hasContent && <span style={{ fontSize: 9, color: 'var(--c-subtle)', fontWeight: 600 }}>vazio</span>}
-                          {/* Eye toggle */}
-                          <button
-                            onClick={() => {
-                              const newHidden = new Set(hidden)
-                              isHidden ? newHidden.delete(key) : newHidden.add(key)
-                              setPreviewStyle(ps => ({ ...ps, hiddenSections: [...newHidden] }))
-                            }}
-                            title={isHidden ? 'Mostrar' : 'Ocultar'}
-                            style={{ background: 'none', border: 'none', padding: '2px 3px', cursor: 'pointer', display: 'flex', color: isHidden ? 'var(--c-subtle)' : '#1b78f7', flexShrink: 0, borderRadius: 5, transition: 'background 0.12s' }}
-                            onMouseEnter={e => e.currentTarget.style.background = 'rgba(27,120,247,0.1)'}
-                            onMouseLeave={e => e.currentTarget.style.background = 'none'}
-                          >
-                            {isHidden ? <EyeOff size={13} /> : <Eye size={13} />}
-                          </button>
-                        </div>
-                      )
-                    })}
-                  </div>
-                  <p style={{ margin: '12px 0 0', fontSize: 10, color: 'var(--c-subtle)', lineHeight: 1.5 }}>
-                    A ordem é guardada ao clicar em "Guardar preview".
-                  </p>
-                </div>
-              )
-            })()}
-
-            {/* Save */}
-            <div style={{ padding: '10px 12px 14px', borderTop: '1px solid var(--c-border)', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 7 }}>
-              <button
-                onClick={async () => {
-                  const { error } = await supabase.from('projects').update({ preview_blocks: previewBlocks, preview_style: previewStyle }).eq('id', project.id)
-                  if (!error) { setPreviewSaved(true); setTimeout(() => setPreviewSaved(false), 2500) }
-                }}
-                style={{
-                  width: '100%', padding: '12px',
-                  background: previewSaved ? 'linear-gradient(135deg, #22c55e, #16a34a)' : 'linear-gradient(135deg, #1b78f7, #4f46e5)',
-                  border: 'none', borderRadius: 10,
-                  color: '#fff', fontSize: 13, fontWeight: 700,
-                  cursor: 'pointer', fontFamily: 'inherit',
-                  boxShadow: previewSaved ? '0 4px 16px rgba(34,197,94,0.3)' : '0 4px 16px rgba(27,120,247,0.3)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                  transition: 'background 0.3s, box-shadow 0.3s',
-                }}
-              >
-                <Check size={15} /> {previewSaved ? 'Guardado!' : 'Guardar alterações'}
-              </button>
-              <button
-                onClick={() => setPreviewEditing(false)}
-                style={{ width: '100%', padding: '8px', background: 'transparent', border: '1px solid var(--c-border)', borderRadius: 8, color: 'var(--c-muted)', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
-              >
-                Fechar editor
-              </button>
-            </div>
+          {/* ── Footer: save ── */}
+          <div style={{
+            padding: '12px 14px 16px', borderTop: '1px solid var(--c-border)', flexShrink: 0,
+            background: 'linear-gradient(0deg, var(--c-sidebar-bg) 60%, transparent)',
+          }}>
+            <button
+              onClick={async () => {
+                const { error } = await supabase.from('projects').update({ preview_blocks: previewBlocks, preview_style: previewStyle }).eq('id', project.id)
+                if (!error) { setPreviewSaved(true); setTimeout(() => setPreviewSaved(false), 2500) }
+              }}
+              style={{
+                width: '100%', padding: '13px',
+                background: previewSaved ? 'linear-gradient(135deg, #22c55e, #16a34a)' : 'linear-gradient(135deg, #1b78f7, #4f46e5)',
+                border: 'none', borderRadius: 11,
+                color: '#fff', fontSize: 13, fontWeight: 700,
+                cursor: 'pointer', fontFamily: 'inherit',
+                boxShadow: previewSaved ? '0 4px 20px rgba(34,197,94,0.3)' : '0 4px 20px rgba(27,120,247,0.35)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                transition: 'background 0.3s, box-shadow 0.3s', letterSpacing: '-0.1px',
+              }}
+            >
+              {previewSaved ? <><Check size={15} strokeWidth={3} /> Guardado!</> : <><Save size={15} /> Guardar alterações</>}
+            </button>
           </div>
+        </div>
       )}
 
       {/* ── Story sections ── */}
