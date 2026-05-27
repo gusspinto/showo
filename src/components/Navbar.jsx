@@ -320,13 +320,15 @@ function InviteInbox({ userId, sidebar = false }) {
         onClick={() => setOpen(o => !o)}
         style={{
           position: 'relative',
-          background: open ? 'rgba(27,120,247,0.1)' : 'transparent',
-          border: `1px solid ${open ? 'rgba(27,120,247,0.35)' : C.border}`,
+          background: open ? 'rgba(27,120,247,0.13)' : 'transparent',
+          border: 'none',
           borderRadius: 8, width: 32, height: 32,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          cursor: 'pointer', color: open ? C.blue : C.muted,
-          transition: 'all 0.15s', flexShrink: 0,
+          cursor: 'pointer', color: open ? '#1b78f7' : 'var(--c-muted)',
+          transition: 'background 0.13s, color 0.13s', flexShrink: 0,
         }}
+        onMouseEnter={e => { if (!open) { e.currentTarget.style.background = 'var(--c-card-hover)'; e.currentTarget.style.color = 'var(--c-text)' } }}
+        onMouseLeave={e => { if (!open) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--c-muted)' } }}
         title="Notificações"
       >
         <Bell size={15} />
