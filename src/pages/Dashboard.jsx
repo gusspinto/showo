@@ -1820,6 +1820,13 @@ export default function Dashboard() {
             </div>
           )}
 
+          {/* ── Insights Block (antes dos projetos, desktop only) ── */}
+          {!isTeacher && !loadingProjects && projects.filter(p => p.score != null).length >= 1 && (
+            <div className="dash-chart-wrap">
+              <InsightsBlock projects={projects} />
+            </div>
+          )}
+
           {/* ── Projetos (dominant section) ── */}
           {!isTeacher && <div id="proj-list">
             <div className="dash-sec-hd">
@@ -1867,13 +1874,6 @@ export default function Dashboard() {
               </div>
             )}
           </div>}
-
-          {/* ── Insights Block (depois dos projetos, desktop only) ── */}
-          {!isTeacher && !loadingProjects && projects.filter(p => p.score != null).length >= 1 && (
-            <div className="dash-chart-wrap">
-              <InsightsBlock projects={projects} />
-            </div>
-          )}
 
           {/* ── Partilhados comigo ── */}
           {!isTeacher && collabProjects.length > 0 && (

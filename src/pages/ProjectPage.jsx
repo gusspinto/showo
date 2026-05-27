@@ -630,7 +630,7 @@ const wsInput = {
   display: 'block', marginBottom: 0,
 }
 
-function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBlocks, setPreviewBlocks, previewEditing, setPreviewEditing,
+function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBlocks, setPreviewBlocks, previewStyle, setPreviewStyle, previewEditing, setPreviewEditing,
   liked, likeCount, likeLoading, onLike,
   hasInterest, interestCount, interestLoading, onInterest,
   isRecruiterRole,
@@ -645,8 +645,8 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
   const sectionDragRef = useRef(null)
   const [dragOverSectionIdx, setDragOverSectionIdx] = useState(null)
   const [previewDevice, setPreviewDevice] = useState('desktop')
-  const [previewStyle, setPreviewStyle] = useState(() => project.preview_style || {})
   const [previewTab, setPreviewTab] = useState('estilo')  // 'estilo' | 'blocos' | 'seccoes'
+  const [previewSaved, setPreviewSaved] = useState(false)
 
   function onDragStart(i) { dragIdx.current = i }
   function onDragEnter(i) { dragOver.current = i; setDragOverIdx(i) }
@@ -934,6 +934,11 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
                 <Layout size={15} color="#1b78f7" />
                 <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--c-text)', flex: 1 }}>Área de trabalho</span>
+                {previewSaved && (
+                  <span style={{ fontSize: 10, fontWeight: 700, color: '#22c55e', display: 'flex', alignItems: 'center', gap: 3, background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.25)', borderRadius: 6, padding: '2px 7px' }}>
+                    <Check size={10} /> Guardado
+                  </span>
+                )}
                 <button
                   onClick={() => setPreviewEditing(false)}
                   title="Fechar workspace"
@@ -1004,6 +1009,36 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
                             <Check size={12} color="#fff" strokeWidth={3} />
                           </span>
                         )}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* Background */}
+              <div style={{ marginBottom: 12 }}>
+                <div style={{ fontSize: 11, color: 'var(--c-muted)', fontWeight: 600, marginBottom: 7 }}>Fundo da página</div>
+                <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+                  {BG_OPTIONS.map(b => {
+                    const isSel = (previewStyle.bg || 'default') === b.key
+                    return (
+                      <button
+                        key={b.key}
+                        title={b.label}
+                        onClick={() => setPreviewStyle(ps => ({ ...ps, bg: b.key }))}
+                        style={{
+                          flex: 1, minWidth: 36, height: 28, borderRadius: 7, border: 'none',
+                          cursor: 'pointer', padding: 0, position: 'relative',
+                          background: b.preview ? b.preview : 'var(--c-bg)',
+                          outline: isSel ? '2px solid var(--c-text)' : '1px solid var(--c-border)',
+                          outlineOffset: isSel ? 2 : 0,
+                          transition: 'outline 0.12s, transform 0.1s',
+                          transform: isSel ? 'scale(1.08)' : 'scale(1)',
+                          fontSize: 8, fontWeight: 700, color: b.preview ? '#fff' : 'var(--c-muted)',
+                          letterSpacing: '0.03em',
+                        }}
+                      >
+                        {b.label}
                       </button>
                     )
                   })}
@@ -1465,23 +1500,30 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
             })()}
 
             {/* Save */}
-            <div style={{ padding: '10px 12px 14px', borderTop: '1px solid var(--c-border)', flexShrink: 0 }}>
+            <div style={{ padding: '10px 12px 14px', borderTop: '1px solid var(--c-border)', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 7 }}>
               <button
                 onClick={async () => {
-                  await supabase.from('projects').update({ preview_blocks: previewBlocks, preview_style: previewStyle }).eq('id', project.id)
-                  setPreviewEditing(false)
+                  const { error } = await supabase.from('projects').update({ preview_blocks: previewBlocks, preview_style: previewStyle }).eq('id', project.id)
+                  if (!error) { setPreviewSaved(true); setTimeout(() => setPreviewSaved(false), 2500) }
                 }}
                 style={{
                   width: '100%', padding: '12px',
-                  background: 'linear-gradient(135deg, #1b78f7, #4f46e5)',
+                  background: previewSaved ? 'linear-gradient(135deg, #22c55e, #16a34a)' : 'linear-gradient(135deg, #1b78f7, #4f46e5)',
                   border: 'none', borderRadius: 10,
                   color: '#fff', fontSize: 13, fontWeight: 700,
                   cursor: 'pointer', fontFamily: 'inherit',
-                  boxShadow: '0 4px 16px rgba(27,120,247,0.3)',
+                  boxShadow: previewSaved ? '0 4px 16px rgba(34,197,94,0.3)' : '0 4px 16px rgba(27,120,247,0.3)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                  transition: 'background 0.3s, box-shadow 0.3s',
                 }}
               >
-                <Check size={15} /> Guardar preview
+                <Check size={15} /> {previewSaved ? 'Guardado!' : 'Guardar alterações'}
+              </button>
+              <button
+                onClick={() => setPreviewEditing(false)}
+                style={{ width: '100%', padding: '8px', background: 'transparent', border: '1px solid var(--c-border)', borderRadius: 8, color: 'var(--c-muted)', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+              >
+                Fechar editor
               </button>
             </div>
           </div>
@@ -2030,6 +2072,7 @@ export default function ProjectPage() {
   const [viewAsPublic, setViewAsPublic] = useState(false)
   const [previewEditing, setPreviewEditing] = useState(false)
   const [previewBlocks, setPreviewBlocks] = useState([])
+  const [previewStyle, setPreviewStyle] = useState({})
   // Jury / professor ratings state
   const [juryRatings, setJuryRatings] = useState({})        // { criteriaId: 0-10 }
   const [juryNote, setJuryNote] = useState('')
@@ -2121,8 +2164,9 @@ export default function ProjectPage() {
       if (data.ai_feedback) setAiFeedback(data.ai_feedback)
       // Load defense date
       if (data.defense_date) setDefenseDate(data.defense_date)
-      // Load preview blocks
+      // Load preview blocks + style
       if (Array.isArray(data.preview_blocks)) setPreviewBlocks(data.preview_blocks)
+      if (data.preview_style && typeof data.preview_style === 'object') setPreviewStyle(data.preview_style)
 
       // Load likes count + user's like
       supabase.from('project_likes').select('user_id', { count: 'exact' }).eq('project_id', data.id).then(({ count }) => {
@@ -3392,6 +3436,8 @@ export default function ProjectPage() {
           onExitPreview={() => { setViewAsPublic(false); setPreviewEditing(false) }}
           previewBlocks={previewBlocks}
           setPreviewBlocks={setPreviewBlocks}
+          previewStyle={previewStyle}
+          setPreviewStyle={setPreviewStyle}
           previewEditing={previewEditing}
           setPreviewEditing={setPreviewEditing}
           liked={liked}
@@ -3688,7 +3734,7 @@ export default function ProjectPage() {
           }
 
           return (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(0, 220px))', justifyContent: 'center', gap: 10, marginBottom: 4 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 10, marginBottom: 4 }}>
 
               {/* Certificate — score = 100 */}
               {score >= 100 && (
