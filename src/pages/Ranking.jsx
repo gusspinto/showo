@@ -103,6 +103,7 @@ export default function Ranking() {
   const prevPositions = useRef(loadPrevPositions())
 
   useEffect(() => {
+    let saveTimer = null
     async function load() {
       const { data, error } = await supabase
         .from('projects')
@@ -112,11 +113,12 @@ export default function Ranking() {
       if (!error && data) {
         setProjects(data)
         // Save new positions after a short delay (so prev is shown first this session)
-        setTimeout(() => saveCurrentPositions(data), 3000)
+        saveTimer = setTimeout(() => saveCurrentPositions(data), 3000)
       }
       setLoading(false)
     }
     load()
+    return () => clearTimeout(saveTimer)
   }, [])
 
   const areas   = [...new Set(projects.map(p => p.area).filter(Boolean))].sort()

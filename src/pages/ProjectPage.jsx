@@ -2100,6 +2100,7 @@ export default function ProjectPage() {
   const rafRef = useRef(null)
   const toastTimerRef = useRef(null)
   const cooldownRef = useRef(null)
+  const membersChannelRef = useRef(null) // realtime channel — must be cleaned up on unmount
 
   // Show launch overlay for newly created projects
   useEffect(() => {
@@ -2224,7 +2225,11 @@ export default function ProjectPage() {
       loadMembers(data.id)
 
       // Realtime: update members panel when any collaborator row changes
-      const channel = supabase
+      // Store in ref so the useEffect cleanup can remove it on unmount
+      if (membersChannelRef.current) {
+        supabase.removeChannel(membersChannelRef.current)
+      }
+      membersChannelRef.current = supabase
         .channel(`members-${data.id}`)
         .on('postgres_changes', {
           event: '*',
@@ -2269,9 +2274,14 @@ export default function ProjectPage() {
           .then(({ data: fb }) => { if (fb) setTeacherFeedback(fb) })
       }
 
-      return () => supabase.removeChannel(channel)
     }
     fetchProject()
+    return () => {
+      if (membersChannelRef.current) {
+        supabase.removeChannel(membersChannelRef.current)
+        membersChannelRef.current = null
+      }
+    }
   }, [slug, user?.id])
 
   // View tracking + PROJECT_VIEW / COMPANY_VIEW notifications
@@ -2628,7 +2638,7 @@ export default function ProjectPage() {
   const isRecruiterRole = profile?.role === 'recrutador' || profile?.role === 'empresa'
 
   async function handleLike() {
-    if (!user) { window.location.href = '/login'; return }
+    if (!user) { navigate('/login'); return }
     if (likeLoading) return
     setLikeLoading(true)
     if (liked) {
@@ -2645,7 +2655,7 @@ export default function ProjectPage() {
   }
 
   async function handleInterest() {
-    if (!user) { window.location.href = '/login'; return }
+    if (!user) { navigate('/login'); return }
     if (interestLoading) return
     setInterestLoading(true)
     if (hasInterest) {

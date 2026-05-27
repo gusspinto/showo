@@ -6,5 +6,6 @@ export async function generateProject(projectData) {
   })
 
   if (error) throw error
+  if (!data) throw new Error('A IA não devolveu resposta. Tenta novamente.')
   return data
 }

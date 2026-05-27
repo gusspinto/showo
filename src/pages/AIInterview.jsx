@@ -712,6 +712,8 @@ export default function AIInterview() {
                         type="button"
                         onClick={goBack}
                         disabled={history.length === 0}
+                        aria-label="Voltar atrás"
+                        title="Voltar atrás"
                         style={{
                           background: 'none', border: 'none', padding: 0, fontFamily: 'inherit',
                           fontSize: 12, color: history.length > 0 ? C.muted : C.subtle,

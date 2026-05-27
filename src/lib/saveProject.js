@@ -64,7 +64,7 @@ export async function saveProject(formData, aiResult, userId = null) {
 
   if (error) {
     if (error.code === '23505') {
-      const retryPayload = { ...payload, slug: generateSlug(formData.name) }
+      const retryPayload = { ...payload, slug: generateSlug(formData.name), edit_token: generateToken() }
       const { data: retryData, error: retryError } = await supabase
         .from('projects')
         .insert([retryPayload])

@@ -158,6 +158,7 @@ export default function NewProject() {
   // Draft recovery
   const [draftModal, setDraftModal] = useState(null) // { answers, formGoal, step, savedAt }
   const syncTimerRef = useRef(null)
+  const draftCheckedRef = useRef(false) // prevents checkDraft re-running on token refresh
 
   function toggleExample(key) {
     setShownExamples(prev => {
@@ -241,7 +242,10 @@ export default function NewProject() {
       setDraftModal(draft)
     }
 
-    if (!authLoading) checkDraft()
+    if (!authLoading && !draftCheckedRef.current) {
+      draftCheckedRef.current = true
+      checkDraft()
+    }
   }, [authLoading, user]) // eslint-disable-line
 
   // ── Persist draft on every meaningful change (debounced 1.5s) ─────────────
@@ -266,11 +270,12 @@ export default function NewProject() {
     // Always save to localStorage immediately
     try { localStorage.setItem('showo_new_project_draft', JSON.stringify(draft)) } catch {}
 
-    // Debounce the Supabase write (1.5s)
+    // Debounce the Supabase write (1.5s).
+    // Note: no cleanup return — intentionally let the timer fire even after unmount
+    // so the last batch of changes is never lost. saveDraftRemote has no setState,
+    // so firing after unmount is safe and avoids a React "update on unmounted" warning.
     clearTimeout(syncTimerRef.current)
     syncTimerRef.current = setTimeout(() => saveDraftRemote(draft), 1500)
-
-    return () => clearTimeout(syncTimerRef.current)
   }, [answers, formGoal, step, phase]) // eslint-disable-line
 
   // ── Auth nudge for anonymous users ────────────────────────────────────────
