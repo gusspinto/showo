@@ -720,7 +720,7 @@ export default function AIInterview() {
                           transition: 'color 0.15s', opacity: history.length === 0 ? 0.4 : 1,
                         }}
                       >
-                        <RotateCcw size={12} /> Voltar atrás
+                        <RotateCcw size={12} />
                       </button>
                       <p style={{ margin: 0, fontSize: 11, color: C.subtle }}>Enter para continuar</p>
                       <button

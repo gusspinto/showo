@@ -125,6 +125,17 @@ function getMotivation(s) {
   return 'Continua! Estás a começar.'
 }
 
+function timeAgo(iso) {
+  if (!iso) return ''
+  const diff = Date.now() - new Date(iso).getTime()
+  const mins = Math.floor(diff / 60000)
+  if (mins < 2) return 'agora mesmo'
+  if (mins < 60) return `há ${mins} min`
+  const hrs = Math.floor(mins / 60)
+  if (hrs < 24) return `há ${hrs}h`
+  return `há ${Math.floor(hrs / 24)}d`
+}
+
 
 export default function NewProject() {
   const navigate = useNavigate()
@@ -239,6 +250,12 @@ export default function NewProject() {
     if (draftModal) return // don't overwrite while showing recovery dialog
 
     const { cover_url: _omit, ...answersWithoutCover } = answers
+
+    // Don't save until the user has actually done something —
+    // this prevents overwriting a real saved draft on page mount
+    const hasContent = Object.keys(answersWithoutCover).length > 0 || !!formGoal
+    if (!hasContent) return
+
     const draft = {
       answers: answersWithoutCover,
       formGoal,
@@ -410,117 +427,6 @@ export default function NewProject() {
     },
   }
 
-  // ── DRAFT RECOVERY MODAL ─────────────────────────────────
-  if (draftModal) {
-    const { answers: da, formGoal: dg, step: ds, savedAt } = draftModal
-    const projectName = da?.name?.trim()
-    const projectArea = da?.area?.trim()
-    const totalFilled = Object.values(da || {}).filter(v => v && String(v).trim()).length
-    const stepsCompleted = typeof ds === 'number' ? ds : 0
-
-    function timeAgo(iso) {
-      if (!iso) return ''
-      const diff = Date.now() - new Date(iso).getTime()
-      const mins = Math.floor(diff / 60000)
-      if (mins < 2) return 'agora mesmo'
-      if (mins < 60) return `há ${mins} min`
-      const hrs = Math.floor(mins / 60)
-      if (hrs < 24) return `há ${hrs}h`
-      return `há ${Math.floor(hrs / 24)}d`
-    }
-
-    return (
-      <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: 'inherit', display: 'flex', flexDirection: 'column' }}>
-        <Navbar showLinks={false} />
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 24px' }}>
-          <div style={{ width: '100%', maxWidth: 480 }}>
-
-            {/* Icon */}
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
-              <div style={{ width: 64, height: 64, borderRadius: 18, background: 'rgba(27,120,247,0.12)', border: '1px solid rgba(27,120,247,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Save size={28} color={colors.blue} />
-              </div>
-            </div>
-
-            <h2 style={{ fontSize: 'clamp(20px, 3.5vw, 28px)', fontWeight: 800, textAlign: 'center', margin: '0 0 10px', letterSpacing: '-0.4px' }}>
-              Tens um projeto por terminar
-            </h2>
-            <p style={{ color: colors.muted, textAlign: 'center', fontSize: 14, margin: '0 0 28px', lineHeight: 1.6 }}>
-              Encontrámos um rascunho guardado na tua conta. Queres continuar de onde paraste?
-            </p>
-
-            {/* Draft info card */}
-            <div style={{ background: colors.card, border: `1px solid ${colors.border}`, borderLeft: `4px solid ${colors.blue}`, borderRadius: 14, padding: '18px 20px', marginBottom: 24 }}>
-              {projectName && (
-                <div style={{ fontSize: 16, fontWeight: 800, color: colors.text, marginBottom: 4, letterSpacing: '-0.2px' }}>
-                  {projectName}
-                </div>
-              )}
-              {projectArea && (
-                <div style={{ fontSize: 13, color: colors.muted, marginBottom: 10 }}>{projectArea}</div>
-              )}
-              <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  <span style={{ fontSize: 11, color: colors.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Progresso</span>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: colors.text }}>Passo {stepsCompleted + 1} de {TOTAL_STEPS}</span>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  <span style={{ fontSize: 11, color: colors.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Campos preenchidos</span>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: colors.text }}>{totalFilled}</span>
-                </div>
-                {savedAt && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    <span style={{ fontSize: 11, color: colors.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Guardado</span>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: colors.text }}>{timeAgo(savedAt)}</span>
-                  </div>
-                )}
-              </div>
-              {/* Progress bar */}
-              <div style={{ marginTop: 14, height: 4, background: colors.border, borderRadius: 99, overflow: 'hidden' }}>
-                <div style={{ height: '100%', width: `${((stepsCompleted + 1) / TOTAL_STEPS) * 100}%`, background: `linear-gradient(90deg, ${colors.blue}, #4f46e5)`, borderRadius: 99, transition: 'width 0.4s' }} />
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <button
-                onClick={() => { applyDraft(draftModal); setDraftModal(null) }}
-                style={{
-                  width: '100%', padding: '15px', borderRadius: 12,
-                  background: `linear-gradient(135deg, ${colors.blue}, #4f46e5)`,
-                  border: 'none', color: '#fff', fontSize: 15, fontWeight: 700,
-                  cursor: 'pointer', fontFamily: 'inherit',
-                  boxShadow: '0 4px 20px rgba(27,120,247,0.3)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                  transition: 'opacity 0.15s',
-                }}
-                onMouseEnter={e => e.currentTarget.style.opacity = '0.9'}
-                onMouseLeave={e => e.currentTarget.style.opacity = '1'}
-              >
-                <ArrowRight size={16} /> Continuar onde parei
-              </button>
-              <button
-                onClick={async () => { await clearDraft(); setDraftModal(null) }}
-                style={{
-                  width: '100%', padding: '13px', borderRadius: 12,
-                  background: 'transparent', border: `1px solid ${colors.border}`,
-                  color: colors.muted, fontSize: 14, fontWeight: 600,
-                  cursor: 'pointer', fontFamily: 'inherit',
-                  transition: 'border-color 0.15s, color 0.15s',
-                }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = colors.borderBright; e.currentTarget.style.color = colors.text }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.color = colors.muted }}
-              >
-                Começar de novo
-              </button>
-            </div>
-
-          </div>
-        </div>
-      </div>
-    )
-  }
-
   // ── GOAL ─────────────────────────────────────────────────
   if (phase === 'goal') {
     return (
@@ -602,6 +508,110 @@ export default function NewProject() {
             >
               <span style={{display:'flex',alignItems:'center',gap:6}}>Continuar <ArrowRight size={15} /></span>
             </button>
+
+            {/* ── Draft recovery inline card ── */}
+            {draftModal && (() => {
+              const { answers: da, formGoal: dg, step: ds, savedAt } = draftModal
+              const projectName = da?.name?.trim()
+              const projectArea = da?.area?.trim()
+              const stepsCompleted = typeof ds === 'number' ? ds : 0
+              const goalOpt = GOAL_OPTIONS.find(g => g.id === dg)
+              return (
+                <div style={{
+                  marginTop: 20,
+                  background: colors.card,
+                  border: `1px solid ${colors.border}`,
+                  borderLeft: `3px solid ${colors.blue}`,
+                  borderRadius: 14,
+                  padding: '16px 18px',
+                }}>
+                  {/* Header */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                    <div style={{
+                      width: 32, height: 32, borderRadius: 9, flexShrink: 0,
+                      background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.2)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      <Save size={15} color={colors.blue} />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: colors.text, lineHeight: 1.3 }}>
+                        Tens um rascunho guardado
+                      </div>
+                      {savedAt && (
+                        <div style={{ fontSize: 11, color: colors.subtle }}>{timeAgo(savedAt)}</div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Project info chips */}
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
+                    {projectName && (
+                      <span style={{ fontSize: 12, fontWeight: 600, color: colors.text, background: colors.bgAlt, border: `1px solid ${colors.border}`, borderRadius: 99, padding: '3px 10px' }}>
+                        {projectName}
+                      </span>
+                    )}
+                    {projectArea && (
+                      <span style={{ fontSize: 12, color: colors.muted, background: colors.bgAlt, border: `1px solid ${colors.border}`, borderRadius: 99, padding: '3px 10px' }}>
+                        {projectArea}
+                      </span>
+                    )}
+                    {goalOpt && (
+                      <span style={{ fontSize: 12, fontWeight: 600, color: goalOpt.color, background: goalOpt.bg, border: `1px solid ${goalOpt.color}33`, borderRadius: 99, padding: '3px 10px', display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <goalOpt.Icon size={11} /> {goalOpt.title}
+                      </span>
+                    )}
+                    <span style={{ fontSize: 12, color: colors.muted, background: colors.bgAlt, border: `1px solid ${colors.border}`, borderRadius: 99, padding: '3px 10px' }}>
+                      Passo {stepsCompleted + 1} de {TOTAL_STEPS}
+                    </span>
+                  </div>
+
+                  {/* Progress bar */}
+                  <div style={{ height: 3, background: colors.border, borderRadius: 99, overflow: 'hidden', marginBottom: 14 }}>
+                    <div style={{
+                      height: '100%',
+                      width: `${((stepsCompleted + 1) / TOTAL_STEPS) * 100}%`,
+                      background: `linear-gradient(90deg, ${colors.blue}, #4f46e5)`,
+                      borderRadius: 99,
+                    }} />
+                  </div>
+
+                  {/* Actions */}
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button
+                      onClick={() => { applyDraft(draftModal); setDraftModal(null) }}
+                      style={{
+                        flex: 1, padding: '10px 0', borderRadius: 10,
+                        background: `linear-gradient(135deg, ${colors.blue}, #4f46e5)`,
+                        border: 'none', color: '#fff', fontSize: 14, fontWeight: 700,
+                        cursor: 'pointer', fontFamily: 'inherit',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                        transition: 'opacity 0.15s',
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.opacity = '0.9'}
+                      onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+                    >
+                      <ArrowRight size={14} /> Continuar onde parei
+                    </button>
+                    <button
+                      onClick={async () => { await clearDraft(); setDraftModal(null) }}
+                      style={{
+                        padding: '10px 14px', borderRadius: 10,
+                        background: 'transparent', border: `1px solid ${colors.border}`,
+                        color: colors.muted, fontSize: 13, fontWeight: 600,
+                        cursor: 'pointer', fontFamily: 'inherit',
+                        transition: 'border-color 0.15s, color 0.15s',
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor = colors.borderBright; e.currentTarget.style.color = colors.text }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.color = colors.muted }}
+                    >
+                      Apagar
+                    </button>
+                  </div>
+                </div>
+              )
+            })()}
+
           </div>
         </div>
       </div>
