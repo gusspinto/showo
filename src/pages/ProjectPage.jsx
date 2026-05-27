@@ -842,19 +842,21 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
 
           <div style={{ flex: 1 }} />
 
-          <button
-            onClick={() => setPreviewEditing(e => !e)}
-            style={{
-              background: previewEditing ? '#1b78f7' : 'transparent',
-              border: `1px solid ${previewEditing ? '#1b78f7' : 'rgba(27,120,247,0.4)'}`,
-              borderRadius: 7, padding: '5px 12px',
-              color: previewEditing ? '#fff' : '#1b78f7',
-              fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
-              display: 'flex', alignItems: 'center', gap: 5, transition: 'all 0.15s',
-            }}
-          >
-            <Pencil size={11} /> {previewEditing ? 'Fechar workspace' : 'Editar workspace'}
-          </button>
+          {!previewEditing && (
+            <button
+              onClick={() => setPreviewEditing(true)}
+              style={{
+                background: 'transparent',
+                border: '1px solid rgba(27,120,247,0.4)',
+                borderRadius: 7, padding: '5px 12px',
+                color: '#1b78f7',
+                fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+                display: 'flex', alignItems: 'center', gap: 5, transition: 'all 0.15s',
+              }}
+            >
+              <Pencil size={11} /> Editar workspace
+            </button>
+          )}
           <button
             onClick={onExitPreview}
             style={{
@@ -873,8 +875,14 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
         </div>
       )}
 
+      {/* ── Card style scoped CSS ── */}
+      <style>{`
+        [data-pv-cs="flat"] .proj-card { background: transparent !important; border-color: transparent !important; box-shadow: none !important; }
+        [data-pv-cs="glass"] .proj-card { background: rgba(255,255,255,0.05) !important; backdrop-filter: blur(16px) !important; -webkit-backdrop-filter: blur(16px) !important; border: 1px solid rgba(255,255,255,0.09) !important; }
+      `}</style>
+
       {/* ── Device frame wrapper ── */}
-      <div style={{
+      <div data-pv-cs={cardStyleVal} style={{
         margin: previewDevice !== 'desktop' ? `${isOwner ? 16 : 40}px auto 0` : '0 auto',
         maxWidth: deviceMaxWidth,
         width: '100%',
@@ -882,7 +890,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
         borderRadius: previewDevice !== 'desktop' ? 20 : 0,
         overflow: previewDevice !== 'desktop' ? 'hidden' : 'visible',
         transition: 'max-width 0.3s ease, box-shadow 0.3s ease, border-radius 0.3s ease',
-        background: 'var(--c-bg)',
+        background: resolvedBg,
       }}>
 
       {/* ── Hero ── */}
@@ -1379,43 +1387,42 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
           {/* ── TAB: BLOCOS ── */}
           {previewTab === 'blocos' && (
             <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+              {/* Block type picker — compact 3-col chip grid */}
               <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--c-border)' }}>
-                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--c-subtle)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 10 }}>Adicionar bloco</div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--c-subtle)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>Adicionar bloco</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 5 }}>
                   {BLOCK_TYPES.map(bt => {
                     const BtIcon = bt.Icon
                     return (
-                      <button key={bt.type} onClick={() => setPreviewBlocks(bs => [...bs, newBlock(bt.type)])}
+                      <button key={bt.type} title={bt.desc} onClick={() => setPreviewBlocks(bs => [...bs, newBlock(bt.type)])}
                         style={{
-                          background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)',
-                          borderRadius: 10, padding: '10px 12px',
-                          cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
-                          transition: 'all 0.14s', display: 'flex', alignItems: 'center', gap: 10,
+                          background: 'var(--c-bg)', border: '1px solid var(--c-border)',
+                          borderRadius: 8, padding: '7px 6px',
+                          cursor: 'pointer', fontFamily: 'inherit', textAlign: 'center',
+                          transition: 'all 0.13s', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5,
                         }}
-                        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(27,120,247,0.08)'; e.currentTarget.style.borderColor = 'rgba(27,120,247,0.3)' }}
-                        onMouseLeave={e => { e.currentTarget.style.background = 'var(--c-bg-alt)'; e.currentTarget.style.borderColor = 'var(--c-border)' }}
+                        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(27,120,247,0.08)'; e.currentTarget.style.borderColor = 'rgba(27,120,247,0.35)' }}
+                        onMouseLeave={e => { e.currentTarget.style.background = 'var(--c-bg)'; e.currentTarget.style.borderColor = 'var(--c-border)' }}
                       >
-                        <div style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(27,120,247,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                          <BtIcon size={14} color="#1b78f7" />
+                        <div style={{ width: 26, height: 26, borderRadius: 7, background: 'rgba(27,120,247,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <BtIcon size={12} color="#1b78f7" />
                         </div>
-                        <div>
-                          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--c-text)', marginBottom: 2 }}>{bt.label}</div>
-                          <div style={{ fontSize: 9, color: 'var(--c-muted)', lineHeight: 1.3 }}>{bt.desc.slice(0, 26)}…</div>
-                        </div>
+                        <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--c-text)', lineHeight: 1.2 }}>{bt.label}</span>
                       </button>
                     )
                   })}
                 </div>
               </div>
 
-              <div style={{ flex: 1, overflowY: 'auto', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {/* Existing blocks list */}
+              <div style={{ flex: 1, overflowY: 'auto', padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 7 }}>
                 {previewBlocks.length === 0 ? (
-                  <div style={{ textAlign: 'center', padding: '40px 0' }}>
-                    <div style={{ width: 48, height: 48, borderRadius: 14, background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
-                      <Layout size={22} color="var(--c-border)" />
+                  <div style={{ textAlign: 'center', padding: '32px 0' }}>
+                    <div style={{ width: 40, height: 40, borderRadius: 12, background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 10px' }}>
+                      <Layout size={18} color="var(--c-subtle)" />
                     </div>
-                    <div style={{ fontSize: 13, color: 'var(--c-muted)', fontWeight: 600 }}>Nenhum bloco ainda</div>
-                    <div style={{ fontSize: 11, color: 'var(--c-subtle)', marginTop: 4 }}>Adiciona o primeiro bloco acima.</div>
+                    <div style={{ fontSize: 12, color: 'var(--c-muted)', fontWeight: 600 }}>Nenhum bloco ainda</div>
+                    <div style={{ fontSize: 11, color: 'var(--c-subtle)', marginTop: 3 }}>Adiciona o primeiro bloco acima.</div>
                   </div>
                 ) : previewBlocks.map((block, idx) => {
                   const bt = BLOCK_TYPES.find(b => b.type === block.type) || BLOCK_TYPES[0]
@@ -1428,118 +1435,120 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
                       onDragStart={() => onDragStart(idx)} onDragEnter={() => onDragEnter(idx)}
                       onDragEnd={onDragEnd} onDragOver={e => e.preventDefault()}
                       style={{
-                        background: isDragTarget ? 'rgba(27,120,247,0.06)' : 'var(--c-bg-alt)',
-                        border: `1px solid ${isDragTarget ? 'rgba(27,120,247,0.45)' : 'var(--c-border)'}`,
+                        background: isDragTarget ? 'rgba(27,120,247,0.05)' : 'var(--c-bg-alt)',
+                        border: `1px solid ${isDragTarget ? 'rgba(27,120,247,0.4)' : 'var(--c-border)'}`,
                         borderLeft: `3px solid ${accentColor}`,
-                        borderRadius: 10, padding: '11px 12px',
+                        borderRadius: 9, padding: '9px 10px',
                         cursor: 'grab', transition: 'all 0.1s',
                         transform: isDragTarget ? 'scale(1.01)' : 'none',
                       }}
                     >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 10 }}>
-                        <GripVertical size={13} color="var(--c-muted)" style={{ flexShrink: 0 }} />
-                        <div style={{ width: 22, height: 22, borderRadius: 6, background: `${accentColor}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                          <BtIcon size={11} color={accentColor} />
+                      {/* Block header */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                        <GripVertical size={12} color="var(--c-subtle)" style={{ flexShrink: 0, cursor: 'grab' }} />
+                        <div style={{ width: 20, height: 20, borderRadius: 5, background: `${accentColor}1a`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          <BtIcon size={10} color={accentColor} />
                         </div>
                         <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--c-text)', flex: 1 }}>{bt.label}</span>
                         <button onClick={() => setPreviewBlocks(bs => bs.filter(b => b.id !== block.id))}
-                          style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', color: '#ef4444', cursor: 'pointer', padding: '3px 7px', display: 'flex', alignItems: 'center', borderRadius: 6, transition: 'all 0.12s' }}
-                          onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.18)'}
-                          onMouseLeave={e => e.currentTarget.style.background = 'rgba(239,68,68,0.08)'}
-                        ><X size={10} /></button>
+                          style={{ background: 'none', border: 'none', color: 'var(--c-subtle)', cursor: 'pointer', padding: '2px 3px', display: 'flex', alignItems: 'center', borderRadius: 4, transition: 'color 0.12s' }}
+                          onMouseEnter={e => e.currentTarget.style.color = '#ef4444'}
+                          onMouseLeave={e => e.currentTarget.style.color = 'var(--c-subtle)'}
+                        ><X size={12} /></button>
                       </div>
 
+                      {/* Block content inputs */}
                       {block.type === 'heading' && <input value={block.content || ''} onChange={e => upd(block.id, 'content', e.target.value)} placeholder="Título da secção..." style={wsInputNew} />}
-                      {block.type === 'note' && <textarea value={block.content || ''} onChange={e => upd(block.id, 'content', e.target.value)} placeholder="A tua mensagem para quem visita..." rows={3} style={{ ...wsInputNew, resize: 'vertical', lineHeight: 1.5 }} />}
-                      {block.type === 'quote' && <textarea value={block.content || ''} onChange={e => upd(block.id, 'content', e.target.value)} placeholder="A tua frase ou citação..." rows={2} style={{ ...wsInputNew, resize: 'vertical', lineHeight: 1.5 }} />}
+                      {block.type === 'note' && <textarea value={block.content || ''} onChange={e => upd(block.id, 'content', e.target.value)} placeholder="A tua mensagem para quem visita..." rows={2} style={{ ...wsInputNew, resize: 'vertical', lineHeight: 1.5 }} />}
+                      {block.type === 'quote' && <textarea value={block.content || ''} onChange={e => upd(block.id, 'content', e.target.value)} placeholder="Frase ou citação marcante..." rows={2} style={{ ...wsInputNew, resize: 'vertical', lineHeight: 1.5 }} />}
                       {block.type === 'callout' && (<>
-                        <input value={block.label || ''} onChange={e => upd(block.id, 'label', e.target.value)} placeholder="Título do destaque (opcional)" style={{ ...wsInputNew, marginBottom: 6 }} />
+                        <input value={block.label || ''} onChange={e => upd(block.id, 'label', e.target.value)} placeholder="Título (opcional)" style={{ ...wsInputNew, marginBottom: 5 }} />
                         <textarea value={block.content || ''} onChange={e => upd(block.id, 'content', e.target.value)} placeholder="Conteúdo do destaque..." rows={2} style={{ ...wsInputNew, resize: 'vertical', lineHeight: 1.5 }} />
                       </>)}
                       {block.type === 'link' && (<>
-                        <input value={block.label || ''} onChange={e => upd(block.id, 'label', e.target.value)} placeholder="Texto do link (ex: Ver demo)" style={{ ...wsInputNew, marginBottom: 6 }} />
+                        <input value={block.label || ''} onChange={e => upd(block.id, 'label', e.target.value)} placeholder="Texto (ex: Ver demo)" style={{ ...wsInputNew, marginBottom: 5 }} />
                         <input value={block.url || ''} onChange={e => upd(block.id, 'url', e.target.value)} placeholder="URL (https://...)" style={wsInputNew} />
                       </>)}
                       {block.type === 'metric' && (<>
-                        <input value={block.label || ''} onChange={e => upd(block.id, 'label', e.target.value)} placeholder="Número ou valor (ex: 2.500)" style={{ ...wsInputNew, marginBottom: 6, fontWeight: 800, fontSize: 16 }} />
-                        <input value={block.content || ''} onChange={e => upd(block.id, 'content', e.target.value)} placeholder="Descrição (ex: utilizadores activos)" style={wsInputNew} />
+                        <input value={block.label || ''} onChange={e => upd(block.id, 'label', e.target.value)} placeholder="Valor (ex: 2.500)" style={{ ...wsInputNew, marginBottom: 5, fontWeight: 800 }} />
+                        <input value={block.content || ''} onChange={e => upd(block.id, 'content', e.target.value)} placeholder="Descrição" style={wsInputNew} />
                       </>)}
                       {block.type === 'image' && (<>
-                        <div style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
+                        <div style={{ display: 'flex', gap: 5, marginBottom: 5 }}>
                           <input value={block.imageUrl || ''} onChange={e => upd(block.id, 'imageUrl', e.target.value)} placeholder="URL da imagem..." style={{ ...wsInputNew, flex: 1 }} />
-                          <button onClick={() => uploadImage(block.id, 'imageUrl')} style={{ background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.25)', borderRadius: 7, padding: '0 10px', color: colors.blue, cursor: 'pointer', display: 'flex', alignItems: 'center', flexShrink: 0 }}><Camera size={13} /></button>
+                          <button onClick={() => uploadImage(block.id, 'imageUrl')} style={{ background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.25)', borderRadius: 6, padding: '0 9px', color: colors.blue, cursor: 'pointer', display: 'flex', alignItems: 'center', flexShrink: 0 }}><Camera size={12} /></button>
                         </div>
                         <input value={block.content || ''} onChange={e => upd(block.id, 'content', e.target.value)} placeholder="Legenda (opcional)" style={wsInputNew} />
                       </>)}
                       {block.type === 'gallery' && (<>
                         {['imageUrl','imageUrl2','imageUrl3'].map((field, gi) => (
-                          <div key={field} style={{ display: 'flex', gap: 6, marginBottom: gi < 2 ? 6 : 0 }}>
-                            <input value={block[field] || ''} onChange={e => upd(block.id, field, e.target.value)} placeholder={`Imagem ${gi+1} (URL ou upload)`} style={{ ...wsInputNew, flex: 1 }} />
-                            <button onClick={() => uploadImage(block.id, field)} style={{ background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.25)', borderRadius: 7, padding: '0 10px', color: colors.blue, cursor: 'pointer', display: 'flex', alignItems: 'center', flexShrink: 0 }}><Camera size={13} /></button>
+                          <div key={field} style={{ display: 'flex', gap: 5, marginBottom: gi < 2 ? 5 : 0 }}>
+                            <input value={block[field] || ''} onChange={e => upd(block.id, field, e.target.value)} placeholder={`Imagem ${gi+1}`} style={{ ...wsInputNew, flex: 1 }} />
+                            <button onClick={() => uploadImage(block.id, field)} style={{ background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.25)', borderRadius: 6, padding: '0 9px', color: colors.blue, cursor: 'pointer', display: 'flex', alignItems: 'center', flexShrink: 0 }}><Camera size={12} /></button>
                           </div>
                         ))}
                       </>)}
                       {block.type === 'video' && <input value={block.videoUrl || ''} onChange={e => upd(block.id, 'videoUrl', e.target.value)} placeholder="URL do YouTube ou Vimeo..." style={wsInputNew} />}
                       {block.type === 'stats' && (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
                           {[1,2,3].map(n => (
-                            <div key={n} style={{ display: 'flex', gap: 5 }}>
-                              <input value={block[`stat${n}Value`] || ''} onChange={e => upd(block.id, `stat${n}Value`, e.target.value)} placeholder={`Valor ${n}`} style={{ ...wsInputNew, flex: '0 0 42%', fontWeight: 800, fontSize: 14 }} />
-                              <input value={block[`stat${n}Label`] || ''} onChange={e => upd(block.id, `stat${n}Label`, e.target.value)} placeholder={`Descrição ${n}`} style={{ ...wsInputNew, flex: 1 }} />
+                            <div key={n} style={{ display: 'flex', gap: 4 }}>
+                              <input value={block[`stat${n}Value`] || ''} onChange={e => upd(block.id, `stat${n}Value`, e.target.value)} placeholder={`Valor ${n}`} style={{ ...wsInputNew, flex: '0 0 40%', fontWeight: 800 }} />
+                              <input value={block[`stat${n}Label`] || ''} onChange={e => upd(block.id, `stat${n}Label`, e.target.value)} placeholder={`Desc. ${n}`} style={{ ...wsInputNew, flex: 1 }} />
                             </div>
                           ))}
                         </div>
                       )}
                       {block.type === 'cta' && (<>
-                        <input value={block.content || ''} onChange={e => upd(block.id, 'content', e.target.value)} placeholder="Texto do botão (ex: Ver demo ao vivo)" style={{ ...wsInputNew, marginBottom: 6, fontWeight: 700 }} />
+                        <input value={block.content || ''} onChange={e => upd(block.id, 'content', e.target.value)} placeholder="Texto do botão" style={{ ...wsInputNew, marginBottom: 5, fontWeight: 700 }} />
                         <input value={block.url || ''} onChange={e => upd(block.id, 'url', e.target.value)} placeholder="URL de destino (https://...)" style={wsInputNew} />
-                        <div style={{ fontSize: 10, color: 'var(--c-muted)', marginTop: 5 }}>A cor segue a cor de destaque.</div>
                       </>)}
                       {block.type === 'divider' && (
-                        <div style={{ display: 'flex', gap: 4 }}>
+                        <div style={{ display: 'flex', gap: 3 }}>
                           {['solid','dashed','dotted','gradient'].map(s => (
                             <button key={s} onClick={() => upd(block.id, 'dividerStyle', s)}
                               style={{
-                                flex: 1, padding: '6px 0', borderRadius: 7, cursor: 'pointer',
+                                flex: 1, padding: '5px 0', borderRadius: 6, cursor: 'pointer',
                                 border: `1px solid ${(block.dividerStyle || 'solid') === s ? '#1b78f7' : 'var(--c-border)'}`,
-                                background: (block.dividerStyle || 'solid') === s ? 'rgba(27,120,247,0.1)' : 'var(--c-bg)',
+                                background: (block.dividerStyle || 'solid') === s ? 'rgba(27,120,247,0.12)' : 'var(--c-bg)',
                                 color: (block.dividerStyle || 'solid') === s ? '#1b78f7' : 'var(--c-muted)',
-                                fontSize: 10, fontWeight: 700, fontFamily: 'inherit',
+                                fontSize: 9, fontWeight: 700, fontFamily: 'inherit',
                               }}
                             >{s.charAt(0).toUpperCase() + s.slice(1)}</button>
                           ))}
                         </div>
                       )}
 
-                      <div style={{ marginTop: 10, paddingTop: 8, borderTop: '1px solid var(--c-border)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <div style={{ display: 'flex', gap: 5, flex: 1 }}>
+                      {/* Footer: accent color + alignment (compact) */}
+                      <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <div style={{ display: 'flex', gap: 4, flex: 1 }}>
                           {BLOCK_ACCENT_COLORS.map(c => (
                             <button key={c.value} title={c.label}
                               onClick={() => upd(block.id, 'color', block.color === c.value ? '' : c.value)}
                               style={{
-                                width: 20, height: 20, borderRadius: '50%', background: c.value,
-                                border: block.color === c.value ? '2.5px solid var(--c-text)' : '2px solid transparent',
+                                width: 16, height: 16, borderRadius: '50%', background: c.value,
+                                border: block.color === c.value ? '2px solid var(--c-text)' : '1.5px solid transparent',
                                 cursor: 'pointer', padding: 0, flexShrink: 0,
                                 boxShadow: block.color === c.value ? `0 0 0 1px ${c.value}` : 'none',
                                 transition: 'transform 0.1s',
                               }}
-                              onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.25)'}
+                              onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.3)'}
                               onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
                             />
                           ))}
                         </div>
                         {hasText && (
-                          <div style={{ display: 'flex', gap: 3 }}>
+                          <div style={{ display: 'flex', gap: 2 }}>
                             {[{ val: 'left', Icon: AlignLeft }, { val: 'center', Icon: AlignCenter }, { val: 'right', Icon: AlignRight }].map(a => (
                               <button key={a.val} onClick={() => upd(block.id, 'align', a.val)}
                                 style={{
-                                  width: 26, height: 24, borderRadius: 6,
-                                  background: (block.align || 'left') === a.val ? '#1b78f7' : 'var(--c-bg)',
+                                  width: 24, height: 22, borderRadius: 5,
+                                  background: (block.align || 'left') === a.val ? '#1b78f7' : 'transparent',
                                   border: `1px solid ${(block.align || 'left') === a.val ? '#1b78f7' : 'var(--c-border)'}`,
                                   cursor: 'pointer', color: (block.align || 'left') === a.val ? '#fff' : 'var(--c-muted)',
                                   display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
                                 }}
-                              ><a.Icon size={12} /></button>
+                              ><a.Icon size={11} /></button>
                             ))}
                           </div>
                         )}
