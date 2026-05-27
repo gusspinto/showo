@@ -536,6 +536,7 @@ const BLOCK_TYPES = [
   { type: 'image',   label: 'Imagem',        Icon: Image,      desc: 'Imagem por URL ou upload' },
   { type: 'gallery', label: 'Galeria',       Icon: Layout,     desc: 'Até 3 imagens lado a lado' },
   { type: 'video',   label: 'Vídeo',         Icon: Video,      desc: 'YouTube ou Vimeo embed' },
+  { type: 'cta',     label: 'Botão CTA',     Icon: ArrowRight, desc: 'Chamada à ação destacada' },
   { type: 'link',    label: 'Link',          Icon: Link,       desc: 'GitHub, demo, portfolio...' },
   { type: 'divider', label: 'Divisor',       Icon: Minus,      desc: 'Linha separadora de secções' },
 ]
@@ -1088,6 +1089,19 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
                 </div>
               </div>
 
+              {/* Footer text */}
+              <div style={{ paddingTop: 10, borderTop: '1px solid var(--c-border)', marginTop: 4 }}>
+                <div style={{ fontSize: 11, color: 'var(--c-muted)', fontWeight: 600, marginBottom: 6 }}>Rodapé personalizado</div>
+                <input
+                  value={previewStyle.footerText || ''}
+                  onChange={e => setPreviewStyle(ps => ({ ...ps, footerText: e.target.value }))}
+                  placeholder="Ex: Projeto desenvolvido em 2025 · ETIC Lisboa"
+                  style={{ ...wsInput, fontSize: 12 }}
+                  maxLength={120}
+                />
+                <div style={{ fontSize: 10, color: 'var(--c-subtle)', marginTop: 4 }}>Aparece no fundo da preview. Máx. 120 caracteres.</div>
+              </div>
+
               {/* Cover image upload */}
               <div style={{ paddingTop: 10, borderTop: '1px solid var(--c-border)', marginTop: 4 }}>
                 <div style={{ fontSize: 11, color: 'var(--c-muted)', fontWeight: 600, marginBottom: 6 }}>Imagem de capa</div>
@@ -1277,6 +1291,13 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
                             ))}
                           </div>
                         )}
+                        {block.type === 'cta' && (<>
+                          <input value={block.content || ''} onChange={e => upd(block.id, 'content', e.target.value)}
+                            placeholder="Texto do botão (ex: Ver demo ao vivo)" style={{ ...wsInput, marginBottom: 6, fontWeight: 700 }} />
+                          <input value={block.url || ''} onChange={e => upd(block.id, 'url', e.target.value)}
+                            placeholder="URL de destino (https://...)" style={wsInput} />
+                          <div style={{ fontSize: 10, color: 'var(--c-muted)', marginTop: 5 }}>A cor do botão segue a cor de destaque selecionada acima.</div>
+                        </>)}
                         {block.type === 'divider' && (
                           <div style={{ display: 'flex', gap: 4 }}>
                             {['solid','dashed','dotted','gradient'].map(s => (
@@ -1589,6 +1610,28 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
             )
           }
 
+          if (block.type === 'cta' && block.content) return (
+            <div key={block.id} style={{ textAlign: 'center', padding: '16px 0' }}>
+              <a
+                href={block.url || undefined}
+                target="_blank" rel="noopener noreferrer"
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 10,
+                  background: `linear-gradient(135deg, ${accent}, ${accent}cc)`,
+                  color: '#fff', fontSize: 16, fontWeight: 800,
+                  padding: '16px 36px', borderRadius: 14,
+                  textDecoration: 'none', letterSpacing: '-0.2px',
+                  boxShadow: `0 8px 28px ${accent}40, 0 2px 8px ${accent}30`,
+                  transition: 'transform 0.15s, box-shadow 0.15s',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = `0 12px 36px ${accent}55, 0 4px 12px ${accent}40` }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = `0 8px 28px ${accent}40, 0 2px 8px ${accent}30` }}
+              >
+                {block.content} <ArrowRight size={18} />
+              </a>
+            </div>
+          )
+
           if (block.type === 'divider') {
             const ds = block.dividerStyle || 'solid'
             if (ds === 'gradient') return (
@@ -1856,6 +1899,13 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
             <ProjectComments projectId={project.id} projectAuthorId={project.user_id} />
           </div>
         </div>
+
+        {/* Rodapé personalizado */}
+        {previewStyle.footerText && (
+          <div style={{ textAlign: 'center', padding: '8px 0 4px', borderTop: '1px solid var(--c-border)' }}>
+            <span style={{ fontSize: 12, color: 'var(--c-subtle)', fontWeight: 500, letterSpacing: '0.02em' }}>{previewStyle.footerText}</span>
+          </div>
+        )}
 
       </div>
       </div>{/* end device-frame */}

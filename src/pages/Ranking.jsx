@@ -1,10 +1,27 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { Navbar } from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
-import { Trophy, ChevronRight } from 'lucide-react'
+import { Trophy, ChevronRight, TrendingUp, TrendingDown, Minus } from 'lucide-react'
 import CreateProjectModal from '../components/CreateProjectModal'
+
+const RANK_STORAGE_KEY = 'showo_ranking_positions'
+
+function loadPrevPositions() {
+  try {
+    const raw = localStorage.getItem(RANK_STORAGE_KEY)
+    return raw ? JSON.parse(raw) : {}
+  } catch { return {} }
+}
+
+function saveCurrentPositions(projects) {
+  try {
+    const map = {}
+    projects.forEach((p, i) => { map[p.id] = i + 1 })
+    localStorage.setItem(RANK_STORAGE_KEY, JSON.stringify(map))
+  } catch {}
+}
 
 const C = {
   bg:          'var(--c-bg)',
@@ -33,6 +50,23 @@ function getTierColor(score) {
 
 // Rank position accent: 1st=yellow, 2nd=muted(silver-ish), 3rd=orange
 const RANK_ACCENT = [C.yellow, C.muted, C.orange]
+
+function RankDelta({ currentRank, prevRank }) {
+  if (!prevRank || prevRank === currentRank) {
+    return <Minus size={11} color="var(--c-subtle)" />
+  }
+  const diff = prevRank - currentRank  // positive = moved up
+  if (diff > 0) return (
+    <span style={{ display: 'flex', alignItems: 'center', gap: 2, color: '#22c55e', fontSize: 10, fontWeight: 700 }}>
+      <TrendingUp size={11} /> {diff}
+    </span>
+  )
+  return (
+    <span style={{ display: 'flex', alignItems: 'center', gap: 2, color: '#ef4444', fontSize: 10, fontWeight: 700 }}>
+      <TrendingDown size={11} /> {Math.abs(diff)}
+    </span>
+  )
+}
 
 function ScoreRing({ score, size = 64, strokeW = 5 }) {
   const r    = (size - strokeW) / 2
@@ -66,6 +100,7 @@ export default function Ranking() {
   const [yearFilter, setYearFilter] = useState('')
   const [courseFilter, setCourseFilter] = useState('')
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const prevPositions = useRef(loadPrevPositions())
 
   useEffect(() => {
     async function load() {
@@ -74,7 +109,11 @@ export default function Ranking() {
         .select('id,name,slug,area,creator_name,course,school_year,project_type,is_pap,score,ai_tagline,created_at,user_id')
         .order('score', { ascending: false })
         .limit(200)
-      if (!error && data) setProjects(data)
+      if (!error && data) {
+        setProjects(data)
+        // Save new positions after a short delay (so prev is shown first this session)
+        setTimeout(() => saveCurrentPositions(data), 3000)
+      }
       setLoading(false)
     }
     load()
@@ -228,6 +267,7 @@ export default function Ranking() {
                     const isFirst  = i === 0
                     const podiumH  = isFirst ? 72 : i === 1 ? 48 : 32
                     const isMe     = user?.id && project.user_id === user.id
+                    const prevRank = prevPositions.current[project.id]
                     return (
                       <div
                         key={project.id}
@@ -283,9 +323,10 @@ export default function Ranking() {
                           border: `1px solid ${accent}35`,
                           borderTop: `2px solid ${accent}`,
                           borderRadius: '0 0 10px 10px',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
                         }}>
                           <span style={{ fontSize: isFirst ? 22 : 16, fontWeight: 900, color: accent }}>{rank}</span>
+                          {podiumH >= 48 && <RankDelta currentRank={rank} prevRank={prevRank} />}
                         </div>
                       </div>
                     )
@@ -305,6 +346,7 @@ export default function Ranking() {
                     const rank      = i + 4
                     const tierColor = getTierColor(project.score)
                     const isMe      = user?.id && project.user_id === user.id
+                    const prevRank  = prevPositions.current[project.id]
                     return (
                       <div
                         key={project.id}
@@ -320,10 +362,11 @@ export default function Ranking() {
                           boxShadow: isMe ? `0 0 0 1px ${C.blue}20` : 'none',
                         }}
                       >
-                        {/* Position number */}
-                        <span style={{ fontSize: 12, fontWeight: 700, color: C.subtle, width: 26, textAlign: 'right', flexShrink: 0 }}>
-                          {rank}
-                        </span>
+                        {/* Position + delta */}
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2, width: 34, flexShrink: 0 }}>
+                          <span style={{ fontSize: 12, fontWeight: 700, color: C.subtle }}>{rank}</span>
+                          <RankDelta currentRank={rank} prevRank={prevRank} />
+                        </div>
 
                         {/* Score ring */}
                         <ScoreRing score={project.score} size={40} strokeW={3} />
