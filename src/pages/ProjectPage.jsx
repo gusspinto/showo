@@ -2166,7 +2166,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
       </div>{/* end story-sections wrapper */}
       </div>{/* end device-frame / CSS scope */}
       </div>{/* end preview scroll area */}
-    </div>{/* end outer flex-column */}
+    </div>
   )
 }
 

@@ -27,7 +27,7 @@ const C = {
   orange: '#f97316',
 }
 
-const ACHIEVEMENTS = [
+export const ACHIEVEMENTS = [
   // Tier: Bronze
   {
     id: 'first_step',

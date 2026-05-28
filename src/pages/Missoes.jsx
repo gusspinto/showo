@@ -129,7 +129,7 @@ export const MISSIONS = [
   },
 ]
 
-function checkMissionProgress(mission, projects, profile, user) {
+export function checkMissionProgress(mission, projects, profile, user) {
   if (!projects) return false
 
   switch (mission.id) {
