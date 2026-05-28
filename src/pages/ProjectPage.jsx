@@ -800,6 +800,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
     { id: 'mobile',   Icon: Smartphone, label: 'Mobile',    title: 'Vista mobile (390px)' },
   ]
   const deviceMaxWidth = previewDevice === 'mobile' ? 390 : previewDevice === 'tablet' ? 768 : undefined
+  const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 760
 
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', flexDirection: 'column' }}>
@@ -896,7 +897,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
       <div style={{
         flex: 1, overflowY: 'auto', overflowX: 'hidden',
         background: resolvedBg,
-        paddingRight: isOwner && previewEditing && window.innerWidth > 760 ? 360 : 0,
+        paddingRight: isOwner && previewEditing && isDesktop ? 360 : 0,
         transition: 'padding-right 0.3s ease',
       }}>
 
@@ -1035,7 +1036,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
       </div>
 
       {/* ── Workspace panel — fixed right sidebar, flush with banner ── */}
-      {isOwner && previewEditing && window.innerWidth > 760 && (
+      {isOwner && previewEditing && isDesktop && (
         <div style={{
           position: 'fixed', right: 0, top: 40, bottom: 0, zIndex: 200,
           width: 360,
