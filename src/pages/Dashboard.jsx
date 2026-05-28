@@ -1138,20 +1138,31 @@ export default function Dashboard() {
   useEffect(() => {
     if (!user) return
     async function load() {
-      const { data, error } = await supabase
+      // Primary query with collaborator_count
+      let { data, error } = await supabase
         .from('projects')
         .select('id, name, slug, score, area, created_at, ai_tagline, views, defense_date, ai_feedback, cover_url, collaborator_count:project_members(count)')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
-      if (!error) {
-        const normalized = (data || []).map(p => ({
-          ...p,
-          collaborator_count: Array.isArray(p.collaborator_count)
-            ? (p.collaborator_count[0]?.count ?? 0)
-            : (p.collaborator_count ?? 0),
-        }))
-        setProjects(normalized)
+
+      // Fallback: if subquery fails (e.g. RLS on project_members), retry without it
+      if (error) {
+        const fallback = await supabase
+          .from('projects')
+          .select('id, name, slug, score, area, created_at, ai_tagline, views, defense_date, ai_feedback, cover_url')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+        data = fallback.data
+        error = fallback.error
       }
+
+      const normalized = (data || []).map(p => ({
+        ...p,
+        collaborator_count: Array.isArray(p.collaborator_count)
+          ? (p.collaborator_count[0]?.count ?? 0)
+          : (p.collaborator_count ?? 0),
+      }))
+      setProjects(normalized)
       setLoadingProjects(false)
     }
     load()

@@ -243,10 +243,18 @@ export default function Conquistas() {
     if (!user) { navigate('/login'); return }
 
     async function load() {
-      const { data: projs } = await supabase
+      let { data: projs, error } = await supabase
         .from('projects')
         .select('id, score, views, ai_feedback, collaborator_count:project_members(count)')
         .eq('user_id', user.id)
+
+      if (error) {
+        const fallback = await supabase
+          .from('projects')
+          .select('id, score, views, ai_feedback')
+          .eq('user_id', user.id)
+        projs = fallback.data
+      }
 
       const normalized = (projs || []).map(p => ({
         ...p,
