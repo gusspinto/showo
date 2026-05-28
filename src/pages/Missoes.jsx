@@ -150,8 +150,8 @@ function checkMissionProgress(mission, projects, profile, user) {
       return projects.some(p => (p.score ?? 0) >= 90)
 
     case 'share_project':
-      // We consider it done if they have a project (they can share it)
-      return projects.length >= 1
+      // Done when at least one project has been viewed by someone (views > 0 means was shared/visited)
+      return projects.some(p => (p.views ?? 0) > 0)
 
     case '50_views':
       return projects.reduce((s, p) => s + (p.views ?? 0), 0) >= 50
@@ -169,7 +169,8 @@ function checkMissionProgress(mission, projects, profile, user) {
       return projects.length >= 3
 
     case 'internship_ready':
-      return projects.some(p => (p.score ?? 0) >= 90)
+      // Needs: score ≥ 75 + cover image + AI analysis — project looks polished enough for employers
+      return projects.some(p => (p.score ?? 0) >= 75 && p.cover_url && p.ai_feedback)
 
     default:
       return false
@@ -297,7 +298,7 @@ export default function Missoes() {
     async function load() {
       const [{ data: projs }, { data: prof }] = await Promise.all([
         supabase.from('projects')
-          .select('id, score, views, ai_feedback, collaborator_count:project_members(count)')
+          .select('id, score, views, ai_feedback, cover_url, collaborator_count:project_members(count)')
           .eq('user_id', user.id),
         supabase.from('profiles')
           .select('avatar_url, bio, escola, school')

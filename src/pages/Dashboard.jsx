@@ -6,7 +6,8 @@ import { Pencil, ExternalLink } from 'lucide-react'
 import SkillsPicker from '../components/SkillsPicker'
 import { Navbar } from '../components/Navbar'
 import CreateProjectModal from '../components/CreateProjectModal'
-import { Folder, Trophy, BarChart2, Rocket, Eye, GraduationCap, Plus, X, Users, Users2, ChevronRight, User, Settings, Compass, Medal, LogOut, Globe, TrendingUp, MessageSquare, Star, Mail, Search, BookOpen, Trash2, Check, Calendar, ArrowRight, Target, Zap, Sparkles, Briefcase, Building2, Send, Copy, Share2, Link } from 'lucide-react'
+import { Folder, Trophy, BarChart2, Rocket, Eye, GraduationCap, Plus, X, Users, Users2, ChevronRight, User, Settings, Compass, Medal, LogOut, Globe, TrendingUp, MessageSquare, Star, Mail, Search, BookOpen, Trash2, Check, Calendar, ArrowRight, Target, Zap, Sparkles, Briefcase, Building2, Send, Copy, Share2, Link, Swords } from 'lucide-react'
+import { MISSIONS, checkMissionProgress } from './Missoes'
 import ConvidarVagaModal from '../components/ConvidarVagaModal'
 
 const C = {
@@ -1095,10 +1096,18 @@ export default function Dashboard() {
     async function load() {
       const { data, error } = await supabase
         .from('projects')
-        .select('id, name, slug, score, area, created_at, ai_tagline, views, defense_date')
+        .select('id, name, slug, score, area, created_at, ai_tagline, views, defense_date, ai_feedback, cover_url, collaborator_count:project_members(count)')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
-      if (!error) setProjects(data || [])
+      if (!error) {
+        const normalized = (data || []).map(p => ({
+          ...p,
+          collaborator_count: Array.isArray(p.collaborator_count)
+            ? (p.collaborator_count[0]?.count ?? 0)
+            : (p.collaborator_count ?? 0),
+        }))
+        setProjects(normalized)
+      }
       setLoadingProjects(false)
     }
     load()
@@ -1323,6 +1332,11 @@ export default function Dashboard() {
   const isTeacher = profile?.role === 'professor'
   const isRecruiter = profile?.role === 'recrutador' || profile?.role === 'empresa'
 
+  // XP earned from missions (computed, not stored)
+  const earnedXP = !isTeacher && !loadingProjects
+    ? MISSIONS.reduce((sum, m) => sum + (checkMissionProgress(m, projects, profile, user) ? m.xp : 0), 0)
+    : 0
+
   const greeting = (() => {
     const h = new Date().getHours()
     if (h >= 5  && h < 12) return `Bom dia, ${firstName}`
@@ -1522,6 +1536,16 @@ export default function Dashboard() {
                     {totalViews > 0 && (
                       <span className="dash-stat-pill">
                         <Eye size={11} /> {totalViews} visualizações
+                      </span>
+                    )}
+                    {earnedXP > 0 && (
+                      <span
+                        className="dash-stat-pill"
+                        onClick={() => navigate('/missoes')}
+                        style={{ cursor: 'pointer', color: '#a78bfa', borderColor: 'rgba(167,139,250,0.3)', background: 'rgba(167,139,250,0.08)' }}
+                        title="Ver missões"
+                      >
+                        <Swords size={11} /> {earnedXP} XP
                       </span>
                     )}
                   </>
