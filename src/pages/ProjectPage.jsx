@@ -896,7 +896,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
       <div style={{
         flex: 1, overflowY: 'auto', overflowX: 'hidden',
         background: resolvedBg,
-        paddingRight: isOwner && previewEditing ? 360 : 0,
+        paddingRight: isOwner && previewEditing && window.innerWidth > 760 ? 360 : 0,
         transition: 'padding-right 0.3s ease',
       }}>
 
@@ -1035,7 +1035,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
       </div>
 
       {/* ── Workspace panel — fixed right sidebar, flush with banner ── */}
-      {isOwner && previewEditing && (
+      {isOwner && previewEditing && window.innerWidth > 760 && (
         <div style={{
           position: 'fixed', right: 0, top: 40, bottom: 0, zIndex: 200,
           width: 360,
@@ -2927,11 +2927,18 @@ export default function ProjectPage() {
       <Helmet>
         <title>{project.name} — Showo</title>
         <meta name="description" content={project.ai_tagline || project.goal || `Projeto de ${project.creator_name || 'estudante'} no Showo`} />
+        {/* Open Graph — WhatsApp, Facebook, LinkedIn */}
         <meta property="og:title" content={`${project.name} — Showo`} />
         <meta property="og:description" content={project.ai_tagline || project.goal || `Projeto de ${project.creator_name || 'estudante'} no Showo`} />
         <meta property="og:url" content={pageUrl} />
         <meta property="og:type" content="website" />
-        {project.cover_url && <meta property="og:image" content={project.cover_url} />}
+        <meta property="og:site_name" content="Showo" />
+        {project.cover_url
+          ? <meta property="og:image" content={project.cover_url} />
+          : <meta property="og:image" content={`${window.location.origin}/og-default.png`} />}
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        {/* Twitter / X */}
         <meta name="twitter:card" content={project.cover_url ? 'summary_large_image' : 'summary'} />
         <meta name="twitter:title" content={`${project.name} — Showo`} />
         <meta name="twitter:description" content={project.ai_tagline || project.goal || `Projeto no Showo`} />

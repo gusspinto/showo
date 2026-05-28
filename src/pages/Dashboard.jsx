@@ -122,7 +122,7 @@ function ActionBtn({ onClick, label, primary, small }) {
   )
 }
 
-function ProjectRow({ project, onView, onEdit, onDelete }) {
+function ProjectRow({ project, onView, onEdit, onDelete, onCopy, copied }) {
   const [hovered, setHovered] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const date = new Date(project.created_at).toLocaleDateString('pt-PT', {
@@ -208,6 +208,11 @@ function ProjectRow({ project, onView, onEdit, onDelete }) {
               title="Editar"
               style={{ width: 34, height: 34, borderRadius: 9, background: 'var(--c-card-hover)', border: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: C.muted, flexShrink: 0 }}
             ><Pencil size={14} /></button>
+            <button
+              onClick={onCopy}
+              title={copied ? 'Link copiado!' : 'Copiar link'}
+              style={{ width: 34, height: 34, borderRadius: 9, background: copied ? 'rgba(34,197,94,0.1)' : 'var(--c-card-hover)', border: `1px solid ${copied ? 'rgba(34,197,94,0.3)' : C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: copied ? '#22c55e' : C.muted, flexShrink: 0, transition: 'all 0.2s' }}
+            >{copied ? <Check size={14} /> : <Link size={14} />}</button>
             <button
               onClick={onView}
               title="Ver projeto"
@@ -1039,6 +1044,9 @@ export default function Dashboard() {
   const [showJoinModal, setShowJoinModal] = useState(false)
   const [showTurmasModal, setShowTurmasModal] = useState(false)
   const [toast, setToast] = useState('')
+  const [xpToast, setXpToast] = useState(null) // { title, xp, icon } for mission unlocks
+  const [xpToastQueue, setXpToastQueue] = useState([])
+  const [copiedSlug, setCopiedSlug] = useState(null)
   const [showOnboarding, setShowOnboarding] = useState(false)
   const [showOnboardingAluno, setShowOnboardingAluno] = useState(false)
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -1058,6 +1066,42 @@ export default function Dashboard() {
     setToast(msg)
     setTimeout(() => setToast(''), 3000)
   }
+
+  function copyProjectLink(slug) {
+    const url = `${window.location.origin}/projeto/${slug}`
+    navigator.clipboard.writeText(url).then(() => {
+      setCopiedSlug(slug)
+      setTimeout(() => setCopiedSlug(null), 2500)
+    })
+  }
+
+  // ── Mission unlock detection ─────────────────────────────────────────────────
+  useEffect(() => {
+    if (loadingProjects || !user || !profile || profile?.role === 'professor') return
+    const storageKey = `showo_done_missions_${user.id}`
+    const stored = JSON.parse(localStorage.getItem(storageKey) || 'null')
+    const doneMissions = MISSIONS.filter(m => checkMissionProgress(m, projects, profile, user))
+    const doneIds = doneMissions.map(m => m.id)
+
+    if (stored === null) {
+      // First time: just store, no toasts (don't overwhelm on first load)
+      localStorage.setItem(storageKey, JSON.stringify(doneIds))
+      return
+    }
+
+    // Find newly unlocked missions
+    const newlyUnlocked = doneMissions.filter(m => !stored.includes(m.id))
+    if (newlyUnlocked.length > 0) {
+      localStorage.setItem(storageKey, JSON.stringify(doneIds))
+      // Queue toasts with delay between each
+      newlyUnlocked.forEach((m, i) => {
+        setTimeout(() => {
+          setXpToast({ title: m.title, xp: m.xp, color: m.color })
+          setTimeout(() => setXpToast(null), 4000)
+        }, i * 4500)
+      })
+    }
+  }, [loadingProjects, user])
 
   function dismissOnboarding() {
     localStorage.setItem(`showo_onboarded_${user.id}`, '1')
@@ -1449,7 +1493,7 @@ export default function Dashboard() {
         />
       )}
 
-      {/* Toast */}
+      {/* Toast simples */}
       <div style={{
         position: 'fixed', bottom: 28, left: '50%',
         transform: `translateX(-50%) translateY(${toast ? 0 : 80}px)`,
@@ -1459,6 +1503,29 @@ export default function Dashboard() {
         zIndex: 3000, pointerEvents: 'none', whiteSpace: 'nowrap',
         boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
       }}>{toast}</div>
+
+      {/* XP / Missão desbloqueada toast */}
+      <div style={{
+        position: 'fixed', bottom: 28, right: 28,
+        transform: `translateY(${xpToast ? 0 : 120}px)`,
+        opacity: xpToast ? 1 : 0,
+        transition: 'transform 0.4s cubic-bezier(0.34,1.56,0.64,1), opacity 0.25s',
+        background: 'var(--c-card)',
+        border: `1px solid ${xpToast?.color ?? '#a78bfa'}40`,
+        borderLeft: `3px solid ${xpToast?.color ?? '#a78bfa'}`,
+        borderRadius: 14, padding: '14px 18px',
+        zIndex: 3001, pointerEvents: 'none',
+        boxShadow: '0 8px 40px rgba(0,0,0,0.5)',
+        display: 'flex', flexDirection: 'column', gap: 4, minWidth: 240,
+      }}>
+        <div style={{ fontSize: 10, fontWeight: 700, color: xpToast?.color ?? '#a78bfa', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+          Missão desbloqueada
+        </div>
+        <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--c-text)' }}>{xpToast?.title}</div>
+        <div style={{ fontSize: 12, fontWeight: 700, color: xpToast?.color ?? '#a78bfa' }}>
+          +{xpToast?.xp} XP
+        </div>
+      </div>
 
       {showCreateTurma && (
         <CreateTurmaModal
@@ -1579,6 +1646,55 @@ export default function Dashboard() {
             </button>
           </div>
         </div>
+
+        {/* ── Banner de perfil incompleto (aluno, pós-onboarding) ── */}
+        {!isTeacher && !loadingProjects && !showOnboardingAluno && (() => {
+          const missingPhoto    = !profile?.avatar_url
+          const missingProject  = projects.length === 0
+          if (!missingPhoto && !missingProject) return null
+
+          const items = []
+          if (missingPhoto)   items.push({ label: 'Adicionar foto de perfil', action: () => navigate('/settings'), color: '#8b5cf6' })
+          if (missingProject) items.push({ label: 'Criar primeiro projeto', action: () => setShowCreateModal(true), color: C.blue })
+
+          return (
+            <div style={{
+              marginBottom: 16, padding: '14px 18px',
+              background: 'rgba(27,120,247,0.04)',
+              border: '1px solid rgba(27,120,247,0.15)',
+              borderRadius: 14,
+              display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
+            }}>
+              <div style={{ flex: 1, minWidth: 200 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 4 }}>
+                  O teu perfil ainda não está completo
+                </div>
+                <div style={{ fontSize: 12, color: C.muted }}>
+                  Perfis completos têm 3× mais visibilidade para recrutadores.
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {items.map(item => (
+                  <button
+                    key={item.label}
+                    onClick={item.action}
+                    style={{
+                      background: `${item.color}18`, border: `1px solid ${item.color}35`,
+                      borderRadius: 9, padding: '8px 14px',
+                      color: item.color, fontSize: 12, fontWeight: 700,
+                      cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap',
+                      transition: 'all 0.15s',
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.background = `${item.color}28` }}
+                    onMouseLeave={e => { e.currentTarget.style.background = `${item.color}18` }}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )
+        })()}
 
         {/* ── Próximos passos (aluno only) ── */}
         {!isTeacher && !loadingProjects && (() => {
@@ -1893,7 +2009,7 @@ export default function Dashboard() {
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {projects.map(project => (
-                  <ProjectRow key={project.id} project={project} onView={() => navigate(`/projeto/${project.slug}`)} onEdit={() => navigate(`/editar/${project.slug}`)} onDelete={deleteProject} />
+                  <ProjectRow key={project.id} project={project} onView={() => navigate(`/projeto/${project.slug}`)} onEdit={() => navigate(`/editar/${project.slug}`)} onDelete={deleteProject} onCopy={() => copyProjectLink(project.slug)} copied={copiedSlug === project.slug} />
                 ))}
               </div>
             )}
