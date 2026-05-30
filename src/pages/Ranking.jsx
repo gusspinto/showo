@@ -152,7 +152,7 @@ export default function Ranking() {
         .rank-top { transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.15s !important; cursor: pointer !important; }
         .rank-top:hover { background: ${C.cardHover} !important; transform: translateX(4px) !important; }
         @media (max-width: 600px) {
-          .rank-filters { flex-direction: column !important; gap: 8px !important; }
+          .rank-filters { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 8px !important; flex-wrap: unset !important; }
           .rank-filters select { width: 100% !important; }
           .rank-top-info-tagline { display: none !important; }
           /* Filter tabs — scroll horizontally */

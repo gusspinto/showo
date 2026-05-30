@@ -210,7 +210,7 @@ export default function Home() {
         }
 
         @media (max-width: 600px) {
-          .hero-section  { min-height: calc(100dvh - 62px) !important; justify-content: center !important; padding: 32px 20px 48px !important; }
+          .hero-section  { min-height: 0 !important; padding: 44px 20px 60px !important; justify-content: flex-start !important; }
           .hero-h1       { font-size: 30px !important; letter-spacing: -0.5px !important; margin-bottom: 12px !important; min-height: auto !important; }
           .hero-sub      { font-size: 15px !important; }
           .hero-widget   { margin-top: 28px !important; max-width: 100% !important; }

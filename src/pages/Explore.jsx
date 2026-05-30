@@ -347,6 +347,16 @@ export default function Explore() {
           .filter-row { gap: 8px; }
           .filter-row select { font-size: 12px !important; padding: 8px 32px 8px 12px !important; }
         }
+        @media (max-width: 600px) {
+          /* Tab + search: empilhar verticalmente */
+          .explore-tab-search-row { flex-direction: column !important; gap: 8px !important; }
+          .explore-tabs-wrap { width: 100% !important; display: flex !important; }
+          .explore-tabs-wrap button { flex: 1 !important; min-width: 0 !important; }
+          /* Vagas grid — 1 coluna em mobile pequeno */
+          .explore-grid { grid-template-columns: 1fr 1fr !important; }
+          /* Score slider: ocupa linha completa */
+          .explore-score-row { width: 100% !important; }
+        }
         @media (max-width: 440px) {
           .explore-grid { grid-template-columns: 1fr !important; }
         }
@@ -371,9 +381,9 @@ export default function Explore() {
         </div>
 
         {/* Search + Tab row */}
-        <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 16 }}>
+        <div className="explore-tab-search-row" style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 16 }}>
           {/* Animated tab switch */}
-          <div style={{
+          <div className="explore-tabs-wrap" style={{
             position: 'relative', display: 'inline-flex', flexShrink: 0,
             background: 'var(--c-card)', border: '1px solid var(--c-border)',
             borderRadius: 12, padding: 4,
