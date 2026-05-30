@@ -296,6 +296,10 @@ export default function EditProject() {
         </button>
       </Navbar>
 
+      <style>{`
+        @keyframes spin{to{transform:rotate(360deg)}}
+        @media(max-width:600px){.ep-2col{grid-template-columns:1fr!important;}}
+      `}</style>
       <div className="page-content">
         <div style={{ marginBottom: 36 }}>
           <h1 style={{ fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 900, margin: '0 0 6px', letterSpacing: '-0.5px', color: colors.text }}>Editar projeto</h1>
@@ -338,7 +342,7 @@ export default function EditProject() {
 
           {/* Creator */}
           <SectionCard title="Sobre o criador">
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            <div className="ep-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
               <Field label="O teu nome">
                 <input type="text" value={form.creator_name} onChange={e => set('creator_name', e.target.value)} style={inputStyle} placeholder="Ex: João Silva" {...inputHandlers} />
               </Field>
@@ -375,7 +379,7 @@ export default function EditProject() {
               </select>
             </Field>
             {isPap && (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 4 }}>
+              <div className="ep-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 4 }}>
                 <Field label="Orientador">
                   <input type="text" value={form.pap_supervisor} onChange={e => set('pap_supervisor', e.target.value)} style={inputStyle} placeholder="Nome do orientador" {...inputHandlers} />
                 </Field>

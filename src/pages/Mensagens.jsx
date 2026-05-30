@@ -399,15 +399,14 @@ export default function Mensagens() {
             <p style={{ color: C.muted, fontSize: 13, margin: 0 }}>Conversas com recrutadores e candidatos</p>
           </div>
 
-          <div style={{ display: 'flex', gap: 12, height: 'calc(100vh - 200px)', minHeight: 400 }}>
+          <div className="msg-outer-wrap" style={{ display: 'flex', gap: 12, height: 'calc(100vh - 200px)', minHeight: 400 }}>
 
             {/* ── Conversation list ── */}
             <div style={{
               width: 280, flexShrink: 0,
               background: C.card, border: `1px solid ${C.border}`,
               borderRadius: 14, display: 'flex', flexDirection: 'column', overflow: 'hidden',
-              ...(mobileView === 'thread' ? { display: 'none' } : {}),
-            }} className="msg-list">
+            }} className={`msg-list${mobileView === 'thread' ? ' mob-hidden' : ''}`}>
               <div style={{ padding: '12px 12px 8px', borderBottom: `1px solid ${C.border}`, display: 'flex', gap: 6 }}>
                 <div style={{ position: 'relative', flex: 1 }}>
                   <Search size={14} color={C.muted} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
@@ -461,7 +460,7 @@ export default function Mensagens() {
             </div>
 
             {/* ── Thread ── */}
-            <div style={{ flex: 1, background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, display: 'flex', flexDirection: 'column', overflow: 'hidden', ...(mobileView === 'list' && !activeId ? { display: 'none' } : {}) }} className="msg-thread">
+            <div style={{ flex: 1, background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, display: 'flex', flexDirection: 'column', overflow: 'hidden' }} className={`msg-thread${mobileView === 'thread' ? ' active' : ''}`}>
 
               {!activeId ? (
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, padding: 32, textAlign: 'center' }}>
@@ -650,24 +649,28 @@ export default function Mensagens() {
 
       <style>{`
         @media (max-width: 640px) {
-          .msg-list   { display: flex !important; width: 100% !important; }
-          .msg-thread { display: none !important; }
-          .msg-thread.active { display: flex !important; }
-          .msg-back   { display: flex !important; }
+          /* List: full width, hidden when in thread view */
+          .msg-list             { display: flex !important; width: 100% !important; }
+          .msg-list.mob-hidden  { display: none !important; }
+          /* Thread: hidden by default, shown when active */
+          .msg-thread           { display: none !important; }
+          .msg-thread.active    { display: flex !important; }
           /* Compose button — full width on mobile */
           .msg-compose-btn { width: 100% !important; justify-content: center !important; }
           /* Message input area — bigger touch target */
-          .msg-input-area { padding: 10px 12px !important; }
+          .msg-input-area { padding: 10px 12px 16px !important; }
           /* Thread header — reduce padding */
           .msg-thread-hd { padding: 12px 14px !important; }
           /* Back button in thread */
           .msg-back-btn { display: flex !important; }
+          /* Height: use more of the viewport on mobile */
+          .msg-outer-wrap { height: calc(100dvh - 160px) !important; min-height: 300px !important; }
         }
         @media (min-width: 641px) {
-          .msg-list   { display: flex !important; }
-          .msg-thread { display: flex !important; }
-          .msg-back   { display: none !important; }
-          .msg-back-btn { display: none !important; }
+          .msg-list         { display: flex !important; }
+          .msg-thread       { display: flex !important; }
+          .msg-back         { display: none !important; }
+          .msg-back-btn     { display: none !important; }
         }
       `}</style>
     </div>

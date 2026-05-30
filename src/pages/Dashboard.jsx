@@ -1494,6 +1494,9 @@ export default function Dashboard() {
           .dash-greeting { font-size: clamp(20px, 5vw, 28px) !important; }
           /* ── Milestones / progress section ── */
           .dash-milestones { padding: 14px !important; }
+          /* ── Toasts — above bottom nav ── */
+          .dash-toast-center { bottom: 80px !important; }
+          .dash-toast-xp { bottom: 80px !important; right: 12px !important; min-width: 0 !important; max-width: calc(100vw - 24px) !important; }
         }
       `}</style>
       <Navbar />
@@ -1517,7 +1520,7 @@ export default function Dashboard() {
       )}
 
       {/* Toast simples */}
-      <div style={{
+      <div className="dash-toast-center" style={{
         position: 'fixed', bottom: 28, left: '50%',
         transform: `translateX(-50%) translateY(${toast ? 0 : 80}px)`,
         opacity: toast ? 1 : 0, transition: 'all 0.3s cubic-bezier(0.34,1.56,0.64,1)',
@@ -1528,7 +1531,7 @@ export default function Dashboard() {
       }}>{toast}</div>
 
       {/* XP / Missão desbloqueada toast */}
-      <div style={{
+      <div className="dash-toast-xp" style={{
         position: 'fixed', bottom: 28, right: 28,
         transform: `translateY(${xpToast ? 0 : 120}px)`,
         opacity: xpToast ? 1 : 0,
