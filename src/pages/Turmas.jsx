@@ -30,6 +30,7 @@ function TurmaCard({ turma }) {
 
   return (
     <div
+      className="turmas-card-actions"
       onClick={() => navigate(`/turma/${turma.code}`)}
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
@@ -124,7 +125,7 @@ function JoinModal({ onClose, onJoin }) {
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       padding: 20,
     }} onClick={e => e.target === e.currentTarget && onClose()}>
-      <div style={{
+      <div className="turmas-modal-content" style={{
         background: C.card, border: `1px solid ${C.border}`,
         borderRadius: 20, padding: '28px 28px 24px',
         width: '100%', maxWidth: 420,
@@ -237,9 +238,16 @@ export default function Turmas() {
     <div style={{ minHeight: '100vh', background: C.bg }}>
       <Navbar />
       <div className="page-content">
+        <style>{`
+          @media (max-width: 600px) {
+            .turmas-header { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; }
+            .turmas-modal-content { padding: 20px 16px !important; }
+            .turmas-card-actions { flex-wrap: wrap !important; }
+          }
+        `}</style>
 
         {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28, gap: 12, flexWrap: 'wrap' }}>
+        <div className="turmas-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28, gap: 12, flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
             <div style={{
               width: 48, height: 48, borderRadius: 14,

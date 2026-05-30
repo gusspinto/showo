@@ -175,6 +175,7 @@ function AchievementCard({ achievement, unlocked }) {
 
   return (
     <div
+      className="conquistas-card"
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
       style={{
@@ -290,11 +291,17 @@ export default function Conquistas() {
 
   return (
     <div style={{ minHeight: '100vh', background: C.bg }}>
+      <style>{`
+        @media (max-width: 420px) { .conquistas-grid { grid-template-columns: repeat(2, 1fr) !important; } }
+        @media (max-width: 300px) { .conquistas-grid { grid-template-columns: 1fr !important; } }
+        @media (max-width: 400px) { .conquistas-tier-row { flex-wrap: wrap !important; gap: 8px !important; } }
+        @media (max-width: 350px) { .conquistas-card { flex-direction: column !important; text-align: center !important; align-items: center !important; } }
+      `}</style>
       <Navbar />
       <div className="page-content">
 
         {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 8 }}>
+        <div className="conquistas-hd" style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 8 }}>
           <div style={{
             width: 48, height: 48, borderRadius: 14,
             background: 'rgba(251,191,36,0.12)', border: '1px solid rgba(251,191,36,0.25)',
@@ -326,7 +333,7 @@ export default function Conquistas() {
               </div>
             </div>
             {/* Tier counts */}
-            <div style={{ display: 'flex', gap: 12 }}>
+            <div className="conquistas-tier-row" style={{ display: 'flex', gap: 12 }}>
               {TIER_ORDER.map(tier => {
                 const count = achievements.filter(a => a.tier === tier && a.unlocked).length
                 const total = achievements.filter(a => a.tier === tier).length
@@ -354,7 +361,7 @@ export default function Conquistas() {
 
         {/* Tiers */}
         {loading ? (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(180px,1fr))', gap: 12 }}>
+          <div className="conquistas-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(180px,1fr))', gap: 12 }}>
             {[...Array(9)].map((_, i) => (
               <div key={i} style={{ height: 150, borderRadius: 16, background: C.card, border: `1px solid ${C.border}`, opacity: 0.5 }} />
             ))}
@@ -400,7 +407,7 @@ export default function Conquistas() {
                     {items.filter(a => a.unlocked).length}/{items.length}
                   </div>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(180px,1fr))', gap: 12 }}>
+                <div className="conquistas-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(180px,1fr))', gap: 12 }}>
                   {items.map(a => (
                     <AchievementCard key={a.id} achievement={a} unlocked={a.unlocked} />
                   ))}

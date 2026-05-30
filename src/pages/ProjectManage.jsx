@@ -130,7 +130,7 @@ function FieldBlock({ label, required, children, hint }) {
 
 function Card({ children, style }) {
   return (
-    <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16,
+    <div className="pm-section-card" style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16,
       padding: '24px 26px', marginBottom: 16, ...style }}>
       {children}
     </div>
@@ -513,7 +513,7 @@ function TeamSection({ project, isOwner }) {
               const chip = STATUS_CHIP[m.status] ?? STATUS_CHIP.pending
               const name = m.profile?.full_name || m.profile?.username || 'Utilizador'
               return (
-                <div key={m.user_id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', background: C.bgAlt, borderRadius: 12, border: `1px solid ${C.border}` }}>
+                <div key={m.user_id} className="pm-team-row" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', background: C.bgAlt, borderRadius: 12, border: `1px solid ${C.border}` }}>
                   <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(27,120,247,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: C.blue, flexShrink: 0 }}>
                     {m.profile?.avatar_url ? <img src={m.profile.avatar_url} alt="" style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover' }} /> : name[0].toUpperCase()}
                   </div>
@@ -834,6 +834,16 @@ export default function ProjectManage() {
         .pm-nav-item.active { background: var(--c-bg-alt) !important; }
         .pm-tab-pill:hover { border-color: var(--c-border-bright) !important; }
         .pm-tab-pill.active { border-color: currentColor !important; }
+
+        @media (max-width: 600px) {
+          .pm-nav { overflow-x: auto; -webkit-overflow-scrolling: touch; flex-wrap: nowrap !important; padding-bottom: 4px; }
+          .pm-section-card { padding: 16px !important; }
+          .pm-page-hd { flex-direction: column !important; align-items: flex-start !important; gap: 10px !important; }
+          .pm-team-row { flex-wrap: wrap !important; }
+        }
+        @media (max-width: 860px) {
+          .pm-section-desc { display: none !important; }
+        }
       `}</style>
 
       {/* Navbar */}
@@ -852,7 +862,7 @@ export default function ProjectManage() {
 
       {/* Page header */}
       <div style={{ borderBottom: `1px solid ${C.border}`, background: C.card }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+        <div className="pm-page-hd" style={{ maxWidth: 1200, margin: '0 auto', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
           <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: C.subtle, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 3 }}>A gerir</div>
             <h1 style={{ margin: 0, fontSize: 'clamp(16px, 2.5vw, 22px)', fontWeight: 800, letterSpacing: '-0.3px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -870,7 +880,7 @@ export default function ProjectManage() {
       </div>
 
       {/* Mobile tabs */}
-      <div className="pm-mobile-tabs" style={{ display: 'none', overflowX: 'auto', padding: '12px 16px', gap: 8, borderBottom: `1px solid ${C.border}`, background: C.card, scrollbarWidth: 'none' }}>
+      <div className="pm-mobile-tabs pm-nav" style={{ display: 'none', overflowX: 'auto', padding: '12px 16px', gap: 8, borderBottom: `1px solid ${C.border}`, background: C.card, scrollbarWidth: 'none' }}>
         {NAV.map(n => (
           <button key={n.id} onClick={() => setActiveSection(n.id)}
             className={`pm-tab-pill ${activeSection === n.id ? 'active' : ''}`}
@@ -936,7 +946,7 @@ export default function ProjectManage() {
             )}
             <div>
               <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800, letterSpacing: '-0.3px' }}>{activeNav?.label}</h2>
-              <p style={{ margin: 0, fontSize: 12, color: C.muted }}>{activeNav?.desc}</p>
+              <p className="pm-section-desc" style={{ margin: 0, fontSize: 12, color: C.muted }}>{activeNav?.desc}</p>
             </div>
           </div>
 

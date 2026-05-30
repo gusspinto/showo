@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
 import { useSidebar } from '../context/SidebarContext'
 import { supabase } from '../lib/supabase'
-import { Check, X, FolderOpen, User, Settings as SettingsIcon, Shield, Globe, Trophy, LogOut, Bell, Eye, Target, TrendingUp, GraduationCap, UserPlus, LayoutDashboard, Plus, Compass, Sun, Moon, Sparkles, Pencil, ArrowLeft, Briefcase, Medal, Users2, Swords, Building2, Search, Star, MessageSquare, Kanban, Heart, CheckCircle, XCircle } from 'lucide-react'
+import { Check, X, FolderOpen, User, Settings as SettingsIcon, Shield, Globe, Trophy, LogOut, Bell, Eye, Target, TrendingUp, GraduationCap, UserPlus, LayoutDashboard, Plus, Compass, Sun, Moon, Sparkles, Pencil, ArrowLeft, Briefcase, Medal, Users2, Swords, Building2, Search, Star, MessageSquare, Kanban, Heart, CheckCircle, XCircle, AlignJustify } from 'lucide-react'
 
 // Strip emoji characters from notification messages coming from the DB
 function stripEmoji(str) {
@@ -647,6 +647,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
   const { theme, toggleTheme } = useTheme()
   const { extras } = useSidebar()
   const [open, setOpen] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
   const [createModal, setCreateModal] = useState(false)
 
   const isRecruiter = profile?.role === 'recrutador' || profile?.role === 'empresa'
@@ -948,6 +949,82 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
           transition: opacity 0.15s, transform 0.15s;
         }
         .bn-create-btn:active { opacity: 0.8; transform: scale(0.93); }
+
+        /* Raise bottom-nav so it stays visible above the menu sheet */
+        .bottom-nav { z-index: 500 !important; }
+
+        /* ── Mobile full-navigation sheet (≤600px) ── */
+        @keyframes mob-sheet-up {
+          from { transform: translateY(100%); opacity: 0.75; }
+          to   { transform: translateY(0);    opacity: 1;   }
+        }
+        .mob-menu-overlay {
+          position: fixed; inset: 0; z-index: 399;
+          background: rgba(0,0,0,0.55);
+          backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+        }
+        .mob-menu-sheet {
+          position: fixed; left: 0; right: 0; bottom: 0; z-index: 400;
+          max-height: calc(100vh - 60px);
+          background: var(--c-card);
+          border-top: 1px solid var(--c-border);
+          border-radius: 20px 20px 0 0;
+          display: flex; flex-direction: column;
+          animation: mob-sheet-up 0.32s cubic-bezier(0.22,1,0.36,1) both;
+          box-shadow: 0 -6px 40px rgba(0,0,0,0.5);
+        }
+        .mob-sheet-handle {
+          width: 40px; height: 4px; border-radius: 99px;
+          background: var(--c-border-bright);
+          margin: 12px auto 0; flex-shrink: 0; cursor: pointer;
+        }
+        .mob-sheet-scroll {
+          overflow-y: auto; flex: 1;
+          padding: 0 12px max(env(safe-area-inset-bottom, 20px), 20px);
+          min-height: 0;
+        }
+        .mob-sheet-scroll::-webkit-scrollbar { display: none; }
+        .mob-nav-section-label {
+          font-size: 10.5px; font-weight: 700; color: var(--c-subtle);
+          text-transform: uppercase; letter-spacing: 0.1em;
+          padding: 14px 12px 5px; display: block;
+        }
+        .mob-nav-btn {
+          display: flex; align-items: center; gap: 13px;
+          width: 100%; padding: 12px 12px;
+          border-radius: 10px; border: none;
+          background: transparent; color: var(--c-muted);
+          font-size: 15px; font-weight: 500;
+          cursor: pointer; font-family: inherit;
+          text-align: left; transition: background 0.12s, color 0.12s;
+          -webkit-tap-highlight-color: transparent;
+        }
+        .mob-nav-btn:active { background: var(--c-card-hover); color: var(--c-text); }
+        .mob-nav-btn.active { color: #1b78f7; background: rgba(27,120,247,0.08); }
+        .mob-nav-btn.danger { color: #ef4444; }
+        .mob-nav-btn.danger:active { background: rgba(239,68,68,0.08); color: #ef4444; }
+        .mob-nav-soon {
+          margin-left: auto; font-size: 9px; font-weight: 700;
+          color: var(--c-subtle); background: var(--c-bg-alt);
+          border: 1px solid var(--c-border); border-radius: 4px;
+          padding: 1px 5px; text-transform: uppercase; letter-spacing: 0.04em;
+          flex-shrink: 0;
+        }
+        .mob-nav-divider { height: 1px; background: var(--c-border); margin: 6px 12px; }
+        .mob-project-section {
+          background: rgba(27,120,247,0.06); border: 1px solid rgba(27,120,247,0.15);
+          border-radius: 12px; margin: 8px 0; padding: 4px 0 6px;
+        }
+        .mob-project-section .mob-nav-section-label { color: #1b78f7; padding-top: 8px; }
+        .mob-project-section .mob-nav-btn:active { background: rgba(27,120,247,0.12); }
+
+        /* Enhanced tablet drawer: scrollable + section labels */
+        .mobile-drawer { max-height: calc(100vh - 62px); overflow-y: auto; }
+        .mob-drawer-label {
+          font-size: 10.5px; font-weight: 700; color: var(--c-subtle);
+          text-transform: uppercase; letter-spacing: 0.1em;
+          padding: 12px 4px 4px; display: block;
+        }
       `}</style>
 
       {/* Mobile backdrop blur */}
@@ -966,9 +1043,9 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
       {/* Mobile / tablet drawer */}
       {showLinks && (
         <div className={`mobile-drawer${open ? ' is-open' : ''}`}>
-          {/* Nav links */}
+          {/* Public nav links */}
           <button className="mobile-drawer-btn" onClick={() => { navigate('/explorar'); setOpen(false) }}>
-            <Globe size={17} /> Explorar
+            <Compass size={17} /> Explorar
           </button>
           <button className="mobile-drawer-btn" onClick={() => { navigate('/ranking'); setOpen(false) }}>
             <Trophy size={17} /> Ranking
@@ -976,16 +1053,104 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
 
           {user ? (
             <div className="nav-drawer-profile">
-              {/* User header — border-bottom do botão Ranking já separa, sem borderTop extra */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 4px 0' }}>
+              {/* User header */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 4px 10px' }}>
                 <AvatarCircle avatarUrl={profile?.avatar_url} initial={getInitial(user)} size={36} fontSize={14} />
-                <div>
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--c-text)', lineHeight: 1.2 }}>{getDisplayName(user)}</div>
-                  <div style={{ fontSize: 11, color: 'var(--c-muted)', marginTop: 2 }}>{user.email}</div>
+                  <div style={{ fontSize: 11, color: 'var(--c-muted)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email}</div>
                 </div>
+                <button onClick={toggleTheme} style={{ width: 34, height: 34, borderRadius: 8, background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)', color: 'var(--c-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
+                </button>
               </div>
 
-              {/* Dashboard + Meu perfil side by side */}
+              {/* Role-based sections */}
+              {isRecruiter ? (
+                <>
+                  <span className="mob-drawer-label">Recrutamento</span>
+                  <button className="mobile-drawer-btn" onClick={() => { navigate('/explorar?tab=pessoas'); setOpen(false) }}>
+                    <Users2 size={16} /> Candidatos
+                  </button>
+                  <button className="mobile-drawer-btn" onClick={() => { navigate('/vagas'); setOpen(false) }}>
+                    <Briefcase size={16} /> Vagas
+                  </button>
+                  <button className="mobile-drawer-btn" onClick={() => { navigate('/pipeline'); setOpen(false) }}>
+                    <Kanban size={16} /> Pipeline
+                  </button>
+                  <button className="mobile-drawer-btn" onClick={() => { navigate('/candidatos'); setOpen(false) }}>
+                    <Star size={16} /> Guardados
+                  </button>
+                  <button className="mobile-drawer-btn" onClick={() => { navigate('/mensagens'); setOpen(false) }}>
+                    <MessageSquare size={16} /> Mensagens
+                    {unreadMsgs > 0 && <span style={{ marginLeft: 'auto', background: '#1b78f7', color: '#fff', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{unreadMsgs > 9 ? '9+' : unreadMsgs}</span>}
+                  </button>
+                  {user && (
+                    <button className="mobile-drawer-btn" onClick={() => { navigate(`/empresa/${user.id}`); setOpen(false) }}>
+                      <Building2 size={16} /> Minha empresa
+                    </button>
+                  )}
+                </>
+              ) : (
+                <>
+                  <span className="mob-drawer-label">Oportunidades</span>
+                  <button className="mobile-drawer-btn" onClick={() => { navigate('/vagas'); setOpen(false) }}>
+                    <Briefcase size={16} /> Vagas
+                  </button>
+                  <span className="mob-drawer-label">Comunidade</span>
+                  <button className="mobile-drawer-btn" onClick={() => { navigate('/missoes'); setOpen(false) }}>
+                    <Swords size={16} /> Missões
+                  </button>
+                  <button className="mobile-drawer-btn" onClick={() => { navigate('/turmas'); setOpen(false) }}>
+                    <Users2 size={16} /> Turmas
+                  </button>
+                  <button className="mobile-drawer-btn" onClick={() => { navigate('/conquistas'); setOpen(false) }}>
+                    <Medal size={16} /> Conquistas
+                  </button>
+                  <button className="mobile-drawer-btn" onClick={() => { navigate('/mensagens'); setOpen(false) }}>
+                    <MessageSquare size={16} /> Mensagens
+                    {unreadMsgs > 0 && <span style={{ marginLeft: 'auto', background: '#1b78f7', color: '#fff', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{unreadMsgs > 9 ? '9+' : unreadMsgs}</span>}
+                  </button>
+                </>
+              )}
+
+              {/* Project management extras */}
+              {extras?.type === 'project' && (
+                <>
+                  <span className="mob-drawer-label" style={{ color: '#1b78f7' }}>Gerir projeto</span>
+                  {extras.showBack && (
+                    <button className="mobile-drawer-btn" onClick={() => { navigate(`/projeto/${extras.slug}`); setOpen(false) }}>
+                      <ArrowLeft size={16} /> Ver projeto
+                    </button>
+                  )}
+                  {!extras.showBack && (
+                    <button className="mobile-drawer-btn" onClick={() => { navigate(`/editar/${extras.slug}`); setOpen(false) }}>
+                      <Pencil size={16} /> Editar
+                    </button>
+                  )}
+                  {extras.onDefense && (
+                    <button className="mobile-drawer-btn" onClick={() => { extras.onDefense(); setOpen(false) }}>
+                      <GraduationCap size={16} /> Modo defesa
+                    </button>
+                  )}
+                  {extras.onAnalyze && (
+                    <button className="mobile-drawer-btn" onClick={() => { extras.onAnalyze(); setOpen(false) }}>
+                      <Sparkles size={16} /> Análise IA
+                    </button>
+                  )}
+                  <button className="mobile-drawer-btn" onClick={() => { navigate(`/certificado/${extras.slug}`); setOpen(false) }}>
+                    <Trophy size={16} /> Certificado
+                  </button>
+                  {extras.onTogglePublicView && (
+                    <button className="mobile-drawer-btn" style={{ color: extras.viewAsPublic ? '#1b78f7' : undefined }}
+                      onClick={() => { extras.onTogglePublicView(); setOpen(false) }}>
+                      <Globe size={16} /> {extras.viewAsPublic ? 'Sair da preview' : 'Preview visitante'}
+                    </button>
+                  )}
+                </>
+              )}
+
+              {/* Dashboard + Meu perfil + Definições */}
               <div className="mobile-drawer-pair">
                 <button className="mobile-drawer-pair-btn" onClick={() => { navigate('/dashboard'); setOpen(false) }}>
                   <FolderOpen size={15} /> Dashboard
@@ -1431,6 +1596,199 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
         </div>
       </div>
 
+      {/* ── Mobile full-navigation sheet (≤600px) ── */}
+      {menuOpen && (
+        <>
+          <div className="mob-menu-overlay" onClick={() => setMenuOpen(false)} />
+          <div className="mob-menu-sheet">
+            <div className="mob-sheet-handle" onClick={() => setMenuOpen(false)} />
+            <div className="mob-sheet-scroll">
+
+              {/* User header */}
+              {user ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 12px 14px' }}>
+                  <button
+                    style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: 0, textAlign: 'left', minWidth: 0 }}
+                    onClick={() => { profileUrl && navigate(profileUrl); setMenuOpen(false) }}
+                  >
+                    <AvatarCircle avatarUrl={profile?.avatar_url} initial={getInitial(user)} size={44} fontSize={17} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--c-text)' }}>{getDisplayName(user)}</div>
+                      <div style={{ fontSize: 12, color: 'var(--c-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email}</div>
+                    </div>
+                  </button>
+                  <button onClick={toggleTheme} style={{ width: 38, height: 38, borderRadius: 10, background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)', color: 'var(--c-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    {theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
+                  </button>
+                </div>
+              ) : (
+                <div style={{ padding: '16px 12px 12px', display: 'flex', gap: 8 }}>
+                  <button onClick={() => { navigate('/login'); setMenuOpen(false) }} style={{ flex: 1, padding: '13px 0', background: 'transparent', border: '1px solid var(--c-border)', borderRadius: 10, color: 'var(--c-text)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Entrar</button>
+                  <button onClick={() => { navigate('/register'); setMenuOpen(false) }} style={{ flex: 1, padding: '13px 0', background: 'linear-gradient(135deg, #1b78f7, #4f46e5)', border: 'none', borderRadius: 10, color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>Criar conta</button>
+                </div>
+              )}
+
+              <div className="mob-nav-divider" />
+
+              {/* Role-based nav sections */}
+              {isRecruiter ? (
+                <>
+                  <button className={`mob-nav-btn${isActive('/dashboard') ? ' active' : ''}`} onClick={() => { navigate('/dashboard'); setMenuOpen(false) }}>
+                    <LayoutDashboard size={20} /> Dashboard
+                  </button>
+                  <span className="mob-nav-section-label">Recrutamento</span>
+                  <button className={`mob-nav-btn${isActive('/explorar') && new URLSearchParams(location.search).get('tab') === 'pessoas' ? ' active' : ''}`}
+                    onClick={() => { navigate('/explorar?tab=pessoas'); setMenuOpen(false) }}>
+                    <Users2 size={20} /> Candidatos
+                  </button>
+                  <button className={`mob-nav-btn${isActive('/vagas') ? ' active' : ''}`} onClick={() => { navigate('/vagas'); setMenuOpen(false) }}>
+                    <Briefcase size={20} /> Vagas
+                  </button>
+                  <button className={`mob-nav-btn${isActive('/pipeline') ? ' active' : ''}`} onClick={() => { navigate('/pipeline'); setMenuOpen(false) }}>
+                    <Kanban size={20} /> Pipeline
+                  </button>
+                  <button className={`mob-nav-btn${isActive('/candidatos') ? ' active' : ''}`} onClick={() => { navigate('/candidatos'); setMenuOpen(false) }}>
+                    <Star size={20} /> Guardados
+                  </button>
+                  <button className={`mob-nav-btn${isActive('/mensagens') ? ' active' : ''}`} onClick={() => { navigate('/mensagens'); setMenuOpen(false) }}>
+                    <MessageSquare size={20} /> Mensagens
+                    {unreadMsgs > 0 && <span style={{ marginLeft: 'auto', background: '#1b78f7', color: '#fff', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{unreadMsgs > 9 ? '9+' : unreadMsgs}</span>}
+                  </button>
+                  {user && (
+                    <button className={`mob-nav-btn${location.pathname === `/empresa/${user.id}` ? ' active' : ''}`}
+                      onClick={() => { navigate(`/empresa/${user.id}`); setMenuOpen(false) }}>
+                      <Building2 size={20} /> Minha empresa
+                    </button>
+                  )}
+                  <span className="mob-nav-section-label">Explorar</span>
+                  <button className={`mob-nav-btn${isActive('/explorar') && !new URLSearchParams(location.search).get('tab') ? ' active' : ''}`}
+                    onClick={() => { navigate('/explorar'); setMenuOpen(false) }}>
+                    <Compass size={20} /> Projetos
+                  </button>
+                  <button className={`mob-nav-btn${isActive('/ranking') ? ' active' : ''}`} onClick={() => { navigate('/ranking'); setMenuOpen(false) }}>
+                    <Trophy size={20} /> Ranking
+                  </button>
+                </>
+              ) : (
+                <>
+                  {user && (
+                    <button className={`mob-nav-btn${isActive('/dashboard') ? ' active' : ''}`} onClick={() => { navigate('/dashboard'); setMenuOpen(false) }}>
+                      <LayoutDashboard size={20} /> Dashboard
+                    </button>
+                  )}
+                  <button className={`mob-nav-btn${isActive('/explorar') ? ' active' : ''}`} onClick={() => { navigate('/explorar'); setMenuOpen(false) }}>
+                    <Compass size={20} /> Explorar
+                  </button>
+                  <button className={`mob-nav-btn${isActive('/ranking') ? ' active' : ''}`} onClick={() => { navigate('/ranking'); setMenuOpen(false) }}>
+                    <Trophy size={20} /> Ranking
+                  </button>
+                  {user && (
+                    <>
+                      <span className="mob-nav-section-label">Oportunidades</span>
+                      <button className={`mob-nav-btn${isActive('/vagas') ? ' active' : ''}`} onClick={() => { navigate('/vagas'); setMenuOpen(false) }}>
+                        <Briefcase size={20} /> Vagas
+                      </button>
+                      <button className="mob-nav-btn" style={{ opacity: 0.45, cursor: 'default' }} disabled>
+                        <Building2 size={20} /> Estágio <span className="mob-nav-soon">breve</span>
+                      </button>
+                      <span className="mob-nav-section-label">Comunidade</span>
+                      <button className={`mob-nav-btn${isActive('/missoes') ? ' active' : ''}`} onClick={() => { navigate('/missoes'); setMenuOpen(false) }}>
+                        <Swords size={20} /> Missões
+                      </button>
+                      <button className={`mob-nav-btn${isActive('/turmas') ? ' active' : ''}`} onClick={() => { navigate('/turmas'); setMenuOpen(false) }}>
+                        <Users2 size={20} /> Turmas
+                      </button>
+                      <button className={`mob-nav-btn${isActive('/conquistas') ? ' active' : ''}`} onClick={() => { navigate('/conquistas'); setMenuOpen(false) }}>
+                        <Medal size={20} /> Conquistas
+                      </button>
+                      <div className="mob-nav-divider" />
+                      <button className={`mob-nav-btn${isActive('/mensagens') ? ' active' : ''}`} onClick={() => { navigate('/mensagens'); setMenuOpen(false) }}>
+                        <MessageSquare size={20} /> Mensagens
+                        {unreadMsgs > 0 && <span style={{ marginLeft: 'auto', background: '#1b78f7', color: '#fff', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{unreadMsgs > 9 ? '9+' : unreadMsgs}</span>}
+                      </button>
+                      <button className="mob-nav-btn" style={{ opacity: 0.45, cursor: 'default' }} disabled>
+                        <FolderOpen size={20} /> Portfólio <span className="mob-nav-soon">breve</span>
+                      </button>
+                    </>
+                  )}
+                </>
+              )}
+
+              {/* Project management extras */}
+              {extras?.type === 'project' && (
+                <div className="mob-project-section">
+                  <span className="mob-nav-section-label">Gerir projeto</span>
+                  {extras.showBack && (
+                    <button className="mob-nav-btn" onClick={() => { navigate(`/projeto/${extras.slug}`); setMenuOpen(false) }}>
+                      <ArrowLeft size={20} /> Ver projeto
+                    </button>
+                  )}
+                  {!extras.showBack && (
+                    <button className="mob-nav-btn" onClick={() => { navigate(`/editar/${extras.slug}`); setMenuOpen(false) }}>
+                      <Pencil size={20} /> Editar
+                    </button>
+                  )}
+                  {extras.onDefense && (
+                    <button className="mob-nav-btn" onClick={() => { extras.onDefense(); setMenuOpen(false) }}>
+                      <GraduationCap size={20} /> Modo defesa
+                      {extras.defenseDate && (
+                        <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--c-muted)', fontWeight: 500 }}>
+                          {new Date(extras.defenseDate).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' })}
+                        </span>
+                      )}
+                    </button>
+                  )}
+                  {extras.onAnalyze && (
+                    <button className="mob-nav-btn" onClick={() => { extras.onAnalyze(); setMenuOpen(false) }} disabled={extras.analyzingAI} style={{ opacity: extras.analyzingAI ? 0.6 : 1 }}>
+                      <Sparkles size={20} /> {extras.analyzingAI ? 'A analisar…' : 'Análise IA'}
+                      {extras.aiScore != null && !extras.analyzingAI && (
+                        <span style={{ marginLeft: 'auto', fontSize: 13, fontWeight: 700, color: extras.aiScore >= 90 ? '#22c55e' : extras.aiScore >= 71 ? '#1b78f7' : extras.aiScore >= 40 ? '#fbbf24' : '#ef4444' }}>
+                          {extras.aiScore}
+                        </span>
+                      )}
+                    </button>
+                  )}
+                  <button className="mob-nav-btn" onClick={() => { navigate(`/certificado/${extras.slug}`); setMenuOpen(false) }}>
+                    <Trophy size={20} /> Certificado
+                  </button>
+                  {extras.onTogglePublicView && (
+                    <button className="mob-nav-btn" style={{ color: extras.viewAsPublic ? '#1b78f7' : undefined }}
+                      onClick={() => { extras.onTogglePublicView(); setMenuOpen(false) }}>
+                      <Globe size={20} /> {extras.viewAsPublic ? 'Sair da preview' : 'Preview visitante'}
+                    </button>
+                  )}
+                </div>
+              )}
+
+              <div className="mob-nav-divider" />
+
+              {/* Profile / admin / settings / logout */}
+              {user && (
+                <>
+                  {profileUrl && (
+                    <button className={`mob-nav-btn${isActive('profile') ? ' active' : ''}`} onClick={() => { navigate(profileUrl); setMenuOpen(false) }}>
+                      <User size={20} /> Meu perfil
+                    </button>
+                  )}
+                  {isAdmin && (
+                    <button className="mob-nav-btn" onClick={() => { navigate('/admin'); setMenuOpen(false) }} style={{ color: '#a855f7' }}>
+                      <Shield size={20} /> Administração
+                    </button>
+                  )}
+                  <button className={`mob-nav-btn${isActive('/settings') ? ' active' : ''}`} onClick={() => { navigate('/settings'); setMenuOpen(false) }}>
+                    <SettingsIcon size={20} /> Definições
+                  </button>
+                  <button className="mob-nav-btn danger" onClick={() => { handleSignOut(); setMenuOpen(false) }}>
+                    <LogOut size={20} /> Sair
+                  </button>
+                </>
+              )}
+
+            </div>
+          </div>
+        </>
+      )}
+
       {/* ── Bottom navigation bar — mobile only (≤600px) ── */}
       <div className="bottom-nav">
         {user ? (
@@ -1438,7 +1796,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
             {/* Dashboard */}
             <button
               className={`bn-item${isActive('/dashboard') ? ' active' : ''}`}
-              onClick={() => navigate('/dashboard')}
+              onClick={() => { setMenuOpen(false); navigate('/dashboard') }}
             >
               <LayoutDashboard size={24} strokeWidth={isActive('/dashboard') ? 2.5 : 1.8} />
             </button>
@@ -1446,43 +1804,29 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
             {/* Explorar */}
             <button
               className={`bn-item${isActive('/explorar') ? ' active' : ''}`}
-              onClick={() => navigate('/explorar')}
+              onClick={() => { setMenuOpen(false); navigate('/explorar') }}
             >
               <Compass size={24} strokeWidth={isActive('/explorar') ? 2.5 : 1.8} />
             </button>
 
             {/* Criar — botão central elevado */}
             <div className="bn-create-wrap">
-              <button className="bn-create-btn" onClick={() => setCreateModal(true)} aria-label="Criar projeto">
+              <button className="bn-create-btn" onClick={() => { setMenuOpen(false); setCreateModal(true) }} aria-label="Criar projeto">
                 <Plus size={22} color="#fff" strokeWidth={2.5} />
               </button>
             </div>
 
-            {/* Ranking */}
+            {/* Menu — opens full navigation sheet */}
             <button
-              className={`bn-item${isActive('/ranking') ? ' active' : ''}`}
-              onClick={() => navigate('/ranking')}
+              className={`bn-item${menuOpen ? ' active' : ''}`}
+              onClick={() => setMenuOpen(o => !o)}
+              aria-label="Menu"
+              style={{ position: 'relative' }}
             >
-              <Trophy size={24} strokeWidth={isActive('/ranking') ? 2.5 : 1.8} />
-            </button>
-
-            {/* Perfil */}
-            <button
-              className={`bn-item${isActive('profile') ? ' active' : ''}`}
-              onClick={() => profileUrl && navigate(profileUrl)}
-            >
-              {profile?.avatar_url ? (
-                <img
-                  src={profile.avatar_url}
-                  alt=""
-                  style={{
-                    width: 26, height: 26, borderRadius: '50%', objectFit: 'cover',
-                    border: isActive('profile') ? '2px solid #1b78f7' : '2px solid transparent',
-                    transition: 'border-color 0.15s',
-                  }}
-                />
-              ) : (
-                <User size={24} strokeWidth={isActive('profile') ? 2.5 : 1.8} />
+              <AlignJustify size={22} strokeWidth={menuOpen ? 2.5 : 1.8} />
+              {/* Unread messages dot when sheet is closed */}
+              {unreadMsgs > 0 && !menuOpen && (
+                <span style={{ position: 'absolute', top: 7, left: 'calc(50% + 7px)', width: 7, height: 7, borderRadius: '50%', background: '#ef4444', border: '1.5px solid rgba(13,20,36,0.97)' }} />
               )}
             </button>
           </>
@@ -1494,7 +1838,6 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
               onClick={() => navigate('/explorar')}
             >
               <Compass size={22} strokeWidth={isActive('/explorar') ? 2.5 : 1.8} />
-              <span>Explorar</span>
             </button>
 
             {/* Ranking */}
@@ -1503,7 +1846,6 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
               onClick={() => navigate('/ranking')}
             >
               <Trophy size={22} strokeWidth={isActive('/ranking') ? 2.5 : 1.8} />
-              <span>Ranking</span>
             </button>
 
             {/* Entrar */}
@@ -1513,7 +1855,6 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
               style={{ color: isActive('/login') ? '#1b78f7' : 'var(--c-text)' }}
             >
               <User size={22} strokeWidth={1.8} />
-              <span>Entrar</span>
             </button>
           </>
         )}

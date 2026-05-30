@@ -97,6 +97,10 @@ export default function Candidatos() {
 
   return (
     <div style={{ minHeight: '100vh', background: C.bg, fontFamily: 'inherit' }}>
+      <style>{`
+        @media (max-width: 360px) { .candidatos-grid { grid-template-columns: 1fr !important; } }
+        @media (max-width: 600px) { .candidatos-hd { flex-direction: column !important; align-items: stretch !important; gap: 8px !important; } .candidatos-hd input { max-width: 100% !important; } }
+      `}</style>
       <Navbar />
       <div className="page-content">
         {/* Header */}
@@ -111,7 +115,7 @@ export default function Candidatos() {
 
         {/* Search */}
         {saved.length > 0 && (
-          <div style={{ position: 'relative', marginBottom: 20, maxWidth: 400 }}>
+          <div className="candidatos-hd" style={{ position: 'relative', marginBottom: 20, maxWidth: 400 }}>
             <Search size={15} color={C.muted} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Pesquisar candidatos..."
               style={{ width: '100%', background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, color: C.text, fontSize: 14, padding: '11px 14px 11px 40px', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }} />
@@ -119,7 +123,7 @@ export default function Candidatos() {
         )}
 
         {loading ? (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px,1fr))', gap: 14 }}>
+          <div className="candidatos-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px,1fr))', gap: 14 }}>
             {[1,2,3].map(i => <div key={i} style={{ height: 140, background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, opacity: 0.5 }} />)}
           </div>
         ) : filtered.length === 0 ? (
@@ -139,7 +143,7 @@ export default function Candidatos() {
             )}
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px,1fr))', gap: 14 }}>
+          <div className="candidatos-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px,1fr))', gap: 14 }}>
             {filtered.map(s => {
               const p = s.profile
               if (!p) return null

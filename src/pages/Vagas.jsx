@@ -240,7 +240,7 @@ function VagaModal({ initial, onSave, onClose, saving }) {
           </div>
         ))}
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
+        <div className="vagas-filter-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
           <div>
             <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: C.muted, marginBottom: 6 }}>Tipo</label>
             <select value={form.tipo} onChange={e => set('tipo', e.target.value)}
@@ -528,6 +528,10 @@ export default function Vagas() {
 
   return (
     <div style={{ minHeight: '100vh', background: C.bg, fontFamily: 'inherit' }}>
+      <style>{`
+        @media (max-width: 400px) { .vagas-grid { grid-template-columns: 1fr !important; } }
+        @media (max-width: 420px) { .vagas-filter-grid { grid-template-columns: 1fr !important; } }
+      `}</style>
       <Navbar />
       <div className="page-content">
 
@@ -677,7 +681,7 @@ export default function Vagas() {
         )}
 
         {loading ? (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
+          <div className="vagas-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
             {[1, 2, 3].map(i => (
               <div key={i} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: 20, height: 160, opacity: 0.5 }} />
             ))}
@@ -716,7 +720,7 @@ export default function Vagas() {
             <p style={{ color: C.subtle, fontSize: 13, margin: 0 }}>Quando empresas publicarem ofertas aparecem aqui</p>
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
+          <div className="vagas-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
             {vagas.map(v => (
               <PublicCard key={v.id} vaga={v} recruiterProfile={profiles[v.recruiter_id]}
                 myStatus={myCandidaturas[v.id]?.status}

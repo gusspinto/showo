@@ -599,9 +599,19 @@ export default function UserProfile() {
           .up-header { padding: 16px 14px 14px; border-radius: 12px; margin-bottom: 18px; }
           .up-projects-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
           .up-stat-pills { flex-wrap: wrap; gap: 6px !important; }
+          /* Skills section — reduce chip sizes */
+          .up-skill-chip { padding: 5px 10px !important; font-size: 11px !important; }
+          /* Project cards on profile — stack single column */
+          .up-projects-grid { grid-template-columns: 1fr !important; }
+          /* Profile stats row */
+          .up-stats-row { flex-wrap: wrap !important; gap: 8px !important; }
+          /* Bio section */
+          .up-bio { font-size: 14px !important; }
         }
         @media (max-width: 420px) {
           .up-projects-grid { grid-template-columns: 1fr; }
+          /* Profile header (avatar, name, etc.) */
+          .up-header-meta { flex-direction: column !important; align-items: flex-start !important; gap: 8px !important; }
         }
       `}</style>
 
@@ -657,7 +667,7 @@ export default function UserProfile() {
             </div>
           )}
 
-          <div className="up-header-inner" style={{ display: 'flex', alignItems: 'flex-start', gap: 22, position: 'relative', zIndex: 1 }}>
+          <div className="up-header-inner up-header-meta" style={{ display: 'flex', alignItems: 'flex-start', gap: 22, position: 'relative', zIndex: 1 }}>
 
             {/* Avatar */}
             {profile.avatar_url
@@ -704,7 +714,7 @@ export default function UserProfile() {
 
               {/* Bio */}
               {profile.bio && (
-                <p style={{ color: C.muted, fontSize: 14, margin: '0 0 12px', lineHeight: 1.6, maxWidth: 480 }}>
+                <p className="up-bio" style={{ color: C.muted, fontSize: 14, margin: '0 0 12px', lineHeight: 1.6, maxWidth: 480 }}>
                   {profile.bio}
                 </p>
               )}
@@ -722,7 +732,7 @@ export default function UserProfile() {
               )}
 
               {/* Stats */}
-              <div className="up-stat-pills" style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+              <div className="up-stat-pills up-stats-row" style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
                 <span className="up-stat-pill">
                   <strong>{projects.length}</strong> projeto{projects.length !== 1 ? 's' : ''}
                 </span>
@@ -763,7 +773,7 @@ export default function UserProfile() {
               {profile.skills && profile.skills.length > 0 && (
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
                   {profile.skills.map(skill => (
-                    <span key={skill} style={{
+                    <span key={skill} className="up-skill-chip" style={{
                       display: 'inline-flex', alignItems: 'center',
                       background: 'rgba(27,120,247,0.08)', color: '#1b78f7',
                       border: '1px solid rgba(27,120,247,0.2)',

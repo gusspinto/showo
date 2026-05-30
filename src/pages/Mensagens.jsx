@@ -414,7 +414,7 @@ export default function Mensagens() {
                   <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Pesquisar..."
                     style={{ width: '100%', background: 'var(--c-bg)', border: `1px solid ${C.border}`, borderRadius: 8, color: C.text, fontSize: 13, padding: '8px 10px 8px 30px', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }} />
                 </div>
-                <button onClick={() => setShowNova(true)} title="Nova mensagem"
+                <button onClick={() => setShowNova(true)} title="Nova mensagem" className="msg-compose-btn"
                   style={{ flexShrink: 0, width: 34, height: 34, borderRadius: 8, background: C.blue, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(27,120,247,0.3)' }}>
                   <Plus size={16} color="#fff" />
                 </button>
@@ -472,10 +472,10 @@ export default function Mensagens() {
               ) : (
                 <>
                   {/* Thread header */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderBottom: `1px solid ${C.border}`, flexShrink: 0 }}>
-                    <button onClick={() => { setMobileView('list'); setActiveId(null) }} className="msg-back"
-                      style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: C.muted, display: 'flex', alignItems: 'center', padding: 4, borderRadius: 6 }}>
-                      <ArrowLeft size={16} />
+                  <div className="msg-thread-hd" style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderBottom: `1px solid ${C.border}`, flexShrink: 0 }}>
+                    <button onClick={() => { setMobileView('list'); setActiveId(null) }} className="msg-back msg-back-btn"
+                      style={{ background: 'none', border: 'none', color: 'var(--c-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, padding: '0 8px 0 0', fontFamily: 'inherit', fontSize: 13, fontWeight: 600 }}>
+                      <ArrowLeft size={16} /> Voltar
                     </button>
                     <Avatar profile={activeProfile} size={32} />
                     <div>
@@ -619,7 +619,7 @@ export default function Mensagens() {
                   </div>
 
                   {/* Input */}
-                  <div style={{ padding: '8px 12px 12px', borderTop: `1px solid ${C.border}`, flexShrink: 0 }}>
+                  <div className="msg-input-area" style={{ padding: '8px 12px 12px', borderTop: `1px solid ${C.border}`, flexShrink: 0 }}>
                     {sendError && (
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#ef4444', fontSize: 11, fontWeight: 600, marginBottom: 6, padding: '5px 10px', background: 'rgba(239,68,68,0.08)', borderRadius: 7, border: '1px solid rgba(239,68,68,0.2)' }}>
                         <AlertTriangle size={11} /> {sendError}
@@ -654,11 +654,20 @@ export default function Mensagens() {
           .msg-thread { display: none !important; }
           .msg-thread.active { display: flex !important; }
           .msg-back   { display: flex !important; }
+          /* Compose button — full width on mobile */
+          .msg-compose-btn { width: 100% !important; justify-content: center !important; }
+          /* Message input area — bigger touch target */
+          .msg-input-area { padding: 10px 12px !important; }
+          /* Thread header — reduce padding */
+          .msg-thread-hd { padding: 12px 14px !important; }
+          /* Back button in thread */
+          .msg-back-btn { display: flex !important; }
         }
         @media (min-width: 641px) {
           .msg-list   { display: flex !important; }
           .msg-thread { display: flex !important; }
           .msg-back   { display: none !important; }
+          .msg-back-btn { display: none !important; }
         }
       `}</style>
     </div>

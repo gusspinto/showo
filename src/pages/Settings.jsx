@@ -385,7 +385,7 @@ export default function Settings() {
 
   /* ── shared: avatar block ── */
   const avatarBlock = (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 24 }}>
+    <div className="settings-profile-hd" style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 24 }}>
       <div style={{ position: 'relative', flexShrink: 0 }}>
         {avatarUrl ? (
           <img src={avatarUrl} alt="Avatar" style={{ width: 72, height: 72, borderRadius: '50%', objectFit: 'cover', border: `2px solid ${C.border}` }} />
@@ -453,7 +453,13 @@ export default function Settings() {
 
   return (
     <div style={{ minHeight: '100vh', background: C.bg, fontFamily: 'inherit' }}>
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+      <style>{`
+        @keyframes spin{to{transform:rotate(360deg)}}
+        @media (max-width: 600px) { .settings-2col { grid-template-columns: 1fr !important; } }
+        @media (max-width: 600px) { .settings-tab-row { gap: 3px !important; } .settings-tab-row button { min-width: 0 !important; padding: 9px 10px !important; font-size: 12px !important; } }
+        @media (max-width: 400px) { .settings-profile-hd { flex-direction: column; align-items: flex-start !important; gap: 12px !important; } }
+        @media (max-width: 500px) { .settings-security-row { flex-direction: column; align-items: flex-start !important; } }
+      `}</style>
       <Navbar />
       <div className="page-content">
 
@@ -475,7 +481,7 @@ export default function Settings() {
         {isRecruiter ? (
           <>
             {/* Tab bar */}
-            <div style={{ display: 'flex', gap: 4, marginBottom: 24, background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 5, overflowX: 'auto' }}>
+            <div className="settings-tab-row" style={{ display: 'flex', gap: 4, marginBottom: 24, background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 5, overflowX: 'auto' }}>
               {recruiterTabs.map(t => {
                 const active = activeTab === t.id
                 return (
@@ -519,7 +525,7 @@ export default function Settings() {
                 <Input label="Nome da empresa" value={company} onChange={setCompany} placeholder="Ex: Google, NOS, Altice..." />
                 <Input label="O teu cargo" value={companyRole} onChange={setCompanyRole} placeholder="Ex: Talent Acquisition, HR Manager, CEO..." />
                 <Textarea label="Sobre a empresa" value={companyDescription} onChange={setCompanyDescription} placeholder="Descreve a empresa, a cultura, os projetos, o ambiente de trabalho..." hint="Aparece na página pública da empresa." />
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                <div className="settings-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                   <Input label="Localização" value={companyLocation} onChange={setCompanyLocation} placeholder="Ex: Lisboa, Porto, Remote..." />
                   <Input label="Setor / Indústria" value={companyIndustry} onChange={setCompanyIndustry} placeholder="Ex: Tecnologia, Saúde..." />
                 </div>
@@ -582,7 +588,7 @@ export default function Settings() {
                 </SectionCard>
 
                 <SectionCard title="Aparência">
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+                  <div className="settings-security-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
                     <div>
                       <div style={{ fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 3 }}>Tema</div>
                       <div style={{ fontSize: 13, color: C.muted }}>{theme === 'dark' ? 'Modo escuro ativo' : 'Modo claro ativo'}</div>

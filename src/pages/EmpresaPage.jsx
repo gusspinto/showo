@@ -126,13 +126,13 @@ export default function EmpresaPage() {
 
         {/* ── Hero ── */}
         <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 18, padding: 'clamp(20px,4vw,36px)', marginBottom: 20 }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 20, flexWrap: 'wrap' }}>
+          <div className="ep-hero" style={{ display: 'flex', alignItems: 'flex-start', gap: 20, flexWrap: 'wrap' }}>
             {/* Logo/Avatar */}
             <div style={{ flexShrink: 0 }}>
               {company.avatar_url ? (
-                <img src={company.avatar_url} alt={name} style={{ width: 88, height: 88, borderRadius: 20, objectFit: 'cover', border: `2px solid ${C.border}` }} />
+                <img src={company.avatar_url} alt={name} className="ep-hero-logo" style={{ width: 88, height: 88, borderRadius: 20, objectFit: 'cover', border: `2px solid ${C.border}` }} />
               ) : (
-                <div style={{ width: 88, height: 88, borderRadius: 20, background: `linear-gradient(135deg, ${accentColor}, #4f46e5)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36, fontWeight: 900, color: '#fff', border: `2px solid ${C.border}` }}>
+                <div className="ep-hero-logo" style={{ width: 88, height: 88, borderRadius: 20, background: `linear-gradient(135deg, ${accentColor}, #4f46e5)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36, fontWeight: 900, color: '#fff', border: `2px solid ${C.border}` }}>
                   {name[0].toUpperCase()}
                 </div>
               )}
@@ -152,7 +152,7 @@ export default function EmpresaPage() {
               )}
 
               {/* Meta */}
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14 }}>
+              <div className="ep-meta" style={{ display: 'flex', flexWrap: 'wrap', gap: 14 }}>
                 {company.company_location && (
                   <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 13, color: C.muted }}>
                     <MapPin size={13} /> {company.company_location}
@@ -185,7 +185,7 @@ export default function EmpresaPage() {
             </div>
 
             {/* Actions */}
-            <div style={{ display: 'flex', gap: 8, flexShrink: 0, flexWrap: 'wrap' }}>
+            <div className="ep-hero-actions" style={{ display: 'flex', gap: 8, flexShrink: 0, flexWrap: 'wrap' }}>
               {isOwnPage ? (
                 <button onClick={() => navigate('/settings')}
                   style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 10, padding: '9px 16px', color: C.muted, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
@@ -316,6 +316,14 @@ export default function EmpresaPage() {
       <style>{`
         @media (max-width: 720px) {
           .empresa-grid { grid-template-columns: 1fr !important; }
+        }
+        @media (max-width: 600px) {
+          .ep-hero { flex-direction: column !important; align-items: flex-start !important; gap: 16px !important; }
+          .ep-hero-actions { flex-wrap: wrap !important; gap: 8px !important; }
+          .ep-meta { flex-wrap: wrap !important; gap: 8px !important; }
+        }
+        @media (max-width: 480px) {
+          .ep-hero-logo { width: 60px !important; height: 60px !important; }
         }
       `}</style>
     </div>

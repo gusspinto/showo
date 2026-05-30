@@ -695,6 +695,24 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
   const [previewDevice, setPreviewDevice] = useState('desktop')
   const [previewTab, setPreviewTab] = useState('estilo')  // 'estilo' | 'blocos' | 'seccoes'
   const [previewSaved, setPreviewSaved] = useState(false)
+  const bannerRef = useRef(null)
+  const [bannerH, setBannerH] = useState(44)
+  const [isDesktop, setIsDesktop] = useState(() => typeof window !== 'undefined' && window.innerWidth >= 760)
+
+  // Keep isDesktop reactive — panel stays open but switches sidebar ↔ bottom-sheet
+  useEffect(() => {
+    function onResize() { setIsDesktop(window.innerWidth >= 760) }
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
+
+  // Measure banner height so the workspace panel always aligns flush below it
+  useEffect(() => {
+    if (!bannerRef.current) return
+    const obs = new ResizeObserver(([e]) => setBannerH(Math.round(e.contentRect.height) + 1))
+    obs.observe(bannerRef.current)
+    return () => obs.disconnect()
+  }, [])
 
   function onDragStart(i) { dragIdx.current = i }
   function onDragEnter(i) { dragOver.current = i; setDragOverIdx(i) }
@@ -800,7 +818,6 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
     { id: 'mobile',   Icon: Smartphone, label: 'Mobile',    title: 'Vista mobile (390px)' },
   ]
   const deviceMaxWidth = previewDevice === 'mobile' ? 390 : previewDevice === 'tablet' ? 768 : undefined
-  const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 760
 
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', flexDirection: 'column' }}>
@@ -819,41 +836,111 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
           --c-border:#d8d0c4; --c-border-bright:#bdb4a6; --c-muted:#6b6158;
           --c-text:#1c1714; --c-subtle:#8c8278; --c-input-bg:#e8e1d6;
         }
+        @keyframes pv-slidein {
+          from { transform: translateX(20px); opacity: 0; }
+          to   { transform: translateX(0);    opacity: 1; }
+        }
+        @keyframes pv-slidein-up {
+          from { transform: translateY(100%); opacity: 0; }
+          to   { transform: translateY(0);    opacity: 1; }
+        }
+        /* Desktop: right sidebar */
+        .pv-workspace { animation: pv-slidein 0.2s cubic-bezier(0.22,1,0.36,1); }
+        /* Mobile: bottom sheet */
+        .pv-ws-sheet {
+          position: fixed !important;
+          left: 0 !important; right: 0 !important;
+          bottom: 0 !important; top: auto !important;
+          width: 100% !important;
+          max-height: 78vh !important;
+          border-radius: 20px 20px 0 0 !important;
+          border-left: none !important;
+          border-top: 1px solid var(--c-border) !important;
+          box-shadow: 0 -8px 48px rgba(0,0,0,0.55) !important;
+          animation: pv-slidein-up 0.28s cubic-bezier(0.22,1,0.36,1) !important;
+          z-index: 500 !important;
+        }
+        /* Overlay behind bottom sheet */
+        .pv-ws-overlay {
+          position: fixed; inset: 0; z-index: 499;
+          background: rgba(0,0,0,0.45);
+          backdrop-filter: blur(2px);
+          -webkit-backdrop-filter: blur(2px);
+        }
+        /* Drag handle */
+        .pv-ws-drag-handle {
+          width: 40px; height: 4px; border-radius: 99px;
+          background: var(--c-border-bright);
+          margin: 10px auto 0;
+          flex-shrink: 0;
+        }
+        .pv-workspace input:focus,
+        .pv-workspace textarea:focus {
+          border-color: rgba(27,120,247,0.55) !important;
+          box-shadow: 0 0 0 3px rgba(27,120,247,0.1);
+          outline: none;
+        }
+        .pv-banner-btn:hover { opacity: 0.85; }
+        .pv-device-btn { transition: all 0.15s; }
+        .pv-device-btn:hover { opacity: 0.8; }
+
+        /* ── Mobile: banner ── */
+        @media (max-width: 600px) {
+          .pv-banner-inner { flex-wrap: wrap; gap: 6px !important; padding: 8px 12px !important; }
+          .pv-banner-label { display: none; }
+          .pv-device-toggles { display: none !important; }
+          .pv-banner-sep { display: none !important; }
+        }
+        /* ── Mobile: content ── */
+        @media (max-width: 600px) {
+          .pv-story { padding: 0 14px 80px !important; gap: 20px !important; }
+          .pv-hero-title { font-size: clamp(28px, 8vw, 48px) !important; }
+          .pv-section-card { padding: 20px 18px !important; }
+        }
       `}</style>
 
       {/* ── Owner preview banner ── */}
       {isOwner && (
-        <div style={{
+        <div ref={bannerRef} className="pv-banner-inner" style={{
           flexShrink: 0, zIndex: 300,
           background: theme === 'light' ? 'rgba(248,250,252,0.97)' : 'rgba(6,12,24,0.97)',
           backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)',
-          borderBottom: theme === 'light' ? '1px solid rgba(0,0,0,0.09)' : '1px solid rgba(27,120,247,0.15)',
-          padding: '6px 16px',
-          display: 'flex', alignItems: 'center', gap: 8,
+          borderBottom: theme === 'light' ? '1px solid rgba(0,0,0,0.09)' : '1px solid rgba(27,120,247,0.18)',
+          padding: '7px 16px',
+          display: 'flex', alignItems: 'center', gap: 8, minHeight: 44,
         }}>
           <Globe size={13} color={colors.blue} style={{ flexShrink: 0 }} />
-          <span style={{ fontSize: 12, color: 'var(--c-muted)', fontWeight: 500 }}>
+          <span className="pv-banner-label" style={{ fontSize: 12, color: 'var(--c-muted)', fontWeight: 600, letterSpacing: '-0.1px' }}>
             Preview do visitante
           </span>
 
+          {/* Separator */}
+          <div className="pv-banner-sep" style={{ width: 1, height: 18, background: 'var(--c-border)', flexShrink: 0, marginLeft: 4, marginRight: 4 }} />
+
           {/* Device size toggles */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 2, marginLeft: 8, background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)', borderRadius: 8, padding: '2px' }}>
-            {DEVICES.map(({ id, Icon, title }) => (
+          <div className="pv-device-toggles" style={{ display: 'flex', alignItems: 'center', gap: 2, background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)', borderRadius: 8, padding: '2px' }}>
+            {DEVICES.map(({ id, Icon, label, title }) => (
               <button
                 key={id}
                 title={title}
                 onClick={() => setPreviewDevice(id)}
+                className="pv-device-btn"
                 style={{
-                  background: previewDevice === id ? (theme === 'light' ? '#fff' : 'rgba(27,120,247,0.15)') : 'transparent',
-                  border: previewDevice === id ? `1px solid ${theme === 'light' ? 'rgba(0,0,0,0.12)' : 'rgba(27,120,247,0.3)'}` : '1px solid transparent',
-                  borderRadius: 6, width: 28, height: 26,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  background: previewDevice === id ? (theme === 'light' ? '#fff' : 'rgba(27,120,247,0.18)') : 'transparent',
+                  border: previewDevice === id ? `1px solid ${theme === 'light' ? 'rgba(0,0,0,0.12)' : 'rgba(27,120,247,0.35)'}` : '1px solid transparent',
+                  borderRadius: 6,
+                  width: previewDevice === id ? 'auto' : 28, minWidth: 28, height: 26,
+                  paddingLeft: previewDevice === id ? 8 : 0,
+                  paddingRight: previewDevice === id ? 8 : 0,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
                   cursor: 'pointer',
                   color: previewDevice === id ? colors.blue : 'var(--c-muted)',
-                  transition: 'all 0.15s',
                 }}
               >
                 <Icon size={13} strokeWidth={2} />
+                {previewDevice === id && (
+                  <span style={{ fontSize: 11, fontWeight: 700, whiteSpace: 'nowrap' }}>{label}</span>
+                )}
               </button>
             ))}
           </div>
@@ -872,7 +959,8 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
                 display: 'flex', alignItems: 'center', gap: 5, transition: 'all 0.15s',
               }}
             >
-              <Pencil size={11} /> Editar workspace
+              <Pencil size={11} />
+              <span>{isDesktop ? 'Editar workspace' : 'Editar'}</span>
             </button>
           )}
           <button
@@ -888,9 +976,14 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
             onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.08)' }}
             onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
           >
-            <X size={12} /> Sair
+            <X size={12} /> <span>{isDesktop ? 'Sair' : ''}</span>
           </button>
         </div>
+      )}
+
+      {/* ── Overlay behind mobile bottom sheet ── */}
+      {isOwner && previewEditing && !isDesktop && (
+        <div className="pv-ws-overlay" onClick={() => setPreviewEditing(false)} />
       )}
 
       {/* ── Scrollable preview area — full height, background set here ── */}
@@ -959,7 +1052,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
             )}
           </div>
 
-          <h1 style={{
+          <h1 className="pv-hero-title" style={{
             fontSize: 'clamp(36px, 6vw, 64px)', fontWeight: 900,
             letterSpacing: titleStyle === 'caps' ? '0.04em' : '-1.5px', lineHeight: 1.0,
             margin: '0 0 14px',
@@ -1035,21 +1128,23 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
         </div>
       </div>
 
-      {/* ── Workspace panel — fixed right sidebar, flush with banner ── */}
-      {isOwner && previewEditing && isDesktop && (
-        <div style={{
-          position: 'fixed', right: 0, top: 40, bottom: 0, zIndex: 200,
+      {/* ── Workspace panel — sidebar (desktop) or bottom sheet (mobile) ── */}
+      {isOwner && previewEditing && (
+        <div className={`pv-workspace${isDesktop ? '' : ' pv-ws-sheet'}`} style={{
+          position: 'fixed', right: 0, top: bannerH, bottom: 0, zIndex: 200,
           width: 360,
           background: 'var(--c-sidebar-bg)',
-          borderLeft: '2px solid var(--c-border)',
+          borderLeft: '1px solid var(--c-border)',
           display: 'flex', flexDirection: 'column',
           fontFamily: 'var(--font-body)',
         }}>
+          {/* Drag handle — only visible on mobile bottom sheet */}
+          {!isDesktop && <div className="pv-ws-drag-handle" />}
 
           {/* ── Panel header ── */}
           <div style={{
             padding: '14px 16px 0',
-            background: 'linear-gradient(160deg, rgba(27,120,247,0.1) 0%, rgba(79,70,229,0.04) 100%)',
+            background: 'linear-gradient(160deg, rgba(27,120,247,0.08) 0%, rgba(79,70,229,0.03) 100%)',
             borderBottom: '1px solid var(--c-border)',
             flexShrink: 0,
           }}>
@@ -1457,7 +1552,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
 
           {/* ── TAB: BLOCOS ── */}
           {previewTab === 'blocos' && (
-            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
               {/* Block type picker — compact 3-col chip grid */}
               <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--c-border)' }}>
                 <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--c-subtle)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>Adicionar bloco</div>
@@ -1488,12 +1583,14 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
               {/* Existing blocks list */}
               <div style={{ flex: 1, overflowY: 'auto', padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 7 }}>
                 {previewBlocks.length === 0 ? (
-                  <div style={{ textAlign: 'center', padding: '32px 0' }}>
-                    <div style={{ width: 40, height: 40, borderRadius: 12, background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 10px' }}>
-                      <Layout size={18} color="var(--c-subtle)" />
+                  <div style={{ textAlign: 'center', padding: '40px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+                    <div style={{ width: 48, height: 48, borderRadius: 14, background: 'var(--c-bg-alt)', border: '1.5px dashed var(--c-border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Layout size={20} color="var(--c-subtle)" />
                     </div>
-                    <div style={{ fontSize: 12, color: 'var(--c-muted)', fontWeight: 600 }}>Nenhum bloco ainda</div>
-                    <div style={{ fontSize: 11, color: 'var(--c-subtle)', marginTop: 3 }}>Adiciona o primeiro bloco acima.</div>
+                    <div>
+                      <div style={{ fontSize: 13, color: 'var(--c-muted)', fontWeight: 700 }}>Nenhum bloco ainda</div>
+                      <div style={{ fontSize: 11, color: 'var(--c-subtle)', marginTop: 3, lineHeight: 1.5 }}>Adiciona um bloco acima para<br/>personalizar a tua preview.</div>
+                    </div>
                   </div>
                 ) : previewBlocks.map((block, idx) => {
                   const bt = BLOCK_TYPES.find(b => b.type === block.type) || BLOCK_TYPES[0]
@@ -1679,7 +1776,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
                           borderLeft: `3px solid ${hasContent && !isHidden ? '#1b78f7' : 'var(--c-border)'}`,
                           borderRadius: 10, padding: '8px 10px',
                           opacity: hasContent ? 1 : 0.45, transition: 'all 0.12s',
-                          userSelect: 'none', cursor: 'default',
+                          userSelect: 'none', cursor: hasContent ? 'grab' : 'default',
                         }}
                       >
                         <div style={{ cursor: 'grab', color: 'var(--c-subtle)', display: 'flex', flexShrink: 0 }}>
@@ -1744,7 +1841,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
       )}
 
       {/* ── Story sections ── */}
-      <div style={{ maxWidth: deviceMaxWidth ? Math.min(860, deviceMaxWidth) : 860, margin: '60px auto 0', padding: `0 ${previewDevice === 'mobile' ? '16px' : '28px'} 80px`, display: 'flex', flexDirection: 'column', gap: 32, fontFamily: selectedFont.css }}>
+      <div className="pv-story" style={{ maxWidth: deviceMaxWidth ? Math.min(860, deviceMaxWidth) : 860, margin: '60px auto 0', padding: `0 ${previewDevice === 'mobile' ? '16px' : '28px'} 80px`, display: 'flex', flexDirection: 'column', gap: 32, fontFamily: selectedFont.css }}>
 
         {/* Custom blocks — workspace blocks shown first */}
         {previewBlocks.map(block => {
@@ -1822,7 +1919,9 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
             return (
               <div key={block.id} style={{ display: 'grid', gridTemplateColumns: `repeat(${imgs.length}, 1fr)`, gap: 8, borderRadius: 16, overflow: 'hidden' }}>
                 {imgs.map((src, gi) => (
-                  <img key={gi} src={src} alt="" style={{ width: '100%', height: 200, objectFit: 'cover', display: 'block' }} onError={e => { e.target.style.display = 'none' }} />
+                  <div key={gi} style={{ aspectRatio: '4/3', overflow: 'hidden' }}>
+                    <img src={src} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} onError={e => { e.target.style.display = 'none' }} />
+                  </div>
                 ))}
               </div>
             )
@@ -1907,7 +2006,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
 
           if (key === 'problem')
             return !project.problem ? null : (
-              <div key="problem" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderLeft: `4px solid ${hero.c1}`, borderRadius: '0 16px 16px 0', padding: '28px 32px' }}>
+              <div key="problem" className="pv-section-card" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderLeft: `4px solid ${hero.c1}`, borderRadius: '0 16px 16px 0', padding: '28px 32px' }}>
                 <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--c-muted)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
                   <Target size={13} /> O problema que resolve
                 </div>
@@ -1917,7 +2016,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
 
           if (key === 'solution')
             return !project.solution ? null : (
-              <div key="solution" style={{ background: `linear-gradient(135deg, ${hero.c2}10 0%, var(--c-card) 100%)`, border: '1px solid var(--c-border)', borderRadius: 16, padding: '28px 32px' }}>
+              <div key="solution" className="pv-section-card" style={{ background: `linear-gradient(135deg, ${hero.c2}10 0%, var(--c-card) 100%)`, border: '1px solid var(--c-border)', borderRadius: 16, padding: '28px 32px' }}>
                 <div style={{ fontSize: 11, fontWeight: 800, color: colors.blue, textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
                   <Zap size={13} /> A solução
                 </div>
@@ -1927,7 +2026,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
 
           if (key === 'target_audience')
             return !project.target_audience ? null : (
-              <div key="target_audience" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 16, padding: '28px 32px' }}>
+              <div key="target_audience" className="pv-section-card" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 16, padding: '28px 32px' }}>
                 <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--c-muted)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
                   <Users size={13} /> Público-alvo
                 </div>
@@ -1937,7 +2036,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
 
           if (key === 'features')
             return features.length === 0 ? null : (
-              <div key="features" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 16, padding: '28px 32px' }}>
+              <div key="features" className="pv-section-card" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 16, padding: '28px 32px' }}>
                 <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--c-muted)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
                   <Wrench size={13} /> O que faz
                 </div>
@@ -1956,11 +2055,13 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
 
           if (key === 'technologies')
             return tech.length === 0 ? null : (
-              <div key="technologies">
-                <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--c-muted)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 14 }}>Tecnologias</div>
+              <div key="technologies" className="pv-section-card" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 16, padding: '28px 32px' }}>
+                <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--c-muted)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 18, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Zap size={13} /> Tecnologias
+                </div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                   {tech.map((t, i) => (
-                    <span key={i} style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 8, padding: '6px 14px', fontSize: 13, fontWeight: 600, color: 'var(--c-text)' }}>{t}</span>
+                    <span key={i} style={{ background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)', borderRadius: 8, padding: '6px 14px', fontSize: 13, fontWeight: 600, color: 'var(--c-text)' }}>{t}</span>
                   ))}
                 </div>
               </div>
@@ -1968,7 +2069,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
 
           if (key === 'challenges')
             return !project.challenges ? null : (
-              <div key="challenges" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderLeft: '4px solid #f97316', borderRadius: '0 16px 16px 0', padding: '28px 32px' }}>
+              <div key="challenges" className="pv-section-card" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderLeft: '4px solid #f97316', borderRadius: '0 16px 16px 0', padding: '28px 32px' }}>
                 <div style={{ fontSize: 11, fontWeight: 800, color: '#f97316', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
                   <Zap size={13} /> Desafios
                 </div>
@@ -1978,21 +2079,21 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
 
           if (key === 'results')
             return !project.results ? null : (
-              <div key="results" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 16, padding: '28px 32px' }}>
+              <div key="results" className="pv-section-card" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 16, padding: '28px 32px' }}>
                 <div style={{ fontSize: 11, fontWeight: 800, color: '#22c55e', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
                   <BarChart2 size={13} /> Resultados
                 </div>
-                <p style={{ margin: 0, fontSize: 15, color: 'var(--c-text)', lineHeight: 1.8, overflowWrap: 'break-word' }}>{project.results}</p>
+                <p style={{ margin: 0, fontSize: 'clamp(15px,2vw,18px)', color: 'var(--c-text)', lineHeight: 1.8, overflowWrap: 'break-word' }}>{project.results}</p>
               </div>
             )
 
           if (key === 'learnings')
             return !project.learnings ? null : (
-              <div key="learnings" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 16, padding: '28px 32px' }}>
+              <div key="learnings" className="pv-section-card" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 16, padding: '28px 32px' }}>
                 <div style={{ fontSize: 11, fontWeight: 800, color: '#8b5cf6', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
                   <BookOpen size={13} /> Aprendizagens
                 </div>
-                <p style={{ margin: 0, fontSize: 15, color: 'var(--c-text)', lineHeight: 1.8, overflowWrap: 'break-word' }}>{project.learnings}</p>
+                <p style={{ margin: 0, fontSize: 'clamp(15px,2vw,18px)', color: 'var(--c-text)', lineHeight: 1.8, overflowWrap: 'break-word' }}>{project.learnings}</p>
               </div>
             )
 
@@ -2158,8 +2259,8 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
 
         {/* Rodapé personalizado */}
         {previewStyle.footerText && (
-          <div style={{ textAlign: 'center', padding: '8px 0 4px', borderTop: '1px solid var(--c-border)' }}>
-            <span style={{ fontSize: 12, color: 'var(--c-subtle)', fontWeight: 500, letterSpacing: '0.02em' }}>{previewStyle.footerText}</span>
+          <div style={{ textAlign: 'center', padding: '20px 0 8px', borderTop: '1px solid var(--c-border)', marginTop: 8 }}>
+            <span style={{ fontSize: 12, color: 'var(--c-subtle)', fontWeight: 500, letterSpacing: '0.03em' }}>{previewStyle.footerText}</span>
           </div>
         )}
 

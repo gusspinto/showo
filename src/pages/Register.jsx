@@ -168,6 +168,8 @@ export default function Register() {
       <style>{`
         .role-card { transition: all 0.15s; cursor: pointer; }
         .role-card:hover { transform: translateY(-2px); }
+        @media (max-width: 350px) { .register-role-grid { grid-template-columns: 1fr !important; } }
+        @media (max-width: 400px) { .register-card { padding: 24px 18px !important; } }
       `}</style>
       <div style={{ width: '100%', maxWidth: 480, position: 'relative' }}>
 
@@ -208,11 +210,11 @@ export default function Register() {
 
         ) : step === 'role' ? (
           /* ── STEP 1: escolha de tipo de conta ── */
-          <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 18, padding: '36px 32px', boxShadow: '0 8px 40px rgba(0,0,0,0.35)' }}>
+          <div className="register-card" style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 18, padding: '36px 32px', boxShadow: '0 8px 40px rgba(0,0,0,0.35)' }}>
             <h1 style={{ color: C.text, fontSize: 22, fontWeight: 700, margin: '0 0 6px' }}>Criar conta</h1>
             <p style={{ color: C.muted, fontSize: 14, margin: '0 0 28px' }}>Como vais usar o Showo?</p>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 24 }}>
+            <div className="register-role-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 24 }}>
               {ROLES.map(r => {
                 const selected = role === r.id
                 return (
@@ -267,7 +269,7 @@ export default function Register() {
 
         ) : (
           /* ── STEP 2: formulário ── */
-          <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 18, padding: '36px 32px', boxShadow: '0 8px 40px rgba(0,0,0,0.35)' }}>
+          <div className="register-card" style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 18, padding: '36px 32px', boxShadow: '0 8px 40px rgba(0,0,0,0.35)' }}>
             {/* Role badge + back */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

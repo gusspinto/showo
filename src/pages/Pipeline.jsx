@@ -46,7 +46,7 @@ function CandidatoModal({ cand, vagas, onClose, onStageChange, navigate }) {
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
       <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)' }} onClick={onClose} />
-      <div style={{ position: 'relative', background: C.card, border: `1px solid ${C.border}`, borderRadius: 18, width: '100%', maxWidth: 480, zIndex: 1, padding: 28, boxShadow: '0 24px 64px rgba(0,0,0,0.5)' }}>
+      <div className="pipeline-modal" style={{ position: 'relative', background: C.card, border: `1px solid ${C.border}`, borderRadius: 18, width: '100%', maxWidth: 480, zIndex: 1, padding: 28, boxShadow: '0 24px 64px rgba(0,0,0,0.5)' }}>
         <button onClick={onClose} style={{ position: 'absolute', top: 16, right: 16, background: 'transparent', border: 'none', cursor: 'pointer', color: C.muted, display: 'flex', padding: 4 }}>
           <X size={16} />
         </button>
@@ -197,6 +197,13 @@ export default function Pipeline() {
 
   return (
     <div style={{ minHeight: '100vh', background: C.bg, fontFamily: 'inherit' }}>
+      <style>{`
+        @media (max-width: 600px) {
+          .pipeline-board { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+          .pipeline-col { min-width: 260px; }
+          .pipeline-modal { padding: 20px 16px !important; }
+        }
+      `}</style>
       <Navbar />
       <div className="page-content" style={{ padding: 0 }}>
         <div style={{ padding: '28px clamp(8px,3vw,24px) 0' }}>
@@ -252,9 +259,9 @@ export default function Pipeline() {
 
           {/* Kanban board */}
           {!loading && candidaturas.length > 0 && (
-            <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 32, alignItems: 'flex-start' }}>
+            <div className="pipeline-board" style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 32, alignItems: 'flex-start' }}>
               {STAGES.map(stage => (
-                <div key={stage.id} style={{ minWidth: 220, width: 240, flexShrink: 0, display: 'flex', flexDirection: 'column' }}>
+                <div key={stage.id} className="pipeline-col" style={{ minWidth: 220, width: 240, flexShrink: 0, display: 'flex', flexDirection: 'column' }}>
                   {/* Column header */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, padding: '8px 12px', background: stage.bg, border: `1px solid ${stage.color}33`, borderRadius: 10 }}>
                     <div style={{ width: 8, height: 8, borderRadius: '50%', background: stage.color, flexShrink: 0 }} />

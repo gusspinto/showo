@@ -121,7 +121,7 @@ function FeedbackModal({ project, teacherId, onClose }) {
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
       onClick={e => e.target === e.currentTarget && onClose()}>
-      <div style={{ background: C.card, border: `1px solid ${C.borderBright}`, borderRadius: 18, padding: 28, width: '100%', maxWidth: 480, maxHeight: '80vh', overflowY: 'auto', boxShadow: '0 16px 48px rgba(0,0,0,0.6)' }}>
+      <div className="turmapage-modal" style={{ background: C.card, border: `1px solid ${C.borderBright}`, borderRadius: 18, padding: 28, width: '100%', maxWidth: 480, maxHeight: '80vh', overflowY: 'auto', boxShadow: '0 16px 48px rgba(0,0,0,0.6)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
           <div>
             <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: C.text }}>Feedback do professor</h3>
@@ -445,7 +445,12 @@ export default function TurmaPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: C.bg, color: C.text, fontFamily: 'inherit' }}>
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+      <style>{`
+        @keyframes spin{to{transform:rotate(360deg)}}
+        @media (max-width: 480px) { .turmapage-grid { grid-template-columns: 1fr !important; } }
+        @media (max-width: 600px) { .turmapage-hd { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; } }
+        @media (max-width: 520px) { .turmapage-modal { padding: 20px 16px !important; } }
+      `}</style>
       <Navbar />
 
       {/* Feedback modal */}
@@ -542,7 +547,7 @@ export default function TurmaPage() {
       <div className="page-content">
         {/* Header */}
         <div style={{ marginBottom: 32 }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
+          <div className="turmapage-hd" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
                 <div style={{ width: 44, height: 44, borderRadius: 12, background: 'linear-gradient(135deg,rgba(27,120,247,0.2),rgba(79,70,229,0.15))', border: `1px solid rgba(27,120,247,0.25)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -711,7 +716,7 @@ export default function TurmaPage() {
           </div>
         ) : (
           /* Student grid view */
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 16 }}>
+          <div className="turmapage-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 16 }}>
             {sortedProjects.map(p => (
               <ProjectCard key={p.id} project={p} navigate={navigate} />
             ))}

@@ -350,6 +350,15 @@ export default function AIInterview() {
         .send-btn { transition: background 0.12s !important; }
         @media (max-width: 900px) { .iv-preview { display: none !important; } }
         @media (max-width: 600px) { .iv-main { padding: 0 16px 32px !important; } .iv-header { padding: 16px 16px 0 !important; } }
+        @media (max-width: 600px) {
+          .ai-main-content { padding: 16px !important; }
+          .ai-question-text { font-size: 18px !important; }
+          .ai-options-grid { grid-template-columns: 1fr !important; }
+          .ai-header-row { flex-wrap: wrap !important; gap: 8px !important; }
+        }
+        @media (max-width: 400px) {
+          .ai-nav-btns button { padding: 10px 14px !important; font-size: 13px !important; }
+        }
       `}</style>
 
       {/* Progress bar */}
@@ -362,7 +371,7 @@ export default function AIInterview() {
       </div>
 
       {/* Header */}
-      <div className="iv-header" style={{ padding: '24px 32px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div className="iv-header ai-header-row" style={{ padding: '24px 32px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <button
           onClick={() => navigate('/')}
           style={{ background: 'none', border: 'none', color: C.muted, cursor: 'pointer', fontSize: 14, fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6, padding: 0 }}
@@ -620,7 +629,7 @@ export default function AIInterview() {
                     <p style={{ margin: '0 0 4px', fontSize: 11, color: C.blue, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{q.label}</p>
 
                     {/* Question text */}
-                    <p style={{ margin: '0 0 20px', fontSize: 19, fontWeight: 700, color: C.text, lineHeight: 1.4, letterSpacing: '-0.2px' }}>{q.question}</p>
+                    <p className="ai-question-text" style={{ margin: '0 0 20px', fontSize: 19, fontWeight: 700, color: C.text, lineHeight: 1.4, letterSpacing: '-0.2px' }}>{q.question}</p>
 
                     {/* Suggestions — hidden for free-text fields where chips make no sense */}
                     {q.suggestions?.length > 0 && !['name','creator_name','pap_supervisor','school','course'].includes(q.field) && (

@@ -200,6 +200,7 @@ function MissionCard({ mission, done, progress }) {
 
   return (
     <div
+      className="missoes-card"
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
       style={{
@@ -339,11 +340,16 @@ export default function Missoes() {
 
   return (
     <div style={{ minHeight: '100vh', background: C.bg }}>
+      <style>{`
+        @media (max-width: 480px) { .missoes-hd { gap: 10px !important; } .missoes-hd h1 { font-size: clamp(22px, 5vw, 32px) !important; } }
+        @media (max-width: 480px) { .missoes-stats { flex-direction: column !important; gap: 8px !important; } }
+        @media (max-width: 380px) { .missoes-card { gap: 10px !important; padding: 12px !important; } }
+      `}</style>
       <Navbar />
       <div className="page-content">
 
         {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 8 }}>
+        <div className="missoes-hd" style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 8 }}>
           <div style={{
             width: 48, height: 48, borderRadius: 14,
             background: 'rgba(27,120,247,0.12)', border: '1px solid rgba(27,120,247,0.25)',
@@ -366,7 +372,7 @@ export default function Missoes() {
           background: C.card, border: `1px solid ${C.border}`,
           borderRadius: 16, padding: '20px 24px', marginBottom: 28, marginTop: 24,
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+          <div className="missoes-stats" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
             <div>
               <div style={{ fontSize: 13, color: C.muted, marginBottom: 4, fontWeight: 600 }}>XP Total</div>
               <div style={{ fontSize: 28, fontWeight: 900, color: C.blue, letterSpacing: '-1px' }}>

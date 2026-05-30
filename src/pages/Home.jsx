@@ -83,7 +83,7 @@ function TypedHero() {
   }
 
   return (
-    <h1 className="hero-h1" style={{
+    <h1 className="hero-h1 home-hero-heading" style={{
       fontSize: 'clamp(36px, 5.5vw, 62px)', fontWeight: 900,
       lineHeight: 1.1, margin: '0 0 18px',
       letterSpacing: '-1.2px', maxWidth: 680,
@@ -227,6 +227,16 @@ export default function Home() {
           .hero-note     { font-size: 11px !important; }
           .home-ctas     { flex-direction: column !important; gap: 10px !important; align-items: stretch !important; }
           .home-ctas button { width: 100% !important; justify-content: center !important; }
+          /* Features grid — single column on small phones */
+          .home-features-grid { grid-template-columns: 1fr !important; gap: 12px !important; }
+          /* Hero CTA buttons — stack vertically */
+          .home-hero-btns { flex-direction: column !important; width: 100%; }
+          .home-hero-btns a, .home-hero-btns button { width: 100% !important; justify-content: center !important; text-align: center !important; }
+          /* Stats row */
+          .home-stats { flex-wrap: wrap !important; gap: 12px !important; justify-content: center !important; }
+        }
+        @media (max-width: 380px) {
+          .home-hero-heading { font-size: clamp(28px, 8vw, 42px) !important; }
         }
       `}</style>
 
@@ -397,7 +407,7 @@ export default function Home() {
       </div>
 
       {/* Social proof strip */}
-      <div className="social-strip" style={{
+      <div className="social-strip home-stats" style={{
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         gap: 28, padding: '16px 24px',
         borderTop: `1px solid ${colors.border}`,
@@ -423,7 +433,7 @@ export default function Home() {
 
       {/* Features */}
       <div style={{ maxWidth: 960, margin: '0 auto', padding: '64px 24px 48px' }}>
-        <div className="features-grid" style={{
+        <div className="features-grid home-features-grid" style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(3, 1fr)',
           gap: 20,
@@ -460,7 +470,7 @@ export default function Home() {
         >
           <span style={{display:"flex",alignItems:"center",gap:6}}>Criar o meu projeto <ArrowRight size={15} /></span>
         </button>
-        <div className="home-ctas" style={{ marginTop: 20, display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
+        <div className="home-ctas home-hero-btns" style={{ marginTop: 20, display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
           <button onClick={() => navigate('/explorar')} className="home-sec-btn"
             style={{ background: 'transparent', color: colors.muted, border: `1px solid ${colors.border}`, borderRadius: 12, padding: '10px 22px', fontSize: 13, cursor: 'pointer', fontWeight: 600, fontFamily: 'var(--font-body)' }}>
             Ver projetos públicos

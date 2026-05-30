@@ -445,7 +445,7 @@ export default function NewProject() {
             <p style={{ color: colors.muted, textAlign: 'center', marginBottom: 32, fontSize: 15, marginTop: 8 }}>
               Escolhe o teu objetivo para personalizarmos a experiência
             </p>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12, marginBottom: 24 }}>
+            <div className="np-type-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12, marginBottom: 24 }}>
               {GOAL_OPTIONS.map(opt => {
                 const sel = formGoal === opt.id
                 const c = opt.color
@@ -750,6 +750,13 @@ export default function NewProject() {
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: 'inherit', display: 'flex', flexDirection: 'column' }}>
+      <style>{`
+        @media (max-width: 600px) { .np-outer { padding: 20px 16px 60px !important; } }
+        @media (max-width: 380px) { .np-type-grid { grid-template-columns: 1fr !important; } }
+        @media (max-width: 500px) { .np-score-grid { grid-template-columns: repeat(2, 1fr) !important; } }
+        @media (max-width: 320px) { .np-score-grid { grid-template-columns: 1fr !important; } }
+        @media (max-width: 360px) { .np-nav-btns { flex-direction: column-reverse !important; } .np-nav-btns button { width: 100% !important; } }
+      `}</style>
       <Toast {...toast} />
 
       {/* Auth nudge modal */}
@@ -855,7 +862,7 @@ export default function NewProject() {
         }} />
       </div>
 
-      <div style={{ flex: 1, display: 'flex', alignItems: isFinalize ? 'flex-start' : 'center', justifyContent: 'center', padding: isFinalize ? '40px 24px 60px' : '32px 24px', overflowY: 'auto' }}>
+      <div className="np-outer" style={{ flex: 1, display: 'flex', alignItems: isFinalize ? 'flex-start' : 'center', justifyContent: 'center', padding: isFinalize ? '40px 24px 60px' : '32px 24px', overflowY: 'auto' }}>
         <div style={{ width: '100%', maxWidth: 580 }}>
 
           {/* Prefill banner */}
@@ -1083,7 +1090,7 @@ export default function NewProject() {
               {/* Type */}
               <div style={{ marginBottom: 28 }}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: colors.subtle, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 12 }}>Tipo de projeto</div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+                <div className="np-score-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
                   {PROJECT_TYPES.map(t => {
                     const sel = answers.project_type === t.id
                     const c = t.color
@@ -1248,7 +1255,7 @@ export default function NewProject() {
           )}
 
           {/* Navigation */}
-          <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
+          <div className="np-nav-btns" style={{ display: 'flex', gap: 10, marginTop: 24 }}>
             {step > 0 && (
               <button
                 onClick={() => setStep(n => n - 1)}

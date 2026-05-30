@@ -155,6 +155,16 @@ export default function Ranking() {
           .rank-filters { flex-direction: column !important; gap: 8px !important; }
           .rank-filters select { width: 100% !important; }
           .rank-top-info-tagline { display: none !important; }
+          /* Filter tabs — scroll horizontally */
+          .ranking-tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; flex-wrap: nowrap !important; padding-bottom: 4px; }
+          /* Ranking table rows — hide secondary columns */
+          .rank-col-school { display: none !important; }
+          .rank-col-course { display: none !important; }
+          /* Podium section — smaller */
+          .rank-podium { gap: 8px !important; }
+        }
+        @media (max-width: 380px) {
+          .rank-row-name { font-size: 13px !important; max-width: 140px !important; }
         }
       `}</style>
 
@@ -186,7 +196,7 @@ export default function Ranking() {
         </div>
 
         {/* Filters */}
-        <div className="rank-filters" style={{ display: 'flex', gap: 10, marginBottom: 32, flexWrap: 'wrap', alignItems: 'center' }}>
+        <div className="rank-filters ranking-tabs" style={{ display: 'flex', gap: 10, marginBottom: 32, flexWrap: 'wrap', alignItems: 'center' }}>
           <div style={{ position: 'relative' }}>
             <select value={areaFilter} onChange={e => setAreaFilter(e.target.value)} style={selectStyle}
               onFocus={e => (e.target.style.borderColor = C.blue)}
@@ -259,7 +269,7 @@ export default function Ranking() {
                   Pódio
                 </p>
                 {/* order: 2nd · 1st · 3rd */}
-                <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8 }}>
+                <div className="rank-podium" style={{ display: 'flex', alignItems: 'flex-end', gap: 8 }}>
                   {[top3[1], top3[0], top3[2]].map((project, col) => {
                     if (!project) return <div key={col} style={{ flex: 1 }} />
                     const posMap   = [1, 0, 2]           // col→original index
@@ -375,7 +385,7 @@ export default function Ranking() {
 
                         {/* Info */}
                         <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                          <span style={{ fontSize: 14, fontWeight: 600, color: C.text, letterSpacing: '-0.1px' }}>{project.name}</span>
+                          <span className="rank-row-name" style={{ fontSize: 14, fontWeight: 600, color: C.text, letterSpacing: '-0.1px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{project.name}</span>
                           {project.is_pap && (
                             <span style={{ fontSize: 9, color: C.yellow, fontWeight: 700, background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.18)', padding: '1px 6px', borderRadius: 999 }}>PAP</span>
                           )}
@@ -383,7 +393,7 @@ export default function Ranking() {
                             <span style={{ fontSize: 11, color: C.subtle }}>{project.area}</span>
                           )}
                           {project.creator_name && (
-                            <span style={{ fontSize: 11, color: C.subtle }}>· {project.creator_name}</span>
+                            <span className="rank-col-school" style={{ fontSize: 11, color: C.subtle }}>· {project.creator_name}</span>
                           )}
                           {isMe && (
                             <span style={{ fontSize: 10, color: C.blue, fontWeight: 700 }}>· O teu projeto</span>

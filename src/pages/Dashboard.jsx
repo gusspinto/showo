@@ -146,7 +146,7 @@ function ProjectRow({ project, onView, onEdit, onDelete, onCopy, copied }) {
       className="dash-project-row"
     >
       {/* Score ring — SVG stroke (matches Explore style) */}
-      <div onClick={onView} style={{ position: 'relative', width: 42, height: 42, flexShrink: 0, cursor: 'pointer', filter: `drop-shadow(0 0 5px ${scoreColor}80)` }}>
+      <div className="dash-proj-score" onClick={onView} style={{ position: 'relative', width: 42, height: 42, flexShrink: 0, cursor: 'pointer', filter: `drop-shadow(0 0 5px ${scoreColor}80)` }}>
         <svg width={42} height={42} overflow="visible" style={{ transform: 'rotate(-90deg)', display: 'block' }}>
           <circle cx={21} cy={21} r={17} fill="none" stroke="var(--c-border)" strokeWidth={3.5} />
           <circle cx={21} cy={21} r={17} fill="none" stroke={scoreColor} strokeWidth={3.5}
@@ -1482,6 +1482,17 @@ export default function Dashboard() {
           /* ── Header ── */
           .dash-header-btns { gap: 6px !important; }
           .dash-hd-btn-profile { display: none !important; }
+
+          /* ── Score / stats area ── */
+          .dash-score-section { flex-direction: column !important; gap: 12px !important; }
+          /* ── Quick actions grid ── */
+          .dash-quick-actions { grid-template-columns: repeat(2, 1fr) !important; }
+          /* ── Project row score pill — show abbreviated ── */
+          .dash-proj-score { font-size: 11px !important; }
+          /* ── Welcome/greeting — reduce font size ── */
+          .dash-greeting { font-size: clamp(20px, 5vw, 28px) !important; }
+          /* ── Milestones / progress section ── */
+          .dash-milestones { padding: 14px !important; }
         }
       `}</style>
       <Navbar />
@@ -1587,7 +1598,7 @@ export default function Dashboard() {
         {/* ── Header ── */}
         <div style={{ marginBottom: 36, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <h1 style={{ color: C.text, fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 900, margin: '0 0 6px', letterSpacing: '-0.5px', lineHeight: 1.15 }}>
+            <h1 className="dash-greeting" style={{ color: C.text, fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 900, margin: '0 0 6px', letterSpacing: '-0.5px', lineHeight: 1.15 }}>
               {greeting}
             </h1>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
@@ -1600,7 +1611,7 @@ export default function Dashboard() {
             </div>
             {/* Inline stat pills — appear once data loads */}
             {!loadingProjects && (isTeacher ? turmas.length > 0 : projects.length > 0 || totalViews > 0) && (
-              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              <div className="dash-score-section" style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                 {!isTeacher && (
                   <>
                     <span className="dash-stat-pill">
@@ -1808,7 +1819,7 @@ export default function Dashboard() {
 
               {/* Secondary steps — compact inline row */}
               {secondary.length > 0 && (
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                <div className="dash-quick-actions" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                   {secondary.map(s => {
                     const SIcon = s.Icon
                     return (
@@ -1893,6 +1904,7 @@ export default function Dashboard() {
             const scoreCol = getScoreColor(next.score)
             return (
               <div
+                className="dash-milestones"
                 onClick={() => navigate(`/projeto/${next.slug}`)}
                 style={{ background: C.card, border: `1px solid ${urgentColor}35`, borderRadius: 16, overflow: 'hidden', cursor: 'pointer', transition: 'border-color 0.15s, box-shadow 0.15s', boxShadow: '0 2px 12px rgba(0,0,0,0.18)' }}
                 onMouseEnter={e => { e.currentTarget.style.borderColor = urgentColor + '70'; e.currentTarget.style.boxShadow = '0 4px 24px rgba(0,0,0,0.28)' }}
