@@ -655,8 +655,8 @@ export default function Mensagens() {
           /* Thread: hidden by default, shown when active */
           .msg-thread           { display: none !important; }
           .msg-thread.active    { display: flex !important; }
-          /* Compose button — full width on mobile */
-          .msg-compose-btn { width: 100% !important; justify-content: center !important; }
+          /* Compose button — keep natural size (34px icon btn) */
+          .msg-compose-btn { flex-shrink: 0 !important; }
           /* Message input area — bigger touch target */
           .msg-input-area { padding: 10px 12px 16px !important; }
           /* Thread header — reduce padding */

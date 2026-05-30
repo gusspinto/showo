@@ -348,14 +348,31 @@ export default function Explore() {
           .filter-row select { font-size: 12px !important; padding: 8px 32px 8px 12px !important; }
         }
         @media (max-width: 600px) {
-          /* Tab + search: empilhar verticalmente */
-          .explore-tab-search-row { flex-direction: column !important; gap: 8px !important; }
+          /* Tab + search: empilhar verticalmente, esticar ao largo total */
+          .explore-tab-search-row {
+            flex-direction: column !important;
+            gap: 8px !important;
+            align-items: stretch !important;
+          }
           .explore-tabs-wrap { width: 100% !important; display: flex !important; }
           .explore-tabs-wrap button { flex: 1 !important; min-width: 0 !important; }
-          /* Vagas grid — 1 coluna em mobile pequeno */
-          .explore-grid { grid-template-columns: 1fr 1fr !important; }
-          /* Score slider: ocupa linha completa */
-          .explore-score-row { width: 100% !important; }
+          /* Search bar — ocupa a linha toda */
+          .explore-search-wrap { width: 100% !important; }
+
+          /* Filtros: grid 2 colunas uniforme */
+          .filter-row {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr !important;
+            gap: 8px !important;
+          }
+          .filter-row > * { min-width: 0 !important; width: 100% !important; }
+          /* Score slider e toggle "disponível" — linha completa */
+          .filter-score-wrap,
+          .filter-available-btn,
+          .filter-clear-btn { grid-column: 1 / -1 !important; }
+
+          /* Grid de projetos — 1 coluna em mobile */
+          .explore-grid { grid-template-columns: 1fr !important; }
         }
         @media (max-width: 440px) {
           .explore-grid { grid-template-columns: 1fr !important; }
@@ -424,7 +441,7 @@ export default function Explore() {
           </div>
 
           {/* Unified search input */}
-          <div style={{ position: 'relative', flex: 1 }}>
+          <div className="explore-search-wrap" style={{ position: 'relative', flex: 1 }}>
             <svg style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}
               width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={colors.subtle} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
@@ -464,7 +481,7 @@ export default function Explore() {
           <SelectFilter value={filterZone} onChange={setFilterZone} options={ZONES} label="Filtrar por zona" />
 
           {/* Score slider */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: colors.bgAlt, border: `1px solid ${filterMinScore > 0 ? colors.blue : colors.border}`, borderRadius: 10, padding: '8px 14px', minWidth: 180 }}>
+          <div className="filter-score-wrap" style={{ display: 'flex', alignItems: 'center', gap: 8, background: colors.bgAlt, border: `1px solid ${filterMinScore > 0 ? colors.blue : colors.border}`, borderRadius: 10, padding: '8px 14px' }}>
             <span style={{ fontSize: 12, color: colors.muted, whiteSpace: 'nowrap' }}>Score ≥</span>
             <input
               type="range" min={0} max={100} step={5} value={filterMinScore}
@@ -480,6 +497,7 @@ export default function Explore() {
 
           {/* Available for work toggle */}
           <button
+            className="filter-available-btn"
             onClick={() => setFilterAvailable(v => !v)}
             style={{
               display: 'flex', alignItems: 'center', gap: 6,
@@ -497,6 +515,7 @@ export default function Explore() {
 
           {hasFilters && (
             <button
+              className="filter-clear-btn"
               onClick={() => { setFilterArea(''); setFilterType(''); setFilterMinScore(0); setFilterZone(''); setFilterAvailable(false); setFilterSkill('') }}
               style={{ background: 'transparent', border: `1px solid ${colors.border}`, color: colors.muted, borderRadius: 10, padding: '9px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
             >
