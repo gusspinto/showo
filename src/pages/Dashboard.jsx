@@ -1483,8 +1483,9 @@ export default function Dashboard() {
           .dash-header-btns { gap: 6px !important; }
           .dash-hd-btn-profile { display: none !important; }
 
-          /* ── Score / stats area ── */
-          .dash-score-section { flex-direction: column !important; gap: 12px !important; }
+          /* ── Score / stats area — 2 pills per row ── */
+          .dash-score-section { flex-direction: row !important; flex-wrap: wrap !important; gap: 6px !important; }
+          .dash-stat-pill { font-size: 11px !important; padding: 4px 10px !important; }
           /* ── Quick actions grid ── */
           .dash-quick-actions { grid-template-columns: repeat(2, 1fr) !important; }
           /* ── Project row score pill — show abbreviated ── */

@@ -348,18 +348,20 @@ function InviteInbox({ userId, sidebar = false }) {
       {open && (
         <>
           <div style={{ position: 'fixed', inset: 0, zIndex: 198 }} onClick={() => setOpen(false)} />
-          <div style={{
-            ...(sidebar
-              ? { position: 'fixed', left: 248, bottom: 16 }
-              : { position: 'absolute', top: 'calc(100% + 8px)', right: 0 }
-            ),
-            background: 'var(--c-card)', border: `1px solid var(--c-border)`,
-            borderRadius: 14, padding: '8px',
-            boxShadow: '0 8px 40px rgba(0,0,0,0.45)',
-            backdropFilter: 'blur(16px)',
-            zIndex: 199, width: 310,
-            maxHeight: 'calc(100vh - 80px)', overflowY: 'auto',
-          }}>
+          <div
+            className={sidebar ? '' : 'notif-drop'}
+            style={{
+              ...(sidebar
+                ? { position: 'fixed', left: 248, bottom: 16 }
+                : { position: 'absolute', top: 'calc(100% + 8px)', right: 0 }
+              ),
+              background: 'var(--c-card)', border: `1px solid var(--c-border)`,
+              borderRadius: 14, padding: '8px',
+              boxShadow: '0 8px 40px rgba(0,0,0,0.45)',
+              backdropFilter: 'blur(16px)',
+              zIndex: 199, width: 310,
+              maxHeight: 'calc(100vh - 80px)', overflowY: 'auto',
+            }}>
 
             {/* Pending invites TO me */}
             {invites.length > 0 && (
@@ -844,7 +846,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
         /* Mobile (≤600px): bottom nav takes over — logo centrada, sem hamburger */
         @media (max-width: 600px) {
           .nav-mid       { position: absolute; left: 50%; transform: translateX(-50%); }
-          .nav-right     { flex: none; }
+          .nav-right     { flex: none; margin-left: auto; }
           .nav-auth      { display: none !important; }
           .nav-logo      { height: 28px !important; width: auto !important; }
           .showo-nav-pad { padding-left: 20px !important; padding-right: 20px !important; }
@@ -852,6 +854,16 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
           .ham-btn       { display: none !important; }
           .bottom-nav    { display: flex !important; }
           body           { padding-bottom: 78px; }
+
+          /* Notification dropdown — full-width anchored below navbar */
+          .notif-drop {
+            position: fixed !important;
+            top: 62px !important;
+            right: 16px !important;
+            left: 16px !important;
+            width: auto !important;
+            max-width: none !important;
+          }
         }
 
         /* Mobile drawer (tablet only) */
@@ -936,19 +948,20 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
           justify-content: center;
         }
         .bn-create-btn {
-          width: 46px; height: 46px;
-          border-radius: 50%;
-          background: linear-gradient(135deg, #1b78f7, #4f46e5);
+          background: transparent;
           border: none;
           cursor: pointer;
           display: flex;
           align-items: center;
           justify-content: center;
-          box-shadow: 0 4px 18px rgba(27,120,247,0.5);
+          color: #7d93b0;
+          padding: 0;
           -webkit-tap-highlight-color: transparent;
-          transition: opacity 0.15s, transform 0.15s;
+          transition: color 0.15s, transform 0.15s;
+          min-height: 50px;
+          width: 100%;
         }
-        .bn-create-btn:active { opacity: 0.8; transform: scale(0.93); }
+        .bn-create-btn:active { transform: scale(0.88); opacity: 0.7; }
 
         /* Raise bottom-nav so it stays visible above the menu sheet */
         .bottom-nav { z-index: 500 !important; }
@@ -1628,7 +1641,54 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
                 </div>
               )}
 
-              <div className="mob-nav-divider" />
+              {/* ── Gerir projeto — PRIMEIRO quando em projeto próprio ── */}
+              {extras?.type === 'project' && (
+                <>
+                  <div className="mob-project-section" style={{ marginTop: 4 }}>
+                    <span className="mob-nav-section-label">Gerir projeto</span>
+                    {extras.showBack && (
+                      <button className="mob-nav-btn" onClick={() => { navigate(`/projeto/${extras.slug}`); setMenuOpen(false) }}>
+                        <ArrowLeft size={20} /> Ver projeto
+                      </button>
+                    )}
+                    {!extras.showBack && (
+                      <button className="mob-nav-btn" onClick={() => { navigate(`/editar/${extras.slug}`); setMenuOpen(false) }}>
+                        <Pencil size={20} /> Editar
+                      </button>
+                    )}
+                    {extras.onDefense && (
+                      <button className="mob-nav-btn" onClick={() => { extras.onDefense(); setMenuOpen(false) }}>
+                        <GraduationCap size={20} /> Modo defesa
+                        {extras.defenseDate && (
+                          <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--c-muted)', fontWeight: 500 }}>
+                            {new Date(extras.defenseDate).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' })}
+                          </span>
+                        )}
+                      </button>
+                    )}
+                    {extras.onAnalyze && (
+                      <button className="mob-nav-btn" onClick={() => { extras.onAnalyze(); setMenuOpen(false) }} disabled={extras.analyzingAI} style={{ opacity: extras.analyzingAI ? 0.6 : 1 }}>
+                        <Sparkles size={20} /> {extras.analyzingAI ? 'A analisar…' : 'Análise IA'}
+                        {extras.aiScore != null && !extras.analyzingAI && (
+                          <span style={{ marginLeft: 'auto', fontSize: 13, fontWeight: 700, color: extras.aiScore >= 90 ? '#22c55e' : extras.aiScore >= 71 ? '#1b78f7' : extras.aiScore >= 40 ? '#fbbf24' : '#ef4444' }}>
+                            {extras.aiScore}
+                          </span>
+                        )}
+                      </button>
+                    )}
+                    <button className="mob-nav-btn" onClick={() => { navigate(`/certificado/${extras.slug}`); setMenuOpen(false) }}>
+                      <Trophy size={20} /> Certificado
+                    </button>
+                    {extras.onTogglePublicView && (
+                      <button className="mob-nav-btn" style={{ color: extras.viewAsPublic ? '#1b78f7' : undefined }}
+                        onClick={() => { extras.onTogglePublicView(); setMenuOpen(false) }}>
+                        <Globe size={20} /> {extras.viewAsPublic ? 'Sair da preview' : 'Preview visitante'}
+                      </button>
+                    )}
+                  </div>
+                  <div className="mob-nav-divider" />
+                </>
+              )}
 
               {/* Role-based nav sections */}
               {isRecruiter ? (
@@ -1701,63 +1761,12 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
                       <button className={`mob-nav-btn${isActive('/conquistas') ? ' active' : ''}`} onClick={() => { navigate('/conquistas'); setMenuOpen(false) }}>
                         <Medal size={20} /> Conquistas
                       </button>
-                      <div className="mob-nav-divider" />
-                      <button className={`mob-nav-btn${isActive('/mensagens') ? ' active' : ''}`} onClick={() => { navigate('/mensagens'); setMenuOpen(false) }}>
-                        <MessageSquare size={20} /> Mensagens
-                        {unreadMsgs > 0 && <span style={{ marginLeft: 'auto', background: '#1b78f7', color: '#fff', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{unreadMsgs > 9 ? '9+' : unreadMsgs}</span>}
-                      </button>
                       <button className="mob-nav-btn" style={{ opacity: 0.45, cursor: 'default' }} disabled>
                         <FolderOpen size={20} /> Portfólio <span className="mob-nav-soon">breve</span>
                       </button>
                     </>
                   )}
                 </>
-              )}
-
-              {/* Project management extras */}
-              {extras?.type === 'project' && (
-                <div className="mob-project-section">
-                  <span className="mob-nav-section-label">Gerir projeto</span>
-                  {extras.showBack && (
-                    <button className="mob-nav-btn" onClick={() => { navigate(`/projeto/${extras.slug}`); setMenuOpen(false) }}>
-                      <ArrowLeft size={20} /> Ver projeto
-                    </button>
-                  )}
-                  {!extras.showBack && (
-                    <button className="mob-nav-btn" onClick={() => { navigate(`/editar/${extras.slug}`); setMenuOpen(false) }}>
-                      <Pencil size={20} /> Editar
-                    </button>
-                  )}
-                  {extras.onDefense && (
-                    <button className="mob-nav-btn" onClick={() => { extras.onDefense(); setMenuOpen(false) }}>
-                      <GraduationCap size={20} /> Modo defesa
-                      {extras.defenseDate && (
-                        <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--c-muted)', fontWeight: 500 }}>
-                          {new Date(extras.defenseDate).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' })}
-                        </span>
-                      )}
-                    </button>
-                  )}
-                  {extras.onAnalyze && (
-                    <button className="mob-nav-btn" onClick={() => { extras.onAnalyze(); setMenuOpen(false) }} disabled={extras.analyzingAI} style={{ opacity: extras.analyzingAI ? 0.6 : 1 }}>
-                      <Sparkles size={20} /> {extras.analyzingAI ? 'A analisar…' : 'Análise IA'}
-                      {extras.aiScore != null && !extras.analyzingAI && (
-                        <span style={{ marginLeft: 'auto', fontSize: 13, fontWeight: 700, color: extras.aiScore >= 90 ? '#22c55e' : extras.aiScore >= 71 ? '#1b78f7' : extras.aiScore >= 40 ? '#fbbf24' : '#ef4444' }}>
-                          {extras.aiScore}
-                        </span>
-                      )}
-                    </button>
-                  )}
-                  <button className="mob-nav-btn" onClick={() => { navigate(`/certificado/${extras.slug}`); setMenuOpen(false) }}>
-                    <Trophy size={20} /> Certificado
-                  </button>
-                  {extras.onTogglePublicView && (
-                    <button className="mob-nav-btn" style={{ color: extras.viewAsPublic ? '#1b78f7' : undefined }}
-                      onClick={() => { extras.onTogglePublicView(); setMenuOpen(false) }}>
-                      <Globe size={20} /> {extras.viewAsPublic ? 'Sair da preview' : 'Preview visitante'}
-                    </button>
-                  )}
-                </div>
               )}
 
               <div className="mob-nav-divider" />
@@ -1809,25 +1818,33 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
               <Compass size={24} strokeWidth={isActive('/explorar') ? 2.5 : 1.8} />
             </button>
 
-            {/* Criar — botão central elevado */}
+            {/* Criar — ícone simples sem fundo */}
             <div className="bn-create-wrap">
               <button className="bn-create-btn" onClick={() => { setMenuOpen(false); setCreateModal(true) }} aria-label="Criar projeto">
-                <Plus size={22} color="#fff" strokeWidth={2.5} />
+                <Plus size={26} strokeWidth={2} />
               </button>
             </div>
 
-            {/* Menu — opens full navigation sheet */}
+            {/* Mensagens */}
+            <button
+              className={`bn-item${isActive('/mensagens') ? ' active' : ''}`}
+              onClick={() => { setMenuOpen(false); navigate('/mensagens') }}
+              aria-label="Mensagens"
+              style={{ position: 'relative' }}
+            >
+              <MessageSquare size={22} strokeWidth={isActive('/mensagens') ? 2.5 : 1.8} />
+              {unreadMsgs > 0 && (
+                <span style={{ position: 'absolute', top: 8, left: 'calc(50% + 5px)', width: 7, height: 7, borderRadius: '50%', background: '#ef4444', border: '1.5px solid rgba(13,20,36,0.97)' }} />
+              )}
+            </button>
+
+            {/* Menu — abre o sheet */}
             <button
               className={`bn-item${menuOpen ? ' active' : ''}`}
               onClick={() => setMenuOpen(o => !o)}
               aria-label="Menu"
-              style={{ position: 'relative' }}
             >
               <AlignJustify size={22} strokeWidth={menuOpen ? 2.5 : 1.8} />
-              {/* Unread messages dot when sheet is closed */}
-              {unreadMsgs > 0 && !menuOpen && (
-                <span style={{ position: 'absolute', top: 7, left: 'calc(50% + 7px)', width: 7, height: 7, borderRadius: '50%', background: '#ef4444', border: '1.5px solid rgba(13,20,36,0.97)' }} />
-              )}
             </button>
           </>
         ) : (
