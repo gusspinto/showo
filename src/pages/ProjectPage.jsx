@@ -682,6 +682,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
   liked, likeCount, likeLoading, onLike,
   hasInterest, interestCount, interestLoading, onInterest,
   isRecruiterRole,
+  wsExpanded, setWsExpanded,
 }) {
   const navigate = useNavigate()
   const { theme } = useTheme()
@@ -695,7 +696,6 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
   const [previewDevice, setPreviewDevice] = useState('desktop')
   const [previewTab, setPreviewTab] = useState('estilo')  // 'estilo' | 'blocos' | 'seccoes'
   const [previewSaved, setPreviewSaved] = useState(false)
-  const [wsExpanded, setWsExpanded] = useState(false)
   const bannerRef = useRef(null)
   const [bannerH, setBannerH] = useState(44)
   const [isDesktop, setIsDesktop] = useState(() => typeof window !== 'undefined' && window.innerWidth >= 760)
@@ -847,37 +847,26 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
         }
         /* Desktop: right sidebar */
         .pv-workspace { animation: pv-slidein 0.2s cubic-bezier(0.22,1,0.36,1); }
-        /* Mobile: bottom sheet sits ABOVE the preview bottom bar */
+        /* Mobile: sheet sits ABOVE the bottom nav (z-index 510 > bottom nav 500) */
         .pv-ws-sheet {
           position: fixed !important;
           left: 0 !important; right: 0 !important;
           bottom: 62px !important; top: auto !important;
           width: 100% !important;
           height: auto !important;
-          max-height: calc(70vh - 62px) !important;
+          max-height: calc(72vh - 62px) !important;
           border-radius: 20px 20px 0 0 !important;
           border-left: none !important;
           border-top: 1px solid var(--c-border) !important;
           box-shadow: 0 -8px 48px rgba(0,0,0,0.55) !important;
           animation: pv-slidein-up 0.28s cubic-bezier(0.22,1,0.36,1) !important;
-          z-index: 500 !important;
+          z-index: 510 !important;
           transition: max-height 0.28s cubic-bezier(0.22,1,0.36,1) !important;
+          overflow: hidden !important;
         }
         .pv-ws-sheet.ws-collapsed {
           max-height: 0 !important;
           border-top: none !important;
-          overflow: hidden !important;
-        }
-        /* Preview mode bottom bar */
-        .pv-bottom-bar {
-          position: fixed; bottom: 0; left: 0; right: 0;
-          height: 62px; z-index: 600;
-          background: rgba(13,20,36,0.97);
-          border-top: 1px solid var(--c-border);
-          backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-          display: flex; align-items: center;
-          padding-bottom: env(safe-area-inset-bottom, 0px);
-          box-shadow: 0 -4px 24px rgba(0,0,0,0.5);
         }
         /* Compact tab bar for mobile */
         .pv-tab-bar-mobile {
@@ -2378,31 +2367,6 @@ function MembersPanel({ ownerName, members, colors, isOwner }) {
         })}
       </div>
 
-      {/* ── Preview mode mobile bottom bar (inside PublicView — all state available) ── */}
-      {isOwner && !isDesktop && (
-        <div className="pv-bottom-bar">
-          <button
-            onClick={() => { onExitPreview(); setWsExpanded(false) }}
-            style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, background: 'transparent', border: 'none', color: 'var(--c-muted)', cursor: 'pointer', fontFamily: 'inherit', padding: '8px 0' }}
-          >
-            <ArrowLeft size={22} strokeWidth={1.8} />
-            <span style={{ fontSize: 10, fontWeight: 500 }}>Sair</span>
-          </button>
-          <button
-            onClick={() => setWsExpanded(e => !e)}
-            style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, background: 'transparent', border: 'none', color: wsExpanded ? '#1b78f7' : 'var(--c-muted)', cursor: 'pointer', fontFamily: 'inherit', padding: '8px 0', transition: 'color 0.15s' }}
-          >
-            <Layout size={24} strokeWidth={wsExpanded ? 2.3 : 1.8} />
-            <span style={{ fontSize: 10, fontWeight: wsExpanded ? 700 : 500 }}>Editar</span>
-          </button>
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, padding: '8px 0' }}>
-            {previewSaved
-              ? <><Check size={22} color="#22c55e" strokeWidth={2} /><span style={{ fontSize: 10, color: '#22c55e', fontWeight: 600 }}>Guardado</span></>
-              : <div style={{ width: 22, height: 22 }} />
-            }
-          </div>
-        </div>
-      )}
     </div>
   )
 }
@@ -2457,6 +2421,7 @@ export default function ProjectPage() {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [viewAsPublic, setViewAsPublic] = useState(false)
   const [previewEditing, setPreviewEditing] = useState(false)
+  const [wsExpanded, setWsExpanded] = useState(false)
   const [previewBlocks, setPreviewBlocks] = useState([])
   const [previewStyle, setPreviewStyle] = useState({})
   // Jury / professor ratings state
@@ -3240,8 +3205,10 @@ export default function ProjectPage() {
           .proj-body { gap: 14px; }
           .proj-share-qr-label { display: none; }
         }
-        /* FABs hidden in preview edit mode */
+        /* FABs hidden in preview edit mode on mobile */
         .proj-fab-area.preview-editing-mobile { display: none !important; }
+        /* Defense FAB also hidden on tablet when in preview */
+        .proj-fab-area.preview-editing-mobile .proj-fab-defense { display: none !important; }
 
         @media (max-width: 600px) {
           .proj-wrap         { padding: 0 16px 80px !important; overflow-x: hidden !important; }
@@ -3253,11 +3220,10 @@ export default function ProjectPage() {
           .proj-tagline      { font-size: 15px !important; }
           .proj-card-pad, .proj-card { padding: 16px 18px !important; border-radius: 14px !important; }
           .proj-badges       { margin-bottom: 14px !important; }
-          /* Mobile: AI FAB hidden, Defense FAB circular */
+          /* Mobile: AI FAB hidden, Defense FAB hidden (mini-card handles it) */
           .proj-ai-fab       { display: none !important; }
           .proj-ai-fab-label { display: none !important; }
-          .proj-fab-defense-label { display: none !important; }
-          .proj-fab-defense { padding: 0 !important; width: 52px !important; min-width: 52px !important; }
+          .proj-fab-defense  { display: none !important; }
           /* Invite: icon only on mobile */
           .proj-invite-label { display: none !important; }
           /* Author: centered on mobile */
@@ -3792,7 +3758,7 @@ export default function ProjectPage() {
         )}
       </div>
 
-      <Navbar showCreateProject={true}>
+      <Navbar showCreateProject={true} previewEditingMobile={viewAsPublic && previewEditing} onWorkspaceToggle={() => setWsExpanded(e => !e)}>
         <div className="proj-nav-btns" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {isOwner && (
             <button
@@ -3879,6 +3845,8 @@ export default function ProjectPage() {
           interestLoading={interestLoading}
           onInterest={handleInterest}
           isRecruiterRole={isRecruiterRole}
+          wsExpanded={wsExpanded}
+          setWsExpanded={setWsExpanded}
         />
       )}
 

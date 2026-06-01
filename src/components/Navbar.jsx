@@ -642,7 +642,7 @@ const dropItemStyle = {
   transition: 'background 0.12s',
 }
 
-export function Navbar({ children, showLinks = true, showCreateProject = false }) {
+export function Navbar({ children, showLinks = true, showCreateProject = false, previewEditingMobile = false, onWorkspaceToggle }) {
   const navigate = useNavigate()
   const location = useLocation()
   const { user, profile, signOut, isAdmin } = useAuth()
@@ -1818,11 +1818,22 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
               <Compass size={24} strokeWidth={isActive('/explorar') ? 2.5 : 1.8} />
             </button>
 
-            {/* Criar — ícone simples sem fundo */}
+            {/* Centro — workspace em preview mode, + em modo normal */}
             <div className="bn-create-wrap">
-              <button className="bn-create-btn" onClick={() => { setMenuOpen(false); setCreateModal(true) }} aria-label="Criar projeto">
-                <Plus size={26} strokeWidth={2} />
-              </button>
+              {previewEditingMobile ? (
+                <button
+                  className="bn-create-btn"
+                  onClick={onWorkspaceToggle}
+                  aria-label="Editor de preview"
+                  style={{ color: '#1b78f7' }}
+                >
+                  <LayoutDashboard size={24} strokeWidth={2} />
+                </button>
+              ) : (
+                <button className="bn-create-btn" onClick={() => { setMenuOpen(false); setCreateModal(true) }} aria-label="Criar projeto">
+                  <Plus size={26} strokeWidth={2} />
+                </button>
+              )}
             </div>
 
             {/* Mensagens */}
