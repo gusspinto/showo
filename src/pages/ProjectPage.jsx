@@ -682,7 +682,6 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
   liked, likeCount, likeLoading, onLike,
   hasInterest, interestCount, interestLoading, onInterest,
   isRecruiterRole,
-  wsExpanded, setWsExpanded,
 }) {
   const navigate = useNavigate()
   const { theme } = useTheme()
@@ -696,6 +695,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
   const [previewDevice, setPreviewDevice] = useState('desktop')
   const [previewTab, setPreviewTab] = useState('estilo')  // 'estilo' | 'blocos' | 'seccoes'
   const [previewSaved, setPreviewSaved] = useState(false)
+  const [wsExpanded, setWsExpanded] = useState(false)
   const bannerRef = useRef(null)
   const [bannerH, setBannerH] = useState(44)
   const [isDesktop, setIsDesktop] = useState(() => typeof window !== 'undefined' && window.innerWidth >= 760)
@@ -2377,6 +2377,32 @@ function MembersPanel({ ownerName, members, colors, isOwner }) {
           )
         })}
       </div>
+
+      {/* ── Preview mode mobile bottom bar (inside PublicView — all state available) ── */}
+      {isOwner && !isDesktop && (
+        <div className="pv-bottom-bar">
+          <button
+            onClick={() => { onExitPreview(); setWsExpanded(false) }}
+            style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, background: 'transparent', border: 'none', color: 'var(--c-muted)', cursor: 'pointer', fontFamily: 'inherit', padding: '8px 0' }}
+          >
+            <ArrowLeft size={22} strokeWidth={1.8} />
+            <span style={{ fontSize: 10, fontWeight: 500 }}>Sair</span>
+          </button>
+          <button
+            onClick={() => setWsExpanded(e => !e)}
+            style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, background: 'transparent', border: 'none', color: wsExpanded ? '#1b78f7' : 'var(--c-muted)', cursor: 'pointer', fontFamily: 'inherit', padding: '8px 0', transition: 'color 0.15s' }}
+          >
+            <Layout size={24} strokeWidth={wsExpanded ? 2.3 : 1.8} />
+            <span style={{ fontSize: 10, fontWeight: wsExpanded ? 700 : 500 }}>Editar</span>
+          </button>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, padding: '8px 0' }}>
+            {previewSaved
+              ? <><Check size={22} color="#22c55e" strokeWidth={2} /><span style={{ fontSize: 10, color: '#22c55e', fontWeight: 600 }}>Guardado</span></>
+              : <div style={{ width: 22, height: 22 }} />
+            }
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -2431,7 +2457,6 @@ export default function ProjectPage() {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [viewAsPublic, setViewAsPublic] = useState(false)
   const [previewEditing, setPreviewEditing] = useState(false)
-  const [wsExpanded, setWsExpanded] = useState(false)
   const [previewBlocks, setPreviewBlocks] = useState([])
   const [previewStyle, setPreviewStyle] = useState({})
   // Jury / professor ratings state
@@ -3715,39 +3740,8 @@ export default function ProjectPage() {
         </div>
       )}
 
-      {/* Preview-mode mobile bottom bar — replaces normal bottom nav */}
-      {!isDesktop && (isOwner && viewAsPublic) && (
-        <div className="pv-bottom-bar">
-          {/* Exit preview */}
-          <button
-            onClick={() => { setViewAsPublic(false); setPreviewEditing(false); setWsExpanded(false) }}
-            style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, background: 'transparent', border: 'none', color: 'var(--c-muted)', cursor: 'pointer', fontFamily: 'inherit', padding: '8px 0' }}
-          >
-            <ArrowLeft size={22} strokeWidth={1.8} />
-            <span style={{ fontSize: 10, fontWeight: 500 }}>Sair</span>
-          </button>
-
-          {/* Workspace toggle — center */}
-          <button
-            onClick={() => setWsExpanded(e => !e)}
-            style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, background: 'transparent', border: 'none', color: wsExpanded ? '#1b78f7' : 'var(--c-muted)', cursor: 'pointer', fontFamily: 'inherit', padding: '8px 0', transition: 'color 0.15s' }}
-          >
-            <Layout size={24} strokeWidth={wsExpanded ? 2.3 : 1.8} />
-            <span style={{ fontSize: 10, fontWeight: wsExpanded ? 700 : 500 }}>Editar</span>
-          </button>
-
-          {/* Save state */}
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, padding: '8px 0' }}>
-            {previewSaved
-              ? <><Check size={22} color="#22c55e" strokeWidth={2} /><span style={{ fontSize: 10, color: '#22c55e', fontWeight: 600 }}>Guardado</span></>
-              : <><div style={{ width: 22, height: 22 }} /><span style={{ fontSize: 10, color: 'var(--c-subtle)' }}>A guardar…</span></>
-            }
-          </div>
-        </div>
-      )}
-
       {/* FABs — visible on tablet + mobile via CSS (hidden on desktop) */}
-      <div className={`proj-fab-area${(!isDesktop && (isOwner && viewAsPublic)) ? ' preview-editing-mobile' : ''}`} style={{
+      <div className={`proj-fab-area${(isOwner && viewAsPublic) ? ' preview-editing-mobile' : ''}`} style={{
         position: 'fixed', bottom: 24, right: 20,
         flexDirection: 'column', gap: 10, zIndex: 90,
       }}>
@@ -3885,8 +3879,6 @@ export default function ProjectPage() {
           interestLoading={interestLoading}
           onInterest={handleInterest}
           isRecruiterRole={isRecruiterRole}
-          wsExpanded={wsExpanded}
-          setWsExpanded={setWsExpanded}
         />
       )}
 
