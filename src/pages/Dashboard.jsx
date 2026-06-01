@@ -1453,6 +1453,15 @@ export default function Dashboard() {
         }
         /* Mobile project icon actions — hidden by default (desktop shows text buttons) */
         .dash-proj-actions-mobile { display: none; }
+        /* ── CTA buttons in cards — coerência de tamanho ── */
+        .dash-action-btn {
+          font-size: 13px; font-weight: 700;
+          padding: 7px 14px; border-radius: 8px;
+          white-space: nowrap; cursor: pointer; font-family: inherit;
+          transition: opacity 0.12s;
+          flex-shrink: 0;
+        }
+        .dash-action-btn:active { opacity: 0.78; }
         /* Chart hidden on mobile */
         .dash-chart-wrap { }
 
@@ -1477,7 +1486,7 @@ export default function Dashboard() {
           }
 
           /* ── Section header buttons ── */
-          .dash-sec-hd button { padding: 8px 14px !important; font-size: 13px !important; }
+          .dash-sec-hd button { font-size: 13px !important; }
 
           /* ── Header ── */
           .dash-header-btns { gap: 6px !important; }
@@ -1804,15 +1813,12 @@ export default function Dashboard() {
                   <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.5 }}>{primary.desc}</div>
                 </div>
                 <button
+                  className="dash-action-btn"
                   onClick={primary.action}
                   style={{
                     background: `linear-gradient(135deg, ${primary.color}, ${primary.color}cc)`,
-                    border: 'none', borderRadius: 9, padding: '9px 18px',
-                    color: '#fff', fontSize: 13, fontWeight: 700,
-                    cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0,
+                    border: 'none', color: '#fff',
                     boxShadow: `0 4px 14px ${primary.color}44`,
-                    transition: 'opacity 0.12s',
-                    whiteSpace: 'nowrap',
                   }}
                   onMouseEnter={e => e.currentTarget.style.opacity = '0.88'}
                   onMouseLeave={e => e.currentTarget.style.opacity = '1'}
@@ -1971,13 +1977,19 @@ export default function Dashboard() {
               </div>
               <div style={{ display: 'flex', gap: 7, flexShrink: 0 }}>
                 {studentTurmas.length > 0 && (
-                  <button onClick={() => setShowTurmasModal(true)} style={{ background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.22)', borderRadius: 7, padding: '6px 12px', color: C.blue, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s', whiteSpace: 'nowrap' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(27,120,247,0.18)'} onMouseLeave={e => e.currentTarget.style.background = 'rgba(27,120,247,0.1)'}>
+                  <button className="dash-action-btn" onClick={() => setShowTurmasModal(true)} style={{ background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.22)', color: C.blue }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(27,120,247,0.18)'} onMouseLeave={e => e.currentTarget.style.background = 'rgba(27,120,247,0.1)'}>
                     Ver turmas
                   </button>
                 )}
                 <button
+                  className="dash-action-btn"
                   onClick={() => setShowJoinModal(true)}
-                  style={{ background: studentTurmas.length === 0 ? `linear-gradient(135deg, ${C.blue}, #4f46e5)` : 'transparent', border: `1px solid ${studentTurmas.length === 0 ? 'transparent' : C.border}`, borderRadius: 7, padding: '6px 12px', color: studentTurmas.length === 0 ? '#fff' : C.muted, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s', whiteSpace: 'nowrap', boxShadow: studentTurmas.length === 0 ? '0 2px 10px rgba(27,120,247,0.3)' : 'none' }}
+                  style={{
+                    background: studentTurmas.length === 0 ? `linear-gradient(135deg, ${C.blue}, #4f46e5)` : 'transparent',
+                    border: `1px solid ${studentTurmas.length === 0 ? 'transparent' : C.border}`,
+                    color: studentTurmas.length === 0 ? '#fff' : C.muted,
+                    boxShadow: studentTurmas.length === 0 ? '0 2px 10px rgba(27,120,247,0.3)' : 'none',
+                  }}
                   onMouseEnter={e => { if (studentTurmas.length > 0) { e.currentTarget.style.borderColor = C.borderBright; e.currentTarget.style.color = C.text } }}
                   onMouseLeave={e => { if (studentTurmas.length > 0) { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted } }}
                 >
@@ -2003,8 +2015,9 @@ export default function Dashboard() {
               </div>
               {!loadingProjects && projects.length > 0 && (
                 <button
+                  className="dash-action-btn"
                   onClick={() => setShowCreateModal(true)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 6, background: `${C.blue}18`, border: `1px solid ${C.blue}30`, borderRadius: 8, padding: '6px 12px', color: C.blue, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s' }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, background: `${C.blue}18`, border: `1px solid ${C.blue}30`, color: C.blue }}
                   onMouseEnter={e => { e.currentTarget.style.background = `${C.blue}28`; e.currentTarget.style.borderColor = `${C.blue}55` }}
                   onMouseLeave={e => { e.currentTarget.style.background = `${C.blue}18`; e.currentTarget.style.borderColor = `${C.blue}30` }}
                 >
