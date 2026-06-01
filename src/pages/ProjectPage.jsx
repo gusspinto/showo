@@ -1229,12 +1229,21 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
           }}>
             {/* Save + close row */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 6 }}>
-              {previewSaved && (
-                <span style={{ fontSize: 10, fontWeight: 700, color: '#22c55e', display: 'flex', alignItems: 'center', gap: 4, background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.25)', borderRadius: 99, padding: '3px 10px', flexShrink: 0 }}>
-                  <Check size={9} strokeWidth={3} /> Guardado
-                </span>
-              )}
-              <button onClick={() => setPreviewEditing(false)}
+              {/* Manual save icon */}
+              <button
+                onClick={async () => {
+                  const { error } = await supabase.from('projects')
+                    .update({ preview_blocks: previewBlocks, preview_style: previewStyle })
+                    .eq('id', project.id)
+                  if (!error) { setPreviewSaved(true); setTimeout(() => setPreviewSaved(false), 2000) }
+                }}
+                title="Guardar"
+                style={{ width: 28, height: 28, borderRadius: 7, background: previewSaved ? 'rgba(34,197,94,0.12)' : 'rgba(27,120,247,0.08)', border: `1px solid ${previewSaved ? 'rgba(34,197,94,0.3)' : 'rgba(27,120,247,0.2)'}`, color: previewSaved ? '#22c55e' : '#1b78f7', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s', flexShrink: 0 }}
+              >
+                {previewSaved ? <Check size={13} strokeWidth={3} /> : <Save size={13} />}
+              </button>
+              {/* Close workspace */}
+              <button onClick={() => { setPreviewEditing(false); setWsExpanded(false) }}
                 style={{ width: 28, height: 28, borderRadius: 7, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.14s', flexShrink: 0 }}
                 onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.18)'}
                 onMouseLeave={e => e.currentTarget.style.background = 'rgba(239,68,68,0.08)'}
@@ -3752,7 +3761,11 @@ export default function ProjectPage() {
         )}
       </div>
 
-      <Navbar showCreateProject={true} previewEditingMobile={viewAsPublic && previewEditing} onWorkspaceToggle={() => setWsExpanded(e => !e)}>
+      <Navbar
+        showCreateProject={true}
+        previewEditingMobile={isOwner && viewAsPublic}
+        onWorkspaceToggle={() => { setPreviewEditing(true); setWsExpanded(e => !e) }}
+      >
         <div className="proj-nav-btns" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {isOwner && (
             <button

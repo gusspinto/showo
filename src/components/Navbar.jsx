@@ -1641,6 +1641,17 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                 </div>
               )}
 
+              {/* ── Criar projeto — no hamburger quando pincel está no centro ── */}
+              {previewEditingMobile && user && (
+                <>
+                  <span className="mob-nav-section-label">Ações</span>
+                  <button className="mob-nav-btn" onClick={() => { setMenuOpen(false); setCreateModal(true) }}>
+                    <Plus size={20} /> Criar projeto
+                  </button>
+                  <div className="mob-nav-divider" />
+                </>
+              )}
+
               {/* ── Gerir projeto — PRIMEIRO quando em projeto próprio ── */}
               {extras?.type === 'project' && (
                 <>
