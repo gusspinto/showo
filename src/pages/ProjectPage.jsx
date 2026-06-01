@@ -698,6 +698,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
   const bannerRef = useRef(null)
   const [bannerH, setBannerH] = useState(44)
   const [isDesktop, setIsDesktop] = useState(() => typeof window !== 'undefined' && window.innerWidth >= 760)
+  const [wsExpanded, setWsExpanded] = useState(false)
 
   // Keep isDesktop reactive — panel stays open but switches sidebar ↔ bottom-sheet
   useEffect(() => {
@@ -846,19 +847,36 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
         }
         /* Desktop: right sidebar */
         .pv-workspace { animation: pv-slidein 0.2s cubic-bezier(0.22,1,0.36,1); }
-        /* Mobile: bottom sheet */
+        /* Mobile: compact bottom toolbar (Canva-style) */
         .pv-ws-sheet {
           position: fixed !important;
           left: 0 !important; right: 0 !important;
           bottom: 0 !important; top: auto !important;
           width: 100% !important;
-          max-height: 78vh !important;
+          height: auto !important;
+          max-height: 56vh !important;
           border-radius: 20px 20px 0 0 !important;
           border-left: none !important;
           border-top: 1px solid var(--c-border) !important;
           box-shadow: 0 -8px 48px rgba(0,0,0,0.55) !important;
           animation: pv-slidein-up 0.28s cubic-bezier(0.22,1,0.36,1) !important;
           z-index: 500 !important;
+          transition: max-height 0.28s cubic-bezier(0.22,1,0.36,1) !important;
+        }
+        .pv-ws-sheet.ws-collapsed {
+          max-height: 72px !important;
+        }
+        /* Compact tab bar for mobile */
+        .pv-tab-bar-mobile {
+          display: none;
+        }
+        @media (max-width: 759px) {
+          .pv-tab-bar-mobile { display: flex !important; }
+          .pv-ws-header { display: none !important; }
+          .pv-tab-bar-desktop { display: none !important; }
+        }
+        @media (min-width: 760px) {
+          .pv-tab-bar-desktop { display: flex !important; }
         }
         /* Overlay behind bottom sheet */
         .pv-ws-overlay {
@@ -1130,7 +1148,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
 
       {/* ── Workspace panel — sidebar (desktop) or bottom sheet (mobile) ── */}
       {isOwner && previewEditing && (
-        <div className={`pv-workspace${isDesktop ? '' : ' pv-ws-sheet'}`} style={{
+        <div className={`pv-workspace${isDesktop ? '' : ` pv-ws-sheet${wsExpanded ? '' : ' ws-collapsed'}`}`} style={{
           position: 'fixed', right: 0, top: bannerH, bottom: 0, zIndex: 200,
           width: 360,
           background: 'var(--c-sidebar-bg)',
@@ -1139,23 +1157,65 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
           fontFamily: 'var(--font-body)',
         }}>
           {/* Drag handle — only visible on mobile bottom sheet */}
-          {!isDesktop && <div className="pv-ws-drag-handle" />}
+          {!isDesktop && <div className="pv-ws-drag-handle" style={{ cursor: 'pointer' }} onClick={() => setWsExpanded(e => !e)} />}
 
-          {/* ── Panel header ── */}
-          <div style={{
+          {/* ── Mobile compact tab bar (Canva-style) ── */}
+          <div className="pv-tab-bar-mobile" style={{
+            display: 'none', // overridden by CSS
+            alignItems: 'center', gap: 0,
+            padding: '6px 8px',
+            flexShrink: 0,
+          }}>
+            {[
+              { id: 'estilo',  label: 'Estilo',  Icon: Palette },
+              { id: 'blocos',  label: 'Blocos',  Icon: Layout  },
+              { id: 'seccoes', label: 'Secções', Icon: Eye     },
+            ].map(t => {
+              const isAct = previewTab === t.id && wsExpanded
+              return (
+                <button key={t.id}
+                  onClick={() => {
+                    if (isAct) { setWsExpanded(false) }
+                    else { setPreviewTab(t.id); setWsExpanded(true) }
+                  }}
+                  style={{
+                    flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
+                    padding: '8px 4px',
+                    borderRadius: 10, border: 'none',
+                    background: isAct ? 'rgba(27,120,247,0.1)' : 'transparent',
+                    color: isAct ? '#1b78f7' : 'var(--c-muted)',
+                    cursor: 'pointer', fontFamily: 'inherit',
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  <t.Icon size={18} strokeWidth={isAct ? 2.3 : 1.8} />
+                  <span style={{ fontSize: 10, fontWeight: isAct ? 700 : 500 }}>{t.label}</span>
+                </button>
+              )
+            })}
+            {/* Saved indicator + close */}
+            <div style={{ width: 1, height: 32, background: 'var(--c-border)', margin: '0 4px', flexShrink: 0 }} />
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, paddingInline: 8 }}>
+              {previewSaved
+                ? <Check size={16} color="#22c55e" strokeWidth={2.5} />
+                : <div style={{ width: 16, height: 16 }} />
+              }
+              <button onClick={() => { setPreviewEditing(false); setWsExpanded(false) }}
+                style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 7, padding: '3px 6px', color: '#ef4444', cursor: 'pointer', fontSize: 10, fontWeight: 700, fontFamily: 'inherit' }}>
+                Fechar
+              </button>
+            </div>
+          </div>
+
+          {/* ── Desktop header ── */}
+          <div className="pv-ws-header" style={{
             padding: '14px 16px 0',
             background: 'linear-gradient(160deg, rgba(27,120,247,0.08) 0%, rgba(79,70,229,0.03) 100%)',
             borderBottom: '1px solid var(--c-border)',
             flexShrink: 0,
           }}>
-            {/* Top row */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 13 }}>
-              <div style={{
-                width: 32, height: 32, borderRadius: 9,
-                background: 'linear-gradient(135deg, #1b78f7, #4f46e5)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                flexShrink: 0, boxShadow: '0 4px 14px rgba(27,120,247,0.35)',
-              }}>
+              <div style={{ width: 32, height: 32, borderRadius: 9, background: '#1b78f7', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 4px 14px rgba(27,120,247,0.35)' }}>
                 <Layout size={15} color="#fff" />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
@@ -1163,35 +1223,19 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
                 <div style={{ fontSize: 10, color: 'var(--c-muted)', marginTop: 1 }}>Editor de preview público</div>
               </div>
               {previewSaved && (
-                <span style={{
-                  fontSize: 10, fontWeight: 700, color: '#22c55e',
-                  display: 'flex', alignItems: 'center', gap: 4,
-                  background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.25)',
-                  borderRadius: 99, padding: '3px 10px', flexShrink: 0,
-                }}>
+                <span style={{ fontSize: 10, fontWeight: 700, color: '#22c55e', display: 'flex', alignItems: 'center', gap: 4, background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.25)', borderRadius: 99, padding: '3px 10px', flexShrink: 0 }}>
                   <Check size={9} strokeWidth={3} /> Guardado
                 </span>
               )}
-              <button
-                onClick={() => setPreviewEditing(false)}
-                style={{
-                  width: 30, height: 30, borderRadius: 8,
-                  background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)',
-                  color: '#ef4444', cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  transition: 'all 0.14s', flexShrink: 0,
-                }}
+              <button onClick={() => setPreviewEditing(false)}
+                style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.14s', flexShrink: 0 }}
                 onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.18)'}
                 onMouseLeave={e => e.currentTarget.style.background = 'rgba(239,68,68,0.08)'}
               ><X size={13} /></button>
             </div>
 
-            {/* Tab segmented control */}
-            <div style={{
-              display: 'flex', gap: 3, marginBottom: 13,
-              background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)',
-              borderRadius: 11, padding: '3px',
-            }}>
+            {/* Desktop tab control */}
+            <div className="pv-tab-bar-desktop" style={{ display: 'none', gap: 3, marginBottom: 13, background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)', borderRadius: 11, padding: '3px' }}>
               {[
                 { id: 'estilo',  label: 'Estilo',  Icon: Palette },
                 { id: 'blocos',  label: 'Blocos',  Icon: Layout  },
@@ -1200,7 +1244,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
                 <button key={t.id} onClick={() => setPreviewTab(t.id)} style={{
                   flex: 1, padding: '7px 4px', borderRadius: 8, border: 'none',
                   cursor: 'pointer', fontFamily: 'inherit',
-                  background: previewTab === t.id ? 'linear-gradient(135deg, #1b78f7, #4f46e5)' : 'transparent',
+                  background: previewTab === t.id ? '#1b78f7' : 'transparent',
                   color: previewTab === t.id ? '#fff' : 'var(--c-muted)',
                   fontSize: 11, fontWeight: previewTab === t.id ? 700 : 500,
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
@@ -1214,7 +1258,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
           </div>
 
           {/* ── TAB: ESTILO ── */}
-          {previewTab === 'estilo' && (
+          {previewTab === 'estilo' && (isDesktop || wsExpanded) && (
             <div style={{ flex: 1, overflowY: 'auto', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
 
               {/* Group: Identidade visual */}
@@ -1551,7 +1595,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
           )}
 
           {/* ── TAB: BLOCOS ── */}
-          {previewTab === 'blocos' && (
+          {previewTab === 'blocos' && (isDesktop || wsExpanded) && (
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
               {/* Block type picker — compact 3-col chip grid */}
               <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--c-border)' }}>
@@ -1729,7 +1773,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
           )}
 
           {/* ── TAB: SECÇÕES ── */}
-          {previewTab === 'seccoes' && (() => {
+          {previewTab === 'seccoes' && (isDesktop || wsExpanded) && (() => {
             const NATIVE_SECTIONS_MAP = {
               problem:         { label: 'Problema',        Icon: Search     },
               solution:        { label: 'Solução',         Icon: Lightbulb  },
@@ -4091,7 +4135,7 @@ export default function ProjectPage() {
           }
 
           return (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 10, marginBottom: 4 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(148px, 1fr))', gap: 10, marginBottom: 4 }}>
 
               {/* Certificate — score = 100 */}
               {score >= 100 && (
@@ -4161,6 +4205,24 @@ export default function ProjectPage() {
                   {aiFeedback ? 'Ver feedback guardado' : 'Analisar e melhorar score'}
                 </div>
               </button>
+
+              {/* Defesa — mini-card junto ao AI (PAP only, mobile-first) */}
+              {project.project_type === 'pap' && (isOwner || collaboratorSections !== null) && (
+                <button
+                  onClick={() => setDefenseMode(true)}
+                  style={{ ...miniCardBase, background: 'rgba(251,191,36,0.05)', border: '1px solid rgba(251,191,36,0.22)' }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(251,191,36,0.12)'; e.currentTarget.style.borderColor = 'rgba(251,191,36,0.4)' }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(251,191,36,0.05)'; e.currentTarget.style.borderColor = 'rgba(251,191,36,0.22)' }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                    <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(251,191,36,0.12)', border: '1px solid rgba(251,191,36,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <GraduationCap size={14} color="#fbbf24" />
+                    </div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: '#fbbf24' }}>Defesa</div>
+                  </div>
+                  <div style={{ fontSize: 11, color: colors.muted, lineHeight: 1.4 }}>Preparar apresentação</div>
+                </button>
+              )}
 
               {/* Report generation */}
               {isPapOrInternship && (
