@@ -715,6 +715,20 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
     return () => obs.disconnect()
   }, [])
 
+  // ── Auto-save: debounce 1.5s whenever previewBlocks or previewStyle changes ──
+  const autoSaveTimer = useRef(null)
+  useEffect(() => {
+    if (!previewEditing) return // só guarda enquanto o workspace está aberto
+    clearTimeout(autoSaveTimer.current)
+    autoSaveTimer.current = setTimeout(async () => {
+      const { error } = await supabase.from('projects')
+        .update({ preview_blocks: previewBlocks, preview_style: previewStyle })
+        .eq('id', project?.id)
+      if (!error) { setPreviewSaved(true); setTimeout(() => setPreviewSaved(false), 2000) }
+    }, 1500)
+    return () => clearTimeout(autoSaveTimer.current)
+  }, [previewBlocks, previewStyle]) // eslint-disable-line
+
   function onDragStart(i) { dragIdx.current = i }
   function onDragEnter(i) { dragOver.current = i; setDragOverIdx(i) }
   function onDragEnd() {
@@ -847,26 +861,30 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
         }
         /* Desktop: right sidebar */
         .pv-workspace { animation: pv-slidein 0.2s cubic-bezier(0.22,1,0.36,1); }
-        /* Mobile: sheet sits ABOVE the bottom nav (z-index 510 > bottom nav 500) */
+        /* Mobile: Canva-style compact sheet above the bottom nav */
         .pv-ws-sheet {
           position: fixed !important;
           left: 0 !important; right: 0 !important;
           bottom: 62px !important; top: auto !important;
           width: 100% !important;
           height: auto !important;
-          max-height: calc(72vh - 62px) !important;
-          border-radius: 20px 20px 0 0 !important;
+          max-height: 48vh !important;
+          border-radius: 18px 18px 0 0 !important;
           border-left: none !important;
           border-top: 1px solid var(--c-border) !important;
-          box-shadow: 0 -8px 48px rgba(0,0,0,0.55) !important;
-          animation: pv-slidein-up 0.28s cubic-bezier(0.22,1,0.36,1) !important;
+          box-shadow: 0 -6px 32px rgba(0,0,0,0.5) !important;
+          animation: pv-slidein-up 0.26s cubic-bezier(0.22,1,0.36,1) !important;
           z-index: 510 !important;
-          transition: max-height 0.28s cubic-bezier(0.22,1,0.36,1) !important;
+          transition: max-height 0.26s cubic-bezier(0.22,1,0.36,1) !important;
           overflow: hidden !important;
         }
         .pv-ws-sheet.ws-collapsed {
           max-height: 0 !important;
           border-top: none !important;
+        }
+        /* Scrollable preview area — padding-bottom when workspace open */
+        .pv-content-scroll.ws-open {
+          padding-bottom: calc(48vh + 10px) !important;
         }
         /* Compact tab bar for mobile */
         .pv-tab-bar-mobile {
@@ -1007,7 +1025,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
       )}
 
       {/* ── Scrollable preview area — full height, background set here ── */}
-      <div style={{
+      <div className={`pv-content-scroll${wsExpanded && !isDesktop ? ' ws-open' : ''}`} style={{
         flex: 1, overflowY: 'auto', overflowX: 'hidden',
         background: resolvedBg,
         paddingRight: isOwner && previewEditing && isDesktop ? 360 : 0,
@@ -1840,36 +1858,12 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
                   })}
                 </div>
                 <p style={{ margin: '12px 0 0', fontSize: 10, color: 'var(--c-subtle)', lineHeight: 1.5 }}>
-                  A ordem é guardada ao clicar em "Guardar alterações".
+                  A ordem é guardada automaticamente.
                 </p>
               </div>
             )
           })()}
 
-          {/* ── Footer: save ── */}
-          <div style={{
-            padding: '12px 14px 16px', borderTop: '1px solid var(--c-border)', flexShrink: 0,
-            background: 'linear-gradient(0deg, var(--c-sidebar-bg) 60%, transparent)',
-          }}>
-            <button
-              onClick={async () => {
-                const { error } = await supabase.from('projects').update({ preview_blocks: previewBlocks, preview_style: previewStyle }).eq('id', project.id)
-                if (!error) { setPreviewSaved(true); setTimeout(() => setPreviewSaved(false), 2500) }
-              }}
-              style={{
-                width: '100%', padding: '13px',
-                background: previewSaved ? 'linear-gradient(135deg, #22c55e, #16a34a)' : 'linear-gradient(135deg, #1b78f7, #4f46e5)',
-                border: 'none', borderRadius: 11,
-                color: '#fff', fontSize: 13, fontWeight: 700,
-                cursor: 'pointer', fontFamily: 'inherit',
-                boxShadow: previewSaved ? '0 4px 20px rgba(34,197,94,0.3)' : '0 4px 20px rgba(27,120,247,0.35)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                transition: 'background 0.3s, box-shadow 0.3s', letterSpacing: '-0.1px',
-              }}
-            >
-              {previewSaved ? <><Check size={15} strokeWidth={3} /> Guardado!</> : <><Save size={15} /> Guardar alterações</>}
-            </button>
-          </div>
         </div>
       )}
 
