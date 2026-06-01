@@ -165,6 +165,15 @@ h1, h2, h3, h4 {
   }
 }
 
+/* ── Mobile font normalization ── */
+@media (max-width: 600px) {
+  /* Inputs, selects, textareas — same base size everywhere */
+  input, textarea, select { font-size: 14px !important; }
+  /* Muted description text below page titles */
+  .page-content > div > p,
+  .page-content > div > div > p { font-size: 13px; }
+}
+
 a {
   text-decoration: none;
   color: inherit;
