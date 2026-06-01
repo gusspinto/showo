@@ -16,7 +16,7 @@ import CreateProjectModal from '../components/CreateProjectModal'
 import DefenseMode from '../components/DefenseMode'
 import ProjectComments from '../components/ProjectComments'
 import { analyzeProject } from '../lib/analyzeProject'
-import { Check, X, Loader, GraduationCap, Save, Sparkles, Bot, Lightbulb, Pencil, Search, Target, Wrench, Zap, TrendingUp, Briefcase, Users, Rocket, Trophy, BarChart2, CheckCircle, BookOpen, ChevronDown, Eye, EyeOff, UserPlus, Calendar, Mail, ArrowRight, ChevronRight, Globe, Image, MessageSquare, Quote, Layout, Type, Link, GripVertical, Plus, AlignLeft, Star, Camera, FileText, ClipboardList, Copy, Monitor, Tablet, Smartphone, Minus, Video, AlignCenter, AlignRight, Palette, AlertTriangle, Heart, User, Settings } from 'lucide-react'
+import { Check, X, Loader, GraduationCap, Save, Sparkles, Bot, Lightbulb, Pencil, Search, Target, Wrench, Zap, TrendingUp, Briefcase, Users, Rocket, Trophy, BarChart2, CheckCircle, BookOpen, ChevronDown, Eye, EyeOff, UserPlus, Calendar, Mail, ArrowRight, ArrowLeft, ChevronRight, Globe, Image, MessageSquare, Quote, Layout, Type, Link, GripVertical, Plus, AlignLeft, Star, Camera, FileText, ClipboardList, Copy, Monitor, Tablet, Smartphone, Minus, Video, AlignCenter, AlignRight, Palette, AlertTriangle, Heart, User, Settings } from 'lucide-react'
 
 const colors = {
   bg: 'var(--c-bg)',
@@ -847,14 +847,14 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
         }
         /* Desktop: right sidebar */
         .pv-workspace { animation: pv-slidein 0.2s cubic-bezier(0.22,1,0.36,1); }
-        /* Mobile: compact bottom toolbar (Canva-style) */
+        /* Mobile: bottom sheet sits ABOVE the preview bottom bar */
         .pv-ws-sheet {
           position: fixed !important;
           left: 0 !important; right: 0 !important;
-          bottom: 0 !important; top: auto !important;
+          bottom: 62px !important; top: auto !important;
           width: 100% !important;
           height: auto !important;
-          max-height: 56vh !important;
+          max-height: calc(70vh - 62px) !important;
           border-radius: 20px 20px 0 0 !important;
           border-left: none !important;
           border-top: 1px solid var(--c-border) !important;
@@ -864,7 +864,20 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
           transition: max-height 0.28s cubic-bezier(0.22,1,0.36,1) !important;
         }
         .pv-ws-sheet.ws-collapsed {
-          max-height: 72px !important;
+          max-height: 0 !important;
+          border-top: none !important;
+          overflow: hidden !important;
+        }
+        /* Preview mode bottom bar */
+        .pv-bottom-bar {
+          position: fixed; bottom: 0; left: 0; right: 0;
+          height: 62px; z-index: 600;
+          background: rgba(13,20,36,0.97);
+          border-top: 1px solid var(--c-border);
+          backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+          display: flex; align-items: center;
+          padding-bottom: env(safe-area-inset-bottom, 0px);
+          box-shadow: 0 -4px 24px rgba(0,0,0,0.5);
         }
         /* Compact tab bar for mobile */
         .pv-tab-bar-mobile {
@@ -1193,49 +1206,36 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
                 </button>
               )
             })}
-            {/* Saved indicator + close */}
-            <div style={{ width: 1, height: 32, background: 'var(--c-border)', margin: '0 4px', flexShrink: 0 }} />
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, paddingInline: 8 }}>
-              {previewSaved
-                ? <Check size={16} color="#22c55e" strokeWidth={2.5} />
-                : <div style={{ width: 16, height: 16 }} />
-              }
-              <button onClick={() => { setPreviewEditing(false); setWsExpanded(false) }}
-                style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 7, padding: '3px 6px', color: '#ef4444', cursor: 'pointer', fontSize: 10, fontWeight: 700, fontFamily: 'inherit' }}>
-                Fechar
-              </button>
-            </div>
+            {/* Save indicator */}
+            {previewSaved && (
+              <div style={{ paddingInline: 8, display: 'flex', alignItems: 'center' }}>
+                <Check size={15} color="#22c55e" strokeWidth={2.5} />
+              </div>
+            )}
           </div>
 
-          {/* ── Desktop header ── */}
+          {/* ── Desktop header (no title — just tabs + save + close) ── */}
           <div className="pv-ws-header" style={{
-            padding: '14px 16px 0',
-            background: 'linear-gradient(160deg, rgba(27,120,247,0.08) 0%, rgba(79,70,229,0.03) 100%)',
+            padding: '10px 12px',
             borderBottom: '1px solid var(--c-border)',
-            flexShrink: 0,
+            flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 8,
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 13 }}>
-              <div style={{ width: 32, height: 32, borderRadius: 9, background: '#1b78f7', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 4px 14px rgba(27,120,247,0.35)' }}>
-                <Layout size={15} color="#fff" />
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--c-text)', letterSpacing: '-0.2px' }}>Workspace</div>
-                <div style={{ fontSize: 10, color: 'var(--c-muted)', marginTop: 1 }}>Editor de preview público</div>
-              </div>
+            {/* Save + close row */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 6 }}>
               {previewSaved && (
                 <span style={{ fontSize: 10, fontWeight: 700, color: '#22c55e', display: 'flex', alignItems: 'center', gap: 4, background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.25)', borderRadius: 99, padding: '3px 10px', flexShrink: 0 }}>
                   <Check size={9} strokeWidth={3} /> Guardado
                 </span>
               )}
               <button onClick={() => setPreviewEditing(false)}
-                style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.14s', flexShrink: 0 }}
+                style={{ width: 28, height: 28, borderRadius: 7, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.14s', flexShrink: 0 }}
                 onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.18)'}
                 onMouseLeave={e => e.currentTarget.style.background = 'rgba(239,68,68,0.08)'}
               ><X size={13} /></button>
             </div>
 
             {/* Desktop tab control */}
-            <div className="pv-tab-bar-desktop" style={{ display: 'none', gap: 3, marginBottom: 13, background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)', borderRadius: 11, padding: '3px' }}>
+            <div className="pv-tab-bar-desktop" style={{ display: 'none', gap: 3, background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)', borderRadius: 11, padding: '3px' }}>
               {[
                 { id: 'estilo',  label: 'Estilo',  Icon: Palette },
                 { id: 'blocos',  label: 'Blocos',  Icon: Layout  },
@@ -3214,6 +3214,9 @@ export default function ProjectPage() {
           .proj-body { gap: 14px; }
           .proj-share-qr-label { display: none; }
         }
+        /* FABs hidden in preview edit mode */
+        .proj-fab-area.preview-editing-mobile { display: none !important; }
+
         @media (max-width: 600px) {
           .proj-wrap         { padding: 0 16px 80px !important; overflow-x: hidden !important; }
           .proj-cover        { height: 200px !important; margin-top: 20px !important; border-radius: 14px !important; }
@@ -3711,8 +3714,39 @@ export default function ProjectPage() {
         </div>
       )}
 
+      {/* Preview-mode mobile bottom bar — replaces normal bottom nav */}
+      {!isDesktop && (isOwner && viewAsPublic) && (
+        <div className="pv-bottom-bar">
+          {/* Exit preview */}
+          <button
+            onClick={() => { setViewAsPublic(false); setPreviewEditing(false); setWsExpanded(false) }}
+            style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, background: 'transparent', border: 'none', color: 'var(--c-muted)', cursor: 'pointer', fontFamily: 'inherit', padding: '8px 0' }}
+          >
+            <ArrowLeft size={22} strokeWidth={1.8} />
+            <span style={{ fontSize: 10, fontWeight: 500 }}>Sair</span>
+          </button>
+
+          {/* Workspace toggle — center */}
+          <button
+            onClick={() => setWsExpanded(e => !e)}
+            style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, background: 'transparent', border: 'none', color: wsExpanded ? '#1b78f7' : 'var(--c-muted)', cursor: 'pointer', fontFamily: 'inherit', padding: '8px 0', transition: 'color 0.15s' }}
+          >
+            <Layout size={24} strokeWidth={wsExpanded ? 2.3 : 1.8} />
+            <span style={{ fontSize: 10, fontWeight: wsExpanded ? 700 : 500 }}>Editar</span>
+          </button>
+
+          {/* Save state */}
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, padding: '8px 0' }}>
+            {previewSaved
+              ? <><Check size={22} color="#22c55e" strokeWidth={2} /><span style={{ fontSize: 10, color: '#22c55e', fontWeight: 600 }}>Guardado</span></>
+              : <><div style={{ width: 22, height: 22 }} /><span style={{ fontSize: 10, color: 'var(--c-subtle)' }}>A guardar…</span></>
+            }
+          </div>
+        </div>
+      )}
+
       {/* FABs — visible on tablet + mobile via CSS (hidden on desktop) */}
-      <div className="proj-fab-area" style={{
+      <div className={`proj-fab-area${(!isDesktop && (isOwner && viewAsPublic)) ? ' preview-editing-mobile' : ''}`} style={{
         position: 'fixed', bottom: 24, right: 20,
         flexDirection: 'column', gap: 10, zIndex: 90,
       }}>
