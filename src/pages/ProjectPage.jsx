@@ -682,6 +682,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
   liked, likeCount, likeLoading, onLike,
   hasInterest, interestCount, interestLoading, onInterest,
   isRecruiterRole,
+  wsExpanded, setWsExpanded,
 }) {
   const navigate = useNavigate()
   const { theme } = useTheme()
@@ -698,7 +699,6 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
   const bannerRef = useRef(null)
   const [bannerH, setBannerH] = useState(44)
   const [isDesktop, setIsDesktop] = useState(() => typeof window !== 'undefined' && window.innerWidth >= 760)
-  const [wsExpanded, setWsExpanded] = useState(false)
 
   // Keep isDesktop reactive — panel stays open but switches sidebar ↔ bottom-sheet
   useEffect(() => {
@@ -2431,6 +2431,7 @@ export default function ProjectPage() {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [viewAsPublic, setViewAsPublic] = useState(false)
   const [previewEditing, setPreviewEditing] = useState(false)
+  const [wsExpanded, setWsExpanded] = useState(false)
   const [previewBlocks, setPreviewBlocks] = useState([])
   const [previewStyle, setPreviewStyle] = useState({})
   // Jury / professor ratings state
@@ -3884,6 +3885,8 @@ export default function ProjectPage() {
           interestLoading={interestLoading}
           onInterest={handleInterest}
           isRecruiterRole={isRecruiterRole}
+          wsExpanded={wsExpanded}
+          setWsExpanded={setWsExpanded}
         />
       )}
 
