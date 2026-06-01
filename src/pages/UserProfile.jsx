@@ -359,11 +359,21 @@ export default function UserProfile() {
 
       setProfile(profileData)
 
-      const { data: projectsData } = await supabase
+      let { data: projectsData, error: projErr } = await supabase
         .from('projects')
         .select('id, name, slug, score, area, ai_tagline, cover_url, created_at, views, ai_feedback, collaborator_count:project_members(count)')
         .eq('user_id', profileData.id)
         .order('score', { ascending: false })
+
+      // Fallback sem subquery caso RLS bloqueie project_members
+      if (projErr || !projectsData) {
+        const fallback = await supabase
+          .from('projects')
+          .select('id, name, slug, score, area, ai_tagline, cover_url, created_at, views, ai_feedback')
+          .eq('user_id', profileData.id)
+          .order('score', { ascending: false })
+        projectsData = fallback.data
+      }
 
       const normalizedProjects = (projectsData ?? []).map(p => ({
         ...p,
@@ -597,12 +607,11 @@ export default function UserProfile() {
 
         @media (max-width: 600px) {
           .up-header { padding: 16px 14px 14px; border-radius: 12px; margin-bottom: 18px; }
-          .up-projects-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+          /* Projetos — coluna única */
+          .up-projects-grid { grid-template-columns: 1fr !important; gap: 10px !important; }
           .up-stat-pills { flex-wrap: wrap; gap: 6px !important; }
           /* Skills section — reduce chip sizes */
           .up-skill-chip { padding: 5px 10px !important; font-size: 11px !important; }
-          /* Project cards on profile — stack single column */
-          .up-projects-grid { grid-template-columns: 1fr !important; }
           /* Profile stats row */
           .up-stats-row { flex-wrap: wrap !important; gap: 8px !important; }
           /* Bio section */
