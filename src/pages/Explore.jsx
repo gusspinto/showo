@@ -396,9 +396,10 @@ export default function Explore() {
           .explore-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)) !important; }
         }
         @media (max-width: 600px) {
-          /* Tabs + search em linha única (não empilhar) */
+          /* Tabs: só ícones no mobile */
+          .explore-tab-label { display: none !important; }
           .explore-tabs-wrap { flex-shrink: 0; }
-          .explore-tabs-wrap button { min-width: 80px !important; padding: 9px 0 !important; }
+          .explore-tabs-wrap button { min-width: 48px !important; padding: 10px 0 !important; }
           /* Filter panel — grid 2 colunas */
           .explore-filter-panel { grid-template-columns: 1fr 1fr !important; gap: 8px !important; padding: 12px !important; }
           .explore-filter-panel .filter-score-wrap { grid-column: 1 / -1 !important; }
@@ -469,7 +470,8 @@ export default function Explore() {
                   whiteSpace: 'nowrap',
                 }}
               >
-                {t.icon} {t.label}
+                {t.icon}
+                <span className="explore-tab-label">{t.label}</span>
               </button>
             ))}
           </div>

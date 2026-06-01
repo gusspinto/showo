@@ -1223,7 +1223,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false }
         {/* Centre */}
         <div className="nav-mid">
           <img
-            src="/logo.png" alt="Showo" draggable={false}
+            src={theme === 'light' ? '/light_mode_LI.png' : '/logo.png'} alt="Showo" draggable={false}
             onClick={() => navigate('/')} className="nav-logo"
             style={{ height: 36, width: 'auto', display: 'block', cursor: 'pointer', userSelect: 'none' }}
           />
