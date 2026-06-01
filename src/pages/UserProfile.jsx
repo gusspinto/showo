@@ -7,7 +7,6 @@ import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
 import CreateProjectModal from '../components/CreateProjectModal'
 import { Mail, Search, FolderOpen, X, Check, Download, Rocket, QrCode, Pencil, Globe, ExternalLink, Link, Briefcase, ArrowRight, Star, MessageSquare, GraduationCap, Send, Lock } from 'lucide-react'
-import { ACHIEVEMENTS } from './Conquistas'
 import ConvidarVagaModal from '../components/ConvidarVagaModal'
 
 // ── Design tokens (aligned with the rest of the app) ──────────────────────────
@@ -431,11 +430,6 @@ export default function UserProfile() {
   const bestScore    = scores.length ? Math.max(...scores) : null
   const [c1, c2]     = areaGradient(profile?.area || profile?.course || '')
 
-  // Compute unlocked achievements for this profile
-  const unlockedAchievements = projects.length > 0
-    ? ACHIEVEMENTS.filter(a => a.condition(projects))
-    : []
-
   if (loading) return (
     <div style={{ minHeight: '100vh', background: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ width: 36, height: 36, border: `2px solid ${C.border}`, borderTop: `2px solid ${C.blue}`, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
@@ -795,35 +789,6 @@ export default function UserProfile() {
                 </div>
               )}
 
-              {/* Conquistas badges */}
-              {unlockedAchievements.length > 0 && (
-                <div style={{ marginBottom: 16 }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--c-subtle)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>
-                    Conquistas
-                  </div>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                    {unlockedAchievements.map(a => {
-                      const Icon = a.icon
-                      return (
-                        <div
-                          key={a.id}
-                          title={`${a.title} — ${a.description}`}
-                          style={{
-                            display: 'inline-flex', alignItems: 'center', gap: 5,
-                            background: `${a.color}15`,
-                            border: `1px solid ${a.color}40`,
-                            borderRadius: 20, padding: '4px 10px 4px 7px',
-                            cursor: 'default',
-                          }}
-                        >
-                          <Icon size={12} color={a.color} />
-                          <span style={{ fontSize: 11, fontWeight: 700, color: a.color }}>{a.title}</span>
-                        </div>
-                      )
-                    })}
-                  </div>
-                </div>
-              )}
 
               {/* Action buttons */}
               <div className="up-actions" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
