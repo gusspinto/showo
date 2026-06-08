@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { Navbar } from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
-import { Search, Building2, Eye, Briefcase, Users, GraduationCap, BookOpen, Heart, SlidersHorizontal, X } from 'lucide-react'
+import { Search, Building2, Eye, Briefcase, Users, GraduationCap, BookOpen, Heart } from 'lucide-react'
 import CreateProjectModal from '../components/CreateProjectModal'
 
 const colors = {
@@ -152,7 +152,6 @@ export default function Explore() {
   const [peopleLoaded, setPeopleLoaded] = useState(false)
   const [peopleSearch, setPeopleSearch] = useState('')
   const [filterSkill, setFilterSkill] = useState('')
-  const [showFilters, setShowFilters] = useState(false)
 
   // Likes
   const [likeCounts, setLikeCounts]   = useState({})  // { projectId: number }
@@ -292,7 +291,6 @@ export default function Explore() {
   })
 
   const hasFilters = filterArea || filterType || filterMinScore > 0 || filterZone || filterAvailable
-  const activeFilterCount = [filterArea, filterType, filterZone, filterMinScore > 0, filterAvailable].filter(Boolean).length
 
   const peopleQuery = peopleSearch.toLowerCase().trim()
   const filteredPeople = people.filter(p => {
@@ -341,73 +339,13 @@ export default function Explore() {
         .explore-card-arrow { opacity: 0; transform: translateX(-4px); transition: opacity 0.15s, transform 0.15s; }
         .explore-card:hover .explore-card-arrow { opacity: 1; transform: translateX(0); }
         .explore-grid { grid-template-columns: repeat(auto-fill, minmax(288px, 1fr)); }
-
-        /* Search bar */
-        .explore-search {
-          width: 100%; background: var(--c-card); border: 1px solid var(--c-border);
-          border-radius: 12px; color: var(--c-text); font-size: 14px;
-          padding: 12px 16px 12px 44px; outline: none;
-          font-family: var(--font-body); box-sizing: border-box;
-          transition: border-color 0.2s, box-shadow 0.2s;
-        }
+        .explore-search { width: 100%; background: var(--c-card); border: 1px solid var(--c-border); border-radius: 12px; color: var(--c-text); font-size: 15px; padding: 14px 16px 14px 48px; outline: none; font-family: var(--font-body); box-sizing: border-box; transition: border-color 0.2s, box-shadow 0.2s; }
         .explore-search:focus { border-color: #1b78f7 !important; box-shadow: 0 0 0 3px rgba(27,120,247,0.12) !important; }
-
-        /* Filter toggle button */
-        .explore-filter-btn {
-          flex-shrink: 0; position: relative;
-          display: flex; align-items: center; justify-content: center; gap: 6px;
-          background: var(--c-card); border: 1px solid var(--c-border);
-          border-radius: 12px; padding: 0 14px; height: 44px;
-          color: var(--c-muted); font-size: 13px; font-weight: 600;
-          cursor: pointer; font-family: inherit; white-space: nowrap;
-          transition: border-color 0.15s, color 0.15s, background 0.15s;
-        }
-        .explore-filter-btn:hover { border-color: var(--c-border-bright); color: var(--c-text); }
-        .explore-filter-btn.active { border-color: #1b78f7; color: #1b78f7; background: rgba(27,120,247,0.07); }
-        .explore-filter-badge {
-          position: absolute; top: -5px; right: -5px;
-          min-width: 16px; height: 16px; border-radius: 99px;
-          background: #1b78f7; color: #fff;
-          font-size: 10px; font-weight: 800;
-          display: flex; align-items: center; justify-content: center;
-          padding: 0 4px;
-          border: 2px solid var(--c-bg);
-        }
-
-        /* Filter panel */
-        .explore-filter-panel {
-          background: var(--c-card); border: 1px solid var(--c-border);
-          border-radius: 14px; padding: 16px;
-          margin-bottom: 20px;
-          display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px;
-        }
-        .explore-filter-panel .filter-score-wrap {
-          grid-column: 1 / -1;
-        }
-        .explore-filter-panel .filter-available-btn,
-        .explore-filter-panel .filter-clear-btn {
-          grid-column: span 1;
-        }
-
-        /* Filter items */
         .filter-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-
         @media (max-width: 680px) {
           .explore-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)) !important; }
-        }
-        @media (max-width: 600px) {
-          /* Tabs: só ícones no mobile */
-          .explore-tab-label { display: none !important; }
-          .explore-tabs-wrap { flex-shrink: 0; }
-          .explore-tabs-wrap button { min-width: 48px !important; padding: 10px 0 !important; }
-          /* Filter panel — grid 2 colunas */
-          .explore-filter-panel { grid-template-columns: 1fr 1fr !important; gap: 8px !important; padding: 12px !important; }
-          .explore-filter-panel .filter-score-wrap { grid-column: 1 / -1 !important; }
-          /* Filter btn — só ícone no mobile */
-          .explore-filter-btn-label { display: none !important; }
-          .explore-filter-btn { padding: 0 12px !important; }
-          /* Grid de projetos — 1 coluna */
-          .explore-grid { grid-template-columns: 1fr !important; }
+          .filter-row { gap: 8px; }
+          .filter-row select { font-size: 12px !important; padding: 8px 32px 8px 12px !important; }
         }
         @media (max-width: 440px) {
           .explore-grid { grid-template-columns: 1fr !important; }
@@ -432,23 +370,23 @@ export default function Explore() {
           <p style={{ color: colors.muted, margin: 0, fontSize: 15 }}>Descobre projetos e pessoas da comunidade Showo</p>
         </div>
 
-        {/* Search + Tab + Filter row */}
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: showFilters ? 12 : 20 }}>
+        {/* Search + Tab row */}
+        <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 16 }}>
           {/* Animated tab switch */}
-          <div className="explore-tabs-wrap" style={{
+          <div style={{
             position: 'relative', display: 'inline-flex', flexShrink: 0,
             background: 'var(--c-card)', border: '1px solid var(--c-border)',
             borderRadius: 12, padding: 4,
           }}>
-            {/* Sliding pill — azul sólido sem gradiente */}
+            {/* Sliding pill */}
             <div style={{
               position: 'absolute', top: 4, bottom: 4, left: 4,
               width: 'calc(50% - 4px)',
-              background: '#1b78f7',
+              background: 'linear-gradient(135deg, #1b78f7, #4f46e5)',
               borderRadius: 9,
               transform: `translateX(${tab === 'projetos' ? 0 : 100}%)`,
               transition: 'transform 0.32s cubic-bezier(0.4, 0, 0.2, 1)',
-              boxShadow: '0 2px 12px rgba(27,120,247,0.35)',
+              boxShadow: '0 4px 18px rgba(27,120,247,0.45)',
               zIndex: 0,
             }} />
             {[
@@ -470,41 +408,25 @@ export default function Explore() {
                   whiteSpace: 'nowrap',
                 }}
               >
-                {t.icon}
-                <span className="explore-tab-label">{t.label}</span>
+                {t.icon} {t.label}
               </button>
             ))}
           </div>
 
-          {/* Search input */}
+          {/* Unified search input */}
           <div style={{ position: 'relative', flex: 1 }}>
-            <svg style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}
-              width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={colors.subtle} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}
+              width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={colors.subtle} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
             </svg>
             <input
               type="text"
               className="explore-search"
-              placeholder={tab === 'projetos' ? 'Pesquisar...' : 'Pesquisar pessoa...'}
+              placeholder={tab === 'projetos' ? 'Pesquisar por nome, área ou curso...' : 'Pesquisar por nome, empresa, área...'}
               value={tab === 'projetos' ? search : peopleSearch}
               onChange={e => tab === 'projetos' ? setSearch(e.target.value) : setPeopleSearch(e.target.value)}
             />
           </div>
-
-          {/* Filter toggle button — only for projetos tab */}
-          {tab === 'projetos' && (
-            <button
-              className={`explore-filter-btn${showFilters || activeFilterCount > 0 ? ' active' : ''}`}
-              onClick={() => setShowFilters(f => !f)}
-              aria-label="Filtros"
-            >
-              <SlidersHorizontal size={15} />
-              <span className="explore-filter-btn-label">Filtros</span>
-              {activeFilterCount > 0 && (
-                <span className="explore-filter-badge">{activeFilterCount}</span>
-              )}
-            </button>
-          )}
         </div>
 
         {tab === 'projetos' && (<>
@@ -525,52 +447,53 @@ export default function Explore() {
           </div>
         )}
 
-        {/* Filter panel — collapsible */}
-        {showFilters && (
-          <div className="explore-filter-panel">
-            <SelectFilter value={filterArea} onChange={setFilterArea} options={areas} label="Filtrar por área" />
-            <SelectFilter value={filterType} onChange={setFilterType} options={PROJECT_TYPES} label="Filtrar por tipo" />
-            <SelectFilter value={filterZone} onChange={setFilterZone} options={ZONES} label="Filtrar por zona" />
-            <SelectFilter value={sortBy} onChange={setSortBy} options={SORT_OPTIONS} label="Ordenar por" />
+        {/* Filters */}
+        <div className="filter-row" style={{ marginBottom: 28 }}>
+          <SelectFilter value={filterArea} onChange={setFilterArea} options={areas} label="Filtrar por área" />
+          <SelectFilter value={filterType} onChange={setFilterType} options={PROJECT_TYPES} label="Filtrar por tipo" />
+          <SelectFilter value={filterZone} onChange={setFilterZone} options={ZONES} label="Filtrar por zona" />
 
-            {/* Score slider */}
-            <div className="filter-score-wrap" style={{ display: 'flex', alignItems: 'center', gap: 10, background: colors.bgAlt, border: `1px solid ${filterMinScore > 0 ? colors.blue : colors.border}`, borderRadius: 10, padding: '9px 14px' }}>
-              <span style={{ fontSize: 12, color: colors.muted, whiteSpace: 'nowrap', fontWeight: 600 }}>Score ≥</span>
-              <input type="range" min={0} max={100} step={5} value={filterMinScore}
-                onChange={e => setFilterMinScore(Number(e.target.value))}
-                style={{ flex: 1, accentColor: colors.blue, cursor: 'pointer' }} />
-              <span style={{ fontSize: 12, fontWeight: 700, color: filterMinScore > 0 ? colors.blue : colors.muted, minWidth: 30, textAlign: 'right' }}>
-                {filterMinScore > 0 ? filterMinScore : 'Todos'}
-              </span>
-            </div>
-
-            {/* Available for work */}
-            <button
-              onClick={() => setFilterAvailable(v => !v)}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 6,
-                background: filterAvailable ? 'rgba(16,185,129,0.1)' : colors.bgAlt,
-                border: `1px solid ${filterAvailable ? 'rgba(16,185,129,0.4)' : colors.border}`,
-                borderRadius: 10, padding: '9px 14px',
-                color: filterAvailable ? '#10b981' : colors.muted,
-                fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-                transition: 'all 0.15s',
-              }}
-            >
-              <Briefcase size={13} /> Disponível p/ estágio
-            </button>
-
-            {/* Clear + close */}
-            {hasFilters && (
-              <button
-                onClick={() => { setFilterArea(''); setFilterType(''); setFilterMinScore(0); setFilterZone(''); setFilterAvailable(false); setFilterSkill('') }}
-                style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: `1px solid ${colors.border}`, color: colors.muted, borderRadius: 10, padding: '9px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
-              >
-                <X size={13} /> Limpar filtros
-              </button>
-            )}
+          {/* Score slider */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: colors.bgAlt, border: `1px solid ${filterMinScore > 0 ? colors.blue : colors.border}`, borderRadius: 10, padding: '8px 14px', minWidth: 180 }}>
+            <span style={{ fontSize: 12, color: colors.muted, whiteSpace: 'nowrap' }}>Score ≥</span>
+            <input
+              type="range" min={0} max={100} step={5} value={filterMinScore}
+              onChange={e => setFilterMinScore(Number(e.target.value))}
+              style={{ flex: 1, accentColor: colors.blue, cursor: 'pointer' }}
+            />
+            <span style={{ fontSize: 12, fontWeight: 700, color: filterMinScore > 0 ? colors.blue : colors.muted, minWidth: 26, textAlign: 'right' }}>
+              {filterMinScore > 0 ? filterMinScore : 'Todos'}
+            </span>
           </div>
-        )}
+
+          <SelectFilter value={sortBy} onChange={setSortBy} options={SORT_OPTIONS} label="Ordenar por" />
+
+          {/* Available for work toggle */}
+          <button
+            onClick={() => setFilterAvailable(v => !v)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 6,
+              background: filterAvailable ? 'rgba(16,185,129,0.1)' : colors.bgAlt,
+              border: `1px solid ${filterAvailable ? 'rgba(16,185,129,0.4)' : colors.border}`,
+              borderRadius: 10, padding: '9px 14px',
+              color: filterAvailable ? '#10b981' : colors.muted,
+              fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+              transition: 'all 0.15s', whiteSpace: 'nowrap',
+            }}
+          >
+            <Briefcase size={13} />
+            Disponível p/ estágio
+          </button>
+
+          {hasFilters && (
+            <button
+              onClick={() => { setFilterArea(''); setFilterType(''); setFilterMinScore(0); setFilterZone(''); setFilterAvailable(false); setFilterSkill('') }}
+              style={{ background: 'transparent', border: `1px solid ${colors.border}`, color: colors.muted, borderRadius: 10, padding: '9px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+            >
+              Limpar filtros
+            </button>
+          )}
+        </div>
 
         {loading ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(288px, 1fr))', gap: 16 }}>

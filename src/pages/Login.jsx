@@ -186,9 +186,9 @@ export default function Login() {
             <button
               type="submit" disabled={loading}
               style={{
-                background: loading ? 'var(--c-border)' : 'linear-gradient(135deg, #1b78f7, #4f46e5)',
+                background: loading ? 'var(--c-border)' : '#1b78f7',
                 color: '#fff', border: 'none',
-                borderRadius: 10, padding: '13px', fontSize: 15, fontWeight: 700,
+                borderRadius: 10, padding: '12px', fontSize: 14, fontWeight: 700,
                 cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
                 marginTop: 4, transition: 'opacity 0.15s',
                 boxShadow: loading ? 'none' : '0 4px 20px rgba(27,120,247,0.35)',

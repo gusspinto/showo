@@ -16,7 +16,7 @@ import CreateProjectModal from '../components/CreateProjectModal'
 import DefenseMode from '../components/DefenseMode'
 import ProjectComments from '../components/ProjectComments'
 import { analyzeProject } from '../lib/analyzeProject'
-import { Check, X, Loader, GraduationCap, Save, Sparkles, Bot, Lightbulb, Pencil, Search, Target, Wrench, Zap, TrendingUp, Briefcase, Users, Rocket, Trophy, BarChart2, CheckCircle, BookOpen, ChevronDown, Eye, EyeOff, UserPlus, Calendar, Mail, ArrowRight, ArrowLeft, ChevronRight, Globe, Image, MessageSquare, Quote, Layout, Type, Link, GripVertical, Plus, AlignLeft, Star, Camera, FileText, ClipboardList, Copy, Monitor, Tablet, Smartphone, Minus, Video, AlignCenter, AlignRight, Palette, AlertTriangle, Heart, User, Settings } from 'lucide-react'
+import { Check, X, Loader, GraduationCap, Save, Sparkles, Bot, Lightbulb, Pencil, Search, Target, Wrench, Zap, TrendingUp, Briefcase, Users, Rocket, Trophy, BarChart2, CheckCircle, BookOpen, ChevronDown, Eye, EyeOff, UserPlus, Calendar, Mail, ArrowRight, ChevronRight, Globe, Image, MessageSquare, Quote, Layout, Type, Link, GripVertical, Plus, AlignLeft, Star, Camera, FileText, ClipboardList, Copy, Monitor, Tablet, Smartphone, Minus, Video, AlignCenter, AlignRight, Palette, AlertTriangle, Heart, User, Settings } from 'lucide-react'
 
 const colors = {
   bg: 'var(--c-bg)',
@@ -682,7 +682,6 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
   liked, likeCount, likeLoading, onLike,
   hasInterest, interestCount, interestLoading, onInterest,
   isRecruiterRole,
-  wsExpanded, setWsExpanded,
 }) {
   const navigate = useNavigate()
   const { theme } = useTheme()
@@ -714,20 +713,6 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
     obs.observe(bannerRef.current)
     return () => obs.disconnect()
   }, [])
-
-  // ── Auto-save: debounce 1.5s whenever previewBlocks or previewStyle changes ──
-  const autoSaveTimer = useRef(null)
-  useEffect(() => {
-    if (!previewEditing) return // só guarda enquanto o workspace está aberto
-    clearTimeout(autoSaveTimer.current)
-    autoSaveTimer.current = setTimeout(async () => {
-      const { error } = await supabase.from('projects')
-        .update({ preview_blocks: previewBlocks, preview_style: previewStyle })
-        .eq('id', project?.id)
-      if (!error) { setPreviewSaved(true); setTimeout(() => setPreviewSaved(false), 2000) }
-    }, 1500)
-    return () => clearTimeout(autoSaveTimer.current)
-  }, [previewBlocks, previewStyle]) // eslint-disable-line
 
   function onDragStart(i) { dragIdx.current = i }
   function onDragEnter(i) { dragOver.current = i; setDragOverIdx(i) }
@@ -861,42 +846,19 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
         }
         /* Desktop: right sidebar */
         .pv-workspace { animation: pv-slidein 0.2s cubic-bezier(0.22,1,0.36,1); }
-        /* Mobile: Canva-style compact sheet above the bottom nav */
+        /* Mobile: bottom sheet */
         .pv-ws-sheet {
           position: fixed !important;
           left: 0 !important; right: 0 !important;
-          bottom: 62px !important; top: auto !important;
+          bottom: 0 !important; top: auto !important;
           width: 100% !important;
-          height: auto !important;
-          max-height: 48vh !important;
-          border-radius: 18px 18px 0 0 !important;
+          max-height: 78vh !important;
+          border-radius: 20px 20px 0 0 !important;
           border-left: none !important;
           border-top: 1px solid var(--c-border) !important;
-          box-shadow: 0 -6px 32px rgba(0,0,0,0.5) !important;
-          animation: pv-slidein-up 0.26s cubic-bezier(0.22,1,0.36,1) !important;
-          z-index: 510 !important;
-          transition: max-height 0.26s cubic-bezier(0.22,1,0.36,1) !important;
-          overflow: hidden !important;
-        }
-        .pv-ws-sheet.ws-collapsed {
-          max-height: 0 !important;
-          border-top: none !important;
-        }
-        /* Scrollable preview area — padding-bottom when workspace open */
-        .pv-content-scroll.ws-open {
-          padding-bottom: calc(48vh + 10px) !important;
-        }
-        /* Compact tab bar for mobile */
-        .pv-tab-bar-mobile {
-          display: none;
-        }
-        @media (max-width: 759px) {
-          .pv-tab-bar-mobile { display: flex !important; }
-          .pv-ws-header { display: none !important; }
-          .pv-tab-bar-desktop { display: none !important; }
-        }
-        @media (min-width: 760px) {
-          .pv-tab-bar-desktop { display: flex !important; }
+          box-shadow: 0 -8px 48px rgba(0,0,0,0.55) !important;
+          animation: pv-slidein-up 0.28s cubic-bezier(0.22,1,0.36,1) !important;
+          z-index: 500 !important;
         }
         /* Overlay behind bottom sheet */
         .pv-ws-overlay {
@@ -1025,7 +987,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
       )}
 
       {/* ── Scrollable preview area — full height, background set here ── */}
-      <div className={`pv-content-scroll${wsExpanded && !isDesktop ? ' ws-open' : ''}`} style={{
+      <div style={{
         flex: 1, overflowY: 'auto', overflowX: 'hidden',
         background: resolvedBg,
         paddingRight: isOwner && previewEditing && isDesktop ? 360 : 0,
@@ -1168,7 +1130,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
 
       {/* ── Workspace panel — sidebar (desktop) or bottom sheet (mobile) ── */}
       {isOwner && previewEditing && (
-        <div className={`pv-workspace${isDesktop ? '' : ` pv-ws-sheet${wsExpanded ? '' : ' ws-collapsed'}`}`} style={{
+        <div className={`pv-workspace${isDesktop ? '' : ' pv-ws-sheet'}`} style={{
           position: 'fixed', right: 0, top: bannerH, bottom: 0, zIndex: 200,
           width: 360,
           background: 'var(--c-sidebar-bg)',
@@ -1177,81 +1139,59 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
           fontFamily: 'var(--font-body)',
         }}>
           {/* Drag handle — only visible on mobile bottom sheet */}
-          {!isDesktop && <div className="pv-ws-drag-handle" style={{ cursor: 'pointer' }} onClick={() => setWsExpanded(e => !e)} />}
+          {!isDesktop && <div className="pv-ws-drag-handle" />}
 
-          {/* ── Mobile compact tab bar (Canva-style) ── */}
-          <div className="pv-tab-bar-mobile" style={{
-            display: 'none', // overridden by CSS
-            alignItems: 'center', gap: 0,
-            padding: '6px 8px',
+          {/* ── Panel header ── */}
+          <div style={{
+            padding: '14px 16px 0',
+            background: 'linear-gradient(160deg, rgba(27,120,247,0.08) 0%, rgba(79,70,229,0.03) 100%)',
+            borderBottom: '1px solid var(--c-border)',
             flexShrink: 0,
           }}>
-            {[
-              { id: 'estilo',  label: 'Estilo',  Icon: Palette },
-              { id: 'blocos',  label: 'Blocos',  Icon: Layout  },
-              { id: 'seccoes', label: 'Secções', Icon: Eye     },
-            ].map(t => {
-              const isAct = previewTab === t.id && wsExpanded
-              return (
-                <button key={t.id}
-                  onClick={() => {
-                    if (isAct) { setWsExpanded(false) }
-                    else { setPreviewTab(t.id); setWsExpanded(true) }
-                  }}
-                  style={{
-                    flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
-                    padding: '8px 4px',
-                    borderRadius: 10, border: 'none',
-                    background: isAct ? 'rgba(27,120,247,0.1)' : 'transparent',
-                    color: isAct ? '#1b78f7' : 'var(--c-muted)',
-                    cursor: 'pointer', fontFamily: 'inherit',
-                    transition: 'all 0.15s',
-                  }}
-                >
-                  <t.Icon size={18} strokeWidth={isAct ? 2.3 : 1.8} />
-                  <span style={{ fontSize: 10, fontWeight: isAct ? 700 : 500 }}>{t.label}</span>
-                </button>
-              )
-            })}
-            {/* Save indicator */}
-            {previewSaved && (
-              <div style={{ paddingInline: 8, display: 'flex', alignItems: 'center' }}>
-                <Check size={15} color="#22c55e" strokeWidth={2.5} />
+            {/* Top row */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 13 }}>
+              <div style={{
+                width: 32, height: 32, borderRadius: 9,
+                background: 'linear-gradient(135deg, #1b78f7, #4f46e5)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0, boxShadow: '0 4px 14px rgba(27,120,247,0.35)',
+              }}>
+                <Layout size={15} color="#fff" />
               </div>
-            )}
-          </div>
-
-          {/* ── Desktop header (no title — just tabs + save + close) ── */}
-          <div className="pv-ws-header" style={{
-            padding: '10px 12px',
-            borderBottom: '1px solid var(--c-border)',
-            flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 8,
-          }}>
-            {/* Save + close row */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 6 }}>
-              {/* Manual save icon */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--c-text)', letterSpacing: '-0.2px' }}>Workspace</div>
+                <div style={{ fontSize: 10, color: 'var(--c-muted)', marginTop: 1 }}>Editor de preview público</div>
+              </div>
+              {previewSaved && (
+                <span style={{
+                  fontSize: 10, fontWeight: 700, color: '#22c55e',
+                  display: 'flex', alignItems: 'center', gap: 4,
+                  background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.25)',
+                  borderRadius: 99, padding: '3px 10px', flexShrink: 0,
+                }}>
+                  <Check size={9} strokeWidth={3} /> Guardado
+                </span>
+              )}
               <button
-                onClick={async () => {
-                  const { error } = await supabase.from('projects')
-                    .update({ preview_blocks: previewBlocks, preview_style: previewStyle })
-                    .eq('id', project.id)
-                  if (!error) { setPreviewSaved(true); setTimeout(() => setPreviewSaved(false), 2000) }
+                onClick={() => setPreviewEditing(false)}
+                style={{
+                  width: 30, height: 30, borderRadius: 8,
+                  background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)',
+                  color: '#ef4444', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  transition: 'all 0.14s', flexShrink: 0,
                 }}
-                title="Guardar"
-                style={{ width: 28, height: 28, borderRadius: 7, background: previewSaved ? 'rgba(34,197,94,0.12)' : 'rgba(27,120,247,0.08)', border: `1px solid ${previewSaved ? 'rgba(34,197,94,0.3)' : 'rgba(27,120,247,0.2)'}`, color: previewSaved ? '#22c55e' : '#1b78f7', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s', flexShrink: 0 }}
-              >
-                {previewSaved ? <Check size={13} strokeWidth={3} /> : <Save size={13} />}
-              </button>
-              {/* Close workspace */}
-              <button onClick={() => { setPreviewEditing(false); setWsExpanded(false) }}
-                style={{ width: 28, height: 28, borderRadius: 7, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.14s', flexShrink: 0 }}
                 onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.18)'}
                 onMouseLeave={e => e.currentTarget.style.background = 'rgba(239,68,68,0.08)'}
               ><X size={13} /></button>
             </div>
 
-            {/* Desktop tab control */}
-            <div className="pv-tab-bar-desktop" style={{ display: 'none', gap: 3, background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)', borderRadius: 11, padding: '3px' }}>
+            {/* Tab segmented control */}
+            <div style={{
+              display: 'flex', gap: 3, marginBottom: 13,
+              background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)',
+              borderRadius: 11, padding: '3px',
+            }}>
               {[
                 { id: 'estilo',  label: 'Estilo',  Icon: Palette },
                 { id: 'blocos',  label: 'Blocos',  Icon: Layout  },
@@ -1260,7 +1200,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
                 <button key={t.id} onClick={() => setPreviewTab(t.id)} style={{
                   flex: 1, padding: '7px 4px', borderRadius: 8, border: 'none',
                   cursor: 'pointer', fontFamily: 'inherit',
-                  background: previewTab === t.id ? '#1b78f7' : 'transparent',
+                  background: previewTab === t.id ? 'linear-gradient(135deg, #1b78f7, #4f46e5)' : 'transparent',
                   color: previewTab === t.id ? '#fff' : 'var(--c-muted)',
                   fontSize: 11, fontWeight: previewTab === t.id ? 700 : 500,
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
@@ -1274,7 +1214,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
           </div>
 
           {/* ── TAB: ESTILO ── */}
-          {previewTab === 'estilo' && (isDesktop || wsExpanded) && (
+          {previewTab === 'estilo' && (
             <div style={{ flex: 1, overflowY: 'auto', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
 
               {/* Group: Identidade visual */}
@@ -1611,7 +1551,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
           )}
 
           {/* ── TAB: BLOCOS ── */}
-          {previewTab === 'blocos' && (isDesktop || wsExpanded) && (
+          {previewTab === 'blocos' && (
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
               {/* Block type picker — compact 3-col chip grid */}
               <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--c-border)' }}>
@@ -1789,7 +1729,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
           )}
 
           {/* ── TAB: SECÇÕES ── */}
-          {previewTab === 'seccoes' && (isDesktop || wsExpanded) && (() => {
+          {previewTab === 'seccoes' && (() => {
             const NATIVE_SECTIONS_MAP = {
               problem:         { label: 'Problema',        Icon: Search     },
               solution:        { label: 'Solução',         Icon: Lightbulb  },
@@ -1867,12 +1807,36 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
                   })}
                 </div>
                 <p style={{ margin: '12px 0 0', fontSize: 10, color: 'var(--c-subtle)', lineHeight: 1.5 }}>
-                  A ordem é guardada automaticamente.
+                  A ordem é guardada ao clicar em "Guardar alterações".
                 </p>
               </div>
             )
           })()}
 
+          {/* ── Footer: save ── */}
+          <div style={{
+            padding: '12px 14px 16px', borderTop: '1px solid var(--c-border)', flexShrink: 0,
+            background: 'linear-gradient(0deg, var(--c-sidebar-bg) 60%, transparent)',
+          }}>
+            <button
+              onClick={async () => {
+                const { error } = await supabase.from('projects').update({ preview_blocks: previewBlocks, preview_style: previewStyle }).eq('id', project.id)
+                if (!error) { setPreviewSaved(true); setTimeout(() => setPreviewSaved(false), 2500) }
+              }}
+              style={{
+                width: '100%', padding: '13px',
+                background: previewSaved ? 'linear-gradient(135deg, #22c55e, #16a34a)' : 'linear-gradient(135deg, #1b78f7, #4f46e5)',
+                border: 'none', borderRadius: 11,
+                color: '#fff', fontSize: 13, fontWeight: 700,
+                cursor: 'pointer', fontFamily: 'inherit',
+                boxShadow: previewSaved ? '0 4px 20px rgba(34,197,94,0.3)' : '0 4px 20px rgba(27,120,247,0.35)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                transition: 'background 0.3s, box-shadow 0.3s', letterSpacing: '-0.1px',
+              }}
+            >
+              {previewSaved ? <><Check size={15} strokeWidth={3} /> Guardado!</> : <><Save size={15} /> Guardar alterações</>}
+            </button>
+          </div>
         </div>
       )}
 
@@ -2369,7 +2333,6 @@ function MembersPanel({ ownerName, members, colors, isOwner }) {
           )
         })}
       </div>
-
     </div>
   )
 }
@@ -2424,7 +2387,6 @@ export default function ProjectPage() {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [viewAsPublic, setViewAsPublic] = useState(false)
   const [previewEditing, setPreviewEditing] = useState(false)
-  const [wsExpanded, setWsExpanded] = useState(false)
   const [previewBlocks, setPreviewBlocks] = useState([])
   const [previewStyle, setPreviewStyle] = useState({})
   // Jury / professor ratings state
@@ -3208,11 +3170,6 @@ export default function ProjectPage() {
           .proj-body { gap: 14px; }
           .proj-share-qr-label { display: none; }
         }
-        /* FABs hidden in preview edit mode on mobile */
-        .proj-fab-area.preview-editing-mobile { display: none !important; }
-        /* Defense FAB also hidden on tablet when in preview */
-        .proj-fab-area.preview-editing-mobile .proj-fab-defense { display: none !important; }
-
         @media (max-width: 600px) {
           .proj-wrap         { padding: 0 16px 80px !important; overflow-x: hidden !important; }
           .proj-cover        { height: 200px !important; margin-top: 20px !important; border-radius: 14px !important; }
@@ -3223,10 +3180,11 @@ export default function ProjectPage() {
           .proj-tagline      { font-size: 15px !important; }
           .proj-card-pad, .proj-card { padding: 16px 18px !important; border-radius: 14px !important; }
           .proj-badges       { margin-bottom: 14px !important; }
-          /* Mobile: AI FAB hidden, Defense FAB hidden (mini-card handles it) */
+          /* Mobile: AI FAB hidden, Defense FAB circular */
           .proj-ai-fab       { display: none !important; }
           .proj-ai-fab-label { display: none !important; }
-          .proj-fab-defense  { display: none !important; }
+          .proj-fab-defense-label { display: none !important; }
+          .proj-fab-defense { padding: 0 !important; width: 52px !important; min-width: 52px !important; }
           /* Invite: icon only on mobile */
           .proj-invite-label { display: none !important; }
           /* Author: centered on mobile */
@@ -3710,7 +3668,7 @@ export default function ProjectPage() {
       )}
 
       {/* FABs — visible on tablet + mobile via CSS (hidden on desktop) */}
-      <div className={`proj-fab-area${(isOwner && viewAsPublic) ? ' preview-editing-mobile' : ''}`} style={{
+      <div className="proj-fab-area" style={{
         position: 'fixed', bottom: 24, right: 20,
         flexDirection: 'column', gap: 10, zIndex: 90,
       }}>
@@ -3761,11 +3719,7 @@ export default function ProjectPage() {
         )}
       </div>
 
-      <Navbar
-        showCreateProject={true}
-        previewEditingMobile={isOwner && viewAsPublic}
-        onWorkspaceToggle={() => { setPreviewEditing(true); setWsExpanded(e => !e) }}
-      >
+      <Navbar showCreateProject={true}>
         <div className="proj-nav-btns" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {isOwner && (
             <button
@@ -3852,8 +3806,6 @@ export default function ProjectPage() {
           interestLoading={interestLoading}
           onInterest={handleInterest}
           isRecruiterRole={isRecruiterRole}
-          wsExpanded={wsExpanded}
-          setWsExpanded={setWsExpanded}
         />
       )}
 
@@ -4139,7 +4091,7 @@ export default function ProjectPage() {
           }
 
           return (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(148px, 1fr))', gap: 10, marginBottom: 4 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 10, marginBottom: 4 }}>
 
               {/* Certificate — score = 100 */}
               {score >= 100 && (
@@ -4209,24 +4161,6 @@ export default function ProjectPage() {
                   {aiFeedback ? 'Ver feedback guardado' : 'Analisar e melhorar score'}
                 </div>
               </button>
-
-              {/* Defesa — mini-card junto ao AI (PAP only, mobile-first) */}
-              {project.project_type === 'pap' && (isOwner || collaboratorSections !== null) && (
-                <button
-                  onClick={() => setDefenseMode(true)}
-                  style={{ ...miniCardBase, background: 'rgba(251,191,36,0.05)', border: '1px solid rgba(251,191,36,0.22)' }}
-                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(251,191,36,0.12)'; e.currentTarget.style.borderColor = 'rgba(251,191,36,0.4)' }}
-                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(251,191,36,0.05)'; e.currentTarget.style.borderColor = 'rgba(251,191,36,0.22)' }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                    <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(251,191,36,0.12)', border: '1px solid rgba(251,191,36,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <GraduationCap size={14} color="#fbbf24" />
-                    </div>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: '#fbbf24' }}>Defesa</div>
-                  </div>
-                  <div style={{ fontSize: 11, color: colors.muted, lineHeight: 1.4 }}>Preparar apresentação</div>
-                </button>
-              )}
 
               {/* Report generation */}
               {isPapOrInternship && (

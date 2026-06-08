@@ -197,11 +197,11 @@ export default function Register() {
             <button
               onClick={() => navigate('/login')}
               style={{
-                background: 'linear-gradient(135deg, #1b78f7, #4f46e5)',
+                background: '#1b78f7',
                 border: 'none', borderRadius: 10, padding: '12px 28px',
                 color: '#fff', fontSize: 14, fontWeight: 700,
                 cursor: 'pointer', fontFamily: 'inherit',
-                boxShadow: '0 4px 20px rgba(27,120,247,0.35)',
+                boxShadow: '0 4px 20px rgba(27,120,247,0.25)',
               }}
             >
               Ir para o login
@@ -256,9 +256,9 @@ export default function Register() {
               disabled={!role}
               style={{
                 width: '100%',
-                background: role ? `linear-gradient(135deg, ${selectedRole?.color ?? C.blue}, #4f46e5)` : 'var(--c-border)',
-                color: '#fff', border: 'none', borderRadius: 10, padding: '13px',
-                fontSize: 15, fontWeight: 700, cursor: role ? 'pointer' : 'not-allowed',
+                background: role ? (selectedRole?.color ?? C.blue) : 'var(--c-border)',
+                color: '#fff', border: 'none', borderRadius: 10, padding: '12px',
+                fontSize: 14, fontWeight: 700, cursor: role ? 'pointer' : 'not-allowed',
                 fontFamily: 'inherit', transition: 'all 0.15s',
                 boxShadow: role ? '0 4px 20px rgba(27,120,247,0.3)' : 'none',
               }}
@@ -315,12 +315,12 @@ export default function Register() {
               <button
                 type="submit" disabled={loading}
                 style={{
-                  background: loading ? 'var(--c-border)' : 'linear-gradient(135deg, #1b78f7, #4f46e5)',
+                  background: loading ? 'var(--c-border)' : '#1b78f7',
                   color: '#fff', border: 'none',
-                  borderRadius: 10, padding: '13px', fontSize: 15, fontWeight: 700,
+                  borderRadius: 10, padding: '12px', fontSize: 14, fontWeight: 700,
                   cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit', marginTop: 4,
                   transition: 'opacity 0.15s',
-                  boxShadow: loading ? 'none' : '0 4px 20px rgba(27,120,247,0.35)',
+                  boxShadow: loading ? 'none' : '0 4px 16px rgba(27,120,247,0.25)',
                 }}
                 onMouseEnter={e => { if (!loading) e.currentTarget.style.opacity = '0.88' }}
                 onMouseLeave={e => { if (!loading) e.currentTarget.style.opacity = '1' }}

@@ -54,7 +54,7 @@ function Input({ label, value, onChange, placeholder, hint, type = 'text', prefi
             border: `1.5px solid ${focused ? C.borderFocus : C.border}`,
             borderRadius: 10,
             color: C.text,
-            fontSize: 15,
+            fontSize: 14,
             padding: prefix ? '12px 14px 12px 32px' : '12px 14px',
             outline: 'none',
             fontFamily: 'inherit',
@@ -89,7 +89,7 @@ function Textarea({ label, value, onChange, placeholder, hint }) {
           border: `1.5px solid ${focused ? C.borderFocus : C.border}`,
           borderRadius: 10,
           color: C.text,
-          fontSize: 15,
+          fontSize: 14,
           padding: '12px 14px',
           outline: 'none',
           fontFamily: 'inherit',
@@ -566,7 +566,7 @@ export default function Settings() {
                 <SectionCard title="Email">
                   <div style={{ marginBottom: 4 }}>
                     <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: C.muted, marginBottom: 7 }}>Email</label>
-                    <div style={{ background: C.inputBg, border: `1.5px solid ${C.border}`, borderRadius: 10, padding: '12px 14px', color: C.subtle, fontSize: 15, fontFamily: 'inherit' }}>{user.email}</div>
+                    <div style={{ background: C.inputBg, border: `1.5px solid ${C.border}`, borderRadius: 10, padding: '12px 14px', color: C.subtle, fontSize: 14, fontFamily: 'inherit' }}>{user.email}</div>
                     <p style={{ margin: '6px 0 0', fontSize: 12, color: C.subtle }}>O email não pode ser alterado.</p>
                   </div>
                 </SectionCard>
@@ -668,7 +668,7 @@ export default function Settings() {
           <SectionCard title="Conta">
             <div style={{ marginBottom: 20 }}>
               <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: C.muted, marginBottom: 7 }}>Email</label>
-              <div style={{ background: C.inputBg, border: `1.5px solid ${C.border}`, borderRadius: 10, padding: '12px 14px', color: C.subtle, fontSize: 15, fontFamily: 'inherit' }}>{user.email}</div>
+              <div style={{ background: C.inputBg, border: `1.5px solid ${C.border}`, borderRadius: 10, padding: '12px 14px', color: C.subtle, fontSize: 14, fontFamily: 'inherit' }}>{user.email}</div>
               <p style={{ margin: '6px 0 0', fontSize: 12, color: C.subtle }}>O email não pode ser alterado.</p>
             </div>
           </SectionCard>

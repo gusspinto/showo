@@ -502,7 +502,7 @@ export default function NewProject() {
                 width: '100%',
                 background: formGoal ? `linear-gradient(135deg, ${colors.blue}, #4f46e5)` : colors.border,
                 color: '#fff', border: 'none', borderRadius: 12,
-                padding: '15px 0', fontSize: 17, fontWeight: 700,
+                padding: '14px 0', fontSize: 15, fontWeight: 700,
                 cursor: formGoal ? 'pointer' : 'not-allowed',
                 transition: 'background 0.2s, box-shadow 0.2s',
                 fontFamily: 'inherit',
@@ -901,7 +901,7 @@ export default function NewProject() {
                       onKeyDown={i === s.keys.length - 1 ? handleKeyDown : undefined}
                       placeholder={s.placeholders[i]}
                       autoFocus={i === 0}
-                      style={{ ...inputBase, fontSize: 17, border: spamBorder(key) }}
+                      style={{ ...inputBase, fontSize: 15, border: spamBorder(key) }}
                       {...sharedInputHandlers}
                     />
                   </div>

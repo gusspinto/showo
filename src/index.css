@@ -165,15 +165,6 @@ h1, h2, h3, h4 {
   }
 }
 
-/* ── Mobile font normalization ── */
-@media (max-width: 600px) {
-  /* Inputs, selects, textareas — same base size everywhere */
-  input, textarea, select { font-size: 14px !important; }
-  /* Muted description text below page titles */
-  .page-content > div > p,
-  .page-content > div > div > p { font-size: 13px; }
-}
-
 a {
   text-decoration: none;
   color: inherit;
@@ -204,4 +195,36 @@ textarea, input, select, button {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #2a4275;
+}
+
+/* ═══════════════════════════════════════
+   MOBILE GLOBAL — ≤600px
+   Normalização completa de tipografia,
+   espaçamentos e touch targets
+═══════════════════════════════════════ */
+@media (max-width: 600px) {
+
+  /* ── Bottom nav clearance ── */
+  body { padding-bottom: 78px; }
+
+  /* ── Page content ── */
+  .page-content,
+  .page-content-wide { padding: 20px 16px 100px !important; }
+
+  /* ── Typography: inputs/selects/textareas ── */
+  input, textarea, select { font-size: 14px !important; }
+
+  /* ── Touch targets mínimos 44px ── */
+  button, [role="button"], a.btn { min-height: 36px; }
+
+  /* ── Scrollbar oculta em mobile ── */
+  * { scrollbar-width: none; }
+  *::-webkit-scrollbar { display: none; }
+
+  /* ── Card padding ── */
+  .proj-card-pad { padding: 14px 16px !important; }
+
+  /* ── Section labels ── */
+  .dash-sec-label { font-size: 11px !important; }
+
 }
