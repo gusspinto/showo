@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { Navbar } from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
-import { Trophy, ChevronRight, TrendingUp, TrendingDown, Minus } from 'lucide-react'
+import { Trophy, ChevronRight, TrendingUp, TrendingDown, Minus, SlidersHorizontal, X } from 'lucide-react'
 import CreateProjectModal from '../components/CreateProjectModal'
 
 const RANK_STORAGE_KEY = 'showo_ranking_positions'
@@ -100,6 +100,7 @@ export default function Ranking() {
   const [yearFilter, setYearFilter] = useState('')
   const [courseFilter, setCourseFilter] = useState('')
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showFilters, setShowFilters] = useState(false)
   const prevPositions = useRef(loadPrevPositions())
 
   useEffect(() => {
@@ -132,6 +133,7 @@ export default function Ranking() {
     return true
   })
 
+  const activeFilterCount = [areaFilter, yearFilter, courseFilter].filter(Boolean).length
   const top3 = filtered.slice(0, 3)
   const rest = filtered.slice(3)
 
@@ -151,17 +153,43 @@ export default function Ranking() {
         .rank-row:hover { background: ${C.cardHover} !important; border-color: ${C.borderBright} !important; transform: translateX(3px) !important; }
         .rank-top { transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.15s !important; cursor: pointer !important; }
         .rank-top:hover { background: ${C.cardHover} !important; transform: translateX(4px) !important; }
+        /* Filter toggle button */
+        .rank-filter-btn {
+          display: flex; align-items: center; gap: 6px;
+          background: var(--c-card); border: 1px solid var(--c-border);
+          border-radius: 10px; padding: 0 14px; height: 40px;
+          color: var(--c-muted); font-size: 13px; font-weight: 600;
+          cursor: pointer; font-family: inherit; white-space: nowrap;
+          transition: border-color 0.15s, color 0.15s;
+          position: relative; flex-shrink: 0;
+        }
+        .rank-filter-btn:hover { border-color: var(--c-border-bright); color: var(--c-text); }
+        .rank-filter-btn.active { border-color: #1b78f7; color: #1b78f7; background: rgba(27,120,247,0.07); }
+        .rank-filter-badge {
+          position: absolute; top: -5px; right: -5px;
+          min-width: 16px; height: 16px; border-radius: 99px;
+          background: #1b78f7; color: #fff;
+          font-size: 10px; font-weight: 800;
+          display: flex; align-items: center; justify-content: center;
+          padding: 0 4px; border: 2px solid var(--c-bg);
+        }
+        /* Filter panel */
+        .rank-filter-panel {
+          background: var(--c-card); border: 1px solid var(--c-border);
+          border-radius: 14px; padding: 14px;
+          margin-bottom: 20px;
+          display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+        }
+        .rank-filter-panel select { flex: 1; min-width: 140px; }
         @media (max-width: 600px) {
-          .rank-filters { flex-direction: column !important; gap: 8px !important; }
-          .rank-filters select { width: 100% !important; }
           .rank-top-info-tagline { display: none !important; }
-          /* Filter tabs — scroll horizontally */
-          .ranking-tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; flex-wrap: nowrap !important; padding-bottom: 4px; }
-          /* Ranking table rows — hide secondary columns */
           .rank-col-school { display: none !important; }
           .rank-col-course { display: none !important; }
-          /* Podium section — smaller */
           .rank-podium { gap: 8px !important; }
+          .rank-filter-btn-label { display: none !important; }
+          .rank-filter-panel { grid-template-columns: 1fr 1fr !important; display: grid !important; gap: 8px !important; padding: 12px !important; }
+          .rank-filter-panel select { min-width: 0 !important; width: 100% !important; }
+          .rank-filter-panel .rank-clear-btn { grid-column: 1 / -1 !important; }
         }
         @media (max-width: 380px) {
           .rank-row-name { font-size: 13px !important; max-width: 140px !important; }
@@ -172,11 +200,11 @@ export default function Ranking() {
         <button
           onClick={() => setShowCreateModal(true)}
           style={{
-            background: `linear-gradient(135deg, ${C.blue}, #4f46e5)`,
+            background: C.blue,
             color: '#fff', border: 'none', borderRadius: 8,
             padding: '9px 18px', fontSize: 14, fontWeight: 600,
             cursor: 'pointer', fontFamily: 'inherit',
-            boxShadow: '0 4px 16px rgba(27,120,247,0.3)',
+            boxShadow: '0 2px 12px rgba(27,120,247,0.25)',
           }}
         >
           Criar projeto
@@ -185,56 +213,58 @@ export default function Ranking() {
 
       <div className="page-content">
 
-        {/* Header */}
-        <div style={{ marginBottom: 32 }}>
-          <h1 style={{ fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 900, margin: '0 0 8px', letterSpacing: '-0.5px' }}>
-            Ranking de Projetos
-          </h1>
-          <p style={{ color: C.muted, margin: 0, fontSize: 15 }}>
-            Os melhores projetos da comunidade Showo, ordenados por score
-          </p>
+        {/* Header + filter button */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: showFilters ? 12 : 24 }}>
+          <div>
+            <h1 style={{ fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 900, margin: '0 0 8px', letterSpacing: '-0.5px' }}>
+              Ranking de Projetos
+            </h1>
+            <p style={{ color: C.muted, margin: 0, fontSize: 'clamp(13px, 1.5vw, 15px)' }}>
+              Os melhores projetos da comunidade Showo, ordenados por score
+            </p>
+          </div>
+          <button
+            className={`rank-filter-btn${showFilters || activeFilterCount > 0 ? ' active' : ''}`}
+            onClick={() => setShowFilters(f => !f)}
+            style={{ marginTop: 6 }}
+          >
+            <SlidersHorizontal size={15} />
+            <span className="rank-filter-btn-label">Filtros</span>
+            {activeFilterCount > 0 && <span className="rank-filter-badge">{activeFilterCount}</span>}
+          </button>
         </div>
 
-        {/* Filters */}
-        <div className="rank-filters ranking-tabs" style={{ display: 'flex', gap: 10, marginBottom: 32, flexWrap: 'wrap', alignItems: 'center' }}>
-          <div style={{ position: 'relative' }}>
+        {/* Collapsible filter panel */}
+        {showFilters && (
+          <div className="rank-filter-panel" style={{ marginBottom: 24 }}>
             <select value={areaFilter} onChange={e => setAreaFilter(e.target.value)} style={selectStyle}
-              onFocus={e => (e.target.style.borderColor = C.blue)}
-              onBlur={e => (e.target.style.borderColor = C.border)}>
+              onFocus={e => (e.target.style.borderColor = C.blue)} onBlur={e => (e.target.style.borderColor = C.border)}>
               <option value="">Todas as áreas</option>
               {areas.map(a => <option key={a} value={a}>{a}</option>)}
             </select>
-          </div>
-          <div style={{ position: 'relative' }}>
             <select value={yearFilter} onChange={e => setYearFilter(e.target.value)} style={selectStyle}
-              onFocus={e => (e.target.style.borderColor = C.blue)}
-              onBlur={e => (e.target.style.borderColor = C.border)}>
+              onFocus={e => (e.target.style.borderColor = C.blue)} onBlur={e => (e.target.style.borderColor = C.border)}>
               <option value="">Todos os anos</option>
               {years.map(y => <option key={y} value={y}>{y}</option>)}
             </select>
-          </div>
-          {courses.length > 0 && (
-            <div style={{ position: 'relative' }}>
+            {courses.length > 0 && (
               <select value={courseFilter} onChange={e => setCourseFilter(e.target.value)} style={selectStyle}
-                onFocus={e => (e.target.style.borderColor = C.blue)}
-                onBlur={e => (e.target.style.borderColor = C.border)}>
+                onFocus={e => (e.target.style.borderColor = C.blue)} onBlur={e => (e.target.style.borderColor = C.border)}>
                 <option value="">Todos os cursos</option>
                 {courses.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
-            </div>
-          )}
-          {(areaFilter || yearFilter || courseFilter) && (
-            <button
-              onClick={() => { setAreaFilter(''); setYearFilter(''); setCourseFilter('') }}
-              style={{ background: 'transparent', border: `1px solid ${C.border}`, color: C.muted, borderRadius: 8, padding: '9px 14px', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}
-            >
-              Limpar ×
-            </button>
-          )}
-          <span style={{ marginLeft: 'auto', color: C.subtle, fontSize: 13, fontWeight: 500 }}>
-            {filtered.length} projeto{filtered.length !== 1 ? 's' : ''}
-          </span>
-        </div>
+            )}
+            {activeFilterCount > 0 && (
+              <button
+                className="rank-clear-btn"
+                onClick={() => { setAreaFilter(''); setYearFilter(''); setCourseFilter('') }}
+                style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: `1px solid ${C.border}`, color: C.muted, borderRadius: 8, padding: '9px 14px', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}
+              >
+                <X size={13} /> Limpar filtros
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Legend */}
         <div style={{ display: 'flex', gap: 16, marginBottom: 28, flexWrap: 'wrap' }}>
