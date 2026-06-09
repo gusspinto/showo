@@ -682,6 +682,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
   liked, likeCount, likeLoading, onLike,
   hasInterest, interestCount, interestLoading, onInterest,
   isRecruiterRole,
+  wsExpanded, setWsExpanded,
 }) {
   const navigate = useNavigate()
   const { theme } = useTheme()
@@ -824,8 +825,21 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
 
       {/* ── Card style + preview theme scoped CSS ── */}
       <style>{`
-        [data-pv-cs="flat"] .proj-card { background: transparent !important; border-color: transparent !important; box-shadow: none !important; }
-        [data-pv-cs="glass"] .proj-card { background: rgba(255,255,255,0.05) !important; backdrop-filter: blur(16px) !important; -webkit-backdrop-filter: blur(16px) !important; border: 1px solid rgba(255,255,255,0.09) !important; }
+        /* Card style applies to BOTH owner-view cards AND preview section cards */
+        [data-pv-cs="flat"] .proj-card,
+        [data-pv-cs="flat"] .pv-section-card {
+          background: transparent !important;
+          border-color: transparent !important;
+          box-shadow: none !important;
+          border-left-color: transparent !important;
+        }
+        [data-pv-cs="glass"] .proj-card,
+        [data-pv-cs="glass"] .pv-section-card {
+          background: rgba(255,255,255,0.05) !important;
+          backdrop-filter: blur(16px) !important;
+          -webkit-backdrop-filter: blur(16px) !important;
+          border: 1px solid rgba(255,255,255,0.09) !important;
+        }
         [data-pv-theme="dark"] {
           --c-bg:#060c18; --c-bg-alt:#111c32; --c-card:#152030; --c-card-hover:#1c2d44;
           --c-border:#1e3050; --c-border-bright:#2a4275; --c-muted:#7d93b0;
@@ -894,8 +908,12 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
         /* ── Mobile: content ── */
         @media (max-width: 600px) {
           .pv-story { padding: 0 14px 80px !important; gap: 20px !important; }
-          .pv-hero-title { font-size: clamp(28px, 8vw, 48px) !important; }
-          .pv-section-card { padding: 20px 18px !important; }
+          .pv-hero-title { font-size: clamp(24px, 7vw, 40px) !important; letter-spacing: -0.5px !important; line-height: 1.1 !important; }
+          .pv-section-card { padding: 16px 16px !important; border-radius: 12px !important; }
+          /* Title block — reduce horizontal padding on mobile */
+          .pv-title-block { padding: 0 16px !important; }
+          /* Creator pill — smaller on mobile */
+          .pv-creator-pill { font-size: 12px !important; padding: 5px 12px !important; }
         }
       `}</style>
 
@@ -1031,7 +1049,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
         )}
 
         {/* Title block over hero */}
-        <div style={{ maxWidth: 860, margin: '0 auto', padding: '0 28px', position: 'relative', marginTop: coverAsHero ? -160 : project.cover_url ? -100 : -80, textAlign: titleAlign }}>
+        <div className="pv-title-block" style={{ maxWidth: 860, margin: '0 auto', padding: '0 28px', position: 'relative', marginTop: coverAsHero ? -160 : project.cover_url ? -100 : -80, textAlign: titleAlign }}>
           {/* Area / type chips */}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 18, justifyContent: titleAlign === 'center' ? 'center' : titleAlign === 'right' ? 'flex-end' : 'flex-start' }}>
             {project.project_type && (
@@ -1058,6 +1076,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
             margin: '0 0 14px',
             fontFamily: selectedTitleFont.css,
             textTransform: titleStyle === 'caps' ? 'uppercase' : 'none',
+            textAlign: titleAlign,
             ...(titleStyle === 'gradient' ? {
               background: `linear-gradient(135deg, ${hero.c1}, ${hero.c2})`,
               WebkitBackgroundClip: 'text',
@@ -1082,7 +1101,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
           </h1>
 
           {(customTagline || project.ai_tagline) && (
-            <p style={{ fontSize: 'clamp(16px, 2.2vw, 20px)', color: coverAsHero ? 'rgba(255,255,255,0.75)' : 'var(--c-muted)', margin: '0 0 28px', maxWidth: 600, lineHeight: 1.5, fontWeight: 400 }}>
+            <p style={{ fontSize: 'clamp(16px, 2.2vw, 20px)', color: coverAsHero ? 'rgba(255,255,255,0.75)' : 'var(--c-muted)', margin: '0 0 28px', maxWidth: titleAlign === 'center' ? '100%' : 600, lineHeight: 1.5, fontWeight: 400, textAlign: titleAlign }}>
               {customTagline || project.ai_tagline}
             </p>
           )}
@@ -1130,7 +1149,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
 
       {/* ── Workspace panel — sidebar (desktop) or bottom sheet (mobile) ── */}
       {isOwner && previewEditing && (
-        <div className={`pv-workspace${isDesktop ? '' : ' pv-ws-sheet'}`} style={{
+        <div className={`pv-workspace${isDesktop ? '' : ` pv-ws-sheet${wsExpanded ? '' : ' ws-collapsed'}`}`} style={{
           position: 'fixed', right: 0, top: bannerH, bottom: 0, zIndex: 200,
           width: 360,
           background: 'var(--c-sidebar-bg)',
@@ -1138,78 +1157,65 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
           display: 'flex', flexDirection: 'column',
           fontFamily: 'var(--font-body)',
         }}>
-          {/* Drag handle — only visible on mobile bottom sheet */}
-          {!isDesktop && <div className="pv-ws-drag-handle" />}
+          {/* Drag handle — mobile only, taps to close workspace */}
+          {!isDesktop && (
+            <div className="pv-ws-drag-handle" style={{ cursor: 'pointer' }}
+              onClick={() => setWsExpanded(false)} />
+          )}
 
-          {/* ── Panel header ── */}
+          {/* ── Panel header: tabs + save + close ── */}
           <div style={{
-            padding: '14px 16px 0',
-            background: 'linear-gradient(160deg, rgba(27,120,247,0.08) 0%, rgba(79,70,229,0.03) 100%)',
+            padding: '8px 10px 0',
             borderBottom: '1px solid var(--c-border)',
             flexShrink: 0,
           }}>
-            {/* Top row */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 13 }}>
+            {/* Tabs + actions row */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+              {/* Segmented tab control */}
               <div style={{
-                width: 32, height: 32, borderRadius: 9,
-                background: 'linear-gradient(135deg, #1b78f7, #4f46e5)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                flexShrink: 0, boxShadow: '0 4px 14px rgba(27,120,247,0.35)',
+                display: 'flex', gap: 2, flex: 1,
+                background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)',
+                borderRadius: 10, padding: '3px',
               }}>
-                <Layout size={15} color="#fff" />
+                {[
+                  { id: 'estilo',  label: 'Estilo',  Icon: Palette },
+                  { id: 'blocos',  label: 'Blocos',  Icon: Layout  },
+                  { id: 'seccoes', label: 'Secções', Icon: Eye     },
+                ].map(t => (
+                  <button key={t.id} onClick={() => setPreviewTab(t.id)} style={{
+                    flex: 1, padding: '6px 4px', borderRadius: 7, border: 'none',
+                    cursor: 'pointer', fontFamily: 'inherit',
+                    background: previewTab === t.id ? '#1b78f7' : 'transparent',
+                    color: previewTab === t.id ? '#fff' : 'var(--c-muted)',
+                    fontSize: 11, fontWeight: previewTab === t.id ? 700 : 500,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+                    transition: 'all 0.15s',
+                    boxShadow: previewTab === t.id ? '0 1px 8px rgba(27,120,247,0.25)' : 'none',
+                  }}>
+                    <t.Icon size={11} /> {t.label}
+                  </button>
+                ))}
               </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--c-text)', letterSpacing: '-0.2px' }}>Workspace</div>
-                <div style={{ fontSize: 10, color: 'var(--c-muted)', marginTop: 1 }}>Editor de preview público</div>
-              </div>
-              {previewSaved && (
-                <span style={{
-                  fontSize: 10, fontWeight: 700, color: '#22c55e',
-                  display: 'flex', alignItems: 'center', gap: 4,
-                  background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.25)',
-                  borderRadius: 99, padding: '3px 10px', flexShrink: 0,
-                }}>
-                  <Check size={9} strokeWidth={3} /> Guardado
-                </span>
-              )}
+              {/* Save icon */}
               <button
-                onClick={() => setPreviewEditing(false)}
-                style={{
-                  width: 30, height: 30, borderRadius: 8,
-                  background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)',
-                  color: '#ef4444', cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  transition: 'all 0.14s', flexShrink: 0,
+                onClick={async () => {
+                  const { error } = await supabase.from('projects')
+                    .update({ preview_blocks: previewBlocks, preview_style: previewStyle })
+                    .eq('id', project.id)
+                  if (!error) { setPreviewSaved(true); setTimeout(() => setPreviewSaved(false), 2000) }
                 }}
+                title="Guardar"
+                style={{ width: 28, height: 28, borderRadius: 7, background: previewSaved ? 'rgba(34,197,94,0.1)' : 'rgba(27,120,247,0.08)', border: `1px solid ${previewSaved ? 'rgba(34,197,94,0.3)' : 'rgba(27,120,247,0.2)'}`, color: previewSaved ? '#22c55e' : '#1b78f7', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s', flexShrink: 0 }}
+              >
+                {previewSaved ? <Check size={13} strokeWidth={3} /> : <Save size={13} />}
+              </button>
+              {/* Close */}
+              <button
+                onClick={() => { setPreviewEditing(false); setWsExpanded(false) }}
+                style={{ width: 28, height: 28, borderRadius: 7, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.14s', flexShrink: 0 }}
                 onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.18)'}
                 onMouseLeave={e => e.currentTarget.style.background = 'rgba(239,68,68,0.08)'}
               ><X size={13} /></button>
-            </div>
-
-            {/* Tab segmented control */}
-            <div style={{
-              display: 'flex', gap: 3, marginBottom: 13,
-              background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)',
-              borderRadius: 11, padding: '3px',
-            }}>
-              {[
-                { id: 'estilo',  label: 'Estilo',  Icon: Palette },
-                { id: 'blocos',  label: 'Blocos',  Icon: Layout  },
-                { id: 'seccoes', label: 'Secções', Icon: Eye     },
-              ].map(t => (
-                <button key={t.id} onClick={() => setPreviewTab(t.id)} style={{
-                  flex: 1, padding: '7px 4px', borderRadius: 8, border: 'none',
-                  cursor: 'pointer', fontFamily: 'inherit',
-                  background: previewTab === t.id ? 'linear-gradient(135deg, #1b78f7, #4f46e5)' : 'transparent',
-                  color: previewTab === t.id ? '#fff' : 'var(--c-muted)',
-                  fontSize: 11, fontWeight: previewTab === t.id ? 700 : 500,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
-                  transition: 'all 0.15s',
-                  boxShadow: previewTab === t.id ? '0 2px 10px rgba(27,120,247,0.3)' : 'none',
-                }}>
-                  <t.Icon size={11} /> {t.label}
-                </button>
-              ))}
             </div>
           </div>
 
@@ -2387,6 +2393,7 @@ export default function ProjectPage() {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [viewAsPublic, setViewAsPublic] = useState(false)
   const [previewEditing, setPreviewEditing] = useState(false)
+  const [wsExpanded, setWsExpanded] = useState(false)
   const [previewBlocks, setPreviewBlocks] = useState([])
   const [previewStyle, setPreviewStyle] = useState({})
   // Jury / professor ratings state
@@ -3719,7 +3726,11 @@ export default function ProjectPage() {
         )}
       </div>
 
-      <Navbar showCreateProject={true}>
+      <Navbar
+        showCreateProject={true}
+        previewEditingMobile={isOwner && viewAsPublic}
+        onWorkspaceToggle={() => { setPreviewEditing(true); setWsExpanded(e => !e) }}
+      >
         <div className="proj-nav-btns" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {isOwner && (
             <button
@@ -3806,6 +3817,8 @@ export default function ProjectPage() {
           interestLoading={interestLoading}
           onInterest={handleInterest}
           isRecruiterRole={isRecruiterRole}
+          wsExpanded={wsExpanded}
+          setWsExpanded={setWsExpanded}
         />
       )}
 
