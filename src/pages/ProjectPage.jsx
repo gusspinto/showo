@@ -821,7 +821,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
   const deviceMaxWidth = previewDevice === 'mobile' ? 390 : previewDevice === 'tablet' ? 768 : undefined
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', flexDirection: 'column' }}>
+    <div className="pv-outer" style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', flexDirection: 'column' }}>
 
       {/* ── Card style + preview theme scoped CSS ── */}
       <style>{`
@@ -859,6 +859,10 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
           to   { transform: translateY(0);    opacity: 1; }
         }
         /* Desktop: right sidebar */
+        /* Tablet: top-nav visível (62px) — container começa abaixo */
+        @media (min-width: 601px) and (max-width: 860px) {
+          .pv-outer { top: 62px !important; }
+        }
         .pv-workspace { animation: pv-slidein 0.2s cubic-bezier(0.22,1,0.36,1); }
         /* Mobile: bottom sheet */
         .pv-ws-sheet {
@@ -935,32 +939,35 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
           {/* Separator */}
           <div className="pv-banner-sep" style={{ width: 1, height: 18, background: 'var(--c-border)', flexShrink: 0, marginLeft: 4, marginRight: 4 }} />
 
-          {/* Device size toggles */}
-          <div className="pv-device-toggles" style={{ display: 'flex', alignItems: 'center', gap: 2, background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)', borderRadius: 8, padding: '2px' }}>
-            {DEVICES.map(({ id, Icon, label, title }) => (
-              <button
-                key={id}
-                title={title}
-                onClick={() => setPreviewDevice(id)}
-                className="pv-device-btn"
-                style={{
-                  background: previewDevice === id ? (theme === 'light' ? '#fff' : 'rgba(27,120,247,0.18)') : 'transparent',
-                  border: previewDevice === id ? `1px solid ${theme === 'light' ? 'rgba(0,0,0,0.12)' : 'rgba(27,120,247,0.35)'}` : '1px solid transparent',
-                  borderRadius: 6,
-                  width: previewDevice === id ? 'auto' : 28, minWidth: 28, height: 26,
-                  paddingLeft: previewDevice === id ? 8 : 0,
-                  paddingRight: previewDevice === id ? 8 : 0,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
-                  cursor: 'pointer',
-                  color: previewDevice === id ? colors.blue : 'var(--c-muted)',
-                }}
-              >
-                <Icon size={13} strokeWidth={2} />
-                {previewDevice === id && (
-                  <span style={{ fontSize: 11, fontWeight: 700, whiteSpace: 'nowrap' }}>{label}</span>
-                )}
-              </button>
-            ))}
+          {/* Device size toggles — pill azul + texto branco */}
+          <div className="pv-device-toggles" style={{ display: 'flex', alignItems: 'center', gap: 2, background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)', borderRadius: 9, padding: '3px' }}>
+            {DEVICES.map(({ id, Icon, label, title }) => {
+              const isAct = previewDevice === id
+              return (
+                <button
+                  key={id}
+                  title={title}
+                  onClick={() => setPreviewDevice(id)}
+                  className="pv-device-btn"
+                  style={{
+                    background: isAct ? '#1b78f7' : 'transparent',
+                    border: 'none',
+                    borderRadius: 7,
+                    height: 28,
+                    padding: isAct ? '0 10px' : '0',
+                    minWidth: 28,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+                    cursor: 'pointer',
+                    color: isAct ? '#fff' : 'var(--c-muted)',
+                    transition: 'all 0.15s',
+                    boxShadow: isAct ? '0 2px 8px rgba(27,120,247,0.3)' : 'none',
+                  }}
+                >
+                  <Icon size={13} strokeWidth={isAct ? 2.2 : 1.8} />
+                  {isAct && <span style={{ fontSize: 11, fontWeight: 700, whiteSpace: 'nowrap' }}>{label}</span>}
+                </button>
+              )
+            })}
           </div>
 
           <div style={{ flex: 1 }} />
@@ -1333,7 +1340,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
                       onClick={() => project.cover_url && setPreviewStyle(ps => ({ ...ps, coverAsHero: !ps.coverAsHero }))}
                       style={{
                         width: 42, height: 24, borderRadius: 99, flexShrink: 0,
-                        background: previewStyle.coverAsHero && project.cover_url ? 'linear-gradient(135deg, #1b78f7, #4f46e5)' : 'var(--c-border)',
+                        background: previewStyle.coverAsHero && project.cover_url ? '#1b78f7' : 'var(--c-border)',
                         border: 'none', cursor: project.cover_url ? 'pointer' : 'not-allowed',
                         transition: 'background 0.2s', position: 'relative',
                         opacity: project.cover_url ? 1 : 0.4,
@@ -1819,30 +1826,6 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
             )
           })()}
 
-          {/* ── Footer: save ── */}
-          <div style={{
-            padding: '12px 14px 16px', borderTop: '1px solid var(--c-border)', flexShrink: 0,
-            background: 'linear-gradient(0deg, var(--c-sidebar-bg) 60%, transparent)',
-          }}>
-            <button
-              onClick={async () => {
-                const { error } = await supabase.from('projects').update({ preview_blocks: previewBlocks, preview_style: previewStyle }).eq('id', project.id)
-                if (!error) { setPreviewSaved(true); setTimeout(() => setPreviewSaved(false), 2500) }
-              }}
-              style={{
-                width: '100%', padding: '13px',
-                background: previewSaved ? 'linear-gradient(135deg, #22c55e, #16a34a)' : 'linear-gradient(135deg, #1b78f7, #4f46e5)',
-                border: 'none', borderRadius: 11,
-                color: '#fff', fontSize: 13, fontWeight: 700,
-                cursor: 'pointer', fontFamily: 'inherit',
-                boxShadow: previewSaved ? '0 4px 20px rgba(34,197,94,0.3)' : '0 4px 20px rgba(27,120,247,0.35)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                transition: 'background 0.3s, box-shadow 0.3s', letterSpacing: '-0.1px',
-              }}
-            >
-              {previewSaved ? <><Check size={15} strokeWidth={3} /> Guardado!</> : <><Save size={15} /> Guardar alterações</>}
-            </button>
-          </div>
         </div>
       )}
 
@@ -2134,11 +2117,11 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
               <button
                 onClick={() => navigate(`/u/${ownerProfile.username}`)}
                 style={{
-                  background: 'linear-gradient(135deg, #1b78f7, #4f46e5)',
+                  background: '#1b78f7',
                   border: 'none', borderRadius: 10, padding: '10px 22px',
                   color: '#fff', fontSize: 13, fontWeight: 700,
                   cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0,
-                  boxShadow: '0 4px 16px rgba(27,120,247,0.3)',
+                  boxShadow: '0 2px 12px rgba(27,120,247,0.25)',
                 }}
               >
                 Ver perfil
@@ -2300,7 +2283,7 @@ function MembersPanel({ ownerName, members, colors, isOwner }) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {/* Owner */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ width: 32, height: 32, borderRadius: '50%', flexShrink: 0, background: 'linear-gradient(135deg, #1b78f7, #4f46e5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#fff' }}>
+          <div style={{ width: 32, height: 32, borderRadius: '50%', flexShrink: 0, background: '#1b78f7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#fff' }}>
             {displayOwner[0]?.toUpperCase()}
           </div>
           <span style={{ fontSize: 14, fontWeight: 600, color: colors.text, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{displayOwner}</span>
