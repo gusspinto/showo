@@ -859,24 +859,35 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
           to   { transform: translateY(0);    opacity: 1; }
         }
         /* Desktop: right sidebar */
+        /* Desktop: preview começa após a sidebar (z-index 100) */
+        @media (min-width: 861px) {
+          .pv-outer { left: 240px !important; }
+        }
         /* Tablet: top-nav visível (62px) — container começa abaixo */
         @media (min-width: 601px) and (max-width: 860px) {
           .pv-outer { top: 62px !important; }
         }
         .pv-workspace { animation: pv-slidein 0.2s cubic-bezier(0.22,1,0.36,1); }
-        /* Mobile: bottom sheet */
+        /* Mobile: bottom sheet — acima da bottom nav (62px) */
         .pv-ws-sheet {
           position: fixed !important;
           left: 0 !important; right: 0 !important;
-          bottom: 0 !important; top: auto !important;
+          bottom: 62px !important; top: auto !important;
           width: 100% !important;
-          max-height: 78vh !important;
-          border-radius: 20px 20px 0 0 !important;
+          height: auto !important;
+          max-height: 48vh !important;
+          border-radius: 18px 18px 0 0 !important;
           border-left: none !important;
           border-top: 1px solid var(--c-border) !important;
-          box-shadow: 0 -8px 48px rgba(0,0,0,0.55) !important;
-          animation: pv-slidein-up 0.28s cubic-bezier(0.22,1,0.36,1) !important;
-          z-index: 500 !important;
+          box-shadow: 0 -6px 32px rgba(0,0,0,0.5) !important;
+          animation: pv-slidein-up 0.26s cubic-bezier(0.22,1,0.36,1) !important;
+          z-index: 510 !important;
+          transition: max-height 0.26s cubic-bezier(0.22,1,0.36,1) !important;
+          overflow: hidden !important;
+        }
+        .pv-ws-sheet.ws-collapsed {
+          max-height: 0 !important;
+          border-top: none !important;
         }
         /* Overlay behind bottom sheet */
         .pv-ws-overlay {
@@ -1016,7 +1027,8 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
         flex: 1, overflowY: 'auto', overflowX: 'hidden',
         background: resolvedBg,
         paddingRight: isOwner && previewEditing && isDesktop ? 360 : 0,
-        transition: 'padding-right 0.3s ease',
+        transition: 'padding-right 0.26s ease, padding-bottom 0.26s ease',
+        paddingBottom: wsExpanded && !isDesktop ? 'calc(48vh + 10px)' : undefined,
       }}>
 
       {/* ── Device frame + CSS scope (data-pv-cs, data-pv-theme) ── */}
@@ -1830,7 +1842,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
       )}
 
       {/* ── Story sections ── */}
-      <div className="pv-story" style={{ maxWidth: deviceMaxWidth ? Math.min(860, deviceMaxWidth) : 860, margin: '60px auto 0', padding: `0 ${previewDevice === 'mobile' ? '16px' : '28px'} 80px`, display: 'flex', flexDirection: 'column', gap: 32, fontFamily: selectedFont.css }}>
+      <div className="pv-story" style={{ maxWidth: deviceMaxWidth ? Math.min(860, deviceMaxWidth) : 860, margin: `${bannerH + 16}px auto 0`, padding: `0 ${previewDevice === 'mobile' ? '16px' : '28px'} 80px`, display: 'flex', flexDirection: 'column', gap: 32, fontFamily: selectedFont.css }}>
 
         {/* Custom blocks — workspace blocks shown first */}
         {previewBlocks.map(block => {
@@ -2404,9 +2416,22 @@ export default function ProjectPage() {
 
   const prevScoreRef = useRef(null)
   const rafRef = useRef(null)
+  const autoSaveRef = useRef(null)
   const toastTimerRef = useRef(null)
   const cooldownRef = useRef(null)
   const membersChannelRef = useRef(null) // realtime channel — must be cleaned up on unmount
+
+  // ── Auto-save: debounce 1.5s quando previewBlocks ou previewStyle muda ──
+  useEffect(() => {
+    if (!previewEditing || !project?.id) return
+    clearTimeout(autoSaveRef.current)
+    autoSaveRef.current = setTimeout(async () => {
+      await supabase.from('projects')
+        .update({ preview_blocks: previewBlocks, preview_style: previewStyle })
+        .eq('id', project.id)
+    }, 1500)
+    return () => clearTimeout(autoSaveRef.current)
+  }, [previewBlocks, previewStyle]) // eslint-disable-line
 
   // Show launch overlay for newly created projects
   useEffect(() => {
