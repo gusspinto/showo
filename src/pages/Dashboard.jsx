@@ -1418,35 +1418,56 @@ export default function Dashboard() {
           border-radius: 14px;
         }
 
-        /* Section header pattern */
+        /* ── Section header ── */
         .dash-sec-hd {
           display: flex; align-items: center; justify-content: space-between;
-          margin-bottom: 14px;
+          margin-bottom: 16px;
         }
         .dash-sec-label {
-          display: flex; align-items: center; gap: 8px;
-          font-size: 12px; font-weight: 700; color: ${C.muted};
-          text-transform: uppercase; letter-spacing: 0.08em;
+          display: flex; align-items: center; gap: 7px;
+          font-size: 11px; font-weight: 700; color: ${C.muted};
+          text-transform: uppercase; letter-spacing: 0.1em;
           font-family: var(--font-body);
         }
         .dash-sec-count {
-          background: ${C.border}; border-radius: 20px; padding: 2px 8px;
-          font-size: 10px; font-weight: 700; color: ${C.muted};
+          background: rgba(255,255,255,0.04);
+          border: 1px solid ${C.border};
+          border-radius: 20px; padding: 1px 7px;
+          font-size: 10px; font-weight: 700; color: ${C.subtle};
         }
 
-        /* Inline stat pills */
+        /* ── Stat pills — refined ── */
         .dash-stat-pill {
           display: inline-flex; align-items: center; gap: 5px;
-          background: var(--c-bg-alt);
+          background: rgba(255,255,255,0.03);
           border: 1px solid ${C.border};
-          border-radius: 999px;
-          padding: 4px 11px;
-          font-size: 11px; font-weight: 600; color: ${C.muted};
+          border-radius: 8px;
+          padding: 5px 12px;
+          font-size: 12px; font-weight: 600; color: ${C.muted};
           white-space: nowrap;
+          transition: border-color 0.15s, color 0.15s;
+          cursor: default;
+        }
+        .dash-stat-pill:hover { border-color: ${C.borderBright}; color: ${C.text}; }
+
+        /* ── Project rows — hover lift ── */
+        .dash-project-row {
+          transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.15s !important;
+        }
+        .dash-project-row:hover {
+          transform: translateY(-1px) !important;
+          box-shadow: 0 4px 20px rgba(0,0,0,0.25) !important;
+          border-color: ${C.borderBright} !important;
         }
 
-        /* Project rows */
+        /* ── Project actions ── */
         .dash-project-actions { display: flex; gap: 6px; flex-shrink: 0; align-items: center; }
+
+        /* ── Animated entry for lists ── */
+        @keyframes dash-item-in {
+          from { opacity: 0; transform: translateY(6px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
 
         @media (max-width: 860px) {
           .dash-hd-btn-settings { display: none !important; }
@@ -1455,13 +1476,24 @@ export default function Dashboard() {
         .dash-proj-actions-mobile { display: none; }
         /* ── CTA buttons in cards — coerência de tamanho ── */
         .dash-action-btn {
-          font-size: 13px; font-weight: 700;
+          font-size: 13px; font-weight: 600;
           padding: 7px 14px; border-radius: 8px;
           white-space: nowrap; cursor: pointer; font-family: inherit;
-          transition: opacity 0.12s;
+          transition: opacity 0.15s, transform 0.12s, box-shadow 0.15s;
           flex-shrink: 0;
         }
-        .dash-action-btn:active { opacity: 0.78; }
+        .dash-action-btn:hover { opacity: 0.88; transform: translateY(-1px); }
+        .dash-action-btn:active { opacity: 0.75; transform: translateY(0); }
+
+        /* ── Action insight cards — hover lift ── */
+        .dash-insight-card {
+          transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s !important;
+        }
+        .dash-insight-card:hover {
+          border-color: rgba(27,120,247,0.35) !important;
+          box-shadow: 0 4px 20px rgba(27,120,247,0.1) !important;
+          transform: translateY(-1px) !important;
+        }
         /* Chart hidden on mobile */
         .dash-chart-wrap { }
 
@@ -2048,8 +2080,10 @@ export default function Dashboard() {
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {projects.map(project => (
-                  <ProjectRow key={project.id} project={project} onView={() => navigate(`/projeto/${project.slug}`)} onEdit={() => navigate(`/editar/${project.slug}`)} onDelete={deleteProject} onCopy={() => copyProjectLink(project.slug)} copied={copiedSlug === project.slug} />
+                {projects.map((project, idx) => (
+                  <div key={project.id} style={{ animation: `dash-item-in 0.3s cubic-bezier(0.16,1,0.3,1) ${idx * 0.06}s both` }}>
+                    <ProjectRow project={project} onView={() => navigate(`/projeto/${project.slug}`)} onEdit={() => navigate(`/editar/${project.slug}`)} onDelete={deleteProject} onCopy={() => copyProjectLink(project.slug)} copied={copiedSlug === project.slug} />
+                  </div>
                 ))}
               </div>
             )}

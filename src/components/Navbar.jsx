@@ -382,7 +382,7 @@ function InviteInbox({ userId, sidebar = false }) {
                       <div style={{ display: 'flex', gap: 6 }}>
                         <button
                           onClick={() => respond(invite, 'accepted')} disabled={isActing}
-                          style={{ flex: 1, padding: '7px 0', background: 'linear-gradient(135deg,#1b78f7,#4f46e5)', border: 'none', borderRadius: 7, color: '#fff', fontSize: 12, fontWeight: 700, cursor: isActing ? 'default' : 'pointer', fontFamily: 'inherit' }}
+                          style={{ flex: 1, padding: '7px 0', background: '#1b78f7', border: 'none', borderRadius: 7, color: '#fff', fontSize: 12, fontWeight: 700, cursor: isActing ? 'default' : 'pointer', fontFamily: 'inherit' }}
                         >{acting[invite.id] === 'accepted' ? '...' : <><Check size={12} style={{ verticalAlign: 'middle', marginRight: 3 }} />Aceitar</>}</button>
                         <button
                           onClick={() => respond(invite, 'declined')} disabled={isActing}
@@ -525,7 +525,7 @@ function AvatarCircle({ avatarUrl, initial, size = 28, fontSize = 13 }) {
   ) : (
     <div style={{
       width: size, height: size, borderRadius: '50%',
-      background: 'linear-gradient(135deg, #1b78f7, #4f46e5)',
+      background: '#1b78f7',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       fontSize, fontWeight: 700, color: '#fff', flexShrink: 0,
       userSelect: 'none',
@@ -703,11 +703,14 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
         .ham-btn    { display: none !important; }
 
         /* ── Sidebar (desktop >860px) ── */
+        /* ═══════════════════════════════════
+           SIDEBAR — redesign
+        ═══════════════════════════════════ */
         .sidebar {
           display: none;
           position: fixed;
           left: 0; top: 0; bottom: 0;
-          width: 240px;
+          width: 232px;
           background: var(--c-sidebar-bg);
           border-right: 1px solid var(--c-border);
           flex-direction: column;
@@ -717,34 +720,35 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
         }
         .sb-logo {
           display: flex; align-items: center;
-          padding: 20px 16px 18px;
+          padding: 18px 16px 16px;
           cursor: pointer; border: none; background: transparent;
           font-family: inherit; text-align: left; width: 100%;
+          transition: opacity 0.15s;
         }
-        .sb-logo:hover { opacity: 0.85; }
+        .sb-logo:hover { opacity: 0.75; }
         .sb-logo-divider {
-          height: 1px; background: var(--c-border);
-          margin: 0 12px 10px; opacity: 0.6;
+          height: 1px;
+          background: linear-gradient(90deg, transparent, var(--c-border), transparent);
+          margin: 0 0 8px; opacity: 0.8;
         }
-        .sb-section { padding: 0 8px; flex: 1; overflow-y: auto; overflow-x: hidden; min-height: 0; }
-        .sb-section::-webkit-scrollbar { width: 3px; }
+        .sb-section {
+          padding: 0 10px;
+          flex: 1; overflow-y: auto; overflow-x: hidden; min-height: 0;
+        }
+        .sb-section::-webkit-scrollbar { width: 2px; }
         .sb-section::-webkit-scrollbar-track { background: transparent; }
         .sb-section::-webkit-scrollbar-thumb { background: var(--c-border); border-radius: 99px; }
 
         /* Sidebar animation keyframes */
         @keyframes sb-fade-slide-in {
-          from { opacity: 0; transform: translateY(-6px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes sb-fade-slide-out {
-          from { opacity: 1; transform: translateY(0); max-height: 400px; }
-          to   { opacity: 0; transform: translateY(-6px); max-height: 0; }
+          from { opacity: 0; transform: translateY(-4px) scale(0.99); }
+          to   { opacity: 1; transform: translateY(0) scale(1); }
         }
         .sb-create-wrap {
           display: grid;
           grid-template-rows: 1fr;
-          transition: grid-template-rows 0.32s cubic-bezier(0.16,1,0.3,1),
-                      opacity 0.24s ease;
+          transition: grid-template-rows 0.28s cubic-bezier(0.16,1,0.3,1),
+                      opacity 0.2s ease;
           opacity: 1;
         }
         .sb-create-wrap.hidden {
@@ -752,77 +756,83 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
           opacity: 0;
           pointer-events: none;
         }
-        .sb-create-inner {
-          overflow: hidden;
-          min-height: 0;
-        }
+        .sb-create-inner { overflow: hidden; min-height: 0; }
         .sb-soon {
           display: inline-flex; align-items: center;
           margin-left: auto; font-size: 9px; font-weight: 700;
-          color: var(--c-subtle); background: var(--c-bg-alt);
+          color: var(--c-subtle); background: var(--c-bg);
           border: 1px solid var(--c-border); border-radius: 4px;
           padding: 1px 5px; text-transform: uppercase; letter-spacing: 0.05em;
           flex-shrink: 0;
         }
         .sb-label {
-          font-size: 11px; font-weight: 700; color: var(--c-subtle);
-          text-transform: uppercase; letter-spacing: 0.1em;
-          padding: 12px 10px 4px; display: block;
+          font-size: 10px; font-weight: 700; color: var(--c-subtle);
+          text-transform: uppercase; letter-spacing: 0.12em;
+          padding: 14px 4px 5px; display: block;
         }
+        /* Nav item — left-bar active indicator style */
         .sb-item {
-          display: flex; align-items: center; gap: 11px;
-          width: 100%; padding: 9px 12px;
-          border-radius: 9px; border: none;
+          display: flex; align-items: center; gap: 10px;
+          width: 100%; padding: 8px 10px;
+          border-radius: 8px; border: none;
           background: transparent; color: var(--c-muted);
-          font-size: 13px; font-weight: 600;
+          font-size: 13px; font-weight: 500;
           cursor: pointer; font-family: inherit;
-          transition: background 0.13s, color 0.13s;
+          transition: background 0.15s, color 0.15s, transform 0.1s;
           text-align: left; white-space: nowrap;
+          position: relative;
         }
-        .sb-item:hover { background: rgba(128,128,128,0.1); color: var(--c-text); }
-        .sb-item.active { background: rgba(27,120,247,0.13); color: #1b78f7; }
+        .sb-item:hover {
+          background: rgba(255,255,255,0.04);
+          color: var(--c-text);
+          transform: translateX(2px);
+        }
+        .sb-item.active {
+          background: rgba(27,120,247,0.1);
+          color: #1b78f7;
+          font-weight: 600;
+        }
+        /* Active left accent bar */
+        .sb-item.active::before {
+          content: '';
+          position: absolute;
+          left: -10px; top: 25%; bottom: 25%;
+          width: 3px;
+          background: #1b78f7;
+          border-radius: 0 3px 3px 0;
+        }
         .sb-item.danger { color: #ef4444; }
-        .sb-item.danger:hover { background: rgba(239,68,68,0.08); color: #ef4444; }
+        .sb-item.danger:hover { background: rgba(239,68,68,0.07); color: #ef4444; transform: none; }
+        /* Create button — solid blue, no gradient */
         .sb-create {
           display: flex; align-items: center; gap: 8px;
-          margin: 10px 8px 4px;
-          padding: 10px 14px;
-          background: linear-gradient(135deg, #1b78f7, #4f46e5);
-          border: none; border-radius: 10px;
-          color: #fff; font-size: 13px; font-weight: 700;
-          cursor: pointer; font-family: inherit;
-          box-shadow: 0 2px 14px rgba(27,120,247,0.3);
-          transition: opacity 0.15s; width: calc(100% - 16px);
-        }
-        .sb-create:hover { opacity: 0.88; }
-        .sb-divider { height: 1px; background: var(--c-border); margin: 8px 8px; }
-        .sb-project-section {
-          background: rgba(27,120,247,0.07);
-          border: 1px solid rgba(27,120,247,0.18);
-          border-radius: 12px;
-          padding: 4px 0 6px;
           margin: 8px 0 4px;
-          animation: sb-fade-slide-in 0.3s cubic-bezier(0.16,1,0.3,1) both;
+          padding: 9px 13px;
+          background: #1b78f7;
+          border: none; border-radius: 9px;
+          color: #fff; font-size: 13px; font-weight: 600;
+          cursor: pointer; font-family: inherit;
+          box-shadow: 0 2px 10px rgba(27,120,247,0.28);
+          transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
+          width: 100%;
         }
-        .sb-project-section .sb-label {
-          color: #1b78f7;
-          padding-top: 8px;
-        }
-        .sb-project-section .sb-item:hover {
-          background: rgba(27,120,247,0.12);
-          color: #e8f2ff;
-        }
-        body.light .sb-project-section {
+        .sb-create:hover { background: #1564d4; box-shadow: 0 4px 16px rgba(27,120,247,0.38); transform: translateY(-1px); }
+        .sb-create:active { transform: translateY(0); }
+        .sb-divider { height: 1px; background: var(--c-border); margin: 6px 0; opacity: 0.6; }
+        /* Project section card — subtle highlight */
+        .sb-project-section {
           background: rgba(27,120,247,0.06);
-          border-color: rgba(27,120,247,0.2);
+          border: 1px solid rgba(27,120,247,0.14);
+          border-radius: 10px;
+          padding: 4px 0 6px;
+          margin: 6px 0 4px;
+          animation: sb-fade-slide-in 0.25s cubic-bezier(0.16,1,0.3,1) both;
         }
-        body.light .sb-project-section .sb-label {
-          color: #1b78f7;
-        }
-        body.light .sb-project-section .sb-item:hover {
-          color: #1b78f7;
-        }
-        .sb-bottom { padding: 0 8px 16px; }
+        .sb-project-section .sb-label { color: rgba(27,120,247,0.7); padding-top: 8px; }
+        .sb-project-section .sb-item:hover { background: rgba(27,120,247,0.1); color: var(--c-text); }
+        body.light .sb-project-section { background: rgba(27,120,247,0.05); border-color: rgba(27,120,247,0.15); }
+        body.light .sb-item:hover { background: rgba(0,0,0,0.04); }
+        .sb-bottom { padding: 0 10px 14px; }
 
         @media (min-width: 861px) {
           .sidebar   { display: flex; }
@@ -1192,7 +1202,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               >Entrar</button>
               <button
                 onClick={() => { navigate('/register'); setOpen(false) }}
-                style={{ flex: 1, padding: '12px 0', background: 'linear-gradient(135deg, #1b78f7, #4f46e5)', border: 'none', borderRadius: 10, color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 16px rgba(27,120,247,0.3)' }}
+                style={{ flex: 1, padding: '12px 0', background: '#1b78f7', border: 'none', borderRadius: 10, color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 16px rgba(27,120,247,0.3)' }}
               >Criar conta</button>
             </div>
           )}
@@ -1299,7 +1309,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               onClick={() => setCreateModal(true)}
               aria-label="Criar projeto"
               style={{
-                background: 'linear-gradient(135deg, #1b78f7, #4f46e5)',
+                background: '#1b78f7',
                 border: 'none',
                 borderRadius: 8, width: 38, height: 38,
                 flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
@@ -1637,7 +1647,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               ) : (
                 <div style={{ padding: '16px 12px 12px', display: 'flex', gap: 8 }}>
                   <button onClick={() => { navigate('/login'); setMenuOpen(false) }} style={{ flex: 1, padding: '13px 0', background: 'transparent', border: '1px solid var(--c-border)', borderRadius: 10, color: 'var(--c-text)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Entrar</button>
-                  <button onClick={() => { navigate('/register'); setMenuOpen(false) }} style={{ flex: 1, padding: '13px 0', background: 'linear-gradient(135deg, #1b78f7, #4f46e5)', border: 'none', borderRadius: 10, color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>Criar conta</button>
+                  <button onClick={() => { navigate('/register'); setMenuOpen(false) }} style={{ flex: 1, padding: '13px 0', background: '#1b78f7', border: 'none', borderRadius: 10, color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>Criar conta</button>
                 </div>
               )}
 
