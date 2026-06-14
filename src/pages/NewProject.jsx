@@ -375,7 +375,12 @@ export default function NewProject() {
     setPhase('generating')
     setError(null)
     try {
-      const aiResult = await generateProject(answers)
+      let aiResult = {}
+      try {
+        aiResult = await generateProject(answers)
+      } catch (aiErr) {
+        console.warn('AI generation failed, saving without AI content:', aiErr)
+      }
       const project = await saveProject(answers, aiResult, user?.id ?? null)
       localStorage.setItem(`edit_token_${project.slug}`, project.edit_token)
       await clearDraft()
