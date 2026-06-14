@@ -2484,7 +2484,7 @@ export default function ProjectPage() {
         setLikeCount(count || 0)
       })
       if (user?.id) {
-        supabase.from('project_likes').select('user_id').eq('project_id', data.id).eq('user_id', user.id).single().then(({ data: l }) => {
+        supabase.from('project_likes').select('user_id').eq('project_id', data.id).eq('user_id', user.id).maybeSingle().then(({ data: l }) => {
           setLiked(!!l)
         })
       }
