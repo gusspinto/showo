@@ -1285,7 +1285,7 @@ export default function Dashboard() {
     if (!user || (profile?.role !== 'recrutador' && profile?.role !== 'empresa')) return
     supabase
       .from('vagas')
-      .select('id, title, location, type')
+      .select('id, title:titulo, location:localizacao, type:tipo')
       .eq('recruiter_id', user.id)
       .eq('is_active', true)
       .order('created_at', { ascending: false })

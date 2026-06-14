@@ -246,7 +246,7 @@ export default function Conquistas() {
     async function load() {
       let { data: projs, error } = await supabase
         .from('projects')
-        .select('id, score, views, ai_feedback, collaborator_count:project_members(count)')
+        .select('id, score, views, ai_feedback, collaborator_count:project_collaborators(count)')
         .eq('user_id', user.id)
 
       if (error) {

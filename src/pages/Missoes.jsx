@@ -299,7 +299,7 @@ export default function Missoes() {
     async function load() {
       const [{ data: projs }, { data: prof }] = await Promise.all([
         supabase.from('projects')
-          .select('id, score, views, ai_feedback, cover_url, collaborator_count:project_members(count)')
+          .select('id, score, views, ai_feedback, cover_url, collaborator_count:project_collaborators(count)')
           .eq('user_id', user.id),
         supabase.from('profiles')
           .select('avatar_url, bio, escola, school')
