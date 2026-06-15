@@ -76,7 +76,7 @@ function ProjectMockup({ theme }) {
         top: 0, left: 0,
         width: MOCK_W,
         transformOrigin: 'top left',
-        transform: 'scale(0.65)',
+        transform: 'scale(0.75)',
         borderRadius: 16,
         overflow: 'hidden',
         boxShadow: '0 24px 80px rgba(0,0,0,0.6)',
@@ -562,45 +562,37 @@ export default function Home() {
           pointerEvents: 'none', animation: 'pulse-glow 5s ease-in-out infinite',
         }} />
 
-        {/* Hero — container centrado, margens automáticas iguais */}
-        <div className="hero-section" style={{ padding: '72px 0 0', position: 'relative' }}>
-          <div style={{ maxWidth: 1160, margin: '0 auto', padding: '0 40px' }}>
-          {/* Grid: texto | mockup */}
-          <div className="hero-inner" style={{ marginBottom: 40 }}>
-            {/* Left col — só texto */}
-            <div className="hero-left" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-              <div className="hero-badge" style={{
-                display: 'inline-flex', alignItems: 'center', gap: 8,
-                background: theme === 'light' ? 'rgba(27,120,247,0.08)' : 'rgba(27,120,247,0.07)',
-                border: `1px solid ${theme === 'light' ? 'rgba(27,120,247,0.25)' : 'rgba(27,120,247,0.18)'}`,
-                color: '#1b78f7', borderRadius: 999,
-                padding: '5px 16px', fontSize: 12, fontWeight: 600, marginBottom: 28,
-              }}>
-                <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#1b78f7', display: 'inline-block', animation: 'pulse-glow 2s ease-in-out infinite' }} />
-                Para estudantes portugueses
-              </div>
+        {/* Hero — flex row: texto+widget à esquerda, mockup à direita (sangra) */}
+        <div className="hero-section" style={{ padding: '72px 0 72px', position: 'relative', display: 'flex', alignItems: 'center' }}>
 
-              <StaticHero />
-
-              <p className="hero-sub" style={{
-                fontSize: 17, color: colors.muted, maxWidth: 460,
-                lineHeight: 1.7, margin: 0, fontWeight: 400,
-              }}>
-                Cria uma página profissional do teu projeto em 10 minutos.
-                Partilha o link com qualquer empresa. Consegue o estágio que mereces.
-              </p>
+          {/* Coluna esquerda: texto + widget */}
+          <div className="hero-left" style={{
+            display: 'flex', flexDirection: 'column', alignItems: 'flex-start',
+            flexShrink: 0, width: 460, paddingLeft: 64,
+          }}>
+            <div className="hero-badge" style={{
+              display: 'inline-flex', alignItems: 'center', gap: 8,
+              background: theme === 'light' ? 'rgba(27,120,247,0.08)' : 'rgba(27,120,247,0.07)',
+              border: `1px solid ${theme === 'light' ? 'rgba(27,120,247,0.25)' : 'rgba(27,120,247,0.18)'}`,
+              color: '#1b78f7', borderRadius: 999,
+              padding: '5px 16px', fontSize: 12, fontWeight: 600, marginBottom: 28,
+            }}>
+              <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#1b78f7', display: 'inline-block', animation: 'pulse-glow 2s ease-in-out infinite' }} />
+              Para estudantes portugueses
             </div>
 
-            {/* Right col — mockup */}
-            <div className="hero-mockup-col" style={{ alignSelf: 'center' }}>
-              <ProjectMockup theme={theme} />
-            </div>
-          </div>
+            <StaticHero />
 
-          {/* Widget centrado abaixo das duas colunas */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingBottom: 64 }}>
-            <form className="hero-widget" onSubmit={handleStart} style={{ width: '100%', maxWidth: 580 }}>
-              <div className="goals-row" style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 14 }}>
+            <p className="hero-sub" style={{
+              fontSize: 16, color: colors.muted, lineHeight: 1.7, margin: '0 0 32px', fontWeight: 400,
+            }}>
+              Cria uma página profissional do teu projeto em 10 minutos.
+              Partilha o link com qualquer empresa.
+            </p>
+
+            {/* Widget */}
+            <form className="hero-widget" onSubmit={handleStart} style={{ width: '100%' }}>
+              <div className="goals-row" style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'flex-start', marginBottom: 14 }}>
                 {QUICK_GOALS.map(g => (
                   <button
                     key={g.id} type="button" className="goal-pill"
@@ -614,7 +606,6 @@ export default function Home() {
                   >{g.label}</button>
                 ))}
               </div>
-
               <div
                 className="widget-box"
                 style={{
@@ -633,7 +624,7 @@ export default function Home() {
                   placeholder={placeholder}
                   style={{
                     flex: 1, background: 'transparent', border: 'none',
-                    color: 'var(--c-text)', fontSize: 16, fontFamily: 'inherit',
+                    color: 'var(--c-text)', fontSize: 15, fontFamily: 'inherit',
                     outline: 'none', minWidth: 0, padding: '10px 0',
                   }}
                 />
@@ -642,30 +633,33 @@ export default function Home() {
                   disabled={!inputText.trim()}
                   style={{
                     background: inputText.trim() ? '#1b78f7' : 'rgba(255,255,255,0.06)',
-                    border: 'none', borderRadius: 12, color: '#fff', width: 48, height: 48,
+                    border: 'none', borderRadius: 12, color: '#fff', width: 44, height: 44,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     cursor: inputText.trim() ? 'pointer' : 'not-allowed', flexShrink: 0,
                     transition: 'all 0.15s',
                   }}
                 >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
                   </svg>
                 </button>
               </div>
-
               {spamError ? (
-                <p style={{ color: '#ef4444', fontSize: 12, marginTop: 10, fontWeight: 600, textAlign: 'center' }}>
+                <p style={{ color: '#ef4444', fontSize: 12, marginTop: 10, fontWeight: 600 }}>
                   Texto inválido — escreve uma descrição real do teu projeto.
                 </p>
               ) : (
-                <p className="hero-note" style={{ color: colors.subtle, fontSize: 13, marginTop: 14, fontWeight: 500, textAlign: 'center' }}>
+                <p className="hero-note" style={{ color: colors.subtle, fontSize: 13, marginTop: 12, fontWeight: 500 }}>
                   Sem registo · Sem cartão de crédito
                 </p>
               )}
             </form>
           </div>
-          </div>{/* /maxWidth container */}
+
+          {/* Coluna direita: mockup grande, sangra à direita */}
+          <div className="hero-mockup-col" style={{ flex: 1, overflow: 'hidden', alignSelf: 'stretch', position: 'relative', marginLeft: 48 }}>
+            <ProjectMockup theme={theme} />
+          </div>
         </div>
       </div>
 
