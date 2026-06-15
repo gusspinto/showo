@@ -139,8 +139,7 @@ export function checkMissionProgress(mission, projects, profile, user) {
     case 'complete_profile':
       return !!(
         profile?.avatar_url &&
-        profile?.bio &&
-        (profile?.escola || profile?.school)
+        profile?.bio
       )
 
     case 'score_60':
@@ -299,10 +298,10 @@ export default function Missoes() {
     async function load() {
       const [{ data: projs }, { data: prof }] = await Promise.all([
         supabase.from('projects')
-          .select('id, score, views, ai_feedback, cover_url, collaborator_count:project_members(count)')
+          .select('id, score, views, ai_feedback, cover_url, collaborator_count:project_collaborators(count)')
           .eq('user_id', user.id),
         supabase.from('profiles')
-          .select('avatar_url, bio, escola, school')
+          .select('avatar_url, bio, skills')
           .eq('id', user.id)
           .single(),
       ])

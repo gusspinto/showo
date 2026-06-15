@@ -360,7 +360,7 @@ export default function UserProfile() {
 
       let { data: projectsData, error: projErr } = await supabase
         .from('projects')
-        .select('id, name, slug, score, area, ai_tagline, cover_url, created_at, views, ai_feedback, collaborator_count:project_members(count)')
+        .select('id, name, slug, score, area, ai_tagline, cover_url, created_at, views, ai_feedback, collaborator_count:project_collaborators(count)')
         .eq('user_id', profileData.id)
         .order('score', { ascending: false })
 

@@ -1138,14 +1138,12 @@ export default function Dashboard() {
   useEffect(() => {
     if (!user) return
     async function load() {
-      // Primary query with collaborator_count
       let { data, error } = await supabase
         .from('projects')
-        .select('id, name, slug, score, area, created_at, ai_tagline, views, defense_date, ai_feedback, cover_url, collaborator_count:project_members(count)')
+        .select('id, name, slug, score, area, created_at, ai_tagline, views, defense_date, ai_feedback, cover_url, collaborator_count:project_collaborators(count)')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
 
-      // Fallback: if subquery fails (e.g. RLS on project_members), retry without it
       if (error) {
         const fallback = await supabase
           .from('projects')
@@ -1287,7 +1285,7 @@ export default function Dashboard() {
     if (!user || (profile?.role !== 'recrutador' && profile?.role !== 'empresa')) return
     supabase
       .from('vagas')
-      .select('id, title, location, type')
+      .select('id, title:titulo, location:localizacao, type:tipo')
       .eq('recruiter_id', user.id)
       .eq('is_active', true)
       .order('created_at', { ascending: false })

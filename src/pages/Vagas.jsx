@@ -430,7 +430,7 @@ export default function Vagas() {
       const vagaIds = [...new Set(invites.map(i => i.vaga_id))]
       const recruiterIds = [...new Set(invites.map(i => i.recruiter_id))]
       const [{ data: vagasData }, { data: profsData }] = await Promise.all([
-        supabase.from('vagas').select('id, title, type, location, area').in('id', vagaIds),
+        supabase.from('vagas').select('id, title:titulo, type:tipo, location:localizacao, area').in('id', vagaIds),
         supabase.from('profiles').select('id, full_name, username, company, avatar_url').in('id', recruiterIds),
       ])
       const vagaMap = {}

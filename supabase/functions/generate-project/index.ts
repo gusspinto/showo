@@ -11,7 +11,8 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const projectData = await req.json()
+    const body = await req.json()
+    const projectData = body.data ?? body
 
     const client = new Anthropic({
       apiKey: Deno.env.get('ANTHROPIC_API_KEY') ?? '',
