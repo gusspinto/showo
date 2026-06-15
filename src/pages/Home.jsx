@@ -32,10 +32,7 @@ function StaticHero() {
       textAlign: 'left',
     }}>
       O teu projeto vale mais do que um{' '}
-      <span style={{
-        background: 'linear-gradient(135deg, #1b78f7 0%, #38a3ff 100%)',
-        WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-      }}>CV vazio.</span>
+      <span style={{ color: '#1b78f7' }}>CV vazio.</span>
     </h1>
   )
 }
@@ -76,10 +73,10 @@ function ProjectMockup({ theme }) {
       {/* Scaled page */}
       <div style={{
         position: 'absolute',
-        top: 0, right: -80,
+        top: -20, right: -100,
         width: MOCK_W,
         transformOrigin: 'top right',
-        transform: 'scale(0.72)',
+        transform: 'scale(0.63)',
         borderRadius: 16,
         overflow: 'hidden',
         border: `1px solid ${border}`,
@@ -192,8 +189,15 @@ function ProjectMockup({ theme }) {
       {/* Left shadow — "emerging from behind" effect */}
       <div style={{
         position: 'absolute', top: 0, left: 0,
-        width: '35%', height: '100%',
-        background: `linear-gradient(to right, var(--c-bg) 30%, transparent 100%)`,
+        width: '45%', height: '100%',
+        background: `linear-gradient(to right, var(--c-bg) 40%, transparent 100%)`,
+        pointerEvents: 'none', zIndex: 2,
+      }} />
+      {/* Bottom fade */}
+      <div style={{
+        position: 'absolute', bottom: 0, left: 0, right: 0,
+        height: '25%',
+        background: `linear-gradient(to bottom, transparent, var(--c-bg))`,
         pointerEvents: 'none', zIndex: 2,
       }} />
     </div>
@@ -310,10 +314,10 @@ export default function Home() {
         /* Hero two-column layout */
         .hero-inner {
           display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 64px;
+          grid-template-columns: 52% 48%;
+          gap: 0;
           align-items: center;
-          max-width: 1160px;
+          max-width: 1280px;
           margin: 0 auto;
           width: 100%;
         }
@@ -387,7 +391,7 @@ export default function Home() {
           minHeight: 'calc(100vh - 62px)',
           display: 'flex', flexDirection: 'column',
           alignItems: 'center', justifyContent: 'center',
-          padding: '64px 32px',
+          padding: '80px 48px 80px 56px',
           position: 'relative',
         }}>
           <div className="hero-inner">
@@ -411,7 +415,7 @@ export default function Home() {
               {/* Subheadline */}
               <p className="hero-sub" style={{
                 fontSize: 17, color: colors.muted, maxWidth: 460,
-                lineHeight: 1.65, margin: '0 0 36px', fontWeight: 400,
+                lineHeight: 1.7, margin: '0 0 44px', fontWeight: 400,
               }}>
                 Cria uma página profissional do teu projeto em 10 minutos.
                 Partilha o link com qualquer empresa. Consegue o estágio que mereces.
