@@ -41,107 +41,147 @@ function StaticHero() {
 }
 
 function ProjectMockup({ theme }) {
-  const isDark = theme !== 'light'
-  const cardBg     = isDark ? '#0f1623' : '#ffffff'
-  const cardBorder = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'
+  const isDark     = theme !== 'light'
+  const pageBg     = isDark ? '#0b1120' : '#f8fafc'
+  const cardBg     = isDark ? '#111827' : '#ffffff'
+  const cardBorder = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)'
   const textPri    = isDark ? '#f1f5f9' : '#0f172a'
   const textSec    = isDark ? '#94a3b8' : '#64748b'
-  const tagBg      = isDark ? 'rgba(27,120,247,0.15)' : 'rgba(27,120,247,0.08)'
+  const chromeBg   = isDark ? '#1e293b' : '#e2e8f0'
 
   return (
     <div style={{
-      transform: 'rotate(3deg)',
-      transformOrigin: 'center center',
-      filter: 'drop-shadow(0 32px 64px rgba(0,0,0,0.45))',
-      width: '100%', maxWidth: 380,
+      transform: 'rotate(2.5deg)',
+      transformOrigin: 'center top',
+      filter: 'drop-shadow(0 40px 80px rgba(0,0,0,0.5))',
+      width: '100%', maxWidth: 400,
     }}>
       {/* Browser chrome */}
       <div style={{
-        background: isDark ? '#1e293b' : '#e2e8f0',
-        borderRadius: '14px 14px 0 0',
-        padding: '10px 14px',
-        display: 'flex', alignItems: 'center', gap: 6,
-        border: `1px solid ${cardBorder}`,
-        borderBottom: 'none',
+        background: chromeBg, borderRadius: '14px 14px 0 0',
+        padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 6,
+        border: `1px solid ${cardBorder}`, borderBottom: 'none',
       }}>
-        <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#ef4444', opacity: 0.8 }} />
-        <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#fbbf24', opacity: 0.8 }} />
-        <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#22c55e', opacity: 0.8 }} />
+        <div style={{ width: 9, height: 9, borderRadius: '50%', background: '#ef4444', opacity: 0.85 }} />
+        <div style={{ width: 9, height: 9, borderRadius: '50%', background: '#fbbf24', opacity: 0.85 }} />
+        <div style={{ width: 9, height: 9, borderRadius: '50%', background: '#22c55e', opacity: 0.85 }} />
         <div style={{
-          flex: 1, marginLeft: 8,
-          background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)',
-          borderRadius: 6, padding: '3px 10px',
-          fontSize: 10, color: textSec, fontFamily: 'monospace',
-        }}>
-          showo.pt/p/stockflow-pro
-        </div>
+          flex: 1, marginLeft: 8, background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)',
+          borderRadius: 6, padding: '3px 10px', fontSize: 10, color: textSec, fontFamily: 'monospace',
+        }}>showo.pt/p/stockflow-pro</div>
       </div>
 
-      {/* Card content */}
+      {/* Page body */}
       <div style={{
-        background: cardBg,
-        border: `1px solid ${cardBorder}`,
-        borderRadius: '0 0 14px 14px',
-        overflow: 'hidden',
+        background: pageBg, border: `1px solid ${cardBorder}`,
+        borderRadius: '0 0 14px 14px', overflow: 'hidden',
+        maxHeight: 520,
       }}>
-        {/* Cover image placeholder */}
+        {/* Cover */}
         <div style={{
-          height: 120,
-          background: 'linear-gradient(135deg, #1b3a6b 0%, #1b78f7 50%, #818cf8 100%)',
+          height: 100,
+          background: 'linear-gradient(135deg, #0d2a5e 0%, #1b78f7 60%, #818cf8 100%)',
           position: 'relative',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
-          <div style={{ fontSize: 32, opacity: 0.3 }}>📦</div>
+          {/* Score badge no canto */}
+          <div style={{
+            position: 'absolute', top: 10, right: 12,
+            background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(6px)',
+            borderRadius: 8, padding: '4px 10px',
+            display: 'flex', alignItems: 'center', gap: 5,
+          }}>
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="#fbbf24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <span style={{ fontSize: 10, fontWeight: 800, color: '#fff' }}>88 pts</span>
+          </div>
           {/* Avatar */}
           <div style={{
-            position: 'absolute', bottom: -20, left: 20,
-            width: 44, height: 44, borderRadius: '50%',
-            background: 'linear-gradient(135deg, #1b78f7, #818cf8)',
-            border: `3px solid ${cardBg}`,
+            position: 'absolute', bottom: -18, left: 16,
+            width: 40, height: 40, borderRadius: '50%',
+            background: 'linear-gradient(135deg, #1b78f7, #a78bfa)',
+            border: `3px solid ${pageBg}`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 16, fontWeight: 700, color: '#fff',
+            fontSize: 15, fontWeight: 800, color: '#fff',
           }}>J</div>
         </div>
 
-        <div style={{ padding: '28px 20px 20px' }}>
-          {/* Tags */}
-          <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
-            <span style={{ background: tagBg, color: '#1b78f7', fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 6 }}>PAP</span>
-            <span style={{ background: isDark ? 'rgba(251,191,36,0.12)' : 'rgba(251,191,36,0.1)', color: '#fbbf24', fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 6 }}>2024/25</span>
+        {/* Header info */}
+        <div style={{ padding: '24px 16px 14px' }}>
+          <div style={{ display: 'flex', gap: 5, marginBottom: 8 }}>
+            <span style={{ background: 'rgba(27,120,247,0.15)', color: '#1b78f7', fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 5 }}>PAP</span>
+            <span style={{ background: 'rgba(251,191,36,0.12)', color: '#fbbf24', fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 5 }}>2024/25</span>
           </div>
-
-          {/* Title */}
-          <div style={{ fontSize: 15, fontWeight: 800, color: textPri, marginBottom: 4, letterSpacing: '-0.3px', fontFamily: 'var(--font-heading)' }}>
+          <div style={{ fontSize: 16, fontWeight: 900, color: textPri, letterSpacing: '-0.4px', fontFamily: 'var(--font-heading)', marginBottom: 3 }}>
             StockFlow Pro
           </div>
-          <div style={{ fontSize: 11, color: textSec, marginBottom: 14 }}>
-            João Silva · CTIC, Escola Profissional do Porto
+          <div style={{ fontSize: 10, color: textSec }}>
+            João Silva · Escola Profissional do Porto
           </div>
 
           {/* Score bar */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-            <div style={{ flex: 1, height: 4, background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)', borderRadius: 99 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 12, marginBottom: 4 }}>
+            <div style={{ flex: 1, height: 3, background: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)', borderRadius: 99 }}>
               <div style={{ width: '88%', height: '100%', background: 'linear-gradient(90deg, #1b78f7, #818cf8)', borderRadius: 99 }} />
             </div>
-            <span style={{ fontSize: 11, fontWeight: 700, color: '#1b78f7', whiteSpace: 'nowrap' }}>88 pts</span>
+            <span style={{ fontSize: 9, fontWeight: 700, color: '#1b78f7' }}>88/100</span>
           </div>
+          <div style={{ fontSize: 9, color: textSec }}>Pontuação IA · Top 12% dos projetos</div>
+        </div>
 
-          {/* Description */}
-          <div style={{ fontSize: 11, color: textSec, lineHeight: 1.6, marginBottom: 16 }}>
+        <div style={{ height: 1, background: cardBorder }} />
+
+        {/* Sobre o projeto */}
+        <div style={{ padding: '12px 16px' }}>
+          <div style={{ fontSize: 9, fontWeight: 700, color: textSec, letterSpacing: '0.6px', textTransform: 'uppercase', marginBottom: 6 }}>Sobre o projeto</div>
+          <div style={{ fontSize: 11, color: textPri, lineHeight: 1.6 }}>
             Sistema de gestão de inventário com alertas automáticos e dashboard em tempo real para pequenas empresas.
           </div>
+        </div>
 
-          {/* Tech stack pills */}
+        <div style={{ height: 1, background: cardBorder }} />
+
+        {/* 3 highlight cards */}
+        <div style={{ padding: '12px 16px' }}>
+          <div style={{ fontSize: 9, fontWeight: 700, color: textSec, letterSpacing: '0.6px', textTransform: 'uppercase', marginBottom: 8 }}>Pontos-chave</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {[
+              { icon: '⚡', text: 'Reduz erros de stock em 90% com alertas em tempo real' },
+              { icon: '💰', text: 'Poupança média de 3h/semana para o gestor de loja' },
+              { icon: '🎯', text: 'Solução testada em 2 empresas reais durante o estágio' },
+            ].map(({ icon, text }) => (
+              <div key={text} style={{
+                background: cardBg, border: `1px solid ${cardBorder}`,
+                borderRadius: 8, padding: '8px 10px',
+                display: 'flex', alignItems: 'flex-start', gap: 8,
+              }}>
+                <span style={{ fontSize: 13, lineHeight: 1 }}>{icon}</span>
+                <span style={{ fontSize: 10, color: textPri, lineHeight: 1.5 }}>{text}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ height: 1, background: cardBorder }} />
+
+        {/* Tech stack */}
+        <div style={{ padding: '10px 16px 14px' }}>
+          <div style={{ fontSize: 9, fontWeight: 700, color: textSec, letterSpacing: '0.6px', textTransform: 'uppercase', marginBottom: 6 }}>Tecnologias</div>
           <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-            {['React', 'Node.js', 'PostgreSQL'].map(t => (
+            {['React', 'Node.js', 'PostgreSQL', 'Tailwind'].map(t => (
               <span key={t} style={{
-                fontSize: 9, fontWeight: 600, padding: '2px 7px', borderRadius: 5,
+                fontSize: 9, fontWeight: 600, padding: '3px 8px', borderRadius: 5,
                 background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
                 color: textSec, border: `1px solid ${cardBorder}`,
               }}>{t}</span>
             ))}
           </div>
         </div>
+
+        {/* Fade out bottom */}
+        <div style={{
+          height: 48,
+          background: `linear-gradient(to bottom, transparent, ${pageBg})`,
+          marginTop: -48, position: 'relative', pointerEvents: 'none',
+        }} />
       </div>
     </div>
   )
