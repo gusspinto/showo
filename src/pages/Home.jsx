@@ -563,12 +563,12 @@ export default function Home() {
         }} />
 
         {/* Hero — centrado, mockup sangra à direita */}
-        <div className="hero-section" style={{ padding: '72px 0 72px 100px', position: 'relative', display: 'flex', alignItems: 'center' }}>
+        <div className="hero-section" style={{ padding: '72px 0 64px 100px', position: 'relative', display: 'flex', alignItems: 'flex-start' }}>
 
           {/* Coluna esquerda: texto + widget */}
           <div className="hero-left" style={{
             display: 'flex', flexDirection: 'column', alignItems: 'flex-start',
-            flexShrink: 0, width: 480,
+            flexShrink: 0, width: 520,
           }}>
             <div className="hero-badge" style={{
               display: 'inline-flex', alignItems: 'center', gap: 8,
