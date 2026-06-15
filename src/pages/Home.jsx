@@ -25,13 +25,13 @@ const colors = {
 function StaticHero() {
   return (
     <h1 className="hero-h1 home-hero-heading" style={{
-      fontSize: 'clamp(26px, 3vw, 44px)', fontWeight: 900,
-      lineHeight: 1.1, margin: '0 0 20px',
-      letterSpacing: '-1.2px',
+      fontSize: 'clamp(22px, 2.8vw, 40px)', fontWeight: 900,
+      lineHeight: 1.12, margin: '0 0 20px',
+      letterSpacing: '-1px',
       fontFamily: 'var(--font-heading)',
       textAlign: 'left',
     }}>
-      O teu projeto vale mais<br />do que um{' '}
+      O teu projeto vale mais do que um{' '}
       <span style={{ color: '#1b78f7', whiteSpace: 'nowrap' }}>CV vazio.</span>
     </h1>
   )
@@ -568,7 +568,7 @@ export default function Home() {
           {/* Coluna esquerda: texto + widget */}
           <div className="hero-left" style={{
             display: 'flex', flexDirection: 'column', alignItems: 'flex-start',
-            flexShrink: 0, width: 460, paddingLeft: 64,
+            flexShrink: 0, width: 520, paddingLeft: 56,
           }}>
             <div className="hero-badge" style={{
               display: 'inline-flex', alignItems: 'center', gap: 8,
