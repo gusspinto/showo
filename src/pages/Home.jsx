@@ -25,14 +25,14 @@ const colors = {
 function StaticHero() {
   return (
     <h1 className="hero-h1 home-hero-heading" style={{
-      fontSize: 'clamp(32px, 4.2vw, 56px)', fontWeight: 900,
-      lineHeight: 1.08, margin: '0 0 20px',
+      fontSize: 'clamp(28px, 3.6vw, 52px)', fontWeight: 900,
+      lineHeight: 1.1, margin: '0 0 20px',
       letterSpacing: '-1.5px',
       fontFamily: 'var(--font-heading)',
       textAlign: 'left',
     }}>
-      O teu projeto vale mais do que um{' '}
-      <span style={{ color: '#1b78f7' }}>CV vazio.</span>
+      O teu projeto vale mais<br />do que um{' '}
+      <span style={{ color: '#1b78f7', whiteSpace: 'nowrap' }}>CV vazio.</span>
     </h1>
   )
 }
@@ -189,7 +189,7 @@ function ProjectMockup({ theme }) {
       {/* Left fade — blends into left column */}
       <div style={{
         position: 'absolute', top: 0, left: 0,
-        width: '28%', height: '100%',
+        width: '18%', height: '100%',
         background: `linear-gradient(to right, var(--c-bg) 0%, transparent 100%)`,
         pointerEvents: 'none', zIndex: 2,
       }} />
@@ -393,16 +393,16 @@ export default function Home() {
           pointerEvents: 'none', animation: 'pulse-glow 5s ease-in-out infinite',
         }} />
 
+        {/* Two-col: text + mockup */}
         <div className="hero-section" style={{
           display: 'flex', flexDirection: 'column',
           alignItems: 'center', justifyContent: 'center',
-          padding: '100px 0 100px 0',
+          padding: '96px 0 80px',
           position: 'relative',
         }}>
           <div className="hero-inner">
-            {/* Left col */}
+            {/* Left col — só texto */}
             <div className="hero-left hero-left-wrap" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-              {/* Badge */}
               <div className="hero-badge" style={{
                 display: 'inline-flex', alignItems: 'center', gap: 8,
                 background: theme === 'light' ? 'rgba(27,120,247,0.08)' : 'rgba(27,120,247,0.07)',
@@ -414,103 +414,91 @@ export default function Home() {
                 Para estudantes portugueses
               </div>
 
-              {/* Headline */}
               <StaticHero />
 
-              {/* Subheadline */}
               <p className="hero-sub" style={{
-                fontSize: 17, color: colors.muted, maxWidth: 460,
-                lineHeight: 1.7, margin: '0 0 44px', fontWeight: 400,
+                fontSize: 17, color: colors.muted, maxWidth: 440,
+                lineHeight: 1.7, margin: 0, fontWeight: 400,
               }}>
                 Cria uma página profissional do teu projeto em 10 minutos.
                 Partilha o link com qualquer empresa. Consegue o estágio que mereces.
               </p>
-
-              {/* Widget */}
-              <form className="hero-widget" onSubmit={handleStart} style={{ width: '100%' }}>
-                {/* Pills */}
-                <div className="goals-row" style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'flex-start', marginBottom: 14 }}>
-                  {QUICK_GOALS.map(g => (
-                    <button
-                      key={g.id}
-                      type="button"
-                      className="goal-pill"
-                      onClick={() => setSelectedGoal(selectedGoal === g.id ? null : g.id)}
-                      style={{
-                        background: selectedGoal === g.id ? 'rgba(27,120,247,0.12)' : 'transparent',
-                        border: `1px solid ${selectedGoal === g.id ? '#1b78f7' : colors.border}`,
-                        color: selectedGoal === g.id ? '#1b78f7' : colors.muted,
-                        borderRadius: 999, padding: '6px 15px',
-                        fontSize: 12, fontWeight: 600, fontFamily: 'inherit',
-                      }}
-                    >
-                      {g.label}
-                    </button>
-                  ))}
-                </div>
-
-                {/* Input */}
-                <div
-                  className="widget-box"
-                  style={{
-                    display: 'flex', alignItems: 'center',
-                    background: 'var(--c-bg-alt)',
-                    border: `1.5px solid ${colors.borderBright}`,
-                    borderRadius: 16, padding: '6px 6px 6px 20px',
-                    boxShadow: theme === 'light' ? '0 4px 24px rgba(0,0,0,0.09)' : '0 8px 40px rgba(0,0,0,0.45)',
-                  }}
-                  onFocusCapture={e => { e.currentTarget.style.borderColor = '#1b78f7' }}
-                  onBlurCapture={e => { if (!e.currentTarget.contains(e.relatedTarget)) e.currentTarget.style.borderColor = colors.borderBright }}
-                >
-                  <input
-                    type="text"
-                    className="widget-input"
-                    value={inputText}
-                    onChange={e => setInputText(e.target.value)}
-                    placeholder={placeholder}
-                    style={{
-                      flex: 1, background: 'transparent', border: 'none',
-                      color: 'var(--c-text)', fontSize: 16, fontFamily: 'inherit',
-                      outline: 'none', minWidth: 0, padding: '10px 0',
-                    }}
-                  />
-                  <button
-                    type="submit"
-                    className="submit-btn"
-                    disabled={!inputText.trim()}
-                    style={{
-                      background: inputText.trim() ? '#1b78f7' : 'var(--c-border)',
-                      border: 'none', borderRadius: 12,
-                      color: '#fff', width: 48, height: 48,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      cursor: inputText.trim() ? 'pointer' : 'not-allowed', flexShrink: 0,
-                      transition: 'all 0.15s',
-                    }}
-                  >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <line x1="5" y1="12" x2="19" y2="12"/>
-                      <polyline points="12 5 19 12 12 19"/>
-                    </svg>
-                  </button>
-                </div>
-
-                {spamError ? (
-                  <p style={{ color: '#ef4444', fontSize: 12, marginTop: 10, fontWeight: 600 }}>
-                    Texto inválido — escreve uma descrição real do teu projeto.
-                  </p>
-                ) : (
-                  <p className="hero-note" style={{ color: colors.subtle, fontSize: 13, marginTop: 14, fontWeight: 500 }}>
-                    Sem registo · Sem cartão de crédito
-                  </p>
-                )}
-              </form>
             </div>
 
             {/* Right col — mockup */}
-            <div className="hero-mockup-col" style={{ height: 600 }}>
+            <div className="hero-mockup-col" style={{ height: 580 }}>
               <ProjectMockup theme={theme} />
             </div>
           </div>
+        </div>
+
+        {/* Widget centrado abaixo do hero */}
+        <div style={{ padding: '0 24px 96px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <form className="hero-widget" onSubmit={handleStart} style={{ width: '100%', maxWidth: 640 }}>
+            <div className="goals-row" style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 14 }}>
+              {QUICK_GOALS.map(g => (
+                <button
+                  key={g.id} type="button" className="goal-pill"
+                  onClick={() => setSelectedGoal(selectedGoal === g.id ? null : g.id)}
+                  style={{
+                    background: selectedGoal === g.id ? 'rgba(27,120,247,0.12)' : 'transparent',
+                    border: `1px solid ${selectedGoal === g.id ? '#1b78f7' : colors.border}`,
+                    color: selectedGoal === g.id ? '#1b78f7' : colors.muted,
+                    borderRadius: 999, padding: '6px 15px', fontSize: 12, fontWeight: 600, fontFamily: 'inherit',
+                  }}
+                >{g.label}</button>
+              ))}
+            </div>
+
+            <div
+              className="widget-box"
+              style={{
+                display: 'flex', alignItems: 'center',
+                background: 'rgba(255,255,255,0.03)',
+                border: `1.5px solid rgba(255,255,255,0.08)`,
+                borderRadius: 16, padding: '6px 6px 6px 20px',
+                backdropFilter: 'blur(8px)',
+              }}
+              onFocusCapture={e => { e.currentTarget.style.borderColor = '#1b78f7' }}
+              onBlurCapture={e => { if (!e.currentTarget.contains(e.relatedTarget)) e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)' }}
+            >
+              <input
+                type="text" className="widget-input"
+                value={inputText} onChange={e => setInputText(e.target.value)}
+                placeholder={placeholder}
+                style={{
+                  flex: 1, background: 'transparent', border: 'none',
+                  color: 'var(--c-text)', fontSize: 16, fontFamily: 'inherit',
+                  outline: 'none', minWidth: 0, padding: '10px 0',
+                }}
+              />
+              <button
+                type="submit" className="submit-btn"
+                disabled={!inputText.trim()}
+                style={{
+                  background: inputText.trim() ? '#1b78f7' : 'rgba(255,255,255,0.06)',
+                  border: 'none', borderRadius: 12, color: '#fff', width: 48, height: 48,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: inputText.trim() ? 'pointer' : 'not-allowed', flexShrink: 0,
+                  transition: 'all 0.15s',
+                }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </button>
+            </div>
+
+            {spamError ? (
+              <p style={{ color: '#ef4444', fontSize: 12, marginTop: 10, fontWeight: 600, textAlign: 'center' }}>
+                Texto inválido — escreve uma descrição real do teu projeto.
+              </p>
+            ) : (
+              <p className="hero-note" style={{ color: colors.subtle, fontSize: 13, marginTop: 14, fontWeight: 500, textAlign: 'center' }}>
+                Sem registo · Sem cartão de crédito
+              </p>
+            )}
+          </form>
         </div>
       </div>
 
@@ -540,7 +528,7 @@ export default function Home() {
       </div>
 
       {/* Features */}
-      <div style={{ maxWidth: 960, margin: '0 auto', padding: '64px 24px 48px' }}>
+      <div style={{ maxWidth: 960, margin: '0 auto', padding: '120px 24px 64px' }}>
         <div className="features-grid home-features-grid" style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(3, 1fr)',
