@@ -562,13 +562,13 @@ export default function Home() {
           pointerEvents: 'none', animation: 'pulse-glow 5s ease-in-out infinite',
         }} />
 
-        {/* Hero — flex row: texto+widget à esquerda, mockup à direita (sangra) */}
-        <div className="hero-section" style={{ padding: '72px 0 72px', position: 'relative', display: 'flex', alignItems: 'center' }}>
+        {/* Hero — centrado, mockup sangra à direita */}
+        <div className="hero-section" style={{ padding: '72px 0 72px 100px', position: 'relative', display: 'flex', alignItems: 'center' }}>
 
           {/* Coluna esquerda: texto + widget */}
           <div className="hero-left" style={{
             display: 'flex', flexDirection: 'column', alignItems: 'flex-start',
-            flexShrink: 0, width: 520, paddingLeft: 56,
+            flexShrink: 0, width: 480,
           }}>
             <div className="hero-badge" style={{
               display: 'inline-flex', alignItems: 'center', gap: 8,
