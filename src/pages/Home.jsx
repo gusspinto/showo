@@ -73,7 +73,7 @@ function ProjectMockup({ theme }) {
       {/* Scaled page */}
       <div style={{
         position: 'absolute',
-        top: 0, left: -60,
+        top: 0, left: 0,
         width: MOCK_W,
         transformOrigin: 'top left',
         transform: 'scale(0.68)',
@@ -483,17 +483,17 @@ export default function Home() {
         /* Hero two-column layout */
         .hero-inner {
           display: grid;
-          grid-template-columns: 1fr 1fr;
+          grid-template-columns: 55% 45%;
           gap: 0;
           align-items: center;
           width: 100%;
           max-width: 100%;
         }
         .hero-left-wrap {
-          padding: 0 48px 0 64px;
-          max-width: 640px;
+          padding: 0 32px 0 48px;
+          max-width: 600px;
         }
-        .hero-mockup-col { display: block; position: relative; overflow: hidden; }
+        .hero-mockup-col { display: block; position: relative; overflow: visible; }
 
         /* Tablet */
         @media (max-width: 960px) {
@@ -566,7 +566,7 @@ export default function Home() {
         <div className="hero-section" style={{
           display: 'flex', flexDirection: 'column',
           alignItems: 'center', justifyContent: 'center',
-          padding: '96px 0 80px',
+          padding: '64px 0 32px',
           position: 'relative',
         }}>
           <div className="hero-inner">
@@ -595,7 +595,7 @@ export default function Home() {
             </div>
 
             {/* Right col — mockup */}
-            <div className="hero-mockup-col" style={{ height: 580 }}>
+            <div className="hero-mockup-col" style={{ height: 520 }}>
               <ProjectMockup theme={theme} />
             </div>
           </div>
