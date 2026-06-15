@@ -25,7 +25,7 @@ const colors = {
 function StaticHero() {
   return (
     <h1 className="hero-h1 home-hero-heading" style={{
-      fontSize: 'clamp(22px, 2.8vw, 40px)', fontWeight: 900,
+      fontSize: 'clamp(20px, 2.4vw, 34px)', fontWeight: 900,
       lineHeight: 1.12, margin: '0 0 20px',
       letterSpacing: '-1px',
       fontFamily: 'var(--font-heading)',
@@ -76,7 +76,7 @@ function ProjectMockup({ theme }) {
         top: 0, left: 0,
         width: MOCK_W,
         transformOrigin: 'top left',
-        transform: 'scale(0.75)',
+        transform: 'scale(0.90)',
         borderRadius: 16,
         overflow: 'hidden',
         boxShadow: '0 24px 80px rgba(0,0,0,0.6)',
@@ -563,12 +563,12 @@ export default function Home() {
         }} />
 
         {/* Hero — centrado, mockup sangra à direita */}
-        <div className="hero-section" style={{ padding: '72px 0 64px 100px', position: 'relative', display: 'flex', alignItems: 'flex-start' }}>
+        <div className="hero-section" style={{ padding: '80px 0 80px 150px', position: 'relative', display: 'flex', alignItems: 'flex-start' }}>
 
           {/* Coluna esquerda: texto + widget */}
           <div className="hero-left" style={{
             display: 'flex', flexDirection: 'column', alignItems: 'flex-start',
-            flexShrink: 0, width: 520,
+            flexShrink: 0, width: 420,
           }}>
             <div className="hero-badge" style={{
               display: 'inline-flex', alignItems: 'center', gap: 8,
@@ -657,7 +657,7 @@ export default function Home() {
           </div>
 
           {/* Coluna direita: mockup grande, sangra à direita */}
-          <div className="hero-mockup-col" style={{ flex: 1, overflow: 'hidden', alignSelf: 'stretch', position: 'relative', marginLeft: 48 }}>
+          <div className="hero-mockup-col" style={{ flex: 1, overflow: 'hidden', alignSelf: 'stretch', position: 'relative', marginLeft: 64 }}>
             <ProjectMockup theme={theme} />
           </div>
         </div>
