@@ -25,9 +25,9 @@ const colors = {
 function StaticHero() {
   return (
     <h1 className="hero-h1 home-hero-heading" style={{
-      fontSize: 'clamp(28px, 3.6vw, 52px)', fontWeight: 900,
+      fontSize: 'clamp(26px, 3vw, 44px)', fontWeight: 900,
       lineHeight: 1.1, margin: '0 0 20px',
-      letterSpacing: '-1.5px',
+      letterSpacing: '-1.2px',
       fontFamily: 'var(--font-heading)',
       textAlign: 'left',
     }}>
@@ -76,7 +76,7 @@ function ProjectMockup({ theme }) {
         top: 0, left: 0,
         width: MOCK_W,
         transformOrigin: 'top left',
-        transform: 'scale(0.68)',
+        transform: 'scale(0.58)',
         borderRadius: 16,
         overflow: 'hidden',
         boxShadow: '0 24px 80px rgba(0,0,0,0.6)',
@@ -483,8 +483,8 @@ export default function Home() {
         /* Hero two-column layout */
         .hero-inner {
           display: grid;
-          grid-template-columns: 55% 45%;
-          gap: 0;
+          grid-template-columns: 1fr 1fr;
+          gap: 40px;
           align-items: center;
           width: 100%;
           max-width: 100%;
@@ -493,7 +493,7 @@ export default function Home() {
           padding: 0 32px 0 48px;
           max-width: 600px;
         }
-        .hero-mockup-col { display: block; position: relative; overflow: visible; }
+        .hero-mockup-col { display: block; position: relative; overflow: hidden; }
 
         /* Tablet */
         @media (max-width: 960px) {
@@ -563,11 +563,11 @@ export default function Home() {
         }} />
 
         {/* Hero — padding horizontal igual em ambos os lados */}
-        <div className="hero-section" style={{ padding: '72px 56px 0', position: 'relative' }}>
+        <div className="hero-section" style={{ padding: '72px 64px 0', position: 'relative' }}>
           {/* Grid: texto | mockup */}
           <div className="hero-inner" style={{ marginBottom: 40 }}>
             {/* Left col — só texto */}
-            <div className="hero-left" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', paddingRight: 40 }}>
+            <div className="hero-left" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
               <div className="hero-badge" style={{
                 display: 'inline-flex', alignItems: 'center', gap: 8,
                 background: theme === 'light' ? 'rgba(27,120,247,0.08)' : 'rgba(27,120,247,0.07)',
