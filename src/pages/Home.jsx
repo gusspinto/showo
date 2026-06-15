@@ -584,7 +584,7 @@ export default function Home() {
             <StaticHero />
 
             <p className="hero-sub" style={{
-              fontSize: 16, color: colors.muted, lineHeight: 1.7, margin: '0 0 32px', fontWeight: 400,
+              fontSize: 16, color: colors.muted, lineHeight: 1.7, margin: '0 0 52px', fontWeight: 400,
             }}>
               Cria uma página profissional do teu projeto em 10 minutos.
               Partilha o link com qualquer empresa.
