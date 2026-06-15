@@ -76,7 +76,7 @@ function ProjectMockup({ theme }) {
         top: 0, left: 0,
         width: MOCK_W,
         transformOrigin: 'top left',
-        transform: 'scale(0.58)',
+        transform: 'scale(0.65)',
         borderRadius: 16,
         overflow: 'hidden',
         boxShadow: '0 24px 80px rgba(0,0,0,0.6)',
@@ -562,8 +562,9 @@ export default function Home() {
           pointerEvents: 'none', animation: 'pulse-glow 5s ease-in-out infinite',
         }} />
 
-        {/* Hero — padding horizontal igual em ambos os lados */}
-        <div className="hero-section" style={{ padding: '72px 64px 0', position: 'relative' }}>
+        {/* Hero — container centrado, margens automáticas iguais */}
+        <div className="hero-section" style={{ padding: '72px 0 0', position: 'relative' }}>
+          <div style={{ maxWidth: 1160, margin: '0 auto', padding: '0 40px' }}>
           {/* Grid: texto | mockup */}
           <div className="hero-inner" style={{ marginBottom: 40 }}>
             {/* Left col — só texto */}
@@ -664,6 +665,7 @@ export default function Home() {
               )}
             </form>
           </div>
+          </div>{/* /maxWidth container */}
         </div>
       </div>
 
