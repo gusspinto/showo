@@ -25,10 +25,11 @@ const colors = {
 function StaticHero() {
   return (
     <h1 className="hero-h1 home-hero-heading" style={{
-      fontSize: 'clamp(36px, 5.5vw, 62px)', fontWeight: 900,
+      fontSize: 'clamp(32px, 4.2vw, 56px)', fontWeight: 900,
       lineHeight: 1.08, margin: '0 0 20px',
-      letterSpacing: '-1.5px', maxWidth: 720,
+      letterSpacing: '-1.5px',
       fontFamily: 'var(--font-heading)',
+      textAlign: 'left',
     }}>
       O teu projeto vale mais do que um{' '}
       <span style={{
@@ -36,6 +37,113 @@ function StaticHero() {
         WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
       }}>CV vazio.</span>
     </h1>
+  )
+}
+
+function ProjectMockup({ theme }) {
+  const isDark = theme !== 'light'
+  const cardBg     = isDark ? '#0f1623' : '#ffffff'
+  const cardBorder = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'
+  const textPri    = isDark ? '#f1f5f9' : '#0f172a'
+  const textSec    = isDark ? '#94a3b8' : '#64748b'
+  const tagBg      = isDark ? 'rgba(27,120,247,0.15)' : 'rgba(27,120,247,0.08)'
+
+  return (
+    <div style={{
+      transform: 'rotate(3deg)',
+      transformOrigin: 'center center',
+      filter: 'drop-shadow(0 32px 64px rgba(0,0,0,0.45))',
+      width: '100%', maxWidth: 380,
+    }}>
+      {/* Browser chrome */}
+      <div style={{
+        background: isDark ? '#1e293b' : '#e2e8f0',
+        borderRadius: '14px 14px 0 0',
+        padding: '10px 14px',
+        display: 'flex', alignItems: 'center', gap: 6,
+        border: `1px solid ${cardBorder}`,
+        borderBottom: 'none',
+      }}>
+        <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#ef4444', opacity: 0.8 }} />
+        <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#fbbf24', opacity: 0.8 }} />
+        <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#22c55e', opacity: 0.8 }} />
+        <div style={{
+          flex: 1, marginLeft: 8,
+          background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)',
+          borderRadius: 6, padding: '3px 10px',
+          fontSize: 10, color: textSec, fontFamily: 'monospace',
+        }}>
+          showo.pt/p/stockflow-pro
+        </div>
+      </div>
+
+      {/* Card content */}
+      <div style={{
+        background: cardBg,
+        border: `1px solid ${cardBorder}`,
+        borderRadius: '0 0 14px 14px',
+        overflow: 'hidden',
+      }}>
+        {/* Cover image placeholder */}
+        <div style={{
+          height: 120,
+          background: 'linear-gradient(135deg, #1b3a6b 0%, #1b78f7 50%, #818cf8 100%)',
+          position: 'relative',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <div style={{ fontSize: 32, opacity: 0.3 }}>📦</div>
+          {/* Avatar */}
+          <div style={{
+            position: 'absolute', bottom: -20, left: 20,
+            width: 44, height: 44, borderRadius: '50%',
+            background: 'linear-gradient(135deg, #1b78f7, #818cf8)',
+            border: `3px solid ${cardBg}`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 16, fontWeight: 700, color: '#fff',
+          }}>J</div>
+        </div>
+
+        <div style={{ padding: '28px 20px 20px' }}>
+          {/* Tags */}
+          <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
+            <span style={{ background: tagBg, color: '#1b78f7', fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 6 }}>PAP</span>
+            <span style={{ background: isDark ? 'rgba(251,191,36,0.12)' : 'rgba(251,191,36,0.1)', color: '#fbbf24', fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 6 }}>2024/25</span>
+          </div>
+
+          {/* Title */}
+          <div style={{ fontSize: 15, fontWeight: 800, color: textPri, marginBottom: 4, letterSpacing: '-0.3px', fontFamily: 'var(--font-heading)' }}>
+            StockFlow Pro
+          </div>
+          <div style={{ fontSize: 11, color: textSec, marginBottom: 14 }}>
+            João Silva · CTIC, Escola Profissional do Porto
+          </div>
+
+          {/* Score bar */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+            <div style={{ flex: 1, height: 4, background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)', borderRadius: 99 }}>
+              <div style={{ width: '88%', height: '100%', background: 'linear-gradient(90deg, #1b78f7, #818cf8)', borderRadius: 99 }} />
+            </div>
+            <span style={{ fontSize: 11, fontWeight: 700, color: '#1b78f7', whiteSpace: 'nowrap' }}>88 pts</span>
+          </div>
+
+          {/* Description */}
+          <div style={{ fontSize: 11, color: textSec, lineHeight: 1.6, marginBottom: 16 }}>
+            Sistema de gestão de inventário com alertas automáticos e dashboard em tempo real para pequenas empresas.
+          </div>
+
+          {/* Tech stack pills */}
+          <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+            {['React', 'Node.js', 'PostgreSQL'].map(t => (
+              <span key={t} style={{
+                fontSize: 9, fontWeight: 600, padding: '2px 7px', borderRadius: 5,
+                background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
+                color: textSec, border: `1px solid ${cardBorder}`,
+              }}>{t}</span>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -146,14 +254,33 @@ export default function Home() {
           background: rgba(27,120,247,0.06) !important;
         }
 
+        /* Hero two-column layout */
+        .hero-inner {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 64px;
+          align-items: center;
+          max-width: 1160px;
+          margin: 0 auto;
+          width: 100%;
+        }
+        .hero-mockup-col { display: flex; justify-content: center; align-items: center; }
+
         /* Tablet */
-        @media (max-width: 860px) {
+        @media (max-width: 960px) {
+          .hero-inner { grid-template-columns: 1fr !important; gap: 48px !important; }
+          .hero-mockup-col { display: none !important; }
+          .hero-left { text-align: center !important; align-items: center !important; }
+          .hero-h1 { text-align: center !important; }
+          .hero-sub { text-align: center !important; }
+          .hero-badge { align-self: center !important; }
+          .goals-row { justify-content: center !important; }
           .features-grid { grid-template-columns: repeat(2, 1fr) !important; }
         }
 
         @media (max-width: 600px) {
           .hero-section  { min-height: calc(100dvh - 62px) !important; justify-content: center !important; padding: 32px 20px 48px !important; }
-          .hero-h1       { font-size: 30px !important; letter-spacing: -0.5px !important; margin-bottom: 12px !important; min-height: auto !important; }
+          .hero-h1       { font-size: 30px !important; letter-spacing: -0.5px !important; margin-bottom: 12px !important; }
           .hero-sub      { font-size: 15px !important; }
           .hero-widget   { margin-top: 28px !important; max-width: 100% !important; }
           .goals-row     { flex-wrap: nowrap !important; overflow-x: auto !important; justify-content: flex-start !important; padding-bottom: 6px !important; scrollbar-width: none !important; -webkit-overflow-scrolling: touch !important; }
@@ -169,12 +296,9 @@ export default function Home() {
           .hero-note     { font-size: 11px !important; }
           .home-ctas     { flex-direction: column !important; gap: 10px !important; align-items: stretch !important; }
           .home-ctas button { width: 100% !important; justify-content: center !important; }
-          /* Features grid — single column on small phones */
           .home-features-grid { grid-template-columns: 1fr !important; gap: 12px !important; }
-          /* Hero CTA buttons — stack vertically */
           .home-hero-btns { flex-direction: column !important; width: 100%; }
           .home-hero-btns a, .home-hero-btns button { width: 100% !important; justify-content: center !important; text-align: center !important; }
-          /* Stats row */
           .home-stats { flex-wrap: wrap !important; gap: 12px !important; justify-content: center !important; }
         }
         @media (max-width: 380px) {
@@ -210,118 +334,121 @@ export default function Home() {
           minHeight: 'calc(100vh - 62px)',
           display: 'flex', flexDirection: 'column',
           alignItems: 'center', justifyContent: 'center',
-          textAlign: 'center',
-          padding: '64px 24px',
+          padding: '64px 32px',
           position: 'relative',
         }}>
-          {/* Badge */}
-          <div className="hero-badge" style={{
-            display: 'inline-flex', alignItems: 'center', gap: 8,
-            background: theme === 'light' ? 'rgba(27,120,247,0.08)' : 'rgba(27,120,247,0.07)',
-            border: `1px solid ${theme === 'light' ? 'rgba(27,120,247,0.25)' : 'rgba(27,120,247,0.18)'}`,
-            color: '#1b78f7', borderRadius: 999,
-            padding: '5px 16px', fontSize: 12, fontWeight: 600, marginBottom: 28,
-          }}>
-            <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#1b78f7', display: 'inline-block', animation: 'pulse-glow 2s ease-in-out infinite' }} />
-            Para estudantes do ensino profissional e universitário
-          </div>
+          <div className="hero-inner">
+            {/* Left col */}
+            <div className="hero-left" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+              {/* Badge */}
+              <div className="hero-badge" style={{
+                display: 'inline-flex', alignItems: 'center', gap: 8,
+                background: theme === 'light' ? 'rgba(27,120,247,0.08)' : 'rgba(27,120,247,0.07)',
+                border: `1px solid ${theme === 'light' ? 'rgba(27,120,247,0.25)' : 'rgba(27,120,247,0.18)'}`,
+                color: '#1b78f7', borderRadius: 999,
+                padding: '5px 16px', fontSize: 12, fontWeight: 600, marginBottom: 28,
+              }}>
+                <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#1b78f7', display: 'inline-block', animation: 'pulse-glow 2s ease-in-out infinite' }} />
+                Para estudantes portugueses
+              </div>
 
-          {/* Headline */}
-          <StaticHero />
+              {/* Headline */}
+              <StaticHero />
 
-          {/* Subheadline */}
-          <p className="hero-sub" style={{
-            fontSize: 18, color: colors.muted, maxWidth: 520,
-            lineHeight: 1.6, margin: '0 auto 8px', fontWeight: 400,
-          }}>
-            Cria uma página profissional do teu projeto em 10 minutos.
-            Partilha o link com qualquer empresa. Consegue o estágio que mereces.
-          </p>
+              {/* Subheadline */}
+              <p className="hero-sub" style={{
+                fontSize: 17, color: colors.muted, maxWidth: 460,
+                lineHeight: 1.65, margin: '0 0 36px', fontWeight: 400,
+              }}>
+                Cria uma página profissional do teu projeto em 10 minutos.
+                Partilha o link com qualquer empresa. Consegue o estágio que mereces.
+              </p>
 
-          {/* Widget */}
-          <form
-            className="hero-widget"
-            onSubmit={handleStart}
-            style={{ width: '100%', maxWidth: 720, margin: '40px auto 0' }}
-          >
-            {/* Pills */}
-            <div className="goals-row" style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 14 }}>
-              {QUICK_GOALS.map(g => (
-                <button
-                  key={g.id}
-                  type="button"
-                  className="goal-pill"
-                  onClick={() => setSelectedGoal(selectedGoal === g.id ? null : g.id)}
+              {/* Widget */}
+              <form className="hero-widget" onSubmit={handleStart} style={{ width: '100%' }}>
+                {/* Pills */}
+                <div className="goals-row" style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'flex-start', marginBottom: 14 }}>
+                  {QUICK_GOALS.map(g => (
+                    <button
+                      key={g.id}
+                      type="button"
+                      className="goal-pill"
+                      onClick={() => setSelectedGoal(selectedGoal === g.id ? null : g.id)}
+                      style={{
+                        background: selectedGoal === g.id ? 'rgba(27,120,247,0.12)' : 'transparent',
+                        border: `1px solid ${selectedGoal === g.id ? '#1b78f7' : colors.border}`,
+                        color: selectedGoal === g.id ? '#1b78f7' : colors.muted,
+                        borderRadius: 999, padding: '6px 15px',
+                        fontSize: 12, fontWeight: 600, fontFamily: 'inherit',
+                      }}
+                    >
+                      {g.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Input */}
+                <div
+                  className="widget-box"
                   style={{
-                    background: selectedGoal === g.id ? 'rgba(27,120,247,0.12)' : 'transparent',
-                    border: `1px solid ${selectedGoal === g.id ? '#1b78f7' : colors.border}`,
-                    color: selectedGoal === g.id ? '#1b78f7' : colors.muted,
-                    borderRadius: 999, padding: '6px 15px',
-                    fontSize: 12, fontWeight: 600, fontFamily: 'inherit',
+                    display: 'flex', alignItems: 'center',
+                    background: 'var(--c-bg-alt)',
+                    border: `1.5px solid ${colors.borderBright}`,
+                    borderRadius: 16, padding: '6px 6px 6px 20px',
+                    boxShadow: theme === 'light' ? '0 4px 24px rgba(0,0,0,0.09)' : '0 8px 40px rgba(0,0,0,0.45)',
                   }}
+                  onFocusCapture={e => { e.currentTarget.style.borderColor = '#1b78f7' }}
+                  onBlurCapture={e => { if (!e.currentTarget.contains(e.relatedTarget)) e.currentTarget.style.borderColor = colors.borderBright }}
                 >
-                  {g.label}
-                </button>
-              ))}
-            </div>
+                  <input
+                    type="text"
+                    className="widget-input"
+                    value={inputText}
+                    onChange={e => setInputText(e.target.value)}
+                    placeholder={placeholder}
+                    style={{
+                      flex: 1, background: 'transparent', border: 'none',
+                      color: 'var(--c-text)', fontSize: 16, fontFamily: 'inherit',
+                      outline: 'none', minWidth: 0, padding: '10px 0',
+                    }}
+                  />
+                  <button
+                    type="submit"
+                    className="submit-btn"
+                    disabled={!inputText.trim()}
+                    style={{
+                      background: inputText.trim() ? '#1b78f7' : 'var(--c-border)',
+                      border: 'none', borderRadius: 12,
+                      color: '#fff', width: 48, height: 48,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      cursor: inputText.trim() ? 'pointer' : 'not-allowed', flexShrink: 0,
+                      transition: 'all 0.15s',
+                    }}
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="5" y1="12" x2="19" y2="12"/>
+                      <polyline points="12 5 19 12 12 19"/>
+                    </svg>
+                  </button>
+                </div>
 
-            {/* Input */}
-            <div
-              className="widget-box"
-              style={{
-                display: 'flex', alignItems: 'center',
-                background: 'var(--c-bg-alt)',
-                border: `1.5px solid ${colors.borderBright}`,
-                borderRadius: 16, padding: '6px 6px 6px 20px',
-                boxShadow: theme === 'light' ? '0 4px 24px rgba(0,0,0,0.09)' : '0 8px 40px rgba(0,0,0,0.45)',
-              }}
-              onFocusCapture={e => { e.currentTarget.style.borderColor = '#1b78f7' }}
-              onBlurCapture={e => { if (!e.currentTarget.contains(e.relatedTarget)) e.currentTarget.style.borderColor = colors.borderBright }}
-            >
-              <input
-                type="text"
-                className="widget-input"
-                value={inputText}
-                onChange={e => setInputText(e.target.value)}
-                placeholder={placeholder}
-                style={{
-                  flex: 1, background: 'transparent', border: 'none',
-                  color: 'var(--c-text)', fontSize: 16, fontFamily: 'inherit',
-                  outline: 'none', minWidth: 0, padding: '10px 0',
-                }}
-              />
-              <button
-                type="submit"
-                className="submit-btn"
-                disabled={!inputText.trim()}
-                style={{
-                  background: inputText.trim() ? '#1b78f7' : 'var(--c-border)',
-                  border: 'none', borderRadius: 12,
-                  color: '#fff', width: 48, height: 48,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  cursor: inputText.trim() ? 'pointer' : 'not-allowed', flexShrink: 0,
-                  transition: 'all 0.15s',
-                }}
-              >
-                {(
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="5" y1="12" x2="19" y2="12"/>
-                    <polyline points="12 5 19 12 12 19"/>
-                  </svg>
+                {spamError ? (
+                  <p style={{ color: '#ef4444', fontSize: 12, marginTop: 10, fontWeight: 600 }}>
+                    Texto inválido — escreve uma descrição real do teu projeto.
+                  </p>
+                ) : (
+                  <p className="hero-note" style={{ color: colors.subtle, fontSize: 13, marginTop: 14, fontWeight: 500 }}>
+                    Sem registo · Sem cartão de crédito
+                  </p>
                 )}
-              </button>
+              </form>
             </div>
 
-            {spamError ? (
-              <p style={{ color: '#ef4444', fontSize: 12, marginTop: 10, fontWeight: 600, textAlign: 'center' }}>
-                Texto inválido — escreve uma descrição real do teu projeto.
-              </p>
-            ) : (
-              <p className="hero-note" style={{ color: colors.subtle, fontSize: 13, marginTop: 14, fontWeight: 500, textAlign: 'center' }}>
-                Sem registo · Sem cartão de crédito
-              </p>
-            )}
-          </form>
+            {/* Right col — mockup */}
+            <div className="hero-mockup-col">
+              <ProjectMockup theme={theme} />
+            </div>
+          </div>
         </div>
       </div>
 
