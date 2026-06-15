@@ -562,15 +562,10 @@ export default function Home() {
           pointerEvents: 'none', animation: 'pulse-glow 5s ease-in-out infinite',
         }} />
 
-        {/* Two-col: text + mockup */}
-        <div className="hero-section" style={{
-          display: 'flex', flexDirection: 'column',
-          alignItems: 'center', justifyContent: 'center',
-          padding: '64px 0 32px',
-          position: 'relative',
-        }}>
+        {/* Two-col: text+widget left | mockup right */}
+        <div className="hero-section" style={{ padding: '72px 0 80px', position: 'relative' }}>
           <div className="hero-inner">
-            {/* Left col — só texto */}
+            {/* Left col — texto + widget */}
             <div className="hero-left hero-left-wrap" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
               <div className="hero-badge" style={{
                 display: 'inline-flex', alignItems: 'center', gap: 8,
@@ -586,88 +581,86 @@ export default function Home() {
               <StaticHero />
 
               <p className="hero-sub" style={{
-                fontSize: 17, color: colors.muted, maxWidth: 440,
-                lineHeight: 1.7, margin: 0, fontWeight: 400,
+                fontSize: 17, color: colors.muted, maxWidth: 460,
+                lineHeight: 1.7, margin: '0 0 36px', fontWeight: 400,
               }}>
                 Cria uma página profissional do teu projeto em 10 minutos.
                 Partilha o link com qualquer empresa. Consegue o estágio que mereces.
               </p>
+
+              {/* Widget integrado na coluna */}
+              <form className="hero-widget" onSubmit={handleStart} style={{ width: '100%', maxWidth: 520 }}>
+                <div className="goals-row" style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'flex-start', marginBottom: 14 }}>
+                  {QUICK_GOALS.map(g => (
+                    <button
+                      key={g.id} type="button" className="goal-pill"
+                      onClick={() => setSelectedGoal(selectedGoal === g.id ? null : g.id)}
+                      style={{
+                        background: selectedGoal === g.id ? 'rgba(27,120,247,0.12)' : 'transparent',
+                        border: `1px solid ${selectedGoal === g.id ? '#1b78f7' : colors.border}`,
+                        color: selectedGoal === g.id ? '#1b78f7' : colors.muted,
+                        borderRadius: 999, padding: '6px 15px', fontSize: 12, fontWeight: 600, fontFamily: 'inherit',
+                      }}
+                    >{g.label}</button>
+                  ))}
+                </div>
+
+                <div
+                  className="widget-box"
+                  style={{
+                    display: 'flex', alignItems: 'center',
+                    background: 'rgba(255,255,255,0.03)',
+                    border: `1.5px solid rgba(255,255,255,0.08)`,
+                    borderRadius: 16, padding: '6px 6px 6px 20px',
+                    backdropFilter: 'blur(8px)',
+                  }}
+                  onFocusCapture={e => { e.currentTarget.style.borderColor = '#1b78f7' }}
+                  onBlurCapture={e => { if (!e.currentTarget.contains(e.relatedTarget)) e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)' }}
+                >
+                  <input
+                    type="text" className="widget-input"
+                    value={inputText} onChange={e => setInputText(e.target.value)}
+                    placeholder={placeholder}
+                    style={{
+                      flex: 1, background: 'transparent', border: 'none',
+                      color: 'var(--c-text)', fontSize: 16, fontFamily: 'inherit',
+                      outline: 'none', minWidth: 0, padding: '10px 0',
+                    }}
+                  />
+                  <button
+                    type="submit" className="submit-btn"
+                    disabled={!inputText.trim()}
+                    style={{
+                      background: inputText.trim() ? '#1b78f7' : 'rgba(255,255,255,0.06)',
+                      border: 'none', borderRadius: 12, color: '#fff', width: 48, height: 48,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      cursor: inputText.trim() ? 'pointer' : 'not-allowed', flexShrink: 0,
+                      transition: 'all 0.15s',
+                    }}
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+                    </svg>
+                  </button>
+                </div>
+
+                {spamError ? (
+                  <p style={{ color: '#ef4444', fontSize: 12, marginTop: 10, fontWeight: 600 }}>
+                    Texto inválido — escreve uma descrição real do teu projeto.
+                  </p>
+                ) : (
+                  <p className="hero-note" style={{ color: colors.subtle, fontSize: 13, marginTop: 14, fontWeight: 500 }}>
+                    Sem registo · Sem cartão de crédito
+                  </p>
+                )}
+              </form>
             </div>
 
             {/* Right col — mockup */}
-            <div className="hero-mockup-col" style={{ height: 520 }}>
+            <div className="hero-mockup-col" style={{ alignSelf: 'center' }}>
               <ProjectMockup theme={theme} />
             </div>
           </div>
-        </div>
-
-        {/* Widget centrado abaixo do hero */}
-        <div style={{ padding: '0 24px 80px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <form className="hero-widget" onSubmit={handleStart} style={{ width: '100%', maxWidth: 640 }}>
-            <div className="goals-row" style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 14 }}>
-              {QUICK_GOALS.map(g => (
-                <button
-                  key={g.id} type="button" className="goal-pill"
-                  onClick={() => setSelectedGoal(selectedGoal === g.id ? null : g.id)}
-                  style={{
-                    background: selectedGoal === g.id ? 'rgba(27,120,247,0.12)' : 'transparent',
-                    border: `1px solid ${selectedGoal === g.id ? '#1b78f7' : colors.border}`,
-                    color: selectedGoal === g.id ? '#1b78f7' : colors.muted,
-                    borderRadius: 999, padding: '6px 15px', fontSize: 12, fontWeight: 600, fontFamily: 'inherit',
-                  }}
-                >{g.label}</button>
-              ))}
-            </div>
-
-            <div
-              className="widget-box"
-              style={{
-                display: 'flex', alignItems: 'center',
-                background: 'rgba(255,255,255,0.03)',
-                border: `1.5px solid rgba(255,255,255,0.08)`,
-                borderRadius: 16, padding: '6px 6px 6px 20px',
-                backdropFilter: 'blur(8px)',
-              }}
-              onFocusCapture={e => { e.currentTarget.style.borderColor = '#1b78f7' }}
-              onBlurCapture={e => { if (!e.currentTarget.contains(e.relatedTarget)) e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)' }}
-            >
-              <input
-                type="text" className="widget-input"
-                value={inputText} onChange={e => setInputText(e.target.value)}
-                placeholder={placeholder}
-                style={{
-                  flex: 1, background: 'transparent', border: 'none',
-                  color: 'var(--c-text)', fontSize: 16, fontFamily: 'inherit',
-                  outline: 'none', minWidth: 0, padding: '10px 0',
-                }}
-              />
-              <button
-                type="submit" className="submit-btn"
-                disabled={!inputText.trim()}
-                style={{
-                  background: inputText.trim() ? '#1b78f7' : 'rgba(255,255,255,0.06)',
-                  border: 'none', borderRadius: 12, color: '#fff', width: 48, height: 48,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  cursor: inputText.trim() ? 'pointer' : 'not-allowed', flexShrink: 0,
-                  transition: 'all 0.15s',
-                }}
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
-                </svg>
-              </button>
-            </div>
-
-            {spamError ? (
-              <p style={{ color: '#ef4444', fontSize: 12, marginTop: 10, fontWeight: 600, textAlign: 'center' }}>
-                Texto inválido — escreve uma descrição real do teu projeto.
-              </p>
-            ) : (
-              <p className="hero-note" style={{ color: colors.subtle, fontSize: 13, marginTop: 14, fontWeight: 500, textAlign: 'center' }}>
-                Sem registo · Sem cartão de crédito
-              </p>
-            )}
-          </form>
         </div>
       </div>
 
