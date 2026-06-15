@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Globe, Bot, GraduationCap, Trophy, Sparkles, BadgeCheck, Users, ArrowRight } from 'lucide-react'
+import { Globe, Bot, GraduationCap, Trophy, Sparkles, BadgeCheck, Users, ArrowRight, Search, Lightbulb, TrendingUp, Wrench, Zap, Target, Star } from 'lucide-react'
 import { Navbar } from '../components/Navbar'
 import { supabase } from '../lib/supabase'
 import Onboarding from '../components/Onboarding'
@@ -40,149 +40,161 @@ function StaticHero() {
   )
 }
 
+function MiniScoreRing({ score, size = 72 }) {
+  const stroke = 6
+  const r = (size - stroke) / 2
+  const circ = 2 * Math.PI * r
+  const dash = (score / 100) * circ
+  const color = score >= 86 ? '#22c55e' : score >= 51 ? '#1b78f7' : '#f97316'
+  return (
+    <div style={{ position: 'relative', width: size, height: size, filter: `drop-shadow(0 0 5px ${color}70)` }}>
+      <svg width={size} height={size} style={{ transform: 'rotate(-90deg)', display: 'block' }}>
+        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth={stroke} />
+        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth={stroke}
+          strokeDasharray={`${dash} ${circ - dash}`} strokeLinecap="round" />
+      </svg>
+      <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+        <span style={{ fontSize: 18, fontWeight: 900, color, lineHeight: 1, letterSpacing: '-1px' }}>{score}</span>
+        <span style={{ fontSize: 7, color: 'rgba(255,255,255,0.4)', fontWeight: 700, letterSpacing: 1.5, textTransform: 'uppercase', marginTop: 1 }}>score</span>
+      </div>
+    </div>
+  )
+}
+
 function ProjectMockup({ theme }) {
-  const isDark     = theme !== 'light'
-  const pageBg     = isDark ? '#0b1120' : '#f8fafc'
-  const cardBg     = isDark ? '#111827' : '#ffffff'
-  const cardBorder = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)'
-  const textPri    = isDark ? '#f1f5f9' : '#0f172a'
-  const textSec    = isDark ? '#94a3b8' : '#64748b'
-  const chromeBg   = isDark ? '#1e293b' : '#e2e8f0'
+  const isDark  = theme !== 'light'
+  const pageBg  = isDark ? '#0b1120' : '#f0f4f8'
+  const cardBg  = isDark ? '#111827' : '#ffffff'
+  const border  = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.08)'
+  const textPri = isDark ? '#f1f5f9' : '#0f172a'
+  const textSec = isDark ? '#94a3b8' : '#64748b'
+
+  const MOCK_W = 860
 
   return (
-    <div style={{
-      transform: 'rotate(2.5deg)',
-      transformOrigin: 'center top',
-      filter: 'drop-shadow(0 40px 80px rgba(0,0,0,0.5))',
-      width: '100%', maxWidth: 400,
-    }}>
-      {/* Browser chrome */}
+    <div style={{ position: 'relative', width: '100%', height: '100%', minHeight: 560 }}>
+      {/* Scaled page */}
       <div style={{
-        background: chromeBg, borderRadius: '14px 14px 0 0',
-        padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 6,
-        border: `1px solid ${cardBorder}`, borderBottom: 'none',
+        position: 'absolute',
+        top: 0, right: -40,
+        width: MOCK_W,
+        transformOrigin: 'top right',
+        transform: 'scale(0.58)',
+        borderRadius: 16,
+        overflow: 'hidden',
+        border: `1px solid ${border}`,
+        boxShadow: '0 32px 80px rgba(0,0,0,0.55)',
+        background: pageBg,
+        fontFamily: 'var(--font-body)',
       }}>
-        <div style={{ width: 9, height: 9, borderRadius: '50%', background: '#ef4444', opacity: 0.85 }} />
-        <div style={{ width: 9, height: 9, borderRadius: '50%', background: '#fbbf24', opacity: 0.85 }} />
-        <div style={{ width: 9, height: 9, borderRadius: '50%', background: '#22c55e', opacity: 0.85 }} />
+        {/* Browser chrome */}
         <div style={{
-          flex: 1, marginLeft: 8, background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)',
-          borderRadius: 6, padding: '3px 10px', fontSize: 10, color: textSec, fontFamily: 'monospace',
-        }}>showo.pt/p/stockflow-pro</div>
-      </div>
-
-      {/* Page body */}
-      <div style={{
-        background: pageBg, border: `1px solid ${cardBorder}`,
-        borderRadius: '0 0 14px 14px', overflow: 'hidden',
-        maxHeight: 520,
-      }}>
-        {/* Cover */}
-        <div style={{
-          height: 100,
-          background: 'linear-gradient(135deg, #0d2a5e 0%, #1b78f7 60%, #818cf8 100%)',
-          position: 'relative',
+          background: isDark ? '#0d1526' : '#dde3ea',
+          padding: '10px 16px',
+          display: 'flex', alignItems: 'center', gap: 7,
+          borderBottom: `1px solid ${border}`,
         }}>
-          {/* Score badge no canto */}
+          <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#ef4444', opacity: 0.8 }} />
+          <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#fbbf24', opacity: 0.8 }} />
+          <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#22c55e', opacity: 0.8 }} />
           <div style={{
-            position: 'absolute', top: 10, right: 12,
-            background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(6px)',
-            borderRadius: 8, padding: '4px 10px',
-            display: 'flex', alignItems: 'center', gap: 5,
-          }}>
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="#fbbf24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-            <span style={{ fontSize: 10, fontWeight: 800, color: '#fff' }}>88 pts</span>
-          </div>
-          {/* Avatar */}
-          <div style={{
-            position: 'absolute', bottom: -18, left: 16,
-            width: 40, height: 40, borderRadius: '50%',
-            background: 'linear-gradient(135deg, #1b78f7, #a78bfa)',
-            border: `3px solid ${pageBg}`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 15, fontWeight: 800, color: '#fff',
-          }}>J</div>
+            flex: 1, marginLeft: 10, background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.07)',
+            borderRadius: 6, padding: '4px 14px', fontSize: 11, color: textSec, fontFamily: 'monospace',
+          }}>showo.pt/p/stockflow-pro</div>
         </div>
 
-        {/* Header info */}
-        <div style={{ padding: '24px 16px 14px' }}>
-          <div style={{ display: 'flex', gap: 5, marginBottom: 8 }}>
-            <span style={{ background: 'rgba(27,120,247,0.15)', color: '#1b78f7', fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 5 }}>PAP</span>
-            <span style={{ background: 'rgba(251,191,36,0.12)', color: '#fbbf24', fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 5 }}>2024/25</span>
-          </div>
-          <div style={{ fontSize: 16, fontWeight: 900, color: textPri, letterSpacing: '-0.4px', fontFamily: 'var(--font-heading)', marginBottom: 3 }}>
-            StockFlow Pro
-          </div>
-          <div style={{ fontSize: 10, color: textSec }}>
-            João Silva · Escola Profissional do Porto
+        {/* Hero cover */}
+        <div style={{ position: 'relative', height: 200, background: 'linear-gradient(135deg, #1a0f40 0%, #1b78f7 55%, #818cf8 100%)', overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', top: -60, left: '5%', width: 600, height: 600, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(99,102,241,0.25) 0%, transparent 65%)', pointerEvents: 'none' }} />
+          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 40%, rgba(11,17,32,0.85) 100%)' }} />
+        </div>
+
+        {/* Title block */}
+        <div style={{ padding: '0 32px', position: 'relative', marginTop: -80 }}>
+          {/* Type chip */}
+          <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
+            <span style={{ background: 'linear-gradient(135deg, #6366f1, #4f46e5)', color: '#fff', borderRadius: 6, padding: '4px 12px', fontSize: 11, fontWeight: 800, letterSpacing: '0.06em' }}>PAP</span>
+            <span style={{ background: 'rgba(27,120,247,0.12)', color: '#1b78f7', border: '1px solid rgba(27,120,247,0.2)', borderRadius: 6, padding: '4px 12px', fontSize: 12, fontWeight: 600 }}>Tecnologias de Informação</span>
           </div>
 
-          {/* Score bar */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 12, marginBottom: 4 }}>
-            <div style={{ flex: 1, height: 3, background: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)', borderRadius: 99 }}>
-              <div style={{ width: '88%', height: '100%', background: 'linear-gradient(90deg, #1b78f7, #818cf8)', borderRadius: 99 }} />
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 20 }}>
+            <div style={{ flex: 1 }}>
+              <h1 style={{ fontSize: 42, fontWeight: 900, letterSpacing: '-1.5px', lineHeight: 1.0, margin: '0 0 12px', fontFamily: 'var(--font-heading)', color: textPri }}>
+                StockFlow Pro
+              </h1>
+              <p style={{ fontSize: 16, color: textSec, margin: '0 0 20px', lineHeight: 1.5 }}>
+                Sistema inteligente de gestão de inventário com alertas em tempo real.
+              </p>
+              {/* Creator pill */}
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, background: cardBg, border: `1px solid ${border}`, borderRadius: 999, padding: '6px 16px 6px 6px' }}>
+                <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'linear-gradient(135deg, #6366f1, #4f46e5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: '#fff', flexShrink: 0 }}>J</div>
+                <span style={{ fontSize: 13, fontWeight: 600, color: textPri }}>João Silva</span>
+                <span style={{ fontSize: 12, color: textSec }}>· CTIC</span>
+              </div>
             </div>
-            <span style={{ fontSize: 9, fontWeight: 700, color: '#1b78f7' }}>88/100</span>
-          </div>
-          <div style={{ fontSize: 9, color: textSec }}>Pontuação IA · Top 12% dos projetos</div>
-        </div>
-
-        <div style={{ height: 1, background: cardBorder }} />
-
-        {/* Sobre o projeto */}
-        <div style={{ padding: '12px 16px' }}>
-          <div style={{ fontSize: 9, fontWeight: 700, color: textSec, letterSpacing: '0.6px', textTransform: 'uppercase', marginBottom: 6 }}>Sobre o projeto</div>
-          <div style={{ fontSize: 11, color: textPri, lineHeight: 1.6 }}>
-            Sistema de gestão de inventário com alertas automáticos e dashboard em tempo real para pequenas empresas.
+            {/* Score ring */}
+            <div style={{ flexShrink: 0, paddingTop: 8 }}>
+              <MiniScoreRing score={88} size={84} />
+              <div style={{ textAlign: 'center', marginTop: 6, fontSize: 10, color: textSec, fontWeight: 600 }}>Nível profissional</div>
+            </div>
           </div>
         </div>
 
-        <div style={{ height: 1, background: cardBorder }} />
+        {/* Divider */}
+        <div style={{ height: 1, background: border, margin: '28px 0 0' }} />
 
-        {/* 3 highlight cards */}
-        <div style={{ padding: '12px 16px' }}>
-          <div style={{ fontSize: 9, fontWeight: 700, color: textSec, letterSpacing: '0.6px', textTransform: 'uppercase', marginBottom: 8 }}>Pontos-chave</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        {/* Cards grid */}
+        <div style={{ padding: '24px 32px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+
+          {/* Problema */}
+          <div style={{ background: cardBg, border: `1px solid ${border}`, borderRadius: 14, padding: '18px 20px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 10 }}>
+              <Search size={13} color={textSec} />
+              <span style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: textSec }}>Problema</span>
+            </div>
+            <p style={{ margin: 0, fontSize: 14, color: textPri, lineHeight: 1.7 }}>
+              Pequenas empresas perdem horas por semana a gerir stock manualmente em folhas de cálculo, sem alertas de rutura nem visibilidade em tempo real sobre o inventário.
+            </p>
+          </div>
+
+          {/* Highlight cards */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
             {[
-              { icon: '⚡', text: 'Reduz erros de stock em 90% com alertas em tempo real' },
-              { icon: '💰', text: 'Poupança média de 3h/semana para o gestor de loja' },
-              { icon: '🎯', text: 'Solução testada em 2 empresas reais durante o estágio' },
-            ].map(({ icon, text }) => (
-              <div key={text} style={{
-                background: cardBg, border: `1px solid ${cardBorder}`,
-                borderRadius: 8, padding: '8px 10px',
-                display: 'flex', alignItems: 'flex-start', gap: 8,
-              }}>
-                <span style={{ fontSize: 13, lineHeight: 1 }}>{icon}</span>
-                <span style={{ fontSize: 10, color: textPri, lineHeight: 1.5 }}>{text}</span>
+              { Icon: Zap,        color: '#1b78f7', bg: 'rgba(27,120,247,0.08)',  text: 'Reduz erros de stock em 90%' },
+              { Icon: TrendingUp, color: '#22c55e', bg: 'rgba(34,197,94,0.08)',   text: 'Poupança de 3h/semana por loja' },
+              { Icon: Target,     color: '#8b5cf6', bg: 'rgba(139,92,246,0.08)',  text: 'Testado em 2 empresas reais' },
+            ].map(({ Icon, color, bg, text }) => (
+              <div key={text} style={{ background: cardBg, border: `1px solid ${border}`, borderRadius: 12, padding: '14px 16px' }}>
+                <div style={{ width: 32, height: 32, borderRadius: 9, background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 10 }}>
+                  <Icon size={15} color={color} />
+                </div>
+                <span style={{ fontSize: 12, color: textPri, fontWeight: 600, lineHeight: 1.5 }}>{text}</span>
               </div>
             ))}
           </div>
-        </div>
 
-        <div style={{ height: 1, background: cardBorder }} />
-
-        {/* Tech stack */}
-        <div style={{ padding: '10px 16px 14px' }}>
-          <div style={{ fontSize: 9, fontWeight: 700, color: textSec, letterSpacing: '0.6px', textTransform: 'uppercase', marginBottom: 6 }}>Tecnologias</div>
-          <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-            {['React', 'Node.js', 'PostgreSQL', 'Tailwind'].map(t => (
-              <span key={t} style={{
-                fontSize: 9, fontWeight: 600, padding: '3px 8px', borderRadius: 5,
-                background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
-                color: textSec, border: `1px solid ${cardBorder}`,
-              }}>{t}</span>
-            ))}
+          {/* Tecnologias */}
+          <div style={{ background: cardBg, border: `1px solid ${border}`, borderRadius: 14, padding: '18px 20px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 12 }}>
+              <Wrench size={13} color={textSec} />
+              <span style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: textSec }}>Tecnologias</span>
+            </div>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              {['React', 'Node.js', 'PostgreSQL', 'Tailwind CSS', 'Docker'].map(t => (
+                <span key={t} style={{ fontSize: 12, fontWeight: 600, padding: '4px 10px', borderRadius: 6, background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)', color: textSec, border: `1px solid ${border}` }}>{t}</span>
+              ))}
+            </div>
           </div>
         </div>
-
-        {/* Fade out bottom */}
-        <div style={{
-          height: 48,
-          background: `linear-gradient(to bottom, transparent, ${pageBg})`,
-          marginTop: -48, position: 'relative', pointerEvents: 'none',
-        }} />
       </div>
+
+      {/* Left shadow — "emerging from behind" effect */}
+      <div style={{
+        position: 'absolute', top: 0, left: 0,
+        width: '35%', height: '100%',
+        background: `linear-gradient(to right, var(--c-bg) 30%, transparent 100%)`,
+        pointerEvents: 'none', zIndex: 2,
+      }} />
     </div>
   )
 }
@@ -485,7 +497,7 @@ export default function Home() {
             </div>
 
             {/* Right col — mockup */}
-            <div className="hero-mockup-col">
+            <div className="hero-mockup-col" style={{ position: 'relative', minHeight: 560, overflow: 'visible' }}>
               <ProjectMockup theme={theme} />
             </div>
           </div>
