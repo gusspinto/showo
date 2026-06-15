@@ -69,14 +69,14 @@ function ProjectMockup({ theme }) {
   const MOCK_W = 860
 
   return (
-    <div style={{ position: 'relative', width: '100%', height: '100%', minHeight: 560 }}>
+    <div style={{ position: 'relative', width: '100%', height: 600 }}>
       {/* Scaled page */}
       <div style={{
         position: 'absolute',
-        top: -20, right: -100,
+        top: 0, left: -60,
         width: MOCK_W,
-        transformOrigin: 'top right',
-        transform: 'scale(0.63)',
+        transformOrigin: 'top left',
+        transform: 'scale(0.68)',
         borderRadius: 16,
         overflow: 'hidden',
         border: `1px solid ${border}`,
@@ -186,17 +186,17 @@ function ProjectMockup({ theme }) {
         </div>
       </div>
 
-      {/* Left shadow — "emerging from behind" effect */}
+      {/* Left fade — blends into left column */}
       <div style={{
         position: 'absolute', top: 0, left: 0,
-        width: '45%', height: '100%',
-        background: `linear-gradient(to right, var(--c-bg) 40%, transparent 100%)`,
+        width: '28%', height: '100%',
+        background: `linear-gradient(to right, var(--c-bg) 0%, transparent 100%)`,
         pointerEvents: 'none', zIndex: 2,
       }} />
       {/* Bottom fade */}
       <div style={{
         position: 'absolute', bottom: 0, left: 0, right: 0,
-        height: '25%',
+        height: '30%',
         background: `linear-gradient(to bottom, transparent, var(--c-bg))`,
         pointerEvents: 'none', zIndex: 2,
       }} />
@@ -314,19 +314,23 @@ export default function Home() {
         /* Hero two-column layout */
         .hero-inner {
           display: grid;
-          grid-template-columns: 52% 48%;
+          grid-template-columns: 1fr 1fr;
           gap: 0;
           align-items: center;
-          max-width: 1280px;
-          margin: 0 auto;
           width: 100%;
+          max-width: 100%;
         }
-        .hero-mockup-col { display: flex; justify-content: center; align-items: center; }
+        .hero-left-wrap {
+          padding: 0 48px 0 64px;
+          max-width: 640px;
+        }
+        .hero-mockup-col { display: block; position: relative; overflow: hidden; }
 
         /* Tablet */
         @media (max-width: 960px) {
-          .hero-inner { grid-template-columns: 1fr !important; gap: 48px !important; }
+          .hero-inner { grid-template-columns: 1fr !important; }
           .hero-mockup-col { display: none !important; }
+          .hero-left-wrap { padding: 0 32px !important; max-width: 100% !important; }
           .hero-left { text-align: center !important; align-items: center !important; }
           .hero-h1 { text-align: center !important; }
           .hero-sub { text-align: center !important; }
@@ -336,7 +340,8 @@ export default function Home() {
         }
 
         @media (max-width: 600px) {
-          .hero-section  { min-height: calc(100dvh - 62px) !important; justify-content: center !important; padding: 32px 20px 48px !important; }
+          .hero-section  { padding: 60px 0 60px !important; }
+          .hero-left-wrap { padding: 0 20px !important; }
           .hero-h1       { font-size: 30px !important; letter-spacing: -0.5px !important; margin-bottom: 12px !important; }
           .hero-sub      { font-size: 15px !important; }
           .hero-widget   { margin-top: 28px !important; max-width: 100% !important; }
@@ -380,23 +385,23 @@ export default function Home() {
 
       {/* Hero */}
       <div style={{ position: 'relative', overflow: 'hidden' }}>
+        {/* Background glow */}
         <div style={{
-          position: 'absolute', top: -80, left: '50%', transform: 'translateX(-50%)',
-          width: 800, height: 500, borderRadius: '50%',
-          background: 'radial-gradient(ellipse, rgba(27,120,247,0.08) 0%, transparent 68%)',
+          position: 'absolute', top: -60, left: '20%',
+          width: 600, height: 600, borderRadius: '50%',
+          background: 'radial-gradient(ellipse, rgba(27,120,247,0.07) 0%, transparent 68%)',
           pointerEvents: 'none', animation: 'pulse-glow 5s ease-in-out infinite',
         }} />
 
         <div className="hero-section" style={{
-          minHeight: 'calc(100vh - 62px)',
           display: 'flex', flexDirection: 'column',
           alignItems: 'center', justifyContent: 'center',
-          padding: '80px 48px 80px 56px',
+          padding: '100px 0 100px 0',
           position: 'relative',
         }}>
           <div className="hero-inner">
             {/* Left col */}
-            <div className="hero-left" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+            <div className="hero-left hero-left-wrap" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
               {/* Badge */}
               <div className="hero-badge" style={{
                 display: 'inline-flex', alignItems: 'center', gap: 8,
@@ -502,7 +507,7 @@ export default function Home() {
             </div>
 
             {/* Right col — mockup */}
-            <div className="hero-mockup-col" style={{ position: 'relative', minHeight: 640, overflow: 'visible' }}>
+            <div className="hero-mockup-col" style={{ height: 600 }}>
               <ProjectMockup theme={theme} />
             </div>
           </div>
