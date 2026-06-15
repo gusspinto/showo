@@ -22,86 +22,28 @@ const colors = {
   subtle:       'var(--c-subtle)',
 }
 
-const PHRASES = [
-  { full: 'O teu projeto merece mais do que um PDF.', highlight: 'mais do que um PDF.' },
-  { full: 'Organiza. Apresenta. Impressiona.', highlight: 'Organiza. Apresenta. Impressiona.' },
-  { full: 'A IA prepara-te para a defesa.', highlight: 'prepara-te para a defesa.' },
-]
-
-function TypedHero() {
-  const [idx,      setIdx]      = useState(0)
-  const [text,     setText]     = useState('')
-  const [deleting, setDeleting] = useState(false)
-  const [cursor,   setCursor]   = useState(true)
-
-  useEffect(() => {
-    const t = setInterval(() => setCursor(c => !c), 530)
-    return () => clearInterval(t)
-  }, [])
-
-  useEffect(() => {
-    const phrase = PHRASES[idx].full
-    let timer
-    if (!deleting) {
-      if (text.length < phrase.length) {
-        timer = setTimeout(() => setText(phrase.slice(0, text.length + 1)), 55)
-      } else {
-        timer = setTimeout(() => setDeleting(true), 2200)
-      }
-    } else {
-      if (text.length > 0) {
-        timer = setTimeout(() => setText(text.slice(0, -1)), 30)
-      } else {
-        setDeleting(false)
-        setIdx(i => (i + 1) % PHRASES.length)
-      }
-    }
-    return () => clearTimeout(timer)
-  }, [text, deleting, idx])
-
-  const phrase = PHRASES[idx]
-  let rendered
-  if (phrase.highlight) {
-    const hStart = phrase.full.indexOf(phrase.highlight)
-    if (text.length > hStart) {
-      const before = text.slice(0, hStart)
-      const hl     = text.slice(hStart)
-      rendered = (
-        <>
-          {before}
-          <span style={{
-            background: 'linear-gradient(135deg, #1b78f7 0%, #818cf8 60%, #a78bfa 100%)',
-            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-          }}>{hl}</span>
-        </>
-      )
-    } else {
-      rendered = text
-    }
-  } else {
-    rendered = text
-  }
-
+function StaticHero() {
   return (
     <h1 className="hero-h1 home-hero-heading" style={{
       fontSize: 'clamp(36px, 5.5vw, 62px)', fontWeight: 900,
-      lineHeight: 1.1, margin: '0 0 18px',
-      letterSpacing: '-1.2px', maxWidth: 680,
+      lineHeight: 1.08, margin: '0 0 20px',
+      letterSpacing: '-1.5px', maxWidth: 720,
       fontFamily: 'var(--font-heading)',
-      minHeight: '2.2em',
     }}>
-      {rendered}
-      <span style={{ color: '#1b78f7', WebkitTextFillColor: '#1b78f7', opacity: cursor ? 1 : 0, marginLeft: 3, transition: 'opacity 0.1s' }}>|</span>
+      O teu projeto vale mais do que um{' '}
+      <span style={{
+        background: 'linear-gradient(135deg, #1b78f7 0%, #818cf8 60%, #a78bfa 100%)',
+        WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+      }}>CV vazio.</span>
     </h1>
   )
 }
 
 const QUICK_GOALS = [
-  { id: 'pap',         label: 'PAP' },
-  { id: 'internship',  label: 'Estágio' },
-  { id: 'group',       label: 'Trabalho de grupo' },
-  { id: 'personal',    label: 'Projeto pessoal' },
-  { id: 'competition', label: 'Competição' },
+  { id: 'pap',        label: 'PAP' },
+  { id: 'internship', label: 'Estágio' },
+  { id: 'group',      label: 'Trabalho de grupo' },
+  { id: 'personal',   label: 'Projeto pessoal' },
 ]
 
 const FEATURES = [
@@ -285,14 +227,15 @@ export default function Home() {
           </div>
 
           {/* Headline */}
-          <TypedHero />
+          <StaticHero />
 
           {/* Subheadline */}
           <p className="hero-sub" style={{
-            fontSize: 15, color: colors.subtle, maxWidth: 400,
-            lineHeight: 1.5, margin: '0 auto 8px', fontWeight: 400,
+            fontSize: 18, color: colors.muted, maxWidth: 520,
+            lineHeight: 1.6, margin: '0 auto 8px', fontWeight: 400,
           }}>
-            Para estudantes que levam os projetos a sério.
+            Cria uma página profissional do teu projeto em 10 minutos.
+            Partilha o link com qualquer empresa. Consegue o estágio que mereces.
           </p>
 
           {/* Widget */}
@@ -373,33 +316,9 @@ export default function Home() {
               <p style={{ color: '#ef4444', fontSize: 12, marginTop: 10, fontWeight: 600, textAlign: 'center' }}>
                 Texto inválido — escreve uma descrição real do teu projeto.
               </p>
-            ) : !user ? (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 14 }}>
-                <div style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 8,
-                  background: 'rgba(var(--c-warn-rgb, 251,191,36),0.08)',
-                  border: '1px solid var(--c-warn, #fbbf24)',
-                  borderRadius: 10, padding: '8px 14px',
-                  fontSize: 13, color: 'var(--c-warn, #fbbf24)', fontWeight: 500,
-                  borderColor: 'color-mix(in srgb, var(--c-warn, #fbbf24) 35%, transparent)',
-                }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--c-warn, #fbbf24)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
-                    <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-                  </svg>
-                  Sem conta o projeto não fica guardado —&nbsp;
-                  <button
-                    type="button"
-                    onClick={() => navigate('/register')}
-                    style={{ background: 'none', border: 'none', color: 'var(--c-warn, #fbbf24)', fontWeight: 700, fontSize: 13, cursor: 'pointer', padding: 0, fontFamily: 'inherit', textDecoration: 'underline', textUnderlineOffset: 2 }}
-                  >
-                    cria conta grátis
-                  </button>
-                </div>
-              </div>
             ) : (
-              <p className="hero-note" style={{ color: colors.subtle, fontSize: 12, marginTop: 14, fontWeight: 500 }}>
-                Sem cartão de crédito
+              <p className="hero-note" style={{ color: colors.subtle, fontSize: 13, marginTop: 14, fontWeight: 500, textAlign: 'center' }}>
+                Sem registo · Sem cartão de crédito
               </p>
             )}
           </form>
@@ -416,10 +335,10 @@ export default function Home() {
         flexWrap: 'wrap',
       }}>
         {[
-          { Icon: Users,      color: colors.blue,         text: projectCount != null ? `${projectCount} projetos criados` : 'Centenas de projetos' },
-          { Icon: Trophy,     color: colors.yellow,       text: 'Ranking público' },
-          { Icon: Sparkles,   color: '#818cf8',           text: 'Análise por IA' },
-          { Icon: BadgeCheck, color: colors.green,        text: 'Certificados verificados' },
+          { Icon: Users,      color: colors.blue,   text: projectCount != null ? `Já ${projectCount} projetos criados por estudantes portugueses` : 'Já centenas de projetos criados por estudantes portugueses' },
+          { Icon: Trophy,     color: colors.yellow, text: 'Ranking público' },
+          { Icon: Sparkles,   color: '#818cf8',     text: 'Análise por IA' },
+          { Icon: BadgeCheck, color: colors.green,  text: 'Certificados verificados' },
         ].map(({ Icon, color, text }, i, arr) => (
           <div key={text} style={{ display: 'flex', alignItems: 'center', gap: 28 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
