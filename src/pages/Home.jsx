@@ -33,7 +33,7 @@ function StaticHero() {
     }}>
       O teu projeto vale mais do que um{' '}
       <span style={{
-        background: 'linear-gradient(135deg, #1b78f7 0%, #818cf8 60%, #a78bfa 100%)',
+        background: 'linear-gradient(135deg, #1b78f7 0%, #38a3ff 100%)',
         WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
       }}>CV vazio.</span>
     </h1>
@@ -76,10 +76,10 @@ function ProjectMockup({ theme }) {
       {/* Scaled page */}
       <div style={{
         position: 'absolute',
-        top: 0, right: -40,
+        top: 0, right: -80,
         width: MOCK_W,
         transformOrigin: 'top right',
-        transform: 'scale(0.58)',
+        transform: 'scale(0.72)',
         borderRadius: 16,
         overflow: 'hidden',
         border: `1px solid ${border}`,
@@ -104,17 +104,18 @@ function ProjectMockup({ theme }) {
         </div>
 
         {/* Hero cover */}
-        <div style={{ position: 'relative', height: 200, background: 'linear-gradient(135deg, #1a0f40 0%, #1b78f7 55%, #818cf8 100%)', overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', top: -60, left: '5%', width: 600, height: 600, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(99,102,241,0.25) 0%, transparent 65%)', pointerEvents: 'none' }} />
-          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 40%, rgba(11,17,32,0.85) 100%)' }} />
+        <div style={{ position: 'relative', height: 200, background: 'linear-gradient(135deg, #061a3a 0%, #0d3a7a 40%, #1b78f7 100%)', overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', top: -60, right: '10%', width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(27,120,247,0.35) 0%, transparent 65%)', pointerEvents: 'none' }} />
+          <div style={{ position: 'absolute', bottom: -20, left: '20%', width: 300, height: 300, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(56,163,255,0.2) 0%, transparent 65%)', pointerEvents: 'none' }} />
+          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 30%, rgba(11,17,32,0.9) 100%)' }} />
         </div>
 
         {/* Title block */}
         <div style={{ padding: '0 32px', position: 'relative', marginTop: -80 }}>
           {/* Type chip */}
           <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
-            <span style={{ background: 'linear-gradient(135deg, #6366f1, #4f46e5)', color: '#fff', borderRadius: 6, padding: '4px 12px', fontSize: 11, fontWeight: 800, letterSpacing: '0.06em' }}>PAP</span>
-            <span style={{ background: 'rgba(27,120,247,0.12)', color: '#1b78f7', border: '1px solid rgba(27,120,247,0.2)', borderRadius: 6, padding: '4px 12px', fontSize: 12, fontWeight: 600 }}>Tecnologias de Informação</span>
+            <span style={{ background: 'linear-gradient(135deg, #1b78f7, #0d5abf)', color: '#fff', borderRadius: 6, padding: '4px 12px', fontSize: 11, fontWeight: 800, letterSpacing: '0.06em' }}>PAP</span>
+            <span style={{ background: 'rgba(27,120,247,0.12)', color: '#38a3ff', border: '1px solid rgba(27,120,247,0.25)', borderRadius: 6, padding: '4px 12px', fontSize: 12, fontWeight: 600 }}>Tecnologias de Informação</span>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 20 }}>
@@ -160,9 +161,9 @@ function ProjectMockup({ theme }) {
           {/* Highlight cards */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
             {[
-              { Icon: Zap,        color: '#1b78f7', bg: 'rgba(27,120,247,0.08)',  text: 'Reduz erros de stock em 90%' },
-              { Icon: TrendingUp, color: '#22c55e', bg: 'rgba(34,197,94,0.08)',   text: 'Poupança de 3h/semana por loja' },
-              { Icon: Target,     color: '#8b5cf6', bg: 'rgba(139,92,246,0.08)',  text: 'Testado em 2 empresas reais' },
+              { Icon: Zap,        color: '#1b78f7', bg: 'rgba(27,120,247,0.1)',  text: 'Reduz erros de stock em 90%' },
+              { Icon: TrendingUp, color: '#38a3ff', bg: 'rgba(56,163,255,0.1)',  text: 'Poupança de 3h/semana por loja' },
+              { Icon: Target,     color: '#1b78f7', bg: 'rgba(27,120,247,0.08)', text: 'Testado em 2 empresas reais' },
             ].map(({ Icon, color, bg, text }) => (
               <div key={text} style={{ background: cardBg, border: `1px solid ${border}`, borderRadius: 12, padding: '14px 16px' }}>
                 <div style={{ width: 32, height: 32, borderRadius: 9, background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 10 }}>
@@ -497,7 +498,7 @@ export default function Home() {
             </div>
 
             {/* Right col — mockup */}
-            <div className="hero-mockup-col" style={{ position: 'relative', minHeight: 560, overflow: 'visible' }}>
+            <div className="hero-mockup-col" style={{ position: 'relative', minHeight: 640, overflow: 'visible' }}>
               <ProjectMockup theme={theme} />
             </div>
           </div>
