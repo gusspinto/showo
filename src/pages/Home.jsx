@@ -25,9 +25,9 @@ const colors = {
 function StaticHero() {
   return (
     <h1 className="hero-h1 home-hero-heading" style={{
-      fontSize: 'clamp(22px, 2.8vw, 40px)', fontWeight: 900,
-      lineHeight: 1.12, margin: '0 0 20px',
-      letterSpacing: '-1px',
+      fontSize: 'clamp(26px, 3vw, 42px)', fontWeight: 900,
+      lineHeight: 1.1, margin: '0 0 24px',
+      letterSpacing: '-1.5px',
       fontFamily: 'var(--font-heading)',
       textAlign: 'center',
     }}>
@@ -381,7 +381,7 @@ export default function Home() {
         }} />
 
         <div className="hero-section" style={{
-          padding: '100px 24px 88px',
+          padding: '140px 24px 130px',
           display: 'flex', flexDirection: 'column', alignItems: 'center',
           textAlign: 'center', position: 'relative',
         }}>
@@ -400,7 +400,7 @@ export default function Home() {
 
           <p className="hero-sub" style={{
             fontSize: 17, color: colors.muted, lineHeight: 1.7,
-            margin: '0 0 48px', fontWeight: 400, maxWidth: 460,
+            margin: '0 0 56px', fontWeight: 400, maxWidth: 460,
           }}>
             Cria uma página profissional do teu projeto em 10 minutos.
             Partilha o link com qualquer empresa.
@@ -499,11 +499,11 @@ export default function Home() {
       </div>
 
       {/* Features alternadas */}
-      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '120px 40px 80px' }}>
+      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '200px 40px 80px' }}>
 
         {/* Título da secção */}
         <div style={{ textAlign: 'center', marginBottom: 96 }}>
-          <h2 style={{ fontSize: 'clamp(28px, 3.5vw, 44px)', fontWeight: 900, letterSpacing: '-1px', margin: '0 0 16px', fontFamily: 'var(--font-heading)', color: colors.text }}>
+          <h2 style={{ fontSize: 'clamp(26px, 3vw, 42px)', fontWeight: 900, letterSpacing: '-1.5px', margin: '0 0 16px', fontFamily: 'var(--font-heading)', color: colors.text }}>
             Tudo o que precisas, num só sítio
           </h2>
           <p style={{ fontSize: 17, color: colors.muted, maxWidth: 480, margin: '0 auto', lineHeight: 1.65 }}>
