@@ -1612,7 +1612,24 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
             </>
           ) : (
             <>
-              <button className="sb-item" onClick={() => navigate('/login')}>Entrar</button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '0 4px 2px' }}>
+                <button className="sb-item" style={{ flex: 1, margin: 0 }} onClick={() => navigate('/login')}>Entrar</button>
+                <button
+                  onClick={toggleTheme}
+                  title={theme === 'dark' ? 'Modo claro' : 'Modo escuro'}
+                  style={{
+                    flexShrink: 0, width: 32, height: 32, borderRadius: 8,
+                    background: 'transparent', border: 'none',
+                    color: 'var(--c-muted)', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    transition: 'background 0.13s, color 0.13s',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'var(--c-card-hover)'; e.currentTarget.style.color = 'var(--c-text)' }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--c-muted)' }}
+                >
+                  {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
+                </button>
+              </div>
               <button className="sb-item active" onClick={() => navigate('/register')}>Criar conta</button>
             </>
           )}
@@ -1645,9 +1662,12 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   </button>
                 </div>
               ) : (
-                <div style={{ padding: '16px 12px 12px', display: 'flex', gap: 8 }}>
+                <div style={{ padding: '16px 12px 12px', display: 'flex', gap: 8, alignItems: 'center' }}>
                   <button onClick={() => { navigate('/login'); setMenuOpen(false) }} style={{ flex: 1, padding: '13px 0', background: 'transparent', border: '1px solid var(--c-border)', borderRadius: 10, color: 'var(--c-text)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Entrar</button>
                   <button onClick={() => { navigate('/register'); setMenuOpen(false) }} style={{ flex: 1, padding: '13px 0', background: '#1b78f7', border: 'none', borderRadius: 10, color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>Criar conta</button>
+                  <button onClick={toggleTheme} style={{ width: 46, height: 46, borderRadius: 10, background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)', color: 'var(--c-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    {theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
+                  </button>
                 </div>
               )}
 
