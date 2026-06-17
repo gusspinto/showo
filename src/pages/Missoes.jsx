@@ -197,70 +197,78 @@ function MissionCard({ mission, done, progress }) {
   const accent = mission.color
   const pct = progress ? Math.round((progress.current / progress.max) * 100) : 0
 
+  if (done) {
+    return (
+      <div
+        className="missoes-card"
+        style={{
+          background: C.card,
+          border: `1px solid ${C.border}`,
+          borderRadius: 12,
+          padding: '10px 14px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12,
+          opacity: 0.5,
+        }}
+      >
+        <div style={{
+          width: 32, height: 32, borderRadius: 9, flexShrink: 0,
+          background: C.bgAlt,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <Icon size={15} color={C.subtle} />
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <span style={{ fontSize: 13, fontWeight: 600, color: C.muted, textDecoration: 'line-through' }}>{mission.title}</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+          <span style={{ fontSize: 12, fontWeight: 700, color: C.subtle }}>+{mission.xp} XP</span>
+          <CheckCircle2 size={15} color={C.subtle} />
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div
       className="missoes-card"
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
       style={{
-        background: hov && !done ? C.cardHover : C.card,
-        border: `1px solid ${done ? accent + '55' : hov ? C.borderBright : C.border}`,
-        borderRadius: 14,
-        padding: '16px 18px',
+        background: hov ? C.cardHover : C.card,
+        border: `1px solid ${hov ? C.borderBright : C.border}`,
+        borderRadius: 12,
+        padding: '12px 14px',
         display: 'flex',
         alignItems: 'center',
-        gap: 16,
+        gap: 12,
         transition: 'all 0.18s',
-        opacity: done ? 1 : 0.8,
-        boxShadow: done ? `0 0 0 1px ${accent}22` : 'none',
-        position: 'relative',
-        overflow: 'hidden',
       }}
     >
-      {/* top accent line if done */}
-      {done && (
-        <div style={{
-          position: 'absolute', top: 0, left: 0, right: 0, height: 2,
-          background: `linear-gradient(90deg,${accent}88,${accent}22)`,
-          borderRadius: '14px 14px 0 0',
-        }} />
-      )}
-
       {/* Icon */}
       <div style={{
-        width: 44, height: 44, borderRadius: 12, flexShrink: 0,
+        width: 36, height: 36, borderRadius: 10, flexShrink: 0,
         background: `${accent}18`,
         border: `1px solid ${accent}30`,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>
-        <Icon size={20} color={accent} />
+        <Icon size={17} color={accent} />
       </div>
 
       {/* Text */}
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
-          <span style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{mission.title}</span>
-          <span style={{
-            fontSize: 10, fontWeight: 700, letterSpacing: '0.06em',
-            background: `${accent}18`, border: `1px solid ${accent}30`,
-            borderRadius: 4, padding: '1px 6px', color: accent,
-          }}>{mission.category}</span>
-        </div>
-        <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.4, marginBottom: progress && !done ? 8 : 0 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 2 }}>{mission.title}</div>
+        <div style={{ fontSize: 11, color: C.muted, lineHeight: 1.4, marginBottom: progress ? 6 : 0 }}>
           {mission.description}
         </div>
-        {/* Progress bar — only for quantifiable missions not yet done */}
-        {progress && !done && (
+        {progress && (
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-              <span style={{ fontSize: 10, color: C.subtle, fontWeight: 600 }}>
-                {progress.current} / {progress.max}
-              </span>
-              <span style={{ fontSize: 10, color: pct >= 75 ? accent : C.subtle, fontWeight: 700 }}>
-                {pct}%
-              </span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
+              <span style={{ fontSize: 10, color: C.subtle, fontWeight: 600 }}>{progress.current} / {progress.max}</span>
+              <span style={{ fontSize: 10, color: pct >= 75 ? accent : C.subtle, fontWeight: 700 }}>{pct}%</span>
             </div>
-            <div style={{ height: 4, background: `${accent}20`, borderRadius: 99, overflow: 'hidden' }}>
+            <div style={{ height: 3, background: `${accent}20`, borderRadius: 99, overflow: 'hidden' }}>
               <div style={{
                 height: '100%', width: `${pct}%`,
                 background: `linear-gradient(90deg, ${accent}bb, ${accent})`,
@@ -273,13 +281,8 @@ function MissionCard({ mission, done, progress }) {
 
       {/* XP + Status */}
       <div style={{ textAlign: 'right', flexShrink: 0 }}>
-        <div style={{ fontSize: 15, fontWeight: 800, color: done ? accent : C.subtle, marginBottom: 4 }}>
-          +{mission.xp} XP
-        </div>
-        {done
-          ? <CheckCircle2 size={18} color={accent} />
-          : <Circle size={18} color={C.subtle} />
-        }
+        <div style={{ fontSize: 13, fontWeight: 800, color: accent, marginBottom: 3 }}>+{mission.xp} XP</div>
+        <Circle size={15} color={C.subtle} />
       </div>
     </div>
   )
@@ -407,29 +410,29 @@ export default function Missoes() {
           </div>
         ) : (
           <>
-            {/* Completed */}
-            {doneMissions.length > 0 && (
-              <div style={{ marginBottom: 28 }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 12 }}>
-                  Concluídas · {doneMissions.length}
+            {/* Pending */}
+            {pendingMissions.length > 0 && (
+              <div style={{ marginBottom: 24 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 10 }}>
+                  Por completar · {pendingMissions.length}
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {doneMissions.map(m => (
-                    <MissionCard key={m.id} mission={m} done={true} />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {pendingMissions.map(m => (
+                    <MissionCard key={m.id} mission={m} done={false} progress={getMissionProgress(m.id, projects)} />
                   ))}
                 </div>
               </div>
             )}
 
-            {/* Pending */}
-            {pendingMissions.length > 0 && (
+            {/* Completed */}
+            {doneMissions.length > 0 && (
               <div>
-                <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 12 }}>
-                  Por completar · {pendingMissions.length}
+                <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 10 }}>
+                  Concluídas · {doneMissions.length}
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {pendingMissions.map(m => (
-                    <MissionCard key={m.id} mission={m} done={false} progress={getMissionProgress(m.id, projects)} />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  {doneMissions.map(m => (
+                    <MissionCard key={m.id} mission={m} done={true} />
                   ))}
                 </div>
               </div>
