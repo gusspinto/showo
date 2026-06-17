@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useMemo, memo } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { Navbar } from '../components/Navbar'
@@ -68,7 +68,7 @@ function getLevelColor(score) {
   return colors.red
 }
 
-function ScoreRingSmall({ score }) {
+const ScoreRingSmall = memo(function ScoreRingSmall({ score }) {
   const size = 52, stroke = 4
   const r = (size - stroke) / 2
   const circ = 2 * Math.PI * r
@@ -86,7 +86,7 @@ function ScoreRingSmall({ score }) {
       </div>
     </div>
   )
-}
+})
 
 function SelectFilter({ value, onChange, options, label }) {
   return (
@@ -119,6 +119,8 @@ function SelectFilter({ value, onChange, options, label }) {
   )
 }
 
+const VIEWS_KEY = `showo_views_${new Date().toISOString().slice(0, 13)}`
+
 const ROLE_LABELS = {
   recrutador: { label: 'Recrutador', color: '#8b5cf6', bg: 'rgba(139,92,246,0.1)', border: 'rgba(139,92,246,0.3)', icon: <Search size={16} /> },
   empresa:    { label: 'Empresa',    color: '#f59e0b', bg: 'rgba(245,158,11,0.1)',  border: 'rgba(245,158,11,0.3)',  icon: <Building2 size={16} /> },
@@ -142,8 +144,7 @@ export default function Explore() {
 
   const recruiterMode = profile?.role === 'recrutador' || profile?.role === 'empresa'
   const roleInfo = ROLE_LABELS[profile?.role] ?? null
-
-  const VIEWS_KEY = `showo_views_${new Date().toISOString().slice(0, 13)}`
+  const [visibleCount, setVisibleCount] = useState(24)
 
   // People tab — default to 'pessoas' if URL param says so
   const [tab, setTab] = useState(() => searchParams.get('tab') === 'pessoas' ? 'pessoas' : 'projetos')
@@ -271,7 +272,7 @@ export default function Explore() {
 
   const query = search.toLowerCase().trim()
 
-  const filtered = projects.filter(p => {
+  const filtered = useMemo(() => projects.filter(p => {
     if (query && !(
       p.name?.toLowerCase().includes(query) ||
       p.area?.toLowerCase().includes(query) ||
@@ -289,13 +290,13 @@ export default function Explore() {
     }
     if (filterAvailable && !p.available_for_work) return false
     return true
-  })
+  }), [projects, query, filterArea, filterType, filterMinScore, filterZone, filterAvailable])
 
   const hasFilters = filterArea || filterType || filterMinScore > 0 || filterZone || filterAvailable
   const activeFilterCount = [filterArea, filterType, filterZone, filterMinScore > 0, filterAvailable].filter(Boolean).length
 
   const peopleQuery = peopleSearch.toLowerCase().trim()
-  const filteredPeople = people.filter(p => {
+  const filteredPeople = useMemo(() => people.filter(p => {
     if (peopleQuery && !(
       p.full_name?.toLowerCase().includes(peopleQuery) ||
       p.username?.toLowerCase().includes(peopleQuery) ||
@@ -305,7 +306,7 @@ export default function Explore() {
     )) return false
     if (filterSkill && !(p.skills || []).includes(filterSkill)) return false
     return true
-  })
+  }), [people, peopleQuery, filterSkill])
 
   const SORT_OPTIONS = [
     { id: 'score',   label: 'Melhor score' },
@@ -314,12 +315,15 @@ export default function Explore() {
     { id: 'likes',   label: 'Mais gostos' },
   ]
 
-  const sorted = [...filtered].sort((a, b) => {
+  const sorted = useMemo(() => [...filtered].sort((a, b) => {
     if (sortBy === 'recent') return new Date(b.created_at) - new Date(a.created_at)
     if (sortBy === 'views')  return (b.views ?? 0) - (a.views ?? 0)
     if (sortBy === 'likes')  return (likeCounts[b.id] || 0) - (likeCounts[a.id] || 0)
     return (b.score ?? 0) - (a.score ?? 0)
-  })
+  }), [filtered, sortBy, likeCounts])
+
+  // Reset pagination when filters/search change
+  useEffect(() => { setVisibleCount(24) }, [query, filterArea, filterType, filterMinScore, filterZone, filterAvailable, sortBy])
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: 'var(--font-body)' }}>
@@ -594,7 +598,7 @@ export default function Explore() {
               {sorted.length} projeto{sorted.length !== 1 ? 's' : ''}{query && ` para "${search}"`}
             </div>
             <div className="explore-grid" style={{ display: 'grid', gap: 16 }}>
-              {sorted.map(project => (
+              {sorted.slice(0, visibleCount).map(project => (
                 <div
                   key={project.id}
                   className="explore-card"
@@ -743,6 +747,23 @@ export default function Explore() {
                 </div>
               ))}
             </div>
+            {visibleCount < sorted.length && (
+              <div style={{ textAlign: 'center', marginTop: 32 }}>
+                <button
+                  onClick={() => setVisibleCount(v => v + 24)}
+                  style={{
+                    background: 'transparent', border: `1px solid var(--c-border)`,
+                    color: 'var(--c-muted)', borderRadius: 12, padding: '11px 28px',
+                    fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+                    transition: 'border-color 0.15s, color 0.15s',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = '#1b78f7'; e.currentTarget.style.color = '#1b78f7' }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--c-border)'; e.currentTarget.style.color = 'var(--c-muted)' }}
+                >
+                  Carregar mais ({sorted.length - visibleCount} restantes)
+                </button>
+              </div>
+            )}
           </>
         )}
 
