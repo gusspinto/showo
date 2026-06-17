@@ -103,28 +103,25 @@ const FeatureRow = memo(function FeatureRow({ reverse, tag, tagColor, title, des
 })
 
 const MockupPortfolio = memo(function MockupPortfolio() {
-  const c = { bg: '#111827', border: 'rgba(255,255,255,0.07)', text: '#f1f5f9', muted: '#94a3b8' }
+  const c = { bg: '#ffffff', bgAlt: '#f0f5ff', border: '#dde6f5', text: '#0f172a', muted: '#64748b', blue: '#1b78f7' }
   return (
-    <div style={{ background: c.bg, border: `1px solid ${c.border}`, borderRadius: 18, overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.4)' }}>
-      {/* Cover */}
-      <div style={{ height: 80, background: 'linear-gradient(135deg, #061a3a, #1b78f7)', position: 'relative' }}>
-        <div style={{ position: 'absolute', bottom: -16, left: 20, width: 34, height: 34, borderRadius: '50%', background: 'linear-gradient(135deg, #1b78f7, #38a3ff)', border: `3px solid ${c.bg}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: '#fff' }}>J</div>
+    <div style={{ background: c.bg, border: `1px solid ${c.border}`, borderRadius: 18, overflow: 'hidden', boxShadow: '0 20px 60px rgba(27,120,247,0.12)' }}>
+      <div style={{ height: 80, background: 'linear-gradient(135deg, #1b78f7, #60a5fa)', position: 'relative' }}>
+        <div style={{ position: 'absolute', bottom: -16, left: 20, width: 34, height: 34, borderRadius: '50%', background: 'linear-gradient(135deg, #1b78f7, #60a5fa)', border: `3px solid ${c.bg}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: '#fff' }}>J</div>
       </div>
       <div style={{ padding: '22px 20px 18px' }}>
-        {/* Tags row */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
           <div style={{ display: 'flex', gap: 6 }}>
-            <span style={{ background: 'rgba(27,120,247,0.15)', color: '#1b78f7', fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 5 }}>PAP</span>
-            <span style={{ background: 'rgba(27,120,247,0.08)', color: '#38a3ff', border: '1px solid rgba(27,120,247,0.2)', fontSize: 10, fontWeight: 600, padding: '3px 8px', borderRadius: 5 }}>Tecnologias de Informação</span>
+            <span style={{ background: 'rgba(27,120,247,0.1)', color: c.blue, fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 5 }}>PAP</span>
+            <span style={{ background: c.bgAlt, color: '#3b82f6', border: `1px solid ${c.border}`, fontSize: 10, fontWeight: 600, padding: '3px 8px', borderRadius: 5 }}>Tecnologias de Informação</span>
           </div>
-          {/* Score badge */}
-          <span style={{ fontSize: 11, fontWeight: 800, color: '#22c55e', background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.25)', borderRadius: 6, padding: '3px 8px', letterSpacing: '-0.3px' }}>88 pts</span>
+          <span style={{ fontSize: 11, fontWeight: 800, color: '#16a34a', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 6, padding: '3px 8px' }}>88 pts</span>
         </div>
         <div style={{ fontSize: 17, fontWeight: 900, color: c.text, letterSpacing: '-0.5px', fontFamily: 'var(--font-heading)', marginBottom: 4 }}>StockFlow Pro</div>
         <div style={{ fontSize: 12, color: c.muted, marginBottom: 14 }}>João Silva · Escola Profissional do Porto</div>
-        <div style={{ background: 'rgba(27,120,247,0.08)', border: '1px solid rgba(27,120,247,0.15)', borderRadius: 10, padding: '9px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
-          <Globe size={12} color="#1b78f7" />
-          <span style={{ fontSize: 11, color: '#38a3ff', fontWeight: 600, fontFamily: 'monospace' }}>showo.pt/p/stockflow-pro</span>
+        <div style={{ background: c.bgAlt, border: `1px solid ${c.border}`, borderRadius: 10, padding: '9px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
+          <Globe size={12} color={c.blue} />
+          <span style={{ fontSize: 11, color: c.blue, fontWeight: 600, fontFamily: 'monospace' }}>showo.pt/p/stockflow-pro</span>
         </div>
       </div>
     </div>
@@ -132,7 +129,7 @@ const MockupPortfolio = memo(function MockupPortfolio() {
 })
 
 const MockupMissoes = memo(function MockupMissoes() {
-  const c = { bg: '#111827', border: 'rgba(255,255,255,0.07)', text: '#f1f5f9', muted: '#94a3b8' }
+  const c = { bg: '#ffffff', bgAlt: '#f0f5ff', border: '#dde6f5', text: '#0f172a', muted: '#64748b' }
   const missions = [
     { label: 'Descreve o problema', pts: '+8 pts', done: true },
     { label: 'Adiciona tecnologias', pts: '+5 pts', done: true },
@@ -140,25 +137,25 @@ const MockupMissoes = memo(function MockupMissoes() {
     { label: 'Apresenta resultados', pts: '+10 pts', done: false },
   ]
   return (
-    <div style={{ background: c.bg, border: `1px solid ${c.border}`, borderRadius: 18, overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.4)' }}>
-      <div style={{ padding: '20px 20px 16px', borderBottom: `1px solid ${c.border}` }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+    <div style={{ background: c.bg, border: `1px solid ${c.border}`, borderRadius: 18, overflow: 'hidden', boxShadow: '0 20px 60px rgba(27,120,247,0.12)' }}>
+      <div style={{ padding: '18px 20px 14px', borderBottom: `1px solid ${c.border}` }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
           <span style={{ fontSize: 13, fontWeight: 800, color: c.text, fontFamily: 'var(--font-heading)' }}>As tuas missões</span>
-          <span style={{ fontSize: 11, fontWeight: 700, color: '#22c55e', background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 6, padding: '3px 8px' }}>88 pts</span>
+          <span style={{ fontSize: 11, fontWeight: 700, color: '#16a34a', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 6, padding: '3px 8px' }}>88 pts</span>
         </div>
-        <div style={{ height: 4, background: 'rgba(255,255,255,0.07)', borderRadius: 99 }}>
+        <div style={{ height: 4, background: c.bgAlt, borderRadius: 99 }}>
           <div style={{ width: '55%', height: '100%', background: 'linear-gradient(90deg, #22c55e, #16a34a)', borderRadius: 99 }} />
         </div>
-        <div style={{ fontSize: 10, color: c.muted, marginTop: 6 }}>2 de 4 missões completas</div>
+        <div style={{ fontSize: 10, color: c.muted, marginTop: 5 }}>2 de 4 missões completas</div>
       </div>
-      <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 7 }}>
         {missions.map(m => (
-          <div key={m.label} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, background: m.done ? 'rgba(34,197,94,0.04)' : 'rgba(255,255,255,0.03)', border: `1px solid ${m.done ? 'rgba(34,197,94,0.15)' : c.border}` }}>
-            <div style={{ width: 22, height: 22, borderRadius: 6, background: m.done ? 'rgba(34,197,94,0.15)' : 'rgba(255,255,255,0.05)', border: `1px solid ${m.done ? 'rgba(34,197,94,0.3)' : c.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              {m.done ? <Trophy size={11} color="#22c55e" /> : <Zap size={11} color="#94a3b8" />}
+          <div key={m.label} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 10, background: m.done ? '#f0fdf4' : c.bgAlt, border: `1px solid ${m.done ? '#bbf7d0' : c.border}` }}>
+            <div style={{ width: 22, height: 22, borderRadius: 6, background: m.done ? '#dcfce7' : '#e0eaff', border: `1px solid ${m.done ? '#86efac' : '#bfcfff'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              {m.done ? <Trophy size={11} color="#16a34a" /> : <Zap size={11} color="#1b78f7" />}
             </div>
-            <span style={{ flex: 1, fontSize: 12, color: m.done ? '#94a3b8' : c.text, fontWeight: m.done ? 400 : 600, textDecoration: m.done ? 'line-through' : 'none' }}>{m.label}</span>
-            <span style={{ fontSize: 11, fontWeight: 700, color: m.done ? '#22c55e' : '#94a3b8' }}>{m.pts}</span>
+            <span style={{ flex: 1, fontSize: 12, color: m.done ? c.muted : c.text, fontWeight: m.done ? 400 : 600, textDecoration: m.done ? 'line-through' : 'none' }}>{m.label}</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: m.done ? '#16a34a' : '#1b78f7' }}>{m.pts}</span>
           </div>
         ))}
       </div>
@@ -167,28 +164,28 @@ const MockupMissoes = memo(function MockupMissoes() {
 })
 
 const MockupVagas = memo(function MockupVagas() {
-  const c = { bg: '#111827', border: 'rgba(255,255,255,0.07)', text: '#f1f5f9', muted: '#94a3b8' }
+  const c = { bg: '#ffffff', bgAlt: '#f0f5ff', border: '#dde6f5', text: '#0f172a', muted: '#64748b', blue: '#1b78f7' }
   const vagas = [
     { empresa: 'Codilink', cargo: 'Estágio em Desenvolvimento Web', tipo: 'Presencial · Lisboa', nova: true },
     { empresa: 'DataVision', cargo: 'Junior Backend Developer', tipo: 'Remoto · Full-time', nova: false },
     { empresa: 'UXLab', cargo: 'Estágio em Design de Produto', tipo: 'Híbrido · Porto', nova: true },
   ]
   return (
-    <div style={{ background: c.bg, border: `1px solid ${c.border}`, borderRadius: 18, overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.4)' }}>
-      <div style={{ padding: '18px 20px 14px', borderBottom: `1px solid ${c.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+    <div style={{ background: c.bg, border: `1px solid ${c.border}`, borderRadius: 18, overflow: 'hidden', boxShadow: '0 20px 60px rgba(27,120,247,0.12)' }}>
+      <div style={{ padding: '16px 20px 13px', borderBottom: `1px solid ${c.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <span style={{ fontSize: 13, fontWeight: 800, color: c.text, fontFamily: 'var(--font-heading)' }}>Vagas para ti</span>
-        <span style={{ fontSize: 10, color: '#f59e0b', fontWeight: 700, background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: 6, padding: '3px 8px' }}>3 novas</span>
+        <span style={{ fontSize: 10, color: '#b45309', fontWeight: 700, background: '#fef3c7', border: '1px solid #fde68a', borderRadius: 6, padding: '3px 8px' }}>3 novas</span>
       </div>
       <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
         {vagas.map(v => (
-          <div key={v.empresa} style={{ padding: '12px 14px', borderRadius: 12, background: 'rgba(255,255,255,0.03)', border: `1px solid ${c.border}`, display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(27,120,247,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <Briefcase size={15} color="#1b78f7" />
+          <div key={v.empresa} style={{ padding: '11px 14px', borderRadius: 12, background: c.bgAlt, border: `1px solid ${c.border}`, display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ width: 34, height: 34, borderRadius: 10, background: '#e0eaff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <Briefcase size={14} color={c.blue} />
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
                 <span style={{ fontSize: 12, fontWeight: 700, color: c.text }}>{v.cargo}</span>
-                {v.nova && <span style={{ fontSize: 9, fontWeight: 700, color: '#f59e0b', background: 'rgba(245,158,11,0.12)', borderRadius: 4, padding: '1px 5px' }}>Nova</span>}
+                {v.nova && <span style={{ fontSize: 9, fontWeight: 700, color: '#b45309', background: '#fef3c7', borderRadius: 4, padding: '1px 5px' }}>Nova</span>}
               </div>
               <span style={{ fontSize: 11, color: c.muted }}>{v.empresa} · {v.tipo}</span>
             </div>
@@ -200,31 +197,31 @@ const MockupVagas = memo(function MockupVagas() {
 })
 
 const MockupDefesa = memo(function MockupDefesa() {
-  const c = { bg: '#111827', border: 'rgba(255,255,255,0.07)', text: '#f1f5f9', muted: '#94a3b8' }
+  const c = { bg: '#ffffff', bgAlt: '#f0f5ff', border: '#dde6f5', text: '#0f172a', muted: '#64748b' }
   const perguntas = [
     'Qual foi o maior desafio técnico que enfrentaste?',
     'Como garantiste a qualidade do código produzido?',
     'Que tecnologias escolheste e porquê?',
   ]
   return (
-    <div style={{ background: c.bg, border: `1px solid ${c.border}`, borderRadius: 18, overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.4)' }}>
-      <div style={{ padding: '18px 20px 14px', borderBottom: `1px solid ${c.border}`, display: 'flex', alignItems: 'center', gap: 10 }}>
-        <div style={{ width: 30, height: 30, borderRadius: 9, background: 'rgba(139,92,246,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <GraduationCap size={15} color="#8b5cf6" />
+    <div style={{ background: c.bg, border: `1px solid ${c.border}`, borderRadius: 18, overflow: 'hidden', boxShadow: '0 20px 60px rgba(27,120,247,0.12)' }}>
+      <div style={{ padding: '16px 20px 13px', borderBottom: `1px solid ${c.border}`, display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ width: 30, height: 30, borderRadius: 9, background: '#ede9fe', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <GraduationCap size={15} color="#7c3aed" />
         </div>
         <span style={{ fontSize: 13, fontWeight: 800, color: c.text, fontFamily: 'var(--font-heading)' }}>Treino de defesa — PAP</span>
       </div>
-      <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: c.muted, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>Perguntas prováveis do júri</div>
+      <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 9 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: c.muted, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Perguntas prováveis do júri</div>
         {perguntas.map((p, i) => (
-          <div key={i} style={{ padding: '12px 14px', borderRadius: 10, background: 'rgba(139,92,246,0.05)', border: '1px solid rgba(139,92,246,0.15)', display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-            <span style={{ fontSize: 11, fontWeight: 800, color: '#8b5cf6', flexShrink: 0, marginTop: 1 }}>{i + 1}.</span>
+          <div key={i} style={{ padding: '11px 14px', borderRadius: 10, background: '#f5f3ff', border: '1px solid #ddd6fe', display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+            <span style={{ fontSize: 11, fontWeight: 800, color: '#7c3aed', flexShrink: 0, marginTop: 1 }}>{i + 1}.</span>
             <span style={{ fontSize: 12, color: c.text, lineHeight: 1.5 }}>{p}</span>
           </div>
         ))}
-        <div style={{ marginTop: 4, padding: '10px 14px', borderRadius: 10, background: 'rgba(27,120,247,0.06)', border: '1px solid rgba(27,120,247,0.15)', display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ padding: '9px 14px', borderRadius: 10, background: c.bgAlt, border: `1px solid ${c.border}`, display: 'flex', alignItems: 'center', gap: 8 }}>
           <Bot size={13} color="#1b78f7" />
-          <span style={{ fontSize: 11, color: '#38a3ff', fontWeight: 600 }}>IA a gerar respostas sugeridas...</span>
+          <span style={{ fontSize: 11, color: '#1b78f7', fontWeight: 600 }}>IA a gerar respostas sugeridas...</span>
         </div>
       </div>
     </div>
