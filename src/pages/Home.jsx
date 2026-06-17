@@ -1,6 +1,6 @@
 import { useState, useEffect, memo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Globe, Bot, GraduationCap, Trophy, Briefcase, Sparkles, BadgeCheck, Users, ArrowRight, Search, TrendingUp, Wrench, Zap, Target } from 'lucide-react'
+import { Globe, Bot, GraduationCap, Trophy, Briefcase, Sparkles, BadgeCheck, Users, ArrowRight, TrendingUp, Wrench, Zap, Target } from 'lucide-react'
 import { Navbar } from '../components/Navbar'
 import { supabase } from '../lib/supabase'
 import Onboarding from '../components/Onboarding'
@@ -29,7 +29,7 @@ function StaticHero() {
       lineHeight: 1.12, margin: '0 0 20px',
       letterSpacing: '-1px',
       fontFamily: 'var(--font-heading)',
-      textAlign: 'left',
+      textAlign: 'center',
     }}>
       O teu projeto vale mais do que um{' '}
       <span style={{ color: '#1b78f7', whiteSpace: 'nowrap' }}>CV vazio.</span>
@@ -57,151 +57,6 @@ function MiniScoreRing({ score, size = 72 }) {
     </div>
   )
 }
-
-const ProjectMockup = memo(function ProjectMockup({ theme }) {
-  const isDark  = theme !== 'light'
-  const pageBg  = isDark ? '#0b1120' : '#f0f4f8'
-  const cardBg  = isDark ? '#111827' : '#ffffff'
-  const border  = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.08)'
-  const textPri = isDark ? '#f1f5f9' : '#0f172a'
-  const textSec = isDark ? '#94a3b8' : '#64748b'
-
-  const MOCK_W = 860
-
-  return (
-    <div style={{ position: 'relative', width: '100%', height: 600 }}>
-      {/* Scaled page */}
-      <div style={{
-        position: 'absolute',
-        top: 0, left: 0,
-        width: MOCK_W,
-        transformOrigin: 'top left',
-        transform: 'scale(0.90)',
-        borderRadius: 16,
-        overflow: 'hidden',
-        boxShadow: '0 24px 80px rgba(0,0,0,0.6)',
-        background: pageBg,
-        fontFamily: 'var(--font-body)',
-      }}>
-        {/* Browser chrome */}
-        <div style={{
-          background: isDark ? '#0d1526' : '#dde3ea',
-          padding: '10px 16px',
-          display: 'flex', alignItems: 'center', gap: 7,
-          borderBottom: `1px solid ${border}`,
-        }}>
-          <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#ef4444', opacity: 0.8 }} />
-          <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#fbbf24', opacity: 0.8 }} />
-          <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#22c55e', opacity: 0.8 }} />
-          <div style={{
-            flex: 1, marginLeft: 10, background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.07)',
-            borderRadius: 6, padding: '4px 14px', fontSize: 11, color: textSec, fontFamily: 'monospace',
-          }}>showo.pt/p/stockflow-pro</div>
-        </div>
-
-        {/* Hero cover */}
-        <div style={{ position: 'relative', height: 200, background: 'linear-gradient(135deg, #061a3a 0%, #0d3a7a 40%, #1b78f7 100%)', overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', top: -60, right: '10%', width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(27,120,247,0.35) 0%, transparent 65%)', pointerEvents: 'none' }} />
-          <div style={{ position: 'absolute', bottom: -20, left: '20%', width: 300, height: 300, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(56,163,255,0.2) 0%, transparent 65%)', pointerEvents: 'none' }} />
-          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 30%, rgba(11,17,32,0.9) 100%)' }} />
-        </div>
-
-        {/* Title block */}
-        <div style={{ padding: '0 32px', position: 'relative', marginTop: -80 }}>
-          {/* Type chip */}
-          <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
-            <span style={{ background: 'linear-gradient(135deg, #1b78f7, #0d5abf)', color: '#fff', borderRadius: 6, padding: '4px 12px', fontSize: 11, fontWeight: 800, letterSpacing: '0.06em' }}>PAP</span>
-            <span style={{ background: 'rgba(27,120,247,0.12)', color: '#38a3ff', border: '1px solid rgba(27,120,247,0.25)', borderRadius: 6, padding: '4px 12px', fontSize: 12, fontWeight: 600 }}>Tecnologias de Informação</span>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 20 }}>
-            <div style={{ flex: 1 }}>
-              <h1 style={{ fontSize: 42, fontWeight: 900, letterSpacing: '-1.5px', lineHeight: 1.0, margin: '0 0 12px', fontFamily: 'var(--font-heading)', color: textPri }}>
-                StockFlow Pro
-              </h1>
-              <p style={{ fontSize: 16, color: textSec, margin: '0 0 20px', lineHeight: 1.5 }}>
-                Sistema inteligente de gestão de inventário com alertas em tempo real.
-              </p>
-              {/* Creator pill */}
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, background: cardBg, border: `1px solid ${border}`, borderRadius: 999, padding: '6px 16px 6px 6px' }}>
-                <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'linear-gradient(135deg, #6366f1, #4f46e5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: '#fff', flexShrink: 0 }}>J</div>
-                <span style={{ fontSize: 13, fontWeight: 600, color: textPri }}>João Silva</span>
-                <span style={{ fontSize: 12, color: textSec }}>· CTIC</span>
-              </div>
-            </div>
-            {/* Score ring */}
-            <div style={{ flexShrink: 0, paddingTop: 8 }}>
-              <MiniScoreRing score={88} size={84} />
-              <div style={{ textAlign: 'center', marginTop: 6, fontSize: 10, color: textSec, fontWeight: 600 }}>Nível profissional</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Divider */}
-        <div style={{ height: 1, background: border, margin: '28px 0 0' }} />
-
-        {/* Cards grid */}
-        <div style={{ padding: '24px 32px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-
-          {/* Problema */}
-          <div style={{ background: cardBg, border: `1px solid ${border}`, borderRadius: 14, padding: '18px 20px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 10 }}>
-              <Search size={13} color={textSec} />
-              <span style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: textSec }}>Problema</span>
-            </div>
-            <p style={{ margin: 0, fontSize: 14, color: textPri, lineHeight: 1.7 }}>
-              Pequenas empresas perdem horas por semana a gerir stock manualmente em folhas de cálculo, sem alertas de rutura nem visibilidade em tempo real sobre o inventário.
-            </p>
-          </div>
-
-          {/* Highlight cards */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
-            {[
-              { Icon: Zap,        color: '#1b78f7', bg: 'rgba(27,120,247,0.1)',  text: 'Reduz erros de stock em 90%' },
-              { Icon: TrendingUp, color: '#38a3ff', bg: 'rgba(56,163,255,0.1)',  text: 'Poupança de 3h/semana por loja' },
-              { Icon: Target,     color: '#1b78f7', bg: 'rgba(27,120,247,0.08)', text: 'Testado em 2 empresas reais' },
-            ].map(({ Icon, color, bg, text }) => (
-              <div key={text} style={{ background: cardBg, border: `1px solid ${border}`, borderRadius: 12, padding: '14px 16px' }}>
-                <div style={{ width: 32, height: 32, borderRadius: 9, background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 10 }}>
-                  <Icon size={15} color={color} />
-                </div>
-                <span style={{ fontSize: 12, color: textPri, fontWeight: 600, lineHeight: 1.5 }}>{text}</span>
-              </div>
-            ))}
-          </div>
-
-          {/* Tecnologias */}
-          <div style={{ background: cardBg, border: `1px solid ${border}`, borderRadius: 14, padding: '18px 20px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 12 }}>
-              <Wrench size={13} color={textSec} />
-              <span style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: textSec }}>Tecnologias</span>
-            </div>
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-              {['React', 'Node.js', 'PostgreSQL', 'Tailwind CSS', 'Docker'].map(t => (
-                <span key={t} style={{ fontSize: 12, fontWeight: 600, padding: '4px 10px', borderRadius: 6, background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)', color: textSec, border: `1px solid ${border}` }}>{t}</span>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Left fade — blends into left column */}
-      <div style={{
-        position: 'absolute', top: 0, left: 0,
-        width: '18%', height: '100%',
-        background: `linear-gradient(to right, var(--c-bg) 0%, transparent 100%)`,
-        pointerEvents: 'none', zIndex: 2,
-      }} />
-      {/* Bottom fade */}
-      <div style={{
-        position: 'absolute', bottom: 0, left: 0, right: 0,
-        height: '30%',
-        background: `linear-gradient(to bottom, transparent, var(--c-bg))`,
-        pointerEvents: 'none', zIndex: 2,
-      }} />
-    </div>
-  )
-})
 
 const FeatureRow = memo(function FeatureRow({ reverse, tag, tagColor, title, desc, bullets, bulletColor, mockup }) {
   return (
@@ -516,119 +371,105 @@ export default function Home() {
       </Navbar>
 
       {/* Hero */}
-      <div style={{ position: 'relative', overflow: 'hidden' }}>
+      <div style={{ position: 'relative' }}>
         {/* Background glows */}
         <div style={{
-          position: 'absolute', top: -100, left: '15%',
-          width: 700, height: 700, borderRadius: '50%',
-          background: 'radial-gradient(ellipse, rgba(27,120,247,0.09) 0%, transparent 65%)',
+          position: 'absolute', top: -120, left: '50%', transform: 'translateX(-50%)',
+          width: 800, height: 600, borderRadius: '50%',
+          background: 'radial-gradient(ellipse, rgba(27,120,247,0.1) 0%, transparent 65%)',
           pointerEvents: 'none', animation: 'pulse-glow 5s ease-in-out infinite',
         }} />
-        <div style={{
-          position: 'absolute', top: 0, right: '-5%',
-          width: 500, height: 500, borderRadius: '50%',
-          background: 'radial-gradient(ellipse, rgba(79,70,229,0.06) 0%, transparent 65%)',
-          pointerEvents: 'none',
-        }} />
 
-        {/* Hero — centrado, mockup sangra à direita */}
-        <div className="hero-section" style={{ padding: '80px 0 80px 100px', position: 'relative', display: 'flex', alignItems: 'flex-start' }}>
-
-          {/* Coluna esquerda: texto + widget */}
-          <div className="hero-left" style={{
-            display: 'flex', flexDirection: 'column', alignItems: 'flex-start',
-            flexShrink: 0, width: 420,
+        <div className="hero-section" style={{
+          padding: '100px 24px 88px',
+          display: 'flex', flexDirection: 'column', alignItems: 'center',
+          textAlign: 'center', position: 'relative',
+        }}>
+          <div className="hero-badge" style={{
+            display: 'inline-flex', alignItems: 'center', gap: 8,
+            background: theme === 'light' ? 'rgba(27,120,247,0.08)' : 'rgba(27,120,247,0.07)',
+            border: `1px solid ${theme === 'light' ? 'rgba(27,120,247,0.25)' : 'rgba(27,120,247,0.18)'}`,
+            color: '#1b78f7', borderRadius: 999,
+            padding: '5px 16px', fontSize: 12, fontWeight: 600, marginBottom: 28,
           }}>
-            <div className="hero-badge" style={{
-              display: 'inline-flex', alignItems: 'center', gap: 8,
-              background: theme === 'light' ? 'rgba(27,120,247,0.08)' : 'rgba(27,120,247,0.07)',
-              border: `1px solid ${theme === 'light' ? 'rgba(27,120,247,0.25)' : 'rgba(27,120,247,0.18)'}`,
-              color: '#1b78f7', borderRadius: 999,
-              padding: '5px 16px', fontSize: 12, fontWeight: 600, marginBottom: 28,
-            }}>
-              <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#1b78f7', display: 'inline-block', animation: 'pulse-glow 2s ease-in-out infinite' }} />
-              Para estudantes portugueses
-            </div>
+            <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#1b78f7', display: 'inline-block', animation: 'pulse-glow 2s ease-in-out infinite' }} />
+            Para estudantes portugueses
+          </div>
 
-            <StaticHero />
+          <StaticHero />
 
-            <p className="hero-sub" style={{
-              fontSize: 16, color: colors.muted, lineHeight: 1.7, margin: '0 0 52px', fontWeight: 400,
-            }}>
-              Cria uma página profissional do teu projeto em 10 minutos.
-              Partilha o link com qualquer empresa.
-            </p>
+          <p className="hero-sub" style={{
+            fontSize: 17, color: colors.muted, lineHeight: 1.7,
+            margin: '0 0 48px', fontWeight: 400, maxWidth: 460,
+          }}>
+            Cria uma página profissional do teu projeto em 10 minutos.
+            Partilha o link com qualquer empresa.
+          </p>
 
-            {/* Widget */}
-            <form className="hero-widget" onSubmit={handleStart} style={{ width: '100%' }}>
-              <div className="goals-row" style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'flex-start', marginBottom: 14 }}>
-                {QUICK_GOALS.map(g => (
-                  <button
-                    key={g.id} type="button" className="goal-pill"
-                    onClick={() => setSelectedGoal(selectedGoal === g.id ? null : g.id)}
-                    style={{
-                      background: selectedGoal === g.id ? 'rgba(27,120,247,0.12)' : 'transparent',
-                      border: `1px solid ${selectedGoal === g.id ? '#1b78f7' : colors.border}`,
-                      color: selectedGoal === g.id ? '#1b78f7' : colors.muted,
-                      borderRadius: 999, padding: '6px 15px', fontSize: 12, fontWeight: 600, fontFamily: 'inherit',
-                    }}
-                  >{g.label}</button>
-                ))}
-              </div>
-              <div
-                className="widget-box"
-                style={{
-                  display: 'flex', alignItems: 'center',
-                  background: 'rgba(255,255,255,0.03)',
-                  border: `1.5px solid rgba(255,255,255,0.08)`,
-                  borderRadius: 16, padding: '6px 6px 6px 20px',
-                  backdropFilter: 'blur(8px)',
-                }}
-                onFocusCapture={e => { e.currentTarget.style.borderColor = '#1b78f7' }}
-                onBlurCapture={e => { if (!e.currentTarget.contains(e.relatedTarget)) e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)' }}
-              >
-                <input
-                  type="text" className="widget-input"
-                  value={inputText} onChange={e => setInputText(e.target.value)}
-                  placeholder={placeholder}
-                  style={{
-                    flex: 1, background: 'transparent', border: 'none',
-                    color: 'var(--c-text)', fontSize: 15, fontFamily: 'inherit',
-                    outline: 'none', minWidth: 0, padding: '10px 0',
-                  }}
-                />
+          {/* Widget */}
+          <form className="hero-widget" onSubmit={handleStart} style={{ width: '100%', maxWidth: 520 }}>
+            <div className="goals-row" style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 14 }}>
+              {QUICK_GOALS.map(g => (
                 <button
-                  type="submit" className="submit-btn"
-                  disabled={!inputText.trim()}
+                  key={g.id} type="button" className="goal-pill"
+                  onClick={() => setSelectedGoal(selectedGoal === g.id ? null : g.id)}
                   style={{
-                    background: inputText.trim() ? '#1b78f7' : 'rgba(255,255,255,0.06)',
-                    border: 'none', borderRadius: 12, color: '#fff', width: 44, height: 44,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    cursor: inputText.trim() ? 'pointer' : 'not-allowed', flexShrink: 0,
-                    transition: 'all 0.15s',
+                    background: selectedGoal === g.id ? 'rgba(27,120,247,0.12)' : 'transparent',
+                    border: `1px solid ${selectedGoal === g.id ? '#1b78f7' : colors.border}`,
+                    color: selectedGoal === g.id ? '#1b78f7' : colors.muted,
+                    borderRadius: 999, padding: '6px 15px', fontSize: 12, fontWeight: 600, fontFamily: 'inherit',
                   }}
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
-                  </svg>
-                </button>
-              </div>
-              {spamError ? (
-                <p style={{ color: '#ef4444', fontSize: 12, marginTop: 10, fontWeight: 600 }}>
-                  Texto inválido — escreve uma descrição real do teu projeto.
-                </p>
-              ) : (
-                <p className="hero-note" style={{ color: colors.subtle, fontSize: 13, marginTop: 12, fontWeight: 500 }}>
-                  Sem registo · Sem cartão de crédito
-                </p>
-              )}
-            </form>
-          </div>
-
-          {/* Coluna direita: mockup grande, sangra à direita */}
-          <div className="hero-mockup-col" style={{ flexShrink: 0, width: 820, overflow: 'visible', position: 'relative', marginLeft: 64 }}>
-            <ProjectMockup theme={theme} />
-          </div>
+                >{g.label}</button>
+              ))}
+            </div>
+            <div
+              className="widget-box"
+              style={{
+                display: 'flex', alignItems: 'center',
+                background: 'rgba(255,255,255,0.03)',
+                border: `1.5px solid rgba(255,255,255,0.08)`,
+                borderRadius: 16, padding: '6px 6px 6px 20px',
+                backdropFilter: 'blur(8px)',
+              }}
+              onFocusCapture={e => { e.currentTarget.style.borderColor = '#1b78f7' }}
+              onBlurCapture={e => { if (!e.currentTarget.contains(e.relatedTarget)) e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)' }}
+            >
+              <input
+                type="text" className="widget-input"
+                value={inputText} onChange={e => setInputText(e.target.value)}
+                placeholder={placeholder}
+                style={{
+                  flex: 1, background: 'transparent', border: 'none',
+                  color: 'var(--c-text)', fontSize: 15, fontFamily: 'inherit',
+                  outline: 'none', minWidth: 0, padding: '10px 0',
+                }}
+              />
+              <button
+                type="submit" className="submit-btn"
+                disabled={!inputText.trim()}
+                style={{
+                  background: inputText.trim() ? '#1b78f7' : 'rgba(255,255,255,0.06)',
+                  border: 'none', borderRadius: 12, color: '#fff', width: 44, height: 44,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: inputText.trim() ? 'pointer' : 'not-allowed', flexShrink: 0,
+                  transition: 'all 0.15s',
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </button>
+            </div>
+            {spamError ? (
+              <p style={{ color: '#ef4444', fontSize: 12, marginTop: 10, fontWeight: 600 }}>
+                Texto inválido — escreve uma descrição real do teu projeto.
+              </p>
+            ) : (
+              <p className="hero-note" style={{ color: colors.subtle, fontSize: 13, marginTop: 12, fontWeight: 500 }}>
+                Sem registo · Sem cartão de crédito
+              </p>
+            )}
+          </form>
         </div>
       </div>
 
