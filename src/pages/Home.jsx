@@ -106,22 +106,25 @@ const MockupPortfolio = memo(function MockupPortfolio() {
   const c = { bg: '#111827', border: 'rgba(255,255,255,0.07)', text: '#f1f5f9', muted: '#94a3b8' }
   return (
     <div style={{ background: c.bg, border: `1px solid ${c.border}`, borderRadius: 18, overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.4)' }}>
-      <div style={{ height: 90, background: 'linear-gradient(135deg, #061a3a, #1b78f7)', position: 'relative' }}>
-        <div style={{ position: 'absolute', bottom: -16, left: 20, width: 36, height: 36, borderRadius: '50%', background: 'linear-gradient(135deg, #1b78f7, #38a3ff)', border: `3px solid ${c.bg}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, color: '#fff' }}>J</div>
-        <div style={{ position: 'absolute', top: 12, right: 14, background: 'rgba(0,0,0,0.4)', borderRadius: 8, padding: '4px 10px', display: 'flex', alignItems: 'center', gap: 5 }}>
-          <MiniScoreRing score={88} size={36} />
-        </div>
+      {/* Cover */}
+      <div style={{ height: 80, background: 'linear-gradient(135deg, #061a3a, #1b78f7)', position: 'relative' }}>
+        <div style={{ position: 'absolute', bottom: -16, left: 20, width: 34, height: 34, borderRadius: '50%', background: 'linear-gradient(135deg, #1b78f7, #38a3ff)', border: `3px solid ${c.bg}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: '#fff' }}>J</div>
       </div>
-      <div style={{ padding: '24px 20px 20px' }}>
-        <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
-          <span style={{ background: 'rgba(27,120,247,0.15)', color: '#1b78f7', fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 5 }}>PAP</span>
-          <span style={{ background: 'rgba(27,120,247,0.08)', color: '#38a3ff', border: '1px solid rgba(27,120,247,0.2)', fontSize: 10, fontWeight: 600, padding: '3px 8px', borderRadius: 5 }}>Tecnologias de Informação</span>
+      <div style={{ padding: '22px 20px 18px' }}>
+        {/* Tags row */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+          <div style={{ display: 'flex', gap: 6 }}>
+            <span style={{ background: 'rgba(27,120,247,0.15)', color: '#1b78f7', fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 5 }}>PAP</span>
+            <span style={{ background: 'rgba(27,120,247,0.08)', color: '#38a3ff', border: '1px solid rgba(27,120,247,0.2)', fontSize: 10, fontWeight: 600, padding: '3px 8px', borderRadius: 5 }}>Tecnologias de Informação</span>
+          </div>
+          {/* Score badge */}
+          <span style={{ fontSize: 11, fontWeight: 800, color: '#22c55e', background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.25)', borderRadius: 6, padding: '3px 8px', letterSpacing: '-0.3px' }}>88 pts</span>
         </div>
-        <div style={{ fontSize: 18, fontWeight: 900, color: c.text, letterSpacing: '-0.5px', fontFamily: 'var(--font-heading)', marginBottom: 6 }}>StockFlow Pro</div>
-        <div style={{ fontSize: 12, color: c.muted, marginBottom: 16 }}>João Silva · Escola Profissional do Porto</div>
-        <div style={{ background: 'rgba(27,120,247,0.08)', border: '1px solid rgba(27,120,247,0.15)', borderRadius: 10, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
-          <Globe size={13} color="#1b78f7" />
-          <span style={{ fontSize: 12, color: '#38a3ff', fontWeight: 600, fontFamily: 'monospace' }}>showo.pt/p/stockflow-pro</span>
+        <div style={{ fontSize: 17, fontWeight: 900, color: c.text, letterSpacing: '-0.5px', fontFamily: 'var(--font-heading)', marginBottom: 4 }}>StockFlow Pro</div>
+        <div style={{ fontSize: 12, color: c.muted, marginBottom: 14 }}>João Silva · Escola Profissional do Porto</div>
+        <div style={{ background: 'rgba(27,120,247,0.08)', border: '1px solid rgba(27,120,247,0.15)', borderRadius: 10, padding: '9px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
+          <Globe size={12} color="#1b78f7" />
+          <span style={{ fontSize: 11, color: '#38a3ff', fontWeight: 600, fontFamily: 'monospace' }}>showo.pt/p/stockflow-pro</span>
         </div>
       </div>
     </div>
@@ -441,12 +444,12 @@ export default function Home() {
               className="widget-box"
               style={{
                 display: 'flex', alignItems: 'center',
-                background: 'rgba(255,255,255,0.03)',
-                border: `1.5px solid rgba(255,255,255,0.1)`,
+                background: 'var(--c-card)',
+                border: `1.5px solid var(--c-border)`,
                 borderRadius: 18, padding: '8px 8px 8px 24px',
               }}
               onFocusCapture={e => { e.currentTarget.style.borderColor = '#1b78f7' }}
-              onBlurCapture={e => { if (!e.currentTarget.contains(e.relatedTarget)) e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)' }}
+              onBlurCapture={e => { if (!e.currentTarget.contains(e.relatedTarget)) e.currentTarget.style.borderColor = 'var(--c-border)' }}
             >
               <input
                 type="text" className="widget-input"
@@ -462,8 +465,8 @@ export default function Home() {
                 type="submit" className="submit-btn"
                 disabled={!inputText.trim()}
                 style={{
-                  background: inputText.trim() ? '#1b78f7' : 'rgba(255,255,255,0.06)',
-                  border: 'none', borderRadius: 12, color: '#fff', width: 48, height: 48,
+                  background: inputText.trim() ? '#1b78f7' : 'var(--c-bg-alt)',
+                  border: 'none', borderRadius: 12, color: inputText.trim() ? '#fff' : 'var(--c-muted)', width: 48, height: 48,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   cursor: inputText.trim() ? 'pointer' : 'not-allowed', flexShrink: 0,
                   transition: 'all 0.15s',
