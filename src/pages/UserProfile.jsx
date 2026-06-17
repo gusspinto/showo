@@ -343,55 +343,46 @@ export default function UserProfile() {
 
   useEffect(() => {
     async function load() {
-      let profileData = null
       const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(username)
 
-      if (isUUID) {
-        const { data } = await supabase.from('profiles').select('*').eq('id', username).single()
-        profileData = data
-      } else {
-        const { data } = await supabase.from('profiles').select('*').eq('username', username).single()
-        profileData = data
-      }
+      const { data: profileData, error: profileErr } = isUUID
+        ? await supabase.from('profiles').select('*').eq('id', username).single()
+        : await supabase.from('profiles').select('*').eq('username', username).single()
 
-      if (!profileData) { setNotFound(true); setLoading(false); return }
-
+      if (profileErr || !profileData) { setNotFound(true); setLoading(false); return }
       setProfile(profileData)
 
-      let { data: projectsData, error: projErr } = await supabase
+      // Fire projects + saved-check in parallel — no longer sequential
+      const projectsPromise = supabase
         .from('projects')
         .select('id, name, slug, score, area, ai_tagline, cover_url, created_at, views, ai_feedback, collaborator_count:project_collaborators(count)')
         .eq('user_id', profileData.id)
         .order('score', { ascending: false })
 
-      // Fallback sem subquery caso RLS bloqueie project_members
+      const isRecruiterVisitor = user && (myProfile?.role === 'recrutador' || myProfile?.role === 'empresa') && profileData.id !== user.id
+      const savedPromise = isRecruiterVisitor
+        ? supabase.from('saved_candidates').select('id').eq('recruiter_id', user.id).eq('student_id', profileData.id).maybeSingle()
+        : Promise.resolve({ data: null })
+
+      const [{ data: projectsData, error: projErr }, { data: sc }] = await Promise.all([projectsPromise, savedPromise])
+
+      let finalProjects = projectsData
       if (projErr || !projectsData) {
-        const fallback = await supabase
+        const { data: fallback } = await supabase
           .from('projects')
           .select('id, name, slug, score, area, ai_tagline, cover_url, created_at, views, ai_feedback')
           .eq('user_id', profileData.id)
           .order('score', { ascending: false })
-        projectsData = fallback.data
+        finalProjects = fallback
       }
 
-      const normalizedProjects = (projectsData ?? []).map(p => ({
+      setProjects((finalProjects ?? []).map(p => ({
         ...p,
         collaborator_count: Array.isArray(p.collaborator_count)
           ? (p.collaborator_count[0]?.count ?? 0)
           : (p.collaborator_count ?? 0),
-      }))
-      setProjects(normalizedProjects)
-
-      // Check if recruiter already saved this student
-      if (user && (myProfile?.role === 'recrutador' || myProfile?.role === 'empresa') && profileData.id !== user.id) {
-        const { data: sc } = await supabase
-          .from('saved_candidates')
-          .select('id')
-          .eq('recruiter_id', user.id)
-          .eq('student_id', profileData.id)
-          .maybeSingle()
-        setSaved(!!sc)
-      }
+      })))
+      if (isRecruiterVisitor) setSaved(!!sc)
 
       setLoading(false)
     }
