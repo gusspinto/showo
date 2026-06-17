@@ -2472,6 +2472,7 @@ export default function ProjectPage() {
 
   const pageUrl = window.location.href
 
+  // Effect 1: fetch project + public data — runs only when slug changes (never re-runs due to auth)
   useEffect(() => {
     async function fetchProject() {
       const { data, error } = await supabase
@@ -2496,120 +2497,49 @@ export default function ProjectPage() {
         supabase.from('projects').update({ score: s }).eq('id', data.id)
       }
 
-      // Load cached AI feedback
       if (data.ai_feedback) setAiFeedback(data.ai_feedback)
-      // Load defense date
       if (data.defense_date) setDefenseDate(data.defense_date)
-      // Load preview blocks + style
       if (Array.isArray(data.preview_blocks)) setPreviewBlocks(data.preview_blocks)
       if (data.preview_style && typeof data.preview_style === 'object') setPreviewStyle(data.preview_style)
 
-      // Load likes count + user's like
+      // Public likes count (no user needed)
       supabase.from('project_likes').select('user_id', { count: 'exact' }).eq('project_id', data.id).then(({ count }) => {
         setLikeCount(count || 0)
       })
-      if (user?.id) {
-        supabase.from('project_likes').select('user_id').eq('project_id', data.id).eq('user_id', user.id).maybeSingle().then(({ data: l }) => {
-          setLiked(!!l)
-        })
-      }
 
-      // Load recruiter interests count (+ recruiter profiles for owner)
-      const isOwnerLoad = !!(user?.id && data.user_id && user.id === data.user_id)
-      if (isOwnerLoad) {
-        supabase.from('recruiter_interests')
-          .select('recruiter_id, profiles!recruiter_id(id, full_name, username, avatar_url, company, role)')
-          .eq('project_id', data.id)
-          .then(({ data: rows }) => {
-            setInterestCount(rows?.length || 0)
-            setInterestors((rows || []).map(r => r.profiles).filter(Boolean))
-          })
-      } else {
-        supabase.from('recruiter_interests').select('recruiter_id', { count: 'exact' }).eq('project_id', data.id).then(({ count }) => {
-          setInterestCount(count || 0)
-        })
-        if (user?.id) {
-          supabase.from('recruiter_interests').select('recruiter_id').eq('project_id', data.id).eq('recruiter_id', user.id).single().then(({ data: ri }) => {
-            setHasInterest(!!ri)
-          })
-        }
-      }
+      // Public recruiter interest count
+      supabase.from('recruiter_interests').select('recruiter_id', { count: 'exact' }).eq('project_id', data.id).then(({ count }) => {
+        setInterestCount(count || 0)
+      })
 
-      const isProjectOwner = !!(user?.id && data.user_id && user.id === data.user_id)
-
-      async function loadMembers(projectId) {
-        // Step 1: get collaborator rows (no embedded join — two FKs to profiles causes PostgREST ambiguity)
-        const q = supabase
-          .from('project_collaborators')
-          .select('user_id, status, sections')
-          .eq('project_id', projectId)
-        const { data: rows } = isProjectOwner ? await q : await q.eq('status', 'accepted')
+      // Members + realtime channel
+      async function loadMembers(projectId, isOwner) {
+        const q = supabase.from('project_collaborators').select('user_id, status, sections').eq('project_id', projectId)
+        const { data: rows } = isOwner ? await q : await q.eq('status', 'accepted')
         if (!rows?.length) { setMembers([]); return }
-
-        // Step 2: fetch profiles separately
         const userIds = [...new Set(rows.map(r => r.user_id))]
-        const { data: profiles } = await supabase
-          .from('profiles')
-          .select('id, username, full_name')
-          .in('id', userIds)
+        const { data: profiles } = await supabase.from('profiles').select('id, username, full_name').in('id', userIds)
         const profileMap = {}
         profiles?.forEach(p => { profileMap[p.id] = p })
-
         setMembers(rows.map(r => ({ ...r, profiles: profileMap[r.user_id] || null })))
       }
-      loadMembers(data.id)
+      // isOwner unknown at this point (user not yet resolved) — load accepted members only
+      loadMembers(data.id, false)
 
-      // Realtime: update members panel when any collaborator row changes
-      // Store in ref so the useEffect cleanup can remove it on unmount
-      if (membersChannelRef.current) {
-        supabase.removeChannel(membersChannelRef.current)
-      }
+      if (membersChannelRef.current) supabase.removeChannel(membersChannelRef.current)
       membersChannelRef.current = supabase
         .channel(`members-${data.id}`)
-        .on('postgres_changes', {
-          event: '*',
-          schema: 'public',
-          table: 'project_collaborators',
-          filter: `project_id=eq.${data.id}`,
-        }, () => loadMembers(data.id))
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'project_collaborators', filter: `project_id=eq.${data.id}` },
+          () => loadMembers(data.id, false))
         .subscribe()
 
-      // Load owner profile for correct name display
+      // Owner profile
       if (data.user_id) {
-        supabase
-          .from('profiles')
-          .select('id, username, full_name, avatar_url, available_for_work')
-          .eq('id', data.user_id)
-          .single()
-          .then(({ data: prof }) => {
-            if (prof) setOwnerProfile(prof)
-          })
+        supabase.from('profiles').select('id, username, full_name, avatar_url, available_for_work').eq('id', data.user_id).single()
+          .then(({ data: prof }) => { if (prof) setOwnerProfile(prof) })
       }
-
-      // Check if logged-in user is an accepted collaborator (not the owner)
-      if (user?.id && data.user_id && user.id !== data.user_id) {
-        supabase
-          .from('project_collaborators')
-          .select('sections')
-          .eq('project_id', data.id)
-          .eq('user_id', user.id)
-          .eq('status', 'accepted')
-          .single()
-          .then(({ data: collab }) => {
-            if (collab) setCollaboratorSections(collab.sections ?? [])
-          })
-      }
-
-      // Load teacher feedback (visible to project owner + the teacher)
-      if (user?.id) {
-        supabase
-          .from('teacher_feedback')
-          .select('*')
-          .eq('project_id', data.id)
-          .then(({ data: fb }) => { if (fb) setTeacherFeedback(fb) })
-      }
-
     }
+
     fetchProject()
     return () => {
       if (membersChannelRef.current) {
@@ -2617,7 +2547,40 @@ export default function ProjectPage() {
         membersChannelRef.current = null
       }
     }
-  }, [slug, user?.id])
+  }, [slug])
+
+  // Effect 2: user-specific data — runs when auth resolves, never re-fetches the project
+  useEffect(() => {
+    if (!user?.id || !project?.id) return
+    const pid = project.id
+    const isOwner = user.id === project.user_id
+
+    // User's own like
+    supabase.from('project_likes').select('user_id').eq('project_id', pid).eq('user_id', user.id).maybeSingle()
+      .then(({ data: l }) => setLiked(!!l))
+
+    if (isOwner) {
+      // Owner sees recruiter profiles
+      supabase.from('recruiter_interests')
+        .select('recruiter_id, profiles!recruiter_id(id, full_name, username, avatar_url, company, role)')
+        .eq('project_id', pid)
+        .then(({ data: rows }) => {
+          setInterestCount(rows?.length || 0)
+          setInterestors((rows || []).map(r => r.profiles).filter(Boolean))
+        })
+    } else {
+      // Non-owner: check own recruiter interest + collaborator sections
+      supabase.from('recruiter_interests').select('recruiter_id').eq('project_id', pid).eq('recruiter_id', user.id).single()
+        .then(({ data: ri }) => setHasInterest(!!ri))
+
+      supabase.from('project_collaborators').select('sections').eq('project_id', pid).eq('user_id', user.id).eq('status', 'accepted').single()
+        .then(({ data: collab }) => { if (collab) setCollaboratorSections(collab.sections ?? []) })
+    }
+
+    // Teacher feedback
+    supabase.from('teacher_feedback').select('*').eq('project_id', pid)
+      .then(({ data: fb }) => { if (fb) setTeacherFeedback(fb) })
+  }, [user?.id, project?.id])
 
   // View tracking + PROJECT_VIEW / COMPANY_VIEW notifications
   useEffect(() => {
