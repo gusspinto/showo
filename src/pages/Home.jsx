@@ -1,4 +1,4 @@
-import { useState, useEffect, memo } from 'react'
+import { useState, useEffect, useRef, memo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Globe, Bot, GraduationCap, Trophy, Briefcase, Sparkles, BadgeCheck, Users, ArrowRight, TrendingUp, Wrench, Zap, Target } from 'lucide-react'
 import { Navbar } from '../components/Navbar'
@@ -246,6 +246,19 @@ export default function Home() {
   const [projectCount, setProjectCount] = useState(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [spamError, setSpamError] = useState(false)
+  const [featuresReady, setFeaturesReady] = useState(false)
+  const featuresRef = useRef(null)
+
+  useEffect(() => {
+    const el = featuresRef.current
+    if (!el) return
+    const obs = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setFeaturesReady(true); obs.disconnect() } },
+      { rootMargin: '300px' }
+    )
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [])
 
   useEffect(() => {
     async function fetchCount() {
@@ -392,25 +405,25 @@ export default function Home() {
             background: theme === 'light' ? 'rgba(27,120,247,0.08)' : 'rgba(27,120,247,0.07)',
             border: `1px solid ${theme === 'light' ? 'rgba(27,120,247,0.25)' : 'rgba(27,120,247,0.18)'}`,
             color: '#1b78f7', borderRadius: 999,
-            padding: '5px 16px', fontSize: 12, fontWeight: 600, marginBottom: 28,
+            padding: '6px 18px', fontSize: 13, fontWeight: 600, marginBottom: 40,
           }}>
-            <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#1b78f7', display: 'inline-block', animation: 'pulse-glow 2s ease-in-out infinite' }} />
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#1b78f7', display: 'inline-block', animation: 'pulse-glow 2s ease-in-out infinite' }} />
             Para estudantes portugueses
           </div>
 
           <StaticHero />
 
           <p className="hero-sub" style={{
-            fontSize: 17, color: colors.muted, lineHeight: 1.7,
-            margin: '0 0 56px', fontWeight: 400, maxWidth: 460,
+            fontSize: 18, color: colors.muted, lineHeight: 1.75,
+            margin: '0 0 56px', fontWeight: 400, maxWidth: 500,
           }}>
             Cria uma página profissional do teu projeto em 10 minutos.
             Partilha o link com qualquer empresa.
           </p>
 
           {/* Widget */}
-          <form className="hero-widget" onSubmit={handleStart} style={{ width: '100%', maxWidth: 520 }}>
-            <div className="goals-row" style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 14 }}>
+          <form className="hero-widget" onSubmit={handleStart} style={{ width: '100%', maxWidth: 600 }}>
+            <div className="goals-row" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 16 }}>
               {QUICK_GOALS.map(g => (
                 <button
                   key={g.id} type="button" className="goal-pill"
@@ -419,7 +432,7 @@ export default function Home() {
                     background: selectedGoal === g.id ? 'rgba(27,120,247,0.12)' : 'transparent',
                     border: `1px solid ${selectedGoal === g.id ? '#1b78f7' : colors.border}`,
                     color: selectedGoal === g.id ? '#1b78f7' : colors.muted,
-                    borderRadius: 999, padding: '6px 15px', fontSize: 12, fontWeight: 600, fontFamily: 'inherit',
+                    borderRadius: 999, padding: '7px 18px', fontSize: 13, fontWeight: 600, fontFamily: 'inherit',
                   }}
                 >{g.label}</button>
               ))}
@@ -429,12 +442,11 @@ export default function Home() {
               style={{
                 display: 'flex', alignItems: 'center',
                 background: 'rgba(255,255,255,0.03)',
-                border: `1.5px solid rgba(255,255,255,0.08)`,
-                borderRadius: 16, padding: '6px 6px 6px 20px',
-                backdropFilter: 'blur(8px)',
+                border: `1.5px solid rgba(255,255,255,0.1)`,
+                borderRadius: 18, padding: '8px 8px 8px 24px',
               }}
               onFocusCapture={e => { e.currentTarget.style.borderColor = '#1b78f7' }}
-              onBlurCapture={e => { if (!e.currentTarget.contains(e.relatedTarget)) e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)' }}
+              onBlurCapture={e => { if (!e.currentTarget.contains(e.relatedTarget)) e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)' }}
             >
               <input
                 type="text" className="widget-input"
@@ -442,8 +454,8 @@ export default function Home() {
                 placeholder={placeholder}
                 style={{
                   flex: 1, background: 'transparent', border: 'none',
-                  color: 'var(--c-text)', fontSize: 15, fontFamily: 'inherit',
-                  outline: 'none', minWidth: 0, padding: '10px 0',
+                  color: 'var(--c-text)', fontSize: 16, fontFamily: 'inherit',
+                  outline: 'none', minWidth: 0, padding: '12px 0',
                 }}
               />
               <button
@@ -451,23 +463,23 @@ export default function Home() {
                 disabled={!inputText.trim()}
                 style={{
                   background: inputText.trim() ? '#1b78f7' : 'rgba(255,255,255,0.06)',
-                  border: 'none', borderRadius: 12, color: '#fff', width: 44, height: 44,
+                  border: 'none', borderRadius: 12, color: '#fff', width: 48, height: 48,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   cursor: inputText.trim() ? 'pointer' : 'not-allowed', flexShrink: 0,
                   transition: 'all 0.15s',
                 }}
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
                 </svg>
               </button>
             </div>
             {spamError ? (
-              <p style={{ color: '#ef4444', fontSize: 12, marginTop: 10, fontWeight: 600 }}>
+              <p style={{ color: '#ef4444', fontSize: 13, marginTop: 12, fontWeight: 600 }}>
                 Texto inválido — escreve uma descrição real do teu projeto.
               </p>
             ) : (
-              <p className="hero-note" style={{ color: colors.subtle, fontSize: 13, marginTop: 12, fontWeight: 500 }}>
+              <p className="hero-note" style={{ color: colors.subtle, fontSize: 13, marginTop: 14, fontWeight: 500 }}>
                 Sem registo · Sem cartão de crédito
               </p>
             )}
@@ -501,7 +513,7 @@ export default function Home() {
       </div>
 
       {/* Features alternadas */}
-      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '200px 40px 80px' }}>
+      <div ref={featuresRef} style={{ maxWidth: 1100, margin: '0 auto', padding: '200px 40px 80px' }}>
 
         {/* Título da secção */}
         <div style={{ textAlign: 'center', marginBottom: 96 }}>
@@ -513,53 +525,55 @@ export default function Home() {
           </p>
         </div>
 
-        {/* Feature 1 — Portfólio público */}
-        <FeatureRow
-          reverse={false}
-          tag="Portfólio"
-          tagColor="#1b78f7"
-          title="A tua página profissional em minutos"
-          desc="Gera automaticamente uma página pública do teu projeto com score de IA, descrição, tecnologias e muito mais. Partilha o link com qualquer empresa ou professor — sem precisar de fazer CV."
-          bullets={['Link único partilhável', 'Score calculado por IA', 'Página personalizada com o teu estilo']}
-          bulletColor="#1b78f7"
-          mockup={<MockupPortfolio />}
-        />
+        {featuresReady && <>
+          {/* Feature 1 — Portfólio público */}
+          <FeatureRow
+            reverse={false}
+            tag="Portfólio"
+            tagColor="#1b78f7"
+            title="A tua página profissional em minutos"
+            desc="Gera automaticamente uma página pública do teu projeto com score de IA, descrição, tecnologias e muito mais. Partilha o link com qualquer empresa ou professor — sem precisar de fazer CV."
+            bullets={['Link único partilhável', 'Score calculado por IA', 'Página personalizada com o teu estilo']}
+            bulletColor="#1b78f7"
+            mockup={<MockupPortfolio />}
+          />
 
-        {/* Feature 2 — Missões + Ranking */}
-        <FeatureRow
-          reverse={true}
-          tag="Missões"
-          tagColor="#22c55e"
-          title="Completa missões. Sobe no ranking."
-          desc="Cada campo que preencheres, cada detalhe que adicionares ao teu projeto vale pontos. Competes com outros estudantes num ranking público e provoas que o teu projeto é a sério."
-          bullets={['Missões com pontos por campo', 'Ranking público entre estudantes', 'Badges de nível conquistados']}
-          bulletColor="#22c55e"
-          mockup={<MockupMissoes />}
-        />
+          {/* Feature 2 — Missões + Ranking */}
+          <FeatureRow
+            reverse={true}
+            tag="Missões"
+            tagColor="#22c55e"
+            title="Completa missões. Sobe no ranking."
+            desc="Cada campo que preencheres, cada detalhe que adicionares ao teu projeto vale pontos. Competes com outros estudantes num ranking público e provoas que o teu projeto é a sério."
+            bullets={['Missões com pontos por campo', 'Ranking público entre estudantes', 'Badges de nível conquistados']}
+            bulletColor="#22c55e"
+            mockup={<MockupMissoes />}
+          />
 
-        {/* Feature 3 — Vagas */}
-        <FeatureRow
-          reverse={false}
-          tag="Vagas"
-          tagColor="#f59e0b"
-          title="Candidata-te com o teu projeto como portfólio"
-          desc="Encontra estágios e vagas de emprego directamente na plataforma. Candidata-te com o link do teu projeto — em vez de um CV vazio, mostras trabalho real."
-          bullets={['Vagas filtradas para estudantes', 'Candidatura com link do projeto', 'Visibilidade directa para empresas']}
-          bulletColor="#f59e0b"
-          mockup={<MockupVagas />}
-        />
+          {/* Feature 3 — Vagas */}
+          <FeatureRow
+            reverse={false}
+            tag="Vagas"
+            tagColor="#f59e0b"
+            title="Candidata-te com o teu projeto como portfólio"
+            desc="Encontra estágios e vagas de emprego directamente na plataforma. Candidata-te com o link do teu projeto — em vez de um CV vazio, mostras trabalho real."
+            bullets={['Vagas filtradas para estudantes', 'Candidatura com link do projeto', 'Visibilidade directa para empresas']}
+            bulletColor="#f59e0b"
+            mockup={<MockupVagas />}
+          />
 
-        {/* Feature 4 — Defesa */}
-        <FeatureRow
-          reverse={true}
-          tag="Defesa PAP"
-          tagColor="#8b5cf6"
-          title="Treina a defesa. Prepara as respostas do júri."
-          desc="A IA gera as perguntas mais prováveis do júri com base no teu projeto, treinas as respostas e chegas à defesa preparado. Nunca mais ficas sem resposta na hora certa."
-          bullets={['Perguntas prováveis do júri', 'Treino de apresentação cronometrado', 'Guia do apresentador por secção']}
-          bulletColor="#8b5cf6"
-          mockup={<MockupDefesa />}
-        />
+          {/* Feature 4 — Defesa */}
+          <FeatureRow
+            reverse={true}
+            tag="Defesa PAP"
+            tagColor="#8b5cf6"
+            title="Treina a defesa. Prepara as respostas do júri."
+            desc="A IA gera as perguntas mais prováveis do júri com base no teu projeto, treinas as respostas e chegas à defesa preparado. Nunca mais ficas sem resposta na hora certa."
+            bullets={['Perguntas prováveis do júri', 'Treino de apresentação cronometrado', 'Guia do apresentador por secção']}
+            bulletColor="#8b5cf6"
+            mockup={<MockupDefesa />}
+          />
+        </>}
       </div>
 
       {/* Bottom CTA */}
