@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, memo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Globe, Bot, GraduationCap, Trophy, Briefcase, Sparkles, BadgeCheck, Users, ArrowRight, Search, Lightbulb, TrendingUp, Wrench, Zap, Target, Star } from 'lucide-react'
+import { Globe, Bot, GraduationCap, Trophy, Briefcase, Sparkles, BadgeCheck, Users, ArrowRight, Search, TrendingUp, Wrench, Zap, Target } from 'lucide-react'
 import { Navbar } from '../components/Navbar'
 import { supabase } from '../lib/supabase'
 import Onboarding from '../components/Onboarding'
@@ -58,7 +58,7 @@ function MiniScoreRing({ score, size = 72 }) {
   )
 }
 
-function ProjectMockup({ theme }) {
+const ProjectMockup = memo(function ProjectMockup({ theme }) {
   const isDark  = theme !== 'light'
   const pageBg  = isDark ? '#0b1120' : '#f0f4f8'
   const cardBg  = isDark ? '#111827' : '#ffffff'
@@ -201,9 +201,9 @@ function ProjectMockup({ theme }) {
       }} />
     </div>
   )
-}
+})
 
-function FeatureRow({ reverse, tag, tagColor, title, desc, bullets, bulletColor, mockup }) {
+const FeatureRow = memo(function FeatureRow({ reverse, tag, tagColor, title, desc, bullets, bulletColor, mockup }) {
   return (
     <div style={{
       display: 'grid',
@@ -245,9 +245,9 @@ function FeatureRow({ reverse, tag, tagColor, title, desc, bullets, bulletColor,
       </div>
     </div>
   )
-}
+})
 
-function MockupPortfolio() {
+const MockupPortfolio = memo(function MockupPortfolio() {
   const c = { bg: '#111827', border: 'rgba(255,255,255,0.07)', text: '#f1f5f9', muted: '#94a3b8' }
   return (
     <div style={{ background: c.bg, border: `1px solid ${c.border}`, borderRadius: 18, overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.4)' }}>
@@ -271,9 +271,9 @@ function MockupPortfolio() {
       </div>
     </div>
   )
-}
+})
 
-function MockupMissoes() {
+const MockupMissoes = memo(function MockupMissoes() {
   const c = { bg: '#111827', border: 'rgba(255,255,255,0.07)', text: '#f1f5f9', muted: '#94a3b8' }
   const missions = [
     { label: 'Descreve o problema', pts: '+8 pts', done: true },
@@ -306,9 +306,9 @@ function MockupMissoes() {
       </div>
     </div>
   )
-}
+})
 
-function MockupVagas() {
+const MockupVagas = memo(function MockupVagas() {
   const c = { bg: '#111827', border: 'rgba(255,255,255,0.07)', text: '#f1f5f9', muted: '#94a3b8' }
   const vagas = [
     { empresa: 'Codilink', cargo: 'Estágio em Desenvolvimento Web', tipo: 'Presencial · Lisboa', nova: true },
@@ -339,9 +339,9 @@ function MockupVagas() {
       </div>
     </div>
   )
-}
+})
 
-function MockupDefesa() {
+const MockupDefesa = memo(function MockupDefesa() {
   const c = { bg: '#111827', border: 'rgba(255,255,255,0.07)', text: '#f1f5f9', muted: '#94a3b8' }
   const perguntas = [
     'Qual foi o maior desafio técnico que enfrentaste?',
@@ -371,37 +371,13 @@ function MockupDefesa() {
       </div>
     </div>
   )
-}
+})
 
 const QUICK_GOALS = [
   { id: 'pap',        label: 'PAP' },
   { id: 'internship', label: 'Estágio' },
   { id: 'group',      label: 'Trabalho de grupo' },
   { id: 'personal',   label: 'Projeto pessoal' },
-]
-
-const FEATURES = [
-  {
-    Icon: Globe,
-    iconColor: '#5a9ff5',
-    iconBg: 'rgba(27,120,247,0.1)',
-    title: 'Página profissional',
-    desc: 'Em 10 minutos tens um link para partilhar com qualquer empresa ou professor.',
-  },
-  {
-    Icon: Bot,
-    iconColor: '#818cf8',
-    iconBg: 'rgba(129,140,248,0.1)',
-    title: 'Análise por IA',
-    desc: 'A IA avalia o teu projeto campo a campo e diz-te exatamente o que melhorar.',
-  },
-  {
-    Icon: GraduationCap,
-    iconColor: '#fbbf24',
-    iconBg: 'rgba(251,191,36,0.1)',
-    title: 'Prepara a defesa',
-    desc: 'Perguntas prováveis do júri, guia do apresentador e gestão de grupo incluídos.',
-  },
 ]
 
 
@@ -480,20 +456,7 @@ export default function Home() {
           background: rgba(27,120,247,0.06) !important;
         }
 
-        /* Hero two-column layout */
-        .hero-inner {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 40px;
-          align-items: center;
-          width: 100%;
-          max-width: 100%;
-        }
-        .hero-left-wrap {
-          padding: 0 32px 0 48px;
-          max-width: 600px;
-        }
-        .hero-mockup-col { display: block; position: relative; overflow: hidden; }
+        .hero-mockup-col { display: block; }
 
         /* Tablet */
         @media (max-width: 960px) {
@@ -554,16 +517,22 @@ export default function Home() {
 
       {/* Hero */}
       <div style={{ position: 'relative', overflow: 'hidden' }}>
-        {/* Background glow */}
+        {/* Background glows */}
         <div style={{
-          position: 'absolute', top: -60, left: '20%',
-          width: 600, height: 600, borderRadius: '50%',
-          background: 'radial-gradient(ellipse, rgba(27,120,247,0.07) 0%, transparent 68%)',
+          position: 'absolute', top: -100, left: '15%',
+          width: 700, height: 700, borderRadius: '50%',
+          background: 'radial-gradient(ellipse, rgba(27,120,247,0.09) 0%, transparent 65%)',
           pointerEvents: 'none', animation: 'pulse-glow 5s ease-in-out infinite',
+        }} />
+        <div style={{
+          position: 'absolute', top: 0, right: '-5%',
+          width: 500, height: 500, borderRadius: '50%',
+          background: 'radial-gradient(ellipse, rgba(79,70,229,0.06) 0%, transparent 65%)',
+          pointerEvents: 'none',
         }} />
 
         {/* Hero — centrado, mockup sangra à direita */}
-        <div className="hero-section" style={{ padding: '80px 0 80px 240px', position: 'relative', display: 'flex', alignItems: 'flex-start' }}>
+        <div className="hero-section" style={{ padding: '80px 0 80px 100px', position: 'relative', display: 'flex', alignItems: 'flex-start' }}>
 
           {/* Coluna esquerda: texto + widget */}
           <div className="hero-left" style={{
@@ -657,7 +626,7 @@ export default function Home() {
           </div>
 
           {/* Coluna direita: mockup grande, sangra à direita */}
-          <div className="hero-mockup-col" style={{ flexShrink: 0, overflow: 'visible', position: 'relative', marginLeft: 64 }}>
+          <div className="hero-mockup-col" style={{ flexShrink: 0, width: 820, overflow: 'visible', position: 'relative', marginLeft: 64 }}>
             <ProjectMockup theme={theme} />
           </div>
         </div>
