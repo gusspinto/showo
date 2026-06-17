@@ -102,10 +102,16 @@ const FeatureRow = memo(function FeatureRow({ reverse, tag, tagColor, title, des
   )
 })
 
-const MockupPortfolio = memo(function MockupPortfolio() {
-  const c = { bg: '#ffffff', bgAlt: '#f0f5ff', border: '#dde6f5', text: '#0f172a', muted: '#64748b', blue: '#1b78f7' }
+const MOCKUP_COLORS = {
+  dark:  { bg: '#111827', bgAlt: 'rgba(255,255,255,0.04)', border: 'rgba(255,255,255,0.07)', text: '#f1f5f9', muted: '#94a3b8', shadow: 'rgba(0,0,0,0.4)' },
+  light: { bg: '#ffffff', bgAlt: '#f0f5ff', border: '#dde6f5', text: '#0f172a', muted: '#64748b', shadow: 'rgba(27,120,247,0.12)' },
+}
+
+const MockupPortfolio = memo(function MockupPortfolio({ theme }) {
+  const c = MOCKUP_COLORS[theme] ?? MOCKUP_COLORS.dark
+  const isLight = theme === 'light'
   return (
-    <div style={{ background: c.bg, border: `1px solid ${c.border}`, borderRadius: 18, overflow: 'hidden', boxShadow: '0 20px 60px rgba(27,120,247,0.12)' }}>
+    <div style={{ background: c.bg, border: `1px solid ${c.border}`, borderRadius: 18, overflow: 'hidden', boxShadow: `0 20px 60px ${c.shadow}` }}>
       <div style={{ height: 80, background: 'linear-gradient(135deg, #1b78f7, #60a5fa)', position: 'relative' }}>
         <div style={{ position: 'absolute', bottom: -16, left: 20, width: 34, height: 34, borderRadius: '50%', background: 'linear-gradient(135deg, #1b78f7, #60a5fa)', border: `3px solid ${c.bg}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: '#fff' }}>J</div>
       </div>
@@ -128,8 +134,9 @@ const MockupPortfolio = memo(function MockupPortfolio() {
   )
 })
 
-const MockupMissoes = memo(function MockupMissoes() {
-  const c = { bg: '#ffffff', bgAlt: '#f0f5ff', border: '#dde6f5', text: '#0f172a', muted: '#64748b' }
+const MockupMissoes = memo(function MockupMissoes({ theme }) {
+  const c = MOCKUP_COLORS[theme] ?? MOCKUP_COLORS.dark
+  const isLight = theme === 'light'
   const missions = [
     { label: 'Descreve o problema', pts: '+8 pts', done: true },
     { label: 'Adiciona tecnologias', pts: '+5 pts', done: true },
@@ -137,7 +144,7 @@ const MockupMissoes = memo(function MockupMissoes() {
     { label: 'Apresenta resultados', pts: '+10 pts', done: false },
   ]
   return (
-    <div style={{ background: c.bg, border: `1px solid ${c.border}`, borderRadius: 18, overflow: 'hidden', boxShadow: '0 20px 60px rgba(27,120,247,0.12)' }}>
+    <div style={{ background: c.bg, border: `1px solid ${c.border}`, borderRadius: 18, overflow: 'hidden', boxShadow: `0 20px 60px ${c.shadow}` }}>
       <div style={{ padding: '18px 20px 14px', borderBottom: `1px solid ${c.border}` }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
           <span style={{ fontSize: 13, fontWeight: 800, color: c.text, fontFamily: 'var(--font-heading)' }}>As tuas missões</span>
@@ -150,12 +157,12 @@ const MockupMissoes = memo(function MockupMissoes() {
       </div>
       <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 7 }}>
         {missions.map(m => (
-          <div key={m.label} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 10, background: m.done ? '#f0fdf4' : c.bgAlt, border: `1px solid ${m.done ? '#bbf7d0' : c.border}` }}>
-            <div style={{ width: 22, height: 22, borderRadius: 6, background: m.done ? '#dcfce7' : '#e0eaff', border: `1px solid ${m.done ? '#86efac' : '#bfcfff'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              {m.done ? <Trophy size={11} color="#16a34a" /> : <Zap size={11} color="#1b78f7" />}
+          <div key={m.label} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 10, background: m.done ? (isLight ? '#f0fdf4' : 'rgba(34,197,94,0.04)') : c.bgAlt, border: `1px solid ${m.done ? (isLight ? '#bbf7d0' : 'rgba(34,197,94,0.15)') : c.border}` }}>
+            <div style={{ width: 22, height: 22, borderRadius: 6, background: m.done ? (isLight ? '#dcfce7' : 'rgba(34,197,94,0.15)') : (isLight ? '#e0eaff' : 'rgba(255,255,255,0.05)'), border: `1px solid ${m.done ? (isLight ? '#86efac' : 'rgba(34,197,94,0.3)') : (isLight ? '#bfcfff' : c.border)}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              {m.done ? <Trophy size={11} color={isLight ? '#16a34a' : '#22c55e'} /> : <Zap size={11} color="#1b78f7" />}
             </div>
             <span style={{ flex: 1, fontSize: 12, color: m.done ? c.muted : c.text, fontWeight: m.done ? 400 : 600, textDecoration: m.done ? 'line-through' : 'none' }}>{m.label}</span>
-            <span style={{ fontSize: 11, fontWeight: 700, color: m.done ? '#16a34a' : '#1b78f7' }}>{m.pts}</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: m.done ? (isLight ? '#16a34a' : '#22c55e') : '#1b78f7' }}>{m.pts}</span>
           </div>
         ))}
       </div>
@@ -163,15 +170,16 @@ const MockupMissoes = memo(function MockupMissoes() {
   )
 })
 
-const MockupVagas = memo(function MockupVagas() {
-  const c = { bg: '#ffffff', bgAlt: '#f0f5ff', border: '#dde6f5', text: '#0f172a', muted: '#64748b', blue: '#1b78f7' }
+const MockupVagas = memo(function MockupVagas({ theme }) {
+  const c = MOCKUP_COLORS[theme] ?? MOCKUP_COLORS.dark
+  const isLight = theme === 'light'
   const vagas = [
     { empresa: 'Codilink', cargo: 'Estágio em Desenvolvimento Web', tipo: 'Presencial · Lisboa', nova: true },
     { empresa: 'DataVision', cargo: 'Junior Backend Developer', tipo: 'Remoto · Full-time', nova: false },
     { empresa: 'UXLab', cargo: 'Estágio em Design de Produto', tipo: 'Híbrido · Porto', nova: true },
   ]
   return (
-    <div style={{ background: c.bg, border: `1px solid ${c.border}`, borderRadius: 18, overflow: 'hidden', boxShadow: '0 20px 60px rgba(27,120,247,0.12)' }}>
+    <div style={{ background: c.bg, border: `1px solid ${c.border}`, borderRadius: 18, overflow: 'hidden', boxShadow: `0 20px 60px ${c.shadow}` }}>
       <div style={{ padding: '16px 20px 13px', borderBottom: `1px solid ${c.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <span style={{ fontSize: 13, fontWeight: 800, color: c.text, fontFamily: 'var(--font-heading)' }}>Vagas para ti</span>
         <span style={{ fontSize: 10, color: '#b45309', fontWeight: 700, background: '#fef3c7', border: '1px solid #fde68a', borderRadius: 6, padding: '3px 8px' }}>3 novas</span>
@@ -179,13 +187,13 @@ const MockupVagas = memo(function MockupVagas() {
       <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
         {vagas.map(v => (
           <div key={v.empresa} style={{ padding: '11px 14px', borderRadius: 12, background: c.bgAlt, border: `1px solid ${c.border}`, display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ width: 34, height: 34, borderRadius: 10, background: '#e0eaff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <div style={{ width: 34, height: 34, borderRadius: 10, background: isLight ? '#e0eaff' : 'rgba(27,120,247,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <Briefcase size={14} color={c.blue} />
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
                 <span style={{ fontSize: 12, fontWeight: 700, color: c.text }}>{v.cargo}</span>
-                {v.nova && <span style={{ fontSize: 9, fontWeight: 700, color: '#b45309', background: '#fef3c7', borderRadius: 4, padding: '1px 5px' }}>Nova</span>}
+                {v.nova && <span style={{ fontSize: 9, fontWeight: 700, color: isLight ? '#b45309' : '#f59e0b', background: isLight ? '#fef3c7' : 'rgba(245,158,11,0.12)', borderRadius: 4, padding: '1px 5px' }}>Nova</span>}
               </div>
               <span style={{ fontSize: 11, color: c.muted }}>{v.empresa} · {v.tipo}</span>
             </div>
@@ -196,17 +204,18 @@ const MockupVagas = memo(function MockupVagas() {
   )
 })
 
-const MockupDefesa = memo(function MockupDefesa() {
-  const c = { bg: '#ffffff', bgAlt: '#f0f5ff', border: '#dde6f5', text: '#0f172a', muted: '#64748b' }
+const MockupDefesa = memo(function MockupDefesa({ theme }) {
+  const c = MOCKUP_COLORS[theme] ?? MOCKUP_COLORS.dark
+  const isLight = theme === 'light'
   const perguntas = [
     'Qual foi o maior desafio técnico que enfrentaste?',
     'Como garantiste a qualidade do código produzido?',
     'Que tecnologias escolheste e porquê?',
   ]
   return (
-    <div style={{ background: c.bg, border: `1px solid ${c.border}`, borderRadius: 18, overflow: 'hidden', boxShadow: '0 20px 60px rgba(27,120,247,0.12)' }}>
+    <div style={{ background: c.bg, border: `1px solid ${c.border}`, borderRadius: 18, overflow: 'hidden', boxShadow: `0 20px 60px ${c.shadow}` }}>
       <div style={{ padding: '16px 20px 13px', borderBottom: `1px solid ${c.border}`, display: 'flex', alignItems: 'center', gap: 10 }}>
-        <div style={{ width: 30, height: 30, borderRadius: 9, background: '#ede9fe', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: 30, height: 30, borderRadius: 9, background: isLight ? '#ede9fe' : 'rgba(139,92,246,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <GraduationCap size={15} color="#7c3aed" />
         </div>
         <span style={{ fontSize: 13, fontWeight: 800, color: c.text, fontFamily: 'var(--font-heading)' }}>Treino de defesa — PAP</span>
@@ -214,7 +223,7 @@ const MockupDefesa = memo(function MockupDefesa() {
       <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 9 }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: c.muted, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Perguntas prováveis do júri</div>
         {perguntas.map((p, i) => (
-          <div key={i} style={{ padding: '11px 14px', borderRadius: 10, background: '#f5f3ff', border: '1px solid #ddd6fe', display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+          <div key={i} style={{ padding: '11px 14px', borderRadius: 10, background: isLight ? '#f5f3ff' : 'rgba(139,92,246,0.05)', border: `1px solid ${isLight ? '#ddd6fe' : 'rgba(139,92,246,0.15)'}`, display: 'flex', alignItems: 'flex-start', gap: 10 }}>
             <span style={{ fontSize: 11, fontWeight: 800, color: '#7c3aed', flexShrink: 0, marginTop: 1 }}>{i + 1}.</span>
             <span style={{ fontSize: 12, color: c.text, lineHeight: 1.5 }}>{p}</span>
           </div>
@@ -542,7 +551,7 @@ export default function Home() {
             desc="Gera automaticamente uma página pública do teu projeto com score de IA, descrição, tecnologias e muito mais. Partilha o link com qualquer empresa ou professor — sem precisar de fazer CV."
             bullets={['Link único partilhável', 'Score calculado por IA', 'Página personalizada com o teu estilo']}
             bulletColor="#1b78f7"
-            mockup={<MockupPortfolio />}
+            mockup={<MockupPortfolio theme={theme} />}
           />
 
           {/* Feature 2 — Missões + Ranking */}
@@ -554,7 +563,7 @@ export default function Home() {
             desc="Cada campo que preencheres, cada detalhe que adicionares ao teu projeto vale pontos. Competes com outros estudantes num ranking público e provoas que o teu projeto é a sério."
             bullets={['Missões com pontos por campo', 'Ranking público entre estudantes', 'Badges de nível conquistados']}
             bulletColor="#22c55e"
-            mockup={<MockupMissoes />}
+            mockup={<MockupMissoes theme={theme} />}
           />
 
           {/* Feature 3 — Vagas */}
@@ -566,7 +575,7 @@ export default function Home() {
             desc="Encontra estágios e vagas de emprego directamente na plataforma. Candidata-te com o link do teu projeto — em vez de um CV vazio, mostras trabalho real."
             bullets={['Vagas filtradas para estudantes', 'Candidatura com link do projeto', 'Visibilidade directa para empresas']}
             bulletColor="#f59e0b"
-            mockup={<MockupVagas />}
+            mockup={<MockupVagas theme={theme} />}
           />
 
           {/* Feature 4 — Defesa */}
@@ -578,7 +587,7 @@ export default function Home() {
             desc="A IA gera as perguntas mais prováveis do júri com base no teu projeto, treinas as respostas e chegas à defesa preparado. Nunca mais ficas sem resposta na hora certa."
             bullets={['Perguntas prováveis do júri', 'Treino de apresentação cronometrado', 'Guia do apresentador por secção']}
             bulletColor="#8b5cf6"
-            mockup={<MockupDefesa />}
+            mockup={<MockupDefesa theme={theme} />}
           />
         </>}
       </div>
