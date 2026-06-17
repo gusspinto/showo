@@ -309,7 +309,7 @@ export default function Conquistas() {
           }}>
             <Medal size={24} color="#fbbf24" />
           </div>
-          <div>
+          <div style={{ flex: 1, minWidth: 0 }}>
             <h1 style={{ margin: 0, fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 900, color: C.text, letterSpacing: '-0.5px' }}>
               Conquistas
             </h1>
@@ -317,6 +317,22 @@ export default function Conquistas() {
               Desbloqueia conquistas ao evoluir os teus projetos
             </p>
           </div>
+          <button
+            onClick={() => navigate('/missoes')}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0,
+              padding: '6px 12px', borderRadius: 8,
+              background: 'transparent', border: `1px solid ${C.border}`,
+              color: C.muted, fontSize: 12, fontWeight: 600,
+              cursor: 'pointer', fontFamily: 'inherit',
+              transition: 'border-color 0.15s, color 0.15s',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = C.borderBright; e.currentTarget.style.color = C.text }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted }}
+          >
+            <Swords size={13} color="currentColor" />
+            Missões
+          </button>
         </div>
 
         {/* Progress card */}
@@ -368,31 +384,6 @@ export default function Conquistas() {
           </div>
         ) : (
           <>
-            {/* ── Cross-link to Missões ── */}
-            <div
-              onClick={() => navigate('/missoes')}
-              style={{
-                marginBottom: 28, padding: '16px 20px',
-                background: 'rgba(27,120,247,0.06)', border: '1px solid rgba(27,120,247,0.18)',
-                borderRadius: 14, cursor: 'pointer',
-                display: 'flex', alignItems: 'center', gap: 14,
-                transition: 'background 0.15s, border-color 0.15s',
-              }}
-              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(27,120,247,0.1)'; e.currentTarget.style.borderColor = 'rgba(27,120,247,0.3)' }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(27,120,247,0.06)'; e.currentTarget.style.borderColor = 'rgba(27,120,247,0.18)' }}
-            >
-              <div style={{ width: 40, height: 40, borderRadius: 10, flexShrink: 0, background: 'rgba(27,120,247,0.12)', border: '1px solid rgba(27,120,247,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Swords size={20} color={C.blue} />
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 2 }}>Ver missões por completar</div>
-                <div style={{ fontSize: 12, color: C.muted }}>
-                  Completa missões para ganhar XP e desbloquear novas conquistas.
-                </div>
-              </div>
-              <ArrowRight size={16} color={C.muted} style={{ flexShrink: 0 }} />
-            </div>
-
             {groupedByTier.map(({ tier, items }) => (
               <div key={tier} style={{ marginBottom: 32 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
