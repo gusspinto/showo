@@ -315,6 +315,13 @@ export default function Home() {
         }
         .submit-btn:hover { background: #1564d4 !important; }
         .submit-btn { transition: background 0.15s !important; }
+        /* Override global light-mode input style inside the hero widget */
+        body.light .widget-box { background: #ffffff !important; border-color: #dde6f5 !important; }
+        body.light .widget-box:focus-within { border-color: #1b78f7 !important; }
+        body.light .widget-input { background: transparent !important; }
+        body.light .widget-box .submit-btn[disabled] { background: #f0f5ff !important; }
+        body.light .goal-pill { border-color: #dde6f5 !important; color: #64748b !important; }
+        body.light .goal-pill:hover { border-color: #1b78f7 !important; background: rgba(27,120,247,0.07) !important; color: #1b78f7 !important; }
         .home-cta-btn { transition: all 0.15s !important; }
         .home-cta-btn:hover { opacity: 0.88 !important; }
         .home-sec-btn { transition: all 0.15s !important; }
