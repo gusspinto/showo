@@ -381,8 +381,10 @@ export default function Home() {
         }} />
 
         <div className="hero-section" style={{
-          padding: '140px 24px 130px',
+          minHeight: 'calc(100vh - 60px)',
+          padding: '60px 24px',
           display: 'flex', flexDirection: 'column', alignItems: 'center',
+          justifyContent: 'center',
           textAlign: 'center', position: 'relative',
         }}>
           <div className="hero-badge" style={{
