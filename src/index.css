@@ -76,7 +76,7 @@ body.light {
   --c-muted:        #526180;
   --c-text:         #0f172a;
   --c-subtle:       #6b7c9a;
-  --c-input-bg:     #d5dce8;   /* darker than card → sunken-in look, no white block */
+  --c-input-bg:     #ffffff;
   --c-blue-bg:      #dbeafe;
   --c-green-bg:     #dcfce7;
   --c-sidebar-bg:   #d4dced;  /* deeper, more blue than page bg */
