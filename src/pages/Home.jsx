@@ -121,7 +121,7 @@ const MockupPortfolio = memo(function MockupPortfolio({ theme }) {
             <span style={{ background: 'rgba(27,120,247,0.1)', color: c.blue, fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 5 }}>PAP</span>
             <span style={{ background: c.bgAlt, color: '#3b82f6', border: `1px solid ${c.border}`, fontSize: 10, fontWeight: 600, padding: '3px 8px', borderRadius: 5 }}>Tecnologias de Informação</span>
           </div>
-          <span style={{ fontSize: 11, fontWeight: 800, color: '#16a34a', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 6, padding: '3px 8px' }}>88 pts</span>
+          <span style={{ fontSize: 11, fontWeight: 800, color: isLight ? '#16a34a' : '#22c55e', background: isLight ? '#f0fdf4' : 'rgba(34,197,94,0.1)', border: `1px solid ${isLight ? '#bbf7d0' : 'rgba(34,197,94,0.25)'}`, borderRadius: 6, padding: '3px 8px' }}>88 pts</span>
         </div>
         <div style={{ fontSize: 17, fontWeight: 900, color: c.text, letterSpacing: '-0.5px', fontFamily: 'var(--font-heading)', marginBottom: 4 }}>StockFlow Pro</div>
         <div style={{ fontSize: 12, color: c.muted, marginBottom: 14 }}>João Silva · Escola Profissional do Porto</div>
@@ -148,7 +148,7 @@ const MockupMissoes = memo(function MockupMissoes({ theme }) {
       <div style={{ padding: '18px 20px 14px', borderBottom: `1px solid ${c.border}` }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
           <span style={{ fontSize: 13, fontWeight: 800, color: c.text, fontFamily: 'var(--font-heading)' }}>As tuas missões</span>
-          <span style={{ fontSize: 11, fontWeight: 700, color: '#16a34a', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 6, padding: '3px 8px' }}>88 pts</span>
+          <span style={{ fontSize: 11, fontWeight: 700, color: isLight ? '#16a34a' : '#22c55e', background: isLight ? '#f0fdf4' : 'rgba(34,197,94,0.1)', border: `1px solid ${isLight ? '#bbf7d0' : 'rgba(34,197,94,0.25)'}`, borderRadius: 6, padding: '3px 8px' }}>88 pts</span>
         </div>
         <div style={{ height: 4, background: c.bgAlt, borderRadius: 99 }}>
           <div style={{ width: '55%', height: '100%', background: 'linear-gradient(90deg, #22c55e, #16a34a)', borderRadius: 99 }} />
@@ -182,7 +182,7 @@ const MockupVagas = memo(function MockupVagas({ theme }) {
     <div style={{ background: c.bg, border: `1px solid ${c.border}`, borderRadius: 18, overflow: 'hidden', boxShadow: `0 20px 60px ${c.shadow}` }}>
       <div style={{ padding: '16px 20px 13px', borderBottom: `1px solid ${c.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <span style={{ fontSize: 13, fontWeight: 800, color: c.text, fontFamily: 'var(--font-heading)' }}>Vagas para ti</span>
-        <span style={{ fontSize: 10, color: '#b45309', fontWeight: 700, background: '#fef3c7', border: '1px solid #fde68a', borderRadius: 6, padding: '3px 8px' }}>3 novas</span>
+        <span style={{ fontSize: 10, color: isLight ? '#b45309' : '#f59e0b', fontWeight: 700, background: isLight ? '#fef3c7' : 'rgba(245,158,11,0.1)', border: `1px solid ${isLight ? '#fde68a' : 'rgba(245,158,11,0.2)'}`, borderRadius: 6, padding: '3px 8px' }}>3 novas</span>
       </div>
       <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
         {vagas.map(v => (
