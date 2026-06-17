@@ -359,7 +359,7 @@ export default function Missoes() {
           }}>
             <Swords size={24} color="#1b78f7" />
           </div>
-          <div>
+          <div style={{ flex: 1, minWidth: 0 }}>
             <h1 style={{ margin: 0, fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 900, color: C.text, letterSpacing: '-0.5px' }}>
               Missões
             </h1>
@@ -367,6 +367,22 @@ export default function Missoes() {
               Completa missões para ganhar XP e desbloquear conquistas
             </p>
           </div>
+          <button
+            onClick={() => navigate('/conquistas')}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0,
+              padding: '6px 12px', borderRadius: 8,
+              background: 'transparent', border: `1px solid ${C.border}`,
+              color: C.muted, fontSize: 12, fontWeight: 600,
+              cursor: 'pointer', fontFamily: 'inherit',
+              transition: 'border-color 0.15s, color 0.15s',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = C.borderBright; e.currentTarget.style.color = C.text }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted }}
+          >
+            <Medal size={13} color="currentColor" />
+            Conquistas
+          </button>
         </div>
 
         {/* XP Progress card */}
@@ -440,32 +456,6 @@ export default function Missoes() {
           </>
         )}
 
-        {/* ── Cross-link to Conquistas ── */}
-        {!loading && (
-          <div
-            onClick={() => navigate('/conquistas')}
-            style={{
-              marginTop: 32, padding: '16px 20px',
-              background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.2)',
-              borderRadius: 14, cursor: 'pointer',
-              display: 'flex', alignItems: 'center', gap: 14,
-              transition: 'background 0.15s, border-color 0.15s',
-            }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(251,191,36,0.1)'; e.currentTarget.style.borderColor = 'rgba(251,191,36,0.35)' }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(251,191,36,0.06)'; e.currentTarget.style.borderColor = 'rgba(251,191,36,0.2)' }}
-          >
-            <div style={{ width: 40, height: 40, borderRadius: 10, flexShrink: 0, background: 'rgba(251,191,36,0.12)', border: '1px solid rgba(251,191,36,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Medal size={20} color={C.yellow} />
-            </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 2 }}>Ver as minhas conquistas</div>
-              <div style={{ fontSize: 12, color: C.muted }}>
-                Missões completadas desbloqueiam conquistas e badges permanentes no teu perfil.
-              </div>
-            </div>
-            <ArrowRight size={16} color={C.muted} style={{ flexShrink: 0 }} />
-          </div>
-        )}
       </div>
     </div>
   )
