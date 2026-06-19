@@ -6,7 +6,7 @@ import { Pencil, ExternalLink } from 'lucide-react'
 import SkillsPicker from '../components/SkillsPicker'
 import { Navbar } from '../components/Navbar'
 import CreateProjectModal from '../components/CreateProjectModal'
-import { Folder, Trophy, BarChart2, Rocket, Eye, GraduationCap, Plus, X, Users, Users2, ChevronRight, User, Settings, Compass, Medal, LogOut, Globe, TrendingUp, MessageSquare, Star, Mail, Search, BookOpen, Trash2, Check, Calendar, ArrowRight, Target, Zap, Sparkles, Briefcase, Building2, Send, Copy, Share2, Link, Swords } from 'lucide-react'
+import { Folder, Trophy, BarChart2, Rocket, Eye, GraduationCap, Plus, X, Users, Users2, ChevronRight, User, Settings, Compass, Medal, LogOut, Globe, TrendingUp, MessageSquare, Star, Mail, Search, BookOpen, Trash2, Check, Calendar, ArrowRight, Target, Zap, Sparkles, Briefcase, Building2, Send, Copy, Share2, Link, Swords, HelpCircle } from 'lucide-react'
 import { MISSIONS, checkMissionProgress } from './Missoes'
 import ConvidarVagaModal from '../components/ConvidarVagaModal'
 
@@ -593,6 +593,67 @@ function TurmaCard({ turma, navigate }) {
   )
 }
 
+const SCORE_BREAKDOWN = [
+  { label: 'Nome do projeto', pts: 5 },
+  { label: 'Área do projeto', pts: 5 },
+  { label: 'Problema descrito', pts: 15 },
+  { label: 'Solução descrita', pts: 15 },
+  { label: 'Público-alvo', pts: 10 },
+  { label: 'Funcionalidades', pts: 10 },
+  { label: 'Tecnologias / Ferramentas', pts: 8 },
+  { label: 'Desafios encontrados', pts: 8 },
+  { label: 'Resultados obtidos', pts: 12 },
+  { label: 'Aprendizagens', pts: 12 },
+  { label: 'Imagem de capa', pts: 10 },
+]
+
+function ScoreInfoTooltip() {
+  const [open, setOpen] = useState(false)
+  return (
+    <div style={{ position: 'relative', marginLeft: 'auto' }}>
+      <button
+        onMouseEnter={() => setOpen(true)}
+        onMouseLeave={() => setOpen(false)}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setOpen(false)}
+        style={{
+          background: 'none', border: 'none', padding: 4, cursor: 'pointer',
+          color: C.subtle, display: 'flex', alignItems: 'center', borderRadius: 6,
+          transition: 'color 0.15s',
+        }}
+        onMouseEnterCapture={e => e.currentTarget.style.color = C.muted}
+        onMouseLeaveCapture={e => e.currentTarget.style.color = C.subtle}
+        aria-label="Como é calculado o score?"
+      >
+        <HelpCircle size={14} />
+      </button>
+      {open && (
+        <div style={{
+          position: 'absolute', right: 0, top: '100%', marginTop: 6,
+          background: C.card, border: `1px solid ${C.border}`,
+          borderRadius: 12, padding: '12px 14px', zIndex: 50,
+          width: 220, boxShadow: '0 8px 28px rgba(0,0,0,0.28)',
+          animation: 'fadeIn 0.15s ease',
+        }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 10 }}>
+            Como é calculado
+          </div>
+          {SCORE_BREAKDOWN.map(row => (
+            <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '3px 0' }}>
+              <span style={{ fontSize: 11, color: C.muted }}>{row.label}</span>
+              <span style={{ fontSize: 11, fontWeight: 700, color: C.blue, flexShrink: 0, marginLeft: 8 }}>+{row.pts}</span>
+            </div>
+          ))}
+          <div style={{ borderTop: `1px solid ${C.border}`, marginTop: 8, paddingTop: 8, display: 'flex', justifyContent: 'space-between' }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: C.text }}>Total máximo</span>
+            <span style={{ fontSize: 11, fontWeight: 800, color: C.blue }}>100 pts</span>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 function InsightsBlock({ projects }) {
   const withScore = projects.filter(p => p.score != null)
   if (!withScore.length) return null
@@ -608,6 +669,7 @@ function InsightsBlock({ projects }) {
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 18 }}>
         <TrendingUp size={13} color={C.muted} />
         <span style={{ fontSize: 12, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Resumo</span>
+        <ScoreInfoTooltip />
       </div>
 
       {/* 3 big numbers */}

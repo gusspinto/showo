@@ -418,7 +418,7 @@ export default function AIInterview() {
                 <textarea
                   value={setupDesc}
                   onChange={e => setSetupDesc(e.target.value)}
-                  placeholder="Ex: Uma plataforma web que ajuda alunos a criar portfólios profissionais com ajuda de IA..."
+                  placeholder="Ex: Uma app de gestão de tarefas, um produto de design gráfico, uma investigação sobre sustentabilidade, uma campanha de marketing..."
                   rows={4}
                   autoFocus
                   style={{
