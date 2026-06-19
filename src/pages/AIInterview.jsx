@@ -491,7 +491,7 @@ export default function AIInterview() {
                 disabled={!setupDesc.trim()}
                 style={{
                   width: '100%',
-                  background: setupDesc.trim() ? 'linear-gradient(135deg, #1b78f7, #4f46e5)' : C.border,
+                  background: setupDesc.trim() ? '#1b78f7' : C.border,
                   border: 'none', borderRadius: 14,
                   color: '#fff', fontSize: 16, fontWeight: 700,
                   padding: '16px 0', cursor: setupDesc.trim() ? 'pointer' : 'not-allowed',

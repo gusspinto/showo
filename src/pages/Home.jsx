@@ -388,7 +388,7 @@ export default function Home() {
         <button
           onClick={() => setShowCreateModal(true)}
           style={{
-            background: 'linear-gradient(135deg, #1b78f7, #4f46e5)',
+            background: '#1b78f7',
             color: '#fff', border: 'none', borderRadius: 12,
             padding: '9px 20px', fontSize: 14, fontWeight: 700,
             cursor: 'pointer', fontFamily: 'var(--font-body)',
@@ -598,7 +598,7 @@ export default function Home() {
           onClick={() => setShowCreateModal(true)}
           className="home-cta-btn"
           style={{
-            background: 'linear-gradient(135deg, #1b78f7, #4f46e5)',
+            background: '#1b78f7',
             color: '#fff', border: 'none', borderRadius: 14,
             padding: '16px 40px', fontSize: 17, fontWeight: 700,
             cursor: 'pointer', fontFamily: 'var(--font-body)',

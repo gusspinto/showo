@@ -367,7 +367,7 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%', maxWidth: 320, animation: 'fadeUp 0.4s 0.6s ease-out both' }}>
           <button
             onClick={() => { setFinished(false); setTimer(0); setTimerOn(false); setCurrent(0); setChecked({}); setShowNote(false) }}
-            style={{ padding: '14px 0', background: 'linear-gradient(135deg, #1b78f7, #4f46e5)', border: 'none', borderRadius: 14, color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 6px 24px rgba(27,120,247,0.35)' }}
+            style={{ padding: '14px 0', background: '#1b78f7', border: 'none', borderRadius: 14, color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 6px 24px rgba(27,120,247,0.35)' }}
           >
             Recomeçar do início
           </button>
@@ -433,7 +433,7 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
             onClick={() => { setStarted(true); setTimerOn(true) }}
             style={{
               width: '100%', padding: '16px 0',
-              background: 'linear-gradient(135deg, #1b78f7, #4f46e5)',
+              background: '#1b78f7',
               border: 'none', borderRadius: 14,
               color: '#fff', fontSize: 17, fontWeight: 700,
               cursor: 'pointer', fontFamily: 'inherit',
@@ -826,7 +826,7 @@ function GrupoPanel({ project }) {
           </div>
           <button
             onClick={addCollaborator}
-            style={{ background: 'linear-gradient(135deg, #1b78f7, #4f46e5)', border: 'none', borderRadius: 8, padding: '8px 16px', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+            style={{ background: '#1b78f7', border: 'none', borderRadius: 8, padding: '8px 16px', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
           >
             Adicionar
           </button>
@@ -907,7 +907,7 @@ function GrupoPanel({ project }) {
               disabled={saving}
               style={{
                 padding: '12px 0', width: '100%',
-                background: saved ? 'rgba(34,197,94,0.1)' : 'linear-gradient(135deg, #1b78f7, #4f46e5)',
+                background: saved ? 'rgba(34,197,94,0.1)' : '#1b78f7',
                 border: saved ? '1px solid rgba(34,197,94,0.3)' : 'none',
                 borderRadius: 12,
                 color: saved ? C.green : '#fff',
@@ -1045,7 +1045,7 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
                   onClick={() => setGuideMode(true)}
                   style={{
                     width: '100%', padding: '14px 0',
-                    background: 'linear-gradient(135deg, #1b78f7, #4f46e5)',
+                    background: '#1b78f7',
                     border: 'none', borderRadius: 12,
                     color: '#fff', fontSize: 15, fontWeight: 700,
                     cursor: 'pointer', fontFamily: 'inherit',

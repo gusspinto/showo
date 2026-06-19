@@ -816,7 +816,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
           transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
           width: 100%;
         }
-        .sb-create:hover { background: #1564d4; box-shadow: 0 4px 16px rgba(27,120,247,0.38); transform: translateY(-1px); }
+        .sb-create:hover { background: #1564d4; box-shadow: 0 6px 18px rgba(27,120,247,0.4); }
         .sb-create:active { transform: translateY(0); }
         .sb-divider { height: 1px; background: var(--c-border); margin: 6px 0; opacity: 0.6; }
         /* Project section card — subtle highlight */

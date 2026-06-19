@@ -185,7 +185,7 @@ export default function ConvidarVagaModal({ studentId, studentName, vagas, onClo
                 style={{
                   width: '100%', padding: '12px 0', borderRadius: 10,
                   background: selectedVaga
-                    ? 'linear-gradient(135deg, #1b78f7, #4f46e5)'
+                    ? '#1b78f7'
                     : C.border,
                   border: 'none',
                   color: selectedVaga ? '#fff' : C.muted,

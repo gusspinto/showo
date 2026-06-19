@@ -20,7 +20,7 @@ function Btn({ children, onClick, primary, disabled, style = {} }) {
       onClick={onClick}
       disabled={disabled}
       style={{
-        background: disabled ? 'var(--c-border)' : primary ? 'linear-gradient(135deg, #1b78f7, #4f46e5)' : 'transparent',
+        background: disabled ? 'var(--c-border)' : primary ? '#1b78f7' : 'transparent',
         border: primary ? 'none' : `1px solid ${C.border}`,
         borderRadius: 9, padding: '11px 20px',
         color: disabled ? 'var(--c-subtle)' : primary ? '#fff' : C.muted,

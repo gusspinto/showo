@@ -17,7 +17,7 @@ const STEPS = [
         </span>
         <div style={{
           width: 30, height: 30, borderRadius: 8, flexShrink: 0,
-          background: 'linear-gradient(135deg,#1b78f7,#4f46e5)',
+          background: '#1b78f7',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: 14,
         }}><ArrowRight size={16} color="#fff" /></div>
@@ -217,7 +217,7 @@ export default function Onboarding({ onDone }) {
             onClick={next}
             style={{
               padding: '9px 20px',
-              background: 'linear-gradient(135deg,#1b78f7,#4f46e5)',
+              background: '#1b78f7',
               border: 'none', borderRadius: 10,
               color: '#fff', fontSize: 13, fontWeight: 700,
               cursor: 'pointer', fontFamily: 'inherit',

@@ -71,7 +71,7 @@ export default function CreateProjectModal({ onClose }) {
           >
             <div style={{
               width: 44, height: 44, borderRadius: 12, flexShrink: 0,
-              background: 'linear-gradient(135deg, #1b78f7, #4f46e5)',
+              background: '#1b78f7',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               boxShadow: '0 4px 16px rgba(27,120,247,0.35)',
             }}>

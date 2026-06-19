@@ -99,7 +99,7 @@ function ErrorFallback({ error, onReset }) {
           onClick={() => window.location.reload()}
           style={{
             display: 'flex', alignItems: 'center', gap: 6,
-            background: 'linear-gradient(135deg, #1b78f7, #4f46e5)',
+            background: '#1b78f7',
             border: 'none', borderRadius: 10, padding: '10px 18px',
             color: '#fff', fontSize: 14, fontWeight: 700,
             cursor: 'pointer', fontFamily: 'inherit',
@@ -125,7 +125,7 @@ function NotFound() {
       <div style={{
         fontSize: 'clamp(64px, 12vw, 96px)', fontWeight: 900,
         fontFamily: 'var(--font-heading)', letterSpacing: '-4px', lineHeight: 1,
-        background: 'linear-gradient(135deg, #1b78f7, #4f46e5)',
+        background: '#1b78f7',
         WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
       }}>404</div>
       <div style={{ textAlign: 'center', maxWidth: 360 }}>
@@ -152,7 +152,7 @@ function NotFound() {
         <button
           onClick={() => navigate('/')}
           style={{
-            background: 'linear-gradient(135deg, #1b78f7, #4f46e5)',
+            background: '#1b78f7',
             border: 'none', borderRadius: 10, padding: '10px 18px',
             color: '#fff', fontSize: 14, fontWeight: 700,
             cursor: 'pointer', fontFamily: 'inherit',

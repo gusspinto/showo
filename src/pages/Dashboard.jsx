@@ -321,7 +321,7 @@ function QuickCreateProject({ navigate }) {
           className="qc-btn"
           disabled={!desc.trim()}
           style={{
-            background: desc.trim() ? `linear-gradient(135deg, ${C.blue}, #4f46e5)` : C.border,
+            background: desc.trim() ? `#1b78f7` : C.border,
             border: 'none', borderRadius: 12,
             width: 46, height: 46,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -402,7 +402,7 @@ function CreateTurmaModal({ onClose, onCreated }) {
             />
           </div>
           {error && <p style={{ color: '#ef4444', fontSize: 13, margin: 0 }}>{error}</p>}
-          <button type="submit" disabled={saving || !name.trim()} style={{ background: 'linear-gradient(135deg,#1b78f7,#4f46e5)', border: 'none', borderRadius: 8, padding: '11px', color: '#fff', fontSize: 14, fontWeight: 600, cursor: saving ? 'default' : 'pointer', opacity: saving ? 0.7 : 1, fontFamily: 'inherit', marginTop: 4 }}>
+          <button type="submit" disabled={saving || !name.trim()} style={{ background: '#1b78f7', border: 'none', borderRadius: 8, padding: '11px', color: '#fff', fontSize: 14, fontWeight: 600, cursor: saving ? 'default' : 'pointer', opacity: saving ? 0.7 : 1, fontFamily: 'inherit', marginTop: 4 }}>
             {saving ? 'A criar…' : 'Criar turma'}
           </button>
         </form>
@@ -453,7 +453,7 @@ function JoinTurmaModal({ onClose, navigate, onJoined }) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               <button
                 onClick={() => { navigate(`/turma/${joined.code}`); onClose() }}
-                style={{ width: '100%', background: `linear-gradient(135deg, ${C.blue}, #4f46e5)`, border: 'none', borderRadius: 12, padding: '14px', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 20px rgba(27,120,247,0.35)' }}
+                style={{ width: '100%', background: `#1b78f7`, border: 'none', borderRadius: 12, padding: '14px', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 20px rgba(27,120,247,0.35)' }}
               >
                 <span style={{display:'flex',alignItems:'center',gap:6,justifyContent:'center'}}>Ir para a turma <ArrowRight size={15} /></span>
               </button>
@@ -499,7 +499,7 @@ function JoinTurmaModal({ onClose, navigate, onJoined }) {
                 disabled={checking || code.trim().length < 2}
                 style={{
                   width: '100%',
-                  background: code.trim() ? `linear-gradient(135deg, ${C.blue}, #4f46e5)` : C.border,
+                  background: code.trim() ? `#1b78f7` : C.border,
                   border: 'none', borderRadius: 12, padding: '15px',
                   color: '#fff', fontSize: 15, fontWeight: 700,
                   cursor: code.trim() ? 'pointer' : 'not-allowed',
@@ -829,7 +829,7 @@ function OnboardingAlunoModal({ user, profile, onDismiss, firstProject }) {
             <button
               onClick={saveProfile}
               disabled={saving}
-              style={{ width: '100%', background: 'linear-gradient(135deg,#1b78f7,#4f46e5)', border: 'none', borderRadius: 11, padding: '13px', color: '#fff', fontSize: 15, fontWeight: 700, cursor: saving ? 'default' : 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 20px rgba(27,120,247,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, opacity: saving ? 0.7 : 1 }}
+              style={{ width: '100%', background: '#1b78f7', border: 'none', borderRadius: 11, padding: '13px', color: '#fff', fontSize: 15, fontWeight: 700, cursor: saving ? 'default' : 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 20px rgba(27,120,247,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, opacity: saving ? 0.7 : 1 }}
             >
               {saving ? 'A guardar…' : <><span>Guardar perfil</span><ArrowRight size={15} /></>}
             </button>
@@ -864,7 +864,7 @@ function OnboardingAlunoModal({ user, profile, onDismiss, firstProject }) {
               </div>
               <button
                 onClick={() => { onDismiss(); navigate('/novo') }}
-                style={{ background: 'linear-gradient(135deg,#1b78f7,#4f46e5)', border: 'none', borderRadius: 11, padding: '13px', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 20px rgba(27,120,247,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}
+                style={{ background: '#1b78f7', border: 'none', borderRadius: 11, padding: '13px', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 20px rgba(27,120,247,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}
               >
                 <span>Criar projecto</span><ArrowRight size={15} />
               </button>
@@ -905,7 +905,7 @@ function OnboardingAlunoModal({ user, profile, onDismiss, firstProject }) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               <button
                 onClick={() => { onDismiss(); navigate(`/u/${resolvedUsername}`) }}
-                style={{ background: 'linear-gradient(135deg,#1b78f7,#4f46e5)', border: 'none', borderRadius: 11, padding: '13px', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 20px rgba(27,120,247,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}
+                style={{ background: '#1b78f7', border: 'none', borderRadius: 11, padding: '13px', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 20px rgba(27,120,247,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}
               >
                 <span>Ver a minha página</span><ArrowRight size={15} />
               </button>
@@ -978,7 +978,7 @@ function OnboardingModal({ user, profile, onDismiss, onCreateTurma }) {
             <div style={{ display: 'flex', gap: 10 }}>
               <button
                 onClick={() => setStep(1)}
-                style={{ flex: 1, background: 'linear-gradient(135deg,#1b78f7,#4f46e5)', border: 'none', borderRadius: 10, padding: '13px', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 20px rgba(27,120,247,0.35)' }}
+                style={{ flex: 1, background: '#1b78f7', border: 'none', borderRadius: 10, padding: '13px', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 20px rgba(27,120,247,0.35)' }}
               >
                 <span style={{display:'flex',alignItems:'center',gap:6,justifyContent:'center'}}>Continuar <ArrowRight size={15} /></span>
               </button>
@@ -1007,7 +1007,7 @@ function OnboardingModal({ user, profile, onDismiss, onCreateTurma }) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               <button
                 onClick={handleCta}
-                style={{ background: 'linear-gradient(135deg,#1b78f7,#4f46e5)', border: 'none', borderRadius: 10, padding: '14px', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 20px rgba(27,120,247,0.35)' }}
+                style={{ background: '#1b78f7', border: 'none', borderRadius: 10, padding: '14px', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 20px rgba(27,120,247,0.35)' }}
               >
                 <span style={{display:'flex',alignItems:'center',gap:6,justifyContent:'center'}}>{cfg.cta} <ArrowRight size={15} /></span>
               </button>
@@ -1917,7 +1917,7 @@ export default function Dashboard() {
                   </div>
                   <p style={{ color: C.text, fontSize: 15, fontWeight: 700, margin: '0 0 6px' }}>Ainda não tens turmas</p>
                   <p style={{ color: C.muted, fontSize: 13, margin: '0 0 22px', lineHeight: 1.6 }}>Cria uma turma e partilha o código com os teus alunos.</p>
-                  <button onClick={() => setShowCreateTurma(true)} style={{ background: `linear-gradient(135deg, ${C.blue}, #4f46e5)`, border: 'none', borderRadius: 9, padding: '10px 24px', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 16px rgba(27,120,247,0.3)' }}>
+                  <button onClick={() => setShowCreateTurma(true)} style={{ background: `#1b78f7`, border: 'none', borderRadius: 9, padding: '10px 24px', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 16px rgba(27,120,247,0.3)' }}>
                     <span style={{display:'flex',alignItems:'center',gap:6}}>Criar primeira turma <ArrowRight size={14} /></span>
                   </button>
                 </div>
@@ -2015,7 +2015,7 @@ export default function Dashboard() {
                   className="dash-action-btn"
                   onClick={() => setShowJoinModal(true)}
                   style={{
-                    background: studentTurmas.length === 0 ? `linear-gradient(135deg, ${C.blue}, #4f46e5)` : 'transparent',
+                    background: studentTurmas.length === 0 ? `#1b78f7` : 'transparent',
                     border: `1px solid ${studentTurmas.length === 0 ? 'transparent' : C.border}`,
                     color: studentTurmas.length === 0 ? '#fff' : C.muted,
                     boxShadow: studentTurmas.length === 0 ? '0 2px 10px rgba(27,120,247,0.3)' : 'none',
@@ -2071,7 +2071,7 @@ export default function Dashboard() {
                 </p>
                 <button
                   onClick={() => setShowCreateModal(true)}
-                  style={{ background: `linear-gradient(135deg, ${C.blue}, #4f46e5)`, border: 'none', borderRadius: 10, padding: '13px 32px', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 20px rgba(27,120,247,0.35)' }}
+                  style={{ background: `#1b78f7`, border: 'none', borderRadius: 10, padding: '13px 32px', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 20px rgba(27,120,247,0.35)' }}
                 >
                   Criar projeto
                 </button>
@@ -2261,7 +2261,7 @@ export default function Dashboard() {
                   </p>
                   <button
                     onClick={() => navigate('/explorar')}
-                    style={{ background: `linear-gradient(135deg,${C.blue},#4f46e5)`, border: 'none', borderRadius: 9, padding: '9px 20px', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+                    style={{ background: `#1b78f7`, border: 'none', borderRadius: 9, padding: '9px 20px', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
                   >
                     Explorar projetos
                   </button>
