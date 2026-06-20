@@ -1612,6 +1612,43 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
             </>
           ) : (
             <>
+              {/* Anonymous pitch block */}
+              <div style={{
+                margin: '0 0 10px',
+                padding: '14px 14px 16px',
+                background: 'rgba(27,120,247,0.06)',
+                border: '1px solid rgba(27,120,247,0.14)',
+                borderRadius: 12,
+              }}>
+                <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--c-text)', marginBottom: 10, letterSpacing: '-0.2px' }}>
+                  O teu portfólio de escola, a sério.
+                </div>
+                {[
+                  { icon: '📁', text: 'Mostra os projetos que já fizeste' },
+                  { icon: '✦', text: 'Prova que és mais do que um CV' },
+                  { icon: '🏢', text: 'Aparece a recrutadores reais' },
+                ].map(({ icon, text }) => (
+                  <div key={text} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
+                    <span style={{ fontSize: 12, lineHeight: 1.5, flexShrink: 0 }}>{icon}</span>
+                    <span style={{ fontSize: 12, color: 'var(--c-muted)', lineHeight: 1.5 }}>{text}</span>
+                  </div>
+                ))}
+              </div>
+              <button
+                onClick={() => navigate('/register')}
+                style={{
+                  width: '100%', padding: '10px 0', marginBottom: 6,
+                  background: '#1b78f7', border: 'none', borderRadius: 10,
+                  color: '#fff', fontSize: 13, fontWeight: 700,
+                  cursor: 'pointer', fontFamily: 'inherit',
+                  boxShadow: '0 2px 10px rgba(27,120,247,0.3)',
+                  transition: 'background 0.15s, box-shadow 0.15s',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = '#1564d4'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(27,120,247,0.4)' }}
+                onMouseLeave={e => { e.currentTarget.style.background = '#1b78f7'; e.currentTarget.style.boxShadow = '0 2px 10px rgba(27,120,247,0.3)' }}
+              >
+                Criar conta grátis
+              </button>
               <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '0 4px 2px' }}>
                 <button className="sb-item" style={{ flex: 1, margin: 0 }} onClick={() => navigate('/login')}>Entrar</button>
                 <button
@@ -1630,7 +1667,6 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
                 </button>
               </div>
-              <button className="sb-item active" onClick={() => navigate('/register')}>Criar conta</button>
             </>
           )}
         </div>
