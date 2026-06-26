@@ -389,15 +389,15 @@ function EditModal({ challenge, project, onClose, onSave, saving }) {
       <div style={{
         background: colors.card,
         border: `1px solid ${colors.borderBright}`,
-        borderRadius: 20,
+        borderRadius: 14,
         padding: '28px 32px',
         width: '100%', maxWidth: 560,
-        boxShadow: '0 32px 80px rgba(0,0,0,0.6)',
+        boxShadow: 'none',
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <div style={{
-              width: 42, height: 42, borderRadius: 12,
+              width: 42, height: 42, borderRadius: 10,
               background: 'var(--c-card-hover)',
               border: `1px solid ${colors.border}`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -406,7 +406,7 @@ function EditModal({ challenge, project, onClose, onSave, saving }) {
               <ChalIcon size={22} />
             </div>
             <div>
-              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: colors.text }}>{challenge.fieldLabel}</h2>
+              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 400, fontFamily: 'var(--font-heading)', letterSpacing: '-0.01em', color: colors.text }}>{challenge.fieldLabel}</h2>
               <span style={{ fontSize: 12, color: colors.blue, fontWeight: 600 }}>+{challenge.scoreGain} XP ao completar</span>
             </div>
           </div>
@@ -460,8 +460,8 @@ function EditModal({ challenge, project, onClose, onSave, saving }) {
             background: isSpam
               ? colors.border
               : isComplete
-                ? `linear-gradient(135deg, ${colors.green}, #16a34a)`
-                : `linear-gradient(135deg, ${colors.blue}, #4f46e5)`,
+                ? colors.green
+                : colors.blue,
             color: isSpam ? colors.muted : '#fff',
             border: 'none', borderRadius: 10,
             padding: '14px 0', fontSize: 16, fontWeight: 700,
@@ -469,7 +469,7 @@ function EditModal({ challenge, project, onClose, onSave, saving }) {
             opacity: saving ? 0.75 : 1,
             transition: 'background 0.2s',
             fontFamily: 'inherit',
-            boxShadow: isSpam ? 'none' : isComplete ? '0 4px 20px rgba(34,197,94,0.3)' : '0 4px 20px rgba(27,120,247,0.3)',
+            boxShadow: isSpam ? 'none' : isComplete ? '0 2px 8px rgba(34,197,94,0.2)' : '0 2px 8px rgba(27,120,247,0.2)',
           }}
         >
           {saving ? 'A guardar...' : `Guardar e ganhar +${challenge.scoreGain} XP`}
@@ -487,12 +487,12 @@ function Toast({ message, visible }) {
       opacity: visible ? 1 : 0,
       background: 'var(--c-card)',
       border: `1px solid ${colors.borderBright}`,
-      borderRadius: 14, padding: '14px 28px',
+      borderRadius: 10, padding: '14px 28px',
       color: 'var(--c-text)', fontSize: 15, fontWeight: 600,
       zIndex: 2000,
       transition: 'transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s',
       whiteSpace: 'nowrap',
-      boxShadow: '0 8px 32px rgba(0,0,0,0.25)',
+      boxShadow: 'none',
       pointerEvents: 'none',
       fontFamily: 'inherit',
     }}>
@@ -879,7 +879,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
           border-radius: 18px 18px 0 0 !important;
           border-left: none !important;
           border-top: 1px solid var(--c-border) !important;
-          box-shadow: 0 -6px 32px rgba(0,0,0,0.5) !important;
+          box-shadow: none !important;
           animation: pv-slidein-up 0.26s cubic-bezier(0.22,1,0.36,1) !important;
           z-index: 510 !important;
           transition: max-height 0.26s cubic-bezier(0.22,1,0.36,1) !important;
@@ -1036,8 +1036,8 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
         margin: previewDevice !== 'desktop' ? `${isOwner ? 16 : 40}px auto 0` : '0 auto',
         maxWidth: deviceMaxWidth,
         width: '100%',
-        boxShadow: previewDevice !== 'desktop' ? '0 0 0 1px rgba(0,0,0,0.2), 0 12px 60px rgba(0,0,0,0.35)' : 'none',
-        borderRadius: previewDevice !== 'desktop' ? 20 : 0,
+        boxShadow: previewDevice !== 'desktop' ? '0 0 0 1px rgba(0,0,0,0.2)' : 'none',
+        borderRadius: previewDevice !== 'desktop' ? 14 : 0,
         overflow: previewDevice !== 'desktop' ? 'hidden' : 'visible',
         transition: 'max-width 0.3s ease',
         background: resolvedBg,
@@ -1070,22 +1070,19 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
         {/* Title block over hero */}
         <div className="pv-title-block" style={{ maxWidth: 860, margin: '0 auto', padding: '0 28px', position: 'relative', marginTop: coverAsHero ? -160 : project.cover_url ? -100 : -80, textAlign: titleAlign }}>
           {/* Area / type chips */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 18, justifyContent: titleAlign === 'center' ? 'center' : titleAlign === 'right' ? 'flex-end' : 'flex-start' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center', marginBottom: 18, justifyContent: titleAlign === 'center' ? 'center' : titleAlign === 'right' ? 'flex-end' : 'flex-start' }}>
             {project.project_type && (
               <span style={{
-                background: `linear-gradient(135deg, ${hero.c1}, ${hero.c2})`,
-                color: '#fff', borderRadius: 6, padding: '4px 12px',
-                fontSize: 11, fontWeight: 800, letterSpacing: '0.06em',
+                color: hero.c1, fontSize: 12, fontWeight: 700, letterSpacing: '0.06em',
               }}>
                 {project.project_type.toUpperCase()}
               </span>
             )}
+            {project.project_type && project.area && (
+              <span style={{ color: colors.subtle, fontSize: 12 }}>·</span>
+            )}
             {project.area && (
-              <span style={{
-                background: 'rgba(27,120,247,0.1)', color: colors.blue,
-                border: '1px solid rgba(27,120,247,0.2)',
-                borderRadius: 6, padding: '4px 12px', fontSize: 12, fontWeight: 600,
-              }}>{project.area}</span>
+              <span style={{ color: colors.blue, fontSize: 12, fontWeight: 600 }}>{project.area}</span>
             )}
           </div>
 
@@ -1109,8 +1106,8 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                 marginLeft: 14, verticalAlign: 'middle',
                 width: 32, height: 32, borderRadius: 10,
-                background: 'linear-gradient(135deg, #1b78f7, #4f46e5)',
-                boxShadow: '0 4px 14px rgba(27,120,247,0.5)',
+                background: '#1b78f7',
+                boxShadow: '0 2px 8px rgba(27,120,247,0.3)',
                 flexShrink: 0,
                 WebkitTextFillColor: 'initial',
               }}>
@@ -1131,7 +1128,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
               {avatarUrl ? (
                 <img src={avatarUrl} alt="" style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
               ) : (
-                <div style={{ width: 28, height: 28, borderRadius: '50%', flexShrink: 0, background: `linear-gradient(135deg, ${hero.c1}, ${hero.c2})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: '#fff' }}>
+                <div style={{ width: 28, height: 28, borderRadius: '50%', flexShrink: 0, background: hero.c1, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: '#fff' }}>
                   {displayName[0]?.toUpperCase()}
                 </div>
               )}
@@ -1145,7 +1142,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 16, justifyContent: titleAlign === 'center' ? 'center' : titleAlign === 'right' ? 'flex-end' : 'flex-start' }}>
               {previewStyle.linkDemo && (
                 <a href={previewStyle.linkDemo} target="_blank" rel="noopener noreferrer"
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: `linear-gradient(135deg, ${hero.c1}, ${hero.c2})`, color: '#fff', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 700, textDecoration: 'none', boxShadow: `0 4px 14px ${hero.c1}44` }}>
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: hero.c1, color: '#fff', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 700, textDecoration: 'none', boxShadow: `0 2px 8px ${hero.c1}33` }}>
                   <Globe size={13} /> Ver demo
                 </a>
               )}
@@ -1851,14 +1848,14 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
 
           if (block.type === 'heading' && block.content) return (
             <div key={block.id} style={{ textAlign: align }}>
-              <h2 style={{ margin: 0, fontSize: 'clamp(22px,3.5vw,32px)', fontWeight: 900, color: block.color || 'var(--c-text)', letterSpacing: '-0.5px', lineHeight: 1.15 }}>
+              <h2 style={{ margin: 0, fontSize: 'clamp(22px,3.5vw,32px)', fontWeight: 400, fontFamily: 'var(--font-heading)', color: block.color || 'var(--c-text)', letterSpacing: '-0.02em', lineHeight: 1.15 }}>
                 {block.content}
               </h2>
             </div>
           )
 
           if (block.type === 'note' && block.content) return (
-            <div key={block.id} style={{ background: 'var(--c-card)', border: `1px solid ${accent}33`, borderLeft: `4px solid ${accent}`, borderRadius: '0 16px 16px 0', padding: '22px 26px', textAlign: align }}>
+            <div key={block.id} style={{ background: 'var(--c-card)', border: `1px solid ${accent}33`, borderLeft: `4px solid ${accent}`, borderRadius: '0 12px 12px 0', padding: '22px 26px', textAlign: align }}>
               <div style={{ fontSize: 10, fontWeight: 700, color: accent, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6, justifyContent: align === 'right' ? 'flex-end' : align === 'center' ? 'center' : 'flex-start' }}>
                 <AlignLeft size={11} /> Nota do criador
               </div>
@@ -1867,7 +1864,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
           )
 
           if (block.type === 'quote' && block.content) return (
-            <div key={block.id} style={{ borderLeft: `4px solid ${accent}`, padding: '20px 28px', background: `${accent}08`, borderRadius: '0 12px 12px 0', textAlign: align }}>
+            <div key={block.id} style={{ borderLeft: `4px solid ${accent}`, padding: '20px 28px', background: `${accent}08`, borderRadius: '0 10px 10px 0', textAlign: align }}>
               <p style={{ margin: 0, fontSize: 'clamp(16px,2.2vw,22px)', color: 'var(--c-text)', fontStyle: 'italic', lineHeight: 1.7, fontWeight: 500 }}>
                 "{block.content}"
               </p>
@@ -1875,8 +1872,8 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
           )
 
           if (block.type === 'callout' && block.content) return (
-            <div key={block.id} style={{ background: `${accent}0d`, border: `1px solid ${accent}33`, borderRadius: 16, padding: '20px 24px', display: 'flex', alignItems: 'flex-start', gap: 14 }}>
-              <div style={{ width: 36, height: 36, borderRadius: 10, flexShrink: 0, background: `${accent}22`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div key={block.id} style={{ background: `${accent}0d`, border: `1px solid ${accent}33`, borderRadius: 12, padding: '20px 24px', display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+              <div style={{ width: 36, height: 36, borderRadius: 8, flexShrink: 0, background: `${accent}22`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <Sparkles size={17} color={accent} />
               </div>
               <div style={{ flex: 1, textAlign: align }}>
@@ -1891,7 +1888,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
               <a href={block.url} target="_blank" rel="noopener noreferrer" style={{
                 display: 'inline-flex', alignItems: 'center', gap: 8,
                 background: `${accent}18`, border: `1px solid ${accent}44`,
-                borderRadius: 10, padding: '11px 20px',
+                borderRadius: 8, padding: '11px 20px',
                 color: accent, fontSize: 14, fontWeight: 700, textDecoration: 'none',
                 transition: 'all 0.15s',
               }}>
@@ -1901,14 +1898,14 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
           )
 
           if (block.type === 'metric' && block.label) return (
-            <div key={block.id} style={{ background: 'var(--c-card)', border: `1px solid ${accent}33`, borderRadius: 16, padding: '24px 28px', textAlign: align }}>
+            <div key={block.id} style={{ background: 'var(--c-card)', border: `1px solid ${accent}33`, borderRadius: 12, padding: '24px 28px', textAlign: align }}>
               <div style={{ fontSize: 'clamp(36px,5vw,56px)', fontWeight: 900, color: accent, letterSpacing: '-2px', lineHeight: 1, marginBottom: 8 }}>{block.label}</div>
               {block.content && <div style={{ fontSize: 15, color: 'var(--c-muted)', fontWeight: 500 }}>{block.content}</div>}
             </div>
           )
 
           if (block.type === 'image' && block.imageUrl) return (
-            <div key={block.id} style={{ borderRadius: 16, overflow: 'hidden' }}>
+            <div key={block.id} style={{ borderRadius: 12, overflow: 'hidden' }}>
               <img src={block.imageUrl} alt={block.content || ''} style={{ width: '100%', maxHeight: 480, objectFit: 'cover', display: 'block' }} onError={e => { e.target.style.display = 'none' }} />
               {block.content && <div style={{ padding: '10px 16px', background: 'var(--c-card)', fontSize: 13, color: 'var(--c-muted)', fontStyle: 'italic', textAlign: align }}>{block.content}</div>}
             </div>
@@ -1918,7 +1915,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
             const imgs = [block.imageUrl, block.imageUrl2, block.imageUrl3].filter(Boolean)
             if (!imgs.length) return null
             return (
-              <div key={block.id} style={{ display: 'grid', gridTemplateColumns: `repeat(${imgs.length}, 1fr)`, gap: 8, borderRadius: 16, overflow: 'hidden' }}>
+              <div key={block.id} style={{ display: 'grid', gridTemplateColumns: `repeat(${imgs.length}, 1fr)`, gap: 8, borderRadius: 12, overflow: 'hidden' }}>
                 {imgs.map((src, gi) => (
                   <div key={gi} style={{ aspectRatio: '4/3', overflow: 'hidden' }}>
                     <img src={src} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} onError={e => { e.target.style.display = 'none' }} />
@@ -1932,7 +1929,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
             const embedUrl = getVideoEmbedUrl(block.videoUrl)
             if (!embedUrl) return null
             return (
-              <div key={block.id} style={{ borderRadius: 16, overflow: 'hidden', background: '#000', aspectRatio: '16/9', position: 'relative' }}>
+              <div key={block.id} style={{ borderRadius: 12, overflow: 'hidden', background: '#000', aspectRatio: '16/9', position: 'relative' }}>
                 <iframe
                   src={embedUrl}
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -1955,7 +1952,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
                 {stats.map((s, si) => (
                   <div key={si} style={{
                     background: 'var(--c-card)', border: `1px solid ${accent}33`,
-                    borderRadius: 16, padding: '24px 20px', textAlign: 'center',
+                    borderRadius: 12, padding: '24px 20px', textAlign: 'center',
                     borderTop: `3px solid ${accent}`,
                   }}>
                     <div style={{ fontSize: 'clamp(28px,4.5vw,44px)', fontWeight: 900, color: accent, letterSpacing: '-1.5px', lineHeight: 1, marginBottom: 8 }}>{s.value}</div>
@@ -1973,15 +1970,15 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
                 target="_blank" rel="noopener noreferrer"
                 style={{
                   display: 'inline-flex', alignItems: 'center', gap: 10,
-                  background: `linear-gradient(135deg, ${accent}, ${accent}cc)`,
+                  background: accent,
                   color: '#fff', fontSize: 16, fontWeight: 800,
-                  padding: '16px 36px', borderRadius: 14,
+                  padding: '16px 36px', borderRadius: 10,
                   textDecoration: 'none', letterSpacing: '-0.2px',
-                  boxShadow: `0 8px 28px ${accent}40, 0 2px 8px ${accent}30`,
-                  transition: 'transform 0.15s, box-shadow 0.15s',
+                  boxShadow: `0 2px 8px ${accent}33`,
+                  transition: 'opacity 0.15s',
                 }}
-                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = `0 12px 36px ${accent}55, 0 4px 12px ${accent}40` }}
-                onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = `0 8px 28px ${accent}40, 0 2px 8px ${accent}30` }}
+                onMouseEnter={e => { e.currentTarget.style.opacity = '0.88' }}
+                onMouseLeave={e => { e.currentTarget.style.opacity = '1' }}
               >
                 {block.content} <ArrowRight size={18} />
               </a>
@@ -2007,7 +2004,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
 
           if (key === 'problem')
             return !project.problem ? null : (
-              <div key="problem" className="pv-section-card" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderLeft: `4px solid ${hero.c1}`, borderRadius: '0 16px 16px 0', padding: '28px 32px' }}>
+              <div key="problem" className="pv-section-card" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderLeft: `4px solid ${hero.c1}`, borderRadius: '0 12px 12px 0', padding: '28px 32px' }}>
                 <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--c-muted)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
                   <Target size={13} /> O problema que resolve
                 </div>
@@ -2017,7 +2014,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
 
           if (key === 'solution')
             return !project.solution ? null : (
-              <div key="solution" className="pv-section-card" style={{ background: `linear-gradient(135deg, ${hero.c2}10 0%, var(--c-card) 100%)`, border: '1px solid var(--c-border)', borderRadius: 16, padding: '28px 32px' }}>
+              <div key="solution" className="pv-section-card" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 12, padding: '28px 32px' }}>
                 <div style={{ fontSize: 11, fontWeight: 800, color: colors.blue, textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
                   <Zap size={13} /> A solução
                 </div>
@@ -2027,7 +2024,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
 
           if (key === 'target_audience')
             return !project.target_audience ? null : (
-              <div key="target_audience" className="pv-section-card" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 16, padding: '28px 32px' }}>
+              <div key="target_audience" className="pv-section-card" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 12, padding: '28px 32px' }}>
                 <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--c-muted)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
                   <Users size={13} /> Público-alvo
                 </div>
@@ -2037,7 +2034,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
 
           if (key === 'features')
             return features.length === 0 ? null : (
-              <div key="features" className="pv-section-card" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 16, padding: '28px 32px' }}>
+              <div key="features" className="pv-section-card" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 12, padding: '28px 32px' }}>
                 <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--c-muted)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
                   <Wrench size={13} /> O que faz
                 </div>
@@ -2056,13 +2053,13 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
 
           if (key === 'technologies')
             return tech.length === 0 ? null : (
-              <div key="technologies" className="pv-section-card" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 16, padding: '28px 32px' }}>
+              <div key="technologies" className="pv-section-card" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 12, padding: '28px 32px' }}>
                 <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--c-muted)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 18, display: 'flex', alignItems: 'center', gap: 8 }}>
                   <Zap size={13} /> Tecnologias
                 </div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, fontSize: 14, color: 'var(--c-text)', fontWeight: 500 }}>
                   {tech.map((t, i) => (
-                    <span key={i} style={{ background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)', borderRadius: 8, padding: '6px 14px', fontSize: 13, fontWeight: 600, color: 'var(--c-text)' }}>{t}</span>
+                    <span key={i}>{t}{i < tech.length - 1 ? <span style={{ color: 'var(--c-subtle)', margin: '0 8px' }}>·</span> : null}</span>
                   ))}
                 </div>
               </div>
@@ -2070,7 +2067,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
 
           if (key === 'challenges')
             return !project.challenges ? null : (
-              <div key="challenges" className="pv-section-card" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderLeft: '4px solid #f97316', borderRadius: '0 16px 16px 0', padding: '28px 32px' }}>
+              <div key="challenges" className="pv-section-card" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderLeft: '4px solid #f97316', borderRadius: '0 12px 12px 0', padding: '28px 32px' }}>
                 <div style={{ fontSize: 11, fontWeight: 800, color: '#f97316', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
                   <Zap size={13} /> Desafios
                 </div>
@@ -2080,7 +2077,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
 
           if (key === 'results')
             return !project.results ? null : (
-              <div key="results" className="pv-section-card" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 16, padding: '28px 32px' }}>
+              <div key="results" className="pv-section-card" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 12, padding: '28px 32px' }}>
                 <div style={{ fontSize: 11, fontWeight: 800, color: '#22c55e', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
                   <BarChart2 size={13} /> Resultados
                 </div>
@@ -2090,7 +2087,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
 
           if (key === 'learnings')
             return !project.learnings ? null : (
-              <div key="learnings" className="pv-section-card" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 16, padding: '28px 32px' }}>
+              <div key="learnings" className="pv-section-card" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 12, padding: '28px 32px' }}>
                 <div style={{ fontSize: 11, fontWeight: 800, color: '#8b5cf6', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
                   <BookOpen size={13} /> Aprendizagens
                 </div>
@@ -2105,7 +2102,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
         {(displayName || course || school) && (
           <div style={{
             background: 'var(--c-card)', border: '1px solid var(--c-border)',
-            borderRadius: 16, padding: '28px 32px',
+            borderRadius: 12, padding: '28px 32px',
             display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap',
           }}>
             {avatarUrl ? (
@@ -2113,7 +2110,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
             ) : displayName && (
               <div style={{
                 width: 56, height: 56, borderRadius: '50%', flexShrink: 0,
-                background: `linear-gradient(135deg, ${hero.c1}, ${hero.c2})`,
+                background: hero.c1,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: 22, fontWeight: 800, color: '#fff',
               }}>{displayName[0]?.toUpperCase()}</div>
@@ -2122,7 +2119,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
               <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--c-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>
                 A história de {project.name}
               </div>
-              {displayName && <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--c-text)', marginBottom: 4 }}>{displayName}</div>}
+              {displayName && <div style={{ fontSize: 18, fontWeight: 400, fontFamily: 'var(--font-heading)', letterSpacing: '-0.01em', color: 'var(--c-text)', marginBottom: 4 }}>{displayName}</div>}
               {course && <div style={{ fontSize: 14, color: 'var(--c-muted)' }}>{course}{school ? ` · ${school}` : ''}</div>}
             </div>
             {ownerProfile?.username && (
@@ -2130,10 +2127,10 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
                 onClick={() => navigate(`/u/${ownerProfile.username}`)}
                 style={{
                   background: '#1b78f7',
-                  border: 'none', borderRadius: 10, padding: '10px 22px',
+                  border: 'none', borderRadius: 8, padding: '10px 22px',
                   color: '#fff', fontSize: 13, fontWeight: 700,
                   cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0,
-                  boxShadow: '0 2px 12px rgba(27,120,247,0.25)',
+                  boxShadow: '0 2px 8px rgba(27,120,247,0.2)',
                 }}
               >
                 Ver perfil
@@ -2197,9 +2194,9 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
           {/* Confirmação de interesse: card com ações */}
           {isRecruiterRole && hasInterest && !isOwner && (
             <div style={{
-              background: 'linear-gradient(135deg, rgba(245,158,11,0.1), rgba(251,191,36,0.06))',
+              background: 'rgba(245,158,11,0.08)',
               border: '1.5px solid rgba(245,158,11,0.35)',
-              borderRadius: 14, padding: '16px 20px',
+              borderRadius: 12, padding: '16px 20px',
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               flexWrap: 'wrap', gap: 12,
             }}>
@@ -2253,7 +2250,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
           )}
 
           {/* Comentários */}
-          <div style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 16, padding: '22px 24px' }}>
+          <div style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 12, padding: '22px 24px' }}>
             <ProjectComments projectId={project.id} projectAuthorId={project.user_id} />
           </div>
         </div>
@@ -2277,9 +2274,9 @@ function MembersPanel({ ownerName, members, colors, isOwner }) {
   const displayOwner = ownerName || 'Dono'
 
   const statusCfg = {
-    accepted: { label: 'Colaborador', color: '#22c55e', bg: 'rgba(34,197,94,0.1)', border: 'rgba(34,197,94,0.25)', avatar: 'linear-gradient(135deg,#22c55e,#059669)', dim: false },
-    pending:  { label: 'Pendente', color: '#fbbf24', bg: 'rgba(234,179,8,0.1)',  border: 'rgba(234,179,8,0.25)',  avatar: 'linear-gradient(135deg,#ca8a04,#92400e)', dim: true  },
-    declined: { label: 'Recusou',  color: '#ef4444', bg: 'rgba(239,68,68,0.1)', border: 'rgba(239,68,68,0.25)', avatar: 'linear-gradient(135deg,#ef4444,#b91c1c)', dim: true  },
+    accepted: { label: 'Colaborador', color: '#22c55e', bg: 'rgba(34,197,94,0.1)', border: 'rgba(34,197,94,0.25)', avatar: '#22c55e', dim: false },
+    pending:  { label: 'Pendente', color: '#fbbf24', bg: 'rgba(234,179,8,0.1)',  border: 'rgba(234,179,8,0.25)',  avatar: '#ca8a04', dim: true  },
+    declined: { label: 'Recusou',  color: '#ef4444', bg: 'rgba(239,68,68,0.1)', border: 'rgba(239,68,68,0.25)', avatar: '#ef4444', dim: true  },
   }
 
   // For non-owners, only show accepted; already filtered at query level but guard here too
@@ -2877,7 +2874,7 @@ export default function ProjectPage() {
         `}</style>
         <div className="sk-wrap">
           {/* Cover */}
-          <div className="sk" style={{ width: '100%', height: 200, borderRadius: 16, marginTop: 24 }} />
+          <div className="sk" style={{ width: '100%', height: 200, borderRadius: 12, marginTop: 24 }} />
           {/* Title */}
           <div className="sk" style={{ height: 30, width: '60%', marginTop: 28 }} />
           {/* Tagline */}
@@ -2889,8 +2886,8 @@ export default function ProjectPage() {
             <div className="sk" style={{ height: 48, flex: 1, animationDelay: '0.25s' }} />
           </div>
           {/* Card block */}
-          <div className="sk" style={{ height: 140, width: '100%', marginTop: 20, borderRadius: 16, animationDelay: '0.3s' }} />
-          <div className="sk" style={{ height: 100, width: '100%', marginTop: 14, borderRadius: 16, animationDelay: '0.35s' }} />
+          <div className="sk" style={{ height: 140, width: '100%', marginTop: 20, borderRadius: 12, animationDelay: '0.3s' }} />
+          <div className="sk" style={{ height: 100, width: '100%', marginTop: 14, borderRadius: 12, animationDelay: '0.35s' }} />
         </div>
       </div>
     )
@@ -2899,11 +2896,11 @@ export default function ProjectPage() {
   if (!project) {
     return (
       <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-body)', gap: 16, textAlign: 'center', padding: 24 }}>
-        <h2 style={{ margin: 0, fontSize: 24, fontWeight: 700 }}>Este projeto não existe ou foi removido</h2>
+        <h2 style={{ margin: 0, fontSize: 24, fontWeight: 400, fontFamily: 'var(--font-heading)', letterSpacing: '-0.01em' }}>Este projeto não existe ou foi removido</h2>
         <p style={{ color: colors.muted, margin: 0 }}>O link pode estar incorrecto ou o projeto foi eliminado.</p>
         <button
           onClick={() => setShowCreateModal(true)}
-          style={{ background: `linear-gradient(135deg, ${colors.blue}, #4f46e5)`, color: '#fff', border: 'none', borderRadius: 10, padding: '12px 28px', fontSize: 16, fontWeight: 700, cursor: 'pointer', marginTop: 8, boxShadow: '0 4px 20px rgba(27,120,247,0.3)', fontFamily: 'inherit' }}
+          style={{ background: colors.blue, color: '#fff', border: 'none', borderRadius: 10, padding: '12px 28px', fontSize: 16, fontWeight: 700, cursor: 'pointer', marginTop: 8, boxShadow: '0 2px 8px rgba(27,120,247,0.2)', fontFamily: 'inherit' }}
         >
           <span style={{display:"flex",alignItems:"center",gap:6}}>Criar o meu projeto <ArrowRight size={15} /></span>
         </button>
@@ -3027,8 +3024,8 @@ export default function ProjectPage() {
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes sparkle-pulse {
-          0%, 100% { box-shadow: 0 0 0 0 rgba(139,92,246,0.5), 0 4px 20px rgba(0,0,0,0.4); }
-          50%       { box-shadow: 0 0 0 10px rgba(139,92,246,0), 0 4px 20px rgba(0,0,0,0.4); }
+          0%, 100% { box-shadow: 0 0 0 0 rgba(139,92,246,0.5); }
+          50%       { box-shadow: 0 0 0 10px rgba(139,92,246,0); }
         }
         @keyframes confetti-fall {
           0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
@@ -3040,9 +3037,9 @@ export default function ProjectPage() {
         .proj-card {
           background: ${colors.card};
           border: 1px solid ${colors.border};
-          border-radius: 16px;
+          border-radius: 12px;
           padding: 20px 22px;
-          box-shadow: 0 2px 12px rgba(0,0,0,0.18);
+          box-shadow: none;
         }
         /* Consistent section label (11px uppercase muted with icon) */
         .proj-sec-label {
@@ -3205,16 +3202,16 @@ export default function ProjectPage() {
           onClick={() => setReportModal(false)}
         >
           <div
-            style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 20, padding: '28px', maxWidth: 660, width: '100%', maxHeight: '88vh', overflowY: 'auto', position: 'relative', boxShadow: '0 24px 80px rgba(0,0,0,0.6)' }}
+            style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 14, padding: '28px', maxWidth: 660, width: '100%', maxHeight: '88vh', overflowY: 'auto', position: 'relative', boxShadow: 'none' }}
             onClick={e => e.stopPropagation()}
           >
             {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-              <div style={{ width: 40, height: 40, borderRadius: 12, background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <div style={{ width: 40, height: 40, borderRadius: 10, background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <FileText size={18} color="#10b981" />
               </div>
               <div style={{ flex: 1 }}>
-                <h2 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: colors.text }}>
+                <h2 style={{ margin: 0, fontSize: 17, fontWeight: 400, fontFamily: 'var(--font-heading)', letterSpacing: '-0.01em', color: colors.text }}>
                   Rascunho de {project.project_type === 'pap' ? 'Relatório PAP' : 'Relatório de Estágio'}
                 </h2>
                 <p style={{ margin: '2px 0 0', fontSize: 12, color: colors.muted }}>Gerado por IA · revê e adapta antes de entregar</p>
@@ -3292,13 +3289,13 @@ export default function ProjectPage() {
             onClick={e => e.stopPropagation()}
             style={{
               width: '100%', maxWidth: 440,
-              background: 'linear-gradient(145deg, #0e1f3a 0%, #152030 60%, #0d1424 100%)',
+              background: '#152030',
               border: '1px solid rgba(27,120,247,0.35)',
-              borderRadius: 28,
+              borderRadius: 14,
               padding: '44px 36px 36px',
               textAlign: 'center',
               position: 'relative',
-              boxShadow: '0 32px 100px rgba(27,120,247,0.25), 0 8px 40px rgba(0,0,0,0.7)',
+              boxShadow: 'none',
               overflow: 'hidden',
             }}
           >
@@ -3311,11 +3308,11 @@ export default function ProjectPage() {
 
             <h2 style={{
               margin: '0 0 10px',
-              fontFamily: 'Syne, sans-serif',
+              fontFamily: 'var(--font-heading)',
               fontSize: 28,
-              fontWeight: 900,
+              fontWeight: 400,
               color: '#e8f2ff',
-              letterSpacing: '-0.5px',
+              letterSpacing: '-0.02em',
               lineHeight: 1.2,
               position: 'relative',
             }}>
@@ -3387,21 +3384,21 @@ export default function ProjectPage() {
               style={{
                 display: 'block',
                 width: '100%',
-                background: 'linear-gradient(135deg, #1b78f7, #4f46e5)',
+                background: '#1b78f7',
                 border: 'none',
-                borderRadius: 12,
+                borderRadius: 10,
                 padding: '14px 24px',
                 color: '#fff',
                 fontSize: 16,
                 fontWeight: 700,
                 cursor: 'pointer',
                 letterSpacing: '-0.2px',
-                boxShadow: '0 4px 20px rgba(27,120,247,0.35)',
-                transition: 'transform 0.15s, box-shadow 0.15s',
+                boxShadow: '0 2px 8px rgba(27,120,247,0.2)',
+                transition: 'opacity 0.15s',
                 position: 'relative',
               }}
-              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 6px 28px rgba(27,120,247,0.45)' }}
-              onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 4px 20px rgba(27,120,247,0.35)' }}
+              onMouseEnter={e => { e.currentTarget.style.opacity = '0.88' }}
+              onMouseLeave={e => { e.currentTarget.style.opacity = '1' }}
             >
               Ver a minha página →
             </button>
@@ -3427,11 +3424,11 @@ export default function ProjectPage() {
               width: '100%', maxWidth: 400,
               background: 'var(--c-card)',
               border: '1px solid rgba(27,120,247,0.35)',
-              borderRadius: 24,
+              borderRadius: 14,
               padding: '36px 32px',
               textAlign: 'center',
               position: 'relative',
-              boxShadow: '0 24px 80px rgba(27,120,247,0.18), 0 8px 32px rgba(0,0,0,0.35)',
+              boxShadow: 'none',
               overflow: 'hidden',
             }}
           >
@@ -3452,7 +3449,7 @@ export default function ProjectPage() {
             <div style={{ fontSize: 13, fontWeight: 700, color: colors.muted, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8, position: 'relative' }}>
               Marco desbloqueado
             </div>
-            <div style={{ fontSize: 28, fontWeight: 900, color: colors.text, letterSpacing: '-0.5px', marginBottom: 6, position: 'relative' }}>
+            <div style={{ fontSize: 28, fontWeight: 400, fontFamily: 'var(--font-heading)', color: colors.text, letterSpacing: '-0.02em', marginBottom: 6, position: 'relative' }}>
               {milestoneCard.score} pontos!
             </div>
             <div style={{ fontSize: 15, color: colors.muted, marginBottom: 24, position: 'relative' }}>
@@ -3464,7 +3461,7 @@ export default function ProjectPage() {
               display: 'inline-flex', alignItems: 'center', gap: 8,
               background: milestoneCard.score >= 90 ? 'rgba(34,197,94,0.12)' : milestoneCard.score >= 70 ? 'rgba(27,120,247,0.12)' : 'rgba(251,191,36,0.12)',
               border: `1px solid ${milestoneCard.score >= 90 ? 'rgba(34,197,94,0.3)' : milestoneCard.score >= 70 ? 'rgba(27,120,247,0.3)' : 'rgba(251,191,36,0.3)'}`,
-              borderRadius: 999, padding: '6px 20px', marginBottom: 28,
+              borderRadius: 8, padding: '6px 20px', marginBottom: 28,
               color: milestoneCard.score >= 90 ? '#22c55e' : milestoneCard.score >= 70 ? colors.blue : '#fbbf24',
               fontSize: 13, fontWeight: 800, position: 'relative',
             }}>
@@ -3487,11 +3484,11 @@ export default function ProjectPage() {
                 }}
                 style={{
                   flex: 1,
-                  background: 'linear-gradient(135deg, #1b78f7, #4f46e5)',
-                  border: 'none', borderRadius: 12,
+                  background: '#1b78f7',
+                  border: 'none', borderRadius: 10,
                   padding: '13px 0', color: '#fff',
                   fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-                  boxShadow: '0 6px 20px rgba(27,120,247,0.35)',
+                  boxShadow: '0 2px 8px rgba(27,120,247,0.2)',
                 }}
               >
                 Copiar link
@@ -3501,7 +3498,7 @@ export default function ProjectPage() {
                 style={{
                   flex: 1,
                   background: 'var(--c-card-hover)',
-                  border: `1px solid ${colors.border}`, borderRadius: 12,
+                  border: `1px solid ${colors.border}`, borderRadius: 10,
                   padding: '13px 0', color: colors.muted,
                   fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
                 }}
@@ -3533,14 +3530,14 @@ export default function ProjectPage() {
             style={{
               background: colors.card,
               border: `1px solid ${colors.border}`,
-              borderRadius: 20,
+              borderRadius: 14,
               padding: '28px',
               maxWidth: 580,
               width: '100%',
               maxHeight: '85vh',
               overflowY: 'auto',
               position: 'relative',
-              boxShadow: '0 24px 80px rgba(0,0,0,0.6)',
+              boxShadow: 'none',
             }}
             onClick={e => e.stopPropagation()}
           >
@@ -3564,7 +3561,7 @@ export default function ProjectPage() {
                   <Bot size={20} color="#818cf8" />
                 </div>
                 <div>
-                  <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800, letterSpacing: '-0.3px' }}>Análise da IA</h3>
+                  <h3 style={{ margin: 0, fontSize: 17, fontWeight: 400, fontFamily: 'var(--font-heading)', letterSpacing: '-0.01em' }}>Análise da IA</h3>
                   <p style={{ margin: 0, fontSize: 12, color: colors.muted, marginTop: 2 }}>Feedback personalizado para melhorar o teu projeto</p>
                 </div>
               </div>
@@ -3575,14 +3572,14 @@ export default function ProjectPage() {
                   disabled={analyzingAI}
                   style={{
                     flexShrink: 0,
-                    background: analyzingAI ? 'rgba(27,120,247,0.08)' : aiFeedback ? 'rgba(27,120,247,0.1)' : 'linear-gradient(135deg,#1b78f7,#4f46e5)',
+                    background: analyzingAI ? 'rgba(27,120,247,0.08)' : aiFeedback ? 'rgba(27,120,247,0.1)' : '#1b78f7',
                     border: analyzingAI || aiFeedback ? `1px solid ${colors.blue}30` : 'none',
-                    borderRadius: 9, padding: '8px 16px',
+                    borderRadius: 8, padding: '8px 16px',
                     color: analyzingAI || aiFeedback ? colors.blue : '#fff',
                     fontSize: 12, fontWeight: 700,
                     cursor: analyzingAI ? 'default' : 'pointer',
                     fontFamily: 'inherit',
-                    boxShadow: analyzingAI || aiFeedback ? 'none' : '0 4px 14px rgba(27,120,247,0.3)',
+                    boxShadow: analyzingAI || aiFeedback ? 'none' : '0 2px 8px rgba(27,120,247,0.2)',
                     display: 'flex', alignItems: 'center', gap: 7,
                     transition: 'all 0.15s',
                   }}
@@ -3659,13 +3656,13 @@ export default function ProjectPage() {
             disabled={analyzingAI}
             style={{
               height: 52, borderRadius: 999, padding: '0 18px',
-              background: 'linear-gradient(135deg, #6d28d9, #4f46e5)',
+              background: '#6d28d9',
               border: 'none',
               color: '#fff', cursor: analyzingAI ? 'default' : 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
               animation: analyzingAI ? 'none' : 'sparkle-pulse 2s ease-in-out infinite',
               opacity: analyzingAI ? 0.7 : 1,
-              boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
+              boxShadow: 'none',
               fontFamily: 'inherit', fontSize: 14, fontWeight: 700,
             }}
           >
@@ -3686,7 +3683,7 @@ export default function ProjectPage() {
               color: '#fbbf24', cursor: 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
               padding: '0 18px', height: 52, minWidth: 52,
-              boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
+              boxShadow: 'none',
               backdropFilter: 'blur(8px)',
               fontFamily: 'inherit', fontSize: 14, fontWeight: 700,
             }}
@@ -3842,33 +3839,27 @@ export default function ProjectPage() {
             return (
               <div className="proj-badges" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, marginBottom: 20 }}>
                 {project.project_type && PROJECT_TYPE_LABELS[project.project_type] && (
-                  <div style={{
-                    background: `linear-gradient(135deg, ${hero.c1}, ${hero.c2})`,
-                    color: '#fff', borderRadius: 8, padding: '5px 14px',
-                    fontSize: 11, fontWeight: 800, letterSpacing: '0.06em',
+                  <span style={{
+                    color: hero.c1,
+                    fontSize: 12, fontWeight: 700, letterSpacing: '0.06em',
                     display: 'flex', alignItems: 'center', gap: 6,
-                    boxShadow: `0 4px 16px ${hero.c1}40`,
                   }}>
                     {hero.Icon && <hero.Icon size={12} />} {PROJECT_TYPE_LABELS[project.project_type].toUpperCase()}
-                  </div>
+                  </span>
                 )}
                 {project.area && (
-                  <div style={{
-                    background: colors.blueSubtle, color: colors.blue,
-                    border: '1px solid rgba(27,120,247,0.2)',
-                    borderRadius: 8, padding: '5px 14px', fontSize: 12, fontWeight: 600,
-                  }}>
-                    {project.area}
-                  </div>
+                  <>
+                    {project.project_type && PROJECT_TYPE_LABELS[project.project_type] && <span style={{ color: colors.subtle, fontSize: 12 }}>·</span>}
+                    <span style={{ color: colors.blue, fontSize: 12, fontWeight: 600 }}>
+                      {project.area}
+                    </span>
+                  </>
                 )}
 
                 {/* Tags */}
-                {project.tags && project.tags.length > 0 && project.tags.map(tag => (
-                  <span key={tag} style={{
-                    background: 'var(--c-bg-alt)', color: 'var(--c-muted)',
-                    border: '1px solid var(--c-border)',
-                    borderRadius: 8, padding: '5px 12px', fontSize: 12, fontWeight: 500,
-                  }}>
+                {project.tags && project.tags.length > 0 && project.tags.map((tag, i) => (
+                  <span key={tag} style={{ color: 'var(--c-muted)', fontSize: 12, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 8 }}>
+                    {(i > 0 || project.area || (project.project_type && PROJECT_TYPE_LABELS[project.project_type])) && <span style={{ color: colors.subtle }}>·</span>}
                     {tag}
                   </span>
                 ))}
@@ -3944,12 +3935,12 @@ export default function ProjectPage() {
           <div className="proj-h1-row" style={{ alignItems: 'flex-start' }}>
             <h1 className="proj-h1" style={{
               fontSize: 'clamp(30px, 5vw, 42px)',
-              fontWeight: 900,
+              fontWeight: 400,
               margin: 0,
               lineHeight: 1.08,
-              letterSpacing: '-1px',
+              letterSpacing: '-0.02em',
               flex: 1,
-              fontFamily: "'Syne', 'Inter', sans-serif",
+              fontFamily: 'var(--font-heading)',
               color: colors.text,
             }}>
               {project.name}
@@ -4017,7 +4008,7 @@ export default function ProjectPage() {
               <div style={{
                 display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 6,
                 background: level.color + '15', color: level.color,
-                borderRadius: 999, padding: '3px 10px', fontSize: 12, fontWeight: 700,
+                borderRadius: 6, padding: '3px 10px', fontSize: 12, fontWeight: 700,
                 border: `1px solid ${level.color}35`,
               }}>{level.label}</div>
               <div style={{ height: 3, background: progTrack(Math.round((earnedXP / totalXP) * 100)), borderRadius: 2, overflow: 'hidden', marginBottom: 5 }}>
@@ -4185,7 +4176,7 @@ export default function ProjectPage() {
           <div style={{
             background: colors.card,
             border: `1px solid ${colors.border}`,
-            borderRadius: 16, padding: '16px 20px',
+            borderRadius: 12, padding: '16px 20px',
             display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
           }}>
             <Bot size={20} color={colors.blue} style={{ flexShrink: 0 }} />
@@ -4196,11 +4187,11 @@ export default function ProjectPage() {
               <button
                 onClick={() => setShowCreateModal(true)}
                 style={{
-                  background: 'linear-gradient(135deg, #6d28d9, #4f46e5)',
+                  background: '#6d28d9',
                   border: 'none', borderRadius: 8, padding: '7px 16px',
                   color: '#fff', fontSize: 12, fontWeight: 700,
                   cursor: 'pointer', fontFamily: 'inherit',
-                  boxShadow: '0 4px 14px rgba(109,40,217,0.35)',
+                  boxShadow: '0 2px 8px rgba(109,40,217,0.2)',
                 }}
               >
                 <span style={{display:"flex",alignItems:"center",gap:6}}>Criar o meu projeto <ArrowRight size={15} /></span>
@@ -4212,7 +4203,7 @@ export default function ProjectPage() {
         {/* A tua história — AI narrative with blue gradient */}
         {project.ai_description && (
           <div className="proj-card-pad proj-card" style={{
-            background: 'linear-gradient(135deg, #1b78f7 0%, #4f46e5 100%)',
+            background: '#1b78f7',
             border: '1px solid rgba(79,70,229,0.5)',
             position: 'relative', overflow: 'hidden',
           }}>
@@ -4276,7 +4267,7 @@ export default function ProjectPage() {
                 return (
                   <div key={i} className="proj-card" style={{
                     display: 'flex', flexDirection: 'column', gap: 12,
-                    background: `linear-gradient(145deg, ${acc}18 0%, ${acc}08 100%)`,
+                    background: `${acc}10`,
                     border: `1px solid ${acc}30`,
                     position: 'relative', overflow: 'hidden',
                   }}>
@@ -4489,9 +4480,9 @@ export default function ProjectPage() {
               onClick={e => e.stopPropagation()}
               style={{
                 background: colors.card, border: `1px solid ${colors.borderBright}`,
-                borderRadius: 20, padding: '28px 32px',
+                borderRadius: 14, padding: '28px 32px',
                 display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20,
-                boxShadow: '0 24px 64px rgba(0,0,0,0.6)',
+                boxShadow: 'none',
                 maxWidth: 320, width: '100%',
                 position: 'relative',
               }}
@@ -4504,7 +4495,7 @@ export default function ProjectPage() {
                 <div style={{ fontSize: 15, fontWeight: 700, color: colors.text, textAlign: 'center', marginBottom: 4 }}>{project.name}</div>
                 <div style={{ fontSize: 12, color: colors.muted, textAlign: 'center' }}>Aponta a câmara para abrir</div>
               </div>
-              <div style={{ background: '#fff', borderRadius: 16, padding: 16, boxShadow: '0 8px 32px rgba(0,0,0,0.4)' }}>
+              <div style={{ background: '#fff', borderRadius: 12, padding: 16, boxShadow: 'none' }}>
                 <QRCodeSVG value={pageUrl} size={180} />
               </div>
               <div style={{ background: colors.bg, border: `1px solid ${colors.border}`, borderRadius: 8, padding: '8px 14px', fontSize: 11, color: colors.subtle, textAlign: 'center', wordBreak: 'break-all', maxWidth: '100%' }}>
@@ -4529,7 +4520,7 @@ export default function ProjectPage() {
             ) : (
               <div style={{
                 width: 44, height: 44, flexShrink: 0,
-                background: `linear-gradient(135deg, ${colors.blue}, #4f46e5)`,
+                background: colors.blue,
                 borderRadius: '50%',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: 16, fontWeight: 800, color: '#fff',
@@ -4606,7 +4597,7 @@ export default function ProjectPage() {
             const avgScore   = totalRated === 0 ? null : Math.round(JURY_CRITERIA.reduce((s, c) => s + (juryRatings[c.id] ?? 0), 0) / JURY_CRITERIA.length * 10) / 10
 
             return (
-              <div style={{ background: 'linear-gradient(135deg, rgba(99,102,241,0.06), rgba(79,70,229,0.03))', border: '1px solid rgba(99,102,241,0.22)', borderRadius: 16, overflow: 'hidden', marginBottom: 4 }}>
+              <div style={{ background: 'rgba(99,102,241,0.05)', border: '1px solid rgba(99,102,241,0.22)', borderRadius: 12, overflow: 'hidden', marginBottom: 4 }}>
                 {/* Header */}
                 <div style={{ padding: '13px 16px 10px', borderBottom: '1px solid rgba(99,102,241,0.12)', display: 'flex', alignItems: 'center', gap: 9 }}>
                   <ClipboardList size={14} color="#818cf8" />
@@ -4681,8 +4672,8 @@ export default function ProjectPage() {
                       setTimeout(() => setJurySaved(false), 3000)
                     }}
                     style={{
-                      width: '100%', padding: '10px', borderRadius: 9,
-                      background: jurySaved ? 'rgba(34,197,94,0.12)' : 'linear-gradient(135deg, #6366f1, #4f46e5)',
+                      width: '100%', padding: '10px', borderRadius: 8,
+                      background: jurySaved ? 'rgba(34,197,94,0.12)' : '#6366f1',
                       border: jurySaved ? '1px solid rgba(34,197,94,0.3)' : 'none',
                       color: jurySaved ? '#22c55e' : '#fff',
                       fontSize: 13, fontWeight: 700, cursor: totalRated === 0 || jurySaving ? 'default' : 'pointer',
@@ -4702,7 +4693,7 @@ export default function ProjectPage() {
             const FB_SECTION_LABELS = { description: 'Descrição', tech: 'Tecnologias', links: 'Links', demo: 'Demo', team: 'Equipa', gallery: 'Galeria', geral: 'Geral' }
             const myFeedback = isProfessor ? teacherFeedback.filter(f => f.teacher_id === user?.id) : teacherFeedback
             return (
-              <div style={{ background: 'linear-gradient(135deg,rgba(251,191,36,0.05),rgba(245,158,11,0.02))', border: '1px solid rgba(251,191,36,0.22)', borderRadius: 16, overflow: 'hidden' }}>
+              <div style={{ background: 'rgba(251,191,36,0.04)', border: '1px solid rgba(251,191,36,0.22)', borderRadius: 12, overflow: 'hidden' }}>
                 {/* Header */}
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 16px', borderBottom: myFeedback.length > 0 || showFeedbackForm ? '1px solid rgba(251,191,36,0.12)' : 'none' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
@@ -4764,7 +4755,7 @@ export default function ProjectPage() {
                     </div>
                     <textarea value={fbComment} onChange={e => setFbComment(e.target.value)} placeholder={`Feedback sobre ${FB_SECTION_LABELS[fbFieldKey]}…`} rows={3} style={{ width: '100%', background: 'var(--c-bg)', border: `1px solid ${colors.border}`, borderRadius: 8, padding: '9px 11px', color: colors.text, fontSize: 13, fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box', outline: 'none' }} />
                     <div style={{ display: 'flex', gap: 8 }}>
-                      <button onClick={handleFbSave} disabled={fbSaving || !fbComment.trim()} style={{ flex: 1, background: 'linear-gradient(135deg,#d97706,#b45309)', border: 'none', borderRadius: 8, padding: '9px', color: '#fff', fontSize: 13, fontWeight: 600, cursor: fbSaving || !fbComment.trim() ? 'default' : 'pointer', opacity: fbSaving || !fbComment.trim() ? 0.6 : 1, fontFamily: 'inherit' }}>
+                      <button onClick={handleFbSave} disabled={fbSaving || !fbComment.trim()} style={{ flex: 1, background: '#d97706', border: 'none', borderRadius: 8, padding: '9px', color: '#fff', fontSize: 13, fontWeight: 600, cursor: fbSaving || !fbComment.trim() ? 'default' : 'pointer', opacity: fbSaving || !fbComment.trim() ? 0.6 : 1, fontFamily: 'inherit' }}>
                         {fbSaving ? 'A guardar…' : fbEditing ? 'Atualizar' : 'Guardar'}
                       </button>
                       {fbEditing && <button onClick={() => { setFbEditing(null); setFbComment('') }} style={{ background: 'transparent', border: `1px solid ${colors.border}`, borderRadius: 8, padding: '9px 12px', color: colors.muted, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>Cancelar</button>}
@@ -4862,7 +4853,7 @@ export default function ProjectPage() {
             if (needsWork.length === 0) return null // completude card already shows 100% state
 
             return (
-              <div className="proj-card" style={{ background: 'linear-gradient(135deg, rgba(27,120,247,0.05), rgba(79,70,229,0.03))', border: '1px solid rgba(27,120,247,0.18)' }}>
+              <div className="proj-card" style={{ background: 'rgba(27,120,247,0.04)', border: '1px solid rgba(27,120,247,0.18)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: tipsOpen ? 14 : 0 }}>
                   <h3 className="proj-sec-label" style={{ margin: 0, color: '#5a9ff5', flex: 1, minWidth: 0, overflow: 'hidden' }}>
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#5a9ff5" strokeWidth="2.5" style={{ flexShrink: 0 }}><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
@@ -4967,7 +4958,7 @@ export default function ProjectPage() {
             }}>
               <div onClick={e => e.stopPropagation()} style={{
                 background: 'var(--c-card)', border: '1px solid var(--c-border)',
-                borderRadius: 18, padding: '28px 28px 24px', maxWidth: 440, width: '90%',
+                borderRadius: 14, padding: '28px 28px 24px', maxWidth: 440, width: '90%',
                 maxHeight: '70vh', overflowY: 'auto',
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
@@ -5023,7 +5014,7 @@ export default function ProjectPage() {
           {/* Comments */}
           <div style={{
             background: 'var(--c-card)', border: '1px solid var(--c-border)',
-            borderRadius: 16, padding: '22px 24px',
+            borderRadius: 12, padding: '22px 24px',
           }}>
             <ProjectComments projectId={project.id} projectAuthorId={project.user_id} />
           </div>
