@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
 import { useSidebar } from '../context/SidebarContext'
 import { supabase } from '../lib/supabase'
-import { Check, X, FolderOpen, User, Settings as SettingsIcon, Shield, Globe, Trophy, LogOut, Bell, Eye, Target, TrendingUp, GraduationCap, UserPlus, LayoutDashboard, Plus, Compass, Sun, Moon, Sparkles, Pencil, ArrowLeft, Briefcase, Medal, Users2, Swords, Building2, Search, Star, MessageSquare, Kanban, Heart, CheckCircle, XCircle, AlignJustify, Paintbrush, Mail } from 'lucide-react'
+import { Check, X, FolderOpen, User, Settings as SettingsIcon, Shield, Globe, Trophy, LogOut, LogIn, Bell, Eye, Target, TrendingUp, GraduationCap, UserPlus, LayoutDashboard, Plus, Compass, Sun, Moon, Sparkles, Pencil, ArrowLeft, Briefcase, Medal, Users2, Swords, Building2, Search, Star, MessageSquare, Kanban, Heart, CheckCircle, XCircle, AlignJustify, Paintbrush, Mail, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 
 // Strip emoji characters from notification messages coming from the DB
 function stripEmoji(str) {
@@ -651,6 +651,15 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
   const [open, setOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [createModal, setCreateModal] = useState(false)
+  const [collapsed, setCollapsed] = useState(() => typeof window !== 'undefined' && window.localStorage.getItem('showo_sidebar_collapsed') === '1')
+
+  function toggleCollapsed() {
+    setCollapsed(prev => {
+      const next = !prev
+      window.localStorage.setItem('showo_sidebar_collapsed', next ? '1' : '0')
+      return next
+    })
+  }
 
   const isRecruiter = profile?.role === 'recrutador' || profile?.role === 'empresa'
   const recruiterAccent = profile?.role === 'empresa' ? '#f59e0b' : '#8b5cf6'
@@ -717,7 +726,26 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
           padding: 0;
           z-index: 100;
           overflow: hidden;
+          transition: width 0.2s ease;
         }
+        .sidebar.collapsed { width: 64px; }
+        .sidebar.collapsed .sb-logo { display: none; }
+        .sidebar.collapsed .sb-logo-divider { display: none; }
+        .sidebar.collapsed .sb-label { display: none; }
+        .sidebar.collapsed .sb-item { justify-content: center; padding: 9px 0; }
+        .sidebar.collapsed .sb-create { justify-content: center; padding: 9px 0; }
+        .sb-collapse-btn {
+          display: flex; align-items: center; justify-content: center;
+          width: 32px; height: 32px;
+          border: 1px solid var(--c-border);
+          background: transparent;
+          border-radius: 8px;
+          color: var(--c-muted);
+          cursor: pointer;
+          transition: border-color 0.15s, color 0.15s;
+          flex-shrink: 0;
+        }
+        .sb-collapse-btn:hover { border-color: var(--c-border-bright); color: var(--c-text); }
         .sb-logo {
           display: flex; align-items: center;
           padding: 18px 16px 16px;
@@ -1346,7 +1374,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
       </nav>
 
       {/* ── Sidebar — desktop only (>860px) ── */}
-      <div className="sidebar">
+      <div className={`sidebar${collapsed ? ' collapsed' : ''}`}>
         {/* Logo */}
         <button className="sb-logo" onClick={() => navigate(user ? '/dashboard' : '/')}>
           <img src={theme === 'light' ? '/light_mode_LI.png' : '/icon_logo.png'} alt="Showo" style={{ height: 28, width: 'auto', objectFit: 'contain' }} />
@@ -1359,34 +1387,34 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
             /* ── RECRUITER / EMPRESA sidebar ── */
             <>
               <button className={`sb-item${isActive('/dashboard') ? ' active' : ''}`} onClick={() => navigate('/dashboard')}>
-                <LayoutDashboard size={16} /> Dashboard
+                <LayoutDashboard size={16} />{!collapsed && <span>Dashboard</span>}
               </button>
 
               <div className="sb-divider" style={{ margin: '8px 0 4px' }} />
-              <span className="sb-label">Recrutamento</span>
+              {!collapsed && <span className="sb-label">Recrutamento</span>}
 
               <button className={`sb-item${location.pathname === '/explorar' && new URLSearchParams(location.search).get('tab') === 'pessoas' ? ' active' : ''}`}
                 onClick={() => navigate('/explorar?tab=pessoas')}
                 style={{ color: isActive('/explorar') && new URLSearchParams(location.search).get('tab') === 'pessoas' ? recruiterAccent : undefined }}>
-                <Users2 size={16} /> Candidatos
+                <Users2 size={16} />{!collapsed && <span>Candidatos</span>}
               </button>
 
               <button className={`sb-item${isActive('/vagas') ? ' active' : ''}`} onClick={() => navigate('/vagas')}>
-                <Briefcase size={16} /> Vagas
+                <Briefcase size={16} />{!collapsed && <span>Vagas</span>}
               </button>
 
               <button className={`sb-item${isActive('/pipeline') ? ' active' : ''}`} onClick={() => navigate('/pipeline')}>
-                <Kanban size={16} /> Pipeline
+                <Kanban size={16} />{!collapsed && <span>Pipeline</span>}
               </button>
 
               <button className={`sb-item${isActive('/candidatos') ? ' active' : ''}`} onClick={() => navigate('/candidatos')}>
-                <Star size={16} /> Guardados
+                <Star size={16} />{!collapsed && <span>Guardados</span>}
               </button>
 
               <button className={`sb-item${isActive('/mensagens') ? ' active' : ''}`} onClick={() => navigate('/mensagens')}
                 style={{ position: 'relative' }}>
-                <MessageSquare size={16} /> Mensagens
-                {unreadMsgs > 0 && (
+                <MessageSquare size={16} />{!collapsed && <span>Mensagens</span>}
+                {!collapsed && unreadMsgs > 0 && (
                   <span style={{ marginLeft: 'auto', background: '#1b78f7', color: '#fff', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>
                     {unreadMsgs > 9 ? '9+' : unreadMsgs}
                   </span>
@@ -1396,23 +1424,23 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               {user && (
                 <button className={`sb-item${location.pathname === `/empresa/${user.id}` ? ' active' : ''}`}
                   onClick={() => navigate(`/empresa/${user.id}`)}>
-                  <Building2 size={16} /> Minha empresa
+                  <Building2 size={16} />{!collapsed && <span>Minha empresa</span>}
                 </button>
               )}
 
               <div className="sb-divider" style={{ margin: '8px 0 4px' }} />
-              <span className="sb-label">Explorar</span>
+              {!collapsed && <span className="sb-label">Explorar</span>}
 
               <button className={`sb-item${isActive('/explorar') && !new URLSearchParams(location.search).get('tab') ? ' active' : ''}`}
                 onClick={() => navigate('/explorar')}>
-                <Compass size={16} /> Projetos
+                <Compass size={16} />{!collapsed && <span>Projetos</span>}
               </button>
 
               {/* New vaga button */}
               <div style={{ margin: '10px 0 4px', padding: '0 0' }}>
                 <button onClick={() => navigate('/vagas')}
-                  style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '10px 0 4px', padding: '10px 14px', background: `linear-gradient(135deg, ${recruiterAccent}, #4f46e5)`, border: 'none', borderRadius: 10, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: `0 2px 14px ${recruiterAccent}44`, width: '100%' }}>
-                  <Plus size={14} /> Nova vaga
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: collapsed ? 'center' : 'flex-start', gap: 8, margin: '10px 0 4px', padding: collapsed ? '10px 0' : '10px 14px', background: `linear-gradient(135deg, ${recruiterAccent}, #4f46e5)`, border: 'none', borderRadius: 10, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: `0 2px 14px ${recruiterAccent}44`, width: '100%' }}>
+                  <Plus size={14} />{!collapsed && <span>Nova vaga</span>}
                 </button>
               </div>
             </>
@@ -1421,44 +1449,44 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
             <>
               {user && (
                 <button className={`sb-item${isActive('/dashboard') ? ' active' : ''}`} onClick={() => navigate('/dashboard')}>
-                  <LayoutDashboard size={16} /> Dashboard
+                  <LayoutDashboard size={16} />{!collapsed && <span>Dashboard</span>}
                 </button>
               )}
               <button className={`sb-item${isActive('/explorar') ? ' active' : ''}`} onClick={() => navigate('/explorar')}>
-                <Compass size={16} /> Explorar
+                <Compass size={16} />{!collapsed && <span>Explorar</span>}
               </button>
               <button className={`sb-item${isActive('/ranking') ? ' active' : ''}`} onClick={() => navigate('/ranking')}>
-                <Trophy size={16} /> Ranking
+                <Trophy size={16} />{!collapsed && <span>Ranking</span>}
               </button>
 
               {user && (
                 <>
                   <div className="sb-divider" style={{ margin: '8px 0 4px' }} />
-                  <span className="sb-label">Oportunidades</span>
+                  {!collapsed && <span className="sb-label">Oportunidades</span>}
                   <button className={`sb-item${isActive('/vagas') ? ' active' : ''}`} onClick={() => navigate('/vagas')}>
-                    <Briefcase size={16} /> Vagas
+                    <Briefcase size={16} />{!collapsed && <span>Vagas</span>}
                   </button>
                   <button className="sb-item" disabled style={{ opacity: 0.45, cursor: 'default' }}>
-                    <Building2 size={16} /> Estágio
-                    <span className="sb-soon">breve</span>
+                    <Building2 size={16} />
+                    {!collapsed && <><span>Estágio</span><span className="sb-soon">breve</span></>}
                   </button>
 
                   <div className="sb-divider" style={{ margin: '8px 0 4px' }} />
-                  <span className="sb-label">Comunidade</span>
+                  {!collapsed && <span className="sb-label">Comunidade</span>}
                   <button className={`sb-item${isActive('/missoes') ? ' active' : ''}`} onClick={() => navigate('/missoes')}>
-                    <Swords size={16} /> Missões
+                    <Swords size={16} />{!collapsed && <span>Missões</span>}
                   </button>
                   <button className={`sb-item${isActive('/turmas') ? ' active' : ''}`} onClick={() => navigate('/turmas')}>
-                    <Users2 size={16} /> Turmas
+                    <Users2 size={16} />{!collapsed && <span>Turmas</span>}
                   </button>
                   <button className={`sb-item${isActive('/conquistas') ? ' active' : ''}`} onClick={() => navigate('/conquistas')}>
-                    <Medal size={16} /> Conquistas
+                    <Medal size={16} />{!collapsed && <span>Conquistas</span>}
                   </button>
 
                   <div className="sb-divider" style={{ margin: '8px 0 4px' }} />
                   <button className="sb-item" disabled style={{ opacity: 0.45, cursor: 'default' }}>
-                    <FolderOpen size={16} /> Portfólio
-                    <span className="sb-soon">breve</span>
+                    <FolderOpen size={16} />
+                    {!collapsed && <><span>Portfólio</span><span className="sb-soon">breve</span></>}
                   </button>
                 </>
               )}
@@ -1467,7 +1495,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                 <div className={`sb-create-wrap ${extras ? 'hidden' : 'visible'}`}>
                   <div className="sb-create-inner">
                     <button className="sb-create" onClick={() => setCreateModal(true)}>
-                      <Plus size={14} /> Criar projeto
+                      <Plus size={14} />{!collapsed && <span>Criar projeto</span>}
                     </button>
                   </div>
                 </div>
@@ -1481,20 +1509,20 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               {/* Back to project (shown when on sub-page like edit/cert) */}
               {extras.showBack && (
                 <button className="sb-item" onClick={() => navigate(`/projeto/${extras.slug}`)}>
-                  <ArrowLeft size={16} /> Ver projeto
+                  <ArrowLeft size={16} />{!collapsed && <span>Ver projeto</span>}
                 </button>
               )}
-              <span className="sb-label">Gerir projeto</span>
+              {!collapsed && <span className="sb-label">Gerir projeto</span>}
               {!extras.showBack && (
                 <button className="sb-item" onClick={() => navigate(`/editar/${extras.slug}`)}>
-                  <Pencil size={16} /> Editar
+                  <Pencil size={16} />{!collapsed && <span>Editar</span>}
                 </button>
               )}
               {extras.onDefense && (
                 <button className="sb-item" onClick={extras.onDefense}>
                   <GraduationCap size={16} />
-                  Modo defesa
-                  {extras.defenseDate && (
+                  {!collapsed && <span>Modo defesa</span>}
+                  {!collapsed && extras.defenseDate && (
                     <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--c-muted)', fontWeight: 500 }}>
                       {new Date(extras.defenseDate).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' })}
                     </span>
@@ -1509,8 +1537,8 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   style={{ opacity: extras.analyzingAI ? 0.6 : 1 }}
                 >
                   <Sparkles size={16} />
-                  {extras.analyzingAI ? 'A analisar…' : 'Análise IA'}
-                  {extras.aiScore != null && !extras.analyzingAI && (
+                  {!collapsed && (extras.analyzingAI ? 'A analisar…' : 'Análise IA')}
+                  {!collapsed && extras.aiScore != null && !extras.analyzingAI && (
                     <span style={{
                       marginLeft: 'auto', fontSize: 11, fontWeight: 700,
                       color: extras.aiScore >= 90 ? '#22c55e' : extras.aiScore >= 71 ? '#1b78f7' : extras.aiScore >= 40 ? '#fbbf24' : '#ef4444',
@@ -1521,7 +1549,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                 </button>
               )}
               <button className="sb-item" onClick={() => navigate(`/certificado/${extras.slug}`)}>
-                <Trophy size={16} /> Certificado
+                <Trophy size={16} />{!collapsed && <span>Certificado</span>}
               </button>
               {extras.onTogglePublicView && (
                 <button
@@ -1530,7 +1558,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   style={{ color: extras.viewAsPublic ? C.blue : 'var(--c-muted)' }}
                 >
                   <Globe size={16} />
-                  {extras.viewAsPublic ? 'Sair da preview' : 'Preview visitante'}
+                  {!collapsed && <span>{extras.viewAsPublic ? 'Sair da preview' : 'Preview visitante'}</span>}
                 </button>
               )}
             </div>
@@ -1544,14 +1572,15 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
           {user ? (
             <>
               {/* Profile row + notifications + theme toggle */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '0 4px 2px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '0 4px 2px', justifyContent: collapsed ? 'center' : undefined }}>
                 {profileUrl && (
-                  <button className={`sb-item${isActive('profile') ? ' active' : ''}`} style={{ flex: 1, margin: 0 }} onClick={() => navigate(profileUrl)}>
+                  <button className={`sb-item${isActive('profile') ? ' active' : ''}`} style={{ flex: collapsed ? '0 0 auto' : 1, margin: 0, justifyContent: collapsed ? 'center' : undefined }} onClick={() => navigate(profileUrl)}>
                     <AvatarCircle avatarUrl={profile?.avatar_url} initial={getInitial(user)} size={20} fontSize={9} />
-                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{getDisplayName(user)}</span>
+                    {!collapsed && <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{getDisplayName(user)}</span>}
                   </button>
                 )}
                 {/* Theme toggle */}
+                {!collapsed && (
                 <button
                   onClick={toggleTheme}
                   title={theme === 'dark' ? 'Modo claro' : 'Modo escuro'}
@@ -1567,7 +1596,9 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                 >
                   {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
                 </button>
+                )}
                 {/* Mensagens — compact icon with badge */}
+                {!collapsed && (
                 <button
                   onClick={() => navigate('/mensagens')}
                   title="Mensagens"
@@ -1592,20 +1623,25 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                     }} />
                   )}
                 </button>
-                <InviteInbox userId={user.id} sidebar={true} />
+                )}
+                {!collapsed && <InviteInbox userId={user.id} sidebar={true} />}
               </div>
               <button className="sb-item" onClick={() => navigate('/settings')}>
-                <SettingsIcon size={16} /> Definições
+                <SettingsIcon size={16} />{!collapsed && <span>Definições</span>}
               </button>
               <button className="sb-item danger" onClick={handleSignOut}>
-                <LogOut size={16} /> Sair
+                <LogOut size={16} />{!collapsed && <span>Sair</span>}
+              </button>
+              <button className="sb-collapse-btn" onClick={toggleCollapsed} title={collapsed ? 'Expandir menu' : 'Colapsar menu'} style={{ margin: collapsed ? '6px auto 0' : '6px 4px 0' }}>
+                {collapsed ? <PanelLeftOpen size={15} /> : <PanelLeftClose size={15} />}
               </button>
             </>
           ) : (
             <>
-              <button className="sb-item" onClick={() => navigate('/register')}>Criar conta</button>
+              <button className="sb-item" onClick={() => navigate('/register')}><UserPlus size={16} />{!collapsed && <span>Criar conta</span>}</button>
               <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                <button className="sb-item" style={{ flex: 1, margin: 0 }} onClick={() => navigate('/login')}>Entrar</button>
+                <button className="sb-item" style={{ flex: collapsed ? '0 0 auto' : 1, margin: 0, justifyContent: collapsed ? 'center' : undefined }} onClick={() => navigate('/login')}><LogIn size={16} />{!collapsed && <span>Entrar</span>}</button>
+                {!collapsed && (
                 <button
                   onClick={toggleTheme}
                   title={theme === 'dark' ? 'Modo claro' : 'Modo escuro'}
@@ -1621,7 +1657,11 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                 >
                   {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
                 </button>
+                )}
               </div>
+              <button className="sb-collapse-btn" onClick={toggleCollapsed} title={collapsed ? 'Expandir menu' : 'Colapsar menu'} style={{ margin: collapsed ? '6px auto 0' : '6px 4px 0' }}>
+                {collapsed ? <PanelLeftOpen size={15} /> : <PanelLeftClose size={15} />}
+              </button>
             </>
           )}
         </div>
