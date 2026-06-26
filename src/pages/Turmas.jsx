@@ -37,12 +37,10 @@ function TurmaCard({ turma }) {
       style={{
         background: hov ? C.cardHover : C.card,
         border: `1px solid ${hov ? C.borderBright : C.border}`,
-        borderRadius: 14,
+        borderRadius: 12,
         padding: '18px 20px',
         cursor: 'pointer',
-        transition: 'all 0.18s',
-        transform: hov ? 'translateY(-2px)' : 'none',
-        boxShadow: hov ? '0 8px 28px rgba(0,0,0,0.3)' : 'none',
+        transition: 'background 0.15s, border-color 0.15s',
         display: 'flex',
         alignItems: 'center',
         gap: 16,
@@ -50,7 +48,7 @@ function TurmaCard({ turma }) {
     >
       {/* Icon */}
       <div style={{
-        width: 46, height: 46, borderRadius: 12, flexShrink: 0,
+        width: 46, height: 46, borderRadius: 10, flexShrink: 0,
         background: 'rgba(27,120,247,0.12)',
         border: '1px solid rgba(27,120,247,0.22)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -127,12 +125,12 @@ function JoinModal({ onClose, onJoin }) {
     }} onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="turmas-modal-content" style={{
         background: C.card, border: `1px solid ${C.border}`,
-        borderRadius: 20, padding: '28px 28px 24px',
+        borderRadius: 14, padding: '28px 28px 24px',
         width: '100%', maxWidth: 420,
       }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20 }}>
           <div>
-            <h3 style={{ margin: '0 0 4px', fontSize: 18, fontWeight: 800, color: C.text }}>Entrar numa turma</h3>
+            <h3 style={{ margin: '0 0 4px', fontSize: 18, fontWeight: 400, color: C.text, fontFamily: 'var(--font-heading)', letterSpacing: '-0.4px' }}>Entrar numa turma</h3>
             <p style={{ margin: 0, fontSize: 13, color: C.muted }}>Introduz o código fornecido pelo professor</p>
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: C.subtle, cursor: 'pointer', padding: 4, lineHeight: 1, display: 'flex' }}>
@@ -149,7 +147,7 @@ function JoinModal({ onClose, onJoin }) {
           style={{
             width: '100%', boxSizing: 'border-box',
             background: C.bg, border: `1px solid ${error ? '#ef4444' : C.border}`,
-            borderRadius: 10, padding: '12px 14px',
+            borderRadius: 8, padding: '12px 14px',
             fontSize: 18, fontWeight: 700, letterSpacing: '0.1em',
             color: C.text, outline: 'none', textAlign: 'center',
             fontFamily: 'inherit', marginBottom: error ? 8 : 20,
@@ -165,11 +163,12 @@ function JoinModal({ onClose, onJoin }) {
           disabled={loading || !code.trim()}
           style={{
             width: '100%', padding: '12px',
-            background: C.blue, border: 'none', borderRadius: 10,
+            background: C.blue, border: 'none', borderRadius: 8,
             color: '#fff', fontSize: 14, fontWeight: 700,
             cursor: loading || !code.trim() ? 'not-allowed' : 'pointer',
             opacity: loading || !code.trim() ? 0.6 : 1,
             fontFamily: 'inherit', transition: 'opacity 0.15s',
+            boxShadow: '0 2px 8px rgba(27,120,247,0.2)',
           }}
         >
           {loading ? 'A verificar…' : 'Entrar na turma'}
@@ -250,14 +249,14 @@ export default function Turmas() {
         <div className="turmas-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28, gap: 12, flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
             <div style={{
-              width: 48, height: 48, borderRadius: 14,
+              width: 48, height: 48, borderRadius: 12,
               background: 'rgba(27,120,247,0.12)', border: '1px solid rgba(27,120,247,0.25)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
               <Users2 size={24} color="#1b78f7" />
             </div>
             <div>
-              <h1 style={{ margin: 0, fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 900, color: C.text, letterSpacing: '-0.5px' }}>
+              <h1 style={{ margin: 0, fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 400, color: C.text, letterSpacing: '-1px', fontFamily: 'var(--font-heading)' }}>
                 Turmas
               </h1>
               <p style={{ margin: 0, fontSize: 13, color: C.muted }}>
@@ -271,9 +270,10 @@ export default function Turmas() {
               onClick={() => setShowJoin(true)}
               style={{
                 display: 'flex', alignItems: 'center', gap: 6,
-                background: C.blue, border: 'none', borderRadius: 10,
+                background: C.blue, border: 'none', borderRadius: 8,
                 color: '#fff', fontSize: 13, fontWeight: 700,
                 padding: '10px 16px', cursor: 'pointer', fontFamily: 'inherit',
+                boxShadow: '0 2px 8px rgba(27,120,247,0.2)',
               }}
             >
               <Plus size={15} />
@@ -286,16 +286,16 @@ export default function Turmas() {
         {loading ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {[...Array(3)].map((_, i) => (
-              <div key={i} style={{ height: 82, borderRadius: 14, background: C.card, border: `1px solid ${C.border}`, opacity: 0.5 }} />
+              <div key={i} style={{ height: 82, borderRadius: 12, background: C.card, border: `1px solid ${C.border}`, opacity: 0.5 }} />
             ))}
           </div>
         ) : turmas.length === 0 ? (
           <div style={{
             background: C.card, border: `1px solid ${C.border}`,
-            borderRadius: 16, padding: '48px 24px', textAlign: 'center',
+            borderRadius: 12, padding: '48px 24px', textAlign: 'center',
           }}>
             <div style={{
-              width: 56, height: 56, borderRadius: 16, margin: '0 auto 16px',
+              width: 56, height: 56, borderRadius: 14, margin: '0 auto 16px',
               background: 'rgba(27,120,247,0.08)', border: '1px solid rgba(27,120,247,0.15)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
@@ -314,9 +314,10 @@ export default function Turmas() {
                 onClick={() => setShowJoin(true)}
                 style={{
                   display: 'inline-flex', alignItems: 'center', gap: 6,
-                  background: C.blue, border: 'none', borderRadius: 10,
+                  background: C.blue, border: 'none', borderRadius: 8,
                   color: '#fff', fontSize: 13, fontWeight: 700,
                   padding: '10px 18px', cursor: 'pointer', fontFamily: 'inherit',
+                  boxShadow: '0 2px 8px rgba(27,120,247,0.2)',
                 }}
               >
                 <Plus size={15} />

@@ -149,10 +149,10 @@ export default function Ranking() {
     <div style={{ minHeight: '100vh', backgroundColor: C.bg, color: C.text, fontFamily: 'var(--font-body)' }}>
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
-        .rank-row { transition: background 0.15s, border-color 0.15s, transform 0.15s !important; cursor: pointer !important; }
-        .rank-row:hover { background: ${C.cardHover} !important; border-color: ${C.borderBright} !important; transform: translateX(3px) !important; }
-        .rank-top { transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.15s !important; cursor: pointer !important; }
-        .rank-top:hover { background: ${C.cardHover} !important; transform: translateX(4px) !important; }
+        .rank-row { transition: background 0.15s, border-color 0.15s !important; cursor: pointer !important; }
+        .rank-row:hover { background: ${C.cardHover} !important; border-color: ${C.borderBright} !important; }
+        .rank-top { cursor: pointer !important; }
+        .rank-top:hover .rank-top-card { background: ${C.cardHover} !important; border-color: ${C.borderBright} !important; }
         /* Filter toggle button */
         .rank-filter-btn {
           display: flex; align-items: center; gap: 6px;
@@ -216,7 +216,7 @@ export default function Ranking() {
         {/* Header + filter button */}
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: showFilters ? 12 : 24 }}>
           <div>
-            <h1 style={{ fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 900, margin: '0 0 8px', letterSpacing: '-0.5px' }}>
+            <h1 style={{ fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 8px', letterSpacing: '-0.5px' }}>
               Ranking de Projetos
             </h1>
             <p style={{ color: C.muted, margin: 0, fontSize: 'clamp(13px, 1.5vw, 15px)' }}>
@@ -318,14 +318,14 @@ export default function Ranking() {
                         style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer' }}
                       >
                         {/* Card above platform */}
-                        <div style={{
+                        <div className="rank-top-card" style={{
                           width: '100%',
-                          background: isMe ? 'rgba(27,120,247,0.08)' : C.card,
+                          background: isMe ? 'rgba(27,120,247,0.06)' : C.card,
                           border: `1px solid ${isMe ? C.borderBright : C.border}`,
-                          borderRadius: 14,
+                          borderRadius: 12,
+                          transition: 'border-color 0.15s, background 0.15s',
                           padding: isFirst ? '20px 14px 18px' : '14px 12px 14px',
                           display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10,
-                          boxShadow: isFirst ? `0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px ${accent}18` : '0 2px 12px rgba(0,0,0,0.22)',
                           marginBottom: 0,
                           textAlign: 'center',
                         }}>
@@ -335,7 +335,7 @@ export default function Ranking() {
                           <ScoreRing score={project.score} size={isFirst ? 72 : 58} strokeW={isFirst ? 5 : 4} />
                           <div>
                             <div style={{
-                              fontSize: isFirst ? 15 : 13, fontWeight: 800,
+                              fontSize: isFirst ? 15 : 13, fontWeight: 700,
                               color: C.text, letterSpacing: '-0.2px',
                               display: '-webkit-box', WebkitLineClamp: 2,
                               WebkitBoxOrient: 'vertical', overflow: 'hidden',
@@ -349,10 +349,8 @@ export default function Ranking() {
                               </div>
                             )}
                             {project.area && (
-                              <div style={{ marginTop: 6 }}>
-                                <span style={{ fontSize: 10, color: C.blue, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.18)', borderRadius: 999, padding: '2px 7px', fontWeight: 600 }}>
-                                  {project.area}
-                                </span>
+                              <div style={{ marginTop: 6, fontSize: 10, color: C.blue, fontWeight: 600 }}>
+                                {project.area}
                               </div>
                             )}
                           </div>
@@ -361,13 +359,15 @@ export default function Ranking() {
                         {/* Platform */}
                         <div style={{
                           width: '100%', height: podiumH,
-                          background: `linear-gradient(180deg, ${accent}22 0%, ${accent}10 100%)`,
-                          border: `1px solid ${accent}35`,
+                          background: 'var(--c-bg-alt)',
+                          borderLeft: `1px solid ${C.border}`,
+                          borderRight: `1px solid ${C.border}`,
+                          borderBottom: `1px solid ${C.border}`,
                           borderTop: `2px solid ${accent}`,
-                          borderRadius: '0 0 10px 10px',
+                          borderRadius: '0 0 8px 8px',
                           display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
                         }}>
-                          <span style={{ fontSize: isFirst ? 22 : 16, fontWeight: 900, color: accent }}>{rank}</span>
+                          <span style={{ fontSize: isFirst ? 22 : 16, fontWeight: 700, color: accent }}>{rank}</span>
                           {podiumH >= 48 && <RankDelta currentRank={rank} prevRank={prevRank} />}
                         </div>
                       </div>
@@ -397,11 +397,10 @@ export default function Ranking() {
                         style={{
                           background: isMe ? 'rgba(27,120,247,0.05)' : C.card,
                           border: `1px solid ${isMe ? C.borderBright : C.border}`,
-                          borderLeft: `3px solid ${tierColor}`,
-                          borderRadius: 12,
+                          borderLeft: `2px solid ${tierColor}`,
+                          borderRadius: 10,
                           padding: '13px 18px',
                           display: 'flex', alignItems: 'center', gap: 14,
-                          boxShadow: isMe ? `0 0 0 1px ${C.blue}20` : 'none',
                         }}
                       >
                         {/* Position + delta */}
@@ -417,10 +416,10 @@ export default function Ranking() {
                         <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                           <span className="rank-row-name" style={{ fontSize: 14, fontWeight: 600, color: C.text, letterSpacing: '-0.1px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{project.name}</span>
                           {project.is_pap && (
-                            <span style={{ fontSize: 9, color: C.yellow, fontWeight: 700, background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.18)', padding: '1px 6px', borderRadius: 999 }}>PAP</span>
+                            <span style={{ fontSize: 10, color: C.yellow, fontWeight: 700 }}>· PAP</span>
                           )}
                           {project.area && (
-                            <span style={{ fontSize: 11, color: C.subtle }}>{project.area}</span>
+                            <span style={{ fontSize: 11, color: C.subtle }}>· {project.area}</span>
                           )}
                           {project.creator_name && (
                             <span className="rank-col-school" style={{ fontSize: 11, color: C.subtle }}>· {project.creator_name}</span>

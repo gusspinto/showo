@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, memo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Globe, Bot, GraduationCap, Trophy, Briefcase, Sparkles, BadgeCheck, Users, ArrowRight, TrendingUp, Wrench, Zap, Target } from 'lucide-react'
+import { Globe, Bot, GraduationCap, Trophy, Briefcase, ArrowRight, Zap } from 'lucide-react'
 import { Navbar } from '../components/Navbar'
 import { supabase } from '../lib/supabase'
 import Onboarding from '../components/Onboarding'
@@ -25,14 +25,14 @@ const colors = {
 function StaticHero() {
   return (
     <h1 className="hero-h1 home-hero-heading" style={{
-      fontSize: 'clamp(26px, 3vw, 42px)', fontWeight: 900,
-      lineHeight: 1.1, margin: '0 0 24px',
-      letterSpacing: '-1.5px',
+      fontSize: 'clamp(40px, 6.2vw, 72px)', fontWeight: 400,
+      lineHeight: 1.12, margin: '0 auto 28px',
+      letterSpacing: '-1px', maxWidth: 1100,
       fontFamily: 'var(--font-heading)',
       textAlign: 'center',
     }}>
-      O teu projeto vale mais do que um{' '}
-      <span style={{ color: '#1b78f7', whiteSpace: 'nowrap' }}>CV vazio.</span>
+      A tua carreira merece mais{' '}
+      do que um <em style={{ fontStyle: 'italic', color: '#1b78f7', whiteSpace: 'nowrap' }}>CV vazio.</em>
     </h1>
   )
 }
@@ -103,31 +103,27 @@ const FeatureRow = memo(function FeatureRow({ reverse, tag, tagColor, title, des
 })
 
 const MOCKUP_COLORS = {
-  dark:  { bg: '#111827', bgAlt: 'rgba(255,255,255,0.04)', border: 'rgba(255,255,255,0.07)', text: '#f1f5f9', muted: '#94a3b8', shadow: 'rgba(0,0,0,0.4)' },
-  light: { bg: '#ffffff', bgAlt: '#f0f5ff', border: '#dde6f5', text: '#0f172a', muted: '#64748b', shadow: 'rgba(27,120,247,0.12)' },
+  dark:  { bg: '#0c1422', bgAlt: 'rgba(255,255,255,0.03)', border: 'rgba(255,255,255,0.08)', text: '#f1f5f9', muted: '#94a3b8' },
+  light: { bg: '#ffffff', bgAlt: '#f4f6fa', border: '#e1e6ef', text: '#0f172a', muted: '#64748b' },
 }
 
 const MockupPortfolio = memo(function MockupPortfolio({ theme }) {
   const c = MOCKUP_COLORS[theme] ?? MOCKUP_COLORS.dark
-  const isLight = theme === 'light'
   return (
-    <div style={{ background: c.bg, border: `1px solid ${c.border}`, borderRadius: 18, overflow: 'hidden', boxShadow: `0 20px 60px ${c.shadow}` }}>
-      <div style={{ height: 80, background: 'linear-gradient(135deg, #1b78f7, #60a5fa)', position: 'relative' }}>
-        <div style={{ position: 'absolute', bottom: -16, left: 20, width: 34, height: 34, borderRadius: '50%', background: 'linear-gradient(135deg, #1b78f7, #60a5fa)', border: `3px solid ${c.bg}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: '#fff' }}>J</div>
+    <div style={{ background: c.bg, border: `1px solid ${c.border}`, borderRadius: 12, overflow: 'hidden' }}>
+      <div style={{ height: 64, background: '#1b78f7', position: 'relative' }}>
+        <div style={{ position: 'absolute', bottom: -16, left: 20, width: 34, height: 34, borderRadius: '50%', background: '#1b78f7', border: `3px solid ${c.bg}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: '#fff' }}>J</div>
       </div>
       <div style={{ padding: '22px 20px 18px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-          <div style={{ display: 'flex', gap: 6 }}>
-            <span style={{ background: 'rgba(27,120,247,0.1)', color: c.blue, fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 5 }}>PAP</span>
-            <span style={{ background: c.bgAlt, color: '#3b82f6', border: `1px solid ${c.border}`, fontSize: 10, fontWeight: 600, padding: '3px 8px', borderRadius: 5 }}>Tecnologias de Informação</span>
-          </div>
-          <span style={{ fontSize: 11, fontWeight: 800, color: isLight ? '#16a34a' : '#22c55e', background: isLight ? '#f0fdf4' : 'rgba(34,197,94,0.1)', border: `1px solid ${isLight ? '#bbf7d0' : 'rgba(34,197,94,0.25)'}`, borderRadius: 6, padding: '3px 8px' }}>88 pts</span>
+          <span style={{ fontSize: 11, color: c.muted, fontWeight: 600 }}>PAP · Tecnologias de Informação</span>
+          <span style={{ fontSize: 12, fontWeight: 700, color: '#22c55e' }}>88 pts</span>
         </div>
-        <div style={{ fontSize: 17, fontWeight: 900, color: c.text, letterSpacing: '-0.5px', fontFamily: 'var(--font-heading)', marginBottom: 4 }}>StockFlow Pro</div>
+        <div style={{ fontSize: 17, fontWeight: 400, color: c.text, letterSpacing: '-0.3px', fontFamily: 'var(--font-heading)', marginBottom: 4 }}>StockFlow Pro</div>
         <div style={{ fontSize: 12, color: c.muted, marginBottom: 14 }}>João Silva · Escola Profissional do Porto</div>
-        <div style={{ background: c.bgAlt, border: `1px solid ${c.border}`, borderRadius: 10, padding: '9px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
-          <Globe size={12} color={c.blue} />
-          <span style={{ fontSize: 11, color: c.blue, fontWeight: 600, fontFamily: 'monospace' }}>showo.pt/p/stockflow-pro</span>
+        <div style={{ borderTop: `1px solid ${c.border}`, paddingTop: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Globe size={12} color="#1b78f7" />
+          <span style={{ fontSize: 11, color: '#1b78f7', fontWeight: 600, fontFamily: 'monospace' }}>showo.pt/p/stockflow-pro</span>
         </div>
       </div>
     </div>
@@ -136,7 +132,6 @@ const MockupPortfolio = memo(function MockupPortfolio({ theme }) {
 
 const MockupMissoes = memo(function MockupMissoes({ theme }) {
   const c = MOCKUP_COLORS[theme] ?? MOCKUP_COLORS.dark
-  const isLight = theme === 'light'
   const missions = [
     { label: 'Descreve o problema', pts: '+8 pts', done: true },
     { label: 'Adiciona tecnologias', pts: '+5 pts', done: true },
@@ -144,25 +139,23 @@ const MockupMissoes = memo(function MockupMissoes({ theme }) {
     { label: 'Apresenta resultados', pts: '+10 pts', done: false },
   ]
   return (
-    <div style={{ background: c.bg, border: `1px solid ${c.border}`, borderRadius: 18, overflow: 'hidden', boxShadow: `0 20px 60px ${c.shadow}` }}>
+    <div style={{ background: c.bg, border: `1px solid ${c.border}`, borderRadius: 12, overflow: 'hidden' }}>
       <div style={{ padding: '18px 20px 14px', borderBottom: `1px solid ${c.border}` }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-          <span style={{ fontSize: 13, fontWeight: 800, color: c.text, fontFamily: 'var(--font-heading)' }}>As tuas missões</span>
-          <span style={{ fontSize: 11, fontWeight: 700, color: isLight ? '#16a34a' : '#22c55e', background: isLight ? '#f0fdf4' : 'rgba(34,197,94,0.1)', border: `1px solid ${isLight ? '#bbf7d0' : 'rgba(34,197,94,0.25)'}`, borderRadius: 6, padding: '3px 8px' }}>88 pts</span>
+          <span style={{ fontSize: 13, fontWeight: 400, color: c.text, fontFamily: 'var(--font-heading)' }}>As tuas missões</span>
+          <span style={{ fontSize: 12, fontWeight: 700, color: '#22c55e' }}>88 pts</span>
         </div>
-        <div style={{ height: 4, background: c.bgAlt, borderRadius: 99 }}>
-          <div style={{ width: '55%', height: '100%', background: 'linear-gradient(90deg, #22c55e, #16a34a)', borderRadius: 99 }} />
+        <div style={{ height: 3, background: c.bgAlt, borderRadius: 99 }}>
+          <div style={{ width: '55%', height: '100%', background: '#22c55e', borderRadius: 99 }} />
         </div>
         <div style={{ fontSize: 10, color: c.muted, marginTop: 5 }}>2 de 4 missões completas</div>
       </div>
-      <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 7 }}>
+      <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 4 }}>
         {missions.map(m => (
-          <div key={m.label} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 10, background: m.done ? (isLight ? '#f0fdf4' : 'rgba(34,197,94,0.04)') : c.bgAlt, border: `1px solid ${m.done ? (isLight ? '#bbf7d0' : 'rgba(34,197,94,0.15)') : c.border}` }}>
-            <div style={{ width: 22, height: 22, borderRadius: 6, background: m.done ? (isLight ? '#dcfce7' : 'rgba(34,197,94,0.15)') : (isLight ? '#e0eaff' : 'rgba(255,255,255,0.05)'), border: `1px solid ${m.done ? (isLight ? '#86efac' : 'rgba(34,197,94,0.3)') : (isLight ? '#bfcfff' : c.border)}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              {m.done ? <Trophy size={11} color={isLight ? '#16a34a' : '#22c55e'} /> : <Zap size={11} color="#1b78f7" />}
-            </div>
+          <div key={m.label} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 4px' }}>
+            {m.done ? <Trophy size={13} color="#22c55e" /> : <Zap size={13} color="#1b78f7" />}
             <span style={{ flex: 1, fontSize: 12, color: m.done ? c.muted : c.text, fontWeight: m.done ? 400 : 600, textDecoration: m.done ? 'line-through' : 'none' }}>{m.label}</span>
-            <span style={{ fontSize: 11, fontWeight: 700, color: m.done ? (isLight ? '#16a34a' : '#22c55e') : '#1b78f7' }}>{m.pts}</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: m.done ? '#22c55e' : '#1b78f7' }}>{m.pts}</span>
           </div>
         ))}
       </div>
@@ -172,28 +165,25 @@ const MockupMissoes = memo(function MockupMissoes({ theme }) {
 
 const MockupVagas = memo(function MockupVagas({ theme }) {
   const c = MOCKUP_COLORS[theme] ?? MOCKUP_COLORS.dark
-  const isLight = theme === 'light'
   const vagas = [
     { empresa: 'Codilink', cargo: 'Estágio em Desenvolvimento Web', tipo: 'Presencial · Lisboa', nova: true },
     { empresa: 'DataVision', cargo: 'Junior Backend Developer', tipo: 'Remoto · Full-time', nova: false },
     { empresa: 'UXLab', cargo: 'Estágio em Design de Produto', tipo: 'Híbrido · Porto', nova: true },
   ]
   return (
-    <div style={{ background: c.bg, border: `1px solid ${c.border}`, borderRadius: 18, overflow: 'hidden', boxShadow: `0 20px 60px ${c.shadow}` }}>
+    <div style={{ background: c.bg, border: `1px solid ${c.border}`, borderRadius: 12, overflow: 'hidden' }}>
       <div style={{ padding: '16px 20px 13px', borderBottom: `1px solid ${c.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <span style={{ fontSize: 13, fontWeight: 800, color: c.text, fontFamily: 'var(--font-heading)' }}>Vagas para ti</span>
-        <span style={{ fontSize: 10, color: isLight ? '#b45309' : '#f59e0b', fontWeight: 700, background: isLight ? '#fef3c7' : 'rgba(245,158,11,0.1)', border: `1px solid ${isLight ? '#fde68a' : 'rgba(245,158,11,0.2)'}`, borderRadius: 6, padding: '3px 8px' }}>3 novas</span>
+        <span style={{ fontSize: 13, fontWeight: 400, color: c.text, fontFamily: 'var(--font-heading)' }}>Vagas para ti</span>
+        <span style={{ fontSize: 11, color: '#f59e0b', fontWeight: 700 }}>3 novas</span>
       </div>
-      <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {vagas.map(v => (
-          <div key={v.empresa} style={{ padding: '11px 14px', borderRadius: 12, background: c.bgAlt, border: `1px solid ${c.border}`, display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ width: 34, height: 34, borderRadius: 10, background: isLight ? '#e0eaff' : 'rgba(27,120,247,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <Briefcase size={14} color={c.blue} />
-            </div>
+      <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column' }}>
+        {vagas.map((v, i) => (
+          <div key={v.empresa} style={{ padding: '11px 4px', borderTop: i > 0 ? `1px solid ${c.border}` : 'none', display: 'flex', alignItems: 'center', gap: 12 }}>
+            <Briefcase size={14} color="#1b78f7" style={{ flexShrink: 0 }} />
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
                 <span style={{ fontSize: 12, fontWeight: 700, color: c.text }}>{v.cargo}</span>
-                {v.nova && <span style={{ fontSize: 9, fontWeight: 700, color: isLight ? '#b45309' : '#f59e0b', background: isLight ? '#fef3c7' : 'rgba(245,158,11,0.12)', borderRadius: 4, padding: '1px 5px' }}>Nova</span>}
+                {v.nova && <span style={{ fontSize: 10, fontWeight: 700, color: '#f59e0b' }}>· Nova</span>}
               </div>
               <span style={{ fontSize: 11, color: c.muted }}>{v.empresa} · {v.tipo}</span>
             </div>
@@ -206,29 +196,26 @@ const MockupVagas = memo(function MockupVagas({ theme }) {
 
 const MockupDefesa = memo(function MockupDefesa({ theme }) {
   const c = MOCKUP_COLORS[theme] ?? MOCKUP_COLORS.dark
-  const isLight = theme === 'light'
   const perguntas = [
     'Qual foi o maior desafio técnico que enfrentaste?',
     'Como garantiste a qualidade do código produzido?',
     'Que tecnologias escolheste e porquê?',
   ]
   return (
-    <div style={{ background: c.bg, border: `1px solid ${c.border}`, borderRadius: 18, overflow: 'hidden', boxShadow: `0 20px 60px ${c.shadow}` }}>
+    <div style={{ background: c.bg, border: `1px solid ${c.border}`, borderRadius: 12, overflow: 'hidden' }}>
       <div style={{ padding: '16px 20px 13px', borderBottom: `1px solid ${c.border}`, display: 'flex', alignItems: 'center', gap: 10 }}>
-        <div style={{ width: 30, height: 30, borderRadius: 9, background: isLight ? '#ede9fe' : 'rgba(139,92,246,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <GraduationCap size={15} color="#7c3aed" />
-        </div>
-        <span style={{ fontSize: 13, fontWeight: 800, color: c.text, fontFamily: 'var(--font-heading)' }}>Treino de defesa — PAP</span>
+        <GraduationCap size={16} color="#7c3aed" />
+        <span style={{ fontSize: 13, fontWeight: 400, color: c.text, fontFamily: 'var(--font-heading)' }}>Treino de defesa — PAP</span>
       </div>
-      <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 9 }}>
+      <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: c.muted, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Perguntas prováveis do júri</div>
         {perguntas.map((p, i) => (
-          <div key={i} style={{ padding: '11px 14px', borderRadius: 10, background: isLight ? '#f5f3ff' : 'rgba(139,92,246,0.05)', border: `1px solid ${isLight ? '#ddd6fe' : 'rgba(139,92,246,0.15)'}`, display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+          <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
             <span style={{ fontSize: 11, fontWeight: 800, color: '#7c3aed', flexShrink: 0, marginTop: 1 }}>{i + 1}.</span>
             <span style={{ fontSize: 12, color: c.text, lineHeight: 1.5 }}>{p}</span>
           </div>
         ))}
-        <div style={{ padding: '9px 14px', borderRadius: 10, background: c.bgAlt, border: `1px solid ${c.border}`, display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ borderTop: `1px solid ${c.border}`, paddingTop: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
           <Bot size={13} color="#1b78f7" />
           <span style={{ fontSize: 11, color: '#1b78f7', fontWeight: 600 }}>IA a gerar respostas sugeridas...</span>
         </div>
@@ -238,10 +225,10 @@ const MockupDefesa = memo(function MockupDefesa({ theme }) {
 })
 
 const QUICK_GOALS = [
-  { id: 'pap',        label: 'PAP' },
-  { id: 'internship', label: 'Estágio' },
-  { id: 'group',      label: 'Trabalho de grupo' },
-  { id: 'personal',   label: 'Projeto pessoal' },
+  { id: 'pap',        label: 'PAP',              placeholder: 'Nome da tua PAP...' },
+  { id: 'internship', label: 'Estágio',          placeholder: 'Nome do teu estágio...' },
+  { id: 'group',      label: 'Trabalho de grupo', placeholder: 'Nome do teu trabalho de grupo...' },
+  { id: 'personal',   label: 'Projeto pessoal',  placeholder: 'Nome do teu projeto pessoal...' },
 ]
 
 
@@ -253,10 +240,34 @@ export default function Home() {
   const [inputText, setInputText] = useState('')
   const [showOnboarding, setShowOnboarding] = useState(() => !localStorage.getItem('showo_seen_onboarding'))
   const [projectCount, setProjectCount] = useState(null)
+  const [animatedCount, setAnimatedCount] = useState(0)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [spamError, setSpamError] = useState(false)
   const [featuresReady, setFeaturesReady] = useState(false)
   const featuresRef = useRef(null)
+  const goalsRowRef = useRef(null)
+  const pillRefs = useRef({})
+  const prevGoalRef = useRef(null)
+  const [pillHighlight, setPillHighlight] = useState({ left: 0, width: 0, top: 0, height: 0, opacity: 0, moving: false })
+
+  useEffect(() => {
+    const container = goalsRowRef.current
+    const btn = selectedGoal ? pillRefs.current[selectedGoal] : null
+    if (!container || !btn) {
+      setPillHighlight(h => ({ ...h, opacity: 0, moving: false }))
+      prevGoalRef.current = selectedGoal
+      return
+    }
+    const cr = container.getBoundingClientRect()
+    const br = btn.getBoundingClientRect()
+    const cameFromAnotherGoal = !!prevGoalRef.current && prevGoalRef.current !== selectedGoal
+    setPillHighlight({
+      left: br.left - cr.left, width: br.width,
+      top: br.top - cr.top, height: br.height,
+      opacity: 1, moving: cameFromAnotherGoal,
+    })
+    prevGoalRef.current = selectedGoal
+  }, [selectedGoal])
 
   useEffect(() => {
     const el = featuresRef.current
@@ -279,6 +290,22 @@ export default function Home() {
     fetchCount()
   }, [])
 
+  // Count-up animation — runs every time the count loads (every page load).
+  useEffect(() => {
+    if (projectCount == null) return
+    let raf
+    const duration = 1100
+    const start = performance.now()
+    function tick(now) {
+      const progress = Math.min((now - start) / duration, 1)
+      const eased = 1 - Math.pow(1 - progress, 3)
+      setAnimatedCount(Math.round(eased * projectCount))
+      if (progress < 1) raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [projectCount])
+
   function handleStart(e) {
     e.preventDefault()
     const text = inputText.trim()
@@ -297,7 +324,7 @@ export default function Home() {
   }
 
   const placeholder = selectedGoal
-    ? `Nome do teu ${QUICK_GOALS.find(g => g.id === selectedGoal)?.label.toLowerCase()}...`
+    ? QUICK_GOALS.find(g => g.id === selectedGoal)?.placeholder
     : 'Descreve o teu projeto em poucas palavras...'
 
   return (
@@ -309,12 +336,8 @@ export default function Home() {
           0%, 100% { opacity: 0.3; }
           50%       { opacity: 0.6; }
         }
-        .goal-pill { transition: all 0.15s !important; cursor: pointer; }
-        .goal-pill:hover {
-          border-color: #1b78f7 !important;
-          color: var(--c-text) !important;
-          background: rgba(27,120,247,0.08) !important;
-        }
+        .goal-pill { transition: color 0.15s !important; cursor: pointer; display: inline-block; }
+        .goal-pill:hover { color: #1b78f7 !important; }
         .feature-card { transition: all 0.2s ease !important; cursor: default; }
         .feature-card:hover {
           border-color: var(--c-border-bright) !important;
@@ -322,61 +345,36 @@ export default function Home() {
           box-shadow: 0 16px 48px rgba(0,0,0,0.25) !important;
           background: var(--c-card-hover) !important;
         }
-        .submit-btn:hover { background: #1564d4 !important; }
-        .submit-btn { transition: background 0.15s !important; }
-        /* Override global light-mode input style inside the hero widget */
-        body.light .widget-box { background: #ffffff !important; border-color: #dde6f5 !important; }
-        body.light .widget-box:focus-within { border-color: #1b78f7 !important; }
+        .submit-btn:hover { opacity: 0.7 !important; }
+        .submit-btn { transition: opacity 0.15s !important; }
         body.light .widget-input { background: transparent !important; }
-        body.light .widget-box .submit-btn[disabled] { background: #f0f5ff !important; }
-        body.light .goal-pill { border-color: #dde6f5 !important; color: #64748b !important; }
-        body.light .goal-pill:hover { border-color: #1b78f7 !important; background: rgba(27,120,247,0.07) !important; color: #1b78f7 !important; }
         .home-cta-btn { transition: all 0.15s !important; }
         .home-cta-btn:hover { opacity: 0.88 !important; }
-        .home-sec-btn { transition: all 0.15s !important; }
-        .home-sec-btn:hover {
-          border-color: #1b78f7 !important;
-          color: var(--c-text) !important;
-          background: rgba(27,120,247,0.06) !important;
-        }
+        .home-sec-link { transition: color 0.15s !important; }
+        .home-sec-link:hover { color: #1b78f7 !important; }
 
         .hero-mockup-col { display: block; }
 
         /* Tablet */
         @media (max-width: 960px) {
-          .hero-inner { grid-template-columns: 1fr !important; }
           .hero-mockup-col { display: none !important; }
-          .hero-left-wrap { padding: 0 32px !important; max-width: 100% !important; }
-          .hero-left { text-align: center !important; align-items: center !important; }
-          .hero-h1 { text-align: center !important; }
-          .hero-sub { text-align: center !important; }
-          .hero-badge { align-self: center !important; }
-          .goals-row { justify-content: center !important; }
           .features-grid { grid-template-columns: repeat(2, 1fr) !important; }
         }
 
         @media (max-width: 600px) {
-          .hero-section  { padding: 60px 0 60px !important; }
-          .hero-left-wrap { padding: 0 20px !important; }
-          .hero-h1       { font-size: 30px !important; letter-spacing: -0.5px !important; margin-bottom: 12px !important; }
-          .hero-sub      { font-size: 15px !important; }
+          .hero-section  { padding: 60px 0 60px !important; min-height: auto !important; }
+          .hero-inner    { padding: 0 20px !important; }
+          .hero-h1       { font-size: 34px !important; letter-spacing: -0.5px !important; margin-bottom: 16px !important; }
+          .hero-sub      { font-size: 16px !important; }
           .hero-widget   { margin-top: 28px !important; max-width: 100% !important; }
-          .goals-row     { flex-wrap: nowrap !important; overflow-x: auto !important; justify-content: flex-start !important; padding-bottom: 6px !important; scrollbar-width: none !important; -webkit-overflow-scrolling: touch !important; }
+          .goals-row     { flex-wrap: nowrap !important; overflow-x: auto !important; padding-bottom: 6px !important; scrollbar-width: none !important; -webkit-overflow-scrolling: touch !important; }
           .goals-row::-webkit-scrollbar { display: none !important; }
-          .goal-pill     { font-size: 12px !important; padding: 6px 14px !important; flex-shrink: 0 !important; min-height: 36px !important; }
-          .widget-box    { padding: 4px 4px 4px 16px !important; border-radius: 14px !important; }
-          .widget-input  { padding: 8px 0 !important; font-size: 15px !important; }
-          .submit-btn    { width: 42px !important; height: 42px !important; border-radius: 10px !important; }
+          .goal-pill     { font-size: 12px !important; flex-shrink: 0 !important; }
           .social-strip  { gap: 10px !important; font-size: 12px !important; justify-content: center !important; }
           .features-grid { grid-template-columns: 1fr !important; gap: 12px !important; }
           .feature-card  { padding: 20px 18px !important; }
-          .hero-badge    { font-size: 11px !important; padding: 5px 12px !important; gap: 6px !important; }
           .hero-note     { font-size: 11px !important; }
-          .home-ctas     { flex-direction: column !important; gap: 10px !important; align-items: stretch !important; }
-          .home-ctas button { width: 100% !important; justify-content: center !important; }
           .home-features-grid { grid-template-columns: 1fr !important; gap: 12px !important; }
-          .home-hero-btns { flex-direction: column !important; width: 100%; }
-          .home-hero-btns a, .home-hero-btns button { width: 100% !important; justify-content: center !important; text-align: center !important; }
           .home-stats { flex-wrap: wrap !important; gap: 12px !important; justify-content: center !important; }
         }
         @media (max-width: 380px) {
@@ -400,55 +398,59 @@ export default function Home() {
       </Navbar>
 
       {/* Hero */}
-      <div style={{ position: 'relative' }}>
-        {/* Background glows */}
-        <div style={{
-          position: 'absolute', top: -120, left: '50%', transform: 'translateX(-50%)',
-          width: 800, height: 600, borderRadius: '50%',
-          background: 'radial-gradient(ellipse, rgba(27,120,247,0.1) 0%, transparent 65%)',
-          pointerEvents: 'none', animation: 'pulse-glow 5s ease-in-out infinite',
-        }} />
-
-        <div className="hero-section" style={{
+      <div style={{ position: 'relative', borderBottom: `1px solid ${colors.border}` }}>
+        <div className="hero-section hero-inner" style={{
           minHeight: 'calc(100vh - 60px)',
-          padding: '60px 24px',
+          maxWidth: 1140, margin: '0 auto',
+          padding: '140px 32px 64px',
           display: 'flex', flexDirection: 'column', alignItems: 'center',
           justifyContent: 'center',
           textAlign: 'center', position: 'relative',
         }}>
           <div className="hero-badge" style={{
-            display: 'inline-flex', alignItems: 'center', gap: 8,
-            background: theme === 'light' ? 'rgba(27,120,247,0.08)' : 'rgba(27,120,247,0.07)',
-            border: `1px solid ${theme === 'light' ? 'rgba(27,120,247,0.25)' : 'rgba(27,120,247,0.18)'}`,
-            color: '#1b78f7', borderRadius: 999,
-            padding: '6px 18px', fontSize: 13, fontWeight: 600, marginBottom: 40,
+            display: 'flex', alignItems: 'center', gap: 8,
+            color: colors.muted, fontSize: 12, fontWeight: 700,
+            letterSpacing: '0.14em', textTransform: 'uppercase',
+            marginBottom: 28,
           }}>
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#1b78f7', display: 'inline-block', animation: 'pulse-glow 2s ease-in-out infinite' }} />
-            Para estudantes portugueses
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#1b78f7' }} />
+            Para estudantes
           </div>
 
           <StaticHero />
 
           <p className="hero-sub" style={{
-            fontSize: 18, color: colors.muted, lineHeight: 1.75,
-            margin: '0 0 56px', fontWeight: 400, maxWidth: 500,
+            fontSize: 16, color: colors.muted, lineHeight: 1.6,
+            margin: '0 auto 72px', fontWeight: 400, maxWidth: 580,
+            textAlign: 'center',
           }}>
-            Cria uma página profissional do teu projeto em 10 minutos.
-            Partilha o link com qualquer empresa.
+            Cria uma página profissional do teu projeto em 10 minutos.<br />
+            Partilha o link com <span style={{ whiteSpace: 'nowrap' }}>qualquer empresa.</span>
           </p>
 
           {/* Widget */}
-          <form className="hero-widget" onSubmit={handleStart} style={{ width: '100%', maxWidth: 600 }}>
-            <div className="goals-row" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 16 }}>
+          <form className="hero-widget" onSubmit={handleStart} style={{ width: '100%', maxWidth: 560 }}>
+            <div ref={goalsRowRef} className="goals-row" style={{ position: 'relative', display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 22 }}>
+              <span style={{
+                position: 'absolute', borderRadius: 999,
+                background: 'rgba(27,120,247,0.12)',
+                left: pillHighlight.left, width: pillHighlight.width,
+                top: pillHighlight.top, height: pillHighlight.height,
+                opacity: pillHighlight.opacity, pointerEvents: 'none',
+                transition: pillHighlight.moving
+                  ? 'left 0.32s cubic-bezier(0.4,0,0.2,1), width 0.32s cubic-bezier(0.4,0,0.2,1), opacity 0.15s'
+                  : 'opacity 0.25s ease',
+              }} />
               {QUICK_GOALS.map(g => (
                 <button
-                  key={g.id} type="button" className="goal-pill"
+                  key={g.id} type="button"
+                  ref={el => { pillRefs.current[g.id] = el }}
+                  className={`goal-pill${selectedGoal === g.id ? ' active' : ''}`}
                   onClick={() => setSelectedGoal(selectedGoal === g.id ? null : g.id)}
                   style={{
-                    background: selectedGoal === g.id ? 'rgba(27,120,247,0.12)' : 'transparent',
-                    border: `1px solid ${selectedGoal === g.id ? '#1b78f7' : colors.border}`,
+                    position: 'relative', background: 'transparent', border: 'none',
                     color: selectedGoal === g.id ? '#1b78f7' : colors.muted,
-                    borderRadius: 999, padding: '7px 18px', fontSize: 13, fontWeight: 600, fontFamily: 'inherit',
+                    borderRadius: 999, padding: '7px 14px', fontSize: 13, fontWeight: 600, fontFamily: 'inherit',
                   }}
                 >{g.label}</button>
               ))}
@@ -456,13 +458,15 @@ export default function Home() {
             <div
               className="widget-box"
               style={{
-                display: 'flex', alignItems: 'center',
+                display: 'flex', alignItems: 'center', gap: 14,
                 background: 'var(--c-card)',
-                border: `1.5px solid var(--c-border)`,
-                borderRadius: 18, padding: '8px 8px 8px 24px',
+                border: `1.5px solid rgba(27,120,247,0.22)`,
+                borderRadius: 14, padding: '8px 8px 8px 20px',
+                boxShadow: 'none',
+                transition: 'border-color 0.15s, box-shadow 0.15s',
               }}
-              onFocusCapture={e => { e.currentTarget.style.borderColor = '#1b78f7' }}
-              onBlurCapture={e => { if (!e.currentTarget.contains(e.relatedTarget)) e.currentTarget.style.borderColor = 'var(--c-border)' }}
+              onFocusCapture={e => { e.currentTarget.style.borderColor = '#1b78f7'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(27,120,247,0.15)' }}
+              onBlurCapture={e => { if (!e.currentTarget.contains(e.relatedTarget)) { e.currentTarget.style.borderColor = 'rgba(27,120,247,0.22)'; e.currentTarget.style.boxShadow = 'none' } }}
             >
               <input
                 type="text" className="widget-input"
@@ -470,7 +474,7 @@ export default function Home() {
                 placeholder={placeholder}
                 style={{
                   flex: 1, background: 'transparent', border: 'none',
-                  color: 'var(--c-text)', fontSize: 16, fontFamily: 'inherit',
+                  color: 'var(--c-text)', fontSize: 17, fontFamily: 'inherit',
                   outline: 'none', minWidth: 0, padding: '12px 0',
                 }}
               />
@@ -478,24 +482,26 @@ export default function Home() {
                 type="submit" className="submit-btn"
                 disabled={!inputText.trim()}
                 style={{
-                  background: inputText.trim() ? '#1b78f7' : 'var(--c-bg-alt)',
-                  border: 'none', borderRadius: 12, color: inputText.trim() ? '#fff' : 'var(--c-muted)', width: 48, height: 48,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  background: inputText.trim() ? '#1b78f7' : 'transparent',
+                  border: inputText.trim() ? 'none' : '1px solid var(--c-border)',
+                  color: inputText.trim() ? '#fff' : 'var(--c-subtle)',
+                  display: 'flex', alignItems: 'center', gap: 6,
                   cursor: inputText.trim() ? 'pointer' : 'not-allowed', flexShrink: 0,
-                  transition: 'all 0.15s',
+                  fontSize: 14, fontWeight: 700, fontFamily: 'inherit',
+                  borderRadius: 9, padding: '11px 18px',
+                  transition: 'opacity 0.15s, background 0.15s',
                 }}
               >
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
-                </svg>
+                Começar
+                <ArrowRight size={15} />
               </button>
             </div>
             {spamError ? (
-              <p style={{ color: '#ef4444', fontSize: 13, marginTop: 12, fontWeight: 600 }}>
+              <p style={{ color: '#ef4444', fontSize: 13, marginTop: 12, fontWeight: 600, textAlign: 'center' }}>
                 Texto inválido — escreve uma descrição real do teu projeto.
               </p>
             ) : (
-              <p className="hero-note" style={{ color: colors.subtle, fontSize: 13, marginTop: 14, fontWeight: 500 }}>
+              <p className="hero-note" style={{ color: colors.subtle, fontSize: 13, marginTop: 14, fontWeight: 500, textAlign: 'center' }}>
                 Sem registo · Sem cartão de crédito
               </p>
             )}
@@ -504,28 +510,29 @@ export default function Home() {
       </div>
 
       {/* Social proof strip */}
-      <div className="social-strip home-stats" style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        gap: 28, padding: '16px 24px',
-        borderTop: `1px solid ${colors.border}`,
+      <div className="home-stats" style={{
+        textAlign: 'center', padding: '40px 24px 28px',
         borderBottom: `1px solid ${colors.border}`,
-        background: 'var(--c-bg-alt)',
-        flexWrap: 'wrap',
       }}>
-        {[
-          { Icon: Users,      color: colors.blue,   text: projectCount != null ? `Já ${projectCount} projetos criados por estudantes portugueses` : 'Já centenas de projetos criados por estudantes portugueses' },
-          { Icon: Trophy,     color: colors.yellow, text: 'Ranking público' },
-          { Icon: Sparkles,   color: '#818cf8',     text: 'Análise por IA' },
-          { Icon: BadgeCheck, color: colors.green,  text: 'Certificados verificados' },
-        ].map(({ Icon, color, text }, i, arr) => (
-          <div key={text} style={{ display: 'flex', alignItems: 'center', gap: 28 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-              <Icon size={14} color={color} style={{ flexShrink: 0, opacity: 0.85 }} />
-              <span style={{ fontSize: 13, color: colors.muted, fontWeight: 500, whiteSpace: 'nowrap' }}>{text}</span>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, marginBottom: 24 }}>
+          <span style={{ fontFamily: 'var(--font-heading)', fontWeight: 400, fontSize: 'clamp(34px, 4.4vw, 50px)', color: '#1b78f7', letterSpacing: '-1px', fontVariantNumeric: 'tabular-nums', minWidth: '1.4em', textAlign: 'right' }}>
+            {projectCount == null ? '...' : animatedCount}
+          </span>
+          <span style={{ fontSize: 14, color: colors.muted, fontWeight: 500, maxWidth: 200, textAlign: 'left', lineHeight: 1.3 }}>
+            projetos criados por estudantes portugueses
+          </span>
+        </div>
+        <div className="social-strip" style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          gap: 28, flexWrap: 'wrap',
+        }}>
+          {['Ranking público', 'Análise por IA', 'Certificados verificados'].map((text, i, arr) => (
+            <div key={text} style={{ display: 'flex', alignItems: 'center', gap: 28 }}>
+              <span style={{ fontSize: 12, color: colors.subtle, fontWeight: 600, whiteSpace: 'nowrap', letterSpacing: '0.02em' }}>{text}</span>
+              {i < arr.length - 1 && <span style={{ color: 'rgba(27,120,247,0.35)', userSelect: 'none' }}>/</span>}
             </div>
-            {i < arr.length - 1 && <span style={{ color: colors.subtle, userSelect: 'none' }}>·</span>}
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
 
       {/* Features alternadas */}
@@ -608,13 +615,14 @@ export default function Home() {
         >
           <span style={{display:"flex",alignItems:"center",gap:6}}>Criar o meu projeto <ArrowRight size={15} /></span>
         </button>
-        <div className="home-ctas home-hero-btns" style={{ marginTop: 20, display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
-          <button onClick={() => navigate('/explorar')} className="home-sec-btn"
-            style={{ background: 'transparent', color: colors.muted, border: `1px solid ${colors.border}`, borderRadius: 12, padding: '10px 22px', fontSize: 13, cursor: 'pointer', fontWeight: 600, fontFamily: 'var(--font-body)' }}>
+        <div className="home-ctas home-hero-btns" style={{ marginTop: 20, textAlign: 'center' }}>
+          <button onClick={() => navigate('/explorar')} className="home-sec-link"
+            style={{ background: 'none', color: colors.muted, border: 'none', padding: 0, fontSize: 13, cursor: 'pointer', fontWeight: 600, fontFamily: 'var(--font-body)', textDecoration: 'underline', textDecorationColor: 'rgba(27,120,247,0.35)', textUnderlineOffset: 3 }}>
             Ver projetos públicos
           </button>
-          <button onClick={() => navigate('/ranking')} className="home-sec-btn"
-            style={{ background: 'transparent', color: colors.muted, border: `1px solid ${colors.border}`, borderRadius: 12, padding: '10px 22px', fontSize: 13, cursor: 'pointer', fontWeight: 600, fontFamily: 'var(--font-body)' }}>
+          <span style={{ color: 'rgba(27,120,247,0.35)', margin: '0 12px' }}>·</span>
+          <button onClick={() => navigate('/ranking')} className="home-sec-link"
+            style={{ background: 'none', color: colors.muted, border: 'none', padding: 0, fontSize: 13, cursor: 'pointer', fontWeight: 600, fontFamily: 'var(--font-body)', textDecoration: 'underline', textDecorationColor: 'rgba(27,120,247,0.35)', textUnderlineOffset: 3 }}>
             Ver ranking
           </button>
         </div>

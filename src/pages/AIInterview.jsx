@@ -68,8 +68,8 @@ function LivePreview({ projectType, answers, currentField, currentValue }) {
   return (
     <div style={{
       background: C.card, border: `1px solid ${C.border}`,
-      borderRadius: 20, overflow: 'hidden',
-      boxShadow: '0 24px 64px rgba(0,0,0,0.5)',
+      borderRadius: 12, overflow: 'hidden',
+      boxShadow: 'none',
     }}>
       {/* Cover gradient */}
       <div style={{
@@ -80,9 +80,9 @@ function LivePreview({ projectType, answers, currentField, currentValue }) {
       }}>
         <div style={{ position: 'absolute', top: -20, right: -20, width: 120, height: 120, borderRadius: '50%', background: `radial-gradient(ellipse, ${c1}33, transparent 70%)` }} />
         <div style={{
-          background: `linear-gradient(135deg, ${c1}, ${c2})`,
-          color: '#fff', borderRadius: 8, padding: '4px 12px',
-          fontSize: 11, fontWeight: 800, letterSpacing: '0.06em',
+          background: c1,
+          color: '#fff', borderRadius: 6, padding: '4px 12px',
+          fontSize: 11, fontWeight: 700, letterSpacing: '0.06em',
         }}>
           {TYPE_LABELS[projectType] ?? 'PROJETO'}
         </div>
@@ -90,15 +90,15 @@ function LivePreview({ projectType, answers, currentField, currentValue }) {
 
       <div style={{ padding: '18px 20px' }}>
         {name ? (
-          <h3 style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 800, color: C.text, letterSpacing: '-0.3px', lineHeight: 1.2 }}>{name}</h3>
+          <h3 style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 400, fontFamily: 'var(--font-heading)', color: C.text, letterSpacing: '-0.3px', lineHeight: 1.2 }}>{name}</h3>
         ) : (
           <div style={{ height: 22, width: '70%', background: C.border, borderRadius: 6, marginBottom: 8, animation: 'pulse-p 1.8s ease-in-out infinite' }} />
         )}
 
         {techs.length > 0 && (
-          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 14 }}>
-            {techs.slice(0, 5).map(t => (
-              <span key={t} style={{ background: `${c1}18`, border: `1px solid ${c1}33`, color: c1, borderRadius: 6, padding: '2px 9px', fontSize: 11, fontWeight: 600 }}>{t}</span>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 14, fontSize: 11, fontWeight: 600, color: c1 }}>
+            {techs.slice(0, 5).map((t, i) => (
+              <span key={t}>{t}{i < Math.min(techs.length, 5) - 1 && <span style={{ color: C.subtle, margin: '0 4px' }}>·</span>}</span>
             ))}
           </div>
         )}
@@ -397,14 +397,14 @@ export default function AIInterview() {
             <div style={{ maxWidth: 520, margin: '0 auto', animation: 'fadeIn 0.4s ease' }}>
               <div style={{ marginBottom: 32, textAlign: 'center' }}>
                 <div style={{
-                  width: 56, height: 56, borderRadius: 16, margin: '0 auto 20px',
-                  background: 'linear-gradient(135deg, #1b78f7, #818cf8)',
+                  width: 56, height: 56, borderRadius: 14, margin: '0 auto 20px',
+                  background: '#1b78f7',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  boxShadow: '0 8px 32px rgba(27,120,247,0.35)',
+                  boxShadow: '0 2px 8px rgba(27,120,247,0.2)',
                 }}>
                   <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
                 </div>
-                <h1 style={{ margin: '0 0 8px', fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 900, color: C.text, letterSpacing: '-0.5px', lineHeight: 1.15 }}>Criar com IA</h1>
+                <h1 style={{ margin: '0 0 8px', fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 400, fontFamily: 'var(--font-heading)', color: C.text, letterSpacing: '-1px', lineHeight: 1.15 }}>Criar com IA</h1>
                 <p style={{ margin: 0, fontSize: 13, color: C.subtle, lineHeight: 1.6 }}>
                   Descreve brevemente o teu projeto e a IA fará as perguntas certas para o construir.
                 </p>
@@ -424,7 +424,7 @@ export default function AIInterview() {
                   style={{
                     width: '100%', boxSizing: 'border-box',
                     background: 'var(--c-bg-alt)', border: `1.5px solid ${C.bright}`,
-                    borderRadius: 14, color: C.text, fontSize: 15,
+                    borderRadius: 10, color: C.text, fontSize: 15,
                     fontFamily: 'inherit', outline: 'none', resize: 'none',
                     padding: '14px 16px', lineHeight: 1.65,
                     transition: 'border-color 0.15s',
@@ -455,19 +455,19 @@ export default function AIInterview() {
                         style={{
                           background: selected ? `${t.color}12` : 'var(--c-bg-alt)',
                           border: `1.5px solid ${selected ? t.color : C.border}`,
-                          borderRadius: 12, padding: '12px 10px',
+                          borderRadius: 10, padding: '12px 10px',
                           color: selected ? t.color : C.muted,
                           fontFamily: 'inherit',
                           cursor: 'pointer', transition: 'all 0.12s',
                           textAlign: 'center',
                           display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
-                          boxShadow: selected ? `0 0 0 3px ${t.color}18` : 'none',
+                          boxShadow: 'none',
                         }}
                         onMouseEnter={e => { if (!selected) { e.currentTarget.style.borderColor = t.color + '60'; e.currentTarget.style.color = t.color } }}
                         onMouseLeave={e => { if (!selected) { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted } }}
                       >
                         <div style={{
-                          width: 32, height: 32, borderRadius: 9, flexShrink: 0,
+                          width: 32, height: 32, borderRadius: 8, flexShrink: 0,
                           background: selected ? `${t.color}20` : 'var(--c-card)',
                           border: `1px solid ${selected ? t.color + '40' : C.border}`,
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -492,11 +492,11 @@ export default function AIInterview() {
                 style={{
                   width: '100%',
                   background: setupDesc.trim() ? '#1b78f7' : C.border,
-                  border: 'none', borderRadius: 14,
+                  border: 'none', borderRadius: 10,
                   color: '#fff', fontSize: 16, fontWeight: 700,
                   padding: '16px 0', cursor: setupDesc.trim() ? 'pointer' : 'not-allowed',
                   fontFamily: 'inherit', transition: 'background 0.15s',
-                  boxShadow: setupDesc.trim() ? '0 4px 20px rgba(27,120,247,0.35)' : 'none',
+                  boxShadow: setupDesc.trim() ? '0 2px 8px rgba(27,120,247,0.2)' : 'none',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                 }}
               >
@@ -510,16 +510,16 @@ export default function AIInterview() {
           {phase === 'loading' && (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 320, gap: 20, animation: 'fadeIn 0.4s ease' }}>
               <div style={{
-                width: 56, height: 56, borderRadius: 16,
-                background: 'linear-gradient(135deg, #1b78f7, #818cf8)',
+                width: 56, height: 56, borderRadius: 14,
+                background: '#1b78f7',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: '0 8px 32px rgba(27,120,247,0.35)',
+                boxShadow: '0 0 24px rgba(27,120,247,0.35)',
                 animation: 'glow 2s ease-in-out infinite',
               }}>
                 <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
               </div>
               <div style={{ textAlign: 'center' }}>
-                <p style={{ margin: 0, fontSize: 18, fontWeight: 700, color: C.text }}>A analisar o teu projeto...</p>
+                <p style={{ margin: 0, fontSize: 18, fontWeight: 400, fontFamily: 'var(--font-heading)', color: C.text }}>A analisar o teu projeto...</p>
                 <p style={{ margin: '6px 0 0', fontSize: 14, color: C.muted }}>A IA está a preparar as perguntas certas para ti</p>
               </div>
               <div style={{ display: 'flex', gap: 6 }}>
@@ -538,13 +538,13 @@ export default function AIInterview() {
               <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginTop: 24, flexWrap: 'wrap' }}>
                 <button
                   onClick={() => generateAndSave(answers)}
-                  style={{ background: C.blue, color: '#fff', border: 'none', borderRadius: 12, padding: '10px 24px', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}
+                  style={{ background: C.blue, color: '#fff', border: 'none', borderRadius: 10, padding: '10px 24px', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600, boxShadow: '0 2px 8px rgba(27,120,247,0.2)' }}
                 >
                   Tentar novamente
                 </button>
                 <button
                   onClick={() => navigate('/novo')}
-                  style={{ background: 'transparent', color: C.muted, border: `1px solid ${C.border}`, borderRadius: 12, padding: '10px 24px', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}
+                  style={{ background: 'transparent', color: C.muted, border: `1px solid ${C.border}`, borderRadius: 10, padding: '10px 24px', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}
                 >
                   Usar formulário manual
                 </button>
@@ -556,15 +556,15 @@ export default function AIInterview() {
           {phase === 'generating' && (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 320, gap: 20, animation: 'fadeIn 0.4s ease' }}>
               <div style={{
-                width: 72, height: 72, borderRadius: 20,
-                background: 'linear-gradient(135deg, #1b78f7, #818cf8)',
+                width: 72, height: 72, borderRadius: 18,
+                background: '#1b78f7',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: '0 8px 48px rgba(27,120,247,0.4)',
+                boxShadow: '0 0 32px rgba(27,120,247,0.3)',
               }}>
                 <div style={{ width: 30, height: 30, border: '3px solid rgba(255,255,255,0.3)', borderTop: '3px solid #fff', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
               </div>
               <div style={{ textAlign: 'center' }}>
-                <p style={{ margin: 0, fontSize: 20, fontWeight: 800, color: C.text, letterSpacing: '-0.3px' }}>A construir o teu perfil...</p>
+                <p style={{ margin: 0, fontSize: 20, fontWeight: 400, fontFamily: 'var(--font-heading)', color: C.text, letterSpacing: '-0.5px' }}>A construir o teu perfil...</p>
                 <p style={{ margin: '8px 0 0', fontSize: 14, color: C.muted, lineHeight: 1.6 }}>
                   A IA está a gerar a tua tagline, descrição<br/>e destaques profissionais
                 </p>
@@ -579,15 +579,15 @@ export default function AIInterview() {
               {/* Understanding banner */}
               {understanding && (
                 <div style={{
-                  background: 'linear-gradient(135deg, rgba(27,120,247,0.08), rgba(129,140,248,0.06))',
+                  background: 'rgba(27,120,247,0.06)',
                   border: '1px solid rgba(27,120,247,0.2)',
-                  borderRadius: 14, padding: '12px 16px', marginBottom: 28,
+                  borderRadius: 10, padding: '12px 16px', marginBottom: 28,
                   animation: 'fadeSlideUp 0.5s ease', width: '100%', boxSizing: 'border-box',
                 }}>
                   <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
                     <div style={{
-                      width: 28, height: 28, borderRadius: 8, flexShrink: 0,
-                      background: 'linear-gradient(135deg, #1b78f7, #818cf8)',
+                      width: 28, height: 28, borderRadius: 7, flexShrink: 0,
+                      background: '#1b78f7',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                     }}>
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
@@ -605,7 +605,7 @@ export default function AIInterview() {
                     <div style={{
                       position: 'absolute', top: 2, left: '6%', right: '6%', height: 64,
                       background: C.card, border: `1px solid ${C.border}`,
-                      borderRadius: 20, opacity: 0.13, zIndex: 1, pointerEvents: 'none',
+                      borderRadius: 12, opacity: 0.13, zIndex: 1, pointerEvents: 'none',
                     }} />
                   )}
                   {/* Ghost card — one behind */}
@@ -613,7 +613,7 @@ export default function AIInterview() {
                     <div style={{
                       position: 'absolute', top: 11, left: '3%', right: '3%', height: 64,
                       background: C.card, border: `1px solid ${C.border}`,
-                      borderRadius: 20, opacity: 0.30, zIndex: 2, pointerEvents: 'none',
+                      borderRadius: 12, opacity: 0.30, zIndex: 2, pointerEvents: 'none',
                     }} />
                   )}
 
@@ -621,15 +621,15 @@ export default function AIInterview() {
                   <div key={currentQ} style={{
                     position: 'relative', zIndex: 3,
                     background: C.card, border: `1.5px solid ${C.bright}`,
-                    borderRadius: 20, padding: '28px 28px 20px',
-                    boxShadow: '0 16px 48px rgba(0,0,0,0.22)',
+                    borderRadius: 12, padding: '28px 28px 20px',
+                    boxShadow: 'none',
                     animation: goingBack ? 'fadeSlideDown 0.35s ease' : 'fadeSlideUp 0.4s ease',
                   }}>
                     {/* Label */}
                     <p style={{ margin: '0 0 4px', fontSize: 11, color: C.blue, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{q.label}</p>
 
                     {/* Question text */}
-                    <p className="ai-question-text" style={{ margin: '0 0 20px', fontSize: 19, fontWeight: 700, color: C.text, lineHeight: 1.4, letterSpacing: '-0.2px' }}>{q.question}</p>
+                    <p className="ai-question-text" style={{ margin: '0 0 20px', fontSize: 19, fontWeight: 400, fontFamily: 'var(--font-heading)', color: C.text, lineHeight: 1.4, letterSpacing: '-0.4px' }}>{q.question}</p>
 
                     {/* Suggestions — hidden for free-text fields where chips make no sense */}
                     {q.suggestions?.length > 0 && !['name','creator_name','pap_supervisor','school','course'].includes(q.field) && (
@@ -650,7 +650,7 @@ export default function AIInterview() {
                               }}
                               style={{
                                 background: 'rgba(27,120,247,0.07)', border: `1px solid ${C.border}`,
-                                color: C.muted, borderRadius: 999, padding: '5px 14px',
+                                color: C.muted, borderRadius: 6, padding: '5px 14px',
                                 fontSize: 12, fontWeight: 600, fontFamily: 'inherit',
                               }}
                             >
@@ -666,7 +666,7 @@ export default function AIInterview() {
                       style={{
                         display: 'flex', gap: 10, alignItems: 'flex-end',
                         background: 'var(--c-bg-alt)', border: `1.5px solid ${C.border}`,
-                        borderRadius: 14, padding: '8px 8px 8px 16px',
+                        borderRadius: 10, padding: '8px 8px 8px 16px',
                       }}
                       onFocusCapture={e => e.currentTarget.style.borderColor = C.blue}
                       onBlurCapture={e => { if (!e.currentTarget.contains(e.relatedTarget)) e.currentTarget.style.borderColor = C.border }}

@@ -108,7 +108,7 @@ export default function EmpresaPage() {
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: 'calc(100vh - 62px)', gap: 12, textAlign: 'center', padding: 32 }}>
         <Building2 size={40} color={C.muted} style={{ opacity: 0.4 }} />
         <p style={{ color: C.muted, fontSize: 15, fontWeight: 600, margin: 0 }}>Empresa não encontrada</p>
-        <button onClick={() => navigate(-1)} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 9, padding: '8px 16px', color: C.muted, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+        <button onClick={() => navigate(-1)} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 8, padding: '8px 16px', color: C.muted, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
           <ArrowLeft size={14} /> Voltar
         </button>
       </div>
@@ -125,14 +125,14 @@ export default function EmpresaPage() {
       <div className="page-content">
 
         {/* ── Hero ── */}
-        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 18, padding: 'clamp(20px,4vw,36px)', marginBottom: 20 }}>
+        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 'clamp(20px,4vw,36px)', marginBottom: 20 }}>
           <div className="ep-hero" style={{ display: 'flex', alignItems: 'flex-start', gap: 20, flexWrap: 'wrap' }}>
             {/* Logo/Avatar */}
             <div style={{ flexShrink: 0 }}>
               {company.avatar_url ? (
-                <img src={company.avatar_url} alt={name} className="ep-hero-logo" style={{ width: 88, height: 88, borderRadius: 20, objectFit: 'cover', border: `2px solid ${C.border}` }} />
+                <img src={company.avatar_url} alt={name} className="ep-hero-logo" style={{ width: 88, height: 88, borderRadius: 14, objectFit: 'cover', border: `2px solid ${C.border}` }} />
               ) : (
-                <div className="ep-hero-logo" style={{ width: 88, height: 88, borderRadius: 20, background: `linear-gradient(135deg, ${accentColor}, #4f46e5)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36, fontWeight: 900, color: '#fff', border: `2px solid ${C.border}` }}>
+                <div className="ep-hero-logo" style={{ width: 88, height: 88, borderRadius: 14, background: accentColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36, fontWeight: 400, fontFamily: 'var(--font-heading)', color: '#fff', border: `2px solid ${C.border}` }}>
                   {name[0].toUpperCase()}
                 </div>
               )}
@@ -141,8 +141,8 @@ export default function EmpresaPage() {
             {/* Info */}
             <div style={{ flex: 1, minWidth: 200 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 6 }}>
-                <h1 style={{ margin: 0, fontSize: 'clamp(20px,3vw,28px)', fontWeight: 900, color: C.text, letterSpacing: '-0.4px' }}>{name}</h1>
-                <span style={{ fontSize: 11, fontWeight: 700, color: tipo.color, background: tipo.bg, border: `1px solid ${tipo.color}44`, borderRadius: 99, padding: '3px 10px' }}>
+                <h1 style={{ margin: 0, fontSize: 'clamp(20px,3vw,28px)', fontWeight: 400, color: C.text, letterSpacing: '-0.6px', fontFamily: 'var(--font-heading)' }}>{name}</h1>
+                <span style={{ fontSize: 11, fontWeight: 700, color: tipo.color }}>
                   {tipo.label}
                 </span>
               </div>
@@ -188,12 +188,14 @@ export default function EmpresaPage() {
             <div className="ep-hero-actions" style={{ display: 'flex', gap: 8, flexShrink: 0, flexWrap: 'wrap' }}>
               {isOwnPage ? (
                 <button onClick={() => navigate('/settings')}
-                  style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 10, padding: '9px 16px', color: C.muted, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 8, padding: '9px 16px', color: C.muted, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'border-color 0.15s, color 0.15s' }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--c-border-bright)'; e.currentTarget.style.color = C.text }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted }}>
                   <Settings size={14} /> Editar
                 </button>
               ) : user ? (
                 <button onClick={() => navigate(`/mensagens?to=${company.id}`)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 7, background: C.blue, border: 'none', borderRadius: 10, padding: '9px 18px', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 14px rgba(27,120,247,0.3)' }}>
+                  style={{ display: 'flex', alignItems: 'center', gap: 7, background: C.blue, border: 'none', borderRadius: 8, padding: '9px 18px', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px rgba(27,120,247,0.2)' }}>
                   <MessageSquare size={14} /> Contactar
                 </button>
               ) : null}
@@ -212,12 +214,12 @@ export default function EmpresaPage() {
 
           {/* ── Vagas abertas ── */}
           <div>
-            <h2 style={{ color: C.text, fontSize: 18, fontWeight: 800, margin: '0 0 14px', letterSpacing: '-0.2px' }}>
-              Vagas abertas <span style={{ fontSize: 13, fontWeight: 600, color: C.muted, marginLeft: 6 }}>({vagas.length})</span>
+            <h2 style={{ color: C.text, fontSize: 18, fontWeight: 400, margin: '0 0 14px', letterSpacing: '-0.4px', fontFamily: 'var(--font-heading)' }}>
+              Vagas abertas <span style={{ fontSize: 13, fontWeight: 600, color: C.muted, marginLeft: 6, fontFamily: 'var(--font-body)' }}>({vagas.length})</span>
             </h2>
 
             {vagas.length === 0 ? (
-              <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: '40px 24px', textAlign: 'center' }}>
+              <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: '40px 24px', textAlign: 'center' }}>
                 <Briefcase size={32} color={C.muted} style={{ opacity: 0.4, marginBottom: 10 }} />
                 <p style={{ color: C.muted, fontSize: 14, margin: 0 }}>Sem vagas abertas de momento</p>
               </div>
@@ -227,7 +229,7 @@ export default function EmpresaPage() {
                   const cand = applied[v.id]
                   const st   = cand ? STATUS_INFO[cand.status] ?? STATUS_INFO.pendente : null
                   return (
-                    <div key={v.id} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: '18px 20px', transition: 'border-color 0.15s' }}
+                    <div key={v.id} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: '18px 20px', transition: 'border-color 0.15s' }}
                       onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--c-border-bright)'}
                       onMouseLeave={e => e.currentTarget.style.borderColor = C.border}>
                       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
@@ -235,7 +237,7 @@ export default function EmpresaPage() {
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
                             <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: C.text }}>{v.title}</h3>
                             {v.tipo && (
-                              <span style={{ fontSize: 11, fontWeight: 600, color: C.muted, background: 'var(--c-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 6, padding: '2px 7px' }}>
+                              <span style={{ fontSize: 11, fontWeight: 600, color: C.muted }}>
                                 {v.tipo}
                               </span>
                             )}
@@ -255,17 +257,17 @@ export default function EmpresaPage() {
 
                         <div style={{ flexShrink: 0 }}>
                           {st ? (
-                            <span style={{ fontSize: 12, fontWeight: 700, color: st.color, background: st.bg, border: `1px solid ${st.color}44`, borderRadius: 99, padding: '5px 12px' }}>
+                            <span style={{ fontSize: 12, fontWeight: 700, color: st.color, background: st.bg, borderRadius: 7, padding: '5px 12px' }}>
                               {st.label}
                             </span>
                           ) : user && isStudent ? (
                             <button onClick={() => navigate('/vagas')}
-                              style={{ background: C.blue, border: 'none', borderRadius: 9, padding: '8px 16px', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 12px rgba(27,120,247,0.25)' }}>
+                              style={{ background: C.blue, border: 'none', borderRadius: 8, padding: '8px 16px', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px rgba(27,120,247,0.2)' }}>
                               Candidatar
                             </button>
                           ) : !user ? (
                             <button onClick={() => navigate('/login')}
-                              style={{ background: C.blue, border: 'none', borderRadius: 9, padding: '8px 16px', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+                              style={{ background: C.blue, border: 'none', borderRadius: 8, padding: '8px 16px', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
                               Entrar para candidatar
                             </button>
                           ) : null}
@@ -281,23 +283,23 @@ export default function EmpresaPage() {
           {/* ── Sidebar: O que procuram ── */}
           <div>
             {company.looking_for && (
-              <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: '20px 20px 22px', marginBottom: 14 }}>
+              <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: '20px 20px 22px', marginBottom: 14 }}>
                 <h3 style={{ margin: '0 0 12px', fontSize: 14, fontWeight: 700, color: C.text }}>O que procuram</h3>
                 <p style={{ margin: 0, fontSize: 13, color: C.muted, lineHeight: 1.7 }}>{company.looking_for}</p>
               </div>
             )}
 
             {company.username && (
-              <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: '20px' }}>
+              <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: '20px' }}>
                 <h3 style={{ margin: '0 0 12px', fontSize: 14, fontWeight: 700, color: C.text }}>Recrutador</h3>
                 <button onClick={() => navigate(`/u/${company.username}`)}
-                  style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 10, padding: '10px 12px', cursor: 'pointer', fontFamily: 'inherit', transition: 'background 0.12s' }}
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 12px', cursor: 'pointer', fontFamily: 'inherit', transition: 'background 0.12s' }}
                   onMouseEnter={e => e.currentTarget.style.background = 'var(--c-bg-alt)'}
                   onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                   {company.avatar_url ? (
                     <img src={company.avatar_url} alt="" style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover' }} />
                   ) : (
-                    <div style={{ width: 36, height: 36, borderRadius: '50%', background: `linear-gradient(135deg,${accentColor},#4f46e5)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 800, color: '#fff' }}>
+                    <div style={{ width: 36, height: 36, borderRadius: '50%', background: accentColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 700, color: '#fff' }}>
                       {name[0].toUpperCase()}
                     </div>
                   )}

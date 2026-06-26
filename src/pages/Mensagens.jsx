@@ -66,7 +66,7 @@ function NovaConversa({ onSelect, onClose }) {
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
       <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(6px)' }} onClick={onClose} />
-      <div style={{ position: 'relative', background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, width: '100%', maxWidth: 420, zIndex: 1, overflow: 'hidden' }}>
+      <div style={{ position: 'relative', background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, width: '100%', maxWidth: 420, zIndex: 1, overflow: 'hidden' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 16px', borderBottom: `1px solid ${C.border}` }}>
           <Search size={15} color={C.muted} style={{ flexShrink: 0 }} />
           <input
@@ -393,7 +393,7 @@ export default function Mensagens() {
         <div style={{ maxWidth: 920, margin: '0 auto', padding: '0 clamp(8px,3vw,24px)', paddingTop: 28 }}>
 
           <div style={{ marginBottom: 20 }}>
-            <h1 style={{ color: C.text, fontSize: 'clamp(22px,4vw,32px)', fontWeight: 900, margin: '0 0 4px', letterSpacing: '-0.4px' }}>
+            <h1 style={{ color: C.text, fontSize: 'clamp(22px,4vw,32px)', fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 4px', letterSpacing: '-0.4px' }}>
               Mensagens {totalUnread > 0 && <span style={{ fontSize: 15, fontWeight: 700, background: C.blue, color: '#fff', borderRadius: 99, padding: '2px 9px', verticalAlign: 'middle', marginLeft: 6 }}>{totalUnread}</span>}
             </h1>
             <p style={{ color: C.muted, fontSize: 13, margin: 0 }}>Conversas com recrutadores e candidatos</p>
@@ -405,7 +405,7 @@ export default function Mensagens() {
             <div style={{
               width: 280, flexShrink: 0,
               background: C.card, border: `1px solid ${C.border}`,
-              borderRadius: 14, display: 'flex', flexDirection: 'column', overflow: 'hidden',
+              borderRadius: 12, display: 'flex', flexDirection: 'column', overflow: 'hidden',
             }} className={`msg-list${mobileView === 'thread' ? ' mob-hidden' : ''}`}>
               <div style={{ padding: '12px 12px 8px', borderBottom: `1px solid ${C.border}`, display: 'flex', gap: 6 }}>
                 <div style={{ position: 'relative', flex: 1 }}>
@@ -414,7 +414,7 @@ export default function Mensagens() {
                     style={{ width: '100%', background: 'var(--c-bg)', border: `1px solid ${C.border}`, borderRadius: 8, color: C.text, fontSize: 13, padding: '8px 10px 8px 30px', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }} />
                 </div>
                 <button onClick={() => setShowNova(true)} title="Nova mensagem" className="msg-compose-btn"
-                  style={{ flexShrink: 0, width: 34, height: 34, borderRadius: 8, background: C.blue, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(27,120,247,0.3)' }}>
+                  style={{ flexShrink: 0, width: 34, height: 34, borderRadius: 8, background: C.blue, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(27,120,247,0.2)' }}>
                   <Plus size={16} color="#fff" />
                 </button>
               </div>
@@ -460,7 +460,7 @@ export default function Mensagens() {
             </div>
 
             {/* ── Thread ── */}
-            <div style={{ flex: 1, background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, display: 'flex', flexDirection: 'column', overflow: 'hidden' }} className={`msg-thread${mobileView === 'thread' ? ' active' : ''}`}>
+            <div style={{ flex: 1, background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, display: 'flex', flexDirection: 'column', overflow: 'hidden' }} className={`msg-thread${mobileView === 'thread' ? ' active' : ''}`}>
 
               {!activeId ? (
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, padding: 32, textAlign: 'center' }}>

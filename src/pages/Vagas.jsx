@@ -17,9 +17,8 @@ function matchScore(studentSkills, vagaSkills) {
 function MatchBadge({ score }) {
   if (score === null) return null
   const color = score >= 70 ? '#22c55e' : score >= 40 ? '#f59e0b' : '#7d93b0'
-  const bg    = score >= 70 ? 'rgba(34,197,94,0.1)' : score >= 40 ? 'rgba(245,158,11,0.1)' : 'rgba(125,147,176,0.1)'
   return (
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, color, background: bg, borderRadius: 6, padding: '3px 8px', flexShrink: 0 }}>
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, color, flexShrink: 0 }}>
       <Zap size={10} />{score}% match
     </span>
   )
@@ -40,10 +39,10 @@ const C = {
 }
 
 const TIPO_INFO = {
-  estagio:   { label: 'Estágio',       color: C.blue,   bg: 'rgba(27,120,247,0.1)'  },
-  part_time: { label: 'Part-time',     color: C.purple, bg: 'rgba(139,92,246,0.1)'  },
-  full_time: { label: 'Full-time',     color: C.green,  bg: 'rgba(34,197,94,0.1)'   },
-  freelance: { label: 'Freelance',     color: C.amber,  bg: 'rgba(245,158,11,0.1)'  },
+  estagio:   { label: 'Estágio',       color: C.blue   },
+  part_time: { label: 'Part-time',     color: C.purple },
+  full_time: { label: 'Full-time',     color: C.green  },
+  freelance: { label: 'Freelance',     color: C.amber  },
 }
 
 function daysDiff(dateStr) {
@@ -70,13 +69,13 @@ function RecruiterCard({ vaga, cands, onEdit, onToggle, onDelete, expanded, onTo
   const tipo = TIPO_INFO[vaga.tipo] ?? TIPO_INFO.estagio
   const candList = cands || []
   return (
-    <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, overflow: 'hidden' }}>
+    <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, overflow: 'hidden' }}>
       <div style={{ padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 4 }}>
-              <span style={{ fontSize: 11, fontWeight: 700, color: tipo.color, background: tipo.bg, borderRadius: 6, padding: '2px 8px' }}>{tipo.label}</span>
-              {!vaga.is_active && <span style={{ fontSize: 11, fontWeight: 700, color: C.muted, background: 'rgba(128,128,128,0.1)', borderRadius: 6, padding: '2px 8px' }}>Pausada</span>}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginBottom: 4, fontSize: 11, fontWeight: 700, color: tipo.color }}>
+              <span>{tipo.label}</span>
+              {!vaga.is_active && <><span style={{ color: C.muted }}>·</span><span style={{ color: C.muted }}>Pausada</span></>}
             </div>
             <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: C.text, lineHeight: 1.3 }}>{vaga.titulo}</h3>
             {vaga.area && <p style={{ margin: '4px 0 0', fontSize: 13, color: C.muted }}>{vaga.area}</p>}
@@ -119,7 +118,7 @@ function RecruiterCard({ vaga, cands, onEdit, onToggle, onDelete, expanded, onTo
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 3 }}>
                     <span style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{p?.full_name || p?.username || 'Candidato'}</span>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: st.color, background: st.bg, borderRadius: 5, padding: '1px 7px' }}>{st.label}</span>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: st.color }}>{st.label}</span>
                     <MatchBadge score={matchScore(p?.skills, vaga.skills)} />
                   </div>
                   {c.message && <p style={{ margin: '0 0 8px', fontSize: 13, color: C.muted, lineHeight: 1.5 }}>{c.message}</p>}
@@ -155,7 +154,7 @@ function PublicCard({ vaga, recruiterProfile, myStatus, onCandidatar, isAluno, u
   const score = matchScore(userSkills, vaga.skills)
 
   return (
-    <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: '20px 22px', transition: 'border-color 0.15s', display: 'flex', flexDirection: 'column', gap: 12 }}
+    <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: '20px 22px', transition: 'border-color 0.15s', display: 'flex', flexDirection: 'column', gap: 12 }}
       onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--c-border-bright)'}
       onMouseLeave={e => e.currentTarget.style.borderColor = C.border}>
       {/* Company header */}
@@ -170,13 +169,13 @@ function PublicCard({ vaga, recruiterProfile, myStatus, onCandidatar, isAluno, u
           {recruiterProfile?.company_role && <div style={{ fontSize: 11, color: C.muted }}>{recruiterProfile.company_role}</div>}
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
-          <span style={{ fontSize: 11, fontWeight: 700, color: tipo.color, background: tipo.bg, borderRadius: 6, padding: '2px 8px' }}>{tipo.label}</span>
+          <span style={{ fontSize: 11, fontWeight: 700, color: tipo.color }}>{tipo.label}</span>
           {score !== null && <MatchBadge score={score} />}
         </div>
       </div>
 
       <div>
-        <h3 style={{ margin: '0 0 4px', fontSize: 16, fontWeight: 800, color: C.text, lineHeight: 1.25 }}>{vaga.titulo}</h3>
+        <h3 style={{ margin: '0 0 4px', fontSize: 16, fontWeight: 600, color: C.text, lineHeight: 1.25 }}>{vaga.titulo}</h3>
         {vaga.area && <p style={{ margin: 0, fontSize: 13, color: C.blue, fontWeight: 600 }}>{vaga.area}</p>}
       </div>
 
@@ -197,12 +196,12 @@ function PublicCard({ vaga, recruiterProfile, myStatus, onCandidatar, isAluno, u
           )}
           {isAluno && (
             st ? (
-              <span style={{ fontSize: 12, fontWeight: 700, color: st.color, background: st.bg, borderRadius: 7, padding: '5px 10px', display: 'flex', alignItems: 'center', gap: 4 }}>
+              <span style={{ fontSize: 12, fontWeight: 700, color: st.color, display: 'flex', alignItems: 'center', gap: 4 }}>
                 <Check size={11} /> {st.label}
               </span>
             ) : (
               <button onClick={() => onCandidatar(vaga)}
-                style={{ fontSize: 12, fontWeight: 700, color: '#fff', background: `linear-gradient(135deg, ${C.blue}, #4f46e5)`, border: 'none', borderRadius: 7, padding: '5px 12px', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 4, boxShadow: '0 2px 8px rgba(27,120,247,0.3)' }}>
+                style={{ fontSize: 12, fontWeight: 700, color: '#fff', background: C.blue, border: 'none', borderRadius: 8, padding: '5px 12px', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 4, boxShadow: '0 2px 8px rgba(27,120,247,0.2)' }}>
                 <Send size={11} /> Candidatar
               </button>
             )
@@ -222,9 +221,9 @@ function VagaModal({ initial, onSave, onClose, saving }) {
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
       <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)' }} onClick={onClose} />
-      <div style={{ position: 'relative', background: C.card, border: `1px solid ${C.border}`, borderRadius: 18, padding: 28, width: '100%', maxWidth: 520, maxHeight: '90vh', overflowY: 'auto', zIndex: 1 }}>
+      <div style={{ position: 'relative', background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 28, width: '100%', maxWidth: 520, maxHeight: '90vh', overflowY: 'auto', zIndex: 1 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
-          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: C.text }}>{initial ? 'Editar vaga' : 'Publicar vaga'}</h2>
+          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 400, fontFamily: 'var(--font-heading)', letterSpacing: '-0.3px', color: C.text }}>{initial ? 'Editar vaga' : 'Publicar vaga'}</h2>
           <button onClick={onClose} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: C.muted, display: 'flex', padding: 4 }}><X size={18} /></button>
         </div>
 
@@ -287,7 +286,7 @@ function VagaModal({ initial, onSave, onClose, saving }) {
         </div>
 
         <button onClick={() => onSave(form)} disabled={saving || !form.titulo.trim()}
-          style={{ width: '100%', background: saving || !form.titulo.trim() ? C.border : `linear-gradient(135deg, ${C.blue}, #4f46e5)`, border: 'none', borderRadius: 10, padding: '13px 0', color: '#fff', fontSize: 15, fontWeight: 700, cursor: saving || !form.titulo.trim() ? 'default' : 'pointer', fontFamily: 'inherit', boxShadow: saving ? 'none' : '0 4px 16px rgba(27,120,247,0.3)' }}>
+          style={{ width: '100%', background: saving || !form.titulo.trim() ? C.border : C.blue, border: 'none', borderRadius: 10, padding: '13px 0', color: '#fff', fontSize: 15, fontWeight: 700, cursor: saving || !form.titulo.trim() ? 'default' : 'pointer', fontFamily: 'inherit', boxShadow: saving ? 'none' : '0 2px 8px rgba(27,120,247,0.2)' }}>
           {saving ? 'A guardar...' : initial ? 'Guardar alterações' : 'Publicar vaga'}
         </button>
       </div>
@@ -307,8 +306,8 @@ function CandidatarModal({ vaga, recruiterProfile, onClose, onSubmit, sending })
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
       <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)' }} onClick={onClose} />
-      <div style={{ position: 'relative', background: C.card, border: `1px solid ${C.border}`, borderRadius: 18, padding: 28, width: '100%', maxWidth: 460, zIndex: 1 }}>
-        <h2 style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 800, color: C.text }}>Candidatar a esta vaga</h2>
+      <div style={{ position: 'relative', background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 28, width: '100%', maxWidth: 460, zIndex: 1 }}>
+        <h2 style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 400, fontFamily: 'var(--font-heading)', letterSpacing: '-0.3px', color: C.text }}>Candidatar a esta vaga</h2>
         <p style={{ margin: '0 0 20px', fontSize: 13, color: C.muted }}>{vaga.titulo} · {recruiterProfile?.company || recruiterProfile?.full_name}</p>
         <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: C.muted, marginBottom: 7 }}>Mensagem de apresentação</label>
         <textarea value={msg} onChange={e => setMsg(e.target.value)} rows={5}
@@ -317,7 +316,7 @@ function CandidatarModal({ vaga, recruiterProfile, onClose, onSubmit, sending })
         <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
           <button onClick={onClose} style={{ flex: 1, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 10, padding: '11px 0', color: C.text, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Cancelar</button>
           <button onClick={() => onSubmit(msg)} disabled={sending}
-            style={{ flex: 1, background: sending ? C.border : `linear-gradient(135deg, ${C.blue}, #4f46e5)`, border: 'none', borderRadius: 10, padding: '11px 0', color: '#fff', fontSize: 14, fontWeight: 700, cursor: sending ? 'default' : 'pointer', fontFamily: 'inherit' }}>
+            style={{ flex: 1, background: sending ? C.border : C.blue, border: 'none', borderRadius: 10, padding: '11px 0', color: '#fff', fontSize: 14, fontWeight: 700, cursor: sending ? 'default' : 'pointer', fontFamily: 'inherit' }}>
             {sending ? 'A enviar...' : <><Send size={13} style={{ verticalAlign: 'middle', marginRight: 5 }} />Candidatar</>}
           </button>
         </div>
@@ -546,7 +545,7 @@ export default function Vagas() {
               <Briefcase size={24} color="#1b78f7" />
             </div>
             <div>
-              <h1 style={{ color: C.text, fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 900, margin: '0 0 6px', letterSpacing: '-0.5px' }}>Vagas</h1>
+              <h1 style={{ color: C.text, fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 6px', letterSpacing: '-0.5px' }}>Vagas</h1>
               <p style={{ color: C.muted, fontSize: 13, margin: 0 }}>
                 {isRecruiter ? 'Gere as tuas ofertas e encontra candidatos' : 'Ofertas de estágio e emprego de empresas e recrutadores'}
               </p>
@@ -554,7 +553,7 @@ export default function Vagas() {
           </div>
           {isRecruiter && (
             <button onClick={() => { setEditVaga(null); setShowModal(true) }}
-              style={{ display: 'flex', alignItems: 'center', gap: 8, background: `linear-gradient(135deg, ${accentColor}, #4f46e5)`, border: 'none', borderRadius: 10, padding: '11px 20px', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: `0 4px 16px ${accentColor}55`, flexShrink: 0 }}>
+              style={{ display: 'flex', alignItems: 'center', gap: 8, background: accentColor, border: 'none', borderRadius: 10, padding: '11px 20px', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px rgba(27,120,247,0.2)', flexShrink: 0 }}>
               <Plus size={16} /> Nova vaga
             </button>
           )}
@@ -569,7 +568,7 @@ export default function Vagas() {
                 Convites para ti
               </span>
               {myInvites.length > 0 && (
-                <span style={{ background: '#1b78f720', border: '1px solid #1b78f740', borderRadius: 20, padding: '2px 8px', fontSize: 10, fontWeight: 700, color: '#1b78f7' }}>
+                <span style={{ background: '#1b78f720', borderRadius: 6, padding: '2px 8px', fontSize: 10, fontWeight: 700, color: '#1b78f7' }}>
                   {myInvites.length}
                 </span>
               )}
@@ -590,9 +589,9 @@ export default function Vagas() {
                   const alreadyCandidated = !!myCandidaturas[invite.vaga_id]
                   return (
                     <div key={invite.id} style={{
-                      background: 'linear-gradient(135deg, rgba(27,120,247,0.07), rgba(79,70,229,0.04))',
-                      border: '1.5px solid rgba(27,120,247,0.25)',
-                      borderRadius: 14, padding: '14px 18px',
+                      background: 'rgba(27,120,247,0.06)',
+                      border: '1px solid rgba(27,120,247,0.2)',
+                      borderRadius: 12, padding: '14px 18px',
                       display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
                     }}>
                       {/* Icon */}
@@ -636,9 +635,9 @@ export default function Vagas() {
                             style={{
                               display: 'flex', alignItems: 'center', gap: 6,
                               padding: '7px 14px', borderRadius: 8, fontSize: 13, fontWeight: 700,
-                              background: 'linear-gradient(135deg,#1b78f7,#4f46e5)', border: 'none',
+                              background: '#1b78f7', border: 'none',
                               color: '#fff', cursor: 'pointer', fontFamily: 'inherit',
-                              boxShadow: '0 2px 10px rgba(27,120,247,0.3)',
+                              boxShadow: '0 2px 8px rgba(27,120,247,0.2)',
                             }}
                           >
                             <Check size={13} />
@@ -693,7 +692,7 @@ export default function Vagas() {
               <p style={{ color: C.muted, fontSize: 16, fontWeight: 700, margin: '0 0 6px' }}>Ainda não tens vagas publicadas</p>
               <p style={{ color: C.subtle, fontSize: 13, margin: '0 0 20px' }}>Publica a tua primeira oferta e começa a receber candidatos</p>
               <button onClick={() => setShowModal(true)}
-                style={{ background: `linear-gradient(135deg, ${accentColor}, #4f46e5)`, border: 'none', borderRadius: 10, padding: '11px 24px', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+                style={{ background: accentColor, border: 'none', borderRadius: 10, padding: '11px 24px', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
                 <Plus size={14} style={{ verticalAlign: 'middle', marginRight: 6 }} />Publicar primeira vaga
               </button>
             </div>

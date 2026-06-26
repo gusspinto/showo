@@ -2,57 +2,51 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { Mail, GraduationCap, BookOpen, Search, Building2, ArrowLeft } from 'lucide-react'
-import { useTheme } from '../context/ThemeContext'
+import AuthSidePanel from '../components/AuthSidePanel'
 
 const C = {
   bg:          'var(--c-bg)',
-  card:        'var(--c-card)',
   border:      'var(--c-border)',
-  borderBright:'var(--c-border-bright)',
   blue:        '#1b78f7',
-  blueHover:   '#1564d4',
   muted:       'var(--c-muted)',
-  subtle:      'var(--c-subtle)',
   text:        'var(--c-text)',
   error:       '#ef4444',
 }
 
+const REGISTER_PHRASES = [
+  { lead: 'Cria o teu', highlight: 'portfólio.' },
+  { lead: 'Começa a', highlight: 'mostrar-te.' },
+  { lead: 'Junta-te a quem', highlight: 'já mostra.' },
+]
+
 const ROLES = [
   {
     id: 'aluno',
-    icon: <GraduationCap size={26} />,
+    icon: <GraduationCap size={24} />,
     label: 'Aluno',
     desc: 'Estou a criar o meu projeto profissional',
     color: '#1b78f7',
-    bg: 'rgba(27,120,247,0.08)',
-    border: 'rgba(27,120,247,0.25)',
   },
   {
     id: 'professor',
-    icon: <BookOpen size={26} />,
+    icon: <BookOpen size={24} />,
     label: 'Professor',
     desc: 'Acompanho e avalio projetos de alunos',
     color: '#10b981',
-    bg: 'rgba(16,185,129,0.08)',
-    border: 'rgba(16,185,129,0.25)',
   },
   {
     id: 'recrutador',
-    icon: <Search size={26} />,
+    icon: <Search size={24} />,
     label: 'Recrutador',
     desc: 'Procuro talentos e avalio candidatos',
     color: '#8b5cf6',
-    bg: 'rgba(139,92,246,0.08)',
-    border: 'rgba(139,92,246,0.25)',
   },
   {
     id: 'empresa',
-    icon: <Building2 size={26} />,
+    icon: <Building2 size={24} />,
     label: 'Empresa',
     desc: 'Somos uma empresa à procura de talento',
     color: '#f59e0b',
-    bg: 'rgba(245,158,11,0.08)',
-    border: 'rgba(245,158,11,0.25)',
   },
 ]
 
@@ -71,7 +65,7 @@ function EyeIcon({ visible }) {
 
 function Field({ label, children }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
       <label style={{ color: C.muted, fontSize: 13, fontWeight: 500 }}>{label}</label>
       {children}
     </div>
@@ -83,18 +77,11 @@ function Input({ type = 'text', value, onChange, placeholder, required }) {
   const [show, setShow] = useState(false)
   const isPassword = type === 'password'
   return (
-    <div style={{ position: 'relative' }}>
+    <div className="auth-field-wrap" style={{ borderBottomColor: focused ? C.blue : C.border }}>
       <input
         type={isPassword ? (show ? 'text' : 'password') : type}
         value={value} onChange={onChange} placeholder={placeholder} required={required}
-        style={{
-          width: '100%', background: C.bg,
-          border: `1px solid ${focused ? C.blue : C.border}`,
-          borderRadius: 8, padding: isPassword ? '11px 44px 11px 14px' : '11px 14px',
-          color: C.text, fontSize: 15, outline: 'none', fontFamily: 'inherit',
-          transition: 'border-color 0.15s', boxSizing: 'border-box',
-          boxShadow: focused ? '0 0 0 3px rgba(27,120,247,0.1)' : 'none',
-        }}
+        className="auth-input"
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
       />
@@ -102,10 +89,9 @@ function Input({ type = 'text', value, onChange, placeholder, required }) {
         <button
           type="button" onClick={() => setShow(s => !s)} tabIndex={-1}
           style={{
-            position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
             background: 'none', border: 'none', cursor: 'pointer',
             color: show ? C.blue : C.muted, padding: 0, display: 'flex',
-            transition: 'color 0.15s',
+            transition: 'color 0.15s', flexShrink: 0,
           }}
         >
           <EyeIcon visible={show} />
@@ -117,7 +103,6 @@ function Input({ type = 'text', value, onChange, placeholder, required }) {
 
 export default function Register() {
   const navigate = useNavigate()
-  const { theme } = useTheme()
   const [step, setStep] = useState('role') // 'role' | 'form'
   const [role, setRole] = useState('')
   const [name, setName] = useState('')
@@ -153,190 +138,259 @@ export default function Register() {
   }
 
   const selectedRole = ROLES.find(r => r.id === role)
+  const progressStep = done ? 2 : step === 'role' ? 1 : 2
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: theme === 'light'
-        ? 'linear-gradient(135deg, #c8d5ea 0%, #d9e2f0 30%, #e6eaf2 60%, #dcd8ef 100%)'
-        : C.bg,
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      padding: '24px 16px', fontFamily: 'inherit',
-      position: 'relative', overflow: 'hidden',
-    }}>
-      <div style={{ position: 'absolute', top: '-10%', left: '50%', transform: 'translateX(-50%)', width: 600, height: 400, borderRadius: '50%', background: `radial-gradient(ellipse, rgba(27,120,247,${theme === 'light' ? '0.1' : '0.07'}) 0%, transparent 70%)`, pointerEvents: 'none' }} />
+    <div className="auth-shell">
       <style>{`
-        .role-card { transition: all 0.15s; cursor: pointer; }
-        .role-card:hover { transform: translateY(-2px); }
+        .auth-shell { min-height: 100vh; display: flex; background: var(--c-bg); font-family: inherit; }
+        .auth-side {
+          position: relative; overflow: hidden;
+          flex: 0 0 42%; display: flex; align-items: center; justify-content: flex-start;
+          padding: 0 0 0 64px; background: linear-gradient(115deg, #000 0%, #050b1c 40%, #0e2249 85%, #143169 100%);
+          border-right: 1px solid var(--c-border);
+        }
+        .auth-side-content {
+          position: relative; z-index: 3;
+          display: flex; flex-direction: column; align-items: flex-start; gap: 22px;
+          text-align: left;
+        }
+        .auth-side-mark { width: 72px; height: auto; display: block; }
+        .auth-side-phrase {
+          font-family: var(--font-heading); font-weight: 400;
+          font-size: clamp(22px, 2.6vw, 36px); line-height: 1.3;
+          letter-spacing: -0.5px; color: #fff; margin: 0;
+          white-space: nowrap; text-align: left;
+          animation: auth-phrase-fade 0.6s ease;
+        }
+        @keyframes auth-phrase-fade {
+          from { opacity: 0; transform: translateY(8px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .auth-side-highlight {
+          background: #1b78f7; color: #fff;
+          padding: 2px 10px 9px; border-radius: 0 0 14px 14px;
+          display: inline-block;
+        }
+        .auth-side-letter {
+          display: inline-block;
+          animation: auth-letter-rise 0.45s ease both;
+        }
+        @keyframes auth-letter-rise {
+          from { opacity: 0; transform: translateY(60%); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .auth-side-progress {
+          position: absolute; left: 64px; right: 56px; bottom: 48px;
+          display: flex; align-items: center; gap: 12px; z-index: 3;
+        }
+        .auth-side-progress-track {
+          position: relative; flex: 1; height: 3px; border-radius: 3px;
+          background: rgba(255,255,255,0.14); overflow: hidden;
+        }
+        .auth-side-progress-fill {
+          position: relative; height: 100%; border-radius: 3px;
+          background: linear-gradient(90deg, #0f5fd1, #4a93f9);
+          transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+          overflow: hidden;
+        }
+        .auth-side-progress-fill::after {
+          content: ''; position: absolute; inset: 0;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.55), transparent);
+          width: 60%; animation: auth-progress-shimmer 1.6s ease-in-out infinite;
+        }
+        @keyframes auth-progress-shimmer {
+          0%   { transform: translateX(-100%); }
+          100% { transform: translateX(220%); }
+        }
+        .auth-side-progress-label {
+          font-size: 11px; font-weight: 600; letter-spacing: 0.5px;
+          color: rgba(255,255,255,0.55); flex-shrink: 0;
+        }
+        .auth-main { flex: 1; display: flex; align-items: center; justify-content: center; padding: 24px 16px; }
+        .auth-card { width: 100%; max-width: 420px; }
+        .auth-input {
+          flex: 1; width: 100%; background: transparent; border: none;
+          color: var(--c-text); font-size: 16px; outline: none; font-family: inherit;
+          padding: 10px 0; box-sizing: border-box;
+        }
+        .auth-field-wrap {
+          display: flex; align-items: center; gap: 10px;
+          border-bottom: 1.5px solid var(--c-border); transition: border-color 0.15s;
+        }
+        .auth-submit { transition: opacity 0.15s; }
+        .auth-submit:hover:not(:disabled) { opacity: 0.88; }
+        .auth-input:-webkit-autofill,
+        .auth-input:-webkit-autofill:hover,
+        .auth-input:-webkit-autofill:focus {
+          -webkit-text-fill-color: var(--c-text) !important;
+          -webkit-box-shadow: 0 0 0 1000px var(--c-bg) inset !important;
+          box-shadow: 0 0 0 1000px var(--c-bg) inset !important;
+          caret-color: var(--c-text) !important;
+          transition: background-color 9999s ease-in-out 0s;
+        }
+        .role-card { transition: border-color 0.15s, color 0.15s; cursor: pointer; }
+        @media (max-width: 860px) {
+          .auth-side { display: none; }
+        }
         @media (max-width: 350px) { .register-role-grid { grid-template-columns: 1fr !important; } }
-        @media (max-width: 400px) { .register-card { padding: 24px 18px !important; } }
       `}</style>
-      <div style={{ width: '100%', maxWidth: 480, position: 'relative' }}>
 
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <img
-            src={theme === 'light' ? '/light_mode_LI.png' : '/icon_logo.png'} alt="Showo"
-            style={{ height: 'clamp(44px, 10vw, 56px)', width: 'auto', cursor: 'pointer' }}
-            onClick={() => navigate('/')}
-          />
-        </div>
+      <AuthSidePanel
+        phrases={REGISTER_PHRASES}
+        step={progressStep} totalSteps={2}
+      />
 
-        {done ? (
-          <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: '40px 32px', textAlign: 'center' }}>
-            <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'center' }}><Mail size={52} color={C.blue} /></div>
-            <h2 style={{ color: C.text, fontSize: 20, fontWeight: 700, margin: '0 0 10px' }}>
-              Confirma o teu email
-            </h2>
-            <p style={{ color: C.muted, fontSize: 15, lineHeight: 1.65, margin: '0 0 8px' }}>
-              Enviámos um email para
-            </p>
-            <p style={{ color: C.text, fontSize: 15, fontWeight: 600, margin: '0 0 16px' }}>{email}</p>
-            <p style={{ color: C.muted, fontSize: 14, lineHeight: 1.65, margin: '0 0 28px' }}>
-              Abre o link no email para ativar a tua conta. Verifica também a pasta de spam.
-            </p>
-            <button
-              onClick={() => navigate('/login')}
-              style={{
-                background: '#1b78f7',
-                border: 'none', borderRadius: 10, padding: '12px 28px',
-                color: '#fff', fontSize: 14, fontWeight: 700,
-                cursor: 'pointer', fontFamily: 'inherit',
-                boxShadow: '0 4px 20px rgba(27,120,247,0.25)',
-              }}
-            >
-              Ir para o login
-            </button>
+      <div className="auth-main">
+        <div className="auth-card">
+          <div className="auth-main-logo" style={{ marginBottom: 36 }}>
+            <img
+              src="/icon_logo.png" alt="Showo"
+              style={{ height: 32, width: 'auto', cursor: 'pointer' }}
+              onClick={() => navigate('/')}
+            />
           </div>
 
-        ) : step === 'role' ? (
-          /* ── STEP 1: escolha de tipo de conta ── */
-          <div className="register-card" style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 18, padding: '36px 32px', boxShadow: '0 8px 40px rgba(0,0,0,0.35)' }}>
-            <h1 style={{ color: C.text, fontSize: 22, fontWeight: 700, margin: '0 0 6px' }}>Criar conta</h1>
-            <p style={{ color: C.muted, fontSize: 14, margin: '0 0 28px' }}>Como vais usar o Showo?</p>
+          {done ? (
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ marginBottom: 16, display: 'flex' }}><Mail size={48} color={C.blue} /></div>
+              <h2 style={{ color: C.text, fontSize: 22, fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 10px', letterSpacing: '-0.5px' }}>
+                Confirma o teu email
+              </h2>
+              <p style={{ color: C.muted, fontSize: 15, lineHeight: 1.65, margin: '0 0 8px' }}>
+                Enviámos um email para
+              </p>
+              <p style={{ color: C.text, fontSize: 15, fontWeight: 600, margin: '0 0 16px' }}>{email}</p>
+              <p style={{ color: C.muted, fontSize: 14, lineHeight: 1.65, margin: '0 0 28px' }}>
+                Abre o link no email para ativar a tua conta. Verifica também a pasta de spam.
+              </p>
+              <button
+                onClick={() => navigate('/login')}
+                className="auth-submit"
+                style={{
+                  background: '#1b78f7',
+                  border: 'none', borderRadius: 8, padding: '12px 28px',
+                  color: '#fff', fontSize: 14, fontWeight: 700,
+                  cursor: 'pointer', fontFamily: 'inherit',
+                }}
+              >
+                Ir para o login
+              </button>
+            </div>
 
-            <div className="register-role-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 24 }}>
-              {ROLES.map(r => {
-                const selected = role === r.id
-                return (
-                  <div
-                    key={r.id}
-                    className="role-card"
-                    onClick={() => setRole(r.id)}
-                    style={{
-                      background: selected ? r.bg : 'var(--c-bg-alt)',
-                      border: `2px solid ${selected ? r.border : C.border}`,
-                      borderRadius: 14, padding: '18px 16px',
-                      display: 'flex', flexDirection: 'column', gap: 8,
-                      boxShadow: selected ? `0 0 0 1px ${r.border}` : 'none',
-                    }}
-                  >
-                    <span style={{ color: r.color, display: 'flex', alignItems: 'center' }}>{r.icon}</span>
-                    <div>
-                      <div style={{ fontSize: 15, fontWeight: 700, color: selected ? r.color : C.text, marginBottom: 3 }}>
-                        {r.label}
-                      </div>
-                      <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.4 }}>
-                        {r.desc}
+          ) : step === 'role' ? (
+            /* ── STEP 1: escolha de tipo de conta ── */
+            <>
+              <h1 style={{ color: C.text, fontSize: 26, fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 6px', letterSpacing: '-0.5px' }}>Criar conta</h1>
+              <p style={{ color: C.muted, fontSize: 14, margin: '0 0 28px' }}>Como vais usar o Showo?</p>
+
+              <div className="register-role-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 28 }}>
+                {ROLES.map(r => {
+                  const selected = role === r.id
+                  return (
+                    <div
+                      key={r.id}
+                      className="role-card"
+                      onClick={() => setRole(r.id)}
+                      style={{
+                        border: `1px solid ${selected ? r.color : C.border}`,
+                        borderRadius: 8, padding: '16px 14px',
+                        display: 'flex', flexDirection: 'column', gap: 8,
+                      }}
+                    >
+                      <span style={{ color: r.color, display: 'flex', alignItems: 'center' }}>{r.icon}</span>
+                      <div>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: selected ? r.color : C.text, marginBottom: 3 }}>
+                          {r.label}
+                        </div>
+                        <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.4 }}>
+                          {r.desc}
+                        </div>
                       </div>
                     </div>
-                    {selected && (
-                      <div style={{ width: 16, height: 16, borderRadius: '50%', background: r.color, display: 'flex', alignItems: 'center', justifyContent: 'center', alignSelf: 'flex-end' }}>
-                        <svg width="9" height="7" viewBox="0 0 9 7" fill="none">
-                          <path d="M1 3.5L3.5 6L8 1" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                      </div>
-                    )}
-                  </div>
-                )
-              })}
-            </div>
-
-            <button
-              onClick={() => { if (role) setStep('form') }}
-              disabled={!role}
-              style={{
-                width: '100%',
-                background: role ? (selectedRole?.color ?? C.blue) : 'var(--c-border)',
-                color: '#fff', border: 'none', borderRadius: 10, padding: '12px',
-                fontSize: 14, fontWeight: 700, cursor: role ? 'pointer' : 'not-allowed',
-                fontFamily: 'inherit', transition: 'all 0.15s',
-                boxShadow: role ? '0 4px 20px rgba(27,120,247,0.3)' : 'none',
-              }}
-            >
-              {role ? `Continuar como ${selectedRole?.label}` : 'Escolhe um tipo de conta'}
-            </button>
-          </div>
-
-        ) : (
-          /* ── STEP 2: formulário ── */
-          <div className="register-card" style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 18, padding: '36px 32px', boxShadow: '0 8px 40px rgba(0,0,0,0.35)' }}>
-            {/* Role badge + back */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ color: selectedRole?.color, display: 'flex', alignItems: 'center' }}>{selectedRole?.icon && <span style={{ transform: 'scale(0.8)' }}>{selectedRole.icon}</span>}</span>
-                <span style={{
-                  fontSize: 12, fontWeight: 700, color: selectedRole?.color,
-                  background: selectedRole?.bg, border: `1px solid ${selectedRole?.border}`,
-                  borderRadius: 999, padding: '3px 12px',
-                }}>
-                  {selectedRole?.label}
-                </span>
+                  )
+                })}
               </div>
-              <button
-                onClick={() => setStep('role')}
-                style={{ background: 'none', border: 'none', color: C.muted, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}
-              >
-                <><ArrowLeft size={14} style={{marginRight:5,verticalAlign:"middle"}} />Alterar</>
-              </button>
-            </div>
-
-            <h1 style={{ color: C.text, fontSize: 20, fontWeight: 700, margin: '0 0 20px' }}>Os teus dados</h1>
-
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <Field label="O teu nome">
-                <Input value={name} onChange={e => setName(e.target.value)} placeholder="Ex: João Silva" required />
-              </Field>
-              <Field label="Email">
-                <Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="tu@email.com" required />
-              </Field>
-              <Field label="Palavra-passe">
-                <Input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Mínimo 6 caracteres" required />
-              </Field>
-              <Field label="Confirmar palavra-passe">
-                <Input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="Repete a palavra-passe" required />
-              </Field>
-
-              {error && (
-                <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 8, padding: '10px 14px', color: C.error, fontSize: 14 }}>
-                  {error}
-                </div>
-              )}
 
               <button
-                type="submit" disabled={loading}
+                onClick={() => { if (role) setStep('form') }}
+                disabled={!role}
+                className="auth-submit"
                 style={{
-                  background: loading ? 'var(--c-border)' : '#1b78f7',
-                  color: '#fff', border: 'none',
-                  borderRadius: 10, padding: '12px', fontSize: 14, fontWeight: 700,
-                  cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit', marginTop: 4,
-                  transition: 'opacity 0.15s',
-                  boxShadow: loading ? 'none' : '0 4px 16px rgba(27,120,247,0.25)',
+                  width: '100%',
+                  background: role ? (selectedRole?.color ?? C.blue) : 'var(--c-border)',
+                  color: '#fff', border: 'none', borderRadius: 8, padding: '13px',
+                  fontSize: 14, fontWeight: 700, cursor: role ? 'pointer' : 'not-allowed',
+                  fontFamily: 'inherit',
                 }}
-                onMouseEnter={e => { if (!loading) e.currentTarget.style.opacity = '0.88' }}
-                onMouseLeave={e => { if (!loading) e.currentTarget.style.opacity = '1' }}
               >
-                {loading ? 'A criar conta…' : 'Criar conta'}
+                {role ? `Continuar como ${selectedRole?.label}` : 'Escolhe um tipo de conta'}
               </button>
-            </form>
-          </div>
-        )}
+            </>
 
-        {!done && (
-          <p style={{ textAlign: 'center', color: C.muted, fontSize: 14, marginTop: 20 }}>
-            Já tens conta?{' '}
-            <Link to="/login" style={{ color: C.blue, textDecoration: 'none', fontWeight: 500 }}>Entrar</Link>
-          </p>
-        )}
+          ) : (
+            /* ── STEP 2: formulário ── */
+            <>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ color: selectedRole?.color, display: 'flex', alignItems: 'center', transform: 'scale(0.85)' }}>{selectedRole?.icon}</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: selectedRole?.color }}>
+                    {selectedRole?.label}
+                  </span>
+                </div>
+                <button
+                  onClick={() => setStep('role')}
+                  style={{ background: 'none', border: 'none', color: C.muted, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', padding: 0, display: 'flex', alignItems: 'center', gap: 5 }}
+                >
+                  <ArrowLeft size={14} />Alterar
+                </button>
+              </div>
+
+              <h1 style={{ color: C.text, fontSize: 22, fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 24px', letterSpacing: '-0.5px' }}>Os teus dados</h1>
+
+              <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
+                <Field label="O teu nome">
+                  <Input value={name} onChange={e => setName(e.target.value)} placeholder="Ex: João Silva" required />
+                </Field>
+                <Field label="Email">
+                  <Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="tu@email.com" required />
+                </Field>
+                <Field label="Palavra-passe">
+                  <Input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Mínimo 6 caracteres" required />
+                </Field>
+                <Field label="Confirmar palavra-passe">
+                  <Input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="Repete a palavra-passe" required />
+                </Field>
+
+                {error && (
+                  <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 8, padding: '10px 14px', color: C.error, fontSize: 14 }}>
+                    {error}
+                  </div>
+                )}
+
+                <button
+                  type="submit" disabled={loading}
+                  className="auth-submit"
+                  style={{
+                    background: loading ? 'var(--c-border)' : '#1b78f7',
+                    color: '#fff', border: 'none',
+                    borderRadius: 8, padding: '13px', fontSize: 14, fontWeight: 700,
+                    cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit', marginTop: 4,
+                  }}
+                >
+                  {loading ? 'A criar conta…' : 'Criar conta'}
+                </button>
+              </form>
+            </>
+          )}
+
+          {!done && (
+            <p style={{ textAlign: 'center', color: C.muted, fontSize: 14, marginTop: 24 }}>
+              Já tens conta?{' '}
+              <Link to="/login" style={{ color: C.blue, textDecoration: 'none', fontWeight: 500 }}>Entrar</Link>
+            </p>
+          )}
+        </div>
       </div>
     </div>
   )

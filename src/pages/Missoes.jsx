@@ -204,7 +204,7 @@ function MissionCard({ mission, done, progress }) {
         style={{
           background: C.card,
           border: `1px solid ${C.border}`,
-          borderRadius: 12,
+          borderRadius: 10,
           padding: '10px 14px',
           display: 'flex',
           alignItems: 'center',
@@ -213,7 +213,7 @@ function MissionCard({ mission, done, progress }) {
         }}
       >
         <div style={{
-          width: 32, height: 32, borderRadius: 9, flexShrink: 0,
+          width: 32, height: 32, borderRadius: 8, flexShrink: 0,
           background: C.bgAlt,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
@@ -238,17 +238,17 @@ function MissionCard({ mission, done, progress }) {
       style={{
         background: hov ? C.cardHover : C.card,
         border: `1px solid ${hov ? C.borderBright : C.border}`,
-        borderRadius: 12,
+        borderRadius: 10,
         padding: '12px 14px',
         display: 'flex',
         alignItems: 'center',
         gap: 12,
-        transition: 'all 0.18s',
+        transition: 'background 0.15s, border-color 0.15s',
       }}
     >
       {/* Icon */}
       <div style={{
-        width: 36, height: 36, borderRadius: 10, flexShrink: 0,
+        width: 36, height: 36, borderRadius: 9, flexShrink: 0,
         background: `${accent}18`,
         border: `1px solid ${accent}30`,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -353,14 +353,14 @@ export default function Missoes() {
         {/* Header */}
         <div className="missoes-hd" style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 8 }}>
           <div style={{
-            width: 48, height: 48, borderRadius: 14,
+            width: 48, height: 48, borderRadius: 12,
             background: 'rgba(27,120,247,0.12)', border: '1px solid rgba(27,120,247,0.25)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
             <Swords size={24} color="#1b78f7" />
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <h1 style={{ margin: 0, fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 900, color: C.text, letterSpacing: '-0.5px' }}>
+            <h1 style={{ margin: 0, fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 400, color: C.text, letterSpacing: '-1px', fontFamily: 'var(--font-heading)' }}>
               Missões
             </h1>
             <p style={{ margin: 0, fontSize: 13, color: C.muted }}>
@@ -371,7 +371,7 @@ export default function Missoes() {
             onClick={() => navigate('/conquistas')}
             style={{
               display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0,
-              padding: '6px 12px', borderRadius: 8,
+              padding: '6px 12px', borderRadius: 7,
               background: 'transparent', border: `1px solid ${C.border}`,
               color: C.muted, fontSize: 12, fontWeight: 600,
               cursor: 'pointer', fontFamily: 'inherit',
@@ -388,7 +388,7 @@ export default function Missoes() {
         {/* XP Progress card */}
         <div style={{
           background: C.card, border: `1px solid ${C.border}`,
-          borderRadius: 16, padding: '20px 24px', marginBottom: 28, marginTop: 24,
+          borderRadius: 12, padding: '20px 24px', marginBottom: 28, marginTop: 24,
         }}>
           <div className="missoes-stats" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
             <div>
@@ -421,7 +421,7 @@ export default function Missoes() {
         {loading ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {[...Array(6)].map((_, i) => (
-              <div key={i} style={{ height: 76, borderRadius: 14, background: C.card, border: `1px solid ${C.border}`, opacity: 0.5 }} />
+              <div key={i} style={{ height: 76, borderRadius: 10, background: C.card, border: `1px solid ${C.border}`, opacity: 0.5 }} />
             ))}
           </div>
         ) : (

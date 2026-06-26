@@ -105,7 +105,7 @@ export default function Candidatos() {
       <div className="page-content">
         {/* Header */}
         <div style={{ marginBottom: 28 }}>
-          <h1 style={{ color: C.text, fontSize: 'clamp(26px,4vw,38px)', fontWeight: 900, margin: '0 0 4px', letterSpacing: '-0.5px' }}>
+          <h1 style={{ color: C.text, fontSize: 'clamp(26px,4vw,38px)', fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 4px', letterSpacing: '-0.5px' }}>
             Candidatos guardados
           </h1>
           <p style={{ color: C.muted, fontSize: 14, margin: 0 }}>
@@ -137,7 +137,7 @@ export default function Candidatos() {
             </p>
             {saved.length === 0 && (
               <button onClick={() => navigate('/explorar?tab=pessoas')}
-                style={{ background: `linear-gradient(135deg, ${accentColor}, #4f46e5)`, border: 'none', borderRadius: 10, padding: '11px 24px', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+                style={{ background: accentColor, border: 'none', borderRadius: 10, padding: '11px 24px', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
                 <Users size={14} style={{ verticalAlign: 'middle', marginRight: 6 }} />Explorar candidatos
               </button>
             )}
@@ -149,7 +149,7 @@ export default function Candidatos() {
               if (!p) return null
               const roleInfo = ROLE_LABELS[p.role] ?? ROLE_LABELS.aluno
               return (
-                <div key={s.id} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div key={s.id} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
                   {/* Header row */}
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
                     <button onClick={() => navigate(p.username ? `/u/${p.username}` : `/u/${p.id}`)} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', flexShrink: 0 }}>
@@ -173,12 +173,15 @@ export default function Candidatos() {
                   </div>
 
                   {/* Badges */}
-                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: roleInfo.color, background: `${roleInfo.color}18`, borderRadius: 6, padding: '2px 8px' }}>{roleInfo.label}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', fontSize: 11, fontWeight: 700 }}>
+                    <span style={{ color: roleInfo.color }}>{roleInfo.label}</span>
                     {p.available_for_work && (
-                      <span style={{ fontSize: 11, fontWeight: 700, color: C.green, background: 'rgba(34,197,94,0.1)', borderRadius: 6, padding: '2px 8px', display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <Briefcase size={10} /> Disponível
-                      </span>
+                      <>
+                        <span style={{ color: C.muted }}>·</span>
+                        <span style={{ color: C.green, display: 'flex', alignItems: 'center', gap: 4 }}>
+                          <Briefcase size={10} /> Disponível
+                        </span>
+                      </>
                     )}
                   </div>
 
@@ -188,7 +191,7 @@ export default function Candidatos() {
                   {/* Actions */}
                   <div style={{ display: 'flex', gap: 8 }}>
                     <button onClick={() => navigate(`/mensagens?to=${p.id}`)}
-                      style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, background: `linear-gradient(135deg, ${accentColor}, #4f46e5)`, border: 'none', borderRadius: 8, padding: '8px 0', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+                      style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, background: accentColor, border: 'none', borderRadius: 8, padding: '8px 0', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
                       <MessageSquare size={13} /> Mensagem
                     </button>
                     <button onClick={() => navigate(p.username ? `/u/${p.username}` : `/u/${p.id}`)}

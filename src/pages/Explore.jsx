@@ -51,13 +51,13 @@ const TYPE_COLORS = {
   presentation:'#8b5cf6',
 }
 
-function getAreaGradient(area) {
+function getAreaColor(area) {
   const a = (area || '').toLowerCase()
-  if (a.includes('educa')) return 'linear-gradient(135deg, #1e3a5f, #2d6a4f)'
-  if (a.includes('comercial') || a.includes('marketing') || a.includes('vendas')) return 'linear-gradient(135deg, #3d1a6e, #1a3a6e)'
-  if (a.includes('tecnolog') || a.includes('informátic') || a.includes('programaç') || a.includes('software')) return 'linear-gradient(135deg, #0d2137, #1a4a6e)'
-  if (a.includes('saúde') || a.includes('saude') || a.includes('medical') || a.includes('bio')) return 'linear-gradient(135deg, #1a4a2e, #2d6a4f)'
-  return 'linear-gradient(135deg, #2d1a4a, #1a2d6e)'
+  if (a.includes('educa')) return '#1e3a5f'
+  if (a.includes('comercial') || a.includes('marketing') || a.includes('vendas')) return '#1a3a6e'
+  if (a.includes('tecnolog') || a.includes('informátic') || a.includes('programaç') || a.includes('software')) return '#0d2137'
+  if (a.includes('saúde') || a.includes('saude') || a.includes('medical') || a.includes('bio')) return '#1a4a2e'
+  return '#1a2d6e'
 }
 
 function getLevelColor(score) {
@@ -340,8 +340,8 @@ export default function Explore() {
           border: 1px solid #1e3050;
           border-radius: 14px;
         }
-        .explore-card { transition: all 0.18s ease !important; }
-        .explore-card:hover { border-color: var(--c-border-bright) !important; transform: translateY(-3px) !important; box-shadow: 0 12px 40px rgba(0,0,0,0.3) !important; background: var(--c-card-hover) !important; }
+        .explore-card { transition: border-color 0.15s, background 0.15s !important; }
+        .explore-card:hover { border-color: var(--c-border-bright) !important; background: var(--c-card-hover) !important; }
         .explore-card-arrow { opacity: 0; transform: translateX(-4px); transition: opacity 0.15s, transform 0.15s; }
         .explore-card:hover .explore-card-arrow { opacity: 1; transform: translateX(0); }
         .explore-grid { grid-template-columns: repeat(auto-fill, minmax(288px, 1fr)); }
@@ -430,7 +430,7 @@ export default function Explore() {
       <div className="page-content">
         {/* Header */}
         <div style={{ marginBottom: 24 }}>
-          <h1 style={{ fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 900, margin: '0 0 8px', letterSpacing: '-0.5px' }}>
+          <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 400, margin: '0 0 8px', letterSpacing: '-0.5px' }}>
             Explorar
           </h1>
           <p style={{ color: colors.muted, margin: 0, fontSize: 15 }}>Descobre projetos e pessoas da comunidade Showo</p>
@@ -516,14 +516,13 @@ export default function Explore() {
         {/* Recruiter/Empresa banner — shown automatically based on account role */}
         {recruiterMode && roleInfo && (
           <div style={{
-            background: roleInfo.bg,
-            border: `1px solid ${roleInfo.border}`,
-            borderRadius: 12, padding: '14px 20px', marginBottom: 24,
+            borderLeft: `2px solid ${roleInfo.color}`,
+            padding: '4px 0 4px 16px', marginBottom: 24,
             display: 'flex', alignItems: 'center', gap: 12,
           }}>
             <span style={{ color: roleInfo.color, display: 'flex', flexShrink: 0, alignItems: 'center' }}>{roleInfo.icon}</span>
-            <p style={{ margin: 0, fontSize: 13, color: roleInfo.color, lineHeight: 1.5 }}>
-              <strong>Estás em modo {roleInfo.label}</strong> — os criadores dos projetos são notificados quando os visitas.
+            <p style={{ margin: 0, fontSize: 13, color: colors.muted, lineHeight: 1.5 }}>
+              <strong style={{ color: roleInfo.color }}>Estás em modo {roleInfo.label}</strong> — os criadores dos projetos são notificados quando os visitas.
               Vês também as tecnologias usadas em cada projeto.
             </p>
           </div>
@@ -605,9 +604,8 @@ export default function Explore() {
                   onClick={() => handleProjectClick(project)}
                   style={{
                     background: colors.card, border: `1px solid ${colors.border}`,
-                    borderRadius: 18, padding: '22px', cursor: 'pointer',
+                    borderRadius: 12, padding: '22px', cursor: 'pointer',
                     display: 'flex', flexDirection: 'column', gap: 12,
-                    boxShadow: '0 2px 12px rgba(0,0,0,0.3)',
                   }}
                 >
                   {/* Cover */}
@@ -615,7 +613,7 @@ export default function Explore() {
                     height: project.cover_url ? 120 : 80,
                     borderRadius: '10px 10px 0 0',
                     marginTop: -22, marginLeft: -22, marginRight: -22, marginBottom: 16,
-                    background: getAreaGradient(project.area),
+                    background: getAreaColor(project.area),
                     position: 'relative', overflow: 'hidden',
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                     padding: project.cover_url ? 0 : '0 16px',
@@ -658,21 +656,16 @@ export default function Explore() {
 
                   {/* Score + area */}
                   <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                      {project.area && (
-                        <span style={{ fontSize: 11, color: colors.blue, background: 'rgba(27,120,247,0.08)', border: '1px solid rgba(27,120,247,0.15)', borderRadius: 999, padding: '3px 10px', fontWeight: 600 }}>
-                          {project.area}
-                        </span>
-                      )}
-                      {project.is_pap && (
-                        <span style={{ fontSize: 11, color: colors.yellow, background: 'rgba(234,179,8,0.08)', border: '1px solid rgba(234,179,8,0.2)', borderRadius: 999, padding: '3px 10px', fontWeight: 600 }}>
-                          PAP
-                        </span>
-                      )}
+                    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 600 }}>
+                      {project.area && <span style={{ color: colors.blue }}>{project.area}</span>}
+                      {project.is_pap && <>{project.area && <span style={{ color: colors.subtle }}>·</span>}<span style={{ color: colors.yellow }}>PAP</span></>}
                       {project.available_for_work && (
-                        <span style={{ fontSize: 11, color: '#10b981', background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.25)', borderRadius: 999, padding: '3px 10px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                          <Briefcase size={10} style={{ flexShrink: 0 }} /> Disponível
-                        </span>
+                        <>
+                          {(project.area || project.is_pap) && <span style={{ color: colors.subtle }}>·</span>}
+                          <span style={{ color: '#10b981', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                            <Briefcase size={10} style={{ flexShrink: 0 }} /> Disponível
+                          </span>
+                        </>
                       )}
                     </div>
                     <ScoreRingSmall score={project.score ?? 0} />
@@ -839,7 +832,7 @@ export default function Explore() {
                         style={{
                           background: colors.card,
                           border: `1px solid ${colors.border}`,
-                          borderRadius: 14,
+                          borderRadius: 12,
                           padding: '16px 18px',
                           cursor: profileUrl ? 'pointer' : 'default',
                           display: 'flex', alignItems: 'center', gap: 14,
@@ -861,19 +854,19 @@ export default function Explore() {
                               {displayName}
                             </span>
                             {p.available_for_work && (
-                              <span style={{ flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 10, fontWeight: 700, color: '#10b981', background: 'rgba(16,185,129,0.1)', borderRadius: 999, padding: '2px 7px' }}>
+                              <span style={{ flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 10, fontWeight: 700, color: '#10b981' }}>
                                 <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#10b981' }} /> Disponível
                               </span>
                             )}
                           </div>
 
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600, color: rc.color, background: rc.bg, borderRadius: 6, padding: '2px 8px' }}>
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600, color: rc.color }}>
                               {rc.icon} {rc.label}
                             </span>
                             {(p.company || p.area || p.course) && (
                               <span style={{ fontSize: 12, color: colors.subtle, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                {p.company ? `${p.company}${p.company_role ? ` · ${p.company_role}` : ''}` : (p.area || p.course)}
+                                · {p.company ? `${p.company}${p.company_role ? ` · ${p.company_role}` : ''}` : (p.area || p.course)}
                               </span>
                             )}
                           </div>
@@ -883,9 +876,9 @@ export default function Explore() {
                                 <span key={skill} style={{
                                   fontSize: 10, fontWeight: 600,
                                   color: filterSkill === skill ? colors.blue : colors.muted,
-                                  background: filterSkill === skill ? 'rgba(27,120,247,0.1)' : colors.bgAlt,
+                                  background: filterSkill === skill ? 'rgba(27,120,247,0.08)' : 'transparent',
                                   border: `1px solid ${filterSkill === skill ? 'rgba(27,120,247,0.3)' : colors.border}`,
-                                  borderRadius: 20, padding: '2px 8px',
+                                  borderRadius: 6, padding: '2px 8px',
                                 }}>
                                   {skill}
                                 </span>

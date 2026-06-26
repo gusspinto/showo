@@ -37,17 +37,17 @@ function StatCard({ icon, label, value, color = C.blue, sub }) {
   return (
     <div style={{
       background: C.card, border: `1px solid ${C.border}`,
-      borderRadius: 16, padding: '22px 24px',
+      borderRadius: 12, padding: '22px 24px',
       display: 'flex', alignItems: 'flex-start', gap: 16,
     }}>
       <div style={{
-        width: 44, height: 44, borderRadius: 12, flexShrink: 0,
+        width: 44, height: 44, borderRadius: 10, flexShrink: 0,
         background: color + '18', border: `1px solid ${color}30`,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         fontSize: 20,
       }}>{icon}</div>
       <div>
-        <div style={{ fontSize: 26, fontWeight: 800, color, letterSpacing: '-0.5px', lineHeight: 1 }}>{value}</div>
+        <div style={{ fontSize: 26, fontWeight: 400, color, letterSpacing: '-0.5px', lineHeight: 1, fontFamily: 'var(--font-heading)' }}>{value}</div>
         <div style={{ fontSize: 13, color: C.muted, fontWeight: 500, marginTop: 4 }}>{label}</div>
         {sub && <div style={{ fontSize: 11, color: C.subtle, marginTop: 3 }}>{sub}</div>}
       </div>
@@ -55,12 +55,9 @@ function StatCard({ icon, label, value, color = C.blue, sub }) {
   )
 }
 
-function Badge({ children, color = C.blue, bg }) {
+function Badge({ children, color = C.blue }) {
   return (
-    <span style={{
-      fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 5,
-      background: bg || color + '18', border: `1px solid ${color}35`, color,
-    }}>{children}</span>
+    <span style={{ fontSize: 11, fontWeight: 700, color }}>{children}</span>
   )
 }
 
@@ -87,13 +84,13 @@ function ConfirmModal({ title, body, onConfirm, onCancel, danger = true }) {
     >
       <div style={{
         background: C.card, border: `1px solid ${danger ? C.redBorder : C.borderBright}`,
-        borderRadius: 18, padding: '28px 32px', maxWidth: 420, width: '100%',
-        boxShadow: '0 16px 48px rgba(0,0,0,0.6)',
+        borderRadius: 12, padding: '28px 32px', maxWidth: 420, width: '100%',
+        boxShadow: 'none',
       }}>
         <div style={{ fontSize: 28, marginBottom: 12, textAlign: 'center', display: 'flex', justifyContent: 'center' }}>
           {danger ? <AlertTriangle size={28} color="#ef4444" /> : <HelpCircle size={28} color="#1b78f7" />}
         </div>
-        <h3 style={{ margin: '0 0 10px', fontSize: 17, fontWeight: 700, color: C.text, textAlign: 'center' }}>{title}</h3>
+        <h3 style={{ margin: '0 0 10px', fontSize: 17, fontWeight: 400, fontFamily: 'var(--font-heading)', letterSpacing: '-0.3px', color: C.text, textAlign: 'center' }}>{title}</h3>
         <p style={{ margin: '0 0 24px', fontSize: 14, color: C.muted, textAlign: 'center', lineHeight: 1.6 }}>{body}</p>
         <div style={{ display: 'flex', gap: 10 }}>
           <button
@@ -102,7 +99,7 @@ function ConfirmModal({ title, body, onConfirm, onCancel, danger = true }) {
           >Cancelar</button>
           <button
             onClick={onConfirm}
-            style={{ flex: 1, background: danger ? '#7f1d1d' : C.blue, border: `1px solid ${danger ? C.redBorder : 'transparent'}`, color: danger ? C.red : '#fff', borderRadius: 8, padding: '10px', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+            style={{ flex: 1, background: danger ? 'transparent' : C.blue, border: `1px solid ${danger ? C.redBorder : 'transparent'}`, color: danger ? C.red : '#fff', borderRadius: 8, padding: '10px', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
           >{danger ? 'Eliminar' : 'Confirmar'}</button>
         </div>
       </div>
@@ -140,7 +137,7 @@ function OverviewTab({ users, projects }) {
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
         {/* Recent projects */}
-        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: '20px 22px' }}>
+        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: '20px 22px' }}>
           <h3 style={{ margin: '0 0 16px', fontSize: 12, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Projetos recentes</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {recentProjects.map(p => (
@@ -162,7 +159,7 @@ function OverviewTab({ users, projects }) {
         </div>
 
         {/* Recent users */}
-        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: '20px 22px' }}>
+        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: '20px 22px' }}>
           <h3 style={{ margin: '0 0 16px', fontSize: 12, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Utilizadores recentes</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {recentUsers.map(u => (
@@ -274,17 +271,17 @@ function UsersTab({ users, projects, onToggleAdmin, onDeleteUser }) {
                 {u.is_admin ? (
                   <button
                     onClick={() => setConfirm({ type: 'revokeAdmin', user: u })}
-                    style={{ background: C.purpleSoft, border: `1px solid ${C.purple}30`, color: C.purple, borderRadius: 7, padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+                    style={{ background: 'transparent', border: `1px solid ${C.purple}40`, color: C.purple, borderRadius: 7, padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
                   >Revogar Admin</button>
                 ) : (
                   <button
                     onClick={() => setConfirm({ type: 'makeAdmin', user: u })}
-                    style={{ background: C.purpleSoft, border: `1px solid ${C.purple}30`, color: C.purple, borderRadius: 7, padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+                    style={{ background: 'transparent', border: `1px solid ${C.purple}40`, color: C.purple, borderRadius: 7, padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
                   >Tornar Admin</button>
                 )}
                 <button
                   onClick={() => setConfirm({ type: 'delete', user: u })}
-                  style={{ background: C.redSoft, border: `1px solid ${C.redBorder}`, color: C.red, borderRadius: 7, padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+                  style={{ background: 'transparent', border: `1px solid ${C.redBorder}`, color: C.red, borderRadius: 7, padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
                 >Eliminar</button>
               </div>
             </div>
@@ -376,11 +373,11 @@ function ProjectsTab({ projects, users, onDeleteProject }) {
               <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
                 <a
                   href={`/projeto/${p.slug}`} target="_blank" rel="noopener noreferrer"
-                  style={{ background: C.blueSoft, border: `1px solid ${C.blue}30`, color: C.blue, borderRadius: 7, padding: '6px 12px', fontSize: 12, fontWeight: 600, textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}
+                  style={{ background: 'transparent', border: `1px solid ${C.blue}40`, color: C.blue, borderRadius: 7, padding: '6px 12px', fontSize: 12, fontWeight: 600, textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}
                 >Ver</a>
                 <button
                   onClick={() => setConfirm({ id: p.id, name: p.name })}
-                  style={{ background: C.redSoft, border: `1px solid ${C.redBorder}`, color: C.red, borderRadius: 7, padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+                  style={{ background: 'transparent', border: `1px solid ${C.redBorder}`, color: C.red, borderRadius: 7, padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
                 >Eliminar</button>
               </div>
             </div>
@@ -478,7 +475,7 @@ export default function Admin() {
   return (
     <div style={{ minHeight: '100vh', background: C.bg, color: C.text, fontFamily: 'inherit' }}>
       <Navbar>
-        <div style={{ fontSize: 12, color: C.purple, fontWeight: 700, background: C.purpleSoft, border: `1px solid ${C.purple}30`, borderRadius: 6, padding: '4px 10px' }}>
+        <div style={{ fontSize: 12, color: C.purple, fontWeight: 700 }}>
           <Shield size={12} style={{ verticalAlign: 'middle', marginRight: 4 }} />Admin
         </div>
       </Navbar>
@@ -487,10 +484,10 @@ export default function Admin() {
       <div style={{
         position: 'fixed', bottom: 28, left: '50%', transform: `translateX(-50%) translateY(${toast ? 0 : 80}px)`,
         opacity: toast ? 1 : 0, transition: 'all 0.35s cubic-bezier(0.34,1.56,0.64,1)',
-        background: 'var(--c-bg-alt)', border: `1px solid ${C.borderBright}`, borderRadius: 12,
+        background: 'var(--c-bg-alt)', border: `1px solid ${C.borderBright}`, borderRadius: 10,
         padding: '12px 24px', fontSize: 14, fontWeight: 600, color: C.text,
         zIndex: 3000, pointerEvents: 'none', whiteSpace: 'nowrap',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+        boxShadow: 'none',
       }}>{toast}</div>
 
       <div className="page-content">
@@ -498,20 +495,20 @@ export default function Admin() {
         <div style={{ marginBottom: 28 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 6 }}>
             <div style={{
-              width: 44, height: 44, borderRadius: 12,
-              background: 'linear-gradient(135deg,#a855f7,#7c3aed)',
+              width: 44, height: 44, borderRadius: 10,
+              background: C.purple,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: '0 4px 16px rgba(168,85,247,0.3)',
+              boxShadow: 'none',
             }}><Shield size={22} color="#fff" /></div>
             <div>
-              <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, letterSpacing: '-0.3px' }}>Painel de Administração</h1>
+              <h1 style={{ margin: 0, fontSize: 24, fontWeight: 400, fontFamily: 'var(--font-heading)', letterSpacing: '-0.5px' }}>Painel de Administração</h1>
               <p style={{ margin: 0, fontSize: 13, color: C.muted }}>Gestão completa de utilizadores e projetos</p>
             </div>
           </div>
         </div>
 
         {/* Tabs */}
-        <div style={{ display: 'flex', gap: 4, marginBottom: 24, background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 4, width: 'fit-content' }}>
+        <div style={{ display: 'flex', gap: 4, marginBottom: 24, background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: 4, width: 'fit-content' }}>
           {tabs.map(t => (
             <button
               key={t.id}

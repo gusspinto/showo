@@ -31,9 +31,9 @@ function ProjectCard({ project, navigate }) {
       style={{
         background: hov ? C.cardHover : C.card,
         border: `1px solid ${hov ? C.borderBright : C.border}`,
-        borderRadius: 14, overflow: 'hidden', cursor: 'pointer',
-        transition: 'all 0.18s', transform: hov ? 'translateY(-2px)' : 'none',
-        boxShadow: hov ? '0 8px 32px rgba(0,0,0,0.4)' : 'none',
+        borderRadius: 12, overflow: 'hidden', cursor: 'pointer',
+        transition: 'background 0.15s, border-color 0.15s',
+        boxShadow: 'none',
       }}
     >
       {project.cover_url ? (
@@ -52,7 +52,7 @@ function ProjectCard({ project, navigate }) {
         )}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           {project.area && (
-            <span style={{ fontSize: 11, color: C.muted, background: 'var(--c-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 4, padding: '2px 7px' }}>
+            <span style={{ fontSize: 11, color: C.muted, fontWeight: 600 }}>
               {project.area}
             </span>
           )}
@@ -121,10 +121,10 @@ function FeedbackModal({ project, teacherId, onClose }) {
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
       onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="turmapage-modal" style={{ background: C.card, border: `1px solid ${C.borderBright}`, borderRadius: 18, padding: 28, width: '100%', maxWidth: 480, maxHeight: '80vh', overflowY: 'auto', boxShadow: '0 16px 48px rgba(0,0,0,0.6)' }}>
+      <div className="turmapage-modal" style={{ background: C.card, border: `1px solid ${C.borderBright}`, borderRadius: 14, padding: 28, width: '100%', maxWidth: 480, maxHeight: '80vh', overflowY: 'auto', boxShadow: 'none' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
           <div>
-            <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: C.text }}>Feedback do professor</h3>
+            <h3 style={{ margin: 0, fontSize: 16, fontWeight: 400, color: C.text, fontFamily: 'var(--font-heading)', letterSpacing: '-0.3px' }}>Feedback do professor</h3>
             <p style={{ margin: '3px 0 0', fontSize: 13, color: C.muted }}>{project.name}</p>
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.muted, padding: 4 }}><X size={18} /></button>
@@ -162,7 +162,7 @@ function FeedbackModal({ project, teacherId, onClose }) {
             style={{ width: '100%', background: 'var(--c-bg)', border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 12px', color: C.text, fontSize: 13, fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box', outline: 'none' }}
           />
           <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={handleSave} disabled={saving || !comment.trim()} style={{ flex: 1, background: 'linear-gradient(135deg,#1b78f7,#4f46e5)', border: 'none', borderRadius: 8, padding: '10px', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: saving || !comment.trim() ? 0.6 : 1, fontFamily: 'inherit' }}>
+            <button onClick={handleSave} disabled={saving || !comment.trim()} style={{ flex: 1, background: '#1b78f7', border: 'none', borderRadius: 8, padding: '10px', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: saving || !comment.trim() ? 0.6 : 1, fontFamily: 'inherit', boxShadow: '0 2px 8px rgba(27,120,247,0.2)' }}>
               {saving ? 'A guardar…' : editing ? 'Atualizar' : 'Guardar feedback'}
             </button>
             {editing && <button onClick={() => { setEditing(null); setComment('') }} style={{ background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 14px', color: C.muted, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>Cancelar</button>}
@@ -417,9 +417,9 @@ export default function TurmaPage() {
     return (
       <div style={{ minHeight: '100vh', background: C.bg, color: C.text, fontFamily: 'inherit', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, padding: 24 }}>
         <Search size={52} color="#1b78f7" />
-        <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700 }}>Turma não encontrada</h2>
+        <h2 style={{ margin: 0, fontSize: 22, fontWeight: 400, fontFamily: 'var(--font-heading)', letterSpacing: '-0.4px' }}>Turma não encontrada</h2>
         <p style={{ color: C.muted, margin: 0 }}>O código <strong style={{ color: C.text }}>{code}</strong> não existe. Verifica com o professor.</p>
-        <button onClick={() => navigate('/')} style={{ background: C.blue, border: 'none', borderRadius: 8, padding: '10px 24px', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+        <button onClick={() => navigate('/')} style={{ background: C.blue, border: 'none', borderRadius: 8, padding: '10px 24px', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px rgba(27,120,247,0.2)' }}>
           Ir para o início
         </button>
       </div>
@@ -466,31 +466,31 @@ export default function TurmaPage() {
       <div style={{
         position: 'fixed', bottom: 28, left: '50%',
         transform: `translateX(-50%) translateY(${toast ? 0 : 80}px)`,
-        opacity: toast ? 1 : 0, transition: 'all 0.3s cubic-bezier(0.34,1.56,0.64,1)',
-        background: 'var(--c-bg-alt)', border: `1px solid ${C.borderBright}`, borderRadius: 12,
+        opacity: toast ? 1 : 0, transition: 'opacity 0.3s, transform 0.3s',
+        background: 'var(--c-bg-alt)', border: `1px solid ${C.borderBright}`, borderRadius: 10,
         padding: '12px 24px', fontSize: 14, fontWeight: 600, color: C.text,
         zIndex: 3000, pointerEvents: 'none', whiteSpace: 'nowrap',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+        boxShadow: 'none',
       }}>{toast}</div>
 
       {/* Leave class confirm */}
       {showLeaveConfirm && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
           onClick={() => setShowLeaveConfirm(false)}>
-          <div style={{ background: C.card, border: `1px solid ${C.borderBright}`, borderRadius: 18, padding: '32px 28px', width: '100%', maxWidth: 360, boxShadow: '0 16px 48px rgba(0,0,0,0.6)', textAlign: 'center' }}
+          <div style={{ background: C.card, border: `1px solid ${C.borderBright}`, borderRadius: 14, padding: '32px 28px', width: '100%', maxWidth: 360, boxShadow: 'none', textAlign: 'center' }}
             onClick={e => e.stopPropagation()}>
-            <div style={{ width: 52, height: 52, borderRadius: 16, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px' }}>
+            <div style={{ width: 52, height: 52, borderRadius: 12, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px' }}>
               <X size={24} color="#ef4444" />
             </div>
-            <h3 style={{ margin: '0 0 8px', fontSize: 17, fontWeight: 700, color: C.text }}>Sair da turma?</h3>
+            <h3 style={{ margin: '0 0 8px', fontSize: 17, fontWeight: 400, color: C.text, fontFamily: 'var(--font-heading)', letterSpacing: '-0.3px' }}>Sair da turma?</h3>
             <p style={{ margin: '0 0 24px', fontSize: 14, color: C.muted, lineHeight: 1.5 }}>
               Vais sair de <strong style={{ color: C.text }}>{turma?.name}</strong>. Os teus projetos ficam, mas deixas de aparecer na lista de membros.
             </p>
             <div style={{ display: 'flex', gap: 8 }}>
-              <button onClick={() => setShowLeaveConfirm(false)} style={{ flex: 1, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 10, padding: '11px', color: C.muted, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+              <button onClick={() => setShowLeaveConfirm(false)} style={{ flex: 1, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 8, padding: '11px', color: C.muted, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
                 Cancelar
               </button>
-              <button onClick={() => { setShowLeaveConfirm(false); leaveClass() }} disabled={leavingClass} style={{ flex: 1, background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 10, padding: '11px', color: '#ef4444', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', opacity: leavingClass ? 0.6 : 1 }}>
+              <button onClick={() => { setShowLeaveConfirm(false); leaveClass() }} disabled={leavingClass} style={{ flex: 1, background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, padding: '11px', color: '#ef4444', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', opacity: leavingClass ? 0.6 : 1 }}>
                 {leavingClass ? 'A sair…' : 'Sair'}
               </button>
             </div>
@@ -504,15 +504,15 @@ export default function TurmaPage() {
           style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
           onClick={e => e.target === e.currentTarget && setShowAdd(false)}
         >
-          <div style={{ background: C.card, border: `1px solid ${C.borderBright}`, borderRadius: 18, padding: '28px', width: '100%', maxWidth: 400, boxShadow: '0 16px 48px rgba(0,0,0,0.6)' }}>
-            <h3 style={{ margin: '0 0 6px', fontSize: 17, fontWeight: 700 }}>Adicionar à turma</h3>
+          <div style={{ background: C.card, border: `1px solid ${C.borderBright}`, borderRadius: 14, padding: '28px', width: '100%', maxWidth: 400, boxShadow: 'none' }}>
+            <h3 style={{ margin: '0 0 6px', fontSize: 17, fontWeight: 400, fontFamily: 'var(--font-heading)', letterSpacing: '-0.3px', color: C.text }}>Adicionar à turma</h3>
             <p style={{ margin: '0 0 20px', fontSize: 13, color: C.muted }}>Seleciona um projeto para adicionar a <strong style={{ color: C.text }}>{turma.name}</strong></p>
             {addableProjects.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '20px 0', color: C.muted, fontSize: 14 }}>
                 {myProjects.length === 0 ? 'Ainda não tens projetos.' : 'Todos os teus projetos já estão nesta turma.'}
                 {myProjects.length === 0 && (
                   <div style={{ marginTop: 12 }}>
-                    <button onClick={() => setShowCreateModal(true)} style={{ background: C.blue, border: 'none', borderRadius: 8, padding: '9px 20px', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                    <button onClick={() => setShowCreateModal(true)} style={{ background: C.blue, border: 'none', borderRadius: 8, padding: '9px 20px', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px rgba(27,120,247,0.2)' }}>
                       <span style={{display:'flex',alignItems:'center',gap:6}}>Criar projeto <ArrowRight size={14} /></span>
                     </button>
                   </div>
@@ -521,7 +521,7 @@ export default function TurmaPage() {
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {addableProjects.map(p => (
-                  <div key={p.id} style={{ background: C.bgAlt, border: `1px solid ${C.border}`, borderRadius: 10, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div key={p.id} style={{ background: C.bgAlt, border: `1px solid ${C.border}`, borderRadius: 8, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 12 }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 14, fontWeight: 600, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
                       <div style={{ fontSize: 11, color: C.muted }}>Score: {p.score ?? '—'}</div>
@@ -529,7 +529,7 @@ export default function TurmaPage() {
                     <button
                       onClick={() => addProject(p.id)}
                       disabled={adding === p.id}
-                      style={{ background: 'linear-gradient(135deg,#1b78f7,#4f46e5)', border: 'none', borderRadius: 8, padding: '7px 16px', color: '#fff', fontSize: 13, fontWeight: 600, cursor: adding === p.id ? 'default' : 'pointer', fontFamily: 'inherit', opacity: adding === p.id ? 0.6 : 1, flexShrink: 0 }}
+                      style={{ background: '#1b78f7', border: 'none', borderRadius: 8, padding: '7px 16px', color: '#fff', fontSize: 13, fontWeight: 600, cursor: adding === p.id ? 'default' : 'pointer', fontFamily: 'inherit', opacity: adding === p.id ? 0.6 : 1, flexShrink: 0 }}
                     >
                       {adding === p.id ? '...' : 'Adicionar'}
                     </button>
@@ -550,11 +550,11 @@ export default function TurmaPage() {
           <div className="turmapage-hd" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-                <div style={{ width: 44, height: 44, borderRadius: 12, background: 'linear-gradient(135deg,rgba(27,120,247,0.2),rgba(79,70,229,0.15))', border: `1px solid rgba(27,120,247,0.25)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(27,120,247,0.1)', border: `1px solid rgba(27,120,247,0.25)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Users2 size={22} color="#1b78f7" />
                 </div>
                 <div>
-                  <h1 style={{ margin: 0, fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 900, letterSpacing: '-0.5px' }}>{turma.name}</h1>
+                  <h1 style={{ margin: 0, fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 400, letterSpacing: '-0.8px', fontFamily: 'var(--font-heading)' }}>{turma.name}</h1>
                   {turma.subject && <p style={{ margin: 0, fontSize: 14, color: C.muted }}>{turma.subject}</p>}
                 </div>
               </div>
@@ -567,7 +567,7 @@ export default function TurmaPage() {
               {/* Code badge */}
               <button
                 onClick={copyCode}
-                style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(27,120,247,0.06)', border: `1px solid rgba(27,120,247,0.2)`, borderRadius: 10, padding: '8px 14px', cursor: 'pointer', fontFamily: 'inherit' }}
+                style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(27,120,247,0.06)', border: `1px solid rgba(27,120,247,0.2)`, borderRadius: 8, padding: '8px 14px', cursor: 'pointer', fontFamily: 'inherit' }}
               >
                 <span style={{ fontSize: 11, color: C.muted, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>Código</span>
                 <span style={{ fontSize: 16, fontWeight: 800, color: C.blue, letterSpacing: 2 }}>{turma.code}</span>
@@ -576,7 +576,7 @@ export default function TurmaPage() {
               {/* Copy link */}
               <button
                 onClick={copyLink}
-                style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(27,120,247,0.06)', border: `1px solid rgba(27,120,247,0.2)`, borderRadius: 10, padding: '8px 14px', cursor: 'pointer', fontFamily: 'inherit', color: copiedLink ? C.green : C.muted, fontSize: 13, fontWeight: 600, transition: 'color 0.15s' }}
+                style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(27,120,247,0.06)', border: `1px solid rgba(27,120,247,0.2)`, borderRadius: 8, padding: '8px 14px', cursor: 'pointer', fontFamily: 'inherit', color: copiedLink ? C.green : C.muted, fontSize: 13, fontWeight: 600, transition: 'color 0.15s' }}
               >
                 {copiedLink ? <Check size={13} /> : <Copy size={13} />}
                 {copiedLink ? 'Link copiado!' : 'Copiar link'}
@@ -585,7 +585,7 @@ export default function TurmaPage() {
               {isTeacher && projects.length > 0 && (
                 <button
                   onClick={exportCSV}
-                  style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 10, padding: '9px 14px', color: '#4ade80', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 8, padding: '9px 14px', color: '#4ade80', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
                 >
                   <Download size={14} /> Exportar CSV
                 </button>
@@ -594,7 +594,7 @@ export default function TurmaPage() {
               {!isTeacher && user && (
                 <button
                   onClick={() => setShowLeaveConfirm(true)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 10, padding: '9px 14px', color: '#ef4444', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s' }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 8, padding: '9px 14px', color: '#ef4444', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'background 0.15s, border-color 0.15s' }}
                   onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.12)'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.35)' }}
                   onMouseLeave={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.06)'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.2)' }}
                 >
@@ -605,14 +605,14 @@ export default function TurmaPage() {
               {!isTeacher && (user ? (
                 <button
                   onClick={() => setShowAdd(true)}
-                  style={{ background: 'linear-gradient(135deg,#1b78f7,#4f46e5)', border: 'none', borderRadius: 10, padding: '9px 18px', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 16px rgba(27,120,247,0.3)' }}
+                  style={{ background: '#1b78f7', border: 'none', borderRadius: 8, padding: '9px 18px', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px rgba(27,120,247,0.2)' }}
                 >
                   + Adicionar o meu projeto
                 </button>
               ) : (
                 <button
                   onClick={() => navigate('/login')}
-                  style={{ background: 'rgba(27,120,247,0.08)', border: `1px solid rgba(27,120,247,0.2)`, borderRadius: 10, padding: '9px 18px', color: C.blue, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+                  style={{ background: 'rgba(27,120,247,0.08)', border: `1px solid rgba(27,120,247,0.2)`, borderRadius: 8, padding: '9px 18px', color: C.blue, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
                 >
                   Entrar para adicionar
                 </button>
@@ -629,7 +629,7 @@ export default function TurmaPage() {
               <span style={{ fontSize: 13, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.07em' }}>
                 Membros
               </span>
-              <span style={{ fontSize: 11, fontWeight: 700, color: C.subtle, background: 'var(--c-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 999, padding: '1px 8px' }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: C.subtle }}>
                 {members.length}
               </span>
             </div>
@@ -637,7 +637,7 @@ export default function TurmaPage() {
               {members.map(m => (
                 <div key={m.user_id} style={{
                   background: C.card, border: `1px solid ${C.border}`,
-                  borderRadius: 12, padding: '14px 16px',
+                  borderRadius: 10, padding: '14px 16px',
                   display: 'flex', alignItems: 'center', gap: 12,
                 }}>
                   <Avatar avatarUrl={m.avatar_url} name={m.full_name} size={38} />
@@ -647,7 +647,7 @@ export default function TurmaPage() {
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 3 }}>
                       {m.role === 'professor' ? (
-                        <span style={{ fontSize: 11, fontWeight: 700, color: '#1b78f7', background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.2)', borderRadius: 999, padding: '1px 8px' }}>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: '#1b78f7' }}>
                           Professor
                         </span>
                       ) : (
@@ -665,14 +665,14 @@ export default function TurmaPage() {
 
         {/* Projects */}
         {sortedProjects.length === 0 ? (
-          <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: '60px 32px', textAlign: 'center' }}>
+          <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: '60px 32px', textAlign: 'center' }}>
             <div style={{ marginBottom: 14 }}><Inbox size={44} color="var(--c-subtle)" /></div>
             <p style={{ color: C.text, fontSize: 17, fontWeight: 700, margin: '0 0 8px' }}>Ainda não há projetos</p>
             <p style={{ color: C.muted, fontSize: 14, margin: '0 0 24px' }}>Partilha o código <strong style={{ color: C.blue }}>{turma.code}</strong> com os teus alunos para que adicionem os seus projetos.</p>
           </div>
         ) : isTeacher ? (
           /* Professor table view */
-          <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, overflow: 'hidden' }}>
+          <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, overflow: 'hidden' }}>
             <div style={{ overflowX: 'auto' }}>
             {/* Table header */}
             <div style={{ display: 'grid', gridTemplateColumns: 'minmax(160px,1fr) 64px 120px 88px 130px', gap: 0, padding: '10px 16px', borderBottom: `1px solid ${C.border}`, background: 'var(--c-bg)', minWidth: 580 }}>

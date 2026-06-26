@@ -770,25 +770,20 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
           text-transform: uppercase; letter-spacing: 0.12em;
           padding: 14px 4px 5px; display: block;
         }
-        /* Nav item — left-bar active indicator style */
+        /* Nav item — flat editorial list style, no fill on hover/active */
         .sb-item {
           display: flex; align-items: center; gap: 10px;
-          width: 100%; padding: 8px 10px;
-          border-radius: 8px; border: none;
+          width: 100%; padding: 9px 10px;
+          border-radius: 0; border: none;
           background: transparent; color: var(--c-muted);
           font-size: 13px; font-weight: 500;
           cursor: pointer; font-family: inherit;
-          transition: background 0.15s, color 0.15s, transform 0.1s;
+          transition: color 0.15s;
           text-align: left; white-space: nowrap;
           position: relative;
         }
-        .sb-item:hover {
-          background: rgba(255,255,255,0.04);
-          color: var(--c-text);
-          transform: translateX(2px);
-        }
+        .sb-item:hover { color: var(--c-text); }
         .sb-item.active {
-          background: rgba(27,120,247,0.1);
           color: #1b78f7;
           font-weight: 600;
         }
@@ -797,41 +792,37 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
           content: '';
           position: absolute;
           left: -10px; top: 25%; bottom: 25%;
-          width: 3px;
+          width: 2px;
           background: #1b78f7;
-          border-radius: 0 3px 3px 0;
         }
         .sb-item.danger { color: #ef4444; }
-        .sb-item.danger:hover { background: rgba(239,68,68,0.07); color: #ef4444; transform: none; }
-        /* Create button — solid blue, no gradient */
+        .sb-item.danger:hover { color: #f87171; }
+        /* Create button — filled, flat */
         .sb-create {
           display: flex; align-items: center; gap: 8px;
           margin: 8px 0 4px;
           padding: 9px 13px;
           background: #1b78f7;
-          border: none; border-radius: 9px;
-          color: #fff; font-size: 13px; font-weight: 600;
+          border: 1px solid #1b78f7; border-radius: 6px;
+          color: #fff; font-size: 13px; font-weight: 700;
           cursor: pointer; font-family: inherit;
-          box-shadow: 0 2px 10px rgba(27,120,247,0.28);
-          transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
+          transition: opacity 0.15s;
           width: 100%;
         }
-        .sb-create:hover { background: #1564d4; box-shadow: 0 6px 18px rgba(27,120,247,0.4); }
-        .sb-create:active { transform: translateY(0); }
+        .sb-create:hover { opacity: 0.88; }
         .sb-divider { height: 1px; background: var(--c-border); margin: 6px 0; opacity: 0.6; }
-        /* Project section card — subtle highlight */
+        /* Project section — flat, left rule instead of filled card */
         .sb-project-section {
-          background: rgba(27,120,247,0.06);
-          border: 1px solid rgba(27,120,247,0.14);
-          border-radius: 10px;
-          padding: 4px 0 6px;
+          background: transparent;
+          border: none;
+          border-left: 1px solid rgba(27,120,247,0.3);
+          border-radius: 0;
+          padding: 4px 0 6px 8px;
           margin: 6px 0 4px;
           animation: sb-fade-slide-in 0.25s cubic-bezier(0.16,1,0.3,1) both;
         }
         .sb-project-section .sb-label { color: rgba(27,120,247,0.7); padding-top: 8px; }
-        .sb-project-section .sb-item:hover { background: rgba(27,120,247,0.1); color: var(--c-text); }
-        body.light .sb-project-section { background: rgba(27,120,247,0.05); border-color: rgba(27,120,247,0.15); }
-        body.light .sb-item:hover { background: rgba(0,0,0,0.04); }
+        .sb-project-section .sb-item:hover { color: var(--c-text); }
         .sb-bottom { padding: 0 10px 14px; }
 
         @media (min-width: 861px) {
@@ -1612,44 +1603,8 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
             </>
           ) : (
             <>
-              {/* Anonymous pitch block */}
-              <div style={{
-                margin: '0 0 10px',
-                padding: '14px 14px 16px',
-                background: 'rgba(27,120,247,0.06)',
-                border: '1px solid rgba(27,120,247,0.14)',
-                borderRadius: 12,
-              }}>
-                <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--c-text)', marginBottom: 10, letterSpacing: '-0.2px' }}>
-                  O teu portfólio de escola, a sério.
-                </div>
-                {[
-                  { icon: '📁', text: 'Mostra os projetos que já fizeste' },
-                  { icon: '✦', text: 'Prova que és mais do que um CV' },
-                  { icon: '🏢', text: 'Aparece a recrutadores reais' },
-                ].map(({ icon, text }) => (
-                  <div key={text} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
-                    <span style={{ fontSize: 12, lineHeight: 1.5, flexShrink: 0 }}>{icon}</span>
-                    <span style={{ fontSize: 12, color: 'var(--c-muted)', lineHeight: 1.5 }}>{text}</span>
-                  </div>
-                ))}
-              </div>
-              <button
-                onClick={() => navigate('/register')}
-                style={{
-                  width: '100%', padding: '10px 0', marginBottom: 6,
-                  background: '#1b78f7', border: 'none', borderRadius: 10,
-                  color: '#fff', fontSize: 13, fontWeight: 700,
-                  cursor: 'pointer', fontFamily: 'inherit',
-                  boxShadow: '0 2px 10px rgba(27,120,247,0.3)',
-                  transition: 'background 0.15s, box-shadow 0.15s',
-                }}
-                onMouseEnter={e => { e.currentTarget.style.background = '#1564d4'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(27,120,247,0.4)' }}
-                onMouseLeave={e => { e.currentTarget.style.background = '#1b78f7'; e.currentTarget.style.boxShadow = '0 2px 10px rgba(27,120,247,0.3)' }}
-              >
-                Criar conta grátis
-              </button>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '0 4px 2px' }}>
+              <button className="sb-item" onClick={() => navigate('/register')}>Criar conta</button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                 <button className="sb-item" style={{ flex: 1, margin: 0 }} onClick={() => navigate('/login')}>Entrar</button>
                 <button
                   onClick={toggleTheme}

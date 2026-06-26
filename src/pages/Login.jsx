@@ -2,20 +2,22 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { Mail, Check } from 'lucide-react'
-import { useTheme } from '../context/ThemeContext'
+import AuthSidePanel from '../components/AuthSidePanel'
 
 const C = {
   bg:          'var(--c-bg)',
-  card:        'var(--c-card)',
   border:      'var(--c-border)',
-  borderBright:'var(--c-border-bright)',
   blue:        '#1b78f7',
-  blueHover:   '#1564d4',
   muted:       'var(--c-muted)',
-  subtle:      'var(--c-subtle)',
   text:        'var(--c-text)',
   error:       '#ef4444',
 }
+
+const LOGIN_PHRASES = [
+  { lead: 'Mostra o que', highlight: 'fizeste.' },
+  { lead: 'O teu trabalho,', highlight: 'não o teu CV.' },
+  { lead: 'Continua a', highlight: 'construir.' },
+]
 
 function EyeIcon({ visible }) {
   return visible ? (
@@ -35,28 +37,20 @@ function PasswordInput({ value, onChange, placeholder }) {
   const [show, setShow] = useState(false)
   const [focused, setFocused] = useState(false)
   return (
-    <div style={{ position: 'relative' }}>
+    <div className="auth-field-wrap" style={{ borderBottomColor: focused ? C.blue : C.border }}>
       <input
         type={show ? 'text' : 'password'}
         value={value} onChange={onChange} required placeholder={placeholder}
-        style={{
-          width: '100%', background: C.bg,
-          border: `1px solid ${focused ? C.blue : C.border}`,
-          borderRadius: 10, padding: '10px 44px 10px 14px',
-          color: C.text, fontSize: 15, outline: 'none', fontFamily: 'inherit',
-          boxSizing: 'border-box', transition: 'border-color 0.15s',
-          boxShadow: focused ? '0 0 0 3px rgba(27,120,247,0.1)' : 'none',
-        }}
+        className="auth-input"
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
       />
       <button
         type="button" onClick={() => setShow(s => !s)}
         style={{
-          position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
           background: 'none', border: 'none', cursor: 'pointer',
           color: show ? C.blue : C.muted, padding: 0, display: 'flex',
-          transition: 'color 0.15s',
+          transition: 'color 0.15s', flexShrink: 0,
         }}
         tabIndex={-1}
       >
@@ -68,7 +62,6 @@ function PasswordInput({ value, onChange, placeholder }) {
 
 export default function Login() {
   const navigate = useNavigate()
-  const { theme } = useTheme()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -102,53 +95,133 @@ export default function Login() {
   }
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: theme === 'light'
-        ? 'linear-gradient(135deg, #c8d5ea 0%, #d9e2f0 30%, #e6eaf2 60%, #dcd8ef 100%)'
-        : C.bg,
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      padding: '24px 16px', fontFamily: 'inherit',
-      position: 'relative', overflow: 'hidden',
-    }}>
-      {/* Background glow */}
-      <div style={{ position: 'absolute', top: '-10%', left: '50%', transform: 'translateX(-50%)', width: 600, height: 400, borderRadius: '50%', background: `radial-gradient(ellipse, rgba(27,120,247,${theme === 'light' ? '0.1' : '0.07'}) 0%, transparent 70%)`, pointerEvents: 'none' }} />
-      <div style={{ width: '100%', maxWidth: 400, position: 'relative' }}>
+    <div className="auth-shell">
+      <style>{`
+        .auth-shell { min-height: 100vh; display: flex; background: var(--c-bg); font-family: inherit; }
+        .auth-side {
+          position: relative; overflow: hidden;
+          flex: 0 0 42%; display: flex; align-items: center; justify-content: flex-start;
+          padding: 0 0 0 64px; background: linear-gradient(115deg, #000 0%, #050b1c 40%, #0e2249 85%, #143169 100%);
+          border-right: 1px solid var(--c-border);
+        }
+        .auth-side-content {
+          position: relative; z-index: 3;
+          display: flex; flex-direction: column; align-items: flex-start; gap: 22px;
+          text-align: left;
+        }
+        .auth-side-mark { width: 72px; height: auto; display: block; }
+        .auth-side-phrase {
+          font-family: var(--font-heading); font-weight: 400;
+          font-size: clamp(22px, 2.6vw, 36px); line-height: 1.3;
+          letter-spacing: -0.5px; color: #fff; margin: 0;
+          white-space: nowrap; text-align: left;
+          animation: auth-phrase-fade 0.6s ease;
+        }
+        @keyframes auth-phrase-fade {
+          from { opacity: 0; transform: translateY(8px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .auth-side-highlight {
+          background: #1b78f7; color: #fff;
+          padding: 2px 10px 9px; border-radius: 0 0 14px 14px;
+          display: inline-block;
+        }
+        .auth-side-letter {
+          display: inline-block;
+          animation: auth-letter-rise 0.45s ease both;
+        }
+        @keyframes auth-letter-rise {
+          from { opacity: 0; transform: translateY(60%); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .auth-side-progress {
+          position: absolute; left: 64px; right: 56px; bottom: 48px;
+          display: flex; align-items: center; gap: 12px; z-index: 3;
+        }
+        .auth-side-progress-track {
+          position: relative; flex: 1; height: 3px; border-radius: 3px;
+          background: rgba(255,255,255,0.14); overflow: hidden;
+        }
+        .auth-side-progress-fill {
+          position: relative; height: 100%; border-radius: 3px;
+          background: linear-gradient(90deg, #0f5fd1, #4a93f9);
+          transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+          overflow: hidden;
+        }
+        .auth-side-progress-fill::after {
+          content: ''; position: absolute; inset: 0;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.55), transparent);
+          width: 60%; animation: auth-progress-shimmer 1.6s ease-in-out infinite;
+        }
+        @keyframes auth-progress-shimmer {
+          0%   { transform: translateX(-100%); }
+          100% { transform: translateX(220%); }
+        }
+        .auth-side-progress-label {
+          font-size: 11px; font-weight: 600; letter-spacing: 0.5px;
+          color: rgba(255,255,255,0.55); flex-shrink: 0;
+        }
+        .auth-main { flex: 1; display: flex; align-items: center; justify-content: center; padding: 24px 16px; }
+        .auth-card { width: 100%; max-width: 380px; }
+        .auth-input {
+          flex: 1; width: 100%; background: transparent; border: none;
+          color: var(--c-text); font-size: 16px; outline: none; font-family: inherit;
+          padding: 10px 0; box-sizing: border-box;
+        }
+        .auth-field-wrap {
+          display: flex; align-items: center; gap: 10px;
+          border-bottom: 1.5px solid var(--c-border); transition: border-color 0.15s;
+        }
+        .auth-submit { transition: opacity 0.15s; }
+        .auth-submit:hover:not(:disabled) { opacity: 0.88; }
+        .auth-input:-webkit-autofill,
+        .auth-input:-webkit-autofill:hover,
+        .auth-input:-webkit-autofill:focus {
+          -webkit-text-fill-color: var(--c-text) !important;
+          -webkit-box-shadow: 0 0 0 1000px var(--c-bg) inset !important;
+          box-shadow: 0 0 0 1000px var(--c-bg) inset !important;
+          caret-color: var(--c-text) !important;
+          transition: background-color 9999s ease-in-out 0s;
+        }
+        @media (max-width: 860px) {
+          .auth-side { display: none; }
+        }
+      `}</style>
 
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <img
-            src={theme === 'light' ? '/light_mode_LI.png' : '/icon_logo.png'} alt="Showo"
-            style={{ height: 'clamp(44px, 10vw, 56px)', width: 'auto', cursor: 'pointer' }}
-            onClick={() => navigate('/')}
-          />
-        </div>
+      <AuthSidePanel phrases={LOGIN_PHRASES} step={1} totalSteps={1} />
 
-        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 18, padding: '36px 32px', boxShadow: '0 8px 40px rgba(0,0,0,0.35)' }}>
-          <h1 style={{ color: C.text, fontSize: 22, fontWeight: 700, margin: '0 0 8px' }}>Entrar</h1>
-          <p style={{ color: C.muted, fontSize: 14, margin: '0 0 28px' }}>Acede ao teu painel de projetos</p>
+      <div className="auth-main">
+        <div className="auth-card">
+          <div className="auth-main-logo" style={{ marginBottom: 36 }}>
+            <img
+              src="/icon_logo.png" alt="Showo"
+              style={{ height: 32, width: 'auto', cursor: 'pointer' }}
+              onClick={() => navigate('/')}
+            />
+          </div>
 
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <h1 style={{ color: C.text, fontSize: 26, fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 8px', letterSpacing: '-0.5px' }}>Entrar</h1>
+          <p style={{ color: C.muted, fontSize: 14, margin: '0 0 32px' }}>Acede ao teu painel de projetos</p>
+
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <label style={{ color: C.muted, fontSize: 13, fontWeight: 500 }}>Email</label>
-              <input
-                type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="tu@email.com"
-                style={{
-                  background: C.bg, border: `1px solid ${emailFocused ? C.blue : C.border}`,
-                  borderRadius: 10, padding: '10px 14px', color: C.text, fontSize: 15,
-                  outline: 'none', fontFamily: 'inherit', transition: 'border-color 0.15s',
-                  boxShadow: emailFocused ? '0 0 0 3px rgba(27,120,247,0.1)' : 'none',
-                }}
-                onFocus={() => setEmailFocused(true)}
-                onBlur={() => setEmailFocused(false)}
-              />
+              <div className="auth-field-wrap" style={{ borderBottomColor: emailFocused ? C.blue : C.border }}>
+                <input
+                  type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="tu@email.com"
+                  className="auth-input"
+                  onFocus={() => setEmailFocused(true)}
+                  onBlur={() => setEmailFocused(false)}
+                />
+              </div>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <label style={{ color: C.muted, fontSize: 13, fontWeight: 500 }}>Palavra-passe</label>
               <PasswordInput value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" />
             </div>
 
             {error && (
-              <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 10, padding: '10px 14px', color: C.error, fontSize: 14 }}>
+              <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 8, padding: '10px 14px', color: C.error, fontSize: 14 }}>
                 {error}
               </div>
             )}
@@ -185,26 +258,24 @@ export default function Login() {
 
             <button
               type="submit" disabled={loading}
+              className="auth-submit"
               style={{
                 background: loading ? 'var(--c-border)' : '#1b78f7',
                 color: '#fff', border: 'none',
-                borderRadius: 10, padding: '12px', fontSize: 14, fontWeight: 700,
+                borderRadius: 8, padding: '13px', fontSize: 14, fontWeight: 700,
                 cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
-                marginTop: 4, transition: 'opacity 0.15s',
-                boxShadow: loading ? 'none' : '0 4px 20px rgba(27,120,247,0.35)',
+                marginTop: 4,
               }}
-              onMouseEnter={e => { if (!loading) e.currentTarget.style.opacity = '0.88' }}
-              onMouseLeave={e => { if (!loading) e.currentTarget.style.opacity = '1' }}
             >
               {loading ? 'A entrar…' : 'Entrar'}
             </button>
           </form>
-        </div>
 
-        <p style={{ textAlign: 'center', color: C.muted, fontSize: 14, marginTop: 20 }}>
-          Não tens conta?{' '}
-          <Link to="/register" style={{ color: C.blue, textDecoration: 'none', fontWeight: 500 }}>Regista-te</Link>
-        </p>
+          <p style={{ textAlign: 'center', color: C.muted, fontSize: 14, marginTop: 24 }}>
+            Não tens conta?{' '}
+            <Link to="/register" style={{ color: C.blue, textDecoration: 'none', fontWeight: 500 }}>Regista-te</Link>
+          </p>
+        </div>
       </div>
     </div>
   )

@@ -130,8 +130,8 @@ function FieldBlock({ label, required, children, hint }) {
 
 function Card({ children, style }) {
   return (
-    <div className="pm-section-card" style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16,
-      padding: '24px 26px', marginBottom: 16, ...style }}>
+    <div className="pm-section-card" style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12,
+      padding: '24px 26px', marginBottom: 16, boxShadow: 'none', ...style }}>
       {children}
     </div>
   )
@@ -359,12 +359,12 @@ function ContentSection({ project, onSaved }) {
 
       <button type="submit" disabled={saving || !form.name?.trim() || !form.area?.trim()} style={{
         width: '100%',
-        background: saved ? `linear-gradient(135deg, ${C.green}, #16a34a)` : (saving || !form.name?.trim() || !form.area?.trim()) ? C.border : `linear-gradient(135deg, ${C.blue}, #4f46e5)`,
-        color: '#fff', border: 'none', borderRadius: 12,
+        background: saved ? C.green : (saving || !form.name?.trim() || !form.area?.trim()) ? C.border : C.blue,
+        color: '#fff', border: 'none', borderRadius: 10,
         padding: '15px 0', fontSize: 16, fontWeight: 700,
         cursor: saving || !form.name?.trim() || !form.area?.trim() ? 'not-allowed' : 'pointer',
         transition: 'background 0.2s', fontFamily: 'inherit',
-        boxShadow: (!saving && form.name?.trim() && form.area?.trim()) ? '0 4px 20px rgba(27,120,247,0.3)' : 'none',
+        boxShadow: (!saving && form.name?.trim() && form.area?.trim()) ? '0 2px 8px rgba(27,120,247,0.2)' : 'none',
         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
       }}>
         {saved ? <><Check size={16} /> Guardado!</> : saving ? 'A guardar…' : 'Guardar alterações'}
@@ -407,7 +407,7 @@ function PreviewSection({ project }) {
             </div>
           ))}
 
-          <a href={`/projeto/${project?.slug}`} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 20, padding: '13px 0', background: 'linear-gradient(135deg, #a855f7, #7c3aed)', border: 'none', borderRadius: 12, color: '#fff', fontSize: 15, fontWeight: 700, textDecoration: 'none', boxShadow: '0 4px 20px rgba(168,85,247,0.3)' }}>
+          <a href={`/projeto/${project?.slug}`} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 20, padding: '13px 0', background: '#a855f7', border: 'none', borderRadius: 10, color: '#fff', fontSize: 15, fontWeight: 700, textDecoration: 'none', boxShadow: '0 2px 8px rgba(168,85,247,0.2)' }}>
             <Eye size={16} /> Abrir editor de preview
           </a>
           <p style={{ margin: '10px 0 0', fontSize: 12, color: C.subtle, textAlign: 'center' }}>
@@ -486,7 +486,7 @@ function TeamSection({ project, isOwner }) {
               style={{ ...inputStyle, flex: 1 }}
               {...inputHandlers}
             />
-            <button type="submit" disabled={!inviteInput.trim() || inviting} style={{ padding: '11px 18px', background: `linear-gradient(135deg, ${C.blue}, #4f46e5)`, border: 'none', borderRadius: 10, color: '#fff', fontSize: 14, fontWeight: 700, cursor: inviteInput.trim() ? 'pointer' : 'not-allowed', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, opacity: !inviteInput.trim() ? 0.5 : 1 }}>
+            <button type="submit" disabled={!inviteInput.trim() || inviting} style={{ padding: '11px 18px', background: C.blue, border: 'none', borderRadius: 8, color: '#fff', fontSize: 14, fontWeight: 700, cursor: inviteInput.trim() ? 'pointer' : 'not-allowed', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, opacity: !inviteInput.trim() ? 0.5 : 1 }}>
               <Send size={14} /> Convidar
             </button>
           </form>
@@ -521,7 +521,7 @@ function TeamSection({ project, isOwner }) {
                     <div style={{ fontSize: 14, fontWeight: 600, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</div>
                     {m.profile?.username && <div style={{ fontSize: 12, color: C.muted }}>@{m.profile.username}</div>}
                   </div>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: chip.color, background: chip.bg, border: `1px solid ${chip.border}`, borderRadius: 99, padding: '3px 9px', flexShrink: 0 }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: chip.color, flexShrink: 0 }}>
                     {chip.label}
                   </span>
                   {isOwner && (
@@ -568,7 +568,7 @@ function AISection({ project }) {
               <p style={{ margin: '0 0 20px', fontSize: 13, color: C.muted, lineHeight: 1.6 }}>
                 Abre a página do projeto e usa o botão "Analisar com IA" para gerar feedback detalhado.
               </p>
-              <a href={`/projeto/${project?.slug}`} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '11px 22px', background: 'linear-gradient(135deg, #f59e0b, #d97706)', border: 'none', borderRadius: 10, color: '#fff', fontSize: 14, fontWeight: 700, textDecoration: 'none' }}>
+              <a href={`/projeto/${project?.slug}`} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '11px 22px', background: '#f59e0b', border: 'none', borderRadius: 8, color: '#fff', fontSize: 14, fontWeight: 700, textDecoration: 'none' }}>
                 <Sparkles size={14} /> Ir para o projeto
               </a>
             </div>
@@ -594,7 +594,7 @@ function AISection({ project }) {
                           <span style={{ fontSize: 12, fontWeight: 700, color: C.text }}>{feedback.scores[c.key]}/10</span>
                         </div>
                         <div style={{ height: 4, background: C.border, borderRadius: 99, overflow: 'hidden' }}>
-                          <div style={{ height: '100%', width: `${(feedback.scores[c.key] / 10) * 100}%`, background: 'linear-gradient(90deg, #f59e0b, #d97706)', borderRadius: 99 }} />
+                          <div style={{ height: '100%', width: `${(feedback.scores[c.key] / 10) * 100}%`, background: '#f59e0b', borderRadius: 99 }} />
                         </div>
                       </div>
                     ))}
@@ -661,7 +661,7 @@ function SettingsSection({ project, isOwner, navigate }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           <div style={{ display: 'flex', gap: 8 }}>
             <div style={{ flex: 1, background: C.bgAlt, border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 12px', fontSize: 13, color: C.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{publicUrl}</div>
-            <button onClick={() => copy(publicUrl, 'public')} style={{ padding: '10px 16px', background: copied === 'public' ? `linear-gradient(135deg, ${C.green}, #16a34a)` : `linear-gradient(135deg, ${C.blue}, #4f46e5)`, border: 'none', borderRadius: 8, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, whiteSpace: 'nowrap', transition: 'background 0.2s' }}>
+            <button onClick={() => copy(publicUrl, 'public')} style={{ padding: '10px 16px', background: copied === 'public' ? C.green : C.blue, border: 'none', borderRadius: 8, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, whiteSpace: 'nowrap', transition: 'background 0.2s' }}>
               {copied === 'public' ? <><Check size={13} /> Copiado</> : <><Copy size={13} /> Copiar</>}
             </button>
             <a href={publicUrl} target="_blank" rel="noopener noreferrer" style={{ padding: '10px 12px', background: C.bgAlt, border: `1px solid ${C.border}`, borderRadius: 8, color: C.muted, display: 'flex', alignItems: 'center', flexShrink: 0, transition: 'all 0.15s' }}
@@ -678,7 +678,7 @@ function SettingsSection({ project, isOwner, navigate }) {
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
                 <div style={{ flex: 1, background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.2)', borderRadius: 8, padding: '10px 12px', fontSize: 13, color: C.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{editUrl}</div>
-                <button onClick={() => copy(editUrl, 'edit')} style={{ padding: '10px 16px', background: copied === 'edit' ? `linear-gradient(135deg, ${C.green}, #16a34a)` : C.yellow, border: 'none', borderRadius: 8, color: 'var(--c-bg)', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, whiteSpace: 'nowrap', transition: 'background 0.2s' }}>
+                <button onClick={() => copy(editUrl, 'edit')} style={{ padding: '10px 16px', background: copied === 'edit' ? C.green : C.yellow, border: 'none', borderRadius: 8, color: 'var(--c-bg)', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, whiteSpace: 'nowrap', transition: 'background 0.2s' }}>
                   {copied === 'edit' ? <><Check size={13} /> Copiado</> : <><Copy size={13} /> Copiar</>}
                 </button>
               </div>
@@ -689,7 +689,7 @@ function SettingsSection({ project, isOwner, navigate }) {
 
       {/* Zona de perigo */}
       {isOwner && (
-        <Card style={{ border: '1px solid rgba(239,68,68,0.3)' }}>
+        <Card style={{ border: '1px solid rgba(239,68,68,0.3)', boxShadow: 'none' }}>
           <CardTitle color="#ef4444"><AlertTriangle size={13} /> Zona de perigo</CardTitle>
           <p style={{ margin: '0 0 16px', fontSize: 14, color: C.muted, lineHeight: 1.65 }}>
             Eliminar o projeto é uma ação irreversível. Todos os dados, score e página pública serão apagados permanentemente.
@@ -788,11 +788,11 @@ export default function ProjectManage() {
   if (accessDenied) return (
     <div style={{ minHeight: '100vh', background: C.bg, color: C.text, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, fontFamily: 'inherit', padding: 24, textAlign: 'center' }}>
       <Lock size={48} color={C.yellow} />
-      <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800 }}>Acesso restrito</h2>
+      <h2 style={{ margin: 0, fontSize: 22, fontWeight: 400, fontFamily: 'var(--font-heading)' }}>Acesso restrito</h2>
       <p style={{ color: C.muted, margin: 0, maxWidth: 380, lineHeight: 1.65, fontSize: 14 }}>
         Só o criador deste projeto pode gerir. Usa o link privado de edição que recebeste quando criaste o projeto.
       </p>
-      <button onClick={() => navigate(`/projeto/${slug}`)} style={{ background: `linear-gradient(135deg, ${C.blue}, #4f46e5)`, color: '#fff', border: 'none', borderRadius: 10, padding: '12px 28px', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 20px rgba(27,120,247,0.3)' }}>
+      <button onClick={() => navigate(`/projeto/${slug}`)} style={{ background: C.blue, color: '#fff', border: 'none', borderRadius: 8, padding: '12px 28px', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px rgba(27,120,247,0.2)' }}>
         Ver o projeto
       </button>
     </div>
@@ -801,8 +801,8 @@ export default function ProjectManage() {
   if (!project) return (
     <div style={{ minHeight: '100vh', background: C.bg, color: C.text, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, fontFamily: 'inherit' }}>
       <Search size={48} color={C.blue} />
-      <h2 style={{ margin: 0, fontWeight: 700 }}>Projeto não encontrado</h2>
-      <button onClick={() => navigate('/')} style={{ background: `linear-gradient(135deg, ${C.blue}, #4f46e5)`, color: '#fff', border: 'none', borderRadius: 10, padding: '12px 28px', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>Ir para o início</button>
+      <h2 style={{ margin: 0, fontWeight: 400, fontFamily: 'var(--font-heading)' }}>Projeto não encontrado</h2>
+      <button onClick={() => navigate('/')} style={{ background: C.blue, color: '#fff', border: 'none', borderRadius: 8, padding: '12px 28px', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px rgba(27,120,247,0.2)' }}>Ir para o início</button>
     </div>
   )
 
@@ -854,7 +854,7 @@ export default function ProjectManage() {
             onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted }}>
             <ArrowLeft size={13} /> Projeto
           </button>
-          <a href={`/projeto/${slug}`} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 13px', background: `linear-gradient(135deg, ${C.blue}, #4f46e5)`, border: 'none', borderRadius: 8, color: '#fff', fontSize: 13, fontWeight: 600, textDecoration: 'none', boxShadow: '0 2px 10px rgba(27,120,247,0.3)' }}>
+          <a href={`/projeto/${slug}`} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 13px', background: C.blue, border: 'none', borderRadius: 8, color: '#fff', fontSize: 13, fontWeight: 600, textDecoration: 'none', boxShadow: '0 2px 8px rgba(27,120,247,0.2)' }}>
             <ExternalLink size={13} /> Ver público
           </a>
         </div>
@@ -865,7 +865,7 @@ export default function ProjectManage() {
         <div className="pm-page-hd" style={{ maxWidth: 1200, margin: '0 auto', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
           <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: C.subtle, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 3 }}>A gerir</div>
-            <h1 style={{ margin: 0, fontSize: 'clamp(16px, 2.5vw, 22px)', fontWeight: 800, letterSpacing: '-0.3px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <h1 style={{ margin: 0, fontSize: 'clamp(16px, 2.5vw, 22px)', fontWeight: 400, fontFamily: 'var(--font-heading)', letterSpacing: '-0.3px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {project.name}
             </h1>
           </div>
@@ -884,7 +884,7 @@ export default function ProjectManage() {
         {NAV.map(n => (
           <button key={n.id} onClick={() => setActiveSection(n.id)}
             className={`pm-tab-pill ${activeSection === n.id ? 'active' : ''}`}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 99, border: `1.5px solid ${activeSection === n.id ? n.color : C.border}`, background: activeSection === n.id ? `${n.color}15` : 'transparent', color: activeSection === n.id ? n.color : C.muted, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap', flexShrink: 0, transition: 'all 0.15s' }}>
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8, border: `1.5px solid ${activeSection === n.id ? n.color : C.border}`, background: activeSection === n.id ? `${n.color}15` : 'transparent', color: activeSection === n.id ? n.color : C.muted, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap', flexShrink: 0, transition: 'all 0.15s' }}>
             <n.Icon size={13} /> {n.label}
           </button>
         ))}
@@ -945,7 +945,7 @@ export default function ProjectManage() {
               </div>
             )}
             <div>
-              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800, letterSpacing: '-0.3px' }}>{activeNav?.label}</h2>
+              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 400, fontFamily: 'var(--font-heading)', letterSpacing: '-0.3px' }}>{activeNav?.label}</h2>
               <p className="pm-section-desc" style={{ margin: 0, fontSize: 12, color: C.muted }}>{activeNav?.desc}</p>
             </div>
           </div>

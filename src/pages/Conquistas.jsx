@@ -181,12 +181,10 @@ function AchievementCard({ achievement, unlocked }) {
       style={{
         background: hov && unlocked ? C.cardHover : C.card,
         border: `1px solid ${unlocked ? accent + '55' : C.border}`,
-        borderRadius: 16,
+        borderRadius: 12,
         padding: '20px',
         textAlign: 'center',
-        transition: 'all 0.18s',
-        transform: hov && unlocked ? 'translateY(-3px)' : 'none',
-        boxShadow: hov && unlocked ? `0 8px 28px ${accent}22` : 'none',
+        transition: 'background 0.15s, border-color 0.15s',
         opacity: unlocked ? 1 : 0.5,
         position: 'relative',
         overflow: 'hidden',
@@ -196,13 +194,13 @@ function AchievementCard({ achievement, unlocked }) {
         <div style={{
           position: 'absolute', top: 0, left: 0, right: 0, height: 2,
           background: `linear-gradient(90deg,${accent}99,${accent}22)`,
-          borderRadius: '16px 16px 0 0',
+          borderRadius: '12px 12px 0 0',
         }} />
       )}
 
       {/* Icon circle */}
       <div style={{
-        width: 56, height: 56, borderRadius: 16, margin: '0 auto 12px',
+        width: 56, height: 56, borderRadius: 14, margin: '0 auto 12px',
         background: `${accent}18`,
         border: `1.5px solid ${accent}${unlocked ? '55' : '22'}`,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -303,14 +301,14 @@ export default function Conquistas() {
         {/* Header */}
         <div className="conquistas-hd" style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 8 }}>
           <div style={{
-            width: 48, height: 48, borderRadius: 14,
+            width: 48, height: 48, borderRadius: 12,
             background: 'rgba(251,191,36,0.12)', border: '1px solid rgba(251,191,36,0.25)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
             <Medal size={24} color="#fbbf24" />
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <h1 style={{ margin: 0, fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 900, color: C.text, letterSpacing: '-0.5px' }}>
+            <h1 style={{ margin: 0, fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 400, color: C.text, letterSpacing: '-1px', fontFamily: 'var(--font-heading)' }}>
               Conquistas
             </h1>
             <p style={{ margin: 0, fontSize: 13, color: C.muted }}>
@@ -321,7 +319,7 @@ export default function Conquistas() {
             onClick={() => navigate('/missoes')}
             style={{
               display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0,
-              padding: '6px 12px', borderRadius: 8,
+              padding: '6px 12px', borderRadius: 7,
               background: 'transparent', border: `1px solid ${C.border}`,
               color: C.muted, fontSize: 12, fontWeight: 600,
               cursor: 'pointer', fontFamily: 'inherit',
@@ -338,7 +336,7 @@ export default function Conquistas() {
         {/* Progress card */}
         <div style={{
           background: C.card, border: `1px solid ${C.border}`,
-          borderRadius: 16, padding: '20px 24px', marginBottom: 32, marginTop: 24,
+          borderRadius: 12, padding: '20px 24px', marginBottom: 32, marginTop: 24,
         }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
             <div>
@@ -379,7 +377,7 @@ export default function Conquistas() {
         {loading ? (
           <div className="conquistas-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(180px,1fr))', gap: 12 }}>
             {[...Array(9)].map((_, i) => (
-              <div key={i} style={{ height: 150, borderRadius: 16, background: C.card, border: `1px solid ${C.border}`, opacity: 0.5 }} />
+              <div key={i} style={{ height: 150, borderRadius: 12, background: C.card, border: `1px solid ${C.border}`, opacity: 0.5 }} />
             ))}
           </div>
         ) : (

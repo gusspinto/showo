@@ -94,10 +94,10 @@ function SectionCard({ title, children }) {
     <div style={{
       background: colors.card,
       border: `1px solid ${colors.border}`,
-      borderRadius: 16,
+      borderRadius: 12,
       padding: '24px 26px',
       marginBottom: 16,
-      boxShadow: '0 2px 12px rgba(0,0,0,0.25)',
+      boxShadow: 'none',
     }}>
       <h2 style={{
         margin: '0 0 20px', fontSize: 11, fontWeight: 700,
@@ -259,9 +259,9 @@ export default function EditProject() {
     return (
       <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, fontFamily: 'var(--font-body)', padding: 24, textAlign: 'center' }}>
         <Lock size={48} color={colors.yellow ?? '#fbbf24'} />
-        <h2 style={{ margin: 0, fontSize: 24, fontWeight: 700 }}>Acesso restrito</h2>
+        <h2 style={{ margin: 0, fontSize: 24, fontWeight: 400, fontFamily: 'var(--font-heading)' }}>Acesso restrito</h2>
         <p style={{ color: colors.muted, margin: 0, maxWidth: 380, lineHeight: 1.65 }}>Só o criador deste projeto pode editá-lo. Usa o link privado de edição que recebeste quando criaste o projeto.</p>
-        <button onClick={() => navigate(`/projeto/${slug}`)} style={{ background: `linear-gradient(135deg, ${colors.blue}, #4f46e5)`, color: '#fff', border: 'none', borderRadius: 10, padding: '12px 28px', fontSize: 15, fontWeight: 700, cursor: 'pointer', marginTop: 8, boxShadow: '0 4px 20px rgba(27,120,247,0.3)', fontFamily: 'inherit' }}>Ver o projeto</button>
+        <button onClick={() => navigate(`/projeto/${slug}`)} style={{ background: colors.blue, color: '#fff', border: 'none', borderRadius: 8, padding: '12px 28px', fontSize: 15, fontWeight: 700, cursor: 'pointer', marginTop: 8, boxShadow: '0 2px 8px rgba(27,120,247,0.2)', fontFamily: 'inherit' }}>Ver o projeto</button>
       </div>
     )
   }
@@ -270,8 +270,8 @@ export default function EditProject() {
     return (
       <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, fontFamily: 'var(--font-body)' }}>
         <Search size={48} color={colors.blue} />
-        <h2 style={{ margin: 0, fontWeight: 700 }}>Projeto não encontrado</h2>
-        <button onClick={() => navigate('/')} style={{ background: `linear-gradient(135deg, ${colors.blue}, #4f46e5)`, color: '#fff', border: 'none', borderRadius: 10, padding: '12px 28px', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>Ir para o início</button>
+        <h2 style={{ margin: 0, fontWeight: 400, fontFamily: 'var(--font-heading)' }}>Projeto não encontrado</h2>
+        <button onClick={() => navigate('/')} style={{ background: colors.blue, color: '#fff', border: 'none', borderRadius: 8, padding: '12px 28px', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px rgba(27,120,247,0.2)' }}>Ir para o início</button>
       </div>
     )
   }
@@ -302,7 +302,7 @@ export default function EditProject() {
       `}</style>
       <div className="page-content">
         <div style={{ marginBottom: 36 }}>
-          <h1 style={{ fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 900, margin: '0 0 6px', letterSpacing: '-0.5px', color: colors.text }}>Editar projeto</h1>
+          <h1 style={{ fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 6px', letterSpacing: '-0.5px', color: colors.text }}>Editar projeto</h1>
           <p style={{ color: colors.muted, margin: 0, fontSize: 15 }}>{project.name}</p>
         </div>
 
@@ -449,15 +449,15 @@ export default function EditProject() {
               width: '100%',
               background: saving || !form.name?.trim() || !form.area?.trim()
                 ? colors.border
-                : `linear-gradient(135deg, ${colors.blue}, #4f46e5)`,
+                : colors.blue,
               color: '#fff', border: 'none',
-              borderRadius: 12, padding: '15px 0',
+              borderRadius: 10, padding: '15px 0',
               fontSize: 17, fontWeight: 700,
               cursor: saving ? 'default' : 'pointer',
               opacity: saving ? 0.7 : 1,
               transition: 'opacity 0.2s, background 0.2s',
               fontFamily: 'inherit',
-              boxShadow: saving || !form.name?.trim() || !form.area?.trim() ? 'none' : '0 4px 20px rgba(27,120,247,0.3)',
+              boxShadow: saving || !form.name?.trim() || !form.area?.trim() ? 'none' : '0 2px 8px rgba(27,120,247,0.2)',
               letterSpacing: '-0.1px',
             }}
           >

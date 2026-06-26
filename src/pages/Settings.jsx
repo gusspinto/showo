@@ -110,11 +110,11 @@ function SectionCard({ title, children }) {
     <div style={{
       background: C.card,
       border: `1px solid ${C.border}`,
-      borderRadius: 16,
+      borderRadius: 12,
       padding: '28px 28px 22px',
       marginBottom: 20,
     }}>
-      <h2 style={{ margin: '0 0 22px', fontSize: 16, fontWeight: 700, color: C.text, letterSpacing: '-0.2px' }}>
+      <h2 style={{ margin: '0 0 22px', fontSize: 16, fontWeight: 400, color: C.text, letterSpacing: '-0.3px', fontFamily: 'var(--font-heading)' }}>
         {title}
       </h2>
       {children}
@@ -426,7 +426,7 @@ export default function Settings() {
         </div>
       )}
       <button onClick={handleSaveProfile} disabled={saving}
-        style={{ background: saving ? C.border : `linear-gradient(135deg, ${accentColor}, #4f46e5)`, border: 'none', borderRadius: 10, padding: '12px 24px', color: '#fff', fontSize: 14, fontWeight: 700, cursor: saving ? 'default' : 'pointer', fontFamily: 'inherit', boxShadow: saving ? 'none' : `0 4px 16px ${accentColor}55`, transition: 'background 0.2s' }}>
+        style={{ background: saving ? C.border : accentColor, border: 'none', borderRadius: 8, padding: '12px 24px', color: '#fff', fontSize: 14, fontWeight: 700, cursor: saving ? 'default' : 'pointer', fontFamily: 'inherit', boxShadow: saving ? 'none' : `0 2px 8px ${accentColor}33`, transition: 'background 0.2s' }}>
         {saving ? 'A guardar...' : 'Guardar'}
       </button>
     </>
@@ -443,7 +443,7 @@ export default function Settings() {
   const roleBadge = (
     <div style={{ marginBottom: 20 }}>
       <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: C.muted, marginBottom: 10 }}>Tipo de conta</label>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: `${r.color}0d`, border: `1.5px solid ${r.color}40`, borderRadius: 10, padding: '12px 16px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: `${r.color}0d`, border: `1px solid ${r.color}30`, borderRadius: 8, padding: '12px 16px' }}>
         <span style={{ color: r.color, display: 'flex', alignItems: 'center' }}>{r.icon}</span>
         <span style={{ fontSize: 14, fontWeight: 700, color: r.color }}>{r.label}</span>
         <span style={{ marginLeft: 'auto', fontSize: 11, color: C.subtle, display: 'flex', alignItems: 'center', gap: 4 }}><Lock size={11} /> Definido no registo</span>
@@ -466,7 +466,7 @@ export default function Settings() {
         {/* Header */}
         <div style={{ marginBottom: 28, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
           <div>
-            <h1 style={{ color: C.text, fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 900, margin: '0 0 4px', letterSpacing: '-0.5px' }}>Definições</h1>
+            <h1 style={{ color: C.text, fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 400, margin: '0 0 4px', letterSpacing: '-0.8px', fontFamily: 'var(--font-heading)' }}>Definições</h1>
             <p style={{ color: C.muted, fontSize: 14, margin: 0 }}>Gere o teu perfil e conta</p>
           </div>
           <button onClick={() => navigate('/dashboard')}
@@ -481,12 +481,12 @@ export default function Settings() {
         {isRecruiter ? (
           <>
             {/* Tab bar */}
-            <div className="settings-tab-row" style={{ display: 'flex', gap: 4, marginBottom: 24, background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 5, overflowX: 'auto' }}>
+            <div className="settings-tab-row" style={{ display: 'flex', gap: 4, marginBottom: 24, background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: 5, overflowX: 'auto' }}>
               {recruiterTabs.map(t => {
                 const active = activeTab === t.id
                 return (
                   <button key={t.id} onClick={() => setActiveTab(t.id)}
-                    style={{ flex: 1, minWidth: 90, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '10px 14px', borderRadius: 8, border: 'none', fontFamily: 'inherit', fontSize: 13, fontWeight: active ? 700 : 500, cursor: 'pointer', transition: 'all 0.18s', background: active ? accentColor : 'transparent', color: active ? '#fff' : C.muted, boxShadow: active ? `0 2px 8px ${accentColor}44` : 'none', whiteSpace: 'nowrap' }}>
+                    style={{ flex: 1, minWidth: 90, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '10px 14px', borderRadius: 8, border: 'none', fontFamily: 'inherit', fontSize: 13, fontWeight: active ? 700 : 500, cursor: 'pointer', transition: 'all 0.18s', background: active ? accentColor : 'transparent', color: active ? '#fff' : C.muted, boxShadow: 'none', whiteSpace: 'nowrap' }}>
                     {t.icon} {t.label}
                   </button>
                 )

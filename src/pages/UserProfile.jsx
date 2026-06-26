@@ -60,12 +60,11 @@ function ProjectCard({ project, onClick }) {
       style={{
         background: hovered ? C.cardHover : C.card,
         border: `1px solid ${hovered ? C.borderBright : C.border}`,
-        borderRadius: 14,
+        borderRadius: 12,
         cursor: 'pointer',
         overflow: 'hidden',
-        transition: 'background 0.15s, border-color 0.15s, transform 0.15s, box-shadow 0.15s',
-        transform: hovered ? 'translateY(-2px)' : 'none',
-        boxShadow: hovered ? '0 8px 32px rgba(0,0,0,0.35)' : '0 2px 8px rgba(0,0,0,0.2)',
+        transition: 'background 0.15s, border-color 0.15s',
+        boxShadow: 'none',
       }}
     >
       {/* Cover */}
@@ -91,10 +90,7 @@ function ProjectCard({ project, onClick }) {
             {project.name}
           </span>
           {project.score != null && (
-            <span style={{
-              background: `${color}18`, border: `1px solid ${color}44`,
-              borderRadius: 6, padding: '2px 7px', color, fontSize: 12, fontWeight: 700, flexShrink: 0,
-            }}>
+            <span style={{ color, fontSize: 12, fontWeight: 700, flexShrink: 0 }}>
               {project.score}
             </span>
           )}
@@ -105,7 +101,7 @@ function ProjectCard({ project, onClick }) {
           </p>
         )}
         {project.area && (
-          <span style={{ fontSize: 11, color: C.muted, background: 'var(--c-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 5, padding: '2px 7px' }}>
+          <span style={{ fontSize: 11, color: C.muted, fontWeight: 600 }}>
             {project.area}
           </span>
         )}
@@ -144,18 +140,18 @@ function QRModal({ profileUrl, username, onClose }) {
       style={{ position: 'fixed', inset: 0, zIndex: 9800, background: 'rgba(5,9,18,0.88)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, fontFamily: 'inherit' }}
       onClick={e => e.target === e.currentTarget && onClose()}
     >
-      <div style={{ background: C.card, border: `1px solid ${C.borderBright}`, borderRadius: 20, width: '100%', maxWidth: 340, boxShadow: '0 32px 80px rgba(0,0,0,0.7)', position: 'relative' }}>
+      <div style={{ background: C.card, border: `1px solid ${C.borderBright}`, borderRadius: 14, width: '100%', maxWidth: 340, boxShadow: 'none', position: 'relative' }}>
         <button onClick={onClose} style={{ position: 'absolute', top: 14, right: 14, background: 'var(--c-card-hover)', border: `1px solid ${C.border}`, borderRadius: 8, width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.muted, cursor: 'pointer' }}>
           <X size={14} />
         </button>
 
         <div style={{ padding: '24px 24px 0' }}>
-          <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: C.text }}>QR Code do perfil</h2>
+          <h2 style={{ margin: 0, fontSize: 16, fontWeight: 400, color: C.text, fontFamily: 'var(--font-heading)', letterSpacing: '-0.3px' }}>QR Code do perfil</h2>
           <p style={{ margin: '4px 0 0', fontSize: 12, color: C.muted }}>Aponta a câmara para abrir o teu portfólio</p>
         </div>
 
         <div style={{ padding: '20px 24px 24px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18 }}>
-          <div ref={qrRef} style={{ background: '#fff', borderRadius: 16, padding: 16, boxShadow: '0 8px 32px rgba(0,0,0,0.4)' }}>
+          <div ref={qrRef} style={{ background: '#fff', borderRadius: 12, padding: 16, boxShadow: 'none' }}>
             <QRCodeSVG value={profileUrl} size={180} />
           </div>
           <div style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 8, padding: '8px 14px', fontSize: 11, color: C.subtle, textAlign: 'center', wordBreak: 'break-all', width: '100%', boxSizing: 'border-box' }}>
@@ -245,11 +241,11 @@ ${displayName}`)
       style={{ position: 'fixed', inset: 0, zIndex: 9800, background: 'rgba(5,9,18,0.88)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, fontFamily: 'inherit' }}
       onClick={e => e.target === e.currentTarget && onClose()}
     >
-      <div style={{ background: C.card, border: `1px solid ${C.borderBright}`, borderRadius: 20, width: '100%', maxWidth: 560, maxHeight: '90vh', overflow: 'auto', boxShadow: '0 32px 80px rgba(0,0,0,0.7)' }}>
+      <div style={{ background: C.card, border: `1px solid ${C.borderBright}`, borderRadius: 14, width: '100%', maxWidth: 560, maxHeight: '90vh', overflow: 'auto', boxShadow: 'none' }}>
         {/* Header */}
         <div style={{ padding: '22px 24px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', position: 'sticky', top: 0, background: C.card, borderBottom: `1px solid ${C.border}`, paddingBottom: 16 }}>
           <div>
-            <h2 style={{ margin: '0 0 3px', fontSize: 17, fontWeight: 800, color: C.text }}>Kit de Estágio</h2>
+            <h2 style={{ margin: '0 0 3px', fontSize: 17, fontWeight: 400, color: C.text, fontFamily: 'var(--font-heading)', letterSpacing: '-0.3px' }}>Kit de Estágio</h2>
             <p style={{ margin: 0, fontSize: 12, color: C.muted }}>Tudo o que precisas para conseguir um estágio com os teus projetos.</p>
           </div>
           <button onClick={onClose} style={{ background: 'var(--c-card-hover)', border: `1px solid ${C.border}`, borderRadius: 8, width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.muted, cursor: 'pointer', flexShrink: 0, marginTop: 2 }}>
@@ -298,7 +294,7 @@ ${displayName}`)
           <div>
             <SectionLabel>QR Code do teu perfil</SectionLabel>
             <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
-              <div ref={qrRef} style={{ background: '#fff', borderRadius: 12, padding: 12, boxShadow: '0 4px 20px rgba(0,0,0,0.3)', flexShrink: 0 }}>
+              <div ref={qrRef} style={{ background: '#fff', borderRadius: 10, padding: 12, boxShadow: 'none', flexShrink: 0 }}>
                 <QRCodeSVG value={profileUrl} size={110} />
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -433,9 +429,9 @@ export default function UserProfile() {
       <Navbar />
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, padding: 24, textAlign: 'center' }}>
         <Search size={44} color={C.muted} />
-        <h2 style={{ color: C.text, fontSize: 22, fontWeight: 800, margin: 0 }}>Perfil não encontrado</h2>
+        <h2 style={{ color: C.text, fontSize: 22, fontWeight: 400, margin: 0, fontFamily: 'var(--font-heading)', letterSpacing: '-0.4px' }}>Perfil não encontrado</h2>
         <p style={{ color: C.muted, margin: 0, fontSize: 14 }}>O utilizador @{username} não existe.</p>
-        <button onClick={() => navigate('/')} style={{ marginTop: 8, background: C.blue, border: 'none', borderRadius: 8, padding: '10px 24px', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+        <button onClick={() => navigate('/')} style={{ marginTop: 8, background: C.blue, border: 'none', borderRadius: 8, padding: '10px 24px', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px rgba(27,120,247,0.2)' }}>
           Ir para o início
         </button>
       </div>
@@ -458,12 +454,12 @@ export default function UserProfile() {
         .up-header {
           background: ${C.card};
           border: 1px solid ${C.border};
-          border-radius: 18px;
+          border-radius: 14px;
           padding: 28px 28px 24px;
           margin-bottom: 28px;
           position: relative;
           overflow: hidden;
-          box-shadow: 0 8px 40px rgba(0,0,0,0.35), 0 1px 0 rgba(255,255,255,0.03) inset;
+          box-shadow: none;
         }
         /* Subtle area gradient glow in top-right corner — dark mode only */
         .up-header::before {
@@ -485,7 +481,6 @@ export default function UserProfile() {
           object-fit: cover;
           flex-shrink: 0;
           border: 3px solid ${c1};
-          box-shadow: 0 8px 28px rgba(0,0,0,0.4), 0 0 0 1px ${c1}44;
         }
         .up-avatar-placeholder {
           width: 112px; height: 112px;
@@ -493,9 +488,8 @@ export default function UserProfile() {
           flex-shrink: 0;
           background: linear-gradient(135deg, ${c1}, ${c2});
           display: flex; align-items: center; justify-content: center;
-          font-size: 42px; font-weight: 900; color: rgba(255,255,255,0.85);
+          font-size: 42px; font-weight: 400; font-family: var(--font-heading); color: rgba(255,255,255,0.85);
           border: 3px solid ${c1};
-          box-shadow: 0 8px 28px rgba(0,0,0,0.4), 0 0 0 1px ${c1}44;
         }
 
         .up-stat-pill {
@@ -555,16 +549,16 @@ export default function UserProfile() {
           color: ${C.yellow};
         }
         .up-action-btn.primary {
-          background: linear-gradient(135deg, #1b78f7, #4f46e5);
+          background: #1b78f7;
           border-color: transparent;
           color: #fff;
-          box-shadow: 0 2px 14px rgba(27,120,247,0.32);
+          box-shadow: 0 2px 8px rgba(27,120,247,0.2);
         }
         .up-action-btn.primary:hover {
-          background: linear-gradient(135deg, #1564d4, #4338ca);
+          background: #1564d4;
           border-color: transparent;
           color: #fff;
-          box-shadow: 0 4px 18px rgba(27,120,247,0.44);
+          box-shadow: 0 2px 8px rgba(27,120,247,0.2);
         }
 
         .up-section-label {
@@ -646,15 +640,15 @@ export default function UserProfile() {
                 style={{
                   display: 'inline-flex', alignItems: 'center', gap: 7,
                   background: '#1b78f7', border: 'none',
-                  borderRadius: 10, padding: '9px 18px',
+                  borderRadius: 9, padding: '9px 18px',
                   color: '#fff', fontSize: 13, fontWeight: 700,
                   cursor: 'pointer', fontFamily: 'inherit',
                   whiteSpace: 'nowrap',
-                  boxShadow: '0 4px 14px rgba(27,120,247,0.3)',
-                  transition: 'background 0.15s, box-shadow 0.15s',
+                  boxShadow: '0 2px 8px rgba(27,120,247,0.2)',
+                  transition: 'background 0.15s',
                 }}
-                onMouseEnter={e => { e.currentTarget.style.background = '#1564d4'; e.currentTarget.style.boxShadow = '0 4px 18px rgba(27,120,247,0.45)' }}
-                onMouseLeave={e => { e.currentTarget.style.background = '#1b78f7'; e.currentTarget.style.boxShadow = '0 4px 14px rgba(27,120,247,0.3)' }}
+                onMouseEnter={e => { e.currentTarget.style.background = '#1564d4' }}
+                onMouseLeave={e => { e.currentTarget.style.background = '#1b78f7' }}
               >
                 <MessageSquare size={14} /> Mensagem
               </button>
@@ -673,14 +667,14 @@ export default function UserProfile() {
             <div style={{ flex: 1, minWidth: 0, paddingRight: 8 }}>
               {/* Name + username */}
               <div style={{ marginBottom: 6 }}>
-                <h1 style={{ color: C.text, fontSize: 26, fontWeight: 900, margin: '0 0 3px', letterSpacing: '-0.6px', lineHeight: 1.15, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                <h1 style={{ color: C.text, fontSize: 26, fontWeight: 400, margin: '0 0 3px', letterSpacing: '-0.6px', lineHeight: 1.15, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', fontFamily: 'var(--font-heading)' }}>
                   {displayName}
                   {projects.some(p => (p.score || 0) >= 100) && (
                     <span title="Tem um projeto com score perfeito" style={{
                       display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                       width: 28, height: 28, borderRadius: 8,
-                      background: 'linear-gradient(135deg, #1b78f7, #4f46e5)',
-                      boxShadow: '0 3px 10px rgba(27,120,247,0.45)',
+                      background: '#1b78f7',
+                      boxShadow: '0 0 8px rgba(27,120,247,0.5)',
                       flexShrink: 0,
                     }}>
                       <GraduationCap size={15} color="#fff" />
@@ -696,12 +690,15 @@ export default function UserProfile() {
               {(profile.area || profile.course || profile.school) && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginBottom: 10, marginTop: 6 }}>
                   {(profile.area || profile.course) && (
-                    <span style={{ fontSize: 12, fontWeight: 600, color: c1, background: `${c1}18`, border: `1px solid ${c1}40`, borderRadius: 6, padding: '3px 10px' }}>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: c1 }}>
                       {profile.area || profile.course}
                     </span>
                   )}
                   {profile.school && (
-                    <span style={{ fontSize: 12, color: C.muted }}>{profile.school}</span>
+                    <>
+                      {(profile.area || profile.course) && <span style={{ color: C.subtle, fontSize: 12 }}>·</span>}
+                      <span style={{ fontSize: 12, color: C.muted }}>{profile.school}</span>
+                    </>
                   )}
                 </div>
               )}
@@ -718,7 +715,7 @@ export default function UserProfile() {
                 <div style={{
                   display: 'inline-flex', alignItems: 'center', gap: 6,
                   background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)',
-                  borderRadius: 999, padding: '5px 14px', marginBottom: 12,
+                  borderRadius: 7, padding: '5px 14px', marginBottom: 12,
                   color: '#10b981', fontSize: 13, fontWeight: 700,
                 }}>
                   <Briefcase size={13} style={{ flexShrink: 0 }} /> Disponível para estágio
@@ -771,7 +768,7 @@ export default function UserProfile() {
                       display: 'inline-flex', alignItems: 'center',
                       background: 'rgba(27,120,247,0.08)', color: '#1b78f7',
                       border: '1px solid rgba(27,120,247,0.2)',
-                      borderRadius: 20, padding: '3px 12px',
+                      borderRadius: 6, padding: '3px 12px',
                       fontSize: 12, fontWeight: 600,
                     }}>
                       {skill}
@@ -825,16 +822,16 @@ export default function UserProfile() {
                       onClick={() => setShowInvite(true)}
                       style={{
                         display: 'inline-flex', alignItems: 'center', gap: 6,
-                        background: 'linear-gradient(135deg, #1b78f7, #4f46e5)',
+                        background: '#1b78f7',
                         border: 'none',
                         borderRadius: 9, padding: '8px 16px',
                         color: '#fff',
                         fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-                        boxShadow: '0 2px 12px rgba(27,120,247,0.3)',
-                        transition: 'all 0.15s',
+                        boxShadow: '0 2px 8px rgba(27,120,247,0.2)',
+                        transition: 'background 0.15s',
                       }}
-                      onMouseEnter={e => { e.currentTarget.style.background = 'linear-gradient(135deg,#1564d4,#4338ca)' }}
-                      onMouseLeave={e => { e.currentTarget.style.background = 'linear-gradient(135deg,#1b78f7,#4f46e5)' }}
+                      onMouseEnter={e => { e.currentTarget.style.background = '#1564d4' }}
+                      onMouseLeave={e => { e.currentTarget.style.background = '#1b78f7' }}
                     >
                       <Send size={13} /> Convidar para vaga
                     </button>
@@ -855,20 +852,20 @@ export default function UserProfile() {
 
           {projects.length === 0 ? (
             isOwnProfile ? (
-              <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: '48px 32px', textAlign: 'center' }}>
+              <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: '48px 32px', textAlign: 'center' }}>
                 <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16, color: C.blue }}><Rocket size={40} /></div>
                 <p style={{ color: C.text, fontSize: 17, fontWeight: 700, margin: '0 0 8px' }}>O teu portfólio começa aqui</p>
                 <p style={{ color: C.muted, fontSize: 14, margin: '0 0 24px', maxWidth: 360, marginLeft: 'auto', marginRight: 'auto', lineHeight: 1.65 }}>
                   Adiciona o teu primeiro projeto e transforma-o numa página profissional com a ajuda da IA.
                 </p>
                 <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
-                  <button onClick={() => setShowCreateModal(true)} style={{ background: C.blue, border: 'none', borderRadius: 9, padding: '11px 24px', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                  <button onClick={() => setShowCreateModal(true)} style={{ background: C.blue, border: 'none', borderRadius: 8, padding: '11px 24px', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px rgba(27,120,247,0.2)' }}>
                     <span style={{display:'flex',alignItems:'center',gap:6}}>Criar projeto <ArrowRight size={14} /></span>
                   </button>
                 </div>
               </div>
             ) : (
-              <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: '48px 32px', textAlign: 'center' }}>
+              <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: '48px 32px', textAlign: 'center' }}>
                 <FolderOpen size={40} color={C.subtle} style={{ marginBottom: 14 }} />
                 <p style={{ color: C.text, fontSize: 16, fontWeight: 700, margin: '0 0 8px' }}>Ainda sem projetos</p>
                 <p style={{ color: C.muted, fontSize: 14, margin: 0, lineHeight: 1.6 }}>

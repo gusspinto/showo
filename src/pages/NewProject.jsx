@@ -444,7 +444,7 @@ export default function NewProject() {
         <Navbar showLinks={false} />
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 24px' }}>
           <div style={{ width: '100%', maxWidth: 560 }}>
-            <h2 style={{ fontSize: 'clamp(22px, 4vw, 32px)', fontWeight: 800, marginBottom: 8, textAlign: 'center', marginTop: 0, letterSpacing: '-0.5px' }}>
+            <h2 style={{ fontSize: 'clamp(22px, 4vw, 32px)', fontWeight: 400, fontFamily: 'var(--font-heading)', marginBottom: 8, textAlign: 'center', marginTop: 0, letterSpacing: '-0.5px' }}>
               O que pretendes alcançar?
             </h2>
             <p style={{ color: colors.muted, textAlign: 'center', marginBottom: 32, fontSize: 15, marginTop: 8 }}>
@@ -460,17 +460,16 @@ export default function NewProject() {
                     onClick={() => setFormGoal(opt.id)}
                     style={{
                       background: sel ? opt.bg : colors.card,
-                      border: `2px solid ${sel ? c : colors.border}`,
-                      borderRadius: 16, padding: '20px 16px',
+                      border: `1.5px solid ${sel ? c : colors.border}`,
+                      borderRadius: 12, padding: '20px 16px',
                       color: colors.text, cursor: 'pointer', textAlign: 'left',
-                      transition: 'all 0.18s cubic-bezier(0.4,0,0.2,1)',
-                      boxShadow: sel ? `0 0 0 4px ${opt.glow}, 0 4px 20px ${opt.glow}` : '0 1px 4px rgba(0,0,0,0.1)',
+                      transition: 'border-color 0.18s, background 0.18s',
+                      boxShadow: 'none',
                       fontFamily: 'inherit',
-                      transform: sel ? 'scale(1.02)' : 'scale(1)',
                       position: 'relative',
                     }}
-                    onMouseEnter={e => { if (!sel) { e.currentTarget.style.borderColor = `${c}66`; e.currentTarget.style.transform = 'scale(1.015)'; e.currentTarget.style.boxShadow = `0 4px 16px ${opt.glow}` }}}
-                    onMouseLeave={e => { if (!sel) { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 1px 4px rgba(0,0,0,0.1)' }}}
+                    onMouseEnter={e => { if (!sel) { e.currentTarget.style.borderColor = colors.borderBright; e.currentTarget.style.background = colors.cardHover }}}
+                    onMouseLeave={e => { if (!sel) { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.background = colors.card }}}
                   >
                     {/* Checkmark badge */}
                     {sel && (
@@ -505,13 +504,13 @@ export default function NewProject() {
               disabled={!formGoal}
               style={{
                 width: '100%',
-                background: formGoal ? `linear-gradient(135deg, ${colors.blue}, #4f46e5)` : colors.border,
-                color: '#fff', border: 'none', borderRadius: 12,
+                background: formGoal ? colors.blue : colors.border,
+                color: '#fff', border: 'none', borderRadius: 10,
                 padding: '14px 0', fontSize: 15, fontWeight: 700,
                 cursor: formGoal ? 'pointer' : 'not-allowed',
                 transition: 'background 0.2s, box-shadow 0.2s',
                 fontFamily: 'inherit',
-                boxShadow: formGoal ? '0 4px 20px rgba(27,120,247,0.3)' : 'none',
+                boxShadow: formGoal ? '0 2px 8px rgba(27,120,247,0.2)' : 'none',
                 letterSpacing: '-0.2px',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}
@@ -532,7 +531,7 @@ export default function NewProject() {
                   background: colors.card,
                   border: `1px solid ${colors.border}`,
                   borderLeft: `3px solid ${colors.blue}`,
-                  borderRadius: 14,
+                  borderRadius: 12,
                   padding: '16px 18px',
                 }}>
                   {/* Header */}
@@ -555,25 +554,19 @@ export default function NewProject() {
                   </div>
 
                   {/* Project info chips */}
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, marginBottom: 12, fontSize: 12 }}>
                     {projectName && (
-                      <span style={{ fontSize: 12, fontWeight: 600, color: colors.text, background: colors.bgAlt, border: `1px solid ${colors.border}`, borderRadius: 99, padding: '3px 10px' }}>
-                        {projectName}
-                      </span>
+                      <span style={{ fontWeight: 700, color: colors.text }}>{projectName}</span>
                     )}
                     {projectArea && (
-                      <span style={{ fontSize: 12, color: colors.muted, background: colors.bgAlt, border: `1px solid ${colors.border}`, borderRadius: 99, padding: '3px 10px' }}>
-                        {projectArea}
-                      </span>
+                      <span style={{ color: colors.muted }}>· {projectArea}</span>
                     )}
                     {goalOpt && (
-                      <span style={{ fontSize: 12, fontWeight: 600, color: goalOpt.color, background: goalOpt.bg, border: `1px solid ${goalOpt.color}33`, borderRadius: 99, padding: '3px 10px', display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <goalOpt.Icon size={11} /> {goalOpt.title}
+                      <span style={{ fontWeight: 600, color: goalOpt.color, display: 'flex', alignItems: 'center', gap: 4 }}>
+                        · <goalOpt.Icon size={11} /> {goalOpt.title}
                       </span>
                     )}
-                    <span style={{ fontSize: 12, color: colors.muted, background: colors.bgAlt, border: `1px solid ${colors.border}`, borderRadius: 99, padding: '3px 10px' }}>
-                      Passo {stepsCompleted + 1} de {TOTAL_STEPS}
-                    </span>
+                    <span style={{ color: colors.muted }}>· Passo {stepsCompleted + 1} de {TOTAL_STEPS}</span>
                   </div>
 
                   {/* Progress bar */}
@@ -581,7 +574,7 @@ export default function NewProject() {
                     <div style={{
                       height: '100%',
                       width: `${((stepsCompleted + 1) / TOTAL_STEPS) * 100}%`,
-                      background: `linear-gradient(90deg, ${colors.blue}, #4f46e5)`,
+                      background: colors.blue,
                       borderRadius: 99,
                     }} />
                   </div>
@@ -591,8 +584,8 @@ export default function NewProject() {
                     <button
                       onClick={() => { applyDraft(draftModal); setDraftModal(null) }}
                       style={{
-                        flex: 1, padding: '10px 0', borderRadius: 10,
-                        background: `linear-gradient(135deg, ${colors.blue}, #4f46e5)`,
+                        flex: 1, padding: '10px 0', borderRadius: 8,
+                        background: colors.blue,
                         border: 'none', color: '#fff', fontSize: 14, fontWeight: 700,
                         cursor: 'pointer', fontFamily: 'inherit',
                         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
@@ -606,7 +599,7 @@ export default function NewProject() {
                     <button
                       onClick={async () => { await clearDraft(); setDraftModal(null) }}
                       style={{
-                        padding: '10px 14px', borderRadius: 10,
+                        padding: '10px 14px', borderRadius: 8,
                         background: 'transparent', border: `1px solid ${colors.border}`,
                         color: colors.muted, fontSize: 13, fontWeight: 600,
                         cursor: 'pointer', fontFamily: 'inherit',
@@ -647,12 +640,12 @@ export default function NewProject() {
           <div style={{ width: '100%', maxWidth: 560 }}>
             <div style={{ textAlign: 'center', marginBottom: 36 }}>
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}><Sparkles size={52} color={colors.blue} /></div>
-              <h2 style={{ fontSize: 'clamp(22px, 4vw, 30px)', fontWeight: 800, margin: '0 0 8px', letterSpacing: '-0.5px' }}>O teu projeto está pronto!</h2>
+              <h2 style={{ fontSize: 'clamp(22px, 4vw, 30px)', fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 8px', letterSpacing: '-0.5px' }}>O teu projeto está pronto!</h2>
               <p style={{ color: colors.muted, margin: 0, fontSize: 15 }}>Guarda o link de edição — só tu o tens.</p>
             </div>
 
             {/* Project link */}
-            <div style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 14, padding: '20px 22px', marginBottom: 12, boxShadow: '0 2px 12px rgba(0,0,0,0.25)' }}>
+            <div style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 12, padding: '20px 22px', marginBottom: 12, boxShadow: 'none' }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: colors.subtle, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 10 }}>Link do projeto</div>
               <div style={{ display: 'flex', gap: 8 }}>
                 <div style={{ flex: 1, background: colors.bg, border: `1px solid ${colors.border}`, borderRadius: 8, padding: '10px 12px', fontSize: 13, color: colors.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -661,7 +654,7 @@ export default function NewProject() {
                 <button
                   onClick={() => copyLink(projectUrl, 'project')}
                   style={{
-                    background: copiedLink === 'project' ? `linear-gradient(135deg, ${colors.green}, #16a34a)` : `linear-gradient(135deg, ${colors.blue}, #4f46e5)`,
+                    background: copiedLink === 'project' ? colors.green : colors.blue,
                     color: '#fff', border: 'none', borderRadius: 8,
                     padding: '10px 16px', fontSize: 13, fontWeight: 600,
                     cursor: 'pointer', whiteSpace: 'nowrap',
@@ -675,7 +668,7 @@ export default function NewProject() {
             </div>
 
             {/* Edit link */}
-            <div style={{ background: colors.yellowGlow, border: '1px solid rgba(234,179,8,0.2)', borderRadius: 14, padding: '20px 22px', marginBottom: 28 }}>
+            <div style={{ background: colors.yellowGlow, border: '1px solid rgba(234,179,8,0.2)', borderRadius: 12, padding: '20px 22px', marginBottom: 28 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                 <Lock size={16} color={colors.yellow} />
                 <div style={{ fontSize: 11, fontWeight: 700, color: colors.yellow, textTransform: 'uppercase', letterSpacing: 0.8 }}>Teu link privado de edição</div>
@@ -690,7 +683,7 @@ export default function NewProject() {
                 <button
                   onClick={() => copyLink(editUrl, 'edit')}
                   style={{
-                    background: copiedLink === 'edit' ? `linear-gradient(135deg, ${colors.green}, #16a34a)` : colors.yellow,
+                    background: copiedLink === 'edit' ? colors.green : colors.yellow,
                     color: 'var(--c-bg)', border: 'none', borderRadius: 8,
                     padding: '10px 16px', fontSize: 13, fontWeight: 700,
                     cursor: 'pointer', whiteSpace: 'nowrap',
@@ -707,12 +700,12 @@ export default function NewProject() {
               onClick={() => navigate(`/projeto/${savedProject.slug}`)}
               style={{
                 width: '100%',
-                background: `linear-gradient(135deg, ${colors.blue}, #4f46e5)`,
+                background: colors.blue,
                 color: '#fff', border: 'none',
-                borderRadius: 12, padding: '15px 0',
+                borderRadius: 10, padding: '15px 0',
                 fontSize: 17, fontWeight: 700, cursor: 'pointer',
                 fontFamily: 'inherit',
-                boxShadow: '0 4px 20px rgba(27,120,247,0.3)',
+                boxShadow: '0 2px 8px rgba(27,120,247,0.2)',
                 letterSpacing: '-0.2px',
               }}
             >
@@ -776,14 +769,14 @@ export default function NewProject() {
           <div style={{
             background: colors.card,
             border: '1px solid #1e3050',
-            borderRadius: 18,
+            borderRadius: 14,
             padding: '36px 32px 28px',
             maxWidth: 420, width: '100%',
-            boxShadow: '0 24px 60px rgba(0,0,0,0.6)',
+            boxShadow: 'none',
             textAlign: 'center',
           }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}><Save size={36} color={colors.blue} /></div>
-            <h2 style={{ color: 'var(--c-text)', fontSize: 20, fontWeight: 800, margin: '0 0 10px', letterSpacing: '-0.3px' }}>
+            <h2 style={{ color: 'var(--c-text)', fontSize: 20, fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 10px', letterSpacing: '-0.3px' }}>
               Guarda o teu projeto
             </h2>
             <p style={{ color: 'var(--c-muted)', fontSize: 14, lineHeight: 1.65, margin: '0 0 28px' }}>
@@ -793,12 +786,12 @@ export default function NewProject() {
               <button
                 onClick={() => navigate('/register')}
                 style={{
-                  background: 'linear-gradient(135deg, #1b78f7, #4f46e5)',
-                  border: 'none', borderRadius: 10,
+                  background: '#1b78f7',
+                  border: 'none', borderRadius: 8,
                   padding: '12px 0', color: '#fff',
                   fontSize: 15, fontWeight: 700,
                   cursor: 'pointer', fontFamily: 'inherit',
-                  boxShadow: '0 4px 16px rgba(27,120,247,0.3)',
+                  boxShadow: '0 2px 8px rgba(27,120,247,0.2)',
                   transition: 'opacity 0.15s',
                 }}
                 onMouseEnter={e => e.currentTarget.style.opacity = '0.88'}
@@ -810,7 +803,7 @@ export default function NewProject() {
                 onClick={() => navigate('/login')}
                 style={{
                   background: 'transparent',
-                  border: '1px solid #1e3050', borderRadius: 10,
+                  border: '1px solid #1e3050', borderRadius: 8,
                   padding: '11px 0', color: 'var(--c-text)',
                   fontSize: 15, fontWeight: 600,
                   cursor: 'pointer', fontFamily: 'inherit',
@@ -843,12 +836,7 @@ export default function NewProject() {
       <Navbar showLinks={false}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           {formGoal && (
-            <span style={{
-              fontSize: 11, color: colors.blue,
-              background: 'rgba(27,120,247,0.08)',
-              border: '1px solid rgba(27,120,247,0.15)',
-              borderRadius: 999, padding: '3px 10px', fontWeight: 600,
-            }}>
+            <span style={{ fontSize: 12, color: colors.blue, fontWeight: 600 }}>
               {GOAL_LABELS[formGoal]}
             </span>
           )}
@@ -861,9 +849,9 @@ export default function NewProject() {
         <div style={{
           height: '100%',
           width: `${progress}%`,
-          background: `linear-gradient(90deg, ${colors.blue}, #818cf8)`,
+          background: colors.blue,
           transition: 'width 0.4s ease',
-          boxShadow: '0 0 8px rgba(27,120,247,0.4)',
+          boxShadow: 'none',
         }} />
       </div>
 
@@ -894,7 +882,7 @@ export default function NewProject() {
           {/* ── dual_text ── */}
           {s.type === 'dual_text' && (
             <>
-              <h2 style={{ fontSize: 'clamp(26px, 4.5vw, 36px)', fontWeight: 900, marginBottom: 28, marginTop: 6, lineHeight: 1.2, letterSpacing: '-0.5px' }}>{s.label}</h2>
+              <h2 style={{ fontSize: 'clamp(26px, 4.5vw, 36px)', fontWeight: 400, fontFamily: 'var(--font-heading)', marginBottom: 28, marginTop: 6, lineHeight: 1.2, letterSpacing: '-0.5px' }}>{s.label}</h2>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 {s.keys.map((key, i) => (
                   <div key={key}>
@@ -919,7 +907,7 @@ export default function NewProject() {
           {s.type === 'text' && (
             <>
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 28, marginTop: 6 }}>
-                <h2 style={{ fontSize: 'clamp(26px, 4.5vw, 36px)', fontWeight: 900, margin: 0, lineHeight: 1.2, letterSpacing: '-0.5px' }}>{s.label}</h2>
+                <h2 style={{ fontSize: 'clamp(26px, 4.5vw, 36px)', fontWeight: 400, fontFamily: 'var(--font-heading)', margin: 0, lineHeight: 1.2, letterSpacing: '-0.5px' }}>{s.label}</h2>
                 {EXAMPLES[s.key] && (
                   <button
                     onClick={() => toggleExample(s.key)}
@@ -959,7 +947,7 @@ export default function NewProject() {
           {s.type === 'textarea' && (
             <>
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 28, marginTop: 6 }}>
-                <h2 style={{ fontSize: 'clamp(26px, 4.5vw, 36px)', fontWeight: 900, margin: 0, lineHeight: 1.2, letterSpacing: '-0.5px' }}>{s.label}</h2>
+                <h2 style={{ fontSize: 'clamp(26px, 4.5vw, 36px)', fontWeight: 400, fontFamily: 'var(--font-heading)', margin: 0, lineHeight: 1.2, letterSpacing: '-0.5px' }}>{s.label}</h2>
                 {EXAMPLES[s.key] && (
                   <button
                     onClick={() => toggleExample(s.key)}
@@ -997,7 +985,7 @@ export default function NewProject() {
           {/* ── dual_textarea ── */}
           {s.type === 'dual_textarea' && (
             <>
-              <h2 style={{ fontSize: 'clamp(26px, 4.5vw, 36px)', fontWeight: 900, marginBottom: 28, marginTop: 6, lineHeight: 1.2, letterSpacing: '-0.5px' }}>{s.label}</h2>
+              <h2 style={{ fontSize: 'clamp(26px, 4.5vw, 36px)', fontWeight: 400, fontFamily: 'var(--font-heading)', marginBottom: 28, marginTop: 6, lineHeight: 1.2, letterSpacing: '-0.5px' }}>{s.label}</h2>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 {s.keys.map((key, i) => (
                   <div key={key}>
@@ -1041,7 +1029,7 @@ export default function NewProject() {
           {/* ── finalize ── */}
           {isFinalize && (
             <>
-              <h2 style={{ fontSize: 'clamp(26px, 4.5vw, 36px)', fontWeight: 900, marginBottom: 6, marginTop: 6, lineHeight: 1.2, letterSpacing: '-0.5px' }}>Quase pronto!</h2>
+              <h2 style={{ fontSize: 'clamp(26px, 4.5vw, 36px)', fontWeight: 400, fontFamily: 'var(--font-heading)', marginBottom: 6, marginTop: 6, lineHeight: 1.2, letterSpacing: '-0.5px' }}>Quase pronto!</h2>
               <p style={{ color: colors.muted, fontSize: 14, marginBottom: 28, marginTop: 0 }}>
                 Todos os campos abaixo são opcionais — podes preencher agora ou depois.
               </p>
@@ -1105,17 +1093,16 @@ export default function NewProject() {
                         onClick={() => set('project_type', sel ? null : t.id)}
                         style={{
                           background: sel ? t.bg : colors.card,
-                          border: `2px solid ${sel ? c : colors.border}`,
-                          borderRadius: 14, padding: '16px 10px 14px',
+                          border: `1.5px solid ${sel ? c : colors.border}`,
+                          borderRadius: 12, padding: '16px 10px 14px',
                           color: colors.text, cursor: 'pointer', textAlign: 'center',
-                          transition: 'all 0.18s cubic-bezier(0.4,0,0.2,1)',
-                          boxShadow: sel ? `0 0 0 4px ${t.glow}, 0 4px 16px ${t.glow}` : '0 1px 4px rgba(0,0,0,0.08)',
+                          transition: 'border-color 0.18s, background 0.18s',
+                          boxShadow: 'none',
                           fontFamily: 'inherit',
-                          transform: sel ? 'scale(1.04)' : 'scale(1)',
                           position: 'relative',
                         }}
-                        onMouseEnter={e => { if (!sel) { e.currentTarget.style.borderColor = `${c}66`; e.currentTarget.style.transform = 'scale(1.02)'; e.currentTarget.style.boxShadow = `0 4px 14px ${t.glow}` }}}
-                        onMouseLeave={e => { if (!sel) { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 1px 4px rgba(0,0,0,0.08)' }}}
+                        onMouseEnter={e => { if (!sel) { e.currentTarget.style.borderColor = colors.borderBright; e.currentTarget.style.background = colors.cardHover }}}
+                        onMouseLeave={e => { if (!sel) { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.background = colors.card }}}
                       >
                         {/* Checkmark badge */}
                         {sel && (
@@ -1267,7 +1254,7 @@ export default function NewProject() {
                 style={{
                   background: 'transparent',
                   border: `1.5px solid ${colors.border}`,
-                  color: colors.muted, borderRadius: 10,
+                  color: colors.muted, borderRadius: 8,
                   padding: '12px 20px', fontSize: 15, cursor: 'pointer',
                   fontWeight: 600, fontFamily: 'inherit',
                   transition: 'border-color 0.2s',
@@ -1281,13 +1268,13 @@ export default function NewProject() {
               disabled={!canProceed()}
               style={{
                 flex: 1,
-                background: canProceed() ? `linear-gradient(135deg, ${colors.blue}, #4f46e5)` : colors.border,
-                color: '#fff', border: 'none', borderRadius: 10,
+                background: canProceed() ? colors.blue : colors.border,
+                color: '#fff', border: 'none', borderRadius: 8,
                 padding: '14px 24px', fontSize: 16, fontWeight: 700,
                 cursor: canProceed() ? 'pointer' : 'not-allowed',
                 transition: 'background 0.2s, box-shadow 0.2s',
                 fontFamily: 'inherit',
-                boxShadow: canProceed() ? '0 4px 20px rgba(27,120,247,0.3)' : 'none',
+                boxShadow: canProceed() ? '0 2px 8px rgba(27,120,247,0.2)' : 'none',
                 letterSpacing: '-0.1px',
               }}
             >

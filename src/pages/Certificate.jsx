@@ -110,8 +110,8 @@ export default function Certificate() {
           0%, 100% { opacity: 0.5; }
           50% { opacity: 1; }
         }
-        .cert-action-btn { transition: all 0.15s; }
-        .cert-action-btn:hover { opacity: 0.85; transform: translateY(-1px); }
+        .cert-action-btn { transition: opacity 0.15s; }
+        .cert-action-btn:hover { opacity: 0.85; }
         @media (max-width: 600px) {
           .cert-actions { flex-direction: column !important; }
           .cert-actions button { width: 100% !important; }
@@ -133,11 +133,11 @@ export default function Certificate() {
           width: '100%', maxWidth: 800,
           background: 'linear-gradient(135deg, #0a1020 0%, #0d1a2e 50%, #0a1020 100%)',
           border: '1px solid rgba(27,120,247,0.3)',
-          borderRadius: 24,
+          borderRadius: 16,
           padding: '52px 56px',
           position: 'relative',
           overflow: 'hidden',
-          boxShadow: '0 24px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(27,120,247,0.1)',
+          boxShadow: 'none',
         }}
       >
         {/* Background decoration */}
@@ -161,11 +161,11 @@ export default function Certificate() {
         {/* Main content */}
         <div style={{ marginBottom: 36 }}>
           <div style={{ fontSize: 13, color: C.muted, marginBottom: 10, fontWeight: 500 }}>Este certificado comprova que</div>
-          <div style={{ fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 900, color: 'var(--c-text)', letterSpacing: '-1px', lineHeight: 1.1, marginBottom: 20, fontFamily: 'var(--font-heading)' }}>
+          <div style={{ fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 400, color: 'var(--c-text)', letterSpacing: '-1px', lineHeight: 1.1, marginBottom: 20, fontFamily: 'var(--font-heading)' }}>
             {project.creator_name || 'Estudante'}
           </div>
           <div style={{ fontSize: 14, color: C.muted, marginBottom: 8, fontWeight: 500 }}>concluiu com sucesso o projeto</div>
-          <div style={{ fontSize: 'clamp(20px, 3vw, 32px)', fontWeight: 800, color: '#1b78f7', letterSpacing: '-0.5px', lineHeight: 1.2, fontFamily: 'var(--font-heading)' }}>
+          <div style={{ fontSize: 'clamp(20px, 3vw, 32px)', fontWeight: 400, color: '#1b78f7', letterSpacing: '-0.5px', lineHeight: 1.2, fontFamily: 'var(--font-heading)' }}>
             {project.name}
           </div>
         </div>
@@ -213,11 +213,11 @@ export default function Certificate() {
           onClick={handleDownload}
           disabled={downloading}
           style={{
-            background: 'linear-gradient(135deg, #1b78f7, #4f46e5)',
-            color: '#fff', border: 'none', borderRadius: 12,
+            background: '#1b78f7',
+            color: '#fff', border: 'none', borderRadius: 10,
             padding: '14px 28px', fontSize: 15, fontWeight: 700,
             cursor: downloading ? 'default' : 'pointer', fontFamily: 'inherit',
-            boxShadow: '0 4px 20px rgba(27,120,247,0.3)',
+            boxShadow: '0 2px 8px rgba(27,120,247,0.2)',
             opacity: downloading ? 0.7 : 1,
           }}
         >
@@ -231,7 +231,7 @@ export default function Certificate() {
           onClick={handleCopy}
           style={{
             background: 'transparent', border: `1px solid ${C.border}`,
-            color: copied ? '#22c55e' : C.muted, borderRadius: 12,
+            color: copied ? '#22c55e' : C.muted, borderRadius: 10,
             padding: '14px 28px', fontSize: 15, fontWeight: 600,
             cursor: 'pointer', fontFamily: 'inherit',
           }}

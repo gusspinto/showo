@@ -46,10 +46,7 @@ function getDisplayName(user) {
 function ScoreBadge({ score }) {
   const color = getScoreColor(score)
   return (
-    <span style={{
-      background: `${color}18`, border: `1px solid ${color}44`,
-      borderRadius: 6, padding: '2px 9px', color, fontSize: 12, fontWeight: 700,
-    }}>
+    <span style={{ color, fontSize: 12, fontWeight: 700 }}>
       {score ?? '—'}
     </span>
   )
@@ -67,18 +64,18 @@ function StatCard({ icon, label, value, color, onClick }) {
       style={{
         background: hov && onClick ? C.cardHover : C.card,
         border: `1px solid ${hov && onClick ? C.borderBright : C.border}`,
-        borderRadius: 16,
+        borderRadius: 12,
         padding: '18px 20px',
         display: 'flex', flexDirection: 'column', gap: 10,
         cursor: onClick ? 'pointer' : 'default',
-        transition: 'background 0.15s, border-color 0.15s, box-shadow 0.15s',
-        boxShadow: hov && onClick ? `0 0 0 1px ${accent}22, 0 4px 20px rgba(0,0,0,0.3)` : '0 2px 12px rgba(0,0,0,0.2)',
+        transition: 'background 0.15s, border-color 0.15s',
+        boxShadow: 'none',
         position: 'relative', overflow: 'hidden',
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         <div style={{
-          width: 32, height: 32, borderRadius: 9, flexShrink: 0,
+          width: 32, height: 32, borderRadius: 8, flexShrink: 0,
           background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           color: accent,
@@ -87,7 +84,7 @@ function StatCard({ icon, label, value, color, onClick }) {
         </div>
         <span style={{ color: C.muted, fontSize: 12, fontWeight: 500 }}>{label}</span>
       </div>
-      <span style={{ color: accent, fontSize: 30, fontWeight: 900, letterSpacing: '-1.5px', lineHeight: 1, marginTop: 4 }}>
+      <span style={{ color: accent, fontSize: 30, fontWeight: 400, fontFamily: 'var(--font-heading)', letterSpacing: '-1.5px', lineHeight: 1, marginTop: 4 }}>
         {value}
       </span>
     </div>
@@ -113,7 +110,7 @@ function ActionBtn({ onClick, label, primary, small }) {
         fontFamily: 'var(--font-body)',
         transition: 'background 0.15s, color 0.15s',
         display: 'flex', alignItems: 'center', gap: 5,
-        boxShadow: primary ? '0 2px 12px rgba(27,120,247,0.25)' : 'none',
+        boxShadow: primary ? '0 2px 8px rgba(27,120,247,0.2)' : 'none',
         whiteSpace: 'nowrap',
       }}
     >
@@ -137,11 +134,11 @@ function ProjectRow({ project, onView, onEdit, onDelete, onCopy, copied }) {
       style={{
         background: hovered ? C.cardHover : C.card,
         border: `1px solid ${hovered ? C.borderBright : C.border}`,
-        borderRadius: 14, padding: '14px 18px',
+        borderRadius: 12, padding: '14px 18px',
         display: 'flex', alignItems: 'center', gap: 14,
-        transition: 'background 0.15s, border-color 0.15s, box-shadow 0.15s',
+        transition: 'background 0.15s, border-color 0.15s',
         cursor: 'default',
-        boxShadow: hovered ? '0 2px 12px rgba(0,0,0,0.12)' : 'none',
+        boxShadow: 'none',
       }}
       className="dash-project-row"
     >
@@ -169,8 +166,8 @@ function ProjectRow({ project, onView, onEdit, onDelete, onCopy, copied }) {
             {project.name}
           </span>
           {project.area && (
-            <span style={{ color: C.subtle, fontSize: 11, background: 'var(--c-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 5, padding: '1px 7px', flexShrink: 0 }}>
-              {project.area}
+            <span style={{ color: C.subtle, fontSize: 11, fontWeight: 600, flexShrink: 0 }}>
+              · {project.area}
             </span>
           )}
         </div>
@@ -189,11 +186,11 @@ function ProjectRow({ project, onView, onEdit, onDelete, onCopy, copied }) {
             <span style={{ fontSize: 12, color: C.muted, alignSelf: 'center', whiteSpace: 'nowrap' }}>Apagar?</span>
             <button
               onClick={() => { onDelete(project.id); setConfirmDelete(false) }}
-              style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, padding: '7px 13px', color: '#ef4444', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+              style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 7, padding: '7px 13px', color: '#ef4444', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
             >Sim</button>
             <button
               onClick={() => setConfirmDelete(false)}
-              style={{ background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.3)', borderRadius: 8, padding: '7px 13px', color: C.blue, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+              style={{ background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.3)', borderRadius: 7, padding: '7px 13px', color: C.blue, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
             >Não</button>
           </>
         ) : (
@@ -201,22 +198,22 @@ function ProjectRow({ project, onView, onEdit, onDelete, onCopy, copied }) {
             <button
               onClick={() => setConfirmDelete(true)}
               title="Apagar"
-              style={{ width: 34, height: 34, borderRadius: 9, background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#ef4444', flexShrink: 0 }}
+              style={{ width: 34, height: 34, borderRadius: 8, background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#ef4444', flexShrink: 0 }}
             ><Trash2 size={14} /></button>
             <button
               onClick={onEdit}
               title="Editar"
-              style={{ width: 34, height: 34, borderRadius: 9, background: 'var(--c-card-hover)', border: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: C.muted, flexShrink: 0 }}
+              style={{ width: 34, height: 34, borderRadius: 8, background: 'var(--c-card-hover)', border: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: C.muted, flexShrink: 0 }}
             ><Pencil size={14} /></button>
             <button
               onClick={onCopy}
               title={copied ? 'Link copiado!' : 'Copiar link'}
-              style={{ width: 34, height: 34, borderRadius: 9, background: copied ? 'rgba(34,197,94,0.1)' : 'var(--c-card-hover)', border: `1px solid ${copied ? 'rgba(34,197,94,0.3)' : C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: copied ? '#22c55e' : C.muted, flexShrink: 0, transition: 'all 0.2s' }}
+              style={{ width: 34, height: 34, borderRadius: 8, background: copied ? 'rgba(34,197,94,0.1)' : 'var(--c-card-hover)', border: `1px solid ${copied ? 'rgba(34,197,94,0.3)' : C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: copied ? '#22c55e' : C.muted, flexShrink: 0, transition: 'background 0.15s, border-color 0.15s, color 0.15s' }}
             >{copied ? <Check size={14} /> : <Link size={14} />}</button>
             <button
               onClick={onView}
               title="Ver projeto"
-              style={{ width: 34, height: 34, borderRadius: 9, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.28)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: C.blue, flexShrink: 0 }}
+              style={{ width: 34, height: 34, borderRadius: 8, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.28)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: C.blue, flexShrink: 0 }}
             ><ExternalLink size={14} /></button>
           </>
         )}
@@ -229,11 +226,11 @@ function ProjectRow({ project, onView, onEdit, onDelete, onCopy, copied }) {
             <span style={{ fontSize: 11, color: C.muted, whiteSpace: 'nowrap' }}>Apagar?</span>
             <button
               onClick={(e) => { e.stopPropagation(); onDelete(project.id); setConfirmDelete(false) }}
-              style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, padding: '7px 12px', color: '#ef4444', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+              style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 7, padding: '7px 12px', color: '#ef4444', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
             >Sim</button>
             <button
               onClick={(e) => { e.stopPropagation(); setConfirmDelete(false) }}
-              style={{ background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.3)', borderRadius: 8, padding: '7px 12px', color: C.blue, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+              style={{ background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.3)', borderRadius: 7, padding: '7px 12px', color: C.blue, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
             >Não</button>
           </>
         ) : (
@@ -241,12 +238,12 @@ function ProjectRow({ project, onView, onEdit, onDelete, onCopy, copied }) {
             <button
               onClick={(e) => { e.stopPropagation(); setConfirmDelete(true) }}
               title="Apagar"
-              style={{ width: 36, height: 36, borderRadius: 9, background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#ef4444' }}
+              style={{ width: 36, height: 36, borderRadius: 8, background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#ef4444' }}
             ><Trash2 size={14} /></button>
             <button
               onClick={(e) => { e.stopPropagation(); onEdit() }}
               title="Editar"
-              style={{ width: 36, height: 36, borderRadius: 9, background: 'var(--c-card-hover)', border: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: C.muted }}
+              style={{ width: 36, height: 36, borderRadius: 8, background: 'var(--c-card-hover)', border: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: C.muted }}
             ><Pencil size={14} /></button>
           </>
         )}
@@ -286,13 +283,13 @@ function QuickCreateProject({ navigate }) {
               onClick={() => setType(sel ? '' : t.id)}
               className="qc-pill"
               style={{
-                fontSize: 12, padding: '6px 14px', borderRadius: 20,
+                fontSize: 12, padding: '6px 14px', borderRadius: 7,
                 border: `1px solid ${sel ? C.blue : C.border}`,
                 background: sel ? `${C.blue}20` : 'transparent',
                 color: sel ? C.blue : C.muted,
                 cursor: 'pointer', fontFamily: 'inherit',
                 fontWeight: sel ? 700 : 500,
-                transition: 'all 0.12s',
+                transition: 'background 0.12s, border-color 0.12s, color 0.12s',
               }}
             >
               {t.label}
@@ -309,7 +306,7 @@ function QuickCreateProject({ navigate }) {
           className="qc-input"
           style={{
             flex: 1, background: C.bg, border: `1px solid ${C.border}`,
-            borderRadius: 12, padding: '13px 16px', color: C.text,
+            borderRadius: 9, padding: '13px 16px', color: C.text,
             fontSize: 14, fontFamily: 'inherit', outline: 'none', minWidth: 0,
             transition: 'border-color 0.15s',
           }}
@@ -322,12 +319,12 @@ function QuickCreateProject({ navigate }) {
           disabled={!desc.trim()}
           style={{
             background: desc.trim() ? `#1b78f7` : C.border,
-            border: 'none', borderRadius: 12,
+            border: 'none', borderRadius: 9,
             width: 46, height: 46,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             cursor: desc.trim() ? 'pointer' : 'not-allowed', flexShrink: 0,
-            boxShadow: desc.trim() ? '0 4px 20px rgba(27,120,247,0.4)' : 'none',
-            transition: 'all 0.15s',
+            boxShadow: desc.trim() ? '0 2px 8px rgba(27,120,247,0.2)' : 'none',
+            transition: 'opacity 0.15s',
           }}
           onMouseEnter={e => { if (desc.trim()) e.currentTarget.style.opacity = '0.85' }}
           onMouseLeave={e => e.currentTarget.style.opacity = '1'}
@@ -379,9 +376,9 @@ function CreateTurmaModal({ onClose, onCreated }) {
       style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
       onClick={e => e.target === e.currentTarget && onClose()}
     >
-      <div style={{ background: C.card, border: `1px solid ${C.borderBright}`, borderRadius: 18, padding: 28, width: '100%', maxWidth: 400, boxShadow: '0 16px 48px rgba(0,0,0,0.6)' }}>
+      <div style={{ background: C.card, border: `1px solid ${C.borderBright}`, borderRadius: 14, padding: 28, width: '100%', maxWidth: 400, boxShadow: 'none' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-          <h3 style={{ margin: 0, fontSize: 17, fontWeight: 700, color: C.text }}>Nova turma</h3>
+          <h3 style={{ margin: 0, fontSize: 17, fontWeight: 400, color: C.text, fontFamily: 'var(--font-heading)', letterSpacing: '-0.3px' }}>Nova turma</h3>
           <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.muted, padding: 4 }}><X size={18} /></button>
         </div>
         <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -402,7 +399,7 @@ function CreateTurmaModal({ onClose, onCreated }) {
             />
           </div>
           {error && <p style={{ color: '#ef4444', fontSize: 13, margin: 0 }}>{error}</p>}
-          <button type="submit" disabled={saving || !name.trim()} style={{ background: '#1b78f7', border: 'none', borderRadius: 8, padding: '11px', color: '#fff', fontSize: 14, fontWeight: 600, cursor: saving ? 'default' : 'pointer', opacity: saving ? 0.7 : 1, fontFamily: 'inherit', marginTop: 4 }}>
+          <button type="submit" disabled={saving || !name.trim()} style={{ background: '#1b78f7', border: 'none', borderRadius: 8, padding: '11px', color: '#fff', fontSize: 14, fontWeight: 600, cursor: saving ? 'default' : 'pointer', opacity: saving ? 0.7 : 1, fontFamily: 'inherit', marginTop: 4, boxShadow: '0 2px 8px rgba(27,120,247,0.2)' }}>
             {saving ? 'A criar…' : 'Criar turma'}
           </button>
         </form>
@@ -440,26 +437,26 @@ function JoinTurmaModal({ onClose, navigate, onJoined }) {
       style={{ position: 'fixed', inset: 0, zIndex: 3000, background: 'rgba(0,0,0,0.78)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
       onClick={e => e.target === e.currentTarget && onClose()}
     >
-      <div style={{ background: C.card, border: `1px solid ${C.borderBright}`, borderRadius: 22, padding: '36px 32px', width: '100%', maxWidth: 400, boxShadow: '0 32px 80px rgba(0,0,0,0.7)' }}>
+      <div style={{ background: C.card, border: `1px solid ${C.borderBright}`, borderRadius: 16, padding: '36px 32px', width: '100%', maxWidth: 400, boxShadow: 'none' }}>
         {joined ? (
           <>
             <div style={{ textAlign: 'center', marginBottom: 28 }}>
-              <div style={{ width: 60, height: 60, borderRadius: 18, background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px' }}>
+              <div style={{ width: 60, height: 60, borderRadius: 16, background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px' }}>
                 <Check size={30} color="#22c55e" />
               </div>
-              <h3 style={{ color: C.text, margin: '0 0 6px', fontSize: 20, fontWeight: 800, letterSpacing: '-0.3px' }}>Turma encontrada!</h3>
+              <h3 style={{ color: C.text, margin: '0 0 6px', fontSize: 20, fontWeight: 400, letterSpacing: '-0.5px', fontFamily: 'var(--font-heading)' }}>Turma encontrada!</h3>
               <p style={{ color: C.muted, margin: 0, fontSize: 14, lineHeight: 1.5 }}>{joined.name}</p>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               <button
                 onClick={() => { navigate(`/turma/${joined.code}`); onClose() }}
-                style={{ width: '100%', background: `#1b78f7`, border: 'none', borderRadius: 12, padding: '14px', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 20px rgba(27,120,247,0.35)' }}
+                style={{ width: '100%', background: `#1b78f7`, border: 'none', borderRadius: 10, padding: '14px', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px rgba(27,120,247,0.2)' }}
               >
                 <span style={{display:'flex',alignItems:'center',gap:6,justifyContent:'center'}}>Ir para a turma <ArrowRight size={15} /></span>
               </button>
               <button
                 onClick={onClose}
-                style={{ width: '100%', background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 12, padding: '12px', color: C.muted, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+                style={{ width: '100%', background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 10, padding: '12px', color: C.muted, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
               >
                 Fechar
               </button>
@@ -469,7 +466,7 @@ function JoinTurmaModal({ onClose, navigate, onJoined }) {
           <>
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 28 }}>
               <div>
-                <h3 style={{ color: C.text, margin: '0 0 4px', fontSize: 20, fontWeight: 800, letterSpacing: '-0.3px' }}>Entrar numa turma</h3>
+                <h3 style={{ color: C.text, margin: '0 0 4px', fontSize: 20, fontWeight: 400, letterSpacing: '-0.5px', fontFamily: 'var(--font-heading)' }}>Entrar numa turma</h3>
                 <p style={{ color: C.muted, margin: 0, fontSize: 13 }}>Pede o código de 6 letras ao teu professor</p>
               </div>
               <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.muted, padding: 4, display: 'flex', marginTop: 2 }}><X size={18} /></button>
@@ -484,11 +481,11 @@ function JoinTurmaModal({ onClose, navigate, onJoined }) {
                 style={{
                   width: '100%', background: C.bg,
                   border: `2px solid ${error ? '#ef4444' : code.length === 6 ? C.blue : C.border}`,
-                  borderRadius: 14, padding: '18px',
+                  borderRadius: 10, padding: '18px',
                   color: C.text, fontSize: 28, fontWeight: 900, outline: 'none',
                   letterSpacing: 10, textAlign: 'center', fontFamily: 'inherit',
                   boxSizing: 'border-box', transition: 'border-color 0.15s',
-                  boxShadow: code.length === 6 && !error ? '0 0 0 4px rgba(27,120,247,0.1)' : 'none',
+                  boxShadow: code.length === 6 && !error ? '0 0 0 3px rgba(27,120,247,0.12)' : 'none',
                 }}
               />
               {error && (
@@ -500,12 +497,12 @@ function JoinTurmaModal({ onClose, navigate, onJoined }) {
                 style={{
                   width: '100%',
                   background: code.trim() ? `#1b78f7` : C.border,
-                  border: 'none', borderRadius: 12, padding: '15px',
+                  border: 'none', borderRadius: 10, padding: '15px',
                   color: '#fff', fontSize: 15, fontWeight: 700,
                   cursor: code.trim() ? 'pointer' : 'not-allowed',
                   fontFamily: 'inherit', opacity: checking ? 0.7 : 1,
-                  transition: 'all 0.15s',
-                  boxShadow: code.trim() ? '0 4px 20px rgba(27,120,247,0.35)' : 'none',
+                  transition: 'opacity 0.15s',
+                  boxShadow: code.trim() ? '0 2px 8px rgba(27,120,247,0.2)' : 'none',
                 }}
               >
                 {checking ? 'A verificar…' : 'Confirmar código'}
@@ -525,10 +522,10 @@ function TurmasListModal({ turmas, onClose, navigate, onJoin }) {
       style={{ position: 'fixed', inset: 0, zIndex: 3000, background: 'rgba(0,0,0,0.78)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
       onClick={e => e.target === e.currentTarget && onClose()}
     >
-      <div style={{ background: C.card, border: `1px solid ${C.borderBright}`, borderRadius: 22, padding: '28px 24px', width: '100%', maxWidth: 420, boxShadow: '0 32px 80px rgba(0,0,0,0.7)' }}>
+      <div style={{ background: C.card, border: `1px solid ${C.borderBright}`, borderRadius: 16, padding: '28px 24px', width: '100%', maxWidth: 420, boxShadow: 'none' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 22 }}>
           <div>
-            <h3 style={{ color: C.text, margin: '0 0 2px', fontSize: 18, fontWeight: 800 }}>As minhas turmas</h3>
+            <h3 style={{ color: C.text, margin: '0 0 2px', fontSize: 18, fontWeight: 400, fontFamily: 'var(--font-heading)', letterSpacing: '-0.4px' }}>As minhas turmas</h3>
             <p style={{ color: C.muted, margin: 0, fontSize: 13 }}>{turmas.length} turma{turmas.length !== 1 ? 's' : ''}</p>
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.muted, padding: 4, display: 'flex' }}><X size={18} /></button>
@@ -538,11 +535,11 @@ function TurmasListModal({ turmas, onClose, navigate, onJoin }) {
             <div
               key={t.id}
               onClick={() => { navigate(`/turma/${t.code}`); onClose() }}
-              style={{ background: 'var(--c-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 14, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', transition: 'all 0.15s' }}
+              style={{ background: 'var(--c-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 12, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', transition: 'background 0.15s, border-color 0.15s' }}
               onMouseEnter={e => { e.currentTarget.style.background = C.cardHover; e.currentTarget.style.borderColor = C.borderBright }}
               onMouseLeave={e => { e.currentTarget.style.background = 'var(--c-bg-alt)'; e.currentTarget.style.borderColor = C.border }}
             >
-              <div style={{ width: 38, height: 38, borderRadius: 10, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <div style={{ width: 38, height: 38, borderRadius: 9, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <Users2 size={16} color="#1b78f7" />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
@@ -556,7 +553,7 @@ function TurmasListModal({ turmas, onClose, navigate, onJoin }) {
         </div>
         <button
           onClick={() => { onClose(); onJoin() }}
-          style={{ width: '100%', background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 12, padding: '12px', color: C.muted, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, transition: 'all 0.15s' }}
+          style={{ width: '100%', background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 10, padding: '12px', color: C.muted, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, transition: 'border-color 0.15s, color 0.15s' }}
           onMouseEnter={e => { e.currentTarget.style.borderColor = C.borderBright; e.currentTarget.style.color = C.text }}
           onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted }}
         >
@@ -574,9 +571,9 @@ function TurmaCard({ turma, navigate }) {
       onClick={() => navigate(`/turma/${turma.code}`)}
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
-      style={{ background: hov ? C.cardHover : C.card, border: `1px solid ${hov ? C.borderBright : C.border}`, borderRadius: 12, padding: '16px 18px', cursor: 'pointer', transition: 'all 0.15s', display: 'flex', alignItems: 'center', gap: 14 }}
+      style={{ background: hov ? C.cardHover : C.card, border: `1px solid ${hov ? C.borderBright : C.border}`, borderRadius: 10, padding: '16px 18px', cursor: 'pointer', transition: 'background 0.15s, border-color 0.15s', display: 'flex', alignItems: 'center', gap: 14 }}
     >
-      <div style={{ width: 40, height: 40, borderRadius: 10, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+      <div style={{ width: 40, height: 40, borderRadius: 9, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
         <Users2 size={18} color="#1b78f7" />
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
@@ -630,9 +627,9 @@ function ScoreInfoTooltip() {
       {open && (
         <div style={{
           position: 'absolute', right: 0, top: '100%', marginTop: 6,
-          background: C.card, border: `1px solid ${C.border}`,
-          borderRadius: 12, padding: '12px 14px', zIndex: 50,
-          width: 220, boxShadow: '0 8px 28px rgba(0,0,0,0.28)',
+          background: C.card, border: `1px solid ${C.borderBright}`,
+          borderRadius: 10, padding: '12px 14px', zIndex: 50,
+          width: 220, boxShadow: 'none',
           animation: 'fadeIn 0.15s ease',
         }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 10 }}>
@@ -665,7 +662,7 @@ function InsightsBlock({ projects }) {
   const trend = sorted.length > 1 ? sorted[sorted.length - 1].score - sorted[0].score : null
 
   return (
-    <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: '18px 22px' }}>
+    <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: '18px 22px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 18 }}>
         <TrendingUp size={13} color={C.muted} />
         <span style={{ fontSize: 12, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Resumo</span>
@@ -675,25 +672,25 @@ function InsightsBlock({ projects }) {
       {/* 3 big numbers */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 0, marginBottom: 20 }}>
         <div style={{ textAlign: 'center', padding: '0 8px' }}>
-          <div style={{ fontSize: 38, fontWeight: 900, color: getScoreColor(best), letterSpacing: '-2px', lineHeight: 1 }}>{best}</div>
+          <div style={{ fontSize: 38, fontWeight: 400, fontFamily: 'var(--font-heading)', color: getScoreColor(best), letterSpacing: '-2px', lineHeight: 1 }}>{best}</div>
           <div style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>Melhor score</div>
           <div style={{ fontSize: 10, color: C.subtle, marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{bestProj?.name}</div>
         </div>
         <div style={{ textAlign: 'center', padding: '0 8px', borderLeft: `1px solid ${C.border}`, borderRight: `1px solid ${C.border}` }}>
-          <div style={{ fontSize: 38, fontWeight: 900, color: getScoreColor(avg), letterSpacing: '-2px', lineHeight: 1 }}>{avg}</div>
+          <div style={{ fontSize: 38, fontWeight: 400, fontFamily: 'var(--font-heading)', color: getScoreColor(avg), letterSpacing: '-2px', lineHeight: 1 }}>{avg}</div>
           <div style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>Score médio</div>
           <div style={{ fontSize: 10, color: C.subtle, marginTop: 1 }}>{withScore.length} projeto{withScore.length !== 1 ? 's' : ''}</div>
         </div>
         <div style={{ textAlign: 'center', padding: '0 8px' }}>
           {totalViews > 0 ? (
             <>
-              <div style={{ fontSize: 38, fontWeight: 900, color: C.blue, letterSpacing: '-2px', lineHeight: 1 }}>{totalViews}</div>
+              <div style={{ fontSize: 38, fontWeight: 400, fontFamily: 'var(--font-heading)', color: C.blue, letterSpacing: '-2px', lineHeight: 1 }}>{totalViews}</div>
               <div style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>Visualizações</div>
               <div style={{ fontSize: 10, color: C.subtle, marginTop: 1 }}>total</div>
             </>
           ) : trend != null ? (
             <>
-              <div style={{ fontSize: 38, fontWeight: 900, color: trend >= 0 ? C.green : C.red, letterSpacing: '-2px', lineHeight: 1 }}>{trend >= 0 ? '+' : ''}{trend}</div>
+              <div style={{ fontSize: 38, fontWeight: 400, fontFamily: 'var(--font-heading)', color: trend >= 0 ? C.green : C.red, letterSpacing: '-2px', lineHeight: 1 }}>{trend >= 0 ? '+' : ''}{trend}</div>
               <div style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>Evolução</div>
               <div style={{ fontSize: 10, color: C.subtle, marginTop: 1 }}>1º → último</div>
             </>
@@ -820,8 +817,8 @@ function OnboardingAlunoModal({ user, profile, onDismiss, firstProject }) {
     }}>
       <div style={{
         background: C.card, border: '1px solid #2a4275',
-        borderRadius: 22, width: '100%', maxWidth: 460,
-        boxShadow: '0 28px 80px rgba(0,0,0,0.75)',
+        borderRadius: 16, width: '100%', maxWidth: 460,
+        boxShadow: 'none',
         animation: 'onbFadeUp 0.25s ease',
         maxHeight: '90vh', overflowY: 'auto',
       }}>
@@ -834,7 +831,7 @@ function OnboardingAlunoModal({ user, profile, onDismiss, firstProject }) {
               <div style={{ width: 54, height: 54, borderRadius: '50%', background: 'rgba(27,120,247,0.12)', border: '1px solid rgba(27,120,247,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
                 <User size={24} color={C.blue} />
               </div>
-              <h2 style={{ margin: '0 0 6px', fontSize: 20, fontWeight: 800, color: C.text, letterSpacing: '-0.3px' }}>Completa o teu perfil</h2>
+              <h2 style={{ margin: '0 0 6px', fontSize: 20, fontWeight: 400, color: C.text, letterSpacing: '-0.5px', fontFamily: 'var(--font-heading)' }}>Completa o teu perfil</h2>
               <p style={{ margin: 0, fontSize: 14, color: C.muted, lineHeight: 1.5 }}>
                 O teu perfil é o teu cartão de visita para recrutadores.
               </p>
@@ -891,7 +888,7 @@ function OnboardingAlunoModal({ user, profile, onDismiss, firstProject }) {
             <button
               onClick={saveProfile}
               disabled={saving}
-              style={{ width: '100%', background: '#1b78f7', border: 'none', borderRadius: 11, padding: '13px', color: '#fff', fontSize: 15, fontWeight: 700, cursor: saving ? 'default' : 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 20px rgba(27,120,247,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, opacity: saving ? 0.7 : 1 }}
+              style={{ width: '100%', background: '#1b78f7', border: 'none', borderRadius: 9, padding: '13px', color: '#fff', fontSize: 15, fontWeight: 700, cursor: saving ? 'default' : 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px rgba(27,120,247,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, opacity: saving ? 0.7 : 1 }}
             >
               {saving ? 'A guardar…' : <><span>Guardar perfil</span><ArrowRight size={15} /></>}
             </button>
@@ -907,12 +904,12 @@ function OnboardingAlunoModal({ user, profile, onDismiss, firstProject }) {
             <div style={{ width: 54, height: 54, borderRadius: '50%', background: 'rgba(27,120,247,0.12)', border: '1px solid rgba(27,120,247,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
               <Rocket size={24} color={C.blue} />
             </div>
-            <h2 style={{ margin: '0 0 10px', fontSize: 20, fontWeight: 800, color: C.text, letterSpacing: '-0.3px' }}>Cria o teu primeiro projecto</h2>
+            <h2 style={{ margin: '0 0 10px', fontSize: 20, fontWeight: 400, color: C.text, letterSpacing: '-0.5px', fontFamily: 'var(--font-heading)' }}>Cria o teu primeiro projecto</h2>
             <p style={{ margin: '0 auto 24px', fontSize: 14, color: C.muted, lineHeight: 1.6, maxWidth: 340 }}>
               Responde a algumas perguntas sobre o teu trabalho — a IA transforma as tuas respostas numa página profissional pronta a partilhar.
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, background: 'var(--c-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 14, padding: '16px 18px', textAlign: 'left', marginBottom: 8 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, background: 'var(--c-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 12, padding: '16px 18px', textAlign: 'left', marginBottom: 8 }}>
                 {[
                   { icon: <Pencil size={15} color={C.blue} />, text: 'Formulário guiado passo a passo' },
                   { icon: <Sparkles size={15} color={C.blue} />, text: 'IA analisa e melhora cada resposta' },
@@ -926,13 +923,13 @@ function OnboardingAlunoModal({ user, profile, onDismiss, firstProject }) {
               </div>
               <button
                 onClick={() => { onDismiss(); navigate('/novo') }}
-                style={{ background: '#1b78f7', border: 'none', borderRadius: 11, padding: '13px', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 20px rgba(27,120,247,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}
+                style={{ background: '#1b78f7', border: 'none', borderRadius: 9, padding: '13px', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px rgba(27,120,247,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}
               >
                 <span>Criar projecto</span><ArrowRight size={15} />
               </button>
               <button
                 onClick={() => setStep(2)}
-                style={{ background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 11, padding: '12px', color: C.muted, fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}
+                style={{ background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 9, padding: '12px', color: C.muted, fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}
               >
                 Já tenho projecto, avançar →
               </button>
@@ -949,17 +946,17 @@ function OnboardingAlunoModal({ user, profile, onDismiss, firstProject }) {
             <div style={{ width: 54, height: 54, borderRadius: '50%', background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
               <Share2 size={24} color={C.green} />
             </div>
-            <h2 style={{ margin: '0 0 10px', fontSize: 20, fontWeight: 800, color: C.text, letterSpacing: '-0.3px' }}>Partilha a tua página</h2>
+            <h2 style={{ margin: '0 0 10px', fontSize: 20, fontWeight: 400, color: C.text, letterSpacing: '-0.5px', fontFamily: 'var(--font-heading)' }}>Partilha a tua página</h2>
             <p style={{ margin: '0 auto 24px', fontSize: 14, color: C.muted, lineHeight: 1.6, maxWidth: 340 }}>
               A tua página de perfil está pronta. Envia-a a recrutadores, professores ou amigos.
             </p>
             {/* URL box */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--c-bg-alt)', border: `1.5px solid ${C.border}`, borderRadius: 12, padding: '10px 14px', marginBottom: 20, textAlign: 'left' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--c-bg-alt)', border: `1.5px solid ${C.border}`, borderRadius: 10, padding: '10px 14px', marginBottom: 20, textAlign: 'left' }}>
               <Link size={14} color={C.muted} style={{ flexShrink: 0 }} />
               <span style={{ flex: 1, fontSize: 13, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{profileUrl}</span>
               <button
                 onClick={copyUrl}
-                style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 5, background: copied ? 'rgba(34,197,94,0.12)' : 'rgba(27,120,247,0.1)', border: `1px solid ${copied ? 'rgba(34,197,94,0.3)' : 'rgba(27,120,247,0.3)'}`, borderRadius: 8, padding: '5px 12px', fontSize: 12, fontWeight: 600, color: copied ? C.green : C.blue, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.2s', whiteSpace: 'nowrap' }}
+                style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 5, background: copied ? 'rgba(34,197,94,0.12)' : 'rgba(27,120,247,0.1)', border: `1px solid ${copied ? 'rgba(34,197,94,0.3)' : 'rgba(27,120,247,0.3)'}`, borderRadius: 7, padding: '5px 12px', fontSize: 12, fontWeight: 600, color: copied ? C.green : C.blue, cursor: 'pointer', fontFamily: 'inherit', transition: 'background 0.2s, border-color 0.2s', whiteSpace: 'nowrap' }}
               >
                 {copied ? <><Check size={12} /> Copiado!</> : <><Copy size={12} /> Copiar</>}
               </button>
@@ -967,11 +964,11 @@ function OnboardingAlunoModal({ user, profile, onDismiss, firstProject }) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               <button
                 onClick={() => { onDismiss(); navigate(`/u/${resolvedUsername}`) }}
-                style={{ background: '#1b78f7', border: 'none', borderRadius: 11, padding: '13px', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 20px rgba(27,120,247,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}
+                style={{ background: '#1b78f7', border: 'none', borderRadius: 9, padding: '13px', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px rgba(27,120,247,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}
               >
                 <span>Ver a minha página</span><ArrowRight size={15} />
               </button>
-              <button onClick={onDismiss} style={{ background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 11, padding: '12px', color: C.muted, fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>
+              <button onClick={onDismiss} style={{ background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 9, padding: '12px', color: C.muted, fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>
                 Ir para o dashboard
               </button>
             </div>
@@ -1013,22 +1010,22 @@ function OnboardingModal({ user, profile, onDismiss, onCreateTurma }) {
     }}>
       <div style={{
         background: C.card, border: '1px solid #2a4275',
-        borderRadius: 20, padding: '36px 32px', width: '100%', maxWidth: 440,
-        boxShadow: '0 24px 64px rgba(0,0,0,0.7)',
+        borderRadius: 16, padding: '36px 32px', width: '100%', maxWidth: 440,
+        boxShadow: 'none',
         fontFamily: 'inherit',
       }}>
         {step === 0 ? (
           <>
             <div style={{ textAlign: 'center', marginBottom: 28 }}>
               <img src="/icon.png" alt="Showo" style={{ width: 60, height: 60, objectFit: 'contain', marginBottom: 14, display: 'block', margin: '0 auto 14px' }} />
-              <h2 style={{ color: 'var(--c-text)', fontSize: 22, fontWeight: 800, margin: '0 0 8px', letterSpacing: '-0.3px' }}>
+              <h2 style={{ color: 'var(--c-text)', fontSize: 22, fontWeight: 400, margin: '0 0 8px', letterSpacing: '-0.5px', fontFamily: 'var(--font-heading)' }}>
                 {cfg.title}
               </h2>
               <p style={{ color: 'var(--c-muted)', fontSize: 15, margin: 0, lineHeight: 1.5 }}>{cfg.subtitle}</p>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 28 }}>
               {cfg.steps.map((s, i) => (
-                <div key={i} style={{ display: 'flex', gap: 14, alignItems: 'flex-start', background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)', borderRadius: 12, padding: '14px 16px' }}>
+                <div key={i} style={{ display: 'flex', gap: 14, alignItems: 'flex-start', background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)', borderRadius: 10, padding: '14px 16px' }}>
                   <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1, width: 24, height: 24 }}>{s.icon}</span>
                   <div>
                     <div style={{ color: 'var(--c-text)', fontSize: 14, fontWeight: 600, marginBottom: 3 }}>{s.title}</div>
@@ -1040,7 +1037,7 @@ function OnboardingModal({ user, profile, onDismiss, onCreateTurma }) {
             <div style={{ display: 'flex', gap: 10 }}>
               <button
                 onClick={() => setStep(1)}
-                style={{ flex: 1, background: '#1b78f7', border: 'none', borderRadius: 10, padding: '13px', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 20px rgba(27,120,247,0.35)' }}
+                style={{ flex: 1, background: '#1b78f7', border: 'none', borderRadius: 9, padding: '13px', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px rgba(27,120,247,0.2)' }}
               >
                 <span style={{display:'flex',alignItems:'center',gap:6,justifyContent:'center'}}>Continuar <ArrowRight size={15} /></span>
               </button>
@@ -1056,7 +1053,7 @@ function OnboardingModal({ user, profile, onDismiss, onCreateTurma }) {
           <>
             <div style={{ textAlign: 'center', marginBottom: 28 }}>
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 14 }}><Rocket size={44} color="#1b78f7" /></div>
-              <h2 style={{ color: 'var(--c-text)', fontSize: 20, fontWeight: 800, margin: '0 0 8px', letterSpacing: '-0.3px' }}>
+              <h2 style={{ color: 'var(--c-text)', fontSize: 20, fontWeight: 400, margin: '0 0 8px', letterSpacing: '-0.5px', fontFamily: 'var(--font-heading)' }}>
                 Pronto para começar?
               </h2>
               <p style={{ color: 'var(--c-muted)', fontSize: 14, margin: 0, lineHeight: 1.55, maxWidth: 320, marginLeft: 'auto', marginRight: 'auto' }}>
@@ -1069,13 +1066,13 @@ function OnboardingModal({ user, profile, onDismiss, onCreateTurma }) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               <button
                 onClick={handleCta}
-                style={{ background: '#1b78f7', border: 'none', borderRadius: 10, padding: '14px', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 20px rgba(27,120,247,0.35)' }}
+                style={{ background: '#1b78f7', border: 'none', borderRadius: 9, padding: '14px', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px rgba(27,120,247,0.2)' }}
               >
                 <span style={{display:'flex',alignItems:'center',gap:6,justifyContent:'center'}}>{cfg.cta} <ArrowRight size={15} /></span>
               </button>
               <button
                 onClick={onDismiss}
-                style={{ background: 'transparent', border: '1px solid var(--c-border)', borderRadius: 10, padding: '13px', color: 'var(--c-muted)', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}
+                style={{ background: 'transparent', border: '1px solid var(--c-border)', borderRadius: 9, padding: '13px', color: 'var(--c-muted)', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}
               >
                 Explorar primeiro
               </button>
@@ -1475,7 +1472,7 @@ export default function Dashboard() {
           background-size: 1200px 100%;
           animation: shimmer 1.6s infinite linear;
           border: 1px solid ${C.border};
-          border-radius: 14px;
+          border-radius: 10px;
         }
 
         /* ── Section header ── */
@@ -1510,13 +1507,11 @@ export default function Dashboard() {
         }
         .dash-stat-pill:hover { border-color: ${C.borderBright}; color: ${C.text}; }
 
-        /* ── Project rows — hover lift ── */
+        /* ── Project rows — hover feedback ── */
         .dash-project-row {
-          transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.15s !important;
+          transition: background 0.15s, border-color 0.15s !important;
         }
         .dash-project-row:hover {
-          transform: translateY(-1px) !important;
-          box-shadow: 0 4px 20px rgba(0,0,0,0.25) !important;
           border-color: ${C.borderBright} !important;
         }
 
@@ -1539,20 +1534,18 @@ export default function Dashboard() {
           font-size: 13px; font-weight: 600;
           padding: 7px 14px; border-radius: 8px;
           white-space: nowrap; cursor: pointer; font-family: inherit;
-          transition: opacity 0.15s, transform 0.12s, box-shadow 0.15s;
+          transition: opacity 0.15s;
           flex-shrink: 0;
         }
-        .dash-action-btn:hover { opacity: 0.88; transform: translateY(-1px); }
-        .dash-action-btn:active { opacity: 0.75; transform: translateY(0); }
+        .dash-action-btn:hover { opacity: 0.88; }
+        .dash-action-btn:active { opacity: 0.75; }
 
-        /* ── Action insight cards — hover lift ── */
+        /* ── Action insight cards — hover feedback ── */
         .dash-insight-card {
-          transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s !important;
+          transition: border-color 0.15s !important;
         }
         .dash-insight-card:hover {
           border-color: rgba(27,120,247,0.35) !important;
-          box-shadow: 0 4px 20px rgba(27,120,247,0.1) !important;
-          transform: translateY(-1px) !important;
         }
         /* Chart hidden on mobile */
         .dash-chart-wrap { }
@@ -1625,10 +1618,10 @@ export default function Dashboard() {
         position: 'fixed', bottom: 28, left: '50%',
         transform: `translateX(-50%) translateY(${toast ? 0 : 80}px)`,
         opacity: toast ? 1 : 0, transition: 'all 0.3s cubic-bezier(0.34,1.56,0.64,1)',
-        background: 'var(--c-bg-alt)', border: `1px solid ${C.borderBright}`, borderRadius: 12,
+        background: 'var(--c-bg-alt)', border: `1px solid ${C.borderBright}`, borderRadius: 10,
         padding: '12px 24px', fontSize: 14, fontWeight: 600, color: C.text,
         zIndex: 3000, pointerEvents: 'none', whiteSpace: 'nowrap',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+        boxShadow: '0 4px 16px rgba(0,0,0,0.18)',
       }}>{toast}</div>
 
       {/* XP / Missão desbloqueada toast */}
@@ -1640,9 +1633,9 @@ export default function Dashboard() {
         background: 'var(--c-card)',
         border: `1px solid ${xpToast?.color ?? '#a78bfa'}40`,
         borderLeft: `3px solid ${xpToast?.color ?? '#a78bfa'}`,
-        borderRadius: 14, padding: '14px 18px',
+        borderRadius: 10, padding: '14px 18px',
         zIndex: 3001, pointerEvents: 'none',
-        boxShadow: '0 8px 40px rgba(0,0,0,0.5)',
+        boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
         display: 'flex', flexDirection: 'column', gap: 4, minWidth: 240,
       }}>
         <div style={{ fontSize: 10, fontWeight: 700, color: xpToast?.color ?? '#a78bfa', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
@@ -1703,16 +1696,16 @@ export default function Dashboard() {
         {/* ── Header ── */}
         <div style={{ marginBottom: 36, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <h1 className="dash-greeting" style={{ color: C.text, fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 900, margin: '0 0 6px', letterSpacing: '-0.5px', lineHeight: 1.15 }}>
+            <h1 className="dash-greeting" style={{ color: C.text, fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 400, margin: '0 0 6px', letterSpacing: '-1px', lineHeight: 1.15, fontFamily: 'var(--font-heading)' }}>
               {greeting}
             </h1>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
               {profile?.role && (
-                <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: C.blue, background: `${C.blue}18`, border: `1px solid ${C.blue}30`, borderRadius: 5, padding: '2px 7px' }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: C.blue }}>
                   {{ aluno: 'Aluno', professor: 'Professor', recrutador: 'Recrutador', empresa: 'Empresa' }[profile.role] ?? 'Membro'}
                 </span>
               )}
-              <span style={{ color: C.subtle, fontSize: 12 }}>{user.email}</span>
+              <span style={{ color: C.subtle, fontSize: 12 }}>{profile?.role ? '· ' : ''}{user.email}</span>
             </div>
             {/* Inline stat pills — appear once data loads */}
             {!loadingProjects && (isTeacher ? turmas.length > 0 : projects.length > 0 || totalViews > 0) && (
@@ -1756,7 +1749,7 @@ export default function Dashboard() {
             <button
               className="dash-hd-btn-profile"
               onClick={() => navigate(profile?.username ? `/u/${profile.username}` : `/u/${user.id}`)}
-              style={{ background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 9, padding: '8px 16px', color: C.muted, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s' }}
+              style={{ background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 8, padding: '8px 16px', color: C.muted, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'border-color 0.15s, color 0.15s' }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = C.borderBright; e.currentTarget.style.color = C.text }}
               onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted }}
             >
@@ -1765,7 +1758,7 @@ export default function Dashboard() {
             <button
               className="dash-hd-btn-settings"
               onClick={() => navigate('/settings')}
-              style={{ background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 9, padding: '8px 16px', color: C.muted, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s' }}
+              style={{ background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 8, padding: '8px 16px', color: C.muted, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'border-color 0.15s, color 0.15s' }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = C.borderBright; e.currentTarget.style.color = C.text }}
               onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted }}
             >
@@ -1789,7 +1782,7 @@ export default function Dashboard() {
               marginBottom: 16, padding: '14px 18px',
               background: 'rgba(27,120,247,0.04)',
               border: '1px solid rgba(27,120,247,0.15)',
-              borderRadius: 14,
+              borderRadius: 12,
               display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
             }}>
               <div style={{ flex: 1, minWidth: 200 }}>
@@ -1807,10 +1800,10 @@ export default function Dashboard() {
                     onClick={item.action}
                     style={{
                       background: `${item.color}18`, border: `1px solid ${item.color}35`,
-                      borderRadius: 9, padding: '8px 14px',
+                      borderRadius: 7, padding: '8px 14px',
                       color: item.color, fontSize: 12, fontWeight: 700,
                       cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap',
-                      transition: 'all 0.15s',
+                      transition: 'background 0.15s',
                     }}
                     onMouseEnter={e => { e.currentTarget.style.background = `${item.color}28` }}
                     onMouseLeave={e => { e.currentTarget.style.background = `${item.color}18` }}
@@ -1889,15 +1882,15 @@ export default function Dashboard() {
                   background: C.card,
                   border: `1px solid ${primary.color}30`,
                   borderLeft: `3px solid ${primary.color}`,
-                  borderRadius: 14, padding: '18px 20px',
+                  borderRadius: 12, padding: '18px 20px',
                   display: 'flex', gap: 16, alignItems: 'center',
-                  transition: 'border-color 0.15s, box-shadow 0.15s',
-                  boxShadow: `0 2px 16px ${primary.color}12`,
+                  transition: 'border-color 0.15s',
+                  boxShadow: 'none',
                 }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = primary.color + '55'; e.currentTarget.style.boxShadow = `0 4px 24px ${primary.color}22` }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = primary.color + '30'; e.currentTarget.style.boxShadow = `0 2px 16px ${primary.color}12` }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = primary.color + '55' }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = primary.color + '30' }}
               >
-                <div style={{ width: 44, height: 44, borderRadius: 12, flexShrink: 0, background: primary.color + '18', border: `1px solid ${primary.color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: 44, height: 44, borderRadius: 10, flexShrink: 0, background: primary.color + '18', border: `1px solid ${primary.color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <PIcon size={20} color={primary.color} />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -1908,9 +1901,9 @@ export default function Dashboard() {
                   className="dash-action-btn"
                   onClick={primary.action}
                   style={{
-                    background: `linear-gradient(135deg, ${primary.color}, ${primary.color}cc)`,
+                    background: primary.color,
                     border: 'none', color: '#fff',
-                    boxShadow: `0 4px 14px ${primary.color}44`,
+                    boxShadow: `0 2px 8px ${primary.color}33`,
                   }}
                   onMouseEnter={e => e.currentTarget.style.opacity = '0.88'}
                   onMouseLeave={e => e.currentTarget.style.opacity = '1'}
@@ -1931,7 +1924,7 @@ export default function Dashboard() {
                         style={{
                           display: 'flex', alignItems: 'center', gap: 8,
                           background: C.card, border: `1px solid ${C.border}`,
-                          borderRadius: 10, padding: '9px 14px',
+                          borderRadius: 8, padding: '9px 14px',
                           color: C.muted, fontSize: 12, fontWeight: 600,
                           cursor: 'pointer', fontFamily: 'inherit',
                           transition: 'border-color 0.12s, color 0.12s',
@@ -1965,7 +1958,7 @@ export default function Dashboard() {
                 </div>
                 <button
                   onClick={() => setShowCreateTurma(true)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.22)', borderRadius: 8, padding: '6px 12px', color: C.blue, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s' }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.22)', borderRadius: 7, padding: '6px 12px', color: C.blue, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'background 0.15s' }}
                   onMouseEnter={e => { e.currentTarget.style.background = 'rgba(27,120,247,0.18)' }}
                   onMouseLeave={e => { e.currentTarget.style.background = 'rgba(27,120,247,0.1)' }}
                 >
@@ -1973,13 +1966,13 @@ export default function Dashboard() {
                 </button>
               </div>
               {turmas.length === 0 ? (
-                <div style={{ background: C.card, border: `1px dashed ${C.border}`, borderRadius: 14, padding: '40px 28px', textAlign: 'center' }}>
-                  <div style={{ marginBottom: 14, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 52, height: 52, borderRadius: 14, background: 'rgba(27,120,247,0.08)', border: '1px solid rgba(27,120,247,0.15)' }}>
+                <div style={{ background: C.card, border: `1px dashed ${C.border}`, borderRadius: 12, padding: '40px 28px', textAlign: 'center' }}>
+                  <div style={{ marginBottom: 14, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 52, height: 52, borderRadius: 12, background: 'rgba(27,120,247,0.08)', border: '1px solid rgba(27,120,247,0.15)' }}>
                     <Users2 size={24} color="#1b78f7" />
                   </div>
                   <p style={{ color: C.text, fontSize: 15, fontWeight: 700, margin: '0 0 6px' }}>Ainda não tens turmas</p>
                   <p style={{ color: C.muted, fontSize: 13, margin: '0 0 22px', lineHeight: 1.6 }}>Cria uma turma e partilha o código com os teus alunos.</p>
-                  <button onClick={() => setShowCreateTurma(true)} style={{ background: `#1b78f7`, border: 'none', borderRadius: 9, padding: '10px 24px', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 16px rgba(27,120,247,0.3)' }}>
+                  <button onClick={() => setShowCreateTurma(true)} style={{ background: `#1b78f7`, border: 'none', borderRadius: 8, padding: '10px 24px', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px rgba(27,120,247,0.2)' }}>
                     <span style={{display:'flex',alignItems:'center',gap:6}}>Criar primeira turma <ArrowRight size={14} /></span>
                   </button>
                 </div>
@@ -2008,9 +2001,9 @@ export default function Dashboard() {
               <div
                 className="dash-milestones"
                 onClick={() => navigate(`/projeto/${next.slug}`)}
-                style={{ background: C.card, border: `1px solid ${urgentColor}35`, borderRadius: 16, overflow: 'hidden', cursor: 'pointer', transition: 'border-color 0.15s, box-shadow 0.15s', boxShadow: '0 2px 12px rgba(0,0,0,0.18)' }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = urgentColor + '70'; e.currentTarget.style.boxShadow = '0 4px 24px rgba(0,0,0,0.28)' }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = urgentColor + '35'; e.currentTarget.style.boxShadow = '0 2px 12px rgba(0,0,0,0.18)' }}
+                style={{ background: C.card, border: `1px solid ${urgentColor}35`, borderRadius: 12, overflow: 'hidden', cursor: 'pointer', transition: 'border-color 0.15s', boxShadow: 'none' }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = urgentColor + '70' }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = urgentColor + '35' }}
               >
                 {/* Top accent */}
                 <div style={{ height: 3, background: `linear-gradient(90deg, ${urgentColor}, ${urgentColor}33)` }} />
@@ -2025,7 +2018,7 @@ export default function Dashboard() {
                       <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{defenseDate}</div>
                     </div>
                     <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: 16 }}>
-                      <div style={{ fontSize: 32, fontWeight: 900, color: urgentColor, lineHeight: 1, letterSpacing: '-1.5px' }}>
+                      <div style={{ fontSize: 32, fontWeight: 400, fontFamily: 'var(--font-heading)', color: urgentColor, lineHeight: 1, letterSpacing: '-1.5px' }}>
                         {next.daysLeft > 0 ? next.daysLeft : next.daysLeft === 0 ? '0' : <Medal size={24} />}
                       </div>
                       {next.daysLeft > 0 && <div style={{ fontSize: 10, color: urgentColor, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>dias</div>}
@@ -2051,8 +2044,8 @@ export default function Dashboard() {
 
           {/* ── Turma widget (alunos only) ── */}
           {!isTeacher && !loadingStudentTurmas && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', background: studentTurmas.length > 0 ? 'rgba(27,120,247,0.05)' : 'var(--c-bg-alt)', border: `1px solid ${studentTurmas.length > 0 ? 'rgba(27,120,247,0.18)' : C.border}`, borderRadius: 12, padding: '11px 14px', transition: 'all 0.2s' }}>
-              <div style={{ width: 32, height: 32, borderRadius: 9, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', background: studentTurmas.length > 0 ? 'rgba(27,120,247,0.05)' : 'var(--c-bg-alt)', border: `1px solid ${studentTurmas.length > 0 ? 'rgba(27,120,247,0.18)' : C.border}`, borderRadius: 10, padding: '11px 14px', transition: 'background 0.2s, border-color 0.2s' }}>
+              <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <Users2 size={14} color="#1b78f7" />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
@@ -2123,8 +2116,8 @@ export default function Dashboard() {
                 {[1,2,3].map(i => <div key={i} className="dash-skeleton" style={{ height: 72, opacity: 1 - i * 0.15 }} />)}
               </div>
             ) : projects.length === 0 ? (
-              <div style={{ background: C.card, border: `1px dashed ${C.border}`, borderRadius: 16, padding: '52px 28px', textAlign: 'center' }}>
-                <div style={{ marginBottom: 18, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 60, height: 60, borderRadius: 18, background: `${C.blue}18`, border: `1px solid ${C.blue}25` }}>
+              <div style={{ background: C.card, border: `1px dashed ${C.border}`, borderRadius: 12, padding: '52px 28px', textAlign: 'center' }}>
+                <div style={{ marginBottom: 18, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 60, height: 60, borderRadius: 14, background: `${C.blue}18`, border: `1px solid ${C.blue}25` }}>
                   <Rocket size={28} color={C.blue} />
                 </div>
                 <p style={{ color: C.text, fontSize: 17, fontWeight: 700, margin: '0 0 8px' }}>O teu portfólio começa aqui</p>
@@ -2133,7 +2126,7 @@ export default function Dashboard() {
                 </p>
                 <button
                   onClick={() => setShowCreateModal(true)}
-                  style={{ background: `#1b78f7`, border: 'none', borderRadius: 10, padding: '13px 32px', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 20px rgba(27,120,247,0.35)' }}
+                  style={{ background: `#1b78f7`, border: 'none', borderRadius: 8, padding: '13px 32px', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px rgba(27,120,247,0.2)' }}
                 >
                   Criar projeto
                 </button>

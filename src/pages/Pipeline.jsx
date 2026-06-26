@@ -46,7 +46,7 @@ function CandidatoModal({ cand, vagas, onClose, onStageChange, navigate }) {
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
       <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)' }} onClick={onClose} />
-      <div className="pipeline-modal" style={{ position: 'relative', background: C.card, border: `1px solid ${C.border}`, borderRadius: 18, width: '100%', maxWidth: 480, zIndex: 1, padding: 28, boxShadow: '0 24px 64px rgba(0,0,0,0.5)' }}>
+      <div className="pipeline-modal" style={{ position: 'relative', background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, width: '100%', maxWidth: 480, zIndex: 1, padding: 28, boxShadow: 'none' }}>
         <button onClick={onClose} style={{ position: 'absolute', top: 16, right: 16, background: 'transparent', border: 'none', cursor: 'pointer', color: C.muted, display: 'flex', padding: 4 }}>
           <X size={16} />
         </button>
@@ -55,12 +55,12 @@ function CandidatoModal({ cand, vagas, onClose, onStageChange, navigate }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 20 }}>
           <Avatar profile={cand.profile} size={52} />
           <div>
-            <div style={{ fontSize: 17, fontWeight: 800, color: C.text, letterSpacing: '-0.2px' }}>
+            <div style={{ fontSize: 17, fontWeight: 600, color: C.text, letterSpacing: '-0.2px' }}>
               {cand.profile?.full_name || cand.profile?.username || 'Utilizador'}
             </div>
             {cand.profile?.username && <div style={{ fontSize: 12, color: C.muted }}>@{cand.profile.username}</div>}
           </div>
-          <span style={{ marginLeft: 'auto', fontSize: 11, fontWeight: 700, color: stage.color, background: stage.bg, border: `1px solid ${stage.color}44`, borderRadius: 99, padding: '4px 10px' }}>
+          <span style={{ marginLeft: 'auto', fontSize: 11, fontWeight: 700, color: stage.color, background: stage.bg, borderRadius: 6, padding: '4px 10px' }}>
             {stage.label}
           </span>
         </div>
@@ -92,7 +92,7 @@ function CandidatoModal({ cand, vagas, onClose, onStageChange, navigate }) {
               const active = (cand.pipeline_stage || 'novo') === s.id
               return (
                 <button key={s.id} onClick={() => onStageChange(cand.id, s.id)}
-                  style={{ padding: '6px 12px', borderRadius: 20, border: `1.5px solid ${active ? s.color : C.border}`, background: active ? s.bg : 'transparent', color: active ? s.color : C.muted, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s' }}
+                  style={{ padding: '6px 12px', borderRadius: 8, border: `1px solid ${active ? s.color : C.border}`, background: active ? s.bg : 'transparent', color: active ? s.color : C.muted, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s' }}
                   onMouseEnter={e => { if (!active) { e.currentTarget.style.borderColor = s.color; e.currentTarget.style.color = s.color } }}
                   onMouseLeave={e => { if (!active) { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted } }}>
                   {s.label}
@@ -111,7 +111,7 @@ function CandidatoModal({ cand, vagas, onClose, onStageChange, navigate }) {
             </button>
           )}
           <button onClick={() => { navigate(`/mensagens?to=${cand.student_id}`); onClose() }}
-            style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, background: C.blue, border: 'none', borderRadius: 10, padding: '10px 0', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 12px rgba(27,120,247,0.3)' }}>
+            style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, background: C.blue, border: 'none', borderRadius: 10, padding: '10px 0', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px rgba(27,120,247,0.2)' }}>
             <MessageSquare size={14} /> Enviar mensagem
           </button>
         </div>
@@ -211,7 +211,7 @@ export default function Pipeline() {
           {/* Header */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
             <div>
-              <h1 style={{ color: C.text, fontSize: 'clamp(22px,4vw,30px)', fontWeight: 900, margin: '0 0 4px', letterSpacing: '-0.4px' }}>
+              <h1 style={{ color: C.text, fontSize: 'clamp(22px,4vw,30px)', fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 4px', letterSpacing: '-0.4px' }}>
                 Pipeline
               </h1>
               <p style={{ color: C.muted, fontSize: 13, margin: 0 }}>
@@ -263,10 +263,10 @@ export default function Pipeline() {
               {STAGES.map(stage => (
                 <div key={stage.id} className="pipeline-col" style={{ minWidth: 220, width: 240, flexShrink: 0, display: 'flex', flexDirection: 'column' }}>
                   {/* Column header */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, padding: '8px 12px', background: stage.bg, border: `1px solid ${stage.color}33`, borderRadius: 10 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, padding: '8px 12px', background: stage.bg, borderRadius: 8 }}>
                     <div style={{ width: 8, height: 8, borderRadius: '50%', background: stage.color, flexShrink: 0 }} />
                     <span style={{ fontSize: 12, fontWeight: 700, color: stage.color }}>{stage.label}</span>
-                    <span style={{ marginLeft: 'auto', fontSize: 11, fontWeight: 700, color: stage.color, background: `${stage.color}22`, borderRadius: 99, padding: '1px 7px' }}>
+                    <span style={{ marginLeft: 'auto', fontSize: 11, fontWeight: 700, color: stage.color }}>
                       {grouped[stage.id].length}
                     </span>
                   </div>
@@ -282,9 +282,9 @@ export default function Pipeline() {
                       const vaga = vagas.find(v => v.id === c.vaga_id)
                       return (
                         <button key={c.id} onClick={() => setSelected(c)}
-                          style={{ width: '100%', background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: '12px 14px', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', transition: 'border-color 0.15s, box-shadow 0.15s, transform 0.1s' }}
-                          onMouseEnter={e => { e.currentTarget.style.borderColor = stage.color; e.currentTarget.style.boxShadow = `0 4px 16px ${stage.color}22`; e.currentTarget.style.transform = 'translateY(-1px)' }}
-                          onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'none' }}>
+                          style={{ width: '100%', background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: '12px 14px', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', transition: 'border-color 0.15s, background 0.15s' }}
+                          onMouseEnter={e => { e.currentTarget.style.borderColor = stage.color; e.currentTarget.style.background = 'var(--c-card-hover)' }}
+                          onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.background = C.card }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: vaga ? 8 : 0 }}>
                             <Avatar profile={c.profile} size={30} />
                             <div style={{ minWidth: 0, flex: 1 }}>
