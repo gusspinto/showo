@@ -3149,7 +3149,7 @@ export default function ProjectPage() {
           .proj-wrap         { padding: 0 16px 80px !important; overflow-x: hidden !important; }
           .proj-cover        { height: 200px !important; margin-top: 20px !important; border-radius: 14px !important; }
           .proj-hero         { padding: 20px 0 16px !important; }
-          .proj-h1           { font-size: 30px !important; }
+          .proj-h1           { font-size: 32px !important; }
           .proj-score-abs    { display: none !important; }
           .proj-dashboard    { display: flex !important; }
           .proj-tagline      { font-size: 15px !important; }
@@ -3934,8 +3934,8 @@ export default function ProjectPage() {
           {/* Title row — Syne font, large */}
           <div className="proj-h1-row" style={{ alignItems: 'flex-start' }}>
             <h1 className="proj-h1" style={{
-              fontSize: 'clamp(30px, 5vw, 42px)',
-              fontWeight: 400,
+              fontSize: 'clamp(34px, 5.5vw, 48px)',
+              fontWeight: 500,
               margin: 0,
               lineHeight: 1.08,
               letterSpacing: '-0.02em',

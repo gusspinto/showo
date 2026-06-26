@@ -2,9 +2,42 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { saveProject } from '../lib/saveProject'
-import { AlertTriangle, ArrowRight, RotateCcw, GraduationCap, Rocket, Users, Trophy, Briefcase, BarChart2 } from 'lucide-react'
+import { AlertTriangle, ArrowRight, RotateCcw, GraduationCap, Rocket, Users, Trophy, Briefcase, BarChart2, ArrowLeft, Sun, Moon } from 'lucide-react'
 import { looksLikeSpam } from '../lib/score'
 import { containsProfanity } from '../lib/profanity'
+import { useTheme } from '../context/ThemeContext'
+
+function MiniSidebar({ onBack }) {
+  const { theme, toggleTheme } = useTheme()
+  return (
+    <div className="ai-mini-sidebar" style={{
+      position: 'fixed', top: 0, left: 0, bottom: 0, width: 64, zIndex: 90,
+      display: 'flex', flexDirection: 'column', alignItems: 'center',
+      justifyContent: 'space-between', padding: '18px 0',
+      background: 'var(--c-bg-alt)', borderRight: '1px solid var(--c-border)',
+    }}>
+      <button
+        onClick={onBack} aria-label="Voltar"
+        style={{
+          width: 36, height: 36, borderRadius: 8, border: 'none', background: 'transparent',
+          color: 'var(--c-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}
+      >
+        <ArrowLeft size={18} />
+      </button>
+      <img src="/icon_logo.png" alt="Showo" style={{ width: 26, height: 'auto', objectFit: 'contain' }} />
+      <button
+        onClick={toggleTheme} aria-label="Mudar tema"
+        style={{
+          width: 36, height: 36, borderRadius: 8, border: '1px solid var(--c-border)', background: 'transparent',
+          color: 'var(--c-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}
+      >
+        {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+      </button>
+    </div>
+  )
+}
 
 const C = {
   bg:     'var(--c-bg)',
@@ -334,8 +367,13 @@ export default function AIInterview() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: C.bg, color: C.text, fontFamily: 'var(--font-body)', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ minHeight: '100vh', background: C.bg, color: C.text, fontFamily: 'var(--font-body)', display: 'flex', flexDirection: 'column', paddingLeft: 64 }} className="ai-interview-wrap">
+      <MiniSidebar onBack={() => navigate('/')} />
       <style>{`
+        @media (max-width: 860px) {
+          .ai-interview-wrap { padding-left: 0 !important; }
+          .ai-mini-sidebar { display: none !important; }
+        }
         @keyframes pulse-p { 0%,100%{opacity:0.4} 50%{opacity:0.7} }
         @keyframes spin { to{transform:rotate(360deg)} }
         @keyframes fadeSlideUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
