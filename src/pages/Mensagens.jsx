@@ -390,7 +390,7 @@ export default function Mensagens() {
     <div style={{ minHeight: '100vh', background: C.bg, fontFamily: 'inherit' }}>
       <Navbar />
       <div className="page-content" style={{ padding: 0, maxWidth: '100%' }}>
-        <div style={{ maxWidth: 920, margin: '0 auto', padding: '0 clamp(8px,3vw,24px)', paddingTop: 28 }}>
+        <div className="msg-inner" style={{ maxWidth: 920, margin: '0 auto', padding: '0 clamp(8px,3vw,24px)', paddingTop: 28, transition: 'max-width 0.22s cubic-bezier(0.4,0,0.2,1)' }}>
 
           <div style={{ marginBottom: 20 }}>
             <h1 style={{ color: C.text, fontSize: 'clamp(22px,4vw,32px)', fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 4px', letterSpacing: '-0.4px' }}>

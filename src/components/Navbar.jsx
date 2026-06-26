@@ -78,7 +78,7 @@ function timeAgo(ts) {
   return new Date(ts).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' })
 }
 
-function InviteInbox({ userId, sidebar = false }) {
+function InviteInbox({ userId, sidebar = false, collapsed = false }) {
   const navigate = useNavigate()
   const [open, setOpen]     = useState(false)
   const [invites, setInvites] = useState([])
@@ -352,7 +352,7 @@ function InviteInbox({ userId, sidebar = false }) {
             className={sidebar ? '' : 'notif-drop'}
             style={{
               ...(sidebar
-                ? { position: 'fixed', left: 248, bottom: 16 }
+                ? { position: 'fixed', left: collapsed ? 80 : 248, bottom: 16, transition: 'left 0.22s cubic-bezier(0.4,0,0.2,1)' }
                 : { position: 'absolute', top: 'calc(100% + 8px)', right: 0 }
               ),
               background: 'var(--c-card)', border: `1px solid var(--c-border)`,
@@ -661,6 +661,13 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
     })
   }
 
+  // Keep page content in sync with sidebar width so layout doesn't leave a
+  // stale gap when the sidebar is collapsed/expanded on a different page.
+  useEffect(() => {
+    document.body.classList.toggle('sidebar-collapsed', collapsed)
+    return () => document.body.classList.remove('sidebar-collapsed')
+  }, [collapsed])
+
   const isRecruiter = profile?.role === 'recrutador' || profile?.role === 'empresa'
   const recruiterAccent = profile?.role === 'empresa' ? '#f59e0b' : '#8b5cf6'
 
@@ -726,31 +733,37 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
           padding: 0;
           z-index: 100;
           overflow: hidden;
-          transition: width 0.2s ease;
+          transition: width 0.22s cubic-bezier(0.4,0,0.2,1);
         }
         .sidebar.collapsed { width: 64px; }
         .sidebar.collapsed .sb-logo { display: none; }
+        .sidebar.collapsed .sb-top-row { padding: 20px 0 16px; justify-content: center; }
         .sidebar.collapsed .sb-logo-divider { display: none; }
         .sidebar.collapsed .sb-label { display: none; }
         .sidebar.collapsed .sb-item { justify-content: center; padding: 9px 0; }
         .sidebar.collapsed .sb-create { justify-content: center; padding: 9px 0; }
+        .sb-top-row {
+          display: flex; align-items: center; justify-content: space-between;
+          padding: 14px 10px 14px 16px;
+          transition: padding 0.22s cubic-bezier(0.4,0,0.2,1);
+        }
         .sb-collapse-btn {
           display: flex; align-items: center; justify-content: center;
-          width: 32px; height: 32px;
-          border: 1px solid var(--c-border);
+          width: 30px; height: 30px;
+          border: none;
           background: transparent;
           border-radius: 8px;
           color: var(--c-muted);
           cursor: pointer;
-          transition: border-color 0.15s, color 0.15s;
+          transition: background 0.13s, color 0.13s;
           flex-shrink: 0;
         }
-        .sb-collapse-btn:hover { border-color: var(--c-border-bright); color: var(--c-text); }
+        .sb-collapse-btn:hover { background: var(--c-card-hover); color: var(--c-text); }
         .sb-logo {
           display: flex; align-items: center;
-          padding: 18px 16px 16px;
+          padding: 0;
           cursor: pointer; border: none; background: transparent;
-          font-family: inherit; text-align: left; width: 100%;
+          font-family: inherit; text-align: left;
           transition: opacity 0.15s;
         }
         .sb-logo:hover { opacity: 0.75; }
@@ -806,7 +819,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
           background: transparent; color: var(--c-muted);
           font-size: 13px; font-weight: 500;
           cursor: pointer; font-family: inherit;
-          transition: color 0.15s;
+          transition: color 0.15s, padding 0.22s cubic-bezier(0.4,0,0.2,1), justify-content 0.22s cubic-bezier(0.4,0,0.2,1);
           text-align: left; white-space: nowrap;
           position: relative;
         }
@@ -852,12 +865,32 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
         .sb-project-section .sb-label { color: rgba(27,120,247,0.7); padding-top: 8px; }
         .sb-project-section .sb-item:hover { color: var(--c-text); }
         .sb-bottom { padding: 0 10px 14px; }
+        .sb-action-row {
+          display: flex; align-items: center; justify-content: space-between;
+          gap: 2px; padding: 4px 0 0;
+        }
+        .sb-action-btn {
+          flex: 0 0 auto;
+          width: 32px;
+          display: flex; align-items: center; justify-content: center;
+          height: 32px; border-radius: 8px;
+          background: transparent; border: none;
+          color: var(--c-muted); cursor: pointer;
+          transition: background 0.13s, color 0.13s;
+        }
+        .sb-action-btn:hover { background: var(--c-card-hover); color: var(--c-text); }
+        .sb-action-btn.danger:hover { background: rgba(239,68,68,0.1); color: #ef4444; }
 
         @media (min-width: 861px) {
           .sidebar   { display: flex; }
           .top-nav   { display: none !important; }
           .bottom-nav { display: none !important; }
-          body { padding-left: 240px !important; padding-bottom: 0 !important; }
+          body { padding-left: 240px !important; padding-bottom: 0 !important; transition: padding-left 0.22s cubic-bezier(0.4,0,0.2,1); }
+          body.sidebar-collapsed { padding-left: 72px !important; }
+          body.sidebar-collapsed .page-content { max-width: 1068px !important; }
+          body.sidebar-collapsed .page-content-wide { max-width: 1168px !important; }
+          body.sidebar-collapsed .msg-inner { max-width: 1088px !important; }
+          .page-content, .page-content-wide { transition: max-width 0.22s cubic-bezier(0.4,0,0.2,1); }
         }
 
         /* Tablet (601–860px): hamburger visible, bottom nav hidden */
@@ -1177,12 +1210,14 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   )}
                   {extras.onAnalyze && (
                     <button className="mobile-drawer-btn" onClick={() => { extras.onAnalyze(); setOpen(false) }}>
-                      <Sparkles size={16} /> Análise IA
+                      <Sparkles size={16} /> {extras.aiScore != null ? 'Ver análise IA' : 'Análise IA'}
                     </button>
                   )}
-                  <button className="mobile-drawer-btn" onClick={() => { navigate(`/certificado/${extras.slug}`); setOpen(false) }}>
-                    <Trophy size={16} /> Certificado
-                  </button>
+                  {extras.showCertificate && (
+                    <button className="mobile-drawer-btn" onClick={() => { navigate(`/certificado/${extras.slug}`); setOpen(false) }}>
+                      <Trophy size={16} /> Certificado
+                    </button>
+                  )}
                   {extras.onTogglePublicView && (
                     <button className="mobile-drawer-btn" style={{ color: extras.viewAsPublic ? '#1b78f7' : undefined }}
                       onClick={() => { extras.onTogglePublicView(); setOpen(false) }}>
@@ -1375,10 +1410,17 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
 
       {/* ── Sidebar — desktop only (>860px) ── */}
       <div className={`sidebar${collapsed ? ' collapsed' : ''}`}>
-        {/* Logo */}
-        <button className="sb-logo" onClick={() => navigate(user ? '/dashboard' : '/')}>
-          <img src={theme === 'light' ? '/light_mode_LI.png' : '/icon_logo.png'} alt="Showo" style={{ height: 28, width: 'auto', objectFit: 'contain' }} />
-        </button>
+        {/* Logo + collapse toggle */}
+        <div className="sb-top-row">
+          {!collapsed && (
+            <button className="sb-logo" onClick={() => navigate(user ? '/dashboard' : '/')}>
+              <img src={theme === 'light' ? '/light_mode_LI.png' : '/icon_logo.png'} alt="Showo" style={{ height: 28, width: 'auto', objectFit: 'contain' }} />
+            </button>
+          )}
+          <button className="sb-collapse-btn" onClick={toggleCollapsed} title={collapsed ? 'Expandir menu' : 'Colapsar menu'}>
+            {collapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
+          </button>
+        </div>
         <div className="sb-logo-divider" />
 
         {/* Main nav + project controls in one scrollable section */}
@@ -1491,7 +1533,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                 </>
               )}
 
-              {user && (
+              {user && location.pathname !== '/dashboard' && (
                 <div className={`sb-create-wrap ${extras ? 'hidden' : 'visible'}`}>
                   <div className="sb-create-inner">
                     <button className="sb-create" onClick={() => setCreateModal(true)}>
@@ -1537,7 +1579,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   style={{ opacity: extras.analyzingAI ? 0.6 : 1 }}
                 >
                   <Sparkles size={16} />
-                  {!collapsed && (extras.analyzingAI ? 'A analisar…' : 'Análise IA')}
+                  {!collapsed && (extras.analyzingAI ? 'A analisar…' : extras.aiScore != null ? 'Ver análise IA' : 'Análise IA')}
                   {!collapsed && extras.aiScore != null && !extras.analyzingAI && (
                     <span style={{
                       marginLeft: 'auto', fontSize: 11, fontWeight: 700,
@@ -1548,9 +1590,11 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   )}
                 </button>
               )}
-              <button className="sb-item" onClick={() => navigate(`/certificado/${extras.slug}`)}>
-                <Trophy size={16} />{!collapsed && <span>Certificado</span>}
-              </button>
+              {extras.showCertificate && (
+                <button className="sb-item" onClick={() => navigate(`/certificado/${extras.slug}`)}>
+                  <Trophy size={16} />{!collapsed && <span>Certificado</span>}
+                </button>
+              )}
               {extras.onTogglePublicView && (
                 <button
                   className="sb-item"
@@ -1571,75 +1615,87 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
         <div className="sb-bottom">
           {user ? (
             <>
-              {/* Profile row + notifications + theme toggle */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '0 4px 2px', justifyContent: collapsed ? 'center' : undefined }}>
+              {/* Profile row + notifications */}
+              <div style={{
+                display: 'flex', flexDirection: collapsed ? 'column' : 'row',
+                alignItems: 'center', gap: 4, padding: collapsed ? '0 0 6px' : '0 0 2px',
+                justifyContent: 'center',
+              }}>
                 {profileUrl && (
                   <button className={`sb-item${isActive('profile') ? ' active' : ''}`} style={{ flex: collapsed ? '0 0 auto' : 1, margin: 0, justifyContent: collapsed ? 'center' : undefined }} onClick={() => navigate(profileUrl)}>
                     <AvatarCircle avatarUrl={profile?.avatar_url} initial={getInitial(user)} size={20} fontSize={9} />
                     {!collapsed && <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{getDisplayName(user)}</span>}
                   </button>
                 )}
-                {/* Theme toggle */}
-                {!collapsed && (
-                <button
-                  onClick={toggleTheme}
-                  title={theme === 'dark' ? 'Modo claro' : 'Modo escuro'}
-                  style={{
-                    flexShrink: 0, width: 32, height: 32, borderRadius: 8,
-                    background: 'transparent', border: 'none',
-                    color: 'var(--c-muted)', cursor: 'pointer',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    transition: 'background 0.13s, color 0.13s',
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.background = 'var(--c-card-hover)'; e.currentTarget.style.color = 'var(--c-text)' }}
-                  onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--c-muted)' }}
-                >
-                  {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
-                </button>
+                {/* Mensagens — only stacked here in collapsed mode; moved to the icon row below when expanded */}
+                {collapsed && (
+                  <button
+                    onClick={() => navigate('/mensagens')}
+                    title="Mensagens"
+                    style={{
+                      flexShrink: 0, width: 32, height: 32, borderRadius: 8,
+                      background: isActive('/mensagens') ? 'rgba(27,120,247,0.13)' : 'transparent',
+                      border: 'none',
+                      color: isActive('/mensagens') ? '#1b78f7' : 'var(--c-muted)',
+                      cursor: 'pointer', position: 'relative',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      transition: 'background 0.13s, color 0.13s',
+                    }}
+                    onMouseEnter={e => { if (!isActive('/mensagens')) { e.currentTarget.style.background = 'var(--c-card-hover)'; e.currentTarget.style.color = 'var(--c-text)' } }}
+                    onMouseLeave={e => { if (!isActive('/mensagens')) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--c-muted)' } }}
+                  >
+                    <MessageSquare size={15} />
+                    {unreadMsgs > 0 && (
+                      <span style={{
+                        position: 'absolute', top: 3, right: 3,
+                        width: 8, height: 8, borderRadius: '50%',
+                        background: '#1b78f7', border: '1.5px solid var(--c-sidebar-bg)',
+                      }} />
+                    )}
+                  </button>
                 )}
-                {/* Mensagens — compact icon with badge */}
-                {!collapsed && (
-                <button
-                  onClick={() => navigate('/mensagens')}
-                  title="Mensagens"
-                  style={{
-                    flexShrink: 0, width: 32, height: 32, borderRadius: 8,
-                    background: isActive('/mensagens') ? 'rgba(27,120,247,0.13)' : 'transparent',
-                    border: 'none',
-                    color: isActive('/mensagens') ? '#1b78f7' : 'var(--c-muted)',
-                    cursor: 'pointer', position: 'relative',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    transition: 'background 0.13s, color 0.13s',
-                  }}
-                  onMouseEnter={e => { if (!isActive('/mensagens')) { e.currentTarget.style.background = 'var(--c-card-hover)'; e.currentTarget.style.color = 'var(--c-text)' } }}
-                  onMouseLeave={e => { if (!isActive('/mensagens')) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--c-muted)' } }}
-                >
-                  <MessageSquare size={15} />
-                  {unreadMsgs > 0 && (
-                    <span style={{
-                      position: 'absolute', top: 3, right: 3,
-                      width: 8, height: 8, borderRadius: '50%',
-                      background: '#1b78f7', border: '1.5px solid var(--c-sidebar-bg)',
-                    }} />
-                  )}
-                </button>
-                )}
-                {!collapsed && <InviteInbox userId={user.id} sidebar={true} />}
+                {/* Notificações — stays visible when collapsed */}
+                <InviteInbox userId={user.id} sidebar={true} collapsed={collapsed} />
               </div>
-              <button className="sb-item" onClick={() => navigate('/settings')}>
-                <SettingsIcon size={16} />{!collapsed && <span>Definições</span>}
-              </button>
-              <button className="sb-item danger" onClick={handleSignOut}>
-                <LogOut size={16} />{!collapsed && <span>Sair</span>}
-              </button>
-              <button className="sb-collapse-btn" onClick={toggleCollapsed} title={collapsed ? 'Expandir menu' : 'Colapsar menu'} style={{ margin: collapsed ? '6px auto 0' : '6px 4px 0' }}>
-                {collapsed ? <PanelLeftOpen size={15} /> : <PanelLeftClose size={15} />}
-              </button>
+
+              {collapsed ? (
+                <>
+                  <button className="sb-item" onClick={() => navigate('/settings')}>
+                    <SettingsIcon size={16} />
+                  </button>
+                  <button className="sb-item danger" onClick={handleSignOut}>
+                    <LogOut size={16} />
+                  </button>
+                </>
+              ) : (
+                /* Definições / Modo claro / Mensagens / Sair — one tidy icon row instead of a long list */
+                <div className="sb-action-row">
+                  <button className="sb-action-btn" onClick={() => navigate('/settings')} title="Definições">
+                    <SettingsIcon size={15} />
+                  </button>
+                  <button className="sb-action-btn" onClick={toggleTheme} title={theme === 'dark' ? 'Modo claro' : 'Modo escuro'}>
+                    {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
+                  </button>
+                  <button className="sb-action-btn" onClick={() => navigate('/mensagens')} title="Mensagens" style={{ position: 'relative', color: isActive('/mensagens') ? '#1b78f7' : undefined }}>
+                    <MessageSquare size={15} />
+                    {unreadMsgs > 0 && (
+                      <span style={{
+                        position: 'absolute', top: 5, right: 5,
+                        width: 7, height: 7, borderRadius: '50%',
+                        background: '#1b78f7', border: '1.5px solid var(--c-sidebar-bg)',
+                      }} />
+                    )}
+                  </button>
+                  <button className="sb-action-btn danger" onClick={handleSignOut} title="Sair">
+                    <LogOut size={15} />
+                  </button>
+                </div>
+              )}
             </>
           ) : (
             <>
               <button className="sb-item" onClick={() => navigate('/register')}><UserPlus size={16} />{!collapsed && <span>Criar conta</span>}</button>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4, width: '100%', justifyContent: collapsed ? 'center' : undefined }}>
                 <button className="sb-item" style={{ flex: collapsed ? '0 0 auto' : 1, margin: 0, justifyContent: collapsed ? 'center' : undefined }} onClick={() => navigate('/login')}><LogIn size={16} />{!collapsed && <span>Entrar</span>}</button>
                 {!collapsed && (
                 <button
@@ -1659,9 +1715,6 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                 </button>
                 )}
               </div>
-              <button className="sb-collapse-btn" onClick={toggleCollapsed} title={collapsed ? 'Expandir menu' : 'Colapsar menu'} style={{ margin: collapsed ? '6px auto 0' : '6px 4px 0' }}>
-                {collapsed ? <PanelLeftOpen size={15} /> : <PanelLeftClose size={15} />}
-              </button>
             </>
           )}
         </div>
@@ -1740,7 +1793,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                     )}
                     {extras.onAnalyze && (
                       <button className="mob-nav-btn" onClick={() => { extras.onAnalyze(); setMenuOpen(false) }} disabled={extras.analyzingAI} style={{ opacity: extras.analyzingAI ? 0.6 : 1 }}>
-                        <Sparkles size={20} /> {extras.analyzingAI ? 'A analisar…' : 'Análise IA'}
+                        <Sparkles size={20} /> {extras.analyzingAI ? 'A analisar…' : extras.aiScore != null ? 'Ver análise IA' : 'Análise IA'}
                         {extras.aiScore != null && !extras.analyzingAI && (
                           <span style={{ marginLeft: 'auto', fontSize: 13, fontWeight: 700, color: extras.aiScore >= 90 ? '#22c55e' : extras.aiScore >= 71 ? '#1b78f7' : extras.aiScore >= 40 ? '#fbbf24' : '#ef4444' }}>
                             {extras.aiScore}
@@ -1748,9 +1801,11 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                         )}
                       </button>
                     )}
-                    <button className="mob-nav-btn" onClick={() => { navigate(`/certificado/${extras.slug}`); setMenuOpen(false) }}>
-                      <Trophy size={20} /> Certificado
-                    </button>
+                    {extras.showCertificate && (
+                      <button className="mob-nav-btn" onClick={() => { navigate(`/certificado/${extras.slug}`); setMenuOpen(false) }}>
+                        <Trophy size={20} /> Certificado
+                      </button>
+                    )}
                     {extras.onTogglePublicView && (
                       <button className="mob-nav-btn" style={{ color: extras.viewAsPublic ? '#1b78f7' : undefined }}
                         onClick={() => { extras.onTogglePublicView(); setMenuOpen(false) }}>

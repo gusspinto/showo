@@ -859,13 +859,15 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
           to   { transform: translateY(0);    opacity: 1; }
         }
         /* Desktop: right sidebar */
-        /* Desktop: preview começa após a sidebar (z-index 100) */
+        /* Desktop: preview começa após a sidebar (z-index 100) — segue a sidebar quando comprimida */
         @media (min-width: 861px) {
-          .pv-outer { left: 240px !important; }
+          .pv-outer { left: 232px !important; transition: left 0.22s cubic-bezier(0.4,0,0.2,1); }
+          body.sidebar-collapsed .pv-outer { left: 64px !important; }
         }
-        /* Tablet: top-nav visível (62px) — container começa abaixo */
+        /* Tablet: top-nav visível (62px) — container e painel começam abaixo */
         @media (min-width: 601px) and (max-width: 860px) {
           .pv-outer { top: 62px !important; }
+          .pv-workspace { top: calc(62px + 44px) !important; }
         }
         .pv-workspace { animation: pv-slidein 0.2s cubic-bezier(0.22,1,0.36,1); }
         /* Mobile: bottom sheet — acima da bottom nav (62px) */
@@ -1246,7 +1248,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
                 {/* Accent color — 5-col grid */}
                 <div style={{ marginBottom: 14 }}>
                   <div style={wsControlLabel}>Cor de destaque</div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 6 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
                     {ACCENT_PALETTES.map(p => {
                       const isSelected = (previewStyle.accent || 'default') === p.key
                       return (
@@ -1259,9 +1261,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
                               ? `linear-gradient(135deg, ${p.c1}, ${p.c2})`
                               : 'conic-gradient(#1e40af 0deg 60deg,#7c3aed 60deg 120deg,#065f46 120deg 180deg,#7c2d12 180deg 240deg,#d97706 240deg 300deg,#db2777 300deg 360deg)',
                             outline: isSelected ? '2px solid rgba(255,255,255,0.8)' : '2px solid transparent',
-                            outlineOffset: 2, transition: 'all 0.15s',
-                            transform: isSelected ? 'scale(1.07)' : 'scale(1)',
-                            boxShadow: isSelected ? '0 2px 12px rgba(0,0,0,0.4)' : 'none',
+                            outlineOffset: 2, transition: 'outline-color 0.15s',
                           }}
                         >
                           {isSelected && (
@@ -1396,7 +1396,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
                             transition: 'all 0.12s',
                           }}
                         >
-                          <div style={{ fontSize: 14, fontWeight: 700, fontFamily: f.css, lineHeight: 1 }}>{f.sample}</div>
+                          <div style={{ height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, fontFamily: f.css, lineHeight: 1 }}>{f.sample}</div>
                           <div style={{ fontSize: 8, marginTop: 3, fontWeight: isSel ? 700 : 500, fontFamily: 'var(--font-body)' }}>{f.label}</div>
                         </button>
                       )
@@ -1455,7 +1455,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
                             color: isSel ? '#1b78f7' : 'var(--c-muted)', transition: 'all 0.12s',
                           }}
                         >
-                          <div style={{ fontSize: 14, fontWeight: 700, fontFamily: f.css, lineHeight: 1 }}>{f.sample}</div>
+                          <div style={{ height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, fontFamily: f.css, lineHeight: 1 }}>{f.sample}</div>
                           <div style={{ fontSize: 8, marginTop: 3, fontWeight: isSel ? 700 : 500, fontFamily: 'var(--font-body)' }}>{f.label}</div>
                         </button>
                       )
@@ -2453,7 +2453,8 @@ export default function ProjectPage() {
         aiScore: project.ai_score,
         analyzingAI,
         viewAsPublic,
-        onDefense: () => setDefenseMode(true),
+        showCertificate: score >= 100,
+        onDefense: project.project_type === 'pap' ? () => setDefenseMode(true) : null,
         onAnalyze: handleAIClick,
         onTogglePublicView: () => {
           const entering = !viewAsPublic
@@ -2465,7 +2466,7 @@ export default function ProjectPage() {
       setExtras(null)
     }
     return () => setExtras(null)
-  }, [project?.id, project?.defense_date, project?.ai_score, user?.id, analyzingAI, aiFeedback, viewAsPublic])
+  }, [project?.id, project?.project_type, project?.defense_date, project?.ai_score, user?.id, analyzingAI, aiFeedback, viewAsPublic, score])
 
   const pageUrl = window.location.href
 
@@ -3532,7 +3533,7 @@ export default function ProjectPage() {
               border: `1px solid ${colors.border}`,
               borderRadius: 14,
               padding: '28px',
-              maxWidth: 580,
+              maxWidth: 660,
               width: '100%',
               maxHeight: '85vh',
               overflowY: 'auto',
@@ -3598,36 +3599,46 @@ export default function ProjectPage() {
 
             {aiFeedback && !analyzingAI && (
               <div>
-                <div style={{ background: 'rgba(27,120,247,0.06)', border: '1px solid rgba(27,120,247,0.15)', borderRadius: 12, padding: '14px 16px', marginBottom: 16 }}>
-                  <div style={{ fontSize: 13, color: 'var(--c-text)', lineHeight: 1.65, marginBottom: aiFeedback.score_hint ? 8 : 0 }}>
+                {/* Summary */}
+                <div style={{ marginBottom: 20 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: colors.muted, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 8 }}>Resumo</div>
+                  <p style={{ margin: 0, fontSize: 13.5, color: 'var(--c-text)', lineHeight: 1.6 }}>
                     {aiFeedback.overall}
-                  </div>
+                  </p>
                   {aiFeedback.score_hint && (
-                    <div style={{ fontSize: 12, color: colors.blue, fontWeight: 600, display: 'flex', alignItems: 'flex-start', gap: 6 }}>
-                      <Lightbulb size={14} style={{ flexShrink: 0, marginTop: 1 }} />
+                    <div style={{ marginTop: 10, display: 'inline-flex', alignItems: 'flex-start', gap: 6, fontSize: 12, color: colors.blue, fontWeight: 600, background: 'rgba(27,120,247,0.08)', border: '1px solid rgba(27,120,247,0.18)', borderRadius: 8, padding: '7px 10px' }}>
+                      <Lightbulb size={13} style={{ flexShrink: 0, marginTop: 1 }} />
                       <span>{aiFeedback.score_hint}</span>
                     </div>
                   )}
                 </div>
+
                 {aiFeedback.sections && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                    {Object.entries(aiFeedback.sections).map(([key, sec]) => {
-                      const LABELS = { goal: 'Objetivo', problem: 'Problema', solution: 'Solução', target_audience: 'Público-alvo', features: 'Funcionalidades', technologies: 'Tecnologias', results: 'Resultados', learnings: 'Aprendizagens' }
-                      const ratingColor = sec.rating === 'forte' ? colors.green : sec.rating === 'médio' ? colors.yellow : colors.orange
-                      const ratingBg = sec.rating === 'forte' ? 'rgba(34,197,94,0.1)' : sec.rating === 'médio' ? 'rgba(234,179,8,0.1)' : 'rgba(249,115,22,0.1)'
-                      return (
-                        <div key={key} style={{ background: colors.bg, border: `1px solid ${colors.border}`, borderRadius: 10, padding: '12px 14px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 6 }}>
-                            <span style={{ fontSize: 12, fontWeight: 700, color: colors.muted }}>{LABELS[key] || key}</span>
-                            <span style={{ fontSize: 11, fontWeight: 700, color: ratingColor, background: ratingBg, borderRadius: 5, padding: '2px 7px', textTransform: 'uppercase', flexShrink: 0 }}>{sec.rating}</span>
+                  <div>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: colors.muted, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 8 }}>Por secção</div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 8 }}>
+                      {Object.entries(aiFeedback.sections).map(([key, sec]) => {
+                        const LABELS = { goal: 'Objetivo', problem: 'Problema', solution: 'Solução', target_audience: 'Público-alvo', features: 'Funcionalidades', technologies: 'Tecnologias', results: 'Resultados', learnings: 'Aprendizagens' }
+                        const ICONS = { goal: Target, problem: AlertTriangle, solution: Wrench, target_audience: Users, features: Zap, technologies: Wrench, results: TrendingUp, learnings: BookOpen }
+                        const SecIcon = ICONS[key] || CheckCircle
+                        const ratingColor = sec.rating === 'forte' ? colors.green : sec.rating === 'médio' ? colors.yellow : colors.orange
+                        return (
+                          <div key={key} style={{ background: colors.bg, border: `1px solid ${colors.border}`, borderRadius: 10, padding: '12px 14px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 7 }}>
+                              <span style={{ width: 7, height: 7, borderRadius: '50%', background: ratingColor, flexShrink: 0 }} />
+                              <SecIcon size={13} color={colors.muted} style={{ flexShrink: 0 }} />
+                              <span style={{ fontSize: 12, fontWeight: 700, color: colors.text }}>{LABELS[key] || key}</span>
+                            </div>
+                            <p style={{ margin: 0, fontSize: 12, color: colors.muted, lineHeight: 1.5 }}>{sec.feedback}</p>
+                            {sec.tip && (
+                              <p style={{ margin: '8px 0 0', fontSize: 12, color: colors.blue, lineHeight: 1.45, display: 'flex', alignItems: 'flex-start', gap: 5, paddingTop: 8, borderTop: `1px solid ${colors.border}` }}>
+                                <ChevronRight size={12} style={{ flexShrink: 0, marginTop: 2 }} /> <span>{sec.tip}</span>
+                              </p>
+                            )}
                           </div>
-                          <p style={{ margin: '0 0 4px', fontSize: 12, color: colors.text, lineHeight: 1.55 }}>{sec.feedback}</p>
-                          {sec.tip && (
-                            <p style={{ margin: 0, fontSize: 12, color: colors.blue, lineHeight: 1.55, display: 'flex', alignItems: 'center', gap: 5 }}><ChevronRight size={12} /> {sec.tip}</p>
-                          )}
-                        </div>
-                      )
-                    })}
+                        )
+                      })}
+                    </div>
                   </div>
                 )}
               </div>
@@ -3718,46 +3729,6 @@ export default function ProjectPage() {
               title="Gerir projeto"
             >
               <Settings size={15} /> Gerir
-            </button>
-          )}
-          {isOwner && (
-            <button
-              onClick={handleAIClick}
-              style={{
-                background: 'rgba(109,40,217,0.08)',
-                border: '1px solid rgba(109,40,217,0.25)',
-                color: '#a78bfa',
-                borderRadius: 8, padding: '8px 14px',
-                fontSize: 13, fontWeight: 600,
-                cursor: 'pointer', fontFamily: 'inherit',
-                display: 'flex', alignItems: 'center', gap: 6,
-                transition: 'background 0.15s',
-              }}
-              onMouseEnter={e => e.currentTarget.style.background = 'rgba(109,40,217,0.15)'}
-              onMouseLeave={e => e.currentTarget.style.background = 'rgba(109,40,217,0.08)'}
-              title="Análise do projeto com IA"
-            >
-              <Sparkles size={15} /> Análise IA
-            </button>
-          )}
-          {(isOwner || collaboratorSections !== null) && (
-            <button
-              onClick={() => setDefenseMode(true)}
-              style={{
-                background: 'rgba(251,191,36,0.08)',
-                border: '1px solid rgba(251,191,36,0.25)',
-                color: '#fbbf24',
-                borderRadius: 8, padding: '8px 14px',
-                fontSize: 13, fontWeight: 600,
-                cursor: 'pointer', fontFamily: 'inherit',
-                display: 'flex', alignItems: 'center', gap: 6,
-                transition: 'background 0.15s',
-              }}
-              onMouseEnter={e => e.currentTarget.style.background = 'rgba(251,191,36,0.14)'}
-              onMouseLeave={e => e.currentTarget.style.background = 'rgba(251,191,36,0.08)'}
-              title="Preparar a defesa do projeto"
-            >
-              <GraduationCap size={15} /> Preparar defesa
             </button>
           )}
         </div>
@@ -4068,24 +4039,6 @@ export default function ProjectPage() {
           return (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 10, marginBottom: 4 }}>
 
-              {/* Certificate — score = 100 */}
-              {score >= 100 && (
-                <button
-                  onClick={() => navigate(`/certificado/${project.slug}`)}
-                  style={{ ...miniCardBase, background: 'rgba(27,120,247,0.06)', border: '1px solid rgba(27,120,247,0.22)' }}
-                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(27,120,247,0.12)'; e.currentTarget.style.borderColor = 'rgba(27,120,247,0.4)' }}
-                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(27,120,247,0.06)'; e.currentTarget.style.borderColor = 'rgba(27,120,247,0.22)' }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                    <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(27,120,247,0.12)', border: '1px solid rgba(27,120,247,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <GraduationCap size={14} color={colors.blue} />
-                    </div>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: colors.blue }}>Certificado</div>
-                  </div>
-                  <div style={{ fontSize: 11, color: colors.muted, lineHeight: 1.4 }}>Score perfeito · ver certificado</div>
-                </button>
-              )}
-
               {/* PAP defense date */}
               {project.project_type === 'pap' && (
                 <div style={{ ...miniCardBase, background: `rgba(${urgentColor === '#ef4444' ? '239,68,68' : urgentColor === '#f97316' ? '249,115,22' : '27,120,247'},0.05)`, border: `1px solid ${urgentColor}30`, position: 'relative' }}>
@@ -4117,25 +4070,6 @@ export default function ProjectPage() {
                   {savingDefense && <div style={{ position: 'absolute', top: 8, right: 8, width: 10, height: 10, border: `1.5px solid ${colors.border}`, borderTop: `1.5px solid ${colors.blue}`, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />}
                 </div>
               )}
-
-              {/* AI Analysis */}
-              <button
-                onClick={handleAIClick}
-                style={{ ...miniCardBase, background: 'rgba(109,40,217,0.05)', border: '1px solid rgba(129,140,248,0.2)' }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(109,40,217,0.1)'; e.currentTarget.style.borderColor = 'rgba(129,140,248,0.4)' }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(109,40,217,0.05)'; e.currentTarget.style.borderColor = 'rgba(129,140,248,0.2)' }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                  <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(109,40,217,0.12)', border: '1px solid rgba(129,140,248,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <Sparkles size={14} color="#818cf8" />
-                  </div>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: '#818cf8' }}>Análise IA</div>
-                  {aiFeedback && <Check size={11} color="#22c55e" style={{ marginLeft: 'auto' }} />}
-                </div>
-                <div style={{ fontSize: 11, color: colors.muted, lineHeight: 1.4 }}>
-                  {aiFeedback ? 'Ver feedback guardado' : 'Analisar e melhorar score'}
-                </div>
-              </button>
 
               {/* Report generation */}
               {isPapOrInternship && (

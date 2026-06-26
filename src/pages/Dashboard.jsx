@@ -1767,55 +1767,6 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* ── Banner de perfil incompleto (aluno, pós-onboarding) ── */}
-        {!isTeacher && !loadingProjects && !showOnboardingAluno && (() => {
-          const missingPhoto    = !profile?.avatar_url
-          const missingProject  = projects.length === 0
-          if (!missingPhoto && !missingProject) return null
-
-          const items = []
-          if (missingPhoto)   items.push({ label: 'Adicionar foto de perfil', action: () => navigate('/settings'), color: '#8b5cf6' })
-          if (missingProject) items.push({ label: 'Criar primeiro projeto', action: () => setShowCreateModal(true), color: C.blue })
-
-          return (
-            <div style={{
-              marginBottom: 16, padding: '14px 18px',
-              background: 'rgba(27,120,247,0.04)',
-              border: '1px solid rgba(27,120,247,0.15)',
-              borderRadius: 12,
-              display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
-            }}>
-              <div style={{ flex: 1, minWidth: 200 }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 4 }}>
-                  O teu perfil ainda não está completo
-                </div>
-                <div style={{ fontSize: 12, color: C.muted }}>
-                  Perfis completos têm 3× mais visibilidade para recrutadores.
-                </div>
-              </div>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                {items.map(item => (
-                  <button
-                    key={item.label}
-                    onClick={item.action}
-                    style={{
-                      background: `${item.color}18`, border: `1px solid ${item.color}35`,
-                      borderRadius: 7, padding: '8px 14px',
-                      color: item.color, fontSize: 12, fontWeight: 700,
-                      cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap',
-                      transition: 'background 0.15s',
-                    }}
-                    onMouseEnter={e => { e.currentTarget.style.background = `${item.color}28` }}
-                    onMouseLeave={e => { e.currentTarget.style.background = `${item.color}18` }}
-                  >
-                    {item.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )
-        })()}
-
         {/* ── Próximos passos (aluno only) ── */}
         {!isTeacher && !loadingProjects && (() => {
           const steps = []
@@ -1874,8 +1825,35 @@ export default function Dashboard() {
           const secondary = steps.slice(1, 3)
           const PIcon = primary.Icon
 
+          // Onboarding progress — only the two universal steps count (project + avatar)
+          const onboardingDone = (projects.length > 0 ? 1 : 0) + (profile?.avatar_url ? 1 : 0)
+          const showOnboardingProgress = onboardingDone < 2
+
+          // No project yet — the empty-state card below already has its own "Criar projeto" CTA,
+          // so just show the progress label here, not a second redundant card.
+          if (primary.id === 'create') {
+            return showOnboardingProgress ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Primeiros passos</span>
+                <div style={{ flex: '0 0 60px', height: 4, background: C.border, borderRadius: 999, overflow: 'hidden' }}>
+                  <div style={{ width: `${(onboardingDone / 2) * 100}%`, height: '100%', background: C.blue, borderRadius: 999, transition: 'width 0.4s ease' }} />
+                </div>
+                <span style={{ fontSize: 11, color: C.subtle }}>{onboardingDone}/2</span>
+              </div>
+            ) : null
+          }
+
           return (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 8 }}>
+              {showOnboardingProgress && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Primeiros passos</span>
+                  <div style={{ flex: '0 0 60px', height: 4, background: C.border, borderRadius: 999, overflow: 'hidden' }}>
+                    <div style={{ width: `${(onboardingDone / 2) * 100}%`, height: '100%', background: C.blue, borderRadius: 999, transition: 'width 0.4s ease' }} />
+                  </div>
+                  <span style={{ fontSize: 11, color: C.subtle }}>{onboardingDone}/2</span>
+                </div>
+              )}
               {/* Primary action — full width, accent left border */}
               <div
                 style={{
@@ -2042,45 +2020,27 @@ export default function Dashboard() {
             )
           })()}
 
-          {/* ── Turma widget (alunos only) ── */}
+          {/* ── Turma hint (alunos only) — minimal, low-key, easy to ignore ── */}
           {!isTeacher && !loadingStudentTurmas && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', background: studentTurmas.length > 0 ? 'rgba(27,120,247,0.05)' : 'var(--c-bg-alt)', border: `1px solid ${studentTurmas.length > 0 ? 'rgba(27,120,247,0.18)' : C.border}`, borderRadius: 10, padding: '11px 14px', transition: 'background 0.2s, border-color 0.2s' }}>
-              <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <Users2 size={14} color="#1b78f7" />
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                {studentTurmas.length > 0 ? (
-                  <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: C.subtle }}>
+              {studentTurmas.length > 0 ? (
+                <>
+                  <Users2 size={12} />
+                  <span>
                     {studentTurmas.length === 1 ? studentTurmas[0].name : `${studentTurmas.length} turmas`}
-                    {studentTurmas.length === 1 && studentTurmas[0].teacher_name && (
-                      <span style={{ color: C.muted, fontWeight: 400, marginLeft: 8, fontSize: 12 }}>· {studentTurmas[0].teacher_name}</span>
-                    )}
                   </span>
-                ) : (
-                  <span style={{ fontSize: 13, color: C.muted }}>Ainda não entraste em nenhuma turma</span>
-                )}
-              </div>
-              <div style={{ display: 'flex', gap: 7, flexShrink: 0 }}>
-                {studentTurmas.length > 0 && (
-                  <button className="dash-action-btn" onClick={() => setShowTurmasModal(true)} style={{ background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.22)', color: C.blue }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(27,120,247,0.18)'} onMouseLeave={e => e.currentTarget.style.background = 'rgba(27,120,247,0.1)'}>
-                    Ver turmas
+                  <button onClick={() => setShowTurmasModal(true)} style={{ background: 'none', border: 'none', color: C.muted, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', padding: 0, textDecoration: 'underline' }}>
+                    ver
                   </button>
-                )}
-                <button
-                  className="dash-action-btn"
-                  onClick={() => setShowJoinModal(true)}
-                  style={{
-                    background: studentTurmas.length === 0 ? `#1b78f7` : 'transparent',
-                    border: `1px solid ${studentTurmas.length === 0 ? 'transparent' : C.border}`,
-                    color: studentTurmas.length === 0 ? '#fff' : C.muted,
-                    boxShadow: studentTurmas.length === 0 ? '0 2px 10px rgba(27,120,247,0.3)' : 'none',
-                  }}
-                  onMouseEnter={e => { if (studentTurmas.length > 0) { e.currentTarget.style.borderColor = C.borderBright; e.currentTarget.style.color = C.text } }}
-                  onMouseLeave={e => { if (studentTurmas.length > 0) { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted } }}
-                >
-                  {studentTurmas.length === 0 ? 'Entrar numa turma' : 'Entrar noutra'}
-                </button>
-              </div>
+                </>
+              ) : (
+                <>
+                  <span>Não estás numa turma.</span>
+                  <button onClick={() => setShowJoinModal(true)} style={{ background: 'none', border: 'none', color: C.muted, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', padding: 0, textDecoration: 'underline' }}>
+                    entrar numa turma
+                  </button>
+                </>
+              )}
             </div>
           )}
 
@@ -2130,6 +2090,20 @@ export default function Dashboard() {
                 >
                   Criar projeto
                 </button>
+
+                <div style={{ display: 'flex', justifyContent: 'center', gap: 28, flexWrap: 'wrap', marginTop: 36, paddingTop: 28, borderTop: `1px solid ${C.border}`, maxWidth: 560, marginLeft: 'auto', marginRight: 'auto' }}>
+                  {[
+                    { Icon: Sparkles, title: 'IA analisa o teu projeto', desc: 'Recebes feedback e um score sobre o que falta melhorar.' },
+                    { Icon: Globe, title: 'Página pública partilhável', desc: 'Um link profissional para mostrares a recrutadores ou colegas.' },
+                    { Icon: Trophy, title: 'Entras no ranking', desc: 'Compara o teu progresso com outros alunos da comunidade.' },
+                  ].map(b => (
+                    <div key={b.title} style={{ flex: '1 1 150px', maxWidth: 170, textAlign: 'center' }}>
+                      <b.Icon size={18} color={C.subtle} style={{ marginBottom: 8 }} />
+                      <div style={{ fontSize: 12, fontWeight: 700, color: C.text, marginBottom: 4 }}>{b.title}</div>
+                      <div style={{ fontSize: 11.5, color: C.muted, lineHeight: 1.5 }}>{b.desc}</div>
+                    </div>
+                  ))}
+                </div>
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>

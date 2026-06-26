@@ -253,7 +253,7 @@ export default function Register() {
 
           {done ? (
             <div style={{ textAlign: 'center' }}>
-              <div style={{ marginBottom: 16, display: 'flex' }}><Mail size={48} color={C.blue} /></div>
+              <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'center' }}><Mail size={48} color={C.blue} /></div>
               <h2 style={{ color: C.text, fontSize: 22, fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 10px', letterSpacing: '-0.5px' }}>
                 Confirma o teu email
               </h2>
