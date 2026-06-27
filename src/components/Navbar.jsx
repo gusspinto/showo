@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
 import { useSidebar } from '../context/SidebarContext'
 import { supabase } from '../lib/supabase'
-import { Check, X, FolderOpen, User, Settings as SettingsIcon, Shield, Globe, Trophy, LogOut, ArrowRightToLine, Bell, Eye, Target, TrendingUp, GraduationCap, UserPlus, LayoutDashboard, Plus, Compass, Sun, Moon, Sparkles, Pencil, ArrowLeft, ChevronLeft, Briefcase, Medal, Users2, Swords, Building2, Search, Star, MessageSquare, Kanban, Heart, CheckCircle, XCircle, AlignJustify, Paintbrush, Mail } from 'lucide-react'
+import { Check, X, FolderOpen, User, Settings as SettingsIcon, Shield, Globe, Trophy, LogOut, ArrowRightToLine, Bell, Eye, Target, TrendingUp, GraduationCap, UserPlus, LayoutDashboard, Plus, Compass, Sun, Moon, Sparkles, Pencil, ArrowLeft, Briefcase, Medal, Users2, Swords, Building2, Search, Star, MessageSquare, Kanban, Heart, CheckCircle, XCircle, AlignJustify, Paintbrush, Mail } from 'lucide-react'
 
 // Strip emoji characters from notification messages coming from the DB
 function stripEmoji(str) {
@@ -651,22 +651,28 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
   const [open, setOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [createModal, setCreateModal] = useState(false)
-  const [collapsed, setCollapsed] = useState(() => typeof window !== 'undefined' && window.localStorage.getItem('showo_sidebar_collapsed') === '1')
+  // Sidebar is icon-only by default and expands on sustained hover — no manual
+  // toggle. Page layout always reserves the narrow width; the expanded
+  // sidebar overlays the page (GPU composited, no reflow) instead of pushing
+  // content, which is what keeps the hover animation perfectly smooth.
+  const [expanded, setExpanded] = useState(false)
+  const collapsed = !expanded
+  const expandTimer = useRef(null)
 
-  function toggleCollapsed() {
-    setCollapsed(prev => {
-      const next = !prev
-      window.localStorage.setItem('showo_sidebar_collapsed', next ? '1' : '0')
-      return next
-    })
+  function handleSidebarEnter() {
+    clearTimeout(expandTimer.current)
+    expandTimer.current = setTimeout(() => setExpanded(true), 2500)
   }
+  function handleSidebarLeave() {
+    clearTimeout(expandTimer.current)
+    setExpanded(false)
+  }
+  useEffect(() => () => clearTimeout(expandTimer.current), [])
 
-  // Keep page content in sync with sidebar width so layout doesn't leave a
-  // stale gap when the sidebar is collapsed/expanded on a different page.
   useEffect(() => {
-    document.body.classList.toggle('sidebar-collapsed', collapsed)
+    document.body.classList.add('sidebar-collapsed')
     return () => document.body.classList.remove('sidebar-collapsed')
-  }, [collapsed])
+  }, [])
 
   const isRecruiter = profile?.role === 'recrutador' || profile?.role === 'empresa'
   const recruiterAccent = profile?.role === 'empresa' ? '#f59e0b' : '#8b5cf6'
@@ -726,38 +732,30 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
           display: none;
           position: fixed;
           left: 0; top: 0; bottom: 0;
-          width: 232px;
+          width: 64px;
           background: var(--c-sidebar-bg);
           border-right: 1px solid var(--c-border);
           flex-direction: column;
           padding: 0;
           z-index: 100;
           overflow: hidden;
-          transition: width 0.22s cubic-bezier(0.4,0,0.2,1);
+          contain: layout;
+          will-change: width, box-shadow;
+          transition: width 0.25s cubic-bezier(0.22,1,0.36,1), box-shadow 0.25s cubic-bezier(0.22,1,0.36,1);
+        }
+        .sidebar:not(.collapsed) {
+          width: 232px;
+          box-shadow: 6px 0 28px rgba(0,0,0,0.22);
         }
         .sidebar.collapsed { width: 64px; }
         .sidebar.collapsed .sb-top-row { padding: 20px 0 16px; justify-content: center; }
-        .sidebar.collapsed .sb-logo-divider { display: none; }
         .sidebar.collapsed .sb-label { display: none; }
         .sidebar.collapsed .sb-item { justify-content: center; padding: 9px 0; }
         .sidebar.collapsed .sb-create { justify-content: center; padding: 9px 0; }
         .sb-top-row {
           display: flex; align-items: center; justify-content: space-between;
           padding: 14px 10px 14px 16px;
-          transition: padding 0.22s cubic-bezier(0.4,0,0.2,1);
         }
-        .sb-collapse-btn {
-          display: flex; align-items: center; justify-content: center;
-          width: 30px; height: 30px;
-          border: none;
-          background: transparent;
-          border-radius: 8px;
-          color: var(--c-muted);
-          cursor: pointer;
-          transition: background 0.13s, color 0.13s;
-          flex-shrink: 0;
-        }
-        .sb-collapse-btn:hover { background: var(--c-card-hover); color: var(--c-text); }
         .sb-logo {
           display: flex; align-items: center;
           padding: 0;
@@ -818,7 +816,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
           background: transparent; color: var(--c-muted);
           font-size: 13px; font-weight: 500;
           cursor: pointer; font-family: inherit;
-          transition: color 0.15s, padding 0.22s cubic-bezier(0.4,0,0.2,1), justify-content 0.22s cubic-bezier(0.4,0,0.2,1);
+          transition: color 0.15s;
           text-align: left; white-space: nowrap;
           position: relative;
         }
@@ -884,12 +882,13 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
           .sidebar   { display: flex; }
           .top-nav   { display: none !important; }
           .bottom-nav { display: none !important; }
-          body { padding-left: 240px !important; padding-bottom: 0 !important; transition: padding-left 0.22s cubic-bezier(0.4,0,0.2,1); }
-          body.sidebar-collapsed { padding-left: 72px !important; }
-          body.sidebar-collapsed .page-content { max-width: 1068px !important; }
-          body.sidebar-collapsed .page-content-wide { max-width: 1168px !important; }
-          body.sidebar-collapsed .msg-inner { max-width: 1088px !important; }
-          .page-content, .page-content-wide { transition: max-width 0.22s cubic-bezier(0.4,0,0.2,1); }
+          /* Page layout always reserves the narrow (collapsed) sidebar width —
+             the expanded sidebar overlays on top instead of pushing this, so
+             nothing here needs to animate. */
+          body { padding-left: 72px !important; padding-bottom: 0 !important; }
+          .page-content { max-width: 1068px !important; }
+          .page-content-wide { max-width: 1168px !important; }
+          .msg-inner { max-width: 1088px !important; }
         }
 
         /* Tablet (601–860px): hamburger visible, bottom nav hidden */
@@ -1407,12 +1406,16 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
         </div>
       </nav>
 
-      {/* ── Sidebar — desktop only (>860px) ── */}
-      <div className={`sidebar${collapsed ? ' collapsed' : ''}`}>
-        {/* Logo + collapse toggle */}
+      {/* ── Sidebar — desktop only (>860px). Icon-only by default, expands on sustained hover. ── */}
+      <div
+        className={`sidebar${collapsed ? ' collapsed' : ''}`}
+        onMouseEnter={handleSidebarEnter}
+        onMouseLeave={handleSidebarLeave}
+      >
+        {/* Logo */}
         {collapsed ? (
           <div className="sb-top-row" style={{ padding: '12px 0 8px' }}>
-            <button className="sb-collapse-btn" onClick={toggleCollapsed} title="Expandir menu">
+            <button className="sb-logo" onClick={() => navigate(user ? '/dashboard' : '/')} title="Showo">
               <img src="/icon.png" alt="Showo" style={{ height: 18, width: 18, objectFit: 'contain' }} />
             </button>
           </div>
@@ -1420,9 +1423,6 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
           <div className="sb-top-row">
             <button className="sb-logo" onClick={() => navigate(user ? '/dashboard' : '/')}>
               <img src={theme === 'light' ? '/light_mode_LI.png' : '/icon_logo.png'} alt="Showo" style={{ height: 28, width: 'auto', objectFit: 'contain' }} />
-            </button>
-            <button className="sb-collapse-btn" onClick={toggleCollapsed} title="Colapsar menu">
-              <ChevronLeft size={16} />
             </button>
           </div>
         )}
@@ -1513,9 +1513,12 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   <button className={`sb-item${isActive('/vagas') ? ' active' : ''}`} onClick={() => navigate('/vagas')}>
                     <Briefcase size={16} />{!collapsed && <span>Vagas</span>}
                   </button>
-                  <button className="sb-item" disabled style={{ opacity: 0.45, cursor: 'default' }}>
-                    <Building2 size={16} />
-                    {!collapsed && <><span>Estágio</span><span className="sb-soon">breve</span></>}
+                  <button
+                    className={`sb-item${isActive('/estagio') ? ' active' : ''}`}
+                    onClick={() => navigate('/estagio')}
+                    title="Kit de candidatura a estágio"
+                  >
+                    <Mail size={16} />{!collapsed && <span>Estágio</span>}
                   </button>
 
                   <div className="sb-divider" style={{ margin: '8px 0 4px' }} />
@@ -1887,8 +1890,8 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                       <button className={`mob-nav-btn${isActive('/vagas') ? ' active' : ''}`} onClick={() => { navigate('/vagas'); setMenuOpen(false) }}>
                         <Briefcase size={20} /> Vagas
                       </button>
-                      <button className="mob-nav-btn" style={{ opacity: 0.45, cursor: 'default' }} disabled>
-                        <Building2 size={20} /> Estágio <span className="mob-nav-soon">breve</span>
+                      <button className={`mob-nav-btn${isActive('/estagio') ? ' active' : ''}`} onClick={() => { navigate('/estagio'); setMenuOpen(false) }}>
+                        <Mail size={20} /> Estágio
                       </button>
                       <span className="mob-nav-section-label">Comunidade</span>
                       <button className={`mob-nav-btn${isActive('/missoes') ? ' active' : ''}`} onClick={() => { navigate('/missoes'); setMenuOpen(false) }}>

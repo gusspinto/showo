@@ -906,7 +906,7 @@ function OnboardingAlunoModal({ user, profile, onDismiss, firstProject }) {
             </div>
             <h2 style={{ margin: '0 0 10px', fontSize: 20, fontWeight: 400, color: C.text, letterSpacing: '-0.5px', fontFamily: 'var(--font-heading)' }}>Cria o teu primeiro projecto</h2>
             <p style={{ margin: '0 auto 24px', fontSize: 14, color: C.muted, lineHeight: 1.6, maxWidth: 340 }}>
-              Responde a algumas perguntas sobre o teu trabalho — a IA transforma as tuas respostas numa página profissional pronta a partilhar.
+              Conta-nos o que fizeste, em poucas frases. Tratamos do resto e entregamos-te uma página pronta a mostrar.
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, background: 'var(--c-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 12, padding: '16px 18px', textAlign: 'left', marginBottom: 8 }}>
@@ -1452,9 +1452,9 @@ export default function Dashboard() {
   const greeting = (() => {
     const h = new Date().getHours()
     if (h >= 5  && h < 12) return `Bom dia, ${firstName}`
-    if (h >= 12 && h < 17) return `Boa tarde, ${firstName}`
-    if (h >= 17 && h < 21) return `Boa noite, ${firstName}`
-    if (h >= 21 && h < 24) return `Ainda aqui, ${firstName}?`
+    if (h >= 12 && h < 20) return `Boa tarde, ${firstName}`
+    if (h >= 20 && h < 23) return `Boa noite, ${firstName}`
+    if (h >= 23 || h < 1)  return `Ainda aqui, ${firstName}?`
     return `A acabar à última da hora, ${firstName}?`
   })()
 

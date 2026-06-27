@@ -10,6 +10,20 @@
   box-sizing: border-box;
 }
 
+/* Stop Chrome's autofill from painting inputs/textareas white, overriding our theme */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--c-text) !important;
+  -webkit-box-shadow: 0 0 0 1000px var(--c-card) inset !important;
+  box-shadow: 0 0 0 1000px var(--c-card) inset !important;
+  caret-color: var(--c-text) !important;
+  transition: background-color 9999s ease-in-out 0s;
+}
+
 :root {
   --font-heading: 'Croogla', 'Poppins', 'Inter', sans-serif;
   --font-body: 'Montserrat', 'Inter', system-ui, -apple-system, sans-serif;

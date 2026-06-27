@@ -2,21 +2,32 @@ import { useState, useRef } from 'react'
 import { X, Plus } from 'lucide-react'
 
 const POPULAR_SKILLS = [
-  // Dev
-  'JavaScript', 'TypeScript', 'React', 'Vue.js', 'Angular', 'Node.js', 'Python',
-  'Java', 'C#', 'C++', 'Go', 'Rust', 'PHP', 'Ruby', 'Swift', 'Kotlin',
-  'HTML', 'CSS', 'Tailwind CSS', 'Next.js', 'Nuxt.js', 'Express', 'Django',
-  'Laravel', 'Spring Boot', 'Flutter', 'React Native',
-  // Data / AI
-  'Machine Learning', 'Deep Learning', 'Data Science', 'SQL', 'PostgreSQL',
-  'MongoDB', 'Redis', 'Elasticsearch', 'TensorFlow', 'PyTorch', 'Pandas',
-  // Tools & Infra
-  'Git', 'Docker', 'Kubernetes', 'AWS', 'GCP', 'Azure', 'Linux', 'CI/CD',
-  'GraphQL', 'REST API', 'Supabase', 'Firebase',
-  // Design / Product
-  'Figma', 'UI/UX Design', 'Product Management', 'Agile', 'Scrum',
-  // Soft
+  // Tecnologia / Informática
+  'JavaScript', 'Python', 'React', 'Java', 'SQL', 'HTML', 'CSS', 'Excel',
+  'Redes de computadores', 'Cibersegurança', 'Edição de vídeo',
+  // Saúde
+  'Primeiros socorros', 'Cuidados ao paciente', 'Anatomia', 'Farmacologia',
+  'Nutrição', 'Fisioterapia', 'Enfermagem',
+  // Comércio, Marketing e Gestão
+  'Marketing Digital', 'Vendas', 'Gestão de redes sociais', 'Contabilidade',
+  'Atendimento ao cliente', 'Gestão de projetos', 'Negociação', 'Logística',
+  'Recursos Humanos', 'Empreendedorismo',
+  // Design e Multimédia
+  'Design Gráfico', 'Fotografia', 'Ilustração', 'Photoshop', 'Figma',
+  'Animação 2D/3D', 'Storytelling',
+  // Mecânica, Eletricidade e Construção
+  'Eletricidade', 'Eletrónica', 'Mecânica Automóvel', 'AutoCAD', 'Soldadura',
+  'Desenho técnico', 'Energias renováveis',
+  // Turismo, Restauração e Estética
+  'Atendimento a clientes', 'Cozinha', 'Pastelaria', 'Turismo', 'Estética',
+  'Organização de eventos', 'Línguas estrangeiras',
+  // Educação e Ciências Sociais
+  'Ensino', 'Psicologia', 'Educação Social', 'Tradução', 'Redação',
+  // Agricultura e Ambiente
+  'Agricultura', 'Gestão ambiental', 'Veterinária',
+  // Competências transversais
   'Comunicação', 'Trabalho em equipa', 'Liderança', 'Resolução de problemas',
+  'Criatividade', 'Organização', 'Adaptabilidade',
 ]
 
 export default function SkillsPicker({ value = [], onChange, max = 10, label = 'Competências' }) {
