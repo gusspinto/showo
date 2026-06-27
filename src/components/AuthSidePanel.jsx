@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 
-export default function AuthSidePanel({ phrases, step, totalSteps }) {
+export default function AuthSidePanel({ phrases }) {
   const [idx, setIdx] = useState(0)
 
   useEffect(() => {
@@ -30,18 +30,6 @@ export default function AuthSidePanel({ phrases, step, totalSteps }) {
           </span>
         </p>
       </div>
-
-      {totalSteps > 1 && (
-        <div className="auth-side-progress">
-          <div className="auth-side-progress-track">
-            <div
-              className="auth-side-progress-fill"
-              style={{ width: `${(step / totalSteps) * 100}%` }}
-            />
-          </div>
-          <span className="auth-side-progress-label">{step}/{totalSteps}</span>
-        </div>
-      )}
     </div>
   )
 }

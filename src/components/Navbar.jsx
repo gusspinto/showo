@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
 import { useSidebar } from '../context/SidebarContext'
 import { supabase } from '../lib/supabase'
-import { Check, X, FolderOpen, User, Settings as SettingsIcon, Shield, Globe, Trophy, LogOut, LogIn, Bell, Eye, Target, TrendingUp, GraduationCap, UserPlus, LayoutDashboard, Plus, Compass, Sun, Moon, Sparkles, Pencil, ArrowLeft, Briefcase, Medal, Users2, Swords, Building2, Search, Star, MessageSquare, Kanban, Heart, CheckCircle, XCircle, AlignJustify, Paintbrush, Mail, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
+import { Check, X, FolderOpen, User, Settings as SettingsIcon, Shield, Globe, Trophy, LogOut, ArrowRightToLine, Bell, Eye, Target, TrendingUp, GraduationCap, UserPlus, LayoutDashboard, Plus, Compass, Sun, Moon, Sparkles, Pencil, ArrowLeft, ChevronLeft, Briefcase, Medal, Users2, Swords, Building2, Search, Star, MessageSquare, Kanban, Heart, CheckCircle, XCircle, AlignJustify, Paintbrush, Mail } from 'lucide-react'
 
 // Strip emoji characters from notification messages coming from the DB
 function stripEmoji(str) {
@@ -736,7 +736,6 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
           transition: width 0.22s cubic-bezier(0.4,0,0.2,1);
         }
         .sidebar.collapsed { width: 64px; }
-        .sidebar.collapsed .sb-logo { display: none; }
         .sidebar.collapsed .sb-top-row { padding: 20px 0 16px; justify-content: center; }
         .sidebar.collapsed .sb-logo-divider { display: none; }
         .sidebar.collapsed .sb-label { display: none; }
@@ -1411,16 +1410,22 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
       {/* ── Sidebar — desktop only (>860px) ── */}
       <div className={`sidebar${collapsed ? ' collapsed' : ''}`}>
         {/* Logo + collapse toggle */}
-        <div className="sb-top-row">
-          {!collapsed && (
+        {collapsed ? (
+          <div className="sb-top-row" style={{ padding: '12px 0 8px' }}>
+            <button className="sb-collapse-btn" onClick={toggleCollapsed} title="Expandir menu">
+              <img src="/icon.png" alt="Showo" style={{ height: 18, width: 18, objectFit: 'contain' }} />
+            </button>
+          </div>
+        ) : (
+          <div className="sb-top-row">
             <button className="sb-logo" onClick={() => navigate(user ? '/dashboard' : '/')}>
               <img src={theme === 'light' ? '/light_mode_LI.png' : '/icon_logo.png'} alt="Showo" style={{ height: 28, width: 'auto', objectFit: 'contain' }} />
             </button>
-          )}
-          <button className="sb-collapse-btn" onClick={toggleCollapsed} title={collapsed ? 'Expandir menu' : 'Colapsar menu'}>
-            {collapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
-          </button>
-        </div>
+            <button className="sb-collapse-btn" onClick={toggleCollapsed} title="Colapsar menu">
+              <ChevronLeft size={16} />
+            </button>
+          </div>
+        )}
         <div className="sb-logo-divider" />
 
         {/* Main nav + project controls in one scrollable section */}
@@ -1695,26 +1700,33 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
           ) : (
             <>
               <button className="sb-item" onClick={() => navigate('/register')}><UserPlus size={16} />{!collapsed && <span>Criar conta</span>}</button>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 4, width: '100%', justifyContent: collapsed ? 'center' : undefined }}>
-                <button className="sb-item" style={{ flex: collapsed ? '0 0 auto' : 1, margin: 0, justifyContent: collapsed ? 'center' : undefined }} onClick={() => navigate('/login')}><LogIn size={16} />{!collapsed && <span>Entrar</span>}</button>
-                {!collapsed && (
-                <button
-                  onClick={toggleTheme}
-                  title={theme === 'dark' ? 'Modo claro' : 'Modo escuro'}
-                  style={{
-                    flexShrink: 0, width: 32, height: 32, borderRadius: 8,
-                    background: 'transparent', border: 'none',
-                    color: 'var(--c-muted)', cursor: 'pointer',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    transition: 'background 0.13s, color 0.13s',
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.background = 'var(--c-card-hover)'; e.currentTarget.style.color = 'var(--c-text)' }}
-                  onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--c-muted)' }}
-                >
-                  {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
-                </button>
-                )}
-              </div>
+              {collapsed ? (
+                <>
+                  <button className="sb-item" onClick={() => navigate('/login')}><ArrowRightToLine size={16} /></button>
+                  <button className="sb-item" onClick={toggleTheme} title={theme === 'dark' ? 'Modo claro' : 'Modo escuro'}>
+                    {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+                  </button>
+                </>
+              ) : (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4, width: '100%' }}>
+                  <button className="sb-item" style={{ flex: 1, margin: 0 }} onClick={() => navigate('/login')}><ArrowRightToLine size={16} /><span>Entrar</span></button>
+                  <button
+                    onClick={toggleTheme}
+                    title={theme === 'dark' ? 'Modo claro' : 'Modo escuro'}
+                    style={{
+                      flexShrink: 0, width: 32, height: 32, borderRadius: 8,
+                      background: 'transparent', border: 'none',
+                      color: 'var(--c-muted)', cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      transition: 'background 0.13s, color 0.13s',
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'var(--c-card-hover)'; e.currentTarget.style.color = 'var(--c-text)' }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--c-muted)' }}
+                  >
+                    {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
+                  </button>
+                </div>
+              )}
             </>
           )}
         </div>

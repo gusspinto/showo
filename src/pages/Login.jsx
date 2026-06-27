@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { Mail, Check } from 'lucide-react'
 import AuthSidePanel from '../components/AuthSidePanel'
+import { useTheme } from '../context/ThemeContext'
 
 const C = {
   bg:          'var(--c-bg)',
@@ -62,6 +63,7 @@ function PasswordInput({ value, onChange, placeholder }) {
 
 export default function Login() {
   const navigate = useNavigate()
+  const { theme } = useTheme()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -136,35 +138,19 @@ export default function Login() {
         }
         .auth-side-progress {
           position: absolute; left: 64px; right: 56px; bottom: 48px;
-          display: flex; align-items: center; gap: 12px; z-index: 3;
+          display: flex; align-items: center; gap: 6px; z-index: 3;
         }
-        .auth-side-progress-track {
-          position: relative; flex: 1; height: 3px; border-radius: 3px;
-          background: rgba(255,255,255,0.14); overflow: hidden;
+        .auth-side-seg {
+          flex: 1; height: 2px; border-radius: 2px;
+          background: rgba(255,255,255,0.18);
+          transition: background 0.3s;
         }
-        .auth-side-progress-fill {
-          position: relative; height: 100%; border-radius: 3px;
-          background: linear-gradient(90deg, #0f5fd1, #4a93f9);
-          transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-          overflow: hidden;
-        }
-        .auth-side-progress-fill::after {
-          content: ''; position: absolute; inset: 0;
-          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.55), transparent);
-          width: 60%; animation: auth-progress-shimmer 1.6s ease-in-out infinite;
-        }
-        @keyframes auth-progress-shimmer {
-          0%   { transform: translateX(-100%); }
-          100% { transform: translateX(220%); }
-        }
-        .auth-side-progress-label {
-          font-size: 11px; font-weight: 600; letter-spacing: 0.5px;
-          color: rgba(255,255,255,0.55); flex-shrink: 0;
-        }
+        .auth-side-seg.filled { background: #4a93f9; }
         .auth-main { flex: 1; display: flex; align-items: center; justify-content: center; padding: 24px 16px; }
         .auth-card { width: 100%; max-width: 380px; }
-        .auth-input {
-          flex: 1; width: 100%; background: transparent; border: none;
+        .auth-input,
+        body.light .auth-input {
+          flex: 1; width: 100%; background: transparent !important; border: none;
           color: var(--c-text); font-size: 16px; outline: none; font-family: inherit;
           padding: 10px 0; box-sizing: border-box;
         }
@@ -194,7 +180,7 @@ export default function Login() {
         <div className="auth-card">
           <div className="auth-main-logo" style={{ marginBottom: 36 }}>
             <img
-              src="/icon_logo.png" alt="Showo"
+              src={theme === 'light' ? '/light_mode_LI.png' : '/icon_logo.png'} alt="Showo"
               style={{ height: 32, width: 'auto', cursor: 'pointer' }}
               onClick={() => navigate('/')}
             />

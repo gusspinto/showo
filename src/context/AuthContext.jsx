@@ -22,7 +22,7 @@ export function AuthProvider({ children }) {
     if (!data) {
       const { data: created } = await supabase
         .from('profiles')
-        .upsert({ id: uid, full_name: meta.full_name ?? null, role: metaRole ?? 'aluno' })
+        .upsert({ id: uid, full_name: meta.full_name ?? null, role: metaRole ?? 'aluno', company: meta.company ?? null, school: meta.school ?? null })
         .select('id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work')
         .single()
       data = created

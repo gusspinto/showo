@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, memo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Globe, Bot, GraduationCap, Trophy, Briefcase, ArrowRight, Zap } from 'lucide-react'
+import { Globe, Bot, Trophy, Briefcase, ArrowRight, Zap, ChevronDown } from 'lucide-react'
 import { Navbar } from '../components/Navbar'
 import { supabase } from '../lib/supabase'
 import Onboarding from '../components/Onboarding'
@@ -34,6 +34,38 @@ function StaticHero() {
       A tua carreira merece mais{' '}
       do que um <em style={{ fontStyle: 'italic', color: '#1b78f7', whiteSpace: 'nowrap' }}>CV vazio.</em>
     </h1>
+  )
+}
+
+const ROLE_PHRASES = [
+  { verb: 'Cria',       role: 'aluno' },
+  { verb: 'Ajuda',      role: 'professor' },
+  { verb: 'Procura',    role: 'recrutador' },
+  { verb: 'Abre vagas', role: 'empresa' },
+]
+
+function RoleCycler() {
+  const [idx, setIdx] = useState(0)
+
+  useEffect(() => {
+    const id = setInterval(() => setIdx(i => (i + 1) % ROLE_PHRASES.length), 2600)
+    return () => clearInterval(id)
+  }, [])
+
+  const current = ROLE_PHRASES[idx]
+
+  return (
+    <p className="hero-role-phrase" style={{
+      fontSize: 14, color: colors.muted, fontWeight: 600,
+      margin: '64px 0 0', textAlign: 'center',
+    }}>
+      {current.verb}{' '}
+      <span className="hero-role-highlight" key={idx}>
+        {current.role.split('').map((ch, i) => (
+          <span key={i} className="hero-role-letter" style={{ animationDelay: `${i * 0.03}s` }}>{ch}</span>
+        ))}
+      </span>
+    </p>
   )
 }
 
@@ -336,6 +368,31 @@ export default function Home() {
           0%, 100% { opacity: 0.3; }
           50%       { opacity: 0.6; }
         }
+        @keyframes hero-bounce {
+          0%, 100% { transform: translateY(0); }
+          50%      { transform: translateY(5px); }
+        }
+        .hero-role-phrase { animation: hero-role-fade 0.5s ease; }
+        @keyframes hero-role-fade {
+          from { opacity: 0; transform: translateY(6px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .hero-role-highlight {
+          background: #1b78f7; color: #fff;
+          padding: 2px 9px 5px; border-radius: 0 0 10px 10px;
+          display: inline-block;
+        }
+        .hero-role-letter {
+          display: inline-block;
+          animation: hero-role-letter-rise 0.4s ease both;
+        }
+        @keyframes hero-role-letter-rise {
+          from { opacity: 0; transform: translateY(60%); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        @media (max-width: 600px) {
+          .hero-scroll-cue { display: none !important; }
+        }
         .goal-pill { transition: color 0.15s !important; cursor: pointer; display: inline-block; }
         .goal-pill:hover { color: #1b78f7 !important; }
         .feature-card { transition: all 0.2s ease !important; cursor: default; }
@@ -506,6 +563,19 @@ export default function Home() {
               </p>
             )}
           </form>
+
+          {/* Para quem é o Showo */}
+          <RoleCycler />
+
+          {/* Scroll cue — purely visual, no label */}
+          <div className="hero-scroll-cue" style={{
+            position: 'absolute', left: '50%', bottom: 28, transform: 'translateX(-50%)',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
+            opacity: 0.4, pointerEvents: 'none',
+          }}>
+            <ChevronDown size={14} color={colors.subtle} style={{ animation: 'hero-bounce 1.8s ease-in-out infinite' }} />
+            <ChevronDown size={14} color={colors.subtle} style={{ animation: 'hero-bounce 1.8s ease-in-out infinite 0.15s', marginTop: -8 }} />
+          </div>
         </div>
       </div>
 

@@ -1,92 +1,210 @@
-import { useState, useEffect } from 'react'
-import { Edit3, Zap, Link, BookOpen, X, ArrowRight, ChevronRight } from 'lucide-react'
+import { useState, useEffect, useRef, useLayoutEffect } from 'react'
+import { X, MousePointer, Plus, Check, TrendingUp, Clock, Eye } from 'lucide-react'
 
-const STEPS = [
-  {
-    icon: <Edit3 size={32} color="#1b78f7" strokeWidth={2} />,
-    title: 'Descreve o teu projeto',
-    desc: 'Escreve umas palavras sobre o que estás a construir — a IA percebe o contexto sozinha.',
-    preview: (
+/* ── Step 1: create-project cursor-click demo ──
+   Cursor target is measured live off the real button via getBoundingClientRect,
+   so it always lands exactly on the button regardless of card size/padding. */
+function CreateDemo({ play, onDone }) {
+  const [phase, setPhase] = useState('idle') // idle -> moving -> clicked -> created
+  const containerRef = useRef(null)
+  const btnRef = useRef(null)
+  const [target, setTarget] = useState({ x: 0, y: 0 })
+
+  useLayoutEffect(() => {
+    if (!play || !containerRef.current || !btnRef.current) return
+    const c = containerRef.current.getBoundingClientRect()
+    const b = btnRef.current.getBoundingClientRect()
+    setTarget({ x: b.left - c.left + b.width / 2 - 4, y: b.top - c.top + b.height / 2 - 4 })
+  }, [play])
+
+  useEffect(() => {
+    if (!play) return
+    const timers = []
+    setPhase('appear')
+    timers.push(setTimeout(() => setPhase('moving'), 350))
+    timers.push(setTimeout(() => setPhase('clicked'), 1050))
+    timers.push(setTimeout(() => setPhase('created'), 1280))
+    timers.push(setTimeout(onDone, 2400))
+    return () => timers.forEach(clearTimeout)
+  }, [play])
+
+  return (
+    <div ref={containerRef} style={{ marginTop: 22, position: 'relative', height: 118 }}>
       <div style={{
-        background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(27,120,247,0.15)',
-        borderRadius: 10, padding: '12px 14px', marginTop: 14,
-        display: 'flex', alignItems: 'center', gap: 10,
+        background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: 10,
+        padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        animation: 'guide-fade-up 0.4s both',
       }}>
-        <span style={{ fontSize: 12, color: '#7d93b0', flex: 1, lineHeight: 1.5 }}>
-          "Aplicação para gerir horários de estudantes do ensino profissional..."
-        </span>
-        <div style={{
-          width: 30, height: 30, borderRadius: 8, flexShrink: 0,
-          background: '#1b78f7',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 14,
-        }}><ArrowRight size={16} color="#fff" /></div>
-      </div>
-    ),
-  },
-  {
-    icon: <Zap size={32} color="#1b78f7" strokeWidth={2} />,
-    title: 'A IA preenche tudo',
-    desc: 'O Claude analisa a descrição e pré-preenche o objetivo, problema, solução, tecnologias e muito mais.',
-    preview: (
-      <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 6 }}>
-        {['Objetivo', 'Problema', 'Solução', 'Tecnologias'].map((label, i) => (
-          <div key={label} style={{
-            background: 'rgba(27,120,247,0.05)', border: '1px solid rgba(27,120,247,0.12)',
-            borderRadius: 7, padding: '7px 11px',
-            display: 'flex', alignItems: 'center', gap: 8,
-            animation: `guide-fade-up 0.35s ${i * 0.08}s both`,
-          }}>
-            <span style={{ fontSize: 11, color: '#1b78f7', fontWeight: 700, minWidth: 74 }}>{label}</span>
-            <div style={{ flex: 1, height: 5, background: 'rgba(27,120,247,0.12)', borderRadius: 3, overflow: 'hidden' }}>
-              <div style={{
-                height: '100%', background: 'linear-gradient(90deg,#1b78f7,#818cf8)',
-                borderRadius: 3, width: `${[72, 58, 85, 64][i]}%`,
-              }} />
-            </div>
-          </div>
-        ))}
-      </div>
-    ),
-  },
-  {
-    icon: <Link size={32} color="#1b78f7" strokeWidth={2} />,
-    title: 'A tua página profissional',
-    desc: 'O resultado é uma página com design profissional, score, análise IA e link único para partilhares.',
-    preview: (
-      <div style={{
-        marginTop: 14, background: 'rgba(13,20,36,0.8)',
-        border: '1px solid rgba(27,120,247,0.15)', borderRadius: 10, overflow: 'hidden',
-      }}>
-        <div style={{ background: 'linear-gradient(135deg,rgba(27,120,247,0.12),rgba(79,70,229,0.08))', padding: '12px 14px' }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: '#e8f2ff', marginBottom: 3 }}>Gestão de Horários</div>
-          <div style={{ fontSize: 11, color: '#7d93b0' }}>João Silva · Desenvolvimento de Aplicações</div>
+        <span style={{ fontSize: 13, color: 'var(--c-muted)', fontWeight: 600 }}>Os meus projetos</span>
+        <div ref={btnRef} style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+          background: phase === 'clicked' ? '#1660d1' : '#1b78f7',
+          borderRadius: 7, padding: '9px 16px',
+          fontSize: 13, fontWeight: 700, color: '#fff',
+          transform: phase === 'clicked' ? 'scale(0.92)' : 'scale(1)',
+          boxShadow: phase === 'moving' ? '0 0 0 3px rgba(27,120,247,0.18)' : 'none',
+          transition: 'transform 0.15s, background 0.15s, box-shadow 0.3s',
+        }}>
+          <Plus size={14} /> Criar projeto
         </div>
-        <div style={{ padding: '9px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{
-            background: 'conic-gradient(#22c55e 306deg,var(--c-border) 0deg)',
-            borderRadius: '50%', width: 30, height: 30, flexShrink: 0,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            <div style={{ background: 'var(--c-bg)', borderRadius: '50%', width: 22, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 800, color: '#22c55e' }}>85</div>
+      </div>
+
+      {phase === 'created' && (
+        <div className="guide-pop" style={{
+          position: 'absolute', left: 0, right: 0, top: 76,
+          display: 'flex', alignItems: 'center', gap: 8,
+          background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.25)',
+          borderRadius: 8, padding: '10px 14px',
+        }}>
+          <Check size={14} color="#22c55e" />
+          <span style={{ fontSize: 13, fontWeight: 600, color: '#22c55e' }}>Projeto criado</span>
+        </div>
+      )}
+
+      <div style={{
+        position: 'absolute',
+        left: phase === 'idle' || phase === 'appear' ? '92%' : target.x,
+        top: phase === 'idle' || phase === 'appear' ? -30 : target.y,
+        transition: 'left 0.6s cubic-bezier(0.34,1.56,0.64,1), top 0.6s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s',
+        opacity: play && phase !== 'idle' ? 1 : 0,
+        transform: phase === 'clicked' ? 'scale(0.78)' : 'scale(1)',
+        pointerEvents: 'none',
+      }}>
+        <MousePointer size={24} color="#fff" fill="#111" strokeWidth={1.5} style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.5))' }} />
+        {phase === 'clicked' && <span className="guide-click-ring" />}
+      </div>
+    </div>
+  )
+}
+
+/* ── Step 2: AI auto-fill demo ── */
+function FillDemo({ play, onDone }) {
+  const FIELDS = [
+    { label: 'Objetivo', pct: 72 },
+    { label: 'Problema', pct: 58 },
+    { label: 'Solução', pct: 85 },
+    { label: 'Tecnologias', pct: 64 },
+  ]
+  const STAGGER = 0.28
+  useEffect(() => {
+    if (!play) return
+    const t = setTimeout(onDone, (FIELDS.length - 1) * STAGGER * 1000 + 1100)
+    return () => clearTimeout(t)
+  }, [play])
+
+  if (!play) return <div style={{ marginTop: 22, height: 4 + FIELDS.length * 40 }} />
+
+  return (
+    <div style={{ marginTop: 22, display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {FIELDS.map((f, i) => (
+        <div key={f.label} style={{
+          background: 'var(--c-bg)', border: '1px solid var(--c-border)',
+          borderRadius: 8, padding: '10px 14px',
+          display: 'flex', alignItems: 'center', gap: 12,
+          animation: `guide-fade-up 0.45s ${i * STAGGER}s both`,
+        }}>
+          <span style={{ fontSize: 12.5, color: '#1b78f7', fontWeight: 700, minWidth: 90 }}>{f.label}</span>
+          <div style={{ flex: 1, height: 6, background: 'var(--c-border)', borderRadius: 3, overflow: 'hidden' }}>
+            <div style={{
+              height: '100%', background: '#1b78f7',
+              borderRadius: 3, width: `${f.pct}%`,
+              animation: `guide-bar-grow 0.7s ${i * STAGGER + 0.2}s cubic-bezier(0.22,1,0.36,1) both`,
+            }} />
           </div>
-          <div style={{ flex: 1, fontSize: 11, color: '#7d93b0' }}>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+/* ── Step 3: final — page preview + community stats ── */
+function StatsPreview() {
+  const STATS = [
+    { Icon: TrendingUp, value: '3×', label: 'mais visibilidade' },
+    { Icon: Clock, value: '<2 min', label: 'para criar' },
+    { Icon: Eye, value: '92', label: 'score médio' },
+  ]
+  const [score, setScore] = useState(0)
+
+  useEffect(() => {
+    const start = performance.now()
+    const DURATION = 900
+    const TARGET = 85
+    let raf
+    function tick(now) {
+      const t = Math.min(1, (now - start) / DURATION)
+      setScore(Math.round(TARGET * (1 - Math.pow(1 - t, 3)))) // ease-out cubic
+      if (t < 1) raf = requestAnimationFrame(tick)
+    }
+    const startTimer = setTimeout(() => { raf = requestAnimationFrame(tick) }, 250)
+    return () => { clearTimeout(startTimer); cancelAnimationFrame(raf) }
+  }, [])
+
+  return (
+    <div style={{ marginTop: 22 }}>
+      <div style={{ background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: 12, overflow: 'hidden', animation: 'guide-fade-up 0.45s both' }}>
+        <div style={{ background: 'linear-gradient(135deg, rgba(27,120,247,0.14), rgba(79,70,229,0.08))', padding: '16px 18px' }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--c-text)', marginBottom: 3 }}>Gestão de Horários</div>
+          <div style={{ fontSize: 12, color: 'var(--c-muted)' }}>João Silva · Desenvolvimento de Aplicações</div>
+        </div>
+        <div style={{ padding: '13px 18px', display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{
+            background: `conic-gradient(#22c55e ${score / 100 * 360}deg, var(--c-border) 0deg)`,
+            borderRadius: '50%', width: 34, height: 34, flexShrink: 0,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            transition: 'background 0.05s linear',
+          }}>
+            <div style={{ background: 'var(--c-bg)', borderRadius: '50%', width: 26, height: 26, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9.5, fontWeight: 800, color: '#22c55e' }}>{score}</div>
+          </div>
+          <div style={{ flex: 1, fontSize: 12, color: 'var(--c-muted)' }}>
             showo.app/projeto/<span style={{ color: '#1b78f7' }}>gestao-horarios</span>
           </div>
         </div>
       </div>
-    ),
-  },
+
+      <div style={{ display: 'flex', gap: 10, marginTop: 12 }}>
+        {STATS.map((stat, i) => (
+          <div key={stat.label} style={{
+            flex: 1, textAlign: 'center', background: 'var(--c-bg)', border: '1px solid var(--c-border)',
+            borderRadius: 10, padding: '12px 6px',
+            animation: `guide-fade-up 0.4s ${0.3 + i * 0.12}s both`,
+          }}>
+            <stat.Icon size={15} color="#1b78f7" style={{ marginBottom: 5 }} />
+            <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--c-text)', fontFamily: 'var(--font-heading)' }}>{stat.value}</div>
+            <div style={{ fontSize: 10.5, color: 'var(--c-muted)', marginTop: 1 }}>{stat.label}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+const STEPS = [
+  { key: 'create', title: 'Cria o teu primeiro projeto', desc: 'Começa o teu portfólio com um único clique.', Demo: CreateDemo, interactive: true },
+  { key: 'fill',   title: 'A IA trata do resto', desc: 'Objetivo, problema, solução e tecnologias preenchidos automaticamente.', Demo: FillDemo, interactive: true },
+  { key: 'page',   title: 'Uma página que abre portas', desc: 'Design profissional, score automático e link único para partilhares.', Demo: StatsPreview, interactive: false },
 ]
+
+const STEP_DURATION = 5000
 
 export default function Onboarding({ onDone }) {
   const [step, setStep] = useState(0)
   const [visible, setVisible] = useState(false)
+  const advanceTimer = useRef(null)
 
   useEffect(() => {
     const t = setTimeout(() => setVisible(true), 100)
     return () => clearTimeout(t)
   }, [])
+
+  // Auto-advance every step on a fixed cadence — plays the step's demo immediately
+  // and moves to the next one after STEP_DURATION regardless of demo length, looping forever.
+  useEffect(() => {
+    advanceTimer.current = setTimeout(() => {
+      setStep(s => (s + 1) % STEPS.length)
+    }, STEP_DURATION)
+    return () => clearTimeout(advanceTimer.current)
+  }, [step])
 
   function handleDone() {
     localStorage.setItem('showo_seen_onboarding', '1')
@@ -94,24 +212,29 @@ export default function Onboarding({ onDone }) {
     setTimeout(onDone, 300)
   }
 
-  function next() {
-    if (step < STEPS.length - 1) setStep(s => s + 1)
-    else handleDone()
+  function goToStep(i) {
+    clearTimeout(advanceTimer.current)
+    setStep(i)
   }
 
   const s = STEPS[step]
-  const isLast = step === STEPS.length - 1
+  const Demo = s.Demo
 
   return (
     <>
       <style>{`
-        @keyframes guide-fade-up {
-          from { opacity: 0; transform: translateY(6px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
+        @keyframes guide-fade-up { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes guide-bar-grow { from { width: 0%; } }
+        @keyframes guide-step-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes guide-click-ring { from { box-shadow: 0 0 0 0 rgba(0,0,0,0.35); } to { box-shadow: 0 0 0 12px rgba(0,0,0,0); } }
+        @keyframes guide-pop-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes guide-progress { from { width: 0%; } to { width: 100%; } }
+        .guide-click-ring { position: absolute; top: 0; left: 0; width: 20px; height: 20px; border-radius: 50%; animation: guide-click-ring 0.5s ease-out; pointer-events: none; }
+        .guide-pop { animation: guide-pop-in 0.25s ease-out both; }
+        .guide-step-content { animation: guide-step-in 0.3s cubic-bezier(0.16,1,0.3,1) both; }
       `}</style>
 
-      {/* Backdrop — leve, deixa ver o fundo */}
+      {/* Backdrop */}
       <div
         onClick={handleDone}
         style={{
@@ -129,108 +252,85 @@ export default function Onboarding({ onDone }) {
         top: '50%', left: '50%',
         transform: `translate(-50%, ${visible ? '-50%' : '-46%'})`,
         opacity: visible ? 1 : 0,
-        transition: 'all 0.35s cubic-bezier(0.34,1.56,0.64,1)',
-        width: 'calc(100% - 40px)', maxWidth: 400,
+        transition: 'opacity 0.3s, transform 0.3s',
+        width: 'calc(100% - 40px)', maxWidth: 600,
         background: 'var(--c-card)',
-        border: '1px solid var(--c-border-bright)',
-        borderRadius: 20,
-        padding: '22px 22px 22px',
-        boxShadow: '0 20px 60px rgba(0,0,0,0.6)',
+        border: '1px solid var(--c-border)',
+        borderRadius: 18,
+        boxShadow: '0 12px 32px rgba(0,0,0,0.3)',
         fontFamily: 'inherit',
+        display: 'flex',
+        overflow: 'hidden',
       }}>
 
-        {/* Header row: badge + fechar */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 7,
-            background: 'rgba(27,120,247,0.1)',
-            border: '1px solid rgba(27,120,247,0.25)',
-            borderRadius: 20, padding: '4px 10px 4px 7px',
-          }}>
-            <BookOpen size={13} color="#1b78f7" />
-            <span style={{ fontSize: 12, fontWeight: 700, color: '#1b78f7', letterSpacing: 0.2 }}>Guia rápido</span>
-            <span style={{
-              fontSize: 10, fontWeight: 700, color: '#1b78f7',
-              background: 'rgba(27,120,247,0.15)', borderRadius: 10,
-              padding: '1px 6px', marginLeft: 2,
-            }}>{step + 1}/{STEPS.length}</span>
-          </div>
-
-          <button
-            onClick={handleDone}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 5,
-              background: 'var(--c-bg-alt)',
-              border: '1px solid var(--c-border)',
-              borderRadius: 8, padding: '5px 10px',
-              color: 'var(--c-muted)', cursor: 'pointer',
-              fontSize: 12, fontFamily: 'inherit',
-              transition: 'all 0.15s',
-            }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'var(--c-card-hover)'; e.currentTarget.style.color = 'var(--c-text)' }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'var(--c-bg-alt)'; e.currentTarget.style.color = 'var(--c-muted)' }}
-          >
-            <X size={14} />
-            <span>Saltar guia</span>
-          </button>
-        </div>
-
-        {/* Content */}
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, marginBottom: 4 }}>
-          <div style={{
-            width: 48, height: 48, borderRadius: 12, flexShrink: 0,
-            background: 'rgba(27,120,247,0.08)',
-            border: '1px solid rgba(27,120,247,0.18)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            {s.icon}
-          </div>
-          <div>
-            <h2 style={{ margin: '0 0 5px', fontSize: 16, fontWeight: 800, color: '#e8f2ff', letterSpacing: '-0.2px' }}>
-              {s.title}
-            </h2>
-            <p style={{ margin: 0, fontSize: 13, color: '#7d93b0', lineHeight: 1.6 }}>
-              {s.desc}
-            </p>
-          </div>
-        </div>
-
-        {s.preview}
-
-        {/* Footer: dots + botão */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 18, gap: 12 }}>
-          <div style={{ display: 'flex', gap: 5 }}>
-            {STEPS.map((_, i) => (
-              <div
-                key={i}
-                onClick={() => setStep(i)}
+        {/* Left rail — minimal vertical step tracker, acts as progress + nav */}
+        <div style={{
+          width: 48, flexShrink: 0, background: 'var(--c-bg-alt)',
+          borderRight: '1px solid var(--c-border)',
+          display: 'flex', flexDirection: 'column', alignItems: 'center',
+          padding: '34px 0', gap: 0,
+        }}>
+          {STEPS.map((st, i) => (
+            <div key={st.key} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: i < STEPS.length - 1 ? 1 : 'none' }}>
+              <button
+                onClick={() => goToStep(i)}
+                aria-label={`Passo ${i + 1}`}
                 style={{
-                  width: i === step ? 18 : 5, height: 5, borderRadius: 3,
-                  background: i === step ? '#1b78f7' : 'var(--c-border)',
-                  transition: 'all 0.25s', cursor: 'pointer',
+                  width: 8, height: 8, borderRadius: '50%', flexShrink: 0,
+                  border: `1px solid ${i <= step ? '#1b78f7' : 'var(--c-border)'}`,
+                  background: i <= step ? '#1b78f7' : 'transparent',
+                  boxShadow: i === step ? '0 0 0 3px rgba(27,120,247,0.18)' : 'none',
+                  padding: 0, cursor: 'pointer',
+                  transition: 'all 0.25s',
                 }}
               />
-            ))}
+              {i < STEPS.length - 1 && (
+                <div style={{ width: 1, flex: 1, minHeight: 28, marginTop: 6, background: i < step ? '#1b78f7' : 'var(--c-border)', transition: 'background 0.3s' }} />
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Right — content */}
+        <div style={{ flex: 1, padding: '28px 30px 26px', minWidth: 0 }}>
+          {/* Header row */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
+            <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--c-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              Guia rápido · {step + 1}/{STEPS.length}
+            </span>
+            <button
+              onClick={handleDone}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 5,
+                background: 'transparent', border: 'none',
+                color: 'var(--c-muted)', cursor: 'pointer',
+                fontSize: 13, fontFamily: 'inherit', padding: '4px 2px',
+                transition: 'color 0.15s',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.color = 'var(--c-text)' }}
+              onMouseLeave={e => { e.currentTarget.style.color = 'var(--c-muted)' }}
+            >
+              <X size={15} />
+              <span>Saltar</span>
+            </button>
           </div>
 
-          <button
-            onClick={next}
-            style={{
-              padding: '9px 20px',
-              background: '#1b78f7',
-              border: 'none', borderRadius: 10,
-              color: '#fff', fontSize: 13, fontWeight: 700,
-              cursor: 'pointer', fontFamily: 'inherit',
-              boxShadow: '0 4px 16px rgba(27,120,247,0.3)',
-              transition: 'opacity 0.15s',
-            }}
-            onMouseEnter={e => e.currentTarget.style.opacity = '0.9'}
-            onMouseLeave={e => e.currentTarget.style.opacity = '1'}
-          >
-            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              {isLast ? 'Começar' : 'Próximo'} <ChevronRight size={15} />
-            </span>
-          </button>
+          {/* Content — keyed by step so it animates in fresh each time */}
+          <div key={step} className="guide-step-content">
+            <h2 style={{ margin: '0 0 5px', fontSize: 20, fontWeight: 400, fontFamily: 'var(--font-heading)', color: 'var(--c-text)', letterSpacing: '-0.3px' }}>
+              {s.title}
+            </h2>
+            <p style={{ margin: 0, fontSize: 13.5, color: 'var(--c-muted)', lineHeight: 1.6 }}>
+              {s.desc}
+            </p>
+
+            <Demo play={true} onDone={() => {}} />
+          </div>
+
+          {/* Auto-advance progress bar — fills over STEP_DURATION, resets each step. Kept subtle on purpose. */}
+          <div key={`bar-${step}`} style={{ marginTop: 24, height: 2, background: 'transparent', borderRadius: 2, overflow: 'hidden' }}>
+            <div style={{ height: '100%', background: 'var(--c-border)', borderRadius: 2, animation: `guide-progress ${STEP_DURATION}ms linear forwards` }} />
+          </div>
         </div>
       </div>
     </>

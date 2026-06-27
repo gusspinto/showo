@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { Mail, GraduationCap, BookOpen, Search, Building2, ArrowLeft } from 'lucide-react'
 import AuthSidePanel from '../components/AuthSidePanel'
+import { useTheme } from '../context/ThemeContext'
 
 const C = {
   bg:          'var(--c-bg)',
@@ -20,34 +21,10 @@ const REGISTER_PHRASES = [
 ]
 
 const ROLES = [
-  {
-    id: 'aluno',
-    icon: <GraduationCap size={24} />,
-    label: 'Aluno',
-    desc: 'Estou a criar o meu projeto profissional',
-    color: '#1b78f7',
-  },
-  {
-    id: 'professor',
-    icon: <BookOpen size={24} />,
-    label: 'Professor',
-    desc: 'Acompanho e avalio projetos de alunos',
-    color: '#10b981',
-  },
-  {
-    id: 'recrutador',
-    icon: <Search size={24} />,
-    label: 'Recrutador',
-    desc: 'Procuro talentos e avalio candidatos',
-    color: '#8b5cf6',
-  },
-  {
-    id: 'empresa',
-    icon: <Building2 size={24} />,
-    label: 'Empresa',
-    desc: 'Somos uma empresa à procura de talento',
-    color: '#f59e0b',
-  },
+  { id: 'aluno',      icon: <GraduationCap size={22} />, label: 'Aluno',      color: '#1b78f7' },
+  { id: 'professor',  icon: <BookOpen size={22} />,      label: 'Professor',  color: '#10b981' },
+  { id: 'recrutador', icon: <Search size={22} />,        label: 'Recrutador', color: '#8b5cf6' },
+  { id: 'empresa',    icon: <Building2 size={22} />,     label: 'Empresa',    color: '#f59e0b' },
 ]
 
 function EyeIcon({ visible }) {
@@ -103,9 +80,12 @@ function Input({ type = 'text', value, onChange, placeholder, required }) {
 
 export default function Register() {
   const navigate = useNavigate()
+  const { theme } = useTheme()
   const [step, setStep] = useState('role') // 'role' | 'form'
   const [role, setRole] = useState('')
   const [name, setName] = useState('')
+  const [company, setCompany] = useState('')
+  const [school, setSchool] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -113,11 +93,16 @@ export default function Register() {
   const [error, setError] = useState('')
   const [done, setDone] = useState(false)
 
+  const needsCompany = role === 'recrutador' || role === 'empresa'
+  const needsSchool = role === 'professor'
+
   async function handleSubmit(e) {
     e.preventDefault()
     setError('')
 
     if (!name.trim()) { setError('Introduz o teu nome.'); return }
+    if (needsCompany && !company.trim()) { setError('Introduz o nome da empresa.'); return }
+    if (needsSchool && !school.trim()) { setError('Introduz o nome da escola.'); return }
     if (password.length < 6) { setError('A palavra-passe tem de ter pelo menos 6 caracteres.'); return }
     if (password !== confirmPassword) { setError('As palavras-passe não coincidem.'); return }
 
@@ -125,7 +110,11 @@ export default function Register() {
     const { error: err } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { full_name: name.trim(), role: role || 'aluno' } },
+      options: { data: {
+        full_name: name.trim(), role: role || 'aluno',
+        company: needsCompany ? company.trim() : null,
+        school: needsSchool ? school.trim() : null,
+      } },
     })
     setLoading(false)
     if (err) {
@@ -138,7 +127,6 @@ export default function Register() {
   }
 
   const selectedRole = ROLES.find(r => r.id === role)
-  const progressStep = done ? 2 : step === 'role' ? 1 : 2
 
   return (
     <div className="auth-shell">
@@ -180,37 +168,11 @@ export default function Register() {
           from { opacity: 0; transform: translateY(60%); }
           to   { opacity: 1; transform: translateY(0); }
         }
-        .auth-side-progress {
-          position: absolute; left: 64px; right: 56px; bottom: 48px;
-          display: flex; align-items: center; gap: 12px; z-index: 3;
-        }
-        .auth-side-progress-track {
-          position: relative; flex: 1; height: 3px; border-radius: 3px;
-          background: rgba(255,255,255,0.14); overflow: hidden;
-        }
-        .auth-side-progress-fill {
-          position: relative; height: 100%; border-radius: 3px;
-          background: linear-gradient(90deg, #0f5fd1, #4a93f9);
-          transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-          overflow: hidden;
-        }
-        .auth-side-progress-fill::after {
-          content: ''; position: absolute; inset: 0;
-          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.55), transparent);
-          width: 60%; animation: auth-progress-shimmer 1.6s ease-in-out infinite;
-        }
-        @keyframes auth-progress-shimmer {
-          0%   { transform: translateX(-100%); }
-          100% { transform: translateX(220%); }
-        }
-        .auth-side-progress-label {
-          font-size: 11px; font-weight: 600; letter-spacing: 0.5px;
-          color: rgba(255,255,255,0.55); flex-shrink: 0;
-        }
         .auth-main { flex: 1; display: flex; align-items: center; justify-content: center; padding: 24px 16px; }
         .auth-card { width: 100%; max-width: 420px; }
-        .auth-input {
-          flex: 1; width: 100%; background: transparent; border: none;
+        .auth-input,
+        body.light .auth-input {
+          flex: 1; width: 100%; background: transparent !important; border: none;
           color: var(--c-text); font-size: 16px; outline: none; font-family: inherit;
           padding: 10px 0; box-sizing: border-box;
         }
@@ -236,16 +198,13 @@ export default function Register() {
         @media (max-width: 350px) { .register-role-grid { grid-template-columns: 1fr !important; } }
       `}</style>
 
-      <AuthSidePanel
-        phrases={REGISTER_PHRASES}
-        step={progressStep} totalSteps={2}
-      />
+      <AuthSidePanel phrases={REGISTER_PHRASES} />
 
       <div className="auth-main">
         <div className="auth-card">
           <div className="auth-main-logo" style={{ marginBottom: 36 }}>
             <img
-              src="/icon_logo.png" alt="Showo"
+              src={theme === 'light' ? '/light_mode_LI.png' : '/icon_logo.png'} alt="Showo"
               style={{ height: 32, width: 'auto', cursor: 'pointer' }}
               onClick={() => navigate('/')}
             />
@@ -295,17 +254,12 @@ export default function Register() {
                       style={{
                         border: `1px solid ${selected ? r.color : C.border}`,
                         borderRadius: 8, padding: '16px 14px',
-                        display: 'flex', flexDirection: 'column', gap: 8,
+                        display: 'flex', alignItems: 'center', gap: 10,
                       }}
                     >
                       <span style={{ color: r.color, display: 'flex', alignItems: 'center' }}>{r.icon}</span>
-                      <div>
-                        <div style={{ fontSize: 14, fontWeight: 700, color: selected ? r.color : C.text, marginBottom: 3 }}>
-                          {r.label}
-                        </div>
-                        <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.4 }}>
-                          {r.desc}
-                        </div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: selected ? r.color : C.text }}>
+                        {r.label}
                       </div>
                     </div>
                   )
@@ -349,9 +303,19 @@ export default function Register() {
               <h1 style={{ color: C.text, fontSize: 22, fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 24px', letterSpacing: '-0.5px' }}>Os teus dados</h1>
 
               <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
-                <Field label="O teu nome">
+                <Field label={role === 'empresa' ? 'Nome do responsável' : 'O teu nome'}>
                   <Input value={name} onChange={e => setName(e.target.value)} placeholder="Ex: João Silva" required />
                 </Field>
+                {needsCompany && (
+                  <Field label="Nome da empresa">
+                    <Input value={company} onChange={e => setCompany(e.target.value)} placeholder="Ex: Google, NOS, Altice..." required />
+                  </Field>
+                )}
+                {needsSchool && (
+                  <Field label="Nome da escola">
+                    <Input value={school} onChange={e => setSchool(e.target.value)} placeholder="Ex: Escola Secundária de..." required />
+                  </Field>
+                )}
                 <Field label="Email">
                   <Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="tu@email.com" required />
                 </Field>
