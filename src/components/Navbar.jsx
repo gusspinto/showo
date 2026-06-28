@@ -352,7 +352,7 @@ function InviteInbox({ userId, sidebar = false, collapsed = false }) {
             className={sidebar ? '' : 'notif-drop'}
             style={{
               ...(sidebar
-                ? { position: 'fixed', left: collapsed ? 80 : 248, bottom: 16, transition: 'left 0.22s cubic-bezier(0.4,0,0.2,1)' }
+                ? { position: 'fixed', left: collapsed ? 80 : 248, bottom: 16, transition: 'left 0.25s cubic-bezier(0.22,1,0.36,1)' }
                 : { position: 'absolute', top: 'calc(100% + 8px)', right: 0 }
               ),
               background: 'var(--c-card)', border: `1px solid var(--c-border)`,
@@ -661,7 +661,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
 
   function handleSidebarEnter() {
     clearTimeout(expandTimer.current)
-    expandTimer.current = setTimeout(() => setExpanded(true), 2500)
+    expandTimer.current = setTimeout(() => setExpanded(true), 1000)
   }
   function handleSidebarLeave() {
     clearTimeout(expandTimer.current)
@@ -747,11 +747,38 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
           width: 232px;
           box-shadow: 6px 0 28px rgba(0,0,0,0.22);
         }
-        .sidebar.collapsed { width: 64px; }
+        .sidebar.collapsed { width: 64px; overflow: visible; }
         .sidebar.collapsed .sb-top-row { padding: 20px 0 16px; justify-content: center; }
         .sidebar.collapsed .sb-label { display: none; }
         .sidebar.collapsed .sb-item { justify-content: center; padding: 9px 0; }
         .sidebar.collapsed .sb-create { justify-content: center; padding: 9px 0; }
+        /* Let the project bump poke out past the sidebar's edge */
+        .sidebar.collapsed .sb-section { overflow: visible; }
+        .sb-project-bump-row {
+          display: flex; align-items: center;
+          margin: 10px 0 10px;
+          animation: sb-fade-slide-in 0.25s cubic-bezier(0.16,1,0.3,1) both;
+        }
+        .sb-project-bump-label {
+          writing-mode: vertical-rl; transform: rotate(180deg);
+          font-size: 9px; font-weight: 700; white-space: nowrap;
+          color: rgba(74,147,249,0.85); text-transform: uppercase; letter-spacing: 0.1em;
+          margin-right: 2px;
+        }
+        .sb-project-bump {
+          display: flex; flex-direction: column; align-items: center;
+          gap: 12px;
+          background: linear-gradient(160deg, #2f8bff, #1b78f7);
+          border-radius: 999px;
+          padding: 16px 11px;
+          margin-right: -22px;
+          box-shadow: 5px 4px 20px rgba(27,120,247,0.5), 0 0 0 1px rgba(255,255,255,0.08) inset;
+        }
+        .sb-project-bump .sb-item {
+          width: auto; padding: 0; color: #cfe2ff;
+          transition: color 0.15s, transform 0.15s;
+        }
+        .sb-project-bump .sb-item:hover { color: #fff; transform: scale(1.12); }
         .sb-top-row {
           display: flex; align-items: center; justify-content: space-between;
           padding: 14px 10px 14px 16px;
@@ -1554,25 +1581,50 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
           )}
 
           {/* Project controls — immediately after nav, no gap */}
-          {extras?.type === 'project' && (
+          {extras?.type === 'project' && (collapsed ? (
+            /* Collapsed: phone-style bump poking out of the rail, label rotated beside it */
+            <div className="sb-project-bump-row">
+              <span className="sb-project-bump-label">Gerir projeto</span>
+              <div className="sb-project-bump">
+                {extras.showBack && (
+                  <button className="sb-item" title="Ver projeto" onClick={() => navigate(`/projeto/${extras.slug}`)}><ArrowLeft size={16} /></button>
+                )}
+                {!extras.showBack && (
+                  <button className="sb-item" title="Editar" onClick={() => navigate(`/editar/${extras.slug}`)}><Pencil size={16} /></button>
+                )}
+                {extras.onDefense && (
+                  <button className="sb-item" title="Modo defesa" onClick={extras.onDefense}><GraduationCap size={16} /></button>
+                )}
+                {extras.onAnalyze && (
+                  <button className="sb-item" title="Análise IA" onClick={extras.onAnalyze} disabled={extras.analyzingAI} style={{ opacity: extras.analyzingAI ? 0.6 : 1 }}><Sparkles size={16} /></button>
+                )}
+                {extras.showCertificate && (
+                  <button className="sb-item" title="Certificado" onClick={() => navigate(`/certificado/${extras.slug}`)}><Trophy size={16} /></button>
+                )}
+                {extras.onTogglePublicView && (
+                  <button className="sb-item" title={extras.viewAsPublic ? 'Sair da preview' : 'Preview visitante'} onClick={extras.onTogglePublicView}><Globe size={16} /></button>
+                )}
+              </div>
+            </div>
+          ) : (
             <div className="sb-project-section">
               {/* Back to project (shown when on sub-page like edit/cert) */}
               {extras.showBack && (
                 <button className="sb-item" onClick={() => navigate(`/projeto/${extras.slug}`)}>
-                  <ArrowLeft size={16} />{!collapsed && <span>Ver projeto</span>}
+                  <ArrowLeft size={16} /><span>Ver projeto</span>
                 </button>
               )}
-              {!collapsed && <span className="sb-label">Gerir projeto</span>}
+              <span className="sb-label">Gerir projeto</span>
               {!extras.showBack && (
                 <button className="sb-item" onClick={() => navigate(`/editar/${extras.slug}`)}>
-                  <Pencil size={16} />{!collapsed && <span>Editar</span>}
+                  <Pencil size={16} /><span>Editar</span>
                 </button>
               )}
               {extras.onDefense && (
                 <button className="sb-item" onClick={extras.onDefense}>
                   <GraduationCap size={16} />
-                  {!collapsed && <span>Modo defesa</span>}
-                  {!collapsed && extras.defenseDate && (
+                  <span>Modo defesa</span>
+                  {extras.defenseDate && (
                     <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--c-muted)', fontWeight: 500 }}>
                       {new Date(extras.defenseDate).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' })}
                     </span>
@@ -1587,8 +1639,8 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   style={{ opacity: extras.analyzingAI ? 0.6 : 1 }}
                 >
                   <Sparkles size={16} />
-                  {!collapsed && (extras.analyzingAI ? 'A analisar…' : extras.aiScore != null ? 'Ver análise IA' : 'Análise IA')}
-                  {!collapsed && extras.aiScore != null && !extras.analyzingAI && (
+                  {extras.analyzingAI ? 'A analisar…' : extras.aiScore != null ? 'Ver análise IA' : 'Análise IA'}
+                  {extras.aiScore != null && !extras.analyzingAI && (
                     <span style={{
                       marginLeft: 'auto', fontSize: 11, fontWeight: 700,
                       color: extras.aiScore >= 90 ? '#22c55e' : extras.aiScore >= 71 ? '#1b78f7' : extras.aiScore >= 40 ? '#fbbf24' : '#ef4444',
@@ -1600,7 +1652,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               )}
               {extras.showCertificate && (
                 <button className="sb-item" onClick={() => navigate(`/certificado/${extras.slug}`)}>
-                  <Trophy size={16} />{!collapsed && <span>Certificado</span>}
+                  <Trophy size={16} /><span>Certificado</span>
                 </button>
               )}
               {extras.onTogglePublicView && (
@@ -1610,11 +1662,11 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   style={{ color: extras.viewAsPublic ? C.blue : 'var(--c-muted)' }}
                 >
                   <Globe size={16} />
-                  {!collapsed && <span>{extras.viewAsPublic ? 'Sair da preview' : 'Preview visitante'}</span>}
+                  <span>{extras.viewAsPublic ? 'Sair da preview' : 'Preview visitante'}</span>
                 </button>
               )}
             </div>
-          )}
+          ))}
         </div>
 
         <div className="sb-divider" />
