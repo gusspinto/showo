@@ -7,6 +7,12 @@ import { ThemeProvider } from './context/ThemeContext'
 import { SidebarProvider } from './context/SidebarContext'
 import RestReminder from './components/RestReminder'
 import SplashScreen from './components/SplashScreen'
+import ComingSoon from './pages/ComingSoon'
+
+// Shows the "coming soon" cover only on the public domain, so testers can
+// keep using the .vercel.app URL to access the real app until launch day.
+// Remove this check on 1 de julho to bring the real app live on showo.pt too.
+const COMING_SOON_HOSTS = ['showo.pt', 'www.showo.pt']
 
 // Eagerly loaded — visible on first paint
 import Home from './pages/Home'
@@ -226,6 +232,8 @@ function AuthErrorBanner() {
 }
 
 export default function App() {
+  if (COMING_SOON_HOSTS.includes(window.location.hostname)) return <ComingSoon />
+
   // Skip splash on repeat visits — only show it the first time
   const firstVisit = !localStorage.getItem(SPLASH_KEY)
   const [splashVisible,  setSplashVisible]  = useState(firstVisit)
