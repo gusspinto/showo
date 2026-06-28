@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { Mail, GraduationCap, BookOpen, Search, Building2, ArrowLeft } from 'lucide-react'
+import { GraduationCap, BookOpen, Search, Building2, ArrowLeft } from 'lucide-react'
 import AuthSidePanel from '../components/AuthSidePanel'
 import { useTheme } from '../context/ThemeContext'
 
@@ -22,9 +22,9 @@ const REGISTER_PHRASES = [
 
 const ROLES = [
   { id: 'aluno',      icon: <GraduationCap size={22} />, label: 'Aluno',      color: '#1b78f7' },
-  { id: 'professor',  icon: <BookOpen size={22} />,      label: 'Professor',  color: '#10b981' },
-  { id: 'recrutador', icon: <Search size={22} />,        label: 'Recrutador', color: '#8b5cf6' },
-  { id: 'empresa',    icon: <Building2 size={22} />,     label: 'Empresa',    color: '#f59e0b' },
+  { id: 'professor',  icon: <BookOpen size={22} />,      label: 'Professor',  color: '#10b981', disabled: true },
+  { id: 'recrutador', icon: <Search size={22} />,        label: 'Recrutador', color: '#8b5cf6', disabled: true },
+  { id: 'empresa',    icon: <Building2 size={22} />,     label: 'Empresa',    color: '#f59e0b', disabled: true },
 ]
 
 function EyeIcon({ visible }) {
@@ -91,7 +91,6 @@ export default function Register() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [done, setDone] = useState(false)
 
   const needsCompany = role === 'recrutador' || role === 'empresa'
   const needsSchool = role === 'professor'
@@ -107,7 +106,7 @@ export default function Register() {
     if (password !== confirmPassword) { setError('As palavras-passe não coincidem.'); return }
 
     setLoading(true)
-    const { error: err } = await supabase.auth.signUp({
+    const { data, error: err } = await supabase.auth.signUp({
       email,
       password,
       options: { data: {
@@ -116,14 +115,20 @@ export default function Register() {
         school: needsSchool ? school.trim() : null,
       } },
     })
-    setLoading(false)
     if (err) {
+      setLoading(false)
       setError(err.message === 'User already registered'
         ? 'Este email já está registado. Tenta entrar.'
         : 'Algo correu mal. Tenta novamente.')
       return
     }
-    setDone(true)
+    // No email confirmation step — if signUp didn't already return a session
+    // (confirmations enabled on the project), sign in straight away.
+    if (!data?.session) {
+      await supabase.auth.signInWithPassword({ email, password })
+    }
+    setLoading(false)
+    navigate('/dashboard')
   }
 
   const selectedRole = ROLES.find(r => r.id === role)
@@ -210,34 +215,7 @@ export default function Register() {
             />
           </div>
 
-          {done ? (
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'center' }}><Mail size={48} color={C.blue} /></div>
-              <h2 style={{ color: C.text, fontSize: 22, fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 10px', letterSpacing: '-0.5px' }}>
-                Confirma o teu email
-              </h2>
-              <p style={{ color: C.muted, fontSize: 15, lineHeight: 1.65, margin: '0 0 8px' }}>
-                Enviámos um email para
-              </p>
-              <p style={{ color: C.text, fontSize: 15, fontWeight: 600, margin: '0 0 16px' }}>{email}</p>
-              <p style={{ color: C.muted, fontSize: 14, lineHeight: 1.65, margin: '0 0 28px' }}>
-                Abre o link no email para ativar a tua conta. Verifica também a pasta de spam.
-              </p>
-              <button
-                onClick={() => navigate('/login')}
-                className="auth-submit"
-                style={{
-                  background: '#1b78f7',
-                  border: 'none', borderRadius: 8, padding: '12px 28px',
-                  color: '#fff', fontSize: 14, fontWeight: 700,
-                  cursor: 'pointer', fontFamily: 'inherit',
-                }}
-              >
-                Ir para o login
-              </button>
-            </div>
-
-          ) : step === 'role' ? (
+          {step === 'role' ? (
             /* ── STEP 1: escolha de tipo de conta ── */
             <>
               <h1 style={{ color: C.text, fontSize: 26, fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 6px', letterSpacing: '-0.5px' }}>Criar conta</h1>
@@ -250,17 +228,31 @@ export default function Register() {
                     <div
                       key={r.id}
                       className="role-card"
-                      onClick={() => setRole(r.id)}
+                      onClick={() => { if (!r.disabled) setRole(r.id) }}
                       style={{
                         border: `1px solid ${selected ? r.color : C.border}`,
                         borderRadius: 8, padding: '16px 14px',
                         display: 'flex', alignItems: 'center', gap: 10,
+                        opacity: r.disabled ? 0.5 : 1,
+                        cursor: r.disabled ? 'default' : 'pointer',
+                        position: 'relative',
                       }}
                     >
                       <span style={{ color: r.color, display: 'flex', alignItems: 'center' }}>{r.icon}</span>
                       <div style={{ fontSize: 14, fontWeight: 700, color: selected ? r.color : C.text }}>
                         {r.label}
                       </div>
+                      {r.disabled && (
+                        <span style={{
+                          position: 'absolute', top: 6, right: 6,
+                          fontSize: 8.5, fontWeight: 700, color: C.muted,
+                          background: 'var(--c-bg-alt)', border: `1px solid ${C.border}`,
+                          borderRadius: 4, padding: '2px 5px',
+                          textTransform: 'uppercase', letterSpacing: '0.04em',
+                        }}>
+                          Em fase de testes
+                        </span>
+                      )}
                     </div>
                   )
                 })}
@@ -348,12 +340,10 @@ export default function Register() {
             </>
           )}
 
-          {!done && (
-            <p style={{ textAlign: 'center', color: C.muted, fontSize: 14, marginTop: 24 }}>
-              Já tens conta?{' '}
-              <Link to="/login" style={{ color: C.blue, textDecoration: 'none', fontWeight: 500 }}>Entrar</Link>
-            </p>
-          )}
+          <p style={{ textAlign: 'center', color: C.muted, fontSize: 14, marginTop: 24 }}>
+            Já tens conta?{' '}
+            <Link to="/login" style={{ color: C.blue, textDecoration: 'none', fontWeight: 500 }}>Entrar</Link>
+          </p>
         </div>
       </div>
     </div>

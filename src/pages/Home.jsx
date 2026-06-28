@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, memo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Globe, Bot, GraduationCap, Trophy, Briefcase, ArrowRight, Zap, ChevronDown } from 'lucide-react'
+import { Globe, Bot, GraduationCap, Trophy, Briefcase, ArrowRight, Zap, ChevronDown, BookOpen, Search, Building2 } from 'lucide-react'
 import { Navbar } from '../components/Navbar'
 import { supabase } from '../lib/supabase'
 import Onboarding from '../components/Onboarding'
@@ -31,41 +31,124 @@ function StaticHero() {
       fontFamily: 'var(--font-heading)',
       textAlign: 'center',
     }}>
-      A tua carreira merece mais{' '}
-      do que um <em style={{ fontStyle: 'italic', color: '#1b78f7', whiteSpace: 'nowrap' }}>CV vazio.</em>
+      Um documento não define{' '}
+      <em style={{ fontStyle: 'italic', color: '#1b78f7', whiteSpace: 'nowrap' }}>a tua carreira.</em>
     </h1>
   )
 }
 
-const ROLE_PHRASES = [
-  { verb: 'Cria',       role: 'aluno' },
-  { verb: 'Ajuda',      role: 'professor' },
-  { verb: 'Procura',    role: 'recrutador' },
-  { verb: 'Abre vagas', role: 'empresa' },
+// ── Hero aurora — soft drifting gradient blobs, purely ambient, never sits
+// in front of content (z-index 0, blurred, low opacity). ──
+function HeroAurora({ theme }) {
+  const light = theme === 'light'
+  return (
+    <div aria-hidden="true" style={{ position: 'absolute', inset: 0, zIndex: 0, overflow: 'hidden', pointerEvents: 'none' }}>
+      <div className="hero-aurora-blob" style={{
+        position: 'absolute', width: 620, height: 620, borderRadius: '50%',
+        top: '-12%', left: '8%', background: '#1b78f7',
+        opacity: light ? 0.14 : 0.22, filter: 'blur(110px)',
+        animation: 'aurora-drift-1 16s ease-in-out infinite alternate',
+      }} />
+      <div className="hero-aurora-blob" style={{
+        position: 'absolute', width: 540, height: 540, borderRadius: '50%',
+        top: '18%', right: '4%', background: '#0d3a96',
+        opacity: light ? 0.10 : 0.20, filter: 'blur(110px)',
+        animation: 'aurora-drift-2 20s ease-in-out infinite alternate',
+      }} />
+      <div className="hero-aurora-blob" style={{
+        position: 'absolute', width: 420, height: 420, borderRadius: '50%',
+        bottom: '-8%', left: '38%', background: '#5e93ff',
+        opacity: light ? 0.09 : 0.15, filter: 'blur(100px)',
+        animation: 'aurora-drift-3 18s ease-in-out infinite alternate',
+      }} />
+    </div>
+  )
+}
+
+// ── Roles panel — second horizontal slide, reached by swiping/clicking the peek tab ──
+const ROLE_CARDS = [
+  { Icon: GraduationCap, label: 'Aluno',      color: '#1b78f7', desc: 'Mostra os teus projetos escolares numa página profissional.' },
+  { Icon: BookOpen,      label: 'Professor',  color: '#10b981', desc: 'Acompanha as turmas e o progresso dos teus alunos.' },
+  { Icon: Search,        label: 'Recrutador', color: '#8b5cf6', desc: 'Encontra talento real através de projetos, não só CVs.' },
+  { Icon: Building2,     label: 'Empresa',    color: '#f59e0b', desc: 'Publica vagas e estágios para quem já mostra trabalho.' },
 ]
 
-function RoleCycler() {
+const ROLE_PHRASES = [
+  { lead: 'Mostra o teu trabalho como',    role: 'aluno',      color: '#1b78f7' },
+  { lead: 'Acompanha as tuas turmas como', role: 'professor',  color: '#10b981' },
+  { lead: 'Encontra talento como',         role: 'recrutador', color: '#8b5cf6' },
+  { lead: 'Publica vagas como',            role: 'empresa',    color: '#f59e0b' },
+]
+
+function RoleCyclerHeadline() {
   const [idx, setIdx] = useState(0)
 
   useEffect(() => {
-    const id = setInterval(() => setIdx(i => (i + 1) % ROLE_PHRASES.length), 2600)
+    const id = setInterval(() => setIdx(i => (i + 1) % ROLE_PHRASES.length), 2900)
     return () => clearInterval(id)
   }, [])
 
   const current = ROLE_PHRASES[idx]
 
   return (
-    <p className="hero-role-phrase" style={{
-      fontSize: 14, color: colors.muted, fontWeight: 600,
-      margin: '64px 0 0', textAlign: 'center',
+    <h2 className="roles-cycle-phrase" style={{
+      fontSize: 'clamp(24px, 3.4vw, 36px)', fontWeight: 400, fontFamily: 'var(--font-heading)',
+      color: colors.text, margin: '0 0 40px', textAlign: 'center', letterSpacing: '-0.5px',
     }}>
-      {current.verb}{' '}
-      <span className="hero-role-highlight" key={idx}>
+      {current.lead}{' '}
+      <span className="roles-cycle-highlight" key={idx} style={{ background: current.color }}>
         {current.role.split('').map((ch, i) => (
-          <span key={i} className="hero-role-letter" style={{ animationDelay: `${i * 0.03}s` }}>{ch}</span>
+          <span key={i} className="roles-cycle-letter" style={{ animationDelay: `${i * 0.03}s` }}>{ch}</span>
         ))}
       </span>
-    </p>
+    </h2>
+  )
+}
+
+function RolesPanel({ onBack }) {
+  return (
+    <div style={{
+      flex: '0 0 100%', minWidth: '100%', scrollSnapAlign: 'start',
+      minHeight: 'calc(100vh - 60px)', display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'center', padding: '64px 32px',
+      position: 'relative', overflow: 'hidden',
+    }}>
+      <button
+        onClick={onBack}
+        className="hero-peek-tab hero-peek-tab-left"
+        title="Voltar ao início"
+      >
+        <ChevronDown size={17} style={{ transform: 'rotate(90deg)' }} />
+        <span>Início</span>
+      </button>
+
+      <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+        <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: colors.muted, marginBottom: 14 }}>
+          Para quem é a Showo
+        </span>
+        <RoleCyclerHeadline />
+        <div className="roles-card-stack" style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 560, width: '100%' }}>
+          {ROLE_CARDS.map(r => (
+            <div key={r.label} className="roles-id-card" style={{
+              background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 14,
+              padding: '18px 22px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 18,
+              borderLeft: `3px solid ${r.color}`,
+            }}>
+              <div style={{
+                width: 48, height: 48, borderRadius: 12, background: `${r.color}1f`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+              }}>
+                <r.Icon size={24} color={r.color} />
+              </div>
+              <div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: r.color, marginBottom: 3 }}>{r.label}</div>
+                <p style={{ fontSize: 13, color: colors.muted, lineHeight: 1.5, margin: 0 }}>{r.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -280,7 +363,14 @@ export default function Home() {
   const goalsRowRef = useRef(null)
   const pillRefs = useRef({})
   const prevGoalRef = useRef(null)
+  const heroTrackRef = useRef(null)
   const [pillHighlight, setPillHighlight] = useState({ left: 0, width: 0, top: 0, height: 0, opacity: 0, moving: false })
+
+  function scrollToHeroSlide(index) {
+    const track = heroTrackRef.current
+    if (!track) return
+    track.scrollTo({ left: index * track.clientWidth, behavior: 'smooth' })
+  }
 
   useEffect(() => {
     const container = goalsRowRef.current
@@ -368,25 +458,63 @@ export default function Home() {
           0%, 100% { opacity: 0.3; }
           50%       { opacity: 0.6; }
         }
+        @keyframes hero-obj-float {
+          from { transform: translateY(0); }
+          to   { transform: translateY(-16px); }
+        }
         @keyframes hero-bounce {
           0%, 100% { transform: translateY(0); }
           50%      { transform: translateY(5px); }
         }
-        .hero-role-phrase { animation: hero-role-fade 0.5s ease; }
-        @keyframes hero-role-fade {
+        @keyframes aurora-drift-1 { from { transform: translate(0,0) scale(1); } to { transform: translate(40px,30px) scale(1.12); } }
+        @keyframes aurora-drift-2 { from { transform: translate(0,0) scale(1); } to { transform: translate(-35px,25px) scale(1.08); } }
+        @keyframes aurora-drift-3 { from { transform: translate(0,0) scale(1); } to { transform: translate(20px,-20px) scale(1.1); } }
+        .hero-track {
+          display: flex; width: 100%;
+          overflow-x: auto; scroll-snap-type: x mandatory;
+          scroll-behavior: smooth;
+          scrollbar-width: none;
+        }
+        .hero-track::-webkit-scrollbar { display: none; }
+        /* Peek tab — vertical glass pill, sits flush against the hero edge */
+        .hero-peek-tab {
+          position: absolute; top: 50%; transform: translateY(-50%);
+          width: 38px; height: 116px; border-radius: 19px; border: 1px solid var(--c-border-bright);
+          cursor: pointer; background: var(--c-card);
+          backdrop-filter: blur(8px);
+          color: var(--c-muted); display: flex; flex-direction: column; align-items: center;
+          justify-content: center; gap: 10px; padding: 14px 0;
+          z-index: 2; box-shadow: 0 8px 24px -8px rgba(0,0,0,0.25);
+          transition: border-color 0.18s, color 0.18s, box-shadow 0.18s;
+        }
+        .hero-peek-tab span {
+          writing-mode: vertical-rl; font-size: 11px; font-weight: 700;
+          letter-spacing: 0.1em; text-transform: uppercase;
+        }
+        .hero-peek-tab:hover {
+          border-color: #1b78f7; color: #1b78f7;
+          box-shadow: 0 10px 28px -6px rgba(27,120,247,0.35);
+        }
+        .hero-peek-tab-right { right: 14px; }
+        .hero-peek-tab-left  { left: 14px; }
+        .hero-peek-tab-left span { transform: rotate(180deg); }
+        @media (max-width: 700px) {
+          .hero-peek-tab { display: none; }
+        }
+        .roles-cycle-phrase { animation: roles-cycle-fade 0.5s ease; }
+        @keyframes roles-cycle-fade {
           from { opacity: 0; transform: translateY(6px); }
           to   { opacity: 1; transform: translateY(0); }
         }
-        .hero-role-highlight {
-          background: #1b78f7; color: #fff;
-          padding: 2px 9px 5px; border-radius: 0 0 10px 10px;
+        .roles-cycle-highlight {
+          color: #fff; padding: 2px 11px 6px; border-radius: 0 0 12px 12px;
           display: inline-block;
         }
-        .hero-role-letter {
+        .roles-cycle-letter {
           display: inline-block;
-          animation: hero-role-letter-rise 0.4s ease both;
+          animation: roles-cycle-letter-rise 0.4s ease both;
         }
-        @keyframes hero-role-letter-rise {
+        @keyframes roles-cycle-letter-rise {
           from { opacity: 0; transform: translateY(60%); }
           to   { opacity: 1; transform: translateY(0); }
         }
@@ -455,14 +583,18 @@ export default function Home() {
       </Navbar>
 
       {/* Hero */}
-      <div style={{ position: 'relative', borderBottom: `1px solid ${colors.border}` }}>
+      <div style={{ position: 'relative', borderBottom: `1px solid ${colors.border}`, overflow: 'hidden' }}>
+      <HeroAurora theme={theme} />
+      <div className="hero-track" ref={heroTrackRef}>
+        <div style={{ flex: '0 0 100%', minWidth: '100%', scrollSnapAlign: 'start', position: 'relative' }}>
         <div className="hero-section hero-inner" style={{
+          position: 'relative', zIndex: 1,
           minHeight: 'calc(100vh - 60px)',
           maxWidth: 1140, margin: '0 auto',
           padding: '140px 32px 64px',
           display: 'flex', flexDirection: 'column', alignItems: 'center',
           justifyContent: 'center',
-          textAlign: 'center', position: 'relative',
+          textAlign: 'center',
         }}>
           <div className="hero-badge" style={{
             display: 'flex', alignItems: 'center', gap: 8,
@@ -481,8 +613,7 @@ export default function Home() {
             margin: '0 auto 72px', fontWeight: 400, maxWidth: 580,
             textAlign: 'center',
           }}>
-            Cria uma página profissional do teu projeto em 10 minutos.<br />
-            Partilha o link com <span style={{ whiteSpace: 'nowrap' }}>qualquer empresa.</span>
+            Cria uma página profissional em pouco tempo.
           </p>
 
           {/* Widget */}
@@ -564,19 +695,32 @@ export default function Home() {
             )}
           </form>
 
-          {/* Para quem é o Showo */}
-          <RoleCycler />
-
-          {/* Scroll cue — purely visual, no label */}
+          {/* Scroll cue — purely visual, transparent, doubles as the "more below" hint */}
           <div className="hero-scroll-cue" style={{
-            position: 'absolute', left: '50%', bottom: 28, transform: 'translateX(-50%)',
-            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
-            opacity: 0.4, pointerEvents: 'none',
+            position: 'absolute', left: '50%', bottom: 26, transform: 'translateX(-50%)',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+            opacity: 0.42, pointerEvents: 'none',
           }}>
+            <span style={{
+              fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase',
+              color: colors.subtle, whiteSpace: 'nowrap',
+            }}>Mais sobre a Showo</span>
             <ChevronDown size={14} color={colors.subtle} style={{ animation: 'hero-bounce 1.8s ease-in-out infinite' }} />
-            <ChevronDown size={14} color={colors.subtle} style={{ animation: 'hero-bounce 1.8s ease-in-out infinite 0.15s', marginTop: -8 }} />
           </div>
         </div>
+
+        <button
+          className="hero-peek-tab hero-peek-tab-right"
+          onClick={() => scrollToHeroSlide(1)}
+          title="Para quem é a Showo"
+        >
+          <ChevronDown size={17} style={{ transform: 'rotate(-90deg)' }} />
+          <span>Perfis</span>
+        </button>
+        </div>
+
+        <RolesPanel theme={theme} onBack={() => scrollToHeroSlide(0)} />
+      </div>
       </div>
 
       {/* Social proof strip */}

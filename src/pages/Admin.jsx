@@ -180,7 +180,9 @@ function OverviewTab({ users, projects }) {
 }
 
 // ─── USERS TAB ──────────────────────────────────────────────
-function UsersTab({ users, projects, onToggleAdmin, onDeleteUser }) {
+const ROLE_LABELS = { aluno: 'Aluno', professor: 'Professor', recrutador: 'Recrutador', empresa: 'Empresa' }
+
+function UsersTab({ users, projects, onToggleAdmin, onDeleteUser, onChangeRole, onResetPassword }) {
   const [search, setSearch] = useState('')
   const [confirm, setConfirm] = useState(null)
 
@@ -200,17 +202,30 @@ function UsersTab({ users, projects, onToggleAdmin, onDeleteUser }) {
     <div>
       {confirm && (
         <ConfirmModal
-          title={confirm.type === 'delete' ? 'Eliminar utilizador?' : confirm.type === 'makeAdmin' ? 'Tornar administrador?' : 'Revogar administrador?'}
-          body={confirm.type === 'delete'
+          title={
+            confirm.type === 'delete' ? 'Eliminar utilizador?' :
+            confirm.type === 'makeAdmin' ? 'Tornar administrador?' :
+            confirm.type === 'changeRole' ? 'Trocar cargo?' :
+            confirm.type === 'resetPassword' ? 'Enviar reset de password?' :
+            'Revogar administrador?'
+          }
+          body={
+            confirm.type === 'delete'
             ? `Vais eliminar permanentemente a conta de "${confirm.user.full_name || confirm.user.username}". Esta ação não pode ser desfeita.`
             : confirm.type === 'makeAdmin'
             ? `"${confirm.user.full_name || confirm.user.username}" terá acesso total ao painel de administração.`
+            : confirm.type === 'changeRole'
+            ? `O cargo de "${confirm.user.full_name || confirm.user.username}" passa de ${ROLE_LABELS[confirm.user.role] || confirm.user.role} para ${ROLE_LABELS[confirm.newRole]}.`
+            : confirm.type === 'resetPassword'
+            ? `Vai ser enviado um email de reset de password para ${confirm.user.email}.`
             : `Revogar os privilégios de admin de "${confirm.user.full_name || confirm.user.username}"?`
           }
           danger={confirm.type === 'delete'}
           onCancel={() => setConfirm(null)}
           onConfirm={() => {
             if (confirm.type === 'delete') onDeleteUser(confirm.user.id)
+            else if (confirm.type === 'changeRole') onChangeRole(confirm.user.id, confirm.newRole)
+            else if (confirm.type === 'resetPassword') onResetPassword(confirm.user.email)
             else onToggleAdmin(confirm.user.id, confirm.type === 'makeAdmin')
             setConfirm(null)
           }}
@@ -267,7 +282,18 @@ function UsersTab({ users, projects, onToggleAdmin, onDeleteUser }) {
                   <div>registo</div>
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+              <div style={{ display: 'flex', gap: 8, flexShrink: 0, flexWrap: 'wrap', alignItems: 'center' }}>
+                <select
+                  value={u.role || 'aluno'}
+                  onChange={e => setConfirm({ type: 'changeRole', user: u, newRole: e.target.value })}
+                  style={{ background: C.bgAlt, border: `1px solid ${C.border}`, color: C.text, borderRadius: 7, padding: '6px 8px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+                >
+                  {Object.entries(ROLE_LABELS).map(([id, label]) => <option key={id} value={id}>{label}</option>)}
+                </select>
+                <button
+                  onClick={() => setConfirm({ type: 'resetPassword', user: u })}
+                  style={{ background: 'transparent', border: `1px solid ${C.border}`, color: C.muted, borderRadius: 7, padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+                >Reset password</button>
                 {u.is_admin ? (
                   <button
                     onClick={() => setConfirm({ type: 'revokeAdmin', user: u })}
@@ -449,6 +475,21 @@ export default function Admin() {
     setUsers(prev => prev.map(u => u.id === userId ? { ...u, is_admin: makeAdmin } : u))
   }
 
+  async function handleChangeRole(userId, newRole) {
+    const { error } = await supabase.rpc('admin_set_user_role', { target_user_id: userId, new_role: newRole })
+    if (error) { showToast('Erro ao trocar cargo: ' + error.message); return }
+    showToast('Cargo atualizado')
+    setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u))
+  }
+
+  async function handleResetPassword(email) {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/login`,
+    })
+    if (error) { showToast('Erro ao enviar reset: ' + error.message); return }
+    showToast('Email de reset enviado')
+  }
+
   async function handleDeleteUser(userId) {
     const { error } = await supabase.rpc('admin_delete_user', { target_user_id: userId })
     if (error) { showToast('Erro ao eliminar utilizador: ' + error.message); return }
@@ -541,6 +582,8 @@ export default function Admin() {
                 projects={projects}
                 onToggleAdmin={handleToggleAdmin}
                 onDeleteUser={handleDeleteUser}
+                onChangeRole={handleChangeRole}
+                onResetPassword={handleResetPassword}
               />
             )}
             {tab === 'projects' && (
