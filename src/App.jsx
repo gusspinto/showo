@@ -9,10 +9,25 @@ import RestReminder from './components/RestReminder'
 import SplashScreen from './components/SplashScreen'
 import ComingSoon from './pages/ComingSoon'
 
-// Shows the "coming soon" cover only on the public domain, so testers can
-// keep using the .vercel.app URL to access the real app until launch day.
-// Remove this check on 1 de julho to bring the real app live on showo.pt too.
+// Shows the "coming soon" cover only on the public domain, and only before
+// launch — so testers can keep using the .vercel.app URL meanwhile, and
+// showo.pt flips to the real app on its own at launch time, no deploy needed.
 const COMING_SOON_HOSTS = ['showo.pt', 'www.showo.pt']
+const LAUNCH_AT = new Date('2026-07-01T08:00:00Z') // 09:00 em Lisboa (WEST)
+
+function useIsComingSoon() {
+  const [isComingSoon, setIsComingSoon] = useState(
+    () => COMING_SOON_HOSTS.includes(window.location.hostname) && new Date() < LAUNCH_AT
+  )
+  useEffect(() => {
+    if (!isComingSoon) return
+    const id = setInterval(() => {
+      if (new Date() >= LAUNCH_AT) setIsComingSoon(false)
+    }, 30_000)
+    return () => clearInterval(id)
+  }, [isComingSoon])
+  return isComingSoon
+}
 
 // Eagerly loaded — visible on first paint
 import Home from './pages/Home'
@@ -232,7 +247,7 @@ function AuthErrorBanner() {
 }
 
 export default function App() {
-  if (COMING_SOON_HOSTS.includes(window.location.hostname)) return <ComingSoon />
+  if (useIsComingSoon()) return <ComingSoon />
 
   // Skip splash on repeat visits — only show it the first time
   const firstVisit = !localStorage.getItem(SPLASH_KEY)
