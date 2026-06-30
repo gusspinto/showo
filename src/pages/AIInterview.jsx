@@ -248,7 +248,7 @@ export default function AIInterview() {
     try {
       // Merge description + interview answers into project fields
       const formData = {
-        name:            finalAnswers.name            || deriveNameFromDescription(description),
+        name:            pickProjectName(finalAnswers.name, description),
         area:            finalAnswers.area            || guessArea(description, projectType),
         goal:            description                  || '',
         problem:         finalAnswers.problem         || '',
@@ -330,6 +330,16 @@ export default function AIInterview() {
     if (!cleaned) return 'Projeto sem nome'
     const short = cleaned.split(' ').slice(0, 6).join(' ').slice(0, 48).trim()
     return short.charAt(0).toUpperCase() + short.slice(1)
+  }
+
+  // Some interviews ask a "name" question loosely enough that the user answers
+  // with a full sentence/tagline instead of a short title — clamp it down to a
+  // real title instead of saving the whole sentence as the project name.
+  function pickProjectName(rawName, desc) {
+    const trimmed = (rawName || '').trim()
+    const looksLikeTitle = trimmed && trimmed.split(' ').length <= 6 && trimmed.length <= 42
+    if (looksLikeTitle) return trimmed
+    return deriveNameFromDescription(trimmed || desc)
   }
 
   const progress = questions.length > 0

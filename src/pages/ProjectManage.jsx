@@ -386,11 +386,26 @@ function PreviewSection({ project }) {
             O editor de preview permite personalizar a aparência da tua página pública — blocos de conteúdo, cores, tipografia e rodapé.
           </p>
 
-          {project?.cover_url && (
-            <div style={{ marginBottom: 20, borderRadius: 12, overflow: 'hidden', border: `1px solid ${C.border}` }}>
+          <div style={{ position: 'relative', marginBottom: 20, borderRadius: 12, overflow: 'hidden', border: `1px solid ${C.border}` }}>
+            {project?.cover_url ? (
               <img src={project.cover_url} alt="" style={{ width: '100%', height: 140, objectFit: 'cover', display: 'block' }} />
-            </div>
-          )}
+            ) : (
+              <div style={{ width: '100%', height: 140, background: 'var(--c-bg-alt)' }} />
+            )}
+            {project?.score != null && (
+              <div style={{
+                position: 'absolute', top: 10, right: 10,
+                display: 'flex', alignItems: 'center', gap: 6,
+                background: 'rgba(5,9,18,0.65)', backdropFilter: 'blur(6px)',
+                border: '1px solid rgba(255,255,255,0.15)', borderRadius: 999,
+                padding: '5px 12px 5px 9px',
+              }}>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: getScoreColor(project.score) }} />
+                <span style={{ fontSize: 13, fontWeight: 800, color: '#fff' }}>{project.score}</span>
+                <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)' }}>score</span>
+              </div>
+            )}
+          </div>
 
           {/* Feature list */}
           {[

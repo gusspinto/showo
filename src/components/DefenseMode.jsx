@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
-import { Hand, Search, Lightbulb, Settings, Wrench, Trophy, BookOpen, Mic, GraduationCap, Check, X, Smartphone, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react'
+import { Hand, Search, Lightbulb, Settings, Wrench, Trophy, BookOpen, Mic, GraduationCap, Check, X, Smartphone, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, ArrowRight, Eye, EyeOff, SlidersHorizontal } from 'lucide-react'
 
 const C = {
   bg: 'var(--c-bg)',
@@ -255,16 +255,131 @@ function hasContent(project, id) {
   return !!map[id]
 }
 
-// Estimated minutes per section
+// Estimated minutes per section (defaults — overridable per project via guide_config.times)
 const SECTION_TIMES = { cover: 1, problem: 2, solution: 2, features: 3, technologies: 2, results: 2, learnings: 2, closing: 1 }
 
+// Applies a project's guide_config (custom order, hidden sections, custom minutes)
+// on top of the sections that actually have content. Falls back to the default
+// order/visibility/timing when no config has been saved yet.
+function buildSections(project) {
+  const available = SECTIONS.filter(s => hasContent(project, s.id))
+  const config = project.guide_config
+  if (!config) return available
+
+  const hidden = new Set(config.hidden || [])
+  const byId = Object.fromEntries(available.map(s => [s.id, s]))
+  const order = (config.order || []).filter(id => byId[id] && !hidden.has(id))
+  // Any newly-content-filled section not yet present in the saved order goes at the end
+  const remaining = available.filter(s => !order.includes(s.id) && !hidden.has(s.id))
+  return [...order.map(id => byId[id]), ...remaining]
+}
+
+function sectionMinutes(project, id) {
+  return project.guide_config?.times?.[id] || SECTION_TIMES[id] || 2
+}
+
+// Same as buildSections but keeps hidden sections in the list (flagged) so the
+// editor can show + re-enable them instead of dropping them entirely.
+function editorRows(project) {
+  const available = SECTIONS.filter(s => hasContent(project, s.id))
+  const config = project.guide_config
+  const hidden = new Set(config?.hidden || [])
+  const byId = Object.fromEntries(available.map(s => [s.id, s]))
+  const orderIds = (config?.order || []).filter(id => byId[id])
+  const remaining = available.filter(s => !orderIds.includes(s.id)).map(s => s.id)
+  return [...orderIds, ...remaining].map(id => ({
+    ...byId[id], hidden: hidden.has(id), mins: config?.times?.[id] || SECTION_TIMES[id] || 2,
+  }))
+}
+
+function GuideEditor({ project, onSave }) {
+  const [rows, setRows]     = useState(() => editorRows(project))
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved]   = useState(false)
+
+  function move(i, dir) {
+    setRows(r => {
+      const next = [...r]
+      const j = i + dir
+      if (j < 0 || j >= next.length) return r
+      ;[next[i], next[j]] = [next[j], next[i]]
+      return next
+    })
+  }
+  function toggleHidden(i) {
+    setRows(r => r.map((row, idx) => idx === i ? { ...row, hidden: !row.hidden } : row))
+  }
+  function setMins(i, val) {
+    const n = Math.max(1, Math.min(15, Number(val) || 1))
+    setRows(r => r.map((row, idx) => idx === i ? { ...row, mins: n } : row))
+  }
+
+  async function handleSave() {
+    setSaving(true)
+    await onSave({
+      order: rows.map(r => r.id),
+      hidden: rows.filter(r => r.hidden).map(r => r.id),
+      times: Object.fromEntries(rows.map(r => [r.id, r.mins])),
+    })
+    setSaving(false)
+    setSaved(true)
+    setTimeout(() => setSaved(false), 2000)
+  }
+
+  return (
+    <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: '16px 18px', marginBottom: 20, animation: 'fadeIn 0.2s ease-out' }}>
+      <p style={{ margin: '0 0 4px', fontSize: 12, fontWeight: 700, color: C.subtle, textTransform: 'uppercase', letterSpacing: 1 }}>
+        Personalizar secções
+      </p>
+      <p style={{ margin: '0 0 14px', fontSize: 12, color: C.subtle }}>
+        Reordena, esconde secções ou ajusta o tempo estimado de cada uma.
+      </p>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        {rows.map((row, i) => (
+          <div key={row.id} style={{
+            display: 'flex', alignItems: 'center', gap: 8,
+            padding: '8px 10px', borderRadius: 10,
+            background: row.hidden ? 'transparent' : 'var(--c-bg-alt)',
+            opacity: row.hidden ? 0.5 : 1,
+            transition: 'opacity 0.15s, background 0.15s',
+          }}>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <button onClick={() => move(i, -1)} disabled={i === 0} style={{ background: 'none', border: 'none', color: C.subtle, cursor: i === 0 ? 'default' : 'pointer', padding: 1, opacity: i === 0 ? 0.3 : 1 }}><ChevronUp size={13} /></button>
+              <button onClick={() => move(i, 1)} disabled={i === rows.length - 1} style={{ background: 'none', border: 'none', color: C.subtle, cursor: i === rows.length - 1 ? 'default' : 'pointer', padding: 1, opacity: i === rows.length - 1 ? 0.3 : 1 }}><ChevronDown size={13} /></button>
+            </div>
+            <row.Icon size={15} color={row.hidden ? C.subtle : row.accent} style={{ flexShrink: 0 }} />
+            <span style={{ flex: 1, fontSize: 13, fontWeight: 600, color: row.hidden ? C.subtle : C.text }}>{row.label}</span>
+            <input
+              type="number" min={1} max={15} value={row.mins}
+              onChange={e => setMins(i, e.target.value)}
+              style={{ width: 40, background: 'var(--c-bg)', border: `1px solid ${C.border}`, borderRadius: 6, color: C.text, fontSize: 12, padding: '4px 2px', textAlign: 'center', fontFamily: 'inherit' }}
+            />
+            <span style={{ fontSize: 11, color: C.subtle }}>min</span>
+            <button onClick={() => toggleHidden(i)} title={row.hidden ? 'Mostrar secção' : 'Esconder secção'} style={{ background: 'none', border: 'none', color: row.hidden ? C.subtle : C.blue, cursor: 'pointer', display: 'flex', padding: 4, borderRadius: 6 }}>
+              {row.hidden ? <EyeOff size={15} /> : <Eye size={15} />}
+            </button>
+          </div>
+        ))}
+      </div>
+      <button
+        onClick={handleSave}
+        disabled={saving}
+        className="dm-cta-btn"
+        style={{ marginTop: 14, width: '100%', padding: '10px 0', background: saved ? 'rgba(34,197,94,0.12)' : '#1b78f7', border: saved ? '1px solid rgba(34,197,94,0.3)' : 'none', borderRadius: 10, color: saved ? C.green : '#fff', fontSize: 13, fontWeight: 700, cursor: saving ? 'default' : 'pointer', fontFamily: 'inherit' }}
+      >
+        {saving ? 'A guardar...' : saved ? 'Guardado' : 'Guardar personalização'}
+      </button>
+    </div>
+  )
+}
+
 function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose, collaboratorSections, studentName }) {
-  const allSections = SECTIONS.filter(s => hasContent(project, s.id))
+  const allSections = buildSections(project)
   // If collaboratorSections is set (non-owner), only show assigned sections
   const sections = collaboratorSections?.length > 0
     ? allSections.filter(s => collaboratorSections.includes(s.id))
     : allSections
-  const totalMins = sections.reduce((acc, s) => acc + (SECTION_TIMES[s.id] || 2), 0)
+  const totalMins = sections.reduce((acc, s) => acc + sectionMinutes(project, s.id), 0)
 
   const [started, setStarted]     = useState(false)
   const [finished, setFinished]   = useState(false)
@@ -329,7 +444,7 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
 
   const checkedCount = keyPoints.filter((_, i) => checked[`${section?.id}_${i}`]).length
   const allChecked   = keyPoints.length > 0 && checkedCount === keyPoints.length
-  const sectionMins  = SECTION_TIMES[section?.id] || 2
+  const sectionMins  = section ? sectionMinutes(project, section.id) : 2
 
   // ── Finished / celebration screen ────────────────────────────────────────
   if (finished) {
@@ -963,6 +1078,14 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
   const [loadingAI, setLoadingAI] = useState(false)
   const [aiError, setAiError]     = useState(false)
   const [guideMode, setGuideMode] = useState(false)
+  const [guideConfig, setGuideConfig] = useState(project.guide_config || null)
+  const [showGuideEditor, setShowGuideEditor] = useState(false)
+  const effectiveProject = { ...project, guide_config: guideConfig }
+
+  async function saveGuideConfig(next) {
+    setGuideConfig(next)
+    await supabase.from('projects').update({ guide_config: next }).eq('id', project.id)
+  }
 
   useEffect(() => {
     if (!canSeeFullPrep) return
@@ -989,7 +1112,7 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
 
   if (guideMode) return (
     <PresenterGuide
-      project={project}
+      project={effectiveProject}
       aiData={aiData}
       loadingAI={loadingAI}
       aiError={aiError}
@@ -1066,6 +1189,27 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
           {tab === 'grupo' && isOwner && <GrupoPanel project={project} />}
           {tab === 'guide' && (
             <div>
+              {isOwner && (
+                <button
+                  onClick={() => setShowGuideEditor(s => !s)}
+                  className="dm-ghost-btn"
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 7,
+                    background: showGuideEditor ? 'rgba(27,120,247,0.1)' : 'var(--c-bg-alt)',
+                    border: `1px solid ${showGuideEditor ? 'rgba(27,120,247,0.3)' : C.border}`,
+                    borderRadius: 9, padding: '8px 14px', marginBottom: 16,
+                    color: showGuideEditor ? C.blue : C.muted, fontSize: 13, fontWeight: 600,
+                    cursor: 'pointer', fontFamily: 'inherit',
+                  }}
+                >
+                  <SlidersHorizontal size={14} /> Personalizar secções
+                </button>
+              )}
+
+              {showGuideEditor && isOwner && (
+                <GuideEditor project={effectiveProject} onSave={saveGuideConfig} />
+              )}
+
               {/* Preview card — bold blue glass, matching the hero's treatment */}
               <div style={{
                 position: 'relative', overflow: 'hidden',

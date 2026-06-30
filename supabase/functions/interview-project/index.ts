@@ -58,15 +58,18 @@ REGRAS CRÍTICAS:
 - Máximo 6 perguntas, mínimo 5
 - NÃO perguntes o que já está claramente na descrição — usa isso como contexto, não volta a perguntar
 - Cada pergunta deve ser diferente das outras — sem sobreposições
+- O campo "name" tem de pedir um TÍTULO CURTO (2-5 palavras) — nunca uma frase ou descrição. Ex: "Como é que se chama o projeto, num nome curto?"
 - Suggestions devem ser específicas ao projeto descrito, não genéricas
-- Para o campo "technologies": sugere tecnologias relevantes à descrição
+- Para o campo "technologies": sugere tecnologias relevantes à descrição. Se o estudante claramente não é técnico (ex: projeto de gestão, marketing, design sem código), substitui esta pergunta por "ferramentas" (ex: Canva, Excel, Figma) em vez de tecnologia de programação
 - Para PAP: inclui obrigatoriamente escola/curso e orientador
 - Para estágio: inclui obrigatoriamente empresa e o que aprendeu
 - Para competição: inclui obrigatoriamente nome da competição e resultado/classificação
 - O campo "field" deve mapear para campos reais do projeto
 - "school" e "course" podem ser combinados numa só pergunta com field="school"
 - "pap_supervisor" → field="pap_supervisor"
-- Suggestions podem estar vazias ([]) se não houver sugestões óbvias`
+- Suggestions podem estar vazias ([]) se não houver sugestões óbvias
+- TOM HUMANO: escreve cada "question" como um colega curioso perguntaria, nunca como um formulário. Evita jargão técnico nas perguntas em si (mesmo que o campo seja técnico) — explica em palavras simples o que queres saber
+- Para estudantes que parecem ter pouca certeza ou pouco conteúdo na descrição (descrição curta, vaga ou genérica), adapta as perguntas para serem mais guiadas e concretas: em vez de "Que tecnologias usaste?" pergunta algo como "O que usaste para construir isto — apps, programas, materiais? Não tens de saber o nome técnico, descreve por palavras tuas." O objetivo é nunca deixar o estudante sem saber o que responder`
 
     const msg = await client.messages.create({
       model: 'claude-haiku-4-5-20251001',
