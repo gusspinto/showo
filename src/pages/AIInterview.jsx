@@ -248,7 +248,7 @@ export default function AIInterview() {
     try {
       // Merge description + interview answers into project fields
       const formData = {
-        name:            finalAnswers.name            || '',
+        name:            finalAnswers.name            || deriveNameFromDescription(description),
         area:            finalAnswers.area            || guessArea(description, projectType),
         goal:            description                  || '',
         problem:         finalAnswers.problem         || '',
@@ -320,6 +320,16 @@ export default function AIInterview() {
     if (type === 'pap') return 'Júri de avaliação, professores, futuros empregadores'
     if (type === 'internship') return 'Equipa de desenvolvimento, gestores de projeto'
     return ''
+  }
+
+  // The dynamic AI interview doesn't always ask for a project name explicitly —
+  // fall back to a short title derived from the original description so a
+  // project is never saved nameless.
+  function deriveNameFromDescription(desc) {
+    const cleaned = (desc || '').trim().replace(/\s+/g, ' ')
+    if (!cleaned) return 'Projeto sem nome'
+    const short = cleaned.split(' ').slice(0, 6).join(' ').slice(0, 48).trim()
+    return short.charAt(0).toUpperCase() + short.slice(1)
   }
 
   const progress = questions.length > 0

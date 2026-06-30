@@ -340,7 +340,14 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
 
     return (
       <div style={{ position: 'fixed', inset: 0, zIndex: 10000, background: 'var(--c-bg)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit', color: C.text, padding: 32, textAlign: 'center' }}>
-        <style>{`@keyframes pop{0%{transform:scale(0.5);opacity:0}60%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}} @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}`}</style>
+        <style>{`
+          @keyframes pop{0%{transform:scale(0.5);opacity:0}60%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}}
+          @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+          .dm-cta-btn { transition: filter 0.15s, opacity 0.15s; }
+          .dm-cta-btn:hover { filter: brightness(1.08); }
+          .dm-ghost-btn { transition: background 0.15s, border-color 0.15s, color 0.15s; }
+          .dm-ghost-btn:hover { background: var(--c-card-hover); border-color: var(--c-border-bright); color: var(--c-text); }
+        `}</style>
 
         <div style={{ marginBottom: 4, animation: 'pop 0.5s ease-out' }}><GraduationCap size={80} color={C.blue} /></div>
         <h2 style={{ fontSize: 28, fontWeight: 800, margin: '16px 0 8px', letterSpacing: '-0.5px', animation: 'fadeUp 0.4s 0.2s ease-out both' }}>
@@ -367,12 +374,14 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%', maxWidth: 320, animation: 'fadeUp 0.4s 0.6s ease-out both' }}>
           <button
             onClick={() => { setFinished(false); setTimer(0); setTimerOn(false); setCurrent(0); setChecked({}); setShowNote(false) }}
+            className="dm-cta-btn"
             style={{ padding: '14px 0', background: '#1b78f7', border: 'none', borderRadius: 14, color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 6px 24px rgba(27,120,247,0.35)' }}
           >
             Recomeçar do início
           </button>
           <button
             onClick={onClose}
+            className="dm-ghost-btn"
             style={{ padding: '14px 0', background: 'transparent', border: '1px solid var(--c-border)', borderRadius: 14, color: C.muted, fontSize: 15, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
           >
             Fechar
@@ -387,7 +396,15 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
     const juryCount = aiData?.jury_questions?.length ?? 0
     return (
       <div style={{ position: 'fixed', inset: 0, zIndex: 10000, background: 'var(--c-bg)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit', color: C.text, padding: 24 }}>
-        <style>{`@keyframes spin{to{transform:rotate(360deg)}} @keyframes pop{0%{transform:scale(0.92)}60%{transform:scale(1.04)}100%{transform:scale(1)}} @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}`}</style>
+        <style>{`
+          @keyframes spin{to{transform:rotate(360deg)}}
+          @keyframes pop{0%{transform:scale(0.92)}60%{transform:scale(1.04)}100%{transform:scale(1)}}
+          @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+          .dm-cta-btn { transition: filter 0.15s, opacity 0.15s; }
+          .dm-cta-btn:hover { filter: brightness(1.08); }
+          .dm-ghost-btn { transition: background 0.15s, border-color 0.15s, color 0.15s; }
+          .dm-ghost-btn:hover { background: var(--c-card-hover); border-color: var(--c-border-bright); color: var(--c-text); }
+        `}</style>
 
         <div style={{ maxWidth: 360, width: '100%', textAlign: 'center', animation: 'fadeUp 0.3s ease-out' }}>
           {/* Icon */}
@@ -431,6 +448,7 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
 
           <button
             onClick={() => { setStarted(true); setTimerOn(true) }}
+            className="dm-cta-btn"
             style={{
               width: '100%', padding: '16px 0',
               background: '#1b78f7',
@@ -443,7 +461,7 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
             Começar apresentação <ArrowRight size={16} style={{ verticalAlign: 'middle', marginLeft: 4 }} />
           </button>
 
-          <button onClick={onClose} style={{ marginTop: 14, background: 'none', border: 'none', color: C.subtle, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>
+          <button onClick={onClose} className="dm-ghost-btn" style={{ marginTop: 14, background: 'none', border: 'none', borderRadius: 8, padding: '6px 10px', color: C.subtle, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>
             Voltar atrás
           </button>
         </div>
@@ -458,7 +476,14 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}} @keyframes pop{0%{transform:scale(0.92)}60%{transform:scale(1.04)}100%{transform:scale(1)}}`}</style>
+      <style>{`
+        @keyframes spin{to{transform:rotate(360deg)}}
+        @keyframes pop{0%{transform:scale(0.92)}60%{transform:scale(1.04)}100%{transform:scale(1)}}
+        .dm-cta-btn { transition: filter 0.15s, opacity 0.15s; }
+        .dm-cta-btn:hover { filter: brightness(1.08); }
+        .dm-ghost-btn { transition: background 0.15s, border-color 0.15s, color 0.15s; }
+        .dm-ghost-btn:hover:not(:disabled) { background: var(--c-card-hover); border-color: var(--c-border-bright); color: var(--c-text); }
+      `}</style>
 
       {/* Top bar */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 20px', borderBottom: '1px solid var(--c-border)', flexShrink: 0, background: 'var(--c-card)' }}>
@@ -480,7 +505,7 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
             />
           ))}
         </div>
-        <button onClick={onClose} style={{ background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)', borderRadius: 8, padding: '6px 10px', color: C.subtle, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={16} /></button>
+        <button onClick={onClose} className="dm-ghost-btn" style={{ background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)', borderRadius: 8, padding: '6px 10px', color: C.subtle, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={16} /></button>
       </div>
 
       {/* Section header */}
@@ -608,6 +633,7 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
         <button
           onClick={prev}
           disabled={current === 0}
+          className="dm-ghost-btn"
           style={{ flex: 1, padding: '16px 0', background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)', borderRadius: 14, color: current === 0 ? 'var(--c-border)' : C.muted, fontSize: 20, cursor: current === 0 ? 'default' : 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
         ><ChevronLeft size={20} /></button>
         <button
@@ -615,6 +641,7 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
             if (current === sections.length - 1) { setTimerOn(false); setFinished(true) }
             else next()
           }}
+          className="dm-cta-btn"
           style={{ flex: 3, padding: '16px 0', background: `linear-gradient(135deg, ${current === sections.length - 1 ? '#22c55e, #16a34a' : `${accent}, ${accent}bb`})`, border: 'none', borderRadius: 14, color: '#fff', fontSize: 16, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: `0 4px 20px ${current === sections.length - 1 ? 'rgba(34,197,94,0.4)' : accent + '44'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
         >
           {current === sections.length - 1
@@ -986,7 +1013,7 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
     >
       <style>{`@keyframes spin{to{transform:rotate(360deg)}} @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}`}</style>
 
-      <div style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 20, width: '100%', maxWidth: 720, maxHeight: '90vh', display: 'flex', flexDirection: 'column', boxShadow: '0 32px 80px rgba(0,0,0,0.7)', animation: 'fadeIn 0.2s ease-out' }}>
+      <div style={{ background: 'var(--c-card)', backdropFilter: 'blur(20px)', border: '1px solid var(--c-border)', borderRadius: 22, width: '100%', maxWidth: 720, maxHeight: '90vh', display: 'flex', flexDirection: 'column', boxShadow: '0 32px 80px rgba(0,0,0,0.7)', animation: 'fadeIn 0.2s ease-out' }}>
 
         {/* Header */}
         <div style={{ padding: '22px 28px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
@@ -994,8 +1021,17 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
             <h2 style={{ margin: '0 0 2px', fontSize: 18, fontWeight: 800, color: C.text }}>Preparar defesa</h2>
             <p style={{ margin: 0, fontSize: 13, color: C.subtle }}>{project.name}</p>
           </div>
-          <button onClick={onClose} style={{ background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)', borderRadius: 8, padding: '7px 10px', color: C.muted, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={18} /></button>
+          <button
+            onClick={onClose}
+            className="dm-icon-btn"
+            style={{ background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)', borderRadius: 8, padding: '7px 10px', color: C.muted, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.15s, color 0.15s, border-color 0.15s' }}
+          ><X size={18} /></button>
         </div>
+
+        <style>{`
+          .dm-icon-btn:hover { background: var(--c-card-hover) !important; color: var(--c-text) !important; border-color: var(--c-border-bright) !important; }
+          .dm-tab-btn:hover:not(.active) { color: var(--c-text) !important; border-color: var(--c-border-bright) !important; }
+        `}</style>
 
         {/* Tabs */}
         <div style={{ display: 'flex', gap: 4, padding: '16px 28px 0', flexShrink: 0 }}>
@@ -1003,6 +1039,7 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
+              className={`dm-tab-btn${tab === t.id ? ' active' : ''}`}
               style={{
                 background: tab === t.id ? 'rgba(27,120,247,0.12)' : 'transparent',
                 border: `1px solid ${tab === t.id ? 'rgba(27,120,247,0.35)' : C.border}`,
@@ -1029,31 +1066,47 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
           {tab === 'grupo' && isOwner && <GrupoPanel project={project} />}
           {tab === 'guide' && (
             <div>
-              {/* Preview card */}
-              <div style={{ background: 'linear-gradient(135deg, rgba(27,120,247,0.08), rgba(79,70,229,0.06))', border: '1px solid rgba(27,120,247,0.2)', borderRadius: 16, padding: '22px 24px', marginBottom: 20 }}>
-                <div style={{ marginBottom: 10 }}><Smartphone size={28} color={C.blue} /></div>
-                <h3 style={{ margin: '0 0 8px', fontSize: 16, fontWeight: 800, color: C.text }}>Guia do Apresentador</h3>
-                <p style={{ margin: '0 0 16px', fontSize: 14, color: C.muted, lineHeight: 1.6 }}>
-                  Um guia no telemóvel enquanto apresentas no Canva ou PowerPoint. Acompanha as tuas secções, faz check dos pontos-chave e consulta o que dizer se ficares em branco.
-                </p>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
-                  {['Pontos-chave interativos', 'Nota completa por secção', 'Temporizador', 'Navegação por swipe'].map(f => (
-                    <span key={f} style={{ background: 'rgba(27,120,247,0.08)', border: '1px solid rgba(27,120,247,0.18)', borderRadius: 6, padding: '4px 10px', fontSize: 12, color: C.blue }}>{f}</span>
-                  ))}
+              {/* Preview card — bold blue glass, matching the hero's treatment */}
+              <div style={{
+                position: 'relative', overflow: 'hidden',
+                background: 'linear-gradient(135deg, #1454c2 0%, #1b78f7 55%, #2f8bff 100%)',
+                border: '1px solid rgba(255,255,255,0.18)', borderRadius: 20,
+                padding: '24px 26px', marginBottom: 20, color: '#fff',
+              }}>
+                <div aria-hidden="true" style={{
+                  position: 'absolute', inset: 0, pointerEvents: 'none',
+                  background: 'radial-gradient(60% 60% at 85% 0%, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0) 70%)',
+                }} />
+                <div style={{ position: 'relative' }}>
+                  <div style={{
+                    width: 48, height: 48, borderRadius: 14, marginBottom: 14,
+                    background: 'rgba(255,255,255,0.16)', border: '1px solid rgba(255,255,255,0.25)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}><Smartphone size={24} color="#fff" /></div>
+                  <h3 style={{ margin: '0 0 8px', fontSize: 17, fontWeight: 800, color: '#fff' }}>Guia do Apresentador</h3>
+                  <p style={{ margin: '0 0 16px', fontSize: 14, color: 'rgba(255,255,255,0.85)', lineHeight: 1.6 }}>
+                    Um guia no telemóvel enquanto apresentas no Canva ou PowerPoint. Acompanha as tuas secções, faz check dos pontos-chave e consulta o que dizer se ficares em branco.
+                  </p>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
+                    {['Pontos-chave interativos', 'Nota completa por secção', 'Temporizador', 'Navegação por swipe'].map(f => (
+                      <span key={f} style={{ background: 'rgba(255,255,255,0.14)', backdropFilter: 'blur(6px)', border: '1px solid rgba(255,255,255,0.28)', borderRadius: 999, padding: '5px 12px', fontSize: 12, fontWeight: 600, color: '#fff' }}>{f}</span>
+                    ))}
+                  </div>
+                  <button
+                    onClick={() => setGuideMode(true)}
+                    className="dm-cta-btn"
+                    style={{
+                      width: '100%', padding: '14px 0',
+                      background: '#fff',
+                      border: 'none', borderRadius: 12,
+                      color: '#0d3a96', fontSize: 15, fontWeight: 700,
+                      cursor: 'pointer', fontFamily: 'inherit',
+                      boxShadow: '0 8px 28px rgba(0,0,0,0.25)',
+                    }}
+                  >
+                    <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}>Abrir guia <ArrowRight size={15} /></span>
+                  </button>
                 </div>
-                <button
-                  onClick={() => setGuideMode(true)}
-                  style={{
-                    width: '100%', padding: '14px 0',
-                    background: '#1b78f7',
-                    border: 'none', borderRadius: 12,
-                    color: '#fff', fontSize: 15, fontWeight: 700,
-                    cursor: 'pointer', fontFamily: 'inherit',
-                    boxShadow: '0 6px 24px rgba(27,120,247,0.35)',
-                  }}
-                >
-                  <span style={{ display: 'flex', alignItems: 'center', gap: 7 }}>Abrir guia <ArrowRight size={15} /></span>
-                </button>
               </div>
 
               <p style={{ fontSize: 12, color: C.subtle, textAlign: 'center', margin: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>

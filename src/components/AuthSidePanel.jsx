@@ -13,6 +13,18 @@ export default function AuthSidePanel({ phrases }) {
 
   return (
     <div className="auth-side">
+      <style>{`
+        @keyframes auth-aurora-pulse { 0%, 100% { opacity: 0.85; } 50% { opacity: 1; } }
+        .auth-side-aurora { animation: auth-aurora-pulse 9s ease-in-out infinite; will-change: opacity; }
+      `}</style>
+      <div aria-hidden="true" className="auth-side-aurora" style={{
+        position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none',
+        background: `
+          radial-gradient(48% 44% at 18% 14%, rgba(27,120,247,0.30) 0%, rgba(27,120,247,0) 70%),
+          radial-gradient(42% 40% at 88% 30%, rgba(13,58,150,0.24) 0%, rgba(13,58,150,0) 70%),
+          radial-gradient(40% 38% at 42% 92%, rgba(94,147,255,0.16) 0%, rgba(94,147,255,0) 70%)
+        `,
+      }} />
       <div className="auth-side-content">
         <img src="/icon_light.png" alt="Showo" className="auth-side-mark" />
         <p className="auth-side-phrase" key={idx}>

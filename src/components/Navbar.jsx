@@ -658,6 +658,12 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
   const [expanded, setExpanded] = useState(false)
   const collapsed = !expanded
   const expandTimer = useRef(null)
+  // Labels mount only once the width transition has settled, so the
+  // (text-heavy, reflow-heavy) expanded layout is never computed mid-animation —
+  // during the transition itself the sidebar stays icon-only, which is cheap to
+  // resize every frame. This is what keeps the hover-expand butter-smooth.
+  const [showLabels, setShowLabels] = useState(false)
+  const labelTimer = useRef(null)
 
   function handleSidebarEnter() {
     clearTimeout(expandTimer.current)
@@ -665,9 +671,17 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
   }
   function handleSidebarLeave() {
     clearTimeout(expandTimer.current)
+    clearTimeout(labelTimer.current)
     setExpanded(false)
+    setShowLabels(false)
   }
-  useEffect(() => () => clearTimeout(expandTimer.current), [])
+  useEffect(() => {
+    clearTimeout(labelTimer.current)
+    if (expanded) labelTimer.current = setTimeout(() => setShowLabels(true), 260)
+    else setShowLabels(false)
+    return () => clearTimeout(labelTimer.current)
+  }, [expanded])
+  useEffect(() => () => { clearTimeout(expandTimer.current); clearTimeout(labelTimer.current) }, [])
 
   useEffect(() => {
     document.body.classList.add('sidebar-collapsed')
@@ -738,17 +752,26 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
           flex-direction: column;
           padding: 0;
           z-index: 100;
-          overflow: hidden;
-          contain: layout;
-          will-change: width, box-shadow;
-          transition: width 0.25s cubic-bezier(0.22,1,0.36,1), box-shadow 0.25s cubic-bezier(0.22,1,0.36,1);
+          overflow: visible;
+          contain: layout style;
+          will-change: width;
+          transform: translateZ(0);
+          backface-visibility: hidden;
+          transition: width 0.22s cubic-bezier(0.4,0,0.2,1);
         }
-        .sidebar:not(.collapsed) {
-          width: 232px;
+        .sidebar:not(.collapsed) .sb-item > span,
+        .sidebar:not(.collapsed) .sb-label {
+          animation: sb-fade-slide-in 0.18s ease both;
+        }
+        .sidebar::after {
+          content: ''; position: absolute; inset: 0; pointer-events: none;
           box-shadow: 6px 0 28px rgba(0,0,0,0.22);
+          opacity: 0; transition: opacity 0.25s cubic-bezier(0.22,1,0.36,1);
         }
-        .sidebar.collapsed { width: 64px; overflow: visible; }
-        .sidebar.collapsed .sb-top-row { padding: 20px 0 16px; justify-content: center; }
+        .sidebar:not(.collapsed)::after { opacity: 1; }
+        .sidebar:not(.collapsed) { width: 232px; }
+        .sidebar.collapsed { width: 64px; }
+        .sidebar.collapsed .sb-top-row { justify-content: center; }
         .sidebar.collapsed .sb-label { display: none; }
         .sidebar.collapsed .sb-item { justify-content: center; padding: 9px 0; }
         .sidebar.collapsed .sb-create { justify-content: center; padding: 9px 0; }
@@ -781,7 +804,8 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
         .sb-project-bump .sb-item:hover { color: #fff; transform: scale(1.12); }
         .sb-top-row {
           display: flex; align-items: center; justify-content: space-between;
-          padding: 14px 10px 14px 16px;
+          height: 56px; box-sizing: border-box;
+          padding: 0 10px 0 16px;
         }
         .sb-logo {
           display: flex; align-items: center;
@@ -1441,7 +1465,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
       >
         {/* Logo */}
         {collapsed ? (
-          <div className="sb-top-row" style={{ padding: '12px 0 8px' }}>
+          <div className="sb-top-row" style={{ padding: 0 }}>
             <button className="sb-logo" onClick={() => navigate(user ? '/dashboard' : '/')} title="Showo">
               <img src="/icon.png" alt="Showo" style={{ height: 18, width: 18, objectFit: 'contain' }} />
             </button>
@@ -1461,34 +1485,34 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
             /* ── RECRUITER / EMPRESA sidebar ── */
             <>
               <button className={`sb-item${isActive('/dashboard') ? ' active' : ''}`} onClick={() => navigate('/dashboard')}>
-                <LayoutDashboard size={16} />{!collapsed && <span>Dashboard</span>}
+                <LayoutDashboard size={16} />{!collapsed && showLabels && <span>Dashboard</span>}
               </button>
 
               <div className="sb-divider" style={{ margin: '8px 0 4px' }} />
-              {!collapsed && <span className="sb-label">Recrutamento</span>}
+              {!collapsed && showLabels && <span className="sb-label">Recrutamento</span>}
 
               <button className={`sb-item${location.pathname === '/explorar' && new URLSearchParams(location.search).get('tab') === 'pessoas' ? ' active' : ''}`}
                 onClick={() => navigate('/explorar?tab=pessoas')}
                 style={{ color: isActive('/explorar') && new URLSearchParams(location.search).get('tab') === 'pessoas' ? recruiterAccent : undefined }}>
-                <Users2 size={16} />{!collapsed && <span>Candidatos</span>}
+                <Users2 size={16} />{!collapsed && showLabels && <span>Candidatos</span>}
               </button>
 
               <button className={`sb-item${isActive('/vagas') ? ' active' : ''}`} onClick={() => navigate('/vagas')}>
-                <Briefcase size={16} />{!collapsed && <span>Vagas</span>}
+                <Briefcase size={16} />{!collapsed && showLabels && <span>Vagas</span>}
               </button>
 
               <button className={`sb-item${isActive('/pipeline') ? ' active' : ''}`} onClick={() => navigate('/pipeline')}>
-                <Kanban size={16} />{!collapsed && <span>Pipeline</span>}
+                <Kanban size={16} />{!collapsed && showLabels && <span>Pipeline</span>}
               </button>
 
               <button className={`sb-item${isActive('/candidatos') ? ' active' : ''}`} onClick={() => navigate('/candidatos')}>
-                <Star size={16} />{!collapsed && <span>Guardados</span>}
+                <Star size={16} />{!collapsed && showLabels && <span>Guardados</span>}
               </button>
 
               <button className={`sb-item${isActive('/mensagens') ? ' active' : ''}`} onClick={() => navigate('/mensagens')}
                 style={{ position: 'relative' }}>
-                <MessageSquare size={16} />{!collapsed && <span>Mensagens</span>}
-                {!collapsed && unreadMsgs > 0 && (
+                <MessageSquare size={16} />{!collapsed && showLabels && <span>Mensagens</span>}
+                {!collapsed && showLabels && unreadMsgs > 0 && (
                   <span style={{ marginLeft: 'auto', background: '#1b78f7', color: '#fff', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>
                     {unreadMsgs > 9 ? '9+' : unreadMsgs}
                   </span>
@@ -1498,23 +1522,23 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               {user && (
                 <button className={`sb-item${location.pathname === `/empresa/${user.id}` ? ' active' : ''}`}
                   onClick={() => navigate(`/empresa/${user.id}`)}>
-                  <Building2 size={16} />{!collapsed && <span>Minha empresa</span>}
+                  <Building2 size={16} />{!collapsed && showLabels && <span>Minha empresa</span>}
                 </button>
               )}
 
               <div className="sb-divider" style={{ margin: '8px 0 4px' }} />
-              {!collapsed && <span className="sb-label">Explorar</span>}
+              {!collapsed && showLabels && <span className="sb-label">Explorar</span>}
 
               <button className={`sb-item${isActive('/explorar') && !new URLSearchParams(location.search).get('tab') ? ' active' : ''}`}
                 onClick={() => navigate('/explorar')}>
-                <Compass size={16} />{!collapsed && <span>Projetos</span>}
+                <Compass size={16} />{!collapsed && showLabels && <span>Projetos</span>}
               </button>
 
               {/* New vaga button */}
               <div style={{ margin: '10px 0 4px', padding: '0 0' }}>
                 <button onClick={() => navigate('/vagas')}
                   style={{ display: 'flex', alignItems: 'center', justifyContent: collapsed ? 'center' : 'flex-start', gap: 8, margin: '10px 0 4px', padding: collapsed ? '10px 0' : '10px 14px', background: `linear-gradient(135deg, ${recruiterAccent}, #4f46e5)`, border: 'none', borderRadius: 10, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: `0 2px 14px ${recruiterAccent}44`, width: '100%' }}>
-                  <Plus size={14} />{!collapsed && <span>Nova vaga</span>}
+                  <Plus size={14} />{!collapsed && showLabels && <span>Nova vaga</span>}
                 </button>
               </div>
             </>
@@ -1523,47 +1547,47 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
             <>
               {user && (
                 <button className={`sb-item${isActive('/dashboard') ? ' active' : ''}`} onClick={() => navigate('/dashboard')}>
-                  <LayoutDashboard size={16} />{!collapsed && <span>Dashboard</span>}
+                  <LayoutDashboard size={16} />{!collapsed && showLabels && <span>Dashboard</span>}
                 </button>
               )}
               <button className={`sb-item${isActive('/explorar') ? ' active' : ''}`} onClick={() => navigate('/explorar')}>
-                <Compass size={16} />{!collapsed && <span>Explorar</span>}
+                <Compass size={16} />{!collapsed && showLabels && <span>Explorar</span>}
               </button>
               <button className={`sb-item${isActive('/ranking') ? ' active' : ''}`} onClick={() => navigate('/ranking')}>
-                <Trophy size={16} />{!collapsed && <span>Ranking</span>}
+                <Trophy size={16} />{!collapsed && showLabels && <span>Ranking</span>}
               </button>
 
               {user && (
                 <>
                   <div className="sb-divider" style={{ margin: '8px 0 4px' }} />
-                  {!collapsed && <span className="sb-label">Oportunidades</span>}
+                  {!collapsed && showLabels && <span className="sb-label">Oportunidades</span>}
                   <button className={`sb-item${isActive('/vagas') ? ' active' : ''}`} onClick={() => navigate('/vagas')}>
-                    <Briefcase size={16} />{!collapsed && <span>Vagas</span>}
+                    <Briefcase size={16} />{!collapsed && showLabels && <span>Vagas</span>}
                   </button>
                   <button
                     className={`sb-item${isActive('/estagio') ? ' active' : ''}`}
                     onClick={() => navigate('/estagio')}
                     title="Kit de candidatura a estágio"
                   >
-                    <Mail size={16} />{!collapsed && <span>Estágio</span>}
+                    <Mail size={16} />{!collapsed && showLabels && <span>Estágio</span>}
                   </button>
 
                   <div className="sb-divider" style={{ margin: '8px 0 4px' }} />
-                  {!collapsed && <span className="sb-label">Comunidade</span>}
+                  {!collapsed && showLabels && <span className="sb-label">Comunidade</span>}
                   <button className={`sb-item${isActive('/missoes') ? ' active' : ''}`} onClick={() => navigate('/missoes')}>
-                    <Swords size={16} />{!collapsed && <span>Missões</span>}
+                    <Swords size={16} />{!collapsed && showLabels && <span>Missões</span>}
                   </button>
                   <button className={`sb-item${isActive('/turmas') ? ' active' : ''}`} onClick={() => navigate('/turmas')}>
-                    <Users2 size={16} />{!collapsed && <span>Turmas</span>}
+                    <Users2 size={16} />{!collapsed && showLabels && <span>Turmas</span>}
                   </button>
                   <button className={`sb-item${isActive('/conquistas') ? ' active' : ''}`} onClick={() => navigate('/conquistas')}>
-                    <Medal size={16} />{!collapsed && <span>Conquistas</span>}
+                    <Medal size={16} />{!collapsed && showLabels && <span>Conquistas</span>}
                   </button>
 
                   <div className="sb-divider" style={{ margin: '8px 0 4px' }} />
                   <button className="sb-item" disabled style={{ opacity: 0.45, cursor: 'default' }}>
                     <FolderOpen size={16} />
-                    {!collapsed && <><span>Portfólio</span><span className="sb-soon">breve</span></>}
+                    {!collapsed && showLabels && <><span>Portfólio</span><span className="sb-soon">breve</span></>}
                   </button>
                 </>
               )}
@@ -1572,7 +1596,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                 <div className={`sb-create-wrap ${extras ? 'hidden' : 'visible'}`}>
                   <div className="sb-create-inner">
                     <button className="sb-create" onClick={() => setCreateModal(true)}>
-                      <Plus size={14} />{!collapsed && <span>Criar projeto</span>}
+                      <Plus size={14} />{!collapsed && showLabels && <span>Criar projeto</span>}
                     </button>
                   </div>
                 </div>
@@ -1684,7 +1708,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                 {profileUrl && (
                   <button className={`sb-item${isActive('profile') ? ' active' : ''}`} style={{ flex: collapsed ? '0 0 auto' : 1, margin: 0, justifyContent: collapsed ? 'center' : undefined }} onClick={() => navigate(profileUrl)}>
                     <AvatarCircle avatarUrl={profile?.avatar_url} initial={getInitial(user)} size={20} fontSize={9} />
-                    {!collapsed && <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{getDisplayName(user)}</span>}
+                    {!collapsed && showLabels && <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{getDisplayName(user)}</span>}
                   </button>
                 )}
                 {/* Mensagens — only stacked here in collapsed mode; moved to the icon row below when expanded */}
@@ -1754,7 +1778,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
             </>
           ) : (
             <>
-              <button className="sb-item" onClick={() => navigate('/register')}><UserPlus size={16} />{!collapsed && <span>Criar conta</span>}</button>
+              <button className="sb-item" onClick={() => navigate('/register')}><UserPlus size={16} />{!collapsed && showLabels && <span>Criar conta</span>}</button>
               {collapsed ? (
                 <>
                   <button className="sb-item" onClick={() => navigate('/login')}><ArrowRightToLine size={16} /></button>

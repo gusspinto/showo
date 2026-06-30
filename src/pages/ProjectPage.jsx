@@ -2371,6 +2371,7 @@ export default function ProjectPage() {
   const [milestoneCard, setMilestoneCard] = useState(null) // { score, tier }
   const [showLaunchOverlay, setShowLaunchOverlay] = useState(false)
   const [launchCopied, setLaunchCopied] = useState(false)
+  const [claimBannerDismissed, setClaimBannerDismissed] = useState(false)
   const [defenseDate, setDefenseDate] = useState('')
   const [savingDefense, setSavingDefense] = useState(false)
   const [teacherFeedback, setTeacherFeedback] = useState([])
@@ -3000,14 +3001,18 @@ export default function ProjectPage() {
     setTeacherFeedback(prev => prev.filter(f => f.id !== id))
   }
 
+  const scoreSuffix = project.score != null ? ` · Score ${project.score}` : ''
+  const shareTitle = `${project.name} — Showo${scoreSuffix}`
+  const shareDescription = project.ai_tagline || project.goal || `Projeto de ${project.creator_name || 'estudante'} no Showo`
+
   return (
     <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: 'var(--font-body)', overflowX: 'clip' }}>
       <Helmet>
-        <title>{project.name} — Showo</title>
-        <meta name="description" content={project.ai_tagline || project.goal || `Projeto de ${project.creator_name || 'estudante'} no Showo`} />
+        <title>{shareTitle}</title>
+        <meta name="description" content={shareDescription} />
         {/* Open Graph — WhatsApp, Facebook, LinkedIn */}
-        <meta property="og:title" content={`${project.name} — Showo`} />
-        <meta property="og:description" content={project.ai_tagline || project.goal || `Projeto de ${project.creator_name || 'estudante'} no Showo`} />
+        <meta property="og:title" content={shareTitle} />
+        <meta property="og:description" content={shareDescription} />
         <meta property="og:url" content={pageUrl} />
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="Showo" />
@@ -3018,8 +3023,8 @@ export default function ProjectPage() {
         <meta property="og:image:height" content="630" />
         {/* Twitter / X */}
         <meta name="twitter:card" content={project.cover_url ? 'summary_large_image' : 'summary'} />
-        <meta name="twitter:title" content={`${project.name} — Showo`} />
-        <meta name="twitter:description" content={project.ai_tagline || project.goal || `Projeto no Showo`} />
+        <meta name="twitter:title" content={shareTitle} />
+        <meta name="twitter:description" content={shareDescription} />
         {project.cover_url && <meta name="twitter:image" content={project.cover_url} />}
       </Helmet>
       <style>{`
@@ -3403,6 +3408,35 @@ export default function ProjectPage() {
             >
               Ver a minha página →
             </button>
+
+            {!user && (
+              <div style={{
+                marginTop: 18, paddingTop: 18,
+                borderTop: '1px solid rgba(255,255,255,0.08)',
+                position: 'relative',
+              }}>
+                <p style={{ margin: '0 0 12px', fontSize: 13, color: 'rgba(232,242,255,0.55)', lineHeight: 1.6 }}>
+                  Criaste este projeto sem conta — se perderes o link, não há forma de o recuperar.
+                  Cria uma conta para o guardar.
+                </p>
+                <button
+                  onClick={() => navigate('/register', { state: { claimSlug: project.slug } })}
+                  style={{
+                    display: 'block', width: '100%',
+                    background: 'transparent',
+                    border: '1px solid rgba(27,120,247,0.4)',
+                    borderRadius: 10, padding: '11px 24px',
+                    color: '#5a9ff5', fontSize: 14, fontWeight: 700,
+                    cursor: 'pointer', letterSpacing: '-0.2px',
+                    transition: 'background 0.15s',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(27,120,247,0.1)' }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
+                >
+                  Criar conta e guardar projeto
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -3733,6 +3767,34 @@ export default function ProjectPage() {
           )}
         </div>
       </Navbar>
+
+      {isOwner && !user && !claimBannerDismissed && (
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14,
+          flexWrap: 'wrap', padding: '10px 20px',
+          background: 'rgba(27,120,247,0.08)', borderBottom: '1px solid rgba(27,120,247,0.2)',
+        }}>
+          <span style={{ fontSize: 13, color: 'var(--c-muted)', fontWeight: 500 }}>
+            Este projeto não tem conta associada — se perderes o link, não há forma de o recuperar.
+          </span>
+          <button
+            onClick={() => navigate('/register', { state: { claimSlug: project.slug } })}
+            style={{
+              background: '#1b78f7', border: 'none', borderRadius: 7,
+              padding: '6px 14px', color: '#fff', fontSize: 13, fontWeight: 700,
+              cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0,
+            }}
+          >
+            Criar conta e guardar
+          </button>
+          <button
+            onClick={() => setClaimBannerDismissed(true)}
+            style={{ background: 'none', border: 'none', color: 'var(--c-muted)', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
+          >
+            Agora não
+          </button>
+        </div>
+      )}
 
       {/* ── Public visitor view (pure visitors + owners in preview mode) ── */}
       {((!isOwner && collaboratorSections === null && !isProfessor) || (isOwner && viewAsPublic)) && (

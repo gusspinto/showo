@@ -22,7 +22,7 @@ const colors = {
   subtle:       'var(--c-subtle)',
 }
 
-function StaticHero() {
+function StaticHero({ theme }) {
   return (
     <h1 className="hero-h1 home-hero-heading" style={{
       fontSize: 'clamp(40px, 6.2vw, 72px)', fontWeight: 400,
@@ -32,36 +32,33 @@ function StaticHero() {
       textAlign: 'center',
     }}>
       Um documento não define{' '}
-      <em style={{ fontStyle: 'italic', color: '#1b78f7', whiteSpace: 'nowrap' }}>a tua carreira.</em>
+      <em style={{ fontStyle: 'italic', color: theme === 'light' ? '#0a2d78' : '#1b78f7', whiteSpace: 'nowrap' }}>a tua carreira.</em>
     </h1>
   )
 }
 
-// ── Hero aurora — soft drifting gradient blobs, purely ambient, never sits
-// in front of content (z-index 0, blurred, low opacity). ──
+// ── Hero aurora — soft ambient backdrop made of plain radial-gradients (no
+// filter:blur, no animated transform on huge elements) so it stays cheap to
+// paint/composite even on lower-powered GPUs. Dark theme: blue blobs on the
+// near-black brand gradient. Light theme: the hero itself goes full brand-blue,
+// so the aurora flips to soft white blobs for contrast. ──
 function HeroAurora({ theme }) {
   const light = theme === 'light'
+  const rgb = light ? '255,255,255' : '27,120,247'
+  const rgb2 = light ? '255,255,255' : '13,58,150'
+  const rgb3 = light ? '255,255,255' : '94,147,255'
+  const a = light ? 0.24 : 0.30
+  const b = light ? 0.16 : 0.22
+  const c = light ? 0.12 : 0.16
   return (
-    <div aria-hidden="true" style={{ position: 'absolute', inset: 0, zIndex: 0, overflow: 'hidden', pointerEvents: 'none' }}>
-      <div className="hero-aurora-blob" style={{
-        position: 'absolute', width: 620, height: 620, borderRadius: '50%',
-        top: '-12%', left: '8%', background: '#1b78f7',
-        opacity: light ? 0.14 : 0.22, filter: 'blur(110px)',
-        animation: 'aurora-drift-1 16s ease-in-out infinite alternate',
-      }} />
-      <div className="hero-aurora-blob" style={{
-        position: 'absolute', width: 540, height: 540, borderRadius: '50%',
-        top: '18%', right: '4%', background: '#0d3a96',
-        opacity: light ? 0.10 : 0.20, filter: 'blur(110px)',
-        animation: 'aurora-drift-2 20s ease-in-out infinite alternate',
-      }} />
-      <div className="hero-aurora-blob" style={{
-        position: 'absolute', width: 420, height: 420, borderRadius: '50%',
-        bottom: '-8%', left: '38%', background: '#5e93ff',
-        opacity: light ? 0.09 : 0.15, filter: 'blur(100px)',
-        animation: 'aurora-drift-3 18s ease-in-out infinite alternate',
-      }} />
-    </div>
+    <div aria-hidden="true" className="hero-aurora" style={{
+      position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none',
+      background: `
+        radial-gradient(46% 42% at 14% 10%, rgba(${rgb},${a}) 0%, rgba(${rgb},0) 70%),
+        radial-gradient(42% 38% at 88% 28%, rgba(${rgb2},${b}) 0%, rgba(${rgb2},0) 70%),
+        radial-gradient(38% 36% at 46% 92%, rgba(${rgb3},${c}) 0%, rgba(${rgb3},0) 70%)
+      `,
+    }} />
   )
 }
 
@@ -82,16 +79,33 @@ const ROLE_PHRASES = [
 
 function RoleCyclerHeadline() {
   const [idx, setIdx] = useState(0)
-
-  useEffect(() => {
-    const id = setInterval(() => setIdx(i => (i + 1) % ROLE_PHRASES.length), 2900)
-    return () => clearInterval(id)
-  }, [])
-
+  const ref = useRef(null)
   const current = ROLE_PHRASES[idx]
 
+  // Stays on "aluno" until the roles panel actually becomes visible (the
+  // "Perfis" peek tab is the trigger) — then cycles on a timer.
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    let id = null
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !id) {
+          id = setInterval(() => setIdx(i => (i + 1) % ROLE_PHRASES.length), 2000)
+        } else if (!entry.isIntersecting && id) {
+          clearInterval(id)
+          id = null
+          setIdx(0)
+        }
+      },
+      { threshold: 0.6 }
+    )
+    obs.observe(el)
+    return () => { obs.disconnect(); if (id) clearInterval(id) }
+  }, [])
+
   return (
-    <h2 className="roles-cycle-phrase" style={{
+    <h2 ref={ref} className="roles-cycle-phrase" style={{
       fontSize: 'clamp(24px, 3.4vw, 36px)', fontWeight: 400, fontFamily: 'var(--font-heading)',
       color: colors.text, margin: '0 0 40px', textAlign: 'center', letterSpacing: '-0.5px',
     }}>
@@ -105,11 +119,17 @@ function RoleCyclerHeadline() {
   )
 }
 
-function RolesPanel({ onBack }) {
+function RolesPanel({ onBack, theme }) {
+  const cardBg = theme === 'light'
+    ? 'rgba(13,58,150,0.32)'
+    : 'color-mix(in srgb, var(--c-card) 70%, #000 30%)'
+  // The brand blue (#1b78f7) used for "Aluno" reads poorly as text/icon directly on
+  // top of this dark-navy card in the light/blue hero — lighten just that one for contrast.
+  const accent = c => (theme === 'light' && c === '#1b78f7') ? '#9fc6ff' : c
   return (
     <div style={{
       flex: '0 0 100%', minWidth: '100%', scrollSnapAlign: 'start',
-      minHeight: 'calc(100vh - 60px)', display: 'flex', flexDirection: 'column',
+      minHeight: 'calc(100vh - 62px)', display: 'flex', flexDirection: 'column',
       alignItems: 'center', justifyContent: 'center', padding: '64px 32px',
       position: 'relative', overflow: 'hidden',
     }}>
@@ -130,7 +150,8 @@ function RolesPanel({ onBack }) {
         <div className="roles-card-stack" style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 560, width: '100%' }}>
           {ROLE_CARDS.map(r => (
             <div key={r.label} className="roles-id-card" style={{
-              background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 14,
+              background: cardBg, backdropFilter: 'blur(8px)',
+              border: `1px solid ${colors.border}`, borderRadius: 14,
               padding: '18px 22px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 18,
               borderLeft: `3px solid ${r.color}`,
             }}>
@@ -138,10 +159,10 @@ function RolesPanel({ onBack }) {
                 width: 48, height: 48, borderRadius: 12, background: `${r.color}1f`,
                 display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
               }}>
-                <r.Icon size={24} color={r.color} />
+                <r.Icon size={24} color={accent(r.color)} />
               </div>
               <div>
-                <div style={{ fontSize: 15, fontWeight: 700, color: r.color, marginBottom: 3 }}>{r.label}</div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: accent(r.color), marginBottom: 3 }}>{r.label}</div>
                 <p style={{ fontSize: 13, color: colors.muted, lineHeight: 1.5, margin: 0 }}>{r.desc}</p>
               </div>
             </div>
@@ -169,6 +190,29 @@ function MiniScoreRing({ score, size = 72 }) {
         <span style={{ fontSize: 18, fontWeight: 900, color, lineHeight: 1, letterSpacing: '-1px' }}>{score}</span>
         <span style={{ fontSize: 7, color: 'rgba(255,255,255,0.4)', fontWeight: 700, letterSpacing: 1.5, textTransform: 'uppercase', marginTop: 1 }}>score</span>
       </div>
+    </div>
+  )
+}
+
+// ── Reveal — fades + slides an element in once it scrolls into view. ──
+function Reveal({ children, style }) {
+  const ref = useRef(null)
+  const [visible, setVisible] = useState(false)
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const obs = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setVisible(true); obs.disconnect() } },
+      { threshold: 0.15, rootMargin: '0px 0px -60px 0px' }
+    )
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [])
+
+  return (
+    <div ref={ref} className={`reveal-on-scroll${visible ? ' is-visible' : ''}`} style={style}>
+      {children}
     </div>
   )
 }
@@ -466,9 +510,22 @@ export default function Home() {
           0%, 100% { transform: translateY(0); }
           50%      { transform: translateY(5px); }
         }
-        @keyframes aurora-drift-1 { from { transform: translate(0,0) scale(1); } to { transform: translate(40px,30px) scale(1.12); } }
-        @keyframes aurora-drift-2 { from { transform: translate(0,0) scale(1); } to { transform: translate(-35px,25px) scale(1.08); } }
-        @keyframes aurora-drift-3 { from { transform: translate(0,0) scale(1); } to { transform: translate(20px,-20px) scale(1.1); } }
+        @keyframes aurora-pulse { 0%, 100% { opacity: 0.85; } 50% { opacity: 1; } }
+        .hero-aurora { animation: aurora-pulse 9s ease-in-out infinite; will-change: opacity; }
+        .reveal-on-scroll {
+          opacity: 0; transform: translateY(28px);
+          transition: opacity 0.6s cubic-bezier(0.22,1,0.36,1), transform 0.6s cubic-bezier(0.22,1,0.36,1);
+        }
+        .reveal-on-scroll.is-visible { opacity: 1; transform: translateY(0); }
+        /* Bridges the seam between the sidebar (64px) and the page's sidebar-reserved
+           padding (72px): the gradient/aurora box bleeds 72px left so its background
+           reaches flush against the sidebar with no gap, while hero-bleed-offset
+           cancels that shift for the actual content so nothing inside (buttons,
+           slides, scroll math) moves from where it was. */
+        @media (min-width: 861px) {
+          .hero-bleed-box { margin-left: -72px; width: calc(100% + 72px); }
+          .hero-bleed-offset { margin-left: 72px; width: calc(100% - 72px); }
+        }
         .hero-track {
           display: flex; width: 100%;
           overflow-x: auto; scroll-snap-type: x mandatory;
@@ -482,7 +539,7 @@ export default function Home() {
           width: 38px; height: 116px; border-radius: 19px; border: 1px solid var(--c-border-bright);
           cursor: pointer; background: var(--c-card);
           backdrop-filter: blur(8px);
-          color: var(--c-muted); display: flex; flex-direction: column; align-items: center;
+          color: #1b78f7; display: flex; flex-direction: column; align-items: center;
           justify-content: center; gap: 10px; padding: 14px 0;
           z-index: 2; box-shadow: 0 8px 24px -8px rgba(0,0,0,0.25);
           transition: border-color 0.18s, color 0.18s, box-shadow 0.18s;
@@ -492,9 +549,13 @@ export default function Home() {
           letter-spacing: 0.1em; text-transform: uppercase;
         }
         .hero-peek-tab:hover {
-          border-color: #1b78f7; color: #1b78f7;
+          border-color: #1b78f7;
           box-shadow: 0 10px 28px -6px rgba(27,120,247,0.35);
         }
+        /* Blue (light) hero: brighter glass card means a brighter blue washes out —
+           drop to a darker brand blue so the label stays crisp. */
+        .hero-theme-blue .hero-peek-tab { color: #fff; border-color: rgba(255,255,255,0.4); }
+        .hero-theme-blue .hero-peek-tab:hover { border-color: #fff; }
         .hero-peek-tab-right { right: 14px; }
         .hero-peek-tab-left  { left: 14px; }
         .hero-peek-tab-left span { transform: rotate(180deg); }
@@ -523,6 +584,7 @@ export default function Home() {
         }
         .goal-pill { transition: color 0.15s !important; cursor: pointer; display: inline-block; }
         .goal-pill:hover { color: #1b78f7 !important; }
+        .hero-theme-blue .goal-pill:hover { color: #fff !important; }
         .feature-card { transition: all 0.2s ease !important; cursor: default; }
         .feature-card:hover {
           border-color: var(--c-border-bright) !important;
@@ -582,14 +644,37 @@ export default function Home() {
         </button>
       </Navbar>
 
-      {/* Hero */}
-      <div style={{ position: 'relative', borderBottom: `1px solid ${colors.border}`, overflow: 'hidden' }}>
+      {/* Hero — dark theme: near-black brand gradient (same as Login/Register).
+          Light theme: full brand-blue gradient with white accents instead of the
+          page's plain light background. Both forced via locally-scoped CSS vars
+          so every themed descendant (text, cards, inputs) stays readable. */}
+      <div style={{ position: 'relative' }} className={theme === 'light' ? 'hero-theme-blue' : 'hero-theme-dark'}>
+        <div className="hero-bleed-box" style={theme === 'light' ? {
+          position: 'relative', overflow: 'hidden', color: '#fff',
+          background: 'linear-gradient(115deg, #1454c2 0%, #1b78f7 45%, #2f8bff 100%)',
+          borderBottom: '1px solid rgba(255,255,255,0.18)',
+          '--c-bg': '#1b78f7', '--c-bg-alt': '#1664d8',
+          '--c-card': 'rgba(255,255,255,0.14)', '--c-card-hover': 'rgba(255,255,255,0.2)',
+          '--c-border': 'rgba(255,255,255,0.28)', '--c-border-bright': 'rgba(255,255,255,0.45)',
+          '--c-muted': 'rgba(255,255,255,0.75)', '--c-text': '#ffffff', '--c-subtle': 'rgba(255,255,255,0.6)',
+          '--c-input-bg': 'rgba(255,255,255,0.12)',
+        } : {
+          position: 'relative', overflow: 'hidden', color: 'var(--c-text)',
+          background: 'linear-gradient(115deg, #000 0%, #050b1c 40%, #0e2249 85%, #143169 100%)',
+          borderBottom: '1px solid #1e3050',
+          '--c-bg': '#060c18', '--c-bg-alt': '#111c32',
+          '--c-card': '#152030', '--c-card-hover': '#1c2d44',
+          '--c-border': '#1e3050', '--c-border-bright': '#2a4275',
+          '--c-muted': '#7d93b0', '--c-text': '#e8f2ff', '--c-subtle': '#3d5270',
+          '--c-input-bg': '#060c18',
+        }}>
       <HeroAurora theme={theme} />
+      <div className="hero-bleed-offset">
       <div className="hero-track" ref={heroTrackRef}>
         <div style={{ flex: '0 0 100%', minWidth: '100%', scrollSnapAlign: 'start', position: 'relative' }}>
         <div className="hero-section hero-inner" style={{
           position: 'relative', zIndex: 1,
-          minHeight: 'calc(100vh - 60px)',
+          minHeight: 'calc(100vh - 62px)',
           maxWidth: 1140, margin: '0 auto',
           padding: '140px 32px 64px',
           display: 'flex', flexDirection: 'column', alignItems: 'center',
@@ -606,7 +691,7 @@ export default function Home() {
             Para estudantes
           </div>
 
-          <StaticHero />
+          <StaticHero theme={theme} />
 
           <p className="hero-sub" style={{
             fontSize: 16, color: colors.muted, lineHeight: 1.6,
@@ -621,7 +706,7 @@ export default function Home() {
             <div ref={goalsRowRef} className="goals-row" style={{ position: 'relative', display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 22 }}>
               <span style={{
                 position: 'absolute', borderRadius: 999,
-                background: 'rgba(27,120,247,0.12)',
+                background: theme === 'light' ? '#0d3a96' : 'rgba(27,120,247,0.12)',
                 left: pillHighlight.left, width: pillHighlight.width,
                 top: pillHighlight.top, height: pillHighlight.height,
                 opacity: pillHighlight.opacity, pointerEvents: 'none',
@@ -637,7 +722,7 @@ export default function Home() {
                   onClick={() => setSelectedGoal(selectedGoal === g.id ? null : g.id)}
                   style={{
                     position: 'relative', background: 'transparent', border: 'none',
-                    color: selectedGoal === g.id ? '#1b78f7' : colors.muted,
+                    color: selectedGoal === g.id ? (theme === 'light' ? '#ffffff' : '#1b78f7') : colors.muted,
                     borderRadius: 999, padding: '7px 14px', fontSize: 13, fontWeight: 600, fontFamily: 'inherit',
                   }}
                 >{g.label}</button>
@@ -684,13 +769,9 @@ export default function Home() {
                 <ArrowRight size={15} />
               </button>
             </div>
-            {spamError ? (
+            {spamError && (
               <p style={{ color: '#ef4444', fontSize: 13, marginTop: 12, fontWeight: 600, textAlign: 'center' }}>
                 Texto inválido — escreve uma descrição real do teu projeto.
-              </p>
-            ) : (
-              <p className="hero-note" style={{ color: colors.subtle, fontSize: 13, marginTop: 14, fontWeight: 500, textAlign: 'center' }}>
-                Sem registo · Sem cartão de crédito
               </p>
             )}
           </form>
@@ -722,8 +803,11 @@ export default function Home() {
         <RolesPanel theme={theme} onBack={() => scrollToHeroSlide(0)} />
       </div>
       </div>
+      </div>
+      </div>
 
       {/* Social proof strip */}
+      <Reveal>
       <div className="home-stats" style={{
         textAlign: 'center', padding: '40px 24px 28px',
         borderBottom: `1px solid ${colors.border}`,
@@ -748,22 +832,24 @@ export default function Home() {
           ))}
         </div>
       </div>
+      </Reveal>
 
       {/* Features alternadas */}
       <div ref={featuresRef} style={{ maxWidth: 1100, margin: '0 auto', padding: '200px 40px 80px' }}>
 
         {/* Título da secção */}
-        <div style={{ textAlign: 'center', marginBottom: 96 }}>
+        <Reveal style={{ textAlign: 'center', marginBottom: 96 }}>
           <h2 style={{ fontSize: 'clamp(26px, 3vw, 42px)', fontWeight: 900, letterSpacing: '-1.5px', margin: '0 0 16px', fontFamily: 'var(--font-heading)', color: colors.text }}>
             Tudo o que precisas, num só sítio
           </h2>
           <p style={{ fontSize: 17, color: colors.muted, maxWidth: 480, margin: '0 auto', lineHeight: 1.65 }}>
             Cria, melhora, apresenta e candidata-te — sem sair da plataforma.
           </p>
-        </div>
+        </Reveal>
 
         {featuresReady && <>
           {/* Feature 1 — Portfólio público */}
+          <Reveal>
           <FeatureRow
             reverse={false}
             tag="Portfólio"
@@ -774,8 +860,10 @@ export default function Home() {
             bulletColor="#1b78f7"
             mockup={<MockupPortfolio theme={theme} />}
           />
+          </Reveal>
 
           {/* Feature 2 — Missões + Ranking */}
+          <Reveal>
           <FeatureRow
             reverse={true}
             tag="Missões"
@@ -786,8 +874,10 @@ export default function Home() {
             bulletColor="#22c55e"
             mockup={<MockupMissoes theme={theme} />}
           />
+          </Reveal>
 
           {/* Feature 3 — Vagas */}
+          <Reveal>
           <FeatureRow
             reverse={false}
             tag="Vagas"
@@ -798,8 +888,10 @@ export default function Home() {
             bulletColor="#f59e0b"
             mockup={<MockupVagas theme={theme} />}
           />
+          </Reveal>
 
           {/* Feature 4 — Defesa */}
+          <Reveal>
           <FeatureRow
             reverse={true}
             tag="Defesa PAP"
@@ -810,11 +902,12 @@ export default function Home() {
             bulletColor="#8b5cf6"
             mockup={<MockupDefesa theme={theme} />}
           />
+          </Reveal>
         </>}
       </div>
 
       {/* Bottom CTA */}
-      <div style={{ padding: '0 24px 80px', textAlign: 'center' }}>
+      <Reveal style={{ padding: '0 24px 80px', textAlign: 'center' }}>
         <button
           onClick={() => setShowCreateModal(true)}
           className="home-cta-btn"
@@ -840,7 +933,7 @@ export default function Home() {
             Ver ranking
           </button>
         </div>
-      </div>
+      </Reveal>
       {showCreateModal && <CreateProjectModal onClose={() => setShowCreateModal(false)} />}
     </div>
   )

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { GraduationCap, BookOpen, Search, Building2, ArrowLeft } from 'lucide-react'
 import AuthSidePanel from '../components/AuthSidePanel'
@@ -80,6 +80,8 @@ function Input({ type = 'text', value, onChange, placeholder, required }) {
 
 export default function Register() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const claimSlug = location.state?.claimSlug ?? null
   const { theme } = useTheme()
   const [step, setStep] = useState('role') // 'role' | 'form'
   const [role, setRole] = useState('')
@@ -127,6 +129,18 @@ export default function Register() {
     if (!data?.session) {
       await supabase.auth.signInWithPassword({ email, password })
     }
+
+    // Claim an anonymously-created project (made via the homepage widget, no account yet)
+    if (claimSlug) {
+      const { data: { user: newUser } } = await supabase.auth.getUser()
+      if (newUser) {
+        await supabase.from('projects')
+          .update({ user_id: newUser.id })
+          .eq('slug', claimSlug)
+          .is('user_id', null)
+      }
+    }
+
     setLoading(false)
     navigate('/dashboard')
   }
