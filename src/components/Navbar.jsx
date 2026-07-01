@@ -12,6 +12,7 @@ function stripEmoji(str) {
   return str.replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27FF}\u{2900}-\u{297F}\u{1F300}-\u{1F9FF}\u{FE00}-\u{FEFF}]/gu, '').replace(/\s{2,}/g, ' ').trim()
 }
 import CreateProjectModal from './CreateProjectModal'
+import FeedbackButton from './FeedbackButton'
 
 const C = {
   bg: 'rgba(13, 20, 36, 0.88)',
@@ -2229,6 +2230,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
       </div>
 
       {createModal && <CreateProjectModal onClose={() => setCreateModal(false)} />}
+      <FeedbackButton />
     </>
   )
 }
