@@ -981,7 +981,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
           .mob-only-create { display: none !important; }
           .ham-btn       { display: none !important; }
           .bottom-nav    { display: flex !important; }
-          body           { padding-bottom: 78px; }
+          body           { padding-bottom: 84px; }
 
           /* Notification dropdown — full-width anchored below navbar */
           .notif-drop {
@@ -1055,12 +1055,14 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
         .bn-item {
           flex: 1;
           display: flex;
+          flex-direction: column;
           align-items: center;
           justify-content: center;
+          gap: 3px;
           background: transparent;
           border: none;
           cursor: pointer;
-          padding: 0;
+          padding: 6px 0 4px;
           color: #7d93b0;
           font-family: inherit;
           transition: color 0.15s;
@@ -1069,6 +1071,12 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
         }
         .bn-item.active { color: #1b78f7; }
         .bn-item:active { opacity: 0.65; }
+        .bn-label {
+          font-size: 9.5px;
+          font-weight: 600;
+          letter-spacing: 0.01em;
+          line-height: 1;
+        }
         .bn-create-wrap {
           flex: 1;
           display: flex;
@@ -1080,14 +1088,19 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
           border: none;
           cursor: pointer;
           display: flex;
+          flex-direction: column;
           align-items: center;
           justify-content: center;
+          gap: 3px;
           color: #7d93b0;
-          padding: 0;
+          padding: 6px 0 4px;
           -webkit-tap-highlight-color: transparent;
           transition: color 0.15s, transform 0.15s;
           min-height: 50px;
           width: 100%;
+          font-family: inherit;
+          font-size: 9.5px;
+          font-weight: 600;
         }
         .bn-create-btn:active { transform: scale(0.88); opacity: 0.7; }
 
@@ -2125,7 +2138,8 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               className={`bn-item${isActive('/dashboard') ? ' active' : ''}`}
               onClick={() => { setMenuOpen(false); navigate('/dashboard') }}
             >
-              <LayoutDashboard size={24} strokeWidth={isActive('/dashboard') ? 2.5 : 1.8} />
+              <LayoutDashboard size={22} strokeWidth={isActive('/dashboard') ? 2.5 : 1.8} />
+              <span className="bn-label">Início</span>
             </button>
 
             {/* Explorar */}
@@ -2133,7 +2147,8 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               className={`bn-item${isActive('/explorar') ? ' active' : ''}`}
               onClick={() => { setMenuOpen(false); navigate('/explorar') }}
             >
-              <Compass size={24} strokeWidth={isActive('/explorar') ? 2.5 : 1.8} />
+              <Compass size={22} strokeWidth={isActive('/explorar') ? 2.5 : 1.8} />
+              <span className="bn-label">Explorar</span>
             </button>
 
             {/* Centro — workspace em preview mode, + em modo normal */}
@@ -2145,11 +2160,13 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   aria-label="Editor de preview"
                   style={{ color: '#1b78f7' }}
                 >
-                  <Paintbrush size={24} strokeWidth={2} />
+                  <Paintbrush size={22} strokeWidth={2} />
+                  <span>Editar</span>
                 </button>
               ) : (
                 <button className="bn-create-btn" onClick={() => { setMenuOpen(false); setCreateModal(true) }} aria-label="Criar projeto">
-                  <Plus size={26} strokeWidth={2} />
+                  <Plus size={24} strokeWidth={2} />
+                  <span>Criar</span>
                 </button>
               )}
             </div>
@@ -2162,8 +2179,9 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               style={{ position: 'relative' }}
             >
               <MessageSquare size={22} strokeWidth={isActive('/mensagens') ? 2.5 : 1.8} />
+              <span className="bn-label">Mensagens</span>
               {unreadMsgs > 0 && (
-                <span style={{ position: 'absolute', top: 8, left: 'calc(50% + 5px)', width: 7, height: 7, borderRadius: '50%', background: '#ef4444', border: '1.5px solid rgba(13,20,36,0.97)' }} />
+                <span style={{ position: 'absolute', top: 6, left: 'calc(50% + 5px)', width: 7, height: 7, borderRadius: '50%', background: '#ef4444', border: '1.5px solid rgba(13,20,36,0.97)' }} />
               )}
             </button>
 
@@ -2174,6 +2192,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               aria-label="Menu"
             >
               <AlignJustify size={22} strokeWidth={menuOpen ? 2.5 : 1.8} />
+              <span className="bn-label">Menu</span>
             </button>
           </>
         ) : (
@@ -2184,6 +2203,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               onClick={() => navigate('/explorar')}
             >
               <Compass size={22} strokeWidth={isActive('/explorar') ? 2.5 : 1.8} />
+              <span className="bn-label">Explorar</span>
             </button>
 
             {/* Ranking */}
@@ -2192,6 +2212,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               onClick={() => navigate('/ranking')}
             >
               <Trophy size={22} strokeWidth={isActive('/ranking') ? 2.5 : 1.8} />
+              <span className="bn-label">Ranking</span>
             </button>
 
             {/* Entrar */}
@@ -2201,6 +2222,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               style={{ color: isActive('/login') ? '#1b78f7' : 'var(--c-text)' }}
             >
               <User size={22} strokeWidth={1.8} />
+              <span className="bn-label">Entrar</span>
             </button>
           </>
         )}

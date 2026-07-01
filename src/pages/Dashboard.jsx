@@ -1589,8 +1589,8 @@ export default function Dashboard() {
           /* ── Milestones / progress section ── */
           .dash-milestones { padding: 14px !important; }
           /* ── Toasts — above bottom nav ── */
-          .dash-toast-center { bottom: 80px !important; }
-          .dash-toast-xp { bottom: 80px !important; right: 12px !important; min-width: 0 !important; max-width: calc(100vw - 24px) !important; }
+          .dash-toast-center { bottom: 88px !important; }
+          .dash-toast-xp { bottom: 88px !important; right: 12px !important; min-width: 0 !important; max-width: calc(100vw - 24px) !important; }
         }
       `}</style>
       <Navbar />

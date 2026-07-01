@@ -127,7 +127,7 @@ function RolesPanel({ onBack, theme }) {
   // top of this dark-navy card in the light/blue hero — lighten just that one for contrast.
   const accent = c => (theme === 'light' && c === '#1b78f7') ? '#9fc6ff' : c
   return (
-    <div style={{
+    <div className="roles-panel" style={{
       flex: '0 0 100%', minWidth: '100%', scrollSnapAlign: 'start',
       minHeight: 'calc(100vh - 62px)', display: 'flex', flexDirection: 'column',
       alignItems: 'center', justifyContent: 'center', padding: '64px 32px',
@@ -612,7 +612,7 @@ export default function Home() {
           .hero-section  { padding: 60px 0 60px !important; min-height: auto !important; }
           .hero-inner    { padding: 0 20px !important; }
           .hero-h1       { font-size: 34px !important; letter-spacing: -0.5px !important; margin-bottom: 16px !important; }
-          .hero-sub      { font-size: 16px !important; }
+          .hero-sub      { font-size: 16px !important; margin-bottom: 36px !important; }
           .hero-widget   { margin-top: 28px !important; max-width: 100% !important; }
           .goals-row     { flex-wrap: nowrap !important; overflow-x: auto !important; padding-bottom: 6px !important; scrollbar-width: none !important; -webkit-overflow-scrolling: touch !important; }
           .goals-row::-webkit-scrollbar { display: none !important; }
@@ -623,6 +623,17 @@ export default function Home() {
           .hero-note     { font-size: 11px !important; }
           .home-features-grid { grid-template-columns: 1fr !important; gap: 12px !important; }
           .home-stats { flex-wrap: wrap !important; gap: 12px !important; justify-content: center !important; }
+          /* Feature rows: stack on mobile */
+          .feature-row { grid-template-columns: 1fr !important; gap: 32px !important; }
+          .feature-row > div { order: unset !important; }
+          /* Features section: reduce top padding */
+          .features-section { padding: 80px 20px 60px !important; }
+          /* Features title section */
+          .features-title-section { margin-bottom: 48px !important; }
+          /* Roles panel: tighter padding */
+          .roles-panel { padding: 48px 20px 48px !important; }
+          /* Swipe hint for roles */
+          .mob-swipe-hint { display: flex !important; }
         }
         @media (max-width: 380px) {
           .home-hero-heading { font-size: clamp(28px, 8vw, 42px) !important; }
@@ -798,6 +809,24 @@ export default function Home() {
           <ChevronDown size={17} style={{ transform: 'rotate(-90deg)' }} />
           <span>Perfis</span>
         </button>
+
+        {/* Mobile-only swipe hint — peek tab is hidden at ≤700px */}
+        <button
+          className="mob-swipe-hint"
+          onClick={() => scrollToHeroSlide(1)}
+          style={{
+            display: 'none', /* shown via CSS media query */
+            position: 'absolute', bottom: 20, right: 16,
+            background: 'rgba(27,120,247,0.15)', border: '1px solid rgba(27,120,247,0.35)',
+            borderRadius: 20, padding: '6px 14px 6px 10px',
+            alignItems: 'center', gap: 6,
+            color: '#1b78f7', fontSize: 12, fontWeight: 700, fontFamily: 'inherit',
+            cursor: 'pointer', backdropFilter: 'blur(8px)',
+          }}
+        >
+          <ChevronDown size={14} style={{ transform: 'rotate(-90deg)' }} />
+          Para quem é
+        </button>
         </div>
 
         <RolesPanel theme={theme} onBack={() => scrollToHeroSlide(0)} />
@@ -835,9 +864,10 @@ export default function Home() {
       </Reveal>
 
       {/* Features alternadas */}
-      <div ref={featuresRef} style={{ maxWidth: 1100, margin: '0 auto', padding: '200px 40px 80px' }}>
+      <div ref={featuresRef} className="features-section" style={{ maxWidth: 1100, margin: '0 auto', padding: '200px 40px 80px' }}>
 
         {/* Título da secção */}
+        <div className="features-title-section">
         <Reveal style={{ textAlign: 'center', marginBottom: 96 }}>
           <h2 style={{ fontSize: 'clamp(26px, 3vw, 42px)', fontWeight: 900, letterSpacing: '-1.5px', margin: '0 0 16px', fontFamily: 'var(--font-heading)', color: colors.text }}>
             Tudo o que precisas, num só sítio
@@ -846,6 +876,7 @@ export default function Home() {
             Cria, melhora, apresenta e candidata-te — sem sair da plataforma.
           </p>
         </Reveal>
+        </div>
 
         {featuresReady && <>
           {/* Feature 1 — Portfólio público */}
