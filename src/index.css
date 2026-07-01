@@ -243,11 +243,11 @@ a { transition: color 0.15s, opacity 0.15s; }
 @media (max-width: 600px) {
 
   /* ── Bottom nav clearance ── */
-  body { padding-bottom: 78px; }
+  body { padding-bottom: 84px; }
 
   /* ── Page content ── */
   .page-content,
-  .page-content-wide { padding: 20px 16px 100px !important; }
+  .page-content-wide { padding: 20px 16px 104px !important; }
 
   /* ── Typography: inputs/selects/textareas ── */
   input, textarea, select { font-size: 14px !important; }

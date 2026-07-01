@@ -127,7 +127,7 @@ function RolesPanel({ onBack, theme }) {
   // top of this dark-navy card in the light/blue hero — lighten just that one for contrast.
   const accent = c => (theme === 'light' && c === '#1b78f7') ? '#9fc6ff' : c
   return (
-    <div style={{
+    <div className="roles-panel" style={{
       flex: '0 0 100%', minWidth: '100%', scrollSnapAlign: 'start',
       minHeight: 'calc(100vh - 62px)', display: 'flex', flexDirection: 'column',
       alignItems: 'center', justifyContent: 'center', padding: '64px 32px',
@@ -168,6 +168,12 @@ function RolesPanel({ onBack, theme }) {
             </div>
           ))}
         </div>
+
+        {/* Mobile back — same position/style as forward hint in first slide */}
+        <button className="mob-slide-nav" onClick={onBack}>
+          <ChevronDown size={13} style={{ transform: 'rotate(90deg)', flexShrink: 0 }} />
+          <span>Swipe para voltar</span>
+        </button>
       </div>
     </div>
   )
@@ -608,12 +614,30 @@ export default function Home() {
           .features-grid { grid-template-columns: repeat(2, 1fr) !important; }
         }
 
+        /* Mobile slide nav — hidden by default, shown on mobile */
+        .mob-slide-nav {
+          display: none;
+          align-items: center; gap: 7px;
+          margin-top: 28px;
+          background: transparent; border: none;
+          color: var(--c-muted); font-size: 12px; font-weight: 600;
+          font-family: inherit; cursor: pointer;
+          opacity: 0.7; letter-spacing: 0.02em;
+          -webkit-tap-highlight-color: transparent;
+          transition: opacity 0.15s;
+        }
+        .mob-slide-nav:active { opacity: 0.4; }
+
         @media (max-width: 600px) {
-          .hero-section  { padding: 60px 0 60px !important; min-height: auto !important; }
-          .hero-inner    { padding: 0 20px !important; }
+          /* ── Hero track: items align to top so slides don't stretch to match each other ── */
+          .hero-track { align-items: flex-start !important; }
+          /* ── Hero section: separate padding props to avoid shorthand conflict ── */
+          .hero-section  { padding-top: 80px !important; padding-bottom: 40px !important; min-height: 0 !important; justify-content: flex-start !important; }
+          .hero-inner    { padding-left: 20px !important; padding-right: 20px !important; }
           .hero-h1       { font-size: 34px !important; letter-spacing: -0.5px !important; margin-bottom: 16px !important; }
-          .hero-sub      { font-size: 16px !important; }
-          .hero-widget   { margin-top: 28px !important; max-width: 100% !important; }
+          .hero-sub      { font-size: 16px !important; margin-bottom: 32px !important; }
+          .hero-widget   { margin-top: 24px !important; max-width: 100% !important; }
+          .hero-scroll-cue { display: none !important; }
           .goals-row     { flex-wrap: nowrap !important; overflow-x: auto !important; padding-bottom: 6px !important; scrollbar-width: none !important; -webkit-overflow-scrolling: touch !important; }
           .goals-row::-webkit-scrollbar { display: none !important; }
           .goal-pill     { font-size: 12px !important; flex-shrink: 0 !important; }
@@ -623,6 +647,15 @@ export default function Home() {
           .hero-note     { font-size: 11px !important; }
           .home-features-grid { grid-template-columns: 1fr !important; gap: 12px !important; }
           .home-stats { flex-wrap: wrap !important; gap: 12px !important; justify-content: center !important; }
+          /* ── Feature rows: stack ── */
+          .feature-row { grid-template-columns: 1fr !important; gap: 32px !important; }
+          .feature-row > div { order: unset !important; }
+          .features-section { padding: 80px 20px 60px !important; }
+          .features-title-section { margin-bottom: 48px !important; }
+          /* ── Roles panel: no forced height, tighter padding ── */
+          .roles-panel { min-height: 0 !important; height: auto !important; padding: 64px 20px 48px !important; }
+          /* ── Slide nav: show ── */
+          .mob-slide-nav { display: flex !important; }
         }
         @media (max-width: 380px) {
           .home-hero-heading { font-size: clamp(28px, 8vw, 42px) !important; }
@@ -776,7 +809,7 @@ export default function Home() {
             )}
           </form>
 
-          {/* Scroll cue — purely visual, transparent, doubles as the "more below" hint */}
+          {/* Scroll cue — desktop only (hidden on mobile) */}
           <div className="hero-scroll-cue" style={{
             position: 'absolute', left: '50%', bottom: 26, transform: 'translateX(-50%)',
             display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
@@ -788,6 +821,12 @@ export default function Home() {
             }}>Mais sobre a Showo</span>
             <ChevronDown size={14} color={colors.subtle} style={{ animation: 'hero-bounce 1.8s ease-in-out infinite' }} />
           </div>
+
+          {/* Mobile swipe hint — bottom of hero slide, same position as roles back */}
+          <button className="mob-slide-nav" onClick={() => scrollToHeroSlide(1)}>
+            <span>Swipe para veres os perfis</span>
+            <ChevronDown size={13} style={{ transform: 'rotate(-90deg)', flexShrink: 0 }} />
+          </button>
         </div>
 
         <button
@@ -835,9 +874,10 @@ export default function Home() {
       </Reveal>
 
       {/* Features alternadas */}
-      <div ref={featuresRef} style={{ maxWidth: 1100, margin: '0 auto', padding: '200px 40px 80px' }}>
+      <div ref={featuresRef} className="features-section" style={{ maxWidth: 1100, margin: '0 auto', padding: '200px 40px 80px' }}>
 
         {/* Título da secção */}
+        <div className="features-title-section">
         <Reveal style={{ textAlign: 'center', marginBottom: 96 }}>
           <h2 style={{ fontSize: 'clamp(26px, 3vw, 42px)', fontWeight: 900, letterSpacing: '-1.5px', margin: '0 0 16px', fontFamily: 'var(--font-heading)', color: colors.text }}>
             Tudo o que precisas, num só sítio
@@ -846,6 +886,7 @@ export default function Home() {
             Cria, melhora, apresenta e candidata-te — sem sair da plataforma.
           </p>
         </Reveal>
+        </div>
 
         {featuresReady && <>
           {/* Feature 1 — Portfólio público */}

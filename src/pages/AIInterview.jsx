@@ -377,6 +377,7 @@ export default function AIInterview() {
           .ai-question-text { font-size: 18px !important; }
           .ai-options-grid { grid-template-columns: 1fr !important; }
           .ai-header-row { flex-wrap: wrap !important; gap: 8px !important; }
+          .ai-type-grid { grid-template-columns: repeat(2, 1fr) !important; }
         }
         @media (max-width: 400px) {
           .ai-nav-btns button { padding: 10px 14px !important; font-size: 13px !important; }
@@ -466,7 +467,7 @@ export default function AIInterview() {
                 <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>
                   Tipo de projeto
                 </label>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+                <div className="ai-type-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
                   {PROJECT_TYPES.map(t => {
                     const selected = setupType === t.id
                     return (
