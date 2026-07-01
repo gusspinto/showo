@@ -1118,8 +1118,8 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
           backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
         }
         .mob-menu-sheet {
-          position: fixed; left: 0; right: 0; bottom: 0; z-index: 400;
-          max-height: calc(100vh - 60px);
+          position: fixed; left: 0; right: 0; bottom: 84px; z-index: 400;
+          max-height: calc(100vh - 144px);
           background: var(--c-card);
           border-top: 1px solid var(--c-border);
           border-radius: 20px 20px 0 0;
