@@ -536,21 +536,27 @@ const BLOCK_TYPES = [
   { type: 'image',   label: 'Imagem',        Icon: Image,      desc: 'Imagem por URL ou upload' },
   { type: 'gallery', label: 'Galeria',       Icon: Layout,     desc: 'Até 3 imagens lado a lado' },
   { type: 'video',   label: 'Vídeo',         Icon: Video,      desc: 'YouTube ou Vimeo embed' },
+  { type: 'card',    label: 'Card',          Icon: ClipboardList, desc: 'Cartão livre — título + dados (ex: idade, função...)' },
   { type: 'cta',     label: 'Botão CTA',     Icon: ArrowRight, desc: 'Chamada à ação destacada' },
   { type: 'link',    label: 'Link',          Icon: Link,       desc: 'GitHub, demo, portfolio...' },
   { type: 'divider', label: 'Divisor',       Icon: Minus,      desc: 'Linha separadora de secções' },
 ]
 
-function newBlock(type) {
+function newBlock(type, posIndex = 0) {
   return {
     id: Date.now().toString(36) + Math.random().toString(36).slice(2),
     type, content: '', imageUrl: '', imageUrl2: '', imageUrl3: '',
-    label: '', url: '', color: '', align: 'left',
+    label: '', url: '', color: '', align: 'left', width: 'full',
     videoUrl: '',
     stat1Value: '', stat1Label: '',
     stat2Value: '', stat2Label: '',
     stat3Value: '', stat3Label: '',
     dividerStyle: 'solid',
+    cardTitle: '',
+    cardRows: [{ label: '', value: '' }, { label: '', value: '' }],
+    // Position in the freeform canvas (% of canvas width/height) — staggered
+    // so newly-added blocks don't all stack on top of each other at 0,0.
+    pos: { x: 8 + (posIndex % 4) * 6, y: 8 + (posIndex % 5) * 10 },
   }
 }
 
@@ -644,6 +650,45 @@ function useDragBlocks(blocks, setBlocks) {
   return { onDragStart, onDragEnter, onDragEnd }
 }
 
+// ── Free-position drag for canvas mode — pointer-based, updates block.pos
+// (% of the canvas box) on move, commits to previewBlocks on release. ──
+function useCanvasDrag(canvasRef, setPreviewBlocks) {
+  const draggingId = useRef(null)
+  const offset = useRef({ x: 0, y: 0 })
+
+  function onPointerDown(e, block) {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    e.preventDefault()
+    draggingId.current = block.id
+    const rect = canvas.getBoundingClientRect()
+    const curX = (block.pos?.x ?? 8) / 100 * rect.width
+    const curY = (block.pos?.y ?? 8) / 100 * rect.height
+    offset.current = { x: e.clientX - rect.left - curX, y: e.clientY - rect.top - curY }
+    window.addEventListener('pointermove', onPointerMove)
+    window.addEventListener('pointerup', onPointerUp)
+  }
+
+  function onPointerMove(e) {
+    const canvas = canvasRef.current
+    if (!canvas || draggingId.current === null) return
+    const rect = canvas.getBoundingClientRect()
+    let x = (e.clientX - rect.left - offset.current.x) / rect.width * 100
+    let y = (e.clientY - rect.top - offset.current.y) / rect.height * 100
+    x = Math.max(0, Math.min(92, x))
+    y = Math.max(0, Math.min(92, y))
+    setPreviewBlocks(bs => bs.map(b => b.id === draggingId.current ? { ...b, pos: { x, y } } : b))
+  }
+
+  function onPointerUp() {
+    draggingId.current = null
+    window.removeEventListener('pointermove', onPointerMove)
+    window.removeEventListener('pointerup', onPointerUp)
+  }
+
+  return { onPointerDown }
+}
+
 // ── Public visitor view ────────────────────────────────────────────────────────
 const wsInput = {
   width: '100%', boxSizing: 'border-box',
@@ -683,6 +728,8 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
   hasInterest, interestCount, interestLoading, onInterest,
   isRecruiterRole,
   wsExpanded, setWsExpanded,
+  onCoverChange,
+  previewDevice, setPreviewDevice,
 }) {
   const navigate = useNavigate()
   const { theme } = useTheme()
@@ -693,9 +740,31 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
   const [dragOverIdx, setDragOverIdx] = useState(null)
   const sectionDragRef = useRef(null)
   const [dragOverSectionIdx, setDragOverSectionIdx] = useState(null)
-  const [previewDevice, setPreviewDevice] = useState('desktop')
+  const [mediaEditKey, setMediaEditKey] = useState(null)
+  const canvasRef = useRef(null)
+  const { onPointerDown: onCanvasPointerDown } = useCanvasDrag(canvasRef, setPreviewBlocks)
+
+  function uploadSectionMedia(sectionKey) {
+    const input = document.createElement('input')
+    input.type = 'file'; input.accept = 'image/*'
+    input.onchange = async (e) => {
+      const file = e.target.files[0]; if (!file) return
+      const ext = file.name.split('.').pop()
+      const path = `sections/${project.id}/${sectionKey}_${Date.now()}.${ext}`
+      const { data, error } = await supabase.storage.from('project-images').upload(path, file, { upsert: true })
+      if (!error && data) {
+        const { data: { publicUrl } } = supabase.storage.from('project-images').getPublicUrl(path)
+        setPreviewStyle(ps => ({
+          ...ps,
+          sectionMedia: { ...(ps.sectionMedia || {}), [sectionKey]: { ...(ps.sectionMedia?.[sectionKey] || {}), type: 'image', url: publicUrl } },
+        }))
+      }
+    }
+    input.click()
+  }
   const [previewTab, setPreviewTab] = useState('estilo')  // 'estilo' | 'blocos' | 'seccoes'
   const [previewSaved, setPreviewSaved] = useState(false)
+  const [previewSaveError, setPreviewSaveError] = useState(false)
   const bannerRef = useRef(null)
   const [bannerH, setBannerH] = useState(44)
   const [isDesktop, setIsDesktop] = useState(() => typeof window !== 'undefined' && window.innerWidth >= 760)
@@ -810,8 +879,30 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
   const customTagline     = previewStyle.customTagline || ''
   const cardStyleVal      = previewStyle.cardStyle || 'border'
   const hiddenSections = new Set(previewStyle.hiddenSections || [])
-  const DEFAULT_SECTION_ORDER = ['problem','solution','target_audience','features','technologies','challenges','results','learnings']
+  const DEFAULT_SECTION_ORDER = ['problem','solution','target_audience','features','technologies','challenges','results','learnings','pap_supervisor']
   const orderedSections = previewStyle.sectionOrder?.length ? previewStyle.sectionOrder : DEFAULT_SECTION_ORDER
+  const sectionMedia = previewStyle.sectionMedia || {}
+
+  // Pairs a section card with an optional image/video on the side (set via the
+  // Secções tab) — falls back to the plain full-width card when no media is set.
+  function withSectionMedia(key, card) {
+    const media = sectionMedia[key]
+    if (!media || !media.url) return card
+    const embedUrl = media.type === 'video' ? getVideoEmbedUrl(media.url) : null
+    const side = media.side === 'left' ? 'row-reverse' : 'row'
+    return (
+      <div key={key} style={{ display: 'flex', flexWrap: 'wrap', gap: 20, alignItems: 'stretch', flexDirection: side }}>
+        <div style={{ flex: '1 1 280px', minWidth: 0 }}>{card}</div>
+        <div style={{ flex: '1 1 220px', maxWidth: '100%', width: 'min(100%, 320px)', borderRadius: 14, overflow: 'hidden', background: 'var(--c-card)', border: '1px solid var(--c-border)' }}>
+          {embedUrl ? (
+            <iframe src={embedUrl} title="" style={{ width: '100%', height: '100%', minHeight: 200, border: 'none', display: 'block' }} allowFullScreen />
+          ) : (
+            <img src={media.url} alt="" style={{ width: '100%', height: '100%', minHeight: 200, objectFit: 'cover', display: 'block' }} />
+          )}
+        </div>
+      </div>
+    )
+  }
 
   const DEVICES = [
     { id: 'desktop',  Icon: Monitor,    label: 'Desktop',   title: 'Vista desktop' },
@@ -934,8 +1025,11 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
         }
       `}</style>
 
-      {/* ── Owner preview banner ── */}
-      {isOwner && (
+      {/* ── Owner preview banner — desktop moves these controls into the sidebar's
+          "Gerir projeto" section instead (no room for a floating top bar there
+          since the sidebar now stays visible during preview/edit). Mobile/tablet
+          has no sidebar, so it keeps this bar. ── */}
+      {isOwner && !isDesktop && (
         <div ref={bannerRef} className="pv-banner-inner" style={{
           flexShrink: 0, zIndex: 300,
           background: theme === 'light' ? 'rgba(248,250,252,0.97)' : 'rgba(6,12,24,0.97)',
@@ -1028,7 +1122,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
       <div style={{
         flex: 1, overflowY: 'auto', overflowX: 'hidden',
         background: resolvedBg,
-        paddingRight: isOwner && previewEditing && isDesktop ? 360 : 0,
+        paddingRight: isOwner && previewEditing && isDesktop ? (wsExpanded ? 360 : 60) : 0,
         transition: 'padding-right 0.26s ease, padding-bottom 0.26s ease',
         paddingBottom: wsExpanded && !isDesktop ? 'calc(48vh + 10px)' : undefined,
       }}>
@@ -1071,8 +1165,16 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
 
         {/* Title block over hero */}
         <div className="pv-title-block" style={{ maxWidth: 860, margin: '0 auto', padding: '0 28px', position: 'relative', marginTop: coverAsHero ? -160 : project.cover_url ? -100 : -80, textAlign: titleAlign }}>
-          {/* Area / type chips */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center', marginBottom: 18, justifyContent: titleAlign === 'center' ? 'center' : titleAlign === 'right' ? 'flex-end' : 'flex-start' }}>
+          {/* Area / type chips — backed by a translucent pill when sitting over a
+              cover photo, so they stay readable regardless of the image underneath */}
+          <div style={{
+            display: 'inline-flex', flexWrap: 'wrap', gap: 8, alignItems: 'center', marginBottom: 18,
+            justifyContent: titleAlign === 'center' ? 'center' : titleAlign === 'right' ? 'flex-end' : 'flex-start',
+            ...(project.cover_url ? {
+              background: 'rgba(5,9,18,0.55)', backdropFilter: 'blur(6px)',
+              padding: '6px 12px', borderRadius: 999, border: '1px solid rgba(255,255,255,0.1)',
+            } : {}),
+          }}>
             {project.project_type && (
               <span style={{
                 color: hero.c1, fontSize: 12, fontWeight: 700, letterSpacing: '0.06em',
@@ -1085,6 +1187,18 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
             )}
             {project.area && (
               <span style={{ color: colors.blue, fontSize: 12, fontWeight: 600 }}>{project.area}</span>
+            )}
+            {project.score != null && (project.project_type || project.area) && (
+              <span style={{ color: colors.subtle, fontSize: 12 }}>·</span>
+            )}
+            {project.score != null && (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: colors.subtle, fontSize: 12 }}>
+                <span style={{
+                  width: 5, height: 5, borderRadius: '50%',
+                  background: project.score >= 86 ? '#22c55e' : project.score >= 51 ? '#1b78f7' : '#f97316',
+                }} />
+                {project.score} score
+              </span>
             )}
           </div>
 
@@ -1119,7 +1233,11 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
           </h1>
 
           {(customTagline || project.ai_tagline) && (
-            <p style={{ fontSize: 'clamp(16px, 2.2vw, 20px)', color: coverAsHero ? 'rgba(255,255,255,0.75)' : 'var(--c-muted)', margin: '0 0 28px', maxWidth: titleAlign === 'center' ? '100%' : 600, lineHeight: 1.5, fontWeight: 400, textAlign: titleAlign }}>
+            <p style={{
+              fontSize: 'clamp(16px, 2.2vw, 20px)', color: coverAsHero ? 'rgba(255,255,255,0.75)' : 'var(--c-muted)',
+              margin: titleAlign === 'right' ? '0 0 28px auto' : '0 0 28px',
+              maxWidth: titleAlign === 'center' ? '100%' : 600, lineHeight: 1.5, fontWeight: 400, textAlign: titleAlign,
+            }}>
               {customTagline || project.ai_tagline}
             </p>
           )}
@@ -1168,12 +1286,14 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
       {/* ── Workspace panel — sidebar (desktop) or bottom sheet (mobile) ── */}
       {isOwner && previewEditing && (
         <div className={`pv-workspace${isDesktop ? '' : ` pv-ws-sheet${wsExpanded ? '' : ' ws-collapsed'}`}`} style={{
-          position: 'fixed', right: 0, top: bannerH, bottom: 0, zIndex: 200,
-          width: 360,
+          position: 'fixed', right: 0, top: isDesktop ? 0 : bannerH, bottom: 0, zIndex: 200,
+          width: isDesktop ? (wsExpanded ? 360 : 60) : 360,
           background: 'var(--c-sidebar-bg)',
           borderLeft: '1px solid var(--c-border)',
           display: 'flex', flexDirection: 'column',
           fontFamily: 'var(--font-body)',
+          transition: isDesktop ? 'width 0.22s cubic-bezier(0.4,0,0.2,1)' : undefined,
+          overflow: 'hidden',
         }}>
           {/* Drag handle — mobile only, taps to close workspace */}
           {!isDesktop && (
@@ -1181,8 +1301,50 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
               onClick={() => setWsExpanded(false)} />
           )}
 
+          {/* Collapse/expand control — same idiom as the left sidebar's edge button */}
+          {isDesktop && (
+            <button
+              onClick={() => setWsExpanded(e => !e)}
+              title={wsExpanded ? 'Colapsar' : 'Expandir'}
+              style={{
+                position: 'absolute', top: 68, left: -11,
+                width: 22, height: 22, borderRadius: '50%',
+                background: 'var(--c-sidebar-bg)', border: '1px solid var(--c-border)',
+                color: 'var(--c-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer', zIndex: 5, padding: 0,
+                boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+              }}
+            >
+              <ChevronRight size={12} style={{ transform: wsExpanded ? 'none' : 'rotate(180deg)', transition: 'transform 0.2s' }} />
+            </button>
+          )}
+
+          {/* Collapsed desktop rail — just the 3 tab icons, click expands + switches tab */}
+          {isDesktop && !wsExpanded && (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '16px 0' }}>
+              {[
+                { id: 'estilo',  Icon: Palette },
+                { id: 'blocos',  Icon: Layout  },
+                { id: 'seccoes', Icon: Eye     },
+              ].map(t => (
+                <button
+                  key={t.id}
+                  title={t.id}
+                  onClick={() => { setPreviewTab(t.id); setWsExpanded(true) }}
+                  style={{
+                    width: 36, height: 36, borderRadius: 9, border: 'none', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    background: previewTab === t.id ? 'rgba(27,120,247,0.15)' : 'transparent',
+                    color: previewTab === t.id ? '#1b78f7' : 'var(--c-muted)',
+                    transition: 'background 0.13s, color 0.13s',
+                  }}
+                ><t.Icon size={16} /></button>
+              ))}
+            </div>
+          )}
+
           {/* ── Panel header: tabs + save + close ── */}
-          <div style={{
+          {(!isDesktop || wsExpanded) && <div style={{
             padding: '8px 10px 0',
             borderBottom: '1px solid var(--c-border)',
             flexShrink: 0,
@@ -1220,12 +1382,20 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
                   const { error } = await supabase.from('projects')
                     .update({ preview_blocks: previewBlocks, preview_style: previewStyle })
                     .eq('id', project.id)
-                  if (!error) { setPreviewSaved(true); setTimeout(() => setPreviewSaved(false), 2000) }
+                  if (!error) {
+                    setPreviewSaveError(false)
+                    setPreviewSaved(true)
+                    setTimeout(() => setPreviewSaved(false), 2000)
+                  } else {
+                    console.error('Save preview error:', error)
+                    setPreviewSaveError(true)
+                    setTimeout(() => setPreviewSaveError(false), 4000)
+                  }
                 }}
-                title="Guardar"
-                style={{ width: 28, height: 28, borderRadius: 7, background: previewSaved ? 'rgba(34,197,94,0.1)' : 'rgba(27,120,247,0.08)', border: `1px solid ${previewSaved ? 'rgba(34,197,94,0.3)' : 'rgba(27,120,247,0.2)'}`, color: previewSaved ? '#22c55e' : '#1b78f7', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s', flexShrink: 0 }}
+                title={previewSaveError ? 'Erro ao guardar — tenta novamente' : 'Guardar'}
+                style={{ width: 28, height: 28, borderRadius: 7, background: previewSaveError ? 'rgba(239,68,68,0.1)' : previewSaved ? 'rgba(34,197,94,0.1)' : 'rgba(27,120,247,0.08)', border: `1px solid ${previewSaveError ? 'rgba(239,68,68,0.3)' : previewSaved ? 'rgba(34,197,94,0.3)' : 'rgba(27,120,247,0.2)'}`, color: previewSaveError ? '#ef4444' : previewSaved ? '#22c55e' : '#1b78f7', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s', flexShrink: 0 }}
               >
-                {previewSaved ? <Check size={13} strokeWidth={3} /> : <Save size={13} />}
+                {previewSaveError ? <X size={13} strokeWidth={3} /> : previewSaved ? <Check size={13} strokeWidth={3} /> : <Save size={13} />}
               </button>
               {/* Close */}
               <button
@@ -1235,8 +1405,9 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
                 onMouseLeave={e => e.currentTarget.style.background = 'rgba(239,68,68,0.08)'}
               ><X size={13} /></button>
             </div>
-          </div>
+          </div>}
 
+          {(!isDesktop || wsExpanded) && <>
           {/* ── TAB: ESTILO ── */}
           {previewTab === 'estilo' && (
             <div style={{ flex: 1, overflowY: 'auto', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -1359,6 +1530,32 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
                         width: 18, height: 18, borderRadius: '50%', background: '#fff',
                         position: 'absolute', top: 3,
                         left: previewStyle.coverAsHero && project.cover_url ? 21 : 3,
+                        transition: 'left 0.2s', boxShadow: '0 1px 4px rgba(0,0,0,0.35)',
+                      }} />
+                    </button>
+                  </div>
+                </div>
+                <div style={{ marginBottom: 12 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                    <div>
+                      <div style={wsControlLabel}>Blocos em canvas livre</div>
+                      <div style={{ fontSize: 10, color: 'var(--c-subtle)', marginTop: 1 }}>
+                        Arrasta os blocos para qualquer posição, em vez de em lista
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setPreviewStyle(ps => ({ ...ps, canvasMode: !ps.canvasMode }))}
+                      style={{
+                        width: 42, height: 24, borderRadius: 99, flexShrink: 0,
+                        background: previewStyle.canvasMode ? '#1b78f7' : 'var(--c-border)',
+                        border: 'none', cursor: 'pointer',
+                        transition: 'background 0.2s', position: 'relative',
+                      }}
+                    >
+                      <div style={{
+                        width: 18, height: 18, borderRadius: '50%', background: '#fff',
+                        position: 'absolute', top: 3,
+                        left: previewStyle.canvasMode ? 21 : 3,
                         transition: 'left 0.2s', boxShadow: '0 1px 4px rgba(0,0,0,0.35)',
                       }} />
                     </button>
@@ -1531,12 +1728,12 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
                       input.onchange = async () => {
                         const file = input.files[0]; if (!file) return
                         const ext = file.name.split('.').pop()
-                        const path = `covers/${project.id}/cover_${Date.now()}.${ext}`
-                        const { error: upErr } = await supabase.storage.from('project-assets').upload(path, file, { upsert: true })
+                        const path = `${project.id}/cover_${Date.now()}.${ext}`
+                        const { error: upErr } = await supabase.storage.from('covers').upload(path, file, { upsert: true })
                         if (!upErr) {
-                          const { data: { publicUrl } } = supabase.storage.from('project-assets').getPublicUrl(path)
+                          const { data: { publicUrl } } = supabase.storage.from('covers').getPublicUrl(path)
                           await supabase.from('projects').update({ cover_url: publicUrl }).eq('id', project.id)
-                          window.location.reload()
+                          onCoverChange?.(publicUrl)
                         }
                       }
                       input.click()
@@ -1582,7 +1779,18 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
                   {BLOCK_TYPES.map(bt => {
                     const BtIcon = bt.Icon
                     return (
-                      <button key={bt.type} title={bt.desc} onClick={() => setPreviewBlocks(bs => [...bs, newBlock(bt.type)])}
+                      <button key={bt.type} title={bt.desc} onClick={() => {
+                          const b = newBlock(bt.type, previewBlocks.length)
+                          setPreviewBlocks(bs => [b, ...bs])
+                          // New blocks always land at the very top of the page,
+                          // whether or not the order has been customized yet.
+                          setPreviewStyle(ps => {
+                            const base = ps.layoutOrder?.length
+                              ? ps.layoutOrder
+                              : [...previewBlocks.map(pb => ({ kind: 'block', id: pb.id })), ...orderedSections.map(key => ({ kind: 'section', key }))]
+                            return { ...ps, layoutOrder: [{ kind: 'block', id: b.id }, ...base] }
+                          })
+                        }}
                         style={{
                           background: 'var(--c-bg)', border: '1px solid var(--c-border)',
                           borderRadius: 8, padding: '7px 6px',
@@ -1640,7 +1848,12 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
                           <BtIcon size={10} color={accentColor} />
                         </div>
                         <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--c-text)', flex: 1 }}>{bt.label}</span>
-                        <button onClick={() => setPreviewBlocks(bs => bs.filter(b => b.id !== block.id))}
+                        <button onClick={() => {
+                            setPreviewBlocks(bs => bs.filter(b => b.id !== block.id))
+                            setPreviewStyle(ps => ps.layoutOrder?.length
+                              ? { ...ps, layoutOrder: ps.layoutOrder.filter(item => !(item.kind === 'block' && item.id === block.id)) }
+                              : ps)
+                          }}
                           style={{ background: 'none', border: 'none', color: 'var(--c-subtle)', cursor: 'pointer', padding: '2px 3px', display: 'flex', alignItems: 'center', borderRadius: 4, transition: 'color 0.12s' }}
                           onMouseEnter={e => e.currentTarget.style.color = '#ef4444'}
                           onMouseLeave={e => e.currentTarget.style.color = 'var(--c-subtle)'}
@@ -1693,6 +1906,41 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
                         <input value={block.content || ''} onChange={e => upd(block.id, 'content', e.target.value)} placeholder="Texto do botão" style={{ ...wsInputNew, marginBottom: 5, fontWeight: 700 }} />
                         <input value={block.url || ''} onChange={e => upd(block.id, 'url', e.target.value)} placeholder="URL de destino (https://...)" style={wsInputNew} />
                       </>)}
+                      {block.type === 'card' && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                          <input value={block.cardTitle || ''} onChange={e => upd(block.id, 'cardTitle', e.target.value)} placeholder="Título do card (opcional)" style={{ ...wsInputNew, fontWeight: 700 }} />
+                          {(block.cardRows || []).map((row, i) => (
+                            <div key={i} style={{ display: 'flex', gap: 4 }}>
+                              <input
+                                value={row.label}
+                                onChange={e => {
+                                  const rows = [...block.cardRows]; rows[i] = { ...rows[i], label: e.target.value }
+                                  upd(block.id, 'cardRows', rows)
+                                }}
+                                placeholder="Ex: Idade" style={{ ...wsInputNew, flex: '0 0 42%' }}
+                              />
+                              <input
+                                value={row.value}
+                                onChange={e => {
+                                  const rows = [...block.cardRows]; rows[i] = { ...rows[i], value: e.target.value }
+                                  upd(block.id, 'cardRows', rows)
+                                }}
+                                placeholder="Ex: 17 anos" style={{ ...wsInputNew, flex: 1 }}
+                              />
+                              <button
+                                onClick={() => upd(block.id, 'cardRows', block.cardRows.filter((_, ri) => ri !== i))}
+                                style={{ background: 'none', border: 'none', color: 'var(--c-subtle)', cursor: 'pointer', display: 'flex', flexShrink: 0, padding: '0 2px' }}
+                              ><X size={13} /></button>
+                            </div>
+                          ))}
+                          {(block.cardRows || []).length < 6 && (
+                            <button
+                              onClick={() => upd(block.id, 'cardRows', [...(block.cardRows || []), { label: '', value: '' }])}
+                              style={{ alignSelf: 'flex-start', fontSize: 11, fontWeight: 600, color: '#1b78f7', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 0', fontFamily: 'inherit' }}
+                            >+ Adicionar linha</button>
+                          )}
+                        </div>
+                      )}
                       {block.type === 'divider' && (
                         <div style={{ display: 'flex', gap: 3 }}>
                           {['solid','dashed','dotted','gradient'].map(s => (
@@ -1743,6 +1991,20 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
                           </div>
                         )}
                       </div>
+                      {/* Width — pairs two consecutive "Metade" blocks side by side */}
+                      <div style={{ marginTop: 6, display: 'flex', gap: 4 }}>
+                        {[{ val: 'full', label: 'Largura total' }, { val: 'half', label: 'Metade' }].map(w => (
+                          <button key={w.val} onClick={() => upd(block.id, 'width', w.val)}
+                            style={{
+                              flex: 1, padding: '4px 0', borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit',
+                              background: (block.width || 'full') === w.val ? 'rgba(27,120,247,0.12)' : 'var(--c-bg)',
+                              border: `1px solid ${(block.width || 'full') === w.val ? '#1b78f7' : 'var(--c-border)'}`,
+                              color: (block.width || 'full') === w.val ? '#1b78f7' : 'var(--c-muted)',
+                              fontSize: 10, fontWeight: 600,
+                            }}
+                          >{w.label}</button>
+                        ))}
+                      </div>
                     </div>
                   )
                 })}
@@ -1761,35 +2023,81 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
               challenges:      { label: 'Desafios',        Icon: Zap        },
               results:         { label: 'Resultados',      Icon: TrendingUp },
               learnings:       { label: 'Aprendizagens',   Icon: BookOpen   },
+              pap_supervisor:  { label: 'Orientador',       Icon: GraduationCap },
             }
             const hidden = new Set(previewStyle.hiddenSections || [])
+            const blocksById = Object.fromEntries(previewBlocks.map(b => [b.id, b]))
+            const defaultLayout = [
+              ...previewBlocks.map(b => ({ kind: 'block', id: b.id })),
+              ...orderedSections.map(key => ({ kind: 'section', key })),
+            ]
+            const layoutDisplay = previewStyle.layoutOrder?.length ? previewStyle.layoutOrder : defaultLayout
+
+            function moveLayoutItem(from, to) {
+              if (from === to) return
+              const next = [...layoutDisplay]
+              next.splice(to, 0, next.splice(from, 1)[0])
+              setPreviewStyle(ps => ({ ...ps, layoutOrder: next }))
+            }
+
             return (
               <div style={{ flex: 1, overflowY: 'auto', padding: '12px 14px' }}>
-                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--c-subtle)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>Secções da preview</div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--c-subtle)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>Ordem da página</div>
                 <p style={{ margin: '0 0 12px', fontSize: 11, color: 'var(--c-muted)', lineHeight: 1.5 }}>
-                  Arrasta para reordenar. Toca em <Eye size={10} style={{ verticalAlign: 'middle' }} /> para ocultar.
+                  Arrasta para reordenar — podes intercalar blocos com secções livremente. Toca em <Eye size={10} style={{ verticalAlign: 'middle' }} /> para ocultar uma secção.
                 </p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  {orderedSections.map((key, idx) => {
+                  {layoutDisplay.map((item, idx) => {
+                    if (item.kind === 'block') {
+                      const block = blocksById[item.id]
+                      if (!block) return null
+                      const bt = BLOCK_TYPES.find(b => b.type === block.type) || BLOCK_TYPES[0]
+                      const BIcon = bt.Icon
+                      const isOver = dragOverSectionIdx === idx
+                      const previewText = block.content || block.cardTitle || block.label || bt.label
+                      return (
+                        <div key={block.id} draggable
+                          onDragStart={() => { sectionDragRef.current = idx }}
+                          onDragOver={e => { e.preventDefault(); if (dragOverSectionIdx !== idx) setDragOverSectionIdx(idx) }}
+                          onDragLeave={() => setDragOverSectionIdx(null)}
+                          onDrop={e => { e.preventDefault(); setDragOverSectionIdx(null); moveLayoutItem(sectionDragRef.current, idx) }}
+                          onDragEnd={() => setDragOverSectionIdx(null)}
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: 8,
+                            background: isOver ? 'rgba(27,120,247,0.08)' : 'var(--c-bg-alt)',
+                            border: `1px solid ${isOver ? '#1b78f7' : 'rgba(27,120,247,0.15)'}`,
+                            borderLeft: '3px solid #1b78f7',
+                            borderRadius: 10, padding: '8px 10px',
+                            userSelect: 'none', cursor: 'grab',
+                          }}
+                        >
+                          <div style={{ cursor: 'grab', color: 'var(--c-subtle)', display: 'flex', flexShrink: 0 }}><GripVertical size={14} /></div>
+                          <div style={{ width: 26, height: 26, borderRadius: 7, flexShrink: 0, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1b78f7' }}>
+                            <BIcon size={12} strokeWidth={2} />
+                          </div>
+                          <span style={{ fontSize: 12, fontWeight: 600, flex: 1, color: 'var(--c-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {bt.label}{previewText ? ` · ${previewText}` : ''}
+                          </span>
+                          {block.width === 'half' && <span style={{ fontSize: 9, color: '#1b78f7', fontWeight: 700, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.25)', borderRadius: 4, padding: '1px 5px', flexShrink: 0 }}>metade</span>}
+                        </div>
+                      )
+                    }
+
+                    const key = item.key
                     const s = NATIVE_SECTIONS_MAP[key]
                     if (!s) return null
                     const isHidden = hidden.has(key)
                     const hasContent = key === 'features' ? features.length > 0 : key === 'technologies' ? tech.length > 0 : !!(project[key]?.trim())
                     const SIcon = s.Icon
                     const isOver = dragOverSectionIdx === idx
+                    const media = previewStyle.sectionMedia?.[key]
                     return (
-                      <div key={key} draggable
+                      <div key={key}>
+                      <div draggable
                         onDragStart={() => { sectionDragRef.current = idx }}
                         onDragOver={e => { e.preventDefault(); if (dragOverSectionIdx !== idx) setDragOverSectionIdx(idx) }}
                         onDragLeave={() => setDragOverSectionIdx(null)}
-                        onDrop={e => {
-                          e.preventDefault(); setDragOverSectionIdx(null)
-                          const from = sectionDragRef.current
-                          if (from === null || from === idx) return
-                          const newOrder = [...orderedSections]
-                          newOrder.splice(idx, 0, newOrder.splice(from, 1)[0])
-                          setPreviewStyle(ps => ({ ...ps, sectionOrder: newOrder }))
-                        }}
+                        onDrop={e => { e.preventDefault(); setDragOverSectionIdx(null); moveLayoutItem(sectionDragRef.current, idx) }}
                         onDragEnd={() => setDragOverSectionIdx(null)}
                         style={{
                           display: 'flex', alignItems: 'center', gap: 8,
@@ -1824,6 +2132,69 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
                         >
                           {isHidden ? <EyeOff size={14} /> : <Eye size={14} />}
                         </button>
+                        {hasContent && (
+                          <button
+                            onClick={() => setMediaEditKey(k => k === key ? null : key)}
+                            title="Imagem/vídeo ao lado"
+                            style={{ background: media ? 'rgba(27,120,247,0.12)' : 'none', border: 'none', padding: '3px 4px', cursor: 'pointer', display: 'flex', color: media ? '#1b78f7' : 'var(--c-subtle)', flexShrink: 0, borderRadius: 6, transition: 'background 0.12s' }}
+                          >
+                            <Image size={14} />
+                          </button>
+                        )}
+                      </div>
+                      {mediaEditKey === key && (
+                        <div style={{ marginTop: 4, marginLeft: 22, padding: '10px 12px', background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: 8, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                          <div style={{ display: 'flex', gap: 6 }}>
+                            <button
+                              onClick={() => uploadSectionMedia(key)}
+                              style={{ flex: 1, padding: '6px 8px', fontSize: 11, fontWeight: 600, background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)', borderRadius: 6, color: 'var(--c-text)', cursor: 'pointer', fontFamily: 'inherit' }}
+                            >Carregar imagem</button>
+                            {media && (
+                              <button
+                                onClick={() => setPreviewStyle(ps => {
+                                  const next = { ...(ps.sectionMedia || {}) }
+                                  delete next[key]
+                                  return { ...ps, sectionMedia: next }
+                                })}
+                                style={{ padding: '6px 10px', fontSize: 11, fontWeight: 600, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 6, color: '#ef4444', cursor: 'pointer', fontFamily: 'inherit' }}
+                              >Remover</button>
+                            )}
+                          </div>
+                          <input
+                            type="text" placeholder="Ou cola um link de vídeo (YouTube/Vimeo)"
+                            defaultValue={media?.type === 'video' ? media.url : ''}
+                            onBlur={e => {
+                              const url = e.target.value.trim()
+                              if (!url) return
+                              setPreviewStyle(ps => ({
+                                ...ps,
+                                sectionMedia: { ...(ps.sectionMedia || {}), [key]: { ...(ps.sectionMedia?.[key] || {}), type: 'video', url } },
+                              }))
+                            }}
+                            style={{ width: '100%', padding: '6px 8px', fontSize: 11, background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)', borderRadius: 6, color: 'var(--c-text)', fontFamily: 'inherit', boxSizing: 'border-box' }}
+                          />
+                          {media && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <span style={{ fontSize: 10, color: 'var(--c-subtle)', fontWeight: 600 }}>Lado:</span>
+                              {['right', 'left'].map(side => (
+                                <button
+                                  key={side}
+                                  onClick={() => setPreviewStyle(ps => ({
+                                    ...ps,
+                                    sectionMedia: { ...(ps.sectionMedia || {}), [key]: { ...(ps.sectionMedia?.[key] || {}), side } },
+                                  }))}
+                                  style={{
+                                    padding: '4px 10px', fontSize: 11, fontWeight: 600, borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit',
+                                    background: (media.side || 'right') === side ? 'rgba(27,120,247,0.15)' : 'var(--c-bg-alt)',
+                                    border: `1px solid ${(media.side || 'right') === side ? '#1b78f7' : 'var(--c-border)'}`,
+                                    color: (media.side || 'right') === side ? '#1b78f7' : 'var(--c-muted)',
+                                  }}
+                                >{side === 'right' ? 'Direita' : 'Esquerda'}</button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
                       </div>
                     )
                   })}
@@ -1834,15 +2205,17 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
               </div>
             )
           })()}
+          </>}
 
         </div>
       )}
 
       {/* ── Story sections ── */}
-      <div className="pv-story" style={{ maxWidth: deviceMaxWidth ? Math.min(860, deviceMaxWidth) : 860, margin: `${bannerH + 16}px auto 0`, padding: `0 ${previewDevice === 'mobile' ? '16px' : '28px'} 80px`, display: 'flex', flexDirection: 'column', gap: 32, fontFamily: selectedFont.css }}>
+      <div className="pv-story" style={{ maxWidth: deviceMaxWidth ? Math.min(860, deviceMaxWidth) : 860, margin: `${isDesktop ? 40 : bannerH + 16}px auto 0`, padding: `0 ${previewDevice === 'mobile' ? '16px' : '28px'} 80px`, display: 'flex', flexDirection: 'column', gap: 32, fontFamily: selectedFont.css }}>
 
         {/* Custom blocks — workspace blocks shown first */}
-        {previewBlocks.map(block => {
+        {(() => {
+        function renderOneBlock(block) {
           const accent = block.color || '#1b78f7'
           const align  = block.align  || 'left'
 
@@ -1985,6 +2358,28 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
             </div>
           )
 
+          if (block.type === 'card') {
+            const rows = (block.cardRows || []).filter(r => r.label || r.value)
+            if (!block.cardTitle && rows.length === 0) return null
+            return (
+              <div key={block.id} style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderLeft: `4px solid ${accent}`, borderRadius: '0 12px 12px 0', padding: '22px 26px' }}>
+                {block.cardTitle && (
+                  <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--c-text)', marginBottom: rows.length ? 14 : 0 }}>{block.cardTitle}</div>
+                )}
+                {rows.length > 0 && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {rows.map((r, i) => (
+                      <div key={i} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, fontSize: 14 }}>
+                        <span style={{ color: 'var(--c-muted)' }}>{r.label}</span>
+                        <span style={{ color: 'var(--c-text)', fontWeight: 600, textAlign: 'right' }}>{r.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )
+          }
+
           if (block.type === 'divider') {
             const ds = block.dividerStyle || 'solid'
             if (ds === 'gradient') return (
@@ -1996,15 +2391,12 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
           }
 
           return null
-        })}
+        }
 
-        {/* Native sections — rendered in user-defined order */}
-        {orderedSections.map(key => {
-          if (hiddenSections.has(key)) return null
-
+        function renderOneSection(key) {
           if (key === 'problem')
-            return !project.problem ? null : (
-              <div key="problem" className="pv-section-card" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderLeft: `4px solid ${hero.c1}`, borderRadius: '0 12px 12px 0', padding: '28px 32px' }}>
+            return !project.problem ? null : withSectionMedia(key,
+              <div className="pv-section-card" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderLeft: `4px solid ${hero.c1}`, borderRadius: '0 12px 12px 0', padding: '28px 32px' }}>
                 <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--c-muted)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
                   <Target size={13} /> O problema que resolve
                 </div>
@@ -2013,8 +2405,8 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
             )
 
           if (key === 'solution')
-            return !project.solution ? null : (
-              <div key="solution" className="pv-section-card" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 12, padding: '28px 32px' }}>
+            return !project.solution ? null : withSectionMedia(key,
+              <div className="pv-section-card" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 12, padding: '28px 32px' }}>
                 <div style={{ fontSize: 11, fontWeight: 800, color: colors.blue, textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
                   <Zap size={13} /> A solução
                 </div>
@@ -2023,8 +2415,8 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
             )
 
           if (key === 'target_audience')
-            return !project.target_audience ? null : (
-              <div key="target_audience" className="pv-section-card" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 12, padding: '28px 32px' }}>
+            return !project.target_audience ? null : withSectionMedia(key,
+              <div className="pv-section-card" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 12, padding: '28px 32px' }}>
                 <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--c-muted)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
                   <Users size={13} /> Público-alvo
                 </div>
@@ -2033,8 +2425,8 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
             )
 
           if (key === 'features')
-            return features.length === 0 ? null : (
-              <div key="features" className="pv-section-card" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 12, padding: '28px 32px' }}>
+            return features.length === 0 ? null : withSectionMedia(key,
+              <div className="pv-section-card" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 12, padding: '28px 32px' }}>
                 <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--c-muted)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
                   <Wrench size={13} /> O que faz
                 </div>
@@ -2052,8 +2444,8 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
             )
 
           if (key === 'technologies')
-            return tech.length === 0 ? null : (
-              <div key="technologies" className="pv-section-card" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 12, padding: '28px 32px' }}>
+            return tech.length === 0 ? null : withSectionMedia(key,
+              <div className="pv-section-card" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 12, padding: '28px 32px' }}>
                 <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--c-muted)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 18, display: 'flex', alignItems: 'center', gap: 8 }}>
                   <Zap size={13} /> Tecnologias
                 </div>
@@ -2066,8 +2458,8 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
             )
 
           if (key === 'challenges')
-            return !project.challenges ? null : (
-              <div key="challenges" className="pv-section-card" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderLeft: '4px solid #f97316', borderRadius: '0 12px 12px 0', padding: '28px 32px' }}>
+            return !project.challenges ? null : withSectionMedia(key,
+              <div className="pv-section-card" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderLeft: '4px solid #f97316', borderRadius: '0 12px 12px 0', padding: '28px 32px' }}>
                 <div style={{ fontSize: 11, fontWeight: 800, color: '#f97316', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
                   <Zap size={13} /> Desafios
                 </div>
@@ -2076,8 +2468,8 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
             )
 
           if (key === 'results')
-            return !project.results ? null : (
-              <div key="results" className="pv-section-card" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 12, padding: '28px 32px' }}>
+            return !project.results ? null : withSectionMedia(key,
+              <div className="pv-section-card" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 12, padding: '28px 32px' }}>
                 <div style={{ fontSize: 11, fontWeight: 800, color: '#22c55e', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
                   <BarChart2 size={13} /> Resultados
                 </div>
@@ -2086,8 +2478,8 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
             )
 
           if (key === 'learnings')
-            return !project.learnings ? null : (
-              <div key="learnings" className="pv-section-card" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 12, padding: '28px 32px' }}>
+            return !project.learnings ? null : withSectionMedia(key,
+              <div className="pv-section-card" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 12, padding: '28px 32px' }}>
                 <div style={{ fontSize: 11, fontWeight: 800, color: '#8b5cf6', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
                   <BookOpen size={13} /> Aprendizagens
                 </div>
@@ -2095,8 +2487,95 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
               </div>
             )
 
+          if (key === 'pap_supervisor')
+            return !project.pap_supervisor ? null : withSectionMedia(key,
+              <div className="pv-section-card" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 12, padding: '24px 32px', display: 'flex', alignItems: 'center', gap: 16 }}>
+                <div style={{ width: 40, height: 40, borderRadius: 10, flexShrink: 0, background: 'rgba(27,120,247,0.12)', border: '1px solid rgba(27,120,247,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <GraduationCap size={18} color="#1b78f7" />
+                </div>
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--c-muted)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 3 }}>Orientador</div>
+                  <p style={{ margin: 0, fontSize: 16, color: 'var(--c-text)', fontWeight: 600 }}>{project.pap_supervisor}</p>
+                </div>
+              </div>
+            )
+
           return null
-        })}
+        }
+
+        // Unified layout order — custom blocks and native sections interleaved
+        // freely, in whatever order the owner dragged them in the Secções tab.
+        // Falls back to "all blocks, then all sections" for projects saved
+        // before this existed, so nothing shifts for existing customizations.
+        const blocksById = Object.fromEntries(previewBlocks.map(b => [b.id, b]))
+        const defaultLayout = [
+          ...previewBlocks.map(b => ({ kind: 'block', id: b.id })),
+          ...orderedSections.map(key => ({ kind: 'section', key })),
+        ]
+        const layout = (previewStyle.layoutOrder?.length ? previewStyle.layoutOrder : defaultLayout)
+          .filter(item => item.kind === 'block' ? !!blocksById[item.id] : !hiddenSections.has(item.key))
+          // In canvas mode, custom blocks are drawn freely-positioned above
+          // (see canvasMode block below) instead of inline in the flow.
+          .filter(item => !previewStyle.canvasMode || item.kind !== 'block')
+
+        // A "half" block pairs with whatever comes right after it (block or
+        // section) into a side-by-side row — one toggle is enough to see it,
+        // no need to also mark the neighbour as half.
+        const groups = []
+        for (let i = 0; i < layout.length; i++) {
+          const item = layout[i]
+          const isHalfBlock = item.kind === 'block' && blocksById[item.id]?.width === 'half'
+          const next = layout[i + 1]
+          if (isHalfBlock && next) {
+            groups.push([item, next]); i++
+          } else {
+            groups.push([item])
+          }
+        }
+
+        function renderItem(item) {
+          return item.kind === 'block' ? renderOneBlock(blocksById[item.id]) : renderOneSection(item.key)
+        }
+
+        const canvas = previewStyle.canvasMode && previewBlocks.length > 0 && (
+          <div
+            key="canvas" ref={canvasRef}
+            style={{
+              position: 'relative', width: '100%', minHeight: 420,
+              background: 'var(--c-bg-alt)', border: '1.5px dashed var(--c-border)', borderRadius: 14,
+              overflow: isOwner && previewEditing ? 'visible' : 'hidden',
+            }}
+          >
+            {previewBlocks.map(block => (
+              <div
+                key={block.id}
+                onPointerDown={isOwner && previewEditing ? (e => onCanvasPointerDown(e, block)) : undefined}
+                style={{
+                  position: 'absolute',
+                  left: `${block.pos?.x ?? 8}%`, top: `${block.pos?.y ?? 8}%`,
+                  width: 'min(360px, 80%)',
+                  cursor: isOwner && previewEditing ? 'grab' : 'default',
+                  touchAction: 'none',
+                }}
+              >
+                {renderOneBlock(block)}
+              </div>
+            ))}
+          </div>
+        )
+
+        return [
+          canvas,
+          ...groups.map((g, gi) => g.length === 2 ? (
+            <div key={gi} style={{ display: 'flex', flexWrap: 'wrap', gap: 20 }}>
+              <div style={{ flex: '1 1 280px', minWidth: 0 }}>{renderItem(g[0])}</div>
+              <div style={{ flex: '1 1 280px', minWidth: 0 }}>{renderItem(g[1])}</div>
+            </div>
+          ) : (
+            <div key={gi}>{renderItem(g[0])}</div>
+          )),
+        ]
+        })()}
 
         {/* Creator card */}
         {(displayName || course || school) && (
@@ -2371,6 +2850,7 @@ export default function ProjectPage() {
   const [milestoneCard, setMilestoneCard] = useState(null) // { score, tier }
   const [showLaunchOverlay, setShowLaunchOverlay] = useState(false)
   const [launchCopied, setLaunchCopied] = useState(false)
+  const [claimBannerDismissed, setClaimBannerDismissed] = useState(false)
   const [defenseDate, setDefenseDate] = useState('')
   const [savingDefense, setSavingDefense] = useState(false)
   const [teacherFeedback, setTeacherFeedback] = useState([])
@@ -2388,6 +2868,7 @@ export default function ProjectPage() {
   const [wsExpanded, setWsExpanded] = useState(false)
   const [previewBlocks, setPreviewBlocks] = useState([])
   const [previewStyle, setPreviewStyle] = useState({})
+  const [previewDevice, setPreviewDevice] = useState('desktop')
   // Jury / professor ratings state
   const [juryRatings, setJuryRatings] = useState({})        // { criteriaId: 0-10 }
   const [juryNote, setJuryNote] = useState('')
@@ -2459,14 +2940,18 @@ export default function ProjectPage() {
         onTogglePublicView: () => {
           const entering = !viewAsPublic
           setViewAsPublic(entering)
-          if (entering) setPreviewEditing(true)
+          if (entering) { setPreviewEditing(true); setWsExpanded(true) }
         },
+        previewEditing,
+        onEditWorkspace: () => { setPreviewEditing(true); setWsExpanded(e => !e) },
+        previewDevice,
+        setPreviewDevice,
       })
     } else {
       setExtras(null)
     }
     return () => setExtras(null)
-  }, [project?.id, project?.project_type, project?.defense_date, project?.ai_score, user?.id, analyzingAI, aiFeedback, viewAsPublic, score])
+  }, [project?.id, project?.project_type, project?.defense_date, project?.ai_score, user?.id, analyzingAI, aiFeedback, viewAsPublic, score, previewEditing, previewDevice])
 
   const pageUrl = window.location.href
 
@@ -2651,7 +3136,7 @@ export default function ProjectPage() {
     // Show score-gain toast when score increases during the session
     if (to > from) {
       const gain = to - from
-      setTimeout(() => showToast(`Score subiu +${gain} ${gain === 1 ? 'ponto' : 'pontos'}`), 900)
+      setTimeout(() => triggerToast(`Score subiu +${gain} ${gain === 1 ? 'ponto' : 'pontos'}`), 900)
     }
     cancelAnimationFrame(rafRef.current)
     const duration = 800
@@ -3000,14 +3485,18 @@ export default function ProjectPage() {
     setTeacherFeedback(prev => prev.filter(f => f.id !== id))
   }
 
+  const scoreSuffix = project.score != null ? ` · Score ${project.score}` : ''
+  const shareTitle = `${project.name} — Showo${scoreSuffix}`
+  const shareDescription = project.ai_tagline || project.goal || `Projeto de ${project.creator_name || 'estudante'} no Showo`
+
   return (
     <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: 'var(--font-body)', overflowX: 'clip' }}>
       <Helmet>
-        <title>{project.name} — Showo</title>
-        <meta name="description" content={project.ai_tagline || project.goal || `Projeto de ${project.creator_name || 'estudante'} no Showo`} />
+        <title>{shareTitle}</title>
+        <meta name="description" content={shareDescription} />
         {/* Open Graph — WhatsApp, Facebook, LinkedIn */}
-        <meta property="og:title" content={`${project.name} — Showo`} />
-        <meta property="og:description" content={project.ai_tagline || project.goal || `Projeto de ${project.creator_name || 'estudante'} no Showo`} />
+        <meta property="og:title" content={shareTitle} />
+        <meta property="og:description" content={shareDescription} />
         <meta property="og:url" content={pageUrl} />
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="Showo" />
@@ -3018,8 +3507,8 @@ export default function ProjectPage() {
         <meta property="og:image:height" content="630" />
         {/* Twitter / X */}
         <meta name="twitter:card" content={project.cover_url ? 'summary_large_image' : 'summary'} />
-        <meta name="twitter:title" content={`${project.name} — Showo`} />
-        <meta name="twitter:description" content={project.ai_tagline || project.goal || `Projeto no Showo`} />
+        <meta name="twitter:title" content={shareTitle} />
+        <meta name="twitter:description" content={shareDescription} />
         {project.cover_url && <meta name="twitter:image" content={project.cover_url} />}
       </Helmet>
       <style>{`
@@ -3175,9 +3664,8 @@ export default function ProjectPage() {
           .proj-body { gap: 12px; }
         }
         ${viewAsPublic ? `
-          /* ── Preview mode: full-width, no sidebar ── */
-          .sidebar          { display: none !important; }
-          body              { padding-left: 0 !important; }
+          /* ── Preview mode: the sidebar stays visible (so the owner can keep
+             navigating the app) — .pv-outer already offsets to clear it. ── */
           .top-nav          { display: none !important; }
           .bottom-nav       { display: none !important; }
         ` : ''}
@@ -3403,6 +3891,35 @@ export default function ProjectPage() {
             >
               Ver a minha página →
             </button>
+
+            {!user && (
+              <div style={{
+                marginTop: 18, paddingTop: 18,
+                borderTop: '1px solid rgba(255,255,255,0.08)',
+                position: 'relative',
+              }}>
+                <p style={{ margin: '0 0 12px', fontSize: 13, color: 'rgba(232,242,255,0.55)', lineHeight: 1.6 }}>
+                  Criaste este projeto sem conta — se perderes o link, não há forma de o recuperar.
+                  Cria uma conta para o guardar.
+                </p>
+                <button
+                  onClick={() => navigate('/register', { state: { claimSlug: project.slug } })}
+                  style={{
+                    display: 'block', width: '100%',
+                    background: 'transparent',
+                    border: '1px solid rgba(27,120,247,0.4)',
+                    borderRadius: 10, padding: '11px 24px',
+                    color: '#5a9ff5', fontSize: 14, fontWeight: 700,
+                    cursor: 'pointer', letterSpacing: '-0.2px',
+                    transition: 'background 0.15s',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(27,120,247,0.1)' }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
+                >
+                  Criar conta e guardar projeto
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -3734,6 +4251,34 @@ export default function ProjectPage() {
         </div>
       </Navbar>
 
+      {isOwner && !user && !claimBannerDismissed && (
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14,
+          flexWrap: 'wrap', padding: '10px 20px',
+          background: 'rgba(27,120,247,0.08)', borderBottom: '1px solid rgba(27,120,247,0.2)',
+        }}>
+          <span style={{ fontSize: 13, color: 'var(--c-muted)', fontWeight: 500 }}>
+            Este projeto não tem conta associada — se perderes o link, não há forma de o recuperar.
+          </span>
+          <button
+            onClick={() => navigate('/register', { state: { claimSlug: project.slug } })}
+            style={{
+              background: '#1b78f7', border: 'none', borderRadius: 7,
+              padding: '6px 14px', color: '#fff', fontSize: 13, fontWeight: 700,
+              cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0,
+            }}
+          >
+            Criar conta e guardar
+          </button>
+          <button
+            onClick={() => setClaimBannerDismissed(true)}
+            style={{ background: 'none', border: 'none', color: 'var(--c-muted)', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
+          >
+            Agora não
+          </button>
+        </div>
+      )}
+
       {/* ── Public visitor view (pure visitors + owners in preview mode) ── */}
       {((!isOwner && collaboratorSections === null && !isProfessor) || (isOwner && viewAsPublic)) && (
         <PublicView
@@ -3758,6 +4303,9 @@ export default function ProjectPage() {
           isRecruiterRole={isRecruiterRole}
           wsExpanded={wsExpanded}
           setWsExpanded={setWsExpanded}
+          onCoverChange={url => setProject(p => ({ ...p, cover_url: url }))}
+          previewDevice={previewDevice}
+          setPreviewDevice={setPreviewDevice}
         />
       )}
 

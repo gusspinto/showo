@@ -816,7 +816,7 @@ function OnboardingAlunoModal({ user, profile, onDismiss, firstProject }) {
       fontFamily: 'inherit',
     }}>
       <div style={{
-        background: C.card, border: '1px solid #2a4275',
+        background: C.card, border: '1px solid rgba(27,120,247,0.25)',
         borderRadius: 16, width: '100%', maxWidth: 460,
         boxShadow: 'none',
         animation: 'onbFadeUp 0.25s ease',
@@ -849,7 +849,7 @@ function OnboardingAlunoModal({ user, profile, onDismiss, firstProject }) {
                     onChange={e => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
                     placeholder="o_teu_username"
                     maxLength={30}
-                    style={{ width: '100%', background: C.bg, border: `1.5px solid ${C.border}`, borderRadius: 10, color: C.text, fontSize: 14, padding: '11px 14px 11px 30px', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }}
+                    style={{ width: '100%', background: 'rgba(27,120,247,0.06)', border: '1.5px solid rgba(27,120,247,0.2)', borderRadius: 10, color: C.text, fontSize: 14, padding: '11px 14px 11px 30px', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }}
                   />
                 </div>
                 <p style={{ margin: '5px 0 0', fontSize: 11, color: C.muted }}>Apenas letras minúsculas, números e _</p>
@@ -864,7 +864,7 @@ function OnboardingAlunoModal({ user, profile, onDismiss, firstProject }) {
                   placeholder="Estudante de Informática no 12º ano, apaixonado por desenvolvimento web e IA…"
                   rows={3}
                   maxLength={200}
-                  style={{ width: '100%', background: C.bg, border: `1.5px solid ${C.border}`, borderRadius: 10, color: C.text, fontSize: 14, padding: '11px 14px', outline: 'none', fontFamily: 'inherit', resize: 'none', lineHeight: 1.6, boxSizing: 'border-box' }}
+                  style={{ width: '100%', background: 'rgba(27,120,247,0.06)', border: '1.5px solid rgba(27,120,247,0.2)', borderRadius: 10, color: C.text, fontSize: 14, padding: '11px 14px', outline: 'none', fontFamily: 'inherit', resize: 'none', lineHeight: 1.6, boxSizing: 'border-box' }}
                 />
               </div>
 
@@ -1009,7 +1009,7 @@ function OnboardingModal({ user, profile, onDismiss, onCreateTurma }) {
       display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
     }}>
       <div style={{
-        background: C.card, border: '1px solid #2a4275',
+        background: C.card, border: '1px solid rgba(27,120,247,0.25)',
         borderRadius: 16, padding: '36px 32px', width: '100%', maxWidth: 440,
         boxShadow: 'none',
         fontFamily: 'inherit',
