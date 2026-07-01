@@ -142,16 +142,6 @@ function RolesPanel({ onBack, theme }) {
         <span>Início</span>
       </button>
 
-      {/* Mobile back button — peek tab hidden at ≤700px */}
-      <button
-        onClick={onBack}
-        className="mob-roles-back"
-        style={{ display: 'none' }}
-      >
-        <ChevronDown size={14} style={{ transform: 'rotate(90deg)' }} />
-        Voltar
-      </button>
-
       <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
         <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: colors.muted, marginBottom: 14 }}>
           Para quem é a Showo
@@ -178,6 +168,12 @@ function RolesPanel({ onBack, theme }) {
             </div>
           ))}
         </div>
+
+        {/* Mobile back — same position/style as forward hint in first slide */}
+        <button className="mob-slide-nav" onClick={onBack}>
+          <ChevronDown size={13} style={{ transform: 'rotate(90deg)', flexShrink: 0 }} />
+          <span>Swipe para voltar</span>
+        </button>
       </div>
     </div>
   )
@@ -618,41 +614,30 @@ export default function Home() {
           .features-grid { grid-template-columns: repeat(2, 1fr) !important; }
         }
 
-        /* Mobile hero hints — hidden by default, shown via media query */
-        .mob-hero-hints {
+        /* Mobile slide nav — hidden by default, shown on mobile */
+        .mob-slide-nav {
           display: none;
-          flex-direction: column; align-items: center; gap: 14px;
-          margin-top: 24px;
-        }
-        .mob-swipe-hint-btn {
-          display: none;
-          align-items: center; gap: 8px;
-          background: rgba(27,120,247,0.12); border: 1px solid rgba(27,120,247,0.3);
-          border-radius: 99px; padding: 8px 18px 8px 14px;
-          color: #1b78f7; font-size: 13px; font-weight: 700; font-family: inherit;
-          cursor: pointer; transition: background 0.15s;
+          align-items: center; gap: 7px;
+          margin-top: 28px;
+          background: transparent; border: none;
+          color: var(--c-muted); font-size: 12px; font-weight: 600;
+          font-family: inherit; cursor: pointer;
+          opacity: 0.7; letter-spacing: 0.02em;
           -webkit-tap-highlight-color: transparent;
+          transition: opacity 0.15s;
         }
-        .mob-swipe-hint-btn:active { background: rgba(27,120,247,0.22); }
-        /* Mobile roles back button — hidden by default */
-        .mob-roles-back {
-          display: none;
-          align-items: center; gap: 6px;
-          position: absolute; top: 16px; left: 16px;
-          background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
-          border-radius: 99px; padding: 7px 14px 7px 10px;
-          color: var(--c-muted); font-size: 13px; font-weight: 600; font-family: inherit;
-          cursor: pointer; transition: background 0.15s;
-          -webkit-tap-highlight-color: transparent; z-index: 2;
-        }
-        .mob-roles-back:active { background: rgba(255,255,255,0.18); }
+        .mob-slide-nav:active { opacity: 0.4; }
 
         @media (max-width: 600px) {
-          .hero-section  { padding: 80px 0 48px !important; min-height: auto !important; }
-          .hero-inner    { padding: 0 20px !important; }
+          /* ── Hero track: items align to top so slides don't stretch to match each other ── */
+          .hero-track { align-items: flex-start !important; }
+          /* ── Hero section: separate padding props to avoid shorthand conflict ── */
+          .hero-section  { padding-top: 80px !important; padding-bottom: 40px !important; min-height: 0 !important; justify-content: flex-start !important; }
+          .hero-inner    { padding-left: 20px !important; padding-right: 20px !important; }
           .hero-h1       { font-size: 34px !important; letter-spacing: -0.5px !important; margin-bottom: 16px !important; }
-          .hero-sub      { font-size: 16px !important; margin-bottom: 36px !important; }
-          .hero-widget   { margin-top: 28px !important; max-width: 100% !important; }
+          .hero-sub      { font-size: 16px !important; margin-bottom: 32px !important; }
+          .hero-widget   { margin-top: 24px !important; max-width: 100% !important; }
+          .hero-scroll-cue { display: none !important; }
           .goals-row     { flex-wrap: nowrap !important; overflow-x: auto !important; padding-bottom: 6px !important; scrollbar-width: none !important; -webkit-overflow-scrolling: touch !important; }
           .goals-row::-webkit-scrollbar { display: none !important; }
           .goal-pill     { font-size: 12px !important; flex-shrink: 0 !important; }
@@ -662,24 +647,15 @@ export default function Home() {
           .hero-note     { font-size: 11px !important; }
           .home-features-grid { grid-template-columns: 1fr !important; gap: 12px !important; }
           .home-stats { flex-wrap: wrap !important; gap: 12px !important; justify-content: center !important; }
-          /* Feature rows: stack on mobile */
+          /* ── Feature rows: stack ── */
           .feature-row { grid-template-columns: 1fr !important; gap: 32px !important; }
           .feature-row > div { order: unset !important; }
-          /* Features section: reduce top padding */
           .features-section { padding: 80px 20px 60px !important; }
-          /* Features title section */
           .features-title-section { margin-bottom: 48px !important; }
-          /* Roles panel: tighter padding */
-          .roles-panel { padding: 48px 20px 48px !important; }
-          /* Desktop scroll cue hidden on mobile (replaced by inline hints) */
-          .hero-scroll-cue-desktop { display: none !important; }
-          /* Mobile hints row — visible on mobile */
-          .mob-hero-hints { display: flex !important; }
-          .mob-swipe-hint-btn { display: flex !important; }
-          /* RolesPanel forces track height via minHeight — remove on mobile */
-          .roles-panel { min-height: 0 !important; height: auto !important; padding-top: 64px !important; }
-          /* Show mobile back button, hide desktop peek tab */
-          .mob-roles-back { display: flex !important; }
+          /* ── Roles panel: no forced height, tighter padding ── */
+          .roles-panel { min-height: 0 !important; height: auto !important; padding: 64px 20px 48px !important; }
+          /* ── Slide nav: show ── */
+          .mob-slide-nav { display: flex !important; }
         }
         @media (max-width: 380px) {
           .home-hero-heading { font-size: clamp(28px, 8vw, 42px) !important; }
@@ -833,8 +809,8 @@ export default function Home() {
             )}
           </form>
 
-          {/* Scroll cue — desktop: absolute bottom, mobile: inline below form */}
-          <div className="hero-scroll-cue hero-scroll-cue-desktop" style={{
+          {/* Scroll cue — desktop only (hidden on mobile) */}
+          <div className="hero-scroll-cue" style={{
             position: 'absolute', left: '50%', bottom: 26, transform: 'translateX(-50%)',
             display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
             opacity: 0.42, pointerEvents: 'none',
@@ -846,25 +822,11 @@ export default function Home() {
             <ChevronDown size={14} color={colors.subtle} style={{ animation: 'hero-bounce 1.8s ease-in-out infinite' }} />
           </div>
 
-          {/* Mobile-only hints — inline below the form so they're always visible */}
-          <div className="mob-hero-hints">
-            {/* Swipe → to roles */}
-            <button
-              className="mob-swipe-hint-btn"
-              onClick={() => scrollToHeroSlide(1)}
-            >
-              <ChevronDown size={14} style={{ transform: 'rotate(-90deg)', flexShrink: 0 }} />
-              Para quem é a Showo
-              <ChevronDown size={14} style={{ transform: 'rotate(-90deg)', opacity: 0.5, flexShrink: 0 }} />
-            </button>
-            {/* Scroll ↓ for more */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, opacity: 0.5 }}>
-              <ChevronDown size={13} color={colors.subtle} style={{ animation: 'hero-bounce 1.8s ease-in-out infinite' }} />
-              <span style={{ fontSize: 11, fontWeight: 600, color: colors.subtle, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-                Mais sobre a Showo
-              </span>
-            </div>
-          </div>
+          {/* Mobile swipe hint — bottom of hero slide, same position as roles back */}
+          <button className="mob-slide-nav" onClick={() => scrollToHeroSlide(1)}>
+            <span>Swipe para veres os perfis</span>
+            <ChevronDown size={13} style={{ transform: 'rotate(-90deg)', flexShrink: 0 }} />
+          </button>
         </div>
 
         <button
