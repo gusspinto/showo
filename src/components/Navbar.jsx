@@ -1137,7 +1137,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
         }
         .mob-sheet-scroll {
           overflow-y: auto; flex: 1;
-          padding: 0 12px max(env(safe-area-inset-bottom, 20px), 20px);
+          padding: 0 12px 8px;
           min-height: 0;
         }
         .mob-sheet-scroll::-webkit-scrollbar { display: none; }

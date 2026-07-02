@@ -177,8 +177,10 @@ export default function FeedbackButton() {
           color: var(--c-muted); font-size: 13px; font-weight: 600;
           font-family: inherit; cursor: pointer; width: 100%;
           margin-top: 10px; transition: border-color 0.15s, color 0.15s;
+          box-sizing: border-box;
         }
         .fb-add-img:hover { border-color: rgba(27,120,247,0.4); color: #1b78f7; }
+        .fb-add-img svg { flex-shrink: 0; }
       `}</style>
 
       {/* FAB */}

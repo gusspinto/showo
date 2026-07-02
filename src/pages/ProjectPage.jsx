@@ -3654,7 +3654,7 @@ export default function ProjectPage() {
           .proj-ai-fab       { display: none !important; }
           .proj-ai-fab-label { display: none !important; }
           .proj-fab-defense-label { display: none !important; }
-          .proj-fab-defense { padding: 0 !important; width: 52px !important; min-width: 52px !important; }
+          .proj-fab-defense { display: none !important; }
           /* Invite: icon only on mobile */
           .proj-invite-label { display: none !important; }
           /* Author: centered on mobile */
