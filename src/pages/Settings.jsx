@@ -167,6 +167,9 @@ export default function Settings() {
   const [confirmPw, setConfirmPw]     = useState('')
   const [pwSaving, setPwSaving]       = useState(false)
   const [pwMsg, setPwMsg]             = useState(null)
+  const [deleteConfirm, setDeleteConfirm] = useState(false)
+  const [deleteLoading, setDeleteLoading] = useState(false)
+  const [deleteError, setDeleteError] = useState(null)
 
   useEffect(() => {
     if (!authLoading && !user) navigate('/login')
@@ -362,6 +365,20 @@ export default function Settings() {
       setConfirmPw('')
     }
     setPwSaving(false)
+  }
+
+  async function handleDeleteAccount() {
+    setDeleteLoading(true)
+    setDeleteError(null)
+    try {
+      const { error } = await supabase.rpc('delete_account_transfer')
+      if (error) throw error
+      await supabase.auth.signOut()
+      navigate('/')
+    } catch (err) {
+      setDeleteError(err.message ?? 'Erro ao eliminar conta. Tenta novamente.')
+      setDeleteLoading(false)
+    }
   }
 
   if (authLoading) return (
@@ -610,6 +627,47 @@ export default function Settings() {
                     onMouseLeave={e => e.currentTarget.style.background = 'rgba(239,68,68,0.08)'}>
                     Terminar sessão
                   </button>
+                </SectionCard>
+
+                <SectionCard title="Zona de perigo">
+                  <p style={{ color: C.muted, fontSize: 14, margin: '0 0 16px', lineHeight: 1.65 }}>
+                    Ao eliminares a conta, todos os teus dados são apagados permanentemente.
+                    Se os teus projetos tiverem colaboradores, o primeiro colaborador adicionado torna-se o novo dono.
+                    Se não tiverem, os projetos são eliminados.
+                  </p>
+                  {!deleteConfirm ? (
+                    <button
+                      onClick={() => setDeleteConfirm(true)}
+                      style={{ background: 'transparent', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 10, padding: '11px 24px', color: C.red, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'background 0.15s, border-color 0.15s' }}
+                      onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.06)'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.5)' }}
+                      onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.3)' }}
+                    >
+                      Eliminar conta
+                    </button>
+                  ) : (
+                    <div style={{ background: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 12, padding: '16px 18px' }}>
+                      <p style={{ margin: '0 0 14px', fontSize: 14, fontWeight: 700, color: C.red }}>Tens a certeza? Esta ação é irreversível.</p>
+                      {deleteError && (
+                        <p style={{ margin: '0 0 12px', fontSize: 13, color: C.red, background: 'rgba(239,68,68,0.08)', padding: '8px 12px', borderRadius: 8 }}>{deleteError}</p>
+                      )}
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <button
+                          onClick={handleDeleteAccount}
+                          disabled={deleteLoading}
+                          style={{ flex: 1, background: '#ef4444', border: 'none', borderRadius: 10, padding: '11px 0', color: '#fff', fontSize: 14, fontWeight: 700, cursor: deleteLoading ? 'default' : 'pointer', fontFamily: 'inherit', opacity: deleteLoading ? 0.6 : 1 }}
+                        >
+                          {deleteLoading ? 'A eliminar...' : 'Sim, eliminar conta'}
+                        </button>
+                        <button
+                          onClick={() => { setDeleteConfirm(false); setDeleteError(null) }}
+                          disabled={deleteLoading}
+                          style={{ flex: 1, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 10, padding: '11px 0', color: C.muted, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </SectionCard>
               </>
             )}

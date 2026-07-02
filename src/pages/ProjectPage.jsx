@@ -2862,6 +2862,7 @@ export default function ProjectPage() {
 
   const { setExtras } = useSidebar()
   const { theme } = useTheme()
+  const [showRegisterPopup, setShowRegisterPopup] = useState(false)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [viewAsPublic, setViewAsPublic] = useState(false)
   const [previewEditing, setPreviewEditing] = useState(false)
@@ -2916,6 +2917,10 @@ export default function ProjectPage() {
     if (location.state?.newProject) {
       setShowLaunchOverlay(true)
       window.history.replaceState({}, '')
+    }
+    // Show register popup when anonymous user just created a project
+    if (!user && (location.state?.justCreated || location.state?.newProject || location.state?.edit_token)) {
+      setTimeout(() => setShowRegisterPopup(true), 1200)
     }
   }, [])
 
@@ -4030,6 +4035,59 @@ export default function ProjectPage() {
 
       {editModal && (
         <EditModal challenge={editModal} project={project} onClose={() => setEditModal(null)} onSave={handleSave} saving={saving} />
+      )}
+
+      {/* Register popup — shown to anonymous users after creating a project */}
+      {showRegisterPopup && !user && project && (
+        <>
+          <div
+            onClick={() => setShowRegisterPopup(false)}
+            style={{ position: 'fixed', inset: 0, zIndex: 700, background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)' }}
+          />
+          <div style={{
+            position: 'fixed', zIndex: 701,
+            left: '50%', top: '50%', transform: 'translate(-50%, -50%)',
+            width: '100%', maxWidth: 420, margin: '0 auto',
+            padding: '0 16px', boxSizing: 'border-box',
+          }}>
+            <div style={{
+              background: 'var(--c-card)', border: '1px solid var(--c-border)',
+              borderRadius: 20, padding: '32px 28px 28px',
+              boxShadow: '0 24px 80px rgba(0,0,0,0.55)',
+              textAlign: 'center',
+            }}>
+              <div style={{ width: 56, height: 56, borderRadius: 16, background: 'rgba(27,120,247,0.12)', border: '1px solid rgba(27,120,247,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px' }}>
+                <UserPlus size={26} color="#1b78f7" />
+              </div>
+              <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--c-text)', marginBottom: 10, lineHeight: 1.2, fontFamily: 'var(--font-heading)' }}>
+                O teu projeto foi criado!
+              </div>
+              <div style={{ fontSize: 14, color: 'var(--c-muted)', lineHeight: 1.65, marginBottom: 24 }}>
+                Para poderes <strong style={{ color: 'var(--c-text)' }}>editar, partilhar e guardar</strong> o teu projeto, precisas de criar uma conta gratuita.<br /><br />
+                Sem conta, se perderes este link não há como recuperar o projeto.
+              </div>
+              <button
+                onClick={() => navigate('/register', { state: { claimSlug: project.slug } })}
+                style={{
+                  display: 'block', width: '100%',
+                  background: '#1b78f7', border: 'none', borderRadius: 12,
+                  padding: '14px 24px', color: '#fff', fontSize: 15, fontWeight: 700,
+                  cursor: 'pointer', fontFamily: 'inherit',
+                  boxShadow: '0 4px 20px rgba(27,120,247,0.4)',
+                  marginBottom: 10,
+                }}
+              >
+                Criar conta gratuita →
+              </button>
+              <button
+                onClick={() => setShowRegisterPopup(false)}
+                style={{ background: 'none', border: 'none', color: 'var(--c-muted)', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', padding: '8px 0' }}
+              >
+                Continuar sem conta
+              </button>
+            </div>
+          </div>
+        </>
       )}
 
       {/* AI Feedback Modal */}

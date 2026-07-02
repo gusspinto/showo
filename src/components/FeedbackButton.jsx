@@ -183,9 +183,9 @@ export default function FeedbackButton() {
 
       {/* FAB */}
       {!open && (
-        <button className="fb-fab" onClick={handleOpen} aria-label="Deixar feedback">
+        <button className="fb-fab" onClick={handleOpen} aria-label="Deixar feedback anónimo">
           <MessageSquarePlus size={18} />
-          <span className="fb-fab-label">Feedback</span>
+          <span className="fb-fab-label">Feedback anónimo</span>
         </button>
       )}
 
@@ -198,7 +198,7 @@ export default function FeedbackButton() {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
               <div>
                 <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--c-text)', fontFamily: 'var(--font-heading)' }}>
-                  Deixar feedback
+                  Dar feedback anónimo
                 </div>
                 <div style={{ fontSize: 12, color: 'var(--c-muted)', marginTop: 2 }}>
                   O que aconteceu? Qual o erro ou a página?

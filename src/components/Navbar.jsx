@@ -738,6 +738,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
         .nav-right  { display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex: 1; }
         .nav-auth   { display: flex; align-items: center; gap: 8px; }
         .ham-btn    { display: none !important; }
+        .nav-mob-theme { display: none; align-items: center; justify-content: center; width: 32px; height: 32px; background: transparent; border: none; border-radius: 8px; color: var(--c-muted); cursor: pointer; transition: background 0.13s, color 0.13s; -webkit-tap-highlight-color: transparent; }
 
         /* ── Sidebar (desktop >860px) ── */
         /* ═══════════════════════════════════
@@ -983,6 +984,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
           .ham-btn       { display: none !important; }
           .bottom-nav    { display: flex !important; }
           body           { padding-bottom: 84px; }
+          .nav-mob-theme { display: flex !important; }
 
           /* Notification dropdown — full-width anchored below navbar */
           .notif-drop {
@@ -1389,6 +1391,17 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
 
           {/* Notification bell — always visible when logged in (including mobile) */}
           {user && <InviteInbox userId={user.id} />}
+
+          {/* Theme toggle — mobile only, not logged in */}
+          {!user && (
+            <button
+              className="nav-mob-theme"
+              onClick={toggleTheme}
+              aria-label={theme === 'dark' ? 'Modo claro' : 'Modo escuro'}
+            >
+              {theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
+            </button>
+          )}
 
           {/* Auth section */}
           <div className="nav-auth">
