@@ -2876,6 +2876,7 @@ export default function ProjectPage() {
   const { setExtras } = useSidebar()
   const { theme } = useTheme()
   const [showRegisterPopup, setShowRegisterPopup] = useState(false)
+  const [registerPopupConfirm, setRegisterPopupConfirm] = useState(false)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [viewAsPublic, setViewAsPublic] = useState(false)
   const [previewEditing, setPreviewEditing] = useState(false)
@@ -4088,18 +4089,46 @@ export default function ProjectPage() {
                 <span style={{ fontSize: 12, color: 'var(--c-muted)', lineHeight: 1.5 }}>Sem conta, se perderes este link não há como recuperar o projeto.</span>
               </div>
               {/* CTA */}
-              <button
-                onClick={() => navigate('/register', { state: { claimSlug: project.slug } })}
-                style={{ display: 'block', width: '100%', background: '#1b78f7', border: 'none', borderRadius: 12, padding: '14px 24px', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 24px rgba(27,120,247,0.4)', marginBottom: 10 }}
-              >
-                Criar conta gratuita →
-              </button>
-              <button
-                onClick={() => setShowRegisterPopup(false)}
-                style={{ display: 'block', width: '100%', background: 'none', border: 'none', color: 'var(--c-muted)', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', padding: '8px 0' }}
-              >
-                Continuar sem conta
-              </button>
+              {!registerPopupConfirm ? (
+                <>
+                  <button
+                    onClick={() => navigate('/register', { state: { claimSlug: project.slug } })}
+                    style={{ display: 'block', width: '100%', background: '#1b78f7', border: 'none', borderRadius: 12, padding: '14px 24px', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 24px rgba(27,120,247,0.4)', marginBottom: 10 }}
+                  >
+                    Criar conta gratuita →
+                  </button>
+                  <button
+                    onClick={() => setRegisterPopupConfirm(true)}
+                    style={{ display: 'block', width: '100%', background: 'none', border: 'none', color: 'var(--c-muted)', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', padding: '8px 0' }}
+                  >
+                    Continuar sem conta
+                  </button>
+                </>
+              ) : (
+                <div style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 14, padding: '18px 16px' }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: '#ef4444', marginBottom: 4 }}>Tens a certeza?</div>
+                  <div style={{ fontSize: 13, color: 'var(--c-muted)', marginBottom: 16, lineHeight: 1.5 }}>O projeto será <strong style={{ color: 'var(--c-text)' }}>eliminado permanentemente</strong>. Esta ação não pode ser desfeita.</div>
+                  <div style={{ display: 'flex', gap: 10 }}>
+                    <button
+                      onClick={async () => {
+                        const token = localStorage.getItem(`edit_token_${project.slug}`)
+                        if (token) await supabase.rpc('delete_anon_project', { p_slug: project.slug, p_token: token })
+                        localStorage.removeItem(`edit_token_${project.slug}`)
+                        navigate('/')
+                      }}
+                      style={{ flex: 1, background: '#ef4444', border: 'none', borderRadius: 10, padding: '11px 0', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+                    >
+                      Sim, eliminar
+                    </button>
+                    <button
+                      onClick={() => setRegisterPopupConfirm(false)}
+                      style={{ flex: 1, background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)', borderRadius: 10, padding: '11px 0', color: 'var(--c-text)', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </>
