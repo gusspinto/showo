@@ -744,6 +744,12 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
   const canvasRef = useRef(null)
   const { onPointerDown: onCanvasPointerDown } = useCanvasDrag(canvasRef, setPreviewBlocks)
 
+  // Camouflage feedback FAB when workspace is active
+  useEffect(() => {
+    document.body.classList.add('pv-active')
+    return () => document.body.classList.remove('pv-active')
+  }, [])
+
   function uploadSectionMedia(sectionKey) {
     const input = document.createElement('input')
     input.type = 'file'; input.accept = 'image/*'
@@ -1154,13 +1160,20 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
             <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, var(--c-bg) 100%)' }} />
           </div>
         ) : (
-          <div style={{
-            width: '100%', height: heroHeight, position: 'relative',
-            background: `linear-gradient(135deg, ${hero.c1}44 0%, ${hero.c2}66 60%, transparent 100%)`,
-          }}>
-            <div style={{ position: 'absolute', top: -40, left: '5%', width: 500, height: 500, borderRadius: '50%', background: `radial-gradient(ellipse, ${hero.c1}22 0%, transparent 65%)`, pointerEvents: 'none' }} />
-            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 30%, var(--c-bg) 100%)' }} />
-          </div>
+          /* No cover — use page bg theme as base, accent as subtle overlay */
+          (() => {
+            const bgBase = selectedBg.preview || '#060c18'
+            const accentA = selectedBg.isLight ? '22' : '44'
+            const accentB = selectedBg.isLight ? '14' : '2a'
+            const glowA   = selectedBg.isLight ? '10' : '1a'
+            return (
+              <div style={{ width: '100%', height: heroHeight, position: 'relative', background: bgBase }}>
+                <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(135deg, ${hero.c1}${accentA} 0%, ${hero.c2}${accentB} 60%, transparent 100%)` }} />
+                <div style={{ position: 'absolute', top: -40, left: '5%', width: 500, height: 500, borderRadius: '50%', background: `radial-gradient(ellipse, ${hero.c1}${glowA} 0%, transparent 65%)`, pointerEvents: 'none' }} />
+                <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(to bottom, transparent 30%, ${bgBase} 100%)` }} />
+              </div>
+            )
+          })()
         )}
 
         {/* Title block over hero */}
