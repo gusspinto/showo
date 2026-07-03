@@ -89,16 +89,8 @@ export default function FeedbackButton() {
         .fb-fab:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(27,120,247,0.5); }
         .fb-fab:active { transform: scale(0.95); }
         .fb-fab-label { white-space: nowrap; }
-        /* camouflage on workspace preview page */
-        body.pv-active .fb-fab {
-          opacity: 0.2;
-          transform: scale(0.8);
-          transition: opacity 0.2s, transform 0.2s;
-        }
-        body.pv-active .fb-fab:hover {
-          opacity: 0.85;
-          transform: scale(0.88) translateY(-2px);
-        }
+        /* hide on project workspace/preview page so it doesn't overlap the editor */
+        body.pv-active .fb-fab { display: none !important; }
 
         .fb-overlay {
           position: fixed; inset: 0; z-index: 491;
