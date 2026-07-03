@@ -4053,48 +4053,50 @@ export default function ProjectPage() {
       {/* Register popup — shown to anonymous users after creating a project */}
       {showRegisterPopup && !user && project && (
         <>
-          <div
-            onClick={() => setShowRegisterPopup(false)}
-            style={{ position: 'fixed', inset: 0, zIndex: 700, background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)' }}
-          />
-          <div style={{
-            position: 'fixed', zIndex: 701,
-            left: '50%', top: '50%', transform: 'translate(-50%, -50%)',
-            width: '100%', maxWidth: 420, margin: '0 auto',
-            padding: '0 16px', boxSizing: 'border-box',
-          }}>
-            <div style={{
-              background: 'var(--c-card)', border: '1px solid var(--c-border)',
-              borderRadius: 20, padding: '32px 28px 28px',
-              boxShadow: '0 24px 80px rgba(0,0,0,0.55)',
-              textAlign: 'center',
-            }}>
-              <div style={{ width: 56, height: 56, borderRadius: 16, background: 'rgba(27,120,247,0.12)', border: '1px solid rgba(27,120,247,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px' }}>
-                <UserPlus size={26} color="#1b78f7" />
+          <div onClick={() => setShowRegisterPopup(false)} style={{ position: 'fixed', inset: 0, zIndex: 700, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }} />
+          <div style={{ position: 'fixed', zIndex: 701, left: '50%', top: '50%', transform: 'translate(-50%, -50%)', width: '100%', maxWidth: 540, padding: '0 16px', boxSizing: 'border-box' }}>
+            <div style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 24, padding: '36px 36px 28px', boxShadow: '0 32px 100px rgba(0,0,0,0.6)' }}>
+              {/* Header */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24 }}>
+                <div style={{ width: 52, height: 52, borderRadius: 14, background: 'rgba(27,120,247,0.12)', border: '1px solid rgba(27,120,247,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Rocket size={24} color="#1b78f7" />
+                </div>
+                <div>
+                  <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--c-text)', lineHeight: 1.2, fontFamily: 'var(--font-heading)' }}>O teu projeto foi criado!</div>
+                  <div style={{ fontSize: 13, color: 'var(--c-muted)', marginTop: 4 }}>Cria uma conta gratuita para o guardar.</div>
+                </div>
               </div>
-              <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--c-text)', marginBottom: 10, lineHeight: 1.2, fontFamily: 'var(--font-heading)' }}>
-                O teu projeto foi criado!
+              {/* Feature list */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 24 }}>
+                {[
+                  { icon: <Pencil size={16} color="#1b78f7" />, label: 'Editar a qualquer momento', sub: 'Volta sempre que quiseres para atualizar o projeto.' },
+                  { icon: <Globe size={16} color="#8b5cf6" />, label: 'Partilhar com um link', sub: 'Envia o link a recrutadores, professores e amigos.' },
+                  { icon: <Star size={16} color="#f59e0b" />, label: 'Guardar permanentemente', sub: 'O projeto fica na tua conta, seguro e sempre acessível.' },
+                ].map(({ icon, label, sub }) => (
+                  <div key={label} style={{ display: 'flex', alignItems: 'flex-start', gap: 14, background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)', borderRadius: 12, padding: '12px 14px' }}>
+                    <div style={{ width: 32, height: 32, borderRadius: 8, background: 'var(--c-card)', border: '1px solid var(--c-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>{icon}</div>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--c-text)', marginBottom: 2 }}>{label}</div>
+                      <div style={{ fontSize: 12, color: 'var(--c-muted)', lineHeight: 1.5 }}>{sub}</div>
+                    </div>
+                  </div>
+                ))}
               </div>
-              <div style={{ fontSize: 14, color: 'var(--c-muted)', lineHeight: 1.65, marginBottom: 24 }}>
-                Para poderes <strong style={{ color: 'var(--c-text)' }}>editar, partilhar e guardar</strong> o teu projeto, precisas de criar uma conta gratuita.<br /><br />
-                Sem conta, se perderes este link não há como recuperar o projeto.
+              {/* Warning */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: 10, padding: '10px 14px', marginBottom: 20 }}>
+                <AlertTriangle size={14} color="#f59e0b" style={{ flexShrink: 0 }} />
+                <span style={{ fontSize: 12, color: 'var(--c-muted)', lineHeight: 1.5 }}>Sem conta, se perderes este link não há como recuperar o projeto.</span>
               </div>
+              {/* CTA */}
               <button
                 onClick={() => navigate('/register', { state: { claimSlug: project.slug } })}
-                style={{
-                  display: 'block', width: '100%',
-                  background: '#1b78f7', border: 'none', borderRadius: 12,
-                  padding: '14px 24px', color: '#fff', fontSize: 15, fontWeight: 700,
-                  cursor: 'pointer', fontFamily: 'inherit',
-                  boxShadow: '0 4px 20px rgba(27,120,247,0.4)',
-                  marginBottom: 10,
-                }}
+                style={{ display: 'block', width: '100%', background: '#1b78f7', border: 'none', borderRadius: 12, padding: '14px 24px', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 24px rgba(27,120,247,0.4)', marginBottom: 10 }}
               >
                 Criar conta gratuita →
               </button>
               <button
                 onClick={() => setShowRegisterPopup(false)}
-                style={{ background: 'none', border: 'none', color: 'var(--c-muted)', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', padding: '8px 0' }}
+                style={{ display: 'block', width: '100%', background: 'none', border: 'none', color: 'var(--c-muted)', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', padding: '8px 0' }}
               >
                 Continuar sem conta
               </button>
