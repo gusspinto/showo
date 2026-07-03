@@ -78,12 +78,8 @@ export default function Login() {
     setNotConfirmed(false)
     setLoading(true)
     // Check if email is registered before attempting login
-    const { data: profileCheck } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('email', email.trim().toLowerCase())
-      .maybeSingle()
-    if (!profileCheck) {
+    const { data: emailExists } = await supabase.rpc('check_email_exists', { p_email: email.trim() })
+    if (!emailExists) {
       setLoading(false)
       setError('Esta conta não existe. Verifica o email ou cria uma conta.')
       return
