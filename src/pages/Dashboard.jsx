@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Pencil, ExternalLink } from 'lucide-react'
@@ -763,9 +763,10 @@ const ONBOARDING = {
 }
 
 /* ─────────── 3-step aluno onboarding ─────────── */
-function OnboardingAlunoModal({ user, profile, onDismiss, firstProject }) {
+function OnboardingAlunoModal({ user, profile, onDismiss, firstProject, claimedSlug }) {
   const navigate = useNavigate()
-  const [step, setStep] = useState(0) // 0=perfil 1=projeto 2=partilhar
+  // When coming from anonymous project claim, start at step -1 (claim confirmation)
+  const [step, setStep] = useState(claimedSlug ? -1 : 0) // -1=claim 0=perfil 1=projeto 2=partilhar
   const [username, setUsername] = useState(profile?.username ?? '')
   const [bio, setBio] = useState(profile?.bio ?? '')
   const [skills, setSkills] = useState(profile?.skills ?? [])
@@ -823,6 +824,35 @@ function OnboardingAlunoModal({ user, profile, onDismiss, firstProject }) {
         maxHeight: '90vh', overflowY: 'auto',
       }}>
         <style>{`@keyframes onbFadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}`}</style>
+
+        {/* ── Step -1: Projeto reclamado ── */}
+        {step === -1 && claimedSlug && (
+          <div style={{ padding: '36px 30px 28px', textAlign: 'center' }}>
+            <div style={{ width: 54, height: 54, borderRadius: '50%', background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
+              <Check size={26} color="#22c55e" />
+            </div>
+            <h2 style={{ margin: '0 0 8px', fontSize: 20, fontWeight: 700, color: C.text, letterSpacing: '-0.4px', fontFamily: 'var(--font-heading)' }}>
+              Olá{profile?.full_name ? ` ${profile.full_name.split(' ')[0]}` : ''}! O teu projeto está guardado.
+            </h2>
+            <p style={{ margin: '0 0 24px', fontSize: 14, color: C.muted, lineHeight: 1.65 }}>
+              O projeto que criaste sem conta foi guardado na tua conta. Podes editá-lo e partilhá-lo a qualquer momento.
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <button
+                onClick={() => { onDismiss(); navigate(`/projeto/${claimedSlug}`) }}
+                style={{ background: '#1b78f7', border: 'none', borderRadius: 9, padding: '13px', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px rgba(27,120,247,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}
+              >
+                Ir para o projeto <ArrowRight size={15} />
+              </button>
+              <button
+                onClick={() => setStep(0)}
+                style={{ background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 9, padding: '12px', color: C.muted, fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}
+              >
+                Saltar por agora
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* ── Step 0: Perfil ── */}
         {step === 0 && (
@@ -1094,6 +1124,8 @@ function OnboardingModal({ user, profile, onDismiss, onCreateTurma }) {
 export default function Dashboard() {
   const { user, profile, loading: authLoading } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
+  const [claimedSlug] = useState(() => location.state?.claimedSlug ?? null)
   const [projects, setProjects] = useState([])
   const [loadingProjects, setLoadingProjects] = useState(true)
   const [turmas, setTurmas] = useState([])
@@ -1601,6 +1633,7 @@ export default function Dashboard() {
           profile={profile}
           onDismiss={dismissOnboardingAluno}
           firstProject={projects[0] ?? null}
+          claimedSlug={claimedSlug}
         />
       )}
 

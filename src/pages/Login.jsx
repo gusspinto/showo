@@ -77,13 +77,20 @@ export default function Login() {
     setError('')
     setNotConfirmed(false)
     setLoading(true)
+    // Check if email is registered before attempting login
+    const { data: emailExists } = await supabase.rpc('check_email_exists', { p_email: email.trim() })
+    if (!emailExists) {
+      setLoading(false)
+      setError('Esta conta não existe. Verifica o email ou cria uma conta.')
+      return
+    }
     const { error: err } = await supabase.auth.signInWithPassword({ email, password })
     setLoading(false)
     if (err) {
       if (err.message?.toLowerCase().includes('email not confirmed')) {
         setNotConfirmed(true)
       } else {
-        setError('Email ou palavra-passe incorretos.')
+        setError('Palavra-passe incorreta.')
       }
     } else {
       navigate('/dashboard')

@@ -744,6 +744,12 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
   const canvasRef = useRef(null)
   const { onPointerDown: onCanvasPointerDown } = useCanvasDrag(canvasRef, setPreviewBlocks)
 
+  // Camouflage feedback FAB when workspace is active
+  useEffect(() => {
+    document.body.classList.add('pv-active')
+    return () => document.body.classList.remove('pv-active')
+  }, [])
+
   function uploadSectionMedia(sectionKey) {
     const input = document.createElement('input')
     input.type = 'file'; input.accept = 'image/*'
@@ -1154,13 +1160,20 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
             <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, var(--c-bg) 100%)' }} />
           </div>
         ) : (
-          <div style={{
-            width: '100%', height: heroHeight, position: 'relative',
-            background: `linear-gradient(135deg, ${hero.c1}44 0%, ${hero.c2}66 60%, transparent 100%)`,
-          }}>
-            <div style={{ position: 'absolute', top: -40, left: '5%', width: 500, height: 500, borderRadius: '50%', background: `radial-gradient(ellipse, ${hero.c1}22 0%, transparent 65%)`, pointerEvents: 'none' }} />
-            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 30%, var(--c-bg) 100%)' }} />
-          </div>
+          /* No cover — use page bg theme as base, accent as subtle overlay */
+          (() => {
+            const bgBase = selectedBg.preview || '#060c18'
+            const accentA = selectedBg.isLight ? '22' : '44'
+            const accentB = selectedBg.isLight ? '14' : '2a'
+            const glowA   = selectedBg.isLight ? '10' : '1a'
+            return (
+              <div style={{ width: '100%', height: heroHeight, position: 'relative', background: bgBase }}>
+                <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(135deg, ${hero.c1}${accentA} 0%, ${hero.c2}${accentB} 60%, transparent 100%)` }} />
+                <div style={{ position: 'absolute', top: -40, left: '5%', width: 500, height: 500, borderRadius: '50%', background: `radial-gradient(ellipse, ${hero.c1}${glowA} 0%, transparent 65%)`, pointerEvents: 'none' }} />
+                <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(to bottom, transparent 30%, ${bgBase} 100%)` }} />
+              </div>
+            )
+          })()
         )}
 
         {/* Title block over hero */}
@@ -2862,6 +2875,8 @@ export default function ProjectPage() {
 
   const { setExtras } = useSidebar()
   const { theme } = useTheme()
+  const [showRegisterPopup, setShowRegisterPopup] = useState(false)
+  const [registerPopupConfirm, setRegisterPopupConfirm] = useState(false)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [viewAsPublic, setViewAsPublic] = useState(false)
   const [previewEditing, setPreviewEditing] = useState(false)
@@ -2916,6 +2931,10 @@ export default function ProjectPage() {
     if (location.state?.newProject) {
       setShowLaunchOverlay(true)
       window.history.replaceState({}, '')
+    }
+    // Show register popup when anonymous user just created a project
+    if (!user && (location.state?.justCreated || location.state?.newProject || location.state?.edit_token)) {
+      setTimeout(() => setShowRegisterPopup(true), 1200)
     }
   }, [])
 
@@ -3649,7 +3668,7 @@ export default function ProjectPage() {
           .proj-ai-fab       { display: none !important; }
           .proj-ai-fab-label { display: none !important; }
           .proj-fab-defense-label { display: none !important; }
-          .proj-fab-defense { padding: 0 !important; width: 52px !important; min-width: 52px !important; }
+          .proj-fab-defense { display: none !important; }
           /* Invite: icon only on mobile */
           .proj-invite-label { display: none !important; }
           /* Author: centered on mobile */
@@ -4030,6 +4049,89 @@ export default function ProjectPage() {
 
       {editModal && (
         <EditModal challenge={editModal} project={project} onClose={() => setEditModal(null)} onSave={handleSave} saving={saving} />
+      )}
+
+      {/* Register popup — shown to anonymous users after creating a project */}
+      {showRegisterPopup && !user && project && (
+        <>
+          <div onClick={() => setShowRegisterPopup(false)} style={{ position: 'fixed', inset: 0, zIndex: 700, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }} />
+          <div style={{ position: 'fixed', zIndex: 701, left: '50%', top: '50%', transform: 'translate(-50%, -50%)', width: '100%', maxWidth: 540, padding: '0 16px', boxSizing: 'border-box' }}>
+            <div style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 24, padding: '36px 36px 28px', boxShadow: '0 32px 100px rgba(0,0,0,0.6)' }}>
+              {/* Header */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24 }}>
+                <div style={{ width: 52, height: 52, borderRadius: 14, background: 'rgba(27,120,247,0.12)', border: '1px solid rgba(27,120,247,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Rocket size={24} color="#1b78f7" />
+                </div>
+                <div>
+                  <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--c-text)', lineHeight: 1.2, fontFamily: 'var(--font-heading)' }}>O teu projeto foi criado!</div>
+                  <div style={{ fontSize: 13, color: 'var(--c-muted)', marginTop: 4 }}>Cria uma conta gratuita para o guardar.</div>
+                </div>
+              </div>
+              {/* Feature list */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 24 }}>
+                {[
+                  { icon: <Pencil size={16} color="#1b78f7" />, label: 'Editar a qualquer momento', sub: 'Volta sempre que quiseres para atualizar o projeto.' },
+                  { icon: <Globe size={16} color="#8b5cf6" />, label: 'Partilhar com um link', sub: 'Envia o link a recrutadores, professores e amigos.' },
+                  { icon: <Star size={16} color="#f59e0b" />, label: 'Guardar permanentemente', sub: 'O projeto fica na tua conta, seguro e sempre acessível.' },
+                ].map(({ icon, label, sub }) => (
+                  <div key={label} style={{ display: 'flex', alignItems: 'flex-start', gap: 14, background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)', borderRadius: 12, padding: '12px 14px' }}>
+                    <div style={{ width: 32, height: 32, borderRadius: 8, background: 'var(--c-card)', border: '1px solid var(--c-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>{icon}</div>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--c-text)', marginBottom: 2 }}>{label}</div>
+                      <div style={{ fontSize: 12, color: 'var(--c-muted)', lineHeight: 1.5 }}>{sub}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {/* Warning */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: 10, padding: '10px 14px', marginBottom: 20 }}>
+                <AlertTriangle size={14} color="#f59e0b" style={{ flexShrink: 0 }} />
+                <span style={{ fontSize: 12, color: 'var(--c-muted)', lineHeight: 1.5 }}>Sem conta, se perderes este link não há como recuperar o projeto.</span>
+              </div>
+              {/* CTA */}
+              {!registerPopupConfirm ? (
+                <>
+                  <button
+                    onClick={() => navigate('/register', { state: { claimSlug: project.slug } })}
+                    style={{ display: 'block', width: '100%', background: '#1b78f7', border: 'none', borderRadius: 12, padding: '14px 24px', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 24px rgba(27,120,247,0.4)', marginBottom: 10 }}
+                  >
+                    Criar conta gratuita →
+                  </button>
+                  <button
+                    onClick={() => setRegisterPopupConfirm(true)}
+                    style={{ display: 'block', width: '100%', background: 'none', border: 'none', color: 'var(--c-muted)', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', padding: '8px 0' }}
+                  >
+                    Continuar sem conta
+                  </button>
+                </>
+              ) : (
+                <div style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 14, padding: '18px 16px' }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: '#ef4444', marginBottom: 4 }}>Tens a certeza?</div>
+                  <div style={{ fontSize: 13, color: 'var(--c-muted)', marginBottom: 16, lineHeight: 1.5 }}>O projeto será <strong style={{ color: 'var(--c-text)' }}>eliminado permanentemente</strong>. Esta ação não pode ser desfeita.</div>
+                  <div style={{ display: 'flex', gap: 10 }}>
+                    <button
+                      onClick={async () => {
+                        const token = localStorage.getItem(`edit_token_${project.slug}`)
+                        if (token) await supabase.rpc('delete_anon_project', { p_slug: project.slug, p_token: token })
+                        localStorage.removeItem(`edit_token_${project.slug}`)
+                        navigate('/')
+                      }}
+                      style={{ flex: 1, background: '#ef4444', border: 'none', borderRadius: 10, padding: '11px 0', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+                    >
+                      Sim, eliminar
+                    </button>
+                    <button
+                      onClick={() => setRegisterPopupConfirm(false)}
+                      style={{ flex: 1, background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)', borderRadius: 10, padding: '11px 0', color: 'var(--c-text)', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </>
       )}
 
       {/* AI Feedback Modal */}

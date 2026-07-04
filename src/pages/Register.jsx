@@ -142,7 +142,7 @@ export default function Register() {
     }
 
     setLoading(false)
-    navigate('/dashboard')
+    navigate('/dashboard', claimSlug ? { state: { claimedSlug: claimSlug } } : undefined)
   }
 
   const selectedRole = ROLES.find(r => r.id === role)

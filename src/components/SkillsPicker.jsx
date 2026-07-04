@@ -122,6 +122,7 @@ export default function SkillsPicker({ value = [], onChange, max = 10, label = '
             onFocus={() => setShowSuggestions(true)}
             onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
             placeholder={selected.length === 0 ? 'Adiciona competências…' : ''}
+            autoComplete="off"
             style={{
               flex: 1, minWidth: 120, background: 'none', border: 'none', outline: 'none',
               fontSize: 13, color: 'var(--c-text)', fontFamily: 'inherit',

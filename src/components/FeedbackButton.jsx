@@ -89,6 +89,8 @@ export default function FeedbackButton() {
         .fb-fab:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(27,120,247,0.5); }
         .fb-fab:active { transform: scale(0.95); }
         .fb-fab-label { white-space: nowrap; }
+        /* hide on project workspace/preview page so it doesn't overlap the editor */
+        body.pv-active .fb-fab { display: none !important; }
 
         .fb-overlay {
           position: fixed; inset: 0; z-index: 491;
@@ -177,15 +179,17 @@ export default function FeedbackButton() {
           color: var(--c-muted); font-size: 13px; font-weight: 600;
           font-family: inherit; cursor: pointer; width: 100%;
           margin-top: 10px; transition: border-color 0.15s, color 0.15s;
+          box-sizing: border-box;
         }
         .fb-add-img:hover { border-color: rgba(27,120,247,0.4); color: #1b78f7; }
+        .fb-add-img svg { flex-shrink: 0; }
       `}</style>
 
       {/* FAB */}
       {!open && (
-        <button className="fb-fab" onClick={handleOpen} aria-label="Deixar feedback">
+        <button className="fb-fab" onClick={handleOpen} aria-label="Deixar feedback anónimo">
           <MessageSquarePlus size={18} />
-          <span className="fb-fab-label">Feedback</span>
+          <span className="fb-fab-label">Feedback anónimo</span>
         </button>
       )}
 
@@ -198,7 +202,7 @@ export default function FeedbackButton() {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
               <div>
                 <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--c-text)', fontFamily: 'var(--font-heading)' }}>
-                  Deixar feedback
+                  Dar feedback anónimo
                 </div>
                 <div style={{ fontSize: 12, color: 'var(--c-muted)', marginTop: 2 }}>
                   O que aconteceu? Qual o erro ou a página?
