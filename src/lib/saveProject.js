@@ -2,10 +2,11 @@ import { supabase } from './supabase'
 import { calculateScore } from './score'
 
 function generateToken() {
-  return Math.random().toString(36).slice(2, 10) + Math.random().toString(36).slice(2, 10)
+  return crypto.randomUUID().replace(/-/g, '')
 }
 
 function generateSlug(name) {
+  const suffix = crypto.randomUUID().split('-')[0]
   return (
     name
       .toLowerCase()
@@ -14,7 +15,7 @@ function generateSlug(name) {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)/g, '') +
     '-' +
-    Math.random().toString(36).slice(2, 7)
+    suffix
   )
 }
 
