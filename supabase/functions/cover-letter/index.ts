@@ -1,4 +1,5 @@
 import Anthropic from 'npm:@anthropic-ai/sdk@0.36.3'
+import { checkRateLimit, getAuthUser, clip } from '../_shared/rateLimit.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -8,21 +9,37 @@ const corsHeaders = {
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
+  const user = await getAuthUser(req)
+  if (!user) {
+    return new Response(JSON.stringify({ error: 'Autenticação necessária.' }), {
+      status: 401,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
+  }
+
+  const allowed = await checkRateLimit(req, 'cover-letter', 5)
+  if (!allowed) {
+    return new Response(JSON.stringify({ error: 'Demasiados pedidos. Tenta mais tarde.' }), {
+      status: 429,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
+  }
+
   try {
     const { projects, studentName, company, sector, type } = await req.json()
-    // type: 'internship' | 'job'
 
     const client = new Anthropic({ apiKey: Deno.env.get('ANTHROPIC_API_KEY') ?? '' })
 
-    const projectSummaries = projects.map((p: any, i: number) =>
-      `Projeto ${i+1}: ${p.name} — ${p.ai_tagline || p.goal || ''} (tecnologias: ${p.technologies || 'não especificado'})`
+    const safeProjects = (Array.isArray(projects) ? projects.slice(0, 5) : [])
+    const projectSummaries = safeProjects.map((p: any, i: number) =>
+      `Projeto ${i+1}: ${clip(p.name, 100)} — ${clip(p.ai_tagline || p.goal, 200)} (tecnologias: ${clip(p.technologies, 200)})`
     ).join('\n')
 
     const prompt = `És um assistente que ajuda estudantes portugueses a escrever candidaturas de ${type === 'job' ? 'emprego' : 'estágio'} profissionais e autênticas.
 
-ESTUDANTE: ${studentName}
-EMPRESA/ORGANIZAÇÃO: ${company}
-SETOR: ${sector || 'tecnologia'}
+ESTUDANTE: ${clip(studentName, 100)}
+EMPRESA/ORGANIZAÇÃO: ${clip(company, 200)}
+SETOR: ${clip(sector || 'tecnologia', 100)}
 TIPO: ${type === 'job' ? 'Emprego' : 'Estágio'}
 
 PROJETOS DO ESTUDANTE:

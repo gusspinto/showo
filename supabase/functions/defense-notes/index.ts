@@ -1,4 +1,5 @@
 import Anthropic from 'npm:@anthropic-ai/sdk@0.36.3'
+import { checkRateLimit } from '../_shared/rateLimit.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -8,9 +9,19 @@ const corsHeaders = {
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
+  const allowed = await checkRateLimit(req, 'defense-notes')
+  if (!allowed) {
+    return new Response(JSON.stringify({ slide_notes: {}, jury_questions: [], tip: '' }), {
+      status: 429,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
+  }
+
   try {
     const { project } = await req.json()
     const client = new Anthropic({ apiKey: Deno.env.get('ANTHROPIC_API_KEY') ?? '' })
+
+    const f = (v: string | undefined | null) => (v?.trim() || '').slice(0, 2000)
 
     const prompt = `És um coach de apresentações para estudantes portugueses que vão defender o seu projeto (PAP ou trabalho escolar) em frente a um júri.
 
@@ -20,16 +31,16 @@ Com base neste projeto, gera:
 3. Perguntas prováveis do júri com respostas sugeridas
 
 PROJETO:
-Nome: ${project.name || ''}
-Objetivo: ${project.goal || ''}
-Problema: ${project.problem || ''}
-Solução: ${project.solution || ''}
-Funcionalidades: ${project.features || ''}
-Tecnologias: ${project.technologies || ''}
-Público-alvo: ${project.target_audience || ''}
-Desafios: ${project.challenges || ''}
-Resultados: ${project.results || ''}
-Aprendizagens: ${project.learnings || ''}
+Nome: ${f(project.name)}
+Objetivo: ${f(project.goal)}
+Problema: ${f(project.problem)}
+Solução: ${f(project.solution)}
+Funcionalidades: ${f(project.features)}
+Tecnologias: ${f(project.technologies)}
+Público-alvo: ${f(project.target_audience)}
+Desafios: ${f(project.challenges)}
+Resultados: ${f(project.results)}
+Aprendizagens: ${f(project.learnings)}
 
 Devolve APENAS este JSON (sem markdown):
 {

@@ -238,7 +238,8 @@ export default function EditProject() {
     setSaving(true)
     setError(null)
     try {
-      const saved = await updateProject(project.id, { ...form, is_pap: form.project_type === 'pap' })
+      const editToken = !project.user_id ? localStorage.getItem(`edit_token_${project.slug}`) : null
+      const saved = await updateProject(project.id, { ...form, is_pap: form.project_type === 'pap' }, editToken)
       navigate(`/projeto/${saved.slug}`)
     } catch (err) {
       setError('Erro ao guardar. Tenta novamente.')

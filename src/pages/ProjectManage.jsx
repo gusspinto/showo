@@ -234,7 +234,8 @@ function ContentSection({ project, onSaved }) {
     }
     setSaving(true); setError(null)
     try {
-      await updateProject(project.id, { ...form, is_pap: form.project_type === 'pap' })
+      const editToken = !project.user_id ? localStorage.getItem(`edit_token_${project.slug}`) : null
+      await updateProject(project.id, { ...form, is_pap: form.project_type === 'pap' }, editToken)
       setSaved(true)
       setTimeout(() => setSaved(false), 2500)
       onSaved?.()

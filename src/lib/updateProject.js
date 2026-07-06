@@ -1,7 +1,8 @@
 import { supabase } from './supabase'
 import { calculateScore } from './score'
 
-export async function updateProject(id, formData) {
+// editToken must be provided for anonymous projects; omit for authenticated owners.
+export async function updateProject(id, formData, editToken = null) {
   const { score } = calculateScore(formData)
   const isPap = formData.is_pap || formData.project_type === 'pap'
 
@@ -31,6 +32,16 @@ export async function updateProject(id, formData) {
     project_type: formData.project_type || null,
     tags: formData.tags || [],
     score,
+  }
+
+  if (editToken) {
+    const { data, error } = await supabase.rpc('update_anon_project', {
+      p_id: id,
+      p_token: editToken,
+      p_data: payload,
+    })
+    if (error) throw error
+    return data
   }
 
   const { data, error } = await supabase

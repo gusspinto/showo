@@ -1,4 +1,5 @@
 import Anthropic from 'npm:@anthropic-ai/sdk@0.36.3'
+import { checkRateLimit } from '../_shared/rateLimit.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -18,6 +19,14 @@ Deno.serve(async (req) => {
     return new Response('ok', { headers: corsHeaders })
   }
 
+  const allowed = await checkRateLimit(req, 'prefill-project')
+  if (!allowed) {
+    return new Response(JSON.stringify({ prefill: {} }), {
+      status: 429,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
+  }
+
   try {
     const { text, projectType } = await req.json()
 
@@ -32,11 +41,12 @@ Deno.serve(async (req) => {
     })
 
     const typeLabel = TYPE_LABELS[projectType] ?? 'Projeto'
+    const safeText = String(text).trim().slice(0, 1000)
 
     const prompt = `És um assistente que analisa descrições curtas de projetos de estudantes portugueses e infere campos de um formulário.
 
 O utilizador descreveu o seu projeto assim:
-"${text.trim()}"
+"${safeText}"
 
 Tipo de projeto: ${typeLabel}
 
@@ -71,7 +81,6 @@ Devolve APENAS este JSON (sem markdown, sem explicações):
     })
   } catch (err) {
     console.error(err)
-    // On error, return empty prefill — the user fills manually
     return new Response(JSON.stringify({ prefill: {} }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
