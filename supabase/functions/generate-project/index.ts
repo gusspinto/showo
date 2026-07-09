@@ -1,4 +1,5 @@
 import Anthropic from 'npm:@anthropic-ai/sdk@0.36.3'
+import { checkRateLimit, clip } from '../_shared/rateLimit.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -8,6 +9,14 @@ const corsHeaders = {
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
+  }
+
+  const allowed = await checkRateLimit(req, 'generate-project')
+  if (!allowed) {
+    return new Response(JSON.stringify({ error: 'Demasiados pedidos. Tenta mais tarde.' }), {
+      status: 429,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
   }
 
   try {
@@ -23,17 +32,17 @@ Um estudante português do ensino profissional acabou de descrever o seu projeto
 O teu trabalho é transformar o que ele descreveu em algo que o faça sentir visto e orgulhoso — como se alguém finalmente percebeu o que ele construiu.
 
 DADOS DO PROJETO:
-- Nome: ${projectData.name ?? 'N/A'}
-- Área: ${projectData.area ?? 'N/A'}
-- Objetivo: ${projectData.goal ?? 'N/A'}
-- Problema que resolve: ${projectData.problem ?? 'N/A'}
-- Solução: ${projectData.solution ?? 'N/A'}
-- Público-alvo: ${projectData.target_audience ?? 'N/A'}
-- Funcionalidades: ${projectData.features ?? 'N/A'}
-- Tecnologias: ${projectData.technologies ?? 'N/A'}
-- Desafios: ${projectData.challenges ?? 'N/A'}
-- Resultados: ${projectData.results ?? 'N/A'}
-- Aprendizagens: ${projectData.learnings ?? 'N/A'}
+- Nome: ${clip(projectData.name, 200)}
+- Área: ${clip(projectData.area, 200)}
+- Objetivo: ${clip(projectData.goal)}
+- Problema que resolve: ${clip(projectData.problem)}
+- Solução: ${clip(projectData.solution)}
+- Público-alvo: ${clip(projectData.target_audience)}
+- Funcionalidades: ${clip(projectData.features)}
+- Tecnologias: ${clip(projectData.technologies, 500)}
+- Desafios: ${clip(projectData.challenges)}
+- Resultados: ${clip(projectData.results)}
+- Aprendizagens: ${clip(projectData.learnings)}
 
 Gera exatamente este JSON (sem mais nada, só o JSON válido):
 {
@@ -65,13 +74,11 @@ Regras absolutas:
 
     const raw = (message.content[0] as { type: string; text: string }).text.trim()
 
-    // Extract JSON even if the model wraps it in markdown
     const jsonMatch = raw.match(/\{[\s\S]*\}/)
     if (!jsonMatch) throw new Error('Resposta inválida da IA')
 
     const result = JSON.parse(jsonMatch[0])
 
-    // Ensure backward compat: also provide description as joined historia
     if (Array.isArray(result.historia)) {
       result.description = result.historia.join('\n\n')
     }

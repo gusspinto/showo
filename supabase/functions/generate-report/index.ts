@@ -1,4 +1,5 @@
 import Anthropic from 'npm:@anthropic-ai/sdk@0.36.3'
+import { checkRateLimit, getAuthUser } from '../_shared/rateLimit.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -8,12 +9,28 @@ const corsHeaders = {
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
+  const user = await getAuthUser(req)
+  if (!user) {
+    return new Response(JSON.stringify({ error: 'Autenticação necessária.' }), {
+      status: 401,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
+  }
+
+  const allowed = await checkRateLimit(req, 'generate-report', 5)
+  if (!allowed) {
+    return new Response(JSON.stringify({ error: 'Demasiados pedidos. Tenta mais tarde.' }), {
+      status: 429,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
+  }
+
   try {
     const { project, type } = await req.json()
     const client = new Anthropic({ apiKey: Deno.env.get('ANTHROPIC_API_KEY') ?? '' })
 
     const isPap = type === 'pap'
-    const f = (v: string | undefined | null) => v?.trim() || '(não preenchido)'
+    const f = (v: string | undefined | null) => (v?.trim() || '(não preenchido)').slice(0, 3000)
 
     const prompt = `És um redator especializado em relatórios académicos portugueses. Vais gerar um rascunho completo de ${isPap ? 'relatório de PAP (Projeto e Apresentação Profissional)' : 'relatório de estágio'} com base nos dados de um projeto de um aluno.
 

@@ -1,4 +1,5 @@
 import Anthropic from 'npm:@anthropic-ai/sdk@0.36.3'
+import { checkRateLimit } from '../_shared/rateLimit.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -24,17 +25,26 @@ const TYPE_FIELDS: Record<string, string[]> = {
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
+  const allowed = await checkRateLimit(req, 'interview-project')
+  if (!allowed) {
+    return new Response(JSON.stringify({ error: 'Demasiados pedidos. Tenta mais tarde.' }), {
+      status: 429,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
+  }
+
   try {
     const { description, projectType } = await req.json()
     const client = new Anthropic({ apiKey: Deno.env.get('ANTHROPIC_API_KEY') ?? '' })
 
     const typeCtx = TYPE_CONTEXT[projectType] ?? 'Projeto de estudante.'
     const fields  = (TYPE_FIELDS[projectType] ?? TYPE_FIELDS.personal).join(', ')
+    const safeDesc = String(description ?? '').trim().slice(0, 1000)
 
     const prompt = `És um assistente ultra-inteligente que faz entrevistas rápidas a estudantes para criar o perfil do projeto deles. Usas Português de Portugal (PT-PT) fluente e natural. Nunca usas palavras difíceis ou jargão desnecessário.
 
 O estudante descreveu o projeto assim:
-"${description?.trim() || '(sem descrição)'}"
+"${safeDesc || '(sem descrição)'}"
 
 Tipo de projeto: ${typeCtx}
 Campos que precisas de recolher: ${fields}
@@ -87,7 +97,6 @@ REGRAS CRÍTICAS:
     })
   } catch (err) {
     console.error(err)
-    // Fallback: generic questions
     return new Response(JSON.stringify({
       understanding: 'Ótimo! Vou fazer-te algumas perguntas rápidas para criar o teu perfil de projeto.',
       questions: [
