@@ -1,5 +1,5 @@
 import { useState, useEffect, lazy, Suspense, Component } from 'react'
-import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { AlertTriangle, X as XIcon, Frown, RefreshCw, ArrowLeft } from 'lucide-react'
 import { HelmetProvider } from 'react-helmet-async'
 import { AuthProvider, useAuth } from './context/AuthContext'
@@ -7,6 +7,8 @@ import { ThemeProvider } from './context/ThemeContext'
 import { SidebarProvider } from './context/SidebarContext'
 import RestReminder from './components/RestReminder'
 import SplashScreen from './components/SplashScreen'
+import { captureError } from './lib/errorTracking'
+import { trackPageview } from './lib/analytics'
 
 // Eagerly loaded — visible on first paint
 import Home from './pages/Home'
@@ -54,6 +56,9 @@ class ErrorBoundary extends Component {
   }
   static getDerivedStateFromError(error) {
     return { hasError: true, error }
+  }
+  componentDidCatch(error, info) {
+    captureError(error, { componentStack: info?.componentStack })
   }
   render() {
     if (!this.state.hasError) return this.props.children
@@ -184,6 +189,14 @@ function HomeRoute() {
   return <Home />
 }
 
+function PageViewTracker() {
+  const location = useLocation()
+  useEffect(() => {
+    trackPageview(location.pathname + location.search)
+  }, [location.pathname, location.search])
+  return null
+}
+
 function AuthErrorBanner() {
   const [msg, setMsg] = useState('')
 
@@ -248,6 +261,7 @@ export default function App() {
           {splashMounted && <SplashScreen visible={splashVisible} />}
           <RestReminder />
           <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+            <PageViewTracker />
             <ErrorBoundary>
             <Suspense fallback={<PageLoader />}>
             <Routes>

@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
+import { identifyUser, resetAnalytics } from '../lib/analytics'
 
 const AuthContext = createContext({})
 
@@ -9,7 +10,7 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
 
   const fetchProfile = useCallback(async (uid) => {
-    if (!uid) { setProfile(null); return }
+    if (!uid) { setProfile(null); resetAnalytics(); return }
     const [profileRes, userRes] = await Promise.all([
       supabase.from('profiles').select('id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work').eq('id', uid).single(),
       supabase.auth.getUser(),
@@ -33,6 +34,7 @@ export function AuthProvider({ children }) {
     }
 
     setProfile(data ?? null)
+    if (data) identifyUser(userRes.data?.user, data)
   }, [])
 
   useEffect(() => {
