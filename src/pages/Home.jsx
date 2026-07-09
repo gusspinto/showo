@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, memo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Globe, Bot, GraduationCap, Trophy, Briefcase, ArrowRight, Zap, ChevronDown, BookOpen, Search, Building2 } from 'lucide-react'
+import { Globe, Bot, GraduationCap, Trophy, Briefcase, ArrowRight, Zap, ChevronDown, BookOpen, Search, Building2, FileText, Share2 } from 'lucide-react'
 import { Navbar } from '../components/Navbar'
 import { supabase } from '../lib/supabase'
 import Onboarding from '../components/Onboarding'
@@ -64,10 +64,10 @@ function HeroAurora({ theme }) {
 
 // ── Roles panel — second horizontal slide, reached by swiping/clicking the peek tab ──
 const ROLE_CARDS = [
-  { Icon: GraduationCap, label: 'Aluno',      color: '#1b78f7', desc: 'Mostra os teus projetos escolares numa página profissional.' },
-  { Icon: BookOpen,      label: 'Professor',  color: '#10b981', desc: 'Acompanha as turmas e o progresso dos teus alunos.' },
-  { Icon: Search,        label: 'Recrutador', color: '#8b5cf6', desc: 'Encontra talento real através de projetos, não só CVs.' },
-  { Icon: Building2,     label: 'Empresa',    color: '#f59e0b', desc: 'Publica vagas e estágios para quem já mostra trabalho.' },
+  { Icon: GraduationCap, label: 'Aluno',      plural: 'alunos',      color: '#1b78f7', desc: 'Mostra os teus projetos escolares numa página profissional.' },
+  { Icon: BookOpen,      label: 'Professor',  plural: 'professores', color: '#10b981', desc: 'Acompanha as turmas e o progresso dos teus alunos.' },
+  { Icon: Search,        label: 'Recrutador', plural: 'recrutadores',color: '#8b5cf6', desc: 'Encontra talento real através de projetos, não só CVs.' },
+  { Icon: Building2,     label: 'Empresa',    plural: 'empresas',    color: '#f59e0b', desc: 'Publica vagas e estágios para quem já mostra trabalho.' },
 ]
 
 const ROLE_PHRASES = [
@@ -389,6 +389,12 @@ const MockupDefesa = memo(function MockupDefesa({ theme }) {
   )
 })
 
+const HOW_IT_WORKS = [
+  { Icon: FileText, step: '1', title: 'Descreve o teu projeto', desc: 'Em poucas frases: o que fizeste, que problema resolve, que tecnologias usaste.' },
+  { Icon: Bot,       step: '2', title: 'A IA gera a tua página', desc: 'Score automático, sugestões de melhoria e uma página pronta a partilhar.' },
+  { Icon: Share2,    step: '3', title: 'Partilha e candidata-te', desc: 'Um link para o CV ou LinkedIn — ou candidata-te direto a vagas na plataforma.' },
+]
+
 const QUICK_GOALS = [
   { id: 'pap',        label: 'PAP',              placeholder: 'Nome da tua PAP...' },
   { id: 'internship', label: 'Estágio',          placeholder: 'Nome do teu estágio...' },
@@ -612,6 +618,7 @@ export default function Home() {
         @media (max-width: 960px) {
           .hero-mockup-col { display: none !important; }
           .features-grid { grid-template-columns: repeat(2, 1fr) !important; }
+          .how-it-works-grid { grid-template-columns: 1fr !important; gap: 14px !important; }
         }
 
         /* Mobile slide nav — hidden by default, shown on mobile */
@@ -635,7 +642,7 @@ export default function Home() {
           .hero-section  { padding-top: 80px !important; padding-bottom: 40px !important; min-height: 0 !important; justify-content: flex-start !important; }
           .hero-inner    { padding-left: 20px !important; padding-right: 20px !important; }
           .hero-h1       { font-size: 34px !important; letter-spacing: -0.5px !important; margin-bottom: 16px !important; }
-          .hero-sub      { font-size: 16px !important; margin-bottom: 32px !important; }
+          .hero-sub      { font-size: 15px !important; margin-bottom: 32px !important; }
           .hero-widget   { margin-top: 24px !important; max-width: 100% !important; }
           .hero-scroll-cue { display: none !important; }
           .goals-row     { flex-wrap: nowrap !important; overflow-x: auto !important; padding-bottom: 6px !important; scrollbar-width: none !important; -webkit-overflow-scrolling: touch !important; }
@@ -643,6 +650,7 @@ export default function Home() {
           .goal-pill     { font-size: 12px !important; flex-shrink: 0 !important; }
           .social-strip  { gap: 10px !important; font-size: 12px !important; justify-content: center !important; }
           .features-grid { grid-template-columns: 1fr !important; gap: 12px !important; }
+          .how-it-works-grid { grid-template-columns: 1fr !important; gap: 12px !important; }
           .feature-card  { padding: 20px 18px !important; }
           .hero-note     { font-size: 11px !important; }
           .home-features-grid { grid-template-columns: 1fr !important; gap: 12px !important; }
@@ -727,11 +735,11 @@ export default function Home() {
           <StaticHero theme={theme} />
 
           <p className="hero-sub" style={{
-            fontSize: 16, color: colors.muted, lineHeight: 1.6,
-            margin: '0 auto 72px', fontWeight: 400, maxWidth: 580,
+            fontSize: 15, color: colors.muted, lineHeight: 1.5,
+            margin: '0 auto 56px', fontWeight: 500, maxWidth: 400,
             textAlign: 'center',
           }}>
-            Cria uma página profissional em pouco tempo.
+            Do projeto escolar à oportunidade, com IA.
           </p>
 
           {/* Widget */}
@@ -871,6 +879,42 @@ export default function Home() {
           ))}
         </div>
       </div>
+      </Reveal>
+
+      {/* Como funciona — 3 passos, para dar contexto imediato a quem chega */}
+      <Reveal style={{ padding: '64px 24px 8px' }}>
+        <div style={{ maxWidth: 960, margin: '0 auto' }}>
+          <h2 style={{
+            fontSize: 'clamp(22px, 2.6vw, 30px)', fontWeight: 900, letterSpacing: '-1px',
+            margin: '0 0 40px', fontFamily: 'var(--font-heading)', color: colors.text, textAlign: 'center',
+          }}>
+            Como funciona
+          </h2>
+          <div className="how-it-works-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24 }}>
+            {HOW_IT_WORKS.map(s => (
+              <div key={s.step} style={{
+                background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 14,
+                padding: '24px 22px', position: 'relative',
+              }}>
+                <div style={{
+                  width: 40, height: 40, borderRadius: 10, background: 'rgba(27,120,247,0.12)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16,
+                }}>
+                  <s.Icon size={19} color="#1b78f7" />
+                </div>
+                <span style={{
+                  position: 'absolute', top: 20, right: 22, fontSize: 12, fontWeight: 800,
+                  color: colors.subtle, fontFamily: 'var(--font-heading)',
+                }}>{s.step}</span>
+                <h3 style={{
+                  fontSize: 16, fontWeight: 800, letterSpacing: '-0.2px', margin: '0 0 8px',
+                  fontFamily: 'var(--font-heading)', color: colors.text,
+                }}>{s.title}</h3>
+                <p style={{ fontSize: 13.5, color: colors.muted, lineHeight: 1.6, margin: 0 }}>{s.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
       </Reveal>
 
       {/* Features alternadas */}
