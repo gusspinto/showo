@@ -37,6 +37,7 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 
 // Lazy loaded — only fetched when the route is actually visited
+const RecuperarPassword = lazy(() => import('./pages/RecuperarPassword'))
 const NewProject   = lazy(() => import('./pages/NewProject'))
 const ProjectPage  = lazy(() => import('./pages/ProjectPage'))
 const EditProject  = lazy(() => import('./pages/EditProject'))
@@ -295,6 +296,7 @@ export default function App() {
               <Route path="/ranking"       element={<Ranking />}     />
               <Route path="/explorar"      element={<Explore />}     />
               <Route path="/login"         element={<Login />}       />
+              <Route path="/recuperar-password" element={<RecuperarPassword />} />
               <Route path="/register"      element={<Register />}    />
               <Route path="/dashboard"     element={<Dashboard />}   />
               <Route path="/settings"      element={<Settings />}    />

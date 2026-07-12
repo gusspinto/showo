@@ -71,6 +71,22 @@ export default function Login() {
   const [notConfirmed, setNotConfirmed] = useState(false)
   const [resendState, setResendState] = useState('idle') // 'idle' | 'sending' | 'sent'
   const [emailFocused, setEmailFocused] = useState(false)
+  const [mode, setMode] = useState('login') // 'login' | 'forgot'
+  const [forgotEmail, setForgotEmail] = useState('')
+  const [forgotSent, setForgotSent] = useState(false)
+  const [forgotLoading, setForgotLoading] = useState(false)
+
+  async function handleForgotPassword(e) {
+    e.preventDefault()
+    if (!forgotEmail.trim()) return
+    setForgotLoading(true)
+    await supabase.auth.resetPasswordForEmail(forgotEmail.trim(), {
+      redirectTo: `${window.location.origin}/recuperar-password`,
+    })
+    setForgotLoading(false)
+    // Always show success — don't reveal whether the email is registered
+    setForgotSent(true)
+  }
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -198,6 +214,58 @@ export default function Login() {
             />
           </div>
 
+          {mode === 'forgot' ? (
+            <>
+              <h1 style={{ color: C.text, fontSize: 26, fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 8px', letterSpacing: '-0.5px' }}>Recuperar acesso</h1>
+              <p style={{ color: C.muted, fontSize: 14, margin: '0 0 32px' }}>Enviamos-te um link para definires uma nova palavra-passe</p>
+
+              {forgotSent ? (
+                <div style={{ background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.25)', borderRadius: 10, padding: '16px 18px' }}>
+                  <p style={{ margin: '0 0 6px', color: '#22c55e', fontSize: 14, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <Check size={14} /> Verifica o teu email
+                  </p>
+                  <p style={{ margin: 0, color: 'var(--c-muted)', fontSize: 13, lineHeight: 1.5 }}>
+                    Se existir uma conta com o email <strong style={{ color: C.text }}>{forgotEmail}</strong>, vais receber um link para repor a palavra-passe.
+                  </p>
+                </div>
+              ) : (
+                <form onSubmit={handleForgotPassword} style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <label style={{ color: C.muted, fontSize: 13, fontWeight: 500 }}>Email</label>
+                    <div className="auth-field-wrap" style={{ borderBottomColor: C.border }}>
+                      <input
+                        type="email" value={forgotEmail} onChange={e => setForgotEmail(e.target.value)} required placeholder="tu@email.com"
+                        className="auth-input"
+                      />
+                    </div>
+                  </div>
+                  <button
+                    type="submit" disabled={forgotLoading}
+                    className="auth-submit"
+                    style={{
+                      background: forgotLoading ? 'var(--c-border)' : '#1b78f7',
+                      color: '#fff', border: 'none',
+                      borderRadius: 8, padding: '13px', fontSize: 14, fontWeight: 700,
+                      cursor: forgotLoading ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
+                    }}
+                  >
+                    {forgotLoading ? 'A enviar…' : 'Enviar link de recuperação'}
+                  </button>
+                </form>
+              )}
+
+              <p style={{ textAlign: 'center', color: C.muted, fontSize: 14, marginTop: 24 }}>
+                <button
+                  type="button"
+                  onClick={() => { setMode('login'); setForgotSent(false) }}
+                  style={{ background: 'none', border: 'none', color: C.blue, fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}
+                >
+                  Voltar a entrar
+                </button>
+              </p>
+            </>
+          ) : (
+          <>
           <h1 style={{ color: C.text, fontSize: 26, fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 8px', letterSpacing: '-0.5px' }}>Entrar</h1>
           <p style={{ color: C.muted, fontSize: 14, margin: '0 0 32px' }}>Acede ao teu painel de projetos</p>
 
@@ -214,7 +282,16 @@ export default function Login() {
               </div>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <label style={{ color: C.muted, fontSize: 13, fontWeight: 500 }}>Palavra-passe</label>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <label style={{ color: C.muted, fontSize: 13, fontWeight: 500 }}>Palavra-passe</label>
+                <button
+                  type="button"
+                  onClick={() => { setMode('forgot'); setForgotEmail(email) }}
+                  style={{ background: 'none', border: 'none', color: C.muted, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', padding: 0, textDecoration: 'underline' }}
+                >
+                  Esqueceste-te da password?
+                </button>
+              </div>
               <PasswordInput value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" />
             </div>
 
@@ -273,6 +350,8 @@ export default function Login() {
             Não tens conta?{' '}
             <Link to="/register" style={{ color: C.blue, textDecoration: 'none', fontWeight: 500 }}>Regista-te</Link>
           </p>
+          </>
+          )}
         </div>
       </div>
     </div>
