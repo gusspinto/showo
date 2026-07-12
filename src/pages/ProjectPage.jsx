@@ -3304,13 +3304,8 @@ export default function ProjectPage() {
         .eq('username', val)
         .maybeSingle()
       if (!found) {
-        // Try auth users via profiles email col if it exists
-        const { data: byEmail } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('email', val)
-          .maybeSingle()
-        found = byEmail
+        const { data: byEmailId } = await supabase.rpc('find_user_by_email', { p_email: val })
+        found = byEmailId ? { id: byEmailId } : null
       }
       if (!found) {
         setInviteMsg({ type: 'error', text: 'Utilizador não encontrado. Verifica o username.' })

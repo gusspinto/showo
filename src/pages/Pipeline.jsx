@@ -179,7 +179,19 @@ export default function Pipeline() {
   }
 
   async function updateStage(candId, stage) {
-    await supabase.from('candidaturas').update({ pipeline_stage: stage }).eq('id', candId)
+    const current = candidaturas.find(c => c.id === candId)
+    const expectedStage = current?.pipeline_stage || 'novo'
+    const { data, error } = await supabase
+      .from('candidaturas')
+      .update({ pipeline_stage: stage })
+      .eq('id', candId)
+      .eq('pipeline_stage', expectedStage)
+      .select('id')
+    if (error || !data?.length) {
+      alert('Este candidato já foi movido por outra pessoa. A recarregar.')
+      loadData()
+      return
+    }
     setCandidaturas(prev => prev.map(c => c.id === candId ? { ...c, pipeline_stage: stage } : c))
     setSelected(prev => prev?.id === candId ? { ...prev, pipeline_stage: stage } : prev)
   }
