@@ -10,6 +10,12 @@
 -- entirely. guard_profile_privesc (026) only fires on UPDATE, so it never
 -- caught this. This migration closes that INSERT hole and adds a real
 -- invite-code gate so professor self-registration can be reopened safely.
+--
+-- Codes are reusable by default (max_uses = null) — the intended workflow is
+-- one code shared with a whole school, not one code per teacher — but an
+-- admin can still cap a code to a fixed number of uses (e.g. 1) if they want
+-- tighter control for a single person. Each redemption is logged so admins
+-- can see exactly who registered through which code.
 -- ============================================================================
 
 -- ── 1. Split "Own profile" so INSERT gets its own, restrictive WITH CHECK ──
@@ -39,10 +45,10 @@ create policy "Own profile insert" on public.profiles
 create table if not exists public.professor_invite_codes (
   id         uuid primary key default gen_random_uuid(),
   code       text unique not null,
-  label      text,                    -- free-text note for admins, e.g. school/teacher name
+  label      text,                    -- free-text note for admins, e.g. school name
+  max_uses   integer,                 -- null = unlimited (the normal case — one code per school)
+  use_count  integer not null default 0,
   created_by uuid references auth.users(id),
-  used_by    uuid references auth.users(id),
-  used_at    timestamptz,
   expires_at timestamptz,
   created_at timestamptz default now()
 );
@@ -54,8 +60,22 @@ create policy "Admin read invite codes" on public.professor_invite_codes
 -- No insert/update/delete policy for anyone — only the SECURITY DEFINER
 -- RPCs below (which bypass RLS as the function owner) can write this table.
 
--- ── 3. Admin mints a code ───────────────────────────────────────────────────
-create or replace function public.create_professor_invite_code(p_label text default null)
+-- ── 3. Redemption log — who used which code, and when ──────────────────────
+create table if not exists public.professor_invite_redemptions (
+  id          uuid primary key default gen_random_uuid(),
+  code_id     uuid not null references public.professor_invite_codes(id) on delete cascade,
+  user_id     uuid not null references auth.users(id) on delete cascade,
+  redeemed_at timestamptz default now(),
+  unique (code_id, user_id)  -- same person redeeming twice is a no-op, not a second use
+);
+
+alter table public.professor_invite_redemptions enable row level security;
+
+create policy "Admin read invite redemptions" on public.professor_invite_redemptions
+  for select using (is_admin());
+
+-- ── 4. Admin mints a code ───────────────────────────────────────────────────
+create or replace function public.create_professor_invite_code(p_label text default null, p_max_uses integer default null)
 returns text
 language plpgsql
 security definer
@@ -67,6 +87,9 @@ begin
   if not is_admin() then
     raise exception 'Not authorized';
   end if;
+  if p_max_uses is not null and p_max_uses < 1 then
+    raise exception 'max_uses must be positive';
+  end if;
 
   loop
     v_code := (
@@ -76,16 +99,16 @@ begin
     exit when not exists (select 1 from public.professor_invite_codes where code = v_code);
   end loop;
 
-  insert into public.professor_invite_codes (code, label, created_by)
-  values (v_code, nullif(trim(p_label), ''), auth.uid());
+  insert into public.professor_invite_codes (code, label, max_uses, created_by)
+  values (v_code, nullif(trim(p_label), ''), p_max_uses, auth.uid());
 
   return v_code;
 end;
 $$;
 
-grant execute on function public.create_professor_invite_code(text) to authenticated;
+grant execute on function public.create_professor_invite_code(text, integer) to authenticated;
 
--- ── 4. Self-serve redemption at registration ────────────────────────────────
+-- ── 5. Self-serve redemption at registration ────────────────────────────────
 create or replace function public.redeem_professor_invite_code(p_code text, p_full_name text, p_school text default null)
 returns void
 language plpgsql
@@ -93,6 +116,7 @@ security definer
 as $$
 declare
   v_id uuid;
+  v_already_redeemed boolean;
 begin
   if auth.uid() is null then
     raise exception 'not authenticated';
@@ -101,16 +125,22 @@ begin
   select id into v_id
   from public.professor_invite_codes
   where code = upper(trim(p_code))
-    and used_by is null
-    and (expires_at is null or expires_at > now());
+    and (expires_at is null or expires_at > now())
+    and (max_uses is null or use_count < max_uses);
 
   if v_id is null then
-    raise exception 'invalid_or_used_code';
+    raise exception 'invalid_or_exhausted_code';
   end if;
 
-  update public.professor_invite_codes
-  set used_by = auth.uid(), used_at = now()
-  where id = v_id;
+  select exists(
+    select 1 from public.professor_invite_redemptions
+    where code_id = v_id and user_id = auth.uid()
+  ) into v_already_redeemed;
+
+  if not v_already_redeemed then
+    insert into public.professor_invite_redemptions (code_id, user_id) values (v_id, auth.uid());
+    update public.professor_invite_codes set use_count = use_count + 1 where id = v_id;
+  end if;
 
   perform set_config('app.trusted_profile_write', 'true', true);
 

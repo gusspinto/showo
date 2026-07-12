@@ -418,12 +418,14 @@ function ProjectsTab({ projects, users, onDeleteProject }) {
 // ─── INVITES TAB (professor access codes) ────────────────────
 function InvitesTab({ codes, loading, onGenerate, generating }) {
   const [label, setLabel] = useState('')
+  const [maxUses, setMaxUses] = useState('') // empty = ilimitado
   const [justCreated, setJustCreated] = useState(null)
   const [copied, setCopied] = useState(null)
+  const [expanded, setExpanded] = useState(null)
 
   async function handleGenerate() {
-    const code = await onGenerate(label)
-    if (code) { setJustCreated(code); setLabel('') }
+    const code = await onGenerate(label, maxUses.trim() ? parseInt(maxUses, 10) : null)
+    if (code) { setJustCreated(code); setLabel(''); setMaxUses('') }
   }
 
   function copy(code) {
@@ -437,13 +439,20 @@ function InvitesTab({ codes, loading, onGenerate, generating }) {
       <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: '20px 22px', marginBottom: 24 }}>
         <h3 style={{ margin: '0 0 4px', fontSize: 15, fontWeight: 700, color: C.text }}>Gerar código de acesso — Professor</h3>
         <p style={{ margin: '0 0 16px', fontSize: 13, color: C.muted }}>
-          Cada código é de uso único. Envia-o diretamente ao professor — ele introduz o código no registo para desbloquear o cargo.
+          Por defeito, o código é reutilizável — dá para partilhar um único código com uma escola inteira e cada professor regista-se com ele.
+          Define um limite de usos só se quiseres um código para uma pessoa em concreto.
         </p>
         <div style={{ display: 'flex', gap: 10 }}>
           <input
             value={label} onChange={e => setLabel(e.target.value)}
-            placeholder="Nota opcional (ex: nome da escola ou do professor)"
+            placeholder="Nota (ex: Escola Secundária de...)"
             style={{ flex: 1, background: C.bgAlt, border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 14px', color: C.text, fontSize: 13, fontFamily: 'inherit', outline: 'none' }}
+          />
+          <input
+            value={maxUses} onChange={e => setMaxUses(e.target.value.replace(/\D/g, ''))}
+            placeholder="Nº máx. usos (vazio = ilimitado)"
+            inputMode="numeric"
+            style={{ width: 200, background: C.bgAlt, border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 14px', color: C.text, fontSize: 13, fontFamily: 'inherit', outline: 'none' }}
           />
           <button
             onClick={handleGenerate} disabled={generating}
@@ -469,22 +478,42 @@ function InvitesTab({ codes, loading, onGenerate, generating }) {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {codes.map(c => {
-            const used = !!c.used_by
             const expired = c.expires_at && new Date(c.expires_at) < new Date()
+            const exhausted = c.max_uses != null && c.use_count >= c.max_uses
+            const inactive = expired || exhausted
+            const isExpanded = expanded === c.id
             return (
-              <div key={c.id} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 14 }}>
-                <span style={{ fontSize: 14, fontWeight: 800, color: C.text, letterSpacing: 1.5, fontFamily: 'monospace', flexShrink: 0 }}>{c.code}</span>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  {c.label && <div style={{ fontSize: 12, color: C.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.label}</div>}
-                  <div style={{ fontSize: 11, color: C.subtle }}>
-                    Criado {new Date(c.created_at).toLocaleDateString('pt-PT')}
-                    {used && ` · Usado por ${c.usedByName || 'utilizador'} em ${new Date(c.used_at).toLocaleDateString('pt-PT')}`}
+              <div key={c.id} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: '12px 16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                  <span style={{ fontSize: 14, fontWeight: 800, color: C.text, letterSpacing: 1.5, fontFamily: 'monospace', flexShrink: 0 }}>{c.code}</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    {c.label && <div style={{ fontSize: 12, color: C.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.label}</div>}
+                    <div style={{ fontSize: 11, color: C.subtle }}>
+                      Criado {new Date(c.created_at).toLocaleDateString('pt-PT')} · {c.max_uses == null ? 'ilimitado' : `limite de ${c.max_uses}`}
+                    </div>
                   </div>
+                  <button onClick={() => copy(c.code)} title="Copiar" style={{ background: 'none', border: 'none', color: C.muted, cursor: 'pointer', display: 'flex', flexShrink: 0 }}>
+                    {copied === c.code ? <Check size={14} color={C.green} /> : <Copy size={14} />}
+                  </button>
+                  <button
+                    onClick={() => setExpanded(isExpanded ? null : c.id)}
+                    disabled={c.use_count === 0}
+                    style={{ background: 'none', border: 'none', color: C.blue, cursor: c.use_count ? 'pointer' : 'default', fontSize: 12, fontWeight: 700, fontFamily: 'inherit', flexShrink: 0 }}
+                  >
+                    {c.use_count} uso{c.use_count !== 1 ? 's' : ''}
+                  </button>
+                  <Badge color={inactive ? C.muted : C.green}>{expired ? 'Expirado' : exhausted ? 'Esgotado' : 'Ativo'}</Badge>
                 </div>
-                <button onClick={() => copy(c.code)} title="Copiar" style={{ background: 'none', border: 'none', color: C.muted, cursor: 'pointer', display: 'flex', flexShrink: 0 }}>
-                  {copied === c.code ? <Check size={14} color={C.green} /> : <Copy size={14} />}
-                </button>
-                <Badge color={used ? C.muted : expired ? C.red : C.green}>{used ? 'Usado' : expired ? 'Expirado' : 'Por usar'}</Badge>
+                {isExpanded && c.redeemers?.length > 0 && (
+                  <div style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                    {c.redeemers.map(r => (
+                      <div key={r.user_id} style={{ fontSize: 12, color: C.muted, display: 'flex', justifyContent: 'space-between' }}>
+                        <span>{r.name}</span>
+                        <span style={{ color: C.subtle }}>{new Date(r.redeemed_at).toLocaleDateString('pt-PT')}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )
           })}
@@ -550,20 +579,26 @@ export default function Admin() {
 
   const loadCodes = useCallback(async () => {
     setCodesLoading(true)
-    const { data } = await supabase
-      .from('professor_invite_codes')
-      .select('*')
-      .order('created_at', { ascending: false })
-    const rows = data || []
+    const [codesRes, redemptionsRes] = await Promise.all([
+      supabase.from('professor_invite_codes').select('*').order('created_at', { ascending: false }),
+      supabase.from('professor_invite_redemptions').select('code_id, user_id, redeemed_at').order('redeemed_at', { ascending: false }),
+    ])
+    const rows = codesRes.data || []
+    const redemptions = redemptionsRes.data || []
 
-    const usedByIds = [...new Set(rows.filter(c => c.used_by).map(c => c.used_by))]
+    const userIds = [...new Set(redemptions.map(r => r.user_id))]
     let nameMap = {}
-    if (usedByIds.length) {
-      const { data: profs } = await supabase.from('profiles').select('id, full_name, username').in('id', usedByIds)
-      ;(profs || []).forEach(p => { nameMap[p.id] = p.full_name || p.username })
+    if (userIds.length) {
+      const { data: profs } = await supabase.from('profiles').select('id, full_name, username').in('id', userIds)
+      ;(profs || []).forEach(p => { nameMap[p.id] = p.full_name || p.username || 'Utilizador' })
     }
 
-    setCodes(rows.map(c => ({ ...c, usedByName: c.used_by ? nameMap[c.used_by] : null })))
+    setCodes(rows.map(c => ({
+      ...c,
+      redeemers: redemptions
+        .filter(r => r.code_id === c.id)
+        .map(r => ({ user_id: r.user_id, redeemed_at: r.redeemed_at, name: nameMap[r.user_id] })),
+    })))
     setCodesLoading(false)
   }, [])
 
@@ -571,9 +606,9 @@ export default function Admin() {
     if (isAdmin && tab === 'invites' && codes.length === 0 && !codesLoading) loadCodes()
   }, [isAdmin, tab, codes.length, codesLoading, loadCodes])
 
-  async function handleGenerateCode(label) {
+  async function handleGenerateCode(label, maxUses) {
     setGeneratingCode(true)
-    const { data, error } = await supabase.rpc('create_professor_invite_code', { p_label: label || null })
+    const { data, error } = await supabase.rpc('create_professor_invite_code', { p_label: label || null, p_max_uses: maxUses })
     setGeneratingCode(false)
     if (error) { showToast('Erro ao gerar código: ' + error.message); return null }
     loadCodes()
