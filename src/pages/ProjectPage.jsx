@@ -3009,10 +3009,7 @@ export default function ProjectPage() {
         setLikeCount(count || 0)
       })
 
-      // Public recruiter interest count
-      supabase.from('recruiter_interests').select('recruiter_id', { count: 'exact' }).eq('project_id', data.id).then(({ count }) => {
-        setInterestCount(count || 0)
-      })
+      setInterestCount(data.interest_count || 0)
 
       // Members + realtime channel
       async function loadMembers(projectId, isOwner) {
