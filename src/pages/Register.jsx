@@ -22,7 +22,7 @@ const REGISTER_PHRASES = [
 
 const ROLES = [
   { id: 'aluno',      icon: <GraduationCap size={22} />, label: 'Aluno',      color: '#1b78f7' },
-  { id: 'professor',  icon: <BookOpen size={22} />,      label: 'Professor',  color: '#10b981', disabled: true },
+  { id: 'professor',  icon: <BookOpen size={22} />,      label: 'Professor',  color: '#10b981' },
   { id: 'recrutador', icon: <Search size={22} />,        label: 'Recrutador', color: '#8b5cf6', disabled: true },
   { id: 'empresa',    icon: <Building2 size={22} />,     label: 'Empresa',    color: '#f59e0b', disabled: true },
 ]
@@ -91,19 +91,44 @@ export default function Register() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [inviteCode, setInviteCode] = useState('')
+  const [accountCreated, setAccountCreated] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
   const needsCompany = role === 'recrutador' || role === 'empresa'
   const needsSchool = role === 'professor'
+  const needsInviteCode = role === 'professor'
+
+  async function redeemInviteCode() {
+    const { error: codeErr } = await supabase.rpc('redeem_professor_invite_code', {
+      p_code: inviteCode.trim(),
+      p_full_name: name.trim(),
+      p_school: school.trim(),
+    })
+    return !codeErr
+  }
 
   async function handleSubmit(e) {
     e.preventDefault()
     setError('')
 
+    // Account already exists (signUp succeeded on a previous attempt) — this
+    // submit is just retrying the invite code, nothing else to validate.
+    if (accountCreated) {
+      if (!inviteCode.trim()) { setError('Introduz o código de acesso.'); return }
+      setLoading(true)
+      const ok = await redeemInviteCode()
+      setLoading(false)
+      if (!ok) { setError('Código inválido, expirado ou já utilizado.'); return }
+      navigate('/dashboard')
+      return
+    }
+
     if (!name.trim()) { setError('Introduz o teu nome.'); return }
     if (needsCompany && !company.trim()) { setError('Introduz o nome da empresa.'); return }
     if (needsSchool && !school.trim()) { setError('Introduz o nome da escola.'); return }
+    if (needsInviteCode && !inviteCode.trim()) { setError('Introduz o código de acesso enviado pela Showo.'); return }
     if (password.length < 6) { setError('A palavra-passe tem de ter pelo menos 6 caracteres.'); return }
     if (password !== confirmPassword) { setError('As palavras-passe não coincidem.'); return }
 
@@ -112,7 +137,7 @@ export default function Register() {
       email,
       password,
       options: { data: {
-        full_name: name.trim(), role: role || 'aluno',
+        full_name: name.trim(),
         company: needsCompany ? company.trim() : null,
         school: needsSchool ? school.trim() : null,
       } },
@@ -128,6 +153,18 @@ export default function Register() {
     // (confirmations enabled on the project), sign in straight away.
     if (!data?.session) {
       await supabase.auth.signInWithPassword({ email, password })
+    }
+
+    // Professor role only takes effect once the invite code is redeemed —
+    // the account itself was just created as a plain 'aluno'.
+    if (needsInviteCode) {
+      const ok = await redeemInviteCode()
+      if (!ok) {
+        setLoading(false)
+        setAccountCreated(true)
+        setError('A tua conta foi criada, mas o código de acesso é inválido ou já foi utilizado. Verifica o código e tenta novamente.')
+        return
+      }
     }
 
     // Claim an anonymously-created project (made via the homepage widget, no account yet)
@@ -306,31 +343,46 @@ export default function Register() {
                 </button>
               </div>
 
-              <h1 style={{ color: C.text, fontSize: 22, fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 24px', letterSpacing: '-0.5px' }}>Os teus dados</h1>
+              <h1 style={{ color: C.text, fontSize: 22, fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 24px', letterSpacing: '-0.5px' }}>
+                {accountCreated ? 'Só falta o código' : 'Os teus dados'}
+              </h1>
 
               <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
-                <Field label={role === 'empresa' ? 'Nome do responsável' : 'O teu nome'}>
-                  <Input value={name} onChange={e => setName(e.target.value)} placeholder="Ex: João Silva" required />
-                </Field>
-                {needsCompany && (
-                  <Field label="Nome da empresa">
-                    <Input value={company} onChange={e => setCompany(e.target.value)} placeholder="Ex: Google, NOS, Altice..." required />
+                {accountCreated ? (
+                  <Field label="Código de acesso">
+                    <Input value={inviteCode} onChange={e => setInviteCode(e.target.value)} placeholder="Código enviado pela Showo" required />
                   </Field>
+                ) : (
+                  <>
+                    <Field label={role === 'empresa' ? 'Nome do responsável' : 'O teu nome'}>
+                      <Input value={name} onChange={e => setName(e.target.value)} placeholder="Ex: João Silva" required />
+                    </Field>
+                    {needsCompany && (
+                      <Field label="Nome da empresa">
+                        <Input value={company} onChange={e => setCompany(e.target.value)} placeholder="Ex: Google, NOS, Altice..." required />
+                      </Field>
+                    )}
+                    {needsSchool && (
+                      <Field label="Nome da escola">
+                        <Input value={school} onChange={e => setSchool(e.target.value)} placeholder="Ex: Escola Secundária de..." required />
+                      </Field>
+                    )}
+                    {needsInviteCode && (
+                      <Field label="Código de acesso">
+                        <Input value={inviteCode} onChange={e => setInviteCode(e.target.value)} placeholder="Código enviado pela Showo" required />
+                      </Field>
+                    )}
+                    <Field label="Email">
+                      <Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="tu@email.com" required />
+                    </Field>
+                    <Field label="Palavra-passe">
+                      <Input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Mínimo 6 caracteres" required />
+                    </Field>
+                    <Field label="Confirmar palavra-passe">
+                      <Input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="Repete a palavra-passe" required />
+                    </Field>
+                  </>
                 )}
-                {needsSchool && (
-                  <Field label="Nome da escola">
-                    <Input value={school} onChange={e => setSchool(e.target.value)} placeholder="Ex: Escola Secundária de..." required />
-                  </Field>
-                )}
-                <Field label="Email">
-                  <Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="tu@email.com" required />
-                </Field>
-                <Field label="Palavra-passe">
-                  <Input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Mínimo 6 caracteres" required />
-                </Field>
-                <Field label="Confirmar palavra-passe">
-                  <Input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="Repete a palavra-passe" required />
-                </Field>
 
                 {error && (
                   <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 8, padding: '10px 14px', color: C.error, fontSize: 14 }}>
@@ -348,7 +400,7 @@ export default function Register() {
                     cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit', marginTop: 4,
                   }}
                 >
-                  {loading ? 'A criar conta…' : 'Criar conta'}
+                  {loading ? 'A verificar…' : accountCreated ? 'Confirmar código' : 'Criar conta'}
                 </button>
               </form>
             </>

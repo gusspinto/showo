@@ -6,6 +6,7 @@ import { Navbar } from '../components/Navbar'
 import {
   AlertTriangle, HelpCircle, User, Folder, Star,
   Shield, BarChart2, MapPin, Calendar, Check, X, Search,
+  KeyRound, Plus, Copy,
 } from 'lucide-react'
 
 const C = {
@@ -414,6 +415,85 @@ function ProjectsTab({ projects, users, onDeleteProject }) {
   )
 }
 
+// ─── INVITES TAB (professor access codes) ────────────────────
+function InvitesTab({ codes, loading, onGenerate, generating }) {
+  const [label, setLabel] = useState('')
+  const [justCreated, setJustCreated] = useState(null)
+  const [copied, setCopied] = useState(null)
+
+  async function handleGenerate() {
+    const code = await onGenerate(label)
+    if (code) { setJustCreated(code); setLabel('') }
+  }
+
+  function copy(code) {
+    navigator.clipboard.writeText(code)
+    setCopied(code)
+    setTimeout(() => setCopied(null), 1500)
+  }
+
+  return (
+    <div>
+      <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: '20px 22px', marginBottom: 24 }}>
+        <h3 style={{ margin: '0 0 4px', fontSize: 15, fontWeight: 700, color: C.text }}>Gerar código de acesso — Professor</h3>
+        <p style={{ margin: '0 0 16px', fontSize: 13, color: C.muted }}>
+          Cada código é de uso único. Envia-o diretamente ao professor — ele introduz o código no registo para desbloquear o cargo.
+        </p>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <input
+            value={label} onChange={e => setLabel(e.target.value)}
+            placeholder="Nota opcional (ex: nome da escola ou do professor)"
+            style={{ flex: 1, background: C.bgAlt, border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 14px', color: C.text, fontSize: 13, fontFamily: 'inherit', outline: 'none' }}
+          />
+          <button
+            onClick={handleGenerate} disabled={generating}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, background: C.blue, border: 'none', borderRadius: 8, padding: '10px 18px', color: '#fff', fontSize: 13, fontWeight: 700, cursor: generating ? 'default' : 'pointer', fontFamily: 'inherit', opacity: generating ? 0.6 : 1, whiteSpace: 'nowrap' }}
+          >
+            <Plus size={14} /> {generating ? 'A gerar…' : 'Gerar código'}
+          </button>
+        </div>
+        {justCreated && (
+          <div style={{ marginTop: 14, display: 'flex', alignItems: 'center', gap: 10, background: C.greenSoft, border: '1px solid rgba(34,197,94,0.3)', borderRadius: 8, padding: '10px 14px' }}>
+            <span style={{ fontSize: 16, fontWeight: 800, color: C.green, letterSpacing: 2, fontFamily: 'monospace' }}>{justCreated}</span>
+            <button onClick={() => copy(justCreated)} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: C.green, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, fontFamily: 'inherit' }}>
+              {copied === justCreated ? <Check size={13} /> : <Copy size={13} />} {copied === justCreated ? 'Copiado' : 'Copiar'}
+            </button>
+          </div>
+        )}
+      </div>
+
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: '40px 0', color: C.muted, fontSize: 13 }}>A carregar códigos…</div>
+      ) : codes.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '40px 0', color: C.muted, fontSize: 13 }}>Ainda não geraste nenhum código.</div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {codes.map(c => {
+            const used = !!c.used_by
+            const expired = c.expires_at && new Date(c.expires_at) < new Date()
+            return (
+              <div key={c.id} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 14 }}>
+                <span style={{ fontSize: 14, fontWeight: 800, color: C.text, letterSpacing: 1.5, fontFamily: 'monospace', flexShrink: 0 }}>{c.code}</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  {c.label && <div style={{ fontSize: 12, color: C.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.label}</div>}
+                  <div style={{ fontSize: 11, color: C.subtle }}>
+                    Criado {new Date(c.created_at).toLocaleDateString('pt-PT')}
+                    {used && ` · Usado por ${c.usedByName || 'utilizador'} em ${new Date(c.used_at).toLocaleDateString('pt-PT')}`}
+                  </div>
+                </div>
+                <button onClick={() => copy(c.code)} title="Copiar" style={{ background: 'none', border: 'none', color: C.muted, cursor: 'pointer', display: 'flex', flexShrink: 0 }}>
+                  {copied === c.code ? <Check size={14} color={C.green} /> : <Copy size={14} />}
+                </button>
+                <Badge color={used ? C.muted : expired ? C.red : C.green}>{used ? 'Usado' : expired ? 'Expirado' : 'Por usar'}</Badge>
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ─── MAIN COMPONENT ─────────────────────────────────────────
 export default function Admin() {
   const navigate = useNavigate()
@@ -423,6 +503,9 @@ export default function Admin() {
   const [projects, setProjects] = useState([])
   const [loading, setLoading] = useState(true)
   const [toast, setToast] = useState('')
+  const [codes, setCodes] = useState([])
+  const [codesLoading, setCodesLoading] = useState(false)
+  const [generatingCode, setGeneratingCode] = useState(false)
 
   // Guard
   useEffect(() => {
@@ -464,6 +547,38 @@ export default function Admin() {
   useEffect(() => {
     if (isAdmin) loadData()
   }, [isAdmin, loadData])
+
+  const loadCodes = useCallback(async () => {
+    setCodesLoading(true)
+    const { data } = await supabase
+      .from('professor_invite_codes')
+      .select('*')
+      .order('created_at', { ascending: false })
+    const rows = data || []
+
+    const usedByIds = [...new Set(rows.filter(c => c.used_by).map(c => c.used_by))]
+    let nameMap = {}
+    if (usedByIds.length) {
+      const { data: profs } = await supabase.from('profiles').select('id, full_name, username').in('id', usedByIds)
+      ;(profs || []).forEach(p => { nameMap[p.id] = p.full_name || p.username })
+    }
+
+    setCodes(rows.map(c => ({ ...c, usedByName: c.used_by ? nameMap[c.used_by] : null })))
+    setCodesLoading(false)
+  }, [])
+
+  useEffect(() => {
+    if (isAdmin && tab === 'invites' && codes.length === 0 && !codesLoading) loadCodes()
+  }, [isAdmin, tab, codes.length, codesLoading, loadCodes])
+
+  async function handleGenerateCode(label) {
+    setGeneratingCode(true)
+    const { data, error } = await supabase.rpc('create_professor_invite_code', { p_label: label || null })
+    setGeneratingCode(false)
+    if (error) { showToast('Erro ao gerar código: ' + error.message); return null }
+    loadCodes()
+    return data
+  }
 
   async function handleToggleAdmin(userId, makeAdmin) {
     const { error } = await supabase
@@ -511,6 +626,7 @@ export default function Admin() {
     { id: 'overview', label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><BarChart2 size={14} /> Visão geral</span> },
     { id: 'users',    label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><User size={14} /> Utilizadores ({users.length})</span> },
     { id: 'projects', label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Folder size={14} /> Projetos ({projects.length})</span> },
+    { id: 'invites',  label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><KeyRound size={14} /> Convites Professor</span> },
   ]
 
   return (
@@ -591,6 +707,14 @@ export default function Admin() {
                 projects={projects}
                 users={users}
                 onDeleteProject={handleDeleteProject}
+              />
+            )}
+            {tab === 'invites' && (
+              <InvitesTab
+                codes={codes}
+                loading={codesLoading}
+                generating={generatingCode}
+                onGenerate={handleGenerateCode}
               />
             )}
           </>

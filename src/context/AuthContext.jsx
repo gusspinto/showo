@@ -16,14 +16,17 @@ export function AuthProvider({ children }) {
       supabase.auth.getUser(),
     ])
     const meta = userRes.data?.user?.user_metadata ?? {}
-    const metaRole = meta.role
     let data = profileRes.data
 
-    // Profile doesn't exist yet — create it from user_metadata
+    // Profile doesn't exist yet — create it from user_metadata.
+    // role is never trusted from client metadata here — it always starts as
+    // 'aluno' (the DB's "Own profile insert" policy enforces this too).
+    // Elevated roles (professor, ...) can only be set server-side, e.g. via
+    // redeem_professor_invite_code.
     if (!data) {
       const { data: created } = await supabase
         .from('profiles')
-        .upsert({ id: uid, full_name: meta.full_name ?? null, role: metaRole ?? 'aluno', company: meta.company ?? null, school: meta.school ?? null })
+        .upsert({ id: uid, full_name: meta.full_name ?? null, role: 'aluno', company: meta.company ?? null, school: meta.school ?? null })
         .select('id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work')
         .single()
       data = created
