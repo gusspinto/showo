@@ -27,10 +27,6 @@ export function AuthProvider({ children }) {
         .select('id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work')
         .single()
       data = created
-    } else if (metaRole && data.role !== metaRole) {
-      // Sync role from user_metadata if it drifted
-      await supabase.from('profiles').update({ role: metaRole }).eq('id', uid)
-      data.role = metaRole
     }
 
     setProfile(data ?? null)

@@ -200,9 +200,10 @@ export default function UserProfile() {
     async function load() {
       const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(username)
 
+      const PROFILE_COLS = 'id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size, skills, school, total_xp, created_at'
       const { data: profileData, error: profileErr } = isUUID
-        ? await supabase.from('profiles').select('*').eq('id', username).single()
-        : await supabase.from('profiles').select('*').eq('username', username).single()
+        ? await supabase.from('profiles').select(PROFILE_COLS).eq('id', username).single()
+        : await supabase.from('profiles').select(PROFILE_COLS).eq('username', username).single()
 
       if (profileErr || !profileData) { setNotFound(true); setLoading(false); return }
       setProfile(profileData)
