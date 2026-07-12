@@ -3228,11 +3228,11 @@ export default function ProjectPage() {
       }
       // MISSION_COMPLETE notification
       if (user?.id) {
-        supabase.from('notifications').insert({
-          user_id: user.id,
-          type: 'MISSION_COMPLETE',
-          message: `Missão completa: ${challenge.fieldLabel} +${challenge.scoreGain} XP`,
-          project_slug: project.slug,
+        supabase.rpc('create_notification', {
+          p_user_id: user.id,
+          p_type: 'MISSION_COMPLETE',
+          p_message: `Missão completa: ${challenge.fieldLabel} +${challenge.scoreGain} XP`,
+          p_project_slug: project.slug,
         })
       }
     } else {
@@ -3245,11 +3245,11 @@ export default function ProjectPage() {
     const newMilestones = MILESTONES.filter(m => newScore >= m && oldScore < m && !current.includes(m))
     if (newMilestones.length && user?.id) {
       const m = newMilestones[newMilestones.length - 1]
-      supabase.from('notifications').insert({
-        user_id: user.id,
-        type: 'SCORE_MILESTONE',
-        message: `O teu projeto "${project.name}" atingiu ${m} pontos!`,
-        project_slug: project.slug,
+      supabase.rpc('create_notification', {
+        p_user_id: user.id,
+        p_type: 'SCORE_MILESTONE',
+        p_message: `O teu projeto "${project.name}" atingiu ${m} pontos!`,
+        p_project_slug: project.slug,
       })
       const updatedMilestones = [...current, ...newMilestones]
       supabase.from('projects').update({ notified_milestones: updatedMilestones }).eq('id', project.id)
@@ -3486,12 +3486,11 @@ export default function ProjectPage() {
         setTeacherFeedback(prev => { const idx = prev.findIndex(f => f.field_key === fbFieldKey && f.teacher_id === user.id); return idx >= 0 ? prev.map((f, i) => i === idx ? created : f) : [...prev, created] })
         // Notify the student (only on new feedback, not edits)
         if (project.user_id) {
-          supabase.from('notifications').insert({
-            user_id: project.user_id,
-            type: 'TEACHER_FEEDBACK',
-            message: `O teu professor deixou feedback no projeto "${project.name}".`,
-            project_slug: project.slug,
-            read: false,
+          supabase.rpc('create_notification', {
+            p_user_id: project.user_id,
+            p_type: 'TEACHER_FEEDBACK',
+            p_message: `O teu professor deixou feedback no projeto "${project.name}".`,
+            p_project_slug: project.slug,
           })
         }
       }
@@ -5246,10 +5245,10 @@ export default function ProjectPage() {
                         comment: JSON.stringify(payload),
                       }, { onConflict: 'project_id,teacher_id,field_key' })
                       if (project.user_id) {
-                        supabase.from('notifications').insert({
-                          user_id: project.user_id, type: 'TEACHER_FEEDBACK',
-                          message: `O júri avaliou o teu projeto "${project.name}": ${avgScore}/10`,
-                          project_slug: project.slug, read: false,
+                        supabase.rpc('create_notification', {
+                          p_user_id: project.user_id, p_type: 'TEACHER_FEEDBACK',
+                          p_message: `O júri avaliou o teu projeto "${project.name}": ${avgScore}/10`,
+                          p_project_slug: project.slug,
                         })
                       }
                       setJurySaving(false); setJurySaved(true)

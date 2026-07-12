@@ -100,12 +100,11 @@ function FeedbackModal({ project, teacherId, onClose }) {
         setExisting(prev => { const idx = prev.findIndex(f => f.field_key === fieldKey); return idx >= 0 ? prev.map((f, i) => i === idx ? data : f) : [...prev, data] })
         // Notify the student
         if (project.user_id) {
-          supabase.from('notifications').insert({
-            user_id: project.user_id,
-            type: 'TEACHER_FEEDBACK',
-            message: `O teu professor deixou feedback no projeto "${project.name}".`,
-            project_slug: project.slug,
-            read: false,
+          supabase.rpc('create_notification', {
+            p_user_id: project.user_id,
+            p_type: 'TEACHER_FEEDBACK',
+            p_message: `O teu professor deixou feedback no projeto "${project.name}".`,
+            p_project_slug: project.slug,
           })
         }
       }
@@ -331,12 +330,11 @@ export default function TurmaPage() {
       // Notify the teacher
       if (turma.teacher_id) {
         const added = myProjects.find(p => p.id === projectId)
-        supabase.from('notifications').insert({
-          user_id: turma.teacher_id,
-          type: 'STUDENT_JOINED',
-          message: `Um aluno adicionou o projeto "${added?.name ?? 'novo projeto'}" à turma "${turma.name}".`,
-          project_slug: added?.slug ?? null,
-          read: false,
+        supabase.rpc('create_notification', {
+          p_user_id: turma.teacher_id,
+          p_type: 'STUDENT_JOINED',
+          p_message: `Um aluno adicionou o projeto "${added?.name ?? 'novo projeto'}" à turma "${turma.name}".`,
+          p_project_slug: added?.slug ?? null,
         })
       }
     }
