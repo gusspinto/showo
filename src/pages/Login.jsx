@@ -282,16 +282,7 @@ export default function Login() {
               </div>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <label style={{ color: C.muted, fontSize: 13, fontWeight: 500 }}>Palavra-passe</label>
-                <button
-                  type="button"
-                  onClick={() => { setMode('forgot'); setForgotEmail(email) }}
-                  style={{ background: 'none', border: 'none', color: C.muted, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', padding: 0, textDecoration: 'underline' }}
-                >
-                  Esqueceste-te da password?
-                </button>
-              </div>
+              <label style={{ color: C.muted, fontSize: 13, fontWeight: 500 }}>Palavra-passe</label>
               <PasswordInput value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" />
             </div>
 
@@ -349,6 +340,15 @@ export default function Login() {
           <p style={{ textAlign: 'center', color: C.muted, fontSize: 14, marginTop: 24 }}>
             Não tens conta?{' '}
             <Link to="/register" style={{ color: C.blue, textDecoration: 'none', fontWeight: 500 }}>Regista-te</Link>
+          </p>
+          <p style={{ textAlign: 'center', marginTop: 10 }}>
+            <button
+              type="button"
+              onClick={() => { setMode('forgot'); setForgotEmail(email) }}
+              style={{ background: 'none', border: 'none', color: C.muted, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', padding: 0, textDecoration: 'underline' }}
+            >
+              Esqueceste-te da password?
+            </button>
           </p>
           </>
           )}
