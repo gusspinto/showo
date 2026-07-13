@@ -276,10 +276,14 @@ export default function TurmaPage() {
       let projs = []
       if (cp?.length) {
         const ids = cp.map(r => r.project_id)
-        const { data } = await supabase
+        const { data, error: projectsError } = await supabase
           .from('projects')
           .select('id, name, slug, score, area, creator_name, cover_url, ai_tagline, created_at, user_id, goal, problem, solution, features, technologies, results, linkedin_url, github_url, portfolio_url, review_status')
           .in('id', ids)
+        if (projectsError) {
+          console.error('projects fetch failed:', projectsError)
+          showToast('Erro ao carregar projetos: ' + projectsError.message)
+        }
         projs = data || []
         setProjects(projs)
       }
@@ -370,7 +374,7 @@ export default function TurmaPage() {
     } else {
       const { data: projs } = await supabase
         .from('projects')
-        .select('id, name, slug, score, area, creator_name, cover_url, ai_tagline, created_at, user_id, goal, problem, solution, features, technologies, results, linkedin_url, github_url, portfolio_url')
+        .select('id, name, slug, score, area, creator_name, cover_url, ai_tagline, created_at, user_id, goal, problem, solution, features, technologies, results, linkedin_url, github_url, portfolio_url, review_status')
         .in('id', [...projects.map(p => p.id), projectId])
       setProjects(projs || [])
       showToast('Projeto adicionado à turma!')
