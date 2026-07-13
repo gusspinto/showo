@@ -1122,7 +1122,7 @@ function OnboardingModal({ user, profile, onDismiss, onCreateTurma }) {
 }
 
 export default function Dashboard() {
-  const { user, profile, loading: authLoading } = useAuth()
+  const { user, profile, loading: authLoading, isAdmin } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const [claimedSlug] = useState(() => location.state?.claimedSlug ?? null)
@@ -1152,6 +1152,14 @@ export default function Dashboard() {
   const [recruiterVagas, setRecruiterVagas] = useState([])
   // Invite modal target
   const [inviteTarget, setInviteTarget] = useState(null) // { studentId, studentName }
+
+  // Admins land on the admin panel, not the aluno/professor/recrutador
+  // dashboard — is_admin is an elevated flag on top of role, not a role
+  // itself, so this account would otherwise show whatever role it happens
+  // to carry (usually 'aluno').
+  useEffect(() => {
+    if (!authLoading && isAdmin) navigate('/admin', { replace: true })
+  }, [authLoading, isAdmin, navigate])
 
   function showToast(msg) {
     setToast(msg)
@@ -1467,6 +1475,7 @@ export default function Dashboard() {
   }
 
   if (!user) return null
+  if (isAdmin) return null // redirecting to /admin
 
   const firstName = getDisplayName(user)
   const scores = projects.map(p => p.score).filter(s => s != null)

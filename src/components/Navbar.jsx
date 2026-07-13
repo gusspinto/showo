@@ -1532,6 +1532,15 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
 
         {/* Main nav + project controls in one scrollable section */}
         <div className="sb-section">
+          {user && isAdmin && (
+            <>
+              <button className={`sb-item${isActive('/admin') ? ' active' : ''}`} onClick={() => navigate('/admin')}
+                style={{ color: isActive('/admin') ? '#a855f7' : undefined }}>
+                <Shield size={16} />{!collapsed && showLabels && <span>Painel de Admin</span>}
+              </button>
+              <div className="sb-divider" style={{ margin: '8px 0 4px' }} />
+            </>
+          )}
           {user && isRecruiter ? (
             /* ── RECRUITER / EMPRESA sidebar ── */
             <>
@@ -2031,6 +2040,16 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                       </button>
                     )}
                   </div>
+                  <div className="mob-nav-divider" />
+                </>
+              )}
+
+              {isAdmin && (
+                <>
+                  <button className={`mob-nav-btn${isActive('/admin') ? ' active' : ''}`} style={{ color: '#a855f7' }}
+                    onClick={() => { navigate('/admin'); setMenuOpen(false) }}>
+                    <Shield size={20} /> Painel de Admin
+                  </button>
                   <div className="mob-nav-divider" />
                 </>
               )}

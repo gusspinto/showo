@@ -54,7 +54,7 @@ function PasswordField({ label, value, onChange, placeholder }) {
   )
 }
 
-export default function RecuperarPassword() {
+export default function RecuperarPassword({ onDone }) {
   const navigate = useNavigate()
   const { theme } = useTheme()
   const [status, setStatus] = useState('checking') // 'checking' | 'ready' | 'invalid'
@@ -75,9 +75,9 @@ export default function RecuperarPassword() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) { resolved = true; setStatus('ready') }
     })
-    const timer = setTimeout(() => { if (!resolved) setStatus('invalid') }, 3000)
+    const timer = setTimeout(() => { if (!resolved) { setStatus('invalid'); onDone?.() } }, 3000)
     return () => { subscription.unsubscribe(); clearTimeout(timer) }
-  }, [])
+  }, [onDone])
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -90,6 +90,7 @@ export default function RecuperarPassword() {
     setLoading(false)
     if (err) { setError('Não foi possível atualizar a palavra-passe. Tenta pedir um novo link.'); return }
     setDone(true)
+    onDone?.()
     setTimeout(() => navigate('/dashboard'), 1800)
   }
 

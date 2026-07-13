@@ -9,6 +9,7 @@ import RestReminder from './components/RestReminder'
 import SplashScreen from './components/SplashScreen'
 import { captureError } from './lib/errorTracking'
 import { trackPageview } from './lib/analytics'
+import { supabase } from './lib/supabase'
 import ComingSoon from './pages/ComingSoon'
 
 // Shows the "coming soon" cover only on the public domain, and only before
@@ -205,9 +206,9 @@ const UNMOUNT_MS = HOLD_MS + 700 // when to remove from DOM (4400ms)
 const SPLASH_KEY = 'showo_seen_splash'
 
 function HomeRoute() {
-  const { user, loading } = useAuth()
+  const { user, loading, isAdmin } = useAuth()
   if (loading) return null
-  if (user) return <Navigate to="/dashboard" replace />
+  if (user) return <Navigate to={isAdmin ? '/admin' : '/dashboard'} replace />
   return <Home />
 }
 
@@ -217,6 +218,20 @@ function PageViewTracker() {
     trackPageview(location.pathname + location.search)
   }, [location.pathname, location.search])
   return null
+}
+
+// Forces anyone arriving via a password-recovery link onto /recuperar-password
+// before they can touch the rest of the app — a recovery link shouldn't be
+// able to silently sign someone in without them actually setting a new
+// password. Wraps the whole route tree instead of relying on the
+// /recuperar-password page alone, so it holds regardless of where the
+// email's redirect actually lands.
+function RecoveryGate({ pwRecovery, children }) {
+  const location = useLocation()
+  if (pwRecovery && location.pathname !== '/recuperar-password') {
+    return <Navigate to="/recuperar-password" replace />
+  }
+  return children
 }
 
 function AuthErrorBanner() {
@@ -261,12 +276,19 @@ function AuthErrorBanner() {
 }
 
 export default function App() {
-  if (useIsComingSoon()) return <ComingSoon />
+  const isComingSoon = useIsComingSoon()
 
   // Skip splash on repeat visits — only show it the first time
   const firstVisit = !localStorage.getItem(SPLASH_KEY)
   const [splashVisible,  setSplashVisible]  = useState(firstVisit)
   const [splashMounted,  setSplashMounted]  = useState(firstVisit)
+
+  // Detected synchronously on first render (before anything else mounts) so
+  // there's no race with lazy-loaded pages for who sees the recovery hash
+  // first. type=recovery is what Supabase appends to the redirect URL.
+  const [pwRecovery, setPwRecovery] = useState(
+    () => typeof window !== 'undefined' && window.location.hash.includes('type=recovery')
+  )
 
   useEffect(() => {
     if (!firstVisit) return
@@ -275,6 +297,15 @@ export default function App() {
     const unmountTimer = setTimeout(() => setSplashMounted(false), UNMOUNT_MS)
     return () => { clearTimeout(fadeTimer); clearTimeout(unmountTimer) }
   }, [])
+
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') setPwRecovery(true)
+    })
+    return () => subscription.unsubscribe()
+  }, [])
+
+  if (isComingSoon) return <ComingSoon />
 
   return (
     <HelmetProvider>
@@ -287,6 +318,7 @@ export default function App() {
           <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
             <PageViewTracker />
             <ErrorBoundary>
+            <RecoveryGate pwRecovery={pwRecovery}>
             <Suspense fallback={<PageLoader />}>
             <Routes>
               <Route path="/"              element={<HomeRoute />}   />
@@ -296,7 +328,7 @@ export default function App() {
               <Route path="/ranking"       element={<Ranking />}     />
               <Route path="/explorar"      element={<Explore />}     />
               <Route path="/login"         element={<Login />}       />
-              <Route path="/recuperar-password" element={<RecuperarPassword />} />
+              <Route path="/recuperar-password" element={<RecuperarPassword onDone={() => setPwRecovery(false)} />} />
               <Route path="/register"      element={<Register />}    />
               <Route path="/dashboard"     element={<Dashboard />}   />
               <Route path="/settings"      element={<Settings />}    />
@@ -318,6 +350,7 @@ export default function App() {
               <Route path="*"                   element={<NotFound />}      />
             </Routes>
             </Suspense>
+            </RecoveryGate>
             </ErrorBoundary>
           </BrowserRouter>
         </AuthProvider>
