@@ -723,7 +723,7 @@ const wsInputNew = {
   transition: 'border-color 0.2s',
 }
 
-function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBlocks, setPreviewBlocks, previewStyle, setPreviewStyle, previewEditing, setPreviewEditing,
+function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview, previewBlocks, setPreviewBlocks, previewStyle, setPreviewStyle, previewEditing, setPreviewEditing,
   liked, likeCount, likeLoading, onLike,
   hasInterest, interestCount, interestLoading, onInterest,
   isRecruiterRole,
@@ -1035,7 +1035,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
           "Gerir projeto" section instead (no room for a floating top bar there
           since the sidebar now stays visible during preview/edit). Mobile/tablet
           has no sidebar, so it keeps this bar. ── */}
-      {isOwner && !isDesktop && (
+      {((isOwner && !isDesktop) || isProfessor) && (
         <div ref={bannerRef} className="pv-banner-inner" style={{
           flexShrink: 0, zIndex: 300,
           background: theme === 'light' ? 'rgba(248,250,252,0.97)' : 'rgba(6,12,24,0.97)',
@@ -1085,7 +1085,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
 
           <div style={{ flex: 1 }} />
 
-          {!previewEditing && (
+          {isOwner && !previewEditing && (
             <button
               onClick={() => setPreviewEditing(true)}
               style={{
@@ -2891,6 +2891,21 @@ export default function ProjectPage() {
   const [juryNote, setJuryNote] = useState('')
   const [jurySaving, setJurySaving] = useState(false)
   const [jurySaved, setJurySaved] = useState(false)
+  // Hydrate this teacher's previous evaluation (if any) once teacherFeedback loads,
+  // so reopening the project shows the score already given instead of blank sliders.
+  const juryHydrated = useRef(false)
+  useEffect(() => {
+    if (juryHydrated.current || !user) return
+    const mine = teacherFeedback.find(f => f.teacher_id === user.id && f.field_key === 'jury_eval')
+    if (mine) {
+      try {
+        const payload = JSON.parse(mine.comment)
+        setJuryRatings(payload.ratings || {})
+        setJuryNote(payload.note || '')
+      } catch { /* malformed payload, leave sliders blank */ }
+      juryHydrated.current = true
+    }
+  }, [teacherFeedback, user])
   // Report generation state
   const [reportModal, setReportModal] = useState(false)
   const [reportData, setReportData] = useState(null)
@@ -4391,11 +4406,12 @@ export default function ProjectPage() {
       )}
 
       {/* ── Public visitor view (pure visitors + owners in preview mode) ── */}
-      {((!isOwner && collaboratorSections === null && !isProfessor) || (isOwner && viewAsPublic)) && (
+      {((!isOwner && collaboratorSections === null && !isProfessor) || ((isOwner || isProfessor) && viewAsPublic)) && (
         <PublicView
           project={project}
           ownerProfile={ownerProfile}
           isOwner={isOwner}
+          isProfessor={isProfessor}
           onExitPreview={() => { setViewAsPublic(false); setPreviewEditing(false) }}
           previewBlocks={previewBlocks}
           setPreviewBlocks={setPreviewBlocks}
@@ -5170,6 +5186,22 @@ export default function ProjectPage() {
 
         {/* Sidebar */}
         <aside className="proj-sidebar" style={{ paddingTop: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {/* Professor: switch between the public-visitor preview and the evaluation view */}
+          {isProfessor && (
+            <button
+              onClick={() => setViewAsPublic(v => !v)}
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+                background: 'transparent', border: `1px solid ${colors.border}`, borderRadius: 8,
+                padding: '9px', color: colors.muted, fontSize: 12, fontWeight: 700,
+                cursor: 'pointer', fontFamily: 'inherit', transition: 'border-color 0.15s, color 0.15s',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(27,120,247,0.4)'; e.currentTarget.style.color = '#1b78f7' }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.color = colors.muted }}
+            >
+              <Globe size={13} /> Ver como visitante
+            </button>
+          )}
           <MembersPanel
             ownerName={ownerProfile?.full_name || ownerProfile?.username || project.creator_name}
             members={members}
@@ -5194,7 +5226,7 @@ export default function ProjectPage() {
                 {/* Header */}
                 <div style={{ padding: '13px 16px 10px', borderBottom: '1px solid rgba(99,102,241,0.12)', display: 'flex', alignItems: 'center', gap: 9 }}>
                   <ClipboardList size={14} color="#818cf8" />
-                  <span style={{ fontSize: 13, fontWeight: 700, color: colors.text, flex: 1 }}>Avaliação Júri</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: colors.text, flex: 1 }}>Avaliação</span>
                   {avgScore != null && (
                     <span style={{ fontSize: 18, fontWeight: 900, color: avgScore >= 7 ? '#22c55e' : avgScore >= 5 ? '#1b78f7' : '#f97316', letterSpacing: '-0.5px' }}>{avgScore}<span style={{ fontSize: 11, color: colors.muted, fontWeight: 500 }}>/10</span></span>
                   )}
@@ -5257,7 +5289,7 @@ export default function ProjectPage() {
                       if (project.user_id) {
                         supabase.rpc('create_notification', {
                           p_user_id: project.user_id, p_type: 'TEACHER_FEEDBACK',
-                          p_message: `O júri avaliou o teu projeto "${project.name}": ${avgScore}/10`,
+                          p_message: `O professor avaliou o teu projeto "${project.name}": ${avgScore}/10`,
                           p_project_slug: project.slug,
                         })
                       }
@@ -5284,7 +5316,8 @@ export default function ProjectPage() {
           {/* Teacher feedback — sidebar: desktop first/second slot, mobile above author */}
           {(isOwner || isProfessor) && (teacherFeedback.length > 0 || isProfessor) && (() => {
             const FB_SECTION_LABELS = { description: 'Descrição', tech: 'Tecnologias', links: 'Links', demo: 'Demo', team: 'Equipa', gallery: 'Galeria', geral: 'Geral' }
-            const myFeedback = isProfessor ? teacherFeedback.filter(f => f.teacher_id === user?.id) : teacherFeedback
+            const visibleFeedback = teacherFeedback.filter(f => f.field_key !== 'jury_eval')
+            const myFeedback = isProfessor ? visibleFeedback.filter(f => f.teacher_id === user?.id) : visibleFeedback
             return (
               <div style={{ background: 'rgba(251,191,36,0.04)', border: '1px solid rgba(251,191,36,0.22)', borderRadius: 12, overflow: 'hidden' }}>
                 {/* Header */}
@@ -5387,7 +5420,7 @@ export default function ProjectPage() {
                   </div>
                 )}
 
-                {isProfessor && teacherFeedback.length === 0 && !showFeedbackForm && (
+                {isProfessor && myFeedback.length === 0 && !showFeedbackForm && (
                   <p style={{ margin: 0, fontSize: 13, color: colors.muted, padding: '10px 16px' }}>Ainda não deixaste feedback.</p>
                 )}
 
