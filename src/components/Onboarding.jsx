@@ -29,8 +29,8 @@ function CreateDemo({ play, onDone }) {
   }, [play])
 
   return (
-    <div ref={containerRef} style={{ marginTop: 22, position: 'relative', height: 118 }}>
-      <div style={{
+    <div ref={containerRef} className="onb-demo-create" style={{ marginTop: 22, position: 'relative', height: 118 }}>
+      <div className="onb-demo-create-row" style={{
         background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: 10,
         padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         animation: 'guide-fade-up 0.4s both',
@@ -95,15 +95,15 @@ function FillDemo({ play, onDone }) {
   if (!play) return <div style={{ marginTop: 22, height: 4 + FIELDS.length * 40 }} />
 
   return (
-    <div style={{ marginTop: 22, display: 'flex', flexDirection: 'column', gap: 8 }}>
+    <div className="onb-demo-fill" style={{ marginTop: 22, display: 'flex', flexDirection: 'column', gap: 8 }}>
       {FIELDS.map((f, i) => (
-        <div key={f.label} style={{
+        <div key={f.label} className="onb-demo-fill-row" style={{
           background: 'var(--c-bg)', border: '1px solid var(--c-border)',
           borderRadius: 8, padding: '10px 14px',
           display: 'flex', alignItems: 'center', gap: 12,
           animation: `guide-fade-up 0.45s ${i * STAGGER}s both`,
         }}>
-          <span style={{ fontSize: 12.5, color: '#1b78f7', fontWeight: 700, minWidth: 90 }}>{f.label}</span>
+          <span className="onb-demo-fill-label" style={{ fontSize: 12.5, color: '#1b78f7', fontWeight: 700, minWidth: 90, flexShrink: 0 }}>{f.label}</span>
           <div style={{ flex: 1, height: 6, background: 'var(--c-border)', borderRadius: 3, overflow: 'hidden' }}>
             <div style={{
               height: '100%', background: '#1b78f7',
@@ -162,9 +162,9 @@ function StatsPreview() {
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 10, marginTop: 12 }}>
+      <div className="onb-demo-stats-row" style={{ display: 'flex', gap: 10, marginTop: 12 }}>
         {STATS.map((stat, i) => (
-          <div key={stat.label} style={{
+          <div key={stat.label} className="onb-demo-stat" style={{
             flex: 1, textAlign: 'center', background: 'var(--c-bg)', border: '1px solid var(--c-border)',
             borderRadius: 10, padding: '12px 6px',
             animation: `guide-fade-up 0.4s ${0.3 + i * 0.12}s both`,
@@ -232,6 +232,24 @@ export default function Onboarding({ onDone }) {
         .guide-click-ring { position: absolute; top: 0; left: 0; width: 20px; height: 20px; border-radius: 50%; animation: guide-click-ring 0.5s ease-out; pointer-events: none; }
         .guide-pop { animation: guide-pop-in 0.25s ease-out both; }
         .guide-step-content { animation: guide-step-in 0.3s cubic-bezier(0.16,1,0.3,1) both; }
+
+        @media (max-width: 600px) {
+          .onb-card { width: calc(100% - 20px) !important; max-height: 85vh !important; border-radius: 14px !important; }
+          .onb-rail { width: 34px !important; padding: 20px 0 !important; }
+          .onb-content { padding: 18px 14px 16px !important; }
+          .onb-step-label { font-size: 10px !important; }
+          .onb-title { font-size: 16px !important; }
+          .onb-desc { font-size: 12px !important; }
+          .onb-demo-create { height: auto !important; min-height: 100px !important; }
+          .onb-demo-create-row { padding: 12px 14px !important; }
+          .onb-demo-fill-row { padding: 8px 10px !important; gap: 8px !important; }
+          .onb-demo-fill-label { min-width: 64px !important; font-size: 11px !important; }
+          .onb-demo-stats-row { gap: 6px !important; }
+          .onb-demo-stat { padding: 10px 4px !important; }
+        }
+        @media (max-width: 380px) {
+          .onb-rail { display: none !important; }
+        }
       `}</style>
 
       {/* Backdrop */}
@@ -247,24 +265,24 @@ export default function Onboarding({ onDone }) {
       />
 
       {/* Card */}
-      <div style={{
+      <div className="onb-card" style={{
         position: 'fixed', zIndex: 10001,
         top: '50%', left: '50%',
         transform: `translate(-50%, ${visible ? '-50%' : '-46%'})`,
         opacity: visible ? 1 : 0,
         transition: 'opacity 0.3s, transform 0.3s',
         width: 'calc(100% - 40px)', maxWidth: 600,
+        maxHeight: '90vh', overflowY: 'auto', overflowX: 'hidden',
         background: 'var(--c-card)',
         border: '1px solid var(--c-border)',
         borderRadius: 18,
         boxShadow: '0 12px 32px rgba(0,0,0,0.3)',
         fontFamily: 'inherit',
         display: 'flex',
-        overflow: 'hidden',
       }}>
 
         {/* Left rail — minimal vertical step tracker, acts as progress + nav */}
-        <div style={{
+        <div className="onb-rail" style={{
           width: 48, flexShrink: 0, background: 'var(--c-bg-alt)',
           borderRight: '1px solid var(--c-border)',
           display: 'flex', flexDirection: 'column', alignItems: 'center',
@@ -292,10 +310,10 @@ export default function Onboarding({ onDone }) {
         </div>
 
         {/* Right — content */}
-        <div style={{ flex: 1, padding: '28px 30px 26px', minWidth: 0 }}>
+        <div className="onb-content" style={{ flex: 1, padding: '28px 30px 26px', minWidth: 0 }}>
           {/* Header row */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
-            <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--c-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+            <span className="onb-step-label" style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--c-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
               Guia rápido · {step + 1}/{STEPS.length}
             </span>
             <button
@@ -317,10 +335,10 @@ export default function Onboarding({ onDone }) {
 
           {/* Content — keyed by step so it animates in fresh each time */}
           <div key={step} className="guide-step-content">
-            <h2 style={{ margin: '0 0 5px', fontSize: 20, fontWeight: 400, fontFamily: 'var(--font-heading)', color: 'var(--c-text)', letterSpacing: '-0.3px' }}>
+            <h2 className="onb-title" style={{ margin: '0 0 5px', fontSize: 20, fontWeight: 400, fontFamily: 'var(--font-heading)', color: 'var(--c-text)', letterSpacing: '-0.3px' }}>
               {s.title}
             </h2>
-            <p style={{ margin: 0, fontSize: 13.5, color: 'var(--c-muted)', lineHeight: 1.6 }}>
+            <p className="onb-desc" style={{ margin: 0, fontSize: 13.5, color: 'var(--c-muted)', lineHeight: 1.6 }}>
               {s.desc}
             </p>
 
