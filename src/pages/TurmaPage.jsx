@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
-import { Folder, Check, Search, Users2, User, Copy, Inbox, Download, MessageSquare, X, ChevronUp, ChevronDown, ArrowRight } from 'lucide-react'
+import { Folder, Check, Search, Users2, User, Copy, Inbox, Download, MessageSquare, X, ChevronUp, ChevronDown, ArrowRight, Pencil, UserMinus } from 'lucide-react'
 import CreateProjectModal from '../components/CreateProjectModal'
 
 const C = {
@@ -172,6 +172,46 @@ function FeedbackModal({ project, teacherId, onClose }) {
   )
 }
 
+function EditTurmaModal({ turma, onClose, onSave }) {
+  const [name, setName] = useState(turma.name || '')
+  const [subject, setSubject] = useState(turma.subject || '')
+  const [saving, setSaving] = useState(false)
+
+  async function handleSave() {
+    if (!name.trim()) return
+    setSaving(true)
+    await onSave(name.trim(), subject.trim())
+    setSaving(false)
+  }
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
+      onClick={e => e.target === e.currentTarget && onClose()}>
+      <div style={{ background: C.card, border: `1px solid ${C.borderBright}`, borderRadius: 14, padding: 28, width: '100%', maxWidth: 400, boxShadow: 'none' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+          <h3 style={{ margin: 0, fontSize: 17, fontWeight: 400, color: C.text, fontFamily: 'var(--font-heading)', letterSpacing: '-0.3px' }}>Editar turma</h3>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.muted, padding: 4 }}><X size={18} /></button>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div>
+            <label style={{ display: 'block', fontSize: 12, color: C.muted, marginBottom: 6, fontWeight: 600 }}>Nome</label>
+            <input value={name} onChange={e => setName(e.target.value)} placeholder="Nome da turma"
+              style={{ width: '100%', background: 'var(--c-bg)', border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 12px', color: C.text, fontSize: 14, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }} />
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: 12, color: C.muted, marginBottom: 6, fontWeight: 600 }}>Disciplina (opcional)</label>
+            <input value={subject} onChange={e => setSubject(e.target.value)} placeholder="Ex: Programação"
+              style={{ width: '100%', background: 'var(--c-bg)', border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 12px', color: C.text, fontSize: 14, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }} />
+          </div>
+          <button onClick={handleSave} disabled={saving || !name.trim()} style={{ background: '#1b78f7', border: 'none', borderRadius: 8, padding: '11px', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', opacity: saving || !name.trim() ? 0.6 : 1, fontFamily: 'inherit' }}>
+            {saving ? 'A guardar…' : 'Guardar alterações'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function Avatar({ avatarUrl, name, size = 40 }) {
   const initial = (name || '?')[0].toUpperCase()
   const colors = ['#1b78f7','#8b5cf6','#0d9488','#f59e0b','#ec4899','#10b981']
@@ -208,6 +248,8 @@ export default function TurmaPage() {
   const [members, setMembers] = useState([]) // { user_id, full_name, avatar_url, role, projectCount }
   const [leavingClass, setLeavingClass] = useState(false)
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false)
+  const [showEditTurma, setShowEditTurma] = useState(false)
+  const [removingMember, setRemovingMember] = useState(null) // { user_id, full_name }
 
   function showToast(msg) {
     setToast(msg)
@@ -438,6 +480,22 @@ export default function TurmaPage() {
     navigate('/dashboard')
   }
 
+  async function handleUpdateTurma(name, subject) {
+    const { error } = await supabase.rpc('update_class', { p_class_id: turma.id, p_name: name, p_subject: subject || null })
+    if (error) { showToast('Erro ao atualizar turma: ' + error.message); return }
+    setTurma(prev => ({ ...prev, name, subject: subject || null }))
+    setShowEditTurma(false)
+    showToast('Turma atualizada')
+  }
+
+  async function handleRemoveMember(memberUserId) {
+    const { error } = await supabase.rpc('remove_class_member', { p_class_id: turma.id, p_user_id: memberUserId })
+    if (error) { showToast('Erro ao remover aluno: ' + error.message); return }
+    setMembers(prev => prev.filter(m => m.user_id !== memberUserId))
+    setRemovingMember(null)
+    showToast('Aluno removido da turma')
+  }
+
   const alreadyAdded = new Set(projects.map(p => p.id))
   const addableProjects = myProjects.filter(p => !alreadyAdded.has(p.id))
 
@@ -470,6 +528,36 @@ export default function TurmaPage() {
         zIndex: 3000, pointerEvents: 'none', whiteSpace: 'nowrap',
         boxShadow: 'none',
       }}>{toast}</div>
+
+      {/* Edit turma */}
+      {showEditTurma && (
+        <EditTurmaModal turma={turma} onClose={() => setShowEditTurma(false)} onSave={handleUpdateTurma} />
+      )}
+
+      {/* Remove member confirm */}
+      {removingMember && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
+          onClick={() => setRemovingMember(null)}>
+          <div style={{ background: C.card, border: `1px solid ${C.borderBright}`, borderRadius: 14, padding: '32px 28px', width: '100%', maxWidth: 360, boxShadow: 'none', textAlign: 'center' }}
+            onClick={e => e.stopPropagation()}>
+            <div style={{ width: 52, height: 52, borderRadius: 12, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px' }}>
+              <UserMinus size={24} color="#ef4444" />
+            </div>
+            <h3 style={{ margin: '0 0 8px', fontSize: 17, fontWeight: 400, color: C.text, fontFamily: 'var(--font-heading)', letterSpacing: '-0.3px' }}>Remover aluno?</h3>
+            <p style={{ margin: '0 0 24px', fontSize: 14, color: C.muted, lineHeight: 1.5 }}>
+              <strong style={{ color: C.text }}>{removingMember.full_name}</strong> deixa de aparecer na turma. Os projetos que já submeteu ficam na turma.
+            </p>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button onClick={() => setRemovingMember(null)} style={{ flex: 1, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 8, padding: '11px', color: C.muted, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                Cancelar
+              </button>
+              <button onClick={() => handleRemoveMember(removingMember.user_id)} style={{ flex: 1, background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, padding: '11px', color: '#ef4444', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+                Remover
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Leave class confirm */}
       {showLeaveConfirm && (
@@ -552,7 +640,15 @@ export default function TurmaPage() {
                   <Users2 size={22} color="#1b78f7" />
                 </div>
                 <div>
-                  <h1 style={{ margin: 0, fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 400, letterSpacing: '-0.8px', fontFamily: 'var(--font-heading)' }}>{turma.name}</h1>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <h1 style={{ margin: 0, fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 400, letterSpacing: '-0.8px', fontFamily: 'var(--font-heading)' }}>{turma.name}</h1>
+                    {isTeacher && (
+                      <button onClick={() => setShowEditTurma(true)} title="Editar turma"
+                        style={{ background: 'none', border: 'none', color: C.subtle, cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center', borderRadius: 6, marginTop: 6 }}>
+                        <Pencil size={16} />
+                      </button>
+                    )}
+                  </div>
                   {turma.subject && <p style={{ margin: 0, fontSize: 14, color: C.muted }}>{turma.subject}</p>}
                 </div>
               </div>
@@ -655,6 +751,15 @@ export default function TurmaPage() {
                       )}
                     </div>
                   </div>
+                  {isTeacher && m.role !== 'professor' && (
+                    <button
+                      onClick={() => setRemovingMember({ user_id: m.user_id, full_name: m.full_name })}
+                      title="Remover da turma"
+                      style={{ background: 'none', border: 'none', color: C.subtle, cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center', flexShrink: 0, borderRadius: 6 }}
+                    >
+                      <UserMinus size={15} />
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
