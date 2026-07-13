@@ -1603,8 +1603,26 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                 </button>
               </div>
             </>
+          ) : isTeacher ? (
+            /* ── PROFESSOR sidebar — no gamification/opportunities perks, those are aluno-only ── */
+            <>
+              {user && (
+                <button className={`sb-item${isActive('/dashboard') ? ' active' : ''}`} onClick={() => navigate('/dashboard')}>
+                  <LayoutDashboard size={16} />{!collapsed && showLabels && <span>Dashboard</span>}
+                </button>
+              )}
+              <button className={`sb-item${isActive('/turmas') ? ' active' : ''}`} onClick={() => navigate('/turmas')}>
+                <Users2 size={16} />{!collapsed && showLabels && <span>Turmas</span>}
+              </button>
+              <button className={`sb-item${isActive('/explorar') ? ' active' : ''}`} onClick={() => navigate('/explorar')}>
+                <Compass size={16} />{!collapsed && showLabels && <span>Explorar</span>}
+              </button>
+              <button className={`sb-item${isActive('/ranking') ? ' active' : ''}`} onClick={() => navigate('/ranking')}>
+                <Trophy size={16} />{!collapsed && showLabels && <span>Ranking</span>}
+              </button>
+            </>
           ) : (
-            /* ── ALUNO / PROFESSOR sidebar ── */
+            /* ── ALUNO sidebar ── */
             <>
               {user && (
                 <button className={`sb-item${isActive('/dashboard') ? ' active' : ''}`} onClick={() => navigate('/dashboard')}>
@@ -2089,6 +2107,23 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   <button className={`mob-nav-btn${isActive('/explorar') && !new URLSearchParams(location.search).get('tab') ? ' active' : ''}`}
                     onClick={() => { navigate('/explorar'); setMenuOpen(false) }}>
                     <Compass size={20} /> Projetos
+                  </button>
+                  <button className={`mob-nav-btn${isActive('/ranking') ? ' active' : ''}`} onClick={() => { navigate('/ranking'); setMenuOpen(false) }}>
+                    <Trophy size={20} /> Ranking
+                  </button>
+                </>
+              ) : isTeacher ? (
+                <>
+                  {user && (
+                    <button className={`mob-nav-btn${isActive('/dashboard') ? ' active' : ''}`} onClick={() => { navigate('/dashboard'); setMenuOpen(false) }}>
+                      <LayoutDashboard size={20} /> Dashboard
+                    </button>
+                  )}
+                  <button className={`mob-nav-btn${isActive('/turmas') ? ' active' : ''}`} onClick={() => { navigate('/turmas'); setMenuOpen(false) }}>
+                    <Users2 size={20} /> Turmas
+                  </button>
+                  <button className={`mob-nav-btn${isActive('/explorar') ? ' active' : ''}`} onClick={() => { navigate('/explorar'); setMenuOpen(false) }}>
+                    <Compass size={20} /> Explorar
                   </button>
                   <button className={`mob-nav-btn${isActive('/ranking') ? ' active' : ''}`} onClick={() => { navigate('/ranking'); setMenuOpen(false) }}>
                     <Trophy size={20} /> Ranking
