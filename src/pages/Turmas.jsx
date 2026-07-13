@@ -291,22 +291,13 @@ export default function Turmas() {
 
         {/* Header */}
         <div className="turmas-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28, gap: 12, flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-            <div style={{
-              width: 48, height: 48, borderRadius: 12,
-              background: 'rgba(27,120,247,0.12)', border: '1px solid rgba(27,120,247,0.25)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <Users2 size={24} color="#1b78f7" />
-            </div>
-            <div>
-              <h1 style={{ margin: 0, fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 400, color: C.text, letterSpacing: '-1px', fontFamily: 'var(--font-heading)' }}>
-                Turmas
-              </h1>
-              <p style={{ margin: 0, fontSize: 13, color: C.muted }}>
-                {isTeacher ? 'Turmas que geres' : 'Turmas em que participas'}
-              </p>
-            </div>
+          <div>
+            <h1 style={{ margin: 0, fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 400, color: C.text, letterSpacing: '-1px', fontFamily: 'var(--font-heading)' }}>
+              Turmas
+            </h1>
+            <p style={{ margin: 0, fontSize: 13, color: C.muted }}>
+              {isTeacher ? 'Turmas que geres' : 'Turmas em que participas'}
+            </p>
           </div>
 
           {!isTeacher && (

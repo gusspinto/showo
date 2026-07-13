@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
-import { Folder, Check, Search, Users2, User, Copy, Inbox, Download, MessageSquare, X, ChevronUp, ChevronDown, ArrowRight, Pencil, UserMinus, GraduationCap } from 'lucide-react'
+import { Folder, Check, Search, User, Copy, Inbox, Download, MessageSquare, X, ChevronUp, ChevronDown, ArrowRight, Pencil, UserMinus, GraduationCap } from 'lucide-react'
 import CreateProjectModal from '../components/CreateProjectModal'
 
 const C = {
@@ -655,22 +655,17 @@ export default function TurmaPage() {
         <div style={{ marginBottom: 32 }}>
           <div className="turmapage-hd" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-                <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(27,120,247,0.1)', border: `1px solid rgba(27,120,247,0.25)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Users2 size={22} color="#1b78f7" />
+              <div style={{ marginBottom: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <h1 style={{ margin: 0, fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 400, letterSpacing: '-0.8px', fontFamily: 'var(--font-heading)' }}>{turma.name}</h1>
+                  {isTeacher && (
+                    <button onClick={() => setShowEditTurma(true)} title="Editar turma"
+                      className="tp-icon-btn" style={{ marginTop: 6 }}>
+                      <Pencil size={16} />
+                    </button>
+                  )}
                 </div>
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <h1 style={{ margin: 0, fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 400, letterSpacing: '-0.8px', fontFamily: 'var(--font-heading)' }}>{turma.name}</h1>
-                    {isTeacher && (
-                      <button onClick={() => setShowEditTurma(true)} title="Editar turma"
-                        className="tp-icon-btn" style={{ marginTop: 6 }}>
-                        <Pencil size={16} />
-                      </button>
-                    )}
-                  </div>
-                  {turma.subject && <p style={{ margin: 0, fontSize: 14, color: C.muted }}>{turma.subject}</p>}
-                </div>
+                {turma.subject && <p style={{ margin: 0, fontSize: 14, color: C.muted }}>{turma.subject}</p>}
               </div>
               <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', fontSize: 13, color: C.subtle }}>
                 {turma.teacher_name && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><User size={13} />{turma.teacher_name}</span>}
