@@ -469,7 +469,10 @@ export default function TurmaPage() {
   async function leaveClass() {
     if (!turma || !user) return
     setLeavingClass(true)
-    await supabase.from('class_members').delete().eq('class_id', turma.id).eq('user_id', user.id)
+    // Also unlinks the student's own projects from this class server-side —
+    // otherwise the dashboard's "my turmas" (derived independently from
+    // class_projects) kept showing this turma after "leaving".
+    await supabase.rpc('leave_class', { p_class_id: turma.id })
     // Clean localStorage
     try {
       const lsKey = `showo_turmas_${user.id}`
