@@ -421,12 +421,19 @@ function ProjectsTab({ projects, users, onDeleteProject }) {
 }
 
 // ─── INVITES TAB (professor access codes) ────────────────────
-function InvitesTab({ codes, loading, onGenerate, generating }) {
+function InvitesTab({ codes, loading, onGenerate, generating, onToggleActive }) {
   const [label, setLabel] = useState('')
   const [maxUses, setMaxUses] = useState('') // empty = ilimitado
   const [justCreated, setJustCreated] = useState(null)
   const [copied, setCopied] = useState(null)
   const [expanded, setExpanded] = useState(null)
+  const [togglingId, setTogglingId] = useState(null)
+
+  async function handleToggle(c) {
+    setTogglingId(c.id)
+    await onToggleActive(c.id, !!c.revoked_at)
+    setTogglingId(null)
+  }
 
   async function handleGenerate() {
     const code = await onGenerate(label, maxUses.trim() ? parseInt(maxUses, 10) : null)
@@ -483,12 +490,13 @@ function InvitesTab({ codes, loading, onGenerate, generating }) {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {codes.map(c => {
+            const revoked = !!c.revoked_at
             const expired = c.expires_at && new Date(c.expires_at) < new Date()
             const exhausted = c.max_uses != null && c.use_count >= c.max_uses
-            const inactive = expired || exhausted
+            const inactive = revoked || expired || exhausted
             const isExpanded = expanded === c.id
             return (
-              <div key={c.id} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: '12px 16px' }}>
+              <div key={c.id} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: '12px 16px', opacity: revoked ? 0.6 : 1 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
                   <span style={{ fontSize: 14, fontWeight: 800, color: C.text, letterSpacing: 1.5, fontFamily: 'monospace', flexShrink: 0 }}>{c.code}</span>
                   <div style={{ flex: 1, minWidth: 0 }}>
@@ -507,7 +515,19 @@ function InvitesTab({ codes, loading, onGenerate, generating }) {
                   >
                     {c.use_count} uso{c.use_count !== 1 ? 's' : ''}
                   </button>
-                  <Badge color={inactive ? C.muted : C.green}>{expired ? 'Expirado' : exhausted ? 'Esgotado' : 'Ativo'}</Badge>
+                  <Badge color={inactive ? C.muted : C.green}>{revoked ? 'Desativado' : expired ? 'Expirado' : exhausted ? 'Esgotado' : 'Ativo'}</Badge>
+                  <button
+                    onClick={() => handleToggle(c)}
+                    disabled={togglingId === c.id}
+                    style={{
+                      background: 'none', border: `1px solid ${revoked ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}`,
+                      color: revoked ? C.green : C.red, borderRadius: 6, padding: '4px 10px',
+                      fontSize: 11, fontWeight: 700, cursor: togglingId === c.id ? 'default' : 'pointer',
+                      fontFamily: 'inherit', flexShrink: 0, opacity: togglingId === c.id ? 0.6 : 1,
+                    }}
+                  >
+                    {togglingId === c.id ? '…' : revoked ? 'Reativar' : 'Desativar'}
+                  </button>
                 </div>
                 {isExpanded && c.redeemers?.length > 0 && (
                   <div style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -627,6 +647,13 @@ export default function Admin() {
     if (error) { showToast('Erro ao gerar código: ' + error.message); return null }
     loadCodes()
     return data
+  }
+
+  async function handleToggleCodeActive(codeId, currentlyRevoked) {
+    const { error } = await supabase.rpc('set_professor_invite_code_active', { p_code_id: codeId, p_active: currentlyRevoked })
+    if (error) { showToast('Erro ao atualizar código: ' + error.message); return }
+    showToast(currentlyRevoked ? 'Código reativado' : 'Código desativado')
+    loadCodes()
   }
 
   async function handleToggleAdmin(userId, makeAdmin) {
@@ -764,6 +791,7 @@ export default function Admin() {
                 loading={codesLoading}
                 generating={generatingCode}
                 onGenerate={handleGenerateCode}
+                onToggleActive={handleToggleCodeActive}
               />
             )}
           </>
