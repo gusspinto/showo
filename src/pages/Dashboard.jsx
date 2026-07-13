@@ -388,7 +388,7 @@ function CreateTurmaModal({ onClose, onCreated }) {
       <div style={{ background: C.card, border: `1px solid ${C.borderBright}`, borderRadius: 14, padding: 28, width: '100%', maxWidth: 400, boxShadow: 'none' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
           <h3 style={{ margin: 0, fontSize: 17, fontWeight: 400, color: C.text, fontFamily: 'var(--font-heading)', letterSpacing: '-0.3px' }}>Nova turma</h3>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.muted, padding: 4 }}><X size={18} /></button>
+          <button onClick={onClose} className="icon-btn-ghost"><X size={18} /></button>
         </div>
         <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <div>
@@ -501,7 +501,7 @@ function JoinTurmaModal({ onClose, navigate, onJoined }) {
                 <h3 style={{ color: C.text, margin: '0 0 4px', fontSize: 20, fontWeight: 400, letterSpacing: '-0.5px', fontFamily: 'var(--font-heading)' }}>Entrar numa turma</h3>
                 <p style={{ color: C.muted, margin: 0, fontSize: 13 }}>Pede o código de 6 letras ao teu professor</p>
               </div>
-              <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.muted, padding: 4, display: 'flex', marginTop: 2 }}><X size={18} /></button>
+              <button onClick={onClose} className="icon-btn-ghost" style={{ marginTop: 2 }}><X size={18} /></button>
             </div>
             <form onSubmit={handleJoin} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <input
@@ -560,7 +560,7 @@ function TurmasListModal({ turmas, onClose, navigate, onJoin }) {
             <h3 style={{ color: C.text, margin: '0 0 2px', fontSize: 18, fontWeight: 400, fontFamily: 'var(--font-heading)', letterSpacing: '-0.4px' }}>As minhas turmas</h3>
             <p style={{ color: C.muted, margin: 0, fontSize: 13 }}>{turmas.length} turma{turmas.length !== 1 ? 's' : ''}</p>
           </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.muted, padding: 4, display: 'flex' }}><X size={18} /></button>
+          <button onClick={onClose} className="icon-btn-ghost"><X size={18} /></button>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
           {turmas.map(t => (

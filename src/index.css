@@ -143,10 +143,6 @@ body.light .sb-item.active {
   background: rgba(27,120,247,0.1) !important;
   color: #1b78f7 !important;
 }
-body.light .sb-item:hover {
-  background: rgba(27,120,247,0.06) !important;
-  color: #0f172a !important;
-}
 
 h1, h2, h3, h4 {
   font-family: var(--font-heading);
@@ -187,6 +183,19 @@ a {
 textarea, input, select, button {
   font-family: var(--font-body);
 }
+
+/* ── Shared "identity" hover for ghost icon-only buttons (close/edit/remove) ── */
+.icon-btn-ghost {
+  background: transparent; border: 1px solid transparent; color: var(--c-subtle);
+  cursor: pointer; padding: 5px; display: inline-flex; align-items: center;
+  border-radius: 7px; flex-shrink: 0;
+  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+}
+.icon-btn-ghost:hover {
+  background: rgba(27,120,247,0.08); border-color: rgba(27,120,247,0.35);
+  color: #1b78f7; transform: scale(1.08); box-shadow: 0 2px 10px rgba(27,120,247,0.18);
+}
+.icon-btn-ghost:active { transform: scale(0.94); }
 
 ::selection {
   background: rgba(27, 120, 247, 0.3);

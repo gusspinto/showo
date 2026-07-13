@@ -873,19 +873,19 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
           text-transform: uppercase; letter-spacing: 0.12em;
           padding: 14px 4px 5px; display: block;
         }
-        /* Nav item — flat editorial list style, no fill on hover/active */
+        /* Nav item — flat editorial list style, subtle fill on hover (theme-aware, same in light/dark) */
         .sb-item {
           display: flex; align-items: center; gap: 10px;
           width: 100%; padding: 9px 10px;
-          border-radius: 0; border: none;
+          border-radius: 6px; border: none;
           background: transparent; color: var(--c-muted);
           font-size: 13px; font-weight: 500;
           cursor: pointer; font-family: inherit;
-          transition: color 0.15s;
+          transition: color 0.15s, background 0.15s;
           text-align: left; white-space: nowrap;
           position: relative;
         }
-        .sb-item:hover { color: var(--c-text); }
+        .sb-item:hover { background: var(--c-card-hover); color: var(--c-text); }
         .sb-item.active {
           color: #1b78f7;
           font-weight: 600;
@@ -925,7 +925,6 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
           animation: sb-fade-slide-in 0.25s cubic-bezier(0.16,1,0.3,1) both;
         }
         .sb-project-section .sb-label { color: rgba(27,120,247,0.7); padding-top: 8px; }
-        .sb-project-section .sb-item:hover { color: var(--c-text); }
         .sb-bottom { padding: 0 10px 14px; }
         .sb-action-row {
           display: flex; align-items: center; justify-content: space-between;
