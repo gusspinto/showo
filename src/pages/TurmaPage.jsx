@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
-import { Folder, Check, Search, Users2, User, Copy, Inbox, Download, MessageSquare, X, ChevronUp, ChevronDown, ArrowRight, Pencil, UserMinus } from 'lucide-react'
+import { Folder, Check, Search, Users2, User, Copy, Inbox, Download, MessageSquare, X, ChevronUp, ChevronDown, ArrowRight, Pencil, UserMinus, GraduationCap } from 'lucide-react'
 import CreateProjectModal from '../components/CreateProjectModal'
 
 const C = {
@@ -715,8 +715,39 @@ export default function TurmaPage() {
           </div>
         </div>
 
-        {/* Members */}
-        {members.length > 0 && (
+        {/* Professor — own section, visually set apart from the student roster */}
+        {(() => {
+          const teacherMember = members.find(m => m.role === 'professor')
+          if (!teacherMember) return null
+          return (
+            <div style={{ marginBottom: 28 }}>
+              <div style={{
+                background: 'linear-gradient(135deg, rgba(27,120,247,0.1), rgba(79,70,229,0.06))',
+                border: '1px solid rgba(27,120,247,0.3)',
+                borderRadius: 12, padding: '16px 20px',
+                display: 'flex', alignItems: 'center', gap: 14,
+              }}>
+                <div style={{ position: 'relative', flexShrink: 0 }}>
+                  <Avatar avatarUrl={teacherMember.avatar_url} name={teacherMember.full_name} size={46} />
+                  <div style={{
+                    position: 'absolute', bottom: -3, right: -3, width: 20, height: 20, borderRadius: '50%',
+                    background: '#1b78f7', border: `2px solid ${C.bg}`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    <GraduationCap size={11} color="#fff" />
+                  </div>
+                </div>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>{teacherMember.full_name}</div>
+                  <div style={{ fontSize: 12, color: C.blue, fontWeight: 600, marginTop: 2 }}>A gerir esta turma</div>
+                </div>
+              </div>
+            </div>
+          )
+        })()}
+
+        {/* Members — students only */}
+        {members.filter(m => m.role !== 'professor').length > 0 && (
           <div style={{ marginBottom: 32 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
               <Users2 size={15} color={C.muted} />
@@ -724,11 +755,11 @@ export default function TurmaPage() {
                 Membros
               </span>
               <span style={{ fontSize: 11, fontWeight: 700, color: C.subtle }}>
-                {members.length}
+                {members.filter(m => m.role !== 'professor').length}
               </span>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 10 }}>
-              {members.map(m => (
+              {members.filter(m => m.role !== 'professor').map(m => (
                 <div key={m.user_id} style={{
                   background: C.card, border: `1px solid ${C.border}`,
                   borderRadius: 10, padding: '14px 16px',
@@ -740,18 +771,12 @@ export default function TurmaPage() {
                       {m.full_name}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 3 }}>
-                      {m.role === 'professor' ? (
-                        <span style={{ fontSize: 11, fontWeight: 700, color: '#1b78f7' }}>
-                          Professor
-                        </span>
-                      ) : (
-                        <span style={{ fontSize: 11, color: C.muted }}>
-                          {m.projectCount === 0 ? 'Sem projetos' : `${m.projectCount} projeto${m.projectCount !== 1 ? 's' : ''}`}
-                        </span>
-                      )}
+                      <span style={{ fontSize: 11, color: C.muted }}>
+                        {m.projectCount === 0 ? 'Sem projetos' : `${m.projectCount} projeto${m.projectCount !== 1 ? 's' : ''}`}
+                      </span>
                     </div>
                   </div>
-                  {isTeacher && m.role !== 'professor' && (
+                  {isTeacher && (
                     <button
                       onClick={() => setRemovingMember({ user_id: m.user_id, full_name: m.full_name })}
                       title="Remover da turma"

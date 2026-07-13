@@ -103,6 +103,14 @@ function JoinModal({ onClose, onJoin }) {
       return
     }
 
+    // Register actual membership — this was previously only saved to
+    // localStorage, so the teacher's member list never showed the student
+    // until they separately added a project to the class.
+    await supabase.from('class_members').upsert(
+      { class_id: data.id, user_id: user.id },
+      { onConflict: 'class_id,user_id' }
+    )
+
     // Save to localStorage
     const lsKey = `showo_turmas_${user.id}`
     let cached = []
