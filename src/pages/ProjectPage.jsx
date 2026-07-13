@@ -16,7 +16,7 @@ import CreateProjectModal from '../components/CreateProjectModal'
 import DefenseMode from '../components/DefenseMode'
 import ProjectComments from '../components/ProjectComments'
 import { analyzeProject } from '../lib/analyzeProject'
-import { Check, X, Loader, GraduationCap, Save, Sparkles, Bot, Lightbulb, Pencil, Search, Target, Wrench, Zap, TrendingUp, Briefcase, Users, Rocket, Trophy, BarChart2, CheckCircle, BookOpen, ChevronDown, Eye, EyeOff, UserPlus, Calendar, Mail, ArrowRight, ChevronRight, Globe, Image, MessageSquare, Quote, Layout, Type, Link, GripVertical, Plus, AlignLeft, Star, Camera, FileText, ClipboardList, Copy, Monitor, Tablet, Smartphone, Minus, Video, AlignCenter, AlignRight, Palette, AlertTriangle, Heart, User, Settings } from 'lucide-react'
+import { Check, X, Loader, GraduationCap, Save, Sparkles, Bot, Lightbulb, Pencil, Search, Target, Wrench, Zap, TrendingUp, Briefcase, Users, Rocket, Trophy, BarChart2, CheckCircle, BookOpen, ChevronDown, Eye, EyeOff, UserPlus, Calendar, Mail, ArrowRight, ChevronRight, ChevronLeft, Globe, Image, MessageSquare, Quote, Layout, Type, Link, GripVertical, Plus, AlignLeft, Star, Camera, FileText, ClipboardList, Copy, Monitor, Tablet, Smartphone, Minus, Video, AlignCenter, AlignRight, Palette, AlertTriangle, Heart, User, Settings } from 'lucide-react'
 
 const colors = {
   bg: 'var(--c-bg)',
@@ -2906,6 +2906,35 @@ export default function ProjectPage() {
       juryHydrated.current = true
     }
   }, [teacherFeedback, user])
+
+  // Quick "ready for defense" / "needs revision" flag
+  const [reviewStatusSaving, setReviewStatusSaving] = useState(false)
+  async function handleSetReviewStatus(status) {
+    if (!project || reviewStatusSaving) return
+    const next = project.review_status === status ? null : status
+    setReviewStatusSaving(true)
+    const { error } = await supabase.rpc('set_project_review_status', { p_project_id: project.id, p_status: next })
+    if (!error) {
+      setProject(p => ({ ...p, review_status: next }))
+      if (next && project.user_id) {
+        const msg = next === 'ready_for_defense'
+          ? `O professor marcou "${project.name}" como pronto para defesa.`
+          : `O professor marcou "${project.name}" como precisa de revisão.`
+        supabase.rpc('create_notification', { p_user_id: project.user_id, p_type: 'TEACHER_FEEDBACK', p_message: msg, p_project_slug: project.slug })
+      }
+    }
+    setReviewStatusSaving(false)
+  }
+
+  // Batch review queue (started from the turma's "Avaliar todos")
+  const reviewQueue = location.state?.reviewQueue
+  const reviewIndex = location.state?.reviewIndex ?? 0
+  function goToReviewIndex(i) {
+    if (!reviewQueue || i < 0 || i >= reviewQueue.length) return
+    navigate(`/projeto/${reviewQueue[i]}`, {
+      state: { reviewQueue, reviewIndex: i, turmaCode: location.state?.turmaCode, turmaName: location.state?.turmaName },
+    })
+  }
   // Report generation state
   const [reportModal, setReportModal] = useState(false)
   const [reportData, setReportData] = useState(null)
@@ -4612,7 +4641,7 @@ export default function ProjectPage() {
           )}
 
           {/* Student identity line — name · area · course + status badges */}
-          {(project.creator_name || project.area || project.course || internshipReady || ownerProfile?.available_for_work) && (
+          {(project.creator_name || project.area || project.course || internshipReady || ownerProfile?.available_for_work || project.review_status) && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
               {/* "Disponível" — briefcase badge */}
               {ownerProfile?.available_for_work && (
@@ -4629,6 +4658,23 @@ export default function ProjectPage() {
                 >
                   <Briefcase size={11} strokeWidth={2.5} />
                   Disponivel para estágio
+                </div>
+              )}
+              {project.review_status && (
+                <div
+                  title={project.review_status === 'ready_for_defense' ? 'O professor marcou este projeto como pronto para defesa' : 'O professor marcou este projeto como precisando de revisão'}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 5,
+                    background: project.review_status === 'ready_for_defense' ? 'rgba(34,197,94,0.1)' : 'rgba(249,115,22,0.1)',
+                    color: project.review_status === 'ready_for_defense' ? '#22c55e' : '#f97316',
+                    border: `1px solid ${project.review_status === 'ready_for_defense' ? 'rgba(34,197,94,0.25)' : 'rgba(249,115,22,0.25)'}`,
+                    borderRadius: 999, padding: '4px 12px',
+                    fontSize: 11, fontWeight: 700, lineHeight: 1.5,
+                    cursor: 'default',
+                  }}
+                >
+                  {project.review_status === 'ready_for_defense' ? <CheckCircle size={11} strokeWidth={2.5} /> : <AlertTriangle size={11} strokeWidth={2.5} />}
+                  {project.review_status === 'ready_for_defense' ? 'Pronto para defesa' : 'Precisa de revisão'}
                 </div>
               )}
               {[project.creator_name, project.area, project.course, project.school_year]
@@ -5186,6 +5232,65 @@ export default function ProjectPage() {
 
         {/* Sidebar */}
         <aside className="proj-sidebar" style={{ paddingTop: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {/* Professor: batch review queue, started from the turma's "Avaliar todos" */}
+          {isProfessor && reviewQueue && reviewQueue.length > 0 && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.22)', borderRadius: 8, padding: '6px 8px' }}>
+              <button
+                onClick={() => goToReviewIndex(reviewIndex - 1)}
+                disabled={reviewIndex === 0}
+                className="icon-btn-ghost"
+                style={{ opacity: reviewIndex === 0 ? 0.35 : 1, cursor: reviewIndex === 0 ? 'default' : 'pointer' }}
+              ><ChevronLeft size={14} /></button>
+              <div style={{ flex: 1, textAlign: 'center', minWidth: 0 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: colors.text }}>
+                  Projeto {reviewIndex + 1} de {reviewQueue.length}
+                </div>
+                {location.state?.turmaCode && (
+                  <button
+                    onClick={() => navigate(`/turma/${location.state.turmaCode}`)}
+                    style={{ background: 'none', border: 'none', color: colors.muted, fontSize: 10, cursor: 'pointer', padding: 0, fontFamily: 'inherit', textDecoration: 'underline' }}
+                  >Terminar avaliação</button>
+                )}
+              </div>
+              <button
+                onClick={() => goToReviewIndex(reviewIndex + 1)}
+                disabled={reviewIndex === reviewQueue.length - 1}
+                className="icon-btn-ghost"
+                style={{ opacity: reviewIndex === reviewQueue.length - 1 ? 0.35 : 1, cursor: reviewIndex === reviewQueue.length - 1 ? 'default' : 'pointer' }}
+              ><ChevronRight size={14} /></button>
+            </div>
+          )}
+
+          {/* Professor: quick "ready for defense" / "needs revision" flag */}
+          {isProfessor && (
+            <div style={{ display: 'flex', gap: 6 }}>
+              <button
+                onClick={() => handleSetReviewStatus('ready_for_defense')}
+                disabled={reviewStatusSaving}
+                style={{
+                  flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                  background: project.review_status === 'ready_for_defense' ? 'rgba(34,197,94,0.12)' : 'transparent',
+                  border: `1px solid ${project.review_status === 'ready_for_defense' ? 'rgba(34,197,94,0.4)' : colors.border}`,
+                  borderRadius: 8, padding: '8px 6px',
+                  color: project.review_status === 'ready_for_defense' ? '#22c55e' : colors.muted,
+                  fontSize: 11, fontWeight: 700, cursor: reviewStatusSaving ? 'default' : 'pointer', fontFamily: 'inherit',
+                }}
+              ><CheckCircle size={13} /> Pronto</button>
+              <button
+                onClick={() => handleSetReviewStatus('needs_revision')}
+                disabled={reviewStatusSaving}
+                style={{
+                  flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                  background: project.review_status === 'needs_revision' ? 'rgba(249,115,22,0.12)' : 'transparent',
+                  border: `1px solid ${project.review_status === 'needs_revision' ? 'rgba(249,115,22,0.4)' : colors.border}`,
+                  borderRadius: 8, padding: '8px 6px',
+                  color: project.review_status === 'needs_revision' ? '#f97316' : colors.muted,
+                  fontSize: 11, fontWeight: 700, cursor: reviewStatusSaving ? 'default' : 'pointer', fontFamily: 'inherit',
+                }}
+              ><AlertTriangle size={13} /> Revisão</button>
+            </div>
+          )}
+
           {/* Professor: switch between the public-visitor preview and the evaluation view */}
           {isProfessor && (
             <button

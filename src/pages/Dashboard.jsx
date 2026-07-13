@@ -6,7 +6,7 @@ import { Pencil, ExternalLink } from 'lucide-react'
 import SkillsPicker from '../components/SkillsPicker'
 import { Navbar } from '../components/Navbar'
 import CreateProjectModal from '../components/CreateProjectModal'
-import { Folder, Trophy, BarChart2, Rocket, Eye, GraduationCap, Plus, X, Users, Users2, ChevronRight, User, Settings, Compass, Medal, LogOut, Globe, TrendingUp, MessageSquare, Star, Mail, Search, BookOpen, Trash2, Check, Calendar, ArrowRight, Target, Zap, Sparkles, Briefcase, Building2, Send, Copy, Share2, Link, Swords, HelpCircle } from 'lucide-react'
+import { Folder, Trophy, BarChart2, Rocket, Eye, GraduationCap, Plus, X, Users, Users2, ChevronRight, User, Settings, Compass, Medal, LogOut, Globe, TrendingUp, MessageSquare, Star, Mail, Search, BookOpen, Trash2, Check, Calendar, ArrowRight, Target, Zap, Sparkles, Briefcase, Building2, Send, Copy, Share2, Link, Swords, HelpCircle, AlertTriangle } from 'lucide-react'
 import { MISSIONS, checkMissionProgress } from './Missoes'
 import ConvidarVagaModal from '../components/ConvidarVagaModal'
 
@@ -1165,6 +1165,7 @@ export default function Dashboard() {
   const [needsReview, setNeedsReview] = useState([]) // projects in the teacher's turmas with no feedback from them yet
   const [recentActivity, setRecentActivity] = useState([]) // latest projects submitted across the teacher's turmas
   const [upcomingDefenses, setUpcomingDefenses] = useState([]) // students' defense dates coming up, across all turmas
+  const [flaggedForRevision, setFlaggedForRevision] = useState([]) // projects the teacher marked "needs revision"
   const [totalMembers, setTotalMembers] = useState(0)
   const [studentTurmas, setStudentTurmas] = useState([])
   const [loadingStudentTurmas, setLoadingStudentTurmas] = useState(true)
@@ -1436,7 +1437,7 @@ export default function Dashboard() {
         .select('id, name, subject, code, created_at')
         .eq('teacher_id', user.id)
         .order('created_at', { ascending: false })
-      if (!cls?.length) { setTurmas([]); setNeedsReview([]); setTotalMembers(0); return }
+      if (!cls?.length) { setTurmas([]); setNeedsReview([]); setFlaggedForRevision([]); setTotalMembers(0); return }
 
       const [{ data: cp }, { data: members }] = await Promise.all([
         supabase.from('class_projects').select('class_id, project_id').in('class_id', cls.map(c => c.id)),
@@ -1465,7 +1466,7 @@ export default function Dashboard() {
 
       if (allProjectIds.length) {
         const [{ data: projDetails }, { data: myFeedback }] = await Promise.all([
-          supabase.from('projects').select('id, name, slug, creator_name, score, created_at, defense_date').in('id', allProjectIds),
+          supabase.from('projects').select('id, name, slug, creator_name, score, created_at, defense_date, review_status').in('id', allProjectIds),
           supabase.from('teacher_feedback').select('project_id').eq('teacher_id', user.id).in('project_id', allProjectIds),
         ])
         const projs = projDetails || []
@@ -1475,6 +1476,12 @@ export default function Dashboard() {
         setNeedsReview(
           projs
             .filter(p => !reviewedIds.has(p.id))
+            .map(p => ({ ...p, className: classNameByProject[p.id] }))
+        )
+
+        setFlaggedForRevision(
+          projs
+            .filter(p => p.review_status === 'needs_revision')
             .map(p => ({ ...p, className: classNameByProject[p.id] }))
         )
 
@@ -1501,6 +1508,7 @@ export default function Dashboard() {
         setNeedsReview([])
         setRecentActivity([])
         setUpcomingDefenses([])
+        setFlaggedForRevision([])
       }
 
       const memberCounts = {}
@@ -2135,6 +2143,43 @@ export default function Dashboard() {
               {needsReview.length > 5 && (
                 <div style={{ padding: '10px 16px', fontSize: 12, color: C.subtle, textAlign: 'center' }}>
                   +{needsReview.length - 5} projeto{needsReview.length - 5 !== 1 ? 's' : ''} por rever
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ── A aguardar revisão — projects flagged "precisa de revisão" (professor only) ── */}
+        {isTeacher && flaggedForRevision.length > 0 && (
+          <div style={{ marginBottom: 8 }}>
+            <div className="dash-sec-hd">
+              <div className="dash-sec-label">
+                <AlertTriangle size={13} /> A aguardar revisão
+                <span className="dash-sec-count">{flaggedForRevision.length}</span>
+              </div>
+            </div>
+            <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, overflow: 'hidden' }}>
+              {flaggedForRevision.slice(0, 5).map((p, i) => (
+                <div
+                  key={p.id}
+                  onClick={() => navigate(`/projeto/${p.slug}`)}
+                  style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: i < Math.min(flaggedForRevision.length, 5) - 1 ? `1px solid ${C.border}` : 'none', cursor: 'pointer', transition: 'background 0.12s' }}
+                  onMouseEnter={e => e.currentTarget.style.background = C.cardHover}
+                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                >
+                  <div style={{ width: 32, height: 32, borderRadius: 8, flexShrink: 0, background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <AlertTriangle size={14} color="#f97316" />
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
+                    <div style={{ fontSize: 11, color: C.subtle }}>{p.creator_name || 'Aluno'}{p.className ? ` · ${p.className}` : ''} · a aguardar correções</div>
+                  </div>
+                  <ChevronRight size={14} color={C.subtle} style={{ flexShrink: 0 }} />
+                </div>
+              ))}
+              {flaggedForRevision.length > 5 && (
+                <div style={{ padding: '10px 16px', fontSize: 12, color: C.subtle, textAlign: 'center' }}>
+                  +{flaggedForRevision.length - 5} projeto{flaggedForRevision.length - 5 !== 1 ? 's' : ''} a aguardar revisão
                 </div>
               )}
             </div>

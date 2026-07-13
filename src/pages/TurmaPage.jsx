@@ -278,7 +278,7 @@ export default function TurmaPage() {
         const ids = cp.map(r => r.project_id)
         const { data } = await supabase
           .from('projects')
-          .select('id, name, slug, score, area, creator_name, cover_url, ai_tagline, created_at, user_id, goal, problem, solution, features, technologies, results, linkedin_url, github_url, portfolio_url')
+          .select('id, name, slug, score, area, creator_name, cover_url, ai_tagline, created_at, user_id, goal, problem, solution, features, technologies, results, linkedin_url, github_url, portfolio_url, review_status')
           .in('id', ids)
         projs = data || []
         setProjects(projs)
@@ -810,6 +810,33 @@ export default function TurmaPage() {
         })()}
 
         {/* Projects */}
+        {sortedProjects.length > 0 && (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 14 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 13, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.07em' }}>
+                Projetos
+              </span>
+              <span style={{ fontSize: 11, fontWeight: 700, color: C.subtle }}>
+                {sortedProjects.length}
+              </span>
+            </div>
+            {isTeacher && (
+              <button
+                onClick={() => navigate(`/projeto/${sortedProjects[0].slug}`, {
+                  state: {
+                    reviewQueue: sortedProjects.map(p => p.slug),
+                    reviewIndex: 0,
+                    turmaCode: turma.code,
+                    turmaName: turma.name,
+                  },
+                })}
+                style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(27,120,247,0.08)', border: '1px solid rgba(27,120,247,0.3)', borderRadius: 7, padding: '7px 12px', color: C.blue, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+              >
+                <GraduationCap size={13} /> Avaliar todos
+              </button>
+            )}
+          </div>
+        )}
         {sortedProjects.length === 0 ? (
           <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: '60px 32px', textAlign: 'center' }}>
             <div style={{ marginBottom: 14 }}><Inbox size={44} color="var(--c-subtle)" /></div>
@@ -848,8 +875,16 @@ export default function TurmaPage() {
                   onMouseEnter={e => e.currentTarget.style.background = C.cardHover}
                   onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                   <div style={{ minWidth: 0, paddingRight: 12 }}>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: 'pointer' }} onClick={() => navigate(`/projeto/${p.slug}`)}>
-                      {p.name}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }} onClick={() => navigate(`/projeto/${p.slug}`)}>
+                      {p.review_status && (
+                        <span
+                          title={p.review_status === 'ready_for_defense' ? 'Pronto para defesa' : 'Precisa de revisão'}
+                          style={{ width: 7, height: 7, borderRadius: '50%', flexShrink: 0, background: p.review_status === 'ready_for_defense' ? '#22c55e' : '#f97316' }}
+                        />
+                      )}
+                      <div style={{ fontSize: 14, fontWeight: 600, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {p.name}
+                      </div>
                     </div>
                     {p.creator_name && <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>{p.creator_name}</div>}
                   </div>
