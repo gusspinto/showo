@@ -660,56 +660,56 @@ export default function TurmaPage() {
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Folder size={13} />{projects.length} projeto{projects.length !== 1 ? 's' : ''}</span>
               </div>
             </div>
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
               {/* Code badge */}
               <button
                 onClick={copyCode}
-                style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(27,120,247,0.06)', border: `1px solid rgba(27,120,247,0.2)`, borderRadius: 8, padding: '8px 14px', cursor: 'pointer', fontFamily: 'inherit' }}
+                style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(27,120,247,0.06)', border: `1px solid rgba(27,120,247,0.2)`, borderRadius: 7, padding: '6px 10px', cursor: 'pointer', fontFamily: 'inherit' }}
               >
-                <span style={{ fontSize: 11, color: C.muted, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>Código</span>
-                <span style={{ fontSize: 16, fontWeight: 800, color: C.blue, letterSpacing: 2 }}>{turma.code}</span>
-                <span style={{ color: copied ? C.green : C.muted }}>{copied ? <Check size={12} /> : <Copy size={12} />}</span>
+                <span style={{ fontSize: 10, color: C.muted, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>Código</span>
+                <span style={{ fontSize: 14, fontWeight: 800, color: C.blue, letterSpacing: 1.5 }}>{turma.code}</span>
+                <span style={{ color: copied ? C.green : C.muted, display: 'flex' }}>{copied ? <Check size={11} /> : <Copy size={11} />}</span>
               </button>
               {/* Copy link */}
               <button
                 onClick={copyLink}
-                style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(27,120,247,0.06)', border: `1px solid rgba(27,120,247,0.2)`, borderRadius: 8, padding: '8px 14px', cursor: 'pointer', fontFamily: 'inherit', color: copiedLink ? C.green : C.muted, fontSize: 13, fontWeight: 600, transition: 'color 0.15s' }}
+                style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(27,120,247,0.06)', border: `1px solid rgba(27,120,247,0.2)`, borderRadius: 7, padding: '6px 10px', cursor: 'pointer', fontFamily: 'inherit', color: copiedLink ? C.green : C.muted, fontSize: 12, fontWeight: 600, transition: 'color 0.15s' }}
               >
-                {copiedLink ? <Check size={13} /> : <Copy size={13} />}
-                {copiedLink ? 'Link copiado!' : 'Copiar link'}
+                {copiedLink ? <Check size={12} /> : <Copy size={12} />}
+                {copiedLink ? 'Copiado!' : 'Copiar link'}
               </button>
               {/* Professor: export CSV */}
               {isTeacher && projects.length > 0 && (
                 <button
                   onClick={exportCSV}
-                  style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 8, padding: '9px 14px', color: '#4ade80', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 7, padding: '6px 10px', color: '#4ade80', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
                 >
-                  <Download size={14} /> Exportar CSV
+                  <Download size={12} /> CSV
                 </button>
               )}
               {/* Leave class (students only) */}
               {!isTeacher && user && (
                 <button
                   onClick={() => setShowLeaveConfirm(true)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 8, padding: '9px 14px', color: '#ef4444', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'background 0.15s, border-color 0.15s' }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 7, padding: '6px 10px', color: '#ef4444', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'background 0.15s, border-color 0.15s' }}
                   onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.12)'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.35)' }}
                   onMouseLeave={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.06)'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.2)' }}
                 >
-                  <X size={13} /> Sair da turma
+                  <X size={12} /> Sair
                 </button>
               )}
               {/* Add project (students only) */}
               {!isTeacher && (user ? (
                 <button
                   onClick={() => setShowAdd(true)}
-                  style={{ background: '#1b78f7', border: 'none', borderRadius: 8, padding: '9px 18px', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px rgba(27,120,247,0.2)' }}
+                  style={{ background: '#1b78f7', border: 'none', borderRadius: 7, padding: '7px 14px', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px rgba(27,120,247,0.2)' }}
                 >
-                  + Adicionar o meu projeto
+                  + Adicionar projeto
                 </button>
               ) : (
                 <button
                   onClick={() => navigate('/login')}
-                  style={{ background: 'rgba(27,120,247,0.08)', border: `1px solid rgba(27,120,247,0.2)`, borderRadius: 8, padding: '9px 18px', color: C.blue, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+                  style={{ background: 'rgba(27,120,247,0.08)', border: `1px solid rgba(27,120,247,0.2)`, borderRadius: 7, padding: '7px 14px', color: C.blue, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
                 >
                   Entrar para adicionar
                 </button>
