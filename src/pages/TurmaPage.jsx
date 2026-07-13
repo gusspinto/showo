@@ -285,10 +285,15 @@ export default function TurmaPage() {
       }
 
       // Fetch all members from class_members table (source of truth)
-      const { data: classMembers } = await supabase
+      const { data: classMembers, error: classMembersError } = await supabase
         .from('class_members')
         .select('user_id, joined_at')
         .eq('class_id', cls.id)
+
+      if (classMembersError) {
+        console.error('class_members fetch failed:', classMembersError)
+        showToast('Erro ao carregar alunos: ' + classMembersError.message)
+      }
 
       const memberUserIds = (classMembers || []).map(m => m.user_id)
       // Always include teacher even if not in class_members
@@ -297,10 +302,11 @@ export default function TurmaPage() {
         : [...new Set(memberUserIds)]
 
       if (allIds.length > 0) {
-        const { data: profiles } = await supabase
+        const { data: profiles, error: profilesError } = await supabase
           .from('profiles')
           .select('id, full_name, username, avatar_url, role')
           .in('id', allIds)
+        if (profilesError) console.error('profiles fetch failed:', profilesError)
         const profileMap = {}
         ;(profiles || []).forEach(p => { profileMap[p.id] = p })
         const memberList = allIds.map(uid => {
