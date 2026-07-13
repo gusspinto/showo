@@ -81,10 +81,11 @@ function TurmaCard({ turma }) {
   )
 }
 
-function JoinModal({ onClose, onJoin }) {
+function JoinModal({ onClose, onJoin, navigate }) {
   const [code, setCode] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [joined, setJoined] = useState(null) // { turma, verified }
   const { user } = useAuth()
 
   async function handleJoin() {
@@ -106,6 +107,16 @@ function JoinModal({ onClose, onJoin }) {
       return
     }
 
+    // Verify the membership row actually exists instead of trusting the
+    // RPC's return value alone — this is the only way to tell "it worked"
+    // from "it silently didn't" from inside the app.
+    const { data: check } = await supabase
+      .from('class_members')
+      .select('user_id')
+      .eq('class_id', data.id)
+      .eq('user_id', user.id)
+      .maybeSingle()
+
     // Save to localStorage
     const lsKey = `showo_turmas_${user.id}`
     let cached = []
@@ -116,7 +127,42 @@ function JoinModal({ onClose, onJoin }) {
     }
 
     setLoading(false)
+    setJoined({ turma: data, verified: !!check })
     onJoin(data)
+  }
+
+  if (joined) {
+    return (
+      <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
+        onClick={e => e.target === e.currentTarget && onClose()}>
+        <div className="turmas-modal-content" style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: '28px 28px 24px', width: '100%', maxWidth: 420, textAlign: 'center' }}>
+          <div style={{
+            width: 52, height: 52, borderRadius: 14, margin: '0 auto 16px',
+            background: joined.verified ? 'rgba(34,197,94,0.1)' : 'rgba(251,191,36,0.1)',
+            border: `1px solid ${joined.verified ? 'rgba(34,197,94,0.25)' : 'rgba(251,191,36,0.3)'}`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <Check size={24} color={joined.verified ? '#22c55e' : '#fbbf24'} />
+          </div>
+          <h3 style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 400, color: C.text, fontFamily: 'var(--font-heading)', letterSpacing: '-0.4px' }}>
+            {joined.verified ? 'Entraste na turma!' : 'Pedido enviado'}
+          </h3>
+          <p style={{ margin: '0 0 22px', fontSize: 13, color: C.muted, lineHeight: 1.5 }}>
+            {joined.verified
+              ? <>Já és membro de <strong style={{ color: C.text }}>{joined.turma.name}</strong> — confirmado.</>
+              : <>A turma <strong style={{ color: C.text }}>{joined.turma.name}</strong> foi encontrada, mas não consegui confirmar o teu registo como membro. Tenta abrir a turma — se não apareceres na lista de alunos, avisa.</>}
+          </p>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={onClose} style={{ flex: 1, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 8, padding: '11px', color: C.muted, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+              Fechar
+            </button>
+            <button onClick={() => { onClose(); navigate?.(`/turma/${joined.turma.code}`) }} style={{ flex: 1, background: C.blue, border: 'none', borderRadius: 8, padding: '11px', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+              Ver turma
+            </button>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -337,7 +383,7 @@ export default function Turmas() {
         )}
       </div>
 
-      {showJoin && <JoinModal onClose={() => setShowJoin(false)} onJoin={handleJoined} />}
+      {showJoin && <JoinModal onClose={() => setShowJoin(false)} onJoin={handleJoined} navigate={navigate} />}
     </div>
   )
 }

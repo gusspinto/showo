@@ -410,10 +410,12 @@ function CreateTurmaModal({ onClose, onCreated }) {
 
 // ── Join Turma Modal ─────────────────────────────────────────────────────────
 function JoinTurmaModal({ onClose, navigate, onJoined }) {
+  const { user } = useAuth()
   const [code, setCode] = useState('')
   const [error, setError] = useState('')
   const [checking, setChecking] = useState(false)
   const [joined, setJoined] = useState(null)
+  const [verified, setVerified] = useState(null)
 
   async function handleJoin(e) {
     e.preventDefault()
@@ -431,6 +433,15 @@ function JoinTurmaModal({ onClose, navigate, onJoined }) {
         setError(sbErr && sbErr.message !== 'class_not_found' ? sbErr.message : 'Código inválido. Verifica com o professor.')
         return
       }
+      // Confirm the membership row actually exists — don't just trust the
+      // RPC's return value.
+      const { data: check } = await supabase
+        .from('class_members')
+        .select('user_id')
+        .eq('class_id', data.id)
+        .eq('user_id', user.id)
+        .maybeSingle()
+      setVerified(!!check)
       setJoined(data)
       onJoined?.(data)
     } catch {
@@ -449,11 +460,20 @@ function JoinTurmaModal({ onClose, navigate, onJoined }) {
         {joined ? (
           <>
             <div style={{ textAlign: 'center', marginBottom: 28 }}>
-              <div style={{ width: 60, height: 60, borderRadius: 16, background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px' }}>
-                <Check size={30} color="#22c55e" />
+              <div style={{
+                width: 60, height: 60, borderRadius: 16, margin: '0 auto 18px',
+                background: verified ? 'rgba(34,197,94,0.1)' : 'rgba(251,191,36,0.1)',
+                border: `1px solid ${verified ? 'rgba(34,197,94,0.25)' : 'rgba(251,191,36,0.3)'}`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <Check size={30} color={verified ? '#22c55e' : '#fbbf24'} />
               </div>
-              <h3 style={{ color: C.text, margin: '0 0 6px', fontSize: 20, fontWeight: 400, letterSpacing: '-0.5px', fontFamily: 'var(--font-heading)' }}>Turma encontrada!</h3>
-              <p style={{ color: C.muted, margin: 0, fontSize: 14, lineHeight: 1.5 }}>{joined.name}</p>
+              <h3 style={{ color: C.text, margin: '0 0 6px', fontSize: 20, fontWeight: 400, letterSpacing: '-0.5px', fontFamily: 'var(--font-heading)' }}>
+                {verified ? 'Entraste na turma!' : 'Turma encontrada'}
+              </h3>
+              <p style={{ color: C.muted, margin: 0, fontSize: 14, lineHeight: 1.5 }}>
+                {verified ? joined.name : `${joined.name} — não consegui confirmar o teu registo como membro. Verifica na turma.`}
+              </p>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               <button
