@@ -126,7 +126,7 @@ function FeedbackModal({ project, teacherId, onClose }) {
             <h3 style={{ margin: 0, fontSize: 16, fontWeight: 400, color: C.text, fontFamily: 'var(--font-heading)', letterSpacing: '-0.3px' }}>Feedback do professor</h3>
             <p style={{ margin: '3px 0 0', fontSize: 13, color: C.muted }}>{project.name}</p>
           </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.muted, padding: 4 }}><X size={18} /></button>
+          <button onClick={onClose} className="icon-btn-ghost"><X size={18} /></button>
         </div>
 
         {existing.length > 0 && (
@@ -190,7 +190,7 @@ function EditTurmaModal({ turma, onClose, onSave }) {
       <div style={{ background: C.card, border: `1px solid ${C.borderBright}`, borderRadius: 14, padding: 28, width: '100%', maxWidth: 400, boxShadow: 'none' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
           <h3 style={{ margin: 0, fontSize: 17, fontWeight: 400, color: C.text, fontFamily: 'var(--font-heading)', letterSpacing: '-0.3px' }}>Editar turma</h3>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.muted, padding: 4 }}><X size={18} /></button>
+          <button onClick={onClose} className="icon-btn-ghost"><X size={18} /></button>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <div>
@@ -515,17 +515,6 @@ export default function TurmaPage() {
         @media (max-width: 480px) { .turmapage-grid { grid-template-columns: 1fr !important; } }
         @media (max-width: 600px) { .turmapage-hd { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; } }
         @media (max-width: 520px) { .turmapage-modal { padding: 20px 16px !important; } }
-        .tp-icon-btn {
-          background: transparent; border: 1px solid transparent; color: var(--c-subtle);
-          cursor: pointer; padding: 5px; display: inline-flex; align-items: center;
-          border-radius: 7px; flex-shrink: 0;
-          transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
-        }
-        .tp-icon-btn:hover {
-          background: rgba(27,120,247,0.08); border-color: rgba(27,120,247,0.35);
-          color: #1b78f7; transform: scale(1.08); box-shadow: 0 2px 10px rgba(27,120,247,0.18);
-        }
-        .tp-icon-btn:active { transform: scale(0.94); }
       `}</style>
       <Navbar />
 
@@ -660,7 +649,7 @@ export default function TurmaPage() {
                   <h1 style={{ margin: 0, fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 400, letterSpacing: '-0.8px', fontFamily: 'var(--font-heading)' }}>{turma.name}</h1>
                   {isTeacher && (
                     <button onClick={() => setShowEditTurma(true)} title="Editar turma"
-                      className="tp-icon-btn" style={{ marginTop: 6 }}>
+                      className="icon-btn-ghost" style={{ marginTop: 6 }}>
                       <Pencil size={16} />
                     </button>
                   )}
@@ -807,7 +796,7 @@ export default function TurmaPage() {
                         <button
                           onClick={() => setRemovingMember({ user_id: m.user_id, full_name: m.full_name })}
                           title="Remover da turma"
-                          className="tp-icon-btn"
+                          className="icon-btn-ghost"
                         >
                           <UserMinus size={15} />
                         </button>

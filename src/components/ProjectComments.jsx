@@ -247,7 +247,7 @@ export default function ProjectComments({ projectId, projectAuthorId }) {
                         <div style={{ marginLeft: 'auto', display: 'flex', gap: 6 }}>
                           <button
                             onClick={() => { setEditingId(c.id); setEditDraft(c.content) }}
-                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--c-muted)', display: 'flex', alignItems: 'center', padding: 2 }}
+                            className="icon-btn-ghost"
                             title="Editar"
                           >
                             <Pencil size={13} />
@@ -257,14 +257,14 @@ export default function ProjectComments({ projectId, projectAuthorId }) {
                               <button onClick={() => deleteComment(c.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', display: 'flex', alignItems: 'center', padding: 2 }} title="Confirmar">
                                 <Check size={13} />
                               </button>
-                              <button onClick={() => setDeletingId(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--c-muted)', display: 'flex', alignItems: 'center', padding: 2 }} title="Cancelar">
+                              <button onClick={() => setDeletingId(null)} className="icon-btn-ghost" title="Cancelar">
                                 <X size={13} />
                               </button>
                             </div>
                           ) : (
                             <button
                               onClick={() => setDeletingId(c.id)}
-                              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--c-muted)', display: 'flex', alignItems: 'center', padding: 2 }}
+                              className="icon-btn-ghost"
                               title="Eliminar"
                             >
                               <Trash2 size={13} />
@@ -280,12 +280,12 @@ export default function ProjectComments({ projectId, projectAuthorId }) {
                               <button onClick={() => deleteComment(c.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', display: 'flex', alignItems: 'center', padding: 2 }}>
                                 <Check size={13} />
                               </button>
-                              <button onClick={() => setDeletingId(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--c-muted)', display: 'flex', alignItems: 'center', padding: 2 }}>
+                              <button onClick={() => setDeletingId(null)} className="icon-btn-ghost">
                                 <X size={13} />
                               </button>
                             </div>
                           ) : (
-                            <button onClick={() => setDeletingId(c.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--c-muted)', display: 'flex', alignItems: 'center', padding: 2 }} title="Remover comentário">
+                            <button onClick={() => setDeletingId(c.id)} className="icon-btn-ghost" title="Remover comentário">
                               <Trash2 size={13} />
                             </button>
                           )}

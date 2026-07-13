@@ -120,7 +120,7 @@ export default function CoverLetterModal({ projects, studentName, onClose }) {
             <h2 style={{ margin: '0 0 4px', fontSize: 20, fontWeight: 800, color: C.text }}>Kit de Estágio</h2>
             <p style={{ margin: 0, fontSize: 13, color: C.muted }}>Gerado com base nos teus projetos no Showo</p>
           </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: C.muted, cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center' }}><X size={20} /></button>
+          <button onClick={onClose} className="icon-btn-ghost"><X size={20} /></button>
         </div>
 
         <div style={{ padding: '20px 28px 28px' }}>

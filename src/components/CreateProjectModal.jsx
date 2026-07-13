@@ -47,7 +47,7 @@ export default function CreateProjectModal({ onClose }) {
           </div>
           <button
             onClick={onClose}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.subtle, padding: 4, display: 'flex', borderRadius: 6 }}
+            className="icon-btn-ghost"
           >
             <X size={18} />
           </button>

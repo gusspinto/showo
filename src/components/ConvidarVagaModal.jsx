@@ -74,7 +74,7 @@ export default function ConvidarVagaModal({ studentId, studentName, vagas, onClo
           </div>
           <button
             onClick={onClose}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.muted, padding: 4, borderRadius: 6 }}
+            className="icon-btn-ghost"
           >
             <X size={18} />
           </button>

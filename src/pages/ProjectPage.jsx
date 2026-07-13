@@ -1942,7 +1942,7 @@ function PublicView({ project, ownerProfile, isOwner, onExitPreview, previewBloc
                               />
                               <button
                                 onClick={() => upd(block.id, 'cardRows', block.cardRows.filter((_, ri) => ri !== i))}
-                                style={{ background: 'none', border: 'none', color: 'var(--c-subtle)', cursor: 'pointer', display: 'flex', flexShrink: 0, padding: '0 2px' }}
+                                className="icon-btn-ghost"
                               ><X size={13} /></button>
                             </div>
                           ))}
@@ -3733,7 +3733,7 @@ export default function ProjectPage() {
                 </h2>
                 <p style={{ margin: '2px 0 0', fontSize: 12, color: colors.muted }}>Gerado por IA · revê e adapta antes de entregar</p>
               </div>
-              <button onClick={() => setReportModal(false)} style={{ background: 'none', border: 'none', color: colors.muted, cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center' }}><X size={18} /></button>
+              <button onClick={() => setReportModal(false)} className="icon-btn-ghost"><X size={18} /></button>
             </div>
 
             {reportLoading && (
@@ -5329,7 +5329,7 @@ export default function ProjectPage() {
                               <button
                                 onClick={() => { setFbEditing(f.id); setFbFieldKey(f.field_key); setFbComment(f.comment); setShowFeedbackForm(true) }}
                                 title="Editar"
-                                style={{ background: 'none', border: 'none', color: colors.muted, cursor: 'pointer', padding: 3, display: 'flex', alignItems: 'center', borderRadius: 4 }}
+                                className="icon-btn-ghost"
                               ><Pencil size={11} /></button>
                               <button
                                 onClick={() => handleFbDelete(f.id)}
@@ -5612,7 +5612,7 @@ export default function ProjectPage() {
                     <Star size={18} fill="#f59e0b" color="#f59e0b" />
                     <span style={{ fontWeight: 700, fontSize: 16 }}>Recrutadores interessados</span>
                   </div>
-                  <button onClick={() => setShowInterestors(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--c-muted)', padding: 4 }}>
+                  <button onClick={() => setShowInterestors(false)} className="icon-btn-ghost">
                     <X size={18} />
                   </button>
                 </div>

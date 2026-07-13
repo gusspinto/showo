@@ -870,7 +870,7 @@ export default function NewProject() {
               </span>
               <button
                 onClick={() => setPrefillBanner(false)}
-                style={{ background: 'none', border: 'none', color: 'var(--c-muted)', cursor: 'pointer', fontSize: 16, padding: 0, flexShrink: 0 }}
+                className="icon-btn-ghost"
               ><X size={14} /></button>
             </div>
           )}

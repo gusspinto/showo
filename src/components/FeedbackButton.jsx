@@ -228,7 +228,7 @@ export default function FeedbackButton() {
               </div>
               <button
                 onClick={() => setOpen(false)}
-                style={{ background: 'none', border: 'none', color: 'var(--c-muted)', cursor: 'pointer', padding: 4 }}
+                className="icon-btn-ghost"
               >
                 <X size={18} />
               </button>

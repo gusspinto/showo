@@ -177,7 +177,7 @@ function JoinModal({ onClose, onJoin, navigate }) {
             <h3 style={{ margin: '0 0 4px', fontSize: 18, fontWeight: 400, color: C.text, fontFamily: 'var(--font-heading)', letterSpacing: '-0.4px' }}>Entrar numa turma</h3>
             <p style={{ margin: 0, fontSize: 13, color: C.muted }}>Introduz o código fornecido pelo professor</p>
           </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: C.subtle, cursor: 'pointer', padding: 4, lineHeight: 1, display: 'flex' }}>
+          <button onClick={onClose} className="icon-btn-ghost">
             <X size={18} />
           </button>
         </div>
