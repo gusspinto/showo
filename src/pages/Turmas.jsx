@@ -99,7 +99,9 @@ function JoinModal({ onClose, onJoin }) {
     const data = rows?.[0]
 
     if (err || !data) {
-      setError('Turma não encontrada. Verifica o código.')
+      // Surface the real error instead of always blaming the code — a
+      // silent RPC/permission failure once looked identical to a typo.
+      setError(err && err.message !== 'class_not_found' ? err.message : 'Turma não encontrada. Verifica o código.')
       setLoading(false)
       return
     }

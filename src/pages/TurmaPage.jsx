@@ -796,7 +796,18 @@ export default function TurmaPage() {
           <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: '60px 32px', textAlign: 'center' }}>
             <div style={{ marginBottom: 14 }}><Inbox size={44} color="var(--c-subtle)" /></div>
             <p style={{ color: C.text, fontSize: 17, fontWeight: 700, margin: '0 0 8px' }}>Ainda não há projetos</p>
-            <p style={{ color: C.muted, fontSize: 14, margin: '0 0 24px' }}>Partilha o código <strong style={{ color: C.blue }}>{turma.code}</strong> com os teus alunos para que adicionem os seus projetos.</p>
+            {isTeacher ? (
+              <p style={{ color: C.muted, fontSize: 14, margin: 0 }}>Partilha o código <strong style={{ color: C.blue }}>{turma.code}</strong> com os teus alunos para que adicionem os seus projetos.</p>
+            ) : (
+              <>
+                <p style={{ color: C.muted, fontSize: 14, margin: '0 0 24px' }}>Sê o primeiro a adicionar o teu projeto a esta turma.</p>
+                {user && (
+                  <button onClick={() => setShowAdd(true)} style={{ background: '#1b78f7', border: 'none', borderRadius: 8, padding: '10px 22px', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px rgba(27,120,247,0.2)' }}>
+                    + Adicionar o meu projeto
+                  </button>
+                )}
+              </>
+            )}
           </div>
         ) : isTeacher ? (
           /* Professor table view */

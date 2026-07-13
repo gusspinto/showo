@@ -427,7 +427,10 @@ function JoinTurmaModal({ onClose, navigate, onJoined }) {
       // migration).
       const { data: rows, error: sbErr } = await supabase.rpc('join_class', { p_code: trimmed })
       const data = rows?.[0]
-      if (sbErr || !data) { setError('Código inválido. Verifica com o professor.'); return }
+      if (sbErr || !data) {
+        setError(sbErr && sbErr.message !== 'class_not_found' ? sbErr.message : 'Código inválido. Verifica com o professor.')
+        return
+      }
       setJoined(data)
       onJoined?.(data)
     } catch {
