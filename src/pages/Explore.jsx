@@ -419,12 +419,14 @@ export default function Explore() {
       `}</style>
 
       <Navbar>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          style={{ background: `linear-gradient(135deg, ${colors.blue}, #4f46e5)`, color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 16px rgba(27,120,247,0.3)' }}
-        >
-          Criar projeto
-        </button>
+        {profile?.role !== 'professor' && (
+          <button
+            onClick={() => setShowCreateModal(true)}
+            style={{ background: `linear-gradient(135deg, ${colors.blue}, #4f46e5)`, color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 16px rgba(27,120,247,0.3)' }}
+          >
+            Criar projeto
+          </button>
+        )}
       </Navbar>
 
       <div className="page-content">

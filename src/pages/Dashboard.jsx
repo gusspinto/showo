@@ -1129,6 +1129,8 @@ export default function Dashboard() {
   const [projects, setProjects] = useState([])
   const [loadingProjects, setLoadingProjects] = useState(true)
   const [turmas, setTurmas] = useState([])
+  const [needsReview, setNeedsReview] = useState([]) // projects in the teacher's turmas with no feedback from them yet
+  const [totalMembers, setTotalMembers] = useState(0)
   const [studentTurmas, setStudentTurmas] = useState([])
   const [loadingStudentTurmas, setLoadingStudentTurmas] = useState(true)
   const [showCreateTurma, setShowCreateTurma] = useState(false)
@@ -1399,12 +1401,13 @@ export default function Dashboard() {
         .select('id, name, subject, code, created_at')
         .eq('teacher_id', user.id)
         .order('created_at', { ascending: false })
-      if (!cls?.length) { setTurmas([]); return }
+      if (!cls?.length) { setTurmas([]); setNeedsReview([]); setTotalMembers(0); return }
 
-      const { data: cp } = await supabase
-        .from('class_projects')
-        .select('class_id, project_id')
-        .in('class_id', cls.map(c => c.id))
+      const [{ data: cp }, { data: members }] = await Promise.all([
+        supabase.from('class_projects').select('class_id, project_id').in('class_id', cls.map(c => c.id)),
+        supabase.from('class_members').select('class_id, user_id').in('class_id', cls.map(c => c.id)),
+      ])
+      setTotalMembers(new Set((members || []).map(m => m.user_id)).size)
 
       const counts = {}
       const classProjects = {}
@@ -1431,6 +1434,28 @@ export default function Dashboard() {
         const avg_score = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null
         return { ...c, project_count: counts[c.id] ?? 0, avg_score }
       }))
+
+      // "Needs attention" — projects in any of the teacher's turmas that
+      // never got feedback from this teacher.
+      if (allProjectIds.length) {
+        const [{ data: projDetails }, { data: myFeedback }] = await Promise.all([
+          supabase.from('projects').select('id, name, slug, creator_name').in('id', allProjectIds),
+          supabase.from('teacher_feedback').select('project_id').eq('teacher_id', user.id).in('project_id', allProjectIds),
+        ])
+        const reviewedIds = new Set((myFeedback || []).map(f => f.project_id))
+        const classNameByProject = {}
+        Object.entries(classProjects).forEach(([classId, ids]) => {
+          const cls_ = cls.find(c => c.id === classId)
+          ids.forEach(pid => { classNameByProject[pid] = cls_?.name })
+        })
+        setNeedsReview(
+          (projDetails || [])
+            .filter(p => !reviewedIds.has(p.id))
+            .map(p => ({ ...p, className: classNameByProject[p.id] }))
+        )
+      } else {
+        setNeedsReview([])
+      }
     }
     loadTurmas()
   }, [user, profile?.role])
@@ -1964,6 +1989,82 @@ export default function Dashboard() {
             </div>
           )
         })()}
+
+        {/* ── Primeiros passos (professor only) ── */}
+        {isTeacher && (() => {
+          const done = (turmas.length > 0 ? 1 : 0) + (totalMembers > 0 ? 1 : 0)
+          if (done >= 2) return null
+          const step = turmas.length === 0
+            ? { Icon: Users2, color: C.blue, title: 'Cria a tua primeira turma', desc: 'Gera um código e partilha-o com os teus alunos para começarem a submeter projetos.', cta: 'Criar turma', action: () => setShowCreateTurma(true) }
+            : { Icon: Users, color: '#8b5cf6', title: 'Convida os teus alunos', desc: `Partilha o código de ${turmas[0]?.name ?? 'uma turma'} — sem alunos, a turma fica vazia.`, cta: 'Ver turma', action: () => navigate(`/turma/${turmas[0]?.code}`) }
+          const SIcon = step.Icon
+          return (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Primeiros passos</span>
+                <div style={{ flex: '0 0 60px', height: 4, background: C.border, borderRadius: 999, overflow: 'hidden' }}>
+                  <div style={{ width: `${(done / 2) * 100}%`, height: '100%', background: C.blue, borderRadius: 999, transition: 'width 0.4s ease' }} />
+                </div>
+                <span style={{ fontSize: 11, color: C.subtle }}>{done}/2</span>
+              </div>
+              <div style={{ background: C.card, border: `1px solid ${step.color}30`, borderLeft: `3px solid ${step.color}`, borderRadius: 12, padding: '18px 20px', display: 'flex', gap: 16, alignItems: 'center' }}>
+                <div style={{ width: 44, height: 44, borderRadius: 10, flexShrink: 0, background: step.color + '18', border: `1px solid ${step.color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <SIcon size={20} color={step.color} />
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: C.text, marginBottom: 2 }}>{step.title}</div>
+                  <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.5 }}>{step.desc}</div>
+                </div>
+                <button
+                  className="dash-action-btn"
+                  onClick={step.action}
+                  style={{ background: step.color, border: 'none', color: '#fff', boxShadow: `0 2px 8px ${step.color}33` }}
+                  onMouseEnter={e => e.currentTarget.style.opacity = '0.88'}
+                  onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+                >
+                  {step.cta}
+                </button>
+              </div>
+            </div>
+          )
+        })()}
+
+        {/* ── Precisa da tua atenção (professor only) ── */}
+        {isTeacher && needsReview.length > 0 && (
+          <div style={{ marginBottom: 8 }}>
+            <div className="dash-sec-hd">
+              <div className="dash-sec-label">
+                <MessageSquare size={13} /> Precisa da tua atenção
+                <span className="dash-sec-count">{needsReview.length}</span>
+              </div>
+            </div>
+            <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, overflow: 'hidden' }}>
+              {needsReview.slice(0, 5).map((p, i) => (
+                <div
+                  key={p.id}
+                  onClick={() => navigate(`/projeto/${p.slug}`)}
+                  style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: i < Math.min(needsReview.length, 5) - 1 ? `1px solid ${C.border}` : 'none', cursor: 'pointer', transition: 'background 0.12s' }}
+                  onMouseEnter={e => e.currentTarget.style.background = C.cardHover}
+                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                >
+                  <div style={{ width: 32, height: 32, borderRadius: 8, flexShrink: 0, background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Folder size={14} color="#fbbf24" />
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
+                    <div style={{ fontSize: 11, color: C.subtle }}>{p.creator_name || 'Aluno'}{p.className ? ` · ${p.className}` : ''} · sem feedback teu</div>
+                  </div>
+                  <ChevronRight size={14} color={C.subtle} style={{ flexShrink: 0 }} />
+                </div>
+              ))}
+              {needsReview.length > 5 && (
+                <div style={{ padding: '10px 16px', fontSize: 12, color: C.subtle, textAlign: 'center' }}>
+                  +{needsReview.length - 5} projeto{needsReview.length - 5 !== 1 ? 's' : ''} por rever
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* ── All sections ── */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>

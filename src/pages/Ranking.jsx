@@ -93,7 +93,7 @@ function ScoreRing({ score, size = 64, strokeW = 5 }) {
 
 export default function Ranking() {
   const navigate = useNavigate()
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
   const [projects, setProjects]   = useState([])
   const [loading, setLoading]     = useState(true)
   const [areaFilter, setAreaFilter] = useState('')
@@ -197,18 +197,20 @@ export default function Ranking() {
       `}</style>
 
       <Navbar>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          style={{
-            background: C.blue,
-            color: '#fff', border: 'none', borderRadius: 8,
-            padding: '9px 18px', fontSize: 14, fontWeight: 600,
-            cursor: 'pointer', fontFamily: 'inherit',
-            boxShadow: '0 2px 12px rgba(27,120,247,0.25)',
-          }}
-        >
-          Criar projeto
-        </button>
+        {profile?.role !== 'professor' && (
+          <button
+            onClick={() => setShowCreateModal(true)}
+            style={{
+              background: C.blue,
+              color: '#fff', border: 'none', borderRadius: 8,
+              padding: '9px 18px', fontSize: 14, fontWeight: 600,
+              cursor: 'pointer', fontFamily: 'inherit',
+              boxShadow: '0 2px 12px rgba(27,120,247,0.25)',
+            }}
+          >
+            Criar projeto
+          </button>
+        )}
       </Navbar>
 
       <div className="page-content">

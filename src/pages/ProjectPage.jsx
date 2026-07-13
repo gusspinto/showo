@@ -2872,6 +2872,8 @@ export default function ProjectPage() {
   const [fbFieldKey, setFbFieldKey] = useState('geral')
   const [fbSaving, setFbSaving] = useState(false)
   const [fbEditing, setFbEditing] = useState(null)
+  const [resolvingId, setResolvingId] = useState(null)
+  const [resolveNote, setResolveNote] = useState('')
 
   const { setExtras } = useSidebar()
   const { theme } = useTheme()
@@ -3395,12 +3397,14 @@ export default function ProjectPage() {
       <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-body)', gap: 16, textAlign: 'center', padding: 24 }}>
         <h2 style={{ margin: 0, fontSize: 24, fontWeight: 400, fontFamily: 'var(--font-heading)', letterSpacing: '-0.01em' }}>Este projeto não existe ou foi removido</h2>
         <p style={{ color: colors.muted, margin: 0 }}>O link pode estar incorrecto ou o projeto foi eliminado.</p>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          style={{ background: colors.blue, color: '#fff', border: 'none', borderRadius: 10, padding: '12px 28px', fontSize: 16, fontWeight: 700, cursor: 'pointer', marginTop: 8, boxShadow: '0 2px 8px rgba(27,120,247,0.2)', fontFamily: 'inherit' }}
-        >
-          <span style={{display:"flex",alignItems:"center",gap:6}}>Criar o meu projeto <ArrowRight size={15} /></span>
-        </button>
+        {profile?.role !== 'professor' && (
+          <button
+            onClick={() => setShowCreateModal(true)}
+            style={{ background: colors.blue, color: '#fff', border: 'none', borderRadius: 10, padding: '12px 28px', fontSize: 16, fontWeight: 700, cursor: 'pointer', marginTop: 8, boxShadow: '0 2px 8px rgba(27,120,247,0.2)', fontFamily: 'inherit' }}
+          >
+            <span style={{display:"flex",alignItems:"center",gap:6}}>Criar o meu projeto <ArrowRight size={15} /></span>
+          </button>
+        )}
         {showCreateModal && <CreateProjectModal onClose={() => setShowCreateModal(false)} />}
         <button
           onClick={() => navigate('/')}
@@ -3493,6 +3497,20 @@ export default function ProjectPage() {
   async function handleFbDelete(id) {
     await supabase.from('teacher_feedback').delete().eq('id', id)
     setTeacherFeedback(prev => prev.filter(f => f.id !== id))
+  }
+
+  async function handleFbResolve(id, note) {
+    const { error } = await supabase.rpc('resolve_teacher_feedback', { p_feedback_id: id, p_note: note || null })
+    if (error) return
+    setTeacherFeedback(prev => prev.map(f => f.id === id
+      ? { ...f, status: 'resolved', resolved_at: new Date().toISOString(), resolution_note: note || null }
+      : f))
+  }
+
+  async function handleFbReopen(id) {
+    const { error } = await supabase.rpc('reopen_teacher_feedback', { p_feedback_id: id })
+    if (error) return
+    setTeacherFeedback(prev => prev.map(f => f.id === id ? { ...f, status: 'pending', resolved_at: null, resolution_note: null } : f))
   }
 
   const scoreSuffix = project.score != null ? ` · Score ${project.score}` : ''
@@ -4747,7 +4765,7 @@ export default function ProjectPage() {
         })()}
 
         {/* AI Analysis teaser for non-owners */}
-        {!isOwner && (
+        {!isOwner && profile?.role !== 'professor' && (
           <div style={{
             background: colors.card,
             border: `1px solid ${colors.border}`,
@@ -5288,31 +5306,84 @@ export default function ProjectPage() {
                 {/* Feedback items — each on one compact row */}
                 {myFeedback.length > 0 && (
                   <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    {myFeedback.map((f, idx) => (
+                    {myFeedback.map((f, idx) => {
+                      const resolved = f.status === 'resolved'
+                      const isResolving = resolvingId === f.id
+                      return (
                       <div
                         key={f.id}
-                        style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '10px 16px', borderBottom: idx < myFeedback.length - 1 ? '1px solid rgba(251,191,36,0.08)' : 'none' }}
+                        style={{ padding: '10px 16px', borderBottom: idx < myFeedback.length - 1 ? '1px solid rgba(251,191,36,0.08)' : 'none', opacity: resolved && !isProfessor ? 0.75 : 1 }}
                       >
-                        <span style={{ fontSize: 9, fontWeight: 800, color: '#fbbf24', background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.2)', borderRadius: 4, padding: '2px 6px', letterSpacing: 0.5, textTransform: 'uppercase', flexShrink: 0, marginTop: 2, whiteSpace: 'nowrap' }}>
-                          {FB_SECTION_LABELS[f.field_key] || f.field_key}
-                        </span>
-                        <span style={{ flex: 1, fontSize: 13, color: colors.text, lineHeight: 1.5 }}>{f.comment}</span>
-                        {isProfessor && (
-                          <div style={{ display: 'flex', gap: 4, flexShrink: 0, marginTop: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                          <span style={{ fontSize: 9, fontWeight: 800, color: '#fbbf24', background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.2)', borderRadius: 4, padding: '2px 6px', letterSpacing: 0.5, textTransform: 'uppercase', flexShrink: 0, marginTop: 2, whiteSpace: 'nowrap' }}>
+                            {FB_SECTION_LABELS[f.field_key] || f.field_key}
+                          </span>
+                          <span style={{ flex: 1, fontSize: 13, color: colors.text, lineHeight: 1.5, textDecoration: resolved ? 'line-through' : 'none', textDecorationColor: 'rgba(148,163,184,0.5)' }}>{f.comment}</span>
+                          {resolved && (
+                            <span title="Resolvido" style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 10, fontWeight: 700, color: '#22c55e', flexShrink: 0, marginTop: 2 }}>
+                              <Check size={11} /> Resolvido
+                            </span>
+                          )}
+                          {isProfessor && (
+                            <div style={{ display: 'flex', gap: 4, flexShrink: 0, marginTop: 1 }}>
+                              <button
+                                onClick={() => { setFbEditing(f.id); setFbFieldKey(f.field_key); setFbComment(f.comment); setShowFeedbackForm(true) }}
+                                title="Editar"
+                                style={{ background: 'none', border: 'none', color: colors.muted, cursor: 'pointer', padding: 3, display: 'flex', alignItems: 'center', borderRadius: 4 }}
+                              ><Pencil size={11} /></button>
+                              <button
+                                onClick={() => handleFbDelete(f.id)}
+                                title="Apagar"
+                                style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: 3, display: 'flex', alignItems: 'center', borderRadius: 4 }}
+                              ><X size={11} /></button>
+                            </div>
+                          )}
+                        </div>
+
+                        {f.resolution_note && (
+                          <p style={{ margin: '6px 0 0 0', paddingLeft: 4, fontSize: 12, color: colors.muted, fontStyle: 'italic', lineHeight: 1.5 }}>
+                            &ldquo;{f.resolution_note}&rdquo;
+                          </p>
+                        )}
+
+                        {/* Owner: mark resolved */}
+                        {isOwner && !resolved && (
+                          isResolving ? (
+                            <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                              <input
+                                value={resolveNote} onChange={e => setResolveNote(e.target.value)}
+                                placeholder="O que mudaste? (opcional)"
+                                style={{ background: 'var(--c-bg)', border: `1px solid ${colors.border}`, borderRadius: 6, padding: '6px 9px', color: colors.text, fontSize: 12, fontFamily: 'inherit', outline: 'none' }}
+                              />
+                              <div style={{ display: 'flex', gap: 6 }}>
+                                <button
+                                  onClick={() => { handleFbResolve(f.id, resolveNote); setResolvingId(null); setResolveNote('') }}
+                                  style={{ background: '#22c55e', border: 'none', borderRadius: 6, padding: '5px 10px', color: '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+                                >Confirmar</button>
+                                <button
+                                  onClick={() => { setResolvingId(null); setResolveNote('') }}
+                                  style={{ background: 'none', border: `1px solid ${colors.border}`, borderRadius: 6, padding: '5px 10px', color: colors.muted, fontSize: 11, cursor: 'pointer', fontFamily: 'inherit' }}
+                                >Cancelar</button>
+                              </div>
+                            </div>
+                          ) : (
                             <button
-                              onClick={() => { setFbEditing(f.id); setFbFieldKey(f.field_key); setFbComment(f.comment); setShowFeedbackForm(true) }}
-                              title="Editar"
-                              style={{ background: 'none', border: 'none', color: colors.muted, cursor: 'pointer', padding: 3, display: 'flex', alignItems: 'center', borderRadius: 4 }}
-                            ><Pencil size={11} /></button>
-                            <button
-                              onClick={() => handleFbDelete(f.id)}
-                              title="Apagar"
-                              style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: 3, display: 'flex', alignItems: 'center', borderRadius: 4 }}
-                            ><X size={11} /></button>
-                          </div>
+                              onClick={() => setResolvingId(f.id)}
+                              style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 4, background: 'none', border: 'none', color: '#22c55e', cursor: 'pointer', fontSize: 12, fontWeight: 700, fontFamily: 'inherit', padding: 0 }}
+                            ><Check size={12} /> Marcar como resolvido</button>
+                          )
+                        )}
+
+                        {/* Professor: reopen */}
+                        {isProfessor && resolved && (
+                          <button
+                            onClick={() => handleFbReopen(f.id)}
+                            style={{ marginTop: 6, background: 'none', border: 'none', color: colors.muted, cursor: 'pointer', fontSize: 11, fontFamily: 'inherit', padding: 0, textDecoration: 'underline' }}
+                          >Reabrir</button>
                         )}
                       </div>
-                    ))}
+                      )
+                    })}
                   </div>
                 )}
 
