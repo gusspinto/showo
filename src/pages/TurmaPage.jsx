@@ -756,7 +756,7 @@ export default function TurmaPage() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
                 <Users2 size={15} color={C.muted} />
                 <span style={{ fontSize: 13, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.07em' }}>
-                  Membros
+                  Alunos
                 </span>
                 <span style={{ fontSize: 11, fontWeight: 700, color: C.subtle }}>
                   {students.length}
