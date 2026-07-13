@@ -59,9 +59,14 @@ export function AuthProvider({ children }) {
     setProfile(null)
   }
 
-  // Call this after saving profile so Navbar/etc update immediately
-  function refreshProfile() {
-    if (user) fetchProfile(user.id)
+  // Call this after saving profile so Navbar/etc update immediately. Asks
+  // Supabase for the current user directly instead of trusting the `user`
+  // state closure — a caller right after signUp/signIn can run before this
+  // provider's own onAuthStateChange listener has caught up. Returns the
+  // fetch promise so callers can await it before navigating.
+  async function refreshProfile() {
+    const { data: { user: current } } = await supabase.auth.getUser()
+    if (current) return fetchProfile(current.id)
   }
 
   const isAdmin = profile?.is_admin === true

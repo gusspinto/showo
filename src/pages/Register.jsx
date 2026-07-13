@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import { GraduationCap, BookOpen, Search, Building2, ArrowLeft } from 'lucide-react'
 import AuthSidePanel from '../components/AuthSidePanel'
 import { useTheme } from '../context/ThemeContext'
+import { useAuth } from '../context/AuthContext'
 
 const C = {
   bg:          'var(--c-bg)',
@@ -83,6 +84,7 @@ export default function Register() {
   const location = useLocation()
   const claimSlug = location.state?.claimSlug ?? null
   const { theme } = useTheme()
+  const { refreshProfile } = useAuth()
   const [step, setStep] = useState('role') // 'role' | 'form'
   const [role, setRole] = useState('')
   const [name, setName] = useState('')
@@ -119,8 +121,13 @@ export default function Register() {
       if (!inviteCode.trim()) { setError('Introduz o código de acesso.'); return }
       setLoading(true)
       const ok = await redeemInviteCode()
+      if (!ok) {
+        setLoading(false)
+        setError('Código inválido, expirado ou já utilizado.')
+        return
+      }
+      await refreshProfile()
       setLoading(false)
-      if (!ok) { setError('Código inválido, expirado ou já utilizado.'); return }
       navigate('/dashboard')
       return
     }
@@ -165,6 +172,7 @@ export default function Register() {
         setError('A tua conta foi criada, mas o código de acesso é inválido ou já foi utilizado. Verifica o código e tenta novamente.')
         return
       }
+      await refreshProfile()
     }
 
     // Claim an anonymously-created project (made via the homepage widget, no account yet)
