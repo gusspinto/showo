@@ -197,6 +197,8 @@ export default function Login() {
           caret-color: var(--c-text) !important;
           transition: background-color 9999s ease-in-out 0s;
         }
+        .login-forgot-link { transition: opacity 0.15s; }
+        .login-forgot-link:hover { opacity: 1 !important; }
         @media (max-width: 860px) {
           .auth-side { display: none; }
         }
@@ -282,7 +284,17 @@ export default function Login() {
               </div>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <label style={{ color: C.muted, fontSize: 13, fontWeight: 500 }}>Palavra-passe</label>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <label style={{ color: C.muted, fontSize: 13, fontWeight: 500 }}>Palavra-passe</label>
+                <button
+                  type="button"
+                  className="login-forgot-link"
+                  onClick={() => { setMode('forgot'); setForgotEmail(email) }}
+                  style={{ background: 'none', border: 'none', color: 'var(--c-subtle)', fontSize: 12, fontWeight: 400, cursor: 'pointer', fontFamily: 'inherit', padding: 0, opacity: 0.7 }}
+                >
+                  Esqueceste-te da password?
+                </button>
+              </div>
               <PasswordInput value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" />
             </div>
 
@@ -340,15 +352,6 @@ export default function Login() {
           <p style={{ textAlign: 'center', color: C.muted, fontSize: 14, marginTop: 24 }}>
             Não tens conta?{' '}
             <Link to="/register" style={{ color: C.blue, textDecoration: 'none', fontWeight: 500 }}>Regista-te</Link>
-          </p>
-          <p style={{ textAlign: 'center', marginTop: 10 }}>
-            <button
-              type="button"
-              onClick={() => { setMode('forgot'); setForgotEmail(email) }}
-              style={{ background: 'none', border: 'none', color: C.muted, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', padding: 0, textDecoration: 'underline' }}
-            >
-              Esqueceste-te da password?
-            </button>
           </p>
           </>
           )}
