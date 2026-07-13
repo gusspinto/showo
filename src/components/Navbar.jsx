@@ -1426,7 +1426,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   onProfile={profileUrl ? () => navigate(profileUrl) : null}
                   onSettings={() => navigate('/settings')}
                   onSignOut={handleSignOut}
-                  onCreateProject={showCreateProject && !isTeacher ? () => setCreateModal(true) : undefined}
+                  onCreateProject={showCreateProject && !isTeacher && !isAdmin ? () => setCreateModal(true) : undefined}
                 />
               </>
             ) : (
@@ -1451,7 +1451,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
           </div>
 
           {/* Mobile quick-create button — only on mobile (not tablet) */}
-          {showLinks && !isTeacher && (
+          {showLinks && !isTeacher && !isAdmin && (
             <button
               className="ham-btn mob-only-create"
               onClick={() => setCreateModal(true)}
@@ -1671,7 +1671,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                 </>
               )}
 
-              {user && !isTeacher && location.pathname !== '/dashboard' && (
+              {user && !isTeacher && !isAdmin && location.pathname !== '/dashboard' && (
                 <div className={`sb-create-wrap ${extras ? 'hidden' : 'visible'}`}>
                   <div className="sb-create-inner">
                     <button className="sb-create" onClick={() => setCreateModal(true)}>
@@ -2002,7 +2002,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               )}
 
               {/* ── Criar projeto — no hamburger quando pincel está no centro ── */}
-              {previewEditingMobile && user && !isTeacher && (
+              {previewEditingMobile && user && !isTeacher && !isAdmin && (
                 <>
                   <span className="mob-nav-section-label">Ações</span>
                   <button className="mob-nav-btn" onClick={() => { setMenuOpen(false); setCreateModal(true) }}>
@@ -2236,6 +2236,11 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                 <button className={`bn-create-btn${isActive('/turmas') ? ' active' : ''}`} onClick={() => { setMenuOpen(false); navigate('/turmas') }} aria-label="Turmas">
                   <Users2 size={24} strokeWidth={2} />
                   <span>Turmas</span>
+                </button>
+              ) : isAdmin ? (
+                <button className={`bn-create-btn${isActive('/admin') ? ' active' : ''}`} onClick={() => { setMenuOpen(false); navigate('/admin') }} aria-label="Painel de Admin">
+                  <Shield size={22} strokeWidth={2} />
+                  <span>Admin</span>
                 </button>
               ) : (
                 <button className="bn-create-btn" onClick={() => { setMenuOpen(false); setCreateModal(true) }} aria-label="Criar projeto">

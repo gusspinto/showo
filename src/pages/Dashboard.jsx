@@ -42,6 +42,15 @@ function getDisplayName(user) {
   return user?.email?.split('@')[0] ?? ''
 }
 
+function timeAgoLabel(ts) {
+  if (!ts) return ''
+  const diff = (Date.now() - new Date(ts)) / 1000
+  if (diff < 3600) return `há ${Math.max(1, Math.floor(diff / 60))} min`
+  if (diff < 86400) return `há ${Math.floor(diff / 3600)}h`
+  if (diff < 604800) return `há ${Math.floor(diff / 86400)} dias`
+  return new Date(ts).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' })
+}
+
 
 function ScoreBadge({ score }) {
   const color = getScoreColor(score)
@@ -1154,6 +1163,8 @@ export default function Dashboard() {
   const [loadingProjects, setLoadingProjects] = useState(true)
   const [turmas, setTurmas] = useState([])
   const [needsReview, setNeedsReview] = useState([]) // projects in the teacher's turmas with no feedback from them yet
+  const [recentActivity, setRecentActivity] = useState([]) // latest projects submitted across the teacher's turmas
+  const [upcomingDefenses, setUpcomingDefenses] = useState([]) // students' defense dates coming up, across all turmas
   const [totalMembers, setTotalMembers] = useState(0)
   const [studentTurmas, setStudentTurmas] = useState([])
   const [loadingStudentTurmas, setLoadingStudentTurmas] = useState(true)
@@ -1441,15 +1452,55 @@ export default function Dashboard() {
         classProjects[r.class_id].push(r.project_id)
       })
 
-      // Fetch scores for all projects across all turmas
+      // One richer fetch covers scores (turma averages), needs-review,
+      // recent activity and upcoming defenses — no point querying projects
+      // four separate times for the same id list.
       const allProjectIds = cp?.map(r => r.project_id) ?? []
       let scoreMap = {}
+      const classNameByProject = {}
+      Object.entries(classProjects).forEach(([classId, ids]) => {
+        const cls_ = cls.find(c => c.id === classId)
+        ids.forEach(pid => { classNameByProject[pid] = cls_?.name })
+      })
+
       if (allProjectIds.length) {
-        const { data: projs } = await supabase
-          .from('projects')
-          .select('id, score')
-          .in('id', allProjectIds)
-        projs?.forEach(p => { scoreMap[p.id] = p.score })
+        const [{ data: projDetails }, { data: myFeedback }] = await Promise.all([
+          supabase.from('projects').select('id, name, slug, creator_name, score, created_at, defense_date').in('id', allProjectIds),
+          supabase.from('teacher_feedback').select('project_id').eq('teacher_id', user.id).in('project_id', allProjectIds),
+        ])
+        const projs = projDetails || []
+        projs.forEach(p => { scoreMap[p.id] = p.score })
+
+        const reviewedIds = new Set((myFeedback || []).map(f => f.project_id))
+        setNeedsReview(
+          projs
+            .filter(p => !reviewedIds.has(p.id))
+            .map(p => ({ ...p, className: classNameByProject[p.id] }))
+        )
+
+        setRecentActivity(
+          [...projs]
+            .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+            .slice(0, 5)
+            .map(p => ({ ...p, className: classNameByProject[p.id] }))
+        )
+
+        const today = new Date(); today.setHours(0, 0, 0, 0)
+        setUpcomingDefenses(
+          projs
+            .filter(p => p.defense_date && new Date(p.defense_date + 'T00:00:00') >= today)
+            .map(p => ({
+              ...p,
+              className: classNameByProject[p.id],
+              daysLeft: Math.ceil((new Date(p.defense_date + 'T00:00:00') - today) / 86400000),
+            }))
+            .sort((a, b) => a.daysLeft - b.daysLeft)
+            .slice(0, 5)
+        )
+      } else {
+        setNeedsReview([])
+        setRecentActivity([])
+        setUpcomingDefenses([])
       }
 
       const memberCounts = {}
@@ -1461,28 +1512,6 @@ export default function Dashboard() {
         const avg_score = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null
         return { ...c, project_count: counts[c.id] ?? 0, member_count: memberCounts[c.id] ?? 0, avg_score }
       }))
-
-      // "Needs attention" — projects in any of the teacher's turmas that
-      // never got feedback from this teacher.
-      if (allProjectIds.length) {
-        const [{ data: projDetails }, { data: myFeedback }] = await Promise.all([
-          supabase.from('projects').select('id, name, slug, creator_name').in('id', allProjectIds),
-          supabase.from('teacher_feedback').select('project_id').eq('teacher_id', user.id).in('project_id', allProjectIds),
-        ])
-        const reviewedIds = new Set((myFeedback || []).map(f => f.project_id))
-        const classNameByProject = {}
-        Object.entries(classProjects).forEach(([classId, ids]) => {
-          const cls_ = cls.find(c => c.id === classId)
-          ids.forEach(pid => { classNameByProject[pid] = cls_?.name })
-        })
-        setNeedsReview(
-          (projDetails || [])
-            .filter(p => !reviewedIds.has(p.id))
-            .map(p => ({ ...p, className: classNameByProject[p.id] }))
-        )
-      } else {
-        setNeedsReview([])
-      }
     }
     loadTurmas()
   }, [user, profile?.role])
@@ -2011,6 +2040,31 @@ export default function Dashboard() {
           )
         })()}
 
+        {/* ── Stats overview (professor only) ── */}
+        {isTeacher && turmas.length > 0 && (
+          <div className="dash-teacher-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 24 }}>
+            {[
+              { label: 'Alunos', value: totalMembers, color: C.blue },
+              { label: 'Projetos', value: turmas.reduce((s, t) => s + (t.project_count || 0), 0), color: '#8b5cf6' },
+              {
+                label: 'Score médio',
+                value: (() => {
+                  const withScore = turmas.filter(t => t.avg_score != null)
+                  if (!withScore.length) return '—'
+                  return Math.round(withScore.reduce((s, t) => s + t.avg_score, 0) / withScore.length)
+                })(),
+                color: '#f59e0b',
+              },
+              { label: 'Por rever', value: needsReview.length, color: needsReview.length > 0 ? '#ef4444' : '#22c55e' },
+            ].map(stat => (
+              <div key={stat.label} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: '14px 16px' }}>
+                <div style={{ fontSize: 24, fontWeight: 400, fontFamily: 'var(--font-heading)', color: stat.color, letterSpacing: '-0.5px' }}>{stat.value}</div>
+                <div style={{ fontSize: 11, color: C.muted, fontWeight: 600, marginTop: 2 }}>{stat.label}</div>
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* ── Primeiros passos (professor only) ── */}
         {isTeacher && (() => {
           const done = (turmas.length > 0 ? 1 : 0) + (totalMembers > 0 ? 1 : 0)
@@ -2083,6 +2137,78 @@ export default function Dashboard() {
                   +{needsReview.length - 5} projeto{needsReview.length - 5 !== 1 ? 's' : ''} por rever
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* ── Próximas defesas (professor only) ── */}
+        {isTeacher && upcomingDefenses.length > 0 && (
+          <div style={{ marginBottom: 8 }}>
+            <div className="dash-sec-hd">
+              <div className="dash-sec-label">
+                <Calendar size={13} /> Próximas defesas
+                <span className="dash-sec-count">{upcomingDefenses.length}</span>
+              </div>
+            </div>
+            <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, overflow: 'hidden' }}>
+              {upcomingDefenses.map((p, i) => {
+                const urgentColor = p.daysLeft <= 7 ? '#ef4444' : p.daysLeft <= 30 ? '#f97316' : C.blue
+                return (
+                  <div
+                    key={p.id}
+                    onClick={() => navigate(`/projeto/${p.slug}`)}
+                    style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: i < upcomingDefenses.length - 1 ? `1px solid ${C.border}` : 'none', cursor: 'pointer', transition: 'background 0.12s' }}
+                    onMouseEnter={e => e.currentTarget.style.background = C.cardHover}
+                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                  >
+                    <div style={{ width: 32, height: 32, borderRadius: 8, flexShrink: 0, background: `${urgentColor}18`, border: `1px solid ${urgentColor}40`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Calendar size={14} color={urgentColor} />
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
+                      <div style={{ fontSize: 11, color: C.subtle }}>{p.creator_name || 'Aluno'}{p.className ? ` · ${p.className}` : ''}</div>
+                    </div>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: urgentColor, flexShrink: 0 }}>
+                      {p.daysLeft === 0 ? 'Hoje' : p.daysLeft === 1 ? 'Amanhã' : `${p.daysLeft} dias`}
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* ── Atividade recente (professor only) ── */}
+        {isTeacher && recentActivity.length > 0 && (
+          <div style={{ marginBottom: 8 }}>
+            <div className="dash-sec-hd">
+              <div className="dash-sec-label">
+                <TrendingUp size={13} /> Atividade recente
+              </div>
+            </div>
+            <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, overflow: 'hidden' }}>
+              {recentActivity.map((p, i) => (
+                <div
+                  key={p.id}
+                  onClick={() => navigate(`/projeto/${p.slug}`)}
+                  style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: i < recentActivity.length - 1 ? `1px solid ${C.border}` : 'none', cursor: 'pointer', transition: 'background 0.12s' }}
+                  onMouseEnter={e => e.currentTarget.style.background = C.cardHover}
+                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                >
+                  <div style={{ width: 32, height: 32, borderRadius: 8, flexShrink: 0, background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Folder size={14} color="#22c55e" />
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
+                    <div style={{ fontSize: 11, color: C.subtle }}>{p.creator_name || 'Aluno'}{p.className ? ` · ${p.className}` : ''} · {timeAgoLabel(p.created_at)}</div>
+                  </div>
+                  {p.score != null && (
+                    <span style={{ fontSize: 12, fontWeight: 700, color: p.score >= 71 ? '#22c55e' : p.score >= 40 ? '#f59e0b' : '#ef4444', flexShrink: 0 }}>
+                      {p.score}
+                    </span>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
         )}
