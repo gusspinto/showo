@@ -34,6 +34,11 @@ const C = {
   orange: '#f97316',
 }
 
+// authenticated only has column-level SELECT grant on these (no email — that
+// comes from admin_get_users() instead) since migration 033; select('*')
+// fails outright and silently returns no rows.
+const PROFILE_COLUMNS = 'id, username, total_xp, created_at, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size, skills, school, project_draft'
+
 function StatCard({ icon, label, value, color = C.blue, sub }) {
   return (
     <div style={{
@@ -534,6 +539,7 @@ export default function Admin() {
   const [toast, setToast] = useState('')
   const [codes, setCodes] = useState([])
   const [codesLoading, setCodesLoading] = useState(false)
+  const [codesLoaded, setCodesLoaded] = useState(false)
   const [generatingCode, setGeneratingCode] = useState(false)
 
   // Guard
@@ -550,10 +556,12 @@ export default function Admin() {
     setLoading(true)
     try {
       const [profilesRes, projectsRes, emailsRes] = await Promise.all([
-        supabase.from('profiles').select('*').order('created_at', { ascending: false }),
+        supabase.from('profiles').select(PROFILE_COLUMNS).order('created_at', { ascending: false }),
         supabase.from('projects').select('*').order('created_at', { ascending: false }),
         supabase.rpc('admin_get_users'),
       ])
+      if (profilesRes.error) showToast('Erro ao carregar utilizadores: ' + profilesRes.error.message)
+      if (projectsRes.error) showToast('Erro ao carregar projetos: ' + projectsRes.error.message)
 
       const emailMap = {}
       if (emailsRes.data) {
@@ -583,6 +591,7 @@ export default function Admin() {
       supabase.from('professor_invite_codes').select('*').order('created_at', { ascending: false }),
       supabase.from('professor_invite_redemptions').select('code_id, user_id, redeemed_at').order('redeemed_at', { ascending: false }),
     ])
+    if (codesRes.error) showToast('Erro ao carregar códigos: ' + codesRes.error.message)
     const rows = codesRes.data || []
     const redemptions = redemptionsRes.data || []
 
@@ -600,11 +609,16 @@ export default function Admin() {
         .map(r => ({ user_id: r.user_id, redeemed_at: r.redeemed_at, name: nameMap[r.user_id] })),
     })))
     setCodesLoading(false)
+    setCodesLoaded(true)
   }, [])
 
+  // codesLoaded (not codes.length) gates the auto-load — an empty or failed
+  // fetch still counts as "loaded", otherwise a persistent error retries in
+  // an infinite loop (setCodesLoading(false) satisfies the old condition
+  // again immediately, re-triggering the effect on every failed attempt).
   useEffect(() => {
-    if (isAdmin && tab === 'invites' && codes.length === 0 && !codesLoading) loadCodes()
-  }, [isAdmin, tab, codes.length, codesLoading, loadCodes])
+    if (isAdmin && tab === 'invites' && !codesLoaded && !codesLoading) loadCodes()
+  }, [isAdmin, tab, codesLoaded, codesLoading, loadCodes])
 
   async function handleGenerateCode(label, maxUses) {
     setGeneratingCode(true)
