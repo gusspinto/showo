@@ -91,25 +91,18 @@ function JoinModal({ onClose, onJoin }) {
     if (!code.trim()) return
     setLoading(true)
     setError('')
-    const { data, error: err } = await supabase
-      .from('classes')
-      .select('id, name, code, teacher_name')
-      .eq('code', code.trim().toUpperCase())
-      .single()
+    // join_class both validates the code and registers membership
+    // server-side — a direct client upsert into class_members isn't
+    // reliable here since that table's INSERT policy was never captured in
+    // a tracked migration.
+    const { data: rows, error: err } = await supabase.rpc('join_class', { p_code: code.trim().toUpperCase() })
+    const data = rows?.[0]
 
     if (err || !data) {
       setError('Turma não encontrada. Verifica o código.')
       setLoading(false)
       return
     }
-
-    // Register actual membership — this was previously only saved to
-    // localStorage, so the teacher's member list never showed the student
-    // until they separately added a project to the class.
-    await supabase.from('class_members').upsert(
-      { class_id: data.id, user_id: user.id },
-      { onConflict: 'class_id,user_id' }
-    )
 
     // Save to localStorage
     const lsKey = `showo_turmas_${user.id}`

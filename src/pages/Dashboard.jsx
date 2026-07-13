@@ -421,7 +421,12 @@ function JoinTurmaModal({ onClose, navigate, onJoined }) {
     if (!trimmed) return
     setChecking(true); setError('')
     try {
-      const { data, error: sbErr } = await supabase.from('classes').select('id, name, code, teacher_name').eq('code', trimmed).single()
+      // join_class validates the code and registers membership server-side
+      // in one step (class_members' INSERT policy isn't reliable to hit
+      // directly from the client — it was never captured in a tracked
+      // migration).
+      const { data: rows, error: sbErr } = await supabase.rpc('join_class', { p_code: trimmed })
+      const data = rows?.[0]
       if (sbErr || !data) { setError('Código inválido. Verifica com o professor.'); return }
       setJoined(data)
       onJoined?.(data)
@@ -1735,13 +1740,7 @@ export default function Dashboard() {
                 localStorage.setItem(lsKey, JSON.stringify([...existing, turma]))
               }
             } catch {}
-            // Persist in DB so teacher can see all members
-            if (user?.id) {
-              supabase.from('class_members').upsert(
-                { class_id: turma.id, user_id: user.id },
-                { onConflict: 'class_id,user_id' }
-              )
-            }
+            // Membership itself was already registered server-side by join_class
           }}
         />
       )}
