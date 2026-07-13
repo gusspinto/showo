@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { MessageSquarePlus, X, Send, Image, Loader2, Check } from 'lucide-react'
+import { VenetianMask, X, Send, Image, Loader2, Check } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 
@@ -75,20 +75,38 @@ export default function FeedbackButton() {
           right: 20px;
           bottom: 24px;
           z-index: 490;
-          background: #1b78f7;
-          border: none;
-          border-radius: 50px;
-          padding: 10px 16px 10px 13px;
-          display: flex; align-items: center; gap: 7px;
-          color: #fff; font-size: 13px; font-weight: 700;
+          width: 46px; height: 46px;
+          background: var(--c-card);
+          border: 1px solid var(--c-border);
+          border-radius: 23px;
+          padding: 0;
+          display: flex; align-items: center;
+          overflow: hidden;
+          color: var(--c-muted); font-size: 13px; font-weight: 700;
           font-family: inherit; cursor: pointer;
-          box-shadow: 0 4px 20px rgba(27,120,247,0.45);
-          transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
+          opacity: 0.62;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+          transition: width 0.25s cubic-bezier(0.22,1,0.36,1), opacity 0.2s ease,
+                      border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
           -webkit-tap-highlight-color: transparent;
         }
-        .fb-fab:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(27,120,247,0.5); }
-        .fb-fab:active { transform: scale(0.95); }
-        .fb-fab-label { white-space: nowrap; }
+        .fb-fab:hover {
+          width: 176px;
+          opacity: 1;
+          border-color: rgba(27,120,247,0.45);
+          color: #1b78f7;
+          box-shadow: 0 4px 18px rgba(27,120,247,0.22);
+          transform: scale(1.03);
+        }
+        .fb-fab:active { transform: scale(0.96); }
+        .fb-fab svg { flex-shrink: 0; margin-left: 13px; transition: transform 0.3s ease; }
+        .fb-fab:hover svg { transform: rotate(-8deg); }
+        .fb-fab-label {
+          white-space: nowrap; margin-left: 8px;
+          opacity: 0;
+          transition: opacity 0.15s ease;
+        }
+        .fb-fab:hover .fb-fab-label { opacity: 1; transition-delay: 0.08s; }
         /* hide on project workspace/preview page so it doesn't overlap the editor */
         body.pv-active .fb-fab { display: none !important; }
 
@@ -132,11 +150,11 @@ export default function FeedbackButton() {
           }
         }
 
-        /* Mobile: sheet acima da bottom nav */
+        /* Mobile: sheet acima da bottom nav; sem hover, mantém-se sempre colapsado */
         @media (max-width: 600px) {
           .fb-fab { bottom: calc(84px + 12px); }
+          .fb-fab:hover { width: 46px; transform: none; }
           .fb-fab-label { display: none; }
-          .fb-fab { border-radius: 50%; width: 46px; height: 46px; padding: 0; justify-content: center; }
           .fb-sheet { bottom: 84px; border-radius: 22px 22px 0 0; }
         }
 
@@ -188,7 +206,7 @@ export default function FeedbackButton() {
       {/* FAB */}
       {!open && (
         <button className="fb-fab" onClick={handleOpen} aria-label="Deixar feedback anónimo">
-          <MessageSquarePlus size={18} />
+          <VenetianMask size={18} />
           <span className="fb-fab-label">Feedback anónimo</span>
         </button>
       )}
