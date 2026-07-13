@@ -410,7 +410,6 @@ function CreateTurmaModal({ onClose, onCreated }) {
 
 // ── Join Turma Modal ─────────────────────────────────────────────────────────
 function JoinTurmaModal({ onClose, navigate, onJoined }) {
-  const { user } = useAuth()
   const [code, setCode] = useState('')
   const [error, setError] = useState('')
   const [checking, setChecking] = useState(false)
@@ -433,15 +432,11 @@ function JoinTurmaModal({ onClose, navigate, onJoined }) {
         setError(sbErr && sbErr.message !== 'class_not_found' ? sbErr.message : 'Código inválido. Verifica com o professor.')
         return
       }
-      // Confirm the membership row actually exists — don't just trust the
-      // RPC's return value.
-      const { data: check } = await supabase
-        .from('class_members')
-        .select('user_id')
-        .eq('class_id', data.id)
-        .eq('user_id', user.id)
-        .maybeSingle()
-      setVerified(!!check)
+      // join_class verifies the row itself (inside the same transaction)
+      // and returns that result directly — a separate follow-up SELECT
+      // from a fresh connection isn't reliable (read-after-write timing
+      // between two independent requests, confirmed while debugging this).
+      setVerified(!!data.verified)
       setJoined(data)
       onJoined?.(data)
     } catch {

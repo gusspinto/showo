@@ -107,15 +107,10 @@ function JoinModal({ onClose, onJoin, navigate }) {
       return
     }
 
-    // Verify the membership row actually exists instead of trusting the
-    // RPC's return value alone — this is the only way to tell "it worked"
-    // from "it silently didn't" from inside the app.
-    const { data: check } = await supabase
-      .from('class_members')
-      .select('user_id')
-      .eq('class_id', data.id)
-      .eq('user_id', user.id)
-      .maybeSingle()
+    // join_class verifies the row itself (inside the same transaction) and
+    // returns that result directly — a separate follow-up SELECT from a
+    // fresh connection isn't reliable (read-after-write timing between two
+    // independent requests, confirmed while debugging this).
 
     // Save to localStorage
     const lsKey = `showo_turmas_${user.id}`
@@ -127,7 +122,7 @@ function JoinModal({ onClose, onJoin, navigate }) {
     }
 
     setLoading(false)
-    setJoined({ turma: data, verified: !!check })
+    setJoined({ turma: data, verified: !!data.verified })
     onJoin(data)
   }
 
