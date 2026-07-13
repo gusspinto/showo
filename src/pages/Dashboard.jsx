@@ -589,7 +589,8 @@ function TurmaCard({ turma, navigate }) {
         {turma.subject && <div style={{ color: C.muted, fontSize: 12, marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{turma.subject}</div>}
         <div style={{ color: C.subtle, fontSize: 11, marginTop: 4, display: 'flex', gap: 10, alignItems: 'center' }}>
           <span style={{ color: C.blue, fontWeight: 700, letterSpacing: 1 }}>{turma.code}</span>
-          {turma.project_count != null && <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}><Users size={10} />{turma.project_count} projeto{turma.project_count !== 1 ? 's' : ''}</span>}
+          {turma.member_count != null && <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}><Users size={10} />{turma.member_count} aluno{turma.member_count !== 1 ? 's' : ''}</span>}
+          {turma.project_count != null && <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}><Folder size={10} />{turma.project_count} projeto{turma.project_count !== 1 ? 's' : ''}</span>}
           {turma.avg_score != null && <span style={{ color: turma.avg_score >= 90 ? C.green : turma.avg_score >= 71 ? C.blue : turma.avg_score >= 40 ? C.yellow : C.red, fontWeight: 700 }}>⌀ {turma.avg_score}</span>}
         </div>
       </div>
@@ -1436,11 +1437,14 @@ export default function Dashboard() {
         projs?.forEach(p => { scoreMap[p.id] = p.score })
       }
 
+      const memberCounts = {}
+      members?.forEach(m => { memberCounts[m.class_id] = (memberCounts[m.class_id] || 0) + 1 })
+
       setTurmas(cls.map(c => {
         const ids = classProjects[c.id] ?? []
         const scores = ids.map(id => scoreMap[id]).filter(s => s != null)
         const avg_score = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null
-        return { ...c, project_count: counts[c.id] ?? 0, avg_score }
+        return { ...c, project_count: counts[c.id] ?? 0, member_count: memberCounts[c.id] ?? 0, avg_score }
       }))
 
       // "Needs attention" — projects in any of the teacher's turmas that

@@ -746,50 +746,65 @@ export default function TurmaPage() {
           )
         })()}
 
-        {/* Members — students only */}
-        {members.filter(m => m.role !== 'professor').length > 0 && (
-          <div style={{ marginBottom: 32 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-              <Users2 size={15} color={C.muted} />
-              <span style={{ fontSize: 13, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.07em' }}>
-                Membros
-              </span>
-              <span style={{ fontSize: 11, fontWeight: 700, color: C.subtle }}>
-                {members.filter(m => m.role !== 'professor').length}
-              </span>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 10 }}>
-              {members.filter(m => m.role !== 'professor').map(m => (
-                <div key={m.user_id} style={{
-                  background: C.card, border: `1px solid ${C.border}`,
-                  borderRadius: 10, padding: '14px 16px',
-                  display: 'flex', alignItems: 'center', gap: 12,
-                }}>
-                  <Avatar avatarUrl={m.avatar_url} name={m.full_name} size={38} />
-                  <div style={{ minWidth: 0, flex: 1 }}>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {m.full_name}
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 3 }}>
-                      <span style={{ fontSize: 11, color: C.muted }}>
-                        {m.projectCount === 0 ? 'Sem projetos' : `${m.projectCount} projeto${m.projectCount !== 1 ? 's' : ''}`}
-                      </span>
-                    </div>
-                  </div>
-                  {isTeacher && (
-                    <button
-                      onClick={() => setRemovingMember({ user_id: m.user_id, full_name: m.full_name })}
-                      title="Remover da turma"
-                      style={{ background: 'none', border: 'none', color: C.subtle, cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center', flexShrink: 0, borderRadius: 6 }}
-                    >
-                      <UserMinus size={15} />
-                    </button>
-                  )}
+        {/* Members — students only. Always visible (even empty) so the page
+            doesn't read as "just a place to dump projects" — the roster is
+            the point of a turma. */}
+        {(() => {
+          const students = members.filter(m => m.role !== 'professor')
+          return (
+            <div style={{ marginBottom: 32 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+                <Users2 size={15} color={C.muted} />
+                <span style={{ fontSize: 13, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.07em' }}>
+                  Membros
+                </span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: C.subtle }}>
+                  {students.length}
+                </span>
+              </div>
+              {students.length === 0 ? (
+                <div style={{ background: C.card, border: `1px dashed ${C.border}`, borderRadius: 10, padding: '24px 20px', textAlign: 'center' }}>
+                  <p style={{ margin: 0, fontSize: 13, color: C.muted }}>
+                    {isTeacher
+                      ? <>Ainda sem alunos. Partilha o código <strong style={{ color: C.blue }}>{turma.code}</strong> para começarem a entrar.</>
+                      : 'Ainda não há colegas nesta turma.'}
+                  </p>
                 </div>
-              ))}
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 10 }}>
+                  {students.map(m => (
+                    <div key={m.user_id} style={{
+                      background: C.card, border: `1px solid ${C.border}`,
+                      borderRadius: 10, padding: '14px 16px',
+                      display: 'flex', alignItems: 'center', gap: 12,
+                    }}>
+                      <Avatar avatarUrl={m.avatar_url} name={m.full_name} size={38} />
+                      <div style={{ minWidth: 0, flex: 1 }}>
+                        <div style={{ fontSize: 14, fontWeight: 600, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {m.full_name}
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 3 }}>
+                          <span style={{ fontSize: 11, color: C.muted }}>
+                            {m.projectCount === 0 ? 'Sem projetos' : `${m.projectCount} projeto${m.projectCount !== 1 ? 's' : ''}`}
+                          </span>
+                        </div>
+                      </div>
+                      {isTeacher && (
+                        <button
+                          onClick={() => setRemovingMember({ user_id: m.user_id, full_name: m.full_name })}
+                          title="Remover da turma"
+                          style={{ background: 'none', border: 'none', color: C.subtle, cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center', flexShrink: 0, borderRadius: 6 }}
+                        >
+                          <UserMinus size={15} />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-          </div>
-        )}
+          )
+        })()}
 
         {/* Projects */}
         {sortedProjects.length === 0 ? (
