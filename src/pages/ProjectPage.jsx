@@ -5538,29 +5538,6 @@ export default function ProjectPage() {
                   <div style={{ flexBasis: '100%', fontSize: 12, color: colors.muted, lineHeight: 1.5 }}>{project.teacher_score_note}</div>
                 )}
               </div>
-              <button
-                onClick={toggleScoreHistory}
-                style={{ marginTop: 10, background: 'none', border: 'none', color: colors.muted, fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', padding: 0, textDecoration: 'underline' }}
-              >
-                {showScoreHistory ? 'Ocultar histórico' : 'Ver histórico'}
-              </button>
-              {showScoreHistory && (
-                scoreHistory == null ? (
-                  <p style={{ margin: '8px 0 0', fontSize: 12, color: colors.muted }}>A carregar…</p>
-                ) : scoreHistory.length === 0 ? (
-                  <p style={{ margin: '8px 0 0', fontSize: 12, color: colors.muted }}>Ainda não há avaliações anteriores.</p>
-                ) : (
-                  <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    {scoreHistory.map(h => (
-                      <div key={h.id} style={{ display: 'flex', alignItems: 'baseline', gap: 8, fontSize: 12 }}>
-                        <span style={{ fontWeight: 800, color: colors.muted }}>{h.score}/20</span>
-                        <span style={{ color: colors.subtle, fontSize: 11 }}>{new Date(h.created_at).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-                        {h.note && <span style={{ color: colors.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>— {h.note}</span>}
-                      </div>
-                    ))}
-                  </div>
-                )
-              )}
             </div>
           )}
 
