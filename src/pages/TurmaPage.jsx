@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
-import { Folder, Check, Search, User, Copy, Inbox, Download, MessageSquare, X, ChevronUp, ChevronDown, ArrowRight, Pencil, UserMinus, GraduationCap } from 'lucide-react'
+import { Folder, Check, Search, User, Copy, Inbox, Download, MessageSquare, X, ChevronUp, ChevronDown, ArrowRight, Pencil, UserMinus, GraduationCap, CheckCircle, AlertTriangle } from 'lucide-react'
 import CreateProjectModal from '../components/CreateProjectModal'
 
 const C = {
@@ -242,6 +242,8 @@ export default function TurmaPage() {
   const [isTeacher, setIsTeacher] = useState(false)
   const [sortBy, setSortBy] = useState('score')
   const [sortAsc, setSortAsc] = useState(false)
+  const [selectedIds, setSelectedIds] = useState(new Set())
+  const [bulkSaving, setBulkSaving] = useState(false)
   const [feedbackProject, setFeedbackProject] = useState(null)
   const [copiedLink, setCopiedLink] = useState(false)
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -398,6 +400,31 @@ export default function TurmaPage() {
     await supabase.from('class_projects').delete().eq('class_id', turma.id).eq('project_id', projectId)
     setProjects(prev => prev.filter(p => p.id !== projectId))
     showToast('Projeto removido da turma.')
+  }
+
+  function toggleSelected(projectId) {
+    setSelectedIds(prev => {
+      const next = new Set(prev)
+      if (next.has(projectId)) next.delete(projectId)
+      else next.add(projectId)
+      return next
+    })
+  }
+
+  async function handleBulkStatus(status) {
+    if (selectedIds.size === 0 || bulkSaving) return
+    setBulkSaving(true)
+    const ids = [...selectedIds]
+    const results = await Promise.all(
+      ids.map(id => supabase.rpc('set_project_review_status', { p_project_id: id, p_status: status }))
+    )
+    const failed = results.filter(r => r.error).length
+    setProjects(prev => prev.map(p => ids.includes(p.id) ? { ...p, review_status: status } : p))
+    setSelectedIds(new Set())
+    setBulkSaving(false)
+    showToast(failed > 0
+      ? `Estado atualizado em ${ids.length - failed} de ${ids.length} projetos.`
+      : `Estado atualizado em ${ids.length} projeto${ids.length !== 1 ? 's' : ''}.`)
   }
 
   function copyCode() {
@@ -815,7 +842,7 @@ export default function TurmaPage() {
 
         {/* Projects */}
         {sortedProjects.length > 0 && (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 14 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <span style={{ fontSize: 13, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.07em' }}>
                 Projetos
@@ -824,7 +851,32 @@ export default function TurmaPage() {
                 {sortedProjects.length}
               </span>
             </div>
-            {isTeacher && (
+            {isTeacher && selectedIds.size > 0 ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                <span style={{ fontSize: 12, color: C.subtle, fontWeight: 600 }}>{selectedIds.size} selecionado{selectedIds.size !== 1 ? 's' : ''}</span>
+                <button
+                  onClick={() => handleBulkStatus('ready_for_defense')}
+                  disabled={bulkSaving}
+                  style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: 7, padding: '6px 11px', color: '#22c55e', fontSize: 12, fontWeight: 700, cursor: bulkSaving ? 'default' : 'pointer', fontFamily: 'inherit' }}
+                >
+                  <CheckCircle size={12} /> Pronto
+                </button>
+                <button
+                  onClick={() => handleBulkStatus('needs_revision')}
+                  disabled={bulkSaving}
+                  style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.3)', borderRadius: 7, padding: '6px 11px', color: '#f97316', fontSize: 12, fontWeight: 700, cursor: bulkSaving ? 'default' : 'pointer', fontFamily: 'inherit' }}
+                >
+                  <AlertTriangle size={12} /> Revisão
+                </button>
+                <button
+                  onClick={() => setSelectedIds(new Set())}
+                  disabled={bulkSaving}
+                  style={{ background: 'transparent', border: 'none', color: C.muted, fontSize: 12, fontWeight: 600, cursor: bulkSaving ? 'default' : 'pointer', fontFamily: 'inherit', padding: '6px 4px' }}
+                >
+                  Limpar
+                </button>
+              </div>
+            ) : isTeacher && (
               <button
                 onClick={() => navigate(`/projeto/${sortedProjects[0].slug}`, {
                   state: {
@@ -863,7 +915,13 @@ export default function TurmaPage() {
           <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, overflow: 'hidden' }}>
             <div style={{ overflowX: 'auto' }}>
             {/* Table header */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(160px,1fr) 64px 120px 88px 130px', gap: 0, padding: '10px 16px', borderBottom: `1px solid ${C.border}`, background: 'var(--c-bg)', minWidth: 580 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '28px minmax(160px,1fr) 64px 120px 88px 130px', gap: 0, padding: '10px 16px', borderBottom: `1px solid ${C.border}`, background: 'var(--c-bg)', minWidth: 608, alignItems: 'center' }}>
+              <input
+                type="checkbox"
+                checked={sortedProjects.length > 0 && selectedIds.size === sortedProjects.length}
+                onChange={() => setSelectedIds(selectedIds.size === sortedProjects.length ? new Set() : new Set(sortedProjects.map(p => p.id)))}
+                style={{ cursor: 'pointer' }}
+              />
               {[['name','Projeto'], ['score','Score'], ['completude','Completude'], ['updated','Data'], [null,'Ações']].map(([field, label]) => (
                 <div key={label} onClick={() => field && toggleSort(field)} style={{ fontSize: 11, fontWeight: 700, color: field ? (sortBy === field ? C.blue : C.muted) : C.muted, textTransform: 'uppercase', letterSpacing: 0.5, cursor: field ? 'pointer' : 'default', display: 'flex', alignItems: 'center', gap: 4, userSelect: 'none' }}>
                   {label}
@@ -875,9 +933,16 @@ export default function TurmaPage() {
               const completude = computeCompletude(p)
               const updated = p.created_at ? new Date(p.created_at).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' }) : '—'
               return (
-                <div key={p.id} style={{ display: 'grid', gridTemplateColumns: 'minmax(160px,1fr) 64px 120px 88px 130px', gap: 0, padding: '12px 16px', borderBottom: i < sortedProjects.length - 1 ? `1px solid ${C.border}` : 'none', alignItems: 'center', transition: 'background 0.12s', minWidth: 580 }}
+                <div key={p.id} style={{ display: 'grid', gridTemplateColumns: '28px minmax(160px,1fr) 64px 120px 88px 130px', gap: 0, padding: '12px 16px', borderBottom: i < sortedProjects.length - 1 ? `1px solid ${C.border}` : 'none', alignItems: 'center', transition: 'background 0.12s', minWidth: 608 }}
                   onMouseEnter={e => e.currentTarget.style.background = C.cardHover}
                   onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.has(p.id)}
+                    onChange={() => toggleSelected(p.id)}
+                    onClick={e => e.stopPropagation()}
+                    style={{ cursor: 'pointer' }}
+                  />
                   <div style={{ minWidth: 0, paddingRight: 12 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }} onClick={() => navigate(`/projeto/${p.slug}`)}>
                       {p.review_status && (
