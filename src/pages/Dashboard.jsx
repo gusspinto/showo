@@ -1169,6 +1169,7 @@ export default function Dashboard() {
   const [totalMembers, setTotalMembers] = useState(0)
   const [studentTurmas, setStudentTurmas] = useState([])
   const [loadingStudentTurmas, setLoadingStudentTurmas] = useState(true)
+  const [profNotifs, setProfNotifs] = useState([]) // unread professor notifications (grade/feedback/status) — aluno only
   const [showCreateTurma, setShowCreateTurma] = useState(false)
   const [showJoinModal, setShowJoinModal] = useState(false)
   const [showTurmasModal, setShowTurmasModal] = useState(false)
@@ -1553,6 +1554,26 @@ export default function Dashboard() {
     }
     loadStudentTurmas()
   }, [user, profile?.role])
+
+  // ── Unread professor notifications (aluno only) — grade given, feedback left, status flagged ──
+  useEffect(() => {
+    if (!user || profile?.role === 'professor') return
+    supabase
+      .from('notifications')
+      .select('id, message, project_slug, created_at')
+      .eq('user_id', user.id)
+      .eq('type', 'TEACHER_FEEDBACK')
+      .eq('read', false)
+      .order('created_at', { ascending: false })
+      .limit(5)
+      .then(({ data }) => { if (data) setProfNotifs(data) })
+  }, [user, profile?.role])
+
+  async function dismissProfNotif(id, slug) {
+    setProfNotifs(prev => prev.filter(n => n.id !== id))
+    await supabase.from('notifications').update({ read: true }).eq('id', id)
+    if (slug) navigate(`/projeto/${slug}`)
+  }
 
   if (authLoading) {
     return (
@@ -2355,28 +2376,70 @@ export default function Dashboard() {
             )
           })()}
 
-          {/* ── Turma hint (alunos only) — minimal, low-key, easy to ignore ── */}
-          {!isTeacher && !loadingStudentTurmas && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: C.subtle }}>
-              {studentTurmas.length > 0 ? (
-                <>
-                  <Users2 size={12} />
-                  <span>
-                    {studentTurmas.length === 1 ? studentTurmas[0].name : `${studentTurmas.length} turmas`}
-                  </span>
-                  <button onClick={() => setShowTurmasModal(true)} style={{ background: 'none', border: 'none', color: C.muted, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', padding: 0, textDecoration: 'underline' }}>
-                    ver
-                  </button>
-                </>
-              ) : (
-                <>
-                  <span>Não estás numa turma.</span>
-                  <button onClick={() => setShowJoinModal(true)} style={{ background: 'none', border: 'none', color: C.muted, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', padding: 0, textDecoration: 'underline' }}>
-                    entrar numa turma
-                  </button>
-                </>
-              )}
+          {/* ── Novidades do professor (alunos only) — new grade/feedback/status, mirrors the teacher's "needs attention" list ── */}
+          {!isTeacher && profNotifs.length > 0 && (
+            <div style={{ marginBottom: 4 }}>
+              <div className="dash-sec-hd">
+                <div className="dash-sec-label">
+                  <GraduationCap size={13} /> Novidades do professor
+                  <span className="dash-sec-count">{profNotifs.length}</span>
+                </div>
+              </div>
+              <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, overflow: 'hidden' }}>
+                {profNotifs.map((n, i) => (
+                  <div
+                    key={n.id}
+                    onClick={() => dismissProfNotif(n.id, n.project_slug)}
+                    style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: i < profNotifs.length - 1 ? `1px solid ${C.border}` : 'none', cursor: 'pointer', transition: 'background 0.12s' }}
+                    onMouseEnter={e => e.currentTarget.style.background = C.cardHover}
+                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                  >
+                    <div style={{ width: 32, height: 32, borderRadius: 8, flexShrink: 0, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <GraduationCap size={14} color={C.blue} />
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, color: C.text, lineHeight: 1.4 }}>{n.message}</div>
+                      <div style={{ fontSize: 11, color: C.subtle, marginTop: 2 }}>{timeAgoLabel(n.created_at)}</div>
+                    </div>
+                    <ChevronRight size={14} color={C.subtle} style={{ flexShrink: 0 }} />
+                  </div>
+                ))}
+              </div>
             </div>
+          )}
+
+          {/* ── Turma card (alunos only) ── */}
+          {!isTeacher && !loadingStudentTurmas && (
+            studentTurmas.length > 0 ? (
+              <div
+                onClick={() => studentTurmas.length === 1 ? navigate(`/turma/${studentTurmas[0].code}`) : setShowTurmasModal(true)}
+                style={{ display: 'flex', alignItems: 'center', gap: 12, background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: '14px 16px', cursor: 'pointer', transition: 'background 0.12s' }}
+                onMouseEnter={e => e.currentTarget.style.background = C.cardHover}
+                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+              >
+                <div style={{ width: 36, height: 36, borderRadius: 9, flexShrink: 0, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Users2 size={16} color={C.blue} />
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {studentTurmas.length === 1 ? studentTurmas[0].name : `${studentTurmas.length} turmas`}
+                  </div>
+                  <div style={{ fontSize: 12, color: C.muted, marginTop: 1 }}>
+                    {studentTurmas.length === 1
+                      ? (studentTurmas[0].teacher_name || 'Ver turma')
+                      : studentTurmas.map(t => t.name).join(' · ')}
+                  </div>
+                </div>
+                <ChevronRight size={14} color={C.subtle} style={{ flexShrink: 0 }} />
+              </div>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: C.subtle }}>
+                <span>Não estás numa turma.</span>
+                <button onClick={() => setShowJoinModal(true)} style={{ background: 'none', border: 'none', color: C.muted, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', padding: 0, textDecoration: 'underline' }}>
+                  entrar numa turma
+                </button>
+              </div>
+            )
           )}
 
           {/* ── Insights Block (antes dos projetos, desktop only) ── */}
