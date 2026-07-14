@@ -603,10 +603,10 @@ function TurmaCard({ turma, navigate }) {
       onClick={() => navigate(`/turma/${turma.code}`)}
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
-      style={{ background: hov ? C.cardHover : C.card, border: `1px solid ${hov ? C.borderBright : C.border}`, borderRadius: 10, padding: '16px 18px', cursor: 'pointer', transition: 'background 0.15s, border-color 0.15s', display: 'flex', alignItems: 'center', gap: 14 }}
+      style={{ background: hov ? C.cardHover : C.card, border: `1px solid ${hov ? C.borderBright : C.border}`, borderRadius: 12, padding: '14px 16px', cursor: 'pointer', transition: 'background 0.15s, border-color 0.15s', display: 'flex', alignItems: 'center', gap: 12 }}
     >
-      <div style={{ width: 40, height: 40, borderRadius: 9, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-        <Users2 size={18} color="#1b78f7" />
+      <div style={{ width: 36, height: 36, borderRadius: 9, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <Users2 size={16} color="#1b78f7" />
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ color: C.text, fontSize: 14, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{turma.name}</div>
