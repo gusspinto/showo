@@ -5250,7 +5250,7 @@ export default function ProjectPage() {
           {isProfessor && !(reviewQueue && reviewQueue.length > 0) && location.state?.turmaCode && (
             <button
               onClick={() => navigate(`/turma/${location.state.turmaCode}`)}
-              style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.22)', borderRadius: 8, padding: '9px', color: '#818cf8', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+              style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(27,120,247,0.06)', border: '1px solid rgba(27,120,247,0.22)', borderRadius: 8, padding: '9px', color: '#1b78f7', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
             >
               <ChevronLeft size={13} /> Voltar {location.state?.turmaName ? `a "${location.state.turmaName}"` : 'à turma'}
             </button>
@@ -5258,7 +5258,7 @@ export default function ProjectPage() {
 
           {/* Professor: batch review queue, started from the turma's "Avaliar todos" */}
           {isProfessor && reviewQueue && reviewQueue.length > 0 && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.22)', borderRadius: 8, padding: '6px 8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(27,120,247,0.06)', border: '1px solid rgba(27,120,247,0.22)', borderRadius: 8, padding: '6px 8px' }}>
               <button
                 onClick={() => goToReviewIndex(reviewIndex - 1)}
                 disabled={reviewIndex === 0}
@@ -5379,10 +5379,10 @@ export default function ProjectPage() {
             const hasSavedScore = project.teacher_score != null
 
             return (
-              <div style={{ background: 'rgba(99,102,241,0.05)', border: '1px solid rgba(99,102,241,0.22)', borderRadius: 12, overflow: 'hidden', marginBottom: 4 }}>
+              <div style={{ background: 'rgba(27,120,247,0.05)', border: '1px solid rgba(27,120,247,0.22)', borderRadius: 12, overflow: 'hidden', marginBottom: 4 }}>
                 {/* Header */}
-                <div style={{ padding: '13px 16px 10px', borderBottom: (juryEditing || hasSavedScore) ? '1px solid rgba(99,102,241,0.12)' : 'none', display: 'flex', alignItems: 'center', gap: 9 }}>
-                  <ClipboardList size={14} color="#818cf8" />
+                <div style={{ padding: '13px 16px 10px', borderBottom: (juryEditing || hasSavedScore) ? '1px solid rgba(27,120,247,0.12)' : 'none', display: 'flex', alignItems: 'center', gap: 9 }}>
+                  <ClipboardList size={14} color="#1b78f7" />
                   <span style={{ fontSize: 13, fontWeight: 700, color: colors.text, flex: 1 }}>Avaliação</span>
                   {juryEditing && hasSavedScore && (
                     <button onClick={() => setJuryEditing(false)} style={{ background: 'none', border: 'none', color: colors.muted, fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}>Cancelar</button>
@@ -5401,7 +5401,7 @@ export default function ProjectPage() {
                       )}
                       <button
                         onClick={() => setJuryEditing(true)}
-                        style={{ marginLeft: 'auto', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 5, background: 'transparent', border: '1px solid rgba(99,102,241,0.3)', borderRadius: 7, padding: '6px 10px', color: '#818cf8', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+                        style={{ marginLeft: 'auto', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 5, background: 'transparent', border: '1px solid rgba(27,120,247,0.3)', borderRadius: 7, padding: '6px 10px', color: '#1b78f7', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
                       >
                         <Pencil size={11} /> Reavaliar
                       </button>
@@ -5508,7 +5508,7 @@ export default function ProjectPage() {
                         }}
                         style={{
                           width: '100%', padding: '10px', borderRadius: 8,
-                          background: jurySaved ? 'rgba(34,197,94,0.12)' : '#6366f1',
+                          background: jurySaved ? 'rgba(34,197,94,0.12)' : '#1b78f7',
                           border: jurySaved ? '1px solid rgba(34,197,94,0.3)' : 'none',
                           color: jurySaved ? '#22c55e' : '#fff',
                           fontSize: 13, fontWeight: 700, cursor: !allRated || jurySaving ? 'default' : 'pointer',
@@ -5527,9 +5527,9 @@ export default function ProjectPage() {
 
           {/* ── Nota do professor — visible to the owner once graded ── */}
           {isOwner && project.teacher_score != null && (
-            <div style={{ background: 'rgba(99,102,241,0.05)', border: '1px solid rgba(99,102,241,0.22)', borderRadius: 12, padding: '13px 16px' }}>
+            <div style={{ background: 'rgba(27,120,247,0.05)', border: '1px solid rgba(27,120,247,0.22)', borderRadius: 12, padding: '13px 16px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-                <ClipboardList size={14} color="#818cf8" style={{ flexShrink: 0 }} />
+                <ClipboardList size={14} color="#1b78f7" style={{ flexShrink: 0 }} />
                 <span style={{ fontSize: 13, fontWeight: 700, color: colors.text }}>Nota do professor</span>
                 <span style={{ marginLeft: 'auto', fontSize: 20, fontWeight: 900, color: project.teacher_score >= 16 ? '#22c55e' : project.teacher_score >= 10 ? '#1b78f7' : '#f97316', letterSpacing: '-0.5px', flexShrink: 0 }}>
                   {project.teacher_score}<span style={{ fontSize: 11, color: colors.muted, fontWeight: 500 }}>/20</span>
@@ -5570,17 +5570,17 @@ export default function ProjectPage() {
             const visibleFeedback = teacherFeedback.filter(f => f.field_key !== 'jury_eval')
             const myFeedback = isProfessor ? visibleFeedback.filter(f => f.teacher_id === user?.id) : visibleFeedback
             return (
-              <div style={{ background: 'rgba(251,191,36,0.04)', border: '1px solid rgba(251,191,36,0.22)', borderRadius: 12, overflow: 'hidden' }}>
+              <div style={{ background: 'rgba(27,120,247,0.04)', border: '1px solid rgba(27,120,247,0.22)', borderRadius: 12, overflow: 'hidden' }}>
                 {/* Header */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 16px', borderBottom: myFeedback.length > 0 || showFeedbackForm ? '1px solid rgba(251,191,36,0.12)' : 'none' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 16px', borderBottom: myFeedback.length > 0 || showFeedbackForm ? '1px solid rgba(27,120,247,0.12)' : 'none' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                    <GraduationCap size={14} color="#fbbf24" />
+                    <GraduationCap size={14} color="#1b78f7" />
                     <span style={{ fontSize: 13, fontWeight: 700, color: colors.text }}>Feedback do Professor</span>
                   </div>
                   {isProfessor && (
                     <button
                       onClick={() => setShowFeedbackForm(f => !f)}
-                      style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, padding: '4px 9px', borderRadius: 6, border: `1px solid ${showFeedbackForm ? 'rgba(251,191,36,0.5)' : 'rgba(251,191,36,0.3)'}`, background: showFeedbackForm ? 'rgba(251,191,36,0.15)' : 'transparent', color: '#fbbf24', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700 }}
+                      style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, padding: '4px 9px', borderRadius: 6, border: `1px solid ${showFeedbackForm ? 'rgba(27,120,247,0.5)' : 'rgba(27,120,247,0.3)'}`, background: showFeedbackForm ? 'rgba(27,120,247,0.15)' : 'transparent', color: '#1b78f7', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700 }}
                     >
                       {showFeedbackForm ? <><X size={11} /> Fechar</> : <><Pencil size={11} /> Editar</>}
                     </button>
@@ -5596,10 +5596,10 @@ export default function ProjectPage() {
                       return (
                       <div
                         key={f.id}
-                        style={{ padding: '10px 16px', borderBottom: idx < myFeedback.length - 1 ? '1px solid rgba(251,191,36,0.08)' : 'none', opacity: resolved && !isProfessor ? 0.75 : 1 }}
+                        style={{ padding: '10px 16px', borderBottom: idx < myFeedback.length - 1 ? '1px solid rgba(27,120,247,0.08)' : 'none', opacity: resolved && !isProfessor ? 0.75 : 1 }}
                       >
                         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-                          <span style={{ fontSize: 9, fontWeight: 800, color: '#fbbf24', background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.2)', borderRadius: 4, padding: '2px 6px', letterSpacing: 0.5, textTransform: 'uppercase', flexShrink: 0, marginTop: 2, whiteSpace: 'nowrap' }}>
+                          <span style={{ fontSize: 9, fontWeight: 800, color: '#1b78f7', background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.2)', borderRadius: 4, padding: '2px 6px', letterSpacing: 0.5, textTransform: 'uppercase', flexShrink: 0, marginTop: 2, whiteSpace: 'nowrap' }}>
                             {FB_SECTION_LABELS[f.field_key] || f.field_key}
                           </span>
                           <span style={{ flex: 1, fontSize: 13, color: colors.text, lineHeight: 1.5, textDecoration: resolved ? 'line-through' : 'none', textDecorationColor: 'rgba(148,163,184,0.5)' }}>{f.comment}</span>
@@ -5677,10 +5677,10 @@ export default function ProjectPage() {
 
                 {/* Feedback form */}
                 {isProfessor && showFeedbackForm && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '12px 16px', borderTop: myFeedback.length > 0 ? '1px solid rgba(251,191,36,0.12)' : 'none' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '12px 16px', borderTop: myFeedback.length > 0 ? '1px solid rgba(27,120,247,0.12)' : 'none' }}>
                     <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
                       {Object.entries(FB_SECTION_LABELS).map(([k, l]) => (
-                        <button key={k} onClick={() => setFbFieldKey(k)} style={{ fontSize: 11, padding: '3px 8px', borderRadius: 5, border: `1px solid ${fbFieldKey === k ? '#fbbf24' : colors.border}`, background: fbFieldKey === k ? 'rgba(251,191,36,0.12)' : 'transparent', color: fbFieldKey === k ? '#fbbf24' : colors.muted, cursor: 'pointer', fontFamily: 'inherit', fontWeight: fbFieldKey === k ? 700 : 400 }}>{l}</button>
+                        <button key={k} onClick={() => setFbFieldKey(k)} style={{ fontSize: 11, padding: '3px 8px', borderRadius: 5, border: `1px solid ${fbFieldKey === k ? '#1b78f7' : colors.border}`, background: fbFieldKey === k ? 'rgba(27,120,247,0.12)' : 'transparent', color: fbFieldKey === k ? '#1b78f7' : colors.muted, cursor: 'pointer', fontFamily: 'inherit', fontWeight: fbFieldKey === k ? 700 : 400 }}>{l}</button>
                       ))}
                     </div>
                     <textarea value={fbComment} onChange={e => setFbComment(e.target.value)} placeholder={`Feedback sobre ${FB_SECTION_LABELS[fbFieldKey]}…`} rows={3} style={{ width: '100%', background: 'var(--c-bg)', border: `1px solid ${colors.border}`, borderRadius: 8, padding: '9px 11px', color: colors.text, fontSize: 13, fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box', outline: 'none' }} />
