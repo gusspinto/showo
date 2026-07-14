@@ -402,6 +402,12 @@ export default function TurmaPage() {
     showToast('Projeto removido da turma.')
   }
 
+  // So a professor opening a single project (not the batch "Avaliar todos" flow)
+  // still gets a "Voltar à turma" link on the project page.
+  function goToProject(slug) {
+    navigate(`/projeto/${slug}`, { state: { turmaCode: turma.code, turmaName: turma.name } })
+  }
+
   function toggleSelected(projectId) {
     setSelectedIds(prev => {
       const next = new Set(prev)
@@ -945,7 +951,7 @@ export default function TurmaPage() {
                     style={{ cursor: 'pointer' }}
                   />
                   <div style={{ minWidth: 0, paddingRight: 12 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }} onClick={() => navigate(`/projeto/${p.slug}`)}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }} onClick={() => goToProject(p.slug)}>
                       {p.review_status && (
                         <span
                           title={p.review_status === 'ready_for_defense' ? 'Pronto para defesa' : 'Precisa de revisão'}
@@ -970,7 +976,7 @@ export default function TurmaPage() {
                   </div>
                   <div style={{ fontSize: 12, color: C.muted }}>{updated}</div>
                   <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
-                    <button onClick={() => navigate(`/projeto/${p.slug}`)} style={{ fontSize: 12, padding: '5px 11px', borderRadius: 6, border: `1px solid ${C.border}`, background: 'transparent', color: C.muted, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>Ver</button>
+                    <button onClick={() => goToProject(p.slug)} style={{ fontSize: 12, padding: '5px 11px', borderRadius: 6, border: `1px solid ${C.border}`, background: 'transparent', color: C.muted, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>Ver</button>
                     <button onClick={() => setFeedbackProject(p)} title="Feedback" style={{ padding: '5px 8px', borderRadius: 6, border: '1px solid rgba(27,120,247,0.3)', background: 'rgba(27,120,247,0.08)', color: C.blue, cursor: 'pointer', display: 'flex', alignItems: 'center', flexShrink: 0 }}><MessageSquare size={12} /></button>
                     <button onClick={() => removeProject(p.id)} title="Remover" style={{ padding: '5px 8px', borderRadius: 6, border: '1px solid rgba(239,68,68,0.3)', background: 'transparent', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', flexShrink: 0 }}><X size={12} /></button>
                   </div>

@@ -2904,6 +2904,22 @@ export default function ProjectPage() {
     juryHydrated.current = true
   }, [project])
 
+  // Grade history — fetched lazily when the professor/owner opens it
+  const [scoreHistory, setScoreHistory] = useState(null)
+  const [showScoreHistory, setShowScoreHistory] = useState(false)
+  async function toggleScoreHistory() {
+    if (showScoreHistory) { setShowScoreHistory(false); return }
+    setShowScoreHistory(true)
+    if (scoreHistory == null) {
+      const { data } = await supabase
+        .from('project_score_history')
+        .select('id, score, note, created_at')
+        .eq('project_id', project.id)
+        .order('created_at', { ascending: false })
+      setScoreHistory(data || [])
+    }
+  }
+
   // Quick "ready for defense" / "needs revision" flag
   const [reviewStatusSaving, setReviewStatusSaving] = useState(false)
   async function handleSetReviewStatus(status) {
@@ -5230,6 +5246,16 @@ export default function ProjectPage() {
 
         {/* Sidebar */}
         <aside className="proj-sidebar" style={{ paddingTop: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {/* Professor: simple back-to-turma link when opened as a single project (no batch queue) */}
+          {isProfessor && !(reviewQueue && reviewQueue.length > 0) && location.state?.turmaCode && (
+            <button
+              onClick={() => navigate(`/turma/${location.state.turmaCode}`)}
+              style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.22)', borderRadius: 8, padding: '9px', color: '#818cf8', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+            >
+              <ChevronLeft size={13} /> Voltar {location.state?.turmaName ? `a "${location.state.turmaName}"` : 'à turma'}
+            </button>
+          )}
+
           {/* Professor: batch review queue, started from the turma's "Avaliar todos" */}
           {isProfessor && reviewQueue && reviewQueue.length > 0 && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.22)', borderRadius: 8, padding: '6px 8px' }}>
@@ -5365,19 +5391,44 @@ export default function ProjectPage() {
 
                 {!juryEditing && hasSavedScore ? (
                   /* ── Collapsed summary ── */
-                  <div style={{ padding: '13px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <span style={{ fontSize: 24, fontWeight: 900, color: scoreColorFor(project.teacher_score), letterSpacing: '-0.5px', flexShrink: 0 }}>
-                      {project.teacher_score}<span style={{ fontSize: 12, color: colors.muted, fontWeight: 500 }}>/20</span>
-                    </span>
-                    {project.teacher_score_note && (
-                      <span style={{ flex: 1, fontSize: 12, color: colors.muted, lineHeight: 1.4, minWidth: 0 }}>{project.teacher_score_note}</span>
-                    )}
+                  <div style={{ padding: '13px 16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <span style={{ fontSize: 24, fontWeight: 900, color: scoreColorFor(project.teacher_score), letterSpacing: '-0.5px', flexShrink: 0 }}>
+                        {project.teacher_score}<span style={{ fontSize: 12, color: colors.muted, fontWeight: 500 }}>/20</span>
+                      </span>
+                      {project.teacher_score_note && (
+                        <span style={{ flex: 1, fontSize: 12, color: colors.muted, lineHeight: 1.4, minWidth: 0 }}>{project.teacher_score_note}</span>
+                      )}
+                      <button
+                        onClick={() => setJuryEditing(true)}
+                        style={{ marginLeft: 'auto', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 5, background: 'transparent', border: '1px solid rgba(99,102,241,0.3)', borderRadius: 7, padding: '6px 10px', color: '#818cf8', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+                      >
+                        <Pencil size={11} /> Reavaliar
+                      </button>
+                    </div>
                     <button
-                      onClick={() => setJuryEditing(true)}
-                      style={{ marginLeft: 'auto', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 5, background: 'transparent', border: '1px solid rgba(99,102,241,0.3)', borderRadius: 7, padding: '6px 10px', color: '#818cf8', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+                      onClick={toggleScoreHistory}
+                      style={{ marginTop: 10, background: 'none', border: 'none', color: colors.muted, fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', padding: 0, textDecoration: 'underline' }}
                     >
-                      <Pencil size={11} /> Reavaliar
+                      {showScoreHistory ? 'Ocultar histórico' : 'Ver histórico'}
                     </button>
+                    {showScoreHistory && (
+                      scoreHistory == null ? (
+                        <p style={{ margin: '8px 0 0', fontSize: 12, color: colors.muted }}>A carregar…</p>
+                      ) : scoreHistory.length === 0 ? (
+                        <p style={{ margin: '8px 0 0', fontSize: 12, color: colors.muted }}>Ainda não há avaliações anteriores.</p>
+                      ) : (
+                        <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                          {scoreHistory.map(h => (
+                            <div key={h.id} style={{ display: 'flex', alignItems: 'baseline', gap: 8, fontSize: 12 }}>
+                              <span style={{ fontWeight: 800, color: colors.muted }}>{h.score}/20</span>
+                              <span style={{ color: colors.subtle, fontSize: 11 }}>{new Date(h.created_at).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                              {h.note && <span style={{ color: colors.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>— {h.note}</span>}
+                            </div>
+                          ))}
+                        </div>
+                      )
+                    )}
                   </div>
                 ) : (
                   <>
@@ -5476,14 +5527,39 @@ export default function ProjectPage() {
 
           {/* ── Nota do professor — visible to the owner once graded ── */}
           {isOwner && project.teacher_score != null && (
-            <div style={{ background: 'rgba(99,102,241,0.05)', border: '1px solid rgba(99,102,241,0.22)', borderRadius: 12, padding: '13px 16px', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-              <ClipboardList size={14} color="#818cf8" style={{ flexShrink: 0 }} />
-              <span style={{ fontSize: 13, fontWeight: 700, color: colors.text }}>Nota do professor</span>
-              <span style={{ marginLeft: 'auto', fontSize: 20, fontWeight: 900, color: project.teacher_score >= 16 ? '#22c55e' : project.teacher_score >= 10 ? '#1b78f7' : '#f97316', letterSpacing: '-0.5px', flexShrink: 0 }}>
-                {project.teacher_score}<span style={{ fontSize: 11, color: colors.muted, fontWeight: 500 }}>/20</span>
-              </span>
-              {project.teacher_score_note && (
-                <div style={{ flexBasis: '100%', fontSize: 12, color: colors.muted, lineHeight: 1.5 }}>{project.teacher_score_note}</div>
+            <div style={{ background: 'rgba(99,102,241,0.05)', border: '1px solid rgba(99,102,241,0.22)', borderRadius: 12, padding: '13px 16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+                <ClipboardList size={14} color="#818cf8" style={{ flexShrink: 0 }} />
+                <span style={{ fontSize: 13, fontWeight: 700, color: colors.text }}>Nota do professor</span>
+                <span style={{ marginLeft: 'auto', fontSize: 20, fontWeight: 900, color: project.teacher_score >= 16 ? '#22c55e' : project.teacher_score >= 10 ? '#1b78f7' : '#f97316', letterSpacing: '-0.5px', flexShrink: 0 }}>
+                  {project.teacher_score}<span style={{ fontSize: 11, color: colors.muted, fontWeight: 500 }}>/20</span>
+                </span>
+                {project.teacher_score_note && (
+                  <div style={{ flexBasis: '100%', fontSize: 12, color: colors.muted, lineHeight: 1.5 }}>{project.teacher_score_note}</div>
+                )}
+              </div>
+              <button
+                onClick={toggleScoreHistory}
+                style={{ marginTop: 10, background: 'none', border: 'none', color: colors.muted, fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', padding: 0, textDecoration: 'underline' }}
+              >
+                {showScoreHistory ? 'Ocultar histórico' : 'Ver histórico'}
+              </button>
+              {showScoreHistory && (
+                scoreHistory == null ? (
+                  <p style={{ margin: '8px 0 0', fontSize: 12, color: colors.muted }}>A carregar…</p>
+                ) : scoreHistory.length === 0 ? (
+                  <p style={{ margin: '8px 0 0', fontSize: 12, color: colors.muted }}>Ainda não há avaliações anteriores.</p>
+                ) : (
+                  <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {scoreHistory.map(h => (
+                      <div key={h.id} style={{ display: 'flex', alignItems: 'baseline', gap: 8, fontSize: 12 }}>
+                        <span style={{ fontWeight: 800, color: colors.muted }}>{h.score}/20</span>
+                        <span style={{ color: colors.subtle, fontSize: 11 }}>{new Date(h.created_at).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                        {h.note && <span style={{ color: colors.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>— {h.note}</span>}
+                      </div>
+                    ))}
+                  </div>
+                )
               )}
             </div>
           )}
