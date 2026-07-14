@@ -375,19 +375,6 @@ function InviteInbox({ userId, sidebar = false, collapsed = false }) {
               maxHeight: 'calc(100vh - 80px)', overflowY: 'auto',
             }}>
 
-            {(dbNotifs.length > 0 || responses.length > 0) && (
-              <div style={{ display: 'flex', justifyContent: 'flex-end', margin: '2px 6px 4px' }}>
-                <button
-                  onClick={clearAll}
-                  style={{ background: 'none', border: 'none', color: C.muted, fontSize: 11, fontWeight: 600, cursor: 'pointer', padding: '2px 4px', fontFamily: 'inherit' }}
-                  onMouseEnter={e => e.currentTarget.style.color = '#ef4444'}
-                  onMouseLeave={e => e.currentTarget.style.color = C.muted}
-                >
-                  Limpar todas
-                </button>
-              </div>
-            )}
-
             {/* Pending invites TO me */}
             {invites.length > 0 && (
               <>
@@ -468,14 +455,24 @@ function InviteInbox({ userId, sidebar = false, collapsed = false }) {
                   <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>
                     Notificações
                   </p>
-                  {unreadDbCount > 0 && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    {unreadDbCount > 0 && (
+                      <button
+                        onClick={markAllRead}
+                        style={{ background: 'none', border: 'none', color: C.blue, fontSize: 11, fontWeight: 600, cursor: 'pointer', padding: 0, fontFamily: 'inherit' }}
+                      >
+                        Marcar todas como lidas
+                      </button>
+                    )}
                     <button
-                      onClick={markAllRead}
-                      style={{ background: 'none', border: 'none', color: C.blue, fontSize: 11, fontWeight: 600, cursor: 'pointer', padding: 0, fontFamily: 'inherit' }}
+                      onClick={clearAll}
+                      style={{ background: 'none', border: 'none', color: C.muted, fontSize: 11, fontWeight: 600, cursor: 'pointer', padding: 0, fontFamily: 'inherit' }}
+                      onMouseEnter={e => e.currentTarget.style.color = '#ef4444'}
+                      onMouseLeave={e => e.currentTarget.style.color = C.muted}
                     >
-                      Marcar todas como lidas
+                      Limpar todas
                     </button>
-                  )}
+                  </div>
                 </div>
                 {grouped.map(n => (
                   <div
