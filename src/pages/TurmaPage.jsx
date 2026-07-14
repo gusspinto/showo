@@ -11,6 +11,9 @@ const C = {
   border: 'var(--c-border)', borderBright: 'var(--c-border-bright)',
   blue: '#1b78f7', text: 'var(--c-text)', muted: 'var(--c-muted)', subtle: 'var(--c-subtle)',
   green: '#22c55e', yellow: '#fbbf24', red: '#ef4444',
+  glass: 'var(--c-glass)', glassHover: 'var(--c-glass-hover)',
+  glassBorder: 'var(--c-glass-border)', glassBorderBright: 'var(--c-glass-border-bright)',
+  glassStyle: { backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' },
 }
 
 function scoreColor(s) {
@@ -29,8 +32,9 @@ function ProjectCard({ project, navigate }) {
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
       style={{
-        background: hov ? C.cardHover : C.card,
-        border: `1px solid ${hov ? C.borderBright : C.border}`,
+        ...C.glassStyle,
+        background: hov ? C.glassHover : C.glass,
+        border: `1px solid ${hov ? C.glassBorderBright : C.glassBorder}`,
         borderRadius: 12, overflow: 'hidden', cursor: 'pointer',
         transition: 'background 0.15s, border-color 0.15s',
         boxShadow: 'none',
@@ -804,7 +808,7 @@ export default function TurmaPage() {
                 </span>
               </div>
               {students.length === 0 ? (
-                <div style={{ background: C.card, border: `1px dashed ${C.border}`, borderRadius: 10, padding: '24px 20px', textAlign: 'center' }}>
+                <div style={{ ...C.glassStyle, background: C.glass, border: `1px dashed ${C.glassBorder}`, borderRadius: 10, padding: '24px 20px', textAlign: 'center' }}>
                   <p style={{ margin: 0, fontSize: 13, color: C.muted }}>
                     {isTeacher
                       ? <>Ainda sem alunos. Partilha o código <strong style={{ color: C.blue }}>{turma.code}</strong> para começarem a entrar.</>
@@ -815,7 +819,8 @@ export default function TurmaPage() {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 10 }}>
                   {students.map(m => (
                     <div key={m.user_id} style={{
-                      background: C.card, border: `1px solid ${C.border}`,
+                      ...C.glassStyle,
+                      background: C.glass, border: `1px solid ${C.glassBorder}`,
                       borderRadius: 10, padding: '14px 16px',
                       display: 'flex', alignItems: 'center', gap: 12,
                     }}>
@@ -901,7 +906,7 @@ export default function TurmaPage() {
           </div>
         )}
         {sortedProjects.length === 0 ? (
-          <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: '60px 32px', textAlign: 'center' }}>
+          <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '60px 32px', textAlign: 'center' }}>
             <div style={{ marginBottom: 14 }}><Inbox size={44} color="var(--c-subtle)" /></div>
             <p style={{ color: C.text, fontSize: 17, fontWeight: 700, margin: '0 0 8px' }}>Ainda não há projetos</p>
             {isTeacher ? (
@@ -919,7 +924,7 @@ export default function TurmaPage() {
           </div>
         ) : isTeacher ? (
           /* Professor table view */
-          <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, overflow: 'hidden' }}>
+          <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, overflow: 'hidden' }}>
             <div style={{ overflowX: 'auto' }}>
             {/* Table header */}
             <div style={{ display: 'grid', gridTemplateColumns: '28px minmax(160px,1fr) 60px 64px 120px 88px 130px', gap: 0, padding: '10px 16px', borderBottom: `1px solid ${C.border}`, background: 'var(--c-bg)', minWidth: 668, alignItems: 'center' }}>
@@ -941,7 +946,7 @@ export default function TurmaPage() {
               const updated = p.created_at ? new Date(p.created_at).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' }) : '—'
               return (
                 <div key={p.id} style={{ display: 'grid', gridTemplateColumns: '28px minmax(160px,1fr) 60px 64px 120px 88px 130px', gap: 0, padding: '12px 16px', borderBottom: i < sortedProjects.length - 1 ? `1px solid ${C.border}` : 'none', alignItems: 'center', transition: 'background 0.12s', minWidth: 668 }}
-                  onMouseEnter={e => e.currentTarget.style.background = C.cardHover}
+                  onMouseEnter={e => e.currentTarget.style.background = C.glassHover}
                   onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                   <input
                     type="checkbox"

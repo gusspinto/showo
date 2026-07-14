@@ -22,6 +22,11 @@ const C = {
   green: '#22c55e',
   yellow: '#fbbf24',
   red: '#ef4444',
+  glass: 'var(--c-glass)',
+  glassHover: 'var(--c-glass-hover)',
+  glassBorder: 'var(--c-glass-border)',
+  glassBorderBright: 'var(--c-glass-border-bright)',
+  glassStyle: { backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' },
 }
 
 function TurmaCard({ turma }) {
@@ -35,8 +40,9 @@ function TurmaCard({ turma }) {
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
       style={{
-        background: hov ? C.cardHover : C.card,
-        border: `1px solid ${hov ? C.borderBright : C.border}`,
+        ...C.glassStyle,
+        background: hov ? C.glassHover : C.glass,
+        border: `1px solid ${hov ? C.glassBorderBright : C.glassBorder}`,
         borderRadius: 12,
         padding: '18px 20px',
         cursor: 'pointer',
@@ -321,12 +327,13 @@ export default function Turmas() {
         {loading ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {[...Array(3)].map((_, i) => (
-              <div key={i} style={{ height: 82, borderRadius: 12, background: C.card, border: `1px solid ${C.border}`, opacity: 0.5 }} />
+              <div key={i} style={{ height: 82, borderRadius: 12, background: C.glass, border: `1px solid ${C.glassBorder}`, opacity: 0.5 }} />
             ))}
           </div>
         ) : turmas.length === 0 ? (
           <div style={{
-            background: C.card, border: `1px solid ${C.border}`,
+            ...C.glassStyle,
+            background: C.glass, border: `1px solid ${C.glassBorder}`,
             borderRadius: 12, padding: '48px 24px', textAlign: 'center',
           }}>
             <div style={{
