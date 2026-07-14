@@ -280,7 +280,7 @@ export default function TurmaPage() {
         const ids = cp.map(r => r.project_id)
         const { data, error: projectsError } = await supabase
           .from('projects')
-          .select('id, name, slug, score, area, creator_name, cover_url, ai_tagline, created_at, user_id, goal, problem, solution, features, technologies, results, linkedin_url, github_url, portfolio_url, review_status')
+          .select('id, name, slug, score, area, creator_name, cover_url, ai_tagline, created_at, user_id, goal, problem, solution, features, technologies, results, linkedin_url, github_url, portfolio_url, review_status, teacher_score')
           .in('id', ids)
         if (projectsError) {
           console.error('projects fetch failed:', projectsError)
@@ -376,7 +376,7 @@ export default function TurmaPage() {
     } else {
       const { data: projs } = await supabase
         .from('projects')
-        .select('id, name, slug, score, area, creator_name, cover_url, ai_tagline, created_at, user_id, goal, problem, solution, features, technologies, results, linkedin_url, github_url, portfolio_url, review_status')
+        .select('id, name, slug, score, area, creator_name, cover_url, ai_tagline, created_at, user_id, goal, problem, solution, features, technologies, results, linkedin_url, github_url, portfolio_url, review_status, teacher_score')
         .in('id', [...projects.map(p => p.id), projectId])
       setProjects(projs || [])
       showToast('Projeto adicionado à turma!')
@@ -453,10 +453,11 @@ export default function TurmaPage() {
   }
 
   function exportCSV() {
-    const rows = [['Aluno', 'Projeto', 'Score', 'Completude (%)', 'Data', 'Link']]
+    const statusLabel = s => s === 'ready_for_defense' ? 'Pronto para defesa' : s === 'needs_revision' ? 'Precisa de revisão' : '—'
+    const rows = [['Aluno', 'Projeto', 'Nota (0-20)', 'Score', 'Completude (%)', 'Estado', 'Data', 'Link']]
     sortedProjects.forEach(p => {
       const date = p.created_at ? new Date(p.created_at).toLocaleDateString('pt-PT') : '—'
-      rows.push([p.creator_name || '—', p.name, p.score ?? '—', computeCompletude(p), date, `${window.location.origin}/projeto/${p.slug}`])
+      rows.push([p.creator_name || '—', p.name, p.teacher_score ?? '—', p.score ?? '—', computeCompletude(p), statusLabel(p.review_status), date, `${window.location.origin}/projeto/${p.slug}`])
     })
     const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n')
     const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
@@ -915,14 +916,14 @@ export default function TurmaPage() {
           <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, overflow: 'hidden' }}>
             <div style={{ overflowX: 'auto' }}>
             {/* Table header */}
-            <div style={{ display: 'grid', gridTemplateColumns: '28px minmax(160px,1fr) 64px 120px 88px 130px', gap: 0, padding: '10px 16px', borderBottom: `1px solid ${C.border}`, background: 'var(--c-bg)', minWidth: 608, alignItems: 'center' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '28px minmax(160px,1fr) 60px 64px 120px 88px 130px', gap: 0, padding: '10px 16px', borderBottom: `1px solid ${C.border}`, background: 'var(--c-bg)', minWidth: 668, alignItems: 'center' }}>
               <input
                 type="checkbox"
                 checked={sortedProjects.length > 0 && selectedIds.size === sortedProjects.length}
                 onChange={() => setSelectedIds(selectedIds.size === sortedProjects.length ? new Set() : new Set(sortedProjects.map(p => p.id)))}
                 style={{ cursor: 'pointer' }}
               />
-              {[['name','Projeto'], ['score','Score'], ['completude','Completude'], ['updated','Data'], [null,'Ações']].map(([field, label]) => (
+              {[['name','Projeto'], [null,'Nota'], ['score','Score'], ['completude','Completude'], ['updated','Data'], [null,'Ações']].map(([field, label]) => (
                 <div key={label} onClick={() => field && toggleSort(field)} style={{ fontSize: 11, fontWeight: 700, color: field ? (sortBy === field ? C.blue : C.muted) : C.muted, textTransform: 'uppercase', letterSpacing: 0.5, cursor: field ? 'pointer' : 'default', display: 'flex', alignItems: 'center', gap: 4, userSelect: 'none' }}>
                   {label}
                   {field && sortBy === field && (sortAsc ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}
@@ -933,7 +934,7 @@ export default function TurmaPage() {
               const completude = computeCompletude(p)
               const updated = p.created_at ? new Date(p.created_at).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' }) : '—'
               return (
-                <div key={p.id} style={{ display: 'grid', gridTemplateColumns: '28px minmax(160px,1fr) 64px 120px 88px 130px', gap: 0, padding: '12px 16px', borderBottom: i < sortedProjects.length - 1 ? `1px solid ${C.border}` : 'none', alignItems: 'center', transition: 'background 0.12s', minWidth: 608 }}
+                <div key={p.id} style={{ display: 'grid', gridTemplateColumns: '28px minmax(160px,1fr) 60px 64px 120px 88px 130px', gap: 0, padding: '12px 16px', borderBottom: i < sortedProjects.length - 1 ? `1px solid ${C.border}` : 'none', alignItems: 'center', transition: 'background 0.12s', minWidth: 668 }}
                   onMouseEnter={e => e.currentTarget.style.background = C.cardHover}
                   onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                   <input
@@ -956,6 +957,9 @@ export default function TurmaPage() {
                       </div>
                     </div>
                     {p.creator_name && <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>{p.creator_name}</div>}
+                  </div>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: p.teacher_score == null ? C.subtle : p.teacher_score >= 16 ? C.green : p.teacher_score >= 10 ? C.blue : '#f97316' }}>
+                    {p.teacher_score != null ? `${p.teacher_score}/20` : '—'}
                   </div>
                   <div style={{ fontSize: 15, fontWeight: 800, color: scoreColor(p.score) }}>{p.score ?? '—'}</div>
                   <div style={{ paddingRight: 8 }}>

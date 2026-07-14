@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
@@ -108,6 +108,8 @@ function NovaConversa({ onSelect, onClose }) {
 
 export default function Mensagens() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const returnTo = location.state?.returnTo
   const [searchParams] = useSearchParams()
   const { user } = useAuth()
 
@@ -483,12 +485,20 @@ export default function Mensagens() {
                       </div>
                       {activeProfile?.username && <div style={{ fontSize: 11, color: C.muted }}>@{activeProfile.username}</div>}
                     </div>
-                    {activeProfile?.username && (
-                      <button onClick={() => navigate(`/u/${activeProfile.username}`)}
-                        style={{ marginLeft: 'auto', background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 7, padding: '5px 10px', color: C.muted, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
-                        Ver perfil
-                      </button>
-                    )}
+                    <div style={{ marginLeft: 'auto', display: 'flex', gap: 6 }}>
+                      {returnTo && (
+                        <button onClick={() => navigate(returnTo.pathname, { state: returnTo.state })}
+                          style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(27,120,247,0.08)', border: '1px solid rgba(27,120,247,0.3)', borderRadius: 7, padding: '5px 10px', color: C.blue, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
+                          <ArrowLeft size={13} /> Voltar {returnTo.label ? `a "${returnTo.label}"` : ''}
+                        </button>
+                      )}
+                      {activeProfile?.username && (
+                        <button onClick={() => navigate(`/u/${activeProfile.username}`)}
+                          style={{ background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 7, padding: '5px 10px', color: C.muted, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
+                          Ver perfil
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   {/* Messages */}

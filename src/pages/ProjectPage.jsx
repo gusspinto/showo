@@ -2886,26 +2886,23 @@ export default function ProjectPage() {
   const [previewBlocks, setPreviewBlocks] = useState([])
   const [previewStyle, setPreviewStyle] = useState({})
   const [previewDevice, setPreviewDevice] = useState('desktop')
-  // Jury / professor ratings state
-  const [juryRatings, setJuryRatings] = useState({})        // { criteriaId: 0-10 }
+  // Professor grade state (0-20, sum of 5 criteria x 0-4) — lives on the project itself
+  // (project.teacher_score / _note / _ratings), not in teacher_feedback.
+  const [juryRatings, setJuryRatings] = useState({})        // { criteriaId: 0-4 }
   const [juryNote, setJuryNote] = useState('')
   const [jurySaving, setJurySaving] = useState(false)
   const [jurySaved, setJurySaved] = useState(false)
-  // Hydrate this teacher's previous evaluation (if any) once teacherFeedback loads,
-  // so reopening the project shows the score already given instead of blank sliders.
+  const [juryEditing, setJuryEditing] = useState(false)
+  // Hydrate from the saved grade once the project loads, and default to the
+  // collapsed summary if a grade already exists, or straight to the form if not.
   const juryHydrated = useRef(false)
   useEffect(() => {
-    if (juryHydrated.current || !user) return
-    const mine = teacherFeedback.find(f => f.teacher_id === user.id && f.field_key === 'jury_eval')
-    if (mine) {
-      try {
-        const payload = JSON.parse(mine.comment)
-        setJuryRatings(payload.ratings || {})
-        setJuryNote(payload.note || '')
-      } catch { /* malformed payload, leave sliders blank */ }
-      juryHydrated.current = true
-    }
-  }, [teacherFeedback, user])
+    if (juryHydrated.current || !project) return
+    if (project.teacher_score_ratings) setJuryRatings(project.teacher_score_ratings)
+    if (project.teacher_score_note) setJuryNote(project.teacher_score_note)
+    setJuryEditing(project.teacher_score == null)
+    juryHydrated.current = true
+  }, [project])
 
   // Quick "ready for defense" / "needs revision" flag
   const [reviewStatusSaving, setReviewStatusSaving] = useState(false)
@@ -5296,7 +5293,15 @@ export default function ProjectPage() {
             <div style={{ display: 'flex', gap: 6 }}>
               {project.user_id && (
                 <button
-                  onClick={() => navigate(`/mensagens?to=${project.user_id}`)}
+                  onClick={() => navigate(`/mensagens?to=${project.user_id}`, {
+                    state: {
+                      returnTo: {
+                        pathname: `/projeto/${project.slug}`,
+                        state: { reviewQueue, reviewIndex, turmaCode: location.state?.turmaCode, turmaName: location.state?.turmaName },
+                        label: project.name,
+                      },
+                    },
+                  })}
                   style={{
                     flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
                     background: 'transparent', border: `1px solid ${colors.border}`, borderRadius: 8,
@@ -5331,7 +5336,7 @@ export default function ProjectPage() {
             isOwner={isOwner}
           />
 
-          {/* ── Jury evaluation card (professors only) ── */}
+          {/* ── Evaluation card, 0-20 scale (professors only) ── */}
           {isProfessor && (() => {
             const JURY_CRITERIA = [
               { id: 'problem',        label: 'Problema',        desc: 'Clareza e relevância' },
@@ -5341,99 +5346,146 @@ export default function ProjectPage() {
               { id: 'presentation',   label: 'Apresentação',    desc: 'Qualidade do projeto' },
             ]
             const totalRated = JURY_CRITERIA.filter(c => juryRatings[c.id] != null).length
-            const avgScore   = totalRated === 0 ? null : Math.round(JURY_CRITERIA.reduce((s, c) => s + (juryRatings[c.id] ?? 0), 0) / JURY_CRITERIA.length * 10) / 10
+            const allRated   = totalRated === JURY_CRITERIA.length
+            const totalScore = allRated ? JURY_CRITERIA.reduce((s, c) => s + juryRatings[c.id], 0) : null
+            const scoreColorFor = s => s >= 16 ? '#22c55e' : s >= 10 ? '#1b78f7' : '#f97316'
+            const hasSavedScore = project.teacher_score != null
 
             return (
               <div style={{ background: 'rgba(99,102,241,0.05)', border: '1px solid rgba(99,102,241,0.22)', borderRadius: 12, overflow: 'hidden', marginBottom: 4 }}>
                 {/* Header */}
-                <div style={{ padding: '13px 16px 10px', borderBottom: '1px solid rgba(99,102,241,0.12)', display: 'flex', alignItems: 'center', gap: 9 }}>
+                <div style={{ padding: '13px 16px 10px', borderBottom: (juryEditing || hasSavedScore) ? '1px solid rgba(99,102,241,0.12)' : 'none', display: 'flex', alignItems: 'center', gap: 9 }}>
                   <ClipboardList size={14} color="#818cf8" />
                   <span style={{ fontSize: 13, fontWeight: 700, color: colors.text, flex: 1 }}>Avaliação</span>
-                  {avgScore != null && (
-                    <span style={{ fontSize: 18, fontWeight: 900, color: avgScore >= 7 ? '#22c55e' : avgScore >= 5 ? '#1b78f7' : '#f97316', letterSpacing: '-0.5px' }}>{avgScore}<span style={{ fontSize: 11, color: colors.muted, fontWeight: 500 }}>/10</span></span>
+                  {juryEditing && hasSavedScore && (
+                    <button onClick={() => setJuryEditing(false)} style={{ background: 'none', border: 'none', color: colors.muted, fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}>Cancelar</button>
                   )}
                 </div>
 
-                {/* Criteria rating */}
-                <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {JURY_CRITERIA.map(c => (
-                    <div key={c.id}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 5 }}>
-                        <span style={{ fontSize: 12, fontWeight: 700, color: colors.text }}>{c.label}</span>
-                        <span style={{ fontSize: 10, color: colors.muted }}>{c.desc}</span>
-                      </div>
-                      <div style={{ display: 'flex', gap: 4 }}>
-                        {[1,2,3,4,5,6,7,8,9,10].map(n => {
-                          const val = juryRatings[c.id] ?? 0
-                          const active = n <= val
-                          return (
-                            <button
-                              key={n}
-                              onClick={() => setJuryRatings(r => ({ ...r, [c.id]: r[c.id] === n ? 0 : n }))}
-                              style={{
-                                flex: 1, height: 20, borderRadius: 4, border: 'none', cursor: 'pointer', padding: 0,
-                                background: active ? (val >= 7 ? '#22c55e' : val >= 5 ? '#1b78f7' : '#f97316') : 'var(--c-bg)',
-                                transition: 'background 0.1s',
-                              }}
-                              title={`${n}/10`}
-                            />
-                          )
-                        })}
-                      </div>
+                {!juryEditing && hasSavedScore ? (
+                  /* ── Collapsed summary ── */
+                  <div style={{ padding: '13px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <span style={{ fontSize: 24, fontWeight: 900, color: scoreColorFor(project.teacher_score), letterSpacing: '-0.5px', flexShrink: 0 }}>
+                      {project.teacher_score}<span style={{ fontSize: 12, color: colors.muted, fontWeight: 500 }}>/20</span>
+                    </span>
+                    {project.teacher_score_note && (
+                      <span style={{ flex: 1, fontSize: 12, color: colors.muted, lineHeight: 1.4, minWidth: 0 }}>{project.teacher_score_note}</span>
+                    )}
+                    <button
+                      onClick={() => setJuryEditing(true)}
+                      style={{ marginLeft: 'auto', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 5, background: 'transparent', border: '1px solid rgba(99,102,241,0.3)', borderRadius: 7, padding: '6px 10px', color: '#818cf8', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+                    >
+                      <Pencil size={11} /> Reavaliar
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    {/* Criteria rating */}
+                    <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      {JURY_CRITERIA.map(c => (
+                        <div key={c.id}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 5 }}>
+                            <span style={{ fontSize: 12, fontWeight: 700, color: colors.text }}>{c.label}</span>
+                            <span style={{ fontSize: 10, color: colors.muted }}>{c.desc}</span>
+                          </div>
+                          <div style={{ display: 'flex', gap: 4 }}>
+                            {[0,1,2,3,4].map(n => {
+                              const val = juryRatings[c.id]
+                              const active = val != null && n <= val
+                              return (
+                                <button
+                                  key={n}
+                                  onClick={() => setJuryRatings(r => ({ ...r, [c.id]: n }))}
+                                  style={{
+                                    flex: 1, height: 22, borderRadius: 4, border: 'none', cursor: 'pointer', padding: 0,
+                                    background: active ? (val >= 4 ? '#22c55e' : val >= 2 ? '#1b78f7' : '#f97316') : 'var(--c-bg)',
+                                    transition: 'background 0.1s',
+                                  }}
+                                  title={`${n}/4`}
+                                />
+                              )
+                            })}
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
 
-                {/* Note */}
-                <div style={{ padding: '0 16px 12px' }}>
-                  <textarea
-                    value={juryNote}
-                    onChange={e => setJuryNote(e.target.value)}
-                    placeholder="Nota geral para o aluno (opcional)…"
-                    rows={2}
-                    style={{ width: '100%', background: 'var(--c-bg)', border: `1px solid ${colors.border}`, borderRadius: 8, padding: '8px 10px', color: colors.text, fontSize: 12, fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box', outline: 'none', lineHeight: 1.5 }}
-                  />
-                </div>
+                    {/* Running total */}
+                    <div style={{ padding: '0 16px 4px', display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
+                      <span style={{ fontSize: 11, color: colors.muted }}>{totalRated}/{JURY_CRITERIA.length} critérios avaliados</span>
+                      {totalScore != null && (
+                        <span style={{ fontSize: 15, fontWeight: 900, color: scoreColorFor(totalScore) }}>{totalScore}<span style={{ fontSize: 10, color: colors.muted, fontWeight: 500 }}>/20</span></span>
+                      )}
+                    </div>
 
-                {/* Save button */}
-                <div style={{ padding: '0 16px 14px' }}>
-                  <button
-                    disabled={jurySaving || totalRated === 0}
-                    onClick={async () => {
-                      if (totalRated === 0) return
-                      setJurySaving(true)
-                      const payload = { ratings: juryRatings, avg: avgScore, note: juryNote }
-                      // Save as a teacher feedback entry
-                      await supabase.from('teacher_feedback').upsert({
-                        project_id: project.id, teacher_id: user.id, field_key: 'jury_eval',
-                        comment: JSON.stringify(payload),
-                      }, { onConflict: 'project_id,teacher_id,field_key' })
-                      if (project.user_id) {
-                        supabase.rpc('create_notification', {
-                          p_user_id: project.user_id, p_type: 'TEACHER_FEEDBACK',
-                          p_message: `O professor avaliou o teu projeto "${project.name}": ${avgScore}/10`,
-                          p_project_slug: project.slug,
-                        })
-                      }
-                      setJurySaving(false); setJurySaved(true)
-                      setTimeout(() => setJurySaved(false), 3000)
-                    }}
-                    style={{
-                      width: '100%', padding: '10px', borderRadius: 8,
-                      background: jurySaved ? 'rgba(34,197,94,0.12)' : '#6366f1',
-                      border: jurySaved ? '1px solid rgba(34,197,94,0.3)' : 'none',
-                      color: jurySaved ? '#22c55e' : '#fff',
-                      fontSize: 13, fontWeight: 700, cursor: totalRated === 0 || jurySaving ? 'default' : 'pointer',
-                      opacity: totalRated === 0 ? 0.5 : 1, fontFamily: 'inherit',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                    }}
-                  >
-                    {jurySaved ? <><Check size={13} /> Avaliação guardada</> : jurySaving ? 'A guardar…' : <><ClipboardList size={13} /> Guardar avaliação</>}
-                  </button>
-                </div>
+                    {/* Note */}
+                    <div style={{ padding: '8px 16px 12px' }}>
+                      <textarea
+                        value={juryNote}
+                        onChange={e => setJuryNote(e.target.value)}
+                        placeholder="Nota geral para o aluno (opcional)…"
+                        rows={2}
+                        style={{ width: '100%', background: 'var(--c-bg)', border: `1px solid ${colors.border}`, borderRadius: 8, padding: '8px 10px', color: colors.text, fontSize: 12, fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box', outline: 'none', lineHeight: 1.5 }}
+                      />
+                    </div>
+
+                    {/* Save button */}
+                    <div style={{ padding: '0 16px 14px' }}>
+                      <button
+                        disabled={jurySaving || !allRated}
+                        onClick={async () => {
+                          if (!allRated) return
+                          setJurySaving(true)
+                          const { error } = await supabase.rpc('set_project_teacher_score', {
+                            p_project_id: project.id, p_score: totalScore, p_note: juryNote || null, p_ratings: juryRatings,
+                          })
+                          if (!error) {
+                            setProject(p => ({ ...p, teacher_score: totalScore, teacher_score_note: juryNote || null, teacher_score_ratings: juryRatings }))
+                            if (project.user_id) {
+                              supabase.rpc('create_notification', {
+                                p_user_id: project.user_id, p_type: 'TEACHER_FEEDBACK',
+                                p_message: `O professor avaliou o teu projeto "${project.name}": ${totalScore}/20`,
+                                p_project_slug: project.slug,
+                              })
+                            }
+                            setJurySaved(true)
+                            setJuryEditing(false)
+                            setTimeout(() => setJurySaved(false), 3000)
+                          }
+                          setJurySaving(false)
+                        }}
+                        style={{
+                          width: '100%', padding: '10px', borderRadius: 8,
+                          background: jurySaved ? 'rgba(34,197,94,0.12)' : '#6366f1',
+                          border: jurySaved ? '1px solid rgba(34,197,94,0.3)' : 'none',
+                          color: jurySaved ? '#22c55e' : '#fff',
+                          fontSize: 13, fontWeight: 700, cursor: !allRated || jurySaving ? 'default' : 'pointer',
+                          opacity: !allRated ? 0.5 : 1, fontFamily: 'inherit',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                        }}
+                      >
+                        {jurySaved ? <><Check size={13} /> Avaliação guardada</> : jurySaving ? 'A guardar…' : <><ClipboardList size={13} /> Guardar avaliação</>}
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             )
           })()}
+
+          {/* ── Nota do professor — visible to the owner once graded ── */}
+          {isOwner && project.teacher_score != null && (
+            <div style={{ background: 'rgba(99,102,241,0.05)', border: '1px solid rgba(99,102,241,0.22)', borderRadius: 12, padding: '13px 16px', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+              <ClipboardList size={14} color="#818cf8" style={{ flexShrink: 0 }} />
+              <span style={{ fontSize: 13, fontWeight: 700, color: colors.text }}>Nota do professor</span>
+              <span style={{ marginLeft: 'auto', fontSize: 20, fontWeight: 900, color: project.teacher_score >= 16 ? '#22c55e' : project.teacher_score >= 10 ? '#1b78f7' : '#f97316', letterSpacing: '-0.5px', flexShrink: 0 }}>
+                {project.teacher_score}<span style={{ fontSize: 11, color: colors.muted, fontWeight: 500 }}>/20</span>
+              </span>
+              {project.teacher_score_note && (
+                <div style={{ flexBasis: '100%', fontSize: 12, color: colors.muted, lineHeight: 1.5 }}>{project.teacher_score_note}</div>
+              )}
+            </div>
+          )}
 
           {/* Teacher feedback — sidebar: desktop first/second slot, mobile above author */}
           {(isOwner || isProfessor) && (teacherFeedback.length > 0 || isProfessor) && (() => {
