@@ -5565,7 +5565,7 @@ export default function ProjectPage() {
           )}
 
           {/* Teacher feedback — sidebar: desktop first/second slot, mobile above author */}
-          {(isOwner || isProfessor) && (teacherFeedback.length > 0 || isProfessor) && (() => {
+          {(isOwner || isProfessor) && (teacherFeedback.some(f => f.field_key !== 'jury_eval') || isProfessor) && (() => {
             const FB_SECTION_LABELS = { description: 'Descrição', tech: 'Tecnologias', links: 'Links', demo: 'Demo', team: 'Equipa', gallery: 'Galeria', geral: 'Geral' }
             const visibleFeedback = teacherFeedback.filter(f => f.field_key !== 'jury_eval')
             const myFeedback = isProfessor ? visibleFeedback.filter(f => f.teacher_id === user?.id) : visibleFeedback
