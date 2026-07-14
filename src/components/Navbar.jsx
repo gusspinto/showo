@@ -1829,8 +1829,9 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                     {showLabels && <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{getDisplayName(user)}</span>}
                   </button>
                 )}
-                {/* Mensagens — only stacked here in collapsed mode; moved to the icon row below when expanded */}
-                {collapsed && (
+                {/* Mensagens — only stacked here in collapsed mode; moved to the icon row below when expanded.
+                    Skipped for teacher/recruiter, who already have a labeled Mensagens item in their main nav list. */}
+                {collapsed && !isTeacher && !isRecruiter && (
                   <button
                     onClick={() => navigate('/mensagens')}
                     title="Mensagens"
@@ -1923,16 +1924,19 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   <button className="sb-action-btn" onClick={toggleTheme} title={theme === 'dark' ? 'Modo claro' : 'Modo escuro'}>
                     {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
                   </button>
-                  <button className="sb-action-btn" onClick={() => navigate('/mensagens')} title="Mensagens" style={{ position: 'relative', color: isActive('/mensagens') ? '#1b78f7' : undefined }}>
-                    <MessageSquare size={15} />
-                    {unreadMsgs > 0 && (
-                      <span style={{
-                        position: 'absolute', top: 5, right: 5,
-                        width: 7, height: 7, borderRadius: '50%',
-                        background: '#1b78f7', border: '1.5px solid var(--c-sidebar-bg)',
-                      }} />
-                    )}
-                  </button>
+                  {/* Skipped for teacher/recruiter, who already have a labeled Mensagens item in their main nav list */}
+                  {!isTeacher && !isRecruiter && (
+                    <button className="sb-action-btn" onClick={() => navigate('/mensagens')} title="Mensagens" style={{ position: 'relative', color: isActive('/mensagens') ? '#1b78f7' : undefined }}>
+                      <MessageSquare size={15} />
+                      {unreadMsgs > 0 && (
+                        <span style={{
+                          position: 'absolute', top: 5, right: 5,
+                          width: 7, height: 7, borderRadius: '50%',
+                          background: '#1b78f7', border: '1.5px solid var(--c-sidebar-bg)',
+                        }} />
+                      )}
+                    </button>
+                  )}
                   <button className="sb-action-btn danger" onClick={handleSignOut} title="Sair">
                     <LogOut size={15} />
                   </button>
