@@ -2918,6 +2918,7 @@ export default function ProjectPage() {
           ? `O professor marcou "${project.name}" como pronto para defesa.`
           : `O professor marcou "${project.name}" como precisa de revisão.`
         supabase.rpc('create_notification', { p_user_id: project.user_id, p_type: 'TEACHER_FEEDBACK', p_message: msg, p_project_slug: project.slug })
+          .then(({ error: notifError }) => { if (notifError) console.error('review_status notification failed:', notifError) })
       }
     }
     setReviewStatusSaving(false)
@@ -5446,7 +5447,7 @@ export default function ProjectPage() {
                                 p_user_id: project.user_id, p_type: 'TEACHER_FEEDBACK',
                                 p_message: `O professor avaliou o teu projeto "${project.name}": ${totalScore}/20`,
                                 p_project_slug: project.slug,
-                              })
+                              }).then(({ error: notifError }) => { if (notifError) console.error('teacher_score notification failed:', notifError) })
                             }
                             setJurySaved(true)
                             setJuryEditing(false)

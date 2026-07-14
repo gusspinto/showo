@@ -140,6 +140,17 @@ function InviteInbox({ userId, sidebar = false, collapsed = false }) {
     setDbNotifs(prev => prev.filter(n => !arr.includes(n.id)))
   }
 
+  async function clearAll() {
+    if (dbNotifs.length > 0) {
+      await supabase.from('notifications').delete().eq('user_id', userId)
+      setDbNotifs([])
+    }
+    if (responses.length > 0) {
+      setResponses([])
+      try { sessionStorage.removeItem(`owner-notifs-${userId}`) } catch {}
+    }
+  }
+
   // Group VIEW notifications by project_slug, track time-window counts
   const VIEW_TYPES = ['PROJECT_VIEW', 'COMPANY_VIEW']
   function groupedNotifs(notifs) {
@@ -363,6 +374,19 @@ function InviteInbox({ userId, sidebar = false, collapsed = false }) {
               zIndex: 199, width: 310,
               maxHeight: 'calc(100vh - 80px)', overflowY: 'auto',
             }}>
+
+            {(dbNotifs.length > 0 || responses.length > 0) && (
+              <div style={{ display: 'flex', justifyContent: 'flex-end', margin: '2px 6px 4px' }}>
+                <button
+                  onClick={clearAll}
+                  style={{ background: 'none', border: 'none', color: C.muted, fontSize: 11, fontWeight: 600, cursor: 'pointer', padding: '2px 4px', fontFamily: 'inherit' }}
+                  onMouseEnter={e => e.currentTarget.style.color = '#ef4444'}
+                  onMouseLeave={e => e.currentTarget.style.color = C.muted}
+                >
+                  Limpar todas
+                </button>
+              </div>
+            )}
 
             {/* Pending invites TO me */}
             {invites.length > 0 && (
