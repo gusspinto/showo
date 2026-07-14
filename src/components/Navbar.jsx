@@ -1619,6 +1619,15 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               <button className={`sb-item${isActive('/ranking') ? ' active' : ''}`} onClick={() => navigate('/ranking')}>
                 <Trophy size={16} />{!collapsed && showLabels && <span>Ranking</span>}
               </button>
+              <button className={`sb-item${isActive('/mensagens') ? ' active' : ''}`} onClick={() => navigate('/mensagens')}
+                style={{ position: 'relative' }}>
+                <MessageSquare size={16} />{!collapsed && showLabels && <span>Mensagens</span>}
+                {!collapsed && showLabels && unreadMsgs > 0 && (
+                  <span style={{ marginLeft: 'auto', background: '#1b78f7', color: '#fff', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>
+                    {unreadMsgs > 9 ? '9+' : unreadMsgs}
+                  </span>
+                )}
+              </button>
             </>
           ) : (
             /* ── ALUNO sidebar ── */
@@ -2126,6 +2135,10 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   </button>
                   <button className={`mob-nav-btn${isActive('/ranking') ? ' active' : ''}`} onClick={() => { navigate('/ranking'); setMenuOpen(false) }}>
                     <Trophy size={20} /> Ranking
+                  </button>
+                  <button className={`mob-nav-btn${isActive('/mensagens') ? ' active' : ''}`} onClick={() => { navigate('/mensagens'); setMenuOpen(false) }}>
+                    <MessageSquare size={20} /> Mensagens
+                    {unreadMsgs > 0 && <span style={{ marginLeft: 'auto', background: '#1b78f7', color: '#fff', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{unreadMsgs > 9 ? '9+' : unreadMsgs}</span>}
                   </button>
                 </>
               ) : (

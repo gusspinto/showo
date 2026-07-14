@@ -5291,21 +5291,38 @@ export default function ProjectPage() {
             </div>
           )}
 
-          {/* Professor: switch between the public-visitor preview and the evaluation view */}
+          {/* Professor: contact the student, and switch between the public-visitor preview and the evaluation view */}
           {isProfessor && (
-            <button
-              onClick={() => setViewAsPublic(v => !v)}
-              style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
-                background: 'transparent', border: `1px solid ${colors.border}`, borderRadius: 8,
-                padding: '9px', color: colors.muted, fontSize: 12, fontWeight: 700,
-                cursor: 'pointer', fontFamily: 'inherit', transition: 'border-color 0.15s, color 0.15s',
-              }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(27,120,247,0.4)'; e.currentTarget.style.color = '#1b78f7' }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.color = colors.muted }}
-            >
-              <Globe size={13} /> Ver como visitante
-            </button>
+            <div style={{ display: 'flex', gap: 6 }}>
+              {project.user_id && (
+                <button
+                  onClick={() => navigate(`/mensagens?to=${project.user_id}`)}
+                  style={{
+                    flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+                    background: 'transparent', border: `1px solid ${colors.border}`, borderRadius: 8,
+                    padding: '9px', color: colors.muted, fontSize: 12, fontWeight: 700,
+                    cursor: 'pointer', fontFamily: 'inherit', transition: 'border-color 0.15s, color 0.15s',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(27,120,247,0.4)'; e.currentTarget.style.color = '#1b78f7' }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.color = colors.muted }}
+                >
+                  <MessageSquare size={13} /> Contactar
+                </button>
+              )}
+              <button
+                onClick={() => setViewAsPublic(v => !v)}
+                style={{
+                  flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+                  background: 'transparent', border: `1px solid ${colors.border}`, borderRadius: 8,
+                  padding: '9px', color: colors.muted, fontSize: 12, fontWeight: 700,
+                  cursor: 'pointer', fontFamily: 'inherit', transition: 'border-color 0.15s, color 0.15s',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(27,120,247,0.4)'; e.currentTarget.style.color = '#1b78f7' }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.color = colors.muted }}
+              >
+                <Globe size={13} /> Visitante
+              </button>
+            </div>
           )}
           <MembersPanel
             ownerName={ownerProfile?.full_name || ownerProfile?.username || project.creator_name}
