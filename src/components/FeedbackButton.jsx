@@ -91,7 +91,7 @@ export default function FeedbackButton() {
           -webkit-tap-highlight-color: transparent;
         }
         .fb-fab:hover {
-          width: 176px;
+          width: 186px;
           opacity: 1;
           border-color: rgba(27,120,247,0.45);
           color: #1b78f7;
@@ -102,7 +102,7 @@ export default function FeedbackButton() {
         .fb-fab svg { flex-shrink: 0; margin-left: 13px; transition: transform 0.3s ease; }
         .fb-fab:hover svg { transform: rotate(-8deg); }
         .fb-fab-label {
-          white-space: nowrap; margin-left: 8px;
+          white-space: nowrap; margin-left: 8px; margin-right: 16px;
           opacity: 0;
           transition: opacity 0.15s ease;
         }
