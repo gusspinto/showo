@@ -44,6 +44,13 @@ textarea:-webkit-autofill:focus {
   --c-green-bg:     #061a0f;
   --c-sidebar-bg:   #0b1628;  /* slightly more blue than page bg */
 
+  /* ── Dashboard "glass" card surface — translucent bg, visible border, used by
+     Dashboard.jsx cards only (not modals, which stay opaque for readability) ── */
+  --c-glass:          rgba(255,255,255,0.035);
+  --c-glass-hover:    rgba(255,255,255,0.06);
+  --c-glass-border:   rgba(255,255,255,0.14);
+  --c-glass-border-bright: rgba(255,255,255,0.26);
+
   /* ── Typography scale ── */
   --text-xs:   11px;   /* captions, badges, tiny labels */
   --text-sm:   12px;   /* section labels, secondary meta */
@@ -94,6 +101,11 @@ body.light {
   --c-blue-bg:      #dbeafe;
   --c-green-bg:     #dcfce7;
   --c-sidebar-bg:   #d4dced;  /* deeper, more blue than page bg */
+
+  --c-glass:          rgba(255,255,255,0.5);
+  --c-glass-hover:    rgba(255,255,255,0.72);
+  --c-glass-border:   rgba(15,23,42,0.13);
+  --c-glass-border-bright: rgba(15,23,42,0.24);
   --c-warn:         #92400e;  /* amber in light mode — readable on light backgrounds */
 }
 

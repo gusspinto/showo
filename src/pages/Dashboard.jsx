@@ -16,6 +16,11 @@ const C = {
   cardHover: 'var(--c-card-hover)',
   border: 'var(--c-border)',
   borderBright: 'var(--c-border-bright)',
+  glass: 'var(--c-glass)',
+  glassHover: 'var(--c-glass-hover)',
+  glassBorder: 'var(--c-glass-border)',
+  glassBorderBright: 'var(--c-glass-border-bright)',
+  glassStyle: { backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' },
   blue: '#1b78f7',
   blueHover: '#1564d4',
   muted: 'var(--c-muted)',
@@ -71,8 +76,9 @@ function StatCard({ icon, label, value, color, onClick }) {
       onMouseLeave={() => setHov(false)}
       className="stat-card-wrap"
       style={{
-        background: hov && onClick ? C.cardHover : C.card,
-        border: `1px solid ${hov && onClick ? C.borderBright : C.border}`,
+        ...C.glassStyle,
+        background: hov && onClick ? C.glassHover : C.glass,
+        border: `1px solid ${hov && onClick ? C.glassBorderBright : C.glassBorder}`,
         borderRadius: 12,
         padding: '18px 20px',
         display: 'flex', flexDirection: 'column', gap: 10,
@@ -141,8 +147,9 @@ function ProjectRow({ project, onView, onEdit, onDelete, onCopy, copied }) {
       onMouseLeave={() => setHovered(false)}
       onClick={(e) => { if (window.innerWidth <= 600 && !e.target.closest('button')) onView() }}
       style={{
-        background: hovered ? C.cardHover : C.card,
-        border: `1px solid ${hovered ? C.borderBright : C.border}`,
+        ...C.glassStyle,
+        background: hovered ? C.glassHover : C.glass,
+        border: `1px solid ${hovered ? C.glassBorderBright : C.glassBorder}`,
         borderRadius: 12, padding: '14px 18px',
         display: 'flex', alignItems: 'center', gap: 14,
         transition: 'background 0.15s, border-color 0.15s',
@@ -603,7 +610,7 @@ function TurmaCard({ turma, navigate }) {
       onClick={() => navigate(`/turma/${turma.code}`)}
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
-      style={{ background: hov ? C.cardHover : C.card, border: `1px solid ${hov ? C.borderBright : C.border}`, borderRadius: 12, padding: '14px 16px', cursor: 'pointer', transition: 'background 0.15s, border-color 0.15s', display: 'flex', alignItems: 'center', gap: 12 }}
+      style={{ ...C.glassStyle, background: hov ? C.glassHover : C.glass, border: `1px solid ${hov ? C.glassBorderBright : C.glassBorder}`, borderRadius: 12, padding: '14px 16px', cursor: 'pointer', transition: 'background 0.15s, border-color 0.15s', display: 'flex', alignItems: 'center', gap: 12 }}
     >
       <div style={{ width: 36, height: 36, borderRadius: 9, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
         <Users2 size={16} color="#1b78f7" />
@@ -695,7 +702,7 @@ function InsightsBlock({ projects }) {
   const trend = sorted.length > 1 ? sorted[sorted.length - 1].score - sorted[0].score : null
 
   return (
-    <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: '18px 22px' }}>
+    <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '18px 22px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 18 }}>
         <TrendingUp size={13} color={C.muted} />
         <span style={{ fontSize: 12, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Resumo</span>
@@ -1994,7 +2001,7 @@ export default function Dashboard() {
               {showOnboardingProgress && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
                   <span style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Primeiros passos</span>
-                  <div style={{ flex: '0 0 60px', height: 4, background: C.border, borderRadius: 999, overflow: 'hidden' }}>
+                  <div style={{ flex: '0 0 60px', height: 4, background: C.glassBorder, borderRadius: 999, overflow: 'hidden' }}>
                     <div style={{ width: `${(onboardingDone / 2) * 100}%`, height: '100%', background: C.blue, borderRadius: 999, transition: 'width 0.4s ease' }} />
                   </div>
                   <span style={{ fontSize: 11, color: C.subtle }}>{onboardingDone}/2</span>
@@ -2003,7 +2010,8 @@ export default function Dashboard() {
               {/* Primary action — full width, accent left border */}
               <div
                 style={{
-                  background: C.card,
+                  ...C.glassStyle,
+                  background: C.glass,
                   border: `1px solid ${primary.color}30`,
                   borderLeft: `3px solid ${primary.color}`,
                   borderRadius: 12, padding: '18px 20px',
@@ -2046,8 +2054,9 @@ export default function Dashboard() {
                         key={s.id}
                         onClick={s.action}
                         style={{
+                          ...C.glassStyle,
                           display: 'flex', alignItems: 'center', gap: 8,
-                          background: C.card, border: `1px solid ${C.border}`,
+                          background: C.glass, border: `1px solid ${C.glassBorder}`,
                           borderRadius: 8, padding: '9px 14px',
                           color: C.muted, fontSize: 12, fontWeight: 600,
                           cursor: 'pointer', fontFamily: 'inherit',
@@ -2055,7 +2064,7 @@ export default function Dashboard() {
                           flex: 1, minWidth: 160,
                         }}
                         onMouseEnter={e => { e.currentTarget.style.borderColor = s.color + '55'; e.currentTarget.style.color = C.text }}
-                        onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted }}
+                        onMouseLeave={e => { e.currentTarget.style.borderColor = C.glassBorder; e.currentTarget.style.color = C.muted }}
                       >
                         <SIcon size={13} color={s.color} style={{ flexShrink: 0 }} />
                         <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</span>
@@ -2086,7 +2095,7 @@ export default function Dashboard() {
               },
               { label: 'Por rever', value: needsReview.length, color: needsReview.length > 0 ? '#ef4444' : '#22c55e' },
             ].map(stat => (
-              <div key={stat.label} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: '14px 16px' }}>
+              <div key={stat.label} style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '14px 16px' }}>
                 <div style={{ fontSize: 24, fontWeight: 400, fontFamily: 'var(--font-heading)', color: stat.color, letterSpacing: '-0.5px' }}>{stat.value}</div>
                 <div style={{ fontSize: 11, color: C.muted, fontWeight: 600, marginTop: 2 }}>{stat.label}</div>
               </div>
@@ -2106,12 +2115,12 @@ export default function Dashboard() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 8 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
                 <span style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Primeiros passos</span>
-                <div style={{ flex: '0 0 60px', height: 4, background: C.border, borderRadius: 999, overflow: 'hidden' }}>
+                <div style={{ flex: '0 0 60px', height: 4, background: C.glassBorder, borderRadius: 999, overflow: 'hidden' }}>
                   <div style={{ width: `${(done / 2) * 100}%`, height: '100%', background: C.blue, borderRadius: 999, transition: 'width 0.4s ease' }} />
                 </div>
                 <span style={{ fontSize: 11, color: C.subtle }}>{done}/2</span>
               </div>
-              <div style={{ background: C.card, border: `1px solid ${step.color}30`, borderLeft: `3px solid ${step.color}`, borderRadius: 12, padding: '18px 20px', display: 'flex', gap: 16, alignItems: 'center' }}>
+              <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${step.color}30`, borderLeft: `3px solid ${step.color}`, borderRadius: 12, padding: '18px 20px', display: 'flex', gap: 16, alignItems: 'center' }}>
                 <div style={{ width: 44, height: 44, borderRadius: 10, flexShrink: 0, background: step.color + '18', border: `1px solid ${step.color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <SIcon size={20} color={step.color} />
                 </div>
@@ -2142,13 +2151,13 @@ export default function Dashboard() {
                 <span className="dash-sec-count">{needsReview.length}</span>
               </div>
             </div>
-            <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, overflow: 'hidden' }}>
+            <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, overflow: 'hidden' }}>
               {needsReview.slice(0, 5).map((p, i) => (
                 <div
                   key={p.id}
                   onClick={() => navigate(`/projeto/${p.slug}`)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: i < Math.min(needsReview.length, 5) - 1 ? `1px solid ${C.border}` : 'none', cursor: 'pointer', transition: 'background 0.12s' }}
-                  onMouseEnter={e => e.currentTarget.style.background = C.cardHover}
+                  style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: i < Math.min(needsReview.length, 5) - 1 ? `1px solid ${C.glassBorder}` : 'none', cursor: 'pointer', transition: 'background 0.12s' }}
+                  onMouseEnter={e => e.currentTarget.style.background = C.glassHover}
                   onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                 >
                   <div style={{ width: 32, height: 32, borderRadius: 8, flexShrink: 0, background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -2179,13 +2188,13 @@ export default function Dashboard() {
                 <span className="dash-sec-count">{flaggedForRevision.length}</span>
               </div>
             </div>
-            <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, overflow: 'hidden' }}>
+            <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, overflow: 'hidden' }}>
               {flaggedForRevision.slice(0, 5).map((p, i) => (
                 <div
                   key={p.id}
                   onClick={() => navigate(`/projeto/${p.slug}`)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: i < Math.min(flaggedForRevision.length, 5) - 1 ? `1px solid ${C.border}` : 'none', cursor: 'pointer', transition: 'background 0.12s' }}
-                  onMouseEnter={e => e.currentTarget.style.background = C.cardHover}
+                  style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: i < Math.min(flaggedForRevision.length, 5) - 1 ? `1px solid ${C.glassBorder}` : 'none', cursor: 'pointer', transition: 'background 0.12s' }}
+                  onMouseEnter={e => e.currentTarget.style.background = C.glassHover}
                   onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                 >
                   <div style={{ width: 32, height: 32, borderRadius: 8, flexShrink: 0, background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -2216,15 +2225,15 @@ export default function Dashboard() {
                 <span className="dash-sec-count">{upcomingDefenses.length}</span>
               </div>
             </div>
-            <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, overflow: 'hidden' }}>
+            <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, overflow: 'hidden' }}>
               {upcomingDefenses.map((p, i) => {
                 const urgentColor = p.daysLeft <= 7 ? '#ef4444' : p.daysLeft <= 30 ? '#f97316' : C.blue
                 return (
                   <div
                     key={p.id}
                     onClick={() => navigate(`/projeto/${p.slug}`)}
-                    style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: i < upcomingDefenses.length - 1 ? `1px solid ${C.border}` : 'none', cursor: 'pointer', transition: 'background 0.12s' }}
-                    onMouseEnter={e => e.currentTarget.style.background = C.cardHover}
+                    style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: i < upcomingDefenses.length - 1 ? `1px solid ${C.glassBorder}` : 'none', cursor: 'pointer', transition: 'background 0.12s' }}
+                    onMouseEnter={e => e.currentTarget.style.background = C.glassHover}
                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                   >
                     <div style={{ width: 32, height: 32, borderRadius: 8, flexShrink: 0, background: `${urgentColor}18`, border: `1px solid ${urgentColor}40`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -2252,13 +2261,13 @@ export default function Dashboard() {
                 <TrendingUp size={13} /> Atividade recente
               </div>
             </div>
-            <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, overflow: 'hidden' }}>
+            <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, overflow: 'hidden' }}>
               {recentActivity.map((p, i) => (
                 <div
                   key={p.id}
                   onClick={() => navigate(`/projeto/${p.slug}`)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: i < recentActivity.length - 1 ? `1px solid ${C.border}` : 'none', cursor: 'pointer', transition: 'background 0.12s' }}
-                  onMouseEnter={e => e.currentTarget.style.background = C.cardHover}
+                  style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: i < recentActivity.length - 1 ? `1px solid ${C.glassBorder}` : 'none', cursor: 'pointer', transition: 'background 0.12s' }}
+                  onMouseEnter={e => e.currentTarget.style.background = C.glassHover}
                   onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                 >
                   <div style={{ width: 32, height: 32, borderRadius: 8, flexShrink: 0, background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -2300,7 +2309,7 @@ export default function Dashboard() {
                 </button>
               </div>
               {turmas.length === 0 ? (
-                <div style={{ background: C.card, border: `1px dashed ${C.border}`, borderRadius: 12, padding: '40px 28px', textAlign: 'center' }}>
+                <div style={{ ...C.glassStyle, background: C.glass, border: `1px dashed ${C.glassBorder}`, borderRadius: 12, padding: '40px 28px', textAlign: 'center' }}>
                   <div style={{ marginBottom: 14, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 52, height: 52, borderRadius: 12, background: 'rgba(27,120,247,0.08)', border: '1px solid rgba(27,120,247,0.15)' }}>
                     <Users2 size={24} color="#1b78f7" />
                   </div>
@@ -2335,7 +2344,7 @@ export default function Dashboard() {
               <div
                 className="dash-milestones"
                 onClick={() => navigate(`/projeto/${next.slug}`)}
-                style={{ background: C.card, border: `1px solid ${urgentColor}35`, borderRadius: 12, overflow: 'hidden', cursor: 'pointer', transition: 'border-color 0.15s', boxShadow: 'none' }}
+                style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${urgentColor}35`, borderRadius: 12, overflow: 'hidden', cursor: 'pointer', transition: 'border-color 0.15s', boxShadow: 'none' }}
                 onMouseEnter={e => { e.currentTarget.style.borderColor = urgentColor + '70' }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor = urgentColor + '35' }}
               >
@@ -2364,7 +2373,7 @@ export default function Dashboard() {
                       <span style={{ fontSize: 11, color: C.muted }}>Score atual</span>
                       <span style={{ fontSize: 11, fontWeight: 700, color: scoreCol }}>{next.score ?? '—'} / 100</span>
                     </div>
-                    <div style={{ height: 5, background: C.border, borderRadius: 999, overflow: 'hidden' }}>
+                    <div style={{ height: 5, background: C.glassBorder, borderRadius: 999, overflow: 'hidden' }}>
                       <div style={{ width: `${scoreVal}%`, height: '100%', background: `linear-gradient(90deg, ${scoreCol}, ${scoreCol}99)`, borderRadius: 999, transition: 'width 0.6s ease' }} />
                     </div>
                     <div style={{ fontSize: 11, color: C.subtle, marginTop: 5 }}>
@@ -2385,13 +2394,13 @@ export default function Dashboard() {
                   <span className="dash-sec-count">{profNotifs.length}</span>
                 </div>
               </div>
-              <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, overflow: 'hidden' }}>
+              <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, overflow: 'hidden' }}>
                 {profNotifs.map((n, i) => (
                   <div
                     key={n.id}
                     onClick={() => dismissProfNotif(n.id, n.project_slug)}
-                    style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: i < profNotifs.length - 1 ? `1px solid ${C.border}` : 'none', cursor: 'pointer', transition: 'background 0.12s' }}
-                    onMouseEnter={e => e.currentTarget.style.background = C.cardHover}
+                    style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: i < profNotifs.length - 1 ? `1px solid ${C.glassBorder}` : 'none', cursor: 'pointer', transition: 'background 0.12s' }}
+                    onMouseEnter={e => e.currentTarget.style.background = C.glassHover}
                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                   >
                     <div style={{ width: 32, height: 32, borderRadius: 8, flexShrink: 0, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -2413,9 +2422,9 @@ export default function Dashboard() {
             studentTurmas.length > 0 ? (
               <div
                 onClick={() => studentTurmas.length === 1 ? navigate(`/turma/${studentTurmas[0].code}`) : setShowTurmasModal(true)}
-                style={{ display: 'flex', alignItems: 'center', gap: 12, background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: '14px 16px', cursor: 'pointer', transition: 'background 0.12s' }}
-                onMouseEnter={e => e.currentTarget.style.background = C.cardHover}
-                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                style={{ ...C.glassStyle, display: 'flex', alignItems: 'center', gap: 12, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '14px 16px', cursor: 'pointer', transition: 'background 0.12s' }}
+                onMouseEnter={e => e.currentTarget.style.background = C.glassHover}
+                onMouseLeave={e => e.currentTarget.style.background = C.glass}
               >
                 <div style={{ width: 36, height: 36, borderRadius: 9, flexShrink: 0, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Users2 size={16} color={C.blue} />
@@ -2474,7 +2483,7 @@ export default function Dashboard() {
                 {[1,2,3].map(i => <div key={i} className="dash-skeleton" style={{ height: 72, opacity: 1 - i * 0.15 }} />)}
               </div>
             ) : projects.length === 0 ? (
-              <div style={{ background: C.card, border: `1px dashed ${C.border}`, borderRadius: 12, padding: '52px 28px', textAlign: 'center' }}>
+              <div style={{ ...C.glassStyle, background: C.glass, border: `1px dashed ${C.glassBorder}`, borderRadius: 12, padding: '52px 28px', textAlign: 'center' }}>
                 <div style={{ marginBottom: 18, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 60, height: 60, borderRadius: 14, background: `${C.blue}18`, border: `1px solid ${C.blue}25` }}>
                   <Rocket size={28} color={C.blue} />
                 </div>
@@ -2489,7 +2498,7 @@ export default function Dashboard() {
                   Criar projeto
                 </button>
 
-                <div style={{ display: 'flex', justifyContent: 'center', gap: 28, flexWrap: 'wrap', marginTop: 36, paddingTop: 28, borderTop: `1px solid ${C.border}`, maxWidth: 560, marginLeft: 'auto', marginRight: 'auto' }}>
+                <div style={{ display: 'flex', justifyContent: 'center', gap: 28, flexWrap: 'wrap', marginTop: 36, paddingTop: 28, borderTop: `1px solid ${C.glassBorder}`, maxWidth: 560, marginLeft: 'auto', marginRight: 'auto' }}>
                   {[
                     { Icon: Sparkles, title: 'IA analisa o teu projeto', desc: 'Recebes feedback e um score sobre o que falta melhorar.' },
                     { Icon: Globe, title: 'Página pública partilhável', desc: 'Um link profissional para mostrares a recrutadores ou colegas.' },
@@ -2525,9 +2534,9 @@ export default function Dashboard() {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {collabProjects.map(p => (
-                  <div key={p.id} onClick={() => navigate(`/projeto/${p.slug}`)} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer', transition: 'all 0.15s' }}
-                    onMouseEnter={e => { e.currentTarget.style.background = C.cardHover; e.currentTarget.style.borderColor = C.borderBright }}
-                    onMouseLeave={e => { e.currentTarget.style.background = C.card; e.currentTarget.style.borderColor = C.border }}>
+                  <div key={p.id} onClick={() => navigate(`/projeto/${p.slug}`)} style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 14, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer', transition: 'all 0.15s' }}
+                    onMouseEnter={e => { e.currentTarget.style.background = C.glassHover; e.currentTarget.style.borderColor = C.glassBorderBright }}
+                    onMouseLeave={e => { e.currentTarget.style.background = C.glass; e.currentTarget.style.borderColor = C.glassBorder }}>
                     <div style={{ position: 'relative', width: 38, height: 38, flexShrink: 0, filter: `drop-shadow(0 0 4px ${getScoreColor(p.score)}80)` }}>
                       <svg width={38} height={38} overflow="visible" style={{ transform: 'rotate(-90deg)', display: 'block' }}>
                         <circle cx={19} cy={19} r={15} fill="none" stroke="var(--c-border)" strokeWidth={3} />
@@ -2542,7 +2551,7 @@ export default function Dashboard() {
                       <div style={{ color: C.text, fontSize: 14, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
                       {p.creator_name && <div style={{ color: C.muted, fontSize: 12, marginTop: 2 }}>de {p.creator_name}</div>}
                     </div>
-                    {p.area && <span style={{ fontSize: 11, color: C.subtle, background: 'var(--c-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 5, padding: '2px 8px', flexShrink: 0 }}>{p.area}</span>}
+                    {p.area && <span style={{ fontSize: 11, color: C.subtle, background: 'var(--c-bg-alt)', border: `1px solid ${C.glassBorder}`, borderRadius: 5, padding: '2px 8px', flexShrink: 0 }}>{p.area}</span>}
                     <ChevronRight size={15} color={C.subtle} style={{ flexShrink: 0 }} />
                   </div>
                 ))}
@@ -2574,7 +2583,8 @@ export default function Dashboard() {
                     const displayName = rec.full_name || rec.username || 'Recrutador'
                     return (
                       <div key={idx} style={{
-                        background: C.card, border: `1px solid ${C.border}`,
+                        ...C.glassStyle,
+                        background: C.glass, border: `1px solid ${C.glassBorder}`,
                         borderRadius: 14, padding: '14px 18px',
                         display: 'flex', alignItems: 'center', gap: 14,
                       }}>
@@ -2615,7 +2625,7 @@ export default function Dashboard() {
                           {rec.username && (
                             <button
                               onClick={() => navigate(`/u/${rec.username}`)}
-                              style={{ background: 'none', border: `1px solid ${C.border}`, borderRadius: 8, padding: '5px 10px', fontSize: 12, color: C.muted, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}
+                              style={{ background: 'none', border: `1px solid ${C.glassBorder}`, borderRadius: 8, padding: '5px 10px', fontSize: 12, color: C.muted, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}
                             >
                               Perfil
                             </button>
@@ -2676,7 +2686,8 @@ export default function Dashboard() {
                 </div>
               ) : savedTalents.length === 0 ? (
                 <div style={{
-                  background: C.card, border: `1px solid ${C.border}`,
+                  ...C.glassStyle,
+                  background: C.glass, border: `1px solid ${C.glassBorder}`,
                   borderRadius: 14, padding: '24px 20px', textAlign: 'center',
                 }}>
                   <Star size={28} color="var(--c-subtle)" style={{ marginBottom: 10 }} />
@@ -2702,14 +2713,14 @@ export default function Dashboard() {
                     return (
                       <div
                         key={p.id}
-                        style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer', transition: 'all 0.15s' }}
+                        style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 14, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer', transition: 'all 0.15s' }}
                         onClick={() => navigate(`/projeto/${p.slug}`)}
-                        onMouseEnter={e => { e.currentTarget.style.background = C.cardHover; e.currentTarget.style.borderColor = C.borderBright }}
-                        onMouseLeave={e => { e.currentTarget.style.background = C.card; e.currentTarget.style.borderColor = C.border }}
+                        onMouseEnter={e => { e.currentTarget.style.background = C.glassHover; e.currentTarget.style.borderColor = C.glassBorderBright }}
+                        onMouseLeave={e => { e.currentTarget.style.background = C.glass; e.currentTarget.style.borderColor = C.glassBorder }}
                       >
                         {/* Score ring */}
                         <svg width="38" height="38" viewBox="0 0 38 38" style={{ flexShrink: 0 }}>
-                          <circle cx={19} cy={19} r={15} fill="none" stroke={C.border} strokeWidth={3} />
+                          <circle cx={19} cy={19} r={15} fill="none" stroke={C.glassBorder} strokeWidth={3} />
                           <circle cx={19} cy={19} r={15} fill="none" stroke={scoreColor} strokeWidth={3}
                             strokeDasharray={`${((p.score ?? 0) / 100) * 2 * Math.PI * 15} ${2 * Math.PI * 15}`}
                             strokeLinecap="round" strokeDashoffset={2 * Math.PI * 15 * 0.25}
@@ -2729,7 +2740,7 @@ export default function Dashboard() {
                           {ownerUsername && (
                             <button
                               onClick={e => { e.stopPropagation(); navigate(`/u/${ownerUsername}`) }}
-                              style={{ background: 'none', border: `1px solid ${C.border}`, borderRadius: 8, padding: '5px 10px', fontSize: 12, color: C.muted, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}
+                              style={{ background: 'none', border: `1px solid ${C.glassBorder}`, borderRadius: 8, padding: '5px 10px', fontSize: 12, color: C.muted, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}
                             >
                               Perfil
                             </button>
