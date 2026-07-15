@@ -675,6 +675,17 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
   const { extras } = useSidebar()
   const [open, setOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+  // Keeps the mobile menu sheet mounted for one extra animation cycle after
+  // menuOpen flips to false, so the closing slide-down/fade can actually play
+  // instead of the sheet just vanishing — every existing setMenuOpen(false)
+  // call site stays untouched, this just delays the unmount.
+  const [menuRendered, setMenuRendered] = useState(false)
+  useEffect(() => {
+    if (menuOpen) { setMenuRendered(true); return }
+    if (!menuRendered) return
+    const t = setTimeout(() => setMenuRendered(false), 220)
+    return () => clearTimeout(t)
+  }, [menuOpen, menuRendered])
   const [createModal, setCreateModal] = useState(false)
   // Sidebar is icon-only by default and expands on sustained hover — no manual
   // toggle button (manual open/close — hover-to-expand was costing too much on
@@ -1143,16 +1154,29 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
           position: fixed; inset: 0; z-index: 399;
           background: rgba(0,0,0,0.55);
           backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+          animation: mob-overlay-fade-in 0.28s ease both;
         }
+        .mob-menu-overlay.closing { animation: mob-overlay-fade-out 0.22s ease both; }
+        @keyframes mob-overlay-fade-in { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes mob-overlay-fade-out { from { opacity: 1; } to { opacity: 0; } }
         .mob-menu-sheet {
-          position: fixed; left: 0; right: 0; bottom: 84px; z-index: 400;
-          max-height: calc(100vh - 144px);
+          /* Extends all the way to the true viewport bottom instead of stopping
+             at a hardcoded guess of the bottom-nav's height — the bottom-nav
+             sits above it (z-index 500 vs 400) and covers the overlap, so there's
+             no gap showing the dark overlay through underneath the nav bar. */
+          position: fixed; left: 0; right: 0; bottom: 0; z-index: 400;
+          max-height: calc(100vh - 60px);
           background: var(--c-card);
           border-top: 1px solid var(--c-border);
           border-radius: 20px 20px 0 0;
           display: flex; flex-direction: column;
           animation: mob-sheet-up 0.32s cubic-bezier(0.22,1,0.36,1) both;
           box-shadow: 0 -6px 40px rgba(0,0,0,0.5);
+        }
+        .mob-menu-sheet.closing { animation: mob-sheet-down 0.22s cubic-bezier(0.4,0,1,1) both; }
+        @keyframes mob-sheet-down {
+          from { transform: translateY(0);    opacity: 1;    }
+          to   { transform: translateY(100%); opacity: 0.85; }
         }
         .mob-sheet-handle {
           width: 40px; height: 4px; border-radius: 99px;
@@ -1161,7 +1185,10 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
         }
         .mob-sheet-scroll {
           overflow-y: auto; flex: 1;
-          padding: 0 12px 8px;
+          /* Bottom padding reserves space for the always-on-top bottom-nav bar,
+             so the last items scroll clear of it instead of being hidden/
+             unclickable underneath. */
+          padding: 0 12px calc(84px + 8px);
           min-height: 0;
         }
         .mob-sheet-scroll::-webkit-scrollbar { display: none; }
@@ -2003,10 +2030,10 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
       </div>
 
       {/* ── Mobile full-navigation sheet (≤600px) ── */}
-      {menuOpen && (
+      {menuRendered && (
         <>
-          <div className="mob-menu-overlay" onClick={() => setMenuOpen(false)} />
-          <div className="mob-menu-sheet">
+          <div className={`mob-menu-overlay${menuOpen ? '' : ' closing'}`} onClick={() => setMenuOpen(false)} />
+          <div className={`mob-menu-sheet${menuOpen ? '' : ' closing'}`}>
             <div className="mob-sheet-handle" onClick={() => setMenuOpen(false)} />
             <div className="mob-sheet-scroll">
 
