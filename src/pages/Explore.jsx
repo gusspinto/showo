@@ -22,6 +22,11 @@ const colors = {
   yellow: '#fbbf24',
   orange: '#f97316',
   red: '#ef4444',
+  glass: 'var(--c-glass)',
+  glassHover: 'var(--c-glass-hover)',
+  glassBorder: 'var(--c-glass-border)',
+  glassBorderBright: 'var(--c-glass-border-bright)',
+  glassStyle: { backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' },
 }
 
 const PROJECT_TYPES = [
@@ -605,7 +610,8 @@ export default function Explore() {
                   className="explore-card"
                   onClick={() => handleProjectClick(project)}
                   style={{
-                    background: colors.card, border: `1px solid ${colors.border}`,
+                    ...colors.glassStyle,
+                    background: colors.glass, border: `1px solid ${colors.glassBorder}`,
                     borderRadius: 12, padding: '22px', cursor: 'pointer',
                     display: 'flex', flexDirection: 'column', gap: 12,
                   }}
@@ -832,8 +838,9 @@ export default function Explore() {
                         className="explore-card"
                         onClick={() => profileUrl && navigate(profileUrl)}
                         style={{
-                          background: colors.card,
-                          border: `1px solid ${colors.border}`,
+                          ...colors.glassStyle,
+                          background: colors.glass,
+                          border: `1px solid ${colors.glassBorder}`,
                           borderRadius: 12,
                           padding: '16px 18px',
                           cursor: profileUrl ? 'pointer' : 'default',
