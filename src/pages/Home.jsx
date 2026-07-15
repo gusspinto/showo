@@ -151,7 +151,9 @@ function RolesPanel({ onBack, theme }) {
           {ROLE_CARDS.map(r => (
             <div key={r.label} className="roles-id-card" style={{
               background: cardBg, backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
-              border: `1px solid var(--c-glass-border-bright)`, borderRadius: 14,
+              // Fixed light border (not the theme-toggling --c-glass-border-bright token) — cardBg
+              // stays a dark-navy overlay in both themes, so a dark border would vanish in light mode.
+              border: '1px solid rgba(255,255,255,0.22)', borderRadius: 14,
               padding: '18px 22px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 18,
               borderLeft: `3px solid ${r.color}`,
             }}>
@@ -774,13 +776,21 @@ export default function Home() {
               style={{
                 display: 'flex', alignItems: 'center', gap: 14,
                 background: 'var(--c-card)',
-                border: `1.5px solid rgba(27,120,247,0.22)`,
+                border: `1.5px solid ${theme === 'light' ? 'rgba(255,255,255,0.4)' : 'rgba(27,120,247,0.22)'}`,
                 borderRadius: 14, padding: '8px 8px 8px 20px',
                 boxShadow: 'none',
                 transition: 'border-color 0.15s, box-shadow 0.15s',
               }}
-              onFocusCapture={e => { e.currentTarget.style.borderColor = '#1b78f7'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(27,120,247,0.15)' }}
-              onBlurCapture={e => { if (!e.currentTarget.contains(e.relatedTarget)) { e.currentTarget.style.borderColor = 'rgba(27,120,247,0.22)'; e.currentTarget.style.boxShadow = 'none' } }}
+              onFocusCapture={e => {
+                e.currentTarget.style.borderColor = theme === 'light' ? '#ffffff' : '#1b78f7'
+                e.currentTarget.style.boxShadow = theme === 'light' ? '0 0 0 3px rgba(255,255,255,0.3)' : '0 0 0 3px rgba(27,120,247,0.15)'
+              }}
+              onBlurCapture={e => {
+                if (!e.currentTarget.contains(e.relatedTarget)) {
+                  e.currentTarget.style.borderColor = theme === 'light' ? 'rgba(255,255,255,0.4)' : 'rgba(27,120,247,0.22)'
+                  e.currentTarget.style.boxShadow = 'none'
+                }
+              }}
             >
               <input
                 type="text" className="widget-input"
