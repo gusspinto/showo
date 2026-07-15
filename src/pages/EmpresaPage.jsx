@@ -13,6 +13,8 @@ const C = {
   muted:  'var(--c-muted)',
   text:   'var(--c-text)',
   subtle: 'var(--c-subtle)',
+  glass: 'var(--c-glass)', glassBorder: 'var(--c-glass-border)',
+  glassStyle: { backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' },
 }
 
 const TIPO_INFO = {
@@ -125,7 +127,7 @@ export default function EmpresaPage() {
       <div className="page-content">
 
         {/* ── Hero ── */}
-        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 'clamp(20px,4vw,36px)', marginBottom: 20 }}>
+        <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: 'clamp(20px,4vw,36px)', marginBottom: 20 }}>
           <div className="ep-hero" style={{ display: 'flex', alignItems: 'flex-start', gap: 20, flexWrap: 'wrap' }}>
             {/* Logo/Avatar */}
             <div style={{ flexShrink: 0 }}>
@@ -219,7 +221,7 @@ export default function EmpresaPage() {
             </h2>
 
             {vagas.length === 0 ? (
-              <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: '40px 24px', textAlign: 'center' }}>
+              <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '40px 24px', textAlign: 'center' }}>
                 <Briefcase size={32} color={C.muted} style={{ opacity: 0.4, marginBottom: 10 }} />
                 <p style={{ color: C.muted, fontSize: 14, margin: 0 }}>Sem vagas abertas de momento</p>
               </div>
@@ -229,7 +231,7 @@ export default function EmpresaPage() {
                   const cand = applied[v.id]
                   const st   = cand ? STATUS_INFO[cand.status] ?? STATUS_INFO.pendente : null
                   return (
-                    <div key={v.id} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: '18px 20px', transition: 'border-color 0.15s' }}
+                    <div key={v.id} style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '18px 20px', transition: 'border-color 0.15s' }}
                       onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--c-border-bright)'}
                       onMouseLeave={e => e.currentTarget.style.borderColor = C.border}>
                       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
@@ -283,14 +285,14 @@ export default function EmpresaPage() {
           {/* ── Sidebar: O que procuram ── */}
           <div>
             {company.looking_for && (
-              <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: '20px 20px 22px', marginBottom: 14 }}>
+              <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '20px 20px 22px', marginBottom: 14 }}>
                 <h3 style={{ margin: '0 0 12px', fontSize: 14, fontWeight: 700, color: C.text }}>O que procuram</h3>
                 <p style={{ margin: 0, fontSize: 13, color: C.muted, lineHeight: 1.7 }}>{company.looking_for}</p>
               </div>
             )}
 
             {company.username && (
-              <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: '20px' }}>
+              <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '20px' }}>
                 <h3 style={{ margin: '0 0 12px', fontSize: 14, fontWeight: 700, color: C.text }}>Recrutador</h3>
                 <button onClick={() => navigate(`/u/${company.username}`)}
                   style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 12px', cursor: 'pointer', fontFamily: 'inherit', transition: 'background 0.12s' }}
