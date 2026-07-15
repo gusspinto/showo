@@ -40,6 +40,11 @@ const colors = {
   yellowGlow: 'rgba(234,179,8,0.12)',
   orange: '#f97316',
   orangeGlow: 'rgba(249,115,22,0.12)',
+  glass: 'var(--c-glass)',
+  glassHover: 'var(--c-glass-hover)',
+  glassBorder: 'var(--c-glass-border)',
+  glassBorderBright: 'var(--c-glass-border-bright)',
+  glassStyle: { backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' },
 }
 
 const CONFETTI_COLORS = ['#1b78f7', '#22c55e', '#fbbf24', '#f97316', '#a855f7', '#ec4899', '#06b6d4']
@@ -3611,8 +3616,10 @@ export default function ProjectPage() {
         /* ── Design system ── */
         /* Base card: use on all proj-body cards */
         .proj-card {
-          background: ${colors.card};
-          border: 1px solid ${colors.border};
+          background: ${colors.glass};
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
+          border: 1px solid ${colors.glassBorder};
           border-radius: 12px;
           padding: 20px 22px;
           box-shadow: none;
@@ -5379,7 +5386,7 @@ export default function ProjectPage() {
             const hasSavedScore = project.teacher_score != null
 
             return (
-              <div style={{ background: 'rgba(27,120,247,0.05)', border: '1px solid rgba(27,120,247,0.22)', borderRadius: 12, overflow: 'hidden', marginBottom: 4 }}>
+              <div style={{ ...colors.glassStyle, background: colors.glass, border: `1px solid ${colors.glassBorder}`, borderRadius: 12, overflow: 'hidden', marginBottom: 4 }}>
                 {/* Header */}
                 <div style={{ padding: '13px 16px 10px', borderBottom: (juryEditing || hasSavedScore) ? '1px solid rgba(27,120,247,0.12)' : 'none', display: 'flex', alignItems: 'center', gap: 9 }}>
                   <ClipboardList size={14} color="#1b78f7" />
@@ -5527,7 +5534,7 @@ export default function ProjectPage() {
 
           {/* ── Nota do professor — visible to the owner once graded ── */}
           {isOwner && project.teacher_score != null && (
-            <div style={{ background: 'rgba(27,120,247,0.05)', border: '1px solid rgba(27,120,247,0.22)', borderRadius: 12, padding: '13px 16px' }}>
+            <div style={{ ...colors.glassStyle, background: colors.glass, border: `1px solid ${colors.glassBorder}`, borderRadius: 12, padding: '13px 16px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
                 <ClipboardList size={14} color="#1b78f7" style={{ flexShrink: 0 }} />
                 <span style={{ fontSize: 13, fontWeight: 700, color: colors.text }}>Nota do professor</span>
@@ -5547,7 +5554,7 @@ export default function ProjectPage() {
             const visibleFeedback = teacherFeedback.filter(f => f.field_key !== 'jury_eval')
             const myFeedback = isProfessor ? visibleFeedback.filter(f => f.teacher_id === user?.id) : visibleFeedback
             return (
-              <div style={{ background: 'rgba(27,120,247,0.04)', border: '1px solid rgba(27,120,247,0.22)', borderRadius: 12, overflow: 'hidden' }}>
+              <div style={{ ...colors.glassStyle, background: colors.glass, border: `1px solid ${colors.glassBorder}`, borderRadius: 12, overflow: 'hidden' }}>
                 {/* Header */}
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 16px', borderBottom: myFeedback.length > 0 || showFeedbackForm ? '1px solid rgba(27,120,247,0.12)' : 'none' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
@@ -5760,7 +5767,7 @@ export default function ProjectPage() {
             if (needsWork.length === 0) return null // completude card already shows 100% state
 
             return (
-              <div className="proj-card" style={{ background: 'rgba(27,120,247,0.04)', border: '1px solid rgba(27,120,247,0.18)' }}>
+              <div className="proj-card" style={{ background: colors.glass, border: `1px solid ${colors.glassBorder}` }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: tipsOpen ? 14 : 0 }}>
                   <h3 className="proj-sec-label" style={{ margin: 0, color: '#5a9ff5', flex: 1, minWidth: 0, overflow: 'hidden' }}>
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#5a9ff5" strokeWidth="2.5" style={{ flexShrink: 0 }}><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
