@@ -2403,8 +2403,8 @@ export default function Dashboard() {
                     onMouseEnter={e => e.currentTarget.style.background = C.glassHover}
                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                   >
-                    <div style={{ width: 32, height: 32, borderRadius: 8, flexShrink: 0, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <GraduationCap size={14} color={C.blue} />
+                    <div style={{ width: 32, height: 32, borderRadius: 8, flexShrink: 0, background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <GraduationCap size={14} color="#10b981" />
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 13, color: C.text, lineHeight: 1.4 }}>{n.message}</div>

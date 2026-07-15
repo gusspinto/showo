@@ -29,6 +29,7 @@ const C = {
   green:       '#22c55e',
   red:         '#ef4444',
   yellow:      '#fbbf24',
+  glass: 'var(--c-glass)', glassBorder: 'var(--c-glass-border)',
 }
 
 const inputStyle = {
@@ -130,7 +131,7 @@ function FieldBlock({ label, required, children, hint }) {
 
 function Card({ children, style }) {
   return (
-    <div className="pm-section-card" style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12,
+    <div className="pm-section-card" style={{ background: C.glass, backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', border: `1px solid ${C.glassBorder}`, borderRadius: 12,
       padding: '24px 26px', marginBottom: 16, boxShadow: 'none', ...style }}>
       {children}
     </div>

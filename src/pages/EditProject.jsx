@@ -24,6 +24,7 @@ const colors = {
   green: '#22c55e',
   red: '#f43f5e',
   inputBg: 'var(--c-bg)',
+  glass: 'var(--c-glass)', glassBorder: 'var(--c-glass-border)',
 }
 
 const PROJECT_TYPES = [
@@ -92,8 +93,10 @@ function Field({ label, children, required }) {
 function SectionCard({ title, children }) {
   return (
     <div style={{
-      background: colors.card,
-      border: `1px solid ${colors.border}`,
+      background: colors.glass,
+      backdropFilter: 'blur(16px)',
+      WebkitBackdropFilter: 'blur(16px)',
+      border: `1px solid ${colors.glassBorder}`,
       borderRadius: 12,
       padding: '24px 26px',
       marginBottom: 16,

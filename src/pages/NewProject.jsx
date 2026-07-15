@@ -33,6 +33,7 @@ const colors = {
   orange: '#f97316',
   red: '#ef4444',
   inputBg: 'var(--c-bg)',
+  glass: 'var(--c-glass)', glassBorder: 'var(--c-glass-border)',
 }
 
 const inputBase = {
@@ -459,8 +460,10 @@ export default function NewProject() {
                     key={opt.id}
                     onClick={() => setFormGoal(opt.id)}
                     style={{
-                      background: sel ? opt.bg : colors.card,
-                      border: `1.5px solid ${sel ? c : colors.border}`,
+                      background: sel ? opt.bg : colors.glass,
+                      backdropFilter: sel ? undefined : 'blur(16px)',
+                      WebkitBackdropFilter: sel ? undefined : 'blur(16px)',
+                      border: `1.5px solid ${sel ? c : colors.glassBorder}`,
                       borderRadius: 12, padding: '20px 16px',
                       color: colors.text, cursor: 'pointer', textAlign: 'left',
                       transition: 'border-color 0.18s, background 0.18s',
@@ -468,8 +471,8 @@ export default function NewProject() {
                       fontFamily: 'inherit',
                       position: 'relative',
                     }}
-                    onMouseEnter={e => { if (!sel) { e.currentTarget.style.borderColor = colors.borderBright; e.currentTarget.style.background = colors.cardHover }}}
-                    onMouseLeave={e => { if (!sel) { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.background = colors.card }}}
+                    onMouseEnter={e => { if (!sel) { e.currentTarget.style.borderColor = colors.borderBright; e.currentTarget.style.background = 'var(--c-glass-hover)' }}}
+                    onMouseLeave={e => { if (!sel) { e.currentTarget.style.borderColor = colors.glassBorder; e.currentTarget.style.background = colors.glass }}}
                   >
                     {/* Checkmark badge */}
                     {sel && (
@@ -528,8 +531,10 @@ export default function NewProject() {
               return (
                 <div style={{
                   marginTop: 20,
-                  background: colors.card,
-                  border: `1px solid ${colors.border}`,
+                  background: colors.glass,
+                  backdropFilter: 'blur(16px)',
+                  WebkitBackdropFilter: 'blur(16px)',
+                  border: `1px solid ${colors.glassBorder}`,
                   borderLeft: `3px solid ${colors.blue}`,
                   borderRadius: 12,
                   padding: '16px 18px',
@@ -645,7 +650,7 @@ export default function NewProject() {
             </div>
 
             {/* Project link */}
-            <div style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 12, padding: '20px 22px', marginBottom: 12, boxShadow: 'none' }}>
+            <div style={{ background: colors.glass, backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', border: `1px solid ${colors.glassBorder}`, borderRadius: 12, padding: '20px 22px', marginBottom: 12, boxShadow: 'none' }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: colors.subtle, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 10 }}>Link do projeto</div>
               <div style={{ display: 'flex', gap: 8 }}>
                 <div style={{ flex: 1, background: colors.bg, border: `1px solid ${colors.border}`, borderRadius: 8, padding: '10px 12px', fontSize: 13, color: colors.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -1092,8 +1097,10 @@ export default function NewProject() {
                         key={t.id}
                         onClick={() => set('project_type', sel ? null : t.id)}
                         style={{
-                          background: sel ? t.bg : colors.card,
-                          border: `1.5px solid ${sel ? c : colors.border}`,
+                          background: sel ? t.bg : colors.glass,
+                          backdropFilter: sel ? undefined : 'blur(16px)',
+                          WebkitBackdropFilter: sel ? undefined : 'blur(16px)',
+                          border: `1.5px solid ${sel ? c : colors.glassBorder}`,
                           borderRadius: 12, padding: '16px 10px 14px',
                           color: colors.text, cursor: 'pointer', textAlign: 'center',
                           transition: 'border-color 0.18s, background 0.18s',
@@ -1101,8 +1108,8 @@ export default function NewProject() {
                           fontFamily: 'inherit',
                           position: 'relative',
                         }}
-                        onMouseEnter={e => { if (!sel) { e.currentTarget.style.borderColor = colors.borderBright; e.currentTarget.style.background = colors.cardHover }}}
-                        onMouseLeave={e => { if (!sel) { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.background = colors.card }}}
+                        onMouseEnter={e => { if (!sel) { e.currentTarget.style.borderColor = colors.borderBright; e.currentTarget.style.background = 'var(--c-glass-hover)' }}}
+                        onMouseLeave={e => { if (!sel) { e.currentTarget.style.borderColor = colors.glassBorder; e.currentTarget.style.background = colors.glass }}}
                       >
                         {/* Checkmark badge */}
                         {sel && (
@@ -1195,7 +1202,7 @@ export default function NewProject() {
 
           {/* Score preview */}
           {!isFinalize && estimatedScore > 0 && (
-            <div style={{ marginTop: 20, padding: '14px 16px', background: colors.card, borderRadius: 12, border: `1px solid ${colors.border}` }}>
+            <div style={{ marginTop: 20, padding: '14px 16px', background: colors.glass, backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderRadius: 12, border: `1px solid ${colors.glassBorder}` }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                 <span style={{ fontSize: 13, color: colors.muted, fontWeight: 500 }}>Score estimado</span>
                 <span style={{ fontSize: 16, fontWeight: 800, color: getScoreColor(estimatedScore), letterSpacing: '-0.3px' }}>{estimatedScore}</span>

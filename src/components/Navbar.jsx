@@ -70,6 +70,29 @@ function getNotifIcon(type) {
   }
 }
 
+// Role colors mirror Home.jsx's role picker (aluno/professor/recrutador-empresa) —
+// only applied where the acting role is actually knowable from the notification
+// type; view/like/comment notifications stay neutral since the actor is anonymous.
+function getNotifColor(type) {
+  switch (type) {
+    case 'SCORE_MILESTONE':
+    case 'RANKING_CHANGE':
+    case 'MISSION_COMPLETE':
+    case 'STUDENT_JOINED':
+    case 'NEW_CANDIDATURA':
+      return '#1b78f7' // aluno
+    case 'TEACHER_FEEDBACK':
+      return '#10b981' // professor
+    case 'RECRUITER_INTEREST':
+    case 'VAGA_INVITE':
+    case 'CANDIDATURA_ACEITE':
+    case 'CANDIDATURA_RECUSADA':
+      return '#8b5cf6' // recrutador / empresa
+    default:
+      return null // PROJECT_VIEW, COMPANY_VIEW, PROJECT_LIKE, PROJECT_COMMENT — actor unknown
+  }
+}
+
 function timeAgo(ts) {
   const diff = (Date.now() - new Date(ts).getTime()) / 1000
   if (diff < 60)    return 'agora mesmo'
@@ -492,7 +515,7 @@ function InviteInbox({ userId, sidebar = false, collapsed = false }) {
                       transition: 'background 0.12s',
                     }}
                   >
-                    <span style={{ display: 'flex', flexShrink: 0, marginTop: 1, color: C.muted }}>{getNotifIcon(n.type)}</span>
+                    <span style={{ display: 'flex', flexShrink: 0, marginTop: 1, color: getNotifColor(n.type) || C.muted }}>{getNotifIcon(n.type)}</span>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <p style={{ margin: '0 0 2px', fontSize: 13, color: n.anyUnread ? C.text : C.muted, lineHeight: 1.45, fontWeight: n.anyUnread ? 500 : 400 }}>
                         {VIEW_TYPES.includes(n.type) ? viewMessage(n) : stripEmoji(n.message)}
