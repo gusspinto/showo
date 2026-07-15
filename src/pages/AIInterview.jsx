@@ -16,6 +16,8 @@ const C = {
   text:   'var(--c-text)',
   muted:  'var(--c-muted)',
   subtle: 'var(--c-subtle)',
+  glass: 'var(--c-glass)', glassBorder: 'var(--c-glass-border)', glassBorderBright: 'var(--c-glass-border-bright)',
+  glassStyle: { backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' },
 }
 
 const TYPE_LABELS = {
@@ -68,7 +70,8 @@ function LivePreview({ projectType, answers, currentField, currentValue }) {
 
   return (
     <div style={{
-      background: C.card, border: `1px solid ${C.border}`,
+      ...C.glassStyle,
+      background: C.glass, border: `1px solid ${C.glassBorder}`,
       borderRadius: 12, overflow: 'hidden',
       boxShadow: 'none',
     }}>
@@ -627,7 +630,7 @@ export default function AIInterview() {
                   {history.length >= 2 && (
                     <div style={{
                       position: 'absolute', top: 2, left: '6%', right: '6%', height: 64,
-                      background: C.card, border: `1px solid ${C.border}`,
+                      background: C.glass, border: `1px solid ${C.glassBorder}`,
                       borderRadius: 12, opacity: 0.13, zIndex: 1, pointerEvents: 'none',
                     }} />
                   )}
@@ -635,15 +638,16 @@ export default function AIInterview() {
                   {history.length >= 1 && (
                     <div style={{
                       position: 'absolute', top: 11, left: '3%', right: '3%', height: 64,
-                      background: C.card, border: `1px solid ${C.border}`,
+                      background: C.glass, border: `1px solid ${C.glassBorder}`,
                       borderRadius: 12, opacity: 0.30, zIndex: 2, pointerEvents: 'none',
                     }} />
                   )}
 
                   {/* Current question card */}
                   <div key={currentQ} style={{
+                    ...C.glassStyle,
                     position: 'relative', zIndex: 3,
-                    background: C.card, border: `1.5px solid ${C.bright}`,
+                    background: C.glass, border: `1.5px solid ${C.glassBorderBright}`,
                     borderRadius: 12, padding: '28px 28px 20px',
                     boxShadow: 'none',
                     animation: goingBack ? 'fadeSlideDown 0.35s ease' : 'fadeSlideUp 0.4s ease',
