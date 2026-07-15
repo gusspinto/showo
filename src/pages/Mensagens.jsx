@@ -15,6 +15,9 @@ const C = {
   muted:  'var(--c-muted)',
   text:   'var(--c-text)',
   subtle: 'var(--c-subtle)',
+  glass: 'var(--c-glass)', glassHover: 'var(--c-glass-hover)',
+  glassBorder: 'var(--c-glass-border)', glassBorderBright: 'var(--c-glass-border-bright)',
+  glassStyle: { backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' },
 }
 
 function timeAgo(ts) {
@@ -405,8 +408,9 @@ export default function Mensagens() {
 
             {/* ── Conversation list ── */}
             <div style={{
+              ...C.glassStyle,
               width: 280, flexShrink: 0,
-              background: C.card, border: `1px solid ${C.border}`,
+              background: C.glass, border: `1px solid ${C.glassBorder}`,
               borderRadius: 12, display: 'flex', flexDirection: 'column', overflow: 'hidden',
             }} className={`msg-list${mobileView === 'thread' ? ' mob-hidden' : ''}`}>
               <div style={{ padding: '12px 12px 8px', borderBottom: `1px solid ${C.border}`, display: 'flex', gap: 6 }}>
@@ -462,7 +466,7 @@ export default function Mensagens() {
             </div>
 
             {/* ── Thread ── */}
-            <div style={{ flex: 1, background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, display: 'flex', flexDirection: 'column', overflow: 'hidden' }} className={`msg-thread${mobileView === 'thread' ? ' active' : ''}`}>
+            <div style={{ ...C.glassStyle, flex: 1, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, display: 'flex', flexDirection: 'column', overflow: 'hidden' }} className={`msg-thread${mobileView === 'thread' ? ' active' : ''}`}>
 
               {!activeId ? (
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, padding: 32, textAlign: 'center' }}>

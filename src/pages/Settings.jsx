@@ -17,6 +17,7 @@ const C = {
   border:      'var(--c-border)',
   borderBright:'var(--c-border-bright)',
   borderFocus: '#1b78f7',
+  glass: 'var(--c-glass)', glassBorder: 'var(--c-glass-border)',
   blue:        '#1b78f7',
   blueHover:   '#1564d4',
   muted:       'var(--c-muted)',
@@ -108,8 +109,10 @@ function Textarea({ label, value, onChange, placeholder, hint }) {
 function SectionCard({ title, children }) {
   return (
     <div style={{
-      background: C.card,
-      border: `1px solid ${C.border}`,
+      background: C.glass,
+      backdropFilter: 'blur(16px)',
+      WebkitBackdropFilter: 'blur(16px)',
+      border: `1px solid ${C.glassBorder}`,
       borderRadius: 12,
       padding: '28px 28px 22px',
       marginBottom: 20,
