@@ -37,17 +37,20 @@ export function AuthProvider({ children }) {
   }, [])
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      const u = session?.user ?? null
-      setUser(u)
-      fetchProfile(u?.id)
-      setLoading(false)
-    })
-
+    // onAuthStateChange alone covers the initial load too — it fires an
+    // INITIAL_SESSION event (with the current session, or null) as soon as
+    // the listener is registered, so a separate getSession() call here would
+    // just duplicate that first fetchProfile() call on every app boot.
+    let sawInitial = false
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      // TOKEN_REFRESHED fires periodically (~hourly) on long-lived sessions
+      // without the user's identity or profile actually changing — skip the
+      // needless re-fetch.
+      if (_event === 'TOKEN_REFRESHED') return
       const u = session?.user ?? null
       setUser(u)
       fetchProfile(u?.id)
+      if (!sawInitial) { sawInitial = true; setLoading(false) }
     })
 
     return () => subscription.unsubscribe()

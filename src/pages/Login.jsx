@@ -93,28 +93,34 @@ export default function Login() {
     setError('')
     setNotConfirmed(false)
     setLoading(true)
-    // Check if email is registered before attempting login
-    const { data: emailExists, error: emailCheckError } = await supabase.rpc('check_email_exists', { p_email: email.trim() })
-    if (emailCheckError) {
-      setLoading(false)
-      setError('Demasiadas tentativas. Aguarda um pouco e tenta novamente.')
-      return
-    }
-    if (!emailExists) {
-      setLoading(false)
-      setError('Esta conta não existe. Verifica o email ou cria uma conta.')
-      return
-    }
+
+    // Fire both in parallel instead of gating sign-in behind the email-exists
+    // check — the common case (correct credentials) then only waits on
+    // signInWithPassword itself, instead of paying for both round trips back
+    // to back on every login attempt.
+    const emailExistsPromise = supabase.rpc('check_email_exists', { p_email: email.trim() })
     const { error: err } = await supabase.auth.signInWithPassword({ email, password })
     setLoading(false)
-    if (err) {
-      if (err.message?.toLowerCase().includes('email not confirmed')) {
-        setNotConfirmed(true)
-      } else {
-        setError('Palavra-passe incorreta.')
-      }
-    } else {
+
+    if (!err) {
       navigate('/dashboard')
+      return
+    }
+
+    if (err.message?.toLowerCase().includes('email not confirmed')) {
+      setNotConfirmed(true)
+      return
+    }
+
+    // Wrong password or unknown account — check which, using the result that's
+    // already been in flight since the request started.
+    const { data: emailExists, error: emailCheckError } = await emailExistsPromise
+    if (emailCheckError) {
+      setError('Demasiadas tentativas. Aguarda um pouco e tenta novamente.')
+    } else if (!emailExists) {
+      setError('Esta conta não existe. Verifica o email ou cria uma conta.')
+    } else {
+      setError('Palavra-passe incorreta.')
     }
   }
 
