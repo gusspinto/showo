@@ -24,6 +24,9 @@ const C = {
   yellow: '#fbbf24',
   purple: '#a78bfa',
   red: '#ef4444',
+  glass: 'var(--c-glass)', glassHover: 'var(--c-glass-hover)',
+  glassBorder: 'var(--c-glass-border)', glassBorderBright: 'var(--c-glass-border-bright)',
+  glassStyle: { backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' },
 }
 
 // Mission definitions — keyed so ProjectPage can also reference them
@@ -202,8 +205,8 @@ function MissionCard({ mission, done, progress }) {
       <div
         className="missoes-card"
         style={{
-          background: C.card,
-          border: `1px solid ${C.border}`,
+          background: C.glass,
+          border: `1px solid ${C.glassBorder}`,
           borderRadius: 10,
           padding: '10px 14px',
           display: 'flex',
@@ -236,8 +239,8 @@ function MissionCard({ mission, done, progress }) {
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
       style={{
-        background: hov ? C.cardHover : C.card,
-        border: `1px solid ${hov ? C.borderBright : C.border}`,
+        background: hov ? C.glassHover : C.glass,
+        border: `1px solid ${hov ? C.glassBorderBright : C.glassBorder}`,
         borderRadius: 10,
         padding: '12px 14px',
         display: 'flex',
@@ -387,7 +390,8 @@ export default function Missoes() {
 
         {/* XP Progress card */}
         <div style={{
-          background: C.card, border: `1px solid ${C.border}`,
+          ...C.glassStyle,
+          background: C.glass, border: `1px solid ${C.glassBorder}`,
           borderRadius: 12, padding: '20px 24px', marginBottom: 28, marginTop: 24,
         }}>
           <div className="missoes-stats" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
@@ -421,7 +425,7 @@ export default function Missoes() {
         {loading ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {[...Array(6)].map((_, i) => (
-              <div key={i} style={{ height: 76, borderRadius: 10, background: C.card, border: `1px solid ${C.border}`, opacity: 0.5 }} />
+              <div key={i} style={{ height: 76, borderRadius: 10, background: C.glass, border: `1px solid ${C.glassBorder}`, opacity: 0.5 }} />
             ))}
           </div>
         ) : (

@@ -25,6 +25,9 @@ const C = {
   purple: '#a78bfa',
   red: '#ef4444',
   orange: '#f97316',
+  glass: 'var(--c-glass)', glassHover: 'var(--c-glass-hover)',
+  glassBorder: 'var(--c-glass-border)', glassBorderBright: 'var(--c-glass-border-bright)',
+  glassStyle: { backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' },
 }
 
 export const ACHIEVEMENTS = [
@@ -179,8 +182,9 @@ function AchievementCard({ achievement, unlocked }) {
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
       style={{
-        background: hov && unlocked ? C.cardHover : C.card,
-        border: `1px solid ${unlocked ? accent + '55' : C.border}`,
+        ...C.glassStyle,
+        background: hov && unlocked ? C.glassHover : C.glass,
+        border: `1px solid ${unlocked ? accent + '55' : C.glassBorder}`,
         borderRadius: 12,
         padding: '20px',
         textAlign: 'center',
@@ -335,7 +339,8 @@ export default function Conquistas() {
 
         {/* Progress card */}
         <div style={{
-          background: C.card, border: `1px solid ${C.border}`,
+          ...C.glassStyle,
+          background: C.glass, border: `1px solid ${C.glassBorder}`,
           borderRadius: 12, padding: '20px 24px', marginBottom: 32, marginTop: 24,
         }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
@@ -377,7 +382,7 @@ export default function Conquistas() {
         {loading ? (
           <div className="conquistas-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(180px,1fr))', gap: 12 }}>
             {[...Array(9)].map((_, i) => (
-              <div key={i} style={{ height: 150, borderRadius: 12, background: C.card, border: `1px solid ${C.border}`, opacity: 0.5 }} />
+              <div key={i} style={{ height: 150, borderRadius: 12, background: C.glass, border: `1px solid ${C.glassBorder}`, opacity: 0.5 }} />
             ))}
           </div>
         ) : (
