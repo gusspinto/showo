@@ -32,6 +32,8 @@ const C = {
   purple: '#a855f7',
   purpleSoft: 'rgba(168,85,247,0.08)',
   orange: '#f97316',
+  glass: 'var(--c-glass)', glassBorder: 'var(--c-glass-border)',
+  glassStyle: { backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' },
 }
 
 // authenticated only has column-level SELECT grant on these (no email — that
@@ -42,7 +44,8 @@ const PROFILE_COLUMNS = 'id, username, total_xp, created_at, full_name, bio, is_
 function StatCard({ icon, label, value, color = C.blue, sub }) {
   return (
     <div style={{
-      background: C.card, border: `1px solid ${C.border}`,
+      ...C.glassStyle,
+      background: C.glass, border: `1px solid ${C.glassBorder}`,
       borderRadius: 12, padding: '22px 24px',
       display: 'flex', alignItems: 'flex-start', gap: 16,
     }}>
@@ -143,7 +146,7 @@ function OverviewTab({ users, projects }) {
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
         {/* Recent projects */}
-        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: '20px 22px' }}>
+        <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '20px 22px' }}>
           <h3 style={{ margin: '0 0 16px', fontSize: 12, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Projetos recentes</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {recentProjects.map(p => (
@@ -165,7 +168,7 @@ function OverviewTab({ users, projects }) {
         </div>
 
         {/* Recent users */}
-        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: '20px 22px' }}>
+        <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '20px 22px' }}>
           <h3 style={{ margin: '0 0 16px', fontSize: 12, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Utilizadores recentes</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {recentUsers.map(u => (
@@ -260,7 +263,8 @@ function UsersTab({ users, projects, onToggleAdmin, onDeleteUser, onChangeRole, 
           const joined = u.created_at ? new Date(u.created_at).toLocaleDateString('pt-PT', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'
           return (
             <div key={u.id} style={{
-              background: C.card, border: `1px solid ${u.banned_at ? C.redBorder : C.border}`,
+              ...C.glassStyle,
+              background: C.glass, border: `1px solid ${u.banned_at ? C.redBorder : C.glassBorder}`,
               borderRadius: 12, padding: '14px 16px',
               display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
             }}>
@@ -376,7 +380,8 @@ function ProjectsTab({ projects, users, onDeleteProject }) {
           const creator = p.creator_name || userMap[p.user_id]?.full_name || userMap[p.user_id]?.username || 'Anónimo'
           return (
             <div key={p.id} style={{
-              background: C.card, border: `1px solid ${C.border}`,
+              ...C.glassStyle,
+              background: C.glass, border: `1px solid ${C.glassBorder}`,
               borderRadius: 12, padding: '12px 16px',
               display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
             }}>
@@ -448,7 +453,7 @@ function InvitesTab({ codes, loading, onGenerate, generating, onToggleActive }) 
 
   return (
     <div>
-      <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: '20px 22px', marginBottom: 24 }}>
+      <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '20px 22px', marginBottom: 24 }}>
         <h3 style={{ margin: '0 0 4px', fontSize: 15, fontWeight: 700, color: C.text }}>Gerar código de acesso — Professor</h3>
         <p style={{ margin: '0 0 16px', fontSize: 13, color: C.muted }}>
           Por defeito, o código é reutilizável — dá para partilhar um único código com uma escola inteira e cada professor regista-se com ele.
@@ -496,7 +501,7 @@ function InvitesTab({ codes, loading, onGenerate, generating, onToggleActive }) 
             const inactive = revoked || expired || exhausted
             const isExpanded = expanded === c.id
             return (
-              <div key={c.id} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: '12px 16px', opacity: revoked ? 0.6 : 1 }}>
+              <div key={c.id} style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 10, padding: '12px 16px', opacity: revoked ? 0.6 : 1 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
                   <span style={{ fontSize: 14, fontWeight: 800, color: C.text, letterSpacing: 1.5, fontFamily: 'monospace', flexShrink: 0 }}>{c.code}</span>
                   <div style={{ flex: 1, minWidth: 0 }}>
