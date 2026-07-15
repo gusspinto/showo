@@ -36,6 +36,8 @@ const C = {
   red:    '#ef4444',
   amber:  '#f59e0b',
   purple: '#8b5cf6',
+  glass: 'var(--c-glass)', glassBorder: 'var(--c-glass-border)',
+  glassStyle: { backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' },
 }
 
 const TIPO_INFO = {
@@ -69,7 +71,7 @@ function RecruiterCard({ vaga, cands, onEdit, onToggle, onDelete, expanded, onTo
   const tipo = TIPO_INFO[vaga.tipo] ?? TIPO_INFO.estagio
   const candList = cands || []
   return (
-    <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, overflow: 'hidden' }}>
+    <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, overflow: 'hidden' }}>
       <div style={{ padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
@@ -154,9 +156,9 @@ function PublicCard({ vaga, recruiterProfile, myStatus, onCandidatar, isAluno, u
   const score = matchScore(userSkills, vaga.skills)
 
   return (
-    <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: '20px 22px', transition: 'border-color 0.15s', display: 'flex', flexDirection: 'column', gap: 12 }}
-      onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--c-border-bright)'}
-      onMouseLeave={e => e.currentTarget.style.borderColor = C.border}>
+    <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '20px 22px', transition: 'border-color 0.15s', display: 'flex', flexDirection: 'column', gap: 12 }}
+      onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--c-glass-border-bright)'}
+      onMouseLeave={e => e.currentTarget.style.borderColor = C.glassBorder}>
       {/* Company header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         <div style={{ width: 36, height: 36, borderRadius: 8, background: `${tipo.color}22`, border: `1px solid ${tipo.color}44`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -682,7 +684,7 @@ export default function Vagas() {
         {loading ? (
           <div className="vagas-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
             {[1, 2, 3].map(i => (
-              <div key={i} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: 20, height: 160, opacity: 0.5 }} />
+              <div key={i} style={{ background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 14, padding: 20, height: 160, opacity: 0.5 }} />
             ))}
           </div>
         ) : isRecruiter && activeTab === 'minhas' ? (

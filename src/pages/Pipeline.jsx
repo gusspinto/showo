@@ -13,6 +13,7 @@ const C = {
   muted:  'var(--c-muted)',
   text:   'var(--c-text)',
   subtle: 'var(--c-subtle)',
+  glass: 'var(--c-glass)', glassBorder: 'var(--c-glass-border)',
 }
 
 const STAGES = [
@@ -294,9 +295,9 @@ export default function Pipeline() {
                       const vaga = vagas.find(v => v.id === c.vaga_id)
                       return (
                         <button key={c.id} onClick={() => setSelected(c)}
-                          style={{ width: '100%', background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: '12px 14px', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', transition: 'border-color 0.15s, background 0.15s' }}
-                          onMouseEnter={e => { e.currentTarget.style.borderColor = stage.color; e.currentTarget.style.background = 'var(--c-card-hover)' }}
-                          onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.background = C.card }}>
+                          style={{ width: '100%', background: C.glass, backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', border: `1px solid ${C.glassBorder}`, borderRadius: 10, padding: '12px 14px', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', transition: 'border-color 0.15s, background 0.15s' }}
+                          onMouseEnter={e => { e.currentTarget.style.borderColor = stage.color; e.currentTarget.style.background = 'var(--c-glass-hover)' }}
+                          onMouseLeave={e => { e.currentTarget.style.borderColor = C.glassBorder; e.currentTarget.style.background = C.glass }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: vaga ? 8 : 0 }}>
                             <Avatar profile={c.profile} size={30} />
                             <div style={{ minWidth: 0, flex: 1 }}>

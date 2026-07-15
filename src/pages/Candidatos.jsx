@@ -15,6 +15,8 @@ const C = {
   subtle: 'var(--c-subtle)',
   amber:  '#f59e0b',
   green:  '#22c55e',
+  glass: 'var(--c-glass)', glassBorder: 'var(--c-glass-border)',
+  glassStyle: { backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' },
 }
 
 function Avatar({ profile, size = 44 }) {
@@ -124,7 +126,7 @@ export default function Candidatos() {
 
         {loading ? (
           <div className="candidatos-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px,1fr))', gap: 14 }}>
-            {[1,2,3].map(i => <div key={i} style={{ height: 140, background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, opacity: 0.5 }} />)}
+            {[1,2,3].map(i => <div key={i} style={{ height: 140, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 14, opacity: 0.5 }} />)}
           </div>
         ) : filtered.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '72px 0' }}>
@@ -149,7 +151,7 @@ export default function Candidatos() {
               if (!p) return null
               const roleInfo = ROLE_LABELS[p.role] ?? ROLE_LABELS.aluno
               return (
-                <div key={s.id} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div key={s.id} style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
                   {/* Header row */}
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
                     <button onClick={() => navigate(p.username ? `/u/${p.username}` : `/u/${p.id}`)} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', flexShrink: 0 }}>
