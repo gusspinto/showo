@@ -37,6 +37,9 @@ const C = {
   green:       '#22c55e',
   yellow:      '#fbbf24',
   orange:      '#f97316',
+  glass: 'var(--c-glass)', glassHover: 'var(--c-glass-hover)',
+  glassBorder: 'var(--c-glass-border)', glassBorderBright: 'var(--c-glass-border-bright)',
+  glassStyle: { backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' },
 }
 
 // Tier color based on score — connects directly to the scoring system
@@ -150,9 +153,9 @@ export default function Ranking() {
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
         .rank-row { transition: background 0.15s, border-color 0.15s !important; cursor: pointer !important; }
-        .rank-row:hover { background: ${C.cardHover} !important; border-color: ${C.borderBright} !important; }
+        .rank-row:hover { background: ${C.glassHover} !important; border-color: ${C.glassBorderBright} !important; }
         .rank-top { cursor: pointer !important; }
-        .rank-top:hover .rank-top-card { background: ${C.cardHover} !important; border-color: ${C.borderBright} !important; }
+        .rank-top:hover .rank-top-card { background: ${C.glassHover} !important; border-color: ${C.glassBorderBright} !important; }
         /* Filter toggle button */
         .rank-filter-btn {
           display: flex; align-items: center; gap: 6px;
@@ -321,9 +324,10 @@ export default function Ranking() {
                       >
                         {/* Card above platform */}
                         <div className="rank-top-card" style={{
+                          ...C.glassStyle,
                           width: '100%',
-                          background: isMe ? 'rgba(27,120,247,0.06)' : C.card,
-                          border: `1px solid ${isMe ? C.borderBright : C.border}`,
+                          background: isMe ? 'rgba(27,120,247,0.06)' : C.glass,
+                          border: `1px solid ${isMe ? C.glassBorderBright : C.glassBorder}`,
                           borderRadius: 12,
                           transition: 'border-color 0.15s, background 0.15s',
                           padding: isFirst ? '20px 14px 18px' : '14px 12px 14px',
@@ -397,8 +401,9 @@ export default function Ranking() {
                         className="rank-row"
                         onClick={() => navigate(`/projeto/${project.slug}`)}
                         style={{
-                          background: isMe ? 'rgba(27,120,247,0.05)' : C.card,
-                          border: `1px solid ${isMe ? C.borderBright : C.border}`,
+                          ...C.glassStyle,
+                          background: isMe ? 'rgba(27,120,247,0.05)' : C.glass,
+                          border: `1px solid ${isMe ? C.glassBorderBright : C.glassBorder}`,
                           borderLeft: `2px solid ${tierColor}`,
                           borderRadius: 10,
                           padding: '13px 18px',

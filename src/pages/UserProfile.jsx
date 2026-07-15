@@ -26,6 +26,9 @@ const C = {
   yellow:       '#fbbf24',
   orange:       '#f97316',
   red:          '#ef4444',
+  glass: 'var(--c-glass)', glassHover: 'var(--c-glass-hover)',
+  glassBorder: 'var(--c-glass-border)', glassBorderBright: 'var(--c-glass-border-bright)',
+  glassStyle: { backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' },
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
@@ -58,8 +61,9 @@ function ProjectCard({ project, onClick }) {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
-        background: hovered ? C.cardHover : C.card,
-        border: `1px solid ${hovered ? C.borderBright : C.border}`,
+        ...C.glassStyle,
+        background: hovered ? C.glassHover : C.glass,
+        border: `1px solid ${hovered ? C.glassBorderBright : C.glassBorder}`,
         borderRadius: 12,
         cursor: 'pointer',
         overflow: 'hidden',
@@ -312,8 +316,10 @@ export default function UserProfile() {
         @keyframes spin { to { transform: rotate(360deg) } }
 
         .up-header {
-          background: ${C.card};
-          border: 1px solid ${C.border};
+          background: ${C.glass};
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
+          border: 1px solid ${C.glassBorder};
           border-radius: 14px;
           padding: 28px 28px 24px;
           margin-bottom: 28px;
@@ -702,7 +708,7 @@ export default function UserProfile() {
 
           {projects.length === 0 ? (
             isOwnProfile ? (
-              <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: '48px 32px', textAlign: 'center' }}>
+              <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '48px 32px', textAlign: 'center' }}>
                 <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16, color: C.blue }}><Rocket size={40} /></div>
                 <p style={{ color: C.text, fontSize: 17, fontWeight: 700, margin: '0 0 8px' }}>
                   {myProfile?.role === 'professor' ? 'Ainda não tens projetos' : 'O teu portfólio começa aqui'}
@@ -721,7 +727,7 @@ export default function UserProfile() {
                 )}
               </div>
             ) : (
-              <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: '48px 32px', textAlign: 'center' }}>
+              <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '48px 32px', textAlign: 'center' }}>
                 <FolderOpen size={40} color={C.subtle} style={{ marginBottom: 14 }} />
                 <p style={{ color: C.text, fontSize: 16, fontWeight: 700, margin: '0 0 8px' }}>Ainda sem projetos</p>
                 <p style={{ color: C.muted, fontSize: 14, margin: 0, lineHeight: 1.6 }}>
