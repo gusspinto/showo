@@ -150,8 +150,8 @@ function RolesPanel({ onBack, theme }) {
         <div className="roles-card-stack" style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 560, width: '100%' }}>
           {ROLE_CARDS.map(r => (
             <div key={r.label} className="roles-id-card" style={{
-              background: cardBg, backdropFilter: 'blur(8px)',
-              border: `1px solid ${colors.border}`, borderRadius: 14,
+              background: cardBg, backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
+              border: `1px solid var(--c-glass-border-bright)`, borderRadius: 14,
               padding: '18px 22px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 18,
               borderLeft: `3px solid ${r.color}`,
             }}>
