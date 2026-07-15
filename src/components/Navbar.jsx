@@ -285,40 +285,20 @@ function InviteInbox({ userId, sidebar = false, collapsed = false }) {
   }, [userId])
 
   async function loadInvites() {
-    // Step 1: get raw invite rows (no joins — avoids PostgREST ambiguity)
-    const { data: rows, error } = await supabase
-      .from('project_collaborators')
-      .select('id, project_id, invited_by, sections')
-      .eq('user_id', userId)
-      .eq('status', 'pending')
-
+    // Single server-side join (get_pending_invites RPC) instead of 3
+    // sequential round trips (invite rows -> project names -> inviter
+    // names) — this ran on every page load for every logged-in user.
+    const { data: rows, error } = await supabase.rpc('get_pending_invites')
     if (error || !rows?.length) { setInvites([]); return }
 
-    // Step 2: fetch project names
-    const projectIds = [...new Set(rows.map(r => r.project_id))]
-    const { data: projects } = await supabase
-      .from('projects')
-      .select('id, name, slug')
-      .in('id', projectIds)
-
-    // Step 3: fetch inviter usernames
-    const inviterIds = [...new Set(rows.map(r => r.invited_by).filter(Boolean))]
-    let inviters = []
-    if (inviterIds.length) {
-      const { data } = await supabase
-        .from('profiles')
-        .select('id, username, full_name')
-        .in('id', inviterIds)
-      inviters = data ?? []
-    }
-
     const enriched = rows.map(r => ({
-      ...r,
-      projectName: projects?.find(p => p.id === r.project_id)?.name ?? 'Projeto',
-      projectSlug: projects?.find(p => p.id === r.project_id)?.slug ?? '',
-      inviterName: inviters.find(p => p.id === r.invited_by)?.full_name
-        || inviters.find(p => p.id === r.invited_by)?.username
-        || null,
+      id: r.id,
+      project_id: r.project_id,
+      invited_by: r.invited_by,
+      sections: r.sections,
+      projectName: r.project_name ?? 'Projeto',
+      projectSlug: r.project_slug ?? '',
+      inviterName: r.inviter_name || null,
     }))
     setInvites(enriched)
   }

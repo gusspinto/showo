@@ -71,6 +71,16 @@ function PageLoader() {
   )
 }
 
+// Holds the router (and every route) until auth state is resolved, so pages
+// never need their own "if (authLoading) show a spinner" check that used to
+// render right after this same PageLoader — that produced two back-to-back
+// spinners (this one, then the page's own) on a direct/deep navigation.
+function AuthGate({ children }) {
+  const { loading } = useAuth()
+  if (loading) return <PageLoader />
+  return children
+}
+
 // ── Error Boundary ────────────────────────────────────────────────────────────
 class ErrorBoundary extends Component {
   constructor(props) {
@@ -319,6 +329,7 @@ export default function App() {
             <PageViewTracker />
             <ErrorBoundary>
             <RecoveryGate pwRecovery={pwRecovery}>
+            <AuthGate>
             <Suspense fallback={<PageLoader />}>
             <Routes>
               <Route path="/"              element={<HomeRoute />}   />
@@ -350,6 +361,7 @@ export default function App() {
               <Route path="*"                   element={<NotFound />}      />
             </Routes>
             </Suspense>
+            </AuthGate>
             </RecoveryGate>
             </ErrorBoundary>
           </BrowserRouter>
