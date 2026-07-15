@@ -409,6 +409,13 @@ export default function Home() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const { theme } = useTheme()
+  // The hero always renders the moody dark-navy gradient regardless of the site
+  // theme toggle — the light-mode "full brand-blue with white text" variant read
+  // poorly (low-contrast borders, felt like a mismatched second dark mode rather
+  // than an actual light hero), so it's simpler and better-looking to keep the
+  // hero as one deliberate dark, high-contrast beat and let only the rest of the
+  // page (below the hero) follow the user's light/dark preference.
+  const heroTheme = 'dark'
   const [selectedGoal, setSelectedGoal] = useState(null)
   const [inputText, setInputText] = useState('')
   const [showOnboarding, setShowOnboarding] = useState(() => !localStorage.getItem('showo_seen_onboarding'))
@@ -691,8 +698,8 @@ export default function Home() {
           Light theme: full brand-blue gradient with white accents instead of the
           page's plain light background. Both forced via locally-scoped CSS vars
           so every themed descendant (text, cards, inputs) stays readable. */}
-      <div style={{ position: 'relative' }} className={theme === 'light' ? 'hero-theme-blue' : 'hero-theme-dark'}>
-        <div className="hero-bleed-box" style={theme === 'light' ? {
+      <div style={{ position: 'relative' }} className={heroTheme === 'light' ? 'hero-theme-blue' : 'hero-theme-dark'}>
+        <div className="hero-bleed-box" style={heroTheme === 'light' ? {
           position: 'relative', overflow: 'hidden', color: '#fff',
           background: 'linear-gradient(115deg, #1454c2 0%, #1b78f7 45%, #2f8bff 100%)',
           borderBottom: '1px solid rgba(255,255,255,0.18)',
@@ -711,7 +718,7 @@ export default function Home() {
           '--c-muted': '#7d93b0', '--c-text': '#e8f2ff', '--c-subtle': '#3d5270',
           '--c-input-bg': '#060c18',
         }}>
-      <HeroAurora theme={theme} />
+      <HeroAurora theme={heroTheme} />
       <div className="hero-bleed-offset">
       <div className="hero-track" ref={heroTrackRef}>
         <div style={{ flex: '0 0 100%', minWidth: '100%', scrollSnapAlign: 'start', position: 'relative' }}>
@@ -734,7 +741,7 @@ export default function Home() {
             Para estudantes
           </div>
 
-          <StaticHero theme={theme} />
+          <StaticHero theme={heroTheme} />
 
           <p className="hero-sub" style={{
             fontSize: 15, color: colors.muted, lineHeight: 1.5,
@@ -749,7 +756,7 @@ export default function Home() {
             <div ref={goalsRowRef} className="goals-row" style={{ position: 'relative', display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 22 }}>
               <span style={{
                 position: 'absolute', borderRadius: 999,
-                background: theme === 'light' ? '#0d3a96' : 'rgba(27,120,247,0.12)',
+                background: heroTheme === 'light' ? '#0d3a96' : 'rgba(27,120,247,0.12)',
                 left: pillHighlight.left, width: pillHighlight.width,
                 top: pillHighlight.top, height: pillHighlight.height,
                 opacity: pillHighlight.opacity, pointerEvents: 'none',
@@ -765,7 +772,7 @@ export default function Home() {
                   onClick={() => setSelectedGoal(selectedGoal === g.id ? null : g.id)}
                   style={{
                     position: 'relative', background: 'transparent', border: 'none',
-                    color: selectedGoal === g.id ? (theme === 'light' ? '#ffffff' : '#1b78f7') : colors.muted,
+                    color: selectedGoal === g.id ? (heroTheme === 'light' ? '#ffffff' : '#1b78f7') : colors.muted,
                     borderRadius: 999, padding: '7px 14px', fontSize: 13, fontWeight: 600, fontFamily: 'inherit',
                   }}
                 >{g.label}</button>
@@ -776,18 +783,18 @@ export default function Home() {
               style={{
                 display: 'flex', alignItems: 'center', gap: 14,
                 background: 'var(--c-card)',
-                border: `1.5px solid ${theme === 'light' ? 'rgba(255,255,255,0.4)' : 'rgba(27,120,247,0.22)'}`,
+                border: `1.5px solid ${heroTheme === 'light' ? 'rgba(255,255,255,0.4)' : 'rgba(27,120,247,0.22)'}`,
                 borderRadius: 14, padding: '8px 8px 8px 20px',
                 boxShadow: 'none',
                 transition: 'border-color 0.15s, box-shadow 0.15s',
               }}
               onFocusCapture={e => {
-                e.currentTarget.style.borderColor = theme === 'light' ? '#ffffff' : '#1b78f7'
-                e.currentTarget.style.boxShadow = theme === 'light' ? '0 0 0 3px rgba(255,255,255,0.3)' : '0 0 0 3px rgba(27,120,247,0.15)'
+                e.currentTarget.style.borderColor = heroTheme === 'light' ? '#ffffff' : '#1b78f7'
+                e.currentTarget.style.boxShadow = heroTheme === 'light' ? '0 0 0 3px rgba(255,255,255,0.3)' : '0 0 0 3px rgba(27,120,247,0.15)'
               }}
               onBlurCapture={e => {
                 if (!e.currentTarget.contains(e.relatedTarget)) {
-                  e.currentTarget.style.borderColor = theme === 'light' ? 'rgba(255,255,255,0.4)' : 'rgba(27,120,247,0.22)'
+                  e.currentTarget.style.borderColor = heroTheme === 'light' ? 'rgba(255,255,255,0.4)' : 'rgba(27,120,247,0.22)'
                   e.currentTarget.style.boxShadow = 'none'
                 }
               }}
@@ -857,7 +864,7 @@ export default function Home() {
         </button>
         </div>
 
-        <RolesPanel theme={theme} onBack={() => scrollToHeroSlide(0)} />
+        <RolesPanel theme={heroTheme} onBack={() => scrollToHeroSlide(0)} />
       </div>
       </div>
       </div>
