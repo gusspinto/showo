@@ -2851,6 +2851,21 @@ export default function ProjectPage() {
   const [defenseMode, setDefenseMode] = useState(false)
   const [collaboratorSections, setCollaboratorSections] = useState(null) // null = not a collaborator
   const [members, setMembers] = useState([]) // [{ user_id, status, sections, profiles }]
+  // A professor only gets evaluation tools on projects submitted by a student
+  // in one of their own turmas — everywhere else they see the same public
+  // preview a visitor would. Defaults to false (not yet confirmed) so there's
+  // no flash of professor-only UI before the check resolves.
+  const [isMyClassProject, setIsMyClassProject] = useState(false)
+  useEffect(() => {
+    if (!project?.id || profile?.role !== 'professor') { setIsMyClassProject(false); return }
+    let cancelled = false
+    supabase.rpc('is_project_in_my_class', { p_project_id: project.id }).then(({ data, error }) => {
+      if (cancelled) return
+      if (error) console.error('is_project_in_my_class failed:', error)
+      setIsMyClassProject(!!data)
+    })
+    return () => { cancelled = true }
+  }, [project?.id, profile?.role])
   const [ownerProfile, setOwnerProfile] = useState(null)
   const [aiFeedback, setAiFeedback] = useState(null)
   const [analyzingAI, setAnalyzingAI] = useState(false)
@@ -3493,7 +3508,7 @@ export default function ProjectPage() {
   const isOwner = user?.id
     ? (user.id === project.user_id)  // logged-in: only user_id match
     : !!localStorage.getItem(`edit_token_${project.slug}`)  // anonymous: token fallback
-  const isProfessor = profile?.role === 'professor' && !isOwner && !!user?.id
+  const isProfessor = profile?.role === 'professor' && !isOwner && !!user?.id && isMyClassProject
   const isRecruiterRole = profile?.role === 'recrutador' || profile?.role === 'empresa'
 
   async function handleLike() {
