@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
 import {
   Building2, Plus, X, ChevronDown, ChevronRight, Mail, Phone, Globe2,
-  UserPlus, Trash2, Pencil, ExternalLink,
+  UserPlus, Trash2, Pencil, ExternalLink, Send, CheckCircle2,
 } from 'lucide-react'
 
 const C = {
@@ -174,10 +174,13 @@ function LeadRow({ lead, onChangeStatus, onRemove }) {
   )
 }
 
-function CompanyCard({ company, leads, students, onEdit, onDelete, onAddLead, onChangeLeadStatus, onRemoveLead }) {
+function CompanyCard({ company, leads, students, onEdit, onDelete, onAddLead, onChangeLeadStatus, onRemoveLead, onInvite }) {
   const [open, setOpen] = useState(false)
   const [hov, setHov] = useState(false)
   const [showLeadModal, setShowLeadModal] = useState(false)
+  const [inviting, setInviting] = useState(false)
+  const claimed = !!company.claimed_by
+  const invited = !!company.invited_at
 
   return (
     <div style={{ ...C.glassStyle, background: hov ? C.glassHover : C.glass, border: `1px solid ${hov ? C.glassBorderBright : C.glassBorder}`, borderRadius: 12, transition: 'background 0.15s, border-color 0.15s' }}
@@ -191,6 +194,11 @@ function CompanyCard({ company, leads, students, onEdit, onDelete, onAddLead, on
           <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginTop: 2, flexWrap: 'wrap' }}>
             {company.sector && <span style={{ fontSize: 12, color: C.muted }}>{company.sector}</span>}
             {leads.length > 0 && <span style={{ fontSize: 11, color: C.subtle }}>{leads.length} aluno{leads.length !== 1 ? 's' : ''}</span>}
+            {claimed ? (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, color: C.green }}><CheckCircle2 size={11} /> Conta criada</span>
+            ) : invited ? (
+              <span style={{ fontSize: 11, color: C.subtle }}>Convite enviado</span>
+            ) : null}
           </div>
         </div>
         <button onClick={e => { e.stopPropagation(); onEdit(company) }} className="icon-btn-ghost" title="Editar"><Pencil size={14} /></button>
@@ -209,6 +217,22 @@ function CompanyCard({ company, leads, students, onEdit, onDelete, onAddLead, on
             </div>
           )}
           {company.notes && <p style={{ fontSize: 12, color: C.subtle, margin: '0 0 10px', lineHeight: 1.5 }}>{company.notes}</p>}
+
+          {claimed ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: C.green, fontWeight: 600, marginBottom: 12 }}>
+              <CheckCircle2 size={13} /> A empresa já tem conta no Showo e vê estes alunos diretamente.
+            </div>
+          ) : company.contact_email ? (
+            <button
+              onClick={async e => { e.stopPropagation(); setInviting(true); await onInvite(company); setInviting(false) }}
+              disabled={inviting}
+              style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.25)', borderRadius: 8, padding: '8px 12px', color: C.blue, fontSize: 12, fontWeight: 700, cursor: inviting ? 'default' : 'pointer', fontFamily: 'inherit', marginBottom: 12, opacity: inviting ? 0.6 : 1 }}
+            >
+              <Send size={12} /> {inviting ? 'A enviar…' : invited ? 'Reenviar convite' : 'Convidar empresa para o Showo'}
+            </button>
+          ) : (
+            <p style={{ fontSize: 12, color: C.subtle, margin: '0 0 12px' }}>Adiciona um email de contacto para poderes convidar esta empresa.</p>
+          )}
 
           <div>
             {leads.map(lead => (
@@ -245,6 +269,12 @@ export default function Parceiros() {
   const [showCompanyModal, setShowCompanyModal] = useState(false)
   const [editingCompany, setEditingCompany] = useState(null)
   const [deletingCompany, setDeletingCompany] = useState(null)
+  const [toast, setToast] = useState('')
+
+  function showToast(msg) {
+    setToast(msg)
+    setTimeout(() => setToast(''), 4000)
+  }
 
   useEffect(() => {
     if (!user) { navigate('/login'); return }
@@ -328,6 +358,19 @@ export default function Parceiros() {
     await supabase.from('internship_leads').delete().eq('id', leadId)
   }
 
+  async function handleSendInvite(company) {
+    const inviteUrl = `${window.location.origin}/register?empresa_convite=${company.invite_token}`
+    const { data, error } = await supabase.functions.invoke('send-partner-invite', {
+      body: { company_id: company.id, invite_url: inviteUrl },
+    })
+    if (error || data?.error) {
+      showToast(data?.error || 'Erro ao enviar convite: ' + error?.message)
+      return
+    }
+    setCompanies(prev => prev.map(c => c.id === company.id ? { ...c, invited_at: new Date().toISOString() } : c))
+    showToast(`Convite enviado para ${company.contact_email}`)
+  }
+
   const studentNameById = {}
   students.forEach(s => { studentNameById[s.id] = s.full_name })
 
@@ -385,6 +428,7 @@ export default function Parceiros() {
                 onAddLead={handleAddLead}
                 onChangeLeadStatus={handleChangeLeadStatus}
                 onRemoveLead={handleRemoveLead}
+                onInvite={handleSendInvite}
               />
             ))}
           </div>
@@ -421,6 +465,15 @@ export default function Parceiros() {
           </div>
         </div>
       )}
+
+      <div style={{
+        position: 'fixed', bottom: 28, left: '50%',
+        transform: `translateX(-50%) translateY(${toast ? 0 : 80}px)`,
+        opacity: toast ? 1 : 0, transition: 'opacity 0.3s, transform 0.3s',
+        background: 'var(--c-bg-alt)', border: `1px solid ${C.borderBright}`, borderRadius: 10,
+        padding: '12px 24px', fontSize: 14, fontWeight: 600, color: C.text,
+        zIndex: 3000, pointerEvents: 'none', maxWidth: '90vw', textAlign: 'center',
+      }}>{toast}</div>
     </div>
   )
 }

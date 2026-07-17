@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { GraduationCap, BookOpen, Search, Building2, ArrowLeft } from 'lucide-react'
@@ -98,6 +98,28 @@ export default function Register() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
+  // ── Partner-company invite (?empresa_convite=<token>) — a professor added
+  // this company in Parceiros.jsx and emailed this link. It unlocks the
+  // otherwise-disabled 'empresa' role for this one signup and, once claimed,
+  // links the new account to the leads the professor already tracked. ──
+  const partnerToken = new URLSearchParams(location.search).get('empresa_convite')
+  const [partnerInvite, setPartnerInvite] = useState(null) // { name, sector, already_claimed } | 'invalid' | null (loading)
+  const isPartnerFlow = partnerInvite && partnerInvite !== 'invalid' && !partnerInvite.already_claimed
+
+  useEffect(() => {
+    if (!partnerToken) return
+    supabase.rpc('get_partner_company_invite_info', { p_token: partnerToken }).then(({ data, error: err }) => {
+      const row = Array.isArray(data) ? data[0] : data
+      if (err || !row) { setPartnerInvite('invalid'); return }
+      setPartnerInvite(row)
+      if (!row.already_claimed) {
+        setRole('empresa')
+        setCompany(row.name || '')
+        setStep('form')
+      }
+    })
+  }, [partnerToken])
+
   const needsCompany = role === 'recrutador' || role === 'empresa'
   const needsSchool = role === 'professor'
   const needsInviteCode = role === 'professor'
@@ -111,13 +133,32 @@ export default function Register() {
     return !codeErr
   }
 
+  async function claimPartnerInvite() {
+    const { error: claimErr } = await supabase.rpc('claim_partner_company_invite', { p_token: partnerToken })
+    return !claimErr
+  }
+
   async function handleSubmit(e) {
     e.preventDefault()
     setError('')
 
     // Account already exists (signUp succeeded on a previous attempt) — this
-    // submit is just retrying the invite code, nothing else to validate.
+    // submit is just retrying the invite code / partner claim, nothing else
+    // to validate.
     if (accountCreated) {
+      if (isPartnerFlow) {
+        setLoading(true)
+        const ok = await claimPartnerInvite()
+        if (!ok) {
+          setLoading(false)
+          setError('Não foi possível ligar a tua conta a esta empresa. O convite pode já ter sido usado.')
+          return
+        }
+        await refreshProfile()
+        setLoading(false)
+        navigate('/dashboard')
+        return
+      }
       if (!inviteCode.trim()) { setError('Introduz o código de acesso.'); return }
       setLoading(true)
       const ok = await redeemInviteCode()
@@ -170,6 +211,19 @@ export default function Register() {
         setLoading(false)
         setAccountCreated(true)
         setError('A tua conta foi criada, mas o código de acesso é inválido ou já foi utilizado. Verifica o código e tenta novamente.')
+        return
+      }
+      await refreshProfile()
+    }
+
+    // Same idea for the partner-company flow — 'empresa' only takes effect
+    // once the invite token is claimed.
+    if (isPartnerFlow) {
+      const ok = await claimPartnerInvite()
+      if (!ok) {
+        setLoading(false)
+        setAccountCreated(true)
+        setError('A tua conta foi criada, mas não foi possível ligá-la a esta empresa. O convite pode já ter sido usado.')
         return
       }
       await refreshProfile()
@@ -280,6 +334,17 @@ export default function Register() {
               <h1 style={{ color: C.text, fontSize: 26, fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 6px', letterSpacing: '-0.5px' }}>Criar conta</h1>
               <p style={{ color: C.muted, fontSize: 14, margin: '0 0 28px' }}>Como vais usar o Showo?</p>
 
+              {partnerToken && partnerInvite === 'invalid' && (
+                <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 8, padding: '10px 14px', marginBottom: 20, color: C.error, fontSize: 13 }}>
+                  Este link de convite não é válido. Pede ao professor um novo link.
+                </div>
+              )}
+              {partnerToken && partnerInvite?.already_claimed && (
+                <div style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: 8, padding: '10px 14px', marginBottom: 20, color: C.text, fontSize: 13 }}>
+                  Este convite já foi usado para criar uma conta. Se já tens conta, <Link to="/login" style={{ color: C.blue }}>entra aqui</Link>.
+                </div>
+              )}
+
               <div className="register-role-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 28 }}>
                 {ROLES.map(r => {
                   const selected = role === r.id
@@ -343,23 +408,37 @@ export default function Register() {
                     {selectedRole?.label}
                   </span>
                 </div>
-                <button
-                  onClick={() => setStep('role')}
-                  style={{ background: 'none', border: 'none', color: C.muted, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', padding: 0, display: 'flex', alignItems: 'center', gap: 5 }}
-                >
-                  <ArrowLeft size={14} />Alterar
-                </button>
+                {!isPartnerFlow && (
+                  <button
+                    onClick={() => setStep('role')}
+                    style={{ background: 'none', border: 'none', color: C.muted, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', padding: 0, display: 'flex', alignItems: 'center', gap: 5 }}
+                  >
+                    <ArrowLeft size={14} />Alterar
+                  </button>
+                )}
               </div>
 
+              {isPartnerFlow && (
+                <div style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: 8, padding: '10px 14px', marginBottom: 20, color: C.text, fontSize: 13, lineHeight: 1.5 }}>
+                  Foste convidado como parceiro de estágio de <strong>{partnerInvite.name}</strong>. Ao criar conta vais ver os alunos que o professor já assinalou como interessados.
+                </div>
+              )}
+
               <h1 style={{ color: C.text, fontSize: 22, fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 24px', letterSpacing: '-0.5px' }}>
-                {accountCreated ? 'Só falta o código' : 'Os teus dados'}
+                {accountCreated ? (isPartnerFlow ? 'Só falta ligar à empresa' : 'Só falta o código') : 'Os teus dados'}
               </h1>
 
               <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
                 {accountCreated ? (
-                  <Field label="Código de acesso">
-                    <Input value={inviteCode} onChange={e => setInviteCode(e.target.value)} placeholder="Código enviado pela Showo" required />
-                  </Field>
+                  isPartnerFlow ? (
+                    <p style={{ color: C.muted, fontSize: 14, margin: 0 }}>
+                      A tua conta foi criada. Carrega no botão abaixo para tentar ligar-te a <strong style={{ color: C.text }}>{partnerInvite.name}</strong> novamente.
+                    </p>
+                  ) : (
+                    <Field label="Código de acesso">
+                      <Input value={inviteCode} onChange={e => setInviteCode(e.target.value)} placeholder="Código enviado pela Showo" required />
+                    </Field>
+                  )
                 ) : (
                   <>
                     <Field label={role === 'empresa' ? 'Nome do responsável' : 'O teu nome'}>
@@ -408,7 +487,7 @@ export default function Register() {
                     cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit', marginTop: 4,
                   }}
                 >
-                  {loading ? 'A verificar…' : accountCreated ? 'Confirmar código' : 'Criar conta'}
+                  {loading ? 'A verificar…' : accountCreated ? (isPartnerFlow ? 'Tentar novamente' : 'Confirmar código') : 'Criar conta'}
                 </button>
               </form>
             </>

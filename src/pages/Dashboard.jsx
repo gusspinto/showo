@@ -33,6 +33,15 @@ const C = {
   purple: '#a78bfa',
 }
 
+const PARTNER_LEAD_STATUS = {
+  interessado: { label: 'Interessado', color: C.subtle },
+  contactado:  { label: 'Contactado',  color: C.blue },
+  resposta:    { label: 'Resposta',    color: C.purple },
+  entrevista:  { label: 'Entrevista',  color: C.yellow },
+  aceite:      { label: 'Aceite',      color: C.green },
+  recusado:    { label: 'Recusado',    color: C.red },
+}
+
 function getScoreColor(score) {
   if (score == null) return C.muted
   if (score >= 86) return '#22c55e'
@@ -1215,6 +1224,9 @@ export default function Dashboard() {
   const [myInterestsLoading, setMyInterestsLoading] = useState(false)
   // Recruiter: active vagas (for ConvidarVagaModal)
   const [recruiterVagas, setRecruiterVagas] = useState([])
+  // Empresa (claimed via a professor's partner-company invite): students the professor flagged as interested
+  const [partnerLeads, setPartnerLeads] = useState([])
+  const [partnerLeadsLoading, setPartnerLeadsLoading] = useState(true)
   // Invite modal target
   const [inviteTarget, setInviteTarget] = useState(null) // { studentId, studentName }
 
@@ -1455,6 +1467,44 @@ export default function Dashboard() {
       .order('created_at', { ascending: false })
       .then(({ data }) => setRecruiterVagas(data || []))
   }, [user, profile?.role])
+
+  // Empresa claimed via a professor's partner-company invite (Parceiros.jsx)
+  // — surfaces the students the professor already flagged as interested.
+  useEffect(() => {
+    if (!user || profile?.role !== 'empresa') { setPartnerLeadsLoading(false); return }
+    async function loadPartnerLeads() {
+      const { data: companies } = await supabase.from('partner_companies').select('id, name').eq('claimed_by', user.id)
+      if (!companies?.length) { setPartnerLeads([]); setPartnerLeadsLoading(false); return }
+      const companyNameById = {}
+      companies.forEach(c => { companyNameById[c.id] = c.name })
+
+      const { data: leadRows } = await supabase
+        .from('internship_leads')
+        .select('id, student_id, company_id, status, created_at')
+        .in('company_id', companies.map(c => c.id))
+        .order('created_at', { ascending: false })
+
+      if (!leadRows?.length) { setPartnerLeads([]); setPartnerLeadsLoading(false); return }
+
+      const studentIds = [...new Set(leadRows.map(l => l.student_id))]
+      const { data: students } = await supabase.from('profiles').select('id, full_name, username, avatar_url').in('id', studentIds)
+      const studentById = {}
+      ;(students || []).forEach(s => { studentById[s.id] = s })
+
+      setPartnerLeads(leadRows.map(l => ({
+        ...l,
+        companyName: companyNameById[l.company_id],
+        student: studentById[l.student_id],
+      })))
+      setPartnerLeadsLoading(false)
+    }
+    loadPartnerLeads()
+  }, [user, profile?.role])
+
+  async function updatePartnerLeadStatus(leadId, status) {
+    setPartnerLeads(prev => prev.map(l => l.id === leadId ? { ...l, status } : l))
+    await supabase.from('internship_leads').update({ status }).eq('id', leadId)
+  }
 
   useEffect(() => {
     if (!user || profile?.role !== 'professor') return
@@ -2769,6 +2819,47 @@ export default function Dashboard() {
                   })}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* ── Alunos recomendados por professores (empresas parceiras) ── */}
+          {profile?.role === 'empresa' && !partnerLeadsLoading && partnerLeads.length > 0 && (
+            <div style={{ marginTop: 32 }}>
+              <div className="dash-sec-hd">
+                <span className="dash-sec-label">
+                  <Building2 size={14} color={C.blue} />
+                  Alunos recomendados por professores
+                  <span className="dash-sec-count">{partnerLeads.length}</span>
+                </span>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {partnerLeads.map(l => {
+                  const meta = PARTNER_LEAD_STATUS[l.status] || PARTNER_LEAD_STATUS.interessado
+                  return (
+                    <div key={l.id} style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div
+                          onClick={() => l.student?.username && navigate(`/u/${l.student.username}`)}
+                          style={{ fontSize: 14, fontWeight: 700, color: C.text, cursor: l.student?.username ? 'pointer' : 'default', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                        >
+                          {l.student?.full_name || l.student?.username || 'Aluno'}
+                        </div>
+                        <div style={{ fontSize: 11, color: C.subtle, marginTop: 2 }}>via {l.companyName}</div>
+                      </div>
+                      <select
+                        value={l.status}
+                        onChange={e => updatePartnerLeadStatus(l.id, e.target.value)}
+                        style={{ background: `${meta.color}18`, border: `1px solid ${meta.color}40`, borderRadius: 6, padding: '4px 8px', color: meta.color, fontSize: 11, fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer', outline: 'none', flexShrink: 0 }}
+                      >
+                        {Object.entries(PARTNER_LEAD_STATUS).map(([k, v]) => <option key={k} value={k} style={{ background: C.card, color: C.text }}>{v.label}</option>)}
+                      </select>
+                      {l.student?.username && (
+                        <button onClick={() => navigate(`/u/${l.student.username}`)} className="icon-btn-ghost" title="Ver portefólio"><ChevronRight size={15} /></button>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
             </div>
           )}
 
