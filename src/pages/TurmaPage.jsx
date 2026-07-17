@@ -3,8 +3,9 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
-import { Folder, Check, Search, User, Copy, Inbox, Download, MessageSquare, X, ChevronUp, ChevronDown, ArrowRight, Pencil, UserMinus, GraduationCap, CheckCircle, AlertTriangle } from 'lucide-react'
+import { Folder, Check, Search, User, Copy, Inbox, Download, MessageSquare, X, ChevronUp, ChevronDown, ArrowRight, Pencil, UserMinus, GraduationCap, CheckCircle, AlertTriangle, ListChecks, Circle, Trash2, Plus, Calendar } from 'lucide-react'
 import CreateProjectModal from '../components/CreateProjectModal'
+import { getCurrentAcademicYear, academicYearOptions } from '../lib/academicYear'
 
 const C = {
   bg: 'var(--c-bg)', bgAlt: 'var(--c-bg-alt)', card: 'var(--c-card)', cardHover: 'var(--c-card-hover)',
@@ -179,12 +180,13 @@ function FeedbackModal({ project, teacherId, onClose }) {
 function EditTurmaModal({ turma, onClose, onSave }) {
   const [name, setName] = useState(turma.name || '')
   const [subject, setSubject] = useState(turma.subject || '')
+  const [academicYear, setAcademicYear] = useState(turma.academic_year || getCurrentAcademicYear())
   const [saving, setSaving] = useState(false)
 
   async function handleSave() {
     if (!name.trim()) return
     setSaving(true)
-    await onSave(name.trim(), subject.trim())
+    await onSave(name.trim(), subject.trim(), academicYear)
     setSaving(false)
   }
 
@@ -207,10 +209,64 @@ function EditTurmaModal({ turma, onClose, onSave }) {
             <input value={subject} onChange={e => setSubject(e.target.value)} placeholder="Ex: Programação"
               style={{ width: '100%', background: 'var(--c-bg)', border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 12px', color: C.text, fontSize: 14, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }} />
           </div>
+          <div>
+            <label style={{ display: 'block', fontSize: 12, color: C.muted, marginBottom: 6, fontWeight: 600 }}>Ano letivo</label>
+            <select value={academicYear} onChange={e => setAcademicYear(e.target.value)}
+              style={{ width: '100%', background: 'var(--c-bg)', border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 12px', color: C.text, fontSize: 14, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box', cursor: 'pointer' }}>
+              {[...new Set([turma.academic_year, ...academicYearOptions()].filter(Boolean))].map(y => <option key={y} value={y}>{y}</option>)}
+            </select>
+          </div>
           <button onClick={handleSave} disabled={saving || !name.trim()} style={{ background: '#1b78f7', border: 'none', borderRadius: 8, padding: '11px', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', opacity: saving || !name.trim() ? 0.6 : 1, fontFamily: 'inherit' }}>
             {saving ? 'A guardar…' : 'Guardar alterações'}
           </button>
         </div>
+      </div>
+    </div>
+  )
+}
+
+function TaskModal({ onClose, onSave }) {
+  const [title, setTitle] = useState('')
+  const [description, setDescription] = useState('')
+  const [dueDate, setDueDate] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  async function handleSave(e) {
+    e.preventDefault()
+    if (!title.trim()) return
+    setSaving(true)
+    await onSave(title.trim(), description.trim(), dueDate || null)
+    setSaving(false)
+  }
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
+      onClick={e => e.target === e.currentTarget && onClose()}>
+      <div style={{ background: C.card, border: `1px solid ${C.borderBright}`, borderRadius: 14, padding: 28, width: '100%', maxWidth: 420, boxShadow: 'none' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+          <h3 style={{ margin: 0, fontSize: 17, fontWeight: 400, color: C.text, fontFamily: 'var(--font-heading)', letterSpacing: '-0.3px' }}>Nova tarefa</h3>
+          <button onClick={onClose} className="icon-btn-ghost"><X size={18} /></button>
+        </div>
+        <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div>
+            <label style={{ display: 'block', fontSize: 12, color: C.muted, marginBottom: 6, fontWeight: 600 }}>Título *</label>
+            <input value={title} onChange={e => setTitle(e.target.value)} required placeholder="ex: Entregar rascunho do problema/solução"
+              style={{ width: '100%', background: 'var(--c-bg)', border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 12px', color: C.text, fontSize: 14, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }} />
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: 12, color: C.muted, marginBottom: 6, fontWeight: 600 }}>Descrição (opcional)</label>
+            <textarea value={description} onChange={e => setDescription(e.target.value)} rows={3} placeholder="Detalhes da tarefa"
+              style={{ width: '100%', background: 'var(--c-bg)', border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 12px', color: C.text, fontSize: 14, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box', resize: 'vertical' }} />
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: 12, color: C.muted, marginBottom: 6, fontWeight: 600 }}>Data limite (opcional)</label>
+            <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)}
+              style={{ width: '100%', background: 'var(--c-bg)', border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 12px', color: C.text, fontSize: 14, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }} />
+          </div>
+          <button type="submit" disabled={saving || !title.trim()} style={{ background: '#1b78f7', border: 'none', borderRadius: 8, padding: '11px', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', opacity: saving || !title.trim() ? 0.6 : 1, fontFamily: 'inherit' }}>
+            {saving ? 'A criar…' : 'Criar tarefa'}
+          </button>
+        </form>
       </div>
     </div>
   )
@@ -256,6 +312,11 @@ export default function TurmaPage() {
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false)
   const [showEditTurma, setShowEditTurma] = useState(false)
   const [removingMember, setRemovingMember] = useState(null) // { user_id, full_name }
+  const [tasks, setTasks] = useState([])
+  const [myCompletedTaskIds, setMyCompletedTaskIds] = useState(new Set())
+  const [taskCompletionCounts, setTaskCompletionCounts] = useState({}) // task_id -> count, teacher view
+  const [showTaskModal, setShowTaskModal] = useState(false)
+  const [deletingTask, setDeletingTask] = useState(null)
 
   function showToast(msg) {
     setToast(msg)
@@ -266,7 +327,7 @@ export default function TurmaPage() {
     async function load() {
       const { data: cls, error } = await supabase
         .from('classes')
-        .select('id, name, subject, code, teacher_name, teacher_id, created_at')
+        .select('id, name, subject, code, teacher_name, teacher_id, academic_year, created_at')
         .eq('code', code.toUpperCase())
         .single()
 
@@ -347,6 +408,69 @@ export default function TurmaPage() {
     }
     load()
   }, [code, user])
+
+  // Load class tasks + this student's completions (or, for the teacher, a
+  // per-task completion count across the whole turma).
+  useEffect(() => {
+    if (!turma?.id || !user) return
+    async function loadTasks() {
+      const { data: taskRows } = await supabase
+        .from('class_tasks')
+        .select('id, title, description, due_date, created_at')
+        .eq('class_id', turma.id)
+        .order('due_date', { ascending: true, nullsFirst: false })
+        .order('created_at', { ascending: false })
+      setTasks(taskRows || [])
+      if (!taskRows?.length) { setMyCompletedTaskIds(new Set()); setTaskCompletionCounts({}); return }
+
+      const taskIds = taskRows.map(t => t.id)
+      const { data: completions } = await supabase
+        .from('class_task_completions')
+        .select('task_id, user_id')
+        .in('task_id', taskIds)
+
+      setMyCompletedTaskIds(new Set((completions || []).filter(c => c.user_id === user.id).map(c => c.task_id)))
+      if (isTeacher) {
+        const counts = {}
+        ;(completions || []).forEach(c => { counts[c.task_id] = (counts[c.task_id] || 0) + 1 })
+        setTaskCompletionCounts(counts)
+      }
+    }
+    loadTasks()
+  }, [turma?.id, user, isTeacher])
+
+  async function handleCreateTask(title, description, dueDate) {
+    const { data, error } = await supabase
+      .from('class_tasks')
+      .insert({ class_id: turma.id, teacher_id: user.id, title, description: description || null, due_date: dueDate || null })
+      .select()
+      .single()
+    if (error) { showToast('Erro ao criar tarefa: ' + error.message); return }
+    setTasks(prev => [data, ...prev])
+    setShowTaskModal(false)
+  }
+
+  async function handleDeleteTask() {
+    if (!deletingTask) return
+    const { error } = await supabase.from('class_tasks').delete().eq('id', deletingTask.id)
+    if (error) { showToast('Erro ao remover tarefa: ' + error.message); setDeletingTask(null); return }
+    setTasks(prev => prev.filter(t => t.id !== deletingTask.id))
+    setDeletingTask(null)
+  }
+
+  async function toggleTaskCompletion(taskId) {
+    const done = myCompletedTaskIds.has(taskId)
+    setMyCompletedTaskIds(prev => {
+      const next = new Set(prev)
+      done ? next.delete(taskId) : next.add(taskId)
+      return next
+    })
+    if (done) {
+      await supabase.from('class_task_completions').delete().eq('task_id', taskId).eq('user_id', user.id)
+    } else {
+      await supabase.from('class_task_completions').insert({ task_id: taskId, user_id: user.id })
+    }
+  }
 
   // Load user's own projects for the add modal
   useEffect(() => {
@@ -531,10 +655,10 @@ export default function TurmaPage() {
     navigate('/dashboard')
   }
 
-  async function handleUpdateTurma(name, subject) {
-    const { error } = await supabase.rpc('update_class', { p_class_id: turma.id, p_name: name, p_subject: subject || null })
+  async function handleUpdateTurma(name, subject, academicYear) {
+    const { error } = await supabase.rpc('update_class', { p_class_id: turma.id, p_name: name, p_subject: subject || null, p_academic_year: academicYear || null })
     if (error) { showToast('Erro ao atualizar turma: ' + error.message); return }
-    setTurma(prev => ({ ...prev, name, subject: subject || null }))
+    setTurma(prev => ({ ...prev, name, subject: subject || null, academic_year: academicYear || prev.academic_year }))
     setShowEditTurma(false)
     showToast('Turma atualizada')
   }
@@ -583,6 +707,36 @@ export default function TurmaPage() {
       {/* Edit turma */}
       {showEditTurma && (
         <EditTurmaModal turma={turma} onClose={() => setShowEditTurma(false)} onSave={handleUpdateTurma} />
+      )}
+
+      {/* New task */}
+      {showTaskModal && (
+        <TaskModal onClose={() => setShowTaskModal(false)} onSave={handleCreateTask} />
+      )}
+
+      {/* Delete task confirm */}
+      {deletingTask && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
+          onClick={() => setDeletingTask(null)}>
+          <div style={{ background: C.card, border: `1px solid ${C.borderBright}`, borderRadius: 14, padding: '32px 28px', width: '100%', maxWidth: 360, boxShadow: 'none', textAlign: 'center' }}
+            onClick={e => e.stopPropagation()}>
+            <div style={{ width: 52, height: 52, borderRadius: 12, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px' }}>
+              <Trash2 size={22} color="#ef4444" />
+            </div>
+            <h3 style={{ margin: '0 0 8px', fontSize: 17, fontWeight: 400, color: C.text, fontFamily: 'var(--font-heading)', letterSpacing: '-0.3px' }}>Remover tarefa?</h3>
+            <p style={{ margin: '0 0 24px', fontSize: 14, color: C.muted, lineHeight: 1.5 }}>
+              <strong style={{ color: C.text }}>{deletingTask.title}</strong> deixa de aparecer para os alunos.
+            </p>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button onClick={() => setDeletingTask(null)} style={{ flex: 1, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 8, padding: '11px', color: C.muted, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                Cancelar
+              </button>
+              <button onClick={handleDeleteTask} style={{ flex: 1, background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, padding: '11px', color: '#ef4444', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+                Remover
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Remove member confirm */}
@@ -689,6 +843,9 @@ export default function TurmaPage() {
               <div style={{ marginBottom: 8 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <h1 style={{ margin: 0, fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 400, letterSpacing: '-0.8px', fontFamily: 'var(--font-heading)' }}>{turma.name}</h1>
+                  {turma.academic_year && (
+                    <span style={{ fontSize: 12, fontWeight: 700, color: C.muted, background: C.bgAlt, border: `1px solid ${C.border}`, borderRadius: 6, padding: '3px 9px', marginTop: 6 }}>{turma.academic_year}</span>
+                  )}
                   {isTeacher && (
                     <button onClick={() => setShowEditTurma(true)} title="Editar turma"
                       className="icon-btn-ghost" style={{ marginTop: 6 }}>
@@ -851,6 +1008,74 @@ export default function TurmaPage() {
             </div>
           )
         })()}
+
+        {/* Tasks — professor sets them, students check them off individually */}
+        {(isTeacher || tasks.length > 0) && (
+          <div style={{ marginBottom: 32 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <ListChecks size={14} color={C.muted} />
+                <span style={{ fontSize: 13, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.07em' }}>
+                  Tarefas
+                </span>
+                {tasks.length > 0 && <span style={{ fontSize: 11, fontWeight: 700, color: C.subtle }}>{tasks.length}</span>}
+              </div>
+              {isTeacher && (
+                <button
+                  onClick={() => setShowTaskModal(true)}
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.22)', borderRadius: 7, padding: '6px 12px', color: C.blue, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+                >
+                  <Plus size={13} /> Nova tarefa
+                </button>
+              )}
+            </div>
+
+            {tasks.length === 0 ? (
+              <div style={{ ...C.glassStyle, background: C.glass, border: `1px dashed ${C.glassBorder}`, borderRadius: 10, padding: '20px', textAlign: 'center' }}>
+                <p style={{ margin: 0, fontSize: 13, color: C.muted }}>Ainda sem tarefas para esta turma.</p>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {tasks.map(t => {
+                  const done = myCompletedTaskIds.has(t.id)
+                  const overdue = t.due_date && !done && new Date(t.due_date + 'T23:59:59') < new Date()
+                  return (
+                    <div key={t.id} style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${overdue ? 'rgba(239,68,68,0.3)' : C.glassBorder}`, borderRadius: 10, padding: '12px 14px', display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                      {!isTeacher && (
+                        <button onClick={() => toggleTaskCompletion(t.id)} style={{ background: 'none', border: 'none', padding: 2, cursor: 'pointer', marginTop: 1, flexShrink: 0 }}>
+                          {done ? <CheckCircle size={18} color={C.green} /> : <Circle size={18} color={C.subtle} />}
+                        </button>
+                      )}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 14, fontWeight: 600, color: done ? C.muted : C.text, textDecoration: done ? 'line-through' : 'none' }}>{t.title}</div>
+                        {t.description && <div style={{ fontSize: 12, color: C.muted, marginTop: 3, lineHeight: 1.5 }}>{t.description}</div>}
+                        <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 6, flexWrap: 'wrap' }}>
+                          {t.due_date && (
+                            <span style={{ fontSize: 11, color: overdue ? '#ef4444' : C.subtle, display: 'inline-flex', alignItems: 'center', gap: 4, fontWeight: overdue ? 700 : 400 }}>
+                              <Calendar size={11} />
+                              {new Date(t.due_date + 'T00:00:00').toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' })}
+                              {overdue && ' — atrasada'}
+                            </span>
+                          )}
+                          {isTeacher && (
+                            <span style={{ fontSize: 11, color: C.subtle }}>
+                              {taskCompletionCounts[t.id] || 0} de {members.filter(m => m.role !== 'professor').length} concluíram
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      {isTeacher && (
+                        <button onClick={() => setDeletingTask(t)} className="icon-btn-ghost" title="Remover tarefa">
+                          <Trash2 size={14} color={C.subtle} />
+                        </button>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Projects */}
         {sortedProjects.length > 0 && (

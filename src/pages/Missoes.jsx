@@ -6,7 +6,7 @@ import { Navbar } from '../components/Navbar'
 import {
   Swords, Lock, CheckCircle2, Circle, ChevronRight,
   Zap, Star, Target, BookOpen, Users, Globe, TrendingUp,
-  Folder, Award, Lightbulb, ArrowRight, Medal,
+  Folder, Award, Lightbulb, ArrowRight, Medal, Send, Eye,
 } from 'lucide-react'
 
 const C = {
@@ -130,9 +130,84 @@ export const MISSIONS = [
     color: '#f59e0b',
     category: 'Carreira',
   },
+
+  // ── Discovery missions — nudge toward profile/app features that raise
+  // visibility to recruiters, not just project-building. ──
+  {
+    id: 'available_for_work',
+    title: 'Disponível para trabalho',
+    description: 'Ativa "Disponível para trabalho" no teu perfil.',
+    xp: 10,
+    icon: Zap,
+    color: C.green,
+    category: 'Perfil',
+  },
+  {
+    id: 'link_linkedin',
+    title: 'LinkedIn ligado',
+    description: 'Adiciona o link do teu LinkedIn ao perfil.',
+    xp: 10,
+    icon: Globe,
+    color: '#0a66c2',
+    category: 'Perfil',
+  },
+  {
+    id: 'add_skills',
+    title: 'Competências',
+    description: 'Adiciona pelo menos 3 competências ao teu perfil.',
+    xp: 15,
+    icon: Lightbulb,
+    color: '#f59e0b',
+    category: 'Perfil',
+  },
+  {
+    id: 'apply_vaga',
+    title: 'Primeira candidatura',
+    description: 'Candidata-te a uma vaga ou estágio em Vagas.',
+    xp: 15,
+    icon: Send,
+    color: '#06b6d4',
+    category: 'Carreira',
+  },
+
+  // ── Repeatable-feel missions — same one-time-unlock mechanism as the rest
+  // (no separate completion tracking), but framed as the next tier of an
+  // action a student can keep doing, so the list doesn't run dry after the
+  // first project. ──
+  {
+    id: 'three_candidaturas',
+    title: 'Candidato ativo',
+    description: 'Candidata-te a 3 vagas ou estágios.',
+    xp: 30,
+    icon: Send,
+    color: '#06b6d4',
+    category: 'Carreira',
+  },
+  {
+    id: 'five_projects',
+    title: 'Portfólio expandido',
+    description: 'Cria 5 projetos diferentes.',
+    xp: 45,
+    icon: BookOpen,
+    color: C.blue,
+    category: 'Portfólio',
+  },
+  {
+    id: '500_views',
+    title: '500 Visualizações',
+    description: 'O teu portfólio foi visto 500 vezes no total.',
+    xp: 60,
+    icon: TrendingUp,
+    color: C.purple,
+    category: 'Alcance',
+  },
 ]
 
-export function checkMissionProgress(mission, projects, profile, user) {
+// extra carries signals that aren't part of the core projects/profile shape
+// every caller already has on hand (e.g. candidaturas count) — callers that
+// don't pass it just get `false` for the missions that need it, which only
+// Dashboard.jsx's XP total/toast detector needs to stay in sync for.
+export function checkMissionProgress(mission, projects, profile, user, extra = {}) {
   if (!projects) return false
 
   switch (mission.id) {
@@ -174,13 +249,34 @@ export function checkMissionProgress(mission, projects, profile, user) {
       // Needs: score ≥ 75 + cover image + AI analysis — project looks polished enough for employers
       return projects.some(p => (p.score ?? 0) >= 75 && p.cover_url && p.ai_feedback)
 
+    case 'available_for_work':
+      return !!profile?.available_for_work
+
+    case 'link_linkedin':
+      return !!profile?.linkedin_url
+
+    case 'add_skills':
+      return (profile?.skills?.length ?? 0) >= 3
+
+    case 'apply_vaga':
+      return (extra.candidaturaCount ?? 0) >= 1
+
+    case 'three_candidaturas':
+      return (extra.candidaturaCount ?? 0) >= 3
+
+    case 'five_projects':
+      return projects.length >= 5
+
+    case '500_views':
+      return projects.reduce((s, p) => s + (p.views ?? 0), 0) >= 500
+
     default:
       return false
   }
 }
 
 // Returns { current, max } for missions with measurable progress, null for binary ones
-function getMissionProgress(missionId, projects) {
+function getMissionProgress(missionId, projects, extra = {}) {
   if (!projects) return null
   const totalViews = projects.reduce((s, p) => s + (p.views ?? 0), 0)
   const bestScore  = projects.length ? Math.max(0, ...projects.map(p => p.score ?? 0)) : 0
@@ -189,7 +285,10 @@ function getMissionProgress(missionId, projects) {
     case 'score_90':      return { current: Math.min(bestScore, 90),  max: 90  }
     case '50_views':      return { current: Math.min(totalViews, 50), max: 50  }
     case '200_views':     return { current: Math.min(totalViews, 200), max: 200 }
+    case '500_views':     return { current: Math.min(totalViews, 500), max: 500 }
     case 'three_projects':return { current: Math.min(projects.length, 3), max: 3 }
+    case 'five_projects': return { current: Math.min(projects.length, 5), max: 5 }
+    case 'three_candidaturas': return { current: Math.min(extra.candidaturaCount ?? 0, 3), max: 3 }
     default:              return null
   }
 }
@@ -296,20 +395,24 @@ export default function Missoes() {
   const navigate = useNavigate()
   const [projects, setProjects] = useState(null)
   const [profile, setProfile] = useState(null)
+  const [candidaturaCount, setCandidaturaCount] = useState(0)
+  const [recruiterInviteCount, setRecruiterInviteCount] = useState(0)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     if (!user) { navigate('/login'); return }
 
     async function load() {
-      const [{ data: projs }, { data: prof }] = await Promise.all([
+      const [{ data: projs }, { data: prof }, { count: candCount }, { count: inviteCount }] = await Promise.all([
         supabase.from('projects')
           .select('id, score, views, ai_feedback, cover_url, collaborator_count:project_collaborators(count)')
           .eq('user_id', user.id),
         supabase.from('profiles')
-          .select('avatar_url, bio, skills')
+          .select('avatar_url, bio, skills, linkedin_url, available_for_work')
           .eq('id', user.id)
           .single(),
+        supabase.from('candidaturas').select('id', { count: 'exact', head: true }).eq('student_id', user.id),
+        supabase.from('vaga_invites').select('id', { count: 'exact', head: true }).eq('student_id', user.id),
       ])
 
       // Flatten collaborator_count from aggregate
@@ -322,6 +425,8 @@ export default function Missoes() {
 
       setProjects(normalized)
       setProfile(prof)
+      setCandidaturaCount(candCount ?? 0)
+      setRecruiterInviteCount(inviteCount ?? 0)
       setLoading(false)
     }
 
@@ -330,9 +435,10 @@ export default function Missoes() {
 
   if (!user) return null
 
+  const missionExtra = { candidaturaCount }
   const missions = MISSIONS.map(m => ({
     ...m,
-    done: loading ? false : checkMissionProgress(m, projects, profile, user),
+    done: loading ? false : checkMissionProgress(m, projects, profile, user, missionExtra),
   }))
 
   const doneMissions = missions.filter(m => m.done)
@@ -422,6 +528,45 @@ export default function Missoes() {
           <div style={{ fontSize: 11, color: C.subtle, marginTop: 6, fontWeight: 600 }}>{pct}% concluído</div>
         </div>
 
+        {/* Visibilidade — informational, not tied to XP. Missions reward
+            building a portfolio; this shows whether anyone is actually
+            looking at it, using signals we already track (project views,
+            recruiter invites) instead of inventing new tracking. */}
+        {!loading && projects && (
+          <div style={{
+            ...C.glassStyle,
+            background: C.glass, border: `1px solid ${C.glassBorder}`,
+            borderRadius: 12, padding: '18px 24px', marginBottom: 28,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+              <Eye size={13} color={C.muted} />
+              <span style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Visibilidade</span>
+            </div>
+            <div className="missoes-stats" style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
+              <div>
+                <div style={{ fontSize: 22, fontWeight: 900, color: C.text, letterSpacing: '-0.5px' }}>
+                  {projects.reduce((s, p) => s + (p.views ?? 0), 0)}
+                </div>
+                <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>Visualizações totais</div>
+              </div>
+              <div style={{ width: 1, alignSelf: 'stretch', background: C.border }} />
+              <div>
+                <div style={{ fontSize: 22, fontWeight: 900, color: recruiterInviteCount > 0 ? C.purple : C.text, letterSpacing: '-0.5px' }}>
+                  {recruiterInviteCount}
+                </div>
+                <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>Convites de recrutadores</div>
+              </div>
+              <div style={{ width: 1, alignSelf: 'stretch', background: C.border }} />
+              <div>
+                <div style={{ fontSize: 22, fontWeight: 900, color: C.text, letterSpacing: '-0.5px' }}>
+                  {candidaturaCount}
+                </div>
+                <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>Candidaturas enviadas</div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {loading ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {[...Array(6)].map((_, i) => (
@@ -438,7 +583,7 @@ export default function Missoes() {
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {pendingMissions.map(m => (
-                    <MissionCard key={m.id} mission={m} done={false} progress={getMissionProgress(m.id, projects)} />
+                    <MissionCard key={m.id} mission={m} done={false} progress={getMissionProgress(m.id, projects, missionExtra)} />
                   ))}
                 </div>
               </div>

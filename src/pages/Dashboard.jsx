@@ -6,9 +6,10 @@ import { Pencil, ExternalLink } from 'lucide-react'
 import SkillsPicker from '../components/SkillsPicker'
 import { Navbar } from '../components/Navbar'
 import CreateProjectModal from '../components/CreateProjectModal'
-import { Folder, Trophy, BarChart2, Rocket, Eye, GraduationCap, Plus, X, Users, Users2, ChevronRight, User, Settings, Compass, Medal, LogOut, Globe, TrendingUp, MessageSquare, Star, Mail, Search, BookOpen, Trash2, Check, Calendar, ArrowRight, Target, Zap, Sparkles, Briefcase, Building2, Send, Copy, Share2, Link, Swords, HelpCircle, AlertTriangle } from 'lucide-react'
+import { Folder, Trophy, BarChart2, Rocket, Eye, GraduationCap, Plus, X, Users, Users2, ChevronRight, User, Settings, Compass, Medal, LogOut, Globe, TrendingUp, MessageSquare, Star, Mail, Search, BookOpen, Trash2, Check, Calendar, ArrowRight, Target, Zap, Sparkles, Briefcase, Building2, Send, Copy, Share2, Link, Swords, HelpCircle, AlertTriangle, ListChecks, Circle } from 'lucide-react'
 import { MISSIONS, checkMissionProgress } from './Missoes'
 import ConvidarVagaModal from '../components/ConvidarVagaModal'
+import { getCurrentAcademicYear, academicYearOptions } from '../lib/academicYear'
 
 const C = {
   bg: 'var(--c-bg)',
@@ -366,6 +367,7 @@ function CreateTurmaModal({ onClose, onCreated }) {
   const { user, profile } = useAuth()
   const [name, setName] = useState('')
   const [subject, setSubject] = useState('')
+  const [academicYear, setAcademicYear] = useState(getCurrentAcademicYear())
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
@@ -378,7 +380,7 @@ function CreateTurmaModal({ onClose, onCreated }) {
     const teacherName = profile?.full_name || user?.user_metadata?.full_name || ''
     const { data, error: err } = await supabase
       .from('classes')
-      .insert({ name: name.trim(), subject: subject.trim() || null, code, teacher_id: user.id, teacher_name: teacherName })
+      .insert({ name: name.trim(), subject: subject.trim() || null, code, teacher_id: user.id, teacher_name: teacherName, academic_year: academicYear })
       .select()
       .single()
     setSaving(false)
@@ -413,6 +415,15 @@ function CreateTurmaModal({ onClose, onCreated }) {
               placeholder="ex: Programação e Sistemas de Informação"
               style={{ width: '100%', background: C.bg, border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 12px', color: C.text, fontSize: 14, fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none' }}
             />
+          </div>
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>Ano letivo</label>
+            <select
+              value={academicYear} onChange={e => setAcademicYear(e.target.value)}
+              style={{ width: '100%', background: C.bg, border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 12px', color: C.text, fontSize: 14, fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none', cursor: 'pointer' }}
+            >
+              {academicYearOptions().map(y => <option key={y} value={y}>{y}</option>)}
+            </select>
           </div>
           {error && <p style={{ color: '#ef4444', fontSize: 13, margin: 0 }}>{error}</p>}
           <button type="submit" disabled={saving || !name.trim()} style={{ background: '#1b78f7', border: 'none', borderRadius: 8, padding: '11px', color: '#fff', fontSize: 14, fontWeight: 600, cursor: saving ? 'default' : 'pointer', opacity: saving ? 0.7 : 1, fontFamily: 'inherit', marginTop: 4, boxShadow: '0 2px 8px rgba(27,120,247,0.2)' }}>
@@ -616,7 +627,12 @@ function TurmaCard({ turma, navigate }) {
         <Users2 size={16} color="#1b78f7" />
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ color: C.text, fontSize: 14, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{turma.name}</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, overflow: 'hidden' }}>
+          <div style={{ color: C.text, fontSize: 14, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{turma.name}</div>
+          {turma.academic_year && (
+            <span style={{ flexShrink: 0, fontSize: 10, fontWeight: 700, color: C.muted, background: C.border, borderRadius: 5, padding: '2px 6px' }}>{turma.academic_year}</span>
+          )}
+        </div>
         {turma.subject && <div style={{ color: C.muted, fontSize: 12, marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{turma.subject}</div>}
         <div style={{ color: C.subtle, fontSize: 11, marginTop: 4, display: 'flex', gap: 10, alignItems: 'center' }}>
           <span style={{ color: C.blue, fontWeight: 700, letterSpacing: 1 }}>{turma.code}</span>
@@ -1169,6 +1185,7 @@ export default function Dashboard() {
   const [projects, setProjects] = useState([])
   const [loadingProjects, setLoadingProjects] = useState(true)
   const [turmas, setTurmas] = useState([])
+  const [turmaYearFilter, setTurmaYearFilter] = useState('all')
   const [needsReview, setNeedsReview] = useState([]) // projects in the teacher's turmas with no feedback from them yet
   const [recentActivity, setRecentActivity] = useState([]) // latest projects submitted across the teacher's turmas
   const [upcomingDefenses, setUpcomingDefenses] = useState([]) // students' defense dates coming up, across all turmas
@@ -1177,6 +1194,8 @@ export default function Dashboard() {
   const [studentTurmas, setStudentTurmas] = useState([])
   const [loadingStudentTurmas, setLoadingStudentTurmas] = useState(true)
   const [profNotifs, setProfNotifs] = useState([]) // unread professor notifications (grade/feedback/status) — aluno only
+  const [pendingTasks, setPendingTasks] = useState([]) // class tasks not yet completed — aluno only
+  const [candidaturaCount, setCandidaturaCount] = useState(0) // for mission XP parity with Missoes.jsx — aluno only
   const [showCreateTurma, setShowCreateTurma] = useState(false)
   const [showJoinModal, setShowJoinModal] = useState(false)
   const [showTurmasModal, setShowTurmasModal] = useState(false)
@@ -1225,7 +1244,7 @@ export default function Dashboard() {
     if (loadingProjects || !user || !profile || profile?.role === 'professor') return
     const storageKey = `showo_done_missions_${user.id}`
     const stored = JSON.parse(localStorage.getItem(storageKey) || 'null')
-    const doneMissions = MISSIONS.filter(m => checkMissionProgress(m, projects, profile, user))
+    const doneMissions = MISSIONS.filter(m => checkMissionProgress(m, projects, profile, user, { candidaturaCount }))
     const doneIds = doneMissions.map(m => m.id)
 
     if (stored === null) {
@@ -1246,7 +1265,7 @@ export default function Dashboard() {
         }, i * 4500)
       })
     }
-  }, [loadingProjects, user])
+  }, [loadingProjects, user, candidaturaCount])
 
   function dismissOnboarding() {
     localStorage.setItem(`showo_onboarded_${user.id}`, '1')
@@ -1442,7 +1461,7 @@ export default function Dashboard() {
     async function loadTurmas() {
       const { data: cls } = await supabase
         .from('classes')
-        .select('id, name, subject, code, created_at')
+        .select('id, name, subject, code, academic_year, created_at')
         .eq('teacher_id', user.id)
         .order('created_at', { ascending: false })
       if (!cls?.length) { setTurmas([]); setNeedsReview([]); setFlaggedForRevision([]); setTotalMembers(0); return }
@@ -1562,6 +1581,49 @@ export default function Dashboard() {
     loadStudentTurmas()
   }, [user, profile?.role])
 
+  // ── Candidatura count (aluno only) — feeds checkMissionProgress's apply_vaga /
+  // three_candidaturas missions so the XP total here matches Missoes.jsx ──
+  useEffect(() => {
+    if (!user || profile?.role === 'professor') return
+    supabase.from('candidaturas').select('id', { count: 'exact', head: true }).eq('student_id', user.id)
+      .then(({ count }) => setCandidaturaCount(count ?? 0))
+  }, [user, profile?.role])
+
+  // ── Pending class tasks (aluno only) — reads real class_members rows, not the
+  // localStorage+project-linkage merge studentTurmas uses, so a student who joined
+  // via code but hasn't linked a project yet still sees their turma's tasks ──
+  useEffect(() => {
+    if (!user || profile?.role === 'professor') return
+    async function loadPendingTasks() {
+      const { data: memberships } = await supabase.from('class_members').select('class_id').eq('user_id', user.id)
+      if (!memberships?.length) { setPendingTasks([]); return }
+      const classIds = [...new Set(memberships.map(m => m.class_id))]
+      const { data: taskRows } = await supabase
+        .from('class_tasks')
+        .select('id, title, due_date, class_id, classes(name)')
+        .in('class_id', classIds)
+      if (!taskRows?.length) { setPendingTasks([]); return }
+      const taskIds = taskRows.map(t => t.id)
+      const { data: myCompletions } = await supabase
+        .from('class_task_completions')
+        .select('task_id')
+        .eq('user_id', user.id)
+        .in('task_id', taskIds)
+      const doneIds = new Set((myCompletions || []).map(c => c.task_id))
+      setPendingTasks(
+        taskRows
+          .filter(t => !doneIds.has(t.id))
+          .sort((a, b) => (a.due_date || '9999') < (b.due_date || '9999') ? -1 : 1)
+      )
+    }
+    loadPendingTasks()
+  }, [user, profile?.role])
+
+  async function completePendingTask(taskId) {
+    setPendingTasks(prev => prev.filter(t => t.id !== taskId))
+    await supabase.from('class_task_completions').insert({ task_id: taskId, user_id: user.id })
+  }
+
   // ── Unread professor notifications (aluno only) — grade given, feedback left, status flagged ──
   useEffect(() => {
     if (!user || profile?.role === 'professor') return
@@ -1604,7 +1666,7 @@ export default function Dashboard() {
 
   // XP earned from missions (computed, not stored)
   const earnedXP = !isTeacher && !loadingProjects
-    ? MISSIONS.reduce((sum, m) => sum + (checkMissionProgress(m, projects, profile, user) ? m.xp : 0), 0)
+    ? MISSIONS.reduce((sum, m) => sum + (checkMissionProgress(m, projects, profile, user, { candidaturaCount }) ? m.xp : 0), 0)
     : 0
 
   const greeting = (() => {
@@ -2308,6 +2370,29 @@ export default function Dashboard() {
                   <Plus size={13} /> Nova turma
                 </button>
               </div>
+              {(() => {
+                const years = [...new Set(turmas.map(t => t.academic_year).filter(Boolean))].sort().reverse()
+                if (years.length < 2) return null
+                return (
+                  <div style={{ display: 'flex', gap: 6, marginBottom: 12, flexWrap: 'wrap' }}>
+                    {['all', ...years].map(y => (
+                      <button
+                        key={y}
+                        onClick={() => setTurmaYearFilter(y)}
+                        style={{
+                          background: turmaYearFilter === y ? 'rgba(27,120,247,0.14)' : 'transparent',
+                          border: `1px solid ${turmaYearFilter === y ? 'rgba(27,120,247,0.3)' : C.border}`,
+                          borderRadius: 999, padding: '5px 12px', fontSize: 12, fontWeight: 700,
+                          color: turmaYearFilter === y ? C.blue : C.muted, cursor: 'pointer', fontFamily: 'inherit',
+                          transition: 'background 0.15s, border-color 0.15s',
+                        }}
+                      >
+                        {y === 'all' ? 'Todos os anos' : y}
+                      </button>
+                    ))}
+                  </div>
+                )
+              })()}
               {turmas.length === 0 ? (
                 <div style={{ ...C.glassStyle, background: C.glass, border: `1px dashed ${C.glassBorder}`, borderRadius: 12, padding: '40px 28px', textAlign: 'center' }}>
                   <div style={{ marginBottom: 14, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 52, height: 52, borderRadius: 12, background: 'rgba(27,120,247,0.08)', border: '1px solid rgba(27,120,247,0.15)' }}>
@@ -2321,9 +2406,46 @@ export default function Dashboard() {
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {turmas.map(t => <TurmaCard key={t.id} turma={t} navigate={navigate} />)}
+                  {turmas
+                    .filter(t => turmaYearFilter === 'all' || t.academic_year === turmaYearFilter)
+                    .map(t => <TurmaCard key={t.id} turma={t} navigate={navigate} />)}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* ── Pending class tasks (aluno only) ── */}
+          {!isTeacher && pendingTasks.length > 0 && (
+            <div>
+              <div className="dash-sec-hd">
+                <div className="dash-sec-label">
+                  <ListChecks size={13} /> Tarefas pendentes
+                  <span className="dash-sec-count">{pendingTasks.length}</span>
+                </div>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {pendingTasks.slice(0, 5).map(t => {
+                  const overdue = t.due_date && new Date(t.due_date + 'T23:59:59') < new Date()
+                  return (
+                    <div key={t.id} style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${overdue ? 'rgba(239,68,68,0.3)' : C.glassBorder}`, borderRadius: 10, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <button onClick={() => completePendingTask(t.id)} style={{ background: 'none', border: 'none', padding: 2, cursor: 'pointer', flexShrink: 0, display: 'flex' }}>
+                        <Circle size={17} color={C.subtle} />
+                      </button>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.title}</div>
+                        <div style={{ fontSize: 11, color: C.subtle, marginTop: 1 }}>
+                          {t.classes?.name}
+                          {t.due_date && (
+                            <span style={{ color: overdue ? '#ef4444' : C.subtle, fontWeight: overdue ? 700 : 400 }}>
+                              {' — '}{new Date(t.due_date + 'T00:00:00').toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' })}{overdue ? ' (atrasada)' : ''}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
             </div>
           )}
 

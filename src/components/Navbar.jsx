@@ -1664,6 +1664,9 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               <button className={`sb-item${isActive('/turmas') ? ' active' : ''}`} onClick={() => navigate('/turmas')}>
                 <Users2 size={16} />{!collapsed && showLabels && <span>Turmas</span>}
               </button>
+              <button className={`sb-item${isActive('/parceiros') ? ' active' : ''}`} onClick={() => navigate('/parceiros')}>
+                <Building2 size={16} />{!collapsed && showLabels && <span>Empresas parceiras</span>}
+              </button>
               <button className={`sb-item${isActive('/mensagens') ? ' active' : ''}`} onClick={() => navigate('/mensagens')}
                 style={{ position: 'relative' }}>
                 <MessageSquare size={16} />{!collapsed && showLabels && <span>Mensagens</span>}

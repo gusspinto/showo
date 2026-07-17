@@ -32,6 +32,16 @@ const C = {
 function TurmaCard({ turma }) {
   const navigate = useNavigate()
   const [hov, setHov] = useState(false)
+  const nameRow = (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 7, overflow: 'hidden' }}>
+      <div style={{ fontSize: 15, fontWeight: 700, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        {turma.name}
+      </div>
+      {turma.academic_year && (
+        <span style={{ flexShrink: 0, fontSize: 10, fontWeight: 700, color: C.muted, background: C.bgAlt, border: `1px solid ${C.border}`, borderRadius: 5, padding: '2px 6px' }}>{turma.academic_year}</span>
+      )}
+    </div>
+  )
 
   return (
     <div
@@ -64,9 +74,7 @@ function TurmaCard({ turma }) {
 
       {/* Info */}
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 15, fontWeight: 700, color: C.text, marginBottom: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {turma.name}
-        </div>
+        <div style={{ marginBottom: 3 }}>{nameRow}</div>
         <div style={{ fontSize: 12, color: C.muted }}>
           {turma.teacher_name ? `Prof. ${turma.teacher_name}` : 'Professor não atribuído'}
           {turma.code && (
@@ -234,6 +242,7 @@ export default function Turmas() {
   const [turmas, setTurmas] = useState([])
   const [loading, setLoading] = useState(true)
   const [showJoin, setShowJoin] = useState(false)
+  const [yearFilter, setYearFilter] = useState('all')
   const isTeacher = profile?.role === 'professor'
 
   useEffect(() => {
@@ -244,7 +253,7 @@ export default function Turmas() {
         // Teachers see classes they created
         const { data } = await supabase
           .from('classes')
-          .select('id, name, code, teacher_name, created_at')
+          .select('id, name, code, teacher_name, academic_year, created_at')
           .eq('teacher_id', user.id)
           .order('created_at', { ascending: false })
         setTurmas(data || [])
@@ -260,7 +269,7 @@ export default function Turmas() {
           const { data: cp } = await supabase.from('class_projects').select('class_id').in('project_id', myProjs.map(p => p.id))
           if (cp?.length) {
             const classIds = [...new Set(cp.map(r => r.class_id))]
-            const { data: classes } = await supabase.from('classes').select('id, name, code, teacher_name').in('id', classIds)
+            const { data: classes } = await supabase.from('classes').select('id, name, code, teacher_name, academic_year').in('id', classIds)
             dbTurmas = classes || []
           }
         }
@@ -323,6 +332,31 @@ export default function Turmas() {
           )}
         </div>
 
+        {/* Ano letivo filter */}
+        {!loading && (() => {
+          const years = [...new Set(turmas.map(t => t.academic_year).filter(Boolean))].sort().reverse()
+          if (years.length < 2) return null
+          return (
+            <div style={{ display: 'flex', gap: 6, marginBottom: 18, flexWrap: 'wrap' }}>
+              {['all', ...years].map(y => (
+                <button
+                  key={y}
+                  onClick={() => setYearFilter(y)}
+                  style={{
+                    background: yearFilter === y ? 'rgba(27,120,247,0.14)' : 'transparent',
+                    border: `1px solid ${yearFilter === y ? 'rgba(27,120,247,0.3)' : C.border}`,
+                    borderRadius: 999, padding: '6px 14px', fontSize: 12, fontWeight: 700,
+                    color: yearFilter === y ? C.blue : C.muted, cursor: 'pointer', fontFamily: 'inherit',
+                    transition: 'background 0.15s, border-color 0.15s',
+                  }}
+                >
+                  {y === 'all' ? 'Todos os anos' : y}
+                </button>
+              ))}
+            </div>
+          )
+        })()}
+
         {/* Content */}
         {loading ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -369,9 +403,11 @@ export default function Turmas() {
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {turmas.map(t => (
-              <TurmaCard key={t.id} turma={t} />
-            ))}
+            {turmas
+              .filter(t => yearFilter === 'all' || t.academic_year === yearFilter)
+              .map(t => (
+                <TurmaCard key={t.id} turma={t} />
+              ))}
           </div>
         )}
       </div>
