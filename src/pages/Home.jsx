@@ -715,7 +715,7 @@ export default function Home() {
           '--c-bg': '#060c18', '--c-bg-alt': '#111c32',
           '--c-card': '#152030', '--c-card-hover': '#1c2d44',
           '--c-border': '#1e3050', '--c-border-bright': '#2a4275',
-          '--c-muted': '#7d93b0', '--c-text': '#e8f2ff', '--c-subtle': '#3d5270',
+          '--c-muted': '#7d93b0', '--c-text': '#e8f2ff', '--c-subtle': '#6b7f9e',
           '--c-input-bg': '#060c18',
         }}>
       <HeroAurora theme={heroTheme} />

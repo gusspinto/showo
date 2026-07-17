@@ -945,12 +945,12 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
         [data-pv-theme="dark"] {
           --c-bg:#060c18; --c-bg-alt:#111c32; --c-card:#152030; --c-card-hover:#1c2d44;
           --c-border:#1e3050; --c-border-bright:#2a4275; --c-muted:#7d93b0;
-          --c-text:#e8f2ff; --c-subtle:#3d5270; --c-input-bg:#060c18;
+          --c-text:#e8f2ff; --c-subtle:#6b7f9e; --c-input-bg:#060c18;
         }
         [data-pv-theme="light"] {
           --c-bg:#f5f0e8; --c-bg-alt:#ede6d8; --c-card:#faf7f2; --c-card-hover:#f0ebe1;
           --c-border:#d8d0c4; --c-border-bright:#bdb4a6; --c-muted:#6b6158;
-          --c-text:#1c1714; --c-subtle:#8c8278; --c-input-bg:#e8e1d6;
+          --c-text:#1c1714; --c-subtle:#7a7065; --c-input-bg:#e8e1d6;
         }
         @keyframes pv-slidein {
           from { transform: translateX(20px); opacity: 0; }

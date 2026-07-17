@@ -38,7 +38,7 @@ textarea:-webkit-autofill:focus {
   --c-border-bright:#2a4275;
   --c-muted:        #7d93b0;
   --c-text:         #e8f2ff;
-  --c-subtle:       #3d5270;
+  --c-subtle:       #6b7f9e;  /* was #3d5270 — ~2.45:1 on --c-bg, illegible on the glass cards that sit near-flush with the page background; now ~4.8:1 */
   --c-input-bg:     #060c18;
   --c-blue-bg:      #0a1729;
   --c-green-bg:     #061a0f;
@@ -96,7 +96,7 @@ body.light {
   --c-border-bright:#a8b8d4;
   --c-muted:        #526180;
   --c-text:         #0f172a;
-  --c-subtle:       #6b7c9a;
+  --c-subtle:       #5c6f8f;  /* was #6b7c9a — ~3.5:1 on --c-bg, same glass-card legibility issue as dark mode; now ~4.2:1 */
   --c-input-bg:     #ffffff;
   --c-blue-bg:      #dbeafe;
   --c-green-bg:     #dcfce7;
