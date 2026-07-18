@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
 import { Navbar } from '../components/Navbar'
-import { Loader, Check, X, AlertTriangle, Camera, ArrowLeft, GraduationCap, BookOpen, Search, Building2, Lock, Briefcase, Sun, Moon } from 'lucide-react'
+import { Loader, Check, X, AlertTriangle, Camera, ArrowLeft, GraduationCap, BookOpen, Search, Building2, Lock, Briefcase, Sun, Moon, BarChart2 } from 'lucide-react'
 import { CropModal } from '../components/CropModal'
 import { containsProfanity } from '../lib/profanity'
 import SkillsPicker from '../components/SkillsPicker'
@@ -150,6 +150,7 @@ export default function Settings() {
   const avatarInputRef = useRef(null)
 
   const [availableForWork, setAvailableForWork] = useState(false)
+  const [monthlyReportOptIn, setMonthlyReportOptIn] = useState(false)
 
   // Recruiter fields
   const [company, setCompany]                   = useState('')
@@ -183,7 +184,7 @@ export default function Settings() {
     // Pre-fill from user_metadata
     setFullName(user.user_metadata?.full_name ?? '')
     // Load profile
-    supabase.from('profiles').select('username, bio, role, avatar_url, available_for_work, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size, skills').eq('id', user.id).single().then(({ data }) => {
+    supabase.from('profiles').select('username, bio, role, avatar_url, available_for_work, monthly_report_opt_in, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size, skills').eq('id', user.id).single().then(({ data }) => {
       if (data) {
         setUsername(data.username ?? '')
         setOriginalUsername(data.username ?? '')
@@ -191,6 +192,7 @@ export default function Settings() {
         setRole(data.role ?? 'aluno')
         setAvatarUrl(data.avatar_url ?? '')
         setAvailableForWork(data.available_for_work ?? false)
+        setMonthlyReportOptIn(data.monthly_report_opt_in ?? false)
         setCompany(data.company ?? '')
         setCompanyRole(data.company_role ?? '')
         setCompanyWebsite(data.company_website ?? '')
@@ -313,6 +315,9 @@ export default function Settings() {
         bio: bio.trim() || null,
         role,
         available_for_work: availableForWork,
+        ...(role === 'professor' ? {
+          monthly_report_opt_in: monthlyReportOptIn,
+        } : {}),
         ...((role === 'aluno' || role === 'professor') ? {
           skills,
         } : {}),
@@ -710,6 +715,28 @@ export default function Settings() {
                     </div>
                     <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.45 }}>
                       {availableForWork ? 'O teu perfil aparece nos resultados de recrutadores e empresas.' : 'Ativa para aparecer em pesquisas de recrutadores.'}
+                    </div>
+                  </div>
+                </button>
+              </div>
+            )}
+
+            {/* Monthly AI report toggle — professor only */}
+            {role === 'professor' && (
+              <div style={{ marginBottom: 20 }}>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: C.muted, marginBottom: 10 }}>Relatório mensal</label>
+                <button type="button" onClick={() => setMonthlyReportOptIn(v => !v)}
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 14, background: monthlyReportOptIn ? 'rgba(34,197,94,0.07)' : C.inputBg, border: `1.5px solid ${monthlyReportOptIn ? 'rgba(34,197,94,0.35)' : C.border}`, borderRadius: 10, padding: '13px 16px', cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.2s', textAlign: 'left' }}>
+                  <div style={{ width: 42, height: 24, borderRadius: 12, flexShrink: 0, background: monthlyReportOptIn ? '#22c55e' : C.subtle, position: 'relative', transition: 'background 0.2s' }}>
+                    <div style={{ position: 'absolute', top: 3, left: monthlyReportOptIn ? 21 : 3, width: 18, height: 18, borderRadius: '50%', background: '#fff', transition: 'left 0.2s', boxShadow: '0 1px 4px rgba(0,0,0,0.25)' }} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: monthlyReportOptIn ? '#22c55e' : C.text, marginBottom: 2, display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <BarChart2 size={14} style={{ flexShrink: 0 }} />
+                      {monthlyReportOptIn ? 'Relatório mensal ativo' : 'Relatório mensal desativado'}
+                    </div>
+                    <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.45 }}>
+                      Recebe por email, uma vez por mês, um resumo da atividade das tuas turmas (projetos submetidos, scores, turma mais ativa).
                     </div>
                   </div>
                 </button>

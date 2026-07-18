@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
 import { useSidebar } from '../context/SidebarContext'
 import { supabase } from '../lib/supabase'
-import { Check, X, FolderOpen, User, Settings as SettingsIcon, Shield, Globe, Trophy, LogOut, ArrowRightToLine, Bell, Eye, Target, TrendingUp, GraduationCap, UserPlus, LayoutDashboard, Plus, Compass, Sun, Moon, Sparkles, Pencil, ArrowLeft, Briefcase, Medal, Users2, Swords, Building2, Search, Star, MessageSquare, Kanban, Heart, CheckCircle, XCircle, AlignJustify, Paintbrush, Mail, ChevronRight, Monitor, Tablet, Smartphone } from 'lucide-react'
+import { Check, X, FolderOpen, User, Settings as SettingsIcon, Shield, Globe, Trophy, LogOut, ArrowRightToLine, Bell, Eye, Target, TrendingUp, GraduationCap, UserPlus, LayoutDashboard, Plus, Compass, Sun, Moon, Sparkles, Pencil, ArrowLeft, Briefcase, Medal, Users2, Swords, Building2, Search, Star, MessageSquare, Kanban, Heart, CheckCircle, XCircle, AlignJustify, Paintbrush, Mail, ChevronRight, Monitor, Tablet, Smartphone, ListChecks, CheckCircle2 } from 'lucide-react'
 
 // Strip emoji characters from notification messages coming from the DB
 function stripEmoji(str) {
@@ -59,6 +59,8 @@ function getNotifIcon(type) {
     case 'MISSION_COMPLETE': return <Trophy {...s} />
     case 'TEACHER_FEEDBACK': return <GraduationCap {...s} />
     case 'STUDENT_JOINED':   return <UserPlus {...s} />
+    case 'TASK_ASSIGNED':    return <ListChecks {...s} />
+    case 'TASK_COMPLETED':   return <CheckCircle2 {...s} />
     case 'PROJECT_LIKE':        return <Heart {...s} />
     case 'PROJECT_COMMENT':     return <MessageSquare {...s} />
     case 'RECRUITER_INTEREST':  return <Star {...s} />
@@ -80,8 +82,10 @@ function getNotifColor(type) {
     case 'MISSION_COMPLETE':
     case 'STUDENT_JOINED':
     case 'NEW_CANDIDATURA':
+    case 'TASK_COMPLETED':
       return '#1b78f7' // aluno
     case 'TEACHER_FEEDBACK':
+    case 'TASK_ASSIGNED':
       return '#10b981' // professor
     case 'RECRUITER_INTEREST':
     case 'VAGA_INVITE':
@@ -477,7 +481,9 @@ function InviteInbox({ userId, sidebar = false, collapsed = false }) {
                     </button>
                   </div>
                 </div>
-                {grouped.map(n => (
+                {grouped.map(n => {
+                  const roleColor = getNotifColor(n.type)
+                  return (
                   <div
                     key={n.id}
                     onClick={(e) => {
@@ -487,15 +493,15 @@ function InviteInbox({ userId, sidebar = false, collapsed = false }) {
                     }}
                     style={{
                       borderRadius: 10, padding: '10px 12px', marginBottom: 4,
-                      background: n.anyUnread ? 'rgba(27,120,247,0.05)' : 'transparent',
-                      border: `1px solid ${n.anyUnread ? 'rgba(27,120,247,0.12)' : 'transparent'}`,
-                      borderLeft: n.anyUnread ? '3px solid rgba(27,120,247,0.5)' : '3px solid transparent',
+                      background: n.anyUnread ? (roleColor ? `${roleColor}0d` : 'rgba(27,120,247,0.05)') : 'transparent',
+                      border: `1px solid ${n.anyUnread ? (roleColor ? `${roleColor}20` : 'rgba(27,120,247,0.12)') : 'transparent'}`,
+                      borderLeft: n.anyUnread ? `3px solid ${roleColor || 'rgba(27,120,247,0.5)'}` : '3px solid transparent',
                       cursor: n.project_slug ? 'pointer' : 'default',
                       display: 'flex', alignItems: 'flex-start', gap: 10,
                       transition: 'background 0.12s',
                     }}
                   >
-                    <span style={{ display: 'flex', flexShrink: 0, marginTop: 1, color: getNotifColor(n.type) || C.muted }}>{getNotifIcon(n.type)}</span>
+                    <span style={{ display: 'flex', flexShrink: 0, marginTop: 1, color: roleColor || C.muted }}>{getNotifIcon(n.type)}</span>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <p style={{ margin: '0 0 2px', fontSize: 13, color: n.anyUnread ? C.text : C.muted, lineHeight: 1.45, fontWeight: n.anyUnread ? 500 : 400 }}>
                         {VIEW_TYPES.includes(n.type) ? viewMessage(n) : stripEmoji(n.message)}
@@ -508,7 +514,7 @@ function InviteInbox({ userId, sidebar = false, collapsed = false }) {
                       <span style={{ fontSize: 11, color: C.muted }}>{timeAgo(n.created_at)}</span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0, marginTop: 2 }}>
-                      {n.anyUnread && <div style={{ width: 6, height: 6, borderRadius: '50%', background: C.blue }} />}
+                      {n.anyUnread && <div style={{ width: 6, height: 6, borderRadius: '50%', background: roleColor || C.blue }} />}
                       <button
                         data-delete
                         onClick={() => deleteNotifs(n.groupIds)}
@@ -521,7 +527,8 @@ function InviteInbox({ userId, sidebar = false, collapsed = false }) {
                       </button>
                     </div>
                   </div>
-                ))}
+                  )
+                })}
               </>
             )}
 

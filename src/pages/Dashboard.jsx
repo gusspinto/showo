@@ -1200,6 +1200,7 @@ export default function Dashboard() {
   const [upcomingDefenses, setUpcomingDefenses] = useState([]) // students' defense dates coming up, across all turmas
   const [flaggedForRevision, setFlaggedForRevision] = useState([]) // projects the teacher marked "needs revision"
   const [totalMembers, setTotalMembers] = useState(0)
+  const [weeklyActivity, setWeeklyActivity] = useState([]) // last 8 weeks: { label, count } — projects submitted across the teacher's turmas
   const [studentTurmas, setStudentTurmas] = useState([])
   const [loadingStudentTurmas, setLoadingStudentTurmas] = useState(true)
   const [profNotifs, setProfNotifs] = useState([]) // unread professor notifications (grade/feedback/status) — aluno only
@@ -1514,7 +1515,7 @@ export default function Dashboard() {
         .select('id, name, subject, code, academic_year, created_at')
         .eq('teacher_id', user.id)
         .order('created_at', { ascending: false })
-      if (!cls?.length) { setTurmas([]); setNeedsReview([]); setFlaggedForRevision([]); setTotalMembers(0); return }
+      if (!cls?.length) { setTurmas([]); setNeedsReview([]); setFlaggedForRevision([]); setTotalMembers(0); setWeeklyActivity([]); return }
 
       const [{ data: cp }, { data: members }] = await Promise.all([
         supabase.from('class_projects').select('class_id, project_id').in('class_id', cls.map(c => c.id)),
@@ -1569,6 +1570,23 @@ export default function Dashboard() {
             .map(p => ({ ...p, className: classNameByProject[p.id] }))
         )
 
+        // 8-week submission trend — buckets start Monday, oldest first.
+        const weeks = []
+        const now = new Date()
+        const mondayOf = d => { const x = new Date(d); const day = (x.getDay() + 6) % 7; x.setDate(x.getDate() - day); x.setHours(0, 0, 0, 0); return x }
+        const thisMonday = mondayOf(now)
+        for (let i = 7; i >= 0; i--) {
+          const start = new Date(thisMonday); start.setDate(start.getDate() - i * 7)
+          const end = new Date(start); end.setDate(end.getDate() + 7)
+          weeks.push({ start, end, label: start.toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' }), count: 0 })
+        }
+        projs.forEach(p => {
+          const created = new Date(p.created_at)
+          const bucket = weeks.find(w => created >= w.start && created < w.end)
+          if (bucket) bucket.count++
+        })
+        setWeeklyActivity(weeks.map(w => ({ label: w.label, count: w.count })))
+
         const today = new Date(); today.setHours(0, 0, 0, 0)
         setUpcomingDefenses(
           projs
@@ -1586,6 +1604,7 @@ export default function Dashboard() {
         setRecentActivity([])
         setUpcomingDefenses([])
         setFlaggedForRevision([])
+        setWeeklyActivity([])
       }
 
       const memberCounts = {}
@@ -1650,7 +1669,7 @@ export default function Dashboard() {
       const classIds = [...new Set(memberships.map(m => m.class_id))]
       const { data: taskRows } = await supabase
         .from('class_tasks')
-        .select('id, title, due_date, class_id, classes(name)')
+        .select('id, title, due_date, class_id, classes(name, teacher_id)')
         .in('class_id', classIds)
       if (!taskRows?.length) { setPendingTasks([]); return }
       const taskIds = taskRows.map(t => t.id)
@@ -1670,8 +1689,17 @@ export default function Dashboard() {
   }, [user, profile?.role])
 
   async function completePendingTask(taskId) {
+    const task = pendingTasks.find(t => t.id === taskId)
     setPendingTasks(prev => prev.filter(t => t.id !== taskId))
     await supabase.from('class_task_completions').insert({ task_id: taskId, user_id: user.id })
+    if (task?.classes?.teacher_id) {
+      const studentName = profile?.full_name || user?.user_metadata?.full_name || 'Um aluno'
+      supabase.rpc('create_notification', {
+        p_user_id: task.classes.teacher_id,
+        p_type: 'TASK_COMPLETED',
+        p_message: `${studentName} concluiu a tarefa "${task.title}" em "${task.classes.name}".`,
+      })
+    }
   }
 
   // ── Unread professor notifications (aluno only) — grade given, feedback left, status flagged ──
@@ -1819,6 +1847,18 @@ export default function Dashboard() {
         }
         /* Chart hidden on mobile */
         .dash-chart-wrap { }
+
+        /* ── Turma + Projetos side by side (aluno dashboard) ── */
+        .dash-turma-projects-grid {
+          display: grid;
+          grid-template-columns: 300px 1fr;
+          gap: 24px;
+          align-items: start;
+        }
+        .dash-turma-col, .dash-projects-col { min-width: 0; }
+        @media (max-width: 860px) {
+          .dash-turma-projects-grid { grid-template-columns: 1fr; gap: 20px; }
+        }
 
         @media (max-width: 600px) {
           /* ── Chart ── */
@@ -2215,6 +2255,52 @@ export default function Dashboard() {
           </div>
         )}
 
+        {/* ── Atividade semanal (professor only) — projects submitted per week
+             across all their turmas, last 8 weeks. Same signal the monthly
+             AI report is built from. ── */}
+        {isTeacher && turmas.length > 0 && weeklyActivity.some(w => w.count > 0) && (
+          <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '18px 22px', marginBottom: 24 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+              <BarChart2 size={13} color={C.muted} />
+              <span style={{ fontSize: 12, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                Projetos submetidos — últimas 8 semanas
+              </span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, height: 90 }}>
+              {(() => {
+                const max = Math.max(1, ...weeklyActivity.map(w => w.count))
+                return weeklyActivity.map(w => (
+                  <div key={w.label} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, height: '100%', justifyContent: 'flex-end' }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: w.count > 0 ? C.blue : C.subtle }}>{w.count > 0 ? w.count : ''}</span>
+                    <div style={{
+                      width: '100%', maxWidth: 28,
+                      height: `${Math.max(4, (w.count / max) * 56)}px`,
+                      background: w.count > 0 ? 'linear-gradient(180deg, #1b78f7, #1b78f799)' : C.border,
+                      borderRadius: 4,
+                    }} />
+                  </div>
+                ))
+              })()}
+            </div>
+            <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+              {weeklyActivity.map(w => (
+                <span key={w.label} style={{ flex: 1, fontSize: 9, color: C.subtle, textAlign: 'center' }}>{w.label}</span>
+              ))}
+            </div>
+            {!profile?.monthly_report_opt_in && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 14, paddingTop: 14, borderTop: `1px solid ${C.border}` }}>
+                <span style={{ fontSize: 12, color: C.muted }}>Recebe este resumo por email todos os meses.</span>
+                <button
+                  onClick={() => navigate('/settings')}
+                  style={{ background: 'none', border: 'none', color: C.blue, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}
+                >
+                  Ativar relatório mensal
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* ── Primeiros passos (professor only) ── */}
         {isTeacher && (() => {
           const done = (turmas.length > 0 ? 1 : 0) + (totalMembers > 0 ? 1 : 0)
@@ -2464,41 +2550,6 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* ── Pending class tasks (aluno only) ── */}
-          {!isTeacher && pendingTasks.length > 0 && (
-            <div>
-              <div className="dash-sec-hd">
-                <div className="dash-sec-label">
-                  <ListChecks size={13} /> Tarefas pendentes
-                  <span className="dash-sec-count">{pendingTasks.length}</span>
-                </div>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {pendingTasks.slice(0, 5).map(t => {
-                  const overdue = t.due_date && new Date(t.due_date + 'T23:59:59') < new Date()
-                  return (
-                    <div key={t.id} style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${overdue ? 'rgba(239,68,68,0.3)' : C.glassBorder}`, borderRadius: 10, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <button onClick={() => completePendingTask(t.id)} style={{ background: 'none', border: 'none', padding: 2, cursor: 'pointer', flexShrink: 0, display: 'flex' }}>
-                        <Circle size={17} color={C.subtle} />
-                      </button>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 13, fontWeight: 600, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.title}</div>
-                        <div style={{ fontSize: 11, color: C.subtle, marginTop: 1 }}>
-                          {t.classes?.name}
-                          {t.due_date && (
-                            <span style={{ color: overdue ? '#ef4444' : C.subtle, fontWeight: overdue ? 700 : 400 }}>
-                              {' — '}{new Date(t.due_date + 'T00:00:00').toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' })}{overdue ? ' (atrasada)' : ''}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-          )}
-
           {/* ── Defense countdown strip (aluno only) ── */}
           {!isTeacher && !loadingProjects && (() => {
             const today = new Date(); today.setHours(0,0,0,0)
@@ -2589,6 +2640,10 @@ export default function Dashboard() {
             </div>
           )}
 
+          {/* ── Turma + Projetos, side by side on desktop (each stacks its own
+               content vertically), full-width stacked on mobile ── */}
+          {!isTeacher && <div className="dash-turma-projects-grid">
+          <div className="dash-turma-col">
           {/* ── Turma card (alunos only) ── */}
           {!isTeacher && !loadingStudentTurmas && (
             studentTurmas.length > 0 ? (
@@ -2625,11 +2680,48 @@ export default function Dashboard() {
 
           {/* ── Insights Block (antes dos projetos, desktop only) ── */}
           {!isTeacher && !loadingProjects && projects.filter(p => p.score != null).length >= 1 && (
-            <div className="dash-chart-wrap">
+            <div className="dash-chart-wrap" style={{ marginTop: 16 }}>
               <InsightsBlock projects={projects} />
             </div>
           )}
 
+          {/* ── Tarefas pendentes da turma ── */}
+          {!isTeacher && pendingTasks.length > 0 && (
+            <div style={{ marginTop: 20 }}>
+              <div className="dash-sec-hd">
+                <div className="dash-sec-label">
+                  <ListChecks size={13} /> Tarefas pendentes
+                  <span className="dash-sec-count">{pendingTasks.length}</span>
+                </div>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {pendingTasks.slice(0, 5).map(t => {
+                  const overdue = t.due_date && new Date(t.due_date + 'T23:59:59') < new Date()
+                  return (
+                    <div key={t.id} style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${overdue ? 'rgba(239,68,68,0.3)' : C.glassBorder}`, borderRadius: 10, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <button onClick={() => completePendingTask(t.id)} style={{ background: 'none', border: 'none', padding: 2, cursor: 'pointer', flexShrink: 0, display: 'flex' }}>
+                        <Circle size={17} color={C.subtle} />
+                      </button>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.title}</div>
+                        <div style={{ fontSize: 11, color: C.subtle, marginTop: 1 }}>
+                          {t.classes?.name}
+                          {t.due_date && (
+                            <span style={{ color: overdue ? '#ef4444' : C.subtle, fontWeight: overdue ? 700 : 400 }}>
+                              {' — '}{new Date(t.due_date + 'T00:00:00').toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' })}{overdue ? ' (atrasada)' : ''}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+          </div>
+
+          <div className="dash-projects-col">
           {/* ── Projetos (dominant section) ── */}
           {!isTeacher && <div id="proj-list">
             <div className="dash-sec-hd">
@@ -2697,7 +2789,7 @@ export default function Dashboard() {
 
           {/* ── Partilhados comigo ── */}
           {!isTeacher && collabProjects.length > 0 && (
-            <div>
+            <div style={{ marginTop: 20 }}>
               <div className="dash-sec-hd">
                 <div className="dash-sec-label">
                   <Users size={13} /> Partilhados comigo
@@ -2730,6 +2822,8 @@ export default function Dashboard() {
               </div>
             </div>
           )}
+          </div>
+          </div>}
 
           {/* ── Recrutadores com interesse (alunos — só mostra quando há dados) ── */}
           {!isTeacher && !isRecruiter && myInterests.length > 0 && (

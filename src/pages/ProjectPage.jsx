@@ -94,6 +94,46 @@ const SECTION_META = {
 
 // Progress bar: semantic color based on completion
 // <40% orange (needs attention), 40-89% blue (in progress), ≥90% green (done)
+// field_key is free text at the DB level — rows written by other tools (an
+// older AI-jury experiment left some with field_key='JURY_EVAL', for
+// instance) fall outside FB_SECTION_LABELS. Humanize those instead of
+// showing the raw snake/upper-case key.
+function humanizeFieldKey(key) {
+  return key.replace(/_/g, ' ').toLowerCase().replace(/^./, c => c.toUpperCase())
+}
+
+// Some legacy rows (same AI-jury origin) stored a JSON blob — ratings per
+// criterion plus a free-text note — directly in the comment column instead
+// of the plain text this page itself always saves. Render that shape nicely
+// instead of dumping the raw JSON string.
+function FeedbackCommentText({ comment, textColor }) {
+  const trimmed = (comment || '').trim()
+  if (trimmed.startsWith('{')) {
+    try {
+      const parsed = JSON.parse(trimmed)
+      if (parsed && typeof parsed === 'object' && parsed.ratings && typeof parsed.ratings === 'object') {
+        const note = Object.entries(parsed).find(([k, v]) => k !== 'ratings' && k !== 'avg' && typeof v === 'string')
+        return (
+          <span style={{ display: 'inline-flex', flexWrap: 'wrap', alignItems: 'center', gap: 6 }}>
+            {Object.entries(parsed.ratings).map(([k, v]) => (
+              <span key={k} style={{ fontSize: 11, fontWeight: 700, color: '#1b78f7', background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.25)', borderRadius: 5, padding: '1px 6px', textTransform: 'capitalize' }}>
+                {k}: {v}
+              </span>
+            ))}
+            {parsed.avg != null && (
+              <span style={{ fontSize: 11, fontWeight: 700, color: '#22c55e', background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.25)', borderRadius: 5, padding: '1px 6px' }}>
+                média: {parsed.avg}
+              </span>
+            )}
+            {note && <span style={{ color: textColor }}>{note[1]}</span>}
+          </span>
+        )
+      }
+    } catch {}
+  }
+  return comment
+}
+
 function progBar(pct) {
   if (pct >= 90) return '#22c55e'
   if (pct >= 40) return '#1b78f7'
@@ -5599,9 +5639,9 @@ export default function ProjectPage() {
                       >
                         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
                           <span style={{ fontSize: 9, fontWeight: 800, color: '#1b78f7', background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.2)', borderRadius: 4, padding: '2px 6px', letterSpacing: 0.5, textTransform: 'uppercase', flexShrink: 0, marginTop: 2, whiteSpace: 'nowrap' }}>
-                            {FB_SECTION_LABELS[f.field_key] || f.field_key}
+                            {FB_SECTION_LABELS[f.field_key] || humanizeFieldKey(f.field_key)}
                           </span>
-                          <span style={{ flex: 1, fontSize: 13, color: colors.text, lineHeight: 1.5, textDecoration: resolved ? 'line-through' : 'none', textDecorationColor: 'rgba(148,163,184,0.5)' }}>{f.comment}</span>
+                          <span style={{ flex: 1, fontSize: 13, color: colors.text, lineHeight: 1.5, textDecoration: resolved ? 'line-through' : 'none', textDecorationColor: 'rgba(148,163,184,0.5)' }}><FeedbackCommentText comment={f.comment} textColor={colors.text} /></span>
                           {resolved && (
                             <span title="Resolvido" style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 10, fontWeight: 700, color: '#22c55e', flexShrink: 0, marginTop: 2 }}>
                               <Check size={11} /> Resolvido

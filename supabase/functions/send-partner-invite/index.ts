@@ -18,7 +18,7 @@ function buildHtml(companyName: string, teacherName: string, schoolName: string 
   return `
   <div style="background:#03060d;padding:48px 24px;font-family:-apple-system,Helvetica,Arial,sans-serif;">
     <div style="max-width:480px;margin:0 auto;text-align:center;">
-      <p style="margin:0 0 28px;color:#1b78f7;font-weight:700;font-size:20px;letter-spacing:-0.01em;">showo</p>
+      <img src="https://showo.pt/icon_light.png" alt="Showo" width="36" height="36" style="display:block;margin:0 auto 24px;border:0;" />
       <h1 style="margin:0 0 16px;color:#eef2f8;font-size:24px;line-height:1.3;">
         ${from}${school} adicionou a ${esc(companyName)} como parceira de estágio
       </h1>

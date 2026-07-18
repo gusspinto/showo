@@ -75,6 +75,48 @@ const SECTION_LABELS = {
   team: 'Equipa', gallery: 'Galeria', geral: 'Geral',
 }
 
+// field_key is free text at the DB level — rows written by other tools (an
+// older AI-jury experiment left some with field_key='JURY_EVAL', for
+// instance) fall outside SECTION_LABELS. Humanize those instead of showing
+// the raw snake/upper-case key.
+function humanizeFieldKey(key) {
+  return key.replace(/_/g, ' ').toLowerCase().replace(/^./, c => c.toUpperCase())
+}
+
+// Some legacy rows (same AI-jury origin) stored a JSON blob — ratings per
+// criterion plus a free-text note — directly in the comment column instead
+// of the plain text this modal itself always saves. Render that shape
+// nicely instead of dumping the raw JSON string.
+function FeedbackComment({ comment, textColor }) {
+  const trimmed = (comment || '').trim()
+  if (trimmed.startsWith('{')) {
+    try {
+      const parsed = JSON.parse(trimmed)
+      if (parsed && typeof parsed === 'object' && parsed.ratings && typeof parsed.ratings === 'object') {
+        const note = Object.entries(parsed).find(([k, v]) => k !== 'ratings' && k !== 'avg' && typeof v === 'string')
+        return (
+          <div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
+              {Object.entries(parsed.ratings).map(([k, v]) => (
+                <span key={k} style={{ fontSize: 11, fontWeight: 700, color: '#1b78f7', background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.25)', borderRadius: 5, padding: '2px 7px', textTransform: 'capitalize' }}>
+                  {k}: {v}
+                </span>
+              ))}
+              {parsed.avg != null && (
+                <span style={{ fontSize: 11, fontWeight: 700, color: '#22c55e', background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.25)', borderRadius: 5, padding: '2px 7px' }}>
+                  média: {parsed.avg}
+                </span>
+              )}
+            </div>
+            {note && <p style={{ margin: 0, fontSize: 13, color: textColor, lineHeight: 1.5 }}>{note[1]}</p>}
+          </div>
+        )
+      }
+    } catch {}
+  }
+  return <p style={{ margin: 0, fontSize: 13, color: textColor, lineHeight: 1.5 }}>{comment}</p>
+}
+
 function FeedbackModal({ project, teacherId, onClose }) {
   const [comment, setComment] = useState('')
   const [fieldKey, setFieldKey] = useState('geral')
@@ -139,13 +181,13 @@ function FeedbackModal({ project, teacherId, onClose }) {
             {existing.map(f => (
               <div key={f.id} style={{ background: 'var(--c-bg)', border: `1px solid ${C.border}`, borderRadius: 10, padding: '12px 14px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: C.blue, textTransform: 'uppercase', letterSpacing: 0.5 }}>{SECTION_LABELS[f.field_key] || f.field_key}</span>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: C.blue, textTransform: 'uppercase', letterSpacing: 0.5 }}>{SECTION_LABELS[f.field_key] || humanizeFieldKey(f.field_key)}</span>
                   <div style={{ display: 'flex', gap: 8 }}>
                     <button onClick={() => { setEditing(f.id); setFieldKey(f.field_key); setComment(f.comment) }} style={{ background: 'none', border: 'none', color: C.muted, cursor: 'pointer', fontSize: 12, padding: 0, fontFamily: 'inherit' }}>Editar</button>
                     <button onClick={() => handleDelete(f.id)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: 12, padding: 0, fontFamily: 'inherit' }}>Apagar</button>
                   </div>
                 </div>
-                <p style={{ margin: 0, fontSize: 13, color: C.text, lineHeight: 1.5 }}>{f.comment}</p>
+                <FeedbackComment comment={f.comment} textColor={C.text} />
               </div>
             ))}
           </div>
@@ -225,10 +267,10 @@ function EditTurmaModal({ turma, onClose, onSave }) {
   )
 }
 
-function TaskModal({ onClose, onSave }) {
-  const [title, setTitle] = useState('')
-  const [description, setDescription] = useState('')
-  const [dueDate, setDueDate] = useState('')
+function TaskModal({ initial, onClose, onSave }) {
+  const [title, setTitle] = useState(initial?.title || '')
+  const [description, setDescription] = useState(initial?.description || '')
+  const [dueDate, setDueDate] = useState(initial?.due_date || '')
   const [saving, setSaving] = useState(false)
 
   async function handleSave(e) {
@@ -244,7 +286,7 @@ function TaskModal({ onClose, onSave }) {
       onClick={e => e.target === e.currentTarget && onClose()}>
       <div style={{ background: C.card, border: `1px solid ${C.borderBright}`, borderRadius: 14, padding: 28, width: '100%', maxWidth: 420, boxShadow: 'none' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-          <h3 style={{ margin: 0, fontSize: 17, fontWeight: 400, color: C.text, fontFamily: 'var(--font-heading)', letterSpacing: '-0.3px' }}>Nova tarefa</h3>
+          <h3 style={{ margin: 0, fontSize: 17, fontWeight: 400, color: C.text, fontFamily: 'var(--font-heading)', letterSpacing: '-0.3px' }}>{initial ? 'Editar tarefa' : 'Nova tarefa'}</h3>
           <button onClick={onClose} className="icon-btn-ghost"><X size={18} /></button>
         </div>
         <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -264,7 +306,7 @@ function TaskModal({ onClose, onSave }) {
               style={{ width: '100%', background: 'var(--c-bg)', border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 12px', color: C.text, fontSize: 14, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }} />
           </div>
           <button type="submit" disabled={saving || !title.trim()} style={{ background: '#1b78f7', border: 'none', borderRadius: 8, padding: '11px', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', opacity: saving || !title.trim() ? 0.6 : 1, fontFamily: 'inherit' }}>
-            {saving ? 'A criar…' : 'Criar tarefa'}
+            {saving ? 'A guardar…' : initial ? 'Guardar alterações' : 'Criar tarefa'}
           </button>
         </form>
       </div>
@@ -289,7 +331,7 @@ function Avatar({ avatarUrl, name, size = 40 }) {
 export default function TurmaPage() {
   const { code } = useParams()
   const navigate = useNavigate()
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
 
   const [turma, setTurma] = useState(null)
   const [projects, setProjects] = useState([])
@@ -316,6 +358,7 @@ export default function TurmaPage() {
   const [myCompletedTaskIds, setMyCompletedTaskIds] = useState(new Set())
   const [taskCompletionCounts, setTaskCompletionCounts] = useState({}) // task_id -> count, teacher view
   const [showTaskModal, setShowTaskModal] = useState(false)
+  const [editingTask, setEditingTask] = useState(null)
   const [deletingTask, setDeletingTask] = useState(null)
 
   function showToast(msg) {
@@ -448,6 +491,23 @@ export default function TurmaPage() {
     if (error) { showToast('Erro ao criar tarefa: ' + error.message); return }
     setTasks(prev => [data, ...prev])
     setShowTaskModal(false)
+
+    const students = members.filter(m => m.role !== 'professor')
+    await Promise.all(students.map(m => supabase.rpc('create_notification', {
+      p_user_id: m.user_id,
+      p_type: 'TASK_ASSIGNED',
+      p_message: `Nova tarefa em "${turma.name}": ${title}`,
+    })))
+  }
+
+  async function handleUpdateTask(title, description, dueDate) {
+    const { error } = await supabase
+      .from('class_tasks')
+      .update({ title, description: description || null, due_date: dueDate || null })
+      .eq('id', editingTask.id)
+    if (error) { showToast('Erro ao guardar tarefa: ' + error.message); return }
+    setTasks(prev => prev.map(t => t.id === editingTask.id ? { ...t, title, description: description || null, due_date: dueDate || null } : t))
+    setEditingTask(null)
   }
 
   async function handleDeleteTask() {
@@ -469,6 +529,15 @@ export default function TurmaPage() {
       await supabase.from('class_task_completions').delete().eq('task_id', taskId).eq('user_id', user.id)
     } else {
       await supabase.from('class_task_completions').insert({ task_id: taskId, user_id: user.id })
+      if (turma.teacher_id) {
+        const task = tasks.find(t => t.id === taskId)
+        const studentName = profile?.full_name || user?.user_metadata?.full_name || 'Um aluno'
+        supabase.rpc('create_notification', {
+          p_user_id: turma.teacher_id,
+          p_type: 'TASK_COMPLETED',
+          p_message: `${studentName} concluiu a tarefa "${task?.title ?? ''}" em "${turma.name}".`,
+        })
+      }
     }
   }
 
@@ -712,6 +781,11 @@ export default function TurmaPage() {
       {/* New task */}
       {showTaskModal && (
         <TaskModal onClose={() => setShowTaskModal(false)} onSave={handleCreateTask} />
+      )}
+
+      {/* Edit task */}
+      {editingTask && (
+        <TaskModal initial={editingTask} onClose={() => setEditingTask(null)} onSave={handleUpdateTask} />
       )}
 
       {/* Delete task confirm */}
@@ -1065,9 +1139,14 @@ export default function TurmaPage() {
                         </div>
                       </div>
                       {isTeacher && (
-                        <button onClick={() => setDeletingTask(t)} className="icon-btn-ghost" title="Remover tarefa">
-                          <Trash2 size={14} color={C.subtle} />
-                        </button>
+                        <>
+                          <button onClick={() => setEditingTask(t)} className="icon-btn-ghost" title="Editar tarefa">
+                            <Pencil size={14} color={C.subtle} />
+                          </button>
+                          <button onClick={() => setDeletingTask(t)} className="icon-btn-ghost" title="Remover tarefa">
+                            <Trash2 size={14} color={C.subtle} />
+                          </button>
+                        </>
                       )}
                     </div>
                   )

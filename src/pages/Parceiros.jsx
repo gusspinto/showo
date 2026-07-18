@@ -359,7 +359,10 @@ export default function Parceiros() {
   }
 
   async function handleSendInvite(company) {
-    const inviteUrl = `${window.location.origin}/register?empresa_convite=${company.invite_token}`
+    // Fixed to the production domain rather than window.location.origin —
+    // an invite sent while testing from localhost/a preview deploy would
+    // otherwise embed a link nobody but that machine could open.
+    const inviteUrl = `https://showo.pt/register?empresa_convite=${company.invite_token}`
     const { data, error } = await supabase.functions.invoke('send-partner-invite', {
       body: { company_id: company.id, invite_url: inviteUrl },
     })
