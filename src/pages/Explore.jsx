@@ -158,7 +158,9 @@ export default function Explore() {
   const [peopleLoaded, setPeopleLoaded] = useState(false)
   const [peopleSearch, setPeopleSearch] = useState('')
   const [filterSkill, setFilterSkill] = useState('')
+  const [filterPeopleArea, setFilterPeopleArea] = useState('')
   const [showFilters, setShowFilters] = useState(false)
+  const [showPeopleFilters, setShowPeopleFilters] = useState(false)
 
   // Likes
   const [likeCounts, setLikeCounts]   = useState({})  // { projectId: number }
@@ -221,8 +223,9 @@ export default function Explore() {
     setPeopleLoading(true)
     const { data } = await supabase
       .from('profiles')
-      .select('id, full_name, username, bio, role, avatar_url, company, company_role, looking_for, available_for_work, skills')
+      .select('id, full_name, username, bio, role, avatar_url, company, company_role, looking_for, available_for_work, skills, area')
       .not('full_name', 'is', null)
+      .is('banned_at', null)
       .order('created_at', { ascending: false })
       .limit(200)
     setPeople(data || [])
@@ -310,8 +313,9 @@ export default function Explore() {
       p.looking_for?.toLowerCase().includes(peopleQuery)
     )) return false
     if (filterSkill && !(p.skills || []).includes(filterSkill)) return false
+    if (filterPeopleArea && p.area !== filterPeopleArea) return false
     return true
-  }), [people, peopleQuery, filterSkill])
+  }), [people, peopleQuery, filterSkill, filterPeopleArea])
 
   const SORT_OPTIONS = [
     { id: 'score',   label: 'Melhor score' },
@@ -502,7 +506,7 @@ export default function Explore() {
             />
           </div>
 
-          {/* Filter toggle button — only for projetos tab */}
+          {/* Filter toggle button */}
           {tab === 'projetos' && (
             <button
               className={`explore-filter-btn${showFilters || activeFilterCount > 0 ? ' active' : ''}`}
@@ -513,6 +517,19 @@ export default function Explore() {
               <span className="explore-filter-btn-label">Filtros</span>
               {activeFilterCount > 0 && (
                 <span className="explore-filter-badge">{activeFilterCount}</span>
+              )}
+            </button>
+          )}
+          {tab === 'pessoas' && (
+            <button
+              className={`explore-filter-btn${showPeopleFilters || filterPeopleArea || filterSkill ? ' active' : ''}`}
+              onClick={() => setShowPeopleFilters(f => !f)}
+              aria-label="Filtros"
+            >
+              <SlidersHorizontal size={15} />
+              <span className="explore-filter-btn-label">Filtros</span>
+              {(filterPeopleArea || filterSkill) && (
+                <span className="explore-filter-badge">{[filterPeopleArea, filterSkill].filter(Boolean).length}</span>
               )}
             </button>
           )}
@@ -559,10 +576,10 @@ export default function Explore() {
               onClick={() => setFilterAvailable(v => !v)}
               style={{
                 display: 'flex', alignItems: 'center', gap: 6,
-                background: filterAvailable ? 'rgba(16,185,129,0.1)' : colors.bgAlt,
-                border: `1px solid ${filterAvailable ? 'rgba(16,185,129,0.4)' : colors.border}`,
+                background: filterAvailable ? 'rgba(27,120,247,0.1)' : colors.bgAlt,
+                border: `1px solid ${filterAvailable ? 'rgba(27,120,247,0.4)' : colors.border}`,
                 borderRadius: 10, padding: '9px 14px',
-                color: filterAvailable ? '#10b981' : colors.muted,
+                color: filterAvailable ? '#1b78f7' : colors.muted,
                 fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
                 transition: 'all 0.15s',
               }}
@@ -670,8 +687,8 @@ export default function Explore() {
                       {project.available_for_work && (
                         <>
                           {(project.area || project.is_pap) && <span style={{ color: colors.subtle }}>·</span>}
-                          <span style={{ color: '#10b981', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
-                            <Briefcase size={10} style={{ flexShrink: 0 }} /> Disponível
+                          <span style={{ color: '#1b78f7', display: 'inline-flex', alignItems: 'center', gap: 3 }} title="Disponível para estágio">
+                            <Briefcase size={10} style={{ flexShrink: 0 }} />
                           </span>
                         </>
                       )}
@@ -773,31 +790,78 @@ export default function Explore() {
         {/* ── Pessoas tab ── */}
         {tab === 'pessoas' && (
           <>
-            {/* Skill filter chips */}
-            {!peopleLoading && people.length > 0 && (() => {
-              const allSkills = [...new Set(people.flatMap(p => p.skills || []))].sort()
-              if (allSkills.length === 0) return null
-              return (
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 20 }}>
-                  {[{ id: '', label: 'Todas as competências' }, ...allSkills.map(s => ({ id: s, label: s }))].map(s => (
-                    <button
-                      key={s.id}
-                      onClick={() => setFilterSkill(s.id)}
-                      style={{
-                        padding: '6px 14px', borderRadius: 20,
-                        border: `1.5px solid ${filterSkill === s.id ? colors.blue : colors.border}`,
-                        background: filterSkill === s.id ? 'rgba(27,120,247,0.1)' : colors.bgAlt,
-                        color: filterSkill === s.id ? colors.blue : colors.muted,
-                        fontSize: 12, fontWeight: 600, cursor: 'pointer',
-                        fontFamily: 'inherit', transition: 'all 0.15s',
-                      }}
-                    >
-                      {s.label}
-                    </button>
-                  ))}
-                </div>
-              )
-            })()}
+            {/* Collapsible filter panel */}
+            {showPeopleFilters && !peopleLoading && people.length > 0 && (
+              <div className="explore-filter-panel" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {/* Area filter */}
+                {(() => {
+                  const allAreas = [...new Set(people.map(p => p.area).filter(Boolean))].sort()
+                  if (allAreas.length === 0) return null
+                  return (
+                    <div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: colors.muted, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Área</div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                        {[{ id: '', label: 'Todas' }, ...allAreas.map(a => ({ id: a, label: a }))].map(a => (
+                          <button
+                            key={a.id}
+                            onClick={() => setFilterPeopleArea(a.id)}
+                            style={{
+                              padding: '6px 14px', borderRadius: 20,
+                              border: `1.5px solid ${filterPeopleArea === a.id ? colors.blue : colors.border}`,
+                              background: filterPeopleArea === a.id ? 'rgba(27,120,247,0.1)' : colors.bgAlt,
+                              color: filterPeopleArea === a.id ? colors.blue : colors.muted,
+                              fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                              fontFamily: 'inherit', transition: 'all 0.15s',
+                            }}
+                          >
+                            {a.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )
+                })()}
+
+                {/* Skill filter */}
+                {(() => {
+                  const allSkills = [...new Set(people.flatMap(p => p.skills || []))].sort()
+                  if (allSkills.length === 0) return null
+                  return (
+                    <div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: colors.muted, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Competências</div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                        {[{ id: '', label: 'Todas' }, ...allSkills.map(s => ({ id: s, label: s }))].map(s => (
+                          <button
+                            key={s.id}
+                            onClick={() => setFilterSkill(s.id)}
+                            style={{
+                              padding: '6px 14px', borderRadius: 20,
+                              border: `1.5px solid ${filterSkill === s.id ? colors.blue : colors.border}`,
+                              background: filterSkill === s.id ? 'rgba(27,120,247,0.1)' : colors.bgAlt,
+                              color: filterSkill === s.id ? colors.blue : colors.muted,
+                              fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                              fontFamily: 'inherit', transition: 'all 0.15s',
+                            }}
+                          >
+                            {s.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )
+                })()}
+
+                {/* Clear filters */}
+                {(filterPeopleArea || filterSkill) && (
+                  <button
+                    onClick={() => { setFilterPeopleArea(''); setFilterSkill('') }}
+                    style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: `1px solid ${colors.border}`, color: colors.muted, borderRadius: 10, padding: '9px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', alignSelf: 'flex-start' }}
+                  >
+                    <X size={13} /> Limpar filtros
+                  </button>
+                )}
+              </div>
+            )}
 
             {peopleLoading ? (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(288px, 1fr))', gap: 16 }}>
@@ -863,8 +927,8 @@ export default function Explore() {
                               {displayName}
                             </span>
                             {p.available_for_work && (
-                              <span style={{ flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 10, fontWeight: 700, color: '#10b981' }}>
-                                <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#10b981' }} /> Disponível
+                              <span style={{ flexShrink: 0, display: 'inline-flex', alignItems: 'center', color: '#1b78f7' }} title="Disponível para estágio">
+                                <Briefcase size={12} strokeWidth={2.5} />
                               </span>
                             )}
                           </div>

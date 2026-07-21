@@ -126,7 +126,7 @@ function SectionCard({ title, children }) {
 }
 
 export default function Settings() {
-  const { user, loading: authLoading, refreshProfile } = useAuth()
+  const { user, profile, loading: authLoading, refreshProfile } = useAuth()
   const { theme, toggleTheme } = useTheme()
   const navigate = useNavigate()
 
@@ -163,6 +163,9 @@ export default function Settings() {
   const [companyIndustry, setCompanyIndustry]   = useState('')
   const [companySize, setCompanySize]           = useState('')
 
+  // Area (aluno)
+  const [area, setArea] = useState('')
+
   // Skills (aluno/professor)
   const [skills, setSkills] = useState([])
 
@@ -184,7 +187,7 @@ export default function Settings() {
     // Pre-fill from user_metadata
     setFullName(user.user_metadata?.full_name ?? '')
     // Load profile
-    supabase.from('profiles').select('username, bio, role, avatar_url, available_for_work, monthly_report_opt_in, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size, skills').eq('id', user.id).single().then(({ data }) => {
+    supabase.from('profiles').select('username, bio, role, avatar_url, available_for_work, monthly_report_opt_in, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size, skills, area').eq('id', user.id).single().then(({ data }) => {
       if (data) {
         setUsername(data.username ?? '')
         setOriginalUsername(data.username ?? '')
@@ -203,6 +206,7 @@ export default function Settings() {
         setCompanyIndustry(data.company_industry ?? '')
         setCompanySize(data.company_size ?? '')
         setSkills(data.skills ?? [])
+        setArea(data.area ?? '')
       }
     })
   }, [user])
@@ -301,25 +305,32 @@ export default function Settings() {
     }
 
     try {
+      // Never overwrite elevated roles (professor, etc.) from the client;
+      // those are set server-side (e.g. redeem_professor_invite_code).
+      const safeRole = (profile?.role === 'professor' || profile?.role === 'recrutador' || profile?.role === 'empresa')
+        ? profile.role
+        : role
+
       // Update auth metadata (full_name + role kept in sync)
       const { error: metaError } = await supabase.auth.updateUser({
-        data: { full_name: fullName.trim(), role }
+        data: { full_name: fullName.trim(), role: safeRole }
       })
       if (metaError) throw metaError
-
-      // Upsert profile
       const { error: profileError } = await supabase.from('profiles').upsert({
         id: user.id,
         full_name: fullName.trim(),
         username: username.trim() || null,
         bio: bio.trim() || null,
-        role,
+        role: safeRole,
         available_for_work: availableForWork,
         ...(role === 'professor' ? {
           monthly_report_opt_in: monthlyReportOptIn,
         } : {}),
         ...((role === 'aluno' || role === 'professor') ? {
           skills,
+        } : {}),
+        ...(role === 'aluno' ? {
+          area: area || null,
         } : {}),
         ...(role === 'recrutador' || role === 'empresa' ? {
           company: company.trim() || null,
@@ -451,7 +462,7 @@ export default function Settings() {
         </div>
       )}
       <button onClick={handleSaveProfile} disabled={saving}
-        style={{ background: saving ? C.border : accentColor, border: 'none', borderRadius: 8, padding: '12px 24px', color: '#fff', fontSize: 14, fontWeight: 700, cursor: saving ? 'default' : 'pointer', fontFamily: 'inherit', boxShadow: saving ? 'none' : `0 2px 8px ${accentColor}33`, transition: 'background 0.2s' }}>
+        style={{ background: saving ? C.border : C.blue, border: 'none', borderRadius: 8, padding: '12px 24px', color: '#fff', fontSize: 14, fontWeight: 700, cursor: saving ? 'default' : 'pointer', fontFamily: 'inherit', boxShadow: saving ? 'none' : '0 2px 8px rgba(27,120,247,0.2)', transition: 'background 0.2s' }}>
         {saving ? 'A guardar...' : 'Guardar'}
       </button>
     </>
@@ -698,6 +709,33 @@ export default function Settings() {
               }
             />
             <Textarea label="Bio" value={bio} onChange={setBio} placeholder="Conta um pouco sobre ti e os teus projetos..." hint="Aparece no teu perfil público." />
+
+            {/* Área — aluno only */}
+            {role === 'aluno' && (
+              <div style={{ marginBottom: 20 }}>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: C.muted, marginBottom: 7 }}>Área</label>
+                <select
+                  value={area}
+                  onChange={e => setArea(e.target.value)}
+                  style={{ width: '100%', background: C.inputBg, border: `1.5px solid ${C.border}`, borderRadius: 10, color: area ? C.text : C.subtle, fontSize: 14, padding: '12px 14px', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', cursor: 'pointer', appearance: 'none', WebkitAppearance: 'none', backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 14px center' }}
+                >
+                  <option value="">Seleciona a tua área</option>
+                  <option value="Programação e Informática">Programação e Informática</option>
+                  <option value="Design e Multimédia">Design e Multimédia</option>
+                  <option value="Marketing e Comunicação">Marketing e Comunicação</option>
+                  <option value="Gestão e Administração">Gestão e Administração</option>
+                  <option value="Eletrónica e Automação">Eletrónica e Automação</option>
+                  <option value="Audiovisual e Cinema">Audiovisual e Cinema</option>
+                  <option value="Turismo e Hotelaria">Turismo e Hotelaria</option>
+                  <option value="Saúde">Saúde</option>
+                  <option value="Desporto">Desporto</option>
+                  <option value="Artes e Espetáculo">Artes e Espetáculo</option>
+                  <option value="Construção e Engenharia">Construção e Engenharia</option>
+                  <option value="Outra">Outra</option>
+                </select>
+                <p style={{ margin: '6px 0 0', fontSize: 12, color: C.subtle }}>Permite que recrutadores filtrem por área.</p>
+              </div>
+            )}
 
             {/* Available for work toggle — aluno only */}
             {role === 'aluno' && (

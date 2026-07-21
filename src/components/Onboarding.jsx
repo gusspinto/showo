@@ -1,115 +1,97 @@
 import { useState, useEffect, useRef, useLayoutEffect } from 'react'
-import { X, MousePointer, Plus, Check, TrendingUp, Clock, Eye } from 'lucide-react'
+import { X, MousePointer, Plus, Check } from 'lucide-react'
 
-/* ── Step 1: create-project cursor-click demo ──
-   Cursor target is measured live off the real button via getBoundingClientRect,
-   so it always lands exactly on the button regardless of card size/padding. */
-function CreateDemo({ play, onDone }) {
-  const [phase, setPhase] = useState('idle') // idle -> moving -> clicked -> created
-  const containerRef = useRef(null)
+/* One self-building mock. The browser frame stays constant while the inner
+   content morphs through three beats on a loop — click → AI fills → shareable
+   page — so the whole concept reads visually, almost without text. */
+
+const BEATS = [
+  { key: 'click', step: 'Criar projeto' },
+  { key: 'fill',  step: 'IA preenche' },
+  { key: 'done',  step: 'Partilhar' },
+]
+
+// Per-beat dwell time (ms). Click is a touch longer to let the cursor land.
+const DWELL = [2200, 2000, 2400]
+
+const FIELDS = [
+  { label: 'Objetivo', pct: 78 },
+  { label: 'Problema', pct: 55 },
+  { label: 'Solução', pct: 88 },
+]
+
+/* Cursor that flies in and clicks the create button. Target is measured live
+   off the real button so it always lands dead-on. */
+function ClickBeat({ active }) {
+  const wrapRef = useRef(null)
   const btnRef = useRef(null)
   const [target, setTarget] = useState({ x: 0, y: 0 })
+  const [phase, setPhase] = useState('in') // in -> move -> click
 
   useLayoutEffect(() => {
-    if (!play || !containerRef.current || !btnRef.current) return
-    const c = containerRef.current.getBoundingClientRect()
+    if (!wrapRef.current || !btnRef.current) return
+    const c = wrapRef.current.getBoundingClientRect()
     const b = btnRef.current.getBoundingClientRect()
-    setTarget({ x: b.left - c.left + b.width / 2 - 4, y: b.top - c.top + b.height / 2 - 4 })
-  }, [play])
+    setTarget({ x: b.left - c.left + b.width / 2 - 3, y: b.top - c.top + b.height / 2 - 3 })
+  }, [active])
 
   useEffect(() => {
-    if (!play) return
-    const timers = []
-    setPhase('appear')
-    timers.push(setTimeout(() => setPhase('moving'), 350))
-    timers.push(setTimeout(() => setPhase('clicked'), 1050))
-    timers.push(setTimeout(() => setPhase('created'), 1280))
-    timers.push(setTimeout(onDone, 2400))
-    return () => timers.forEach(clearTimeout)
-  }, [play])
+    if (!active) return
+    setPhase('in')
+    const t1 = setTimeout(() => setPhase('move'), 300)
+    const t2 = setTimeout(() => setPhase('click'), 1000)
+    return () => { clearTimeout(t1); clearTimeout(t2) }
+  }, [active])
+
+  const clicked = phase === 'click'
 
   return (
-    <div ref={containerRef} className="onb-demo-create" style={{ marginTop: 22, position: 'relative', height: 118 }}>
-      <div className="onb-demo-create-row" style={{
-        background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: 10,
-        padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        animation: 'guide-fade-up 0.4s both',
+    <div ref={wrapRef} style={{ position: 'relative', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <button ref={btnRef} style={{
+        display: 'flex', alignItems: 'center', gap: 8,
+        background: clicked ? '#1660d1' : '#1b78f7',
+        border: 'none', borderRadius: 10, padding: '13px 22px',
+        fontSize: 15, fontWeight: 700, color: '#fff', fontFamily: 'inherit',
+        transform: clicked ? 'scale(0.94)' : 'scale(1)',
+        boxShadow: phase === 'move' ? '0 0 0 4px rgba(27,120,247,0.2)' : '0 4px 14px rgba(27,120,247,0.35)',
+        transition: 'transform 0.15s, background 0.15s, box-shadow 0.3s',
+        pointerEvents: 'none',
       }}>
-        <span style={{ fontSize: 13, color: 'var(--c-muted)', fontWeight: 600 }}>Os meus projetos</span>
-        <div ref={btnRef} style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-          background: phase === 'clicked' ? '#1660d1' : '#1b78f7',
-          borderRadius: 7, padding: '9px 16px',
-          fontSize: 13, fontWeight: 700, color: '#fff',
-          transform: phase === 'clicked' ? 'scale(0.92)' : 'scale(1)',
-          boxShadow: phase === 'moving' ? '0 0 0 3px rgba(27,120,247,0.18)' : 'none',
-          transition: 'transform 0.15s, background 0.15s, box-shadow 0.3s',
-        }}>
-          <Plus size={14} /> Criar projeto
-        </div>
-      </div>
-
-      {phase === 'created' && (
-        <div className="guide-pop" style={{
-          position: 'absolute', left: 0, right: 0, top: 76,
-          display: 'flex', alignItems: 'center', gap: 8,
-          background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.25)',
-          borderRadius: 8, padding: '10px 14px',
-        }}>
-          <Check size={14} color="#22c55e" />
-          <span style={{ fontSize: 13, fontWeight: 600, color: '#22c55e' }}>Projeto criado</span>
-        </div>
-      )}
+        <Plus size={16} strokeWidth={2.5} /> Criar projeto
+      </button>
 
       <div style={{
         position: 'absolute',
-        left: phase === 'idle' || phase === 'appear' ? '92%' : target.x,
-        top: phase === 'idle' || phase === 'appear' ? -30 : target.y,
-        transition: 'left 0.6s cubic-bezier(0.34,1.56,0.64,1), top 0.6s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s',
-        opacity: play && phase !== 'idle' ? 1 : 0,
-        transform: phase === 'clicked' ? 'scale(0.78)' : 'scale(1)',
+        left: phase === 'in' ? '88%' : target.x,
+        top: phase === 'in' ? '-8%' : target.y,
+        transition: 'left 0.65s cubic-bezier(0.34,1.4,0.64,1), top 0.65s cubic-bezier(0.34,1.4,0.64,1), transform 0.15s',
+        transform: clicked ? 'scale(0.8)' : 'scale(1)',
         pointerEvents: 'none',
       }}>
-        <MousePointer size={24} color="#fff" fill="#111" strokeWidth={1.5} style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.5))' }} />
-        {phase === 'clicked' && <span className="guide-click-ring" />}
+        <MousePointer size={26} color="#fff" fill="#111" strokeWidth={1.5} style={{ filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.5))' }} />
+        {clicked && <span className="onb-ring" />}
       </div>
     </div>
   )
 }
 
-/* ── Step 2: AI auto-fill demo ── */
-function FillDemo({ play, onDone }) {
-  const FIELDS = [
-    { label: 'Objetivo', pct: 72 },
-    { label: 'Problema', pct: 58 },
-    { label: 'Solução', pct: 85 },
-    { label: 'Tecnologias', pct: 64 },
-  ]
-  const STAGGER = 0.28
-  useEffect(() => {
-    if (!play) return
-    const t = setTimeout(onDone, (FIELDS.length - 1) * STAGGER * 1000 + 1100)
-    return () => clearTimeout(t)
-  }, [play])
-
-  if (!play) return <div style={{ marginTop: 22, height: 4 + FIELDS.length * 40 }} />
-
+/* AI writing the project — a title line types in, fields fill with growing bars. */
+function FillBeat({ active }) {
+  if (!active) return null
   return (
-    <div className="onb-demo-fill" style={{ marginTop: 22, display: 'flex', flexDirection: 'column', gap: 8 }}>
+    <div style={{ padding: '4px 4px', display: 'flex', flexDirection: 'column', gap: 13, height: '100%', justifyContent: 'center' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 9, animation: 'onb-fade 0.4s both' }}>
+        <span className="onb-ai-badge">✦ IA</span>
+        <div style={{ height: 9, borderRadius: 5, background: 'var(--c-border)', width: '52%',
+          animation: 'onb-grow 0.6s 0.15s cubic-bezier(0.22,1,0.36,1) both' }} />
+      </div>
       {FIELDS.map((f, i) => (
-        <div key={f.label} className="onb-demo-fill-row" style={{
-          background: 'var(--c-bg)', border: '1px solid var(--c-border)',
-          borderRadius: 8, padding: '10px 14px',
-          display: 'flex', alignItems: 'center', gap: 12,
-          animation: `guide-fade-up 0.45s ${i * STAGGER}s both`,
-        }}>
-          <span className="onb-demo-fill-label" style={{ fontSize: 12.5, color: '#1b78f7', fontWeight: 700, minWidth: 90, flexShrink: 0 }}>{f.label}</span>
-          <div style={{ flex: 1, height: 6, background: 'var(--c-border)', borderRadius: 3, overflow: 'hidden' }}>
-            <div style={{
-              height: '100%', background: '#1b78f7',
-              borderRadius: 3, width: `${f.pct}%`,
-              animation: `guide-bar-grow 0.7s ${i * STAGGER + 0.2}s cubic-bezier(0.22,1,0.36,1) both`,
-            }} />
+        <div key={f.label} style={{ display: 'flex', alignItems: 'center', gap: 11,
+          animation: `onb-fade 0.4s ${0.35 + i * 0.28}s both` }}>
+          <span style={{ fontSize: 12, fontWeight: 700, color: '#1b78f7', minWidth: 78, flexShrink: 0 }}>{f.label}</span>
+          <div style={{ flex: 1, height: 7, background: 'var(--c-border)', borderRadius: 4, overflow: 'hidden' }}>
+            <div style={{ height: '100%', background: '#1b78f7', borderRadius: 4, width: `${f.pct}%`,
+              animation: `onb-grow 0.7s ${0.5 + i * 0.28}s cubic-bezier(0.22,1,0.36,1) both` }} />
           </div>
         </div>
       ))}
@@ -117,238 +99,155 @@ function FillDemo({ play, onDone }) {
   )
 }
 
-/* ── Step 3: final — page preview + community stats ── */
-function StatsPreview() {
-  const STATS = [
-    { Icon: TrendingUp, value: '3×', label: 'mais visibilidade' },
-    { Icon: Clock, value: '<2 min', label: 'para criar' },
-    { Icon: Eye, value: '92', label: 'score médio' },
-  ]
+/* Finished page — score ring counts up, share link with a green check. */
+function DoneBeat({ active }) {
   const [score, setScore] = useState(0)
-
   useEffect(() => {
-    const start = performance.now()
-    const DURATION = 900
-    const TARGET = 85
+    if (!active) { setScore(0); return }
+    const start = performance.now(), DUR = 850, TARGET = 88
     let raf
-    function tick(now) {
-      const t = Math.min(1, (now - start) / DURATION)
-      setScore(Math.round(TARGET * (1 - Math.pow(1 - t, 3)))) // ease-out cubic
+    const tick = now => {
+      const t = Math.min(1, (now - start) / DUR)
+      setScore(Math.round(TARGET * (1 - Math.pow(1 - t, 3))))
       if (t < 1) raf = requestAnimationFrame(tick)
     }
-    const startTimer = setTimeout(() => { raf = requestAnimationFrame(tick) }, 250)
-    return () => { clearTimeout(startTimer); cancelAnimationFrame(raf) }
-  }, [])
+    const s = setTimeout(() => { raf = requestAnimationFrame(tick) }, 220)
+    return () => { clearTimeout(s); cancelAnimationFrame(raf) }
+  }, [active])
 
+  if (!active) return null
   return (
-    <div style={{ marginTop: 22 }}>
-      <div style={{ background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: 12, overflow: 'hidden', animation: 'guide-fade-up 0.45s both' }}>
-        <div style={{ background: 'linear-gradient(135deg, rgba(27,120,247,0.14), rgba(79,70,229,0.08))', padding: '16px 18px' }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--c-text)', marginBottom: 3 }}>Gestão de Horários</div>
-          <div style={{ fontSize: 12, color: 'var(--c-muted)' }}>João Silva · Desenvolvimento de Aplicações</div>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, height: '100%', justifyContent: 'center' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 13, animation: 'onb-fade 0.4s both' }}>
+        <div style={{
+          background: `conic-gradient(#22c55e ${score / 100 * 360}deg, var(--c-border) 0deg)`,
+          borderRadius: '50%', width: 48, height: 48, flexShrink: 0,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <div style={{ background: 'var(--c-card)', borderRadius: '50%', width: 37, height: 37, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, color: '#22c55e' }}>{score}</div>
         </div>
-        <div style={{ padding: '13px 18px', display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div style={{
-            background: `conic-gradient(#22c55e ${score / 100 * 360}deg, var(--c-border) 0deg)`,
-            borderRadius: '50%', width: 34, height: 34, flexShrink: 0,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            transition: 'background 0.05s linear',
-          }}>
-            <div style={{ background: 'var(--c-bg)', borderRadius: '50%', width: 26, height: 26, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9.5, fontWeight: 800, color: '#22c55e' }}>{score}</div>
-          </div>
-          <div style={{ flex: 1, fontSize: 12, color: 'var(--c-muted)' }}>
-            showo.app/projeto/<span style={{ color: '#1b78f7' }}>gestao-horarios</span>
-          </div>
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--c-text)' }}>Gestão de Horários</div>
+          <div style={{ fontSize: 12, color: 'var(--c-muted)' }}>João Silva · DAM</div>
         </div>
       </div>
-
-      <div className="onb-demo-stats-row" style={{ display: 'flex', gap: 10, marginTop: 12 }}>
-        {STATS.map((stat, i) => (
-          <div key={stat.label} className="onb-demo-stat" style={{
-            flex: 1, textAlign: 'center', background: 'var(--c-bg)', border: '1px solid var(--c-border)',
-            borderRadius: 10, padding: '12px 6px',
-            animation: `guide-fade-up 0.4s ${0.3 + i * 0.12}s both`,
-          }}>
-            <stat.Icon size={15} color="#1b78f7" style={{ marginBottom: 5 }} />
-            <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--c-text)', fontFamily: 'var(--font-heading)' }}>{stat.value}</div>
-            <div style={{ fontSize: 10.5, color: 'var(--c-muted)', marginTop: 1 }}>{stat.label}</div>
-          </div>
-        ))}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 9, background: 'var(--c-bg)', border: '1px solid var(--c-border)',
+        borderRadius: 9, padding: '10px 13px', animation: 'onb-fade 0.4s 0.25s both' }}>
+        <div style={{ width: 18, height: 18, borderRadius: '50%', background: 'rgba(34,197,94,0.14)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <Check size={12} color="#22c55e" strokeWidth={3} />
+        </div>
+        <span style={{ fontSize: 12.5, color: 'var(--c-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          showo.app/projeto/<span style={{ color: '#1b78f7', fontWeight: 600 }}>gestao-horarios</span>
+        </span>
       </div>
     </div>
   )
 }
 
-const STEPS = [
-  { key: 'create', title: 'Cria o teu primeiro projeto', desc: 'Começa o teu portfólio com um único clique.', Demo: CreateDemo, interactive: true },
-  { key: 'fill',   title: 'A IA trata do resto', desc: 'Objetivo, problema, solução e tecnologias preenchidos automaticamente.', Demo: FillDemo, interactive: true },
-  { key: 'page',   title: 'Uma página que abre portas', desc: 'Design profissional, score automático e link único para partilhares.', Demo: StatsPreview, interactive: false },
-]
-
-const STEP_DURATION = 5000
-
 export default function Onboarding({ onDone }) {
-  const [step, setStep] = useState(0)
+  const [beat, setBeat] = useState(0)
   const [visible, setVisible] = useState(false)
-  const advanceTimer = useRef(null)
+  const timer = useRef(null)
 
   useEffect(() => {
-    const t = setTimeout(() => setVisible(true), 100)
+    const t = setTimeout(() => setVisible(true), 80)
     return () => clearTimeout(t)
   }, [])
 
-  // Auto-advance every step on a fixed cadence — plays the step's demo immediately
-  // and moves to the next one after STEP_DURATION regardless of demo length, looping forever.
   useEffect(() => {
-    advanceTimer.current = setTimeout(() => {
-      setStep(s => (s + 1) % STEPS.length)
-    }, STEP_DURATION)
-    return () => clearTimeout(advanceTimer.current)
-  }, [step])
+    timer.current = setTimeout(() => setBeat(b => (b + 1) % BEATS.length), DWELL[beat])
+    return () => clearTimeout(timer.current)
+  }, [beat])
 
-  function handleDone() {
+  function close() {
     localStorage.setItem('showo_seen_onboarding', '1')
     setVisible(false)
-    setTimeout(onDone, 300)
+    setTimeout(onDone, 280)
   }
-
-  function goToStep(i) {
-    clearTimeout(advanceTimer.current)
-    setStep(i)
-  }
-
-  const s = STEPS[step]
-  const Demo = s.Demo
 
   return (
     <>
       <style>{`
-        @keyframes guide-fade-up { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes guide-bar-grow { from { width: 0%; } }
-        @keyframes guide-step-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes guide-click-ring { from { box-shadow: 0 0 0 0 rgba(0,0,0,0.35); } to { box-shadow: 0 0 0 12px rgba(0,0,0,0); } }
-        @keyframes guide-pop-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes guide-progress { from { width: 0%; } to { width: 100%; } }
-        .guide-click-ring { position: absolute; top: 0; left: 0; width: 20px; height: 20px; border-radius: 50%; animation: guide-click-ring 0.5s ease-out; pointer-events: none; }
-        .guide-pop { animation: guide-pop-in 0.25s ease-out both; }
-        .guide-step-content { animation: guide-step-in 0.3s cubic-bezier(0.16,1,0.3,1) both; }
-
-        @media (max-width: 600px) {
-          .onb-card { width: calc(100% - 20px) !important; max-height: 85vh !important; border-radius: 14px !important; }
-          .onb-rail { width: 34px !important; padding: 20px 0 !important; }
-          .onb-content { padding: 18px 14px 16px !important; }
-          .onb-step-label { font-size: 10px !important; }
-          .onb-title { font-size: 16px !important; }
-          .onb-desc { font-size: 12px !important; }
-          .onb-demo-create { height: auto !important; min-height: 100px !important; }
-          .onb-demo-create-row { padding: 12px 14px !important; }
-          .onb-demo-fill-row { padding: 8px 10px !important; gap: 8px !important; }
-          .onb-demo-fill-label { min-width: 64px !important; font-size: 11px !important; }
-          .onb-demo-stats-row { gap: 6px !important; }
-          .onb-demo-stat { padding: 10px 4px !important; }
+        @keyframes onb-fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes onb-grow { from { width: 0 !important; } }
+        @keyframes onb-beat-in { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
+        @keyframes onb-ring { from { box-shadow: 0 0 0 0 rgba(27,120,247,0.4); } to { box-shadow: 0 0 0 14px rgba(27,120,247,0); } }
+        .onb-ring { position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; animation: onb-ring 0.55s ease-out; pointer-events: none; }
+        .onb-ai-badge { font-size: 10.5px; font-weight: 800; letter-spacing: 0.02em; color: #1b78f7; background: rgba(27,120,247,0.1); border-radius: 5px; padding: 3px 7px; flex-shrink: 0; }
+        .onb-beat { animation: onb-beat-in 0.35s cubic-bezier(0.16,1,0.3,1) both; }
+        @media (max-width: 560px) {
+          .onb-card { width: calc(100% - 32px) !important; max-width: 360px !important; }
+          .onb-stage { height: 200px !important; padding: 16px !important; }
         }
-        @media (max-width: 380px) {
-          .onb-rail { display: none !important; }
+        @media (max-width: 390px) {
+          .onb-card { width: calc(100% - 24px) !important; }
+          .onb-stage { height: 180px !important; padding: 14px !important; }
         }
       `}</style>
 
-      {/* Backdrop */}
-      <div
-        onClick={handleDone}
-        style={{
-          position: 'fixed', inset: 0, zIndex: 10000,
-          background: 'rgba(0,0,0,0.45)',
-          backdropFilter: 'blur(2px)',
-          opacity: visible ? 1 : 0,
-          transition: 'opacity 0.3s',
-        }}
-      />
+      <div onClick={close} style={{
+        position: 'fixed', inset: 0, zIndex: 10000,
+        background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(3px)',
+        opacity: visible ? 1 : 0, transition: 'opacity 0.28s',
+      }} />
 
-      {/* Card */}
+      {/* The whole popup IS the browser window — no outer card chrome. */}
       <div className="onb-card" style={{
-        position: 'fixed', zIndex: 10001,
-        top: '50%', left: '50%',
+        position: 'fixed', zIndex: 10001, top: '50%', left: '50%',
         transform: `translate(-50%, ${visible ? '-50%' : '-46%'})`,
-        opacity: visible ? 1 : 0,
-        transition: 'opacity 0.3s, transform 0.3s',
-        width: 'calc(100% - 40px)', maxWidth: 600,
-        maxHeight: '90vh', overflowY: 'auto', overflowX: 'hidden',
-        background: 'var(--c-card)',
-        border: '1px solid var(--c-border)',
-        borderRadius: 18,
-        boxShadow: '0 12px 32px rgba(0,0,0,0.3)',
-        fontFamily: 'inherit',
-        display: 'flex',
+        opacity: visible ? 1 : 0, transition: 'opacity 0.28s, transform 0.28s',
+        width: 'calc(100% - 40px)', maxWidth: 440,
+        background: 'var(--c-card)', border: '1px solid var(--c-border)',
+        borderRadius: 14, overflow: 'hidden',
+        boxShadow: '0 24px 60px rgba(0,0,0,0.45)', fontFamily: 'inherit',
       }}>
-
-        {/* Left rail — minimal vertical step tracker, acts as progress + nav */}
-        <div className="onb-rail" style={{
-          width: 48, flexShrink: 0, background: 'var(--c-bg-alt)',
-          borderRight: '1px solid var(--c-border)',
-          display: 'flex', flexDirection: 'column', alignItems: 'center',
-          padding: '34px 0', gap: 0,
+        {/* Title bar — mac dots left, close right */}
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '9px 10px 9px 14px', borderBottom: '1px solid var(--c-border)', background: 'var(--c-bg-alt)',
         }}>
-          {STEPS.map((st, i) => (
-            <div key={st.key} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: i < STEPS.length - 1 ? 1 : 'none' }}>
-              <button
-                onClick={() => goToStep(i)}
-                aria-label={`Passo ${i + 1}`}
-                style={{
-                  width: 8, height: 8, borderRadius: '50%', flexShrink: 0,
-                  border: `1px solid ${i <= step ? '#1b78f7' : 'var(--c-border)'}`,
-                  background: i <= step ? '#1b78f7' : 'transparent',
-                  boxShadow: i === step ? '0 0 0 3px rgba(27,120,247,0.18)' : 'none',
-                  padding: 0, cursor: 'pointer',
-                  transition: 'all 0.25s',
-                }}
-              />
-              {i < STEPS.length - 1 && (
-                <div style={{ width: 1, flex: 1, minHeight: 28, marginTop: 6, background: i < step ? '#1b78f7' : 'var(--c-border)', transition: 'background 0.3s' }} />
-              )}
-            </div>
-          ))}
+          <div style={{ display: 'flex', gap: 7 }}>
+            <span style={{ width: 11, height: 11, borderRadius: '50%', background: '#ff5f57' }} />
+            <span style={{ width: 11, height: 11, borderRadius: '50%', background: '#febc2e' }} />
+            <span style={{ width: 11, height: 11, borderRadius: '50%', background: '#28c840' }} />
+          </div>
+          <button onClick={close} aria-label="Saltar" className="icon-btn-ghost">
+            <X size={16} />
+          </button>
         </div>
 
-        {/* Right — content */}
-        <div className="onb-content" style={{ flex: 1, padding: '28px 30px 26px', minWidth: 0 }}>
-          {/* Header row */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
-            <span className="onb-step-label" style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--c-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-              Guia rápido · {step + 1}/{STEPS.length}
-            </span>
-            <button
-              onClick={handleDone}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 5,
-                background: 'transparent', border: 'none',
-                color: 'var(--c-muted)', cursor: 'pointer',
-                fontSize: 13, fontFamily: 'inherit', padding: '4px 2px',
-                transition: 'color 0.15s',
-              }}
-              onMouseEnter={e => { e.currentTarget.style.color = 'var(--c-text)' }}
-              onMouseLeave={e => { e.currentTarget.style.color = 'var(--c-muted)' }}
-            >
-              <X size={15} />
-              <span>Saltar</span>
-            </button>
+        {/* Stage — the morphing animation */}
+        <div className="onb-stage" style={{ height: 240, padding: '24px', background: 'var(--c-card)' }}>
+          <div key={beat} className="onb-beat" style={{ height: '100%' }}>
+            {beat === 0 && <ClickBeat active />}
+            {beat === 1 && <FillBeat active />}
+            {beat === 2 && <DoneBeat active />}
           </div>
+        </div>
 
-          {/* Content — keyed by step so it animates in fresh each time */}
-          <div key={step} className="guide-step-content">
-            <h2 className="onb-title" style={{ margin: '0 0 5px', fontSize: 20, fontWeight: 400, fontFamily: 'var(--font-heading)', color: 'var(--c-text)', letterSpacing: '-0.3px' }}>
-              {s.title}
-            </h2>
-            <p className="onb-desc" style={{ margin: 0, fontSize: 13.5, color: 'var(--c-muted)', lineHeight: 1.6 }}>
-              {s.desc}
-            </p>
-
-            <Demo play={true} onDone={() => {}} />
+        {/* Footer bar inside the window — progress + start */}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 16,
+          padding: '12px 14px', borderTop: '1px solid var(--c-border)', background: 'var(--c-bg-alt)',
+        }}>
+          <div style={{ display: 'flex', gap: 6, flex: 1 }}>
+            {BEATS.map((b, i) => (
+              <button key={b.key} onClick={() => { clearTimeout(timer.current); setBeat(i) }} aria-label={b.step} style={{
+                flex: 1, height: 3, borderRadius: 2, padding: 0, border: 'none', cursor: 'pointer',
+                background: i <= beat ? '#1b78f7' : 'var(--c-border)', transition: 'background 0.3s',
+              }} />
+            ))}
           </div>
-
-          {/* Auto-advance progress bar — fills over STEP_DURATION, resets each step. Kept subtle on purpose. */}
-          <div key={`bar-${step}`} style={{ marginTop: 24, height: 2, background: 'transparent', borderRadius: 2, overflow: 'hidden' }}>
-            <div style={{ height: '100%', background: 'var(--c-border)', borderRadius: 2, animation: `guide-progress ${STEP_DURATION}ms linear forwards` }} />
-          </div>
+          <button onClick={close} style={{
+            background: '#1b78f7', border: 'none', borderRadius: 9,
+            padding: '9px 20px', fontSize: 13, fontWeight: 700, color: '#fff', fontFamily: 'inherit', cursor: 'pointer',
+            flexShrink: 0, transition: 'background 0.15s',
+          }}
+            onMouseEnter={e => { e.currentTarget.style.background = '#1660d1' }}
+            onMouseLeave={e => { e.currentTarget.style.background = '#1b78f7' }}
+          >
+            Começar
+          </button>
         </div>
       </div>
     </>

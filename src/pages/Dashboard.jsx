@@ -6,8 +6,7 @@ import { Pencil, ExternalLink } from 'lucide-react'
 import SkillsPicker from '../components/SkillsPicker'
 import { Navbar } from '../components/Navbar'
 import CreateProjectModal from '../components/CreateProjectModal'
-import { Folder, Trophy, BarChart2, Rocket, Eye, GraduationCap, Plus, X, Users, Users2, ChevronRight, User, Settings, Compass, Medal, LogOut, Globe, TrendingUp, MessageSquare, Star, Mail, Search, BookOpen, Trash2, Check, Calendar, ArrowRight, Target, Zap, Sparkles, Briefcase, Building2, Send, Copy, Share2, Link, Swords, HelpCircle, AlertTriangle, ListChecks, Circle } from 'lucide-react'
-import { MISSIONS, checkMissionProgress } from './Missoes'
+import { Folder, Trophy, BarChart2, Rocket, Eye, GraduationCap, Plus, X, Users, Users2, ChevronRight, User, Settings, Compass, Medal, LogOut, Globe, TrendingUp, MessageSquare, Star, Mail, Search, BookOpen, Trash2, Check, Calendar, ArrowRight, Target, Zap, Sparkles, Briefcase, Building2, Send, Copy, Share2, Link, HelpCircle, AlertTriangle, ListChecks, Circle } from 'lucide-react'
 import ConvidarVagaModal from '../components/ConvidarVagaModal'
 import { getCurrentAcademicYear, academicYearOptions } from '../lib/academicYear'
 
@@ -205,7 +204,7 @@ function ProjectRow({ project, onView, onEdit, onDelete, onCopy, copied }) {
         <span style={{ color: C.subtle, fontSize: 11 }}>{date}</span>
       </div>
 
-      {/* Actions — desktop icon buttons */}
+      {/* Actions — ghost icons, fade in on row hover */}
       <div className="dash-project-actions">
         {confirmDelete ? (
           <>
@@ -221,31 +220,15 @@ function ProjectRow({ project, onView, onEdit, onDelete, onCopy, copied }) {
           </>
         ) : (
           <>
-            <button
-              onClick={() => setConfirmDelete(true)}
-              title="Apagar"
-              style={{ width: 34, height: 34, borderRadius: 8, background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#ef4444', flexShrink: 0 }}
-            ><Trash2 size={14} /></button>
-            <button
-              onClick={onEdit}
-              title="Editar"
-              style={{ width: 34, height: 34, borderRadius: 8, background: 'var(--c-card-hover)', border: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: C.muted, flexShrink: 0 }}
-            ><Pencil size={14} /></button>
-            <button
-              onClick={onCopy}
-              title={copied ? 'Link copiado!' : 'Copiar link'}
-              style={{ width: 34, height: 34, borderRadius: 8, background: copied ? 'rgba(34,197,94,0.1)' : 'var(--c-card-hover)', border: `1px solid ${copied ? 'rgba(34,197,94,0.3)' : C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: copied ? '#22c55e' : C.muted, flexShrink: 0, transition: 'background 0.15s, border-color 0.15s, color 0.15s' }}
-            >{copied ? <Check size={14} /> : <Link size={14} />}</button>
-            <button
-              onClick={onView}
-              title="Ver projeto"
-              style={{ width: 34, height: 34, borderRadius: 8, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.28)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: C.blue, flexShrink: 0 }}
-            ><ExternalLink size={14} /></button>
+            <button onClick={onView} title="Ver projeto" className="dash-ghost-btn"><ExternalLink size={15} /></button>
+            <button onClick={onEdit} title="Editar" className="dash-ghost-btn"><Pencil size={15} /></button>
+            <button onClick={onCopy} title={copied ? 'Link copiado!' : 'Copiar link'} className="dash-ghost-btn" style={copied ? { color: '#22c55e', opacity: 1 } : undefined}>{copied ? <Check size={15} /> : <Link size={15} />}</button>
+            <button onClick={() => setConfirmDelete(true)} title="Apagar" className="dash-ghost-btn dash-ghost-btn-danger"><Trash2 size={15} /></button>
           </>
         )}
       </div>
 
-      {/* Actions — mobile icon buttons */}
+      {/* Actions — mobile (always visible, smaller set) */}
       <div className="dash-proj-actions-mobile">
         {confirmDelete ? (
           <>
@@ -261,16 +244,8 @@ function ProjectRow({ project, onView, onEdit, onDelete, onCopy, copied }) {
           </>
         ) : (
           <>
-            <button
-              onClick={(e) => { e.stopPropagation(); setConfirmDelete(true) }}
-              title="Apagar"
-              style={{ width: 36, height: 36, borderRadius: 8, background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#ef4444' }}
-            ><Trash2 size={14} /></button>
-            <button
-              onClick={(e) => { e.stopPropagation(); onEdit() }}
-              title="Editar"
-              style={{ width: 36, height: 36, borderRadius: 8, background: 'var(--c-card-hover)', border: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: C.muted }}
-            ><Pencil size={14} /></button>
+            <button onClick={(e) => { e.stopPropagation(); onEdit() }} title="Editar" className="dash-ghost-btn" style={{ opacity: 0.6 }}><Pencil size={14} /></button>
+            <button onClick={(e) => { e.stopPropagation(); setConfirmDelete(true) }} title="Apagar" className="dash-ghost-btn dash-ghost-btn-danger" style={{ opacity: 0.6 }}><Trash2 size={14} /></button>
           </>
         )}
       </div>
@@ -727,51 +702,51 @@ function InsightsBlock({ projects }) {
   const trend = sorted.length > 1 ? sorted[sorted.length - 1].score - sorted[0].score : null
 
   return (
-    <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '18px 22px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 18 }}>
-        <TrendingUp size={13} color={C.muted} />
-        <span style={{ fontSize: 12, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Resumo</span>
+    <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 14, padding: '22px 24px', animation: 'dash-section-in 0.4s ease both' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
+        <TrendingUp size={14} color={C.blue} />
+        <span style={{ fontSize: 13, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Resumo</span>
         <ScoreInfoTooltip />
       </div>
 
       {/* 3 big numbers */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 0, marginBottom: 20 }}>
-        <div style={{ textAlign: 'center', padding: '0 8px' }}>
-          <div style={{ fontSize: 38, fontWeight: 400, fontFamily: 'var(--font-heading)', color: getScoreColor(best), letterSpacing: '-2px', lineHeight: 1 }}>{best}</div>
-          <div style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>Melhor score</div>
-          <div style={{ fontSize: 10, color: C.subtle, marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{bestProj?.name}</div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 0, marginBottom: 22 }}>
+        <div style={{ textAlign: 'center', padding: '0 6px' }}>
+          <div style={{ fontSize: 44, fontWeight: 400, fontFamily: 'var(--font-heading)', color: getScoreColor(best), letterSpacing: '-2px', lineHeight: 1 }}>{best}</div>
+          <div style={{ fontSize: 11, color: C.muted, marginTop: 6, fontWeight: 600 }}>Melhor score</div>
+          <div style={{ fontSize: 10, color: C.subtle, marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{bestProj?.name}</div>
         </div>
-        <div style={{ textAlign: 'center', padding: '0 8px', borderLeft: `1px solid ${C.border}`, borderRight: `1px solid ${C.border}` }}>
-          <div style={{ fontSize: 38, fontWeight: 400, fontFamily: 'var(--font-heading)', color: getScoreColor(avg), letterSpacing: '-2px', lineHeight: 1 }}>{avg}</div>
-          <div style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>Score médio</div>
-          <div style={{ fontSize: 10, color: C.subtle, marginTop: 1 }}>{withScore.length} projeto{withScore.length !== 1 ? 's' : ''}</div>
+        <div style={{ textAlign: 'center', padding: '0 6px', borderLeft: `1px solid ${C.border}`, borderRight: `1px solid ${C.border}` }}>
+          <div style={{ fontSize: 44, fontWeight: 400, fontFamily: 'var(--font-heading)', color: getScoreColor(avg), letterSpacing: '-2px', lineHeight: 1 }}>{avg}</div>
+          <div style={{ fontSize: 11, color: C.muted, marginTop: 6, fontWeight: 600 }}>Score médio</div>
+          <div style={{ fontSize: 10, color: C.subtle, marginTop: 2 }}>{withScore.length} projeto{withScore.length !== 1 ? 's' : ''}</div>
         </div>
-        <div style={{ textAlign: 'center', padding: '0 8px' }}>
+        <div style={{ textAlign: 'center', padding: '0 6px' }}>
           {totalViews > 0 ? (
             <>
-              <div style={{ fontSize: 38, fontWeight: 400, fontFamily: 'var(--font-heading)', color: C.blue, letterSpacing: '-2px', lineHeight: 1 }}>{totalViews}</div>
-              <div style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>Visualizações</div>
-              <div style={{ fontSize: 10, color: C.subtle, marginTop: 1 }}>total</div>
+              <div style={{ fontSize: 44, fontWeight: 400, fontFamily: 'var(--font-heading)', color: C.blue, letterSpacing: '-2px', lineHeight: 1 }}>{totalViews}</div>
+              <div style={{ fontSize: 11, color: C.muted, marginTop: 6, fontWeight: 600 }}>Visualizações</div>
+              <div style={{ fontSize: 10, color: C.subtle, marginTop: 2 }}>total</div>
             </>
           ) : trend != null ? (
             <>
-              <div style={{ fontSize: 38, fontWeight: 400, fontFamily: 'var(--font-heading)', color: trend >= 0 ? C.green : C.red, letterSpacing: '-2px', lineHeight: 1 }}>{trend >= 0 ? '+' : ''}{trend}</div>
-              <div style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>Evolução</div>
-              <div style={{ fontSize: 10, color: C.subtle, marginTop: 1 }}>1º → último</div>
+              <div style={{ fontSize: 44, fontWeight: 400, fontFamily: 'var(--font-heading)', color: trend >= 0 ? C.green : C.red, letterSpacing: '-2px', lineHeight: 1 }}>{trend >= 0 ? '+' : ''}{trend}</div>
+              <div style={{ fontSize: 11, color: C.muted, marginTop: 6, fontWeight: 600 }}>Evolução</div>
+              <div style={{ fontSize: 10, color: C.subtle, marginTop: 2 }}>1º → último</div>
             </>
           ) : <div style={{ fontSize: 11, color: C.subtle, paddingTop: 12 }}>—</div>}
         </div>
       </div>
 
       {/* Progress bars per project */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 9, paddingTop: 16, borderTop: `1px solid ${C.border}` }}>
-        {withScore.slice(0, 4).map(p => (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingTop: 18, borderTop: `1px solid ${C.border}` }}>
+        {withScore.slice(0, 5).map(p => (
           <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ fontSize: 11, color: C.muted, width: 100, flexShrink: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</span>
-            <div style={{ flex: 1, height: 5, background: C.border, borderRadius: 999, overflow: 'hidden' }}>
+            <span style={{ fontSize: 12, color: C.muted, width: 110, flexShrink: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</span>
+            <div style={{ flex: 1, height: 6, background: C.border, borderRadius: 999, overflow: 'hidden' }}>
               <div style={{ width: `${p.score}%`, height: '100%', background: getScoreColor(p.score), borderRadius: 999 }} />
             </div>
-            <span style={{ fontSize: 11, fontWeight: 800, color: getScoreColor(p.score), width: 22, textAlign: 'right', flexShrink: 0 }}>{p.score}</span>
+            <span style={{ fontSize: 12, fontWeight: 800, color: getScoreColor(p.score), width: 26, textAlign: 'right', flexShrink: 0 }}>{p.score}</span>
           </div>
         ))}
       </div>
@@ -834,6 +809,7 @@ function OnboardingAlunoModal({ user, profile, onDismiss, firstProject, claimedS
   const [step, setStep] = useState(claimedSlug ? -1 : 0) // -1=claim 0=perfil 1=projeto 2=partilhar
   const [username, setUsername] = useState(profile?.username ?? '')
   const [bio, setBio] = useState(profile?.bio ?? '')
+  const [area, setArea] = useState(profile?.area ?? '')
   const [skills, setSkills] = useState(profile?.skills ?? [])
   const [saving, setSaving] = useState(false)
   const [saveErr, setSaveErr] = useState(null)
@@ -849,6 +825,7 @@ function OnboardingAlunoModal({ user, profile, onDismiss, firstProject, claimedS
       id: user.id,
       username: username.trim() || null,
       bio: bio.trim() || null,
+      area: area || null,
       skills,
     }, { onConflict: 'id' })
     setSaving(false)
@@ -961,6 +938,30 @@ function OnboardingAlunoModal({ user, profile, onDismiss, firstProject, claimedS
                   maxLength={200}
                   style={{ width: '100%', background: 'rgba(27,120,247,0.06)', border: '1.5px solid rgba(27,120,247,0.2)', borderRadius: 10, color: C.text, fontSize: 14, padding: '11px 14px', outline: 'none', fontFamily: 'inherit', resize: 'none', lineHeight: 1.6, boxSizing: 'border-box' }}
                 />
+              </div>
+
+              {/* Área */}
+              <div>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>Área <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(opcional)</span></label>
+                <select
+                  value={area}
+                  onChange={e => setArea(e.target.value)}
+                  style={{ width: '100%', background: 'rgba(27,120,247,0.06)', border: '1.5px solid rgba(27,120,247,0.2)', borderRadius: 10, color: area ? C.text : C.muted, fontSize: 14, padding: '11px 14px', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', cursor: 'pointer', appearance: 'none', WebkitAppearance: 'none', backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 14px center' }}
+                >
+                  <option value="">Seleciona a tua área</option>
+                  <option value="Programação e Informática">Programação e Informática</option>
+                  <option value="Design e Multimédia">Design e Multimédia</option>
+                  <option value="Marketing e Comunicação">Marketing e Comunicação</option>
+                  <option value="Gestão e Administração">Gestão e Administração</option>
+                  <option value="Eletrónica e Automação">Eletrónica e Automação</option>
+                  <option value="Audiovisual e Cinema">Audiovisual e Cinema</option>
+                  <option value="Turismo e Hotelaria">Turismo e Hotelaria</option>
+                  <option value="Saúde">Saúde</option>
+                  <option value="Desporto">Desporto</option>
+                  <option value="Artes e Espetáculo">Artes e Espetáculo</option>
+                  <option value="Construção e Engenharia">Construção e Engenharia</option>
+                  <option value="Outra">Outra</option>
+                </select>
               </div>
 
               {/* Skills */}
@@ -1205,13 +1206,10 @@ export default function Dashboard() {
   const [loadingStudentTurmas, setLoadingStudentTurmas] = useState(true)
   const [profNotifs, setProfNotifs] = useState([]) // unread professor notifications (grade/feedback/status) — aluno only
   const [pendingTasks, setPendingTasks] = useState([]) // class tasks not yet completed — aluno only
-  const [candidaturaCount, setCandidaturaCount] = useState(0) // for mission XP parity with Missoes.jsx — aluno only
   const [showCreateTurma, setShowCreateTurma] = useState(false)
   const [showJoinModal, setShowJoinModal] = useState(false)
   const [showTurmasModal, setShowTurmasModal] = useState(false)
   const [toast, setToast] = useState('')
-  const [xpToast, setXpToast] = useState(null) // { title, xp, icon } for mission unlocks
-  const [xpToastQueue, setXpToastQueue] = useState([])
   const [copiedSlug, setCopiedSlug] = useState(null)
   const [showOnboarding, setShowOnboarding] = useState(false)
   const [showOnboardingAluno, setShowOnboardingAluno] = useState(false)
@@ -1251,34 +1249,6 @@ export default function Dashboard() {
       setTimeout(() => setCopiedSlug(null), 2500)
     })
   }
-
-  // ── Mission unlock detection ─────────────────────────────────────────────────
-  useEffect(() => {
-    if (loadingProjects || !user || !profile || profile?.role === 'professor') return
-    const storageKey = `showo_done_missions_${user.id}`
-    const stored = JSON.parse(localStorage.getItem(storageKey) || 'null')
-    const doneMissions = MISSIONS.filter(m => checkMissionProgress(m, projects, profile, user, { candidaturaCount }))
-    const doneIds = doneMissions.map(m => m.id)
-
-    if (stored === null) {
-      // First time: just store, no toasts (don't overwhelm on first load)
-      localStorage.setItem(storageKey, JSON.stringify(doneIds))
-      return
-    }
-
-    // Find newly unlocked missions
-    const newlyUnlocked = doneMissions.filter(m => !stored.includes(m.id))
-    if (newlyUnlocked.length > 0) {
-      localStorage.setItem(storageKey, JSON.stringify(doneIds))
-      // Queue toasts with delay between each
-      newlyUnlocked.forEach((m, i) => {
-        setTimeout(() => {
-          setXpToast({ title: m.title, xp: m.xp, color: m.color })
-          setTimeout(() => setXpToast(null), 4000)
-        }, i * 4500)
-      })
-    }
-  }, [loadingProjects, user, candidaturaCount])
 
   function dismissOnboarding() {
     localStorage.setItem(`showo_onboarded_${user.id}`, '1')
@@ -1650,14 +1620,6 @@ export default function Dashboard() {
     loadStudentTurmas()
   }, [user, profile?.role])
 
-  // ── Candidatura count (aluno only) — feeds checkMissionProgress's apply_vaga /
-  // three_candidaturas missions so the XP total here matches Missoes.jsx ──
-  useEffect(() => {
-    if (!user || profile?.role === 'professor') return
-    supabase.from('candidaturas').select('id', { count: 'exact', head: true }).eq('student_id', user.id)
-      .then(({ count }) => setCandidaturaCount(count ?? 0))
-  }, [user, profile?.role])
-
   // ── Pending class tasks (aluno only) — reads real class_members rows, not the
   // localStorage+project-linkage merge studentTurmas uses, so a student who joined
   // via code but hasn't linked a project yet still sees their turma's tasks ──
@@ -1742,11 +1704,6 @@ export default function Dashboard() {
   const isTeacher = profile?.role === 'professor'
   const isRecruiter = profile?.role === 'recrutador' || profile?.role === 'empresa'
 
-  // XP earned from missions (computed, not stored)
-  const earnedXP = !isTeacher && !loadingProjects
-    ? MISSIONS.reduce((sum, m) => sum + (checkMissionProgress(m, projects, profile, user, { candidaturaCount }) ? m.xp : 0), 0)
-    : 0
-
   const greeting = (() => {
     const h = new Date().getHours()
     if (h >= 5  && h < 12) return `Bom dia, ${firstName}`
@@ -1761,6 +1718,10 @@ export default function Dashboard() {
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes dash-section-in {
+          from { opacity: 0; transform: translateY(12px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
         @keyframes shimmer {
           0%   { background-position: -600px 0; }
           100% { background-position:  600px 0; }
@@ -1813,8 +1774,18 @@ export default function Dashboard() {
           border-color: ${C.borderBright} !important;
         }
 
-        /* ── Project actions ── */
-        .dash-project-actions { display: flex; gap: 6px; flex-shrink: 0; align-items: center; }
+        /* ── Project actions — ghost buttons ── */
+        .dash-project-actions { display: flex; gap: 2px; flex-shrink: 0; align-items: center; opacity: 0; transition: opacity 0.15s ease; }
+        .dash-project-row:hover .dash-project-actions { opacity: 1; }
+        .dash-ghost-btn {
+          width: 32px; height: 32px; border-radius: 8px;
+          background: transparent; border: none;
+          display: flex; align-items: center; justify-content: center;
+          cursor: pointer; color: ${C.subtle}; flex-shrink: 0;
+          transition: color 0.15s, background 0.15s;
+        }
+        .dash-ghost-btn:hover { color: ${C.text}; background: ${C.glass}; }
+        .dash-ghost-btn-danger:hover { color: #ef4444; background: rgba(239,68,68,0.08); }
 
         /* ── Animated entry for lists ── */
         @keyframes dash-item-in {
@@ -1823,7 +1794,7 @@ export default function Dashboard() {
         }
 
         @media (max-width: 860px) {
-          .dash-hd-btn-settings { display: none !important; }
+          .dash-hd-btn-profile { display: none !important; }
         }
         /* Mobile project icon actions — hidden by default (desktop shows text buttons) */
         .dash-proj-actions-mobile { display: none; }
@@ -1851,14 +1822,32 @@ export default function Dashboard() {
         /* ── Turma + Projetos side by side (aluno dashboard) ── */
         .dash-turma-projects-grid {
           display: grid;
-          grid-template-columns: 300px 1fr;
+          grid-template-columns: 360px 1fr;
           gap: 24px;
           align-items: start;
         }
-        .dash-turma-col, .dash-projects-col { min-width: 0; }
+        .dash-turma-col, .dash-projects-col { min-width: 0; display: flex; flex-direction: column; gap: 16px; }
         @media (max-width: 860px) {
           .dash-turma-projects-grid { grid-template-columns: 1fr; gap: 20px; }
         }
+
+        /* ── Teacher 2-column: turmas left, feed right ── */
+        .dash-teacher-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 24px;
+          align-items: start;
+        }
+        .dash-teacher-left, .dash-teacher-right {
+          min-width: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+        }
+        @media (max-width: 900px) {
+          .dash-teacher-grid { grid-template-columns: 1fr; gap: 20px; }
+        }
+        /* ── Chart hidden on small screens ── */
 
         @media (max-width: 600px) {
           /* ── Chart ── */
@@ -1870,7 +1859,7 @@ export default function Dashboard() {
           .dash-proj-actions-mobile {
             display: flex !important;
             align-items: center;
-            gap: 6px;
+            gap: 2px;
             flex-shrink: 0;
           }
 
@@ -1884,20 +1873,47 @@ export default function Dashboard() {
           .dash-sec-hd button { font-size: 13px !important; }
 
           /* ── Header ── */
-          .dash-header-btns { gap: 6px !important; }
           .dash-hd-btn-profile { display: none !important; }
 
           /* ── Score / stats area — 2 pills per row ── */
           .dash-score-section { flex-direction: row !important; flex-wrap: wrap !important; gap: 6px !important; }
           .dash-stat-pill { font-size: 11px !important; padding: 4px 10px !important; }
           /* ── Quick actions grid ── */
-          .dash-quick-actions { grid-template-columns: repeat(2, 1fr) !important; }
+          .dash-quick-actions { grid-template-columns: 1fr !important; }
+          /* ── Onboarding progress bar — hide on mobile ── */
+          .dash-onboarding-progress { display: none !important; }
+          /* ── Onboarding / guide card — stack vertically on mobile ── */
+          .dash-guide-card {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 14px !important;
+            padding: 16px !important;
+            border-left-width: 0 !important;
+            border-top: 3px solid var(--guide-accent) !important;
+          }
+          .dash-guide-card .dash-guide-icon {
+            width: 40px !important; height: 40px !important;
+          }
+          .dash-guide-card .dash-guide-text { text-align: left; }
+          .dash-guide-card .dash-guide-text div:first-child { font-size: 15px !important; }
+          .dash-guide-card .dash-guide-text div:last-child { font-size: 13px !important; }
+          .dash-guide-card .dash-action-btn {
+            align-self: stretch !important;
+            text-align: center !important;
+            padding: 12px 14px !important;
+            font-size: 14px !important;
+            border-radius: 10px !important;
+          }
           /* ── Project row score pill — show abbreviated ── */
           .dash-proj-score { font-size: 11px !important; }
           /* ── Welcome/greeting — reduce font size ── */
           .dash-greeting { font-size: clamp(20px, 5vw, 28px) !important; }
           /* ── Milestones / progress section ── */
           .dash-milestones { padding: 14px !important; }
+          /* ── Teacher stats grid — 2 cols on mobile ── */
+          .dash-teacher-stats { grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; }
+          /* ── Compact action bar — wrap on mobile ── */
+          .dash-quick-actions-row { flex-wrap: wrap !important; }
           /* ── Toasts — above bottom nav ── */
           .dash-toast-center { bottom: 88px !important; }
           .dash-toast-xp { bottom: 88px !important; right: 12px !important; min-width: 0 !important; max-width: calc(100vw - 24px) !important; }
@@ -1934,29 +1950,6 @@ export default function Dashboard() {
         zIndex: 3000, pointerEvents: 'none', whiteSpace: 'nowrap',
         boxShadow: '0 4px 16px rgba(0,0,0,0.18)',
       }}>{toast}</div>
-
-      {/* XP / Missão desbloqueada toast */}
-      <div className="dash-toast-xp" style={{
-        position: 'fixed', bottom: 28, right: 28,
-        transform: `translateY(${xpToast ? 0 : 120}px)`,
-        opacity: xpToast ? 1 : 0,
-        transition: 'transform 0.4s cubic-bezier(0.34,1.56,0.64,1), opacity 0.25s',
-        background: 'var(--c-card)',
-        border: `1px solid ${xpToast?.color ?? '#a78bfa'}40`,
-        borderLeft: `3px solid ${xpToast?.color ?? '#a78bfa'}`,
-        borderRadius: 10, padding: '14px 18px',
-        zIndex: 3001, pointerEvents: 'none',
-        boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
-        display: 'flex', flexDirection: 'column', gap: 4, minWidth: 240,
-      }}>
-        <div style={{ fontSize: 10, fontWeight: 700, color: xpToast?.color ?? '#a78bfa', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-          Missão desbloqueada
-        </div>
-        <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--c-text)' }}>{xpToast?.title}</div>
-        <div style={{ fontSize: 12, fontWeight: 700, color: xpToast?.color ?? '#a78bfa' }}>
-          +{xpToast?.xp} XP
-        </div>
-      </div>
 
       {showCreateTurma && (
         <CreateTurmaModal
@@ -2004,7 +1997,7 @@ export default function Dashboard() {
             <h1 className="dash-greeting" style={{ color: C.text, fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 400, margin: '0 0 6px', letterSpacing: '-1px', lineHeight: 1.15, fontFamily: 'var(--font-heading)' }}>
               {greeting}
             </h1>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
               {profile?.role && (
                 <span style={{ fontSize: 11, fontWeight: 700, color: C.blue }}>
                   {{ aluno: 'Aluno', professor: 'Professor', recrutador: 'Recrutador', empresa: 'Empresa' }[profile.role] ?? 'Membro'}
@@ -2030,46 +2023,40 @@ export default function Dashboard() {
                         <Eye size={11} /> {totalViews} visualizações
                       </span>
                     )}
-                    {earnedXP > 0 && (
-                      <span
-                        className="dash-stat-pill"
-                        onClick={() => navigate('/missoes')}
-                        style={{ cursor: 'pointer', color: '#a78bfa', borderColor: 'rgba(167,139,250,0.3)', background: 'rgba(167,139,250,0.08)' }}
-                        title="Ver missões"
-                      >
-                        <Swords size={11} /> {earnedXP} XP
+                  </>
+                )}
+                {isTeacher && (
+                  <>
+                    <span className="dash-stat-pill">
+                      <Users2 size={11} /> {turmas.length} turma{turmas.length !== 1 ? 's' : ''}
+                    </span>
+                    {totalMembers > 0 && (
+                      <span className="dash-stat-pill">
+                        <Users size={11} /> {totalMembers} aluno{totalMembers !== 1 ? 's' : ''}
                       </span>
                     )}
                   </>
                 )}
-                {isTeacher && (
-                  <span className="dash-stat-pill">
-                    <Users2 size={11} /> {turmas.length} turma{turmas.length !== 1 ? 's' : ''}
-                  </span>
-                )}
               </div>
             )}
           </div>
-          <div className="dash-header-btns" style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+          {profile?.username && (
             <button
               className="dash-hd-btn-profile"
-              onClick={() => navigate(profile?.username ? `/u/${profile.username}` : `/u/${user.id}`)}
-              style={{ background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 8, padding: '8px 16px', color: C.muted, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'border-color 0.15s, color 0.15s' }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = C.borderBright; e.currentTarget.style.color = C.text }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted }}
+              onClick={() => {
+                const url = `${window.location.origin}/u/${profile.username}`
+                navigator.clipboard.writeText(url).then(() => {
+                  setCopiedSlug('__profile__')
+                  setTimeout(() => setCopiedSlug(null), 1500)
+                })
+              }}
+              style={{ background: 'transparent', border: `1px solid ${copiedSlug === '__profile__' ? 'rgba(34,197,94,0.4)' : C.border}`, borderRadius: 8, padding: '8px 14px', color: copiedSlug === '__profile__' ? '#22c55e' : C.muted, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'border-color 0.15s, color 0.15s', display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}
+              onMouseEnter={e => { if (copiedSlug !== '__profile__') { e.currentTarget.style.borderColor = C.borderBright; e.currentTarget.style.color = C.text } }}
+              onMouseLeave={e => { if (copiedSlug !== '__profile__') { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted } }}
             >
-              Ver perfil
+              {copiedSlug === '__profile__' ? <><Check size={13} /> Copiado!</> : <><Link size={13} /> Partilhar perfil</>}
             </button>
-            <button
-              className="dash-hd-btn-settings"
-              onClick={() => navigate('/settings')}
-              style={{ background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 8, padding: '8px 16px', color: C.muted, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'border-color 0.15s, color 0.15s' }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = C.borderBright; e.currentTarget.style.color = C.text }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted }}
-            >
-              Definições
-            </button>
-          </div>
+          )}
         </div>
 
         {/* ── Próximos passos (aluno only) ── */}
@@ -2138,7 +2125,7 @@ export default function Dashboard() {
           // so just show the progress label here, not a second redundant card.
           if (primary.id === 'create') {
             return showOnboardingProgress ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+              <div className="dash-onboarding-progress" style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                 <span style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Primeiros passos</span>
                 <div style={{ flex: '0 0 60px', height: 4, background: C.border, borderRadius: 999, overflow: 'hidden' }}>
                   <div style={{ width: `${(onboardingDone / 2) * 100}%`, height: '100%', background: C.blue, borderRadius: 999, transition: 'width 0.4s ease' }} />
@@ -2151,7 +2138,7 @@ export default function Dashboard() {
           return (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 8 }}>
               {showOnboardingProgress && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
+                <div className="dash-onboarding-progress" style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
                   <span style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Primeiros passos</span>
                   <div style={{ flex: '0 0 60px', height: 4, background: C.glassBorder, borderRadius: 999, overflow: 'hidden' }}>
                     <div style={{ width: `${(onboardingDone / 2) * 100}%`, height: '100%', background: C.blue, borderRadius: 999, transition: 'width 0.4s ease' }} />
@@ -2161,7 +2148,9 @@ export default function Dashboard() {
               )}
               {/* Primary action — full width, accent left border */}
               <div
+                className="dash-guide-card"
                 style={{
+                  '--guide-accent': primary.color,
                   ...C.glassStyle,
                   background: C.glass,
                   border: `1px solid ${primary.color}30`,
@@ -2174,10 +2163,10 @@ export default function Dashboard() {
                 onMouseEnter={e => { e.currentTarget.style.borderColor = primary.color + '55' }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor = primary.color + '30' }}
               >
-                <div style={{ width: 44, height: 44, borderRadius: 10, flexShrink: 0, background: primary.color + '18', border: `1px solid ${primary.color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div className="dash-guide-icon" style={{ width: 44, height: 44, borderRadius: 10, flexShrink: 0, background: primary.color + '18', border: `1px solid ${primary.color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <PIcon size={20} color={primary.color} />
                 </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
+                <div className="dash-guide-text" style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 14, fontWeight: 800, color: C.text, marginBottom: 2 }}>{primary.title}</div>
                   <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.5 }}>{primary.desc}</div>
                 </div>
@@ -2232,10 +2221,10 @@ export default function Dashboard() {
 
         {/* ── Stats overview (professor only) ── */}
         {isTeacher && turmas.length > 0 && (
-          <div className="dash-teacher-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 24 }}>
+          <div className="dash-teacher-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 24, animation: 'dash-section-in 0.4s ease both' }}>
             {[
-              { label: 'Alunos', value: totalMembers, color: C.blue },
-              { label: 'Projetos', value: turmas.reduce((s, t) => s + (t.project_count || 0), 0), color: '#8b5cf6' },
+              { label: 'Alunos', value: totalMembers },
+              { label: 'Projetos', value: turmas.reduce((s, t) => s + (t.project_count || 0), 0) },
               {
                 label: 'Score médio',
                 value: (() => {
@@ -2243,13 +2232,12 @@ export default function Dashboard() {
                   if (!withScore.length) return '—'
                   return Math.round(withScore.reduce((s, t) => s + t.avg_score, 0) / withScore.length)
                 })(),
-                color: '#f59e0b',
               },
-              { label: 'Por rever', value: needsReview.length, color: needsReview.length > 0 ? '#ef4444' : '#22c55e' },
+              { label: 'Por rever', value: needsReview.length, accent: needsReview.length > 0 },
             ].map(stat => (
-              <div key={stat.label} style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '14px 16px' }}>
-                <div style={{ fontSize: 24, fontWeight: 400, fontFamily: 'var(--font-heading)', color: stat.color, letterSpacing: '-0.5px' }}>{stat.value}</div>
-                <div style={{ fontSize: 11, color: C.muted, fontWeight: 600, marginTop: 2 }}>{stat.label}</div>
+              <div key={stat.label} style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${stat.accent ? 'rgba(239,68,68,0.25)' : C.glassBorder}`, borderRadius: 14, padding: '18px 20px' }}>
+                <div style={{ fontSize: 32, fontWeight: 400, fontFamily: 'var(--font-heading)', color: stat.accent ? '#ef4444' : C.blue, letterSpacing: '-1px', lineHeight: 1 }}>{stat.value}</div>
+                <div style={{ fontSize: 12, color: C.muted, fontWeight: 600, marginTop: 6 }}>{stat.label}</div>
               </div>
             ))}
           </div>
@@ -2259,7 +2247,7 @@ export default function Dashboard() {
              across all their turmas, last 8 weeks. Same signal the monthly
              AI report is built from. ── */}
         {isTeacher && turmas.length > 0 && weeklyActivity.some(w => w.count > 0) && (
-          <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '18px 22px', marginBottom: 24 }}>
+          <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '18px 22px', marginBottom: 24, animation: 'dash-section-in 0.4s 0.15s ease both' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
               <BarChart2 size={13} color={C.muted} />
               <span style={{ fontSize: 12, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
@@ -2311,18 +2299,18 @@ export default function Dashboard() {
           const SIcon = step.Icon
           return (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 8 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
+              <div className="dash-onboarding-progress" style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
                 <span style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Primeiros passos</span>
                 <div style={{ flex: '0 0 60px', height: 4, background: C.glassBorder, borderRadius: 999, overflow: 'hidden' }}>
                   <div style={{ width: `${(done / 2) * 100}%`, height: '100%', background: C.blue, borderRadius: 999, transition: 'width 0.4s ease' }} />
                 </div>
                 <span style={{ fontSize: 11, color: C.subtle }}>{done}/2</span>
               </div>
-              <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${step.color}30`, borderLeft: `3px solid ${step.color}`, borderRadius: 12, padding: '18px 20px', display: 'flex', gap: 16, alignItems: 'center' }}>
-                <div style={{ width: 44, height: 44, borderRadius: 10, flexShrink: 0, background: step.color + '18', border: `1px solid ${step.color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div className="dash-guide-card" style={{ '--guide-accent': step.color, ...C.glassStyle, background: C.glass, border: `1px solid ${step.color}30`, borderLeft: `3px solid ${step.color}`, borderRadius: 12, padding: '18px 20px', display: 'flex', gap: 16, alignItems: 'center' }}>
+                <div className="dash-guide-icon" style={{ width: 44, height: 44, borderRadius: 10, flexShrink: 0, background: step.color + '18', border: `1px solid ${step.color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <SIcon size={20} color={step.color} />
                 </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
+                <div className="dash-guide-text" style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 14, fontWeight: 800, color: C.text, marginBottom: 2 }}>{step.title}</div>
                   <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.5 }}>{step.desc}</div>
                 </div>
@@ -2340,215 +2328,220 @@ export default function Dashboard() {
           )
         })()}
 
-        {/* ── Precisa da tua atenção (professor only) ── */}
-        {isTeacher && needsReview.length > 0 && (
-          <div style={{ marginBottom: 8 }}>
-            <div className="dash-sec-hd">
-              <div className="dash-sec-label">
-                <MessageSquare size={13} /> Precisa da tua atenção
-                <span className="dash-sec-count">{needsReview.length}</span>
-              </div>
-            </div>
-            <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, overflow: 'hidden' }}>
-              {needsReview.slice(0, 5).map((p, i) => (
-                <div
-                  key={p.id}
-                  onClick={() => navigate(`/projeto/${p.slug}`)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: i < Math.min(needsReview.length, 5) - 1 ? `1px solid ${C.glassBorder}` : 'none', cursor: 'pointer', transition: 'background 0.12s' }}
-                  onMouseEnter={e => e.currentTarget.style.background = C.glassHover}
-                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                >
-                  <div style={{ width: 32, height: 32, borderRadius: 8, flexShrink: 0, background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Folder size={14} color="#fbbf24" />
+        {/* ── Teacher 2-column: turmas left, review/activity right ── */}
+        {isTeacher && (
+          <div className="dash-teacher-grid">
+            {/* ── Left: turmas ── */}
+            <div className="dash-teacher-left">
+              <div style={{ animation: 'dash-section-in 0.4s 0.2s ease both' }}>
+                <div className="dash-sec-hd">
+                  <div className="dash-sec-label">
+                    <Users2 size={13} /> As minhas turmas
+                    {turmas.length > 0 && <span className="dash-sec-count">{turmas.length}</span>}
                   </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
-                    <div style={{ fontSize: 11, color: C.subtle }}>{p.creator_name || 'Aluno'}{p.className ? ` · ${p.className}` : ''} · sem feedback teu</div>
-                  </div>
-                  <ChevronRight size={14} color={C.subtle} style={{ flexShrink: 0 }} />
-                </div>
-              ))}
-              {needsReview.length > 5 && (
-                <div style={{ padding: '10px 16px', fontSize: 12, color: C.subtle, textAlign: 'center' }}>
-                  +{needsReview.length - 5} projeto{needsReview.length - 5 !== 1 ? 's' : ''} por rever
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* ── A aguardar revisão — projects flagged "precisa de revisão" (professor only) ── */}
-        {isTeacher && flaggedForRevision.length > 0 && (
-          <div style={{ marginBottom: 8 }}>
-            <div className="dash-sec-hd">
-              <div className="dash-sec-label">
-                <AlertTriangle size={13} /> A aguardar revisão
-                <span className="dash-sec-count">{flaggedForRevision.length}</span>
-              </div>
-            </div>
-            <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, overflow: 'hidden' }}>
-              {flaggedForRevision.slice(0, 5).map((p, i) => (
-                <div
-                  key={p.id}
-                  onClick={() => navigate(`/projeto/${p.slug}`)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: i < Math.min(flaggedForRevision.length, 5) - 1 ? `1px solid ${C.glassBorder}` : 'none', cursor: 'pointer', transition: 'background 0.12s' }}
-                  onMouseEnter={e => e.currentTarget.style.background = C.glassHover}
-                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                >
-                  <div style={{ width: 32, height: 32, borderRadius: 8, flexShrink: 0, background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <AlertTriangle size={14} color="#f97316" />
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
-                    <div style={{ fontSize: 11, color: C.subtle }}>{p.creator_name || 'Aluno'}{p.className ? ` · ${p.className}` : ''} · a aguardar correções</div>
-                  </div>
-                  <ChevronRight size={14} color={C.subtle} style={{ flexShrink: 0 }} />
-                </div>
-              ))}
-              {flaggedForRevision.length > 5 && (
-                <div style={{ padding: '10px 16px', fontSize: 12, color: C.subtle, textAlign: 'center' }}>
-                  +{flaggedForRevision.length - 5} projeto{flaggedForRevision.length - 5 !== 1 ? 's' : ''} a aguardar revisão
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* ── Próximas defesas (professor only) ── */}
-        {isTeacher && upcomingDefenses.length > 0 && (
-          <div style={{ marginBottom: 8 }}>
-            <div className="dash-sec-hd">
-              <div className="dash-sec-label">
-                <Calendar size={13} /> Próximas defesas
-                <span className="dash-sec-count">{upcomingDefenses.length}</span>
-              </div>
-            </div>
-            <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, overflow: 'hidden' }}>
-              {upcomingDefenses.map((p, i) => {
-                const urgentColor = p.daysLeft <= 7 ? '#ef4444' : p.daysLeft <= 30 ? '#f97316' : C.blue
-                return (
-                  <div
-                    key={p.id}
-                    onClick={() => navigate(`/projeto/${p.slug}`)}
-                    style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: i < upcomingDefenses.length - 1 ? `1px solid ${C.glassBorder}` : 'none', cursor: 'pointer', transition: 'background 0.12s' }}
-                    onMouseEnter={e => e.currentTarget.style.background = C.glassHover}
-                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                  <button
+                    onClick={() => setShowCreateTurma(true)}
+                    className="dash-action-btn"
+                    style={{ display: 'flex', alignItems: 'center', gap: 6, background: `${C.blue}18`, border: `1px solid ${C.blue}30`, color: C.blue }}
+                    onMouseEnter={e => { e.currentTarget.style.background = `${C.blue}28`; e.currentTarget.style.borderColor = `${C.blue}55` }}
+                    onMouseLeave={e => { e.currentTarget.style.background = `${C.blue}18`; e.currentTarget.style.borderColor = `${C.blue}30` }}
                   >
-                    <div style={{ width: 32, height: 32, borderRadius: 8, flexShrink: 0, background: `${urgentColor}18`, border: `1px solid ${urgentColor}40`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <Calendar size={14} color={urgentColor} />
+                    <Plus size={13} /> Nova turma
+                  </button>
+                </div>
+                {(() => {
+                  const years = [...new Set(turmas.map(t => t.academic_year).filter(Boolean))].sort().reverse()
+                  if (years.length < 2) return null
+                  return (
+                    <div style={{ display: 'flex', gap: 6, marginBottom: 12, flexWrap: 'wrap' }}>
+                      {['all', ...years].map(y => (
+                        <button
+                          key={y}
+                          onClick={() => setTurmaYearFilter(y)}
+                          style={{
+                            background: turmaYearFilter === y ? 'rgba(27,120,247,0.14)' : 'transparent',
+                            border: `1px solid ${turmaYearFilter === y ? 'rgba(27,120,247,0.3)' : C.border}`,
+                            borderRadius: 999, padding: '5px 12px', fontSize: 12, fontWeight: 700,
+                            color: turmaYearFilter === y ? C.blue : C.muted, cursor: 'pointer', fontFamily: 'inherit',
+                            transition: 'background 0.15s, border-color 0.15s',
+                          }}
+                        >
+                          {y === 'all' ? 'Todos os anos' : y}
+                        </button>
+                      ))}
                     </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
-                      <div style={{ fontSize: 11, color: C.subtle }}>{p.creator_name || 'Aluno'}{p.className ? ` · ${p.className}` : ''}</div>
+                  )
+                })()}
+                {turmas.length === 0 ? (
+                  <div style={{ ...C.glassStyle, background: C.glass, border: `1px dashed ${C.glassBorder}`, borderRadius: 12, padding: '40px 28px', textAlign: 'center' }}>
+                    <div style={{ marginBottom: 14, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 52, height: 52, borderRadius: 12, background: 'rgba(27,120,247,0.08)', border: '1px solid rgba(27,120,247,0.15)' }}>
+                      <Users2 size={24} color="#1b78f7" />
                     </div>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: urgentColor, flexShrink: 0 }}>
-                      {p.daysLeft === 0 ? 'Hoje' : p.daysLeft === 1 ? 'Amanhã' : `${p.daysLeft} dias`}
-                    </span>
+                    <p style={{ color: C.text, fontSize: 15, fontWeight: 700, margin: '0 0 6px' }}>Ainda não tens turmas</p>
+                    <p style={{ color: C.muted, fontSize: 13, margin: '0 0 22px', lineHeight: 1.6 }}>Cria uma turma e partilha o código com os teus alunos.</p>
+                    <button onClick={() => setShowCreateTurma(true)} style={{ background: '#1b78f7', border: 'none', borderRadius: 8, padding: '10px 24px', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px rgba(27,120,247,0.2)' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>Criar primeira turma <ArrowRight size={14} /></span>
+                    </button>
                   </div>
-                )
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* ── Atividade recente (professor only) ── */}
-        {isTeacher && recentActivity.length > 0 && (
-          <div style={{ marginBottom: 8 }}>
-            <div className="dash-sec-hd">
-              <div className="dash-sec-label">
-                <TrendingUp size={13} /> Atividade recente
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {turmas
+                      .filter(t => turmaYearFilter === 'all' || t.academic_year === turmaYearFilter)
+                      .map(t => <TurmaCard key={t.id} turma={t} navigate={navigate} />)}
+                  </div>
+                )}
               </div>
             </div>
-            <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, overflow: 'hidden' }}>
-              {recentActivity.map((p, i) => (
-                <div
-                  key={p.id}
-                  onClick={() => navigate(`/projeto/${p.slug}`)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: i < recentActivity.length - 1 ? `1px solid ${C.glassBorder}` : 'none', cursor: 'pointer', transition: 'background 0.12s' }}
-                  onMouseEnter={e => e.currentTarget.style.background = C.glassHover}
-                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                >
-                  <div style={{ width: 32, height: 32, borderRadius: 8, flexShrink: 0, background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Folder size={14} color="#22c55e" />
+
+            {/* ── Right: review + activity feed ── */}
+            <div className="dash-teacher-right">
+              {needsReview.length > 0 && (
+                <div style={{ animation: 'dash-section-in 0.4s 0.2s ease both' }}>
+                  <div className="dash-sec-hd">
+                    <div className="dash-sec-label">
+                      <MessageSquare size={13} /> Precisa da tua atenção
+                      <span className="dash-sec-count">{needsReview.length}</span>
+                    </div>
                   </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
-                    <div style={{ fontSize: 11, color: C.subtle }}>{p.creator_name || 'Aluno'}{p.className ? ` · ${p.className}` : ''} · {timeAgoLabel(p.created_at)}</div>
+                  <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, overflow: 'hidden' }}>
+                    {needsReview.slice(0, 5).map((p, i) => (
+                      <div
+                        key={p.id}
+                        onClick={() => navigate(`/projeto/${p.slug}`)}
+                        style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: i < Math.min(needsReview.length, 5) - 1 ? `1px solid ${C.glassBorder}` : 'none', cursor: 'pointer', transition: 'background 0.12s' }}
+                        onMouseEnter={e => e.currentTarget.style.background = C.glassHover}
+                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                      >
+                        <div style={{ width: 32, height: 32, borderRadius: 8, flexShrink: 0, background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <Folder size={14} color="#fbbf24" />
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
+                          <div style={{ fontSize: 11, color: C.subtle }}>{p.creator_name || 'Aluno'}{p.className ? ` · ${p.className}` : ''} · sem feedback teu</div>
+                        </div>
+                        <ChevronRight size={14} color={C.subtle} style={{ flexShrink: 0 }} />
+                      </div>
+                    ))}
+                    {needsReview.length > 5 && (
+                      <div style={{ padding: '10px 16px', fontSize: 12, color: C.subtle, textAlign: 'center' }}>
+                        +{needsReview.length - 5} projeto{needsReview.length - 5 !== 1 ? 's' : ''} por rever
+                      </div>
+                    )}
                   </div>
-                  {p.score != null && (
-                    <span style={{ fontSize: 12, fontWeight: 700, color: p.score >= 71 ? '#22c55e' : p.score >= 40 ? '#f59e0b' : '#ef4444', flexShrink: 0 }}>
-                      {p.score}
-                    </span>
-                  )}
                 </div>
-              ))}
+              )}
+
+              {flaggedForRevision.length > 0 && (
+                <div style={{ animation: 'dash-section-in 0.4s 0.25s ease both' }}>
+                  <div className="dash-sec-hd">
+                    <div className="dash-sec-label">
+                      <AlertTriangle size={13} /> A aguardar revisão
+                      <span className="dash-sec-count">{flaggedForRevision.length}</span>
+                    </div>
+                  </div>
+                  <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, overflow: 'hidden' }}>
+                    {flaggedForRevision.slice(0, 5).map((p, i) => (
+                      <div
+                        key={p.id}
+                        onClick={() => navigate(`/projeto/${p.slug}`)}
+                        style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: i < Math.min(flaggedForRevision.length, 5) - 1 ? `1px solid ${C.glassBorder}` : 'none', cursor: 'pointer', transition: 'background 0.12s' }}
+                        onMouseEnter={e => e.currentTarget.style.background = C.glassHover}
+                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                      >
+                        <div style={{ width: 32, height: 32, borderRadius: 8, flexShrink: 0, background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <AlertTriangle size={14} color="#f97316" />
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
+                          <div style={{ fontSize: 11, color: C.subtle }}>{p.creator_name || 'Aluno'}{p.className ? ` · ${p.className}` : ''} · a aguardar correções</div>
+                        </div>
+                        <ChevronRight size={14} color={C.subtle} style={{ flexShrink: 0 }} />
+                      </div>
+                    ))}
+                    {flaggedForRevision.length > 5 && (
+                      <div style={{ padding: '10px 16px', fontSize: 12, color: C.subtle, textAlign: 'center' }}>
+                        +{flaggedForRevision.length - 5} projeto{flaggedForRevision.length - 5 !== 1 ? 's' : ''} a aguardar revisão
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {upcomingDefenses.length > 0 && (
+                <div>
+                  <div className="dash-sec-hd">
+                    <div className="dash-sec-label">
+                      <Calendar size={13} /> Próximas defesas
+                      <span className="dash-sec-count">{upcomingDefenses.length}</span>
+                    </div>
+                  </div>
+                  <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, overflow: 'hidden' }}>
+                    {upcomingDefenses.map((p, i) => {
+                      const urgentColor = p.daysLeft <= 7 ? '#ef4444' : p.daysLeft <= 30 ? '#f97316' : C.blue
+                      return (
+                        <div
+                          key={p.id}
+                          onClick={() => navigate(`/projeto/${p.slug}`)}
+                          style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: i < upcomingDefenses.length - 1 ? `1px solid ${C.glassBorder}` : 'none', cursor: 'pointer', transition: 'background 0.12s' }}
+                          onMouseEnter={e => e.currentTarget.style.background = C.glassHover}
+                          onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                        >
+                          <div style={{ width: 32, height: 32, borderRadius: 8, flexShrink: 0, background: `${urgentColor}18`, border: `1px solid ${urgentColor}40`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <Calendar size={14} color={urgentColor} />
+                          </div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: 13, fontWeight: 700, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
+                            <div style={{ fontSize: 11, color: C.subtle }}>{p.creator_name || 'Aluno'}{p.className ? ` · ${p.className}` : ''}</div>
+                          </div>
+                          <span style={{ fontSize: 12, fontWeight: 700, color: urgentColor, flexShrink: 0 }}>
+                            {p.daysLeft === 0 ? 'Hoje' : p.daysLeft === 1 ? 'Amanhã' : `${p.daysLeft} dias`}
+                          </span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {recentActivity.length > 0 && (
+                <div style={{ animation: 'dash-section-in 0.4s 0.3s ease both' }}>
+                  <div className="dash-sec-hd">
+                    <div className="dash-sec-label">
+                      <TrendingUp size={13} /> Atividade recente
+                    </div>
+                  </div>
+                  <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, overflow: 'hidden' }}>
+                    {recentActivity.map((p, i) => (
+                      <div
+                        key={p.id}
+                        onClick={() => navigate(`/projeto/${p.slug}`)}
+                        style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: i < recentActivity.length - 1 ? `1px solid ${C.glassBorder}` : 'none', cursor: 'pointer', transition: 'background 0.12s' }}
+                        onMouseEnter={e => e.currentTarget.style.background = C.glassHover}
+                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                      >
+                        <div style={{ width: 32, height: 32, borderRadius: 8, flexShrink: 0, background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <Folder size={14} color="#22c55e" />
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
+                          <div style={{ fontSize: 11, color: C.subtle }}>{p.creator_name || 'Aluno'}{p.className ? ` · ${p.className}` : ''} · {timeAgoLabel(p.created_at)}</div>
+                        </div>
+                        {p.score != null && (
+                          <span style={{ fontSize: 12, fontWeight: 700, color: p.score >= 71 ? '#22c55e' : p.score >= 40 ? '#f59e0b' : '#ef4444', flexShrink: 0 }}>
+                            {p.score}
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
 
         {/* ── All sections ── */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-
-          {/* ── Turmas (professor only) ── */}
-          {isTeacher && (
-            <div>
-              <div className="dash-sec-hd">
-                <div className="dash-sec-label">
-                  <Users2 size={13} /> As minhas turmas
-                  {turmas.length > 0 && <span className="dash-sec-count">{turmas.length}</span>}
-                </div>
-                <button
-                  onClick={() => setShowCreateTurma(true)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.22)', borderRadius: 7, padding: '6px 12px', color: C.blue, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'background 0.15s' }}
-                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(27,120,247,0.18)' }}
-                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(27,120,247,0.1)' }}
-                >
-                  <Plus size={13} /> Nova turma
-                </button>
-              </div>
-              {(() => {
-                const years = [...new Set(turmas.map(t => t.academic_year).filter(Boolean))].sort().reverse()
-                if (years.length < 2) return null
-                return (
-                  <div style={{ display: 'flex', gap: 6, marginBottom: 12, flexWrap: 'wrap' }}>
-                    {['all', ...years].map(y => (
-                      <button
-                        key={y}
-                        onClick={() => setTurmaYearFilter(y)}
-                        style={{
-                          background: turmaYearFilter === y ? 'rgba(27,120,247,0.14)' : 'transparent',
-                          border: `1px solid ${turmaYearFilter === y ? 'rgba(27,120,247,0.3)' : C.border}`,
-                          borderRadius: 999, padding: '5px 12px', fontSize: 12, fontWeight: 700,
-                          color: turmaYearFilter === y ? C.blue : C.muted, cursor: 'pointer', fontFamily: 'inherit',
-                          transition: 'background 0.15s, border-color 0.15s',
-                        }}
-                      >
-                        {y === 'all' ? 'Todos os anos' : y}
-                      </button>
-                    ))}
-                  </div>
-                )
-              })()}
-              {turmas.length === 0 ? (
-                <div style={{ ...C.glassStyle, background: C.glass, border: `1px dashed ${C.glassBorder}`, borderRadius: 12, padding: '40px 28px', textAlign: 'center' }}>
-                  <div style={{ marginBottom: 14, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 52, height: 52, borderRadius: 12, background: 'rgba(27,120,247,0.08)', border: '1px solid rgba(27,120,247,0.15)' }}>
-                    <Users2 size={24} color="#1b78f7" />
-                  </div>
-                  <p style={{ color: C.text, fontSize: 15, fontWeight: 700, margin: '0 0 6px' }}>Ainda não tens turmas</p>
-                  <p style={{ color: C.muted, fontSize: 13, margin: '0 0 22px', lineHeight: 1.6 }}>Cria uma turma e partilha o código com os teus alunos.</p>
-                  <button onClick={() => setShowCreateTurma(true)} style={{ background: `#1b78f7`, border: 'none', borderRadius: 8, padding: '10px 24px', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px rgba(27,120,247,0.2)' }}>
-                    <span style={{display:'flex',alignItems:'center',gap:6}}>Criar primeira turma <ArrowRight size={14} /></span>
-                  </button>
-                </div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {turmas
-                    .filter(t => turmaYearFilter === 'all' || t.academic_year === turmaYearFilter)
-                    .map(t => <TurmaCard key={t.id} turma={t} navigate={navigate} />)}
-                </div>
-              )}
-            </div>
-          )}
 
           {/* ── Defense countdown strip (aluno only) ── */}
           {!isTeacher && !loadingProjects && (() => {
@@ -2610,7 +2603,7 @@ export default function Dashboard() {
 
           {/* ── Novidades do professor (alunos only) — new grade/feedback/status, mirrors the teacher's "needs attention" list ── */}
           {!isTeacher && profNotifs.length > 0 && (
-            <div style={{ marginBottom: 4 }}>
+            <div style={{ marginBottom: 4, animation: 'dash-section-in 0.4s 0.15s ease both' }}>
               <div className="dash-sec-hd">
                 <div className="dash-sec-label">
                   <GraduationCap size={13} /> Novidades do professor
@@ -2640,90 +2633,100 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* ── Turma + Projetos, side by side on desktop (each stacks its own
-               content vertically), full-width stacked on mobile ── */}
+          {/* ── 2-column grid (aluno): turma+insights left, projects right ── */}
           {!isTeacher && <div className="dash-turma-projects-grid">
-          <div className="dash-turma-col">
-          {/* ── Turma card (alunos only) ── */}
-          {!isTeacher && !loadingStudentTurmas && (
-            studentTurmas.length > 0 ? (
-              <div
-                onClick={() => studentTurmas.length === 1 ? navigate(`/turma/${studentTurmas[0].code}`) : setShowTurmasModal(true)}
-                style={{ ...C.glassStyle, display: 'flex', alignItems: 'center', gap: 12, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '14px 16px', cursor: 'pointer', transition: 'background 0.12s' }}
-                onMouseEnter={e => e.currentTarget.style.background = C.glassHover}
-                onMouseLeave={e => e.currentTarget.style.background = C.glass}
-              >
-                <div style={{ width: 36, height: 36, borderRadius: 9, flexShrink: 0, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Users2 size={16} color={C.blue} />
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {studentTurmas.length === 1 ? studentTurmas[0].name : `${studentTurmas.length} turmas`}
-                  </div>
-                  <div style={{ fontSize: 12, color: C.muted, marginTop: 1 }}>
-                    {studentTurmas.length === 1
-                      ? (studentTurmas[0].teacher_name || 'Ver turma')
-                      : studentTurmas.map(t => t.name).join(' · ')}
-                  </div>
-                </div>
-                <ChevronRight size={14} color={C.subtle} style={{ flexShrink: 0 }} />
-              </div>
-            ) : (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: C.subtle }}>
-                <span>Não estás numa turma.</span>
-                <button onClick={() => setShowJoinModal(true)} style={{ background: 'none', border: 'none', color: C.muted, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', padding: 0, textDecoration: 'underline' }}>
-                  entrar numa turma
-                </button>
-              </div>
-            )
-          )}
 
-          {/* ── Insights Block (antes dos projetos, desktop only) ── */}
-          {!isTeacher && !loadingProjects && projects.filter(p => p.score != null).length >= 1 && (
-            <div className="dash-chart-wrap" style={{ marginTop: 16 }}>
+            {/* ── Left column: insights + turma + tasks ── */}
+            <div className="dash-turma-col" style={{ paddingTop: 46 }}>
               <InsightsBlock projects={projects} />
-            </div>
-          )}
 
-          {/* ── Tarefas pendentes da turma ── */}
-          {!isTeacher && pendingTasks.length > 0 && (
-            <div style={{ marginTop: 20 }}>
-              <div className="dash-sec-hd">
-                <div className="dash-sec-label">
-                  <ListChecks size={13} /> Tarefas pendentes
-                  <span className="dash-sec-count">{pendingTasks.length}</span>
-                </div>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {pendingTasks.slice(0, 5).map(t => {
-                  const overdue = t.due_date && new Date(t.due_date + 'T23:59:59') < new Date()
-                  return (
-                    <div key={t.id} style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${overdue ? 'rgba(239,68,68,0.3)' : C.glassBorder}`, borderRadius: 10, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <button onClick={() => completePendingTask(t.id)} style={{ background: 'none', border: 'none', padding: 2, cursor: 'pointer', flexShrink: 0, display: 'flex' }}>
-                        <Circle size={17} color={C.subtle} />
-                      </button>
+              {!loadingStudentTurmas && (
+                <div style={{ animation: 'dash-section-in 0.4s 0.15s ease both' }}>
+                  {studentTurmas.length > 0 ? (
+                    <div
+                      onClick={() => studentTurmas.length === 1 ? navigate(`/turma/${studentTurmas[0].code}`) : setShowTurmasModal(true)}
+                      style={{ ...C.glassStyle, display: 'flex', alignItems: 'center', gap: 12, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '14px 16px', cursor: 'pointer', transition: 'background 0.12s' }}
+                      onMouseEnter={e => e.currentTarget.style.background = C.glassHover}
+                      onMouseLeave={e => e.currentTarget.style.background = C.glass}
+                    >
+                      <div style={{ width: 36, height: 36, borderRadius: 9, flexShrink: 0, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Users2 size={16} color={C.blue} />
+                      </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 13, fontWeight: 600, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.title}</div>
-                        <div style={{ fontSize: 11, color: C.subtle, marginTop: 1 }}>
-                          {t.classes?.name}
-                          {t.due_date && (
-                            <span style={{ color: overdue ? '#ef4444' : C.subtle, fontWeight: overdue ? 700 : 400 }}>
-                              {' — '}{new Date(t.due_date + 'T00:00:00').toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' })}{overdue ? ' (atrasada)' : ''}
-                            </span>
-                          )}
+                        <div style={{ fontSize: 14, fontWeight: 700, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {studentTurmas.length === 1 ? studentTurmas[0].name : `${studentTurmas.length} turmas`}
+                        </div>
+                        <div style={{ fontSize: 12, color: C.muted, marginTop: 1 }}>
+                          {studentTurmas.length === 1
+                            ? (studentTurmas[0].teacher_name || 'Ver turma')
+                            : studentTurmas.map(t => t.name).join(' · ')}
                         </div>
                       </div>
+                      <ChevronRight size={14} color={C.subtle} style={{ flexShrink: 0 }} />
                     </div>
-                  )
-                })}
-              </div>
-            </div>
-          )}
-          </div>
+                  ) : (
+                    <div
+                      onClick={() => setShowJoinModal(true)}
+                      style={{
+                        ...C.glassStyle, background: C.glass, border: `1px dashed ${C.glassBorder}`,
+                        borderRadius: 12, padding: '20px 18px',
+                        display: 'flex', alignItems: 'center', gap: 14,
+                        cursor: 'pointer', transition: 'border-color 0.15s, background 0.15s',
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor = C.blue + '55'; e.currentTarget.style.background = C.glassHover }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor = C.glassBorder; e.currentTarget.style.background = C.glass }}
+                    >
+                      <div style={{ width: 40, height: 40, borderRadius: 10, flexShrink: 0, background: 'rgba(27,120,247,0.08)', border: '1px solid rgba(27,120,247,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Users2 size={18} color={C.blue} />
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 2 }}>Entrar numa turma</div>
+                        <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.4 }}>Usa o código do teu professor para te juntares à tua turma.</div>
+                      </div>
+                      <ArrowRight size={16} color={C.blue} style={{ flexShrink: 0 }} />
+                    </div>
+                  )}
+                </div>
+              )}
 
-          <div className="dash-projects-col">
-          {/* ── Projetos (dominant section) ── */}
-          {!isTeacher && <div id="proj-list">
+              {pendingTasks.length > 0 && (
+                <div style={{ animation: 'dash-section-in 0.4s 0.2s ease both' }}>
+                  <div className="dash-sec-hd">
+                    <div className="dash-sec-label">
+                      <ListChecks size={13} /> Tarefas pendentes
+                      <span className="dash-sec-count">{pendingTasks.length}</span>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {pendingTasks.slice(0, 5).map(t => {
+                      const overdue = t.due_date && new Date(t.due_date + 'T23:59:59') < new Date()
+                      return (
+                        <div key={t.id} style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${overdue ? 'rgba(239,68,68,0.3)' : C.glassBorder}`, borderRadius: 10, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <button onClick={(e) => { e.stopPropagation(); completePendingTask(t.id) }} style={{ background: 'none', border: 'none', padding: 2, cursor: 'pointer', flexShrink: 0, display: 'flex' }}>
+                            <Circle size={17} color={C.subtle} />
+                          </button>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: 13, fontWeight: 600, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.title}</div>
+                            <div style={{ fontSize: 11, color: C.subtle, marginTop: 1 }}>
+                              {t.classes?.name}
+                              {t.due_date && (
+                                <span style={{ color: overdue ? '#ef4444' : C.subtle, fontWeight: overdue ? 700 : 400 }}>
+                                  {' — '}{new Date(t.due_date + 'T00:00:00').toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' })}{overdue ? ' (atrasada)' : ''}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* ── Right column: projects + collab ── */}
+            <div className="dash-projects-col">
+              <div id="proj-list">
             <div className="dash-sec-hd">
               <div className="dash-sec-label">
                 <Folder size={13} /> Os meus projetos
@@ -2785,11 +2788,11 @@ export default function Dashboard() {
                 ))}
               </div>
             )}
-          </div>}
+          </div>
 
           {/* ── Partilhados comigo ── */}
-          {!isTeacher && collabProjects.length > 0 && (
-            <div style={{ marginTop: 20 }}>
+          {collabProjects.length > 0 && (
+            <div>
               <div className="dash-sec-hd">
                 <div className="dash-sec-label">
                   <Users size={13} /> Partilhados comigo
@@ -2822,8 +2825,8 @@ export default function Dashboard() {
               </div>
             </div>
           )}
-          </div>
-          </div>}
+            </div>{/* end dash-projects-col */}
+          </div>}{/* end dash-turma-projects-grid */}
 
           {/* ── Recrutadores com interesse (alunos — só mostra quando há dados) ── */}
           {!isTeacher && !isRecruiter && myInterests.length > 0 && (

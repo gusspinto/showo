@@ -156,6 +156,8 @@ export default function FeedbackButton() {
           .fb-fab:hover { width: 46px; transform: none; }
           .fb-fab-label { display: none; }
           .fb-sheet { bottom: 84px; border-radius: 22px 22px 0 0; }
+          /* Hide FAB on messages page (mobile only) */
+          body.page-mensagens .fb-fab { display: none !important; }
         }
 
         .fb-textarea {

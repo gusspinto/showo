@@ -12,11 +12,16 @@ export function AuthProvider({ children }) {
   const fetchProfile = useCallback(async (uid) => {
     if (!uid) { setProfile(null); resetAnalytics(); return }
     const [profileRes, userRes] = await Promise.all([
-      supabase.from('profiles').select('id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, linkedin_url, skills, monthly_report_opt_in').eq('id', uid).single(),
+      supabase.from('profiles').select('id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, linkedin_url, skills, monthly_report_opt_in, area').eq('id', uid).single(),
       supabase.auth.getUser(),
     ])
     const meta = userRes.data?.user?.user_metadata ?? {}
     let data = profileRes.data
+
+    if (!data && profileRes.error) {
+      setProfile(null)
+      return
+    }
 
     // Profile doesn't exist yet — create it from user_metadata.
     // role is never trusted from client metadata here — it always starts as
@@ -27,7 +32,7 @@ export function AuthProvider({ children }) {
       const { data: created } = await supabase
         .from('profiles')
         .upsert({ id: uid, full_name: meta.full_name ?? null, role: 'aluno', company: meta.company ?? null, school: meta.school ?? null })
-        .select('id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, linkedin_url, skills, monthly_report_opt_in')
+        .select('id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, linkedin_url, skills, monthly_report_opt_in, area')
         .single()
       data = created
     }

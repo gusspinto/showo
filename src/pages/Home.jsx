@@ -31,8 +31,8 @@ function StaticHero({ theme }) {
       fontFamily: 'var(--font-heading)',
       textAlign: 'center',
     }}>
-      Um documento não define{' '}
-      <em style={{ fontStyle: 'italic', color: theme === 'light' ? '#0a2d78' : '#1b78f7', whiteSpace: 'nowrap' }}>a tua carreira.</em>
+      Da defesa da PAP{' '}
+      <em style={{ fontStyle: 'italic', color: theme === 'light' ? '#0a2d78' : '#1b78f7' }}>à tua primeira oportunidade.</em>
     </h1>
   )
 }
@@ -731,25 +731,9 @@ export default function Home() {
           justifyContent: 'center',
           textAlign: 'center',
         }}>
-          <div className="hero-badge" style={{
-            display: 'flex', alignItems: 'center', gap: 8,
-            color: colors.muted, fontSize: 12, fontWeight: 700,
-            letterSpacing: '0.14em', textTransform: 'uppercase',
-            marginBottom: 28,
-          }}>
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#1b78f7' }} />
-            Para estudantes
-          </div>
-
           <StaticHero theme={heroTheme} />
 
-          <p className="hero-sub" style={{
-            fontSize: 15, color: colors.muted, lineHeight: 1.5,
-            margin: '0 auto 56px', fontWeight: 500, maxWidth: 400,
-            textAlign: 'center',
-          }}>
-            Do projeto escolar à oportunidade, com IA.
-          </p>
+          <div style={{ height: 56 }} />
 
           {/* Widget */}
           <form className="hero-widget" onSubmit={handleStart} style={{ width: '100%', maxWidth: 560 }}>

@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
 import { useSidebar } from '../context/SidebarContext'
 import { supabase } from '../lib/supabase'
-import { Check, X, FolderOpen, User, Settings as SettingsIcon, Shield, Globe, Trophy, LogOut, ArrowRightToLine, Bell, Eye, Target, TrendingUp, GraduationCap, UserPlus, LayoutDashboard, Plus, Compass, Sun, Moon, Sparkles, Pencil, ArrowLeft, Briefcase, Medal, Users2, Swords, Building2, Search, Star, MessageSquare, Kanban, Heart, CheckCircle, XCircle, AlignJustify, Paintbrush, Mail, ChevronRight, Monitor, Tablet, Smartphone, ListChecks, CheckCircle2 } from 'lucide-react'
+import { Check, X, FolderOpen, User, Settings as SettingsIcon, Shield, Globe, Trophy, LogOut, ArrowRightToLine, Bell, Eye, Target, TrendingUp, GraduationCap, UserPlus, LayoutDashboard, Plus, Compass, Sun, Moon, Sparkles, Pencil, ArrowLeft, Briefcase, Users2, Building2, Search, Star, MessageSquare, Kanban, Heart, CheckCircle, XCircle, AlignJustify, Paintbrush, Mail, ChevronRight, Monitor, Tablet, Smartphone, ListChecks, CheckCircle2 } from 'lucide-react'
 
 // Strip emoji characters from notification messages coming from the DB
 function stripEmoji(str) {
@@ -109,6 +109,13 @@ function timeAgo(ts) {
 function InviteInbox({ userId, sidebar = false, collapsed = false }) {
   const navigate = useNavigate()
   const [open, setOpen]     = useState(false)
+  const notifRef = useRef(null)
+  useEffect(() => {
+    if (!open) return
+    const handler = (e) => { if (notifRef.current && !notifRef.current.contains(e.target)) setOpen(false) }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [open])
   const [invites, setInvites] = useState([])
   const [acting, setActing] = useState({})
   const [dbNotifs, setDbNotifs] = useState([])
@@ -334,7 +341,7 @@ function InviteInbox({ userId, sidebar = false, collapsed = false }) {
   const count = invites.length + responses.length + unreadDbCount
 
   return (
-    <div style={{ position: 'relative' }}>
+    <div ref={notifRef} style={{ position: 'relative' }}>
       <button
         onClick={() => setOpen(o => !o)}
         style={{
@@ -710,6 +717,13 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
   const [showLabels, setShowLabels] = useState(expanded)
   const labelTimer = useRef(null)
   const [sbProfileMenuOpen, setSbProfileMenuOpen] = useState(false)
+  const profileMenuRef = useRef(null)
+  useEffect(() => {
+    if (!sbProfileMenuOpen) return
+    const handler = (e) => { if (profileMenuRef.current && !profileMenuRef.current.contains(e.target)) setSbProfileMenuOpen(false) }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [sbProfileMenuOpen])
 
   function toggleSidebar() {
     setExpanded(e => {
@@ -790,19 +804,20 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
         .sidebar {
           display: none;
           position: fixed;
-          left: 0; top: 0; bottom: 0;
-          width: 64px;
-          background: var(--c-sidebar-bg);
-          border-right: 1px solid var(--c-border);
+          left: 8px; top: 8px; bottom: 8px;
+          width: 232px;
+          background: var(--c-sidebar-bg-alpha);
+          backdrop-filter: blur(20px) saturate(1.4);
+          -webkit-backdrop-filter: blur(20px) saturate(1.4);
+          border: 1px solid var(--c-border);
+          border-radius: 16px;
           flex-direction: column;
           padding: 0;
           z-index: 100;
           overflow: visible;
-          contain: layout style;
+          contain: style;
           will-change: width;
-          transform: translateZ(0);
-          backface-visibility: hidden;
-          transition: width 0.22s cubic-bezier(0.4,0,0.2,1);
+          transition: width 0.22s cubic-bezier(0.4,0,0.2,1), opacity 0.18s ease, transform 0.22s cubic-bezier(0.4,0,0.2,1);
         }
         .sidebar:not(.collapsed) .sb-item > span,
         .sidebar:not(.collapsed) .sb-label {
@@ -820,34 +835,6 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
         .sidebar.collapsed .sb-label { display: none; }
         .sidebar.collapsed .sb-item { justify-content: center; padding: 9px 0; }
         .sidebar.collapsed .sb-create { justify-content: center; padding: 9px 0; }
-        /* Let the project bump poke out past the sidebar's edge */
-        .sidebar.collapsed .sb-section { overflow: visible; }
-        .sb-project-bump-row {
-          display: flex; align-items: center;
-          margin: 10px 0 10px;
-          animation: sb-fade-slide-in 0.25s cubic-bezier(0.16,1,0.3,1) both;
-        }
-        .sb-project-bump-label {
-          writing-mode: vertical-rl; transform: rotate(180deg);
-          font-size: 9px; font-weight: 700; white-space: nowrap;
-          color: rgba(74,147,249,0.85); text-transform: uppercase; letter-spacing: 0.1em;
-          margin-right: 2px;
-        }
-        .sb-project-bump {
-          display: flex; flex-direction: column; align-items: center;
-          gap: 16px;
-          background: var(--c-sidebar-bg);
-          border: none;
-          border-radius: 999px;
-          padding: 18px 13px;
-          margin-right: -28px;
-          box-shadow: 6px 4px 22px rgba(0,0,0,0.32);
-        }
-        .sb-project-bump .sb-item {
-          width: auto; padding: 0; color: var(--c-muted);
-          transition: color 0.15s, transform 0.15s;
-        }
-        .sb-project-bump .sb-item:hover { color: #1b78f7; transform: scale(1.12); }
         .sb-top-row {
           display: flex; align-items: center; justify-content: space-between;
           height: 56px; box-sizing: border-box;
@@ -956,17 +943,6 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
         }
         .sb-create:hover { opacity: 0.88; }
         .sb-divider { height: 1px; background: var(--c-border); margin: 6px 0; opacity: 0.6; }
-        /* Project section — flat, left rule instead of filled card */
-        .sb-project-section {
-          background: transparent;
-          border: none;
-          border-left: 1px solid rgba(27,120,247,0.3);
-          border-radius: 0;
-          padding: 4px 0 6px 8px;
-          margin: 6px 0 4px;
-          animation: sb-fade-slide-in 0.25s cubic-bezier(0.16,1,0.3,1) both;
-        }
-        .sb-project-section .sb-label { color: rgba(27,120,247,0.7); padding-top: 8px; }
         .sb-bottom { padding: 0 10px 14px; }
         .sb-action-row {
           display: flex; align-items: center; justify-content: space-between;
@@ -984,39 +960,84 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
         .sb-action-btn:hover { background: var(--c-card-hover); color: var(--c-text); }
         .sb-action-btn.danger:hover { background: rgba(239,68,68,0.1); color: #ef4444; }
 
-        @media (min-width: 861px) {
+        /* ── Floating "Gerir projeto" panel ── */
+        .proj-manage-float {
+          position: fixed;
+          left: 258px;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 48px;
+          z-index: 90;
+          display: none;
+          flex-direction: column;
+          align-items: center;
+          gap: 4px;
+          background: var(--c-sidebar-bg-alpha);
+          backdrop-filter: blur(20px) saturate(1.4);
+          -webkit-backdrop-filter: blur(20px) saturate(1.4);
+          border: 1px solid var(--c-border);
+          border-radius: 14px;
+          padding: 10px 6px;
+          box-shadow: 0 4px 24px rgba(0,0,0,0.25);
+          transition: left 0.22s cubic-bezier(0.4,0,0.2,1);
+        }
+        body.sidebar-collapsed .proj-manage-float { left: 84px; }
+        .proj-manage-float .pmf-btn {
+          width: 36px; height: 36px; border-radius: 10px;
+          background: transparent; border: none;
+          display: flex; align-items: center; justify-content: center;
+          cursor: pointer; color: var(--c-muted);
+          transition: color 0.15s, background 0.15s;
+          position: relative;
+        }
+        .proj-manage-float .pmf-btn:hover { color: var(--c-text); background: var(--c-glass); }
+        .proj-manage-float .pmf-btn.active { color: #1b78f7; background: rgba(27,120,247,0.1); }
+        .proj-manage-float .pmf-divider {
+          width: 24px; height: 1px;
+          background: var(--c-border);
+          margin: 2px 0;
+        }
+        .proj-manage-float .pmf-tooltip {
+          position: absolute;
+          left: calc(100% + 8px);
+          top: 50%;
+          transform: translateY(-50%);
+          white-space: nowrap;
+          font-size: 11px;
+          font-weight: 600;
+          color: var(--c-text);
+          background: var(--c-card);
+          border: 1px solid var(--c-border);
+          border-radius: 6px;
+          padding: 4px 10px;
+          pointer-events: none;
+          opacity: 0;
+          transition: opacity 0.12s;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        .proj-manage-float .pmf-btn:hover .pmf-tooltip { opacity: 1; }
+
+        @media (min-width: 601px) {
           .sidebar   { display: flex; }
+          .proj-manage-float { display: flex; }
           .top-nav   { display: none !important; }
           .bottom-nav { display: none !important; }
-          /* Page layout always reserves the narrow (collapsed) sidebar width —
-             the expanded sidebar overlays on top instead of pushing this, so
-             nothing here needs to animate. */
-          body { padding-left: 72px !important; padding-bottom: 0 !important; }
+          body { padding-left: 248px !important; padding-bottom: 0 !important; transition: padding-left 0.22s cubic-bezier(0.4,0,0.2,1); }
+          body.sidebar-collapsed { padding-left: 80px !important; }
           .page-content { max-width: 1068px !important; }
           .page-content-wide { max-width: 1168px !important; }
           .msg-inner { max-width: 1088px !important; }
         }
         ${hideSidebar ? `
-          @media (min-width: 861px) {
+          @media (min-width: 601px) {
             .sidebar { display: none !important; }
             body { padding-left: 0 !important; }
           }
         ` : ''}
 
-        /* Tablet (601–860px): hamburger visible, bottom nav hidden */
-        @media (max-width: 860px) {
-          .nav-left          { display: none; }
-          .nav-children-wrap { display: none !important; }
-          .ham-btn           { display: flex !important; }
-          .mob-only-create   { display: none !important; }
-        }
-
-        @media (min-width: 601px) and (max-width: 860px) {
-          .nav-logo { height: 32px !important; width: auto !important; }
-        }
-
         /* Mobile (≤600px): bottom nav takes over — logo centrada, sem hamburger */
         @media (max-width: 600px) {
+          .nav-left      { display: none !important; }
           .nav-mid       { position: absolute; left: 50%; transform: translateX(-50%); }
           .nav-right     { flex: none; margin-left: auto; }
           .nav-auth      { display: none !important; }
@@ -1313,14 +1334,8 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                     <Briefcase size={16} /> Vagas
                   </button>
                   <span className="mob-drawer-label">Comunidade</span>
-                  <button className="mobile-drawer-btn" onClick={() => { navigate('/missoes'); setOpen(false) }}>
-                    <Swords size={16} /> Missões
-                  </button>
                   <button className="mobile-drawer-btn" onClick={() => { navigate('/turmas'); setOpen(false) }}>
                     <Users2 size={16} /> Turmas
-                  </button>
-                  <button className="mobile-drawer-btn" onClick={() => { navigate('/conquistas'); setOpen(false) }}>
-                    <Medal size={16} /> Conquistas
                   </button>
                   <button className="mobile-drawer-btn" onClick={() => { navigate('/mensagens'); setOpen(false) }}>
                     <MessageSquare size={16} /> Mensagens
@@ -1559,11 +1574,8 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
         </div>
       </nav>
 
-      {/* ── Sidebar — desktop only (>860px). Icon-only by default, toggled open/closed. ── */}
+      {/* ── Sidebar — desktop only (>601px). Icons-only when collapsed. ── */}
       <div className={`sidebar${collapsed ? ' collapsed' : ''}`}>
-        {/* Collapse/expand control — a small edge button straddling the rail's
-            border, same visual idiom as the home hero's peek tabs, so it reads
-            as a deliberate resize handle instead of just another nav icon. */}
         <button
           className="sb-collapse-toggle"
           onClick={toggleSidebar}
@@ -1722,14 +1734,8 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
 
                   <div className="sb-divider" style={{ margin: '8px 0 4px' }} />
                   {!collapsed && showLabels && <span className="sb-label">Comunidade</span>}
-                  <button className={`sb-item${isActive('/missoes') ? ' active' : ''}`} onClick={() => navigate('/missoes')}>
-                    <Swords size={16} />{!collapsed && showLabels && <span>Missões</span>}
-                  </button>
                   <button className={`sb-item${isActive('/turmas') ? ' active' : ''}`} onClick={() => navigate('/turmas')}>
                     <Users2 size={16} />{!collapsed && showLabels && <span>Turmas</span>}
-                  </button>
-                  <button className={`sb-item${isActive('/conquistas') ? ' active' : ''}`} onClick={() => navigate('/conquistas')}>
-                    <Medal size={16} />{!collapsed && showLabels && <span>Conquistas</span>}
                   </button>
 
                   <div className="sb-divider" style={{ margin: '8px 0 4px' }} />
@@ -1752,122 +1758,6 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
             </>
           )}
 
-          {/* Project controls — immediately after nav, no gap */}
-          {extras?.type === 'project' && (collapsed ? (
-            /* Collapsed: a chunk pulled out past the rail's edge, still attached —
-               no border/fill of its own, just the sidebar's own surface extended
-               outward (shape + shadow only) so it reads as "this part sticks out"
-               without looking like a different colored block. */
-            <div className="sb-project-bump-row">
-              <span className="sb-project-bump-label">Gerir projeto</span>
-              <div className="sb-project-bump">
-                {extras.showBack && (
-                  <button className="sb-item" title="Ver projeto" onClick={() => navigate(`/projeto/${extras.slug}`)}><ArrowLeft size={16} /></button>
-                )}
-                {!extras.showBack && (
-                  <button className="sb-item" title="Editar" onClick={() => navigate(`/editar/${extras.slug}`)}><Pencil size={16} /></button>
-                )}
-                {extras.onDefense && (
-                  <button className="sb-item" title="Modo defesa" onClick={extras.onDefense}><GraduationCap size={16} /></button>
-                )}
-                {extras.onAnalyze && (
-                  <button className="sb-item" title="Análise IA" onClick={extras.onAnalyze} disabled={extras.analyzingAI} style={{ opacity: extras.analyzingAI ? 0.6 : 1 }}><Sparkles size={16} /></button>
-                )}
-                {extras.showCertificate && (
-                  <button className="sb-item" title="Certificado" onClick={() => navigate(`/certificado/${extras.slug}`)}><Trophy size={16} /></button>
-                )}
-                {extras.onTogglePublicView && (
-                  <button className="sb-item" title={extras.viewAsPublic ? 'Sair da preview' : 'Preview visitante'} onClick={extras.onTogglePublicView}><Globe size={16} /></button>
-                )}
-                {extras.viewAsPublic && extras.onEditWorkspace && (
-                  <button className="sb-item" title="Editar workspace" onClick={extras.onEditWorkspace}><Pencil size={16} /></button>
-                )}
-              </div>
-            </div>
-          ) : (
-            <div className="sb-project-section">
-              {/* Back to project (shown when on sub-page like edit/cert) */}
-              {extras.showBack && (
-                <button className="sb-item" onClick={() => navigate(`/projeto/${extras.slug}`)}>
-                  <ArrowLeft size={16} /><span>Ver projeto</span>
-                </button>
-              )}
-              <span className="sb-label">Gerir projeto</span>
-              {!extras.showBack && (
-                <button className="sb-item" onClick={() => navigate(`/editar/${extras.slug}`)}>
-                  <Pencil size={16} /><span>Editar</span>
-                </button>
-              )}
-              {extras.onDefense && (
-                <button className="sb-item" onClick={extras.onDefense}>
-                  <GraduationCap size={16} />
-                  <span>Modo defesa</span>
-                  {extras.defenseDate && (
-                    <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--c-muted)', fontWeight: 500 }}>
-                      {new Date(extras.defenseDate).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' })}
-                    </span>
-                  )}
-                </button>
-              )}
-              {extras.onAnalyze && (
-                <button
-                  className="sb-item"
-                  onClick={extras.onAnalyze}
-                  disabled={extras.analyzingAI}
-                  style={{ opacity: extras.analyzingAI ? 0.6 : 1 }}
-                >
-                  <Sparkles size={16} />
-                  {extras.analyzingAI ? 'A analisar…' : extras.aiScore != null ? 'Ver análise IA' : 'Análise IA'}
-                  {extras.aiScore != null && !extras.analyzingAI && (
-                    <span style={{
-                      marginLeft: 'auto', fontSize: 11, fontWeight: 700,
-                      color: extras.aiScore >= 90 ? '#22c55e' : extras.aiScore >= 71 ? '#1b78f7' : extras.aiScore >= 40 ? '#fbbf24' : '#ef4444',
-                    }}>
-                      {extras.aiScore}
-                    </span>
-                  )}
-                </button>
-              )}
-              {extras.showCertificate && (
-                <button className="sb-item" onClick={() => navigate(`/certificado/${extras.slug}`)}>
-                  <Trophy size={16} /><span>Certificado</span>
-                </button>
-              )}
-              {extras.onTogglePublicView && (
-                <button
-                  className="sb-item"
-                  onClick={extras.onTogglePublicView}
-                  style={{ color: extras.viewAsPublic ? C.blue : 'var(--c-muted)' }}
-                >
-                  <Globe size={16} />
-                  <span>{extras.viewAsPublic ? 'Sair da preview' : 'Preview visitante'}</span>
-                </button>
-              )}
-              {extras.viewAsPublic && extras.onEditWorkspace && (
-                <button className="sb-item" onClick={extras.onEditWorkspace} style={{ color: extras.previewEditing ? C.blue : 'var(--c-muted)' }}>
-                  <Pencil size={16} /><span>Editar workspace</span>
-                </button>
-              )}
-              {extras.viewAsPublic && extras.setPreviewDevice && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 3, padding: '6px 10px 2px' }}>
-                  {[{ id: 'desktop', Icon: Monitor }, { id: 'tablet', Icon: Tablet }, { id: 'mobile', Icon: Smartphone }].map(({ id, Icon }) => (
-                    <button
-                      key={id}
-                      onClick={() => extras.setPreviewDevice(id)}
-                      title={id}
-                      style={{
-                        flex: 1, height: 26, borderRadius: 6, border: 'none', cursor: 'pointer',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        background: extras.previewDevice === id ? 'rgba(27,120,247,0.15)' : 'transparent',
-                        color: extras.previewDevice === id ? '#1b78f7' : 'var(--c-subtle)',
-                        transition: 'background 0.13s, color 0.13s',
-                      }}
-                    ><Icon size={13} /></button>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
         </div>
 
         <div className="sb-divider" />
@@ -1923,7 +1813,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                 {/* Avatar — collapsed: tap opens a small Perfil/Sair menu instead of
                     navigating straight away (no room here for a full nav row) */}
                 {collapsed && profileUrl && (
-                  <div style={{ position: 'relative' }}>
+                  <div ref={profileMenuRef} style={{ position: 'relative' }}>
                     <button
                       onClick={() => setSbProfileMenuOpen(o => !o)}
                       title={getDisplayName(user)}
@@ -1937,7 +1827,6 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                     </button>
                     {sbProfileMenuOpen && (
                       <>
-                        <div style={{ position: 'fixed', inset: 0, zIndex: 198 }} onClick={() => setSbProfileMenuOpen(false)} />
                         <div style={{
                           position: 'fixed', left: 80, bottom: 16, zIndex: 199,
                           background: 'var(--c-card)', border: '1px solid var(--c-border)',
@@ -2038,6 +1927,50 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
           )}
         </div>
       </div>
+
+      {/* ── Floating "Gerir projeto" panel — desktop only ── */}
+      {extras?.type === 'project' && (
+        <div className="proj-manage-float">
+          {extras.showBack ? (
+            <button className="pmf-btn" onClick={() => navigate(`/projeto/${extras.slug}`)} title="Ver projeto">
+              <ArrowLeft size={16} />
+              <span className="pmf-tooltip">Ver projeto</span>
+            </button>
+          ) : (
+            <button className="pmf-btn" onClick={() => navigate(`/editar/${extras.slug}`)} title="Editar">
+              <Pencil size={16} />
+              <span className="pmf-tooltip">Editar</span>
+            </button>
+          )}
+          {extras.onDefense && (
+            <button className="pmf-btn" onClick={extras.onDefense} title="Modo defesa">
+              <GraduationCap size={16} />
+              <span className="pmf-tooltip">Modo defesa</span>
+            </button>
+          )}
+          {extras.onAnalyze && (
+            <button className={`pmf-btn${extras.analyzingAI ? ' active' : ''}`} onClick={extras.onAnalyze} disabled={extras.analyzingAI} title="Análise IA">
+              <Sparkles size={16} />
+              <span className="pmf-tooltip">{extras.analyzingAI ? 'A analisar…' : 'Análise IA'}</span>
+            </button>
+          )}
+          {extras.showCertificate && (
+            <button className="pmf-btn" onClick={() => navigate(`/certificado/${extras.slug}`)} title="Certificado">
+              <Trophy size={16} />
+              <span className="pmf-tooltip">Certificado</span>
+            </button>
+          )}
+          {extras.onTogglePublicView && (
+            <>
+              <div className="pmf-divider" />
+              <button className={`pmf-btn${extras.viewAsPublic ? ' active' : ''}`} onClick={extras.onTogglePublicView} title="Preview visitante">
+                <Globe size={16} />
+                <span className="pmf-tooltip">{extras.viewAsPublic ? 'Sair preview' : 'Preview visitante'}</span>
+              </button>
+            </>
+          )}
+        </div>
+      )}
 
       {/* ── Mobile full-navigation sheet (≤600px) ── */}
       {menuRendered && (
@@ -2229,14 +2162,8 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                         <Mail size={20} /> Estágio
                       </button>
                       <span className="mob-nav-section-label">Comunidade</span>
-                      <button className={`mob-nav-btn${isActive('/missoes') ? ' active' : ''}`} onClick={() => { navigate('/missoes'); setMenuOpen(false) }}>
-                        <Swords size={20} /> Missões
-                      </button>
                       <button className={`mob-nav-btn${isActive('/turmas') ? ' active' : ''}`} onClick={() => { navigate('/turmas'); setMenuOpen(false) }}>
                         <Users2 size={20} /> Turmas
-                      </button>
-                      <button className={`mob-nav-btn${isActive('/conquistas') ? ' active' : ''}`} onClick={() => { navigate('/conquistas'); setMenuOpen(false) }}>
-                        <Medal size={20} /> Conquistas
                       </button>
                       <button className="mob-nav-btn" style={{ opacity: 0.45, cursor: 'default' }} disabled>
                         <FolderOpen size={20} /> Portfólio <span className="mob-nav-soon">breve</span>
@@ -2286,15 +2213,6 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
             >
               <LayoutDashboard size={22} strokeWidth={isActive('/dashboard') ? 2.5 : 1.8} />
               <span className="bn-label">Início</span>
-            </button>
-
-            {/* Explorar */}
-            <button
-              className={`bn-item${isActive('/explorar') ? ' active' : ''}`}
-              onClick={() => { setMenuOpen(false); navigate('/explorar') }}
-            >
-              <Compass size={22} strokeWidth={isActive('/explorar') ? 2.5 : 1.8} />
-              <span className="bn-label">Explorar</span>
             </button>
 
             {/* Centro — workspace em preview mode, + em modo normal (Turmas para professor, sem "criar projeto") */}

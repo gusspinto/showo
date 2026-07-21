@@ -204,7 +204,7 @@ export default function UserProfile() {
     async function load() {
       const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(username)
 
-      const PROFILE_COLS = 'id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size, skills, school, total_xp, created_at'
+      const PROFILE_COLS = 'id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size, skills, school, total_xp, created_at, area'
       const { data: profileData, error: profileErr } = isUUID
         ? await supabase.from('profiles').select(PROFILE_COLS).eq('id', username).single()
         : await supabase.from('profiles').select(PROFILE_COLS).eq('username', username).single()
@@ -556,7 +556,7 @@ export default function UserProfile() {
               {(profile.area || profile.course || profile.school) && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginBottom: 10, marginTop: 6 }}>
                   {(profile.area || profile.course) && (
-                    <span style={{ fontSize: 12, fontWeight: 700, color: c1 }}>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: '#1b78f7' }}>
                       {profile.area || profile.course}
                     </span>
                   )}
@@ -580,9 +580,9 @@ export default function UserProfile() {
               {profile.available_for_work && profile.role === 'aluno' && (
                 <div style={{
                   display: 'inline-flex', alignItems: 'center', gap: 6,
-                  background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)',
+                  background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.3)',
                   borderRadius: 7, padding: '5px 14px', marginBottom: 12,
-                  color: '#10b981', fontSize: 13, fontWeight: 700,
+                  color: '#1b78f7', fontSize: 13, fontWeight: 700,
                 }}>
                   <Briefcase size={13} style={{ flexShrink: 0 }} /> Disponível para estágio
                 </div>

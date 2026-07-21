@@ -1344,10 +1344,13 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
       {/* ── Workspace panel — sidebar (desktop) or bottom sheet (mobile) ── */}
       {isOwner && previewEditing && (
         <div className={`pv-workspace${isDesktop ? '' : ` pv-ws-sheet${wsExpanded ? '' : ' ws-collapsed'}`}`} style={{
-          position: 'fixed', right: 0, top: isDesktop ? 0 : bannerH, bottom: 0, zIndex: 200,
+          position: 'fixed', right: isDesktop ? 8 : 0, top: isDesktop ? 8 : bannerH, bottom: isDesktop ? 8 : 0, zIndex: 200,
           width: isDesktop ? (wsExpanded ? 360 : 60) : 360,
-          background: 'var(--c-sidebar-bg)',
-          borderLeft: '1px solid var(--c-border)',
+          background: 'var(--c-sidebar-bg-alpha)',
+          backdropFilter: 'blur(20px) saturate(1.4)',
+          WebkitBackdropFilter: 'blur(20px) saturate(1.4)',
+          border: '1px solid var(--c-border)',
+          borderRadius: isDesktop ? 16 : 0,
           display: 'flex', flexDirection: 'column',
           fontFamily: 'var(--font-body)',
           transition: isDesktop ? 'width 0.22s cubic-bezier(0.4,0,0.2,1)' : undefined,
@@ -3710,7 +3713,14 @@ export default function ProjectPage() {
         .proj-sidebar {
           position: sticky;
           top: 88px;
+          max-height: calc(100vh - 104px);
+          overflow-y: auto;
+          scrollbar-width: thin;
+          scrollbar-color: var(--c-border) transparent;
         }
+        .proj-sidebar::-webkit-scrollbar { width: 3px; }
+        .proj-sidebar::-webkit-scrollbar-track { background: transparent; }
+        .proj-sidebar::-webkit-scrollbar-thumb { background: var(--c-border); border-radius: 99px; }
         @media (max-width: 860px) {
           /* Dissolve proj-main so hero / body / sidebar can be individually ordered */
           .proj-layout { grid-template-columns: 1fr; }
@@ -4719,21 +4729,20 @@ export default function ProjectPage() {
           {/* Student identity line — name · area · course + status badges */}
           {(project.creator_name || project.area || project.course || internshipReady || ownerProfile?.available_for_work || project.review_status) && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
-              {/* "Disponível" — briefcase badge */}
+              {/* "Disponível" — blue briefcase icon only */}
               {ownerProfile?.available_for_work && (
                 <div
                   title="Disponível para trabalho / estágio"
                   style={{
-                    display: 'inline-flex', alignItems: 'center', gap: 5,
-                    background: 'rgba(16,185,129,0.1)', color: '#10b981',
-                    border: '1px solid rgba(16,185,129,0.25)',
-                    borderRadius: 999, padding: '4px 12px',
-                    fontSize: 11, fontWeight: 700, lineHeight: 1.5,
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                    width: 28, height: 28,
+                    background: 'rgba(27,120,247,0.1)', color: '#1b78f7',
+                    border: '1px solid rgba(27,120,247,0.25)',
+                    borderRadius: 999,
                     cursor: 'default',
                   }}
                 >
-                  <Briefcase size={11} strokeWidth={2.5} />
-                  Disponivel para estágio
+                  <Briefcase size={13} strokeWidth={2.5} />
                 </div>
               )}
               {project.review_status && (
@@ -5301,7 +5310,6 @@ export default function ProjectPage() {
         <div style={{ textAlign: 'center', padding: '40px 0 0', color: colors.subtle, fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, flexWrap: 'wrap' }}>
           Criado com{' '}
           <img src={theme === 'light' ? '/light_mode_LI.png' : '/logo.png'} alt="Showo" style={{ height: 16, width: 'auto', verticalAlign: 'middle', opacity: 0.7 }} />
-          {' '}· Transforma projetos em páginas profissionais
         </div>
         </div>{/* end proj-body */}
         </div>{/* end proj-main */}

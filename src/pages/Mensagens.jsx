@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
-import { Send, ArrowLeft, MessageSquare, Search, Plus, X, Pencil, Trash2, Check, CheckCheck, AlertTriangle } from 'lucide-react'
+import { Send, ArrowLeft, MessageSquare, Search, Plus, X, Pencil, Trash2, Check, CheckCheck, AlertTriangle, Copy } from 'lucide-react'
 import { containsProfanity } from '../lib/profanity'
 import { looksLikeSpam } from '../lib/score'
 
@@ -128,11 +128,21 @@ export default function Mensagens() {
   const [showNova, setShowNova]           = useState(false)
   const [mobileView, setMobileView]       = useState('list')
 
+  useEffect(() => {
+    document.body.classList.add('page-mensagens')
+    return () => document.body.classList.remove('page-mensagens')
+  }, [])
+
   // Edit / Delete states
   const [editingId, setEditingId]         = useState(null)
   const [editDraft, setEditDraft]         = useState('')
   const [hoveredMsgId, setHoveredMsgId]   = useState(null)
   const [confirmDeleteId, setConfirmDeleteId] = useState(null)
+  // Mobile message actions overlay
+  const [actionMsg, setActionMsg]         = useState(null)
+  const [showDeletePopup, setShowDeletePopup] = useState(false)
+  const [showEditPopup, setShowEditPopup] = useState(false)
+  const longPressTimer = useRef(null)
 
   const bottomRef   = useRef(null)
   const editInputRef = useRef(null)
@@ -362,6 +372,53 @@ export default function Mensagens() {
     setEditDraft('')
   }
 
+  function openActionOverlay(m) {
+    setActionMsg(m)
+    setShowDeletePopup(false)
+    setShowEditPopup(false)
+  }
+
+  function closeActionOverlay() {
+    setActionMsg(null)
+    setShowDeletePopup(false)
+    setShowEditPopup(false)
+  }
+
+  function handleActionCopy() {
+    navigator.clipboard.writeText(actionMsg.content)
+    closeActionOverlay()
+  }
+
+  function handleActionEdit() {
+    setShowEditPopup(true)
+    setEditDraft(actionMsg.content)
+  }
+
+  function handleActionDelete() {
+    setShowDeletePopup(true)
+  }
+
+  async function confirmActionDelete() {
+    if (actionMsg) await deleteMsg(actionMsg.id)
+    closeActionOverlay()
+  }
+
+  async function confirmActionEdit() {
+    if (actionMsg && editDraft.trim()) {
+      await saveEdit(actionMsg.id)
+    }
+    closeActionOverlay()
+  }
+
+  function handleLongPress(m) {
+    if (m.from_id !== user.id) return
+    longPressTimer.current = setTimeout(() => openActionOverlay(m), 400)
+  }
+
+  function cancelLongPress() {
+    clearTimeout(longPressTimer.current)
+  }
+
   function openConversation(otherId) {
     setActiveId(otherId)
     setMobileView('thread')
@@ -397,7 +454,7 @@ export default function Mensagens() {
       <div className="page-content" style={{ padding: 0, maxWidth: '100%' }}>
         <div className="msg-inner" style={{ maxWidth: 920, margin: '0 auto', padding: '0 clamp(8px,3vw,24px)', paddingTop: 28, transition: 'max-width 0.22s cubic-bezier(0.4,0,0.2,1)' }}>
 
-          <div style={{ marginBottom: 20 }}>
+          <div className={`msg-page-header${mobileView === 'thread' ? ' mob-hidden' : ''}`} style={{ marginBottom: 20 }}>
             <h1 style={{ color: C.text, fontSize: 'clamp(22px,4vw,32px)', fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 4px', letterSpacing: '-0.4px' }}>
               Mensagens {totalUnread > 0 && <span style={{ fontSize: 15, fontWeight: 700, background: C.blue, color: '#fff', borderRadius: 99, padding: '2px 9px', verticalAlign: 'middle', marginLeft: 6 }}>{totalUnread}</span>}
             </h1>
@@ -439,6 +496,7 @@ export default function Mensagens() {
                   const isMine = c.lastMsg.from_id === user.id
                   return (
                     <button key={c.otherId} onClick={() => openConversation(c.otherId)}
+                      className="msg-conv-item"
                       style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: isActive ? 'rgba(27,120,247,0.08)' : 'transparent', border: 'none', borderLeft: isActive ? `3px solid ${C.blue}` : '3px solid transparent', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', transition: 'background 0.12s' }}
                       onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = 'var(--c-bg-alt)' }}
                       onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'transparent' }}>
@@ -527,13 +585,16 @@ export default function Mensagens() {
                         <div key={m.id}
                           style={{ display: 'flex', justifyContent: isMine ? 'flex-end' : 'flex-start', marginTop: isMine === prevIsMine ? 2 : 10, position: 'relative' }}
                           onMouseEnter={() => { setHoveredMsgId(m.id) }}
-                          onMouseLeave={() => { setHoveredMsgId(null); if (confirmDeleteId === m.id && !isEditing) setConfirmDeleteId(null) }}>
+                          onMouseLeave={() => { setHoveredMsgId(null); if (confirmDeleteId === m.id && !isEditing) setConfirmDeleteId(null) }}
+                          onTouchStart={() => handleLongPress(m)}
+                          onTouchEnd={cancelLongPress}
+                          onTouchMove={cancelLongPress}>
 
                           <div style={{ maxWidth: '72%' }}>
 
-                            {/* Action buttons for own messages */}
+                            {/* Desktop: action buttons for own messages (hidden on mobile via CSS) */}
                             {isMine && isHovered && !isEditing && (
-                              <div style={{
+                              <div className="msg-desktop-actions" style={{
                                 display: 'flex', alignItems: 'center', gap: 4,
                                 justifyContent: 'flex-end', marginBottom: 4,
                               }}>
@@ -568,9 +629,9 @@ export default function Mensagens() {
                               </div>
                             )}
 
-                            {/* Message bubble or edit input */}
+                            {/* Message bubble or edit input (desktop inline edit) */}
                             {isEditing ? (
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                              <div className="msg-desktop-actions" style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                                 <textarea
                                   ref={editInputRef}
                                   value={editDraft}
@@ -661,30 +722,162 @@ export default function Mensagens() {
 
       {showNova && <NovaConversa onSelect={selectNewConversation} onClose={() => setShowNova(false)} />}
 
+      {/* ── Mobile message actions overlay ── */}
+      {actionMsg && (
+        <div className="msg-action-overlay" onClick={closeActionOverlay} style={{
+          position: 'fixed', inset: 0, zIndex: 9999,
+          background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          animation: 'msg-overlay-in 0.2s ease',
+        }}>
+          {!showDeletePopup && !showEditPopup && (
+            <div onClick={e => e.stopPropagation()} style={{
+              display: 'flex', flexDirection: 'column', gap: 0, width: 'calc(100% - 48px)', maxWidth: 320,
+              background: 'var(--c-card)', border: `1px solid ${C.glassBorder}`,
+              borderRadius: 16, overflow: 'hidden',
+              boxShadow: '0 24px 60px rgba(0,0,0,0.4)',
+              animation: 'msg-popup-in 0.25s cubic-bezier(0.16,1,0.3,1)',
+            }}>
+              <div style={{ padding: '16px 16px 12px', borderBottom: `1px solid ${C.border}` }}>
+                <div style={{
+                  background: C.blue, color: '#fff',
+                  borderRadius: 12, padding: '9px 13px',
+                  fontSize: 14, lineHeight: 1.5, wordBreak: 'break-word',
+                  maxHeight: 120, overflow: 'hidden',
+                }}>
+                  {actionMsg.content}
+                </div>
+              </div>
+              {[
+                { icon: <Copy size={18} />, label: 'Copiar', color: C.text, action: handleActionCopy },
+                { icon: <Pencil size={18} />, label: 'Editar', color: C.blue, action: handleActionEdit },
+                { icon: <Trash2 size={18} />, label: 'Eliminar', color: '#ef4444', action: handleActionDelete },
+              ].map((a, i) => (
+                <button key={a.label} onClick={a.action} style={{
+                  display: 'flex', alignItems: 'center', gap: 14,
+                  padding: '14px 20px', background: 'transparent', border: 'none',
+                  borderTop: i > 0 ? `1px solid ${C.border}` : 'none',
+                  color: a.color, fontSize: 15, fontWeight: 600,
+                  cursor: 'pointer', fontFamily: 'inherit', width: '100%',
+                  transition: 'background 0.12s',
+                }}>
+                  {a.icon} {a.label}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Delete confirmation popup */}
+          {showDeletePopup && (
+            <div onClick={e => e.stopPropagation()} style={{
+              width: 'calc(100% - 48px)', maxWidth: 300,
+              background: 'var(--c-card)', border: `1px solid ${C.glassBorder}`,
+              borderRadius: 16, overflow: 'hidden',
+              boxShadow: '0 24px 60px rgba(0,0,0,0.4)',
+              animation: 'msg-popup-in 0.25s cubic-bezier(0.16,1,0.3,1)',
+              textAlign: 'center', padding: '24px 20px 16px',
+            }}>
+              <Trash2 size={28} color="#ef4444" style={{ marginBottom: 12 }} />
+              <p style={{ color: C.text, fontSize: 16, fontWeight: 700, margin: '0 0 6px' }}>Eliminar mensagem?</p>
+              <p style={{ color: C.muted, fontSize: 13, margin: '0 0 20px', lineHeight: 1.5 }}>Esta ação não pode ser revertida.</p>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button onClick={closeActionOverlay} style={{
+                  flex: 1, background: 'var(--c-bg)', border: `1px solid ${C.border}`,
+                  borderRadius: 10, padding: '11px 0', color: C.muted, fontSize: 14, fontWeight: 600,
+                  cursor: 'pointer', fontFamily: 'inherit',
+                }}>Cancelar</button>
+                <button onClick={confirmActionDelete} style={{
+                  flex: 1, background: '#ef4444', border: 'none',
+                  borderRadius: 10, padding: '11px 0', color: '#fff', fontSize: 14, fontWeight: 700,
+                  cursor: 'pointer', fontFamily: 'inherit',
+                }}>Eliminar</button>
+              </div>
+            </div>
+          )}
+
+          {/* Edit popup */}
+          {showEditPopup && (
+            <div onClick={e => e.stopPropagation()} style={{
+              width: 'calc(100% - 48px)', maxWidth: 340,
+              background: 'var(--c-card)', border: `1px solid ${C.glassBorder}`,
+              borderRadius: 16, overflow: 'hidden',
+              boxShadow: '0 24px 60px rgba(0,0,0,0.4)',
+              animation: 'msg-popup-in 0.25s cubic-bezier(0.16,1,0.3,1)',
+              padding: '20px',
+            }}>
+              <p style={{ color: C.text, fontSize: 16, fontWeight: 700, margin: '0 0 14px' }}>Editar mensagem</p>
+              <textarea
+                autoFocus
+                value={editDraft}
+                onChange={e => setEditDraft(e.target.value)}
+                rows={Math.min((editDraft || '').split('\n').length + 1, 6)}
+                style={{
+                  width: '100%', boxSizing: 'border-box',
+                  background: 'var(--c-bg)', border: `1.5px solid ${C.blue}`,
+                  borderRadius: 10, color: C.text, fontSize: 14,
+                  padding: '10px 13px', outline: 'none', fontFamily: 'inherit',
+                  resize: 'none',
+                }}
+              />
+              <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                <button onClick={closeActionOverlay} style={{
+                  flex: 1, background: 'var(--c-bg)', border: `1px solid ${C.border}`,
+                  borderRadius: 10, padding: '11px 0', color: C.muted, fontSize: 14, fontWeight: 600,
+                  cursor: 'pointer', fontFamily: 'inherit',
+                }}>Cancelar</button>
+                <button onClick={confirmActionEdit} disabled={!editDraft?.trim()} style={{
+                  flex: 1, background: editDraft?.trim() ? C.blue : 'var(--c-border)', border: 'none',
+                  borderRadius: 10, padding: '11px 0', color: '#fff', fontSize: 14, fontWeight: 700,
+                  cursor: editDraft?.trim() ? 'pointer' : 'default', fontFamily: 'inherit',
+                }}>Guardar</button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       <style>{`
-        @media (max-width: 640px) {
+        @keyframes msg-overlay-in { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes msg-popup-in { from { opacity: 0; transform: scale(0.92) translateY(8px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        @media (max-width: 600px) {
           /* List: full width, hidden when in thread view */
-          .msg-list             { display: flex !important; width: 100% !important; }
+          .msg-list             { display: flex !important; width: 100% !important; border-radius: 14px !important; margin: 0 8px !important; width: calc(100% - 16px) !important; }
           .msg-list.mob-hidden  { display: none !important; }
-          /* Thread: hidden by default, shown when active */
+          /* Thread: hidden by default, shown when active — full screen */
           .msg-thread           { display: none !important; }
-          .msg-thread.active    { display: flex !important; }
+          .msg-thread.active    { display: flex !important; border-radius: 14px !important; position: fixed !important; left: 8px !important; right: 8px !important; top: 8px !important; bottom: 70px !important; z-index: 100 !important; background: var(--c-card) !important; border: 1px solid var(--c-border) !important; }
           /* Compose button — keep natural size (34px icon btn) */
           .msg-compose-btn { flex-shrink: 0 !important; }
-          /* Message input area — bigger touch target */
-          .msg-input-area { padding: 10px 12px 16px !important; }
+          /* Message input area — fixed at bottom of thread, above bottom nav */
+          .msg-input-area { padding: 8px 12px calc(env(safe-area-inset-bottom, 0px) + 10px) !important; background: var(--c-card) !important; }
+          /* 16px font-size prevents iOS zoom on input focus */
+          .msg-input-area input,
+          .msg-input-area textarea,
+          .msg-action-overlay textarea,
+          .msg-action-overlay input { font-size: 16px !important; }
           /* Thread header — reduce padding */
           .msg-thread-hd { padding: 12px 14px !important; }
           /* Back button in thread */
           .msg-back-btn { display: flex !important; }
-          /* Height: use more of the viewport on mobile */
-          .msg-outer-wrap { height: calc(100dvh - 160px) !important; min-height: 300px !important; }
+          /* Height: full viewport minus bottom nav on mobile */
+          .msg-outer-wrap { height: calc(100dvh - 62px) !important; min-height: 300px !important; padding: 0 !important; gap: 0 !important; }
+          /* Page header: hide when in thread */
+          .msg-page-header.mob-hidden { display: none !important; }
+          .msg-page-header { margin-bottom: 8px !important; padding: 0 8px !important; }
+          /* Inner wrapper: remove padding/margin on mobile */
+          .msg-inner { padding: 0 !important; padding-top: 12px !important; }
+          /* Hide desktop hover actions on mobile */
+          .msg-desktop-actions { display: none !important; }
+          /* Conversation list items: bigger touch targets */
+          .msg-conv-item { padding: 12px 14px !important; }
         }
-        @media (min-width: 641px) {
+        @media (min-width: 601px) {
           .msg-list         { display: flex !important; }
           .msg-thread       { display: flex !important; }
           .msg-back         { display: none !important; }
           .msg-back-btn     { display: none !important; }
+          /* Hide mobile overlay trigger on desktop */
+          .msg-action-overlay { display: none !important; }
         }
       `}</style>
     </div>
