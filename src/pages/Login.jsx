@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { claimAnonymousProjects } from '../lib/claimAnonymousProjects'
 import { Mail, Check } from 'lucide-react'
 import AuthSidePanel from '../components/AuthSidePanel'
 import { useTheme } from '../context/ThemeContext'
@@ -103,6 +104,8 @@ export default function Login() {
     setLoading(false)
 
     if (!err) {
+      const { data: { user: loggedUser } } = await supabase.auth.getUser()
+      if (loggedUser) claimAnonymousProjects(loggedUser.id)
       navigate('/dashboard')
       return
     }

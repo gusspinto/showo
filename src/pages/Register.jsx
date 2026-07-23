@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { claimAnonymousProjects } from '../lib/claimAnonymousProjects'
 import { GraduationCap, BookOpen, Search, Building2, ArrowLeft } from 'lucide-react'
 import AuthSidePanel from '../components/AuthSidePanel'
 import { useTheme } from '../context/ThemeContext'
@@ -229,19 +230,16 @@ export default function Register() {
       await refreshProfile()
     }
 
-    // Claim an anonymously-created project (made via the homepage widget, no account yet)
-    if (claimSlug) {
-      const { data: { user: newUser } } = await supabase.auth.getUser()
-      if (newUser) {
-        await supabase.from('projects')
-          .update({ user_id: newUser.id })
-          .eq('slug', claimSlug)
-          .is('user_id', null)
-      }
+    // Claim all anonymously-created projects from this browser (edit_token_* in localStorage)
+    const { data: { user: newUser } } = await supabase.auth.getUser()
+    let claimedSlugs = []
+    if (newUser) {
+      claimedSlugs = await claimAnonymousProjects(newUser.id)
     }
 
     setLoading(false)
-    navigate('/dashboard', claimSlug ? { state: { claimedSlug: claimSlug } } : undefined)
+    const primaryClaimed = claimSlug || claimedSlugs[0]
+    navigate('/dashboard', primaryClaimed ? { state: { claimedSlug: primaryClaimed } } : undefined)
   }
 
   const selectedRole = ROLES.find(r => r.id === role)

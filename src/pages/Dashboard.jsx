@@ -160,96 +160,102 @@ function ProjectRow({ project, onView, onEdit, onDelete, onCopy, copied }) {
         ...C.glassStyle,
         background: hovered ? C.glassHover : C.glass,
         border: `1px solid ${hovered ? C.glassBorderBright : C.glassBorder}`,
-        borderRadius: 12, padding: '14px 18px',
-        display: 'flex', alignItems: 'center', gap: 14,
+        borderRadius: 14, padding: 0,
+        display: 'flex', alignItems: 'stretch',
         transition: 'background 0.15s, border-color 0.15s',
         cursor: 'default',
         boxShadow: 'none',
+        overflow: 'hidden',
       }}
       className="dash-project-row"
     >
-      {/* Score ring — SVG stroke (matches Explore style) */}
-      <div className="dash-proj-score" onClick={onView} style={{ position: 'relative', width: 42, height: 42, flexShrink: 0, cursor: 'pointer', filter: `drop-shadow(0 0 5px ${scoreColor}80)` }}>
-        <svg width={42} height={42} overflow="visible" style={{ transform: 'rotate(-90deg)', display: 'block' }}>
-          <circle cx={21} cy={21} r={17} fill="none" stroke="var(--c-border)" strokeWidth={3.5} />
-          <circle cx={21} cy={21} r={17} fill="none" stroke={scoreColor} strokeWidth={3.5}
-            strokeDasharray={`${((project.score ?? 0) / 100) * 2 * Math.PI * 17} ${2 * Math.PI * 17}`}
-            strokeLinecap="round"
-          />
-        </svg>
-        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, color: scoreColor }}>
-          {project.score ?? '—'}
-        </div>
-      </div>
-
-      {/* Info */}
-      <div className="dash-project-info" style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 2 }}>
-          <span
-            onClick={onView}
-            style={{ color: C.text, fontSize: 14, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: 'pointer' }}
-          >
-            {project.name}
-          </span>
-          {project.area && (
-            <span style={{ color: C.subtle, fontSize: 11, fontWeight: 600, flexShrink: 0 }}>
-              · {project.area}
+      {/* Main content */}
+      <div className="dash-proj-body" style={{ flex: 1, minWidth: 0, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
+        {/* Info */}
+        <div className="dash-project-info" style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 2 }}>
+            <span
+              onClick={onView}
+              style={{ color: C.text, fontSize: 14, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: 'pointer' }}
+            >
+              {project.name}
             </span>
-          )}
-        </div>
-        {project.ai_tagline ? (
-          <p style={{ color: C.muted, fontSize: 12, margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.4 }}>
+            {project.area && (
+              <span className="dash-proj-area-tag" style={{ color: C.subtle, fontSize: 10, fontWeight: 600, flexShrink: 0, background: 'var(--c-bg-alt)', border: `1px solid ${C.glassBorder}`, borderRadius: 5, padding: '1px 6px' }}>
+                {project.area}
+              </span>
+            )}
+          </div>
+          <p className="dash-proj-tagline" style={{ color: C.muted, fontSize: 12, margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.4, display: project.ai_tagline ? undefined : 'none' }}>
             {project.ai_tagline}
           </p>
-        ) : null}
-        <span style={{ color: C.subtle, fontSize: 11 }}>{date}</span>
-      </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 2 }}>
+            <span style={{ color: C.subtle, fontSize: 11 }}>{date}</span>
+            {project.views > 0 && <span style={{ color: C.subtle, fontSize: 11, display: 'flex', alignItems: 'center', gap: 3 }}><Eye size={10} /> {project.views}</span>}
+            {project.collaborator_count > 0 && <span style={{ color: C.subtle, fontSize: 11, display: 'flex', alignItems: 'center', gap: 3 }}><Users size={10} /> {project.collaborator_count}</span>}
+          </div>
+        </div>
 
-      {/* Actions — ghost icons, fade in on row hover */}
-      <div className="dash-project-actions">
-        {confirmDelete ? (
-          <>
-            <span style={{ fontSize: 12, color: C.muted, alignSelf: 'center', whiteSpace: 'nowrap' }}>Apagar?</span>
-            <button
-              onClick={() => { onDelete(project.id); setConfirmDelete(false) }}
-              style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 7, padding: '7px 13px', color: '#ef4444', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
-            >Sim</button>
-            <button
-              onClick={() => setConfirmDelete(false)}
-              style={{ background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.3)', borderRadius: 7, padding: '7px 13px', color: C.blue, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
-            >Não</button>
-          </>
-        ) : (
-          <>
-            <button onClick={onView} title="Ver projeto" className="dash-ghost-btn"><ExternalLink size={15} /></button>
-            <button onClick={onEdit} title="Editar" className="dash-ghost-btn"><Pencil size={15} /></button>
-            <button onClick={onCopy} title={copied ? 'Link copiado!' : 'Copiar link'} className="dash-ghost-btn" style={copied ? { color: '#22c55e', opacity: 1 } : undefined}>{copied ? <Check size={15} /> : <Link size={15} />}</button>
-            <button onClick={() => setConfirmDelete(true)} title="Apagar" className="dash-ghost-btn dash-ghost-btn-danger"><Trash2 size={15} /></button>
-          </>
-        )}
-      </div>
+        {/* Score ring */}
+        <div className="dash-proj-score" onClick={onView} style={{ position: 'relative', width: 42, height: 42, flexShrink: 0, cursor: 'pointer', filter: `drop-shadow(0 0 5px ${scoreColor}80)` }}>
+          <svg width={42} height={42} overflow="visible" style={{ transform: 'rotate(-90deg)', display: 'block' }}>
+            <circle cx={21} cy={21} r={17} fill="none" stroke="var(--c-border)" strokeWidth={3.5} />
+            <circle cx={21} cy={21} r={17} fill="none" stroke={scoreColor} strokeWidth={3.5}
+              strokeDasharray={`${((project.score ?? 0) / 100) * 2 * Math.PI * 17} ${2 * Math.PI * 17}`}
+              strokeLinecap="round"
+            />
+          </svg>
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, color: scoreColor }}>
+            {project.score ?? '—'}
+          </div>
+        </div>
 
-      {/* Actions — mobile (always visible, smaller set) */}
-      <div className="dash-proj-actions-mobile">
-        {confirmDelete ? (
-          <>
-            <span style={{ fontSize: 11, color: C.muted, whiteSpace: 'nowrap' }}>Apagar?</span>
-            <button
-              onClick={(e) => { e.stopPropagation(); onDelete(project.id); setConfirmDelete(false) }}
-              style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 7, padding: '7px 12px', color: '#ef4444', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
-            >Sim</button>
-            <button
-              onClick={(e) => { e.stopPropagation(); setConfirmDelete(false) }}
-              style={{ background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.3)', borderRadius: 7, padding: '7px 12px', color: C.blue, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
-            >Não</button>
-          </>
-        ) : (
-          <>
-            <button onClick={(e) => { e.stopPropagation(); onEdit() }} title="Editar" className="dash-ghost-btn" style={{ opacity: 0.6 }}><Pencil size={14} /></button>
-            <button onClick={(e) => { e.stopPropagation(); setConfirmDelete(true) }} title="Apagar" className="dash-ghost-btn dash-ghost-btn-danger" style={{ opacity: 0.6 }}><Trash2 size={14} /></button>
-          </>
-        )}
-      </div>
+        {/* Actions — ghost icons, fade in on row hover */}
+        <div className="dash-project-actions">
+          {confirmDelete ? (
+            <>
+              <span style={{ fontSize: 12, color: C.muted, alignSelf: 'center', whiteSpace: 'nowrap' }}>Apagar?</span>
+              <button
+                onClick={() => { onDelete(project.id); setConfirmDelete(false) }}
+                style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 7, padding: '7px 13px', color: '#ef4444', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+              >Sim</button>
+              <button
+                onClick={() => setConfirmDelete(false)}
+                style={{ background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.3)', borderRadius: 7, padding: '7px 13px', color: C.blue, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+              >Não</button>
+            </>
+          ) : (
+            <>
+              <button onClick={onView} title="Ver projeto" className="dash-ghost-btn"><ExternalLink size={15} /></button>
+              <button onClick={onEdit} title="Editar" className="dash-ghost-btn"><Pencil size={15} /></button>
+              <button onClick={onCopy} title={copied ? 'Link copiado!' : 'Copiar link'} className="dash-ghost-btn" style={copied ? { color: '#22c55e', opacity: 1 } : undefined}>{copied ? <Check size={15} /> : <Link size={15} />}</button>
+              <button onClick={() => setConfirmDelete(true)} title="Apagar" className="dash-ghost-btn dash-ghost-btn-danger"><Trash2 size={15} /></button>
+            </>
+          )}
+        </div>
+
+        {/* Actions — mobile (always visible, smaller set) */}
+        <div className="dash-proj-actions-mobile">
+          {confirmDelete ? (
+            <>
+              <span style={{ fontSize: 11, color: C.muted, whiteSpace: 'nowrap' }}>Apagar?</span>
+              <button
+                onClick={(e) => { e.stopPropagation(); onDelete(project.id); setConfirmDelete(false) }}
+                style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 7, padding: '7px 12px', color: '#ef4444', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+              >Sim</button>
+              <button
+                onClick={(e) => { e.stopPropagation(); setConfirmDelete(false) }}
+                style={{ background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.3)', borderRadius: 7, padding: '7px 12px', color: C.blue, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+              >Não</button>
+            </>
+          ) : (
+            <>
+              <button onClick={(e) => { e.stopPropagation(); onEdit() }} title="Editar" className="dash-ghost-btn" style={{ opacity: 0.6 }}><Pencil size={14} /></button>
+              <button onClick={(e) => { e.stopPropagation(); setConfirmDelete(true) }} title="Apagar" className="dash-ghost-btn dash-ghost-btn-danger" style={{ opacity: 0.6 }}><Trash2 size={14} /></button>
+            </>
+          )}
+        </div>
+      </div>{/* end main content */}
     </div>
   )
 }
@@ -700,11 +706,10 @@ const POTENTIAL_DIMS = [
   { key: 'consistency', label: 'Consistência', max: 15 },
 ]
 
-function InsightsBlock({ projects, profile }) {
+function InsightsBlock({ projects, profile, rankingPos, rankingPct, username, copiedSlug, setCopiedSlug, navigate }) {
   const withScore = projects.filter(p => p.score != null)
   if (!withScore.length) return null
   const best = Math.max(...withScore.map(p => p.score))
-  const bestProj = withScore.find(p => p.score === best)
   const avg = Math.round(withScore.reduce((s, p) => s + p.score, 0) / withScore.length)
   const totalViews = projects.reduce((s, p) => s + (p.views ?? 0), 0)
   const sorted = [...withScore].sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
@@ -726,68 +731,103 @@ function InsightsBlock({ projects, profile }) {
       : null
 
   return (
-    <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 14, padding: '18px 20px', animation: 'dash-section-in 0.4s ease both' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-        <TrendingUp size={13} color={C.blue} />
-        <span style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Resumo</span>
-        <ScoreInfoTooltip />
-      </div>
-
-      {/* Top row: ring + 3 stats side by side */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 18, marginBottom: 16 }}>
-        {/* Potential ring — compact */}
-        <div style={{ position: 'relative', width: ringSize, height: ringSize, flexShrink: 0 }}>
-          <div style={{ position: 'absolute', inset: '20%', borderRadius: '50%', background: 'rgba(27,120,247,0.06)', filter: 'blur(14px)', pointerEvents: 'none' }} />
-          <svg width={ringSize} height={ringSize} style={{ transform: 'rotate(-90deg)', position: 'relative', zIndex: 1 }}>
-            <circle cx={ringSize / 2} cy={ringSize / 2} r={ringRadius} fill="none" stroke="var(--c-border)" strokeWidth={ringStroke} />
-            <circle
-              cx={ringSize / 2} cy={ringSize / 2} r={ringRadius}
-              fill="none" stroke="#1b78f7" strokeWidth={ringStroke} strokeLinecap="round"
-              strokeDasharray={ringCirc} strokeDashoffset={ringOffset}
-              style={{ transition: 'stroke-dashoffset 1.2s cubic-bezier(0.22,1,0.36,1)', filter: 'drop-shadow(0 0 5px rgba(27,120,247,0.25))' }}
-            />
-          </svg>
-          <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>
-            <div style={{ ...headingNum, fontSize: 30, color: '#1b78f7' }}>{potential}</div>
-            <div style={{ fontSize: 8, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.12em', marginTop: 4 }}>Potencial</div>
-          </div>
+    <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 14, overflow: 'hidden', animation: 'dash-section-in 0.4s ease both' }}>
+      <div style={{ padding: '18px 20px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+          <TrendingUp size={13} color={C.blue} />
+          <span style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Resumo</span>
+          <ScoreInfoTooltip />
         </div>
 
-        {/* Stats column */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-            <div style={{ ...headingNum, fontSize: 24, color: getScoreColor(best) }}>{best}</div>
-            <div style={{ fontSize: 10, color: C.muted, fontWeight: 600 }}>Melhor</div>
+        {/* Top row: ring + stats side by side */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 18, marginBottom: 16 }}>
+          <div style={{ position: 'relative', width: ringSize, height: ringSize, flexShrink: 0 }}>
+            <div style={{ position: 'absolute', inset: '20%', borderRadius: '50%', background: 'rgba(27,120,247,0.06)', filter: 'blur(14px)', pointerEvents: 'none' }} />
+            <svg width={ringSize} height={ringSize} style={{ transform: 'rotate(-90deg)', position: 'relative', zIndex: 1 }}>
+              <circle cx={ringSize / 2} cy={ringSize / 2} r={ringRadius} fill="none" stroke="var(--c-border)" strokeWidth={ringStroke} />
+              <circle
+                cx={ringSize / 2} cy={ringSize / 2} r={ringRadius}
+                fill="none" stroke="#1b78f7" strokeWidth={ringStroke} strokeLinecap="round"
+                strokeDasharray={ringCirc} strokeDashoffset={ringOffset}
+                style={{ transition: 'stroke-dashoffset 1.2s cubic-bezier(0.22,1,0.36,1)', filter: 'drop-shadow(0 0 5px rgba(27,120,247,0.25))' }}
+              />
+            </svg>
+            <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>
+              <div style={{ ...headingNum, fontSize: 30, color: '#1b78f7' }}>{potential}</div>
+              <div style={{ fontSize: 8, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.12em', marginTop: 4 }}>Potencial</div>
+            </div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-            <div style={{ ...headingNum, fontSize: 24, color: getScoreColor(avg) }}>{avg}</div>
-            <div style={{ fontSize: 10, color: C.muted, fontWeight: 600 }}>Média · {withScore.length}p</div>
-          </div>
-          {thirdStat && (
+
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-              <div style={{ ...headingNum, fontSize: 24, color: thirdStat.color }}>{thirdStat.value}</div>
-              <div style={{ fontSize: 10, color: C.muted, fontWeight: 600 }}>{thirdStat.label}</div>
+              <div style={{ ...headingNum, fontSize: 24, color: getScoreColor(best) }}>{best}</div>
+              <div style={{ fontSize: 10, color: C.muted, fontWeight: 600 }}>Melhor</div>
             </div>
-          )}
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+              <div style={{ ...headingNum, fontSize: 24, color: getScoreColor(avg) }}>{avg}</div>
+              <div style={{ fontSize: 10, color: C.muted, fontWeight: 600 }}>Média · {withScore.length}p</div>
+            </div>
+            {thirdStat && (
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+                <div style={{ ...headingNum, fontSize: 24, color: thirdStat.color }}>{thirdStat.value}</div>
+                <div style={{ fontSize: 10, color: C.muted, fontWeight: 600 }}>{thirdStat.label}</div>
+              </div>
+            )}
+            {rankingPct != null && (
+              <div onClick={() => navigate('/ranking')} style={{ display: 'flex', alignItems: 'baseline', gap: 8, cursor: 'pointer' }}>
+                <div style={{ ...headingNum, fontSize: 24, color: C.blue }}>#{rankingPos}</div>
+                <div style={{ fontSize: 10, color: C.muted, fontWeight: 600 }}>Top {rankingPct}%</div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Dimension breakdown */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+          {POTENTIAL_DIMS.map(d => {
+            const val = breakdown[d.key] ?? 0
+            const pct = (val / d.max) * 100
+            return (
+              <div key={d.key} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 10, color: C.muted, width: 78, flexShrink: 0, fontWeight: 600 }}>{d.label}</span>
+                <div style={{ flex: 1, height: 3, background: C.border, borderRadius: 999, overflow: 'hidden' }}>
+                  <div style={{ width: `${pct}%`, height: '100%', background: '#1b78f7', borderRadius: 999, transition: 'width 0.8s cubic-bezier(0.22,1,0.36,1)' }} />
+                </div>
+                <span style={{ fontSize: 9, fontWeight: 700, color: C.subtle, width: 28, textAlign: 'right', flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}>{val}/{d.max}</span>
+              </div>
+            )
+          })}
         </div>
       </div>
 
-      {/* Dimension breakdown — compact bars */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-        {POTENTIAL_DIMS.map(d => {
-          const val = breakdown[d.key] ?? 0
-          const pct = (val / d.max) * 100
-          return (
-            <div key={d.key} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: 10, color: C.muted, width: 78, flexShrink: 0, fontWeight: 600 }}>{d.label}</span>
-              <div style={{ flex: 1, height: 3, background: C.border, borderRadius: 999, overflow: 'hidden' }}>
-                <div style={{ width: `${pct}%`, height: '100%', background: '#1b78f7', borderRadius: 999, transition: 'width 0.8s cubic-bezier(0.22,1,0.36,1)' }} />
-              </div>
-              <span style={{ fontSize: 9, fontWeight: 700, color: C.subtle, width: 28, textAlign: 'right', flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}>{val}/{d.max}</span>
-            </div>
-          )
-        })}
-      </div>
+      {/* Share strip — integrated */}
+      {username && (
+        <div style={{ padding: '10px 18px', borderTop: `1px solid ${C.glassBorder}`, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Link size={12} color={C.subtle} style={{ flexShrink: 0 }} />
+          <span style={{ fontSize: 11, color: C.muted, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            showo.pt/u/{username}
+          </span>
+          <button
+            onClick={() => {
+              const url = `${window.location.origin}/u/${username}`
+              navigator.clipboard.writeText(url).then(() => {
+                setCopiedSlug('__profile__')
+                setTimeout(() => setCopiedSlug(null), 1500)
+              })
+            }}
+            style={{
+              background: copiedSlug === '__profile__' ? 'rgba(34,197,94,0.1)' : `${C.blue}12`,
+              border: `1px solid ${copiedSlug === '__profile__' ? 'rgba(34,197,94,0.3)' : `${C.blue}25`}`,
+              borderRadius: 6, padding: '3px 10px',
+              color: copiedSlug === '__profile__' ? '#22c55e' : C.blue,
+              fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+              transition: 'all 0.15s', display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0,
+            }}
+          >
+            {copiedSlug === '__profile__' ? <><Check size={11} /> Copiado</> : <><Copy size={11} /> Copiar</>}
+          </button>
+        </div>
+      )}
     </div>
   )
 }
@@ -1268,6 +1308,8 @@ export default function Dashboard() {
   // Invite modal target
   const [inviteTarget, setInviteTarget] = useState(null) // { studentId, studentName }
   const [resumoOpen, setResumoOpen] = useState(false)
+  const [rankingPct, setRankingPct] = useState(null)
+  const [rankingPos, setRankingPos] = useState(null)
 
   // Admins land on the admin panel, not the aluno/professor/recrutador
   // dashboard — is_admin is an elevated flag on top of role, not a role
@@ -1518,6 +1560,32 @@ export default function Dashboard() {
   }
 
   useEffect(() => {
+    if (!user || loadingProjects) return
+    if (profile?.role === 'professor' || profile?.role === 'recrutador' || profile?.role === 'empresa') return
+    const scored = projects.filter(p => p.score != null)
+    if (!scored.length) return
+    const best = Math.max(...scored.map(p => p.score))
+    if (!best) return
+    ;(async () => {
+      const { data } = await supabase
+        .from('projects')
+        .select('user_id, score')
+        .not('score', 'is', null)
+        .gt('score', 0)
+      if (!data?.length) return
+      const maxByUser = {}
+      data.forEach(p => {
+        if (!maxByUser[p.user_id] || p.score > maxByUser[p.user_id]) maxByUser[p.user_id] = p.score
+      })
+      const total = Object.keys(maxByUser).length
+      if (total < 2) return
+      const higherCount = Object.values(maxByUser).filter(s => s > best).length
+      setRankingPos(higherCount + 1)
+      setRankingPct(Math.max(1, Math.round(((higherCount + 1) / total) * 100)))
+    })()
+  }, [user, projects, loadingProjects, profile?.role])
+
+  useEffect(() => {
     if (!user || profile?.role !== 'professor') return
     async function loadTurmas() {
       const { data: cls } = await supabase
@@ -1751,6 +1819,13 @@ export default function Dashboard() {
   const isTeacher = profile?.role === 'professor'
   const isRecruiter = profile?.role === 'recrutador' || profile?.role === 'empresa'
 
+  const { potential: potentialScore } = (() => {
+    if (isTeacher || isRecruiter) return { potential: null }
+    const withScore = projects.filter(p => p.score != null)
+    if (!withScore.length) return { potential: null }
+    return calculatePotential({ projects, profile })
+  })()
+
   const greeting = (() => {
     const h = new Date().getHours()
     if (h >= 5  && h < 12) return `Bom dia, ${firstName}`
@@ -1866,6 +1941,8 @@ export default function Dashboard() {
         /* Chart hidden on mobile */
         .dash-chart-wrap { }
 
+        .dash-proj-area-tag { }
+
         /* ── Turma + Projetos side by side (aluno dashboard) ── */
         .dash-turma-projects-grid {
           display: grid;
@@ -1876,6 +1953,7 @@ export default function Dashboard() {
         .dash-turma-col, .dash-projects-col { min-width: 0; display: flex; flex-direction: column; gap: 16px; }
         .dash-resumo-toggle { display: none; align-items: center; gap: 8px; background: var(--c-glass); border: 1px solid var(--c-glass-border); border-radius: 12px; padding: 14px 16px; cursor: pointer; transition: background 0.15s; }
         .dash-resumo-toggle:active { background: var(--c-glass-hover); }
+
         @media (max-width: 860px) {
           .dash-turma-projects-grid { grid-template-columns: 1fr; gap: 20px; }
         }
@@ -1902,8 +1980,8 @@ export default function Dashboard() {
           /* ── Chart ── */
           .dash-chart-wrap { display: none; }
 
-          /* ── Project card — whole card tappable ── */
-          .dash-project-row { cursor: pointer; padding: 13px 14px !important; }
+          /* ── Project card — compact on mobile, no cover ── */
+          .dash-project-row { cursor: pointer; }
           .dash-project-actions { display: none !important; }
           .dash-proj-actions-mobile {
             display: flex !important;
@@ -1911,6 +1989,9 @@ export default function Dashboard() {
             gap: 2px;
             flex-shrink: 0;
           }
+          .dash-proj-tagline { display: none !important; }
+          .dash-proj-area-tag { display: none !important; }
+          .dash-proj-body { padding: 10px 14px !important; }
 
           /* ── Stat pills — slightly bigger touch feel ── */
           .dash-stat-pill {
@@ -2050,72 +2131,58 @@ export default function Dashboard() {
       <div className="dash-content page-content">
 
         {/* ── Header ── */}
-        <div style={{ marginBottom: 36, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <h1 className="dash-greeting" style={{ color: C.text, fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 400, margin: '0 0 6px', letterSpacing: '-1px', lineHeight: 1.15, fontFamily: 'var(--font-heading)' }}>
-              {greeting}
-            </h1>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
-              {profile?.role && (
+        {!isTeacher ? (
+          /* ── Aluno header — compact ── */
+          <div style={{ marginBottom: 24, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <h1 className="dash-greeting" style={{ color: C.text, fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 400, margin: '0 0 6px', letterSpacing: '-1px', lineHeight: 1.15, fontFamily: 'var(--font-heading)' }}>
+                {greeting}
+              </h1>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                 <span style={{ fontSize: 11, fontWeight: 700, color: C.blue }}>
-                  {{ aluno: 'Aluno', professor: 'Professor', recrutador: 'Recrutador', empresa: 'Empresa' }[profile.role] ?? 'Membro'}
+                  {{ aluno: 'Aluno', professor: 'Professor', recrutador: 'Recrutador', empresa: 'Empresa' }[profile?.role] ?? 'Aluno'}
                 </span>
-              )}
-              <span style={{ color: C.subtle, fontSize: 12 }}>{profile?.role ? '· ' : ''}{user.email}</span>
-            </div>
-            {/* Inline stat pills — appear once data loads */}
-            {!loadingProjects && (isTeacher ? turmas.length > 0 : projects.length > 0 || totalViews > 0) && (
-              <div className="dash-score-section" style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                {!isTeacher && (
-                  <>
-                    <span className="dash-stat-pill">
-                      <Folder size={11} /> {projects.length} projeto{projects.length !== 1 ? 's' : ''}
-                    </span>
-                    {bestScore != null && (
-                      <span className="dash-stat-pill" style={{ color: getScoreColor(bestScore), borderColor: `${getScoreColor(bestScore)}30`, background: `${getScoreColor(bestScore)}0c` }}>
-                        <Trophy size={11} /> {bestScore}
-                      </span>
-                    )}
-                    {totalViews > 0 && (
-                      <span className="dash-stat-pill">
-                        <Eye size={11} /> {totalViews} visualizações
-                      </span>
-                    )}
-                  </>
-                )}
-                {isTeacher && (
-                  <>
-                    <span className="dash-stat-pill">
-                      <Users2 size={11} /> {turmas.length} turma{turmas.length !== 1 ? 's' : ''}
-                    </span>
-                    {totalMembers > 0 && (
-                      <span className="dash-stat-pill">
-                        <Users size={11} /> {totalMembers} aluno{totalMembers !== 1 ? 's' : ''}
-                      </span>
-                    )}
-                  </>
-                )}
+                <span style={{ color: C.subtle, fontSize: 12 }}>· {user.email}</span>
               </div>
+            </div>
+            {!loadingProjects && projects.length > 0 && (
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="dash-action-btn"
+                style={{ background: C.blue, border: 'none', color: '#fff', boxShadow: `0 2px 8px ${C.blue}33`, display: 'flex', alignItems: 'center', gap: 6 }}
+                onMouseEnter={e => e.currentTarget.style.opacity = '0.88'}
+                onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+              >
+                <Plus size={14} /> Novo projeto
+              </button>
             )}
           </div>
-          {profile?.username && (
-            <button
-              className="dash-hd-btn-profile"
-              onClick={() => {
-                const url = `${window.location.origin}/u/${profile.username}`
-                navigator.clipboard.writeText(url).then(() => {
-                  setCopiedSlug('__profile__')
-                  setTimeout(() => setCopiedSlug(null), 1500)
-                })
-              }}
-              style={{ background: 'transparent', border: `1px solid ${copiedSlug === '__profile__' ? 'rgba(34,197,94,0.4)' : C.border}`, borderRadius: 8, padding: '8px 14px', color: copiedSlug === '__profile__' ? '#22c55e' : C.muted, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'border-color 0.15s, color 0.15s', display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}
-              onMouseEnter={e => { if (copiedSlug !== '__profile__') { e.currentTarget.style.borderColor = C.borderBright; e.currentTarget.style.color = C.text } }}
-              onMouseLeave={e => { if (copiedSlug !== '__profile__') { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted } }}
-            >
-              {copiedSlug === '__profile__' ? <><Check size={13} /> Copiado!</> : <><Link size={13} /> Partilhar perfil</>}
-            </button>
-          )}
-        </div>
+        ) : (
+          /* ── Teacher header — keep existing ── */
+          <div style={{ marginBottom: 36, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <h1 className="dash-greeting" style={{ color: C.text, fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 400, margin: '0 0 6px', letterSpacing: '-1px', lineHeight: 1.15, fontFamily: 'var(--font-heading)' }}>
+                {greeting}
+              </h1>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: C.blue }}>Professor</span>
+                <span style={{ color: C.subtle, fontSize: 12 }}>· {user.email}</span>
+              </div>
+              {!loadingProjects && turmas.length > 0 && (
+                <div className="dash-score-section" style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  <span className="dash-stat-pill">
+                    <Users2 size={11} /> {turmas.length} turma{turmas.length !== 1 ? 's' : ''}
+                  </span>
+                  {totalMembers > 0 && (
+                    <span className="dash-stat-pill">
+                      <Users size={11} /> {totalMembers} aluno{totalMembers !== 1 ? 's' : ''}
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* ── Próximos passos (aluno only) ── */}
         {!isTeacher && !loadingProjects && (() => {
@@ -2741,7 +2808,7 @@ export default function Dashboard() {
                 <ChevronDown size={15} color={C.subtle} style={{ transform: resumoOpen ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s' }} />
               </div>
               <div className={`dash-resumo-body${resumoOpen ? '' : ' collapsed'}`}>
-                <InsightsBlock projects={projects} profile={profile} />
+                <InsightsBlock projects={projects} profile={profile} rankingPos={rankingPos} rankingPct={rankingPct} username={profile?.username} copiedSlug={copiedSlug} setCopiedSlug={setCopiedSlug} navigate={navigate} />
               </div>
 
               {!loadingStudentTurmas && (
@@ -2772,55 +2839,28 @@ export default function Dashboard() {
                     <div
                       onClick={() => setShowJoinModal(true)}
                       style={{
-                        ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`,
-                        borderRadius: 12, padding: '20px 18px',
+                        ...C.glassStyle, background: C.glass, border: `1px solid ${C.blue}20`,
+                        borderRadius: 10, padding: '12px 16px',
                         cursor: 'pointer', transition: 'border-color 0.15s, background 0.15s',
+                        display: 'flex', alignItems: 'center', gap: 12,
                       }}
                       onMouseEnter={e => { e.currentTarget.style.borderColor = C.blue + '55'; e.currentTarget.style.background = C.glassHover }}
-                      onMouseLeave={e => { e.currentTarget.style.borderColor = C.glassBorder; e.currentTarget.style.background = C.glass }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor = C.blue + '20'; e.currentTarget.style.background = C.glass }}
                     >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-                        <Users2 size={14} color={C.blue} />
-                        <span style={{ fontSize: 12, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>A tua turma</span>
+                      <div style={{ width: 36, height: 36, borderRadius: 9, flexShrink: 0, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Users2 size={16} color={C.blue} />
                       </div>
-
-                      {/* Steps */}
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
-                        {[
-                          { n: 1, text: 'Pede o código de 6 letras ao teu professor' },
-                          { n: 2, text: 'Insere-o aqui e junta-te à turma' },
-                        ].map(s => (
-                          <div key={s.n} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                            <div style={{ width: 20, height: 20, borderRadius: '50%', flexShrink: 0, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, color: C.blue }}>
-                              {s.n}
-                            </div>
-                            <span style={{ fontSize: 12, color: C.muted, lineHeight: 1.4 }}>{s.text}</span>
-                          </div>
-                        ))}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>Junta-te a uma turma</div>
+                        <div style={{ fontSize: 11, color: C.muted, marginTop: 1 }}>Insere o código de 6 letras do professor</div>
                       </div>
-
-                      {/* Code preview boxes */}
-                      <div style={{ display: 'flex', gap: 5, justifyContent: 'center', marginBottom: 16 }}>
-                        {'XXXXXX'.split('').map((ch, i) => (
-                          <div key={i} style={{
-                            width: 34, height: 40, borderRadius: 8,
-                            background: 'var(--c-bg-alt)', border: `1.5px dashed ${C.border}`,
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            fontSize: 16, fontWeight: 800, color: C.subtle,
-                            fontFamily: 'var(--font-heading)',
-                          }}>
-                            {ch}
-                          </div>
-                        ))}
-                      </div>
-
                       <div style={{
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                        background: '#1b78f7', borderRadius: 9, padding: '10px',
-                        color: '#fff', fontSize: 13, fontWeight: 700,
-                        boxShadow: '0 2px 8px rgba(27,120,247,0.2)',
+                        background: `${C.blue}15`, border: `1px solid ${C.blue}30`,
+                        borderRadius: 7, padding: '5px 12px',
+                        color: C.blue, fontSize: 12, fontWeight: 700, flexShrink: 0,
+                        display: 'flex', alignItems: 'center', gap: 4,
                       }}>
-                        Tenho um código <ArrowRight size={14} />
+                        Entrar <ArrowRight size={12} />
                       </div>
                     </div>
                   )}
