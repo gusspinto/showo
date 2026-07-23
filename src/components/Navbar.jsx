@@ -61,6 +61,7 @@ function getNotifIcon(type) {
     case 'STUDENT_JOINED':   return <UserPlus {...s} />
     case 'TASK_ASSIGNED':    return <ListChecks {...s} />
     case 'TASK_COMPLETED':   return <CheckCircle2 {...s} />
+    case 'PROJECT_RESUBMITTED': return <CheckCircle2 {...s} />
     case 'PROJECT_LIKE':        return <Heart {...s} />
     case 'PROJECT_COMMENT':     return <MessageSquare {...s} />
     case 'RECRUITER_INTEREST':  return <Star {...s} />
@@ -83,6 +84,7 @@ function getNotifColor(type) {
     case 'STUDENT_JOINED':
     case 'NEW_CANDIDATURA':
     case 'TASK_COMPLETED':
+    case 'PROJECT_RESUBMITTED':
       return '#1b78f7' // aluno
     case 'TEACHER_FEEDBACK':
     case 'TASK_ASSIGNED':

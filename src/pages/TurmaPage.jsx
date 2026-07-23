@@ -357,6 +357,8 @@ export default function TurmaPage() {
   const [tasks, setTasks] = useState([])
   const [myCompletedTaskIds, setMyCompletedTaskIds] = useState(new Set())
   const [taskCompletionCounts, setTaskCompletionCounts] = useState({}) // task_id -> count, teacher view
+  const [taskCompletions, setTaskCompletions] = useState({}) // task_id -> [{user_id, completed_at}], teacher view
+  const [expandedTaskId, setExpandedTaskId] = useState(null) // teacher: which task shows per-student detail
   const [showTaskModal, setShowTaskModal] = useState(false)
   const [editingTask, setEditingTask] = useState(null)
   const [deletingTask, setDeletingTask] = useState(null)
@@ -464,19 +466,24 @@ export default function TurmaPage() {
         .order('due_date', { ascending: true, nullsFirst: false })
         .order('created_at', { ascending: false })
       setTasks(taskRows || [])
-      if (!taskRows?.length) { setMyCompletedTaskIds(new Set()); setTaskCompletionCounts({}); return }
+      if (!taskRows?.length) { setMyCompletedTaskIds(new Set()); setTaskCompletionCounts({}); setTaskCompletions({}); return }
 
       const taskIds = taskRows.map(t => t.id)
       const { data: completions } = await supabase
         .from('class_task_completions')
-        .select('task_id, user_id')
+        .select('task_id, user_id, completed_at')
         .in('task_id', taskIds)
 
       setMyCompletedTaskIds(new Set((completions || []).filter(c => c.user_id === user.id).map(c => c.task_id)))
       if (isTeacher) {
         const counts = {}
-        ;(completions || []).forEach(c => { counts[c.task_id] = (counts[c.task_id] || 0) + 1 })
+        const byTask = {}
+        ;(completions || []).forEach(c => {
+          counts[c.task_id] = (counts[c.task_id] || 0) + 1
+          ;(byTask[c.task_id] = byTask[c.task_id] || []).push(c)
+        })
         setTaskCompletionCounts(counts)
+        setTaskCompletions(byTask)
       }
     }
     loadTasks()
@@ -656,7 +663,7 @@ export default function TurmaPage() {
   }
 
   function exportCSV() {
-    const statusLabel = s => s === 'ready_for_defense' ? 'Pronto para defesa' : s === 'needs_revision' ? 'Precisa de revisão' : '—'
+    const statusLabel = s => s === 'ready_for_defense' ? 'Pronto para defesa' : s === 'needs_revision' ? 'Precisa de revisão' : s === 'resubmitted' ? 'Correções enviadas' : '—'
     const rows = [['Aluno', 'Projeto', 'Nota (0-20)', 'Score', 'Completude (%)', 'Estado', 'Data', 'Link']]
     sortedProjects.forEach(p => {
       const date = p.created_at ? new Date(p.created_at).toLocaleDateString('pt-PT') : '—'
@@ -1049,12 +1056,20 @@ export default function TurmaPage() {
               ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 10 }}>
                   {students.map(m => (
-                    <div key={m.user_id} style={{
-                      ...C.glassStyle,
-                      background: C.glass, border: `1px solid ${C.glassBorder}`,
-                      borderRadius: 10, padding: '14px 16px',
-                      display: 'flex', alignItems: 'center', gap: 12,
-                    }}>
+                    <div
+                      key={m.user_id}
+                      onClick={isTeacher ? () => navigate(`/turma/${turma.code}/aluno/${m.user_id}`) : undefined}
+                      style={{
+                        ...C.glassStyle,
+                        background: C.glass, border: `1px solid ${C.glassBorder}`,
+                        borderRadius: 10, padding: '14px 16px',
+                        display: 'flex', alignItems: 'center', gap: 12,
+                        cursor: isTeacher ? 'pointer' : 'default',
+                        transition: 'background 0.12s, border-color 0.12s',
+                      }}
+                      onMouseEnter={isTeacher ? e => { e.currentTarget.style.background = C.glassHover; e.currentTarget.style.borderColor = C.glassBorderBright } : undefined}
+                      onMouseLeave={isTeacher ? e => { e.currentTarget.style.background = C.glass; e.currentTarget.style.borderColor = C.glassBorder } : undefined}
+                    >
                       <Avatar avatarUrl={m.avatar_url} name={m.full_name} size={38} />
                       <div style={{ minWidth: 0, flex: 1 }}>
                         <div style={{ fontSize: 14, fontWeight: 600, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -1068,7 +1083,7 @@ export default function TurmaPage() {
                       </div>
                       {isTeacher && (
                         <button
-                          onClick={() => setRemovingMember({ user_id: m.user_id, full_name: m.full_name })}
+                          onClick={e => { e.stopPropagation(); setRemovingMember({ user_id: m.user_id, full_name: m.full_name }) }}
                           title="Remover da turma"
                           className="icon-btn-ghost"
                         >
@@ -1112,41 +1127,87 @@ export default function TurmaPage() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {tasks.map(t => {
                   const done = myCompletedTaskIds.has(t.id)
-                  const overdue = t.due_date && !done && new Date(t.due_date + 'T23:59:59') < new Date()
+                  const taskOverdue = t.due_date && new Date(t.due_date + 'T23:59:59') < new Date()
+                  const overdue = taskOverdue && !done
+                  const students = members.filter(m => m.role !== 'professor')
+                  const doneCount = taskCompletionCounts[t.id] || 0
+                  const expanded = expandedTaskId === t.id
+                  const completedBy = new Map((taskCompletions[t.id] || []).map(c => [c.user_id, c.completed_at]))
                   return (
-                    <div key={t.id} style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${overdue ? 'rgba(239,68,68,0.3)' : C.glassBorder}`, borderRadius: 10, padding: '12px 14px', display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-                      {!isTeacher && (
-                        <button onClick={() => toggleTaskCompletion(t.id)} style={{ background: 'none', border: 'none', padding: 2, cursor: 'pointer', marginTop: 1, flexShrink: 0 }}>
-                          {done ? <CheckCircle size={18} color={C.green} /> : <Circle size={18} color={C.subtle} />}
-                        </button>
-                      )}
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 14, fontWeight: 600, color: done ? C.muted : C.text, textDecoration: done ? 'line-through' : 'none' }}>{t.title}</div>
-                        {t.description && <div style={{ fontSize: 12, color: C.muted, marginTop: 3, lineHeight: 1.5 }}>{t.description}</div>}
-                        <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 6, flexWrap: 'wrap' }}>
-                          {t.due_date && (
-                            <span style={{ fontSize: 11, color: overdue ? '#ef4444' : C.subtle, display: 'inline-flex', alignItems: 'center', gap: 4, fontWeight: overdue ? 700 : 400 }}>
-                              <Calendar size={11} />
-                              {new Date(t.due_date + 'T00:00:00').toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' })}
-                              {overdue && ' — atrasada'}
-                            </span>
-                          )}
-                          {isTeacher && (
-                            <span style={{ fontSize: 11, color: C.subtle }}>
-                              {taskCompletionCounts[t.id] || 0} de {members.filter(m => m.role !== 'professor').length} concluíram
-                            </span>
-                          )}
+                    <div key={t.id} style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${overdue && !isTeacher ? 'rgba(239,68,68,0.3)' : C.glassBorder}`, borderRadius: 10, padding: '12px 14px' }}>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                        {!isTeacher && (
+                          <button onClick={() => toggleTaskCompletion(t.id)} style={{ background: 'none', border: 'none', padding: 2, cursor: 'pointer', marginTop: 1, flexShrink: 0 }}>
+                            {done ? <CheckCircle size={18} color={C.green} /> : <Circle size={18} color={C.subtle} />}
+                          </button>
+                        )}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 14, fontWeight: 600, color: done ? C.muted : C.text, textDecoration: done ? 'line-through' : 'none' }}>{t.title}</div>
+                          {t.description && <div style={{ fontSize: 12, color: C.muted, marginTop: 3, lineHeight: 1.5 }}>{t.description}</div>}
+                          <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 6, flexWrap: 'wrap' }}>
+                            {t.due_date && (
+                              <span style={{ fontSize: 11, color: overdue ? '#ef4444' : C.subtle, display: 'inline-flex', alignItems: 'center', gap: 4, fontWeight: overdue ? 700 : 400 }}>
+                                <Calendar size={11} />
+                                {new Date(t.due_date + 'T00:00:00').toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' })}
+                                {overdue && !isTeacher && ' — atrasada'}
+                              </span>
+                            )}
+                            {isTeacher && students.length > 0 && (
+                              <button
+                                onClick={() => setExpandedTaskId(expanded ? null : t.id)}
+                                style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'inherit', fontSize: 11, fontWeight: 600, color: doneCount === students.length ? C.green : taskOverdue && doneCount < students.length ? '#ef4444' : C.subtle }}
+                              >
+                                <div style={{ width: 52, height: 4, background: C.border, borderRadius: 999, overflow: 'hidden' }}>
+                                  <div style={{ width: `${students.length ? (doneCount / students.length) * 100 : 0}%`, height: '100%', background: doneCount === students.length ? C.green : C.blue, borderRadius: 999 }} />
+                                </div>
+                                {doneCount} de {students.length}
+                                <ChevronDown size={12} style={{ transform: expanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }} />
+                              </button>
+                            )}
+                          </div>
                         </div>
+                        {isTeacher && (
+                          <>
+                            <button onClick={() => setEditingTask(t)} className="icon-btn-ghost" title="Editar tarefa">
+                              <Pencil size={14} color={C.subtle} />
+                            </button>
+                            <button onClick={() => setDeletingTask(t)} className="icon-btn-ghost" title="Remover tarefa">
+                              <Trash2 size={14} color={C.subtle} />
+                            </button>
+                          </>
+                        )}
                       </div>
-                      {isTeacher && (
-                        <>
-                          <button onClick={() => setEditingTask(t)} className="icon-btn-ghost" title="Editar tarefa">
-                            <Pencil size={14} color={C.subtle} />
-                          </button>
-                          <button onClick={() => setDeletingTask(t)} className="icon-btn-ghost" title="Remover tarefa">
-                            <Trash2 size={14} color={C.subtle} />
-                          </button>
-                        </>
+
+                      {/* Teacher: per-student completion detail */}
+                      {isTeacher && expanded && (
+                        <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${C.border}`, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(190px, 1fr))', gap: 6 }}>
+                          {[...students]
+                            .sort((a, b) => {
+                              const aDone = completedBy.has(a.user_id), bDone = completedBy.has(b.user_id)
+                              if (aDone !== bDone) return aDone ? 1 : -1
+                              return (a.full_name || '').localeCompare(b.full_name || '')
+                            })
+                            .map(m => {
+                              const at = completedBy.get(m.user_id)
+                              const missing = !at
+                              return (
+                                <div key={m.user_id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 8px', borderRadius: 8, background: missing ? (taskOverdue ? 'rgba(239,68,68,0.05)' : 'transparent') : 'rgba(34,197,94,0.05)' }}>
+                                  {missing
+                                    ? <Circle size={13} color={taskOverdue ? '#ef4444' : C.subtle} style={{ flexShrink: 0 }} />
+                                    : <CheckCircle size={13} color={C.green} style={{ flexShrink: 0 }} />}
+                                  <Avatar avatarUrl={m.avatar_url} name={m.full_name} size={20} />
+                                  <span style={{ fontSize: 12, fontWeight: 600, color: missing ? C.muted : C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+                                    {m.full_name}
+                                  </span>
+                                  {at && (
+                                    <span style={{ fontSize: 10, color: C.subtle, flexShrink: 0 }}>
+                                      {new Date(at).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' })}
+                                    </span>
+                                  )}
+                                </div>
+                              )
+                            })}
+                        </div>
                       )}
                     </div>
                   )
@@ -1263,8 +1324,8 @@ export default function TurmaPage() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }} onClick={() => goToProject(p.slug)}>
                       {p.review_status && (
                         <span
-                          title={p.review_status === 'ready_for_defense' ? 'Pronto para defesa' : 'Precisa de revisão'}
-                          style={{ width: 7, height: 7, borderRadius: '50%', flexShrink: 0, background: p.review_status === 'ready_for_defense' ? '#22c55e' : '#f97316' }}
+                          title={p.review_status === 'ready_for_defense' ? 'Pronto para defesa' : p.review_status === 'resubmitted' ? 'Correções enviadas — rever de novo' : 'Precisa de revisão'}
+                          style={{ width: 7, height: 7, borderRadius: '50%', flexShrink: 0, background: p.review_status === 'ready_for_defense' ? '#22c55e' : p.review_status === 'resubmitted' ? '#1b78f7' : '#f97316' }}
                         />
                       )}
                       <div style={{ fontSize: 14, fontWeight: 600, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>

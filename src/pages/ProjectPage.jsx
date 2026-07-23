@@ -16,7 +16,7 @@ import CreateProjectModal from '../components/CreateProjectModal'
 import DefenseMode from '../components/DefenseMode'
 import ProjectComments from '../components/ProjectComments'
 import { analyzeProject } from '../lib/analyzeProject'
-import { Check, X, Loader, GraduationCap, Save, Sparkles, Bot, Lightbulb, Pencil, Search, Target, Wrench, Zap, TrendingUp, Briefcase, Users, Rocket, Trophy, BarChart2, CheckCircle, BookOpen, ChevronDown, Eye, EyeOff, UserPlus, Calendar, Mail, ArrowRight, ChevronRight, ChevronLeft, Globe, Image, MessageSquare, Quote, Layout, Type, Link, GripVertical, Plus, AlignLeft, Star, Camera, FileText, ClipboardList, Copy, Monitor, Tablet, Smartphone, Minus, Video, AlignCenter, AlignRight, Palette, AlertTriangle, Heart, User, Settings } from 'lucide-react'
+import { Check, X, Loader, GraduationCap, Save, Sparkles, Bot, Lightbulb, Pencil, Search, Target, Wrench, Zap, TrendingUp, Briefcase, Users, Rocket, Trophy, BarChart2, CheckCircle, BookOpen, ChevronDown, Eye, EyeOff, UserPlus, Calendar, Mail, ArrowRight, ChevronRight, ChevronLeft, Globe, Image, MessageSquare, Quote, Layout, Type, Link, GripVertical, Plus, AlignLeft, Star, Camera, FileText, ClipboardList, Copy, Monitor, Tablet, Smartphone, Minus, Video, AlignCenter, AlignRight, Palette, AlertTriangle, Heart, User, Settings, Bell, Swords } from 'lucide-react'
 
 const colors = {
   bg: 'var(--c-bg)',
@@ -211,7 +211,7 @@ const ScoreRing = memo(function ScoreRing({ score, size = 108 }) {
 const SECTION_CLAMP_LINES = 8  // max lines before "ver mais"
 const APPROX_CHARS_PER_LINE = 70
 
-const Section = memo(function Section({ fieldKey, content, isOwner, onImprove }) {
+const Section = memo(function Section({ fieldKey, content, isOwner, canEdit, onImprove }) {
   const meta    = SECTION_META[fieldKey] ?? { Icon: Wrench, label: fieldKey }
   const fieldCfg = PROFILE_SCORE_FIELDS.find(f => f.key === fieldKey)
   const len     = (content || '').trim().length
@@ -221,7 +221,9 @@ const Section = memo(function Section({ fieldKey, content, isOwner, onImprove })
   const isTruncatable = len > SECTION_CLAMP_LINES * APPROX_CHARS_PER_LINE
   const [expanded, setExpanded] = useState(false)
 
-  if (isEmpty && !isOwner) return null
+  const editable = canEdit ?? isOwner
+
+  if (isEmpty && !isOwner && !editable) return null
 
   return (
     <div className="proj-card-pad proj-card" style={{
@@ -241,7 +243,7 @@ const Section = memo(function Section({ fieldKey, content, isOwner, onImprove })
             </span>
           )}
         </h3>
-        {isOwner && challenge && !isEmpty && (
+        {editable && challenge && !isEmpty && (
           <button
             onClick={() => onImprove(challenge)}
             style={{ background: `${colors.blue}10`, border: `1px solid ${colors.blue}22`, color: colors.blue, cursor: 'pointer', fontSize: 11, fontWeight: 700, fontFamily: 'inherit', padding: '3px 9px', borderRadius: 6, flexShrink: 0, transition: 'all 0.15s' }}
@@ -254,7 +256,7 @@ const Section = memo(function Section({ fieldKey, content, isOwner, onImprove })
       </div>
 
       {isEmpty ? (
-        isOwner && (
+        editable && (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
             <p style={{ margin: 0, fontSize: 13, color: colors.subtle, fontStyle: 'italic' }}>Campo ainda vazio</p>
             {challenge && (
@@ -305,7 +307,7 @@ const Section = memo(function Section({ fieldKey, content, isOwner, onImprove })
               {expanded ? 'Ver menos' : 'Ver mais'}
             </button>
           )}
-          {isOwner && isShort && fieldCfg?.tip && (
+          {editable && isShort && fieldCfg?.tip && (
             <div style={{ marginTop: 12, display: 'flex', alignItems: 'flex-start', gap: 8, background: 'rgba(234,179,8,0.05)', border: '1px solid rgba(234,179,8,0.14)', borderRadius: 8, padding: '9px 12px' }}>
               <Lightbulb size={13} color="#d4a820" style={{ flexShrink: 0 }} />
               <p style={{ margin: 0, fontSize: 12, color: '#d4a820', lineHeight: 1.6 }}>{fieldCfg.tip}</p>
@@ -2937,6 +2939,8 @@ export default function ProjectPage() {
   const [fbEditing, setFbEditing] = useState(null)
   const [resolvingId, setResolvingId] = useState(null)
   const [resolveNote, setResolveNote] = useState('')
+  const [featureInterest, setFeatureInterest] = useState({}) // { pap_slides: true, boss_fight: true }
+  const [fiLoading, setFiLoading] = useState({})
 
   const { setExtras } = useSidebar()
   const { theme } = useTheme()
@@ -2981,6 +2985,45 @@ export default function ProjectPage() {
         .order('created_at', { ascending: false })
       setScoreHistory(data || [])
     }
+  }
+
+  // Fetch which coming-soon features this user already signed up for
+  useEffect(() => {
+    if (!user?.id) return
+    supabase.from('feature_interest').select('feature').eq('user_id', user.id)
+      .then(({ data }) => {
+        if (data) {
+          const map = {}
+          data.forEach(r => { map[r.feature] = true })
+          setFeatureInterest(map)
+        }
+      })
+  }, [user?.id])
+
+  async function handleFeatureInterest(featureName) {
+    if (!user?.id || fiLoading[featureName]) return
+    setFiLoading(l => ({ ...l, [featureName]: true }))
+    const { data: { user: authUser } } = await supabase.auth.getUser()
+    const email = authUser?.email || ''
+    const { error } = await supabase.from('feature_interest').insert({
+      user_id: user.id, feature: featureName, email,
+    })
+    if (!error) setFeatureInterest(fi => ({ ...fi, [featureName]: true }))
+    setFiLoading(l => ({ ...l, [featureName]: false }))
+  }
+
+  // Student: mark teacher-flagged revisions as done — notifies the teacher
+  const [resubmitting, setResubmitting] = useState(false)
+  async function handleMarkResubmitted() {
+    if (!project || resubmitting) return
+    setResubmitting(true)
+    const { error } = await supabase.rpc('mark_project_resubmitted', { p_project_id: project.id })
+    if (!error) {
+      setProject(p => ({ ...p, review_status: 'resubmitted' }))
+      setToast({ visible: true, message: 'O professor foi notificado das tuas correções.' })
+      setTimeout(() => setToast({ visible: false, message: '' }), 3000)
+    }
+    setResubmitting(false)
   }
 
   // Quick "ready for defense" / "needs revision" flag
@@ -3712,13 +3755,16 @@ export default function ProjectPage() {
         .proj-layout > * { min-width: 0; }
         .proj-sidebar {
           position: sticky;
-          top: 88px;
-          max-height: calc(100vh - 104px);
+          top: 16px;
+          max-height: calc(100vh - 32px);
           overflow-y: auto;
+          overscroll-behavior: contain;
           scrollbar-width: thin;
           scrollbar-color: var(--c-border) transparent;
+          padding-right: 4px;
+          padding-bottom: 8px;
         }
-        .proj-sidebar::-webkit-scrollbar { width: 3px; }
+        .proj-sidebar::-webkit-scrollbar { width: 6px; }
         .proj-sidebar::-webkit-scrollbar-track { background: transparent; }
         .proj-sidebar::-webkit-scrollbar-thumb { background: var(--c-border); border-radius: 99px; }
         @media (max-width: 860px) {
@@ -4489,6 +4535,26 @@ export default function ProjectPage() {
               <Settings size={15} /> Gerir
             </button>
           )}
+          {!isOwner && collaboratorSections !== null && (
+            <button
+              onClick={() => navigate(`/editar/${project.slug}`)}
+              style={{
+                background: 'rgba(27,120,247,0.08)',
+                border: '1px solid rgba(27,120,247,0.25)',
+                color: '#1b78f7',
+                borderRadius: 8, padding: '8px 14px',
+                fontSize: 13, fontWeight: 600,
+                cursor: 'pointer', fontFamily: 'inherit',
+                display: 'flex', alignItems: 'center', gap: 6,
+                transition: 'background 0.15s',
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = 'rgba(27,120,247,0.14)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'rgba(27,120,247,0.08)'}
+              title="Editar projeto"
+            >
+              <Pencil size={15} /> Editar
+            </button>
+          )}
         </div>
       </Navbar>
 
@@ -4745,23 +4811,31 @@ export default function ProjectPage() {
                   <Briefcase size={13} strokeWidth={2.5} />
                 </div>
               )}
-              {project.review_status && (
-                <div
-                  title={project.review_status === 'ready_for_defense' ? 'O professor marcou este projeto como pronto para defesa' : 'O professor marcou este projeto como precisando de revisão'}
-                  style={{
-                    display: 'inline-flex', alignItems: 'center', gap: 5,
-                    background: project.review_status === 'ready_for_defense' ? 'rgba(34,197,94,0.1)' : 'rgba(249,115,22,0.1)',
-                    color: project.review_status === 'ready_for_defense' ? '#22c55e' : '#f97316',
-                    border: `1px solid ${project.review_status === 'ready_for_defense' ? 'rgba(34,197,94,0.25)' : 'rgba(249,115,22,0.25)'}`,
-                    borderRadius: 999, padding: '4px 12px',
-                    fontSize: 11, fontWeight: 700, lineHeight: 1.5,
-                    cursor: 'default',
-                  }}
-                >
-                  {project.review_status === 'ready_for_defense' ? <CheckCircle size={11} strokeWidth={2.5} /> : <AlertTriangle size={11} strokeWidth={2.5} />}
-                  {project.review_status === 'ready_for_defense' ? 'Pronto para defesa' : 'Precisa de revisão'}
-                </div>
-              )}
+              {project.review_status && (() => {
+                const rs = project.review_status
+                const cfg = rs === 'ready_for_defense'
+                  ? { tone: '34,197,94', color: '#22c55e', icon: <CheckCircle size={11} strokeWidth={2.5} />, label: 'Pronto para defesa', title: 'O professor marcou este projeto como pronto para defesa' }
+                  : rs === 'resubmitted'
+                  ? { tone: '27,120,247', color: '#1b78f7', icon: <CheckCircle size={11} strokeWidth={2.5} />, label: 'Correções enviadas', title: 'O aluno marcou as correções como feitas — aguarda nova revisão do professor' }
+                  : { tone: '249,115,22', color: '#f97316', icon: <AlertTriangle size={11} strokeWidth={2.5} />, label: 'Precisa de revisão', title: 'O professor marcou este projeto como precisando de revisão' }
+                return (
+                  <div
+                    title={cfg.title}
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 5,
+                      background: `rgba(${cfg.tone},0.1)`,
+                      color: cfg.color,
+                      border: `1px solid rgba(${cfg.tone},0.25)`,
+                      borderRadius: 999, padding: '4px 12px',
+                      fontSize: 11, fontWeight: 700, lineHeight: 1.5,
+                      cursor: 'default',
+                    }}
+                  >
+                    {cfg.icon}
+                    {cfg.label}
+                  </div>
+                )
+              })()}
               {[project.creator_name, project.area, project.course, project.school_year]
                 .filter(Boolean)
                 .map((item, i) => (
@@ -4845,6 +4919,43 @@ export default function ProjectPage() {
           return (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 10, marginBottom: 4 }}>
 
+              {/* Teacher flagged revisions — student confirms when done.
+                  First in the grid so it's the first thing the student sees.
+                  Spam-proof by design: mark_project_resubmitted only works while
+                  review_status = 'needs_revision', so one notification per flag. */}
+              {project.review_status === 'needs_revision' && (
+                <button
+                  onClick={handleMarkResubmitted}
+                  disabled={resubmitting}
+                  style={{ ...miniCardBase, background: 'rgba(249,115,22,0.05)', border: '1px solid rgba(249,115,22,0.25)', opacity: resubmitting ? 0.6 : 1 }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(249,115,22,0.1)'; e.currentTarget.style.borderColor = 'rgba(249,115,22,0.4)' }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(249,115,22,0.05)'; e.currentTarget.style.borderColor = 'rgba(249,115,22,0.25)' }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                    <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(249,115,22,0.12)', border: '1px solid rgba(249,115,22,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <AlertTriangle size={13} color="#f97316" />
+                    </div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: '#f97316' }}>Revisão pedida</div>
+                  </div>
+                  <div style={{ fontSize: 11, color: colors.muted, lineHeight: 1.4 }}>
+                    {resubmitting ? 'A notificar o professor…' : 'Já corrigiste? Marca como feito'}
+                  </div>
+                </button>
+              )}
+              {project.review_status === 'resubmitted' && (
+                <div style={{ ...miniCardBase, cursor: 'default', background: 'rgba(27,120,247,0.04)', border: '1px solid rgba(27,120,247,0.15)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                    <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(27,120,247,0.12)', border: '1px solid rgba(27,120,247,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <Check size={13} color="#1b78f7" />
+                    </div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: '#1b78f7' }}>Correções enviadas</div>
+                  </div>
+                  <div style={{ fontSize: 11, color: colors.muted, lineHeight: 1.4 }}>
+                    O professor vai rever em breve
+                  </div>
+                </div>
+              )}
+
               {/* PAP defense date */}
               {project.project_type === 'pap' && (
                 <div style={{ ...miniCardBase, background: `rgba(${urgentColor === '#ef4444' ? '239,68,68' : urgentColor === '#f97316' ? '249,115,22' : '27,120,247'},0.05)`, border: `1px solid ${urgentColor}30`, position: 'relative' }}>
@@ -4907,6 +5018,67 @@ export default function ProjectPage() {
                   </div>
                 </button>
               )}
+
+              {/* Coming soon: PAP Slides */}
+              <div
+                style={{
+                  ...miniCardBase,
+                  cursor: featureInterest.pap_slides ? 'default' : 'pointer',
+                  background: featureInterest.pap_slides ? 'rgba(27,120,247,0.04)' : 'rgba(27,120,247,0.05)',
+                  border: `1px solid rgba(27,120,247,${featureInterest.pap_slides ? '0.15' : '0.2'})`,
+                  opacity: featureInterest.pap_slides ? 0.75 : 1,
+                }}
+                onClick={() => !featureInterest.pap_slides && handleFeatureInterest('pap_slides')}
+                onMouseEnter={e => { if (!featureInterest.pap_slides) { e.currentTarget.style.background = 'rgba(27,120,247,0.1)'; e.currentTarget.style.borderColor = 'rgba(27,120,247,0.35)' } }}
+                onMouseLeave={e => { if (!featureInterest.pap_slides) { e.currentTarget.style.background = 'rgba(27,120,247,0.05)'; e.currentTarget.style.borderColor = 'rgba(27,120,247,0.2)' } }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                  <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(27,120,247,0.12)', border: '1px solid rgba(27,120,247,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <Layout size={13} color="#1b78f7" />
+                  </div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: '#1b78f7' }}>Slides PAP</div>
+                  {featureInterest.pap_slides && <Check size={11} color="#1b78f7" style={{ marginLeft: 'auto' }} />}
+                </div>
+                <div style={{ fontSize: 11, color: colors.muted, lineHeight: 1.4 }}>
+                  {featureInterest.pap_slides ? 'Vamos avisar-te por email' : 'Em breve — IA gera a apresentação'}
+                </div>
+                {!featureInterest.pap_slides && (
+                  <div style={{ fontSize: 10, fontWeight: 600, color: 'rgba(27,120,247,0.7)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <Bell size={10} /> Notificar-me
+                  </div>
+                )}
+              </div>
+
+              {/* Coming soon: Boss Fight */}
+              <div
+                style={{
+                  ...miniCardBase,
+                  cursor: featureInterest.boss_fight ? 'default' : 'pointer',
+                  background: featureInterest.boss_fight ? 'rgba(249,115,22,0.04)' : 'rgba(249,115,22,0.05)',
+                  border: `1px solid rgba(249,115,22,${featureInterest.boss_fight ? '0.15' : '0.2'})`,
+                  opacity: featureInterest.boss_fight ? 0.75 : 1,
+                }}
+                onClick={() => !featureInterest.boss_fight && handleFeatureInterest('boss_fight')}
+                onMouseEnter={e => { if (!featureInterest.boss_fight) { e.currentTarget.style.background = 'rgba(249,115,22,0.1)'; e.currentTarget.style.borderColor = 'rgba(249,115,22,0.35)' } }}
+                onMouseLeave={e => { if (!featureInterest.boss_fight) { e.currentTarget.style.background = 'rgba(249,115,22,0.05)'; e.currentTarget.style.borderColor = 'rgba(249,115,22,0.2)' } }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                  <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(249,115,22,0.12)', border: '1px solid rgba(249,115,22,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <Swords size={13} color="#f97316" />
+                  </div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: '#f97316' }}>Boss Fight</div>
+                  {featureInterest.boss_fight && <Check size={11} color="#f97316" style={{ marginLeft: 'auto' }} />}
+                </div>
+                <div style={{ fontSize: 11, color: colors.muted, lineHeight: 1.4 }}>
+                  {featureInterest.boss_fight ? 'Vamos avisar-te por email' : 'Em breve — defesa simulada com IA'}
+                </div>
+                {!featureInterest.boss_fight && (
+                  <div style={{ fontSize: 10, fontWeight: 600, color: 'rgba(249,115,22,0.7)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <Bell size={10} /> Notificar-me
+                  </div>
+                )}
+              </div>
+
             </div>
           )
         })()}
@@ -5058,18 +5230,15 @@ export default function ProjectPage() {
         </button>
 
         <div className={`proj-sections-body${sectionsOpen ? '' : ' collapsed'}`}>
-          <Section fieldKey="problem"         content={project.problem}         isOwner={isOwner} onImprove={setEditModal} />
-          <Section fieldKey="solution"        content={project.solution}        isOwner={isOwner} onImprove={setEditModal} />
-          <Section fieldKey="target_audience" content={project.target_audience} isOwner={isOwner} onImprove={setEditModal} />
-          <Section fieldKey="features"        content={project.features}        isOwner={isOwner} onImprove={setEditModal} />
-          <Section fieldKey="technologies"    content={project.technologies}    isOwner={isOwner} onImprove={setEditModal} />
-          <Section fieldKey="challenges"      content={project.challenges}      isOwner={isOwner} onImprove={setEditModal} />
-          <Section fieldKey="results"         content={project.results}         isOwner={isOwner} onImprove={setEditModal} />
-          <Section fieldKey="learnings"       content={project.learnings}       isOwner={isOwner} onImprove={setEditModal} />
+          {['problem','solution','target_audience','features','technologies','challenges','results','learnings'].map(fk => (
+            <Section key={fk} fieldKey={fk} content={project[fk]} isOwner={isOwner}
+              canEdit={isOwner || (collaboratorSections !== null && (collaboratorSections.length === 0 || collaboratorSections.includes(fk)))}
+              onImprove={setEditModal} />
+          ))}
         </div>
 
         {/* Missions — owner only */}
-        {isOwner && <div id="missions-section" className="proj-card" style={{ scrollMarginTop: 88 }}>
+        {(isOwner || collaboratorSections !== null) && <div id="missions-section" className="proj-card" style={{ scrollMarginTop: 88 }}>
           {/* Header */}
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 16, gap: 12 }}>
             <div>
@@ -5352,6 +5521,20 @@ export default function ProjectPage() {
                 className="icon-btn-ghost"
                 style={{ opacity: reviewIndex === reviewQueue.length - 1 ? 0.35 : 1, cursor: reviewIndex === reviewQueue.length - 1 ? 'default' : 'pointer' }}
               ><ChevronRight size={14} /></button>
+            </div>
+          )}
+
+          {/* Professor: student marked their corrections as done */}
+          {isProfessor && project.review_status === 'resubmitted' && (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              background: 'rgba(27,120,247,0.06)', border: '1px solid rgba(27,120,247,0.2)',
+              borderRadius: 8, padding: '9px 12px',
+            }}>
+              <CheckCircle size={13} color="#1b78f7" style={{ flexShrink: 0 }} />
+              <span style={{ fontSize: 11, color: colors.text, fontWeight: 600, lineHeight: 1.4 }}>
+                O aluno marcou as correções como feitas — revê e atualiza o estado.
+              </span>
             </div>
           )}
 

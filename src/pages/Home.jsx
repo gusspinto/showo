@@ -645,10 +645,14 @@ export default function Home() {
         .mob-slide-nav:active { opacity: 0.4; }
 
         @media (max-width: 600px) {
-          /* ── Hero track: items align to top so slides don't stretch to match each other ── */
-          .hero-track { align-items: flex-start !important; }
+          /* ── Top navbar: hide the CTA — the sticky bottom nav already has "Entrar" and the hero has its own input ── */
+          .home-nav-cta { display: none !important; }
+          /* ── Hero track: slides stretch to the same height; content centers inside,
+                 so the height difference between slides never shows as a dead gap ── */
+          .hero-track { align-items: stretch !important; }
           /* ── Hero section: separate padding props to avoid shorthand conflict ── */
-          .hero-section  { padding-top: 80px !important; padding-bottom: 40px !important; min-height: 0 !important; justify-content: flex-start !important; }
+          .hero-section  { padding-top: 72px !important; padding-bottom: 40px !important; min-height: 0 !important; justify-content: center !important; }
+          .hero-gap      { height: 28px !important; }
           .hero-inner    { padding-left: 20px !important; padding-right: 20px !important; }
           .hero-h1       { font-size: 34px !important; letter-spacing: -0.5px !important; margin-bottom: 16px !important; }
           .hero-sub      { font-size: 15px !important; margin-bottom: 32px !important; }
@@ -669,8 +673,17 @@ export default function Home() {
           .feature-row > div { order: unset !important; }
           .features-section { padding: 80px 20px 60px !important; }
           .features-title-section { margin-bottom: 48px !important; }
+          /* ── Hero slide wrapper: flex so hero-section fills height and can center ── */
+          .hero-slide-wrap { display: flex !important; flex-direction: column !important; }
+          .hero-section { flex: 1 !important; }
           /* ── Roles panel: no forced height, tighter padding ── */
           .roles-panel { min-height: 0 !important; height: auto !important; padding: 64px 20px 48px !important; }
+          /* ── Text consistency: roles headline matches hero scale ── */
+          .roles-cycle-phrase { font-size: 22px !important; }
+          .roles-id-card { padding: 14px 16px !important; gap: 14px !important; }
+          .roles-id-card > div:last-child > div:first-child { font-size: 14px !important; }
+          .roles-id-card > div:last-child > p { font-size: 12px !important; }
+          .roles-card-stack { gap: 10px !important; }
           /* ── Slide nav: show ── */
           .mob-slide-nav { display: flex !important; }
         }
@@ -681,6 +694,7 @@ export default function Home() {
 
       <Navbar>
         <button
+          className="home-nav-cta"
           onClick={() => setShowCreateModal(true)}
           style={{
             background: '#1b78f7',
@@ -721,7 +735,7 @@ export default function Home() {
       <HeroAurora theme={heroTheme} />
       <div className="hero-bleed-offset">
       <div className="hero-track" ref={heroTrackRef}>
-        <div style={{ flex: '0 0 100%', minWidth: '100%', scrollSnapAlign: 'start', position: 'relative' }}>
+        <div className="hero-slide-wrap" style={{ flex: '0 0 100%', minWidth: '100%', scrollSnapAlign: 'start', position: 'relative' }}>
         <div className="hero-section hero-inner" style={{
           position: 'relative', zIndex: 1,
           minHeight: 'calc(100vh - 62px)',
@@ -733,7 +747,7 @@ export default function Home() {
         }}>
           <StaticHero theme={heroTheme} />
 
-          <div style={{ height: 56 }} />
+          <div className="hero-gap" style={{ height: 56 }} />
 
           {/* Widget */}
           <form className="hero-widget" onSubmit={handleStart} style={{ width: '100%', maxWidth: 560 }}>

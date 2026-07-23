@@ -1,0 +1,321 @@
+// Per-student detail page for teachers: /turma/:code/aluno/:userId
+// Everything the professor needs about one student in one place — projects,
+// grades, review states and task completion — without hopping between pages.
+import { useEffect, useState } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
+import { supabase } from '../lib/supabase'
+import { useAuth } from '../context/AuthContext'
+import { Navbar } from '../components/Navbar'
+import { Folder, ChevronLeft, ChevronRight, ExternalLink, CheckCircle, Circle, AlertTriangle, Check, Calendar, ListChecks, MessageSquare } from 'lucide-react'
+
+const C = {
+  bg: 'var(--c-bg)', bgAlt: 'var(--c-bg-alt)', card: 'var(--c-card)', cardHover: 'var(--c-card-hover)',
+  border: 'var(--c-border)', borderBright: 'var(--c-border-bright)',
+  blue: '#1b78f7', text: 'var(--c-text)', muted: 'var(--c-muted)', subtle: 'var(--c-subtle)',
+  green: '#22c55e', yellow: '#fbbf24', red: '#ef4444',
+  glass: 'var(--c-glass)', glassHover: 'var(--c-glass-hover)',
+  glassBorder: 'var(--c-glass-border)', glassBorderBright: 'var(--c-glass-border-bright)',
+  glassStyle: { backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' },
+}
+
+function scoreColor(s) {
+  if (s == null) return C.muted
+  if (s >= 90) return C.green
+  if (s >= 71) return C.blue
+  if (s >= 40) return C.yellow
+  return C.red
+}
+
+function gradeColor(g) {
+  if (g == null) return C.subtle
+  if (g >= 16) return C.green
+  if (g >= 10) return C.blue
+  return '#f97316'
+}
+
+function Avatar({ avatarUrl, name, size = 40 }) {
+  const initial = (name || '?')[0].toUpperCase()
+  const colors = ['#1b78f7', '#8b5cf6', '#0d9488', '#f59e0b', '#ec4899', '#10b981']
+  const bg = colors[(initial.charCodeAt(0) || 0) % colors.length]
+  if (avatarUrl) {
+    return <img src={avatarUrl} alt="" style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+  }
+  return (
+    <div style={{ width: size, height: size, borderRadius: '50%', background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: size * 0.42, fontWeight: 800, color: '#fff', flexShrink: 0 }}>
+      {initial}
+    </div>
+  )
+}
+
+const REVIEW_META = {
+  ready_for_defense: { label: 'Pronto para defesa', color: '#22c55e', Icon: CheckCircle },
+  needs_revision:    { label: 'Precisa de revisão', color: '#f97316', Icon: AlertTriangle },
+  resubmitted:       { label: 'Correções enviadas', color: '#1b78f7', Icon: Check },
+}
+
+export default function TurmaAluno() {
+  const { code, userId } = useParams()
+  const navigate = useNavigate()
+  const { user, loading: authLoading } = useAuth()
+
+  const [loading, setLoading] = useState(true)
+  const [denied, setDenied] = useState(false)
+  const [turma, setTurma] = useState(null)
+  const [student, setStudent] = useState(null)
+  const [projects, setProjects] = useState([])
+  const [tasks, setTasks] = useState([])           // class tasks with this student's completion
+  const [joinedAt, setJoinedAt] = useState(null)
+
+  useEffect(() => {
+    if (authLoading) return
+    if (!user) { setDenied(true); setLoading(false); return }
+    let cancelled = false
+    async function load() {
+      const { data: cls } = await supabase
+        .from('classes')
+        .select('id, name, subject, code, teacher_id, academic_year')
+        .eq('code', code.toUpperCase())
+        .single()
+      if (cancelled) return
+      // Teacher-only page — everyone else goes back to the turma
+      if (!cls || cls.teacher_id !== user.id) { setDenied(true); setLoading(false); return }
+      setTurma(cls)
+
+      const [profileRes, memberRes, cpRes, tasksRes] = await Promise.all([
+        supabase.from('profiles').select('id, full_name, username, avatar_url, area, skills, available_for_work').eq('id', userId).single(),
+        supabase.from('class_members').select('joined_at').eq('class_id', cls.id).eq('user_id', userId).maybeSingle(),
+        supabase.from('class_projects').select('project_id').eq('class_id', cls.id),
+        supabase.from('class_tasks').select('id, title, description, due_date, created_at').eq('class_id', cls.id).order('due_date', { ascending: true, nullsFirst: false }).order('created_at', { ascending: false }),
+      ])
+      if (cancelled) return
+
+      setStudent(profileRes.data || null)
+      setJoinedAt(memberRes.data?.joined_at || null)
+
+      // This student's projects inside this turma
+      const ids = (cpRes.data || []).map(r => r.project_id)
+      if (ids.length) {
+        const { data: projs } = await supabase
+          .from('projects')
+          .select('id, name, slug, score, area, cover_url, created_at, user_id, review_status, teacher_score, views')
+          .in('id', ids)
+          .eq('user_id', userId)
+        if (!cancelled) setProjects(projs || [])
+      }
+
+      // Task completion for this student
+      const taskRows = tasksRes.data || []
+      if (taskRows.length) {
+        const { data: completions } = await supabase
+          .from('class_task_completions')
+          .select('task_id, completed_at')
+          .in('task_id', taskRows.map(t => t.id))
+          .eq('user_id', userId)
+        if (cancelled) return
+        const doneMap = new Map((completions || []).map(c => [c.task_id, c.completed_at]))
+        setTasks(taskRows.map(t => ({ ...t, completed_at: doneMap.get(t.id) || null })))
+      } else {
+        setTasks([])
+      }
+
+      setLoading(false)
+    }
+    load()
+    return () => { cancelled = true }
+  }, [code, userId, user, authLoading])
+
+  if (loading || authLoading) {
+    return (
+      <div style={{ minHeight: '100vh', background: C.bg }}>
+        <Navbar />
+        <div className="page-content" style={{ display: 'flex', justifyContent: 'center', paddingTop: 120 }}>
+          <div style={{ width: 28, height: 28, border: `3px solid ${C.border}`, borderTop: `3px solid ${C.blue}`, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+        </div>
+      </div>
+    )
+  }
+
+  if (denied || !turma) {
+    return (
+      <div style={{ minHeight: '100vh', background: C.bg }}>
+        <Navbar />
+        <div className="page-content" style={{ textAlign: 'center', paddingTop: 100 }}>
+          <p style={{ color: C.muted, fontSize: 15 }}>Esta página é só para o professor da turma.</p>
+          <button onClick={() => navigate(`/turma/${code}`)} style={{ marginTop: 12, background: 'rgba(27,120,247,0.08)', border: '1px solid rgba(27,120,247,0.25)', borderRadius: 8, padding: '9px 18px', color: C.blue, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+            Ir para a turma
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  const name = student?.full_name || student?.username || 'Aluno'
+  const withScore = projects.filter(p => p.score != null)
+  const avgScore = withScore.length ? Math.round(withScore.reduce((s, p) => s + p.score, 0) / withScore.length) : null
+  const graded = projects.filter(p => p.teacher_score != null)
+  const avgGrade = graded.length ? Math.round((graded.reduce((s, p) => s + p.teacher_score, 0) / graded.length) * 10) / 10 : null
+  const doneTasks = tasks.filter(t => t.completed_at).length
+  const skills = Array.isArray(student?.skills) ? student.skills : []
+
+  const headingNum = { fontFamily: 'var(--font-heading)', fontVariantNumeric: 'tabular-nums', letterSpacing: '-1.5px', lineHeight: 1, fontWeight: 400 }
+
+  return (
+    <div style={{ minHeight: '100vh', background: C.bg }}>
+      <Navbar />
+      <div className="page-content" style={{ maxWidth: 900, margin: '0 auto' }}>
+
+        {/* Back */}
+        <button
+          onClick={() => navigate(`/turma/${code}`)}
+          style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: 'none', color: C.muted, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', padding: '0 0 18px', marginTop: 4 }}
+        >
+          <ChevronLeft size={15} /> {turma.name}
+        </button>
+
+        {/* Student header */}
+        <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 14, padding: '24px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 18, flexWrap: 'wrap' }}>
+          <Avatar avatarUrl={student?.avatar_url} name={name} size={64} />
+          <div style={{ flex: 1, minWidth: 200 }}>
+            <h1 style={{ margin: 0, fontSize: 'clamp(22px, 3vw, 30px)', fontWeight: 400, letterSpacing: '-0.6px', fontFamily: 'var(--font-heading)', color: C.text }}>{name}</h1>
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 6, fontSize: 13, color: C.muted }}>
+              {student?.area && <span>{student.area}</span>}
+              {joinedAt && <span>Na turma desde {new Date(joinedAt).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short', year: 'numeric' })}</span>}
+            </div>
+            {skills.length > 0 && (
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 10 }}>
+                {skills.slice(0, 6).map(s => (
+                  <span key={s} style={{ fontSize: 11, fontWeight: 600, color: C.muted, background: C.bgAlt, border: `1px solid ${C.border}`, borderRadius: 999, padding: '3px 10px' }}>{s}</span>
+                ))}
+              </div>
+            )}
+          </div>
+          <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+            {student?.username && (
+              <button
+                onClick={() => navigate(`/u/${student.username}`)}
+                style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 8, padding: '8px 14px', color: C.muted, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+              >
+                <ExternalLink size={13} /> Perfil público
+              </button>
+            )}
+            <button
+              onClick={() => navigate(`/mensagens?to=${userId}`, { state: { returnTo: { pathname: `/turma/${code}/aluno/${userId}`, label: name } } })}
+              style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(27,120,247,0.08)', border: '1px solid rgba(27,120,247,0.25)', borderRadius: 8, padding: '8px 14px', color: C.blue, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+            >
+              <MessageSquare size={13} /> Mensagem
+            </button>
+          </div>
+        </div>
+
+        {/* Stats */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10, marginBottom: 28 }}>
+          {[
+            { label: 'Projetos na turma', value: projects.length, color: C.blue },
+            { label: 'Score médio', value: avgScore ?? '—', color: scoreColor(avgScore) },
+            { label: 'Nota média', value: avgGrade != null ? `${avgGrade}` : '—', color: gradeColor(avgGrade), sub: avgGrade != null ? '/20' : null },
+            { label: 'Tarefas concluídas', value: tasks.length ? `${doneTasks}/${tasks.length}` : '—', color: tasks.length && doneTasks === tasks.length ? C.green : C.blue },
+          ].map(s => (
+            <div key={s.label} style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '16px 18px' }}>
+              <div style={{ ...headingNum, fontSize: 30, color: s.color }}>
+                {s.value}{s.sub && <span style={{ fontSize: 15, color: C.subtle }}>{s.sub}</span>}
+              </div>
+              <div style={{ fontSize: 11, color: C.muted, fontWeight: 600, marginTop: 6 }}>{s.label}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Projects */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+          <Folder size={14} color={C.muted} />
+          <span style={{ fontSize: 13, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.07em' }}>Projetos</span>
+          <span style={{ fontSize: 11, fontWeight: 700, color: C.subtle }}>{projects.length}</span>
+        </div>
+        {projects.length === 0 ? (
+          <div style={{ ...C.glassStyle, background: C.glass, border: `1px dashed ${C.glassBorder}`, borderRadius: 10, padding: '24px 20px', textAlign: 'center', marginBottom: 28 }}>
+            <p style={{ margin: 0, fontSize: 13, color: C.muted }}>Este aluno ainda não adicionou projetos à turma.</p>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 28 }}>
+            {projects.map(p => {
+              const rev = REVIEW_META[p.review_status]
+              return (
+                <div
+                  key={p.id}
+                  onClick={() => navigate(`/projeto/${p.slug}`, { state: { turmaCode: turma.code, turmaName: turma.name } })}
+                  style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 10, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer', transition: 'background 0.12s, border-color 0.12s' }}
+                  onMouseEnter={e => { e.currentTarget.style.background = C.glassHover; e.currentTarget.style.borderColor = C.glassBorderBright }}
+                  onMouseLeave={e => { e.currentTarget.style.background = C.glass; e.currentTarget.style.borderColor = C.glassBorder }}
+                >
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ fontSize: 14, fontWeight: 700, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</span>
+                      {rev && (
+                        <span title={rev.label} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, fontWeight: 700, color: rev.color, background: `${rev.color}14`, border: `1px solid ${rev.color}30`, borderRadius: 999, padding: '2px 8px', flexShrink: 0 }}>
+                          <rev.Icon size={10} /> {rev.label}
+                        </span>
+                      )}
+                    </div>
+                    <div style={{ fontSize: 11, color: C.subtle, marginTop: 3 }}>
+                      {p.area || 'Sem área'} · {new Date(p.created_at).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' })}
+                      {p.views != null && ` · ${p.views} visualizaç${p.views === 1 ? 'ão' : 'ões'}`}
+                    </div>
+                  </div>
+                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                    <div style={{ fontSize: 15, fontWeight: 800, color: scoreColor(p.score) }}>{p.score ?? '—'}</div>
+                    <div style={{ fontSize: 10, color: C.subtle }}>score</div>
+                  </div>
+                  <div style={{ textAlign: 'right', flexShrink: 0, minWidth: 44 }}>
+                    <div style={{ fontSize: 15, fontWeight: 800, color: gradeColor(p.teacher_score) }}>{p.teacher_score != null ? `${p.teacher_score}/20` : '—'}</div>
+                    <div style={{ fontSize: 10, color: C.subtle }}>nota</div>
+                  </div>
+                  <ChevronRight size={15} color={C.subtle} style={{ flexShrink: 0 }} />
+                </div>
+              )
+            })}
+          </div>
+        )}
+
+        {/* Tasks */}
+        {tasks.length > 0 && (
+          <>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+              <ListChecks size={14} color={C.muted} />
+              <span style={{ fontSize: 13, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.07em' }}>Tarefas</span>
+              <span style={{ fontSize: 11, fontWeight: 700, color: doneTasks === tasks.length ? C.green : C.subtle }}>{doneTasks}/{tasks.length}</span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 40 }}>
+              {tasks.map(t => {
+                const done = !!t.completed_at
+                const overdue = !done && t.due_date && new Date(t.due_date + 'T23:59:59') < new Date()
+                return (
+                  <div key={t.id} style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${overdue ? 'rgba(239,68,68,0.3)' : C.glassBorder}`, borderRadius: 10, padding: '11px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
+                    {done
+                      ? <CheckCircle size={16} color={C.green} style={{ flexShrink: 0 }} />
+                      : <Circle size={16} color={overdue ? '#ef4444' : C.subtle} style={{ flexShrink: 0 }} />}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: done ? C.muted : C.text, textDecoration: done ? 'line-through' : 'none' }}>{t.title}</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0, fontSize: 11 }}>
+                      {t.due_date && (
+                        <span style={{ color: overdue ? '#ef4444' : C.subtle, display: 'inline-flex', alignItems: 'center', gap: 4, fontWeight: overdue ? 700 : 400 }}>
+                          <Calendar size={11} />
+                          {new Date(t.due_date + 'T00:00:00').toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' })}
+                        </span>
+                      )}
+                      {done && (
+                        <span style={{ color: C.green, fontWeight: 600 }}>
+                          feita {new Date(t.completed_at).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' })}
+                        </span>
+                      )}
+                      {overdue && <span style={{ color: '#ef4444', fontWeight: 700 }}>atrasada</span>}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}

@@ -6,9 +6,10 @@ import { Pencil, ExternalLink } from 'lucide-react'
 import SkillsPicker from '../components/SkillsPicker'
 import { Navbar } from '../components/Navbar'
 import CreateProjectModal from '../components/CreateProjectModal'
-import { Folder, Trophy, BarChart2, Rocket, Eye, GraduationCap, Plus, X, Users, Users2, ChevronRight, User, Settings, Compass, Medal, LogOut, Globe, TrendingUp, MessageSquare, Star, Mail, Search, BookOpen, Trash2, Check, Calendar, ArrowRight, Target, Zap, Sparkles, Briefcase, Building2, Send, Copy, Share2, Link, HelpCircle, AlertTriangle, ListChecks, Circle } from 'lucide-react'
+import { Folder, Trophy, BarChart2, Rocket, Eye, GraduationCap, Plus, X, Users, Users2, ChevronRight, ChevronDown, User, Settings, Compass, Medal, LogOut, Globe, TrendingUp, MessageSquare, Star, Mail, Search, BookOpen, Trash2, Check, Calendar, ArrowRight, Target, Zap, Sparkles, Briefcase, Building2, Send, Copy, Share2, Link, HelpCircle, AlertTriangle, ListChecks, Circle } from 'lucide-react'
 import ConvidarVagaModal from '../components/ConvidarVagaModal'
 import { getCurrentAcademicYear, academicYearOptions } from '../lib/academicYear'
+import { calculatePotential } from '../lib/score'
 
 const C = {
   bg: 'var(--c-bg)',
@@ -691,7 +692,15 @@ function ScoreInfoTooltip() {
   )
 }
 
-function InsightsBlock({ projects }) {
+const POTENTIAL_DIMS = [
+  { key: 'quality',     label: 'Qualidade',    max: 30 },
+  { key: 'depth',       label: 'Profundidade', max: 20 },
+  { key: 'profile',     label: 'Perfil',       max: 15 },
+  { key: 'validation',  label: 'Validação',    max: 20 },
+  { key: 'consistency', label: 'Consistência', max: 15 },
+]
+
+function InsightsBlock({ projects, profile }) {
   const withScore = projects.filter(p => p.score != null)
   if (!withScore.length) return null
   const best = Math.max(...withScore.map(p => p.score))
@@ -700,55 +709,84 @@ function InsightsBlock({ projects }) {
   const totalViews = projects.reduce((s, p) => s + (p.views ?? 0), 0)
   const sorted = [...withScore].sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
   const trend = sorted.length > 1 ? sorted[sorted.length - 1].score - sorted[0].score : null
+  const { potential, breakdown } = calculatePotential({ projects, profile })
+
+  const ringSize = 100
+  const ringStroke = 5
+  const ringRadius = (ringSize - ringStroke) / 2
+  const ringCirc = 2 * Math.PI * ringRadius
+  const ringOffset = ringCirc - (potential / 100) * ringCirc
+
+  const headingNum = { fontFamily: 'var(--font-heading)', fontVariantNumeric: 'tabular-nums', letterSpacing: '-2px', lineHeight: 1, fontWeight: 400 }
+
+  const thirdStat = totalViews > 0
+    ? { value: totalViews, color: C.blue, label: 'Views' }
+    : trend != null
+      ? { value: `${trend >= 0 ? '+' : ''}${trend}`, color: trend >= 0 ? C.green : C.red, label: 'Evolução' }
+      : null
 
   return (
-    <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 14, padding: '22px 24px', animation: 'dash-section-in 0.4s ease both' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
-        <TrendingUp size={14} color={C.blue} />
-        <span style={{ fontSize: 13, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Resumo</span>
+    <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 14, padding: '18px 20px', animation: 'dash-section-in 0.4s ease both' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+        <TrendingUp size={13} color={C.blue} />
+        <span style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Resumo</span>
         <ScoreInfoTooltip />
       </div>
 
-      {/* 3 big numbers */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 0, marginBottom: 22 }}>
-        <div style={{ textAlign: 'center', padding: '0 6px' }}>
-          <div style={{ fontSize: 44, fontWeight: 400, fontFamily: 'var(--font-heading)', color: getScoreColor(best), letterSpacing: '-2px', lineHeight: 1 }}>{best}</div>
-          <div style={{ fontSize: 11, color: C.muted, marginTop: 6, fontWeight: 600 }}>Melhor score</div>
-          <div style={{ fontSize: 10, color: C.subtle, marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{bestProj?.name}</div>
+      {/* Top row: ring + 3 stats side by side */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 18, marginBottom: 16 }}>
+        {/* Potential ring — compact */}
+        <div style={{ position: 'relative', width: ringSize, height: ringSize, flexShrink: 0 }}>
+          <div style={{ position: 'absolute', inset: '20%', borderRadius: '50%', background: 'rgba(27,120,247,0.06)', filter: 'blur(14px)', pointerEvents: 'none' }} />
+          <svg width={ringSize} height={ringSize} style={{ transform: 'rotate(-90deg)', position: 'relative', zIndex: 1 }}>
+            <circle cx={ringSize / 2} cy={ringSize / 2} r={ringRadius} fill="none" stroke="var(--c-border)" strokeWidth={ringStroke} />
+            <circle
+              cx={ringSize / 2} cy={ringSize / 2} r={ringRadius}
+              fill="none" stroke="#1b78f7" strokeWidth={ringStroke} strokeLinecap="round"
+              strokeDasharray={ringCirc} strokeDashoffset={ringOffset}
+              style={{ transition: 'stroke-dashoffset 1.2s cubic-bezier(0.22,1,0.36,1)', filter: 'drop-shadow(0 0 5px rgba(27,120,247,0.25))' }}
+            />
+          </svg>
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>
+            <div style={{ ...headingNum, fontSize: 30, color: '#1b78f7' }}>{potential}</div>
+            <div style={{ fontSize: 8, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.12em', marginTop: 4 }}>Potencial</div>
+          </div>
         </div>
-        <div style={{ textAlign: 'center', padding: '0 6px', borderLeft: `1px solid ${C.border}`, borderRight: `1px solid ${C.border}` }}>
-          <div style={{ fontSize: 44, fontWeight: 400, fontFamily: 'var(--font-heading)', color: getScoreColor(avg), letterSpacing: '-2px', lineHeight: 1 }}>{avg}</div>
-          <div style={{ fontSize: 11, color: C.muted, marginTop: 6, fontWeight: 600 }}>Score médio</div>
-          <div style={{ fontSize: 10, color: C.subtle, marginTop: 2 }}>{withScore.length} projeto{withScore.length !== 1 ? 's' : ''}</div>
-        </div>
-        <div style={{ textAlign: 'center', padding: '0 6px' }}>
-          {totalViews > 0 ? (
-            <>
-              <div style={{ fontSize: 44, fontWeight: 400, fontFamily: 'var(--font-heading)', color: C.blue, letterSpacing: '-2px', lineHeight: 1 }}>{totalViews}</div>
-              <div style={{ fontSize: 11, color: C.muted, marginTop: 6, fontWeight: 600 }}>Visualizações</div>
-              <div style={{ fontSize: 10, color: C.subtle, marginTop: 2 }}>total</div>
-            </>
-          ) : trend != null ? (
-            <>
-              <div style={{ fontSize: 44, fontWeight: 400, fontFamily: 'var(--font-heading)', color: trend >= 0 ? C.green : C.red, letterSpacing: '-2px', lineHeight: 1 }}>{trend >= 0 ? '+' : ''}{trend}</div>
-              <div style={{ fontSize: 11, color: C.muted, marginTop: 6, fontWeight: 600 }}>Evolução</div>
-              <div style={{ fontSize: 10, color: C.subtle, marginTop: 2 }}>1º → último</div>
-            </>
-          ) : <div style={{ fontSize: 11, color: C.subtle, paddingTop: 12 }}>—</div>}
+
+        {/* Stats column */}
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+            <div style={{ ...headingNum, fontSize: 24, color: getScoreColor(best) }}>{best}</div>
+            <div style={{ fontSize: 10, color: C.muted, fontWeight: 600 }}>Melhor</div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+            <div style={{ ...headingNum, fontSize: 24, color: getScoreColor(avg) }}>{avg}</div>
+            <div style={{ fontSize: 10, color: C.muted, fontWeight: 600 }}>Média · {withScore.length}p</div>
+          </div>
+          {thirdStat && (
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+              <div style={{ ...headingNum, fontSize: 24, color: thirdStat.color }}>{thirdStat.value}</div>
+              <div style={{ fontSize: 10, color: C.muted, fontWeight: 600 }}>{thirdStat.label}</div>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Progress bars per project */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingTop: 18, borderTop: `1px solid ${C.border}` }}>
-        {withScore.slice(0, 5).map(p => (
-          <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ fontSize: 12, color: C.muted, width: 110, flexShrink: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</span>
-            <div style={{ flex: 1, height: 6, background: C.border, borderRadius: 999, overflow: 'hidden' }}>
-              <div style={{ width: `${p.score}%`, height: '100%', background: getScoreColor(p.score), borderRadius: 999 }} />
+      {/* Dimension breakdown — compact bars */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+        {POTENTIAL_DIMS.map(d => {
+          const val = breakdown[d.key] ?? 0
+          const pct = (val / d.max) * 100
+          return (
+            <div key={d.key} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 10, color: C.muted, width: 78, flexShrink: 0, fontWeight: 600 }}>{d.label}</span>
+              <div style={{ flex: 1, height: 3, background: C.border, borderRadius: 999, overflow: 'hidden' }}>
+                <div style={{ width: `${pct}%`, height: '100%', background: '#1b78f7', borderRadius: 999, transition: 'width 0.8s cubic-bezier(0.22,1,0.36,1)' }} />
+              </div>
+              <span style={{ fontSize: 9, fontWeight: 700, color: C.subtle, width: 28, textAlign: 'right', flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}>{val}/{d.max}</span>
             </div>
-            <span style={{ fontSize: 12, fontWeight: 800, color: getScoreColor(p.score), width: 26, textAlign: 'right', flexShrink: 0 }}>{p.score}</span>
-          </div>
-        ))}
+          )
+        })}
       </div>
     </div>
   )
@@ -1200,6 +1238,7 @@ export default function Dashboard() {
   const [recentActivity, setRecentActivity] = useState([]) // latest projects submitted across the teacher's turmas
   const [upcomingDefenses, setUpcomingDefenses] = useState([]) // students' defense dates coming up, across all turmas
   const [flaggedForRevision, setFlaggedForRevision] = useState([]) // projects the teacher marked "needs revision"
+  const [resubmitted, setResubmitted] = useState([]) // projects whose students marked corrections as done
   const [totalMembers, setTotalMembers] = useState(0)
   const [weeklyActivity, setWeeklyActivity] = useState([]) // last 8 weeks: { label, count } — projects submitted across the teacher's turmas
   const [studentTurmas, setStudentTurmas] = useState([])
@@ -1228,6 +1267,7 @@ export default function Dashboard() {
   const [partnerLeadsLoading, setPartnerLeadsLoading] = useState(true)
   // Invite modal target
   const [inviteTarget, setInviteTarget] = useState(null) // { studentId, studentName }
+  const [resumoOpen, setResumoOpen] = useState(false)
 
   // Admins land on the admin panel, not the aluno/professor/recrutador
   // dashboard — is_admin is an elevated flag on top of role, not a role
@@ -1287,14 +1327,14 @@ export default function Dashboard() {
     async function load() {
       let { data, error } = await supabase
         .from('projects')
-        .select('id, name, slug, score, area, created_at, ai_tagline, views, defense_date, ai_feedback, cover_url, collaborator_count:project_collaborators(count)')
+        .select('id, name, slug, score, area, created_at, ai_tagline, views, defense_date, ai_feedback, cover_url, teacher_score, project_type, class_projects(class_id), collaborator_count:project_collaborators(count)')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
 
       if (error) {
         const fallback = await supabase
           .from('projects')
-          .select('id, name, slug, score, area, created_at, ai_tagline, views, defense_date, ai_feedback, cover_url')
+          .select('id, name, slug, score, area, created_at, ai_tagline, views, defense_date, ai_feedback, cover_url, teacher_score, project_type')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false })
         data = fallback.data
@@ -1485,7 +1525,7 @@ export default function Dashboard() {
         .select('id, name, subject, code, academic_year, created_at')
         .eq('teacher_id', user.id)
         .order('created_at', { ascending: false })
-      if (!cls?.length) { setTurmas([]); setNeedsReview([]); setFlaggedForRevision([]); setTotalMembers(0); setWeeklyActivity([]); return }
+      if (!cls?.length) { setTurmas([]); setNeedsReview([]); setFlaggedForRevision([]); setResubmitted([]); setTotalMembers(0); setWeeklyActivity([]); return }
 
       const [{ data: cp }, { data: members }] = await Promise.all([
         supabase.from('class_projects').select('class_id, project_id').in('class_id', cls.map(c => c.id)),
@@ -1533,6 +1573,12 @@ export default function Dashboard() {
             .map(p => ({ ...p, className: classNameByProject[p.id] }))
         )
 
+        setResubmitted(
+          projs
+            .filter(p => p.review_status === 'resubmitted')
+            .map(p => ({ ...p, className: classNameByProject[p.id] }))
+        )
+
         setRecentActivity(
           [...projs]
             .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
@@ -1574,6 +1620,7 @@ export default function Dashboard() {
         setRecentActivity([])
         setUpcomingDefenses([])
         setFlaggedForRevision([])
+        setResubmitted([])
         setWeeklyActivity([])
       }
 
@@ -1827,6 +1874,8 @@ export default function Dashboard() {
           align-items: start;
         }
         .dash-turma-col, .dash-projects-col { min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+        .dash-resumo-toggle { display: none; align-items: center; gap: 8px; background: var(--c-glass); border: 1px solid var(--c-glass-border); border-radius: 12px; padding: 14px 16px; cursor: pointer; transition: background 0.15s; }
+        .dash-resumo-toggle:active { background: var(--c-glass-hover); }
         @media (max-width: 860px) {
           .dash-turma-projects-grid { grid-template-columns: 1fr; gap: 20px; }
         }
@@ -1916,6 +1965,15 @@ export default function Dashboard() {
           .dash-quick-actions-row { flex-wrap: wrap !important; }
           /* ── Toasts — above bottom nav ── */
           .dash-toast-center { bottom: 88px !important; }
+          /* ── Mobile: projects first, resumo collapsed ── */
+          .dash-turma-col { order: 2 !important; padding-top: 0 !important; }
+          .dash-projects-col { order: 1 !important; }
+          .dash-resumo-toggle {
+            display: flex !important;
+          }
+          .dash-resumo-body.collapsed {
+            display: none !important;
+          }
           .dash-toast-xp { bottom: 88px !important; right: 12px !important; min-width: 0 !important; max-width: calc(100vw - 24px) !important; }
         }
       `}</style>
@@ -2395,6 +2453,44 @@ export default function Dashboard() {
 
             {/* ── Right: review + activity feed ── */}
             <div className="dash-teacher-right">
+              {/* Students who marked their corrections as done — first thing the
+                  teacher sees on entry, since it's the most actionable list */}
+              {resubmitted.length > 0 && (
+                <div style={{ animation: 'dash-section-in 0.4s 0.18s ease both' }}>
+                  <div className="dash-sec-hd">
+                    <div className="dash-sec-label">
+                      <Check size={13} /> Correções enviadas
+                      <span className="dash-sec-count">{resubmitted.length}</span>
+                    </div>
+                  </div>
+                  <div style={{ ...C.glassStyle, background: C.glass, border: '1px solid rgba(27,120,247,0.25)', borderRadius: 12, overflow: 'hidden' }}>
+                    {resubmitted.slice(0, 5).map((p, i) => (
+                      <div
+                        key={p.id}
+                        onClick={() => navigate(`/projeto/${p.slug}`)}
+                        style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: i < Math.min(resubmitted.length, 5) - 1 ? `1px solid ${C.glassBorder}` : 'none', cursor: 'pointer', transition: 'background 0.12s' }}
+                        onMouseEnter={e => e.currentTarget.style.background = C.glassHover}
+                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                      >
+                        <div style={{ width: 32, height: 32, borderRadius: 8, flexShrink: 0, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <Check size={14} color="#1b78f7" />
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
+                          <div style={{ fontSize: 11, color: C.subtle }}>{p.creator_name || 'Aluno'}{p.className ? ` · ${p.className}` : ''} · pronto para nova revisão</div>
+                        </div>
+                        <ChevronRight size={14} color={C.subtle} style={{ flexShrink: 0 }} />
+                      </div>
+                    ))}
+                    {resubmitted.length > 5 && (
+                      <div style={{ padding: '10px 16px', fontSize: 12, color: C.subtle, textAlign: 'center' }}>
+                        +{resubmitted.length - 5} projeto{resubmitted.length - 5 !== 1 ? 's' : ''} com correções enviadas
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {needsReview.length > 0 && (
                 <div style={{ animation: 'dash-section-in 0.4s 0.2s ease both' }}>
                   <div className="dash-sec-hd">
@@ -2638,7 +2734,15 @@ export default function Dashboard() {
 
             {/* ── Left column: insights + turma + tasks ── */}
             <div className="dash-turma-col" style={{ paddingTop: 46 }}>
-              <InsightsBlock projects={projects} />
+              {/* Resumo toggle — mobile only */}
+              <div className="dash-resumo-toggle" onClick={() => setResumoOpen(o => !o)}>
+                <TrendingUp size={14} color={C.blue} />
+                <span style={{ flex: 1, fontSize: 13, fontWeight: 700, color: C.muted }}>Resumo &amp; Potencial</span>
+                <ChevronDown size={15} color={C.subtle} style={{ transform: resumoOpen ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s' }} />
+              </div>
+              <div className={`dash-resumo-body${resumoOpen ? '' : ' collapsed'}`}>
+                <InsightsBlock projects={projects} profile={profile} />
+              </div>
 
               {!loadingStudentTurmas && (
                 <div style={{ animation: 'dash-section-in 0.4s 0.15s ease both' }}>
@@ -2668,22 +2772,56 @@ export default function Dashboard() {
                     <div
                       onClick={() => setShowJoinModal(true)}
                       style={{
-                        ...C.glassStyle, background: C.glass, border: `1px dashed ${C.glassBorder}`,
+                        ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`,
                         borderRadius: 12, padding: '20px 18px',
-                        display: 'flex', alignItems: 'center', gap: 14,
                         cursor: 'pointer', transition: 'border-color 0.15s, background 0.15s',
                       }}
                       onMouseEnter={e => { e.currentTarget.style.borderColor = C.blue + '55'; e.currentTarget.style.background = C.glassHover }}
                       onMouseLeave={e => { e.currentTarget.style.borderColor = C.glassBorder; e.currentTarget.style.background = C.glass }}
                     >
-                      <div style={{ width: 40, height: 40, borderRadius: 10, flexShrink: 0, background: 'rgba(27,120,247,0.08)', border: '1px solid rgba(27,120,247,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <Users2 size={18} color={C.blue} />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+                        <Users2 size={14} color={C.blue} />
+                        <span style={{ fontSize: 12, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>A tua turma</span>
                       </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 2 }}>Entrar numa turma</div>
-                        <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.4 }}>Usa o código do teu professor para te juntares à tua turma.</div>
+
+                      {/* Steps */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
+                        {[
+                          { n: 1, text: 'Pede o código de 6 letras ao teu professor' },
+                          { n: 2, text: 'Insere-o aqui e junta-te à turma' },
+                        ].map(s => (
+                          <div key={s.n} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                            <div style={{ width: 20, height: 20, borderRadius: '50%', flexShrink: 0, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, color: C.blue }}>
+                              {s.n}
+                            </div>
+                            <span style={{ fontSize: 12, color: C.muted, lineHeight: 1.4 }}>{s.text}</span>
+                          </div>
+                        ))}
                       </div>
-                      <ArrowRight size={16} color={C.blue} style={{ flexShrink: 0 }} />
+
+                      {/* Code preview boxes */}
+                      <div style={{ display: 'flex', gap: 5, justifyContent: 'center', marginBottom: 16 }}>
+                        {'XXXXXX'.split('').map((ch, i) => (
+                          <div key={i} style={{
+                            width: 34, height: 40, borderRadius: 8,
+                            background: 'var(--c-bg-alt)', border: `1.5px dashed ${C.border}`,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: 16, fontWeight: 800, color: C.subtle,
+                            fontFamily: 'var(--font-heading)',
+                          }}>
+                            {ch}
+                          </div>
+                        ))}
+                      </div>
+
+                      <div style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                        background: '#1b78f7', borderRadius: 9, padding: '10px',
+                        color: '#fff', fontSize: 13, fontWeight: 700,
+                        boxShadow: '0 2px 8px rgba(27,120,247,0.2)',
+                      }}>
+                        Tenho um código <ArrowRight size={14} />
+                      </div>
                     </div>
                   )}
                 </div>

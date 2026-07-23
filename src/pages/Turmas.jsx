@@ -380,11 +380,47 @@ export default function Turmas() {
             <p style={{ margin: '0 0 6px', fontSize: 16, fontWeight: 700, color: C.text }}>
               {isTeacher ? 'Ainda não criaste turmas' : 'Ainda não estás em nenhuma turma'}
             </p>
-            <p style={{ margin: '0 0 20px', fontSize: 13, color: C.muted }}>
-              {isTeacher
-                ? 'Cria uma turma na tua área de professor.'
-                : 'Pede o código da turma ao teu professor.'}
-            </p>
+            {isTeacher ? (
+              <p style={{ margin: '0 0 20px', fontSize: 13, color: C.muted }}>
+                Cria uma turma na tua área de professor.
+              </p>
+            ) : (
+              <>
+                {/* Steps */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 320, margin: '18px auto 20px', textAlign: 'left' }}>
+                  {[
+                    { n: 1, text: 'Pede o código de 6 letras ao teu professor' },
+                    { n: 2, text: 'Insere-o aqui e junta-te à turma' },
+                  ].map(s => (
+                    <div key={s.n} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <div style={{ width: 22, height: 22, borderRadius: '50%', flexShrink: 0, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, color: C.blue }}>
+                        {s.n}
+                      </div>
+                      <span style={{ fontSize: 13, color: C.muted, lineHeight: 1.4 }}>{s.text}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Code preview boxes */}
+                <div
+                  onClick={() => setShowJoin(true)}
+                  style={{ display: 'flex', gap: 6, justifyContent: 'center', marginBottom: 22, cursor: 'pointer' }}
+                >
+                  {'XXXXXX'.split('').map((ch, i) => (
+                    <div key={i} style={{
+                      width: 38, height: 44, borderRadius: 9,
+                      background: C.bgAlt, border: `1.5px dashed ${C.border}`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 17, fontWeight: 800, color: C.subtle,
+                      fontFamily: 'var(--font-heading)',
+                      transition: 'border-color 0.15s, color 0.15s',
+                    }}>
+                      {ch}
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
             {!isTeacher && (
               <button
                 onClick={() => setShowJoin(true)}
@@ -392,12 +428,12 @@ export default function Turmas() {
                   display: 'inline-flex', alignItems: 'center', gap: 6,
                   background: C.blue, border: 'none', borderRadius: 8,
                   color: '#fff', fontSize: 13, fontWeight: 700,
-                  padding: '10px 18px', cursor: 'pointer', fontFamily: 'inherit',
+                  padding: '11px 22px', cursor: 'pointer', fontFamily: 'inherit',
                   boxShadow: '0 2px 8px rgba(27,120,247,0.2)',
                 }}
               >
-                <Plus size={15} />
-                Entrar numa turma
+                Tenho um código
+                <ArrowRight size={14} />
               </button>
             )}
           </div>

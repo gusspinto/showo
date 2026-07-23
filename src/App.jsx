@@ -49,6 +49,7 @@ const Settings     = lazy(() => import('./pages/Settings'))
 const UserProfile  = lazy(() => import('./pages/UserProfile'))
 const Admin        = lazy(() => import('./pages/Admin'))
 const TurmaPage    = lazy(() => import('./pages/TurmaPage'))
+const TurmaAluno   = lazy(() => import('./pages/TurmaAluno'))
 const Parceiros    = lazy(() => import('./pages/Parceiros'))
 const Turmas       = lazy(() => import('./pages/Turmas'))
 const AIInterview  = lazy(() => import('./pages/AIInterview'))
@@ -345,6 +346,7 @@ export default function App() {
               <Route path="/u/:username"   element={<UserProfile />} />
               <Route path="/admin"         element={<Admin />}       />
               <Route path="/turma/:code"   element={<TurmaPage />}   />
+              <Route path="/turma/:code/aluno/:userId" element={<TurmaAluno />} />
               <Route path="/turmas"        element={<Turmas />}      />
               <Route path="/parceiros"     element={<Parceiros />}   />
               <Route path="/interview"          element={<AIInterview />}  />
