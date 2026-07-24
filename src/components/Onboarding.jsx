@@ -225,22 +225,22 @@ export default function Onboarding({ onDone }) {
           </div>
         </div>
 
-        {/* Footer bar inside the window — progress + start */}
+        {/* Footer — dots + start */}
         <div style={{
-          display: 'flex', alignItems: 'center', gap: 16,
-          padding: '12px 14px', borderTop: '1px solid var(--c-border)', background: 'var(--c-bg-alt)',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '10px 14px', borderTop: '1px solid var(--c-border)', background: 'var(--c-bg-alt)',
         }}>
-          <div style={{ display: 'flex', gap: 6, flex: 1 }}>
+          <div style={{ display: 'flex', gap: 6 }}>
             {BEATS.map((b, i) => (
               <button key={b.key} onClick={() => { clearTimeout(timer.current); setBeat(i) }} aria-label={b.step} style={{
-                flex: 1, height: 3, borderRadius: 2, padding: 0, border: 'none', cursor: 'pointer',
-                background: i <= beat ? '#1b78f7' : 'var(--c-border)', transition: 'background 0.3s',
+                width: 7, height: 7, borderRadius: '50%', padding: 0, border: 'none', cursor: 'pointer',
+                background: i === beat ? '#1b78f7' : 'var(--c-border)', transition: 'background 0.3s',
               }} />
             ))}
           </div>
           <button onClick={close} style={{
-            background: '#1b78f7', border: 'none', borderRadius: 9,
-            padding: '9px 20px', fontSize: 13, fontWeight: 700, color: '#fff', fontFamily: 'inherit', cursor: 'pointer',
+            background: '#1b78f7', border: 'none', borderRadius: 8,
+            padding: '7px 16px', fontSize: 12, fontWeight: 700, color: '#fff', fontFamily: 'inherit', cursor: 'pointer',
             flexShrink: 0, transition: 'background 0.15s',
           }}
             onMouseEnter={e => { e.currentTarget.style.background = '#1660d1' }}

@@ -68,8 +68,9 @@ REGRAS CRÍTICAS:
 - Máximo 6 perguntas, mínimo 5
 - NÃO perguntes o que já está claramente na descrição — usa isso como contexto, não volta a perguntar
 - Cada pergunta deve ser diferente das outras — sem sobreposições
-- O campo "name" tem de pedir um TÍTULO CURTO (2-5 palavras) — nunca uma frase ou descrição. Ex: "Como é que se chama o projeto, num nome curto?"
-- Suggestions devem ser específicas ao projeto descrito, não genéricas
+- O campo "name" tem de pedir um TÍTULO CURTO (1-4 palavras, estilo marca/app) — nunca uma frase ou descrição. Ex: "Que nome darias ao projeto? Pensa num nome curto, tipo marca — como 'StudyFor' ou 'TaskFlow'."
+- Para o campo "name", OBRIGATORIAMENTE gera 2-3 sugestões de nomes criativos e curtos baseados na descrição do estudante. Analisa a descrição e inventa nomes que soem a app/marca/projeto real (ex: se o estudante descreveu "uma app para ajudar a estudar", sugere ["StudyBuddy", "FocusApp", "LearnFlow"]). Isto é CRÍTICO porque muitos estudantes não sabem que nome dar e acabam por escrever frases longas como nome
+- Suggestions dos outros campos devem ser específicas ao projeto descrito, não genéricas
 - Para o campo "technologies": sugere tecnologias relevantes à descrição. Se o estudante claramente não é técnico (ex: projeto de gestão, marketing, design sem código), substitui esta pergunta por "ferramentas" (ex: Canva, Excel, Figma) em vez de tecnologia de programação
 - Para PAP: inclui obrigatoriamente escola/curso e orientador
 - Para estágio: inclui obrigatoriamente empresa e o que aprendeu
@@ -100,7 +101,7 @@ REGRAS CRÍTICAS:
     return new Response(JSON.stringify({
       understanding: 'Ótimo! Vou fazer-te algumas perguntas rápidas para criar o teu perfil de projeto.',
       questions: [
-        { id: 'name', label: 'Nome', question: 'Como se chama o teu projeto?', field: 'name', placeholder: 'ex: TaskFlow, EduApp...', suggestions: [] },
+        { id: 'name', label: 'Nome', question: 'Que nome darias ao teu projeto? Pensa num nome curto, tipo marca — como "StudyFor" ou "TaskFlow".', field: 'name', placeholder: 'ex: TaskFlow, EduApp...', suggestions: [] },
         { id: 'technologies', label: 'Tecnologias', question: 'Que tecnologias usaste?', field: 'technologies', placeholder: 'ex: React, Python, Firebase...', suggestions: ['React', 'Flutter', 'Node.js'] },
         { id: 'problem', label: 'Problema', question: 'Que problema resolve?', field: 'problem', placeholder: 'O problema que identificaste...', suggestions: [] },
         { id: 'solution', label: 'Solução', question: 'Como resolveste esse problema?', field: 'solution', placeholder: 'A tua abordagem...', suggestions: [] },

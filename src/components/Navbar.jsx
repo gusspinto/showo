@@ -683,7 +683,7 @@ const dropItemStyle = {
   transition: 'background 0.12s',
 }
 
-export function Navbar({ children, showLinks = true, showCreateProject = false, previewEditingMobile = false, onWorkspaceToggle, hideSidebar = false }) {
+export function Navbar({ children, showLinks = true, showCreateProject = false, previewEditingMobile = false, onWorkspaceToggle, hideSidebar = false, hideBottomNav = false, mobileLeft = null }) {
   const navigate = useNavigate()
   const location = useLocation()
   const { user, profile, signOut, isAdmin } = useAuth()
@@ -793,6 +793,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
         .nav-logo:hover { opacity: 0.85; }
 
         .nav-left   { display: flex; align-items: center; gap: 2px; flex: 1; }
+        .nav-mob-left { display: none; }
         .nav-mid    { display: flex; align-items: center; justify-content: center; }
         .nav-right  { display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex: 1; }
         .nav-auth   { display: flex; align-items: center; gap: 8px; }
@@ -1040,14 +1041,17 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
         /* Mobile (≤600px): bottom nav takes over — logo centrada, sem hamburger */
         @media (max-width: 600px) {
           .nav-left      { display: none !important; }
+          .nav-mob-left  { display: flex; align-items: center; }
           .nav-mid       { position: absolute; left: 50%; transform: translateX(-50%); }
           .nav-right     { flex: none; margin-left: auto; }
           .nav-auth      { display: none !important; }
           .nav-logo      { height: 28px !important; width: auto !important; }
           .showo-nav-pad { padding-left: 20px !important; padding-right: 20px !important; }
           .mob-only-create { display: none !important; }
+          .nav-children-wrap { display: none !important; }
           .ham-btn       { display: none !important; }
           .bottom-nav    { display: flex !important; }
+          .bottom-nav.bn-hidden { display: none !important; }
           body           { padding-bottom: 84px; }
           .nav-mob-theme { display: flex !important; }
 
@@ -1433,6 +1437,9 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
           gap: 12,
         }}
       >
+        {/* Mobile-only left slot */}
+        {mobileLeft && <div className="nav-mob-left">{mobileLeft}</div>}
+
         {/* Left */}
         {showLinks && (
           <div className="nav-left">
@@ -2205,7 +2212,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
       )}
 
       {/* ── Bottom navigation bar — mobile only (≤600px) ── */}
-      <div className="bottom-nav">
+      <div className={`bottom-nav${hideBottomNav ? ' bn-hidden' : ''}`}>
         {user ? (
           <>
             {/* Dashboard */}

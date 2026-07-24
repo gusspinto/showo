@@ -325,24 +325,28 @@ export default function AIInterview() {
     return ''
   }
 
-  // The dynamic AI interview doesn't always ask for a project name explicitly —
-  // fall back to a short title derived from the original description so a
-  // project is never saved nameless.
-  function deriveNameFromDescription(desc) {
-    const cleaned = (desc || '').trim().replace(/\s+/g, ' ')
-    if (!cleaned) return 'Projeto sem nome'
-    const short = cleaned.split(' ').slice(0, 6).join(' ').slice(0, 48).trim()
-    return short.charAt(0).toUpperCase() + short.slice(1)
+  const FILLER_STARTS = /^(uma?\s|o\s|a\s|é\s|este\s|esta\s|um\s?app|uma\s?app|projeto\s(de|para|que)|quero\s|vou\s|criei\s|fiz\s|desenvolvi\s)/i
+  const FILLER_WORDS = /^(que|para|de|do|da|dos|das|com|por|em|no|na|nos|nas|ao|aos|à|às|me|se|te|nos|vos|um|uma|uns|umas|o|a|os|as|é|são|foi|ser|ter|fazer|ajudar|ajude|permite|consegue|serve)$/i
+
+  function looksLikeSentence(text) {
+    const words = text.split(/\s+/)
+    if (words.length > 5) return true
+    if (text.length > 40) return true
+    if (FILLER_STARTS.test(text)) return true
+    const fillerCount = words.filter(w => FILLER_WORDS.test(w)).length
+    if (fillerCount >= 3) return true
+    return false
   }
 
-  // Some interviews ask a "name" question loosely enough that the user answers
-  // with a full sentence/tagline instead of a short title — clamp it down to a
-  // real title instead of saving the whole sentence as the project name.
   function pickProjectName(rawName, desc) {
     const trimmed = (rawName || '').trim()
-    const looksLikeTitle = trimmed && trimmed.split(' ').length <= 6 && trimmed.length <= 42
-    if (looksLikeTitle) return trimmed
-    return deriveNameFromDescription(trimmed || desc)
+    if (trimmed && !looksLikeSentence(trimmed)) return trimmed
+    const fallback = (trimmed || desc || '').trim()
+    if (!fallback) return 'Projeto sem nome'
+    const words = fallback.split(/\s+/).filter(w => !FILLER_WORDS.test(w))
+    const core = words.slice(0, 3).join(' ').slice(0, 36).trim()
+    if (!core) return fallback.split(/\s+/).slice(0, 3).join(' ').slice(0, 36).trim() || 'Projeto sem nome'
+    return core.charAt(0).toUpperCase() + core.slice(1)
   }
 
   const progress = questions.length > 0
@@ -659,7 +663,7 @@ export default function AIInterview() {
                     <p className="ai-question-text" style={{ margin: '0 0 20px', fontSize: 19, fontWeight: 400, fontFamily: 'var(--font-heading)', color: C.text, lineHeight: 1.4, letterSpacing: '-0.4px' }}>{q.question}</p>
 
                     {/* Suggestions — hidden for free-text fields where chips make no sense */}
-                    {q.suggestions?.length > 0 && !['name','creator_name','pap_supervisor','school','course'].includes(q.field) && (
+                    {q.suggestions?.length > 0 && !['creator_name','pap_supervisor','school','course'].includes(q.field) && (
                       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 14 }}>
                         {q.suggestions.map(s => {
                           const label = cleanSuggestion(s)
@@ -670,7 +674,7 @@ export default function AIInterview() {
                               type="button"
                               className="sug-chip"
                               onClick={() => {
-                                const v = inputValue ? `${inputValue}, ${label}` : label
+                                const v = q.field === 'name' ? label : (inputValue ? `${inputValue}, ${label}` : label)
                                 setInputValue(v)
                                 setCurrentValue(v)
                                 inputRef.current?.focus()
@@ -735,6 +739,12 @@ export default function AIInterview() {
                         </svg>
                       </button>
                     </div>
+
+                    {q.field === 'name' && inputValue.trim() && looksLikeSentence(inputValue.trim()) && (
+                      <p style={{ margin: '8px 0 0', fontSize: 12, color: '#f59e0b', display: 'flex', alignItems: 'center', gap: 5 }}>
+                        <AlertTriangle size={12} /> Parece uma frase — tenta um nome curto tipo marca (ex: StudyFor, TaskFlow)
+                      </p>
+                    )}
 
                     {inputError && (
                       <p style={{ margin: '8px 0 0', fontSize: 12, color: '#ef4444', display: 'flex', alignItems: 'center', gap: 5 }}>

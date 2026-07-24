@@ -196,7 +196,7 @@ function ProjectRow({ project, onView, onEdit, onDelete, onCopy, copied }) {
           </div>
         </div>
 
-        {/* Score ring */}
+        {/* Score ring — always visible */}
         <div className="dash-proj-score" onClick={onView} style={{ position: 'relative', width: 42, height: 42, flexShrink: 0, cursor: 'pointer', filter: `drop-shadow(0 0 5px ${scoreColor}80)` }}>
           <svg width={42} height={42} overflow="visible" style={{ transform: 'rotate(-90deg)', display: 'block' }}>
             <circle cx={21} cy={21} r={17} fill="none" stroke="var(--c-border)" strokeWidth={3.5} />
@@ -210,7 +210,7 @@ function ProjectRow({ project, onView, onEdit, onDelete, onCopy, copied }) {
           </div>
         </div>
 
-        {/* Actions — ghost icons, fade in on row hover */}
+        {/* Actions — expand on hover */}
         <div className="dash-project-actions">
           {confirmDelete ? (
             <>
@@ -656,8 +656,8 @@ function ScoreInfoTooltip() {
   return (
     <div style={{ position: 'relative', marginLeft: 'auto' }}>
       <button
-        onMouseEnter={() => setOpen(true)}
-        onMouseLeave={() => setOpen(false)}
+        onMouseEnter={e => { setOpen(true); e.currentTarget.style.color = C.muted }}
+        onMouseLeave={e => { setOpen(false); e.currentTarget.style.color = C.subtle }}
         onFocus={() => setOpen(true)}
         onBlur={() => setOpen(false)}
         style={{
@@ -665,8 +665,6 @@ function ScoreInfoTooltip() {
           color: C.subtle, display: 'flex', alignItems: 'center', borderRadius: 6,
           transition: 'color 0.15s',
         }}
-        onMouseEnterCapture={e => e.currentTarget.style.color = C.muted}
-        onMouseLeaveCapture={e => e.currentTarget.style.color = C.subtle}
         aria-label="Como é calculado o score?"
       >
         <HelpCircle size={14} />
@@ -714,7 +712,7 @@ function InsightsBlock({ projects, profile, rankingPos, rankingPct, username, co
   const totalViews = projects.reduce((s, p) => s + (p.views ?? 0), 0)
   const sorted = [...withScore].sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
   const trend = sorted.length > 1 ? sorted[sorted.length - 1].score - sorted[0].score : null
-  const { potential, breakdown } = calculatePotential({ projects, profile })
+  const { potential, breakdown } = profile ? calculatePotential({ projects, profile }) : { potential: 0, breakdown: {} }
 
   const ringSize = 100
   const ringStroke = 5
@@ -1413,7 +1411,7 @@ export default function Dashboard() {
       const ids = collabs.map(c => c.project_id)
       const { data: projs } = await supabase
         .from('projects')
-        .select('id, name, slug, score, area, ai_tagline, creator_name')
+        .select('id, name, slug, score, area, ai_tagline, creator_name, created_at, views')
         .in('id', ids)
         .order('score', { ascending: false })
       setCollabProjects(projs || [])
@@ -1820,7 +1818,7 @@ export default function Dashboard() {
   const isRecruiter = profile?.role === 'recrutador' || profile?.role === 'empresa'
 
   const { potential: potentialScore } = (() => {
-    if (isTeacher || isRecruiter) return { potential: null }
+    if (isTeacher || isRecruiter || !profile) return { potential: null }
     const withScore = projects.filter(p => p.score != null)
     if (!withScore.length) return { potential: null }
     return calculatePotential({ projects, profile })
@@ -1896,9 +1894,17 @@ export default function Dashboard() {
           border-color: ${C.borderBright} !important;
         }
 
-        /* ── Project actions — ghost buttons ── */
-        .dash-project-actions { display: flex; gap: 2px; flex-shrink: 0; align-items: center; opacity: 0; transition: opacity 0.15s ease; }
-        .dash-project-row:hover .dash-project-actions { opacity: 1; }
+        /* ── Project actions — expand on hover ── */
+        .dash-project-actions {
+          display: flex; gap: 2px; align-items: center;
+          flex-shrink: 0; overflow: hidden;
+          max-width: 0; opacity: 0;
+          transition: max-width 0.3s cubic-bezier(.4,0,.2,1), opacity 0.2s ease;
+        }
+        .dash-project-row:hover .dash-project-actions {
+          max-width: 180px;
+          opacity: 1;
+        }
         .dash-ghost-btn {
           width: 32px; height: 32px; border-radius: 8px;
           background: transparent; border: none;
@@ -2145,17 +2151,15 @@ export default function Dashboard() {
                 <span style={{ color: C.subtle, fontSize: 12 }}>· {user.email}</span>
               </div>
             </div>
-            {!loadingProjects && projects.length > 0 && (
-              <button
-                onClick={() => setShowCreateModal(true)}
-                className="dash-action-btn"
-                style={{ background: C.blue, border: 'none', color: '#fff', boxShadow: `0 2px 8px ${C.blue}33`, display: 'flex', alignItems: 'center', gap: 6 }}
-                onMouseEnter={e => e.currentTarget.style.opacity = '0.88'}
-                onMouseLeave={e => e.currentTarget.style.opacity = '1'}
-              >
-                <Plus size={14} /> Novo projeto
-              </button>
-            )}
+            <button
+              onClick={() => navigate(`/u/${profile?.username || ''}`)}
+              className="dash-action-btn"
+              style={{ display: 'flex', alignItems: 'center', gap: 6, background: `${C.blue}18`, border: `1px solid ${C.blue}30`, color: C.blue }}
+              onMouseEnter={e => { e.currentTarget.style.background = `${C.blue}28`; e.currentTarget.style.borderColor = `${C.blue}55` }}
+              onMouseLeave={e => { e.currentTarget.style.background = `${C.blue}18`; e.currentTarget.style.borderColor = `${C.blue}30` }}
+            >
+              <User size={14} /> Perfil
+            </button>
           </div>
         ) : (
           /* ── Teacher header — keep existing ── */
@@ -2978,26 +2982,9 @@ export default function Dashboard() {
                 </div>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {collabProjects.map(p => (
-                  <div key={p.id} onClick={() => navigate(`/projeto/${p.slug}`)} style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 14, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer', transition: 'all 0.15s' }}
-                    onMouseEnter={e => { e.currentTarget.style.background = C.glassHover; e.currentTarget.style.borderColor = C.glassBorderBright }}
-                    onMouseLeave={e => { e.currentTarget.style.background = C.glass; e.currentTarget.style.borderColor = C.glassBorder }}>
-                    <div style={{ position: 'relative', width: 38, height: 38, flexShrink: 0, filter: `drop-shadow(0 0 4px ${getScoreColor(p.score)}80)` }}>
-                      <svg width={38} height={38} overflow="visible" style={{ transform: 'rotate(-90deg)', display: 'block' }}>
-                        <circle cx={19} cy={19} r={15} fill="none" stroke="var(--c-border)" strokeWidth={3} />
-                        <circle cx={19} cy={19} r={15} fill="none" stroke={getScoreColor(p.score)} strokeWidth={3}
-                          strokeDasharray={`${((p.score ?? 0) / 100) * 2 * Math.PI * 15} ${2 * Math.PI * 15}`}
-                          strokeLinecap="round"
-                        />
-                      </svg>
-                      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: getScoreColor(p.score) }}>{p.score ?? '—'}</div>
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ color: C.text, fontSize: 14, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
-                      {p.creator_name && <div style={{ color: C.muted, fontSize: 12, marginTop: 2 }}>de {p.creator_name}</div>}
-                    </div>
-                    {p.area && <span style={{ fontSize: 11, color: C.subtle, background: 'var(--c-bg-alt)', border: `1px solid ${C.glassBorder}`, borderRadius: 5, padding: '2px 8px', flexShrink: 0 }}>{p.area}</span>}
-                    <ChevronRight size={15} color={C.subtle} style={{ flexShrink: 0 }} />
+                {collabProjects.map((p, idx) => (
+                  <div key={p.id} style={{ animation: `dash-item-in 0.3s cubic-bezier(0.16,1,0.3,1) ${idx * 0.06}s both` }}>
+                    <ProjectRow project={p} onView={() => navigate(`/projeto/${p.slug}`)} onEdit={() => navigate(`/projeto/${p.slug}`)} onDelete={() => {}} onCopy={() => copyProjectLink(p.slug)} copied={copiedSlug === p.slug} />
                   </div>
                 ))}
               </div>

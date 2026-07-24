@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
@@ -127,11 +128,27 @@ export default function Mensagens() {
   const [loading, setLoading]             = useState(true)
   const [showNova, setShowNova]           = useState(false)
   const [mobileView, setMobileView]       = useState('list')
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 600)
 
   useEffect(() => {
     document.body.classList.add('page-mensagens')
     return () => document.body.classList.remove('page-mensagens')
   }, [])
+
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth <= 600)
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
+
+  useEffect(() => {
+    if (isMobile && mobileView === 'thread') {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => { document.body.style.overflow = '' }
+  }, [mobileView, isMobile])
 
   // Edit / Delete states
   const [editingId, setEditingId]         = useState(null)
@@ -448,9 +465,116 @@ export default function Mensagens() {
 
   if (!user) return null
 
+  const isMobileThread = isMobile && mobileView === 'thread' && activeId
+
+  function renderMessages() {
+    return (
+      <div style={{ flex: '1 1 0', minHeight: 0, overflowY: 'auto', padding: '16px 16px 8px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+        {messages.length === 0 && (
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, textAlign: 'center', padding: 32 }}>
+            <Avatar profile={activeProfile} size={52} />
+            <p style={{ color: C.text, fontSize: 14, fontWeight: 700, margin: 0 }}>{activeProfile?.full_name || activeProfile?.username}</p>
+            <p style={{ color: C.muted, fontSize: 13, margin: 0 }}>Começa a conversa!</p>
+          </div>
+        )}
+        {messages.map((m, i) => {
+          const isMine = m.from_id === user.id
+          const prevIsMine = i > 0 && messages[i-1].from_id === user.id
+          const isLastSent = isMine && m.id === lastSentMsg?.id
+          const isHovered = hoveredMsgId === m.id
+          const isConfirmingDelete = confirmDeleteId === m.id
+          const isEditing = editingId === m.id
+          return (
+            <div key={m.id}
+              style={{ display: 'flex', justifyContent: isMine ? 'flex-end' : 'flex-start', marginTop: isMine === prevIsMine ? 2 : 10, position: 'relative' }}
+              onMouseEnter={() => setHoveredMsgId(m.id)}
+              onMouseLeave={() => { setHoveredMsgId(null); if (confirmDeleteId === m.id && !isEditing) setConfirmDeleteId(null) }}
+              onTouchStart={() => handleLongPress(m)}
+              onTouchEnd={cancelLongPress}
+              onTouchMove={cancelLongPress}>
+              <div style={{ maxWidth: '72%' }}>
+                {isMine && isHovered && !isEditing && (
+                  <div className="msg-desktop-actions" style={{ display: 'flex', alignItems: 'center', gap: 4, justifyContent: 'flex-end', marginBottom: 4 }}>
+                    {isConfirmingDelete ? (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'var(--c-bg)', border: `1px solid ${C.border}`, borderRadius: 8, padding: '3px 8px', fontSize: 12, color: C.muted }}>
+                        <span>Apagar?</span>
+                        <button onClick={() => deleteMsg(m.id)} style={{ background: '#ef4444', border: 'none', borderRadius: 5, color: '#fff', fontSize: 11, fontWeight: 700, padding: '2px 7px', cursor: 'pointer', fontFamily: 'inherit' }}>Sim</button>
+                        <button onClick={() => setConfirmDeleteId(null)} style={{ background: 'transparent', border: 'none', color: C.muted, fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', padding: '2px 4px' }}>Não</button>
+                      </div>
+                    ) : (
+                      <>
+                        <button onClick={() => startEdit(m)} title="Editar" style={{ background: 'var(--c-bg)', border: `1px solid ${C.border}`, borderRadius: 7, padding: '4px 7px', cursor: 'pointer', display: 'flex', alignItems: 'center', color: C.muted, transition: 'color 0.1s' }} onMouseEnter={e => e.currentTarget.style.color = C.text} onMouseLeave={e => e.currentTarget.style.color = C.muted}><Pencil size={12} /></button>
+                        <button onClick={() => setConfirmDeleteId(m.id)} title="Eliminar" style={{ background: 'var(--c-bg)', border: `1px solid ${C.border}`, borderRadius: 7, padding: '4px 7px', cursor: 'pointer', display: 'flex', alignItems: 'center', color: C.muted, transition: 'color 0.1s' }} onMouseEnter={e => e.currentTarget.style.color = '#ef4444'} onMouseLeave={e => e.currentTarget.style.color = C.muted}><Trash2 size={12} /></button>
+                      </>
+                    )}
+                  </div>
+                )}
+                {isEditing ? (
+                  <div className="msg-desktop-actions" style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <textarea ref={editInputRef} value={editDraft} onChange={e => setEditDraft(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveEdit(m.id) } if (e.key === 'Escape') cancelEdit() }} rows={Math.min(editDraft.split('\n').length + 1, 6)} style={{ background: 'var(--c-bg)', border: `1.5px solid ${C.blue}`, borderRadius: 10, color: C.text, fontSize: 14, padding: '9px 13px', outline: 'none', fontFamily: 'inherit', resize: 'none', minWidth: 180 }} />
+                    <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
+                      <button onClick={cancelEdit} style={{ background: 'var(--c-bg)', border: `1px solid ${C.border}`, borderRadius: 7, padding: '5px 12px', color: C.muted, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Cancelar</button>
+                      <button onClick={() => saveEdit(m.id)} disabled={!editDraft.trim()} style={{ background: editDraft.trim() ? C.blue : 'var(--c-border)', border: 'none', borderRadius: 7, padding: '5px 12px', color: '#fff', fontSize: 12, fontWeight: 700, cursor: editDraft.trim() ? 'pointer' : 'default', fontFamily: 'inherit' }}>Guardar</button>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ background: isMine ? C.blue : 'var(--c-bg-alt)', color: isMine ? '#fff' : C.text, borderRadius: isMine ? '14px 14px 4px 14px' : '14px 14px 14px 4px', padding: '9px 13px', fontSize: 14, lineHeight: 1.5, wordBreak: 'break-word' }}>{m.content}</div>
+                )}
+                {!isEditing && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4, justifyContent: isMine ? 'flex-end' : 'flex-start', marginTop: 3, paddingInline: 4 }}>
+                    <span style={{ fontSize: 10, color: C.subtle }}>{timeAgo(m.created_at)}</span>
+                    {m.edited_at && <span style={{ fontSize: 10, color: C.subtle }}>· editado</span>}
+                    {isMine && isLastSent && (m.read_at ? <CheckCheck size={12} color={C.blue} style={{ flexShrink: 0 }} /> : <Check size={12} color={C.subtle} style={{ flexShrink: 0 }} />)}
+                  </div>
+                )}
+              </div>
+            </div>
+          )
+        })}
+        <div ref={bottomRef} />
+      </div>
+    )
+  }
+
+  function renderInput() {
+    return (
+      <div className="msg-input-area" style={{ padding: '8px 12px 12px', borderTop: `1px solid ${C.border}`, flexShrink: 0 }}>
+        {sendError && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#ef4444', fontSize: 11, fontWeight: 600, marginBottom: 6, padding: '5px 10px', background: 'rgba(239,68,68,0.08)', borderRadius: 7, border: '1px solid rgba(239,68,68,0.2)' }}>
+            <AlertTriangle size={11} /> {sendError}
+          </div>
+        )}
+        <div style={{ display: 'flex', gap: 8 }}>
+          <input
+            value={draft}
+            onChange={e => { setDraft(e.target.value); if (sendError) setSendError('') }}
+            onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }}
+            placeholder="Escreve uma mensagem..."
+            style={{ flex: 1, background: 'var(--c-bg-alt)', border: `1.5px solid ${sendError ? '#ef4444' : C.border}`, borderRadius: 10, color: C.text, fontSize: 16, padding: '10px 14px', outline: 'none', fontFamily: 'inherit', transition: 'border-color 0.15s' }}
+          />
+          <button onClick={send} disabled={!draft.trim() || sending}
+            style={{ background: draft.trim() ? C.blue : 'var(--c-border)', border: 'none', borderRadius: 10, width: 42, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: draft.trim() ? 'pointer' : 'default', transition: 'background 0.15s', flexShrink: 0 }}>
+            <Send size={16} color="#fff" />
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   return (
+    <>
     <div style={{ minHeight: '100vh', background: C.bg, fontFamily: 'inherit' }}>
-      <Navbar />
+      <Navbar
+        hideBottomNav={mobileView === 'thread'}
+        mobileLeft={mobileView === 'thread' ? (
+          <button
+            onClick={() => { setMobileView('list'); setActiveId(null) }}
+            style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'none', border: 'none', color: C.blue, cursor: 'pointer', fontFamily: 'inherit', fontSize: 13, fontWeight: 600, padding: '6px 4px' }}
+          >
+            <ArrowLeft size={18} />
+          </button>
+        ) : null}
+      />
       <div className="page-content" style={{ padding: 0, maxWidth: '100%' }}>
         <div className="msg-inner" style={{ maxWidth: 920, margin: '0 auto', padding: '0 clamp(8px,3vw,24px)', paddingTop: 28, transition: 'max-width 0.22s cubic-bezier(0.4,0,0.2,1)' }}>
 
@@ -523,8 +647,8 @@ export default function Mensagens() {
               </div>
             </div>
 
-            {/* ── Thread ── */}
-            <div style={{ ...C.glassStyle, flex: 1, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, display: 'flex', flexDirection: 'column', overflow: 'hidden' }} className={`msg-thread${mobileView === 'thread' ? ' active' : ''}`}>
+            {/* ── Thread (desktop only — mobile uses portal below) ── */}
+            <div style={{ ...C.glassStyle, flex: 1, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, display: 'flex', flexDirection: 'column', overflow: 'hidden' }} className="msg-thread">
 
               {!activeId ? (
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, padding: 32, textAlign: 'center' }}>
@@ -563,156 +687,8 @@ export default function Mensagens() {
                     </div>
                   </div>
 
-                  {/* Messages */}
-                  <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 8px', display: 'flex', flexDirection: 'column', gap: 4 }}>
-                    {messages.length === 0 && (
-                      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, textAlign: 'center', padding: 32 }}>
-                        <Avatar profile={activeProfile} size={52} />
-                        <p style={{ color: C.text, fontSize: 14, fontWeight: 700, margin: 0 }}>{activeProfile?.full_name || activeProfile?.username}</p>
-                        <p style={{ color: C.muted, fontSize: 13, margin: 0 }}>Começa a conversa!</p>
-                      </div>
-                    )}
-
-                    {messages.map((m, i) => {
-                      const isMine = m.from_id === user.id
-                      const prevIsMine = i > 0 && messages[i-1].from_id === user.id
-                      const isLastSent = isMine && m.id === lastSentMsg?.id
-                      const isHovered = hoveredMsgId === m.id
-                      const isConfirmingDelete = confirmDeleteId === m.id
-                      const isEditing = editingId === m.id
-
-                      return (
-                        <div key={m.id}
-                          style={{ display: 'flex', justifyContent: isMine ? 'flex-end' : 'flex-start', marginTop: isMine === prevIsMine ? 2 : 10, position: 'relative' }}
-                          onMouseEnter={() => { setHoveredMsgId(m.id) }}
-                          onMouseLeave={() => { setHoveredMsgId(null); if (confirmDeleteId === m.id && !isEditing) setConfirmDeleteId(null) }}
-                          onTouchStart={() => handleLongPress(m)}
-                          onTouchEnd={cancelLongPress}
-                          onTouchMove={cancelLongPress}>
-
-                          <div style={{ maxWidth: '72%' }}>
-
-                            {/* Desktop: action buttons for own messages (hidden on mobile via CSS) */}
-                            {isMine && isHovered && !isEditing && (
-                              <div className="msg-desktop-actions" style={{
-                                display: 'flex', alignItems: 'center', gap: 4,
-                                justifyContent: 'flex-end', marginBottom: 4,
-                              }}>
-                                {isConfirmingDelete ? (
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'var(--c-bg)', border: `1px solid ${C.border}`, borderRadius: 8, padding: '3px 8px', fontSize: 12, color: C.muted }}>
-                                    <span>Apagar?</span>
-                                    <button onClick={() => deleteMsg(m.id)}
-                                      style={{ background: '#ef4444', border: 'none', borderRadius: 5, color: '#fff', fontSize: 11, fontWeight: 700, padding: '2px 7px', cursor: 'pointer', fontFamily: 'inherit' }}>
-                                      Sim
-                                    </button>
-                                    <button onClick={() => setConfirmDeleteId(null)}
-                                      style={{ background: 'transparent', border: 'none', color: C.muted, fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', padding: '2px 4px' }}>
-                                      Não
-                                    </button>
-                                  </div>
-                                ) : (
-                                  <>
-                                    <button onClick={() => startEdit(m)} title="Editar"
-                                      style={{ background: 'var(--c-bg)', border: `1px solid ${C.border}`, borderRadius: 7, padding: '4px 7px', cursor: 'pointer', display: 'flex', alignItems: 'center', color: C.muted, transition: 'color 0.1s' }}
-                                      onMouseEnter={e => e.currentTarget.style.color = C.text}
-                                      onMouseLeave={e => e.currentTarget.style.color = C.muted}>
-                                      <Pencil size={12} />
-                                    </button>
-                                    <button onClick={() => setConfirmDeleteId(m.id)} title="Eliminar"
-                                      style={{ background: 'var(--c-bg)', border: `1px solid ${C.border}`, borderRadius: 7, padding: '4px 7px', cursor: 'pointer', display: 'flex', alignItems: 'center', color: C.muted, transition: 'color 0.1s' }}
-                                      onMouseEnter={e => e.currentTarget.style.color = '#ef4444'}
-                                      onMouseLeave={e => e.currentTarget.style.color = C.muted}>
-                                      <Trash2 size={12} />
-                                    </button>
-                                  </>
-                                )}
-                              </div>
-                            )}
-
-                            {/* Message bubble or edit input (desktop inline edit) */}
-                            {isEditing ? (
-                              <div className="msg-desktop-actions" style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                                <textarea
-                                  ref={editInputRef}
-                                  value={editDraft}
-                                  onChange={e => setEditDraft(e.target.value)}
-                                  onKeyDown={e => {
-                                    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveEdit(m.id) }
-                                    if (e.key === 'Escape') cancelEdit()
-                                  }}
-                                  rows={Math.min(editDraft.split('\n').length + 1, 6)}
-                                  style={{
-                                    background: 'var(--c-bg)', border: `1.5px solid ${C.blue}`,
-                                    borderRadius: 10, color: C.text, fontSize: 14,
-                                    padding: '9px 13px', outline: 'none', fontFamily: 'inherit',
-                                    resize: 'none', minWidth: 180,
-                                  }}
-                                />
-                                <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
-                                  <button onClick={cancelEdit}
-                                    style={{ background: 'var(--c-bg)', border: `1px solid ${C.border}`, borderRadius: 7, padding: '5px 12px', color: C.muted, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
-                                    Cancelar
-                                  </button>
-                                  <button onClick={() => saveEdit(m.id)} disabled={!editDraft.trim()}
-                                    style={{ background: editDraft.trim() ? C.blue : 'var(--c-border)', border: 'none', borderRadius: 7, padding: '5px 12px', color: '#fff', fontSize: 12, fontWeight: 700, cursor: editDraft.trim() ? 'pointer' : 'default', fontFamily: 'inherit' }}>
-                                    Guardar
-                                  </button>
-                                </div>
-                              </div>
-                            ) : (
-                              <div style={{
-                                background: isMine ? C.blue : 'var(--c-bg-alt)',
-                                color: isMine ? '#fff' : C.text,
-                                borderRadius: isMine ? '14px 14px 4px 14px' : '14px 14px 14px 4px',
-                                padding: '9px 13px',
-                                fontSize: 14,
-                                lineHeight: 1.5,
-                                wordBreak: 'break-word',
-                              }}>
-                                {m.content}
-                              </div>
-                            )}
-
-                            {/* Timestamp + edited + read receipt */}
-                            {!isEditing && (
-                              <div style={{ display: 'flex', alignItems: 'center', gap: 4, justifyContent: isMine ? 'flex-end' : 'flex-start', marginTop: 3, paddingInline: 4 }}>
-                                <span style={{ fontSize: 10, color: C.subtle }}>{timeAgo(m.created_at)}</span>
-                                {m.edited_at && <span style={{ fontSize: 10, color: C.subtle }}>· editado</span>}
-                                {isMine && isLastSent && (
-                                  m.read_at
-                                    ? <CheckCheck size={12} color={C.blue} style={{ flexShrink: 0 }} />
-                                    : <Check size={12} color={C.subtle} style={{ flexShrink: 0 }} />
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )
-                    })}
-                    <div ref={bottomRef} />
-                  </div>
-
-                  {/* Input */}
-                  <div className="msg-input-area" style={{ padding: '8px 12px 12px', borderTop: `1px solid ${C.border}`, flexShrink: 0 }}>
-                    {sendError && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#ef4444', fontSize: 11, fontWeight: 600, marginBottom: 6, padding: '5px 10px', background: 'rgba(239,68,68,0.08)', borderRadius: 7, border: '1px solid rgba(239,68,68,0.2)' }}>
-                        <AlertTriangle size={11} /> {sendError}
-                      </div>
-                    )}
-                    <div style={{ display: 'flex', gap: 8 }}>
-                    <input
-                      value={draft}
-                      onChange={e => { setDraft(e.target.value); if (sendError) setSendError('') }}
-                      onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }}
-                      placeholder="Escreve uma mensagem..."
-                      style={{ flex: 1, background: 'var(--c-bg)', border: `1.5px solid ${sendError ? '#ef4444' : C.border}`, borderRadius: 10, color: C.text, fontSize: 14, padding: '10px 14px', outline: 'none', fontFamily: 'inherit', transition: 'border-color 0.15s' }}
-                    />
-                    <button onClick={send} disabled={!draft.trim() || sending}
-                      style={{ background: draft.trim() ? C.blue : 'var(--c-border)', border: 'none', borderRadius: 10, width: 42, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: draft.trim() ? 'pointer' : 'default', transition: 'background 0.15s', flexShrink: 0 }}>
-                      <Send size={16} color="#fff" />
-                    </button>
-                    </div>
-                  </div>
+                  {renderMessages()}
+                  {renderInput()}
                 </>
               )}
             </div>
@@ -840,35 +816,15 @@ export default function Mensagens() {
         @keyframes msg-overlay-in { from { opacity: 0; } to { opacity: 1; } }
         @keyframes msg-popup-in { from { opacity: 0; transform: scale(0.92) translateY(8px); } to { opacity: 1; transform: scale(1) translateY(0); } }
         @media (max-width: 600px) {
-          /* List: full width, hidden when in thread view */
-          .msg-list             { display: flex !important; width: 100% !important; border-radius: 14px !important; margin: 0 8px !important; width: calc(100% - 16px) !important; }
+          .msg-list             { display: flex !important; width: calc(100% - 16px) !important; border-radius: 14px !important; margin: 0 8px !important; }
           .msg-list.mob-hidden  { display: none !important; }
-          /* Thread: hidden by default, shown when active — full screen */
           .msg-thread           { display: none !important; }
-          .msg-thread.active    { display: flex !important; border-radius: 14px !important; position: fixed !important; left: 8px !important; right: 8px !important; top: 8px !important; bottom: 70px !important; z-index: 100 !important; background: var(--c-card) !important; border: 1px solid var(--c-border) !important; }
-          /* Compose button — keep natural size (34px icon btn) */
           .msg-compose-btn { flex-shrink: 0 !important; }
-          /* Message input area — fixed at bottom of thread, above bottom nav */
-          .msg-input-area { padding: 8px 12px calc(env(safe-area-inset-bottom, 0px) + 10px) !important; background: var(--c-card) !important; }
-          /* 16px font-size prevents iOS zoom on input focus */
-          .msg-input-area input,
-          .msg-input-area textarea,
-          .msg-action-overlay textarea,
-          .msg-action-overlay input { font-size: 16px !important; }
-          /* Thread header — reduce padding */
-          .msg-thread-hd { padding: 12px 14px !important; }
-          /* Back button in thread */
-          .msg-back-btn { display: flex !important; }
-          /* Height: full viewport minus bottom nav on mobile */
           .msg-outer-wrap { height: calc(100dvh - 62px) !important; min-height: 300px !important; padding: 0 !important; gap: 0 !important; }
-          /* Page header: hide when in thread */
           .msg-page-header.mob-hidden { display: none !important; }
           .msg-page-header { margin-bottom: 8px !important; padding: 0 8px !important; }
-          /* Inner wrapper: remove padding/margin on mobile */
           .msg-inner { padding: 0 !important; padding-top: 12px !important; }
-          /* Hide desktop hover actions on mobile */
           .msg-desktop-actions { display: none !important; }
-          /* Conversation list items: bigger touch targets */
           .msg-conv-item { padding: 12px 14px !important; }
         }
         @media (min-width: 601px) {
@@ -876,10 +832,40 @@ export default function Mensagens() {
           .msg-thread       { display: flex !important; }
           .msg-back         { display: none !important; }
           .msg-back-btn     { display: none !important; }
-          /* Hide mobile overlay trigger on desktop */
           .msg-action-overlay { display: none !important; }
         }
       `}</style>
     </div>
+
+    {/* ── Mobile thread — rendered via portal directly on body ── */}
+    {isMobileThread && createPortal(
+      <div style={{
+        position: 'fixed',
+        top: 62, left: 0, right: 0, bottom: 0,
+        zIndex: 200,
+        display: 'flex', flexDirection: 'column',
+        background: 'var(--c-bg)',
+        fontFamily: 'inherit',
+      }}>
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderBottom: '1px solid var(--c-border)', flexShrink: 0, background: 'var(--c-bg)' }}>
+          <Avatar profile={activeProfile} size={32} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {activeProfile?.full_name || activeProfile?.username || 'Utilizador'}
+            </div>
+            {activeProfile?.username && <div style={{ fontSize: 11, color: C.muted }}>@{activeProfile.username}</div>}
+          </div>
+        </div>
+
+        {/* Messages */}
+        {renderMessages()}
+
+        {/* Input */}
+        {renderInput()}
+      </div>,
+      document.body
+    )}
+    </>
   )
 }

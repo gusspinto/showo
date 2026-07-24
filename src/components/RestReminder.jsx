@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext'
 const DISMISSED_KEY = 'showo_rest_dismissed'
 const SNOOZE_KEY    = 'showo_rest_snooze_until'
 const SNOOZE_MINS_KEY = 'showo_rest_snooze_mins'
+const STANDBY_KEY   = 'showo_rest_standby'
 
 const C = {
   bg:     'rgba(6,12,24,0.95)',
@@ -15,31 +16,46 @@ const C = {
 }
 
 export default function RestReminder() {
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
   const [phase, setPhase] = useState(null)   // null | 'first' | 'second'
   const [visible, setVisible] = useState(false)
+  const [standby, setStandby] = useState(false)
   const [snoozeMins, setSnoozeMins] = useState(0)
   const timerRef = useRef(null)
 
+  const firstName = user?.user_metadata?.full_name?.split(' ')[0]
+    || user?.email?.split('@')[0] || ''
+
   useEffect(() => {
     if (!user) return
+    // Skip for teachers
+    if (profile?.role === 'professor') return
+
+    // Check if standby was active
+    if (localStorage.getItem(STANDBY_KEY) === new Date().toDateString()) {
+      const h = new Date().getHours()
+      if (h >= 23 || h < 6) {
+        setStandby(true)
+        return
+      } else {
+        localStorage.removeItem(STANDBY_KEY)
+      }
+    }
+
     check()
     const id = setInterval(check, 60_000)
     return () => { clearInterval(id); clearTimeout(timerRef.current) }
-  }, [user])
+  }, [user, profile?.role])
 
   function check() {
     const h = new Date().getHours()
     if (h < 23) return
 
-    // Already dismissed today
     if (localStorage.getItem(DISMISSED_KEY) === new Date().toDateString()) return
 
-    // Snoozed?
     const snoozeUntil = localStorage.getItem(SNOOZE_KEY)
     if (snoozeUntil) {
       if (Date.now() < parseInt(snoozeUntil)) return
-      // Snooze expired → second popup
       localStorage.removeItem(SNOOZE_KEY)
       const mins = parseInt(localStorage.getItem(SNOOZE_MINS_KEY) ?? '30')
       setSnoozeMins(mins)
@@ -54,17 +70,65 @@ export default function RestReminder() {
 
   function handleRest() {
     localStorage.setItem(DISMISSED_KEY, new Date().toDateString())
+    localStorage.setItem(STANDBY_KEY, new Date().toDateString())
     localStorage.removeItem(SNOOZE_KEY)
     localStorage.removeItem(SNOOZE_MINS_KEY)
     setVisible(false)
+    setStandby(true)
   }
 
   function handleKeepWorking() {
-    // Random 25–40 min snooze
     const mins = Math.floor(Math.random() * 16) + 25
     localStorage.setItem(SNOOZE_KEY, String(Date.now() + mins * 60_000))
     localStorage.setItem(SNOOZE_MINS_KEY, String(mins))
     setVisible(false)
+  }
+
+  function exitStandby() {
+    localStorage.removeItem(STANDBY_KEY)
+    setStandby(false)
+  }
+
+  // Standby screen
+  if (standby) {
+    return (
+      <div
+        onClick={exitStandby}
+        style={{
+          position: 'fixed', inset: 0, zIndex: 9999,
+          background: '#050a14',
+          display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center',
+          cursor: 'pointer',
+          animation: 'standbyIn 0.6s ease',
+        }}
+      >
+        <div style={{
+          fontSize: 'clamp(28px, 5vw, 42px)',
+          fontWeight: 400,
+          fontFamily: 'var(--font-heading)',
+          color: 'var(--c-text)',
+          letterSpacing: '-1px',
+          marginBottom: 8,
+          opacity: 0.9,
+        }}>
+          Até amanhã, {firstName}.
+        </div>
+        <div style={{
+          fontSize: 13, color: 'var(--c-muted)', opacity: 0.5,
+          marginTop: 24,
+        }}>
+          toca para voltar
+        </div>
+
+        <style>{`
+          @keyframes standbyIn {
+            from { opacity: 0 }
+            to { opacity: 1 }
+          }
+        `}</style>
+      </div>
+    )
   }
 
   if (!visible || !phase) return null
@@ -110,8 +174,8 @@ export default function RestReminder() {
           margin: '0 0 28px',
         }}>
           {isFirst
-            ? 'O cérebro também precisa de descanso. O que aprendes hoje consolida-se enquanto dormes — não enquanto scrollas.'
-            : 'Conseguiste acabar? O projeto continua aqui amanhã. Vai descansar.'}
+            ? 'Descansa a cabeça. O que estudaste hoje fixa-se melhor a dormir.'
+            : 'Conseguiste acabar? Amanhã continuas com mais energia.'}
         </p>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -141,7 +205,7 @@ export default function RestReminder() {
               onMouseEnter={e => { e.currentTarget.style.color = C.text; e.currentTarget.style.borderColor = '#2a4070' }}
               onMouseLeave={e => { e.currentTarget.style.color = C.muted; e.currentTarget.style.borderColor = C.border }}
             >
-              Tenho que acabar este trabalho
+              Preciso de mais um bocado
             </button>
           )}
         </div>
