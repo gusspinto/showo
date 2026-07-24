@@ -3866,8 +3866,8 @@ export default function ProjectPage() {
           .proj-hero { padding: 10px 0 6px !important; }
           /* Highlights: stack on mobile */
           .proj-highlights-grid { grid-template-columns: 1fr !important; gap: 8px !important; }
-          /* Mini dashboard grid: 2 cols on mobile */
-          .proj-mini-dash { grid-template-columns: 1fr 1fr !important; }
+          /* Mini dashboard inner grids: 2 cols on mobile */
+          .proj-mini-dash > div[style*="grid"] { grid-template-columns: 1fr 1fr !important; }
           /* AI narrative: smaller text */
           .proj-ai-story p { font-size: 15px !important; }
           .proj-ai-story p:first-child { font-size: 16px !important; }
@@ -5031,7 +5031,10 @@ export default function ProjectPage() {
           }
 
           return (
-            <div className="proj-mini-dash" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 10, marginBottom: 4 }}>
+            <div className="proj-mini-dash" style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 4 }}>
+
+            {/* ── Actionable now ── */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 10 }}>
 
               {/* Teacher flagged revisions — student confirms when done.
                   First in the grid so it's the first thing the student sees.
@@ -5133,6 +5136,15 @@ export default function ProjectPage() {
                 </button>
               )}
 
+            </div>{/* end actionable grid */}
+
+            {/* ── Em breve ── */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 10, fontWeight: 700, color: colors.subtle, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Em breve</span>
+              <div style={{ flex: 1, height: 1, background: colors.border }} />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 10 }}>
+
               {/* Coming soon: PAP Slides */}
               <div
                 style={{
@@ -5193,7 +5205,8 @@ export default function ProjectPage() {
                 )}
               </div>
 
-            </div>
+            </div>{/* end em-breve grid */}
+            </div>{/* end proj-mini-dash flex */}
           )
         })()}
 
