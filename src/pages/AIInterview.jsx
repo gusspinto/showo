@@ -224,11 +224,11 @@ export default function AIInterview() {
     const q = questions[currentQ]
     if (!q) return
     if (trimmed && containsProfanity(trimmed)) {
-      setInputError('Linguagem inapropriada — mantém o conteúdo respeitoso.')
+      setInputError('Linguagem inapropriada. Mantém o conteúdo respeitoso.')
       return
     }
     if (trimmed && looksLikeSpam(trimmed)) {
-      setInputError('Texto inválido — escreve uma resposta real.')
+      setInputError('Texto inválido. Escreve uma resposta real.')
       return
     }
     setInputError('')
@@ -742,7 +742,7 @@ export default function AIInterview() {
 
                     {q.field === 'name' && inputValue.trim() && looksLikeSentence(inputValue.trim()) && (
                       <p style={{ margin: '8px 0 0', fontSize: 12, color: '#f59e0b', display: 'flex', alignItems: 'center', gap: 5 }}>
-                        <AlertTriangle size={12} /> Parece uma frase — tenta um nome curto tipo marca (ex: StudyFor, TaskFlow)
+                        <AlertTriangle size={12} /> Parece uma frase. Tenta um nome curto tipo marca (ex: StudyFor, TaskFlow)
                       </p>
                     )}
 

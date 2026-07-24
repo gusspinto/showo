@@ -251,7 +251,7 @@ const FeatureRow = memo(function FeatureRow({ reverse, tag, tagColor, title, des
           margin: '0 0 16px', fontFamily: 'var(--font-heading)',
           color: 'var(--c-text)',
         }}>{title}</h3>
-        <p style={{ fontSize: 16, color: 'var(--c-muted)', lineHeight: 1.7, margin: '0 0 24px' }}>{desc}</p>
+        {desc && <p style={{ fontSize: 16, color: 'var(--c-muted)', lineHeight: 1.7, margin: '0 0 24px' }}>{desc}</p>}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {bullets.map(b => (
             <div key={b} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -372,7 +372,7 @@ const MockupDefesa = memo(function MockupDefesa({ theme }) {
     <div style={{ background: c.bg, border: `1px solid ${c.border}`, borderRadius: 12, overflow: 'hidden' }}>
       <div style={{ padding: '16px 20px 13px', borderBottom: `1px solid ${c.border}`, display: 'flex', alignItems: 'center', gap: 10 }}>
         <GraduationCap size={16} color="#7c3aed" />
-        <span style={{ fontSize: 13, fontWeight: 400, color: c.text, fontFamily: 'var(--font-heading)' }}>Treino de defesa — PAP</span>
+        <span style={{ fontSize: 13, fontWeight: 400, color: c.text, fontFamily: 'var(--font-heading)' }}>Treino de defesa PAP</span>
       </div>
       <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: c.muted, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Perguntas prováveis do júri</div>
@@ -394,7 +394,7 @@ const MockupDefesa = memo(function MockupDefesa({ theme }) {
 const HOW_IT_WORKS = [
   { Icon: FileText, step: '1', title: 'Descreve o teu projeto', desc: 'Em poucas frases: o que fizeste, que problema resolve, que tecnologias usaste.' },
   { Icon: Bot,       step: '2', title: 'A IA gera a tua página', desc: 'Score automático, sugestões de melhoria e uma página pronta a partilhar.' },
-  { Icon: Share2,    step: '3', title: 'Partilha e candidata-te', desc: 'Um link para o CV ou LinkedIn — ou candidata-te direto a vagas na plataforma.' },
+  { Icon: Share2,    step: '3', title: 'Partilha e candidata-te', desc: 'Um link para o CV ou LinkedIn, ou candidata-te direto a vagas na plataforma.' },
 ]
 
 const QUICK_GOALS = [
@@ -827,7 +827,7 @@ export default function Home() {
             </div>
             {spamError && (
               <p style={{ color: '#ef4444', fontSize: 13, marginTop: 12, fontWeight: 600, textAlign: 'center' }}>
-                Texto inválido — escreve uma descrição real do teu projeto.
+                Texto inválido. Escreve uma descrição real do teu projeto.
               </p>
             )}
           </form>
@@ -942,7 +942,7 @@ export default function Home() {
             Tudo o que precisas, num só sítio
           </h2>
           <p style={{ fontSize: 17, color: colors.muted, maxWidth: 480, margin: '0 auto', lineHeight: 1.65 }}>
-            Cria, melhora, apresenta e candidata-te — sem sair da plataforma.
+            Cria, melhora, apresenta e candidata-te. Tudo numa só plataforma.
           </p>
         </Reveal>
         </div>
@@ -955,7 +955,7 @@ export default function Home() {
             tag="Portfólio"
             tagColor="#1b78f7"
             title="A tua página profissional em minutos"
-            desc="Gera automaticamente uma página pública do teu projeto com score de IA, descrição, tecnologias e muito mais. Partilha o link com qualquer empresa ou professor — sem precisar de fazer CV."
+            desc=""
             bullets={['Link único partilhável', 'Score calculado por IA', 'Página personalizada com o teu estilo']}
             bulletColor="#1b78f7"
             mockup={<MockupPortfolio theme={theme} />}
@@ -983,7 +983,7 @@ export default function Home() {
             tag="Vagas"
             tagColor="#f59e0b"
             title="Candidata-te com o teu projeto como portfólio"
-            desc="Encontra estágios e vagas de emprego directamente na plataforma. Candidata-te com o link do teu projeto — em vez de um CV vazio, mostras trabalho real."
+            desc="Encontra estágios e vagas de emprego directamente na plataforma. Candidata-te com o link do teu projeto. Em vez de um CV vazio, mostras trabalho real."
             bullets={['Vagas filtradas para estudantes', 'Candidatura com link do projeto', 'Visibilidade directa para empresas']}
             bulletColor="#f59e0b"
             mockup={<MockupVagas theme={theme} />}

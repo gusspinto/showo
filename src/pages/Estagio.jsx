@@ -47,7 +47,7 @@ export default function Estagio() {
 
   useEffect(() => {
     setEmailText(
-`Assunto: Candidatura a Estágio — ${displayName}
+`Assunto: Candidatura a Estágio de ${displayName}
 
 Olá,
 

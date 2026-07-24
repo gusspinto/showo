@@ -454,9 +454,9 @@ function InvitesTab({ codes, loading, onGenerate, generating, onToggleActive }) 
   return (
     <div>
       <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '20px 22px', marginBottom: 24 }}>
-        <h3 style={{ margin: '0 0 4px', fontSize: 15, fontWeight: 700, color: C.text }}>Gerar código de acesso — Professor</h3>
+        <h3 style={{ margin: '0 0 4px', fontSize: 15, fontWeight: 700, color: C.text }}>Gerar código de acesso de Professor</h3>
         <p style={{ margin: '0 0 16px', fontSize: 13, color: C.muted }}>
-          Por defeito, o código é reutilizável — dá para partilhar um único código com uma escola inteira e cada professor regista-se com ele.
+          Por defeito, o código é reutilizável. Dá para partilhar um único código com uma escola inteira e cada professor regista-se com ele.
           Define um limite de usos só se quiseres um código para uma pessoa em concreto.
         </p>
         <div style={{ display: 'flex', gap: 10 }}>

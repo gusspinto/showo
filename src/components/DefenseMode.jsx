@@ -701,7 +701,7 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
 
             {allChecked && (
               <div style={{ background: `${accent}0d`, border: `1px solid ${accent}30`, borderRadius: 12, padding: '14px 18px', textAlign: 'center', animation: 'pop 0.3s ease-out' }}>
-                <span style={{ fontSize: 14, fontWeight: 700, color: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>Secção completa — avança! <ChevronRight size={16} /></span>
+                <span style={{ fontSize: 14, fontWeight: 700, color: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>Secção completa, avança! <ChevronRight size={16} /></span>
               </div>
             )}
 
@@ -920,7 +920,7 @@ function GrupoPanel({ project }) {
   return (
     <div>
       <p style={{ margin: '0 0 18px', fontSize: 14, color: C.muted, lineHeight: 1.6 }}>
-        Adiciona os teus colegas de grupo pelo username do Showo. Depois atribui as secções que cada um vai apresentar — o Guia do Apresentador deles só mostrará as secções deles.
+        Adiciona os teus colegas de grupo pelo username do Showo. Depois atribui as secções que cada um vai apresentar. O Guia do Apresentador deles só mostrará as secções deles.
       </p>
 
       {/* Event toasts */}
