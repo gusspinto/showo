@@ -2948,6 +2948,7 @@ export default function ProjectPage() {
   const [registerPopupConfirm, setRegisterPopupConfirm] = useState(false)
   const [isAnonCreator, setIsAnonCreator] = useState(false)
   const [anonEditCount, setAnonEditCount] = useState(0)
+  const [mobileTab, setMobileTab] = useState('overview')
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [viewAsPublic, setViewAsPublic] = useState(false)
   const [previewEditing, setPreviewEditing] = useState(false)
@@ -3885,7 +3886,59 @@ export default function ProjectPage() {
           .proj-author-bottom-text { text-align: center; }
           .proj-author-links { justify-content: center !important; }
           /* Body gap on mobile */
-          .proj-body { gap: 10px; }
+          .proj-body { gap: 0; padding-top: 8px; }
+          /* Sidebar hidden on mobile — content moves into tabs */
+          .proj-sidebar { display: none !important; }
+          /* In Explorar tab: always show sections, hide the toggle button */
+          .proj-mobile-active .proj-sections-toggle { display: none !important; }
+          .proj-mobile-active .proj-sections-body.collapsed { display: flex !important; flex-direction: column; gap: 12px; }
+          /* proj-body comes before sidebar on mobile */
+          .proj-body   { order: 2 !important; }
+          /* Tab bar */
+          .proj-mobile-tabs {
+            display: flex !important;
+            overflow-x: auto;
+            scrollbar-width: none;
+            border-bottom: 1px solid var(--c-border);
+            margin: 0 -14px 16px;
+            padding: 0 14px;
+            position: sticky;
+            top: 56px;
+            background: var(--c-bg);
+            z-index: 10;
+            flex-shrink: 0;
+          }
+          .proj-mobile-tabs::-webkit-scrollbar { display: none; }
+          .proj-mobile-tab-btn {
+            flex-shrink: 0;
+            padding: 10px 14px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--c-muted);
+            background: none;
+            border: none;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -1px;
+            cursor: pointer;
+            font-family: inherit;
+            white-space: nowrap;
+            transition: color 0.15s;
+          }
+          .proj-mobile-tab-active {
+            color: #1b78f7 !important;
+            font-weight: 700 !important;
+            border-bottom-color: #1b78f7 !important;
+          }
+          /* Tab content sections */
+          .proj-mobile-section { display: none !important; }
+          .proj-mobile-active  { display: flex !important; flex-direction: column; gap: 10px; }
+          /* Mobile-only items hidden on desktop — shown inside active tabs on mobile */
+          .proj-mobile-only { display: block; }
+        }
+        @media (min-width: 601px) {
+          .proj-mobile-tabs { display: none !important; }
+          .proj-mobile-section { display: contents; }
+          .proj-mobile-only { display: none !important; }
         }
         ${viewAsPublic ? `
           /* ── Preview mode: the sidebar stays visible (so the owner can keep
@@ -4932,6 +4985,30 @@ export default function ProjectPage() {
         {/* proj-body: everything after hero — ordered after sidebar on tablet/mobile */}
         <div className="proj-body">
 
+        {/* ── Mobile tab bar (hidden on desktop via CSS) ── */}
+        <div className="proj-mobile-tabs" style={{ display: 'none' }}>
+          {(isOwner ? [
+            { id: 'overview', label: 'Projeto' },
+            { id: 'melhorar', label: 'Melhorar' },
+            { id: 'historia', label: 'História' },
+            { id: 'explorar', label: 'Explorar' },
+            { id: 'missoes', label: 'Missões' },
+          ] : [
+            { id: 'overview', label: 'Projeto' },
+            { id: 'historia', label: 'História' },
+            { id: 'explorar', label: 'Explorar' },
+          ]).map(({ id, label }) => (
+            <button
+              key={id}
+              onClick={() => { setMobileTab(id); if (id === 'explorar') setSectionsOpen(true) }}
+              className={`proj-mobile-tab-btn${mobileTab === id ? ' proj-mobile-tab-active' : ''}`}
+            >{label}</button>
+          ))}
+        </div>
+
+        {/* ── TAB: melhorar — mini-dashboard + completude + tips ── */}
+        <div className={`proj-mobile-section${mobileTab === 'melhorar' ? ' proj-mobile-active' : ''}`}>
+
         {/* ── Owner mini-dashboard: defense / AI analysis / report ── */}
         {isOwner && (() => {
           const isPapOrInternship = project.project_type === 'pap' || project.project_type === 'internship'
@@ -5145,6 +5222,87 @@ export default function ProjectPage() {
           </div>
         )}
 
+        {/* Mobile-only: completude + tips (desktop version lives in aside) */}
+        {isOwner && (() => {
+          const fq = PROFILE_SCORE_FIELDS.map(f => {
+            const val = String(project[f.key] || '').trim()
+            const quality = val.length === 0 ? 'empty' : val.length < f.minLen ? 'short' : 'good'
+            return { ...f, quality }
+          })
+          const pct = Math.round((fq.filter(f => f.quality === 'good').length / fq.length) * 100)
+          const needsWork = fq.filter(f => f.quality !== 'good').slice(0, 3)
+          return (
+            <div className="proj-mobile-only" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div className="proj-card" style={pct === 100 ? { background: 'rgba(34,197,94,0.04)', border: '1px solid rgba(34,197,94,0.22)' } : {}}>
+                {pct === 100 ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{ width: 32, height: 32, borderRadius: 9, background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <Check size={15} color="#22c55e" strokeWidth={3} />
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: '#22c55e', marginBottom: 2 }}>Perfil 100% completo</div>
+                      <div style={{ fontSize: 12, color: colors.subtle }}>Todos os campos preenchidos com qualidade</div>
+                    </div>
+                    <span style={{ fontSize: 13, fontWeight: 800, color: '#22c55e', flexShrink: 0 }}>100%</span>
+                  </div>
+                ) : (
+                  <>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+                      <h3 className="proj-sec-label" style={{ margin: 0 }}>Completude</h3>
+                      <span style={{ fontSize: 13, fontWeight: 800, color: pct > 60 ? colors.blue : colors.yellow }}>{pct}%</span>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      {fq.map(f => (
+                        <div key={f.key} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <div style={{ width: 6, height: 6, borderRadius: '50%', flexShrink: 0, background: f.quality === 'good' ? '#10b981' : f.quality === 'short' ? colors.yellow : colors.subtle }} />
+                          <span style={{ flex: 1, fontSize: 12, color: f.quality === 'good' ? colors.text : f.quality === 'short' ? '#d4a820' : colors.subtle, fontWeight: f.quality === 'good' ? 600 : 400 }}>{f.label}</span>
+                          {f.quality === 'good' && <Check size={11} color="#10b981" strokeWidth={3} />}
+                          {f.quality === 'short' && <span style={{ fontSize: 10, color: colors.yellow, fontWeight: 700 }}>curto</span>}
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{ marginTop: 14, height: 4, background: progTrack(pct), borderRadius: 99, overflow: 'hidden' }}>
+                      <div style={{ height: '100%', borderRadius: 99, width: `${pct}%`, background: progBar(pct), transition: 'width 0.5s' }} />
+                    </div>
+                  </>
+                )}
+              </div>
+              {needsWork.length > 0 && (
+                <div className="proj-card" style={{ background: colors.glass, border: `1px solid ${colors.glassBorder}` }}>
+                  <h3 className="proj-sec-label" style={{ margin: '0 0 12px', color: '#5a9ff5', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#5a9ff5" strokeWidth="2.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                    Como aumentar o score
+                  </h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    {needsWork.map(f => (
+                      <div key={f.key} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                        <div style={{ width: 5, height: 5, borderRadius: '50%', background: f.quality === 'short' ? colors.yellow : '#1b78f7', flexShrink: 0, marginTop: 6 }} />
+                        <div>
+                          <span style={{ fontSize: 11, fontWeight: 700, color: f.quality === 'short' ? colors.yellow : '#5a9ff5', display: 'block', marginBottom: 2 }}>
+                            {f.label} {f.quality === 'short' ? '· muito curto' : '· em falta'}
+                          </span>
+                          <p style={{ margin: 0, fontSize: 12, color: colors.muted, lineHeight: 1.55 }}>{f.tip}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <button
+                    onClick={() => { setMobileTab('missoes') }}
+                    style={{ marginTop: 14, width: '100%', background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.2)', color: '#5a9ff5', borderRadius: 10, padding: '9px 0', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+                  >
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'center' }}>Ver missões <ChevronDown size={14} /></span>
+                  </button>
+                </div>
+              )}
+            </div>
+          )
+        })()}
+
+        </div>{/* end melhorar tab section */}
+
+        {/* ── TAB: historia — AI narrative + highlights + PAP ── */}
+        <div className={`proj-mobile-section${mobileTab === 'historia' ? ' proj-mobile-active' : ''}`}>
+
         {/* A tua história — AI narrative with blue gradient */}
         {project.ai_description && (
           <div className="proj-card-pad proj-card proj-ai-story" style={{
@@ -5249,6 +5407,11 @@ export default function ProjectPage() {
           </div>
         )}
 
+        </div>{/* end historia tab section */}
+
+        {/* ── TAB: explorar — sections accordion ── */}
+        <div className={`proj-mobile-section${mobileTab === 'explorar' ? ' proj-mobile-active' : ''}`}>
+
         {/* Project sections — accordion on mobile/tablet, always visible on desktop */}
         <button
           className="proj-sections-toggle"
@@ -5269,6 +5432,11 @@ export default function ProjectPage() {
               onImprove={setEditModal} />
           ))}
         </div>
+
+        </div>{/* end explorar tab section */}
+
+        {/* ── TAB: missoes — missions ── */}
+        <div className={`proj-mobile-section${mobileTab === 'missoes' ? ' proj-mobile-active' : ''}`}>
 
         {/* Missions — owner only */}
         {(isOwner || collaboratorSections !== null) && <div id="missions-section" className="proj-card" style={{ scrollMarginTop: 88 }}>
@@ -5304,6 +5472,25 @@ export default function ProjectPage() {
             ))}
           </div>
         </div>}
+
+        </div>{/* end missoes tab section */}
+
+        {/* ── TAB: overview — nota professor + share + author ── */}
+        <div className={`proj-mobile-section${mobileTab === 'overview' ? ' proj-mobile-active' : ''}`}>
+
+        {/* Mobile-only: nota do professor */}
+        {isOwner && project.teacher_score != null && (
+          <div className="proj-mobile-only proj-card" style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+            <ClipboardList size={14} color="#1b78f7" style={{ flexShrink: 0 }} />
+            <span style={{ fontSize: 13, fontWeight: 700, color: colors.text }}>Nota do professor</span>
+            <span style={{ marginLeft: 'auto', fontSize: 20, fontWeight: 900, color: project.teacher_score >= 16 ? '#22c55e' : project.teacher_score >= 10 ? '#1b78f7' : '#f97316', letterSpacing: '-0.5px', flexShrink: 0 }}>
+              {project.teacher_score}<span style={{ fontSize: 11, color: colors.muted, fontWeight: 500 }}>/20</span>
+            </span>
+            {project.teacher_score_note && (
+              <div style={{ flexBasis: '100%', fontSize: 12, color: colors.muted, lineHeight: 1.5 }}>{project.teacher_score_note}</div>
+            )}
+          </div>
+        )}
 
         {/* Share — compact bar */}
         <div className="proj-card" style={{ padding: '14px 16px' }}>
@@ -5508,6 +5695,8 @@ export default function ProjectPage() {
           </div>
         )}
 
+
+        </div>{/* end overview tab section */}
 
         <div style={{ textAlign: 'center', padding: '40px 0 0', color: colors.subtle, fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, flexWrap: 'wrap' }}>
           Criado com{' '}
