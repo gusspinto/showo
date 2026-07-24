@@ -664,13 +664,15 @@ export default function Home() {
           .hero-section  { padding-top: 72px !important; padding-bottom: 40px !important; min-height: 0 !important; justify-content: center !important; }
           .hero-gap      { height: 28px !important; }
           .hero-inner    { padding-left: 20px !important; padding-right: 20px !important; }
-          .hero-h1       { font-size: 34px !important; letter-spacing: -0.5px !important; margin-bottom: 16px !important; }
-          .hero-sub      { font-size: 15px !important; margin-bottom: 32px !important; }
-          .hero-widget   { margin-top: 24px !important; max-width: 100% !important; }
+          .hero-h1       { font-size: 28px !important; letter-spacing: -0.5px !important; margin-bottom: 12px !important; }
+          .hero-sub      { font-size: 14px !important; margin-bottom: 24px !important; }
+          .hero-widget   { margin-top: 20px !important; max-width: 100% !important; }
           .hero-scroll-cue { display: none !important; }
-          .goals-row     { flex-wrap: nowrap !important; overflow-x: auto !important; padding-bottom: 6px !important; scrollbar-width: none !important; -webkit-overflow-scrolling: touch !important; }
+          .goals-row     { flex-wrap: nowrap !important; overflow-x: auto !important; padding-bottom: 6px !important; padding-right: 20px !important; scrollbar-width: none !important; -webkit-overflow-scrolling: touch !important; }
+          .goals-row::after { content: ''; display: block; width: 1px; flex-shrink: 0; }
           .goals-row::-webkit-scrollbar { display: none !important; }
-          .goal-pill     { font-size: 12px !important; flex-shrink: 0 !important; }
+          .goal-pill     { font-size: 12px !important; flex-shrink: 0 !important; padding: 6px 12px !important; }
+          .widget-input  { font-size: 15px !important; }
           .social-strip  { gap: 10px !important; font-size: 12px !important; justify-content: center !important; }
           .features-grid { grid-template-columns: 1fr !important; gap: 12px !important; }
           .how-it-works-grid { grid-template-columns: 1fr !important; gap: 12px !important; }

@@ -3850,15 +3850,25 @@ export default function ProjectPage() {
           .proj-share-qr-label { display: none; }
         }
         @media (max-width: 600px) {
-          .proj-wrap         { padding: 0 16px 80px !important; overflow-x: hidden !important; }
-          .proj-cover        { height: 200px !important; margin-top: 20px !important; border-radius: 14px !important; }
-          .proj-hero         { padding: 20px 0 16px !important; }
-          .proj-h1           { font-size: 32px !important; }
+          .proj-wrap         { padding: 0 14px 80px !important; overflow-x: hidden !important; }
+          .proj-cover        { height: 180px !important; margin-top: 16px !important; border-radius: 12px !important; }
+          .proj-hero         { padding: 16px 0 12px !important; }
+          .proj-h1           { font-size: 26px !important; }
           .proj-score-abs    { display: none !important; }
           .proj-dashboard    { display: flex !important; }
-          .proj-tagline      { font-size: 15px !important; }
-          .proj-card-pad, .proj-card { padding: 16px 18px !important; border-radius: 14px !important; }
-          .proj-badges       { margin-bottom: 14px !important; }
+          .proj-tagline      { font-size: 14px !important; }
+          .proj-card-pad, .proj-card { padding: 14px 16px !important; border-radius: 12px !important; }
+          .proj-badges       { margin-bottom: 10px !important; }
+          /* Highlights: stack on mobile */
+          .proj-highlights-grid { grid-template-columns: 1fr !important; gap: 8px !important; }
+          /* Mini dashboard grid: 2 cols on mobile */
+          .proj-mini-dash { grid-template-columns: 1fr 1fr !important; }
+          /* AI narrative: smaller text */
+          .proj-ai-story p { font-size: 15px !important; }
+          .proj-ai-story p:first-child { font-size: 16px !important; }
+          /* Missions header: stack on mobile */
+          .proj-missions-header { flex-direction: column !important; }
+          .proj-missions-header > div:last-child { width: 100% !important; min-width: 0 !important; }
           /* Mobile: AI FAB hidden, Defense FAB circular */
           .proj-ai-fab       { display: none !important; }
           .proj-ai-fab-label { display: none !important; }
@@ -3875,7 +3885,7 @@ export default function ProjectPage() {
           .proj-author-bottom-text { text-align: center; }
           .proj-author-links { justify-content: center !important; }
           /* Body gap on mobile */
-          .proj-body { gap: 12px; }
+          .proj-body { gap: 10px; }
         }
         ${viewAsPublic ? `
           /* ── Preview mode: the sidebar stays visible (so the owner can keep
@@ -4940,7 +4950,7 @@ export default function ProjectPage() {
           }
 
           return (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 10, marginBottom: 4 }}>
+            <div className="proj-mini-dash" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 10, marginBottom: 4 }}>
 
               {/* Teacher flagged revisions — student confirms when done.
                   First in the grid so it's the first thing the student sees.
@@ -5137,7 +5147,7 @@ export default function ProjectPage() {
 
         {/* A tua história — AI narrative with blue gradient */}
         {project.ai_description && (
-          <div className="proj-card-pad proj-card" style={{
+          <div className="proj-card-pad proj-card proj-ai-story" style={{
             background: '#1b78f7',
             border: '1px solid rgba(79,70,229,0.5)',
             position: 'relative', overflow: 'hidden',
@@ -5263,7 +5273,7 @@ export default function ProjectPage() {
         {/* Missions — owner only */}
         {(isOwner || collaboratorSections !== null) && <div id="missions-section" className="proj-card" style={{ scrollMarginTop: 88 }}>
           {/* Header */}
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 16, gap: 12 }}>
+          <div className="proj-missions-header" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 16, gap: 12 }}>
             <div>
               <h3 className="proj-sec-label" style={{ marginBottom: 4 }}>Missões</h3>
               <p style={{ margin: 0, fontSize: 12, color: colors.muted }}>Completa missões para melhorar o teu score</p>

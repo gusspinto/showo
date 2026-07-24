@@ -738,8 +738,8 @@ function InsightsBlock({ projects, profile, rankingPos, rankingPct, username, co
         </div>
 
         {/* Top row: ring + stats side by side */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 18, marginBottom: 16 }}>
-          <div style={{ position: 'relative', width: ringSize, height: ringSize, flexShrink: 0 }}>
+        <div className="dash-insights-top" style={{ display: 'flex', alignItems: 'center', gap: 18, marginBottom: 16 }}>
+          <div className="dash-insights-ring" style={{ position: 'relative', width: ringSize, height: ringSize, flexShrink: 0 }}>
             <div style={{ position: 'absolute', inset: '20%', borderRadius: '50%', background: 'rgba(27,120,247,0.06)', filter: 'blur(14px)', pointerEvents: 'none' }} />
             <svg width={ringSize} height={ringSize} style={{ transform: 'rotate(-90deg)', position: 'relative', zIndex: 1 }}>
               <circle cx={ringSize / 2} cy={ringSize / 2} r={ringRadius} fill="none" stroke="var(--c-border)" strokeWidth={ringStroke} />
@@ -756,7 +756,7 @@ function InsightsBlock({ projects, profile, rankingPos, rankingPct, username, co
             </div>
           </div>
 
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div className="dash-insights-stats" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
               <div style={{ ...headingNum, fontSize: 24, color: getScoreColor(best) }}>{best}</div>
               <div style={{ fontSize: 10, color: C.muted, fontWeight: 600 }}>Melhor</div>
@@ -1992,12 +1992,17 @@ export default function Dashboard() {
           .dash-proj-actions-mobile {
             display: flex !important;
             align-items: center;
-            gap: 2px;
+            gap: 4px;
             flex-shrink: 0;
           }
           .dash-proj-tagline { display: none !important; }
           .dash-proj-area-tag { display: none !important; }
-          .dash-proj-body { padding: 10px 14px !important; }
+          .dash-proj-body { padding: 12px 14px !important; }
+          /* InsightsBlock: stack ring + stats vertically */
+          .dash-insights-top { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; }
+          .dash-insights-ring { width: 72px !important; height: 72px !important; }
+          .dash-insights-ring svg { width: 72px !important; height: 72px !important; }
+          .dash-insights-stats { flex-direction: row !important; flex-wrap: wrap !important; gap: 16px !important; }
 
           /* ── Stat pills — slightly bigger touch feel ── */
           .dash-stat-pill {

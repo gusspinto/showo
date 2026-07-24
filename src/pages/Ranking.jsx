@@ -188,14 +188,24 @@ export default function Ranking() {
           .rank-top-info-tagline { display: none !important; }
           .rank-col-school { display: none !important; }
           .rank-col-course { display: none !important; }
-          .rank-podium { gap: 8px !important; }
           .rank-filter-btn-label { display: none !important; }
           .rank-filter-panel { grid-template-columns: 1fr 1fr !important; display: grid !important; gap: 8px !important; padding: 12px !important; }
           .rank-filter-panel select { min-width: 0 !important; width: 100% !important; }
           .rank-filter-panel .rank-clear-btn { grid-column: 1 / -1 !important; }
+          /* Podium: hide 2nd and 3rd, show only winner */
+          .rank-podium { flex-direction: column !important; align-items: stretch !important; gap: 0 !important; }
+          .rank-top:not(.rank-top-first) { display: none !important; }
+          .rank-top-first { width: 100% !important; }
+          .rank-top-first .rank-top-card { flex-direction: row !important; align-items: center !important; gap: 16px !important; text-align: left !important; padding: 16px !important; }
+          .rank-top-first .rank-top-card > div:last-child { flex: 1 !important; }
+          /* Legend: compact */
+          .rank-legend { gap: 8px !important; }
+          .rank-legend span { font-size: 11px !important; }
+          /* Row name: no max-width truncation */
+          .rank-row-name { font-size: 13px !important; }
         }
         @media (max-width: 380px) {
-          .rank-row-name { font-size: 13px !important; max-width: 140px !important; }
+          .rank-row-name { font-size: 12px !important; }
         }
       `}</style>
 
@@ -272,7 +282,7 @@ export default function Ranking() {
         )}
 
         {/* Legend */}
-        <div style={{ display: 'flex', gap: 16, marginBottom: 28, flexWrap: 'wrap' }}>
+        <div className="rank-legend" style={{ display: 'flex', gap: 16, marginBottom: 28, flexWrap: 'wrap' }}>
           {[
             { color: '#22c55e', label: 'Nível profissional  86+' },
             { color: '#8b5cf6', label: 'Quase profissional  71+' },
@@ -318,7 +328,7 @@ export default function Ranking() {
                     return (
                       <div
                         key={project.id}
-                        className="rank-top"
+                        className={`rank-top${isFirst ? ' rank-top-first' : ''}`}
                         onClick={() => navigate(`/projeto/${project.slug}`)}
                         style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer' }}
                       >
