@@ -297,32 +297,42 @@ const MockupPortfolio = memo(function MockupPortfolio({ theme }) {
   )
 })
 
-const MockupMissoes = memo(function MockupMissoes({ theme }) {
+const MockupPotencial = memo(function MockupPotencial({ theme }) {
   const c = MOCKUP_COLORS[theme] ?? MOCKUP_COLORS.dark
-  const missions = [
-    { label: 'Descreve o problema', pts: '+8 pts', done: true },
-    { label: 'Adiciona tecnologias', pts: '+5 pts', done: true },
-    { label: 'Define o público-alvo', pts: '+8 pts', done: false },
-    { label: 'Apresenta resultados', pts: '+10 pts', done: false },
+  const bars = [
+    { label: 'Qualidade', value: 24, max: 30, color: '#1b78f7' },
+    { label: 'Profundidade', value: 14, max: 20, color: '#1b78f7' },
+    { label: 'Perfil', value: 10, max: 15, color: '#1b78f7' },
+    { label: 'Validação', value: 12, max: 20, color: '#1b78f7' },
+    { label: 'Consistência', value: 11, max: 15, color: '#1b78f7' },
   ]
   return (
     <div style={{ background: c.bg, border: `1px solid ${c.border}`, borderRadius: 12, overflow: 'hidden' }}>
-      <div style={{ padding: '18px 20px 14px', borderBottom: `1px solid ${c.border}` }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-          <span style={{ fontSize: 13, fontWeight: 400, color: c.text, fontFamily: 'var(--font-heading)' }}>As tuas missões</span>
-          <span style={{ fontSize: 12, fontWeight: 700, color: '#22c55e' }}>88 pts</span>
+      <div style={{ padding: '18px 20px 14px', borderBottom: `1px solid ${c.border}`, display: 'flex', alignItems: 'center', gap: 16 }}>
+        <div style={{ position: 'relative', width: 48, height: 48, flexShrink: 0 }}>
+          <svg width={48} height={48} style={{ transform: 'rotate(-90deg)', display: 'block' }}>
+            <circle cx={24} cy={24} r={20} fill="none" stroke={c.border} strokeWidth={4} />
+            <circle cx={24} cy={24} r={20} fill="none" stroke="#1b78f7" strokeWidth={4}
+              strokeDasharray={`${(71 / 100) * 2 * Math.PI * 20} ${2 * Math.PI * 20}`}
+              strokeLinecap="round" />
+          </svg>
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, color: '#1b78f7' }}>71</div>
         </div>
-        <div style={{ height: 3, background: c.bgAlt, borderRadius: 99 }}>
-          <div style={{ width: '55%', height: '100%', background: '#22c55e', borderRadius: 99 }} />
+        <div>
+          <span style={{ fontSize: 13, fontWeight: 400, color: c.text, fontFamily: 'var(--font-heading)' }}>Potencial</span>
+          <div style={{ fontSize: 10, color: c.muted, marginTop: 2 }}>Top 7% dos estudantes</div>
         </div>
-        <div style={{ fontSize: 10, color: c.muted, marginTop: 5 }}>2 de 4 missões completas</div>
       </div>
-      <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 4 }}>
-        {missions.map(m => (
-          <div key={m.label} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 4px' }}>
-            {m.done ? <Trophy size={13} color="#22c55e" /> : <Zap size={13} color="#1b78f7" />}
-            <span style={{ flex: 1, fontSize: 12, color: m.done ? c.muted : c.text, fontWeight: m.done ? 400 : 600, textDecoration: m.done ? 'line-through' : 'none' }}>{m.label}</span>
-            <span style={{ fontSize: 11, fontWeight: 700, color: m.done ? '#22c55e' : '#1b78f7' }}>{m.pts}</span>
+      <div style={{ padding: '14px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {bars.map(b => (
+          <div key={b.label}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
+              <span style={{ fontSize: 11, color: c.muted }}>{b.label}</span>
+              <span style={{ fontSize: 11, color: c.text, fontWeight: 600 }}>{b.value}/{b.max}</span>
+            </div>
+            <div style={{ height: 3, background: c.bgAlt, borderRadius: 99 }}>
+              <div style={{ width: `${(b.value / b.max) * 100}%`, height: '100%', background: b.color, borderRadius: 99 }} />
+            </div>
           </div>
         ))}
       </div>
@@ -948,59 +958,59 @@ export default function Home() {
         </div>
 
         {featuresReady && <>
-          {/* Feature 1 — Portfólio público */}
+          {/* Feature 1 — Defesa PAP */}
+          <Reveal>
+          <FeatureRow
+            reverse={false}
+            tag="Defesa PAP"
+            tagColor="#8b5cf6"
+            title="Treina a defesa. Prepara as respostas do júri."
+            desc=""
+            bullets={['Perguntas prováveis do júri', 'Treino de apresentação cronometrado', 'Guia do apresentador por secção']}
+            bulletColor="#8b5cf6"
+            mockup={<MockupDefesa theme={theme} />}
+          />
+          </Reveal>
+
+          {/* Feature 2 — Potencial */}
+          <Reveal>
+          <FeatureRow
+            reverse={true}
+            tag="Potencial"
+            tagColor="#1b78f7"
+            title="Descobre o potencial do teu projeto."
+            desc=""
+            bullets={['Score calculado por IA', 'Ranking público entre estudantes', 'Análise detalhada por categoria']}
+            bulletColor="#1b78f7"
+            mockup={<MockupPotencial theme={theme} />}
+          />
+          </Reveal>
+
+          {/* Feature 3 — Portfólio */}
           <Reveal>
           <FeatureRow
             reverse={false}
             tag="Portfólio"
-            tagColor="#1b78f7"
+            tagColor="#22c55e"
             title="A tua página profissional em minutos"
             desc=""
-            bullets={['Link único partilhável', 'Score calculado por IA', 'Página personalizada com o teu estilo']}
-            bulletColor="#1b78f7"
+            bullets={['Link único partilhável', 'Página personalizada com o teu estilo', 'Partilha com empresas e professores']}
+            bulletColor="#22c55e"
             mockup={<MockupPortfolio theme={theme} />}
           />
           </Reveal>
 
-          {/* Feature 2 — Missões + Ranking */}
+          {/* Feature 4 — Vagas */}
           <Reveal>
           <FeatureRow
             reverse={true}
-            tag="Missões"
-            tagColor="#22c55e"
-            title="Completa missões. Sobe no ranking."
-            desc="Cada campo que preencheres, cada detalhe que adicionares ao teu projeto vale pontos. Competes com outros estudantes num ranking público e provoas que o teu projeto é a sério."
-            bullets={['Missões com pontos por campo', 'Ranking público entre estudantes', 'Badges de nível conquistados']}
-            bulletColor="#22c55e"
-            mockup={<MockupMissoes theme={theme} />}
-          />
-          </Reveal>
-
-          {/* Feature 3 — Vagas */}
-          <Reveal>
-          <FeatureRow
-            reverse={false}
             tag="Vagas"
             tagColor="#f59e0b"
             title="Candidata-te com o teu projeto como portfólio"
-            desc="Encontra estágios e vagas de emprego directamente na plataforma. Candidata-te com o link do teu projeto. Em vez de um CV vazio, mostras trabalho real."
+            desc=""
             bullets={['Vagas filtradas para estudantes', 'Candidatura com link do projeto', 'Visibilidade directa para empresas']}
             bulletColor="#f59e0b"
             mockup={<MockupVagas theme={theme} />}
-          />
-          </Reveal>
-
-          {/* Feature 4 — Defesa */}
-          <Reveal>
-          <FeatureRow
-            reverse={true}
-            tag="Defesa PAP"
-            tagColor="#8b5cf6"
-            title="Treina a defesa. Prepara as respostas do júri."
-            desc="A IA gera as perguntas mais prováveis do júri com base no teu projeto, treinas as respostas e chegas à defesa preparado. Nunca mais ficas sem resposta na hora certa."
-            bullets={['Perguntas prováveis do júri', 'Treino de apresentação cronometrado', 'Guia do apresentador por secção']}
-            bulletColor="#8b5cf6"
-            mockup={<MockupDefesa theme={theme} />}
           />
           </Reveal>
         </>}
