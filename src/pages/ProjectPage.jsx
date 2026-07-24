@@ -2946,6 +2946,8 @@ export default function ProjectPage() {
   const { theme } = useTheme()
   const [showRegisterPopup, setShowRegisterPopup] = useState(false)
   const [registerPopupConfirm, setRegisterPopupConfirm] = useState(false)
+  const [isAnonCreator, setIsAnonCreator] = useState(false)
+  const [anonEditCount, setAnonEditCount] = useState(0)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [viewAsPublic, setViewAsPublic] = useState(false)
   const [previewEditing, setPreviewEditing] = useState(false)
@@ -3098,9 +3100,9 @@ export default function ProjectPage() {
       setShowLaunchOverlay(true)
       window.history.replaceState({}, '')
     }
-    // Show register popup when anonymous user just created a project
+    // Track that this is an anonymous creator (for gentle nudge banner)
     if (!user && (location.state?.justCreated || location.state?.newProject || location.state?.edit_token)) {
-      setTimeout(() => setShowRegisterPopup(true), 1200)
+      setIsAnonCreator(true)
     }
   }, [])
 
@@ -3422,6 +3424,11 @@ export default function ProjectPage() {
       setMilestoneCard({ score: m, tier })
     }
 
+    if (!user && isAnonCreator) {
+      const next = anonEditCount + 1
+      setAnonEditCount(next)
+      if (next >= 3) setShowRegisterPopup(true)
+    }
     setEditModal(null)
     setSaving(false)
   }
@@ -4248,8 +4255,8 @@ export default function ProjectPage() {
                   <Rocket size={24} color="#1b78f7" />
                 </div>
                 <div>
-                  <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--c-text)', lineHeight: 1.2, fontFamily: 'var(--font-heading)' }}>O teu projeto foi criado!</div>
-                  <div style={{ fontSize: 13, color: 'var(--c-muted)', marginTop: 4 }}>Cria uma conta gratuita para o guardar.</div>
+                  <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--c-text)', lineHeight: 1.2, fontFamily: 'var(--font-heading)' }}>Estás a ir bem!</div>
+                  <div style={{ fontSize: 13, color: 'var(--c-muted)', marginTop: 4 }}>Cria uma conta gratuita para guardar o progresso e continuar a editar.</div>
                 </div>
               </div>
               {/* Feature list */}
@@ -4283,10 +4290,17 @@ export default function ProjectPage() {
                     Criar conta gratuita →
                   </button>
                   <button
-                    onClick={() => setRegisterPopupConfirm(true)}
+                    onClick={() => {
+                      if (anonEditCount >= 3) {
+                        setShowRegisterPopup(false)
+                        setViewAsPublic(true)
+                      } else {
+                        setRegisterPopupConfirm(true)
+                      }
+                    }}
                     style={{ display: 'block', width: '100%', background: 'none', border: 'none', color: 'var(--c-muted)', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', padding: '8px 0' }}
                   >
-                    Continuar sem conta
+                    {anonEditCount >= 3 ? 'Ver projeto sem editar' : 'Continuar sem conta'}
                   </button>
                 </>
               ) : (
