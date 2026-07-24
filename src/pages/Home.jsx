@@ -398,10 +398,10 @@ const HOW_IT_WORKS = [
 ]
 
 const QUICK_GOALS = [
-  { id: 'pap',        label: 'PAP',              placeholder: 'Nome da tua PAP...' },
-  { id: 'internship', label: 'Estágio',          placeholder: 'Nome do teu estágio...' },
-  { id: 'group',      label: 'Trabalho de grupo', placeholder: 'Nome do teu trabalho de grupo...' },
-  { id: 'personal',   label: 'Projeto pessoal',  placeholder: 'Nome do teu projeto pessoal...' },
+  { id: 'pap',        label: 'PAP',              placeholder: 'Sobre o que foi a tua PAP?' },
+  { id: 'internship', label: 'Estágio',          placeholder: 'O que fizeste no teu estágio?' },
+  { id: 'group',      label: 'Trabalho de grupo', placeholder: 'Sobre o que foi o trabalho de grupo?' },
+  { id: 'personal',   label: 'Projeto pessoal',  placeholder: 'O que construíste?' },
 ]
 
 
@@ -512,7 +512,7 @@ export default function Home() {
 
   const placeholder = selectedGoal
     ? QUICK_GOALS.find(g => g.id === selectedGoal)?.placeholder
-    : 'Descreve o teu projeto em poucas palavras...'
+    : 'O que já construíste? Ex: uma app de fitness, um site para a escola...'
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: 'var(--c-bg)', color: 'var(--c-text)', fontFamily: 'var(--font-body)' }}>

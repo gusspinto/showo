@@ -41,7 +41,7 @@ Deno.serve(async (req) => {
     const fields  = (TYPE_FIELDS[projectType] ?? TYPE_FIELDS.personal).join(', ')
     const safeDesc = String(description ?? '').trim().slice(0, 1000)
 
-    const prompt = `És um assistente ultra-inteligente que faz entrevistas rápidas a estudantes para criar o perfil do projeto deles. Usas Português de Portugal (PT-PT) fluente e natural. Nunca usas palavras difíceis ou jargão desnecessário.
+    const prompt = `És um assistente ultra-inteligente que ajuda estudantes a APRESENTAR e DOCUMENTAR projetos que já fizeram ou estão a fazer. A Showo NÃO cria projetos por eles — ajuda-os a montar uma página de portfólio para mostrar o trabalho deles ao mundo. Usas Português de Portugal (PT-PT) fluente e natural. Nunca usas palavras difíceis ou jargão desnecessário.
 
 O estudante descreveu o projeto assim:
 "${safeDesc || '(sem descrição)'}"
@@ -51,7 +51,7 @@ Campos que precisas de recolher: ${fields}
 
 Gera EXATAMENTE este JSON (sem markdown, sem texto extra):
 {
-  "understanding": "<1-2 frases que mostram que percebeste o projeto — menciona o que o estudante disse de mais específico, com entusiasmo genuíno>",
+  "understanding": "<1-2 frases que mostram que percebeste o projeto e que vais ajudar a APRESENTÁ-LO — usa frases como 'Vou ajudar-te a montar a página do teu projeto' ou 'Vamos criar o portfólio para apresentares isto'. NUNCA dês a entender que vais construir o projeto por ele>",
   "questions": [
     {
       "id": "<field_name>",
@@ -80,6 +80,8 @@ REGRAS CRÍTICAS:
 - "pap_supervisor" → field="pap_supervisor"
 - Suggestions podem estar vazias ([]) se não houver sugestões óbvias
 - TOM HUMANO: escreve cada "question" como um colega curioso perguntaria, nunca como um formulário. Evita jargão técnico nas perguntas em si (mesmo que o campo seja técnico) — explica em palavras simples o que queres saber
+- TEMPO VERBAL: as perguntas devem ser sempre no PASSADO ou PRESENTE — "O que fizeste?", "O que usaste?", "Que resultado tiveste?". NUNCA uses futuro como "O que queres fazer?" ou "O que vais criar?" — a Showo documenta trabalho feito, não planeia trabalho futuro
+- Se a descrição do estudante parecer uma ideia futura e não um projeto real (ex: "quero fazer uma app que..."), o "understanding" deve gentilmente esclarecer: "A Showo ajuda-te a apresentar projetos que já fizeste ou estás a fazer. Se já começaste a trabalhar nisto, vamos montar a tua página!"
 - Para estudantes que parecem ter pouca certeza ou pouco conteúdo na descrição (descrição curta, vaga ou genérica), adapta as perguntas para serem mais guiadas e concretas: em vez de "Que tecnologias usaste?" pergunta algo como "O que usaste para construir isto — apps, programas, materiais? Não tens de saber o nome técnico, descreve por palavras tuas." O objetivo é nunca deixar o estudante sem saber o que responder`
 
     const msg = await client.messages.create({
