@@ -3857,9 +3857,13 @@ export default function ProjectPage() {
           .proj-h1           { font-size: 26px !important; }
           .proj-score-abs    { display: none !important; }
           .proj-dashboard    { display: flex !important; }
-          .proj-tagline      { font-size: 14px !important; }
+          .proj-tagline      { font-size: 14px !important; margin-bottom: 12px !important; }
           .proj-card-pad, .proj-card { padding: 14px 16px !important; border-radius: 12px !important; }
-          .proj-badges       { margin-bottom: 10px !important; }
+          /* Hide hero clutter on mobile — type badges, identity row */
+          .proj-badges       { display: none !important; }
+          .proj-identity-row { display: none !important; }
+          /* Tighter hero on mobile */
+          .proj-hero { padding: 10px 0 6px !important; }
           /* Highlights: stack on mobile */
           .proj-highlights-grid { grid-template-columns: 1fr !important; gap: 8px !important; }
           /* Mini dashboard grid: 2 cols on mobile */
@@ -4880,7 +4884,7 @@ export default function ProjectPage() {
 
           {/* Student identity line — name · area · course + status badges */}
           {(project.creator_name || project.area || project.course || internshipReady || ownerProfile?.available_for_work || project.review_status) && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
+            <div className="proj-identity-row" style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
               {/* "Disponível" — blue briefcase icon only */}
               {ownerProfile?.available_for_work && (
                 <div
@@ -5477,6 +5481,45 @@ export default function ProjectPage() {
 
         {/* ── TAB: overview — nota professor + share + author ── */}
         <div className={`proj-mobile-section${mobileTab === 'overview' ? ' proj-mobile-active' : ''}`}>
+
+        {/* Mobile-only: identity meta (hidden from hero on mobile) */}
+        <div className="proj-mobile-only proj-card" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {/* Type + area badges */}
+          {(project.project_type || project.area) && (() => {
+            const hero = TYPE_HERO[project.project_type] ?? TYPE_HERO.personal
+            return (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                {project.project_type && PROJECT_TYPE_LABELS[project.project_type] && (
+                  <span style={{ color: hero.c1, fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', display: 'flex', alignItems: 'center', gap: 5 }}>
+                    {hero.Icon && <hero.Icon size={11} />}{PROJECT_TYPE_LABELS[project.project_type].toUpperCase()}
+                  </span>
+                )}
+                {project.area && <><span style={{ color: colors.subtle, fontSize: 11 }}>·</span><span style={{ color: colors.blue, fontSize: 12, fontWeight: 600 }}>{project.area}</span></>}
+              </div>
+            )
+          })()}
+          {/* Review status + identity */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            {project.review_status && (() => {
+              const rs = project.review_status
+              const cfg = rs === 'ready_for_defense'
+                ? { tone: '34,197,94', color: '#22c55e', icon: <CheckCircle size={11} strokeWidth={2.5} />, label: 'Pronto para defesa' }
+                : rs === 'resubmitted'
+                ? { tone: '27,120,247', color: '#1b78f7', icon: <CheckCircle size={11} strokeWidth={2.5} />, label: 'Correções enviadas' }
+                : { tone: '249,115,22', color: '#f97316', icon: <AlertTriangle size={11} strokeWidth={2.5} />, label: 'Precisa de revisão' }
+              return (
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: `rgba(${cfg.tone},0.1)`, color: cfg.color, border: `1px solid rgba(${cfg.tone},0.25)`, borderRadius: 999, padding: '3px 10px', fontSize: 11, fontWeight: 700 }}>
+                  {cfg.icon}{cfg.label}
+                </div>
+              )
+            })()}
+            {[project.creator_name, project.course, project.school_year].filter(Boolean).map((item, i) => (
+              <span key={i} style={{ fontSize: 12, color: colors.muted, display: 'flex', alignItems: 'center', gap: 6 }}>
+                {i > 0 && <span style={{ color: colors.subtle, fontSize: 10 }}>·</span>}{item}
+              </span>
+            ))}
+          </div>
+        </div>
 
         {/* Mobile-only: nota do professor */}
         {isOwner && project.teacher_score != null && (
