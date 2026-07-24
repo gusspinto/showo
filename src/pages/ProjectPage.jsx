@@ -3103,6 +3103,9 @@ export default function ProjectPage() {
     // Track that this is an anonymous creator (for gentle nudge banner)
     if (!user && (location.state?.justCreated || location.state?.newProject || location.state?.edit_token)) {
       setIsAnonCreator(true)
+      if (location.state?.edit_token && project?.slug) {
+        localStorage.setItem(`edit_token_${project.slug}`, location.state.edit_token)
+      }
     }
   }, [])
 

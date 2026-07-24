@@ -296,6 +296,9 @@ export default function AIInterview() {
         highlights:  aiResult?.highlights  ?? null,
       }, userId)
 
+      // Store edit token for anonymous ownership
+      localStorage.setItem(`edit_token_${project.slug}`, project.edit_token)
+
       // Navigate to project page with edit token
       navigate(`/projeto/${project.slug}`, {
         state: { edit_token: project.edit_token, justCreated: true },
