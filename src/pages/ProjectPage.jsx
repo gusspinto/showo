@@ -4239,7 +4239,7 @@ export default function ProjectPage() {
       {/* Register popup — shown to anonymous users after creating a project */}
       {showRegisterPopup && !user && project && (
         <>
-          <div onClick={() => setShowRegisterPopup(false)} style={{ position: 'fixed', inset: 0, zIndex: 700, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }} />
+          <div style={{ position: 'fixed', inset: 0, zIndex: 700, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }} />
           <div style={{ position: 'fixed', zIndex: 701, left: '50%', top: '50%', transform: 'translate(-50%, -50%)', width: '100%', maxWidth: 540, padding: '0 16px', boxSizing: 'border-box' }}>
             <div style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 24, padding: '36px 36px 28px', boxShadow: '0 32px 100px rgba(0,0,0,0.6)' }}>
               {/* Header */}
