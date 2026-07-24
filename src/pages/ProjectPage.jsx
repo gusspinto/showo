@@ -411,8 +411,8 @@ function EditModal({ challenge, project, onClose, onSave, saving }) {
   const isComplete = len >= challenge.threshold
   const isSpam = looksLikeSpam(value) || containsProfanity(value)
   const spamMsg = containsProfanity(value)
-    ? 'Linguagem inapropriada. A Showo é uma plataforma para estudantes — mantém o conteúdo respeitoso.'
-    : 'Texto inválido — escreve conteúdo real.'
+    ? 'Linguagem inapropriada. A Showo é uma plataforma para estudantes. Mantém o conteúdo respeitoso.'
+    : 'Texto inválido. Escreve conteúdo real.'
   const ChalIcon = challenge.icon
   const progress = Math.min(len / challenge.threshold, 1)
 
@@ -583,7 +583,7 @@ const BLOCK_TYPES = [
   { type: 'image',   label: 'Imagem',        Icon: Image,      desc: 'Imagem por URL ou upload' },
   { type: 'gallery', label: 'Galeria',       Icon: Layout,     desc: 'Até 3 imagens lado a lado' },
   { type: 'video',   label: 'Vídeo',         Icon: Video,      desc: 'YouTube ou Vimeo embed' },
-  { type: 'card',    label: 'Card',          Icon: ClipboardList, desc: 'Cartão livre — título + dados (ex: idade, função...)' },
+  { type: 'card',    label: 'Card',          Icon: ClipboardList, desc: 'Cartão livre. Título + dados (ex: idade, função...)' },
   { type: 'cta',     label: 'Botão CTA',     Icon: ArrowRight, desc: 'Chamada à ação destacada' },
   { type: 'link',    label: 'Link',          Icon: Link,       desc: 'GitHub, demo, portfolio...' },
   { type: 'divider', label: 'Divisor',       Icon: Minus,      desc: 'Linha separadora de secções' },
@@ -1455,7 +1455,7 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                     setTimeout(() => setPreviewSaveError(false), 4000)
                   }
                 }}
-                title={previewSaveError ? 'Erro ao guardar — tenta novamente' : 'Guardar'}
+                title={previewSaveError ? 'Erro ao guardar, tenta novamente' : 'Guardar'}
                 style={{ width: 28, height: 28, borderRadius: 7, background: previewSaveError ? 'rgba(239,68,68,0.1)' : previewSaved ? 'rgba(34,197,94,0.1)' : 'rgba(27,120,247,0.08)', border: `1px solid ${previewSaveError ? 'rgba(239,68,68,0.3)' : previewSaved ? 'rgba(34,197,94,0.3)' : 'rgba(27,120,247,0.2)'}`, color: previewSaveError ? '#ef4444' : previewSaved ? '#22c55e' : '#1b78f7', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s', flexShrink: 0 }}
               >
                 {previewSaveError ? <X size={13} strokeWidth={3} /> : previewSaved ? <Check size={13} strokeWidth={3} /> : <Save size={13} />}
@@ -2107,7 +2107,7 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
               <div style={{ flex: 1, overflowY: 'auto', padding: '12px 14px' }}>
                 <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--c-subtle)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>Ordem da página</div>
                 <p style={{ margin: '0 0 12px', fontSize: 11, color: 'var(--c-muted)', lineHeight: 1.5 }}>
-                  Arrasta para reordenar — podes intercalar blocos com secções livremente. Toca em <Eye size={10} style={{ verticalAlign: 'middle' }} /> para ocultar uma secção.
+                  Arrasta para reordenar. Podes intercalar blocos com secções livremente. Toca em <Eye size={10} style={{ verticalAlign: 'middle' }} /> para ocultar uma secção.
                 </p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {layoutDisplay.map((item, idx) => {
@@ -3688,7 +3688,7 @@ export default function ProjectPage() {
   }
 
   const scoreSuffix = project.score != null ? ` · Score ${project.score}` : ''
-  const shareTitle = `${project.name} — Showo${scoreSuffix}`
+  const shareTitle = `${project.name} · Showo${scoreSuffix}`
   const shareDescription = project.ai_tagline || project.goal || `Projeto de ${project.creator_name || 'estudante'} no Showo`
 
   return (
@@ -4113,7 +4113,7 @@ export default function ProjectPage() {
                 position: 'relative',
               }}>
                 <p style={{ margin: '0 0 12px', fontSize: 13, color: 'rgba(232,242,255,0.55)', lineHeight: 1.6 }}>
-                  Criaste este projeto sem conta — se perderes o link, não há forma de o recuperar.
+                  Criaste este projeto sem conta. Se perderes o link, não há forma de o recuperar.
                   Cria uma conta para o guardar.
                 </p>
                 <button
@@ -4582,7 +4582,7 @@ export default function ProjectPage() {
           background: 'rgba(27,120,247,0.08)', borderBottom: '1px solid rgba(27,120,247,0.2)',
         }}>
           <span style={{ fontSize: 13, color: 'var(--c-muted)', fontWeight: 500 }}>
-            Este projeto não tem conta associada — se perderes o link, não há forma de o recuperar.
+            Este projeto não tem conta associada. Se perderes o link, não há forma de o recuperar.
           </span>
           <button
             onClick={() => navigate('/register', { state: { claimSlug: project.slug } })}
@@ -4610,7 +4610,13 @@ export default function ProjectPage() {
           ownerProfile={ownerProfile}
           isOwner={isOwner}
           isProfessor={isProfessor}
-          onExitPreview={() => { setViewAsPublic(false); setPreviewEditing(false) }}
+          onExitPreview={() => {
+            if (!user && isAnonCreator && anonEditCount >= 3) {
+              setShowRegisterPopup(true)
+              return
+            }
+            setViewAsPublic(false); setPreviewEditing(false)
+          }}
           previewBlocks={previewBlocks}
           setPreviewBlocks={setPreviewBlocks}
           previewStyle={previewStyle}
@@ -4833,7 +4839,7 @@ export default function ProjectPage() {
                 const cfg = rs === 'ready_for_defense'
                   ? { tone: '34,197,94', color: '#22c55e', icon: <CheckCircle size={11} strokeWidth={2.5} />, label: 'Pronto para defesa', title: 'O professor marcou este projeto como pronto para defesa' }
                   : rs === 'resubmitted'
-                  ? { tone: '27,120,247', color: '#1b78f7', icon: <CheckCircle size={11} strokeWidth={2.5} />, label: 'Correções enviadas', title: 'O aluno marcou as correções como feitas — aguarda nova revisão do professor' }
+                  ? { tone: '27,120,247', color: '#1b78f7', icon: <CheckCircle size={11} strokeWidth={2.5} />, label: 'Correções enviadas', title: 'O aluno marcou as correções como feitas. Aguarda nova revisão do professor' }
                   : { tone: '249,115,22', color: '#f97316', icon: <AlertTriangle size={11} strokeWidth={2.5} />, label: 'Precisa de revisão', title: 'O professor marcou este projeto como precisando de revisão' }
                 return (
                   <div
@@ -5057,7 +5063,7 @@ export default function ProjectPage() {
                   {featureInterest.pap_slides && <Check size={11} color="#1b78f7" style={{ marginLeft: 'auto' }} />}
                 </div>
                 <div style={{ fontSize: 11, color: colors.muted, lineHeight: 1.4 }}>
-                  {featureInterest.pap_slides ? 'Vamos avisar-te por email' : 'Em breve — IA gera a apresentação'}
+                  {featureInterest.pap_slides ? 'Vamos avisar-te por email' : 'Em breve. IA gera a apresentação'}
                 </div>
                 {!featureInterest.pap_slides && (
                   <div style={{ fontSize: 10, fontWeight: 600, color: 'rgba(27,120,247,0.7)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -5087,7 +5093,7 @@ export default function ProjectPage() {
                   {featureInterest.boss_fight && <Check size={11} color="#f97316" style={{ marginLeft: 'auto' }} />}
                 </div>
                 <div style={{ fontSize: 11, color: colors.muted, lineHeight: 1.4 }}>
-                  {featureInterest.boss_fight ? 'Vamos avisar-te por email' : 'Em breve — defesa simulada com IA'}
+                  {featureInterest.boss_fight ? 'Vamos avisar-te por email' : 'Em breve. Defesa simulada com IA'}
                 </div>
                 {!featureInterest.boss_fight && (
                   <div style={{ fontSize: 10, fontWeight: 600, color: 'rgba(249,115,22,0.7)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -5550,7 +5556,7 @@ export default function ProjectPage() {
             }}>
               <CheckCircle size={13} color="#1b78f7" style={{ flexShrink: 0 }} />
               <span style={{ fontSize: 11, color: colors.text, fontWeight: 600, lineHeight: 1.4 }}>
-                O aluno marcou as correções como feitas — revê e atualiza o estado.
+                O aluno marcou as correções como feitas. Revê e atualiza o estado.
               </span>
             </div>
           )}
@@ -5693,7 +5699,7 @@ export default function ProjectPage() {
                             <div key={h.id} style={{ display: 'flex', alignItems: 'baseline', gap: 8, fontSize: 12 }}>
                               <span style={{ fontWeight: 800, color: colors.muted }}>{h.score}/20</span>
                               <span style={{ color: colors.subtle, fontSize: 11 }}>{new Date(h.created_at).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-                              {h.note && <span style={{ color: colors.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>— {h.note}</span>}
+                              {h.note && <span style={{ color: colors.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{h.note}</span>}
                             </div>
                           ))}
                         </div>

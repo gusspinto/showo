@@ -695,7 +695,7 @@ export default function Admin() {
   }
 
   async function handleDeleteProject(projectId) {
-    const { error } = await supabase.from('projects').delete().eq('id', projectId)
+    const { error } = await supabase.rpc('admin_delete_project', { p_project_id: projectId })
     if (error) { showToast('Erro ao eliminar projeto: ' + error.message); return }
     showToast('Projeto eliminado')
     setProjects(prev => prev.filter(p => p.id !== projectId))
