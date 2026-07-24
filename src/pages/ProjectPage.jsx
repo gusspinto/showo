@@ -9,6 +9,7 @@ import { CHALLENGES, getChallengeStatus } from '../lib/challenges'
 import { Navbar } from '../components/Navbar'
 import { generateProject } from '../lib/generateProject'
 import { generateReport } from '../lib/generateReport'
+import { chatProjectCoach } from '../lib/chatProjectCoach'
 import { useAuth } from '../context/AuthContext'
 import { useSidebar } from '../context/SidebarContext'
 import { useTheme } from '../context/ThemeContext'
@@ -2949,6 +2950,10 @@ export default function ProjectPage() {
   const [isAnonCreator, setIsAnonCreator] = useState(false)
   const [anonEditCount, setAnonEditCount] = useState(0)
   const [mobileTab, setMobileTab] = useState('overview')
+  const [coachMessages, setCoachMessages] = useState([])
+  const [coachInput, setCoachInput] = useState('')
+  const [coachLoading, setCoachLoading] = useState(false)
+  const coachBottomRef = useRef(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [viewAsPublic, setViewAsPublic] = useState(false)
   const [previewEditing, setPreviewEditing] = useState(false)
@@ -3716,6 +3721,7 @@ export default function ProjectPage() {
       </Helmet>
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes bounce { 0%,60%,100% { transform:translateY(0); opacity:.4 } 30% { transform:translateY(-5px); opacity:1 } }
         @keyframes sparkle-pulse {
           0%, 100% { box-shadow: 0 0 0 0 rgba(139,92,246,0.5); }
           50%       { box-shadow: 0 0 0 10px rgba(139,92,246,0); }
@@ -4997,6 +5003,7 @@ export default function ProjectPage() {
             { id: 'historia', label: 'História' },
             { id: 'explorar', label: 'Explorar' },
             { id: 'missoes', label: 'Missões' },
+          { id: 'ia', label: 'IA' },
           ] : [
             { id: 'overview', label: 'Projeto' },
             { id: 'historia', label: 'História' },
@@ -5491,6 +5498,110 @@ export default function ProjectPage() {
         </div>}
 
         </div>{/* end missoes tab section */}
+
+        {/* ── TAB: ia — project coach chatbot ── */}
+        {isOwner && (() => {
+          const sendCoach = async (e) => {
+            e?.preventDefault()
+            const msg = coachInput.trim()
+            if (!msg || coachLoading) return
+            const next = [...coachMessages, { role: 'user', content: msg }]
+            setCoachMessages(next)
+            setCoachInput('')
+            setCoachLoading(true)
+            try {
+              const reply = await chatProjectCoach({ project, messages: coachMessages, message: msg })
+              setCoachMessages(prev => [...prev, { role: 'assistant', content: reply }])
+              setTimeout(() => coachBottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
+            } catch (err) {
+              setCoachMessages(prev => [...prev, { role: 'assistant', content: 'Ocorreu um erro. Tenta novamente.' }])
+            }
+            setCoachLoading(false)
+          }
+
+          return (
+            <div className={`proj-mobile-section${mobileTab === 'ia' ? ' proj-mobile-active' : ''}`}>
+              <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100dvh - 200px)', minHeight: 400 }}>
+                {/* Messages */}
+                <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12, paddingBottom: 8 }}>
+                  {coachMessages.length === 0 && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingTop: 8 }}>
+                      <div style={{ background: 'rgba(27,120,247,0.08)', border: '1px solid rgba(27,120,247,0.18)', borderRadius: 12, padding: '14px 16px', fontSize: 13, color: colors.text, lineHeight: 1.6 }}>
+                        <span style={{ display: 'block', fontSize: 11, fontWeight: 700, color: colors.blue, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>Assistente IA</span>
+                        Olá! Sou o teu assistente para melhorar o <strong>{project.name}</strong>. Posso ajudar-te a tornar cada secção mais convincente para um júri ou recrutador. Em que queres trabalhar hoje?
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        {[
+                          'O que está mais fraco no meu projeto?',
+                          'Como posso melhorar a secção do problema?',
+                          'O meu público-alvo está bem definido?',
+                        ].map(q => (
+                          <button
+                            key={q}
+                            onClick={() => { setCoachInput(q); setTimeout(() => document.getElementById('coach-input')?.focus(), 50) }}
+                            style={{ textAlign: 'left', background: 'var(--c-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: 10, padding: '10px 14px', fontSize: 12, color: colors.muted, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s' }}
+                            onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(27,120,247,0.4)'; e.currentTarget.style.color = colors.text }}
+                            onMouseLeave={e => { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.color = colors.muted }}
+                          >{q}</button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {coachMessages.map((m, i) => (
+                    <div key={i} style={{
+                      alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start',
+                      maxWidth: '85%',
+                      background: m.role === 'user' ? '#1b78f7' : 'var(--c-bg-alt)',
+                      border: m.role === 'user' ? 'none' : `1px solid ${colors.border}`,
+                      borderRadius: m.role === 'user' ? '14px 14px 4px 14px' : '14px 14px 14px 4px',
+                      padding: '10px 14px',
+                      fontSize: 13,
+                      color: m.role === 'user' ? '#fff' : colors.text,
+                      lineHeight: 1.6,
+                      whiteSpace: 'pre-wrap',
+                    }}>{m.content}</div>
+                  ))}
+                  {coachLoading && (
+                    <div style={{ alignSelf: 'flex-start', background: 'var(--c-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: '14px 14px 14px 4px', padding: '10px 16px', display: 'flex', gap: 5, alignItems: 'center' }}>
+                      {[0,1,2].map(i => <div key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: colors.muted, animation: `bounce 1.2s ease-in-out ${i * 0.2}s infinite` }} />)}
+                    </div>
+                  )}
+                  <div ref={coachBottomRef} />
+                </div>
+                {/* Input */}
+                <form onSubmit={sendCoach} style={{ display: 'flex', gap: 8, paddingTop: 10, borderTop: `1px solid ${colors.border}` }}>
+                  <input
+                    id="coach-input"
+                    value={coachInput}
+                    onChange={e => setCoachInput(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendCoach() } }}
+                    placeholder="Pergunta sobre o teu projeto..."
+                    disabled={coachLoading}
+                    style={{
+                      flex: 1, background: 'var(--c-bg-alt)', border: `1px solid ${colors.border}`,
+                      borderRadius: 10, padding: '10px 14px', fontSize: 13,
+                      color: colors.text, fontFamily: 'inherit', outline: 'none',
+                      opacity: coachLoading ? 0.6 : 1,
+                    }}
+                  />
+                  <button
+                    type="submit"
+                    disabled={!coachInput.trim() || coachLoading}
+                    style={{
+                      background: coachInput.trim() && !coachLoading ? '#1b78f7' : 'var(--c-bg-alt)',
+                      border: `1px solid ${coachInput.trim() && !coachLoading ? '#1b78f7' : colors.border}`,
+                      borderRadius: 10, padding: '10px 14px',
+                      color: coachInput.trim() && !coachLoading ? '#fff' : colors.muted,
+                      cursor: coachInput.trim() && !coachLoading ? 'pointer' : 'default',
+                      fontFamily: 'inherit', fontSize: 13, fontWeight: 600,
+                      transition: 'all 0.15s', flexShrink: 0,
+                    }}
+                  >Enviar</button>
+                </form>
+              </div>
+            </div>
+          )
+        })()}
 
         {/* ── TAB: overview — nota professor + share + author ── */}
         <div className={`proj-mobile-section${mobileTab === 'overview' ? ' proj-mobile-active' : ''}`}>
