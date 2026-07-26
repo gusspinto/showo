@@ -2,6 +2,7 @@ import { useState, useEffect, lazy, Suspense, Component } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { AlertTriangle, X as XIcon, Frown, RefreshCw, ArrowLeft } from 'lucide-react'
 import { HelmetProvider } from 'react-helmet-async'
+import { Analytics } from '@vercel/analytics/react'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { SidebarProvider } from './context/SidebarContext'
@@ -365,6 +366,7 @@ export default function App() {
             </RecoveryGate>
             </ErrorBoundary>
           </BrowserRouter>
+          <Analytics />
         </AuthProvider>
         </SidebarProvider>
       </ThemeProvider>
