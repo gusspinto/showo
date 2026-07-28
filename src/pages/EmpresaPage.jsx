@@ -97,7 +97,7 @@ export default function EmpresaPage() {
   if (loading) return (
     <div style={{ minHeight: '100vh', background: C.bg }}>
       <Navbar />
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 'calc(100vh - 62px)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 'calc(100dvh - 62px)' }}>
         <div style={{ width: 28, height: 28, border: '2px solid var(--c-border)', borderTop: `2px solid ${C.blue}`, borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
@@ -107,7 +107,7 @@ export default function EmpresaPage() {
   if (notFound) return (
     <div style={{ minHeight: '100vh', background: C.bg }}>
       <Navbar />
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: 'calc(100vh - 62px)', gap: 12, textAlign: 'center', padding: 32 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: 'calc(100dvh - 62px)', gap: 12, textAlign: 'center', padding: 32 }}>
         <Building2 size={40} color={C.muted} style={{ opacity: 0.4 }} />
         <p style={{ color: C.muted, fontSize: 15, fontWeight: 600, margin: 0 }}>Empresa não encontrada</p>
         <button onClick={() => navigate(-1)} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 8, padding: '8px 16px', color: C.muted, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>

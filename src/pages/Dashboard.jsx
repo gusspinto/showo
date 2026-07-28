@@ -2055,8 +2055,8 @@ export default function Dashboard() {
           .dash-teacher-stats { grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; }
           /* ── Compact action bar — wrap on mobile ── */
           .dash-quick-actions-row { flex-wrap: wrap !important; }
-          /* ── Toasts — above bottom nav ── */
-          .dash-toast-center { bottom: 88px !important; }
+          /* ── Toasts — bottom tab bar retired, so sit near the true bottom edge ── */
+          .dash-toast-center { bottom: calc(24px + env(safe-area-inset-bottom, 0px)) !important; }
           /* ── Mobile: projects first, resumo collapsed ── */
           .dash-turma-col { order: 2 !important; padding-top: 0 !important; }
           .dash-projects-col { order: 1 !important; }
@@ -2066,7 +2066,7 @@ export default function Dashboard() {
           .dash-resumo-body.collapsed {
             display: none !important;
           }
-          .dash-toast-xp { bottom: 88px !important; right: 12px !important; min-width: 0 !important; max-width: calc(100vw - 24px) !important; }
+          .dash-toast-xp { bottom: calc(24px + env(safe-area-inset-bottom, 0px)) !important; right: 12px !important; min-width: 0 !important; max-width: calc(100vw - 24px) !important; }
         }
       `}</style>
       <Navbar />

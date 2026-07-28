@@ -51,7 +51,7 @@ Campos que precisas de recolher: ${fields}
 
 Gera EXATAMENTE este JSON (sem markdown, sem texto extra):
 {
-  "understanding": "<1-2 frases que mostram que percebeste o projeto e que vais ajudar a APRESENTÁ-LO — usa frases como 'Vou ajudar-te a montar a página do teu projeto' ou 'Vamos criar o portfólio para apresentares isto'. NUNCA dês a entender que vais construir o projeto por ele>",
+  "understanding": "<1-2 frases que provam que leste a descrição — menciona pelo menos 1 detalhe específico do projeto (tecnologia, tema, contexto) e diz que vais ajudar a APRESENTÁ-LO. Ex: 'Percebi — fizeste uma app em Flutter para gerir tarefas escolares. Vamos montar a página para a apresentares.' NUNCA uses uma frase genérica tipo 'Ótimo projeto!' nem dês a entender que vais construir algo por ele>",
   "questions": [
     {
       "id": "<field_name>",

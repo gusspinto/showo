@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
-import { Hand, Search, Lightbulb, Settings, Wrench, Trophy, BookOpen, Mic, GraduationCap, Check, X, Smartphone, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, ArrowRight, Eye, EyeOff, SlidersHorizontal } from 'lucide-react'
+import { Hand, Search, Lightbulb, Settings, Wrench, Trophy, BookOpen, Mic, GraduationCap, Check, X, Smartphone, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, ArrowRight, Eye, EyeOff, SlidersHorizontal, AlignLeft, Play, Pause } from 'lucide-react'
 
 const C = {
   bg: 'var(--c-bg)',
@@ -235,6 +235,30 @@ function JuryPanel({ aiData, loadingAI, aiError, onRetry }) {
   )
 }
 
+// ─── Teleprompter cover fallback ─────────────────────────────────────────────
+function tpCoverFallback(project) {
+  const name   = project?.name        || 'o meu projeto'
+  const school = project?.school      || ''
+  const course = project?.school_course || project?.course || ''
+  const goal   = project?.goal        || ''
+
+  const schoolLine = school || course
+    ? `Sou aluno${course ? ` do curso de ${course}` : ''}${school ? ` na ${school}` : ''}.`
+    : ''
+
+  const goalLine = goal
+    ? `O objetivo deste projeto é ${goal.charAt(0).toLowerCase()}${goal.slice(1)}.`
+    : ''
+
+  return [
+    `Bom dia. O meu nome é [o teu nome] e venho hoje apresentar o meu projeto: ${name}.`,
+    schoolLine,
+    `Ao longo desta apresentação irei explicar o problema que identifiquei, a solução que desenvolvi, as tecnologias que utilizei e os resultados que obtive.`,
+    goalLine,
+    `Peço que guardem as questões para o final. Obrigado pela atenção.`,
+  ].filter(Boolean).join('\n\n')
+}
+
 // ─── Backup slides ────────────────────────────────────────────────────────────
 
 // ─── Presenter guide (phone companion) ───────────────────────────────────────
@@ -390,6 +414,34 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
   const [timerOn, setTimerOn]     = useState(false)
   const timerRef = useRef(null)
   const touchStartX = useRef(null)
+
+  // Teleprompter mode
+  const [tpOn, setTpOn]         = useState(false)
+  const [tpPaused, setTpPaused] = useState(false)
+  const [tpSpeed, setTpSpeed]   = useState(1)  // 0=slow, 1=medium, 2=fast
+  const tpScrollRef              = useRef(null)
+  const tpRafRef                 = useRef(null)
+  const TP_SPEEDS = [0.25, 0.6, 1.2]
+
+  useEffect(() => {
+    if (!tpOn || tpPaused) { cancelAnimationFrame(tpRafRef.current); return }
+    const px = TP_SPEEDS[tpSpeed]
+    function scroll() {
+      const el = tpScrollRef.current
+      if (el) {
+        el.scrollTop += px
+        if (el.scrollTop >= el.scrollHeight - el.clientHeight - 2) el.scrollTop = 0
+      }
+      tpRafRef.current = requestAnimationFrame(scroll)
+    }
+    tpRafRef.current = requestAnimationFrame(scroll)
+    return () => cancelAnimationFrame(tpRafRef.current)
+  }, [tpOn, tpPaused, tpSpeed])
+
+  useEffect(() => {
+    if (tpScrollRef.current) tpScrollRef.current.scrollTop = 0
+    setTpPaused(false)
+  }, [current])
 
   const section   = sections[current]
   const accent    = section?.accent || C.blue
@@ -601,26 +653,35 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
       `}</style>
 
       {/* Top bar */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 20px', borderBottom: '1px solid var(--c-border)', flexShrink: 0, background: 'var(--c-card)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 16px', borderBottom: '1px solid var(--c-border)', flexShrink: 0, background: 'var(--c-card)', gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           {/* Timer — tap to pause/resume */}
           <button
             onClick={() => setTimerOn(s => !s)}
-            style={{ background: timerOn ? `${accent}18` : 'var(--c-bg-alt)', border: `1px solid ${timerOn ? accent + '44' : 'var(--c-border)'}`, borderRadius: 8, padding: '6px 12px', color: timerOn ? accent : C.subtle, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', minWidth: 60, textAlign: 'center' }}
+            style={{ background: timerOn ? `${accent}18` : 'var(--c-bg-alt)', border: `1px solid ${timerOn ? accent + '44' : 'var(--c-border)'}`, borderRadius: 8, padding: '5px 10px', color: timerOn ? accent : C.subtle, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', minWidth: 52, textAlign: 'center' }}
           >
             {fmt(timer)}
           </button>
-          <span style={{ fontSize: 12, color: C.subtle, maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{project.name}</span>
+          {/* Teleprompter toggle */}
+          <button
+            onClick={() => { setTpOn(s => !s); setTpPaused(false) }}
+            title="Modo teleponto"
+            style={{ background: tpOn ? `${accent}18` : 'var(--c-bg-alt)', border: `1px solid ${tpOn ? accent + '55' : 'var(--c-border)'}`, borderRadius: 8, padding: '5px 8px', color: tpOn ? accent : C.subtle, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          >
+            <AlignLeft size={14} />
+          </button>
         </div>
-        {/* Section dots */}
-        <div style={{ display: 'flex', gap: 5 }}>
-          {sections.map((s, i) => (
-            <button key={s.id} onClick={() => { setCurrent(i); setChecked({}); setShowNote(false) }}
-              style={{ width: i === current ? 18 : 6, height: 6, borderRadius: 3, border: 'none', cursor: 'pointer', padding: 0, background: i === current ? accent : i < current ? '#2a4070' : 'var(--c-border)', transition: 'all 0.2s' }}
+        {/* Section dots — collapse to just current/total on very small screens */}
+        <div style={{ display: 'flex', gap: 4, flex: 1, justifyContent: 'center', overflow: 'hidden' }}>
+          {sections.length <= 10 ? sections.map((s, i) => (
+            <button key={s.id} onClick={() => { setCurrent(i); setChecked({}); setShowNote(false); setTpPaused(false) }}
+              style={{ width: i === current ? 16 : 5, height: 5, borderRadius: 3, border: 'none', cursor: 'pointer', padding: 0, background: i === current ? accent : i < current ? '#2a4070' : 'var(--c-border)', transition: 'all 0.2s', flexShrink: 0 }}
             />
-          ))}
+          )) : (
+            <span style={{ fontSize: 12, color: C.subtle, fontWeight: 600 }}>{current + 1}/{sections.length}</span>
+          )}
         </div>
-        <button onClick={onClose} className="dm-ghost-btn" style={{ background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)', borderRadius: 8, padding: '6px 10px', color: C.subtle, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={16} /></button>
+        <button onClick={onClose} className="dm-ghost-btn" style={{ background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)', borderRadius: 8, padding: '5px 8px', color: C.subtle, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={15} /></button>
       </div>
 
       {/* Section header */}
@@ -646,8 +707,59 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
         </div>
       </div>
 
+      {/* Teleprompter mode overlay */}
+      {tpOn && (
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#000', overflow: 'hidden', position: 'relative' }}>
+          {/* Fade edges */}
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 60, background: 'linear-gradient(to bottom, #000, transparent)', zIndex: 2, pointerEvents: 'none' }} />
+          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 80, background: 'linear-gradient(to top, #000, transparent)', zIndex: 2, pointerEvents: 'none' }} />
+
+          {/* Scrolling text — only flowing speech, no bullets */}
+          <div
+            ref={tpScrollRef}
+            onClick={() => setTpPaused(p => !p)}
+            style={{ flex: 1, overflow: 'hidden', padding: '60px 32px 100px', cursor: 'pointer', userSelect: 'none' }}
+          >
+            {/* Section label */}
+            <div style={{ fontSize: 11, fontWeight: 700, color: `${accent}99`, textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 24 }}>
+              {current + 1}/{sections.length} · {section.label}
+            </div>
+
+            {(() => {
+              const text = speakerNote || (section.id === 'cover' ? tpCoverFallback(project) : '')
+              if (!text) return (
+                <p style={{ margin: 0, fontSize: 20, color: 'rgba(255,255,255,0.35)', lineHeight: 1.6, fontStyle: 'italic' }}>
+                  Gera as notas da defesa para ver o texto aqui.
+                </p>
+              )
+              // Split on newlines so paragraphs breathe
+              return text.split(/\n+/).filter(Boolean).map((para, i) => (
+                <p key={i} style={{ margin: '0 0 32px', fontSize: 28, fontWeight: 600, color: '#fff', lineHeight: 1.65, letterSpacing: '-0.2px' }}>
+                  {para}
+                </p>
+              ))
+            })()}
+          </div>
+
+          {/* Controls bar */}
+          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 3, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, padding: '14px 20px' }}>
+            <button onClick={() => setTpPaused(p => !p)} style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 10, padding: '10px 18px', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6 }}>
+              {tpPaused ? <><Play size={14} /> Retomar</> : <><Pause size={14} /> Pausar</>}
+            </button>
+            <div style={{ display: 'flex', gap: 4 }}>
+              {['D', 'M', 'R'].map((label, i) => (
+                <button key={i} onClick={() => setTpSpeed(i)} style={{ background: tpSpeed === i ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.07)', border: `1px solid ${tpSpeed === i ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.12)'}`, borderRadius: 7, padding: '7px 10px', color: tpSpeed === i ? '#fff' : 'rgba(255,255,255,0.5)', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+                  {label}
+                </button>
+              ))}
+            </div>
+            <button onClick={() => setTpOn(false)} style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>Sair</button>
+          </div>
+        </div>
+      )}
+
       {/* Key points + speaker note */}
-      <div style={{ flex: 1, overflow: 'auto', padding: '18px 24px' }}>
+      <div style={{ flex: 1, overflow: 'auto', padding: '16px 20px', display: tpOn ? 'none' : undefined }}>
         {loadingAI ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {[0,1,2].map(i => (
@@ -677,22 +789,22 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
                     display: 'flex', alignItems: 'center', gap: 14, width: '100%',
                     background: done ? `${accent}10` : 'var(--c-card)',
                     border: `1.5px solid ${done ? accent + '50' : 'var(--c-border)'}`,
-                    borderRadius: 14, padding: '16px 18px', cursor: 'pointer',
+                    borderRadius: 14, padding: '18px 18px', cursor: 'pointer',
                     textAlign: 'left', fontFamily: 'inherit',
-                    transition: 'all 0.15s',
+                    transition: 'all 0.15s', minHeight: 64,
                   }}
                 >
                   <span style={{
-                    width: 28, height: 28, borderRadius: 8, flexShrink: 0,
+                    width: 32, height: 32, borderRadius: 9, flexShrink: 0,
                     background: done ? accent : 'var(--c-bg-alt)',
                     border: `1.5px solid ${done ? accent : 'var(--c-border)'}`,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: 13, color: done ? '#fff' : C.subtle, fontWeight: 700,
                     transition: 'all 0.15s',
                   }}>
-                    {done ? <Check size={13} color="#fff" /> : i + 1}
+                    {done ? <Check size={14} color="#fff" /> : i + 1}
                   </span>
-                  <span style={{ fontSize: 16, fontWeight: done ? 400 : 600, color: done ? C.subtle : C.text, lineHeight: 1.4, textDecoration: done ? 'line-through' : 'none', transition: 'all 0.15s' }}>
+                  <span style={{ fontSize: 17, fontWeight: done ? 400 : 600, color: done ? C.subtle : C.text, lineHeight: 1.4, textDecoration: done ? 'line-through' : 'none', transition: 'all 0.15s' }}>
                     {point}
                   </span>
                 </button>
@@ -744,24 +856,24 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
       </div>
 
       {/* Nav buttons */}
-      <div style={{ display: 'flex', gap: 10, padding: '16px 24px', borderTop: '1px solid var(--c-border)', flexShrink: 0, background: 'var(--c-card)' }}>
+      <div style={{ display: 'flex', gap: 10, padding: '12px 16px', borderTop: '1px solid var(--c-border)', flexShrink: 0, background: 'var(--c-card)' }}>
         <button
           onClick={prev}
           disabled={current === 0}
           className="dm-ghost-btn"
-          style={{ flex: 1, padding: '16px 0', background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)', borderRadius: 14, color: current === 0 ? 'var(--c-border)' : C.muted, fontSize: 20, cursor: current === 0 ? 'default' : 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-        ><ChevronLeft size={20} /></button>
+          style={{ flex: 1, padding: '18px 0', background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)', borderRadius: 14, color: current === 0 ? 'var(--c-border)' : C.muted, fontSize: 20, cursor: current === 0 ? 'default' : 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+        ><ChevronLeft size={22} /></button>
         <button
           onClick={() => {
             if (current === sections.length - 1) { setTimerOn(false); setFinished(true) }
             else next()
           }}
           className="dm-cta-btn"
-          style={{ flex: 3, padding: '16px 0', background: `linear-gradient(135deg, ${current === sections.length - 1 ? '#22c55e, #16a34a' : `${accent}, ${accent}bb`})`, border: 'none', borderRadius: 14, color: '#fff', fontSize: 16, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: `0 4px 20px ${current === sections.length - 1 ? 'rgba(34,197,94,0.4)' : accent + '44'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+          style={{ flex: 3, padding: '18px 0', background: `linear-gradient(135deg, ${current === sections.length - 1 ? '#22c55e, #16a34a' : `${accent}, ${accent}bb`})`, border: 'none', borderRadius: 14, color: '#fff', fontSize: 16, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: `0 4px 20px ${current === sections.length - 1 ? 'rgba(34,197,94,0.4)' : accent + '44'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
         >
           {current === sections.length - 1
             ? 'Terminar apresentação'
-            : <>Próxima secção <ChevronRight size={16} /></>
+            : <>Próxima <ChevronRight size={16} /></>
           }
         </button>
       </div>
@@ -1232,7 +1344,7 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
                     Um guia no telemóvel enquanto apresentas no Canva ou PowerPoint. Acompanha as tuas secções, faz check dos pontos-chave e consulta o que dizer se ficares em branco.
                   </p>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
-                    {['Pontos-chave interativos', 'Nota completa por secção', 'Temporizador', 'Navegação por swipe'].map(f => (
+                    {['Pontos-chave interativos', 'Modo teleponto', 'Temporizador', 'Swipe entre secções'].map(f => (
                       <span key={f} style={{ background: 'rgba(255,255,255,0.14)', backdropFilter: 'blur(6px)', border: '1px solid rgba(255,255,255,0.28)', borderRadius: 999, padding: '5px 12px', fontSize: 12, fontWeight: 600, color: '#fff' }}>{f}</span>
                     ))}
                   </div>

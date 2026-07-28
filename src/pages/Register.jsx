@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import { claimAnonymousProjects } from '../lib/claimAnonymousProjects'
 import { GraduationCap, BookOpen, Search, Building2, ArrowLeft } from 'lucide-react'
 import AuthSidePanel from '../components/AuthSidePanel'
+import GoogleButton from '../components/GoogleButton'
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
 
@@ -488,6 +489,21 @@ export default function Register() {
                   {loading ? 'A verificar…' : accountCreated ? (isPartnerFlow ? 'Tentar novamente' : 'Confirmar código') : 'Criar conta'}
                 </button>
               </form>
+
+              {/* Divider + Google sign-up — hidden during the email-code confirmation step */}
+              {!accountCreated && (
+                <>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '18px 0' }}>
+                    <div style={{ flex: 1, height: 1, background: C.border }} />
+                    <span style={{ fontSize: 12, color: 'var(--c-subtle)', fontWeight: 600 }}>ou</span>
+                    <div style={{ flex: 1, height: 1, background: C.border }} />
+                  </div>
+                  <GoogleButton label="Continuar com Google" />
+                  <p style={{ textAlign: 'center', color: 'var(--c-subtle)', fontSize: 11.5, marginTop: 16, lineHeight: 1.5 }}>
+                    Ao continuar, aceitas os <Link to="/termos" style={{ color: C.blue }}>Termos</Link> e a <Link to="/privacidade" style={{ color: C.blue }}>Política de Privacidade</Link>.
+                  </p>
+                </>
+              )}
             </>
           )}
 

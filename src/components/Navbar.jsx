@@ -388,7 +388,7 @@ function InviteInbox({ userId, sidebar = false, collapsed = false }) {
               boxShadow: '0 8px 40px rgba(0,0,0,0.45)',
               backdropFilter: 'blur(16px)',
               zIndex: 199, width: 310,
-              maxHeight: 'calc(100vh - 80px)', overflowY: 'auto',
+              maxHeight: 'calc(100dvh - 80px)', overflowY: 'auto',
             }}>
 
             {/* Pending invites TO me */}
@@ -683,7 +683,7 @@ const dropItemStyle = {
   transition: 'background 0.12s',
 }
 
-export function Navbar({ children, showLinks = true, showCreateProject = false, previewEditingMobile = false, onWorkspaceToggle, hideSidebar = false, hideBottomNav = false, mobileLeft = null }) {
+export function Navbar({ children, showLinks = true, showCreateProject = false, previewEditingMobile = false, onWorkspaceToggle, hideSidebar = false, mobileLeft = null }) {
   const navigate = useNavigate()
   const location = useLocation()
   const { user, profile, signOut, isAdmin } = useAuth()
@@ -702,7 +702,18 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
     const t = setTimeout(() => setMenuRendered(false), 220)
     return () => clearTimeout(t)
   }, [menuOpen, menuRendered])
+  // Lock background scroll while the drawer is open — otherwise the page slides
+  // behind the overlay when you drag, which reads as broken on a phone.
+  useEffect(() => {
+    if (!menuOpen) return
+    document.body.classList.add('drawer-open')
+    return () => document.body.classList.remove('drawer-open')
+  }, [menuOpen])
   const [createModal, setCreateModal] = useState(false)
+  // Mobile "Gerir projeto" popup — opened from the paintbrush that replaces the
+  // "+" while viewing your own project (keeps those actions out of the drawer).
+  const [projMenuOpen, setProjMenuOpen] = useState(false)
+  useEffect(() => { setProjMenuOpen(false) }, [location.pathname])
   // Sidebar is icon-only by default and expands on sustained hover — no manual
   // toggle button (manual open/close — hover-to-expand was costing too much on
   // weaker machines since it fired constantly just from moving the mouse near
@@ -798,6 +809,37 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
         .nav-right  { display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex: 1; }
         .nav-auth   { display: flex; align-items: center; gap: 8px; }
         .ham-btn    { display: none !important; }
+        /* Mobile drawer trigger (left) — hidden on desktop. Borderless for a clean look. */
+        .mob-drawer-trigger {
+          display: none; width: 38px; height: 38px; border-radius: 9px; flex-shrink: 0;
+          align-items: center; justify-content: center; cursor: pointer; padding: 0;
+          background: transparent; border: none; color: var(--c-muted);
+          font-family: inherit; -webkit-tap-highlight-color: transparent;
+          transition: background 0.13s, color 0.13s;
+        }
+        .mob-drawer-trigger:active { background: var(--c-card-hover); color: var(--c-text); }
+        /* Mobile-only action cluster (create / workspace / auth) — hidden on desktop */
+        .mob-nav-actions { display: none; align-items: center; gap: 8px; }
+        .mob-nav-auth-btn {
+          padding: 8px 13px; border-radius: 8px; font-size: 13px; font-weight: 700;
+          font-family: inherit; cursor: pointer; white-space: nowrap; flex-shrink: 0;
+          -webkit-tap-highlight-color: transparent; transition: background 0.13s, border-color 0.13s;
+        }
+        .mob-nav-auth-btn.ghost { background: transparent; border: 1px solid var(--c-border); color: var(--c-text); }
+        .mob-nav-auth-btn.ghost:active { background: var(--c-card-hover); }
+        .mob-nav-auth-btn.primary { background: #1b78f7; border: none; color: #fff; box-shadow: 0 3px 12px rgba(27,120,247,0.3); }
+        .mob-nav-auth-btn.primary:active { transform: scale(0.96); }
+        .mob-nav-icon-btn {
+          width: 38px; height: 38px; border-radius: 9px;
+          display: flex; align-items: center; justify-content: center;
+          cursor: pointer; padding: 0; flex-shrink: 0; font-family: inherit;
+          -webkit-tap-highlight-color: transparent;
+          transition: background 0.13s, border-color 0.13s, color 0.13s;
+        }
+        .mob-nav-icon-btn.ghost { background: transparent; border: 1px solid var(--c-border); color: var(--c-muted); }
+        .mob-nav-icon-btn.ghost:active { background: var(--c-card-hover); color: var(--c-text); }
+        .mob-nav-icon-btn.primary { background: #1b78f7; border: none; color: #fff; box-shadow: 0 4px 12px rgba(27,120,247,0.35); }
+        .mob-nav-icon-btn.primary:active { transform: scale(0.92); }
         .nav-mob-theme { display: none; align-items: center; justify-content: center; width: 32px; height: 32px; background: transparent; border: none; border-radius: 8px; color: var(--c-muted); cursor: pointer; transition: background 0.13s, color 0.13s; -webkit-tap-highlight-color: transparent; }
 
         /* ── Sidebar (desktop >860px) ── */
@@ -1024,7 +1066,6 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
           .sidebar   { display: flex; }
           .proj-manage-float { display: flex; }
           .top-nav   { display: none !important; }
-          .bottom-nav { display: none !important; }
           body { padding-left: 248px !important; padding-bottom: 0 !important; transition: padding-left 0.22s cubic-bezier(0.4,0,0.2,1); }
           body.sidebar-collapsed { padding-left: 80px !important; }
           .page-content { max-width: 1068px !important; }
@@ -1038,22 +1079,22 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
           }
         ` : ''}
 
-        /* Mobile (≤600px): bottom nav takes over — logo centrada, sem hamburger */
+        /* Mobile (≤600px): left-drawer navigation — trigger à esquerda, ações à direita,
+           SEM logo no topo (a logo vive só na sidebar/drawer e no desktop). */
         @media (max-width: 600px) {
           .nav-left      { display: none !important; }
           .nav-mob-left  { display: flex; align-items: center; }
-          .nav-mid       { position: absolute; left: 50%; transform: translateX(-50%); }
-          .nav-right     { flex: none; margin-left: auto; }
+          .nav-mid       { display: none !important; }
+          .nav-right     { flex: 1; margin-left: auto; }
           .nav-auth      { display: none !important; }
-          .nav-logo      { height: 28px !important; width: auto !important; }
-          .showo-nav-pad { padding-left: 20px !important; padding-right: 20px !important; }
+          .showo-nav-pad { padding-left: 16px !important; padding-right: 16px !important; }
           .mob-only-create { display: none !important; }
           .nav-children-wrap { display: none !important; }
           .ham-btn       { display: none !important; }
-          .bottom-nav    { display: flex !important; }
-          .bottom-nav.bn-hidden { display: none !important; }
-          body           { padding-bottom: 84px; }
-          .nav-mob-theme { display: flex !important; }
+          .mob-drawer-trigger { display: flex !important; }
+          .mob-nav-actions { display: flex !important; }
+          body           { padding-bottom: env(safe-area-inset-bottom, 0px); }
+          .nav-mob-theme { display: none !important; }
 
           /* Notification dropdown — full-width anchored below navbar */
           .notif-drop {
@@ -1110,80 +1151,10 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
           .nav-drawer-profile { display: none !important; }
         }
 
-        /* ── Bottom navigation bar (mobile only) ── */
-        .bottom-nav {
-          display: none;
-          position: fixed;
-          bottom: 0; left: 0; right: 0;
-          z-index: 100;
-          background: rgba(13,20,36,0.97);
-          border-top: 1px solid #1e3050;
-          backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
-          padding: 6px 0 max(10px, env(safe-area-inset-bottom, 10px));
-          box-shadow: 0 -4px 32px rgba(0,0,0,0.45);
-          align-items: stretch;
-        }
-        .bn-item {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          gap: 3px;
-          background: transparent;
-          border: none;
-          cursor: pointer;
-          padding: 6px 0 4px;
-          color: #7d93b0;
-          font-family: inherit;
-          transition: color 0.15s;
-          -webkit-tap-highlight-color: transparent;
-          min-height: 50px;
-        }
-        .bn-item.active { color: #1b78f7; }
-        .bn-item:active { opacity: 0.65; }
-        .bn-label {
-          font-size: 9.5px;
-          font-weight: 600;
-          letter-spacing: 0.01em;
-          line-height: 1;
-        }
-        .bn-create-wrap {
-          flex: 1;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-        .bn-create-btn {
-          background: transparent;
-          border: none;
-          cursor: pointer;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          gap: 3px;
-          color: #7d93b0;
-          padding: 6px 0 4px;
-          -webkit-tap-highlight-color: transparent;
-          transition: color 0.15s, transform 0.15s;
-          min-height: 50px;
-          width: 100%;
-          font-family: inherit;
-          font-size: 9.5px;
-          font-weight: 600;
-        }
-        .bn-create-btn:active { transform: scale(0.88); opacity: 0.7; }
-
-        /* Raise bottom-nav so it stays visible above the menu sheet */
-        .bottom-nav { z-index: 500 !important; }
-
-        /* ── Mobile full-navigation sheet (≤600px) ── */
-        @keyframes mob-sheet-up {
-          from { transform: translateY(100%); opacity: 0.75; }
-          to   { transform: translateY(0);    opacity: 1;   }
-        }
+        /* ── Mobile navigation drawer (≤600px) ──────────────────────────────
+           Slides in from the left like the desktop sidebar, replacing the old
+           bottom tab bar that ate screen height. Same content as before, just
+           re-oriented from a bottom sheet to a side drawer. */
         .mob-menu-overlay {
           position: fixed; inset: 0; z-index: 399;
           background: rgba(0,0,0,0.55);
@@ -1194,38 +1165,68 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
         @keyframes mob-overlay-fade-in { from { opacity: 0; } to { opacity: 1; } }
         @keyframes mob-overlay-fade-out { from { opacity: 1; } to { opacity: 0; } }
         .mob-menu-sheet {
-          /* Extends all the way to the true viewport bottom instead of stopping
-             at a hardcoded guess of the bottom-nav's height — the bottom-nav
-             sits above it (z-index 500 vs 400) and covers the overlap, so there's
-             no gap showing the dark overlay through underneath the nav bar. */
-          position: fixed; left: 0; right: 0; bottom: 0; z-index: 400;
-          max-height: calc(100vh - 60px);
+          position: fixed; left: 0; top: 0; bottom: 0; z-index: 400;
+          width: min(86vw, 328px);
+          height: 100dvh;
           background: var(--c-card);
-          border-top: 1px solid var(--c-border);
-          border-radius: 20px 20px 0 0;
+          border-right: 1px solid var(--c-border);
+          border-radius: 0 20px 20px 0;
           display: flex; flex-direction: column;
-          animation: mob-sheet-up 0.32s cubic-bezier(0.22,1,0.36,1) both;
-          box-shadow: 0 -6px 40px rgba(0,0,0,0.5);
+          animation: mob-drawer-in 0.3s cubic-bezier(0.22,1,0.36,1) both;
+          box-shadow: 8px 0 48px rgba(0,0,0,0.5);
         }
-        .mob-menu-sheet.closing { animation: mob-sheet-down 0.22s cubic-bezier(0.4,0,1,1) both; }
-        @keyframes mob-sheet-down {
-          from { transform: translateY(0);    opacity: 1;    }
-          to   { transform: translateY(100%); opacity: 0.85; }
+        .mob-menu-sheet.closing { animation: mob-drawer-out 0.22s cubic-bezier(0.4,0,1,1) both; }
+        @keyframes mob-drawer-in {
+          from { transform: translateX(-100%); }
+          to   { transform: translateX(0);     }
         }
-        .mob-sheet-handle {
-          width: 40px; height: 4px; border-radius: 99px;
-          background: var(--c-border-bright);
-          margin: 12px auto 0; flex-shrink: 0; cursor: pointer;
+        @keyframes mob-drawer-out {
+          from { transform: translateX(0);     }
+          to   { transform: translateX(-100%); }
         }
+        /* Drawer header — logo + close, mirrors the desktop sidebar's top row */
+        .mob-drawer-head {
+          display: flex; align-items: center; justify-content: space-between;
+          padding: 14px 14px 10px; flex-shrink: 0;
+          border-bottom: 1px solid var(--c-border);
+        }
+        .mob-drawer-close {
+          width: 36px; height: 36px; border-radius: 9px;
+          background: transparent; border: none;
+          color: var(--c-muted); cursor: pointer;
+          display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+          -webkit-tap-highlight-color: transparent;
+          transition: background 0.13s, color 0.13s;
+        }
+        .mob-drawer-close:active { background: var(--c-card-hover); color: var(--c-text); }
         .mob-sheet-scroll {
           overflow-y: auto; flex: 1;
-          /* Bottom padding reserves space for the always-on-top bottom-nav bar,
-             so the last items scroll clear of it instead of being hidden/
-             unclickable underneath. */
-          padding: 0 12px calc(84px + 8px);
+          display: flex; flex-direction: column;
+          padding: 6px 12px calc(14px + env(safe-area-inset-bottom, 0px));
           min-height: 0;
         }
         .mob-sheet-scroll::-webkit-scrollbar { display: none; }
+        /* Profile pinned to the very bottom of the drawer */
+        .mob-drawer-foot {
+          margin-top: auto;
+          padding-top: 12px;
+          display: flex; flex-direction: column; gap: 6px;
+          border-top: 1px solid var(--c-border);
+        }
+        .mob-drawer-foot .mob-foot-profile {
+          display: flex; align-items: center; gap: 11px; flex: 1; min-width: 0;
+          background: none; border: none; cursor: pointer; font-family: inherit;
+          padding: 8px 8px; border-radius: 10px; text-align: left;
+          -webkit-tap-highlight-color: transparent; transition: background 0.13s;
+        }
+        .mob-drawer-foot .mob-foot-profile:active { background: var(--c-card-hover); }
+        .mob-drawer-foot .mob-foot-theme {
+          width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
+          background: transparent; border: none; color: var(--c-muted); cursor: pointer;
+          display: flex; align-items: center; justify-content: center;
+          -webkit-tap-highlight-color: transparent; transition: background 0.13s, color 0.13s;
+        }
+        .mob-drawer-foot .mob-foot-theme:active { background: var(--c-card-hover); color: var(--c-text); }
         .mob-nav-section-label {
           font-size: 10.5px; font-weight: 700; color: var(--c-subtle);
           text-transform: uppercase; letter-spacing: 0.1em;
@@ -1253,6 +1254,21 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
           flex-shrink: 0;
         }
         .mob-nav-divider { height: 1px; background: var(--c-border); margin: 6px 12px; }
+        /* "Gerir projeto" popup dropped from the mobile paintbrush */
+        .mob-proj-menu {
+          position: fixed; top: 58px; right: 12px; left: auto; z-index: 399;
+          width: min(84vw, 300px);
+          background: var(--c-card); border: 1px solid var(--c-border);
+          border-radius: 14px; padding: 6px;
+          box-shadow: 0 8px 40px rgba(0,0,0,0.45);
+          backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+          display: flex; flex-direction: column;
+          animation: mob-proj-menu-in 0.16s ease both;
+        }
+        @keyframes mob-proj-menu-in {
+          from { opacity: 0; transform: translateY(-6px) scale(0.98); }
+          to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
         .mob-project-section {
           background: rgba(27,120,247,0.06); border: 1px solid rgba(27,120,247,0.15);
           border-radius: 12px; margin: 8px 0; padding: 4px 0 6px;
@@ -1437,6 +1453,22 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
           gap: 12,
         }}
       >
+        {/* Mobile drawer trigger — leftmost, sidebar-panel icon. Yields to a
+            page-provided back button (mobileLeft), e.g. inside a message thread. */}
+        {showLinks && !mobileLeft && (
+          <button
+            className="mob-drawer-trigger"
+            onClick={() => setMenuOpen(o => !o)}
+            aria-label="Abrir menu"
+            style={{ color: menuOpen ? '#1b78f7' : undefined, borderColor: menuOpen ? '#1b78f7' : undefined }}
+          >
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <line x1="9" y1="3" x2="9" y2="21" />
+            </svg>
+          </button>
+        )}
+
         {/* Mobile-only left slot */}
         {mobileLeft && <div className="nav-mob-left">{mobileLeft}</div>}
 
@@ -1473,6 +1505,37 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
 
           {/* Notification bell — always visible when logged in (including mobile) */}
           {user && <InviteInbox userId={user.id} />}
+
+          {/* Mobile action cluster (≤600px), right side. Logged out → Entrar/Criar conta
+              shown up-front (not buried in the drawer). Logged in → quick-create or the
+              preview workspace toggle. The drawer trigger itself lives on the LEFT. */}
+          {showLinks && (
+            <div className="mob-nav-actions">
+              {!user ? (
+                <>
+                  <button className="mob-nav-auth-btn ghost" onClick={() => navigate('/login')}>Entrar</button>
+                  <button className="mob-nav-auth-btn primary" onClick={() => navigate('/register')}>Criar conta</button>
+                </>
+              ) : previewEditingMobile ? (
+                <button className="mob-nav-icon-btn primary" onClick={onWorkspaceToggle} aria-label="Editar preview">
+                  <Paintbrush size={18} strokeWidth={2} />
+                </button>
+              ) : extras?.type === 'project' ? (
+                <button
+                  className="mob-nav-icon-btn primary"
+                  onClick={() => setProjMenuOpen(o => !o)}
+                  aria-label="Gerir projeto"
+                  style={{ background: projMenuOpen ? '#1564d4' : undefined }}
+                >
+                  <Paintbrush size={18} strokeWidth={2} />
+                </button>
+              ) : !isTeacher && !isAdmin ? (
+                <button className="mob-nav-icon-btn primary" onClick={() => setCreateModal(true)} aria-label="Criar projeto">
+                  <Plus size={20} strokeWidth={2.5} />
+                </button>
+              ) : null}
+            </div>
+          )}
 
           {/* Theme toggle — mobile only, not logged in */}
           {!user && (
@@ -1582,6 +1645,50 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
           )}
         </div>
       </nav>
+
+      {/* ── Mobile "Gerir projeto" popup (≤600px) — dropped from the paintbrush ── */}
+      {projMenuOpen && extras?.type === 'project' && (
+        <>
+          <div style={{ position: 'fixed', inset: 0, zIndex: 398 }} onClick={() => setProjMenuOpen(false)} />
+          <div className="mob-proj-menu">
+            <span className="mob-nav-section-label" style={{ padding: '4px 10px 6px' }}>Gerir projeto</span>
+            <button className="mob-nav-btn" onClick={() => { navigate(`/editar/${extras.slug}`); setProjMenuOpen(false) }}>
+              <Pencil size={18} /> Editar
+            </button>
+            {extras.onDefense && (
+              <button className="mob-nav-btn" onClick={() => { extras.onDefense(); setProjMenuOpen(false) }}>
+                <GraduationCap size={18} /> Modo defesa
+                {extras.defenseDate && (
+                  <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--c-muted)', fontWeight: 500 }}>
+                    {new Date(extras.defenseDate).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' })}
+                  </span>
+                )}
+              </button>
+            )}
+            {extras.onAnalyze && (
+              <button className="mob-nav-btn" onClick={() => { extras.onAnalyze(); setProjMenuOpen(false) }} disabled={extras.analyzingAI} style={{ opacity: extras.analyzingAI ? 0.6 : 1 }}>
+                <Sparkles size={18} /> {extras.analyzingAI ? 'A analisar…' : extras.aiScore != null ? 'Ver análise IA' : 'Análise IA'}
+                {extras.aiScore != null && !extras.analyzingAI && (
+                  <span style={{ marginLeft: 'auto', fontSize: 13, fontWeight: 700, color: extras.aiScore >= 90 ? '#22c55e' : extras.aiScore >= 71 ? '#1b78f7' : extras.aiScore >= 40 ? '#fbbf24' : '#ef4444' }}>
+                    {extras.aiScore}
+                  </span>
+                )}
+              </button>
+            )}
+            {extras.showCertificate && (
+              <button className="mob-nav-btn" onClick={() => { navigate(`/certificado/${extras.slug}`); setProjMenuOpen(false) }}>
+                <Trophy size={18} /> Certificado
+              </button>
+            )}
+            {extras.onTogglePublicView && (
+              <button className="mob-nav-btn" style={{ color: extras.viewAsPublic ? '#1b78f7' : undefined }}
+                onClick={() => { extras.onTogglePublicView(); setProjMenuOpen(false) }}>
+                <Globe size={18} /> {extras.viewAsPublic ? 'Sair da preview' : 'Preview visitante'}
+              </button>
+            )}
+          </div>
+        </>
+      )}
 
       {/* ── Sidebar — desktop only (>601px). Icons-only when collapsed. ── */}
       <div className={`sidebar${collapsed ? ' collapsed' : ''}`}>
@@ -1986,35 +2093,21 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
         <>
           <div className={`mob-menu-overlay${menuOpen ? '' : ' closing'}`} onClick={() => setMenuOpen(false)} />
           <div className={`mob-menu-sheet${menuOpen ? '' : ' closing'}`}>
-            <div className="mob-sheet-handle" onClick={() => setMenuOpen(false)} />
+            <div className="mob-drawer-head">
+              <img
+                src={theme === 'light' ? '/light_mode_LI.png' : '/icon_logo.png'} alt="Showo" draggable={false}
+                onClick={() => { navigate(user ? '/dashboard' : '/'); setMenuOpen(false) }}
+                style={{ height: 26, width: 'auto', objectFit: 'contain', cursor: 'pointer', userSelect: 'none' }}
+              />
+              <button className="mob-drawer-close" onClick={() => setMenuOpen(false)} aria-label="Fechar menu">
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="3" width="18" height="18" rx="2" />
+                  <line x1="9" y1="3" x2="9" y2="21" />
+                </svg>
+              </button>
+            </div>
             <div className="mob-sheet-scroll">
 
-              {/* User header */}
-              {user ? (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 12px 14px' }}>
-                  <button
-                    style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: 0, textAlign: 'left', minWidth: 0 }}
-                    onClick={() => { profileUrl && navigate(profileUrl); setMenuOpen(false) }}
-                  >
-                    <AvatarCircle avatarUrl={profile?.avatar_url} initial={getInitial(user)} size={44} fontSize={17} />
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--c-text)' }}>{getDisplayName(user)}</div>
-                      <div style={{ fontSize: 12, color: 'var(--c-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email}</div>
-                    </div>
-                  </button>
-                  <button onClick={toggleTheme} style={{ width: 38, height: 38, borderRadius: 10, background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)', color: 'var(--c-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    {theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
-                  </button>
-                </div>
-              ) : (
-                <div style={{ padding: '16px 12px 12px', display: 'flex', gap: 8, alignItems: 'center' }}>
-                  <button onClick={() => { navigate('/login'); setMenuOpen(false) }} style={{ flex: 1, padding: '13px 0', background: 'transparent', border: '1px solid var(--c-border)', borderRadius: 10, color: 'var(--c-text)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Entrar</button>
-                  <button onClick={() => { navigate('/register'); setMenuOpen(false) }} style={{ flex: 1, padding: '13px 0', background: '#1b78f7', border: 'none', borderRadius: 10, color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>Criar conta</button>
-                  <button onClick={toggleTheme} style={{ width: 46, height: 46, borderRadius: 10, background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)', color: 'var(--c-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    {theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
-                  </button>
-                </div>
-              )}
 
               {/* ── Criar projeto — no hamburger quando pincel está no centro ── */}
               {previewEditingMobile && user && !isTeacher && !isAdmin && (
@@ -2027,56 +2120,8 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                 </>
               )}
 
-              {/* ── Gerir projeto — PRIMEIRO quando em projeto próprio ── */}
-              {extras?.type === 'project' && (
-                <>
-                  <div className="mob-project-section" style={{ marginTop: 4 }}>
-                    <span className="mob-nav-section-label">Gerir projeto</span>
-                    {extras.showBack && (
-                      <button className="mob-nav-btn" onClick={() => { navigate(`/projeto/${extras.slug}`); setMenuOpen(false) }}>
-                        <ArrowLeft size={20} /> Ver projeto
-                      </button>
-                    )}
-                    {!extras.showBack && (
-                      <button className="mob-nav-btn" onClick={() => { navigate(`/editar/${extras.slug}`); setMenuOpen(false) }}>
-                        <Pencil size={20} /> Editar
-                      </button>
-                    )}
-                    {extras.onDefense && (
-                      <button className="mob-nav-btn" onClick={() => { extras.onDefense(); setMenuOpen(false) }}>
-                        <GraduationCap size={20} /> Modo defesa
-                        {extras.defenseDate && (
-                          <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--c-muted)', fontWeight: 500 }}>
-                            {new Date(extras.defenseDate).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' })}
-                          </span>
-                        )}
-                      </button>
-                    )}
-                    {extras.onAnalyze && (
-                      <button className="mob-nav-btn" onClick={() => { extras.onAnalyze(); setMenuOpen(false) }} disabled={extras.analyzingAI} style={{ opacity: extras.analyzingAI ? 0.6 : 1 }}>
-                        <Sparkles size={20} /> {extras.analyzingAI ? 'A analisar…' : extras.aiScore != null ? 'Ver análise IA' : 'Análise IA'}
-                        {extras.aiScore != null && !extras.analyzingAI && (
-                          <span style={{ marginLeft: 'auto', fontSize: 13, fontWeight: 700, color: extras.aiScore >= 90 ? '#22c55e' : extras.aiScore >= 71 ? '#1b78f7' : extras.aiScore >= 40 ? '#fbbf24' : '#ef4444' }}>
-                            {extras.aiScore}
-                          </span>
-                        )}
-                      </button>
-                    )}
-                    {extras.showCertificate && (
-                      <button className="mob-nav-btn" onClick={() => { navigate(`/certificado/${extras.slug}`); setMenuOpen(false) }}>
-                        <Trophy size={20} /> Certificado
-                      </button>
-                    )}
-                    {extras.onTogglePublicView && (
-                      <button className="mob-nav-btn" style={{ color: extras.viewAsPublic ? '#1b78f7' : undefined }}
-                        onClick={() => { extras.onTogglePublicView(); setMenuOpen(false) }}>
-                        <Globe size={20} /> {extras.viewAsPublic ? 'Sair da preview' : 'Preview visitante'}
-                      </button>
-                    )}
-                  </div>
-                  <div className="mob-nav-divider" />
-                </>
-              )}
+              {/* "Gerir projeto" moved out of the drawer into the paintbrush popup
+                  (see .mob-proj-menu) — keeps the drawer to pure navigation. */}
 
               {isAdmin && (
                 <>
@@ -2184,14 +2229,9 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
 
               <div className="mob-nav-divider" />
 
-              {/* Profile / admin / settings / logout */}
+              {/* Settings / admin / logout */}
               {user && (
                 <>
-                  {profileUrl && (
-                    <button className={`mob-nav-btn${isActive('profile') ? ' active' : ''}`} onClick={() => { navigate(profileUrl); setMenuOpen(false) }}>
-                      <User size={20} /> Meu perfil
-                    </button>
-                  )}
                   {isAdmin && (
                     <button className="mob-nav-btn" onClick={() => { navigate('/admin'); setMenuOpen(false) }} style={{ color: '#a855f7' }}>
                       <Shield size={20} /> Administração
@@ -2206,110 +2246,36 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                 </>
               )}
 
+              {/* Profile pinned to the very bottom — the avatar card doubles as the
+                  "Meu perfil" entry (tap → profile), so no separate menu item needed. */}
+              <div className="mob-drawer-foot">
+                {user ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <button className="mob-foot-profile" onClick={() => { profileUrl && navigate(profileUrl); setMenuOpen(false) }}>
+                      <AvatarCircle avatarUrl={profile?.avatar_url} initial={getInitial(user)} size={40} fontSize={15} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--c-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{getDisplayName(user)}</div>
+                        <div style={{ fontSize: 12, color: 'var(--c-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email}</div>
+                      </div>
+                    </button>
+                    <button className="mob-foot-theme" onClick={toggleTheme} aria-label="Alternar tema">
+                      {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '2px 8px' }}>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--c-muted)' }}>Aspeto</span>
+                    <button className="mob-foot-theme" onClick={toggleTheme} aria-label="Alternar tema">
+                      {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+                    </button>
+                  </div>
+                )}
+              </div>
+
             </div>
           </div>
         </>
       )}
-
-      {/* ── Bottom navigation bar — mobile only (≤600px) ── */}
-      <div className={`bottom-nav${hideBottomNav ? ' bn-hidden' : ''}`}>
-        {user ? (
-          <>
-            {/* Dashboard */}
-            <button
-              className={`bn-item${isActive('/dashboard') ? ' active' : ''}`}
-              onClick={() => { setMenuOpen(false); navigate('/dashboard') }}
-            >
-              <LayoutDashboard size={22} strokeWidth={isActive('/dashboard') ? 2.5 : 1.8} />
-              <span className="bn-label">Início</span>
-            </button>
-
-            {/* Centro — workspace em preview mode, + em modo normal (Turmas para professor, sem "criar projeto") */}
-            <div className="bn-create-wrap">
-              {previewEditingMobile ? (
-                <button
-                  className="bn-create-btn"
-                  onClick={onWorkspaceToggle}
-                  aria-label="Editor de preview"
-                  style={{ color: '#1b78f7' }}
-                >
-                  <Paintbrush size={22} strokeWidth={2} />
-                  <span>Editar</span>
-                </button>
-              ) : isTeacher ? (
-                <button className={`bn-create-btn${isActive('/turmas') ? ' active' : ''}`} onClick={() => { setMenuOpen(false); navigate('/turmas') }} aria-label="Turmas">
-                  <Users2 size={24} strokeWidth={2} />
-                  <span>Turmas</span>
-                </button>
-              ) : isAdmin ? (
-                <button className={`bn-create-btn${isActive('/admin') ? ' active' : ''}`} onClick={() => { setMenuOpen(false); navigate('/admin') }} aria-label="Painel de Admin">
-                  <Shield size={22} strokeWidth={2} />
-                  <span>Admin</span>
-                </button>
-              ) : (
-                <button className="bn-create-btn" onClick={() => { setMenuOpen(false); setCreateModal(true) }} aria-label="Criar projeto">
-                  <Plus size={24} strokeWidth={2} />
-                  <span>Criar</span>
-                </button>
-              )}
-            </div>
-
-            {/* Mensagens */}
-            <button
-              className={`bn-item${isActive('/mensagens') ? ' active' : ''}`}
-              onClick={() => { setMenuOpen(false); navigate('/mensagens') }}
-              aria-label="Mensagens"
-              style={{ position: 'relative' }}
-            >
-              <MessageSquare size={22} strokeWidth={isActive('/mensagens') ? 2.5 : 1.8} />
-              <span className="bn-label">Mensagens</span>
-              {unreadMsgs > 0 && (
-                <span style={{ position: 'absolute', top: 6, left: 'calc(50% + 5px)', width: 7, height: 7, borderRadius: '50%', background: '#ef4444', border: '1.5px solid rgba(13,20,36,0.97)' }} />
-              )}
-            </button>
-
-            {/* Menu — abre o sheet */}
-            <button
-              className={`bn-item${menuOpen ? ' active' : ''}`}
-              onClick={() => setMenuOpen(o => !o)}
-              aria-label="Menu"
-            >
-              <AlignJustify size={22} strokeWidth={menuOpen ? 2.5 : 1.8} />
-              <span className="bn-label">Menu</span>
-            </button>
-          </>
-        ) : (
-          <>
-            {/* Explorar */}
-            <button
-              className={`bn-item${isActive('/explorar') ? ' active' : ''}`}
-              onClick={() => navigate('/explorar')}
-            >
-              <Compass size={22} strokeWidth={isActive('/explorar') ? 2.5 : 1.8} />
-              <span className="bn-label">Explorar</span>
-            </button>
-
-            {/* Ranking */}
-            <button
-              className={`bn-item${isActive('/ranking') ? ' active' : ''}`}
-              onClick={() => navigate('/ranking')}
-            >
-              <Trophy size={22} strokeWidth={isActive('/ranking') ? 2.5 : 1.8} />
-              <span className="bn-label">Ranking</span>
-            </button>
-
-            {/* Entrar */}
-            <button
-              className={`bn-item${isActive('/login') ? ' active' : ''}`}
-              onClick={() => navigate('/login')}
-              style={{ color: isActive('/login') ? '#1b78f7' : 'var(--c-text)' }}
-            >
-              <User size={22} strokeWidth={1.8} />
-              <span className="bn-label">Entrar</span>
-            </button>
-          </>
-        )}
-      </div>
 
       {createModal && <CreateProjectModal onClose={() => setCreateModal(false)} />}
       <FeedbackButton />

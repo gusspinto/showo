@@ -7,6 +7,7 @@ import { Navbar } from '../components/Navbar'
 import { Send, ArrowLeft, MessageSquare, Search, Plus, X, Pencil, Trash2, Check, CheckCheck, AlertTriangle, Copy } from 'lucide-react'
 import { containsProfanity } from '../lib/profanity'
 import { looksLikeSpam } from '../lib/score'
+import { useIsMobile } from '../lib/useIsMobile'
 
 const C = {
   bg:     'var(--c-bg)',
@@ -128,17 +129,11 @@ export default function Mensagens() {
   const [loading, setLoading]             = useState(true)
   const [showNova, setShowNova]           = useState(false)
   const [mobileView, setMobileView]       = useState('list')
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 600)
+  const isMobile = useIsMobile()
 
   useEffect(() => {
     document.body.classList.add('page-mensagens')
     return () => document.body.classList.remove('page-mensagens')
-  }, [])
-
-  useEffect(() => {
-    const onResize = () => setIsMobile(window.innerWidth <= 600)
-    window.addEventListener('resize', onResize)
-    return () => window.removeEventListener('resize', onResize)
   }, [])
 
   useEffect(() => {
@@ -565,7 +560,6 @@ export default function Mensagens() {
     <>
     <div style={{ minHeight: '100vh', background: C.bg, fontFamily: 'inherit' }}>
       <Navbar
-        hideBottomNav={mobileView === 'thread'}
         mobileLeft={mobileView === 'thread' ? (
           <button
             onClick={() => { setMobileView('list'); setActiveId(null) }}
@@ -585,7 +579,7 @@ export default function Mensagens() {
             <p style={{ color: C.muted, fontSize: 13, margin: 0 }}>Conversas com recrutadores e candidatos</p>
           </div>
 
-          <div className="msg-outer-wrap" style={{ display: 'flex', gap: 12, height: 'calc(100vh - 200px)', minHeight: 400 }}>
+          <div className="msg-outer-wrap" style={{ display: 'flex', gap: 12, height: 'calc(100dvh - 200px)', minHeight: 400 }}>
 
             {/* ── Conversation list ── */}
             <div style={{

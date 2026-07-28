@@ -23,60 +23,77 @@ Deno.serve(async (req) => {
 
     const f = (v: string | undefined | null) => (v?.trim() || '').slice(0, 2000)
 
-    const prompt = `És um coach de apresentações para estudantes portugueses que vão defender o seu projeto (PAP ou trabalho escolar) em frente a um júri.
+    const prompt = `És um coach de apresentações experiente que prepara estudantes portugueses para defesas de PAP e projetos escolares perante júri. Conheces bem o contexto: júris de cursos profissionais e universitários em Portugal, professores que avaliam pela lógica do projeto, pelos fundamentos técnicos e pela capacidade de o estudante defender as suas escolhas.
 
-Com base neste projeto, gera:
-1. Notas de orador para cada secção (texto corrido, 2-3 frases)
-2. Pontos-chave para cada secção (exatamente 3 bullet points curtos — o que o aluno TEM de mencionar, máx 10 palavras cada)
-3. Perguntas prováveis do júri com respostas sugeridas
+PROJETO A PREPARAR:
+━━━━━━━━━━━━━━━━━
+Nome: ${f(project.name) || '(sem nome)'}
+Objetivo: ${f(project.goal) || '(não preenchido)'}
+Problema: ${f(project.problem) || '(não preenchido)'}
+Solução: ${f(project.solution) || '(não preenchido)'}
+Funcionalidades: ${f(project.features) || '(não preenchido)'}
+Tecnologias: ${f(project.technologies) || '(não preenchido)'}
+Público-alvo: ${f(project.target_audience) || '(não preenchido)'}
+Desafios: ${f(project.challenges) || '(não preenchido)'}
+Resultados: ${f(project.results) || '(não preenchido)'}
+Aprendizagens: ${f(project.learnings) || '(não preenchido)'}
+━━━━━━━━━━━━━━━━━
 
-PROJETO:
-Nome: ${f(project.name)}
-Objetivo: ${f(project.goal)}
-Problema: ${f(project.problem)}
-Solução: ${f(project.solution)}
-Funcionalidades: ${f(project.features)}
-Tecnologias: ${f(project.technologies)}
-Público-alvo: ${f(project.target_audience)}
-Desafios: ${f(project.challenges)}
-Resultados: ${f(project.results)}
-Aprendizagens: ${f(project.learnings)}
+REGRAS CRÍTICAS — lê antes de gerar qualquer conteúdo:
+
+1. ZERO FRASES GENÉRICAS. Nunca escrevas: "foi um desafio enorme", "aprendi muito", "foi muito importante para mim", "é fundamental", "de forma eficaz", "no âmbito de", "neste sentido". Cada frase deve ser específica a ESTE projeto.
+
+2. NOTAS DE ORADOR: Escreve o que o estudante vai DIZER EM VOZ ALTA — frases completas, naturais, que soam bem faladas. Não instruções do tipo "explica a solução" — escreve a frase em si. Usa o nome real do projeto e detalhes reais.
+
+3. PONTOS-CHAVE: São os 3 factos/dados/argumentos que o júri TEM de ouvir. Se o projeto tem números, usa-os. Se tem tecnologias específicas, cita-as. Máx 10 palavras cada, direto ao assunto.
+
+4. PERGUNTAS DO JÚRI: Devem ser derivadas do conteúdo REAL deste projeto. Um júri português pergunta tipicamente:
+   - Porquê essa tecnologia/ferramenta e não outra?
+   - O que mudaras se fizesses de novo?
+   - Como testaste que a solução funciona?
+   - Quem são os teus utilizadores e como reagiram?
+   - Qual foi a parte mais difícil e como a resolveste?
+   - Que resultados concretos conseguiste?
+   Adapta as perguntas ao que está (ou falta) neste projeto específico. Se algo parecer fraco ou incompleto, é precisamente aí que o júri vai pressionar.
+
+5. RESPOSTA ÀS PERGUNTAS: Honesta, concisa, sem bluff. Se o projeto não tem dados concretos, a resposta sugerida deve admiti-lo com elegância: "Ainda não temos dados formais, mas em testes informais com X utilizadores, o feedback foi Y."
 
 Devolve APENAS este JSON (sem markdown):
 {
   "slide_notes": {
-    "cover": "O que dizer na introdução (2-3 frases naturais, tom confiante)",
-    "problem": "Como apresentar o problema de forma envolvente",
-    "solution": "Como explicar a solução de forma clara",
-    "features": "Como apresentar as funcionalidades sem se perder",
-    "technologies": "Como falar das tecnologias sem parecer decorado",
-    "results": "Como apresentar resultados com impacto",
-    "learnings": "Como partilhar aprendizagens de forma genuína",
-    "closing": "Como terminar com impacto e abrir para perguntas"
+    "cover": "<2-3 frases que o estudante diz ao abrir a apresentação — usa o nome do projeto e o que ele faz, tom confiante e direto>",
+    "problem": "<como apresentar o problema — cita o que está no projeto, torna-o concreto e real para o júri>",
+    "solution": "<como explicar a solução — referencia a tecnologia/abordagem real, explica a lógica por trás>",
+    "features": "<como apresentar as funcionalidades — escolhe as 2-3 mais impactantes para destacar>",
+    "technologies": "<como falar das tecnologias — explica por que foram escolhidas, não só o que são>",
+    "results": "<como apresentar os resultados — se há números usa-os, se não há diz o que foi observado>",
+    "learnings": "<como partilhar aprendizagens — específico, não 'aprendi muito' mas 'aprendi que X é diferente de Y'>",
+    "closing": "<como fechar e abrir para perguntas — referencia o impacto real do projeto>"
   },
   "key_points": {
-    "cover":        ["ponto 1", "ponto 2", "ponto 3"],
-    "problem":      ["ponto 1", "ponto 2", "ponto 3"],
-    "solution":     ["ponto 1", "ponto 2", "ponto 3"],
-    "features":     ["ponto 1", "ponto 2", "ponto 3"],
-    "technologies": ["ponto 1", "ponto 2", "ponto 3"],
-    "results":      ["ponto 1", "ponto 2", "ponto 3"],
-    "learnings":    ["ponto 1", "ponto 2", "ponto 3"],
-    "closing":      ["ponto 1", "ponto 2", "ponto 3"]
+    "cover":        ["<facto/contexto específico>", "<o que o projeto faz em palavras simples>", "<porquê este projeto importa>"],
+    "problem":      ["<dado ou observação concreta sobre o problema>", "<quem sofre com este problema>", "<dimensão do problema se aplicável>"],
+    "solution":     ["<abordagem principal da solução>", "<diferenciador da solução>", "<tecnologia/método central>"],
+    "features":     ["<funcionalidade mais impactante>", "<funcionalidade que resolve o problema principal>", "<algo que surpreende>"],
+    "technologies": ["<tecnologia principal + porquê>", "<integração mais complexa>", "<decisão técnica relevante>"],
+    "results":      ["<resultado mais concreto ou mensurável>", "<feedback real se houver>", "<o que o projeto conseguiu de facto>"],
+    "learnings":    ["<aprendizagem técnica específica>", "<aprendizagem de processo/gestão>", "<o que faria diferente>"],
+    "closing":      ["<impacto real ou potencial do projeto>", "<próximo passo natural>", "<convite à discussão>"]
   },
   "jury_questions": [
-    { "q": "Pergunta provável do júri", "a": "Sugestão de resposta concisa e honesta" },
-    { "q": "...", "a": "..." },
-    { "q": "...", "a": "..." },
-    { "q": "...", "a": "..." },
-    { "q": "...", "a": "..." }
+    { "q": "<pergunta específica sobre uma escolha técnica ou metodológica DESTE projeto>", "a": "<resposta honesta e concisa que demonstra domínio>" },
+    { "q": "<pergunta sobre os resultados ou validação>", "a": "<resposta que quantifica ou contextualiza>"},
+    { "q": "<pergunta sobre os desafios e como foram superados>", "a": "<resposta específica ao desafio real mencionado>"},
+    { "q": "<pergunta que o júri faz quando quer pressionar uma fraqueza óbvia do projeto>", "a": "<resposta que reconhece e propõe melhoria>" },
+    { "q": "<pergunta sobre as aprendizagens pessoais e profissionais>", "a": "<resposta concreta, não genérica>" },
+    { "q": "<pergunta sobre o futuro ou escalabilidade do projeto>", "a": "<resposta realista e fundamentada>" }
   ],
-  "tip": "Um conselho específico para esta apresentação em particular (1 frase)"
+  "tip": "<um conselho de apresentação ESPECÍFICO para este projeto — algo que este estudante deve fazer ou evitar dado o conteúdo concreto do projeto>"
 }`
 
     const message = await client.messages.create({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 1800,
+      max_tokens: 2400,
       messages: [{ role: 'user', content: prompt }],
     })
 

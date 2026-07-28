@@ -3,6 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import { QRCodeSVG } from 'qrcode.react'
 import { supabase, supabaseUrl, supabaseAnonKey } from '../lib/supabase'
+import { useIsMobile } from '../lib/useIsMobile'
 import { calculateScore, looksLikeSpam } from '../lib/score'
 import { containsProfanity } from '../lib/profanity'
 import { CHALLENGES, getChallengeStatus } from '../lib/challenges'
@@ -17,7 +18,7 @@ import CreateProjectModal from '../components/CreateProjectModal'
 import DefenseMode from '../components/DefenseMode'
 import ProjectComments from '../components/ProjectComments'
 import { analyzeProject } from '../lib/analyzeProject'
-import { Check, X, Loader, GraduationCap, Save, Sparkles, Bot, Lightbulb, Pencil, Search, Target, Wrench, Zap, TrendingUp, Briefcase, Users, Rocket, Trophy, BarChart2, CheckCircle, BookOpen, ChevronDown, Eye, EyeOff, UserPlus, Calendar, Mail, ArrowRight, ChevronRight, ChevronLeft, Globe, Image, MessageSquare, Quote, Layout, Type, Link, GripVertical, Plus, AlignLeft, Star, Camera, FileText, ClipboardList, Copy, Monitor, Tablet, Smartphone, Minus, Video, AlignCenter, AlignRight, Palette, AlertTriangle, Heart, User, Settings, Bell, Swords } from 'lucide-react'
+import { Check, X, Loader, GraduationCap, Save, Sparkles, Bot, Lightbulb, Pencil, Search, Target, Wrench, Zap, TrendingUp, Briefcase, Users, Rocket, Trophy, BarChart2, CheckCircle, BookOpen, ChevronDown, Eye, EyeOff, UserPlus, Calendar, Mail, ArrowRight, ChevronRight, ChevronLeft, Globe, Image, MessageSquare, Quote, Layout, Type, Link, GripVertical, Plus, AlignLeft, Star, Camera, FileText, ClipboardList, Copy, Monitor, Tablet, Smartphone, Minus, Video, AlignCenter, AlignRight, Palette, AlertTriangle, Heart, User, Settings, Bell, Swords, Paintbrush } from 'lucide-react'
 
 const colors = {
   bg: 'var(--c-bg)',
@@ -821,14 +822,10 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
   const [previewSaveError, setPreviewSaveError] = useState(false)
   const bannerRef = useRef(null)
   const [bannerH, setBannerH] = useState(44)
-  const [isDesktop, setIsDesktop] = useState(() => typeof window !== 'undefined' && window.innerWidth >= 760)
-
-  // Keep isDesktop reactive — panel stays open but switches sidebar ↔ bottom-sheet
-  useEffect(() => {
-    function onResize() { setIsDesktop(window.innerWidth >= 760) }
-    window.addEventListener('resize', onResize)
-    return () => window.removeEventListener('resize', onResize)
-  }, [])
+  // Two-column layout needs more room than the 600px shell breakpoint, so this
+  // page opts into 760 explicitly. Kept reactive so the panel switches sidebar ↔
+  // bottom-sheet on resize/rotate. (See lib/useIsMobile.)
+  const isDesktop = !useIsMobile(759)
 
   // Measure banner height so the workspace panel always aligns flush below it
   useEffect(() => {
@@ -1015,14 +1012,15 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
           .pv-workspace { top: calc(62px + 44px) !important; }
         }
         .pv-workspace { animation: pv-slidein 0.2s cubic-bezier(0.22,1,0.36,1); }
-        /* Mobile: bottom sheet — acima da bottom nav (62px) */
+        /* Mobile: bottom sheet — anchored to the true bottom edge (bottom tab bar retired) */
         .pv-ws-sheet {
           position: fixed !important;
           left: 0 !important; right: 0 !important;
-          bottom: 62px !important; top: auto !important;
+          bottom: 0 !important; top: auto !important;
           width: 100% !important;
           height: auto !important;
-          max-height: 48vh !important;
+          max-height: calc(48vh + env(safe-area-inset-bottom, 0px)) !important;
+          padding-bottom: env(safe-area-inset-bottom, 0px) !important;
           border-radius: 18px 18px 0 0 !important;
           border-left: none !important;
           border-top: 1px solid var(--c-border) !important;
@@ -1136,33 +1134,37 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
           {isOwner && !previewEditing && (
             <button
               onClick={() => setPreviewEditing(true)}
+              title="Editar workspace"
               style={{
-                background: 'transparent',
-                border: '1px solid rgba(27,120,247,0.4)',
-                borderRadius: 7, padding: '5px 12px',
-                color: '#1b78f7',
-                fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
-                display: 'flex', alignItems: 'center', gap: 5, transition: 'all 0.15s',
+                background: '#1b78f7', border: 'none',
+                borderRadius: 9,
+                width: isDesktop ? 'auto' : 36, height: 36,
+                padding: isDesktop ? '0 14px' : 0,
+                color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, flexShrink: 0,
+                boxShadow: '0 4px 12px rgba(27,120,247,0.35)',
+                WebkitTapHighlightColor: 'transparent',
               }}
             >
-              <Pencil size={11} />
-              <span>{isDesktop ? 'Editar workspace' : 'Editar'}</span>
+              <Paintbrush size={16} />
+              {isDesktop && <span>Editar workspace</span>}
             </button>
           )}
           <button
             onClick={onExitPreview}
+            title="Sair da preview"
             style={{
-              background: 'transparent',
-              border: '1px solid rgba(239,68,68,0.3)',
-              borderRadius: 7, padding: '5px 10px',
-              color: '#ef4444', fontSize: 12, fontWeight: 600,
+              background: 'transparent', border: 'none',
+              borderRadius: 9,
+              width: isDesktop ? 'auto' : 36, height: 36,
+              padding: isDesktop ? '0 12px' : 0,
+              color: '#ef4444', fontSize: 13, fontWeight: 600,
               cursor: 'pointer', fontFamily: 'inherit',
-              display: 'flex', alignItems: 'center', gap: 4, transition: 'all 0.15s',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, flexShrink: 0,
+              WebkitTapHighlightColor: 'transparent',
             }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.08)' }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
           >
-            <X size={12} /> <span>{isDesktop ? 'Sair' : ''}</span>
+            <X size={18} /> {isDesktop && <span>Sair</span>}
           </button>
         </div>
       )}
@@ -2953,6 +2955,7 @@ export default function ProjectPage() {
   const [coachMessages, setCoachMessages] = useState([])
   const [coachInput, setCoachInput] = useState('')
   const [coachLoading, setCoachLoading] = useState(false)
+  const [coachOpen, setCoachOpen] = useState(false)
   const coachBottomRef = useRef(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [viewAsPublic, setViewAsPublic] = useState(false)
@@ -2978,6 +2981,31 @@ export default function ProjectPage() {
     setJuryEditing(project.teacher_score == null)
     juryHydrated.current = true
   }, [project])
+
+  // Class-defined evaluation criteria (fetched when the page is opened from a turma)
+  const [classCriteria, setClassCriteria] = useState([])   // [{id, name, weight}]
+  const [criterionScores, setCriterionScores] = useState({}) // {criterionId: 0-20}
+  useEffect(() => {
+    const turmaId = location.state?.turmaId
+    if (!turmaId || !project?.id) return
+    let cancelled = false
+    async function fetchClassCriteria() {
+      const [{ data: crit }, { data: existingScores }] = await Promise.all([
+        supabase.from('class_evaluation_criteria').select('id, name, weight').eq('class_id', turmaId).order('sort_order'),
+        supabase.from('project_criterion_scores').select('criterion_id, score').eq('project_id', project.id),
+      ])
+      if (cancelled) return
+      if (crit?.length) {
+        setClassCriteria(crit)
+        const map = {}
+        if (existingScores) existingScores.forEach(s => { map[s.criterion_id] = s.score })
+        setCriterionScores(map)
+        if (existingScores?.length === crit.length) setJuryEditing(false)
+      }
+    }
+    fetchClassCriteria()
+    return () => { cancelled = true }
+  }, [location.state?.turmaId, project?.id])
 
   // Grade history — fetched lazily when the professor/owner opens it
   const [scoreHistory, setScoreHistory] = useState(null)
@@ -3007,6 +3035,24 @@ export default function ProjectPage() {
         }
       })
   }, [user?.id])
+
+  async function sendCoach(e) {
+    e?.preventDefault()
+    const msg = coachInput.trim()
+    if (!msg || coachLoading) return
+    const next = [...coachMessages, { role: 'user', content: msg }]
+    setCoachMessages(next)
+    setCoachInput('')
+    setCoachLoading(true)
+    try {
+      const reply = await chatProjectCoach({ project, messages: coachMessages, message: msg })
+      setCoachMessages(prev => [...prev, { role: 'assistant', content: reply }])
+      setTimeout(() => coachBottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
+    } catch (err) {
+      setCoachMessages(prev => [...prev, { role: 'assistant', content: 'Ocorreu um erro. Tenta novamente.' }])
+    }
+    setCoachLoading(false)
+  }
 
   async function handleFeatureInterest(featureName) {
     if (!user?.id || fiLoading[featureName]) return
@@ -3060,7 +3106,7 @@ export default function ProjectPage() {
   function goToReviewIndex(i) {
     if (!reviewQueue || i < 0 || i >= reviewQueue.length) return
     navigate(`/projeto/${reviewQueue[i]}`, {
-      state: { reviewQueue, reviewIndex: i, turmaCode: location.state?.turmaCode, turmaName: location.state?.turmaName },
+      state: { reviewQueue, reviewIndex: i, turmaCode: location.state?.turmaCode, turmaName: location.state?.turmaName, turmaId: location.state?.turmaId },
     })
   }
   // Report generation state
@@ -3722,6 +3768,7 @@ export default function ProjectPage() {
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes bounce { 0%,60%,100% { transform:translateY(0); opacity:.4 } 30% { transform:translateY(-5px); opacity:1 } }
+        @keyframes coachPop { from { opacity:0; transform:translateY(12px) scale(0.97); } to { opacity:1; transform:translateY(0) scale(1); } }
         @keyframes sparkle-pulse {
           0%, 100% { box-shadow: 0 0 0 0 rgba(139,92,246,0.5); }
           50%       { box-shadow: 0 0 0 10px rgba(139,92,246,0); }
@@ -3949,6 +3996,10 @@ export default function ProjectPage() {
           .proj-mobile-tabs { display: none !important; }
           .proj-mobile-section { display: contents; }
           .proj-mobile-only { display: none !important; }
+        }
+        @media (max-width: 600px) {
+          .proj-coach-fab { display: none !important; }
+          .proj-coach-panel { display: none !important; }
         }
         ${viewAsPublic ? `
           /* ── Preview mode: the sidebar stays visible (so the owner can keep
@@ -4943,33 +4994,83 @@ export default function ProjectPage() {
             </div>
           )}
 
-          {/* Mobile dashboard — score + level (hidden on desktop, shown on mobile) */}
+          {/* Mobile status card — unifies the score ring, both scores, review state,
+              missions progress and the primary "improve" action into one block so
+              the owner sees health + next step at a glance (hidden on desktop). */}
           <div className="proj-dashboard" style={{
-            display: 'none', alignItems: 'center', gap: 14, marginBottom: 18,
-            background: colors.bgAlt,
-            border: `1px solid ${colors.border}`,
-            borderRadius: 12, padding: '12px 16px',
+            display: 'none', flexDirection: 'column', gap: 13, marginBottom: 18,
+            background: 'linear-gradient(160deg, rgba(27,120,247,0.09), rgba(79,70,229,0.045))',
+            border: '1px solid rgba(27,120,247,0.25)',
+            borderRadius: 16, padding: 16,
           }}>
-            <ScoreRing score={displayScore} size={72} />
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{
-                display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 6,
-                background: level.color + '15', color: level.color,
-                borderRadius: 6, padding: '3px 10px', fontSize: 12, fontWeight: 700,
-                border: `1px solid ${level.color}35`,
-              }}>{level.label}</div>
-              <div style={{ height: 3, background: progTrack(Math.round((earnedXP / totalXP) * 100)), borderRadius: 2, overflow: 'hidden', marginBottom: 5 }}>
-                <div style={{
-                  height: '100%', borderRadius: 2,
-                  width: `${(earnedXP / totalXP) * 100}%`,
-                  background: progBar(Math.round((earnedXP / totalXP) * 100)),
-                  transition: 'width 0.5s',
-                }} />
-              </div>
-              <div style={{ fontSize: 11, color: colors.muted }}>
-                {completedCount}/{CHALLENGES.length} missões · {earnedXP}/{totalXP} XP
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+              <ScoreRing score={displayScore} size={76} />
+              <div style={{ flex: 1, minWidth: 0, display: 'flex', gap: 12 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 9.5, fontWeight: 800, color: colors.muted, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 4 }}>Score Showo</div>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 2 }}>
+                    <span style={{ fontSize: 26, fontWeight: 900, color: '#1b78f7', letterSpacing: '-1px', lineHeight: 1 }}>{score}</span>
+                    <span style={{ fontSize: 11, color: colors.muted, fontWeight: 600 }}>/100</span>
+                  </div>
+                </div>
+                {isOwner && project.teacher_score != null && (
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 9.5, fontWeight: 800, color: colors.muted, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 4 }}>Nota Professor</div>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 2 }}>
+                      <span style={{ fontSize: 26, fontWeight: 900, color: '#1b78f7', letterSpacing: '-1px', lineHeight: 1 }}>{project.teacher_score}</span>
+                      <span style={{ fontSize: 11, color: colors.muted, fontWeight: 600 }}>/20</span>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
+
+            {/* Review state (falls back to the score level when there's no teacher review) */}
+            {project.review_status ? (() => {
+              const rs = project.review_status
+              const cfg = rs === 'ready_for_defense'
+                ? { tone: '34,197,94', color: '#22c55e', label: 'Pronto para defesa' }
+                : rs === 'resubmitted'
+                ? { tone: '27,120,247', color: '#1b78f7', label: 'Correções enviadas' }
+                : { tone: '245,158,11', color: '#f59e0b', label: 'Precisa de revisão' }
+              return (
+                <div style={{ alignSelf: 'flex-start', display: 'inline-flex', alignItems: 'center', gap: 6, background: `rgba(${cfg.tone},0.12)`, color: cfg.color, border: `1px solid rgba(${cfg.tone},0.28)`, borderRadius: 999, padding: '4px 11px', fontSize: 11.5, fontWeight: 700 }}>
+                  {cfg.label}
+                </div>
+              )
+            })() : (
+              <div style={{ alignSelf: 'flex-start', display: 'inline-flex', alignItems: 'center', gap: 6, background: level.color + '15', color: level.color, border: `1px solid ${level.color}35`, borderRadius: 999, padding: '4px 11px', fontSize: 11.5, fontWeight: 700 }}>
+                {level.label}
+              </div>
+            )}
+
+            {/* Missions progress */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ flex: 1, height: 6, background: progTrack(Math.round((earnedXP / totalXP) * 100)), borderRadius: 99, overflow: 'hidden' }}>
+                <div style={{ height: '100%', borderRadius: 99, width: `${(earnedXP / totalXP) * 100}%`, background: progBar(Math.round((earnedXP / totalXP) * 100)), transition: 'width 0.5s' }} />
+              </div>
+              <span style={{ fontSize: 11, color: colors.muted, fontWeight: 600, whiteSpace: 'nowrap' }}>
+                {completedCount}/{CHALLENGES.length} missões · {earnedXP}/{totalXP} XP
+              </span>
+            </div>
+
+            {/* Primary action — the owner's "ok, let's improve this" entry point */}
+            {isOwner && completedCount < CHALLENGES.length && (
+              <button
+                onClick={() => setMobileTab('melhorar')}
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                  width: '100%', background: '#1b78f7', color: '#fff', border: 'none',
+                  borderRadius: 12, padding: '13px', fontSize: 15, fontWeight: 800,
+                  letterSpacing: '-0.2px', cursor: 'pointer', fontFamily: 'inherit',
+                  boxShadow: '0 8px 20px -6px rgba(27,120,247,0.55)',
+                }}
+              >
+                <Sparkles size={17} />
+                Ver o que melhorar
+                <span style={{ fontWeight: 600, fontSize: 12.5, opacity: 0.85 }}>· {CHALLENGES.length - completedCount} {CHALLENGES.length - completedCount === 1 ? 'campo' : 'campos'}</span>
+              </button>
+            )}
           </div>
 
           </div>{/* end left flex column */}
@@ -5145,75 +5246,31 @@ export default function ProjectPage() {
 
             </div>{/* end actionable grid */}
 
-            {/* ── Em breve ── */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: 10, fontWeight: 700, color: colors.subtle, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Em breve</span>
-              <div style={{ flex: 1, height: 1, background: colors.border }} />
+            {/* ── Em breve — small chips instead of full cards (they're just teasers) ── */}
+            <div style={{ marginTop: 2 }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: colors.subtle, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>Em breve</div>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {[
+                  { key: 'pap_slides', Icon: Layout, label: 'Slides PAP' },
+                  { key: 'boss_fight', Icon: Swords, label: 'Boss Fight' },
+                ].map(({ key, Icon, label }) => {
+                  const on = featureInterest[key]
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => !on && handleFeatureInterest(key)}
+                      title={on ? 'Vamos avisar-te por email' : 'Notificar-me quando sair'}
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'var(--c-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: 999, padding: '7px 13px', cursor: on ? 'default' : 'pointer', fontFamily: 'inherit', opacity: on ? 0.7 : 1, WebkitTapHighlightColor: 'transparent' }}
+                    >
+                      <Icon size={13} color={colors.muted} />
+                      <span style={{ fontSize: 12.5, fontWeight: 600, color: colors.text }}>{label}</span>
+                      {on ? <Check size={12} color="#1b78f7" /> : <Bell size={11} color={colors.subtle} />}
+                    </button>
+                  )
+                })}
+              </div>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 10 }}>
-
-              {/* Coming soon: PAP Slides */}
-              <div
-                style={{
-                  ...miniCardBase,
-                  cursor: featureInterest.pap_slides ? 'default' : 'pointer',
-                  background: featureInterest.pap_slides ? 'rgba(27,120,247,0.04)' : 'rgba(27,120,247,0.05)',
-                  border: `1px solid rgba(27,120,247,${featureInterest.pap_slides ? '0.15' : '0.2'})`,
-                  opacity: featureInterest.pap_slides ? 0.75 : 1,
-                }}
-                onClick={() => !featureInterest.pap_slides && handleFeatureInterest('pap_slides')}
-                onMouseEnter={e => { if (!featureInterest.pap_slides) { e.currentTarget.style.background = 'rgba(27,120,247,0.1)'; e.currentTarget.style.borderColor = 'rgba(27,120,247,0.35)' } }}
-                onMouseLeave={e => { if (!featureInterest.pap_slides) { e.currentTarget.style.background = 'rgba(27,120,247,0.05)'; e.currentTarget.style.borderColor = 'rgba(27,120,247,0.2)' } }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                  <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(27,120,247,0.12)', border: '1px solid rgba(27,120,247,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <Layout size={13} color="#1b78f7" />
-                  </div>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: '#1b78f7' }}>Slides PAP</div>
-                  {featureInterest.pap_slides && <Check size={11} color="#1b78f7" style={{ marginLeft: 'auto' }} />}
-                </div>
-                <div style={{ fontSize: 11, color: colors.muted, lineHeight: 1.4 }}>
-                  {featureInterest.pap_slides ? 'Vamos avisar-te por email' : 'Em breve. IA gera a apresentação'}
-                </div>
-                {!featureInterest.pap_slides && (
-                  <div style={{ fontSize: 10, fontWeight: 600, color: 'rgba(27,120,247,0.7)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <Bell size={10} /> Notificar-me
-                  </div>
-                )}
-              </div>
-
-              {/* Coming soon: Boss Fight */}
-              <div
-                style={{
-                  ...miniCardBase,
-                  cursor: featureInterest.boss_fight ? 'default' : 'pointer',
-                  background: featureInterest.boss_fight ? 'rgba(249,115,22,0.04)' : 'rgba(249,115,22,0.05)',
-                  border: `1px solid rgba(249,115,22,${featureInterest.boss_fight ? '0.15' : '0.2'})`,
-                  opacity: featureInterest.boss_fight ? 0.75 : 1,
-                }}
-                onClick={() => !featureInterest.boss_fight && handleFeatureInterest('boss_fight')}
-                onMouseEnter={e => { if (!featureInterest.boss_fight) { e.currentTarget.style.background = 'rgba(249,115,22,0.1)'; e.currentTarget.style.borderColor = 'rgba(249,115,22,0.35)' } }}
-                onMouseLeave={e => { if (!featureInterest.boss_fight) { e.currentTarget.style.background = 'rgba(249,115,22,0.05)'; e.currentTarget.style.borderColor = 'rgba(249,115,22,0.2)' } }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                  <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(249,115,22,0.12)', border: '1px solid rgba(249,115,22,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <Swords size={13} color="#f97316" />
-                  </div>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: '#f97316' }}>Boss Fight</div>
-                  {featureInterest.boss_fight && <Check size={11} color="#f97316" style={{ marginLeft: 'auto' }} />}
-                </div>
-                <div style={{ fontSize: 11, color: colors.muted, lineHeight: 1.4 }}>
-                  {featureInterest.boss_fight ? 'Vamos avisar-te por email' : 'Em breve. Defesa simulada com IA'}
-                </div>
-                {!featureInterest.boss_fight && (
-                  <div style={{ fontSize: 10, fontWeight: 600, color: 'rgba(249,115,22,0.7)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <Bell size={10} /> Notificar-me
-                  </div>
-                )}
-              </div>
-
-            </div>{/* end em-breve grid */}
-            </div>{/* end proj-mini-dash flex */}
+            </div>
           )
         })()}
 
@@ -5246,78 +5303,62 @@ export default function ProjectPage() {
           </div>
         )}
 
-        {/* Mobile-only: completude + tips (desktop version lives in aside) */}
+        {/* Mobile-only: completude — a clean, tappable checklist of what to fix to
+            raise the score. Each incomplete field links straight to the editor. */}
         {isOwner && (() => {
           const fq = PROFILE_SCORE_FIELDS.map(f => {
             const val = String(project[f.key] || '').trim()
             const quality = val.length === 0 ? 'empty' : val.length < f.minLen ? 'short' : 'good'
             return { ...f, quality }
           })
-          const pct = Math.round((fq.filter(f => f.quality === 'good').length / fq.length) * 100)
-          const needsWork = fq.filter(f => f.quality !== 'good').slice(0, 3)
+          const goodCount = fq.filter(f => f.quality === 'good').length
+          const pct = Math.round((goodCount / fq.length) * 100)
           return (
-            <div className="proj-mobile-only" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <div className="proj-card" style={pct === 100 ? { background: 'rgba(34,197,94,0.04)', border: '1px solid rgba(34,197,94,0.22)' } : {}}>
-                {pct === 100 ? (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <div style={{ width: 32, height: 32, borderRadius: 9, background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <Check size={15} color="#22c55e" strokeWidth={3} />
+            <div className="proj-mobile-only proj-card" style={{ padding: 0, overflow: 'hidden', order: -1 }}>
+              <div style={{ padding: '15px 16px 14px', borderBottom: `1px solid ${colors.border}` }}>
+                <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 12 }}>
+                  <div>
+                    <div style={{ fontSize: 15, fontWeight: 800, letterSpacing: '-0.2px', color: colors.text }}>Como subir o score</div>
+                    <div style={{ fontSize: 12, color: colors.muted, marginTop: 3 }}>
+                      {pct === 100 ? 'Perfil completo — bom trabalho.' : `${goodCount} de ${fq.length} campos · toca para editar`}
                     </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: '#22c55e', marginBottom: 2 }}>Perfil 100% completo</div>
-                      <div style={{ fontSize: 12, color: colors.subtle }}>Todos os campos preenchidos com qualidade</div>
-                    </div>
-                    <span style={{ fontSize: 13, fontWeight: 800, color: '#22c55e', flexShrink: 0 }}>100%</span>
                   </div>
-                ) : (
-                  <>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-                      <h3 className="proj-sec-label" style={{ margin: 0 }}>Completude</h3>
-                      <span style={{ fontSize: 13, fontWeight: 800, color: pct > 60 ? colors.blue : colors.yellow }}>{pct}%</span>
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                      {fq.map(f => (
-                        <div key={f.key} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <div style={{ width: 6, height: 6, borderRadius: '50%', flexShrink: 0, background: f.quality === 'good' ? '#10b981' : f.quality === 'short' ? colors.yellow : colors.subtle }} />
-                          <span style={{ flex: 1, fontSize: 12, color: f.quality === 'good' ? colors.text : f.quality === 'short' ? '#d4a820' : colors.subtle, fontWeight: f.quality === 'good' ? 600 : 400 }}>{f.label}</span>
-                          {f.quality === 'good' && <Check size={11} color="#10b981" strokeWidth={3} />}
-                          {f.quality === 'short' && <span style={{ fontSize: 10, color: colors.yellow, fontWeight: 700 }}>curto</span>}
-                        </div>
-                      ))}
-                    </div>
-                    <div style={{ marginTop: 14, height: 4, background: progTrack(pct), borderRadius: 99, overflow: 'hidden' }}>
-                      <div style={{ height: '100%', borderRadius: 99, width: `${pct}%`, background: progBar(pct), transition: 'width 0.5s' }} />
-                    </div>
-                  </>
-                )}
-              </div>
-              {needsWork.length > 0 && (
-                <div className="proj-card" style={{ background: colors.glass, border: `1px solid ${colors.glassBorder}` }}>
-                  <h3 className="proj-sec-label" style={{ margin: '0 0 12px', color: '#5a9ff5', display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#5a9ff5" strokeWidth="2.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                    Como aumentar o score
-                  </h3>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                    {needsWork.map(f => (
-                      <div key={f.key} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-                        <div style={{ width: 5, height: 5, borderRadius: '50%', background: f.quality === 'short' ? colors.yellow : '#1b78f7', flexShrink: 0, marginTop: 6 }} />
-                        <div>
-                          <span style={{ fontSize: 11, fontWeight: 700, color: f.quality === 'short' ? colors.yellow : '#5a9ff5', display: 'block', marginBottom: 2 }}>
-                            {f.label} {f.quality === 'short' ? '· muito curto' : '· em falta'}
-                          </span>
-                          <p style={{ margin: 0, fontSize: 12, color: colors.muted, lineHeight: 1.55 }}>{f.tip}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <button
-                    onClick={() => { setMobileTab('missoes') }}
-                    style={{ marginTop: 14, width: '100%', background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.2)', color: '#5a9ff5', borderRadius: 10, padding: '9px 0', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
-                  >
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'center' }}>Ver missões <ChevronDown size={14} /></span>
-                  </button>
+                  <span style={{ fontSize: 22, fontWeight: 900, color: pct === 100 ? '#22c55e' : '#1b78f7', letterSpacing: '-0.5px', lineHeight: 1 }}>{pct}%</span>
                 </div>
-              )}
+                <div style={{ height: 6, background: progTrack(pct), borderRadius: 99, overflow: 'hidden' }}>
+                  <div style={{ height: '100%', borderRadius: 99, width: `${pct}%`, background: progBar(pct), transition: 'width 0.5s' }} />
+                </div>
+              </div>
+              <div>
+                {fq.map((f, i) => {
+                  const done = f.quality === 'good'
+                  const tagColor = f.quality === 'short' ? '#f59e0b' : '#1b78f7'
+                  return (
+                    <button
+                      key={f.key}
+                      onClick={() => { if (!done) navigate(`/editar/${project.slug}`) }}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 11, width: '100%',
+                        padding: '11px 16px', background: 'none', border: 'none',
+                        borderTop: i === 0 ? 'none' : `1px solid ${colors.border}`,
+                        cursor: done ? 'default' : 'pointer', fontFamily: 'inherit', textAlign: 'left',
+                        WebkitTapHighlightColor: 'transparent',
+                      }}
+                    >
+                      <span style={{ width: 22, height: 22, borderRadius: 7, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: done ? 'rgba(27,120,247,0.12)' : f.quality === 'short' ? 'rgba(245,158,11,0.12)' : 'var(--c-bg-alt)', border: done ? 'none' : `1px solid ${colors.border}` }}>
+                        {done ? <Check size={12} color="#1b78f7" strokeWidth={3} /> : <span style={{ width: 5, height: 5, borderRadius: '50%', background: f.quality === 'short' ? '#f59e0b' : colors.subtle }} />}
+                      </span>
+                      <span style={{ flex: 1, minWidth: 0, fontSize: 13.5, fontWeight: done ? 500 : 600, color: done ? colors.muted : colors.text }}>{f.label}</span>
+                      {!done && (
+                        <span style={{ fontSize: 10.5, fontWeight: 800, color: tagColor, background: `${tagColor}1f`, borderRadius: 999, padding: '2px 9px' }}>
+                          {f.quality === 'short' ? 'Curto' : 'Em falta'}
+                        </span>
+                      )}
+                      {!done && <ChevronRight size={15} color={colors.subtle} style={{ flexShrink: 0 }} />}
+                    </button>
+                  )
+                })}
+              </div>
             </div>
           )
         })()}
@@ -5499,109 +5540,101 @@ export default function ProjectPage() {
 
         </div>{/* end missoes tab section */}
 
-        {/* ── TAB: ia — project coach chatbot ── */}
-        {isOwner && (() => {
-          const sendCoach = async (e) => {
-            e?.preventDefault()
-            const msg = coachInput.trim()
-            if (!msg || coachLoading) return
-            const next = [...coachMessages, { role: 'user', content: msg }]
-            setCoachMessages(next)
-            setCoachInput('')
-            setCoachLoading(true)
-            try {
-              const reply = await chatProjectCoach({ project, messages: coachMessages, message: msg })
-              setCoachMessages(prev => [...prev, { role: 'assistant', content: reply }])
-              setTimeout(() => coachBottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
-            } catch (err) {
-              setCoachMessages(prev => [...prev, { role: 'assistant', content: 'Ocorreu um erro. Tenta novamente.' }])
-            }
-            setCoachLoading(false)
-          }
-
-          return (
-            <div className={`proj-mobile-section${mobileTab === 'ia' ? ' proj-mobile-active' : ''}`}>
-              <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100dvh - 200px)', minHeight: 400 }}>
-                {/* Messages */}
-                <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12, paddingBottom: 8 }}>
-                  {coachMessages.length === 0 && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingTop: 8 }}>
-                      <div style={{ background: 'rgba(27,120,247,0.08)', border: '1px solid rgba(27,120,247,0.18)', borderRadius: 12, padding: '14px 16px', fontSize: 13, color: colors.text, lineHeight: 1.6 }}>
-                        <span style={{ display: 'block', fontSize: 11, fontWeight: 700, color: colors.blue, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>Assistente IA</span>
-                        Olá! Sou o teu assistente para melhorar o <strong>{project.name}</strong>. Posso ajudar-te a tornar cada secção mais convincente para um júri ou recrutador. Em que queres trabalhar hoje?
-                      </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                        {[
-                          'O que está mais fraco no meu projeto?',
-                          'Como posso melhorar a secção do problema?',
-                          'O meu público-alvo está bem definido?',
-                        ].map(q => (
-                          <button
-                            key={q}
-                            onClick={() => { setCoachInput(q); setTimeout(() => document.getElementById('coach-input')?.focus(), 50) }}
-                            style={{ textAlign: 'left', background: 'var(--c-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: 10, padding: '10px 14px', fontSize: 12, color: colors.muted, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s' }}
-                            onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(27,120,247,0.4)'; e.currentTarget.style.color = colors.text }}
-                            onMouseLeave={e => { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.color = colors.muted }}
-                          >{q}</button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  {coachMessages.map((m, i) => (
-                    <div key={i} style={{
-                      alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start',
-                      maxWidth: '85%',
-                      background: m.role === 'user' ? '#1b78f7' : 'var(--c-bg-alt)',
-                      border: m.role === 'user' ? 'none' : `1px solid ${colors.border}`,
-                      borderRadius: m.role === 'user' ? '14px 14px 4px 14px' : '14px 14px 14px 4px',
-                      padding: '10px 14px',
-                      fontSize: 13,
-                      color: m.role === 'user' ? '#fff' : colors.text,
-                      lineHeight: 1.6,
-                      whiteSpace: 'pre-wrap',
-                    }}>{m.content}</div>
-                  ))}
-                  {coachLoading && (
-                    <div style={{ alignSelf: 'flex-start', background: 'var(--c-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: '14px 14px 14px 4px', padding: '10px 16px', display: 'flex', gap: 5, alignItems: 'center' }}>
-                      {[0,1,2].map(i => <div key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: colors.muted, animation: `bounce 1.2s ease-in-out ${i * 0.2}s infinite` }} />)}
-                    </div>
-                  )}
-                  <div ref={coachBottomRef} />
-                </div>
-                {/* Input */}
-                <form onSubmit={sendCoach} style={{ display: 'flex', gap: 8, paddingTop: 10, borderTop: `1px solid ${colors.border}` }}>
-                  <input
-                    id="coach-input"
-                    value={coachInput}
-                    onChange={e => setCoachInput(e.target.value)}
-                    onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendCoach() } }}
-                    placeholder="Pergunta sobre o teu projeto..."
-                    disabled={coachLoading}
-                    style={{
-                      flex: 1, background: 'var(--c-bg-alt)', border: `1px solid ${colors.border}`,
-                      borderRadius: 10, padding: '10px 14px', fontSize: 13,
-                      color: colors.text, fontFamily: 'inherit', outline: 'none',
-                      opacity: coachLoading ? 0.6 : 1,
-                    }}
-                  />
-                  <button
-                    type="submit"
-                    disabled={!coachInput.trim() || coachLoading}
-                    style={{
-                      background: coachInput.trim() && !coachLoading ? '#1b78f7' : 'var(--c-bg-alt)',
-                      border: `1px solid ${coachInput.trim() && !coachLoading ? '#1b78f7' : colors.border}`,
-                      borderRadius: 10, padding: '10px 14px',
-                      color: coachInput.trim() && !coachLoading ? '#fff' : colors.muted,
-                      cursor: coachInput.trim() && !coachLoading ? 'pointer' : 'default',
-                      fontFamily: 'inherit', fontSize: 13, fontWeight: 600,
-                      transition: 'all 0.15s', flexShrink: 0,
-                    }}
-                  >Enviar</button>
-                </form>
+        {/* ── TAB: ia — project coach chatbot (mobile) ── */}
+        {/* IA — full-screen chat overlay (messages-thread style) instead of a
+            loose tab section that left half the screen empty. Opened by the "IA"
+            tab; the back button returns to the project. */}
+        {isOwner && mobileTab === 'ia' && (
+          <div style={{ position: 'fixed', inset: 0, zIndex: 400, background: 'var(--c-bg)', display: 'flex', flexDirection: 'column' }}>
+            {/* Header */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '11px 12px', borderBottom: `1px solid ${colors.border}`, flexShrink: 0 }}>
+              <button onClick={() => setMobileTab('overview')} aria-label="Voltar ao projeto" style={{ background: 'none', border: 'none', color: colors.muted, cursor: 'pointer', width: 36, height: 36, borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, WebkitTapHighlightColor: 'transparent' }}>
+                <ChevronLeft size={22} />
+              </button>
+              <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(27,120,247,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <Sparkles size={18} color="#1b78f7" />
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 15, fontWeight: 800, color: colors.text, lineHeight: 1.2 }}>Assistente IA</div>
+                <div style={{ fontSize: 12, color: colors.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{project.name}</div>
               </div>
             </div>
-          )
-        })()}
+            {/* Messages */}
+            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12, padding: '16px 14px' }}>
+              {coachMessages.length === 0 && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <div style={{ background: 'rgba(27,120,247,0.08)', border: '1px solid rgba(27,120,247,0.18)', borderRadius: 14, padding: '14px 16px', fontSize: 13.5, color: colors.text, lineHeight: 1.6 }}>
+                    Olá! Sou o teu assistente para melhorar o <strong>{project.name}</strong>. Posso ajudar-te a tornar cada secção mais convincente para um júri ou recrutador. Em que queres trabalhar hoje?
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+                    {[
+                      'O que está mais fraco no meu projeto?',
+                      'Como posso melhorar a secção do problema?',
+                      'O meu público-alvo está bem definido?',
+                    ].map(q => (
+                      <button
+                        key={q}
+                        onClick={() => { setCoachInput(q); setTimeout(() => document.getElementById('coach-input')?.focus(), 50) }}
+                        style={{ textAlign: 'left', background: 'var(--c-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: 11, padding: '11px 14px', fontSize: 13, color: colors.muted, cursor: 'pointer', fontFamily: 'inherit', WebkitTapHighlightColor: 'transparent' }}
+                      >{q}</button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {coachMessages.map((m, i) => (
+                <div key={i} style={{
+                  alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start',
+                  maxWidth: '85%',
+                  background: m.role === 'user' ? '#1b78f7' : 'var(--c-bg-alt)',
+                  border: m.role === 'user' ? 'none' : `1px solid ${colors.border}`,
+                  borderRadius: m.role === 'user' ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
+                  padding: '10px 14px',
+                  fontSize: 13.5,
+                  color: m.role === 'user' ? '#fff' : colors.text,
+                  lineHeight: 1.6,
+                  whiteSpace: 'pre-wrap',
+                }}>{m.content}</div>
+              ))}
+              {coachLoading && (
+                <div style={{ alignSelf: 'flex-start', background: 'var(--c-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: '16px 16px 16px 4px', padding: '10px 16px', display: 'flex', gap: 5, alignItems: 'center' }}>
+                  {[0,1,2].map(i => <div key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: colors.muted, animation: `bounce 1.2s ease-in-out ${i * 0.2}s infinite` }} />)}
+                </div>
+              )}
+              <div ref={coachBottomRef} />
+            </div>
+            {/* Input — pinned to the bottom */}
+            <form onSubmit={sendCoach} style={{ display: 'flex', gap: 8, padding: '10px 12px calc(10px + env(safe-area-inset-bottom, 0px))', borderTop: `1px solid ${colors.border}`, flexShrink: 0 }}>
+              <input
+                id="coach-input"
+                value={coachInput}
+                onChange={e => setCoachInput(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendCoach() } }}
+                placeholder="Pergunta sobre o teu projeto..."
+                disabled={coachLoading}
+                style={{
+                  flex: 1, background: 'var(--c-bg-alt)', border: `1px solid ${colors.border}`,
+                  borderRadius: 11, padding: '12px 14px', fontSize: 14,
+                  color: colors.text, fontFamily: 'inherit', outline: 'none',
+                  opacity: coachLoading ? 0.6 : 1,
+                }}
+              />
+              <button
+                type="submit"
+                disabled={!coachInput.trim() || coachLoading}
+                aria-label="Enviar"
+                style={{
+                  background: coachInput.trim() && !coachLoading ? '#1b78f7' : 'var(--c-bg-alt)',
+                  border: `1px solid ${coachInput.trim() && !coachLoading ? '#1b78f7' : colors.border}`,
+                  borderRadius: 11, padding: '0 16px', minWidth: 48,
+                  color: coachInput.trim() && !coachLoading ? '#fff' : colors.muted,
+                  cursor: coachInput.trim() && !coachLoading ? 'pointer' : 'default',
+                  fontFamily: 'inherit', fontSize: 14, fontWeight: 700,
+                  transition: 'all 0.15s', flexShrink: 0,
+                }}
+              >Enviar</button>
+            </form>
+          </div>
+        )}
 
         {/* ── TAB: overview — nota professor + share + author ── */}
         <div className={`proj-mobile-section${mobileTab === 'overview' ? ' proj-mobile-active' : ''}`}>
@@ -5622,40 +5655,24 @@ export default function ProjectPage() {
               </div>
             )
           })()}
-          {/* Review status + identity */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-            {project.review_status && (() => {
-              const rs = project.review_status
-              const cfg = rs === 'ready_for_defense'
-                ? { tone: '34,197,94', color: '#22c55e', icon: <CheckCircle size={11} strokeWidth={2.5} />, label: 'Pronto para defesa' }
-                : rs === 'resubmitted'
-                ? { tone: '27,120,247', color: '#1b78f7', icon: <CheckCircle size={11} strokeWidth={2.5} />, label: 'Correções enviadas' }
-                : { tone: '249,115,22', color: '#f97316', icon: <AlertTriangle size={11} strokeWidth={2.5} />, label: 'Precisa de revisão' }
-              return (
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: `rgba(${cfg.tone},0.1)`, color: cfg.color, border: `1px solid rgba(${cfg.tone},0.25)`, borderRadius: 999, padding: '3px 10px', fontSize: 11, fontWeight: 700 }}>
-                  {cfg.icon}{cfg.label}
-                </div>
-              )
-            })()}
-            {[project.creator_name, project.course, project.school_year].filter(Boolean).map((item, i) => (
-              <span key={i} style={{ fontSize: 12, color: colors.muted, display: 'flex', alignItems: 'center', gap: 6 }}>
-                {i > 0 && <span style={{ color: colors.subtle, fontSize: 10 }}>·</span>}{item}
-              </span>
-            ))}
-          </div>
+          {/* Creator identity (review state now lives in the status card above) */}
+          {[project.creator_name, project.course, project.school_year].filter(Boolean).length > 0 && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+              {[project.creator_name, project.course, project.school_year].filter(Boolean).map((item, i) => (
+                <span key={i} style={{ fontSize: 12, color: colors.muted, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  {i > 0 && <span style={{ color: colors.subtle, fontSize: 10 }}>·</span>}{item}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* Mobile-only: nota do professor */}
-        {isOwner && project.teacher_score != null && (
-          <div className="proj-mobile-only proj-card" style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-            <ClipboardList size={14} color="#1b78f7" style={{ flexShrink: 0 }} />
-            <span style={{ fontSize: 13, fontWeight: 700, color: colors.text }}>Nota do professor</span>
-            <span style={{ marginLeft: 'auto', fontSize: 20, fontWeight: 900, color: project.teacher_score >= 16 ? '#22c55e' : project.teacher_score >= 10 ? '#1b78f7' : '#f97316', letterSpacing: '-0.5px', flexShrink: 0 }}>
-              {project.teacher_score}<span style={{ fontSize: 11, color: colors.muted, fontWeight: 500 }}>/20</span>
-            </span>
-            {project.teacher_score_note && (
-              <div style={{ flexBasis: '100%', fontSize: 12, color: colors.muted, lineHeight: 1.5 }}>{project.teacher_score_note}</div>
-            )}
+        {/* Teacher's written note — the scores themselves now live in the status
+            card at the top, so here we keep only the qualitative feedback. */}
+        {isOwner && project.teacher_score_note && (
+          <div className="proj-mobile-only proj-card" style={{ padding: '13px 16px' }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: colors.muted, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>Nota do professor</div>
+            <div style={{ fontSize: 13, color: colors.text, lineHeight: 1.55 }}>{project.teacher_score_note}</div>
           </div>
         )}
 
@@ -5966,7 +5983,7 @@ export default function ProjectPage() {
                     state: {
                       returnTo: {
                         pathname: `/projeto/${project.slug}`,
-                        state: { reviewQueue, reviewIndex, turmaCode: location.state?.turmaCode, turmaName: location.state?.turmaName },
+                        state: { reviewQueue, reviewIndex, turmaCode: location.state?.turmaCode, turmaName: location.state?.turmaName, turmaId: location.state?.turmaId },
                         label: project.name,
                       },
                     },
@@ -6007,6 +6024,7 @@ export default function ProjectPage() {
 
           {/* ── Evaluation card, 0-20 scale (professors only) ── */}
           {isProfessor && (() => {
+            const useClassCriteria = classCriteria.length > 0
             const JURY_CRITERIA = [
               { id: 'problem',        label: 'Problema',        desc: 'Clareza e relevância' },
               { id: 'solution',       label: 'Solução',         desc: 'Adequação e criatividade' },
@@ -6014,11 +6032,24 @@ export default function ProjectPage() {
               { id: 'results',        label: 'Resultados',      desc: 'Evidência e impacto' },
               { id: 'presentation',   label: 'Apresentação',    desc: 'Qualidade do projeto' },
             ]
+            // Legacy bar system (no class criteria)
             const totalRated = JURY_CRITERIA.filter(c => juryRatings[c.id] != null).length
             const allRated   = totalRated === JURY_CRITERIA.length
             const totalScore = allRated ? JURY_CRITERIA.reduce((s, c) => s + juryRatings[c.id], 0) : null
+            // Class-criteria weighted system
+            const critRatedCount = classCriteria.filter(c => criterionScores[c.id] != null).length
+            const allCritRated   = critRatedCount === classCriteria.length && classCriteria.length > 0
+            const weightedTotal  = (() => {
+              if (!allCritRated) return null
+              const sumW = classCriteria.reduce((s, c) => s + Number(c.weight), 0)
+              if (!sumW) return null
+              const sumWS = classCriteria.reduce((s, c) => s + Number(c.weight) * Number(criterionScores[c.id]), 0)
+              return Math.round((sumWS / sumW) * 10) / 10
+            })()
             const scoreColorFor = s => s >= 16 ? '#22c55e' : s >= 10 ? '#1b78f7' : '#f97316'
             const hasSavedScore = project.teacher_score != null
+            const finalScore    = useClassCriteria ? weightedTotal : totalScore
+            const canSave       = useClassCriteria ? allCritRated  : allRated
 
             return (
               <div style={{ ...colors.glassStyle, background: colors.glass, border: `1px solid ${colors.glassBorder}`, borderRadius: 12, overflow: 'hidden', marginBottom: 4 }}>
@@ -6076,7 +6107,33 @@ export default function ProjectPage() {
                   <>
                     {/* Criteria rating */}
                     <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                      {JURY_CRITERIA.map(c => (
+                      {useClassCriteria ? classCriteria.map(c => {
+                        const val = criterionScores[c.id]
+                        return (
+                          <div key={c.id}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 6 }}>
+                              <span style={{ fontSize: 12, fontWeight: 700, color: colors.text }}>{c.name}</span>
+                              <span style={{ fontSize: 10, fontWeight: 700, color: '#1b78f7', background: 'rgba(27,120,247,0.1)', borderRadius: 4, padding: '1px 5px' }}>{c.weight}%</span>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <input
+                                type="number" min="0" max="20" step="1"
+                                value={val ?? ''}
+                                onChange={e => {
+                                  const n = e.target.value === '' ? undefined : Math.min(20, Math.max(0, Number(e.target.value)))
+                                  setCriterionScores(s => ({ ...s, [c.id]: n }))
+                                }}
+                                placeholder="—"
+                                style={{ width: 52, background: 'var(--c-bg)', border: `1px solid ${colors.border}`, borderRadius: 7, padding: '5px 8px', color: colors.text, fontSize: 13, fontWeight: 700, fontFamily: 'inherit', outline: 'none', textAlign: 'center' }}
+                              />
+                              <div style={{ flex: 1, height: 6, borderRadius: 3, background: 'var(--c-bg)', overflow: 'hidden' }}>
+                                <div style={{ height: '100%', width: `${((val ?? 0) / 20) * 100}%`, background: val >= 16 ? '#22c55e' : val >= 10 ? '#1b78f7' : '#f97316', borderRadius: 3, transition: 'width 0.15s' }} />
+                              </div>
+                              <span style={{ fontSize: 11, color: colors.muted, minWidth: 22, textAlign: 'right' }}>/20</span>
+                            </div>
+                          </div>
+                        )
+                      }) : JURY_CRITERIA.map(c => (
                         <div key={c.id}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 5 }}>
                             <span style={{ fontSize: 12, fontWeight: 700, color: colors.text }}>{c.label}</span>
@@ -6106,9 +6163,12 @@ export default function ProjectPage() {
 
                     {/* Running total */}
                     <div style={{ padding: '0 16px 4px', display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
-                      <span style={{ fontSize: 11, color: colors.muted }}>{totalRated}/{JURY_CRITERIA.length} critérios avaliados</span>
-                      {totalScore != null && (
-                        <span style={{ fontSize: 15, fontWeight: 900, color: scoreColorFor(totalScore) }}>{totalScore}<span style={{ fontSize: 10, color: colors.muted, fontWeight: 500 }}>/20</span></span>
+                      {useClassCriteria
+                        ? <span style={{ fontSize: 11, color: colors.muted }}>{critRatedCount}/{classCriteria.length} critérios avaliados</span>
+                        : <span style={{ fontSize: 11, color: colors.muted }}>{totalRated}/{JURY_CRITERIA.length} critérios avaliados</span>
+                      }
+                      {finalScore != null && (
+                        <span style={{ fontSize: 15, fontWeight: 900, color: scoreColorFor(finalScore) }}>{finalScore}<span style={{ fontSize: 10, color: colors.muted, fontWeight: 500 }}>/20</span></span>
                       )}
                     </div>
 
@@ -6126,19 +6186,26 @@ export default function ProjectPage() {
                     {/* Save button */}
                     <div style={{ padding: '0 16px 14px' }}>
                       <button
-                        disabled={jurySaving || !allRated}
+                        disabled={jurySaving || !canSave}
                         onClick={async () => {
-                          if (!allRated) return
+                          if (!canSave || finalScore == null) return
                           setJurySaving(true)
+                          const ratings = useClassCriteria ? criterionScores : juryRatings
                           const { error } = await supabase.rpc('set_project_teacher_score', {
-                            p_project_id: project.id, p_score: totalScore, p_note: juryNote || null, p_ratings: juryRatings,
+                            p_project_id: project.id, p_score: finalScore, p_note: juryNote || null, p_ratings: ratings,
                           })
                           if (!error) {
-                            setProject(p => ({ ...p, teacher_score: totalScore, teacher_score_note: juryNote || null, teacher_score_ratings: juryRatings }))
+                            if (useClassCriteria) {
+                              const upsertRows = classCriteria.map(c => ({
+                                project_id: project.id, criterion_id: c.id, score: Number(criterionScores[c.id]),
+                              }))
+                              await supabase.from('project_criterion_scores').upsert(upsertRows, { onConflict: 'project_id,criterion_id' })
+                            }
+                            setProject(p => ({ ...p, teacher_score: finalScore, teacher_score_note: juryNote || null, teacher_score_ratings: ratings }))
                             if (project.user_id) {
                               supabase.rpc('create_notification', {
                                 p_user_id: project.user_id, p_type: 'TEACHER_FEEDBACK',
-                                p_message: `O professor avaliou o teu projeto "${project.name}": ${totalScore}/20`,
+                                p_message: `O professor avaliou o teu projeto "${project.name}": ${finalScore}/20`,
                                 p_project_slug: project.slug,
                               }).then(({ error: notifError }) => { if (notifError) console.error('teacher_score notification failed:', notifError) })
                             }
@@ -6153,8 +6220,8 @@ export default function ProjectPage() {
                           background: jurySaved ? 'rgba(34,197,94,0.12)' : '#1b78f7',
                           border: jurySaved ? '1px solid rgba(34,197,94,0.3)' : 'none',
                           color: jurySaved ? '#22c55e' : '#fff',
-                          fontSize: 13, fontWeight: 700, cursor: !allRated || jurySaving ? 'default' : 'pointer',
-                          opacity: !allRated ? 0.5 : 1, fontFamily: 'inherit',
+                          fontSize: 13, fontWeight: 700, cursor: !canSave || jurySaving ? 'default' : 'pointer',
+                          opacity: !canSave ? 0.5 : 1, fontFamily: 'inherit',
                           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
                         }}
                       >
@@ -6167,21 +6234,36 @@ export default function ProjectPage() {
             )
           })()}
 
-          {/* ── Nota do professor — visible to the owner once graded ── */}
-          {isOwner && project.teacher_score != null && (
-            <div style={{ ...colors.glassStyle, background: colors.glass, border: `1px solid ${colors.glassBorder}`, borderRadius: 12, padding: '13px 16px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-                <ClipboardList size={14} color="#1b78f7" style={{ flexShrink: 0 }} />
-                <span style={{ fontSize: 13, fontWeight: 700, color: colors.text }}>Nota do professor</span>
-                <span style={{ marginLeft: 'auto', fontSize: 20, fontWeight: 900, color: project.teacher_score >= 16 ? '#22c55e' : project.teacher_score >= 10 ? '#1b78f7' : '#f97316', letterSpacing: '-0.5px', flexShrink: 0 }}>
-                  {project.teacher_score}<span style={{ fontSize: 11, color: colors.muted, fontWeight: 500 }}>/20</span>
-                </span>
+          {/* ── Score Showo + Nota Professor side by side — owner only ── */}
+          {isOwner && project.teacher_score != null && (() => {
+            const gradeColor = project.teacher_score >= 16 ? '#22c55e' : project.teacher_score >= 10 ? '#1b78f7' : '#f97316'
+            const scoreColor2 = score >= 86 ? '#22c55e' : score >= 51 ? '#1b78f7' : '#f59e0b'
+            return (
+              <div style={{ ...colors.glassStyle, background: colors.glass, border: `1px solid ${colors.glassBorder}`, borderRadius: 12, overflow: 'hidden' }}>
+                <div style={{ display: 'flex' }}>
+                  <div style={{ flex: 1, padding: '14px 16px', borderRight: `1px solid ${colors.glassBorder}` }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: colors.muted, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Score Showo</div>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 2 }}>
+                      <span style={{ fontSize: 26, fontWeight: 900, color: scoreColor2, letterSpacing: '-1px', lineHeight: 1 }}>{score}</span>
+                      <span style={{ fontSize: 11, color: colors.muted, fontWeight: 500 }}>/100</span>
+                    </div>
+                  </div>
+                  <div style={{ flex: 1, padding: '14px 16px' }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: colors.muted, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Nota Professor</div>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 2 }}>
+                      <span style={{ fontSize: 26, fontWeight: 900, color: gradeColor, letterSpacing: '-1px', lineHeight: 1 }}>{project.teacher_score}</span>
+                      <span style={{ fontSize: 11, color: colors.muted, fontWeight: 500 }}>/20</span>
+                    </div>
+                  </div>
+                </div>
                 {project.teacher_score_note && (
-                  <div style={{ flexBasis: '100%', fontSize: 12, color: colors.muted, lineHeight: 1.5 }}>{project.teacher_score_note}</div>
+                  <div style={{ padding: '10px 16px', borderTop: `1px solid ${colors.glassBorder}`, fontSize: 12, color: colors.muted, lineHeight: 1.5 }}>
+                    {project.teacher_score_note}
+                  </div>
                 )}
               </div>
-            </div>
-          )}
+            )
+          })()}
 
           {/* Teacher feedback — sidebar: desktop first/second slot, mobile above author */}
           {(isOwner || isProfessor) && (teacherFeedback.some(f => f.field_key !== 'jury_eval') || isProfessor) && (() => {
@@ -6569,6 +6651,145 @@ export default function ProjectPage() {
           </div>
         </div>
       )}
+
+      {/* ── Desktop AI Coach: floating button + slide-in panel ── */}
+      {isOwner && (<>
+        {/* Floating button — desktop only, sits above global feedback FAB (bottom: 24) */}
+        <button
+          onClick={() => setCoachOpen(o => !o)}
+          className="proj-coach-fab"
+          style={{
+            position: 'fixed', bottom: 88, right: 20, zIndex: 200,
+            width: 44, height: 44, borderRadius: '50%',
+            background: coachOpen ? 'var(--c-bg-alt)' : '#1b78f7',
+            border: coachOpen ? `2px solid ${colors.border}` : '2px solid transparent',
+            boxShadow: coachOpen ? '0 2px 12px rgba(0,0,0,0.15)' : '0 4px 20px rgba(27,120,247,0.4)',
+            cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            transition: 'all 0.2s',
+          }}
+          title={coachOpen ? 'Fechar assistente' : 'Assistente IA'}
+        >
+          {coachOpen
+            ? <X size={18} color={colors.text} />
+            : <Bot size={20} color="#fff" />}
+        </button>
+
+        {/* Floating chat widget */}
+        {coachOpen && (
+          <div
+            className="proj-coach-panel"
+            style={{
+              position: 'fixed', bottom: 142, right: 20,
+              width: 360, height: 480,
+              maxHeight: 'calc(100dvh - 180px)',
+              zIndex: 199,
+              background: 'var(--c-card)',
+              border: '1px solid var(--c-border)',
+              borderRadius: 16,
+              display: 'flex', flexDirection: 'column',
+              boxShadow: '0 8px 40px rgba(0,0,0,0.28)',
+              animation: 'coachPop 0.18s ease-out',
+            }}
+          >
+            {/* Header */}
+            <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--c-border)', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0, background: 'var(--c-bg-alt)' }}>
+              <div style={{ width: 30, height: 30, borderRadius: 9, background: 'rgba(27,120,247,0.12)', border: '1px solid rgba(27,120,247,0.22)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <Bot size={15} color="#1b78f7" />
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: colors.text }}>Assistente IA</div>
+                <div style={{ fontSize: 11, color: colors.muted }}>Tutor do teu projeto</div>
+              </div>
+              {coachMessages.length > 0 && (
+                <button
+                  onClick={() => setCoachMessages([])}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.muted, fontSize: 11, fontFamily: 'inherit', padding: '4px 8px', borderRadius: 6 }}
+                  title="Limpar conversa"
+                >Limpar</button>
+              )}
+            </div>
+
+            {/* Messages */}
+            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12, padding: '16px 18px' }}>
+              {coachMessages.length === 0 && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <div style={{ background: 'rgba(27,120,247,0.08)', border: '1px solid rgba(27,120,247,0.18)', borderRadius: 12, padding: '14px 16px', fontSize: 13, color: colors.text, lineHeight: 1.6 }}>
+                    <span style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#1b78f7', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>Assistente IA</span>
+                    Olá! Sou o teu assistente para o <strong>{project.name}</strong>. Posso ajudar-te a melhorar cada secção, pensar na estrutura, ou preparar a apresentação. Em que queres trabalhar?
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {[
+                      'O que está mais fraco no meu projeto?',
+                      'Como posso melhorar a secção do problema?',
+                      'Como me preparo para a defesa?',
+                    ].map(q => (
+                      <button
+                        key={q}
+                        onClick={() => { setCoachInput(q); setTimeout(() => document.getElementById('coach-input-desktop')?.focus(), 50) }}
+                        style={{ textAlign: 'left', background: 'var(--c-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: 10, padding: '9px 13px', fontSize: 12, color: colors.muted, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s' }}
+                        onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(27,120,247,0.4)'; e.currentTarget.style.color = colors.text }}
+                        onMouseLeave={e => { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.color = colors.muted }}
+                      >{q}</button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {coachMessages.map((m, i) => (
+                <div key={i} style={{
+                  alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start',
+                  maxWidth: '87%',
+                  background: m.role === 'user' ? '#1b78f7' : 'var(--c-bg-alt)',
+                  border: m.role === 'user' ? 'none' : `1px solid ${colors.border}`,
+                  borderRadius: m.role === 'user' ? '14px 14px 4px 14px' : '14px 14px 14px 4px',
+                  padding: '10px 14px',
+                  fontSize: 13,
+                  color: m.role === 'user' ? '#fff' : colors.text,
+                  lineHeight: 1.6,
+                  whiteSpace: 'pre-wrap',
+                }}>{m.content}</div>
+              ))}
+              {coachLoading && (
+                <div style={{ alignSelf: 'flex-start', background: 'var(--c-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: '14px 14px 14px 4px', padding: '10px 16px', display: 'flex', gap: 5, alignItems: 'center' }}>
+                  {[0,1,2].map(i => <div key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: colors.muted, animation: `bounce 1.2s ease-in-out ${i * 0.2}s infinite` }} />)}
+                </div>
+              )}
+              <div ref={coachBottomRef} />
+            </div>
+
+            {/* Input */}
+            <form onSubmit={sendCoach} style={{ padding: '12px 18px 18px', borderTop: '1px solid var(--c-border)', display: 'flex', gap: 8, flexShrink: 0, background: 'var(--c-bg-alt)' }}>
+              <input
+                id="coach-input-desktop"
+                value={coachInput}
+                onChange={e => setCoachInput(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendCoach() } }}
+                placeholder="Pergunta sobre o teu projeto..."
+                disabled={coachLoading}
+                autoFocus
+                style={{
+                  flex: 1, background: 'var(--c-bg-alt)', border: `1px solid ${colors.border}`,
+                  borderRadius: 10, padding: '10px 14px', fontSize: 13,
+                  color: colors.text, fontFamily: 'inherit', outline: 'none',
+                  opacity: coachLoading ? 0.6 : 1,
+                }}
+              />
+              <button
+                type="submit"
+                disabled={!coachInput.trim() || coachLoading}
+                style={{
+                  background: coachInput.trim() && !coachLoading ? '#1b78f7' : 'var(--c-bg-alt)',
+                  border: `1px solid ${coachInput.trim() && !coachLoading ? '#1b78f7' : colors.border}`,
+                  borderRadius: 10, padding: '10px 14px',
+                  color: coachInput.trim() && !coachLoading ? '#fff' : colors.muted,
+                  cursor: coachInput.trim() && !coachLoading ? 'pointer' : 'default',
+                  fontFamily: 'inherit', fontSize: 13, fontWeight: 600,
+                  transition: 'all 0.15s', flexShrink: 0,
+                }}
+              >Enviar</button>
+            </form>
+          </div>
+        )}
+      </>)}
 
     </div>
   )

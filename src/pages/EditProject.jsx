@@ -5,7 +5,7 @@ import { updateProject } from '../lib/updateProject'
 import { Navbar } from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
 import { useSidebar } from '../context/SidebarContext'
-import { Sparkles, Lock, Search, Image, ArrowLeft } from 'lucide-react'
+import { Sparkles, Lock, Search, Image, ArrowLeft, ChevronDown, Check, FileText, User, Layers } from 'lucide-react'
 import { looksLikeSpam } from '../lib/score'
 import { containsProfanity } from '../lib/profanity'
 import SkillsPicker from '../components/SkillsPicker'
@@ -38,16 +38,16 @@ const PROJECT_TYPES = [
 ]
 
 const FIELDS = [
-  { key: 'name', label: 'Nome do projeto', type: 'text', required: true },
-  { key: 'area', label: 'Área / Tecnologia principal', type: 'text', required: true },
-  { key: 'problem', label: 'Problema que resolve', type: 'textarea' },
-  { key: 'solution', label: 'Solução desenvolvida', type: 'textarea' },
-  { key: 'target_audience', label: 'Público-alvo', type: 'textarea' },
-  { key: 'features', label: 'Funcionalidades principais', type: 'textarea' },
-  { key: 'technologies', label: 'Tecnologias utilizadas', type: 'textarea' },
-  { key: 'challenges', label: 'Desafios encontrados', type: 'textarea' },
-  { key: 'results', label: 'Resultados obtidos', type: 'textarea' },
-  { key: 'learnings', label: 'O que aprendeste', type: 'textarea' },
+  { key: 'name', label: 'Nome do projeto', type: 'text', required: true, hint: 'Um nome curto e memorável — como uma marca' },
+  { key: 'area', label: 'Área / Tecnologia principal', type: 'text', required: true, hint: 'Ex: Desenvolvimento web, Design, Robótica' },
+  { key: 'problem', label: 'Problema que resolve', type: 'textarea', hint: 'Que problema identificaste? E para quem é um problema?' },
+  { key: 'solution', label: 'Solução desenvolvida', type: 'textarea', hint: 'Como o resolveste? O que é que a tua solução faz?' },
+  { key: 'target_audience', label: 'Público-alvo', type: 'textarea', hint: 'Quem usa ou beneficia do teu projeto?' },
+  { key: 'features', label: 'Funcionalidades principais', type: 'textarea', hint: 'As 3-5 coisas mais importantes que faz' },
+  { key: 'technologies', label: 'Tecnologias utilizadas', type: 'textarea', hint: 'Linguagens, ferramentas e frameworks que usaste' },
+  { key: 'challenges', label: 'Desafios encontrados', type: 'textarea', hint: 'Que dificuldades tiveste — e como as resolveste?' },
+  { key: 'results', label: 'Resultados obtidos', type: 'textarea', hint: 'Números, testes, feedback real — o impacto que teve' },
+  { key: 'learnings', label: 'O que aprendeste', type: 'textarea', hint: 'A lição mais valiosa que levas deste projeto' },
 ]
 
 const inputStyle = {
@@ -75,40 +75,44 @@ const inputHandlers = {
   },
 }
 
-function Field({ label, children, required }) {
+function Field({ label, children, required, filled }) {
   return (
-    <div style={{ marginBottom: 20 }}>
+    <div style={{ marginBottom: 18 }}>
       <label style={{
-        display: 'block', fontSize: 11, fontWeight: 700,
+        display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 700,
         color: colors.subtle, marginBottom: 7,
         textTransform: 'uppercase', letterSpacing: 0.6,
       }}>
-        {label}{required && <span style={{ color: colors.red, marginLeft: 4 }}>*</span>}
+        {label}{required && <span style={{ color: colors.red, marginLeft: 2 }}>*</span>}
+        {filled && <Check size={12} color={colors.blue} strokeWidth={3} style={{ marginLeft: 'auto' }} />}
       </label>
       {children}
     </div>
   )
 }
 
-function SectionCard({ title, children }) {
+// Collapsible section — turns the long form into a scannable checklist where each
+// group shows how many of its fields are filled, so editing reads as progress
+// instead of an endless wall of inputs.
+function CollapsibleSection({ title, Icon, filled, total, defaultOpen = false, children }) {
+  const [open, setOpen] = useState(defaultOpen)
+  const complete = total > 0 && filled >= total
   return (
-    <div style={{
-      background: colors.glass,
-      backdropFilter: 'blur(16px)',
-      WebkitBackdropFilter: 'blur(16px)',
-      border: `1px solid ${colors.glassBorder}`,
-      borderRadius: 12,
-      padding: '24px 26px',
-      marginBottom: 16,
-      boxShadow: 'none',
-    }}>
-      <h2 style={{
-        margin: '0 0 20px', fontSize: 11, fontWeight: 700,
-        color: colors.subtle, textTransform: 'uppercase', letterSpacing: 0.8,
-      }}>
-        {title}
-      </h2>
-      {children}
+    <div className="ep-section">
+      <button type="button" className="ep-sec-head" onClick={() => setOpen(o => !o)} aria-expanded={open}>
+        <span className={`ep-sec-icon${complete ? ' done' : ''}`}><Icon size={17} /></span>
+        <span className="ep-sec-titles">
+          <span className="ep-sec-title">{title}</span>
+          {total > 0 && <span className="ep-sec-sub">{filled} de {total} preenchidos</span>}
+        </span>
+        {total > 0 && (
+          <span className={`ep-sec-badge${complete ? ' done' : ''}`}>
+            {complete ? <Check size={13} strokeWidth={3} /> : `${filled}/${total}`}
+          </span>
+        )}
+        <ChevronDown size={18} className="ep-sec-chev" style={{ transform: open ? 'rotate(180deg)' : 'none' }} />
+      </button>
+      {open && <div className="ep-sec-body">{children}</div>}
     </div>
   )
 }
@@ -125,6 +129,7 @@ export default function EditProject() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
   const [accessDenied, setAccessDenied] = useState(false)
+  const [dirty, setDirty] = useState(false)
   const coverInputRef = useRef(null)
 
   useEffect(() => {
@@ -205,6 +210,7 @@ export default function EditProject() {
 
   function set(key, value) {
     setForm(f => ({ ...f, [key]: value }))
+    setDirty(true)
   }
 
   async function handleCoverImage(e) {
@@ -282,9 +288,40 @@ export default function EditProject() {
 
   const isPap = form.project_type === 'pap'
 
+  // ── Completeness, per section and overall — drives the checklist UI ──
+  const isFilled = k => String(form[k] ?? '').trim().length > 0
+  const contentFilled = FIELDS.filter(f => isFilled(f.key)).length + ((form.tags?.length > 0) ? 1 : 0)
+  const contentTotal  = FIELDS.length + 1
+  const creatorKeys   = ['creator_name', 'course', 'school_year', 'school']
+  const creatorFilled = creatorKeys.filter(isFilled).length
+  const creatorTotal  = creatorKeys.length
+  const typeFilled    = form.project_type ? 1 : 0
+  const coverFilled   = (form.cover_url && form.cover_url !== '__uploading__') ? 1 : 0
+  const totalFilled   = contentFilled + creatorFilled + typeFilled + coverFilled
+  const totalAll      = contentTotal + creatorTotal + 1 + 1
+  const pct           = Math.round((totalFilled / totalAll) * 100)
+  const canSave       = !saving && !!form.name?.trim() && !!form.area?.trim()
+
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: 'var(--font-body)' }}>
-      <Navbar showLinks={false}>
+    <div style={{ minHeight: '100dvh', backgroundColor: colors.bg, color: colors.text, fontFamily: 'var(--font-body)' }}>
+      <Navbar
+        showLinks={false}
+        mobileLeft={
+          <button
+            onClick={() => navigate(`/projeto/${slug}`)}
+            aria-label="Voltar ao projeto"
+            style={{
+              background: 'transparent', border: 'none',
+              color: 'var(--c-muted)', cursor: 'pointer', fontFamily: 'inherit',
+              width: 38, height: 38, borderRadius: 9, padding: 0,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              WebkitTapHighlightColor: 'transparent',
+            }}
+          >
+            <ArrowLeft size={20} />
+          </button>
+        }
+      >
         <button
           onClick={() => navigate(`/projeto/${slug}`)}
           style={{
@@ -303,23 +340,51 @@ export default function EditProject() {
       <style>{`
         @keyframes spin{to{transform:rotate(360deg)}}
         @media(max-width:600px){.ep-2col{grid-template-columns:1fr!important;}}
+        .ep-progress { display: flex; align-items: center; gap: 12px; margin-top: 18px; }
+        .ep-progress-track { flex: 1; height: 8px; border-radius: 99px; background: var(--c-bg-alt); overflow: hidden; }
+        .ep-progress-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, #1b78f7, #4f46e5); transition: width 0.4s cubic-bezier(0.22,1,0.36,1); }
+        .ep-progress-label { font-size: 12px; font-weight: 800; color: var(--c-muted); flex-shrink: 0; font-variant-numeric: tabular-nums; }
+        .ep-section { background: var(--c-glass); border: 1px solid var(--c-glass-border); border-radius: 14px; margin-bottom: 12px; overflow: hidden; }
+        .ep-sec-head { display: flex; align-items: center; gap: 12px; width: 100%; padding: 15px 16px; background: none; border: none; cursor: pointer; font-family: inherit; text-align: left; -webkit-tap-highlight-color: transparent; }
+        .ep-sec-icon { width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: rgba(27,120,247,0.1); color: #1b78f7; transition: background 0.2s, color 0.2s; }
+        .ep-sec-icon.done { background: rgba(27,120,247,0.14); color: #1b78f7; }
+        .ep-sec-titles { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+        .ep-sec-title { font-size: 15px; font-weight: 700; color: var(--c-text); }
+        .ep-sec-sub { font-size: 12px; color: var(--c-muted); }
+        .ep-sec-badge { flex-shrink: 0; min-width: 32px; height: 22px; padding: 0 8px; border-radius: 99px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; color: var(--c-muted); background: var(--c-bg-alt); font-variant-numeric: tabular-nums; }
+        .ep-sec-badge.done { color: #1b78f7; background: rgba(27,120,247,0.14); }
+        .ep-sec-chev { color: var(--c-muted); flex-shrink: 0; transition: transform 0.2s; }
+        .ep-sec-body { padding: 2px 16px 16px; }
+        .ep-save-bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; display: flex; align-items: center; gap: 12px; padding: 11px 16px calc(11px + env(safe-area-inset-bottom,0px)); background: var(--c-sidebar-bg-alpha); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border-top: 1px solid var(--c-border); }
+        .ep-save-status { flex: 1; min-width: 0; font-size: 13px; font-weight: 600; color: var(--c-muted); display: flex; align-items: center; gap: 8px; }
+        .ep-save-dot { width: 8px; height: 8px; border-radius: 50%; background: #fbbf24; flex-shrink: 0; }
+        .ep-save-btn { flex-shrink: 0; padding: 12px 30px; border-radius: 10px; border: none; font-size: 15px; font-weight: 700; font-family: inherit; letter-spacing: -0.1px; }
+        @media (min-width: 601px) {
+          .ep-save-bar { left: 248px; }
+          body.sidebar-collapsed .ep-save-bar { left: 80px; }
+        }
       `}</style>
       <div className="page-content">
-        <div style={{ marginBottom: 36 }}>
-          <h1 style={{ fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 6px', letterSpacing: '-0.5px', color: colors.text }}>Editar projeto</h1>
+        <div className="ep-header" style={{ marginBottom: 22 }}>
+          <h1 style={{ fontSize: 'clamp(24px, 4vw, 34px)', fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 6px', letterSpacing: '-0.5px', color: colors.text }}>Editar projeto</h1>
           <p style={{ color: colors.muted, margin: 0, fontSize: 15 }}>{project.name}</p>
+          <div className="ep-progress">
+            <div className="ep-progress-track"><div className="ep-progress-fill" style={{ width: `${pct}%` }} /></div>
+            <span className="ep-progress-label">{pct}% completo</span>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit}>
           {/* Content */}
-          <SectionCard title="Conteúdo do projeto">
+          <CollapsibleSection title="Conteúdo do projeto" Icon={FileText} filled={contentFilled} total={contentTotal} defaultOpen>
             {FIELDS.map(f => (
-              <Field key={f.key} label={f.label} required={f.required}>
+              <Field key={f.key} label={f.label} required={f.required} filled={isFilled(f.key)}>
                 {f.type === 'textarea' ? (
                   <textarea
                     value={form[f.key] || ''}
                     onChange={e => set(f.key, e.target.value)}
                     rows={4}
+                    placeholder={f.hint}
                     style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.65 }}
                     {...inputHandlers}
                   />
@@ -328,13 +393,14 @@ export default function EditProject() {
                     type="text"
                     value={form[f.key] || ''}
                     onChange={e => set(f.key, e.target.value)}
+                    placeholder={f.hint}
                     style={inputStyle}
                     {...inputHandlers}
                   />
                 )}
               </Field>
             ))}
-            <Field label="Tags / Tecnologias">
+            <Field label="Tags / Tecnologias" filled={form.tags?.length > 0}>
               <SkillsPicker
                 value={form.tags || []}
                 onChange={v => set('tags', v)}
@@ -342,21 +408,21 @@ export default function EditProject() {
                 label=""
               />
             </Field>
-          </SectionCard>
+          </CollapsibleSection>
 
           {/* Creator */}
-          <SectionCard title="Sobre o criador">
+          <CollapsibleSection title="Sobre o criador" Icon={User} filled={creatorFilled} total={creatorTotal}>
             <div className="ep-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-              <Field label="O teu nome">
+              <Field label="O teu nome" filled={isFilled('creator_name')}>
                 <input type="text" value={form.creator_name} onChange={e => set('creator_name', e.target.value)} style={inputStyle} placeholder="Ex: João Silva" {...inputHandlers} />
               </Field>
-              <Field label="Curso">
+              <Field label="Curso" filled={isFilled('course')}>
                 <input type="text" value={form.course} onChange={e => set('course', e.target.value)} style={inputStyle} placeholder="Ex: Informática" {...inputHandlers} />
               </Field>
-              <Field label="Ano letivo">
+              <Field label="Ano letivo" filled={isFilled('school_year')}>
                 <input type="text" value={form.school_year} onChange={e => set('school_year', e.target.value)} style={inputStyle} placeholder="Ex: 2024/2025" {...inputHandlers} />
               </Field>
-              <Field label="Escola">
+              <Field label="Escola" filled={isFilled('school')}>
                 <input type="text" value={form.school} onChange={e => set('school', e.target.value)} style={inputStyle} placeholder="Ex: ESMAD" {...inputHandlers} />
               </Field>
             </div>
@@ -368,11 +434,11 @@ export default function EditProject() {
                 <input type="url" value={form.portfolio_url} onChange={e => set('portfolio_url', e.target.value)} style={inputStyle} placeholder="Portfólio ou site pessoal" {...inputHandlers} />
               </div>
             </div>
-          </SectionCard>
+          </CollapsibleSection>
 
           {/* Type */}
-          <SectionCard title="Tipo de projeto">
-            <Field label="Tipo">
+          <CollapsibleSection title="Tipo de projeto" Icon={Layers} filled={typeFilled} total={1}>
+            <Field label="Tipo" filled={!!form.project_type}>
               <select
                 value={form.project_type}
                 onChange={e => set('project_type', e.target.value)}
@@ -384,18 +450,18 @@ export default function EditProject() {
             </Field>
             {isPap && (
               <div className="ep-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 4 }}>
-                <Field label="Orientador">
+                <Field label="Orientador" filled={isFilled('pap_supervisor')}>
                   <input type="text" value={form.pap_supervisor} onChange={e => set('pap_supervisor', e.target.value)} style={inputStyle} placeholder="Nome do orientador" {...inputHandlers} />
                 </Field>
-                <Field label="Data de apresentação">
+                <Field label="Data de apresentação" filled={isFilled('pap_date')}>
                   <input type="text" value={form.pap_date} onChange={e => set('pap_date', e.target.value)} style={inputStyle} placeholder="Ex: Junho 2025" {...inputHandlers} />
                 </Field>
               </div>
             )}
-          </SectionCard>
+          </CollapsibleSection>
 
           {/* Cover image */}
-          <SectionCard title="Imagem de capa">
+          <CollapsibleSection title="Imagem de capa" Icon={Image} filled={coverFilled} total={1}>
             {form.cover_url === '__uploading__' ? (
               <div style={{ height: 180, borderRadius: 10, background: colors.card, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, color: colors.muted, fontSize: 14, marginBottom: 12 }}>
                 <div style={{ width: 20, height: 20, border: `2px solid ${colors.border}`, borderTop: `2px solid ${colors.blue}`, borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
@@ -433,7 +499,7 @@ export default function EditProject() {
               </div>
             )}
             <input ref={coverInputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={handleCoverImage} style={{ display: 'none' }} />
-          </SectionCard>
+          </CollapsibleSection>
 
           {error && (
             <div style={{
@@ -446,27 +512,35 @@ export default function EditProject() {
             </div>
           )}
 
-          <button
-            type="submit"
-            disabled={saving || !form.name?.trim() || !form.area?.trim()}
-            style={{
-              width: '100%',
-              background: saving || !form.name?.trim() || !form.area?.trim()
-                ? colors.border
-                : colors.blue,
-              color: '#fff', border: 'none',
-              borderRadius: 10, padding: '15px 0',
-              fontSize: 17, fontWeight: 700,
-              cursor: saving ? 'default' : 'pointer',
-              opacity: saving ? 0.7 : 1,
-              transition: 'opacity 0.2s, background 0.2s',
-              fontFamily: 'inherit',
-              boxShadow: saving || !form.name?.trim() || !form.area?.trim() ? 'none' : '0 2px 8px rgba(27,120,247,0.2)',
-              letterSpacing: '-0.1px',
-            }}
-          >
-            {saving ? 'A guardar...' : 'Guardar alterações'}
-          </button>
+          {/* Clearance so the last section clears the fixed save bar */}
+          <div style={{ height: 72 }} />
+
+          {/* Sticky save bar — always in reach, shows unsaved state */}
+          <div className="ep-save-bar">
+            <div className="ep-save-status">
+              {!canSave && !saving ? (
+                <span style={{ color: colors.red }}>Falta o nome e a área</span>
+              ) : dirty ? (
+                <><span className="ep-save-dot" /> Alterações por guardar</>
+              ) : (
+                <><Check size={15} color={colors.blue} strokeWidth={3} /> Tudo guardado</>
+              )}
+            </div>
+            <button
+              type="submit"
+              disabled={!canSave}
+              className="ep-save-btn"
+              style={{
+                background: canSave ? colors.blue : colors.border,
+                color: '#fff',
+                cursor: canSave ? 'pointer' : 'default',
+                opacity: saving ? 0.7 : 1,
+                boxShadow: canSave ? '0 4px 14px rgba(27,120,247,0.3)' : 'none',
+              }}
+            >
+              {saving ? 'A guardar…' : 'Guardar'}
+            </button>
+          </div>
         </form>
       </div>
     </div>

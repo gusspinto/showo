@@ -10,6 +10,44 @@
   box-sizing: border-box;
 }
 
+/* ── Global horizontal-overflow guard ──────────────────────────────────────
+   Any single element wider than the viewport used to scroll the WHOLE page
+   sideways on mobile — the root cause of the "things are off screen / app
+   wasn't made for mobile" feedback.
+
+   Base rule uses `overflow-x: hidden` (universal support, incl. iOS 15 Safari)
+   so the guard actually applies on the iPhones that need it most. Modern
+   browsers then upgrade to `overflow-x: clip`, which traps the same overflow
+   WITHOUT creating a scroll container — so the app's position:sticky sub-navs
+   (ProjectPage, ProjectManage, Navbar) keep sticking to the viewport instead
+   of to a clipped body box. Media elements are capped so a wide image/video/svg
+   can never push the layout past the screen edge. */
+html, body {
+  overflow-x: hidden;
+}
+body {
+  max-width: 100%;
+}
+@supports (overflow: clip) {
+  html, body {
+    overflow-x: clip;
+  }
+}
+img, video, canvas, iframe {
+  max-width: 100%;
+}
+
+/* ── Native-feeling touch ──────────────────────────────────────────────────
+   The grey tap-flash and the double-tap zoom delay are the two biggest tells
+   that a web app "wasn't made for mobile". Kill the flash everywhere, and mark
+   interactive elements as manipulation-only so taps register instantly. */
+* { -webkit-tap-highlight-color: transparent; }
+button, a, [role="button"], input, select, textarea, label, summary {
+  touch-action: manipulation;
+}
+/* Scroll-lock while the mobile nav drawer is open (toggled from Navbar) */
+body.drawer-open { overflow: hidden; }
+
 /* Stop Chrome's autofill from painting inputs/textareas white, overriding our theme */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
@@ -119,14 +157,6 @@ body.light .warn-bg { background: rgba(146,64,14,0.07) !important; }
 body.light ::-webkit-scrollbar-track { background: #d4d3d3; }
 body.light ::-webkit-scrollbar-thumb { background: #9ca3af; }
 body.light ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
-
-/* Light mode bottom nav */
-body.light .bottom-nav {
-  background: rgba(228,227,227,0.96) !important;
-  border-top-color: var(--c-border) !important;
-}
-body.light .bn-item { color: var(--c-muted) !important; }
-body.light .bn-item.active { color: #1b78f7 !important; }
 
 /* Light mode top nav */
 body.light nav {
@@ -265,12 +295,13 @@ a { transition: color 0.15s, opacity 0.15s; }
 ═══════════════════════════════════════ */
 @media (max-width: 600px) {
 
-  /* ── Bottom nav clearance ── */
-  body { padding-bottom: 84px; }
+  /* ── Bottom edge clearance ── (bottom tab bar retired for the side drawer;
+     only the home-indicator safe area needs reserving now) ── */
+  body { padding-bottom: env(safe-area-inset-bottom, 0px); }
 
   /* ── Page content ── */
   .page-content,
-  .page-content-wide { padding: 20px 16px 104px !important; }
+  .page-content-wide { padding: 20px 16px calc(48px + env(safe-area-inset-bottom, 0px)) !important; }
 
   /* ── Typography: inputs/selects/textareas ── */
   input, textarea, select { font-size: 16px !important; }

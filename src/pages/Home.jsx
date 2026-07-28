@@ -668,10 +668,12 @@ export default function Home() {
           .hero-sub      { font-size: 14px !important; margin-bottom: 24px !important; }
           .hero-widget   { margin-top: 20px !important; max-width: 100% !important; }
           .hero-scroll-cue { display: none !important; }
-          .goals-row     { flex-wrap: nowrap !important; overflow-x: auto !important; padding-bottom: 6px !important; padding-right: 20px !important; scrollbar-width: none !important; -webkit-overflow-scrolling: touch !important; }
-          .goals-row::after { content: ''; display: block; width: 1px; flex-shrink: 0; }
-          .goals-row::-webkit-scrollbar { display: none !important; }
-          .goal-pill     { font-size: 12px !important; flex-shrink: 0 !important; padding: 6px 12px !important; }
+          /* Wrap the role pills onto as many rows as needed instead of the old
+             horizontal-scroll row that sliced the last pill mid-word ("Projeto
+             pe…") — the exact "off screen" cut the pilot flagged. All 5 options
+             now show, centered, nothing hidden. */
+          .goals-row     { flex-wrap: wrap !important; overflow-x: visible !important; justify-content: center !important; row-gap: 8px !important; padding-right: 0 !important; }
+          .goal-pill     { font-size: 12px !important; padding: 6px 12px !important; }
           .widget-input  { font-size: 15px !important; }
           .social-strip  { gap: 10px !important; font-size: 12px !important; justify-content: center !important; }
           .features-grid { grid-template-columns: 1fr !important; gap: 12px !important; }

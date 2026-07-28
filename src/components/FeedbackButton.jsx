@@ -150,12 +150,13 @@ export default function FeedbackButton() {
           }
         }
 
-        /* Mobile: sheet acima da bottom nav; sem hover, mantém-se sempre colapsado */
+        /* Mobile: bottom tab bar retired, so the FAB drops to the true bottom edge
+           (just clears the home-indicator safe area); sheet anchors to the bottom */
         @media (max-width: 600px) {
-          .fb-fab { bottom: calc(84px + 12px); }
+          .fb-fab { bottom: calc(18px + env(safe-area-inset-bottom, 0px)); }
           .fb-fab:hover { width: 46px; transform: none; }
           .fb-fab-label { display: none; }
-          .fb-sheet { bottom: 84px; border-radius: 22px 22px 0 0; }
+          .fb-sheet { bottom: 0; border-radius: 22px 22px 0 0; }
           /* Hide FAB on messages page (mobile only) */
           body.page-mensagens .fb-fab { display: none !important; }
         }

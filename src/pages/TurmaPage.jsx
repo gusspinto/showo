@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
-import { Folder, Check, Search, User, Copy, Inbox, Download, MessageSquare, X, ChevronUp, ChevronDown, ArrowRight, Pencil, UserMinus, GraduationCap, CheckCircle, AlertTriangle, ListChecks, Circle, Trash2, Plus, Calendar } from 'lucide-react'
+import { Folder, Check, Search, User, Copy, Inbox, Download, MessageSquare, X, ChevronUp, ChevronDown, ArrowRight, Pencil, UserMinus, GraduationCap, CheckCircle, AlertTriangle, ListChecks, Circle, Trash2, Plus, Calendar, ClipboardList, Scale } from 'lucide-react'
 import CreateProjectModal from '../components/CreateProjectModal'
 import { getCurrentAcademicYear, academicYearOptions } from '../lib/academicYear'
 
@@ -362,6 +362,13 @@ export default function TurmaPage() {
   const [showTaskModal, setShowTaskModal] = useState(false)
   const [editingTask, setEditingTask] = useState(null)
   const [deletingTask, setDeletingTask] = useState(null)
+  const [criteria, setCriteria] = useState([])
+  const [criteriaAdding, setCriteriaAdding] = useState(false)
+  const [newCritName, setNewCritName] = useState('')
+  const [newCritWeight, setNewCritWeight] = useState('25')
+  const [editingCrit, setEditingCrit] = useState(null) // { id, name, weight }
+  const [critSaving, setCritSaving] = useState(false)
+  const [criterionScoresMap, setCriterionScoresMap] = useState({}) // { projectId: { criterionId: score } }
 
   function showToast(msg) {
     setToast(msg)
@@ -378,7 +385,19 @@ export default function TurmaPage() {
 
       if (error || !cls) { setLoading(false); return }
       setTurma(cls)
-      if (user && cls.teacher_id === user.id) setIsTeacher(true)
+      const teacherNow = user && cls.teacher_id === user.id
+      if (teacherNow) setIsTeacher(true)
+
+      let crit = []
+      if (teacherNow) {
+        const { data: critData } = await supabase
+          .from('class_evaluation_criteria')
+          .select('*')
+          .eq('class_id', cls.id)
+          .order('sort_order')
+        crit = critData || []
+        setCriteria(crit)
+      }
 
       const { data: cp } = await supabase
         .from('class_projects')
@@ -398,6 +417,22 @@ export default function TurmaPage() {
         }
         projs = data || []
         setProjects(projs)
+
+        // Fetch per-criterion scores if this class has criteria
+        if (teacherNow && crit.length > 0 && projs.length > 0) {
+          const { data: scores } = await supabase
+            .from('project_criterion_scores')
+            .select('project_id, criterion_id, score')
+            .in('project_id', projs.map(p => p.id))
+          if (scores?.length) {
+            const map = {}
+            scores.forEach(s => {
+              if (!map[s.project_id]) map[s.project_id] = {}
+              map[s.project_id][s.criterion_id] = s.score
+            })
+            setCriterionScoresMap(map)
+          }
+        }
       }
 
       // Fetch all members from class_members table (source of truth)
@@ -609,7 +644,7 @@ export default function TurmaPage() {
   // So a professor opening a single project (not the batch "Avaliar todos" flow)
   // still gets a "Voltar à turma" link on the project page.
   function goToProject(slug) {
-    navigate(`/projeto/${slug}`, { state: { turmaCode: turma.code, turmaName: turma.name } })
+    navigate(`/projeto/${slug}`, { state: { turmaCode: turma.code, turmaName: turma.name, turmaId: turma.id } })
   }
 
   function toggleSelected(projectId) {
@@ -662,12 +697,85 @@ export default function TurmaPage() {
     return Math.round((checks.filter(Boolean).length / checks.length) * 100)
   }
 
+  const DEFAULT_CRITERIA = [
+    { name: 'Conteúdo & Problema', weight: 25 },
+    { name: 'Solução & Produto',   weight: 25 },
+    { name: 'Execução Técnica',    weight: 25 },
+    { name: 'Apresentação',        weight: 25 },
+  ]
+
+  async function addCriterion() {
+    const name = newCritName.trim()
+    const weight = parseFloat(newCritWeight)
+    if (!name || !weight || weight <= 0 || !turma) return
+    setCritSaving(true)
+    const { data, error } = await supabase
+      .from('class_evaluation_criteria')
+      .insert({ class_id: turma.id, name, weight, sort_order: criteria.length })
+      .select()
+      .single()
+    if (!error && data) {
+      setCriteria(c => [...c, data])
+      setNewCritName('')
+      setNewCritWeight('25')
+      setCriteriaAdding(false)
+    }
+    setCritSaving(false)
+  }
+
+  async function saveCriterion() {
+    if (!editingCrit) return
+    const name = editingCrit.name.trim()
+    const weight = parseFloat(editingCrit.weight)
+    if (!name || !weight || weight <= 0) return
+    setCritSaving(true)
+    const { error } = await supabase
+      .from('class_evaluation_criteria')
+      .update({ name, weight })
+      .eq('id', editingCrit.id)
+    if (!error) {
+      setCriteria(c => c.map(x => x.id === editingCrit.id ? { ...x, name, weight } : x))
+      setEditingCrit(null)
+    }
+    setCritSaving(false)
+  }
+
+  async function deleteCriterion(id) {
+    const { error } = await supabase.from('class_evaluation_criteria').delete().eq('id', id)
+    if (!error) setCriteria(c => c.filter(x => x.id !== id))
+  }
+
+  async function useDefaultCriteria() {
+    if (!turma || criteria.length > 0) return
+    setCritSaving(true)
+    const rows = DEFAULT_CRITERIA.map((d, i) => ({ class_id: turma.id, name: d.name, weight: d.weight, sort_order: i }))
+    const { data, error } = await supabase.from('class_evaluation_criteria').insert(rows).select()
+    if (!error && data) setCriteria(data)
+    setCritSaving(false)
+  }
+
   function exportCSV() {
     const statusLabel = s => s === 'ready_for_defense' ? 'Pronto para defesa' : s === 'needs_revision' ? 'Precisa de revisão' : s === 'resubmitted' ? 'Correções enviadas' : '—'
-    const rows = [['Aluno', 'Projeto', 'Nota (0-20)', 'Score', 'Completude (%)', 'Estado', 'Data', 'Link']]
+    const hasCrit = criteria.length > 0
+    const critHeaders = hasCrit ? criteria.map(c => `${c.name} (${c.weight}%)`) : []
+    const headers = ['Aluno', 'Projeto', 'Nota (0-20)', ...critHeaders, 'Score Showo', 'Completude (%)', 'Estado', 'Data', 'Link']
+    const rows = [headers]
     sortedProjects.forEach(p => {
       const date = p.created_at ? new Date(p.created_at).toLocaleDateString('pt-PT') : '—'
-      rows.push([p.creator_name || '—', p.name, p.teacher_score ?? '—', p.score ?? '—', computeCompletude(p), statusLabel(p.review_status), date, `${window.location.origin}/projeto/${p.slug}`])
+      const critScores = hasCrit
+        ? criteria.map(c => criterionScoresMap[p.id]?.[c.id] ?? '—')
+        : []
+      rows.push([
+        p.creator_name || '—',
+        p.name,
+        p.teacher_score ?? '—',
+        ...critScores,
+        p.score ?? '—',
+        computeCompletude(p),
+        statusLabel(p.review_status),
+        date,
+        `${window.location.origin}/projeto/${p.slug}`,
+      ])
     })
     const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n')
     const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
@@ -1098,6 +1206,132 @@ export default function TurmaPage() {
           )
         })()}
 
+        {/* Criteria — teacher-only configuration of evaluation dimensions */}
+        {isTeacher && (
+          <div style={{ marginBottom: 32 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Scale size={14} color={C.muted} />
+                <span style={{ fontSize: 13, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.07em' }}>
+                  Critérios de avaliação
+                </span>
+                {criteria.length > 0 && <span style={{ fontSize: 11, fontWeight: 700, color: C.subtle }}>{criteria.length}</span>}
+              </div>
+              <div style={{ display: 'flex', gap: 6 }}>
+                {criteria.length === 0 && (
+                  <button
+                    onClick={useDefaultCriteria}
+                    disabled={critSaving}
+                    style={{ display: 'flex', alignItems: 'center', gap: 5, background: C.bgAlt, border: `1px solid ${C.border}`, borderRadius: 7, padding: '6px 12px', color: C.muted, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+                  >
+                    Usar padrão
+                  </button>
+                )}
+                <button
+                  onClick={() => { setCriteriaAdding(true); setNewCritName(''); setNewCritWeight('25') }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.22)', borderRadius: 7, padding: '6px 12px', color: C.blue, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+                >
+                  <Plus size={13} /> Critério
+                </button>
+              </div>
+            </div>
+
+            {criteria.length === 0 && !criteriaAdding ? (
+              <div style={{ ...C.glassStyle, background: C.glass, border: `1px dashed ${C.glassBorder}`, borderRadius: 10, padding: '18px 20px', textAlign: 'center' }}>
+                <p style={{ margin: '0 0 8px', fontSize: 13, color: C.muted }}>Sem critérios definidos. A avaliação usa uma nota única de 0-20.</p>
+                <button onClick={useDefaultCriteria} style={{ background: 'none', border: 'none', color: C.blue, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', textDecoration: 'underline' }}>
+                  Usar critérios padrão (4 × 25%)
+                </button>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {criteria.map(c => (
+                  editingCrit?.id === c.id ? (
+                    <div key={c.id} style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorderBright}`, borderRadius: 10, padding: '12px 14px', display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                      <input
+                        value={editingCrit.name}
+                        onChange={e => setEditingCrit(x => ({ ...x, name: e.target.value }))}
+                        placeholder="Nome do critério"
+                        style={{ flex: 1, minWidth: 140, background: C.bgAlt, border: `1px solid ${C.border}`, borderRadius: 7, padding: '6px 10px', color: C.text, fontSize: 13, fontFamily: 'inherit', outline: 'none' }}
+                        onKeyDown={e => { if (e.key === 'Enter') saveCriterion(); if (e.key === 'Escape') setEditingCrit(null) }}
+                        autoFocus
+                      />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <input
+                          type="number" min="1" max="100" step="1"
+                          value={editingCrit.weight}
+                          onChange={e => setEditingCrit(x => ({ ...x, weight: e.target.value }))}
+                          style={{ width: 54, background: C.bgAlt, border: `1px solid ${C.border}`, borderRadius: 7, padding: '6px 8px', color: C.text, fontSize: 13, fontFamily: 'inherit', outline: 'none', textAlign: 'right' }}
+                        />
+                        <span style={{ fontSize: 12, color: C.muted }}>%</span>
+                      </div>
+                      <button onClick={saveCriterion} disabled={critSaving} style={{ background: C.blue, border: 'none', borderRadius: 7, padding: '6px 12px', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+                        {critSaving ? '…' : 'Guardar'}
+                      </button>
+                      <button onClick={() => setEditingCrit(null)} style={{ background: 'none', border: `1px solid ${C.border}`, borderRadius: 7, padding: '6px 10px', color: C.muted, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>
+                        Cancelar
+                      </button>
+                    </div>
+                  ) : (
+                    <div key={c.id} style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 10, padding: '11px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <span style={{ flex: 1, fontSize: 13, color: C.text, fontWeight: 500 }}>{c.name}</span>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: C.blue, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.15)', borderRadius: 5, padding: '2px 8px' }}>{c.weight}%</span>
+                      <button onClick={() => setEditingCrit({ id: c.id, name: c.name, weight: String(c.weight) })} title="Editar" style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.subtle, display: 'flex', padding: 4 }}>
+                        <Pencil size={13} />
+                      </button>
+                      <button onClick={() => deleteCriterion(c.id)} title="Remover" style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.subtle, display: 'flex', padding: 4 }}>
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
+                  )
+                ))}
+
+                {/* Add form */}
+                {criteriaAdding && (
+                  <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorderBright}`, borderRadius: 10, padding: '12px 14px', display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                    <input
+                      value={newCritName}
+                      onChange={e => setNewCritName(e.target.value)}
+                      placeholder="Ex: Apresentação oral"
+                      style={{ flex: 1, minWidth: 140, background: C.bgAlt, border: `1px solid ${C.border}`, borderRadius: 7, padding: '6px 10px', color: C.text, fontSize: 13, fontFamily: 'inherit', outline: 'none' }}
+                      onKeyDown={e => { if (e.key === 'Enter') addCriterion(); if (e.key === 'Escape') setCriteriaAdding(false) }}
+                      autoFocus
+                    />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <input
+                        type="number" min="1" max="100" step="1"
+                        value={newCritWeight}
+                        onChange={e => setNewCritWeight(e.target.value)}
+                        style={{ width: 54, background: C.bgAlt, border: `1px solid ${C.border}`, borderRadius: 7, padding: '6px 8px', color: C.text, fontSize: 13, fontFamily: 'inherit', outline: 'none', textAlign: 'right' }}
+                      />
+                      <span style={{ fontSize: 12, color: C.muted }}>%</span>
+                    </div>
+                    <button onClick={addCriterion} disabled={critSaving || !newCritName.trim()} style={{ background: C.blue, border: 'none', borderRadius: 7, padding: '6px 12px', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', opacity: (!newCritName.trim() || critSaving) ? 0.5 : 1 }}>
+                      {critSaving ? '…' : 'Adicionar'}
+                    </button>
+                    <button onClick={() => setCriteriaAdding(false)} style={{ background: 'none', border: `1px solid ${C.border}`, borderRadius: 7, padding: '6px 10px', color: C.muted, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>
+                      Cancelar
+                    </button>
+                  </div>
+                )}
+
+                {/* Weight total */}
+                {criteria.length > 0 && (() => {
+                  const total = criteria.reduce((s, c) => s + Number(c.weight), 0)
+                  const ok = Math.abs(total - 100) < 0.1
+                  return (
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '4px 4px 0' }}>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: ok ? C.green : C.yellow }}>
+                        Total: {total.toFixed(0)}% {ok ? '✓' : '(idealmente 100%)'}
+                      </span>
+                    </div>
+                  )
+                })()}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Tasks — professor sets them, students check them off individually */}
         {(isTeacher || tasks.length > 0) && (
           <div style={{ marginBottom: 32 }}>
@@ -1261,6 +1495,7 @@ export default function TurmaPage() {
                     reviewIndex: 0,
                     turmaCode: turma.code,
                     turmaName: turma.name,
+                    turmaId: turma.id,
                   },
                 })}
                 style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(27,120,247,0.08)', border: '1px solid rgba(27,120,247,0.3)', borderRadius: 7, padding: '7px 12px', color: C.blue, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}

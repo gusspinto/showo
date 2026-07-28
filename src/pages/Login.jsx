@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import { claimAnonymousProjects } from '../lib/claimAnonymousProjects'
 import { Mail, Check } from 'lucide-react'
 import AuthSidePanel from '../components/AuthSidePanel'
+import GoogleButton from '../components/GoogleButton'
 import { useTheme } from '../context/ThemeContext'
 
 const C = {
@@ -299,7 +300,7 @@ export default function Login() {
                   type="button"
                   className="login-forgot-link"
                   onClick={() => { setMode('forgot'); setForgotEmail(email) }}
-                  style={{ background: 'none', border: 'none', color: 'var(--c-subtle)', fontSize: 12, fontWeight: 400, cursor: 'pointer', fontFamily: 'inherit', padding: 0, opacity: 0.7 }}
+                  style={{ background: 'none', border: 'none', color: '#1b78f7', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', padding: 0, opacity: 1 }}
                 >
                   Esqueceste-te da password?
                 </button>
@@ -357,6 +358,14 @@ export default function Login() {
               {loading ? 'A entrar…' : 'Entrar'}
             </button>
           </form>
+
+          {/* Divider + Google sign-in */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '18px 0' }}>
+            <div style={{ flex: 1, height: 1, background: C.border }} />
+            <span style={{ fontSize: 12, color: 'var(--c-subtle)', fontWeight: 600 }}>ou</span>
+            <div style={{ flex: 1, height: 1, background: C.border }} />
+          </div>
+          <GoogleButton />
 
           <p style={{ textAlign: 'center', color: C.muted, fontSize: 14, marginTop: 24 }}>
             Não tens conta?{' '}
