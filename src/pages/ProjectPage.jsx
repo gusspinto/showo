@@ -3582,24 +3582,27 @@ export default function ProjectPage() {
 
   if (!project) {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-body)', gap: 16, textAlign: 'center', padding: 24 }}>
-        <h2 style={{ margin: 0, fontSize: 24, fontWeight: 400, fontFamily: 'var(--font-heading)', letterSpacing: '-0.01em' }}>Este projeto não existe ou foi removido</h2>
-        <p style={{ color: colors.muted, margin: 0 }}>O link pode estar incorrecto ou o projeto foi eliminado.</p>
-        {profile?.role !== 'professor' && (
+      <div style={{ minHeight: '100vh', backgroundColor: colors.bg }}>
+        <Navbar />
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, textAlign: 'center', padding: 24, height: 'calc(100dvh - 62px)', color: colors.text, fontFamily: 'var(--font-body)' }}>
+          <h2 style={{ margin: 0, fontSize: 24, fontWeight: 400, fontFamily: 'var(--font-heading)', letterSpacing: '-0.01em' }}>Este projeto não existe ou foi removido</h2>
+          <p style={{ color: colors.muted, margin: 0 }}>O link pode estar incorrecto ou o projeto foi eliminado.</p>
+          {profile?.role !== 'professor' && (
+            <button
+              onClick={() => setShowCreateModal(true)}
+              style={{ background: colors.blue, color: '#fff', border: 'none', borderRadius: 10, padding: '12px 28px', fontSize: 16, fontWeight: 700, cursor: 'pointer', marginTop: 8, boxShadow: '0 2px 8px var(--color-primary-subtle)', fontFamily: 'inherit' }}
+            >
+              <span style={{display:"flex",alignItems:"center",gap:6}}>Criar o meu projeto <ArrowRight size={15} /></span>
+            </button>
+          )}
+          {showCreateModal && <CreateProjectModal onClose={() => setShowCreateModal(false)} />}
           <button
-            onClick={() => setShowCreateModal(true)}
-            style={{ background: colors.blue, color: '#fff', border: 'none', borderRadius: 10, padding: '12px 28px', fontSize: 16, fontWeight: 700, cursor: 'pointer', marginTop: 8, boxShadow: '0 2px 8px var(--color-primary-subtle)', fontFamily: 'inherit' }}
+            onClick={() => navigate('/')}
+            style={{ background: 'transparent', border: `1px solid ${colors.border}`, color: colors.muted, borderRadius: 8, padding: '10px 22px', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}
           >
-            <span style={{display:"flex",alignItems:"center",gap:6}}>Criar o meu projeto <ArrowRight size={15} /></span>
+            Ir para o início
           </button>
-        )}
-        {showCreateModal && <CreateProjectModal onClose={() => setShowCreateModal(false)} />}
-        <button
-          onClick={() => navigate('/')}
-          style={{ background: 'transparent', border: `1px solid ${colors.border}`, color: colors.muted, borderRadius: 8, padding: '10px 22px', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}
-        >
-          Ir para o início
-        </button>
+        </div>
       </div>
     )
   }

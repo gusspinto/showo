@@ -795,31 +795,40 @@ export default function ProjectManage() {
 
   // ── Loading ────────────────────────────────────────────────────────────────
   if (loading) return (
-    <div style={{ minHeight: '100vh', background: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ width: 36, height: 36, border: `3px solid ${C.border}`, borderTop: `3px solid ${C.blue}`, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    <div style={{ minHeight: '100vh', background: C.bg }}>
+      <Navbar showLinks={false} />
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 'calc(100dvh - 62px)' }}>
+        <div style={{ width: 36, height: 36, border: `3px solid ${C.border}`, borderTop: `3px solid ${C.blue}`, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
     </div>
   )
 
   // ── Access denied ──────────────────────────────────────────────────────────
   if (accessDenied) return (
-    <div style={{ minHeight: '100vh', background: C.bg, color: C.text, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, fontFamily: 'inherit', padding: 24, textAlign: 'center' }}>
-      <Lock size={48} color={C.yellow} />
-      <h2 style={{ margin: 0, fontSize: 22, fontWeight: 400, fontFamily: 'var(--font-heading)' }}>Acesso restrito</h2>
-      <p style={{ color: C.muted, margin: 0, maxWidth: 380, lineHeight: 1.65, fontSize: 14 }}>
-        Só o criador deste projeto pode gerir. Usa o link privado de edição que recebeste quando criaste o projeto.
-      </p>
-      <button onClick={() => navigate(`/projeto/${slug}`)} style={{ background: C.blue, color: '#fff', border: 'none', borderRadius: 8, padding: '12px 28px', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px var(--color-primary-subtle)' }}>
-        Ver o projeto
-      </button>
+    <div style={{ minHeight: '100vh', background: C.bg }}>
+      <Navbar showLinks={false} />
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, padding: 24, textAlign: 'center', height: 'calc(100dvh - 62px)' }}>
+        <Lock size={48} color={C.yellow} />
+        <h2 style={{ margin: 0, fontSize: 22, fontWeight: 400, fontFamily: 'var(--font-heading)', color: C.text }}>Acesso restrito</h2>
+        <p style={{ color: C.muted, margin: 0, maxWidth: 380, lineHeight: 1.65, fontSize: 14 }}>
+          Só o criador deste projeto pode gerir. Usa o link privado de edição que recebeste quando criaste o projeto.
+        </p>
+        <button onClick={() => navigate(`/projeto/${slug}`)} style={{ background: C.blue, color: '#fff', border: 'none', borderRadius: 8, padding: '12px 28px', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px var(--color-primary-subtle)' }}>
+          Ver o projeto
+        </button>
+      </div>
     </div>
   )
 
   if (!project) return (
-    <div style={{ minHeight: '100vh', background: C.bg, color: C.text, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, fontFamily: 'inherit' }}>
-      <Search size={48} color={C.blue} />
-      <h2 style={{ margin: 0, fontWeight: 400, fontFamily: 'var(--font-heading)' }}>Projeto não encontrado</h2>
-      <button onClick={() => navigate('/')} style={{ background: C.blue, color: '#fff', border: 'none', borderRadius: 8, padding: '12px 28px', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px var(--color-primary-subtle)' }}>Ir para o início</button>
+    <div style={{ minHeight: '100vh', background: C.bg }}>
+      <Navbar showLinks={false} />
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, height: 'calc(100dvh - 62px)' }}>
+        <Search size={48} color={C.blue} />
+        <h2 style={{ margin: 0, fontWeight: 400, fontFamily: 'var(--font-heading)', color: C.text }}>Projeto não encontrado</h2>
+        <button onClick={() => navigate('/')} style={{ background: C.blue, color: '#fff', border: 'none', borderRadius: 8, padding: '12px 28px', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px var(--color-primary-subtle)' }}>Ir para o início</button>
+      </div>
     </div>
   )
 

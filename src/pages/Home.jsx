@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, memo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Globe, Bot, GraduationCap, Trophy, Briefcase, ArrowRight, Zap, ChevronDown, BookOpen, Search, Building2, FileText, Share2 } from 'lucide-react'
+import { Globe, GraduationCap, Trophy, Briefcase, ArrowRight, Zap, ChevronDown, BookOpen, Search, Building2, FileText, Share2 } from 'lucide-react'
 import { Navbar } from '../components/Navbar'
 import { supabase } from '../lib/supabase'
 import Onboarding from '../components/Onboarding'
@@ -390,8 +390,8 @@ const MockupDefesa = memo(function MockupDefesa({ theme }) {
           </div>
         ))}
         <div style={{ borderTop: `1px solid ${c.border}`, paddingTop: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Bot size={13} color="var(--color-primary)" />
-          <span style={{ fontSize: 11, color: 'var(--color-primary)', fontWeight: 600 }}>IA a gerar respostas sugeridas...</span>
+          <Trophy size={13} color="var(--color-primary)" />
+          <span style={{ fontSize: 11, color: 'var(--color-primary)', fontWeight: 600 }}>Prepara a tua defesa com confiança</span>
         </div>
       </div>
     </div>
