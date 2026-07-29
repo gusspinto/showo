@@ -8,11 +8,11 @@ const STANDBY_KEY   = 'showo_rest_standby'
 
 const C = {
   bg:     'rgba(6,12,24,0.95)',
-  card:   'var(--c-card)',
-  border: 'var(--c-border)',
-  blue:   '#1b78f7',
-  muted:  'var(--c-muted)',
-  text:   'var(--c-text)',
+  card:   'var(--color-surface)',
+  border: 'var(--color-border)',
+  blue:   'var(--color-primary)',
+  muted:  'var(--color-text-secondary)',
+  text:   'var(--color-text)',
 }
 
 export default function RestReminder() {
@@ -107,7 +107,7 @@ export default function RestReminder() {
           fontSize: 'clamp(28px, 5vw, 42px)',
           fontWeight: 400,
           fontFamily: 'var(--font-heading)',
-          color: 'var(--c-text)',
+          color: 'var(--color-text)',
           letterSpacing: '-1px',
           marginBottom: 8,
           opacity: 0.9,
@@ -115,7 +115,7 @@ export default function RestReminder() {
           Até amanhã, {firstName}.
         </div>
         <div style={{
-          fontSize: 13, color: 'var(--c-muted)', opacity: 0.5,
+          fontSize: 13, color: 'var(--color-text-secondary)', opacity: 0.5,
           marginTop: 24,
         }}>
           toca para voltar

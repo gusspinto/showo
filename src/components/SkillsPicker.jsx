@@ -70,9 +70,9 @@ export default function SkillsPicker({ value = [], onChange, max = 10, label = '
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
       {label && (
-        <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--c-text)' }}>
+        <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text)' }}>
           {label}
-          <span style={{ fontWeight: 400, color: 'var(--c-muted)', marginLeft: 6 }}>
+          <span style={{ fontWeight: 400, color: 'var(--color-text-secondary)', marginLeft: 6 }}>
             (máx. {max})
           </span>
         </label>
@@ -84,7 +84,7 @@ export default function SkillsPicker({ value = [], onChange, max = 10, label = '
         style={{
           display: 'flex', flexWrap: 'wrap', gap: 6,
           padding: '8px 10px', minHeight: 44,
-          background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)',
+          background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)',
           borderRadius: 10, cursor: 'text',
         }}
       >
@@ -93,8 +93,8 @@ export default function SkillsPicker({ value = [], onChange, max = 10, label = '
             key={skill}
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 4,
-              background: 'rgba(27,120,247,0.12)', color: '#1b78f7',
-              border: '1px solid rgba(27,120,247,0.25)',
+              background: 'var(--color-primary-subtle)', color: 'var(--color-primary)',
+              border: '1px solid var(--color-primary-subtle)',
               borderRadius: 20, padding: '3px 10px 3px 10px',
               fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap',
             }}
@@ -105,7 +105,7 @@ export default function SkillsPicker({ value = [], onChange, max = 10, label = '
               onClick={e => { e.stopPropagation(); remove(skill) }}
               style={{
                 background: 'none', border: 'none', padding: 0,
-                cursor: 'pointer', color: '#1b78f7', display: 'flex',
+                cursor: 'pointer', color: 'var(--color-primary)', display: 'flex',
                 alignItems: 'center', lineHeight: 1,
               }}
             >
@@ -125,7 +125,7 @@ export default function SkillsPicker({ value = [], onChange, max = 10, label = '
             autoComplete="off"
             style={{
               flex: 1, minWidth: 120, background: 'none', border: 'none', outline: 'none',
-              fontSize: 13, color: 'var(--c-text)', fontFamily: 'inherit',
+              fontSize: 13, color: 'var(--color-text)', fontFamily: 'inherit',
             }}
           />
         )}
@@ -142,19 +142,19 @@ export default function SkillsPicker({ value = [], onChange, max = 10, label = '
               type="button"
               onMouseDown={e => { e.preventDefault(); add(s) }}
               style={{
-                background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)',
+                background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)',
                 borderRadius: 20, padding: '4px 12px',
-                fontSize: 12, fontWeight: 500, color: 'var(--c-muted)',
+                fontSize: 12, fontWeight: 500, color: 'var(--color-text-secondary)',
                 cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4,
                 transition: 'all 0.15s',
               }}
               onMouseEnter={e => {
-                e.currentTarget.style.borderColor = '#1b78f7'
-                e.currentTarget.style.color = '#1b78f7'
+                e.currentTarget.style.borderColor = 'var(--color-primary)'
+                e.currentTarget.style.color = 'var(--color-primary)'
               }}
               onMouseLeave={e => {
-                e.currentTarget.style.borderColor = 'var(--c-border)'
-                e.currentTarget.style.color = 'var(--c-muted)'
+                e.currentTarget.style.borderColor = 'var(--color-border)'
+                e.currentTarget.style.color = 'var(--color-text-secondary)'
               }}
             >
               <Plus size={10} /> {s}
@@ -164,7 +164,7 @@ export default function SkillsPicker({ value = [], onChange, max = 10, label = '
       )}
 
       {selected.length > 0 && (
-        <p style={{ margin: 0, fontSize: 11, color: 'var(--c-muted)' }}>
+        <p style={{ margin: 0, fontSize: 11, color: 'var(--color-text-secondary)' }}>
           {selected.length}/{max} · Carrega Enter ou vírgula para adicionar
         </p>
       )}

@@ -16,20 +16,20 @@ import {
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const C = {
-  bg:          'var(--c-bg)',
-  bgAlt:       'var(--c-bg-alt)',
-  card:        'var(--c-card)',
-  cardHover:   'var(--c-card-hover)',
-  border:      'var(--c-border)',
-  borderBright:'var(--c-border-bright)',
-  blue:        '#1b78f7',
-  text:        'var(--c-text)',
-  muted:       'var(--c-muted)',
-  subtle:      'var(--c-subtle)',
-  green:       '#22c55e',
-  red:         '#ef4444',
-  yellow:      '#fbbf24',
-  glass: 'var(--c-glass)', glassBorder: 'var(--c-glass-border)',
+  bg:          'var(--color-bg)',
+  bgAlt:       'var(--color-bg-alt)',
+  card:        'var(--color-surface)',
+  cardHover:   'var(--color-surface-hover)',
+  border:      'var(--color-border)',
+  borderBright:'var(--color-border-hover)',
+  blue:        'var(--color-primary)',
+  text:        'var(--color-text)',
+  muted:       'var(--color-text-secondary)',
+  subtle:      'var(--color-text-tertiary)',
+  green:       'var(--color-success)',
+  red:         'var(--color-error)',
+  yellow:      'var(--color-warning)',
+  glass: 'var(--color-glass)', glassBorder: 'var(--color-glass-border)',
 }
 
 const inputStyle = {
@@ -43,16 +43,16 @@ const inputStyle = {
 }
 
 const inputHandlers = {
-  onFocus: e => { e.target.style.borderColor = C.blue; e.target.style.boxShadow = '0 0 0 3px rgba(27,120,247,0.1)' },
+  onFocus: e => { e.target.style.borderColor = C.blue; e.target.style.boxShadow = '0 0 0 3px var(--color-primary-subtle)' },
   onBlur:  e => { e.target.style.borderColor = C.border; e.target.style.boxShadow = 'none' },
 }
 
 // ── Nav sections ──────────────────────────────────────────────────────────────
 const NAV = [
-  { id: 'content',  Icon: Pencil,   label: 'Conteúdo',     color: '#1b78f7', desc: 'Campos e informação do projeto' },
-  { id: 'preview',  Icon: Eye,      label: 'Preview',      color: '#a855f7', desc: 'Personalização da página pública' },
+  { id: 'content',  Icon: Pencil,   label: 'Conteúdo',     color: 'var(--color-primary)', desc: 'Campos e informação do projeto' },
+  { id: 'preview',  Icon: Eye,      label: 'Preview',      color: 'var(--color-accent)', desc: 'Personalização da página pública' },
   { id: 'team',     Icon: Users,    label: 'Colaboradores', color: '#10b981', desc: 'Equipa e convites' },
-  { id: 'ai',       Icon: Sparkles, label: 'Análise IA',   color: '#f59e0b', desc: 'Feedback e sugestões inteligentes' },
+  { id: 'ai',       Icon: Sparkles, label: 'Análise IA',   color: 'var(--color-warning)', desc: 'Feedback e sugestões inteligentes' },
   { id: 'settings', Icon: Settings, label: 'Definições',   color: '#6b7280', desc: 'Links, partilha e zona de perigo' },
 ]
 
@@ -80,11 +80,11 @@ const CONTENT_FIELDS = [
 ]
 
 function getScoreColor(s) {
-  if (s >= 86) return '#22c55e'
-  if (s >= 71) return '#a855f7'
-  if (s >= 51) return '#1b78f7'
-  if (s >= 31) return '#f59e0b'
-  return '#ef4444'
+  if (s >= 86) return 'var(--color-success)'
+  if (s >= 71) return 'var(--color-accent)'
+  if (s >= 51) return 'var(--color-primary)'
+  if (s >= 31) return 'var(--color-warning)'
+  return 'var(--color-error)'
 }
 
 // ── Reusable sub-components ───────────────────────────────────────────────────
@@ -155,8 +155,8 @@ function DesktopNotice({ section }) {
       flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
       textAlign: 'center', padding: '48px 24px', gap: 16,
     }}>
-      <div style={{ width: 56, height: 56, borderRadius: 16, background: 'rgba(27,120,247,0.1)',
-        border: '1px solid rgba(27,120,247,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ width: 56, height: 56, borderRadius: 16, background: 'var(--color-primary-subtle)',
+        border: '1px solid var(--color-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <Monitor size={26} color={C.blue} />
       </div>
       <div>
@@ -343,7 +343,7 @@ function ContentSection({ project, onSaved }) {
           </div>
         ) : (
           <div onClick={() => coverInputRef.current?.click()} style={{ border: `2px dashed ${C.border}`, borderRadius: 12, padding: '32px 20px', textAlign: 'center', cursor: 'pointer', transition: 'border-color 0.2s, background 0.2s' }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = C.blue; e.currentTarget.style.background = 'rgba(27,120,247,0.03)' }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = C.blue; e.currentTarget.style.background = 'var(--color-primary-subtle)' }}
             onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.background = 'transparent' }}>
             <Image size={26} color={C.muted} style={{ marginBottom: 8 }} />
             <p style={{ margin: 0, fontSize: 14, fontWeight: 500, color: C.muted }}>Clica para carregar uma imagem</p>
@@ -354,7 +354,7 @@ function ContentSection({ project, onSaved }) {
       </Card>
 
       {error && (
-        <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 10, padding: '12px 16px', color: C.red, fontSize: 14, marginBottom: 16, fontWeight: 500 }}>
+        <div style={{ background: 'var(--color-error-subtle)', border: '1px solid var(--color-error-subtle)', borderRadius: 10, padding: '12px 16px', color: C.red, fontSize: 14, marginBottom: 16, fontWeight: 500 }}>
           {error}
         </div>
       )}
@@ -366,7 +366,7 @@ function ContentSection({ project, onSaved }) {
         padding: '15px 0', fontSize: 16, fontWeight: 700,
         cursor: saving || !form.name?.trim() || !form.area?.trim() ? 'not-allowed' : 'pointer',
         transition: 'background 0.2s', fontFamily: 'inherit',
-        boxShadow: (!saving && form.name?.trim() && form.area?.trim()) ? '0 2px 8px rgba(27,120,247,0.2)' : 'none',
+        boxShadow: (!saving && form.name?.trim() && form.area?.trim()) ? '0 2px 8px var(--color-primary-subtle)' : 'none',
         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
       }}>
         {saved ? <><Check size={16} /> Guardado!</> : saving ? 'A guardar…' : 'Guardar alterações'}
@@ -383,7 +383,7 @@ function PreviewSection({ project }) {
       <DesktopNotice section="Preview" />
       <div className="pm-desktop-section">
         <Card>
-          <CardTitle color="#a855f7"><Eye size={13} /> Personalização da página pública</CardTitle>
+          <CardTitle color="var(--color-accent)"><Eye size={13} /> Personalização da página pública</CardTitle>
           <p style={{ margin: '0 0 20px', fontSize: 14, color: C.muted, lineHeight: 1.65 }}>
             O editor de preview permite personalizar a aparência da tua página pública — blocos de conteúdo, cores, tipografia e rodapé.
           </p>
@@ -392,7 +392,7 @@ function PreviewSection({ project }) {
             {project?.cover_url ? (
               <img src={project.cover_url} alt="" style={{ width: '100%', height: 140, objectFit: 'cover', display: 'block' }} />
             ) : (
-              <div style={{ width: '100%', height: 140, background: 'var(--c-bg-alt)' }} />
+              <div style={{ width: '100%', height: 140, background: 'var(--color-bg-alt)' }} />
             )}
             {project?.score != null && (
               <div style={{
@@ -417,14 +417,14 @@ function PreviewSection({ project }) {
             { icon: <Globe size={14} />, label: 'Botão CTA e rodapé personalizados' },
           ].map((item, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 0', borderBottom: i < 3 ? `1px solid ${C.border}` : 'none' }}>
-              <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(168,85,247,0.1)', border: '1px solid rgba(168,85,247,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#a855f7', flexShrink: 0 }}>
+              <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(168,85,247,0.1)', border: '1px solid rgba(168,85,247,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-accent)', flexShrink: 0 }}>
                 {item.icon}
               </div>
               <span style={{ fontSize: 13, color: C.muted }}>{item.label}</span>
             </div>
           ))}
 
-          <a href={`/projeto/${project?.slug}`} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 20, padding: '13px 0', background: '#a855f7', border: 'none', borderRadius: 10, color: '#fff', fontSize: 15, fontWeight: 700, textDecoration: 'none', boxShadow: '0 2px 8px rgba(168,85,247,0.2)' }}>
+          <a href={`/projeto/${project?.slug}`} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 20, padding: '13px 0', background: 'var(--color-accent)', border: 'none', borderRadius: 10, color: '#fff', fontSize: 15, fontWeight: 700, textDecoration: 'none', boxShadow: '0 2px 8px rgba(168,85,247,0.2)' }}>
             <Eye size={16} /> Abrir editor de preview
           </a>
           <p style={{ margin: '10px 0 0', fontSize: 12, color: C.subtle, textAlign: 'center' }}>
@@ -485,9 +485,9 @@ function TeamSection({ project, isOwner }) {
   }
 
   const STATUS_CHIP = {
-    accepted: { label: 'Aceite',   bg: 'rgba(34,197,94,0.12)',  color: '#22c55e', border: 'rgba(34,197,94,0.3)' },
-    pending:  { label: 'Pendente', bg: 'rgba(251,191,36,0.12)', color: '#fbbf24', border: 'rgba(251,191,36,0.3)' },
-    declined: { label: 'Recusado', bg: 'rgba(239,68,68,0.1)',   color: '#ef4444', border: 'rgba(239,68,68,0.25)' },
+    accepted: { label: 'Aceite',   bg: 'var(--color-success-subtle)',  color: 'var(--color-success)', border: 'var(--color-success-subtle)' },
+    pending:  { label: 'Pendente', bg: 'rgba(251,191,36,0.12)', color: 'var(--color-warning)', border: 'rgba(251,191,36,0.3)' },
+    declined: { label: 'Recusado', bg: 'var(--color-error-subtle)',   color: 'var(--color-error)', border: 'var(--color-error-subtle)' },
   }
 
   return (
@@ -531,7 +531,7 @@ function TeamSection({ project, isOwner }) {
               const name = m.profile?.full_name || m.profile?.username || 'Utilizador'
               return (
                 <div key={m.user_id} className="pm-team-row" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', background: C.bgAlt, borderRadius: 12, border: `1px solid ${C.border}` }}>
-                  <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(27,120,247,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: C.blue, flexShrink: 0 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'var(--color-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: C.blue, flexShrink: 0 }}>
                     {m.profile?.avatar_url ? <img src={m.profile.avatar_url} alt="" style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover' }} /> : name[0].toUpperCase()}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
@@ -576,16 +576,16 @@ function AISection({ project }) {
       <div className="pm-desktop-section">
         {!feedback ? (
           <Card>
-            <CardTitle color="#f59e0b"><Sparkles size={13} /> Análise IA</CardTitle>
+            <CardTitle color="var(--color-warning)"><Sparkles size={13} /> Análise IA</CardTitle>
             <div style={{ textAlign: 'center', padding: '28px 0' }}>
-              <div style={{ width: 52, height: 52, borderRadius: 14, background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
-                <Sparkles size={24} color="#f59e0b" />
+              <div style={{ width: 52, height: 52, borderRadius: 14, background: 'var(--color-warning-subtle)', border: '1px solid var(--color-warning-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
+                <Sparkles size={24} color="var(--color-warning)" />
               </div>
               <p style={{ margin: '0 0 6px', fontSize: 15, fontWeight: 700, color: C.text }}>Sem análise ainda</p>
               <p style={{ margin: '0 0 20px', fontSize: 13, color: C.muted, lineHeight: 1.6 }}>
                 Abre a página do projeto e usa o botão "Analisar com IA" para gerar feedback detalhado.
               </p>
-              <a href={`/projeto/${project?.slug}`} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '11px 22px', background: '#f59e0b', border: 'none', borderRadius: 8, color: '#fff', fontSize: 14, fontWeight: 700, textDecoration: 'none' }}>
+              <a href={`/projeto/${project?.slug}`} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '11px 22px', background: 'var(--color-warning)', border: 'none', borderRadius: 8, color: '#fff', fontSize: 14, fontWeight: 700, textDecoration: 'none' }}>
                 <Sparkles size={14} /> Ir para o projeto
               </a>
             </div>
@@ -594,9 +594,9 @@ function AISection({ project }) {
           <>
             {aiScore != null && (
               <Card>
-                <CardTitle color="#f59e0b"><Sparkles size={13} /> Score IA</CardTitle>
+                <CardTitle color="var(--color-warning)"><Sparkles size={13} /> Score IA</CardTitle>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                  <div style={{ fontSize: 48, fontWeight: 900, color: '#f59e0b', letterSpacing: '-2px', lineHeight: 1 }}>{aiScore}</div>
+                  <div style={{ fontSize: 48, fontWeight: 900, color: 'var(--color-warning)', letterSpacing: '-2px', lineHeight: 1 }}>{aiScore}</div>
                   <div>
                     <p style={{ margin: '0 0 4px', fontSize: 13, fontWeight: 600, color: C.text }}>Score atribuído pela IA</p>
                     <p style={{ margin: 0, fontSize: 12, color: C.muted }}>Baseado em clareza, impacto e completude</p>
@@ -611,7 +611,7 @@ function AISection({ project }) {
                           <span style={{ fontSize: 12, fontWeight: 700, color: C.text }}>{feedback.scores[c.key]}/10</span>
                         </div>
                         <div style={{ height: 4, background: C.border, borderRadius: 99, overflow: 'hidden' }}>
-                          <div style={{ height: '100%', width: `${(feedback.scores[c.key] / 10) * 100}%`, background: '#f59e0b', borderRadius: 99 }} />
+                          <div style={{ height: '100%', width: `${(feedback.scores[c.key] / 10) * 100}%`, background: 'var(--color-warning)', borderRadius: 99 }} />
                         </div>
                       </div>
                     ))}
@@ -621,11 +621,11 @@ function AISection({ project }) {
             )}
             {feedback?.suggestions?.length > 0 && (
               <Card>
-                <CardTitle color="#f59e0b">Sugestões de melhoria</CardTitle>
+                <CardTitle color="var(--color-warning)">Sugestões de melhoria</CardTitle>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {feedback.suggestions.map((s, i) => (
-                    <div key={i} style={{ display: 'flex', gap: 10, padding: '12px 14px', background: 'rgba(245,158,11,0.05)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: 10 }}>
-                      <span style={{ color: '#f59e0b', fontWeight: 700, fontSize: 13, flexShrink: 0 }}>{i + 1}.</span>
+                    <div key={i} style={{ display: 'flex', gap: 10, padding: '12px 14px', background: 'var(--color-warning-subtle)', border: '1px solid var(--color-warning-subtle)', borderRadius: 10 }}>
+                      <span style={{ color: 'var(--color-warning)', fontWeight: 700, fontSize: 13, flexShrink: 0 }}>{i + 1}.</span>
                       <span style={{ fontSize: 13, color: C.muted, lineHeight: 1.55 }}>{s}</span>
                     </div>
                   ))}
@@ -634,7 +634,7 @@ function AISection({ project }) {
             )}
             {feedback?.summary && (
               <Card>
-                <CardTitle color="#f59e0b">Sumário</CardTitle>
+                <CardTitle color="var(--color-warning)">Sumário</CardTitle>
                 <p style={{ margin: 0, fontSize: 14, color: C.muted, lineHeight: 1.7 }}>{feedback.summary}</p>
               </Card>
             )}
@@ -695,7 +695,7 @@ function SettingsSection({ project, isOwner, navigate }) {
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
                 <div style={{ flex: 1, background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.2)', borderRadius: 8, padding: '10px 12px', fontSize: 13, color: C.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{editUrl}</div>
-                <button onClick={() => copy(editUrl, 'edit')} style={{ padding: '10px 16px', background: copied === 'edit' ? C.green : C.yellow, border: 'none', borderRadius: 8, color: 'var(--c-bg)', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, whiteSpace: 'nowrap', transition: 'background 0.2s' }}>
+                <button onClick={() => copy(editUrl, 'edit')} style={{ padding: '10px 16px', background: copied === 'edit' ? C.green : C.yellow, border: 'none', borderRadius: 8, color: 'var(--color-bg)', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, whiteSpace: 'nowrap', transition: 'background 0.2s' }}>
                   {copied === 'edit' ? <><Check size={13} /> Copiado</> : <><Copy size={13} /> Copiar</>}
                 </button>
               </div>
@@ -706,19 +706,19 @@ function SettingsSection({ project, isOwner, navigate }) {
 
       {/* Zona de perigo */}
       {isOwner && (
-        <Card style={{ border: '1px solid rgba(239,68,68,0.3)', boxShadow: 'none' }}>
-          <CardTitle color="#ef4444"><AlertTriangle size={13} /> Zona de perigo</CardTitle>
+        <Card style={{ border: '1px solid var(--color-error-subtle)', boxShadow: 'none' }}>
+          <CardTitle color="var(--color-error)"><AlertTriangle size={13} /> Zona de perigo</CardTitle>
           <p style={{ margin: '0 0 16px', fontSize: 14, color: C.muted, lineHeight: 1.65 }}>
             Eliminar o projeto é uma ação irreversível. Todos os dados, score e página pública serão apagados permanentemente.
           </p>
           {!confirmDelete ? (
-            <button onClick={() => setConfirmDelete(true)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 10, color: C.red, fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s' }}
-              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.15)'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.5)' }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.08)'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.3)' }}>
+            <button onClick={() => setConfirmDelete(true)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px', background: 'var(--color-error-subtle)', border: '1px solid var(--color-error-subtle)', borderRadius: 10, color: C.red, fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s' }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'var(--color-error-subtle)'; e.currentTarget.style.borderColor = 'var(--color-error-subtle)' }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'var(--color-error-subtle)'; e.currentTarget.style.borderColor = 'var(--color-error-subtle)' }}>
               <Trash2 size={15} /> Eliminar projeto
             </button>
           ) : (
-            <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 12, padding: '16px 18px' }}>
+            <div style={{ background: 'var(--color-error-subtle)', border: '1px solid var(--color-error-subtle)', borderRadius: 12, padding: '16px 18px' }}>
               <p style={{ margin: '0 0 14px', fontSize: 14, fontWeight: 700, color: C.red }}>Tens a certeza? Esta ação não pode ser desfeita.</p>
               <div style={{ display: 'flex', gap: 10 }}>
                 <button onClick={handleDelete} disabled={deleting} style={{ flex: 1, padding: '10px', background: C.red, border: 'none', borderRadius: 10, color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
@@ -809,7 +809,7 @@ export default function ProjectManage() {
       <p style={{ color: C.muted, margin: 0, maxWidth: 380, lineHeight: 1.65, fontSize: 14 }}>
         Só o criador deste projeto pode gerir. Usa o link privado de edição que recebeste quando criaste o projeto.
       </p>
-      <button onClick={() => navigate(`/projeto/${slug}`)} style={{ background: C.blue, color: '#fff', border: 'none', borderRadius: 8, padding: '12px 28px', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px rgba(27,120,247,0.2)' }}>
+      <button onClick={() => navigate(`/projeto/${slug}`)} style={{ background: C.blue, color: '#fff', border: 'none', borderRadius: 8, padding: '12px 28px', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px var(--color-primary-subtle)' }}>
         Ver o projeto
       </button>
     </div>
@@ -819,7 +819,7 @@ export default function ProjectManage() {
     <div style={{ minHeight: '100vh', background: C.bg, color: C.text, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, fontFamily: 'inherit' }}>
       <Search size={48} color={C.blue} />
       <h2 style={{ margin: 0, fontWeight: 400, fontFamily: 'var(--font-heading)' }}>Projeto não encontrado</h2>
-      <button onClick={() => navigate('/')} style={{ background: C.blue, color: '#fff', border: 'none', borderRadius: 8, padding: '12px 28px', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px rgba(27,120,247,0.2)' }}>Ir para o início</button>
+      <button onClick={() => navigate('/')} style={{ background: C.blue, color: '#fff', border: 'none', borderRadius: 8, padding: '12px 28px', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px var(--color-primary-subtle)' }}>Ir para o início</button>
     </div>
   )
 
@@ -847,9 +847,9 @@ export default function ProjectManage() {
           .pm-desktop-only-notice { display: none !important; }
         }
 
-        .pm-nav-item:hover { background: var(--c-bg-alt) !important; }
-        .pm-nav-item.active { background: var(--c-bg-alt) !important; }
-        .pm-tab-pill:hover { border-color: var(--c-border-bright) !important; }
+        .pm-nav-item:hover { background: var(--color-bg-alt) !important; }
+        .pm-nav-item.active { background: var(--color-bg-alt) !important; }
+        .pm-tab-pill:hover { border-color: var(--color-border-hover) !important; }
         .pm-tab-pill.active { border-color: currentColor !important; }
 
         @media (max-width: 600px) {
@@ -871,7 +871,7 @@ export default function ProjectManage() {
             onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted }}>
             <ArrowLeft size={13} /> Projeto
           </button>
-          <a href={`/projeto/${slug}`} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 13px', background: C.blue, border: 'none', borderRadius: 8, color: '#fff', fontSize: 13, fontWeight: 600, textDecoration: 'none', boxShadow: '0 2px 8px rgba(27,120,247,0.2)' }}>
+          <a href={`/projeto/${slug}`} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 13px', background: C.blue, border: 'none', borderRadius: 8, color: '#fff', fontSize: 13, fontWeight: 600, textDecoration: 'none', boxShadow: '0 2px 8px var(--color-primary-subtle)' }}>
             <ExternalLink size={13} /> Ver público
           </a>
         </div>

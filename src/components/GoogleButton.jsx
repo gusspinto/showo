@@ -54,7 +54,7 @@ export default function GoogleButton({ label = 'Continuar com Google', redirectT
       >
         <GoogleG /> {loading ? 'A abrir o Google…' : label}
       </button>
-      {err && <p style={{ color: '#ef4444', fontSize: 13, textAlign: 'center', margin: '8px 0 0' }}>{err}</p>}
+      {err && <p style={{ color: 'var(--color-error)', fontSize: 13, textAlign: 'center', margin: '8px 0 0' }}>{err}</p>}
     </>
   )
 }

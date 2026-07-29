@@ -171,15 +171,15 @@ export default function ProjectComments({ projectId, projectAuthorId }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <MessageSquare size={18} color="#1b78f7" />
+        <MessageSquare size={18} color="var(--color-primary)" />
         <h3 style={{
           margin: 0, fontSize: 16, fontWeight: 700,
-          fontFamily: 'var(--font-heading)', color: 'var(--c-text)',
+          fontFamily: 'var(--font-heading)', color: 'var(--color-text)',
         }}>
           Comentários {comments.length > 0 && (
             <span style={{
               marginLeft: 6, fontSize: 12, fontWeight: 600,
-              background: 'rgba(27,120,247,0.1)', color: '#1b78f7',
+              background: 'var(--color-primary-subtle)', color: 'var(--color-primary)',
               borderRadius: 20, padding: '2px 8px',
             }}>{comments.length}</span>
           )}
@@ -189,11 +189,11 @@ export default function ProjectComments({ projectId, projectAuthorId }) {
       {/* Comments list */}
       {loading ? (
         <div style={{ display: 'flex', justifyContent: 'center', padding: '24px 0' }}>
-          <div style={{ width: 22, height: 22, border: '2px solid var(--c-border)', borderTop: '2px solid #1b78f7', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+          <div style={{ width: 22, height: 22, border: '2px solid var(--color-border)', borderTop: '2px solid var(--color-primary)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
           <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
         </div>
       ) : comments.length === 0 ? (
-        <p style={{ margin: 0, fontSize: 14, color: 'var(--c-muted)', textAlign: 'center', padding: '16px 0' }}>
+        <p style={{ margin: 0, fontSize: 14, color: 'var(--color-text-secondary)', textAlign: 'center', padding: '16px 0' }}>
           Ainda sem comentários. Sê o primeiro!
         </p>
       ) : (
@@ -217,7 +217,7 @@ export default function ProjectComments({ projectId, projectAuthorId }) {
                   ) : (
                     <div style={{
                       width: 34, height: 34, borderRadius: '50%',
-                      background: 'linear-gradient(135deg,#1b78f7,#4f46e5)',
+                      background: 'linear-gradient(135deg,var(--color-primary),#4f46e5)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       fontSize: 12, fontWeight: 700, color: '#fff',
                     }}>
@@ -229,17 +229,17 @@ export default function ProjectComments({ projectId, projectAuthorId }) {
                 {/* Bubble */}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{
-                    background: 'var(--c-bg-alt)', borderRadius: 12,
-                    padding: '10px 14px', border: '1px solid var(--c-border)',
+                    background: 'var(--color-bg-alt)', borderRadius: 12,
+                    padding: '10px 14px', border: '1px solid var(--color-border)',
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6, flexWrap: 'wrap' }}>
                       <a
                         href={p ? `/u/${p.username}` : '#'}
-                        style={{ fontSize: 13, fontWeight: 700, color: 'var(--c-text)', textDecoration: 'none' }}
+                        style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-text)', textDecoration: 'none' }}
                       >
                         {p?.full_name || p?.username || 'Utilizador'}
                       </a>
-                      <span style={{ fontSize: 11, color: 'var(--c-muted)' }}>
+                      <span style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>
                         {timeAgo(c.created_at)}
                         {c.edited_at && ' · editado'}
                       </span>
@@ -254,7 +254,7 @@ export default function ProjectComments({ projectId, projectAuthorId }) {
                           </button>
                           {isDeleting ? (
                             <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-                              <button onClick={() => deleteComment(c.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', display: 'flex', alignItems: 'center', padding: 2 }} title="Confirmar">
+                              <button onClick={() => deleteComment(c.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-error)', display: 'flex', alignItems: 'center', padding: 2 }} title="Confirmar">
                                 <Check size={13} />
                               </button>
                               <button onClick={() => setDeletingId(null)} className="icon-btn-ghost" title="Cancelar">
@@ -277,7 +277,7 @@ export default function ProjectComments({ projectId, projectAuthorId }) {
                         <div style={{ marginLeft: 'auto' }}>
                           {isDeleting ? (
                             <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-                              <button onClick={() => deleteComment(c.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', display: 'flex', alignItems: 'center', padding: 2 }}>
+                              <button onClick={() => deleteComment(c.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-error)', display: 'flex', alignItems: 'center', padding: 2 }}>
                                 <Check size={13} />
                               </button>
                               <button onClick={() => setDeletingId(null)} className="icon-btn-ghost">
@@ -302,14 +302,14 @@ export default function ProjectComments({ projectId, projectAuthorId }) {
                           rows={3}
                           style={{
                             width: '100%', resize: 'none',
-                            background: 'var(--c-bg)', border: `1px solid ${editError ? 'rgba(239,68,68,0.5)' : 'var(--c-border)'}`,
+                            background: 'var(--color-bg)', border: `1px solid ${editError ? 'var(--color-error-subtle)' : 'var(--color-border)'}`,
                             borderRadius: 8, padding: '8px 10px',
-                            fontSize: 13, color: 'var(--c-text)', fontFamily: 'inherit',
+                            fontSize: 13, color: 'var(--color-text)', fontFamily: 'inherit',
                             outline: 'none', boxSizing: 'border-box',
                           }}
                         />
                         {editError && (
-                          <p style={{ margin: 0, fontSize: 12, color: '#ef4444', display: 'flex', alignItems: 'center', gap: 5 }}>
+                          <p style={{ margin: 0, fontSize: 12, color: 'var(--color-error)', display: 'flex', alignItems: 'center', gap: 5 }}>
                             <AlertTriangle size={12} /> {editError}
                           </p>
                         )}
@@ -317,15 +317,15 @@ export default function ProjectComments({ projectId, projectAuthorId }) {
                           <button
                             onClick={() => { setEditingId(null); setEditDraft(''); setEditError('') }}
                             style={{
-                              background: 'var(--c-bg)', border: '1px solid var(--c-border)',
+                              background: 'var(--color-bg)', border: '1px solid var(--color-border)',
                               borderRadius: 8, padding: '5px 12px', fontSize: 12,
-                              color: 'var(--c-muted)', cursor: 'pointer', fontFamily: 'inherit',
+                              color: 'var(--color-text-secondary)', cursor: 'pointer', fontFamily: 'inherit',
                             }}
                           >Cancelar</button>
                           <button
                             onClick={() => saveEdit(c.id)}
                             style={{
-                              background: 'linear-gradient(135deg,#1b78f7,#4f46e5)',
+                              background: 'linear-gradient(135deg,var(--color-primary),#4f46e5)',
                               border: 'none', borderRadius: 8, padding: '5px 12px',
                               fontSize: 12, color: '#fff', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600,
                             }}
@@ -333,7 +333,7 @@ export default function ProjectComments({ projectId, projectAuthorId }) {
                         </div>
                       </div>
                     ) : (
-                      <p style={{ margin: 0, fontSize: 14, color: 'var(--c-text)', lineHeight: 1.6, wordBreak: 'break-word' }}>
+                      <p style={{ margin: 0, fontSize: 14, color: 'var(--color-text)', lineHeight: 1.6, wordBreak: 'break-word' }}>
                         {c.content}
                       </p>
                     )}
@@ -353,7 +353,7 @@ export default function ProjectComments({ projectId, projectAuthorId }) {
           ) : (
             <div style={{
               width: 34, height: 34, borderRadius: '50%', flexShrink: 0,
-              background: 'linear-gradient(135deg,#1b78f7,#4f46e5)',
+              background: 'linear-gradient(135deg,var(--color-primary),#4f46e5)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: 12, fontWeight: 700, color: '#fff',
             }}>
@@ -374,40 +374,40 @@ export default function ProjectComments({ projectId, projectAuthorId }) {
                 maxLength={1000}
                 style={{
                   flex: 1, resize: 'none',
-                  background: 'var(--c-bg-alt)', border: `1px solid ${sendError ? 'rgba(239,68,68,0.5)' : 'var(--c-border)'}`,
+                  background: 'var(--color-bg-alt)', border: `1px solid ${sendError ? 'var(--color-error-subtle)' : 'var(--color-border)'}`,
                   borderRadius: 10, padding: '10px 12px',
-                  fontSize: 13, color: 'var(--c-text)', fontFamily: 'inherit',
+                  fontSize: 13, color: 'var(--color-text)', fontFamily: 'inherit',
                   outline: 'none', lineHeight: 1.5,
                   transition: 'border-color 0.15s',
                 }}
-                onFocus={e => { if (!sendError) e.currentTarget.style.borderColor = '#1b78f7' }}
-                onBlur={e => { if (!sendError) e.currentTarget.style.borderColor = 'var(--c-border)' }}
+                onFocus={e => { if (!sendError) e.currentTarget.style.borderColor = 'var(--color-primary)' }}
+                onBlur={e => { if (!sendError) e.currentTarget.style.borderColor = 'var(--color-border)' }}
               />
               <button
                 onClick={send}
                 disabled={!draft.trim() || sending}
                 style={{
                   flexShrink: 0, width: 38, height: 38,
-                  background: draft.trim() ? 'linear-gradient(135deg,#1b78f7,#4f46e5)' : 'var(--c-bg-alt)',
-                  border: '1px solid var(--c-border)',
+                  background: draft.trim() ? 'linear-gradient(135deg,var(--color-primary),#4f46e5)' : 'var(--color-bg-alt)',
+                  border: '1px solid var(--color-border)',
                   borderRadius: 10, cursor: draft.trim() ? 'pointer' : 'default',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   transition: 'all 0.15s',
                 }}
               >
-                <Send size={16} color={draft.trim() ? '#fff' : 'var(--c-muted)'} />
+                <Send size={16} color={draft.trim() ? '#fff' : 'var(--color-text-secondary)'} />
               </button>
             </div>
             {sendError && (
-              <p style={{ margin: 0, fontSize: 12, color: '#ef4444', display: 'flex', alignItems: 'center', gap: 5 }}>
+              <p style={{ margin: 0, fontSize: 12, color: 'var(--color-error)', display: 'flex', alignItems: 'center', gap: 5 }}>
                 <AlertTriangle size={12} /> {sendError}
               </p>
             )}
           </div>
         </div>
       ) : (
-        <p style={{ margin: 0, fontSize: 13, color: 'var(--c-muted)', textAlign: 'center' }}>
-          <a href="/login" style={{ color: '#1b78f7' }}>Entra</a> para comentar.
+        <p style={{ margin: 0, fontSize: 13, color: 'var(--color-text-secondary)', textAlign: 'center' }}>
+          <a href="/login" style={{ color: 'var(--color-primary)' }}>Entra</a> para comentar.
         </p>
       )}
     </div>

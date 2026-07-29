@@ -8,8 +8,6 @@ import { calculateScore, looksLikeSpam } from '../lib/score'
 import { containsProfanity } from '../lib/profanity'
 import { CHALLENGES, getChallengeStatus } from '../lib/challenges'
 import { Navbar } from '../components/Navbar'
-import { generateProject } from '../lib/generateProject'
-import { generateReport } from '../lib/generateReport'
 import { chatProjectCoach } from '../lib/chatProjectCoach'
 import { useAuth } from '../context/AuthContext'
 import { useSidebar } from '../context/SidebarContext'
@@ -21,35 +19,35 @@ import { analyzeProject } from '../lib/analyzeProject'
 import { Check, X, Loader, GraduationCap, Save, Sparkles, Bot, Lightbulb, Pencil, Search, Target, Wrench, Zap, TrendingUp, Briefcase, Users, Rocket, Trophy, BarChart2, CheckCircle, BookOpen, ChevronDown, Eye, EyeOff, UserPlus, Calendar, Mail, ArrowRight, ChevronRight, ChevronLeft, Globe, Image, MessageSquare, Quote, Layout, Type, Link, GripVertical, Plus, AlignLeft, Star, Camera, FileText, ClipboardList, Copy, Monitor, Tablet, Smartphone, Minus, Video, AlignCenter, AlignRight, Palette, AlertTriangle, Heart, User, Settings, Bell, Swords, Paintbrush } from 'lucide-react'
 
 const colors = {
-  bg: 'var(--c-bg)',
-  bgAlt: 'var(--c-bg-alt)',
-  card: 'var(--c-card)',
-  cardHover: 'var(--c-card-hover)',
-  border: 'var(--c-border)',
-  borderBright: 'var(--c-border-bright)',
-  blue: '#1b78f7',
-  blueHover: '#1564d4',
-  blueGlow: 'rgba(27,120,247,0.15)',
-  blueSubtle: 'rgba(27,120,247,0.08)',
-  blueBg: 'var(--c-blue-bg)',
-  text: 'var(--c-text)',
-  muted: 'var(--c-muted)',
-  subtle: 'var(--c-subtle)',
-  green: '#22c55e',
-  greenGlow: 'rgba(34,197,94,0.12)',
-  greenBg: 'var(--c-green-bg)',
-  yellow: '#fbbf24',
-  yellowGlow: 'rgba(234,179,8,0.12)',
-  orange: '#f97316',
-  orangeGlow: 'rgba(249,115,22,0.12)',
-  glass: 'var(--c-glass)',
-  glassHover: 'var(--c-glass-hover)',
-  glassBorder: 'var(--c-glass-border)',
-  glassBorderBright: 'var(--c-glass-border-bright)',
+  bg: 'var(--color-bg)',
+  bgAlt: 'var(--color-bg-alt)',
+  card: 'var(--color-surface)',
+  cardHover: 'var(--color-surface-hover)',
+  border: 'var(--color-border)',
+  borderBright: 'var(--color-border-hover)',
+  blue: 'var(--color-primary)',
+  blueHover: 'var(--color-primary-hover)',
+  blueGlow: 'var(--color-primary-subtle)',
+  blueSubtle: 'var(--color-primary-subtle)',
+  blueBg: 'var(--color-primary-subtle)',
+  text: 'var(--color-text)',
+  muted: 'var(--color-text-secondary)',
+  subtle: 'var(--color-text-tertiary)',
+  green: 'var(--color-success)',
+  greenGlow: 'var(--color-success-subtle)',
+  greenBg: 'var(--color-success-subtle)',
+  yellow: 'var(--color-warning)',
+  yellowGlow: 'var(--color-warning-subtle)',
+  orange: 'var(--color-warning)',
+  orangeGlow: 'var(--color-warning-subtle)',
+  glass: 'var(--color-glass)',
+  glassHover: 'var(--color-glass-hover)',
+  glassBorder: 'var(--color-glass-border)',
+  glassBorderBright: 'var(--color-glass-border-bright)',
   glassStyle: { backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' },
 }
 
-const CONFETTI_COLORS = ['#1b78f7', '#22c55e', '#fbbf24', '#f97316', '#a855f7', '#ec4899', '#06b6d4']
+const CONFETTI_COLORS = ['var(--color-primary)', 'var(--color-success)', 'var(--color-warning)', 'var(--color-warning)', 'var(--color-accent)', '#ec4899', '#06b6d4']
 
 const PROJECT_TYPE_LABELS = {
   group: 'Trabalho de grupo',
@@ -64,10 +62,10 @@ const PROJECT_TYPE_LABELS = {
 const TYPE_HERO = {
   pap:         { c1: '#6366f1', c2: '#4f46e5', Icon: GraduationCap },
   internship:  { c1: '#10b981', c2: '#059669', Icon: Briefcase },
-  group:       { c1: '#f59e0b', c2: '#d97706', Icon: Users },
-  personal:    { c1: '#1b78f7', c2: '#4f46e5', Icon: Rocket },
-  competition: { c1: '#ef4444', c2: '#dc2626', Icon: Trophy },
-  presentation:{ c1: '#8b5cf6', c2: '#7c3aed', Icon: BarChart2 },
+  group:       { c1: 'var(--color-warning)', c2: '#d97706', Icon: Users },
+  personal:    { c1: 'var(--color-primary)', c2: '#4f46e5', Icon: Rocket },
+  competition: { c1: 'var(--color-error)', c2: '#dc2626', Icon: Trophy },
+  presentation:{ c1: 'var(--color-accent)', c2: '#7c3aed', Icon: BarChart2 },
 }
 
 const QUALITY_MIN = 60 // below this = "needs more"
@@ -118,12 +116,12 @@ function FeedbackCommentText({ comment, textColor }) {
         return (
           <span style={{ display: 'inline-flex', flexWrap: 'wrap', alignItems: 'center', gap: 6 }}>
             {Object.entries(parsed.ratings).map(([k, v]) => (
-              <span key={k} style={{ fontSize: 11, fontWeight: 700, color: '#1b78f7', background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.25)', borderRadius: 5, padding: '1px 6px', textTransform: 'capitalize' }}>
+              <span key={k} style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-primary)', background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 5, padding: '1px 6px', textTransform: 'capitalize' }}>
                 {k}: {v}
               </span>
             ))}
             {parsed.avg != null && (
-              <span style={{ fontSize: 11, fontWeight: 700, color: '#22c55e', background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.25)', borderRadius: 5, padding: '1px 6px' }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-success)', background: 'var(--color-success-subtle)', border: '1px solid var(--color-success-subtle)', borderRadius: 5, padding: '1px 6px' }}>
                 média: {parsed.avg}
               </span>
             )}
@@ -137,40 +135,40 @@ function FeedbackCommentText({ comment, textColor }) {
 }
 
 function progBar(pct) {
-  if (pct >= 90) return '#22c55e'
-  if (pct >= 40) return '#1b78f7'
-  return '#f97316'
+  if (pct >= 90) return 'var(--color-success)'
+  if (pct >= 40) return 'var(--color-primary)'
+  return 'var(--color-warning)'
 }
 // Translucent track that matches the fill colour (~12% opacity)
 function progTrack(pct) {
-  if (pct >= 90) return 'rgba(34,197,94,0.12)'
-  if (pct >= 40) return 'rgba(27,120,247,0.12)'
-  return 'rgba(249,115,22,0.12)'
+  if (pct >= 90) return 'var(--color-success-subtle)'
+  if (pct >= 40) return 'var(--color-primary-subtle)'
+  return 'var(--color-warning-subtle)'
 }
 
 // Area-based gradient for the hero background (when no cover image)
 function getAreaGradient(area) {
   const a = (area || '').toLowerCase()
   if (a.includes('tecnolog') || a.includes('informátic') || a.includes('programaç') || a.includes('software') || a.includes('digital') || a.includes('eletrónic'))
-    return { g1: '#0a1e3d', g2: '#0d2137', accent1: '#1b78f7', accent2: '#0ea5e9' }
+    return { g1: '#0a1e3d', g2: '#0d2137', accent1: 'var(--color-primary)', accent2: '#0ea5e9' }
   if (a.includes('comercial') || a.includes('marketing') || a.includes('vendas') || a.includes('gestão') || a.includes('negócio'))
-    return { g1: '#1a0a3d', g2: '#200a4a', accent1: '#8b5cf6', accent2: '#6366f1' }
+    return { g1: '#1a0a3d', g2: '#200a4a', accent1: 'var(--color-accent)', accent2: '#6366f1' }
   if (a.includes('design') || a.includes('arte') || a.includes('visual') || a.includes('multimédia') || a.includes('gráfico'))
     return { g1: '#051a1f', g2: '#082030', accent1: '#0d9488', accent2: '#06b6d4' }
   if (a.includes('saúde') || a.includes('saude') || a.includes('farmác') || a.includes('medicina') || a.includes('bio'))
-    return { g1: '#051a12', g2: '#062818', accent1: '#10b981', accent2: '#22c55e' }
+    return { g1: '#051a12', g2: '#062818', accent1: '#10b981', accent2: 'var(--color-success)' }
   if (a.includes('construção') || a.includes('civil') || a.includes('arquitet'))
-    return { g1: '#1a1005', g2: '#231500', accent1: '#f59e0b', accent2: '#f97316' }
+    return { g1: '#1a1005', g2: '#231500', accent1: 'var(--color-warning)', accent2: 'var(--color-warning)' }
   // default: deep slate to dark blue
-  return { g1: '#0c1528', g2: '#0d1e38', accent1: '#1b78f7', accent2: '#4f46e5' }
+  return { g1: '#0c1528', g2: '#0d1e38', accent1: 'var(--color-primary)', accent2: '#4f46e5' }
 }
 
 function getLevelInfo(score) {
-  if (score >= 86) return { label: 'Nível profissional', color: '#22c55e' }
-  if (score >= 71) return { label: 'Quase profissional', color: '#8b5cf6' }
+  if (score >= 86) return { label: 'Nível profissional', color: 'var(--color-success)' }
+  if (score >= 71) return { label: 'Quase profissional', color: 'var(--color-accent)' }
   if (score >= 51) return { label: 'A ganhar forma', color: '#3b82f6' }
-  if (score >= 31) return { label: 'A começar', color: '#f59e0b' }
-  return { label: 'Rascunho', color: '#ef4444' }
+  if (score >= 31) return { label: 'A começar', color: 'var(--color-warning)' }
+  return { label: 'Rascunho', color: 'var(--color-error)' }
 }
 
 const ScoreRing = memo(function ScoreRing({ score, size = 108 }) {
@@ -229,7 +227,7 @@ const Section = memo(function Section({ fieldKey, content, isOwner, canEdit, onI
 
   return (
     <div className="proj-card-pad proj-card" style={{
-      border: `1px solid ${isShort ? 'rgba(234,179,8,0.22)' : isEmpty ? colors.subtle + '55' : colors.border}`,
+      border: `1px solid ${isShort ? 'var(--color-warning-subtle)' : isEmpty ? colors.subtle + '55' : colors.border}`,
     }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: isEmpty ? 0 : 12 }}>
         <h3 style={{
@@ -240,7 +238,7 @@ const Section = memo(function Section({ fieldKey, content, isOwner, canEdit, onI
           <meta.Icon size={13} />
           {meta.label}
           {isShort && (
-            <span style={{ fontSize: 10, color: colors.yellow, background: 'rgba(234,179,8,0.1)', border: '1px solid rgba(234,179,8,0.2)', borderRadius: 4, padding: '1px 7px', letterSpacing: '0.03em', fontWeight: 700 }}>
+            <span style={{ fontSize: 10, color: colors.yellow, background: 'var(--color-warning-subtle)', border: '1px solid var(--color-warning-subtle)', borderRadius: 4, padding: '1px 7px', letterSpacing: '0.03em', fontWeight: 700 }}>
               Pouco detalhe
             </span>
           )}
@@ -310,7 +308,7 @@ const Section = memo(function Section({ fieldKey, content, isOwner, canEdit, onI
             </button>
           )}
           {editable && isShort && fieldCfg?.tip && (
-            <div style={{ marginTop: 12, display: 'flex', alignItems: 'flex-start', gap: 8, background: 'rgba(234,179,8,0.05)', border: '1px solid rgba(234,179,8,0.14)', borderRadius: 8, padding: '9px 12px' }}>
+            <div style={{ marginTop: 12, display: 'flex', alignItems: 'flex-start', gap: 8, background: 'var(--color-warning-subtle)', border: '1px solid var(--color-warning-subtle)', borderRadius: 8, padding: '9px 12px' }}>
               <Lightbulb size={13} color="#d4a820" style={{ flexShrink: 0 }} />
               <p style={{ margin: 0, fontSize: 12, color: '#d4a820', lineHeight: 1.6 }}>{fieldCfg.tip}</p>
             </div>
@@ -339,18 +337,18 @@ const MissionRow = memo(function MissionRow({ challenge, project, onImprove, isO
       style={{
         display: 'flex', alignItems: 'center', gap: 12,
         padding: '11px 14px', borderRadius: 12,
-        background: isCompleted ? 'rgba(34,197,94,0.03)' : colors.bgAlt,
-        border: `1px solid ${isCompleted ? 'rgba(34,197,94,0.14)' : colors.border}`,
+        background: isCompleted ? 'var(--color-success-subtle)' : colors.bgAlt,
+        border: `1px solid ${isCompleted ? 'var(--color-success-subtle)' : colors.border}`,
         transition: 'border-color 0.15s',
       }}
     >
       {/* Status dot / icon */}
       <div style={{
         width: 30, height: 30, borderRadius: 9, flexShrink: 0,
-        background: isCompleted ? 'rgba(34,197,94,0.1)' : 'var(--c-bg-alt)',
-        border: `1px solid ${isCompleted ? 'rgba(34,197,94,0.22)' : colors.border}`,
+        background: isCompleted ? 'var(--color-success-subtle)' : 'var(--color-bg-alt)',
+        border: `1px solid ${isCompleted ? 'var(--color-success-subtle)' : colors.border}`,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        color: isCompleted ? '#22c55e' : colors.muted,
+        color: isCompleted ? 'var(--color-success)' : colors.muted,
       }}>
         {isCompleted ? <Check size={13} strokeWidth={3} /> : <ChalIcon size={13} />}
       </div>
@@ -383,9 +381,9 @@ const MissionRow = memo(function MissionRow({ challenge, project, onImprove, isO
       {/* Points badge */}
       <span style={{
         fontSize: 11, fontWeight: 700, flexShrink: 0, borderRadius: 999, padding: '2px 9px',
-        color: isCompleted ? '#22c55e' : colors.blue,
-        background: isCompleted ? 'rgba(34,197,94,0.08)' : 'rgba(27,120,247,0.08)',
-        border: `1px solid ${isCompleted ? 'rgba(34,197,94,0.18)' : 'rgba(27,120,247,0.18)'}`,
+        color: isCompleted ? 'var(--color-success)' : colors.blue,
+        background: isCompleted ? 'var(--color-success-subtle)' : 'var(--color-primary-subtle)',
+        border: `1px solid ${isCompleted ? 'var(--color-success-subtle)' : 'var(--color-primary-subtle)'}`,
       }}>
         {isCompleted ? <Check size={10} strokeWidth={3} /> : `+${realGain} XP`}
       </span>
@@ -395,7 +393,7 @@ const MissionRow = memo(function MissionRow({ challenge, project, onImprove, isO
         <button
           onClick={() => onImprove(challenge)}
           style={{
-            background: 'rgba(27,120,247,0.08)', border: '1px solid rgba(27,120,247,0.18)',
+            background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)',
             color: colors.blue, borderRadius: 8, padding: '5px 12px',
             fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0,
           }}
@@ -447,7 +445,7 @@ function EditModal({ challenge, project, onClose, onSave, saving }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <div style={{
               width: 42, height: 42, borderRadius: 10,
-              background: 'var(--c-card-hover)',
+              background: 'var(--color-surface-hover)',
               border: `1px solid ${colors.border}`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               color: colors.muted,
@@ -469,7 +467,7 @@ function EditModal({ challenge, project, onClose, onSave, saving }) {
           style={{
             width: '100%', minHeight: 150,
             background: colors.bg,
-            border: `1.5px solid ${isSpam ? '#ef4444' : isComplete ? colors.green : colors.border}`,
+            border: `1.5px solid ${isSpam ? 'var(--color-error)' : isComplete ? colors.green : colors.border}`,
             borderRadius: 10, padding: '12px 14px',
             color: colors.text, fontSize: 15, lineHeight: 1.65,
             resize: 'vertical', fontFamily: 'var(--font-body)',
@@ -479,7 +477,7 @@ function EditModal({ challenge, project, onClose, onSave, saving }) {
           placeholder={`Escreve sobre ${challenge.fieldLabel.toLowerCase()}...`}
         />
         {isSpam && (
-          <p style={{ margin: '6px 0 0', fontSize: 12, color: '#ef4444', display: 'flex', alignItems: 'center', gap: 5 }}>
+          <p style={{ margin: '6px 0 0', fontSize: 12, color: 'var(--color-error)', display: 'flex', alignItems: 'center', gap: 5 }}>
             <AlertTriangle size={12} /> {spamMsg}
           </p>
         )}
@@ -518,7 +516,7 @@ function EditModal({ challenge, project, onClose, onSave, saving }) {
             opacity: saving ? 0.75 : 1,
             transition: 'background 0.2s',
             fontFamily: 'inherit',
-            boxShadow: isSpam ? 'none' : isComplete ? '0 2px 8px rgba(34,197,94,0.2)' : '0 2px 8px rgba(27,120,247,0.2)',
+            boxShadow: isSpam ? 'none' : isComplete ? '0 2px 8px var(--color-success-subtle)' : '0 2px 8px var(--color-primary-subtle)',
           }}
         >
           {saving ? 'A guardar...' : `Guardar e ganhar +${challenge.scoreGain} XP`}
@@ -534,10 +532,10 @@ function Toast({ message, visible }) {
       position: 'fixed', bottom: 32, left: '50%',
       transform: `translateX(-50%) translateY(${visible ? 0 : 100}px)`,
       opacity: visible ? 1 : 0,
-      background: 'var(--c-card)',
+      background: 'var(--color-surface)',
       border: `1px solid ${colors.borderBright}`,
       borderRadius: 10, padding: '14px 28px',
-      color: 'var(--c-text)', fontSize: 15, fontWeight: 600,
+      color: 'var(--color-text)', fontSize: 15, fontWeight: 600,
       zIndex: 2000,
       transition: 'transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s',
       whiteSpace: 'nowrap',
@@ -610,10 +608,10 @@ function newBlock(type, posIndex = 0) {
 }
 
 const BLOCK_ACCENT_COLORS = [
-  { label: 'Azul',    value: '#1b78f7' },
-  { label: 'Verde',   value: '#22c55e' },
+  { label: 'Azul',    value: 'var(--color-primary)' },
+  { label: 'Verde',   value: 'var(--color-success)' },
   { label: 'Roxo',    value: '#a78bfa' },
-  { label: 'Laranja', value: '#f97316' },
+  { label: 'Laranja', value: 'var(--color-warning)' },
   { label: 'Rosa',    value: '#ec4899' },
   { label: 'Cinza',   value: '#6b7280' },
 ]
@@ -741,33 +739,33 @@ function useCanvasDrag(canvasRef, setPreviewBlocks) {
 // ── Public visitor view ────────────────────────────────────────────────────────
 const wsInput = {
   width: '100%', boxSizing: 'border-box',
-  background: 'var(--c-card)', border: '1px solid var(--c-border)',
+  background: 'var(--color-surface)', border: '1px solid var(--color-border)',
   borderRadius: 7, padding: '7px 9px',
-  fontSize: 12, color: 'var(--c-text)', outline: 'none', fontFamily: 'inherit',
+  fontSize: 12, color: 'var(--color-text)', outline: 'none', fontFamily: 'inherit',
   display: 'block', marginBottom: 0,
 }
 
 // ── Workspace panel design tokens ─────────────────────────────────────────────
 const wsGroup = {
-  background: 'var(--c-bg-alt)',
-  border: '1px solid var(--c-border)',
+  background: 'var(--color-bg-alt)',
+  border: '1px solid var(--color-border)',
   borderRadius: 12, padding: '13px 14px',
 }
 const wsGroupLabel = {
   fontSize: 10, fontWeight: 700,
-  color: 'var(--c-subtle)',
+  color: 'var(--color-text-tertiary)',
   textTransform: 'uppercase', letterSpacing: '0.1em',
   marginBottom: 11,
 }
 const wsControlLabel = {
   fontSize: 11, fontWeight: 600,
-  color: 'var(--c-muted)', marginBottom: 6,
+  color: 'var(--color-text-secondary)', marginBottom: 6,
 }
 const wsInputNew = {
   width: '100%', boxSizing: 'border-box',
-  background: 'var(--c-bg)', border: '1px solid var(--c-border)',
+  background: 'var(--color-bg)', border: '1px solid var(--color-border)',
   borderRadius: 8, padding: '8px 11px',
-  color: 'var(--c-text)', fontSize: 12,
+  color: 'var(--color-text)', fontSize: 12,
   fontFamily: 'inherit', outline: 'none',
   transition: 'border-color 0.2s',
 }
@@ -895,7 +893,7 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
   // Accent palettes — each swatch maps to a gradient pair
   const ACCENT_PALETTES = [
     { key: 'default', label: 'Padrão',   swatch: null,      c1: null,       c2: null       },
-    { key: 'blue',    label: 'Azul',     swatch: '#1b78f7', c1: '#1e40af',  c2: '#4f46e5'  },
+    { key: 'blue',    label: 'Azul',     swatch: 'var(--color-primary)', c1: '#1e40af',  c2: '#4f46e5'  },
     { key: 'purple',  label: 'Roxo',     swatch: '#7c3aed', c1: '#4c1d95',  c2: '#831843'  },
     { key: 'teal',    label: 'Teal',     swatch: '#0d9488', c1: '#065f46',  c2: '#0369a1'  },
     { key: 'crimson', label: 'Carmim',   swatch: '#dc2626', c1: '#7f1d1d',  c2: '#92400e'  },
@@ -922,7 +920,7 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
   const selectedTitleFont = TITLE_FONT_OPTIONS.find(f => f.key === (previewStyle.titleFont || 'croogla')) || TITLE_FONT_OPTIONS[0]
   const titleStyle        = previewStyle.titleStyle || 'normal'
   const selectedBg        = BG_OPTIONS.find(b => b.key === (previewStyle.bg || 'default')) || BG_OPTIONS[0]
-  const resolvedBg        = selectedBg.bg || 'var(--c-bg)'
+  const resolvedBg        = selectedBg.bg || 'var(--color-bg)'
   // pvTheme: force dark/light CSS vars inside preview regardless of app theme
   const pvTheme           = selectedBg.isLight ? 'light' : selectedBg.key !== 'default' ? 'dark' : null
   const titleAlign        = previewStyle.titleAlign || 'left'
@@ -944,7 +942,7 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
     return (
       <div key={key} style={{ display: 'flex', flexWrap: 'wrap', gap: 20, alignItems: 'stretch', flexDirection: side }}>
         <div style={{ flex: '1 1 280px', minWidth: 0 }}>{card}</div>
-        <div style={{ flex: '1 1 220px', maxWidth: '100%', width: 'min(100%, 320px)', borderRadius: 14, overflow: 'hidden', background: 'var(--c-card)', border: '1px solid var(--c-border)' }}>
+        <div style={{ flex: '1 1 220px', maxWidth: '100%', width: 'min(100%, 320px)', borderRadius: 14, overflow: 'hidden', background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
           {embedUrl ? (
             <iframe src={embedUrl} title="" style={{ width: '100%', height: '100%', minHeight: 200, border: 'none', display: 'block' }} allowFullScreen />
           ) : (
@@ -1023,7 +1021,7 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
           padding-bottom: env(safe-area-inset-bottom, 0px) !important;
           border-radius: 18px 18px 0 0 !important;
           border-left: none !important;
-          border-top: 1px solid var(--c-border) !important;
+          border-top: 1px solid var(--color-border) !important;
           box-shadow: none !important;
           animation: pv-slidein-up 0.26s cubic-bezier(0.22,1,0.36,1) !important;
           z-index: 510 !important;
@@ -1044,14 +1042,14 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
         /* Drag handle */
         .pv-ws-drag-handle {
           width: 40px; height: 4px; border-radius: 99px;
-          background: var(--c-border-bright);
+          background: var(--color-border-hover);
           margin: 10px auto 0;
           flex-shrink: 0;
         }
         .pv-workspace input:focus,
         .pv-workspace textarea:focus {
-          border-color: rgba(27,120,247,0.55) !important;
-          box-shadow: 0 0 0 3px rgba(27,120,247,0.1);
+          border-color: var(--color-primary-subtle) !important;
+          box-shadow: 0 0 0 3px var(--color-primary-subtle);
           outline: none;
         }
         .pv-banner-btn:hover { opacity: 0.85; }
@@ -1086,20 +1084,20 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
           flexShrink: 0, zIndex: 300,
           background: theme === 'light' ? 'rgba(248,250,252,0.97)' : 'rgba(6,12,24,0.97)',
           backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)',
-          borderBottom: theme === 'light' ? '1px solid rgba(0,0,0,0.09)' : '1px solid rgba(27,120,247,0.18)',
+          borderBottom: theme === 'light' ? '1px solid rgba(0,0,0,0.09)' : '1px solid var(--color-primary-subtle)',
           padding: '7px 16px',
           display: 'flex', alignItems: 'center', gap: 8, minHeight: 44,
         }}>
           <Globe size={13} color={colors.blue} style={{ flexShrink: 0 }} />
-          <span className="pv-banner-label" style={{ fontSize: 12, color: 'var(--c-muted)', fontWeight: 600, letterSpacing: '-0.1px' }}>
+          <span className="pv-banner-label" style={{ fontSize: 12, color: 'var(--color-text-secondary)', fontWeight: 600, letterSpacing: '-0.1px' }}>
             Preview do visitante
           </span>
 
           {/* Separator */}
-          <div className="pv-banner-sep" style={{ width: 1, height: 18, background: 'var(--c-border)', flexShrink: 0, marginLeft: 4, marginRight: 4 }} />
+          <div className="pv-banner-sep" style={{ width: 1, height: 18, background: 'var(--color-border)', flexShrink: 0, marginLeft: 4, marginRight: 4 }} />
 
           {/* Device size toggles — pill azul + texto branco */}
-          <div className="pv-device-toggles" style={{ display: 'flex', alignItems: 'center', gap: 2, background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)', borderRadius: 9, padding: '3px' }}>
+          <div className="pv-device-toggles" style={{ display: 'flex', alignItems: 'center', gap: 2, background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)', borderRadius: 9, padding: '3px' }}>
             {DEVICES.map(({ id, Icon, label, title }) => {
               const isAct = previewDevice === id
               return (
@@ -1109,7 +1107,7 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                   onClick={() => setPreviewDevice(id)}
                   className="pv-device-btn"
                   style={{
-                    background: isAct ? '#1b78f7' : 'transparent',
+                    background: isAct ? 'var(--color-primary)' : 'transparent',
                     border: 'none',
                     borderRadius: 7,
                     height: 28,
@@ -1117,9 +1115,9 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                     minWidth: 28,
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
                     cursor: 'pointer',
-                    color: isAct ? '#fff' : 'var(--c-muted)',
+                    color: isAct ? '#fff' : 'var(--color-text-secondary)',
                     transition: 'all 0.15s',
-                    boxShadow: isAct ? '0 2px 8px rgba(27,120,247,0.3)' : 'none',
+                    boxShadow: isAct ? '0 2px 8px var(--color-primary-subtle)' : 'none',
                   }}
                 >
                   <Icon size={13} strokeWidth={isAct ? 2.2 : 1.8} />
@@ -1136,13 +1134,13 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
               onClick={() => setPreviewEditing(true)}
               title="Editar workspace"
               style={{
-                background: '#1b78f7', border: 'none',
+                background: 'var(--color-primary)', border: 'none',
                 borderRadius: 9,
                 width: isDesktop ? 'auto' : 36, height: 36,
                 padding: isDesktop ? '0 14px' : 0,
                 color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, flexShrink: 0,
-                boxShadow: '0 4px 12px rgba(27,120,247,0.35)',
+                boxShadow: '0 4px 12px var(--color-primary-subtle)',
                 WebkitTapHighlightColor: 'transparent',
               }}
             >
@@ -1158,7 +1156,7 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
               borderRadius: 9,
               width: isDesktop ? 'auto' : 36, height: 36,
               padding: isDesktop ? '0 12px' : 0,
-              color: '#ef4444', fontSize: 13, fontWeight: 600,
+              color: 'var(--color-error)', fontSize: 13, fontWeight: 600,
               cursor: 'pointer', fontFamily: 'inherit',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, flexShrink: 0,
               WebkitTapHighlightColor: 'transparent',
@@ -1201,13 +1199,13 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
           /* Cover full-bleed hero */
           <div style={{ width: '100%', height: Math.round(heroHeight * 1.4), position: 'relative' }}>
             <img src={project.cover_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.1) 40%, var(--c-bg) 100%)' }} />
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.1) 40%, var(--color-bg) 100%)' }} />
             <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(135deg, ${hero.c1}22, transparent 60%)` }} />
           </div>
         ) : project.cover_url ? (
           <div style={{ width: '100%', height: Math.round(heroHeight * 1.14), position: 'relative' }}>
             <img src={project.cover_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, var(--c-bg) 100%)' }} />
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, var(--color-bg) 100%)' }} />
           </div>
         ) : (
           /* No cover — use page bg theme as base, accent as subtle overlay */
@@ -1258,7 +1256,7 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: colors.subtle, fontSize: 12 }}>
                 <span style={{
                   width: 5, height: 5, borderRadius: '50%',
-                  background: project.score >= 86 ? '#22c55e' : project.score >= 51 ? '#1b78f7' : '#f97316',
+                  background: project.score >= 86 ? 'var(--color-success)' : project.score >= 51 ? 'var(--color-primary)' : 'var(--color-warning)',
                 }} />
                 {project.score} score
               </span>
@@ -1277,7 +1275,7 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text',
-            } : { color: 'var(--c-text)' }),
+            } : { color: 'var(--color-text)' }),
           }}>
             {project.name}
             {(project.score || 0) >= 100 && (
@@ -1285,8 +1283,8 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                 marginLeft: 14, verticalAlign: 'middle',
                 width: 32, height: 32, borderRadius: 10,
-                background: '#1b78f7',
-                boxShadow: '0 2px 8px rgba(27,120,247,0.3)',
+                background: 'var(--color-primary)',
+                boxShadow: '0 2px 8px var(--color-primary-subtle)',
                 flexShrink: 0,
                 WebkitTextFillColor: 'initial',
               }}>
@@ -1297,7 +1295,7 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
 
           {(customTagline || project.ai_tagline) && (
             <p style={{
-              fontSize: 'clamp(16px, 2.2vw, 20px)', color: coverAsHero ? 'rgba(255,255,255,0.75)' : 'var(--c-muted)',
+              fontSize: 'clamp(16px, 2.2vw, 20px)', color: coverAsHero ? 'rgba(255,255,255,0.75)' : 'var(--color-text-secondary)',
               margin: titleAlign === 'right' ? '0 0 28px auto' : '0 0 28px',
               maxWidth: titleAlign === 'center' ? '100%' : 600, lineHeight: 1.5, fontWeight: 400, textAlign: titleAlign,
             }}>
@@ -1307,7 +1305,7 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
 
           {/* Creator pill */}
           {displayName && (
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 999, padding: '6px 16px 6px 6px' }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 999, padding: '6px 16px 6px 6px' }}>
               {avatarUrl ? (
                 <img src={avatarUrl} alt="" style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
               ) : (
@@ -1315,8 +1313,8 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                   {displayName[0]?.toUpperCase()}
                 </div>
               )}
-              <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--c-text)' }}>{displayName}</span>
-              {course && <span style={{ fontSize: 12, color: 'var(--c-muted)' }}>· {course}</span>}
+              <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text)' }}>{displayName}</span>
+              {course && <span style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>· {course}</span>}
             </div>
           )}
 
@@ -1331,7 +1329,7 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
               )}
               {previewStyle.linkGithub && (
                 <a href={previewStyle.linkGithub} target="_blank" rel="noopener noreferrer"
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'var(--c-card)', border: '1px solid var(--c-border)', color: 'var(--c-text)', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-text)', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>
                   <FileText size={13} /> GitHub
                 </a>
               )}
@@ -1351,10 +1349,10 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
         <div className={`pv-workspace${isDesktop ? '' : ` pv-ws-sheet${wsExpanded ? '' : ' ws-collapsed'}`}`} style={{
           position: 'fixed', right: isDesktop ? 8 : 0, top: isDesktop ? 8 : bannerH, bottom: isDesktop ? 8 : 0, zIndex: 200,
           width: isDesktop ? (wsExpanded ? 360 : 60) : 360,
-          background: 'var(--c-sidebar-bg-alpha)',
+          background: 'var(--color-bg-overlay)',
           backdropFilter: 'blur(20px) saturate(1.4)',
           WebkitBackdropFilter: 'blur(20px) saturate(1.4)',
-          border: '1px solid var(--c-border)',
+          border: '1px solid var(--color-border)',
           borderRadius: isDesktop ? 16 : 0,
           display: 'flex', flexDirection: 'column',
           fontFamily: 'var(--font-body)',
@@ -1375,8 +1373,8 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
               style={{
                 position: 'absolute', top: 68, left: -11,
                 width: 22, height: 22, borderRadius: '50%',
-                background: 'var(--c-sidebar-bg)', border: '1px solid var(--c-border)',
-                color: 'var(--c-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                background: 'var(--color-sidebar-bg)', border: '1px solid var(--color-border)',
+                color: 'var(--color-text-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center',
                 cursor: 'pointer', zIndex: 5, padding: 0,
                 boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
               }}
@@ -1400,8 +1398,8 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                   style={{
                     width: 36, height: 36, borderRadius: 9, border: 'none', cursor: 'pointer',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    background: previewTab === t.id ? 'rgba(27,120,247,0.15)' : 'transparent',
-                    color: previewTab === t.id ? '#1b78f7' : 'var(--c-muted)',
+                    background: previewTab === t.id ? 'var(--color-primary-subtle)' : 'transparent',
+                    color: previewTab === t.id ? 'var(--color-primary)' : 'var(--color-text-secondary)',
                     transition: 'background 0.13s, color 0.13s',
                   }}
                 ><t.Icon size={16} /></button>
@@ -1412,7 +1410,7 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
           {/* ── Panel header: tabs + save + close ── */}
           {(!isDesktop || wsExpanded) && <div style={{
             padding: '8px 10px 0',
-            borderBottom: '1px solid var(--c-border)',
+            borderBottom: '1px solid var(--color-border)',
             flexShrink: 0,
           }}>
             {/* Tabs + actions row */}
@@ -1420,7 +1418,7 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
               {/* Segmented tab control */}
               <div style={{
                 display: 'flex', gap: 2, flex: 1,
-                background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)',
+                background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)',
                 borderRadius: 10, padding: '3px',
               }}>
                 {[
@@ -1431,12 +1429,12 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                   <button key={t.id} onClick={() => setPreviewTab(t.id)} style={{
                     flex: 1, padding: '6px 4px', borderRadius: 7, border: 'none',
                     cursor: 'pointer', fontFamily: 'inherit',
-                    background: previewTab === t.id ? '#1b78f7' : 'transparent',
-                    color: previewTab === t.id ? '#fff' : 'var(--c-muted)',
+                    background: previewTab === t.id ? 'var(--color-primary)' : 'transparent',
+                    color: previewTab === t.id ? '#fff' : 'var(--color-text-secondary)',
                     fontSize: 11, fontWeight: previewTab === t.id ? 700 : 500,
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
                     transition: 'all 0.15s',
-                    boxShadow: previewTab === t.id ? '0 1px 8px rgba(27,120,247,0.25)' : 'none',
+                    boxShadow: previewTab === t.id ? '0 1px 8px var(--color-primary-subtle)' : 'none',
                   }}>
                     <t.Icon size={11} /> {t.label}
                   </button>
@@ -1459,16 +1457,16 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                   }
                 }}
                 title={previewSaveError ? 'Erro ao guardar, tenta novamente' : 'Guardar'}
-                style={{ width: 28, height: 28, borderRadius: 7, background: previewSaveError ? 'rgba(239,68,68,0.1)' : previewSaved ? 'rgba(34,197,94,0.1)' : 'rgba(27,120,247,0.08)', border: `1px solid ${previewSaveError ? 'rgba(239,68,68,0.3)' : previewSaved ? 'rgba(34,197,94,0.3)' : 'rgba(27,120,247,0.2)'}`, color: previewSaveError ? '#ef4444' : previewSaved ? '#22c55e' : '#1b78f7', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s', flexShrink: 0 }}
+                style={{ width: 28, height: 28, borderRadius: 7, background: previewSaveError ? 'var(--color-error-subtle)' : previewSaved ? 'var(--color-success-subtle)' : 'var(--color-primary-subtle)', border: `1px solid ${previewSaveError ? 'var(--color-error-subtle)' : previewSaved ? 'var(--color-success-subtle)' : 'var(--color-primary-subtle)'}`, color: previewSaveError ? 'var(--color-error)' : previewSaved ? 'var(--color-success)' : 'var(--color-primary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s', flexShrink: 0 }}
               >
                 {previewSaveError ? <X size={13} strokeWidth={3} /> : previewSaved ? <Check size={13} strokeWidth={3} /> : <Save size={13} />}
               </button>
               {/* Close */}
               <button
                 onClick={() => { setPreviewEditing(false); setWsExpanded(false) }}
-                style={{ width: 28, height: 28, borderRadius: 7, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.14s', flexShrink: 0 }}
-                onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.18)'}
-                onMouseLeave={e => e.currentTarget.style.background = 'rgba(239,68,68,0.08)'}
+                style={{ width: 28, height: 28, borderRadius: 7, background: 'var(--color-error-subtle)', border: '1px solid var(--color-error-subtle)', color: 'var(--color-error)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.14s', flexShrink: 0 }}
+                onMouseEnter={e => e.currentTarget.style.background = 'var(--color-error-subtle)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'var(--color-error-subtle)'}
               ><X size={13} /></button>
             </div>
           </div>}
@@ -1510,7 +1508,7 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                       )
                     })}
                   </div>
-                  <div style={{ fontSize: 10, color: 'var(--c-subtle)', marginTop: 5, textAlign: 'right' }}>
+                  <div style={{ fontSize: 10, color: 'var(--color-text-tertiary)', marginTop: 5, textAlign: 'right' }}>
                     {(ACCENT_PALETTES.find(p => p.key === (previewStyle.accent || 'default')) || ACCENT_PALETTES[0]).label}
                   </div>
                 </div>
@@ -1528,9 +1526,9 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                         <button key={b.key} title={b.label}
                           onClick={() => setPreviewStyle(ps => ({ ...ps, bg: b.key }))}
                           style={{
-                            borderRadius: 9, border: isSel ? '2px solid #1b78f7' : '2px solid transparent', cursor: 'pointer', padding: 0, overflow: 'hidden',
+                            borderRadius: 9, border: isSel ? '2px solid var(--color-primary)' : '2px solid transparent', cursor: 'pointer', padding: 0, overflow: 'hidden',
                             background: b.previewGradient || '#060c18',
-                            outline: isSel ? '2px solid rgba(27,120,247,0.3)' : '2px solid transparent',
+                            outline: isSel ? '2px solid var(--color-primary-subtle)' : '2px solid transparent',
                             outlineOffset: 2, transition: 'all 0.15s',
                           }}
                         >
@@ -1563,9 +1561,9 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                         <button key={s.key} onClick={() => setPreviewStyle(ps => ({ ...ps, heroSize: s.key }))}
                           style={{
                             flex: 1, padding: '8px 4px', borderRadius: 8,
-                            border: `1px solid ${isSelected ? '#1b78f7' : 'var(--c-border)'}`,
-                            background: isSelected ? 'rgba(27,120,247,0.12)' : 'var(--c-bg)',
-                            color: isSelected ? '#1b78f7' : 'var(--c-muted)',
+                            border: `1px solid ${isSelected ? 'var(--color-primary)' : 'var(--color-border)'}`,
+                            background: isSelected ? 'var(--color-primary-subtle)' : 'var(--color-bg)',
+                            color: isSelected ? 'var(--color-primary)' : 'var(--color-text-secondary)',
                             fontSize: 11, fontWeight: isSelected ? 700 : 500,
                             cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.12s',
                           }}
@@ -1578,7 +1576,7 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
                     <div>
                       <div style={wsControlLabel}>Capa como fundo do hero</div>
-                      <div style={{ fontSize: 10, color: 'var(--c-subtle)', marginTop: 1 }}>
+                      <div style={{ fontSize: 10, color: 'var(--color-text-tertiary)', marginTop: 1 }}>
                         {project.cover_url ? 'Usa a imagem de capa no hero' : 'Adiciona uma capa primeiro'}
                       </div>
                     </div>
@@ -1586,7 +1584,7 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                       onClick={() => project.cover_url && setPreviewStyle(ps => ({ ...ps, coverAsHero: !ps.coverAsHero }))}
                       style={{
                         width: 42, height: 24, borderRadius: 99, flexShrink: 0,
-                        background: previewStyle.coverAsHero && project.cover_url ? '#1b78f7' : 'var(--c-border)',
+                        background: previewStyle.coverAsHero && project.cover_url ? 'var(--color-primary)' : 'var(--color-border)',
                         border: 'none', cursor: project.cover_url ? 'pointer' : 'not-allowed',
                         transition: 'background 0.2s', position: 'relative',
                         opacity: project.cover_url ? 1 : 0.4,
@@ -1605,7 +1603,7 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
                     <div>
                       <div style={wsControlLabel}>Blocos em canvas livre</div>
-                      <div style={{ fontSize: 10, color: 'var(--c-subtle)', marginTop: 1 }}>
+                      <div style={{ fontSize: 10, color: 'var(--color-text-tertiary)', marginTop: 1 }}>
                         Arrasta os blocos para qualquer posição, em vez de em lista
                       </div>
                     </div>
@@ -1613,7 +1611,7 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                       onClick={() => setPreviewStyle(ps => ({ ...ps, canvasMode: !ps.canvasMode }))}
                       style={{
                         width: 42, height: 24, borderRadius: 99, flexShrink: 0,
-                        background: previewStyle.canvasMode ? '#1b78f7' : 'var(--c-border)',
+                        background: previewStyle.canvasMode ? 'var(--color-primary)' : 'var(--color-border)',
                         border: 'none', cursor: 'pointer',
                         transition: 'background 0.2s', position: 'relative',
                       }}
@@ -1636,7 +1634,7 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                     style={wsInputNew}
                     maxLength={120}
                   />
-                  <div style={{ fontSize: 10, color: 'var(--c-subtle)', marginTop: 5 }}>Substitui a tagline gerada pela IA.</div>
+                  <div style={{ fontSize: 10, color: 'var(--color-text-tertiary)', marginTop: 5 }}>Uma frase curta que resume o teu projeto.</div>
                 </div>
               </div>
 
@@ -1653,9 +1651,9 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                           onClick={() => setPreviewStyle(ps => ({ ...ps, titleFont: f.key }))}
                           style={{
                             padding: '8px 2px', borderRadius: 8, cursor: 'pointer', textAlign: 'center',
-                            border: `1px solid ${isSel ? '#1b78f7' : 'var(--c-border)'}`,
-                            background: isSel ? 'rgba(27,120,247,0.12)' : 'var(--c-bg)',
-                            color: isSel ? '#1b78f7' : 'var(--c-muted)',
+                            border: `1px solid ${isSel ? 'var(--color-primary)' : 'var(--color-border)'}`,
+                            background: isSel ? 'var(--color-primary-subtle)' : 'var(--color-bg)',
+                            color: isSel ? 'var(--color-primary)' : 'var(--color-text-secondary)',
                             transition: 'all 0.12s',
                           }}
                         >
@@ -1672,9 +1670,9 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                         <button key={s.key} onClick={() => setPreviewStyle(ps => ({ ...ps, titleStyle: s.key }))}
                           style={{
                             flex: 1, padding: '7px 4px', borderRadius: 8, cursor: 'pointer',
-                            border: `1px solid ${isSel ? '#1b78f7' : 'var(--c-border)'}`,
-                            background: isSel ? 'rgba(27,120,247,0.12)' : 'var(--c-bg)',
-                            color: isSel ? '#1b78f7' : 'var(--c-muted)',
+                            border: `1px solid ${isSel ? 'var(--color-primary)' : 'var(--color-border)'}`,
+                            background: isSel ? 'var(--color-primary-subtle)' : 'var(--color-bg)',
+                            color: isSel ? 'var(--color-primary)' : 'var(--color-text-secondary)',
                             fontSize: 11, fontWeight: 700, fontFamily: 'var(--font-body)', transition: 'all 0.12s',
                           }}
                         >{s.label}</button>
@@ -1693,9 +1691,9 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                         <button key={a.val} onClick={() => setPreviewStyle(ps => ({ ...ps, titleAlign: a.val }))}
                           style={{
                             flex: 1, padding: '8px 0', borderRadius: 8, cursor: 'pointer',
-                            border: `1px solid ${isSel ? '#1b78f7' : 'var(--c-border)'}`,
-                            background: isSel ? 'rgba(27,120,247,0.12)' : 'var(--c-bg)',
-                            color: isSel ? '#1b78f7' : 'var(--c-muted)',
+                            border: `1px solid ${isSel ? 'var(--color-primary)' : 'var(--color-border)'}`,
+                            background: isSel ? 'var(--color-primary-subtle)' : 'var(--color-bg)',
+                            color: isSel ? 'var(--color-primary)' : 'var(--color-text-secondary)',
                             display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.12s',
                           }}
                         ><a.Icon size={14} /></button>
@@ -1713,9 +1711,9 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                           onClick={() => setPreviewStyle(ps => ({ ...ps, font: f.key }))}
                           style={{
                             padding: '8px 2px', borderRadius: 8, cursor: 'pointer', textAlign: 'center',
-                            border: `1px solid ${isSel ? '#1b78f7' : 'var(--c-border)'}`,
-                            background: isSel ? 'rgba(27,120,247,0.12)' : 'var(--c-bg)',
-                            color: isSel ? '#1b78f7' : 'var(--c-muted)', transition: 'all 0.12s',
+                            border: `1px solid ${isSel ? 'var(--color-primary)' : 'var(--color-border)'}`,
+                            background: isSel ? 'var(--color-primary-subtle)' : 'var(--color-bg)',
+                            color: isSel ? 'var(--color-primary)' : 'var(--color-text-secondary)', transition: 'all 0.12s',
                           }}
                         >
                           <div style={{ height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, fontFamily: f.css, lineHeight: 1 }}>{f.sample}</div>
@@ -1737,8 +1735,8 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                     { key: 'linkLinkedin', Icon: User,        placeholder: 'LinkedIn (https://linkedin.com/...)' },
                   ].map(({ key, Icon, placeholder }) => (
                     <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                      <div style={{ width: 26, height: 26, borderRadius: 7, background: 'var(--c-bg)', border: '1px solid var(--c-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <Icon size={12} color="var(--c-muted)" />
+                      <div style={{ width: 26, height: 26, borderRadius: 7, background: 'var(--color-bg)', border: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <Icon size={12} color="var(--color-text-secondary)" />
                       </div>
                       <input
                         value={previewStyle[key] || ''}
@@ -1749,7 +1747,7 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                     </div>
                   ))}
                 </div>
-                <div style={{ fontSize: 10, color: 'var(--c-subtle)', marginTop: 6 }}>Aparecem no hero como botões de acção.</div>
+                <div style={{ fontSize: 10, color: 'var(--color-text-tertiary)', marginTop: 6 }}>Aparecem no hero como botões de acção.</div>
               </div>
 
               {/* Group: Estilo dos cards */}
@@ -1766,14 +1764,14 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                       <button key={c.key} onClick={() => setPreviewStyle(ps => ({ ...ps, cardStyle: c.key }))}
                         style={{
                           flex: 1, padding: '10px 4px', borderRadius: 9, cursor: 'pointer', textAlign: 'center',
-                          border: `1px solid ${isSel ? '#1b78f7' : 'var(--c-border)'}`,
-                          background: isSel ? 'rgba(27,120,247,0.12)' : 'var(--c-bg)',
-                          color: isSel ? '#1b78f7' : 'var(--c-muted)',
+                          border: `1px solid ${isSel ? 'var(--color-primary)' : 'var(--color-border)'}`,
+                          background: isSel ? 'var(--color-primary-subtle)' : 'var(--color-bg)',
+                          color: isSel ? 'var(--color-primary)' : 'var(--color-text-secondary)',
                           fontFamily: 'inherit', transition: 'all 0.12s',
                         }}
                       >
                         <div style={{ fontSize: 12, fontWeight: 700 }}>{c.label}</div>
-                        <div style={{ fontSize: 9, marginTop: 3, color: isSel ? 'rgba(27,120,247,0.65)' : 'var(--c-subtle)' }}>{c.desc}</div>
+                        <div style={{ fontSize: 9, marginTop: 3, color: isSel ? 'var(--color-primary-subtle)' : 'var(--color-text-tertiary)' }}>{c.desc}</div>
                       </button>
                     )
                   })}
@@ -1785,7 +1783,7 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                 <div style={wsGroupLabel}>Imagem de capa</div>
                 <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                   {project.cover_url && (
-                    <img src={project.cover_url} alt="" style={{ width: 58, height: 42, borderRadius: 8, objectFit: 'cover', flexShrink: 0, border: '1px solid var(--c-border)' }} />
+                    <img src={project.cover_url} alt="" style={{ width: 58, height: 42, borderRadius: 8, objectFit: 'cover', flexShrink: 0, border: '1px solid var(--color-border)' }} />
                   )}
                   <button
                     onClick={() => {
@@ -1806,13 +1804,13 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                     }}
                     style={{
                       flex: 1, padding: '11px 14px', borderRadius: 9,
-                      background: 'rgba(27,120,247,0.06)', border: '1.5px dashed rgba(27,120,247,0.3)',
-                      color: '#1b78f7', cursor: 'pointer', fontFamily: 'inherit',
+                      background: 'var(--color-primary-subtle)', border: '1.5px dashed var(--color-primary-subtle)',
+                      color: 'var(--color-primary)', cursor: 'pointer', fontFamily: 'inherit',
                       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                       fontSize: 12, fontWeight: 600, transition: 'all 0.15s',
                     }}
-                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(27,120,247,0.12)'; e.currentTarget.style.borderColor = 'rgba(27,120,247,0.5)' }}
-                    onMouseLeave={e => { e.currentTarget.style.background = 'rgba(27,120,247,0.06)'; e.currentTarget.style.borderColor = 'rgba(27,120,247,0.3)' }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'var(--color-primary-subtle)'; e.currentTarget.style.borderColor = 'var(--color-primary-subtle)' }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'var(--color-primary-subtle)'; e.currentTarget.style.borderColor = 'var(--color-primary-subtle)' }}
                   >
                     <Camera size={14} />
                     {project.cover_url ? 'Alterar capa' : 'Carregar capa'}
@@ -1830,7 +1828,7 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                   style={wsInputNew}
                   maxLength={120}
                 />
-                <div style={{ fontSize: 10, color: 'var(--c-subtle)', marginTop: 5 }}>Aparece no fundo da preview pública.</div>
+                <div style={{ fontSize: 10, color: 'var(--color-text-tertiary)', marginTop: 5 }}>Aparece no fundo da preview pública.</div>
               </div>
             </div>
           )}
@@ -1839,8 +1837,8 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
           {previewTab === 'blocos' && (
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
               {/* Block type picker — compact 3-col chip grid */}
-              <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--c-border)' }}>
-                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--c-subtle)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>Adicionar bloco</div>
+              <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--color-border)' }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>Adicionar bloco</div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 5 }}>
                   {BLOCK_TYPES.map(bt => {
                     const BtIcon = bt.Icon
@@ -1858,18 +1856,18 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                           })
                         }}
                         style={{
-                          background: 'var(--c-bg)', border: '1px solid var(--c-border)',
+                          background: 'var(--color-bg)', border: '1px solid var(--color-border)',
                           borderRadius: 8, padding: '7px 6px',
                           cursor: 'pointer', fontFamily: 'inherit', textAlign: 'center',
                           transition: 'all 0.13s', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5,
                         }}
-                        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(27,120,247,0.08)'; e.currentTarget.style.borderColor = 'rgba(27,120,247,0.35)' }}
-                        onMouseLeave={e => { e.currentTarget.style.background = 'var(--c-bg)'; e.currentTarget.style.borderColor = 'var(--c-border)' }}
+                        onMouseEnter={e => { e.currentTarget.style.background = 'var(--color-primary-subtle)'; e.currentTarget.style.borderColor = 'var(--color-primary-subtle)' }}
+                        onMouseLeave={e => { e.currentTarget.style.background = 'var(--color-bg)'; e.currentTarget.style.borderColor = 'var(--color-border)' }}
                       >
-                        <div style={{ width: 26, height: 26, borderRadius: 7, background: 'rgba(27,120,247,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <BtIcon size={12} color="#1b78f7" />
+                        <div style={{ width: 26, height: 26, borderRadius: 7, background: 'var(--color-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <BtIcon size={12} color="var(--color-primary)" />
                         </div>
-                        <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--c-text)', lineHeight: 1.2 }}>{bt.label}</span>
+                        <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--color-text)', lineHeight: 1.2 }}>{bt.label}</span>
                       </button>
                     )
                   })}
@@ -1880,27 +1878,27 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
               <div style={{ flex: 1, overflowY: 'auto', padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 7 }}>
                 {previewBlocks.length === 0 ? (
                   <div style={{ textAlign: 'center', padding: '40px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-                    <div style={{ width: 48, height: 48, borderRadius: 14, background: 'var(--c-bg-alt)', border: '1.5px dashed var(--c-border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <Layout size={20} color="var(--c-subtle)" />
+                    <div style={{ width: 48, height: 48, borderRadius: 14, background: 'var(--color-bg-alt)', border: '1.5px dashed var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Layout size={20} color="var(--color-text-tertiary)" />
                     </div>
                     <div>
-                      <div style={{ fontSize: 13, color: 'var(--c-muted)', fontWeight: 700 }}>Nenhum bloco ainda</div>
-                      <div style={{ fontSize: 11, color: 'var(--c-subtle)', marginTop: 3, lineHeight: 1.5 }}>Adiciona um bloco acima para<br/>personalizar a tua preview.</div>
+                      <div style={{ fontSize: 13, color: 'var(--color-text-secondary)', fontWeight: 700 }}>Nenhum bloco ainda</div>
+                      <div style={{ fontSize: 11, color: 'var(--color-text-tertiary)', marginTop: 3, lineHeight: 1.5 }}>Adiciona um bloco acima para<br/>personalizar a tua preview.</div>
                     </div>
                   </div>
                 ) : previewBlocks.map((block, idx) => {
                   const bt = BLOCK_TYPES.find(b => b.type === block.type) || BLOCK_TYPES[0]
                   const BtIcon = bt.Icon
                   const isDragTarget = dragOverIdx === idx
-                  const accentColor = block.color || '#1b78f7'
+                  const accentColor = block.color || 'var(--color-primary)'
                   const hasText = ['heading','note','quote','callout','metric','stats'].includes(block.type)
                   return (
                     <div key={block.id} draggable
                       onDragStart={() => onDragStart(idx)} onDragEnter={() => onDragEnter(idx)}
                       onDragEnd={onDragEnd} onDragOver={e => e.preventDefault()}
                       style={{
-                        background: isDragTarget ? 'rgba(27,120,247,0.05)' : 'var(--c-bg-alt)',
-                        border: `1px solid ${isDragTarget ? 'rgba(27,120,247,0.4)' : 'var(--c-border)'}`,
+                        background: isDragTarget ? 'var(--color-primary-subtle)' : 'var(--color-bg-alt)',
+                        border: `1px solid ${isDragTarget ? 'var(--color-primary-subtle)' : 'var(--color-border)'}`,
                         borderLeft: `3px solid ${accentColor}`,
                         borderRadius: 9, padding: '9px 10px',
                         cursor: 'grab', transition: 'all 0.1s',
@@ -1909,20 +1907,20 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                     >
                       {/* Block header */}
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-                        <GripVertical size={12} color="var(--c-subtle)" style={{ flexShrink: 0, cursor: 'grab' }} />
+                        <GripVertical size={12} color="var(--color-text-tertiary)" style={{ flexShrink: 0, cursor: 'grab' }} />
                         <div style={{ width: 20, height: 20, borderRadius: 5, background: `${accentColor}1a`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                           <BtIcon size={10} color={accentColor} />
                         </div>
-                        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--c-text)', flex: 1 }}>{bt.label}</span>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-text)', flex: 1 }}>{bt.label}</span>
                         <button onClick={() => {
                             setPreviewBlocks(bs => bs.filter(b => b.id !== block.id))
                             setPreviewStyle(ps => ps.layoutOrder?.length
                               ? { ...ps, layoutOrder: ps.layoutOrder.filter(item => !(item.kind === 'block' && item.id === block.id)) }
                               : ps)
                           }}
-                          style={{ background: 'none', border: 'none', color: 'var(--c-subtle)', cursor: 'pointer', padding: '2px 3px', display: 'flex', alignItems: 'center', borderRadius: 4, transition: 'color 0.12s' }}
-                          onMouseEnter={e => e.currentTarget.style.color = '#ef4444'}
-                          onMouseLeave={e => e.currentTarget.style.color = 'var(--c-subtle)'}
+                          style={{ background: 'none', border: 'none', color: 'var(--color-text-tertiary)', cursor: 'pointer', padding: '2px 3px', display: 'flex', alignItems: 'center', borderRadius: 4, transition: 'color 0.12s' }}
+                          onMouseEnter={e => e.currentTarget.style.color = 'var(--color-error)'}
+                          onMouseLeave={e => e.currentTarget.style.color = 'var(--color-text-tertiary)'}
                         ><X size={12} /></button>
                       </div>
 
@@ -1945,7 +1943,7 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                       {block.type === 'image' && (<>
                         <div style={{ display: 'flex', gap: 5, marginBottom: 5 }}>
                           <input value={block.imageUrl || ''} onChange={e => upd(block.id, 'imageUrl', e.target.value)} placeholder="URL da imagem..." style={{ ...wsInputNew, flex: 1 }} />
-                          <button onClick={() => uploadImage(block.id, 'imageUrl')} style={{ background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.25)', borderRadius: 6, padding: '0 9px', color: colors.blue, cursor: 'pointer', display: 'flex', alignItems: 'center', flexShrink: 0 }}><Camera size={12} /></button>
+                          <button onClick={() => uploadImage(block.id, 'imageUrl')} style={{ background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 6, padding: '0 9px', color: colors.blue, cursor: 'pointer', display: 'flex', alignItems: 'center', flexShrink: 0 }}><Camera size={12} /></button>
                         </div>
                         <input value={block.content || ''} onChange={e => upd(block.id, 'content', e.target.value)} placeholder="Legenda (opcional)" style={wsInputNew} />
                       </>)}
@@ -1953,7 +1951,7 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                         {['imageUrl','imageUrl2','imageUrl3'].map((field, gi) => (
                           <div key={field} style={{ display: 'flex', gap: 5, marginBottom: gi < 2 ? 5 : 0 }}>
                             <input value={block[field] || ''} onChange={e => upd(block.id, field, e.target.value)} placeholder={`Imagem ${gi+1}`} style={{ ...wsInputNew, flex: 1 }} />
-                            <button onClick={() => uploadImage(block.id, field)} style={{ background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.25)', borderRadius: 6, padding: '0 9px', color: colors.blue, cursor: 'pointer', display: 'flex', alignItems: 'center', flexShrink: 0 }}><Camera size={12} /></button>
+                            <button onClick={() => uploadImage(block.id, field)} style={{ background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 6, padding: '0 9px', color: colors.blue, cursor: 'pointer', display: 'flex', alignItems: 'center', flexShrink: 0 }}><Camera size={12} /></button>
                           </div>
                         ))}
                       </>)}
@@ -2002,7 +2000,7 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                           {(block.cardRows || []).length < 6 && (
                             <button
                               onClick={() => upd(block.id, 'cardRows', [...(block.cardRows || []), { label: '', value: '' }])}
-                              style={{ alignSelf: 'flex-start', fontSize: 11, fontWeight: 600, color: '#1b78f7', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 0', fontFamily: 'inherit' }}
+                              style={{ alignSelf: 'flex-start', fontSize: 11, fontWeight: 600, color: 'var(--color-primary)', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 0', fontFamily: 'inherit' }}
                             >+ Adicionar linha</button>
                           )}
                         </div>
@@ -2013,9 +2011,9 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                             <button key={s} onClick={() => upd(block.id, 'dividerStyle', s)}
                               style={{
                                 flex: 1, padding: '5px 0', borderRadius: 6, cursor: 'pointer',
-                                border: `1px solid ${(block.dividerStyle || 'solid') === s ? '#1b78f7' : 'var(--c-border)'}`,
-                                background: (block.dividerStyle || 'solid') === s ? 'rgba(27,120,247,0.12)' : 'var(--c-bg)',
-                                color: (block.dividerStyle || 'solid') === s ? '#1b78f7' : 'var(--c-muted)',
+                                border: `1px solid ${(block.dividerStyle || 'solid') === s ? 'var(--color-primary)' : 'var(--color-border)'}`,
+                                background: (block.dividerStyle || 'solid') === s ? 'var(--color-primary-subtle)' : 'var(--color-bg)',
+                                color: (block.dividerStyle || 'solid') === s ? 'var(--color-primary)' : 'var(--color-text-secondary)',
                                 fontSize: 9, fontWeight: 700, fontFamily: 'inherit',
                               }}
                             >{s.charAt(0).toUpperCase() + s.slice(1)}</button>
@@ -2031,7 +2029,7 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                               onClick={() => upd(block.id, 'color', block.color === c.value ? '' : c.value)}
                               style={{
                                 width: 16, height: 16, borderRadius: '50%', background: c.value,
-                                border: block.color === c.value ? '2px solid var(--c-text)' : '1.5px solid transparent',
+                                border: block.color === c.value ? '2px solid var(--color-text)' : '1.5px solid transparent',
                                 cursor: 'pointer', padding: 0, flexShrink: 0,
                                 boxShadow: block.color === c.value ? `0 0 0 1px ${c.value}` : 'none',
                                 transition: 'transform 0.1s',
@@ -2047,9 +2045,9 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                               <button key={a.val} onClick={() => upd(block.id, 'align', a.val)}
                                 style={{
                                   width: 24, height: 22, borderRadius: 5,
-                                  background: (block.align || 'left') === a.val ? '#1b78f7' : 'transparent',
-                                  border: `1px solid ${(block.align || 'left') === a.val ? '#1b78f7' : 'var(--c-border)'}`,
-                                  cursor: 'pointer', color: (block.align || 'left') === a.val ? '#fff' : 'var(--c-muted)',
+                                  background: (block.align || 'left') === a.val ? 'var(--color-primary)' : 'transparent',
+                                  border: `1px solid ${(block.align || 'left') === a.val ? 'var(--color-primary)' : 'var(--color-border)'}`,
+                                  cursor: 'pointer', color: (block.align || 'left') === a.val ? '#fff' : 'var(--color-text-secondary)',
                                   display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
                                 }}
                               ><a.Icon size={11} /></button>
@@ -2063,9 +2061,9 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                           <button key={w.val} onClick={() => upd(block.id, 'width', w.val)}
                             style={{
                               flex: 1, padding: '4px 0', borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit',
-                              background: (block.width || 'full') === w.val ? 'rgba(27,120,247,0.12)' : 'var(--c-bg)',
-                              border: `1px solid ${(block.width || 'full') === w.val ? '#1b78f7' : 'var(--c-border)'}`,
-                              color: (block.width || 'full') === w.val ? '#1b78f7' : 'var(--c-muted)',
+                              background: (block.width || 'full') === w.val ? 'var(--color-primary-subtle)' : 'var(--color-bg)',
+                              border: `1px solid ${(block.width || 'full') === w.val ? 'var(--color-primary)' : 'var(--color-border)'}`,
+                              color: (block.width || 'full') === w.val ? 'var(--color-primary)' : 'var(--color-text-secondary)',
                               fontSize: 10, fontWeight: 600,
                             }}
                           >{w.label}</button>
@@ -2108,8 +2106,8 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
 
             return (
               <div style={{ flex: 1, overflowY: 'auto', padding: '12px 14px' }}>
-                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--c-subtle)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>Ordem da página</div>
-                <p style={{ margin: '0 0 12px', fontSize: 11, color: 'var(--c-muted)', lineHeight: 1.5 }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>Ordem da página</div>
+                <p style={{ margin: '0 0 12px', fontSize: 11, color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
                   Arrasta para reordenar. Podes intercalar blocos com secções livremente. Toca em <Eye size={10} style={{ verticalAlign: 'middle' }} /> para ocultar uma secção.
                 </p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -2130,21 +2128,21 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                           onDragEnd={() => setDragOverSectionIdx(null)}
                           style={{
                             display: 'flex', alignItems: 'center', gap: 8,
-                            background: isOver ? 'rgba(27,120,247,0.08)' : 'var(--c-bg-alt)',
-                            border: `1px solid ${isOver ? '#1b78f7' : 'rgba(27,120,247,0.15)'}`,
-                            borderLeft: '3px solid #1b78f7',
+                            background: isOver ? 'var(--color-primary-subtle)' : 'var(--color-bg-alt)',
+                            border: `1px solid ${isOver ? 'var(--color-primary)' : 'var(--color-primary-subtle)'}`,
+                            borderLeft: '3px solid var(--color-primary)',
                             borderRadius: 10, padding: '8px 10px',
                             userSelect: 'none', cursor: 'grab',
                           }}
                         >
-                          <div style={{ cursor: 'grab', color: 'var(--c-subtle)', display: 'flex', flexShrink: 0 }}><GripVertical size={14} /></div>
-                          <div style={{ width: 26, height: 26, borderRadius: 7, flexShrink: 0, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1b78f7' }}>
+                          <div style={{ cursor: 'grab', color: 'var(--color-text-tertiary)', display: 'flex', flexShrink: 0 }}><GripVertical size={14} /></div>
+                          <div style={{ width: 26, height: 26, borderRadius: 7, flexShrink: 0, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-primary)' }}>
                             <BIcon size={12} strokeWidth={2} />
                           </div>
-                          <span style={{ fontSize: 12, fontWeight: 600, flex: 1, color: 'var(--c-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          <span style={{ fontSize: 12, fontWeight: 600, flex: 1, color: 'var(--color-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {bt.label}{previewText ? ` · ${previewText}` : ''}
                           </span>
-                          {block.width === 'half' && <span style={{ fontSize: 9, color: '#1b78f7', fontWeight: 700, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.25)', borderRadius: 4, padding: '1px 5px', flexShrink: 0 }}>metade</span>}
+                          {block.width === 'half' && <span style={{ fontSize: 9, color: 'var(--color-primary)', fontWeight: 700, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 4, padding: '1px 5px', flexShrink: 0 }}>metade</span>}
                         </div>
                       )
                     }
@@ -2167,24 +2165,24 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                         onDragEnd={() => setDragOverSectionIdx(null)}
                         style={{
                           display: 'flex', alignItems: 'center', gap: 8,
-                          background: isOver ? 'rgba(27,120,247,0.08)' : isHidden ? 'var(--c-bg)' : hasContent ? 'var(--c-bg-alt)' : 'var(--c-bg)',
-                          border: `1px solid ${isOver ? '#1b78f7' : isHidden ? 'var(--c-border)' : hasContent ? 'rgba(27,120,247,0.15)' : 'var(--c-border)'}`,
-                          borderLeft: `3px solid ${hasContent && !isHidden ? '#1b78f7' : 'var(--c-border)'}`,
+                          background: isOver ? 'var(--color-primary-subtle)' : isHidden ? 'var(--color-bg)' : hasContent ? 'var(--color-bg-alt)' : 'var(--color-bg)',
+                          border: `1px solid ${isOver ? 'var(--color-primary)' : isHidden ? 'var(--color-border)' : hasContent ? 'var(--color-primary-subtle)' : 'var(--color-border)'}`,
+                          borderLeft: `3px solid ${hasContent && !isHidden ? 'var(--color-primary)' : 'var(--color-border)'}`,
                           borderRadius: 10, padding: '8px 10px',
                           opacity: hasContent ? 1 : 0.45, transition: 'all 0.12s',
                           userSelect: 'none', cursor: hasContent ? 'grab' : 'default',
                         }}
                       >
-                        <div style={{ cursor: 'grab', color: 'var(--c-subtle)', display: 'flex', flexShrink: 0 }}>
+                        <div style={{ cursor: 'grab', color: 'var(--color-text-tertiary)', display: 'flex', flexShrink: 0 }}>
                           <GripVertical size={14} />
                         </div>
-                        <div style={{ width: 26, height: 26, borderRadius: 7, flexShrink: 0, background: isHidden ? 'var(--c-bg-alt)' : 'rgba(27,120,247,0.1)', border: `1px solid ${isHidden ? 'var(--c-border)' : 'rgba(27,120,247,0.2)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: isHidden ? 'var(--c-subtle)' : '#1b78f7' }}>
+                        <div style={{ width: 26, height: 26, borderRadius: 7, flexShrink: 0, background: isHidden ? 'var(--color-bg-alt)' : 'var(--color-primary-subtle)', border: `1px solid ${isHidden ? 'var(--color-border)' : 'var(--color-primary-subtle)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: isHidden ? 'var(--color-text-tertiary)' : 'var(--color-primary)' }}>
                           <SIcon size={12} strokeWidth={2} />
                           </div>
-                        <span style={{ fontSize: 12, fontWeight: 600, flex: 1, color: isHidden ? 'var(--c-subtle)' : 'var(--c-text)', textDecoration: isHidden ? 'line-through' : 'none' }}>
+                        <span style={{ fontSize: 12, fontWeight: 600, flex: 1, color: isHidden ? 'var(--color-text-tertiary)' : 'var(--color-text)', textDecoration: isHidden ? 'line-through' : 'none' }}>
                           {s.label}
                         </span>
-                        {!hasContent && <span style={{ fontSize: 9, color: 'var(--c-subtle)', fontWeight: 600, background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)', borderRadius: 4, padding: '1px 5px' }}>vazio</span>}
+                        {!hasContent && <span style={{ fontSize: 9, color: 'var(--color-text-tertiary)', fontWeight: 600, background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)', borderRadius: 4, padding: '1px 5px' }}>vazio</span>}
                         <button
                           onClick={() => {
                             const newHidden = new Set(hidden)
@@ -2192,8 +2190,8 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                             setPreviewStyle(ps => ({ ...ps, hiddenSections: [...newHidden] }))
                           }}
                           title={isHidden ? 'Mostrar' : 'Ocultar'}
-                          style={{ background: 'none', border: 'none', padding: '3px 4px', cursor: 'pointer', display: 'flex', color: isHidden ? 'var(--c-subtle)' : '#1b78f7', flexShrink: 0, borderRadius: 6, transition: 'background 0.12s' }}
-                          onMouseEnter={e => e.currentTarget.style.background = 'rgba(27,120,247,0.1)'}
+                          style={{ background: 'none', border: 'none', padding: '3px 4px', cursor: 'pointer', display: 'flex', color: isHidden ? 'var(--color-text-tertiary)' : 'var(--color-primary)', flexShrink: 0, borderRadius: 6, transition: 'background 0.12s' }}
+                          onMouseEnter={e => e.currentTarget.style.background = 'var(--color-primary-subtle)'}
                           onMouseLeave={e => e.currentTarget.style.background = 'none'}
                         >
                           {isHidden ? <EyeOff size={14} /> : <Eye size={14} />}
@@ -2202,18 +2200,18 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                           <button
                             onClick={() => setMediaEditKey(k => k === key ? null : key)}
                             title="Imagem/vídeo ao lado"
-                            style={{ background: media ? 'rgba(27,120,247,0.12)' : 'none', border: 'none', padding: '3px 4px', cursor: 'pointer', display: 'flex', color: media ? '#1b78f7' : 'var(--c-subtle)', flexShrink: 0, borderRadius: 6, transition: 'background 0.12s' }}
+                            style={{ background: media ? 'var(--color-primary-subtle)' : 'none', border: 'none', padding: '3px 4px', cursor: 'pointer', display: 'flex', color: media ? 'var(--color-primary)' : 'var(--color-text-tertiary)', flexShrink: 0, borderRadius: 6, transition: 'background 0.12s' }}
                           >
                             <Image size={14} />
                           </button>
                         )}
                       </div>
                       {mediaEditKey === key && (
-                        <div style={{ marginTop: 4, marginLeft: 22, padding: '10px 12px', background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: 8, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        <div style={{ marginTop: 4, marginLeft: 22, padding: '10px 12px', background: 'var(--color-bg)', border: '1px solid var(--color-border)', borderRadius: 8, display: 'flex', flexDirection: 'column', gap: 8 }}>
                           <div style={{ display: 'flex', gap: 6 }}>
                             <button
                               onClick={() => uploadSectionMedia(key)}
-                              style={{ flex: 1, padding: '6px 8px', fontSize: 11, fontWeight: 600, background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)', borderRadius: 6, color: 'var(--c-text)', cursor: 'pointer', fontFamily: 'inherit' }}
+                              style={{ flex: 1, padding: '6px 8px', fontSize: 11, fontWeight: 600, background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)', borderRadius: 6, color: 'var(--color-text)', cursor: 'pointer', fontFamily: 'inherit' }}
                             >Carregar imagem</button>
                             {media && (
                               <button
@@ -2222,7 +2220,7 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                                   delete next[key]
                                   return { ...ps, sectionMedia: next }
                                 })}
-                                style={{ padding: '6px 10px', fontSize: 11, fontWeight: 600, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 6, color: '#ef4444', cursor: 'pointer', fontFamily: 'inherit' }}
+                                style={{ padding: '6px 10px', fontSize: 11, fontWeight: 600, background: 'var(--color-error-subtle)', border: '1px solid var(--color-error-subtle)', borderRadius: 6, color: 'var(--color-error)', cursor: 'pointer', fontFamily: 'inherit' }}
                               >Remover</button>
                             )}
                           </div>
@@ -2237,11 +2235,11 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                                 sectionMedia: { ...(ps.sectionMedia || {}), [key]: { ...(ps.sectionMedia?.[key] || {}), type: 'video', url } },
                               }))
                             }}
-                            style={{ width: '100%', padding: '6px 8px', fontSize: 11, background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)', borderRadius: 6, color: 'var(--c-text)', fontFamily: 'inherit', boxSizing: 'border-box' }}
+                            style={{ width: '100%', padding: '6px 8px', fontSize: 11, background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)', borderRadius: 6, color: 'var(--color-text)', fontFamily: 'inherit', boxSizing: 'border-box' }}
                           />
                           {media && (
                             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                              <span style={{ fontSize: 10, color: 'var(--c-subtle)', fontWeight: 600 }}>Lado:</span>
+                              <span style={{ fontSize: 10, color: 'var(--color-text-tertiary)', fontWeight: 600 }}>Lado:</span>
                               {['right', 'left'].map(side => (
                                 <button
                                   key={side}
@@ -2251,9 +2249,9 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                                   }))}
                                   style={{
                                     padding: '4px 10px', fontSize: 11, fontWeight: 600, borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit',
-                                    background: (media.side || 'right') === side ? 'rgba(27,120,247,0.15)' : 'var(--c-bg-alt)',
-                                    border: `1px solid ${(media.side || 'right') === side ? '#1b78f7' : 'var(--c-border)'}`,
-                                    color: (media.side || 'right') === side ? '#1b78f7' : 'var(--c-muted)',
+                                    background: (media.side || 'right') === side ? 'var(--color-primary-subtle)' : 'var(--color-bg-alt)',
+                                    border: `1px solid ${(media.side || 'right') === side ? 'var(--color-primary)' : 'var(--color-border)'}`,
+                                    color: (media.side || 'right') === side ? 'var(--color-primary)' : 'var(--color-text-secondary)',
                                   }}
                                 >{side === 'right' ? 'Direita' : 'Esquerda'}</button>
                               ))}
@@ -2265,7 +2263,7 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                     )
                   })}
                 </div>
-                <p style={{ margin: '12px 0 0', fontSize: 10, color: 'var(--c-subtle)', lineHeight: 1.5 }}>
+                <p style={{ margin: '12px 0 0', fontSize: 10, color: 'var(--color-text-tertiary)', lineHeight: 1.5 }}>
                   A ordem é guardada ao clicar em "Guardar alterações".
                 </p>
               </div>
@@ -2282,29 +2280,29 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
         {/* Custom blocks — workspace blocks shown first */}
         {(() => {
         function renderOneBlock(block) {
-          const accent = block.color || '#1b78f7'
+          const accent = block.color || 'var(--color-primary)'
           const align  = block.align  || 'left'
 
           if (block.type === 'heading' && block.content) return (
             <div key={block.id} style={{ textAlign: align }}>
-              <h2 style={{ margin: 0, fontSize: 'clamp(22px,3.5vw,32px)', fontWeight: 400, fontFamily: 'var(--font-heading)', color: block.color || 'var(--c-text)', letterSpacing: '-0.02em', lineHeight: 1.15 }}>
+              <h2 style={{ margin: 0, fontSize: 'clamp(22px,3.5vw,32px)', fontWeight: 400, fontFamily: 'var(--font-heading)', color: block.color || 'var(--color-text)', letterSpacing: '-0.02em', lineHeight: 1.15 }}>
                 {block.content}
               </h2>
             </div>
           )
 
           if (block.type === 'note' && block.content) return (
-            <div key={block.id} style={{ background: 'var(--c-card)', border: `1px solid ${accent}33`, borderLeft: `4px solid ${accent}`, borderRadius: '0 12px 12px 0', padding: '22px 26px', textAlign: align }}>
+            <div key={block.id} style={{ background: 'var(--color-surface)', border: `1px solid ${accent}33`, borderLeft: `4px solid ${accent}`, borderRadius: '0 12px 12px 0', padding: '22px 26px', textAlign: align }}>
               <div style={{ fontSize: 10, fontWeight: 700, color: accent, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6, justifyContent: align === 'right' ? 'flex-end' : align === 'center' ? 'center' : 'flex-start' }}>
                 <AlignLeft size={11} /> Nota do criador
               </div>
-              <p style={{ margin: 0, fontSize: 16, color: 'var(--c-text)', lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>{block.content}</p>
+              <p style={{ margin: 0, fontSize: 16, color: 'var(--color-text)', lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>{block.content}</p>
             </div>
           )
 
           if (block.type === 'quote' && block.content) return (
             <div key={block.id} style={{ borderLeft: `4px solid ${accent}`, padding: '20px 28px', background: `${accent}08`, borderRadius: '0 10px 10px 0', textAlign: align }}>
-              <p style={{ margin: 0, fontSize: 'clamp(16px,2.2vw,22px)', color: 'var(--c-text)', fontStyle: 'italic', lineHeight: 1.7, fontWeight: 500 }}>
+              <p style={{ margin: 0, fontSize: 'clamp(16px,2.2vw,22px)', color: 'var(--color-text)', fontStyle: 'italic', lineHeight: 1.7, fontWeight: 500 }}>
                 "{block.content}"
               </p>
             </div>
@@ -2317,7 +2315,7 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
               </div>
               <div style={{ flex: 1, textAlign: align }}>
                 {block.label && <div style={{ fontSize: 12, fontWeight: 800, color: accent, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{block.label}</div>}
-                <p style={{ margin: 0, fontSize: 15, color: 'var(--c-text)', lineHeight: 1.7 }}>{block.content}</p>
+                <p style={{ margin: 0, fontSize: 15, color: 'var(--color-text)', lineHeight: 1.7 }}>{block.content}</p>
               </div>
             </div>
           )
@@ -2337,16 +2335,16 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
           )
 
           if (block.type === 'metric' && block.label) return (
-            <div key={block.id} style={{ background: 'var(--c-card)', border: `1px solid ${accent}33`, borderRadius: 12, padding: '24px 28px', textAlign: align }}>
+            <div key={block.id} style={{ background: 'var(--color-surface)', border: `1px solid ${accent}33`, borderRadius: 12, padding: '24px 28px', textAlign: align }}>
               <div style={{ fontSize: 'clamp(36px,5vw,56px)', fontWeight: 900, color: accent, letterSpacing: '-2px', lineHeight: 1, marginBottom: 8 }}>{block.label}</div>
-              {block.content && <div style={{ fontSize: 15, color: 'var(--c-muted)', fontWeight: 500 }}>{block.content}</div>}
+              {block.content && <div style={{ fontSize: 15, color: 'var(--color-text-secondary)', fontWeight: 500 }}>{block.content}</div>}
             </div>
           )
 
           if (block.type === 'image' && block.imageUrl) return (
             <div key={block.id} style={{ borderRadius: 12, overflow: 'hidden' }}>
               <img src={block.imageUrl} alt={block.content || ''} style={{ width: '100%', maxHeight: 480, objectFit: 'cover', display: 'block' }} onError={e => { e.target.style.display = 'none' }} />
-              {block.content && <div style={{ padding: '10px 16px', background: 'var(--c-card)', fontSize: 13, color: 'var(--c-muted)', fontStyle: 'italic', textAlign: align }}>{block.content}</div>}
+              {block.content && <div style={{ padding: '10px 16px', background: 'var(--color-surface)', fontSize: 13, color: 'var(--color-text-secondary)', fontStyle: 'italic', textAlign: align }}>{block.content}</div>}
             </div>
           )
 
@@ -2390,12 +2388,12 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
               <div key={block.id} style={{ display: 'grid', gridTemplateColumns: `repeat(${stats.length}, 1fr)`, gap: 12 }}>
                 {stats.map((s, si) => (
                   <div key={si} style={{
-                    background: 'var(--c-card)', border: `1px solid ${accent}33`,
+                    background: 'var(--color-surface)', border: `1px solid ${accent}33`,
                     borderRadius: 12, padding: '24px 20px', textAlign: 'center',
                     borderTop: `3px solid ${accent}`,
                   }}>
                     <div style={{ fontSize: 'clamp(28px,4.5vw,44px)', fontWeight: 900, color: accent, letterSpacing: '-1.5px', lineHeight: 1, marginBottom: 8 }}>{s.value}</div>
-                    {s.label && <div style={{ fontSize: 13, color: 'var(--c-muted)', fontWeight: 500, lineHeight: 1.4 }}>{s.label}</div>}
+                    {s.label && <div style={{ fontSize: 13, color: 'var(--color-text-secondary)', fontWeight: 500, lineHeight: 1.4 }}>{s.label}</div>}
                   </div>
                 ))}
               </div>
@@ -2428,16 +2426,16 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
             const rows = (block.cardRows || []).filter(r => r.label || r.value)
             if (!block.cardTitle && rows.length === 0) return null
             return (
-              <div key={block.id} style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderLeft: `4px solid ${accent}`, borderRadius: '0 12px 12px 0', padding: '22px 26px' }}>
+              <div key={block.id} style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderLeft: `4px solid ${accent}`, borderRadius: '0 12px 12px 0', padding: '22px 26px' }}>
                 {block.cardTitle && (
-                  <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--c-text)', marginBottom: rows.length ? 14 : 0 }}>{block.cardTitle}</div>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--color-text)', marginBottom: rows.length ? 14 : 0 }}>{block.cardTitle}</div>
                 )}
                 {rows.length > 0 && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                     {rows.map((r, i) => (
                       <div key={i} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, fontSize: 14 }}>
-                        <span style={{ color: 'var(--c-muted)' }}>{r.label}</span>
-                        <span style={{ color: 'var(--c-text)', fontWeight: 600, textAlign: 'right' }}>{r.value}</span>
+                        <span style={{ color: 'var(--color-text-secondary)' }}>{r.label}</span>
+                        <span style={{ color: 'var(--color-text)', fontWeight: 600, textAlign: 'right' }}>{r.value}</span>
                       </div>
                     ))}
                   </div>
@@ -2462,38 +2460,38 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
         function renderOneSection(key) {
           if (key === 'problem')
             return !project.problem ? null : withSectionMedia(key,
-              <div className="pv-section-card" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderLeft: `4px solid ${hero.c1}`, borderRadius: '0 12px 12px 0', padding: '28px 32px' }}>
-                <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--c-muted)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div className="pv-section-card" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderLeft: `4px solid ${hero.c1}`, borderRadius: '0 12px 12px 0', padding: '28px 32px' }}>
+                <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
                   <Target size={13} /> O problema que resolve
                 </div>
-                <p style={{ margin: 0, fontSize: 'clamp(15px,2vw,18px)', color: 'var(--c-text)', lineHeight: 1.8, fontWeight: 400, overflowWrap: 'break-word' }}>{project.problem}</p>
+                <p style={{ margin: 0, fontSize: 'clamp(15px,2vw,18px)', color: 'var(--color-text)', lineHeight: 1.8, fontWeight: 400, overflowWrap: 'break-word' }}>{project.problem}</p>
               </div>
             )
 
           if (key === 'solution')
             return !project.solution ? null : withSectionMedia(key,
-              <div className="pv-section-card" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 12, padding: '28px 32px' }}>
+              <div className="pv-section-card" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 12, padding: '28px 32px' }}>
                 <div style={{ fontSize: 11, fontWeight: 800, color: colors.blue, textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
                   <Zap size={13} /> A solução
                 </div>
-                <p style={{ margin: 0, fontSize: 'clamp(15px,2vw,18px)', color: 'var(--c-text)', lineHeight: 1.8, fontWeight: 400, overflowWrap: 'break-word' }}>{project.solution}</p>
+                <p style={{ margin: 0, fontSize: 'clamp(15px,2vw,18px)', color: 'var(--color-text)', lineHeight: 1.8, fontWeight: 400, overflowWrap: 'break-word' }}>{project.solution}</p>
               </div>
             )
 
           if (key === 'target_audience')
             return !project.target_audience ? null : withSectionMedia(key,
-              <div className="pv-section-card" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 12, padding: '28px 32px' }}>
-                <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--c-muted)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div className="pv-section-card" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 12, padding: '28px 32px' }}>
+                <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
                   <Users size={13} /> Público-alvo
                 </div>
-                <p style={{ margin: 0, fontSize: 'clamp(15px,2vw,18px)', color: 'var(--c-text)', lineHeight: 1.8, fontWeight: 400, overflowWrap: 'break-word' }}>{project.target_audience}</p>
+                <p style={{ margin: 0, fontSize: 'clamp(15px,2vw,18px)', color: 'var(--color-text)', lineHeight: 1.8, fontWeight: 400, overflowWrap: 'break-word' }}>{project.target_audience}</p>
               </div>
             )
 
           if (key === 'features')
             return features.length === 0 ? null : withSectionMedia(key,
-              <div className="pv-section-card" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 12, padding: '28px 32px' }}>
-                <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--c-muted)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div className="pv-section-card" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 12, padding: '28px 32px' }}>
+                <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
                   <Wrench size={13} /> O que faz
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -2502,7 +2500,7 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                       <div style={{ width: 22, height: 22, borderRadius: 6, flexShrink: 0, marginTop: 1, background: `${hero.c1}22`, border: `1px solid ${hero.c1}44`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <CheckCircle size={12} color={`${hero.c1}cc`} />
                       </div>
-                      <span style={{ fontSize: 15, color: 'var(--c-text)', lineHeight: 1.6, overflowWrap: 'break-word' }}>{f}</span>
+                      <span style={{ fontSize: 15, color: 'var(--color-text)', lineHeight: 1.6, overflowWrap: 'break-word' }}>{f}</span>
                     </div>
                   ))}
                 </div>
@@ -2511,13 +2509,13 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
 
           if (key === 'technologies')
             return tech.length === 0 ? null : withSectionMedia(key,
-              <div className="pv-section-card" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 12, padding: '28px 32px' }}>
-                <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--c-muted)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 18, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div className="pv-section-card" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 12, padding: '28px 32px' }}>
+                <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 18, display: 'flex', alignItems: 'center', gap: 8 }}>
                   <Zap size={13} /> Tecnologias
                 </div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, fontSize: 14, color: 'var(--c-text)', fontWeight: 500 }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, fontSize: 14, color: 'var(--color-text)', fontWeight: 500 }}>
                   {tech.map((t, i) => (
-                    <span key={i}>{t}{i < tech.length - 1 ? <span style={{ color: 'var(--c-subtle)', margin: '0 8px' }}>·</span> : null}</span>
+                    <span key={i}>{t}{i < tech.length - 1 ? <span style={{ color: 'var(--color-text-tertiary)', margin: '0 8px' }}>·</span> : null}</span>
                   ))}
                 </div>
               </div>
@@ -2525,43 +2523,43 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
 
           if (key === 'challenges')
             return !project.challenges ? null : withSectionMedia(key,
-              <div className="pv-section-card" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderLeft: '4px solid #f97316', borderRadius: '0 12px 12px 0', padding: '28px 32px' }}>
-                <div style={{ fontSize: 11, fontWeight: 800, color: '#f97316', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div className="pv-section-card" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderLeft: '4px solid var(--color-warning)', borderRadius: '0 12px 12px 0', padding: '28px 32px' }}>
+                <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--color-warning)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
                   <Zap size={13} /> Desafios
                 </div>
-                <p style={{ margin: 0, fontSize: 'clamp(15px,2vw,18px)', color: 'var(--c-text)', lineHeight: 1.8, fontWeight: 400, overflowWrap: 'break-word' }}>{project.challenges}</p>
+                <p style={{ margin: 0, fontSize: 'clamp(15px,2vw,18px)', color: 'var(--color-text)', lineHeight: 1.8, fontWeight: 400, overflowWrap: 'break-word' }}>{project.challenges}</p>
               </div>
             )
 
           if (key === 'results')
             return !project.results ? null : withSectionMedia(key,
-              <div className="pv-section-card" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 12, padding: '28px 32px' }}>
-                <div style={{ fontSize: 11, fontWeight: 800, color: '#22c55e', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div className="pv-section-card" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 12, padding: '28px 32px' }}>
+                <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--color-success)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
                   <BarChart2 size={13} /> Resultados
                 </div>
-                <p style={{ margin: 0, fontSize: 'clamp(15px,2vw,18px)', color: 'var(--c-text)', lineHeight: 1.8, overflowWrap: 'break-word' }}>{project.results}</p>
+                <p style={{ margin: 0, fontSize: 'clamp(15px,2vw,18px)', color: 'var(--color-text)', lineHeight: 1.8, overflowWrap: 'break-word' }}>{project.results}</p>
               </div>
             )
 
           if (key === 'learnings')
             return !project.learnings ? null : withSectionMedia(key,
-              <div className="pv-section-card" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 12, padding: '28px 32px' }}>
-                <div style={{ fontSize: 11, fontWeight: 800, color: '#8b5cf6', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div className="pv-section-card" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 12, padding: '28px 32px' }}>
+                <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--color-accent)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
                   <BookOpen size={13} /> Aprendizagens
                 </div>
-                <p style={{ margin: 0, fontSize: 'clamp(15px,2vw,18px)', color: 'var(--c-text)', lineHeight: 1.8, overflowWrap: 'break-word' }}>{project.learnings}</p>
+                <p style={{ margin: 0, fontSize: 'clamp(15px,2vw,18px)', color: 'var(--color-text)', lineHeight: 1.8, overflowWrap: 'break-word' }}>{project.learnings}</p>
               </div>
             )
 
           if (key === 'pap_supervisor')
             return !project.pap_supervisor ? null : withSectionMedia(key,
-              <div className="pv-section-card" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 12, padding: '24px 32px', display: 'flex', alignItems: 'center', gap: 16 }}>
-                <div style={{ width: 40, height: 40, borderRadius: 10, flexShrink: 0, background: 'rgba(27,120,247,0.12)', border: '1px solid rgba(27,120,247,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <GraduationCap size={18} color="#1b78f7" />
+              <div className="pv-section-card" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 12, padding: '24px 32px', display: 'flex', alignItems: 'center', gap: 16 }}>
+                <div style={{ width: 40, height: 40, borderRadius: 10, flexShrink: 0, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <GraduationCap size={18} color="var(--color-primary)" />
                 </div>
                 <div>
-                  <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--c-muted)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 3 }}>Orientador</div>
-                  <p style={{ margin: 0, fontSize: 16, color: 'var(--c-text)', fontWeight: 600 }}>{project.pap_supervisor}</p>
+                  <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 3 }}>Orientador</div>
+                  <p style={{ margin: 0, fontSize: 16, color: 'var(--color-text)', fontWeight: 600 }}>{project.pap_supervisor}</p>
                 </div>
               </div>
             )
@@ -2608,7 +2606,7 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
             key="canvas" ref={canvasRef}
             style={{
               position: 'relative', width: '100%', minHeight: 420,
-              background: 'var(--c-bg-alt)', border: '1.5px dashed var(--c-border)', borderRadius: 14,
+              background: 'var(--color-bg-alt)', border: '1.5px dashed var(--color-border)', borderRadius: 14,
               overflow: isOwner && previewEditing ? 'visible' : 'hidden',
             }}
           >
@@ -2646,7 +2644,7 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
         {/* Creator card */}
         {(displayName || course || school) && (
           <div style={{
-            background: 'var(--c-card)', border: '1px solid var(--c-border)',
+            background: 'var(--color-surface)', border: '1px solid var(--color-border)',
             borderRadius: 12, padding: '28px 32px',
             display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap',
           }}>
@@ -2661,21 +2659,21 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
               }}>{displayName[0]?.toUpperCase()}</div>
             )}
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--c-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>
                 A história de {project.name}
               </div>
-              {displayName && <div style={{ fontSize: 18, fontWeight: 400, fontFamily: 'var(--font-heading)', letterSpacing: '-0.01em', color: 'var(--c-text)', marginBottom: 4 }}>{displayName}</div>}
-              {course && <div style={{ fontSize: 14, color: 'var(--c-muted)' }}>{course}{school ? ` · ${school}` : ''}</div>}
+              {displayName && <div style={{ fontSize: 18, fontWeight: 400, fontFamily: 'var(--font-heading)', letterSpacing: '-0.01em', color: 'var(--color-text)', marginBottom: 4 }}>{displayName}</div>}
+              {course && <div style={{ fontSize: 14, color: 'var(--color-text-secondary)' }}>{course}{school ? ` · ${school}` : ''}</div>}
             </div>
             {ownerProfile?.username && (
               <button
                 onClick={() => navigate(`/u/${ownerProfile.username}`)}
                 style={{
-                  background: '#1b78f7',
+                  background: 'var(--color-primary)',
                   border: 'none', borderRadius: 8, padding: '10px 22px',
                   color: '#fff', fontSize: 13, fontWeight: 700,
                   cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0,
-                  boxShadow: '0 2px 8px rgba(27,120,247,0.2)',
+                  boxShadow: '0 2px 8px var(--color-primary-subtle)',
                 }}
               >
                 Ver perfil
@@ -2697,17 +2695,17 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                   onClick={onLike}
                   style={{
                     display: 'flex', alignItems: 'center', gap: 7,
-                    background: liked ? 'rgba(239,68,68,0.1)' : 'var(--c-card)',
-                    border: `1.5px solid ${liked ? 'rgba(239,68,68,0.35)' : 'var(--c-border)'}`,
+                    background: liked ? 'var(--color-error-subtle)' : 'var(--color-surface)',
+                    border: `1.5px solid ${liked ? 'var(--color-error-subtle)' : 'var(--color-border)'}`,
                     borderRadius: 10, padding: '8px 16px',
-                    color: liked ? '#ef4444' : 'var(--c-muted)',
+                    color: liked ? 'var(--color-error)' : 'var(--color-text-secondary)',
                     fontSize: 14, fontWeight: 700, cursor: likeLoading ? 'default' : 'pointer',
                     fontFamily: 'inherit', transition: 'all 0.15s',
                   }}
-                  onMouseEnter={e => { if (!liked) { e.currentTarget.style.borderColor = 'rgba(239,68,68,0.3)'; e.currentTarget.style.color = '#ef4444' }}}
-                  onMouseLeave={e => { if (!liked) { e.currentTarget.style.borderColor = 'var(--c-border)'; e.currentTarget.style.color = 'var(--c-muted)' }}}
+                  onMouseEnter={e => { if (!liked) { e.currentTarget.style.borderColor = 'var(--color-error-subtle)'; e.currentTarget.style.color = 'var(--color-error)' }}}
+                  onMouseLeave={e => { if (!liked) { e.currentTarget.style.borderColor = 'var(--color-border)'; e.currentTarget.style.color = 'var(--color-text-secondary)' }}}
                 >
-                  <Heart size={16} fill={liked ? '#ef4444' : 'none'} />
+                  <Heart size={16} fill={liked ? 'var(--color-error)' : 'none'} />
                   {likeCount > 0 ? likeCount : ''} {likeCount === 1 ? 'gosto' : 'gostos'}
                 </button>
               )}
@@ -2719,15 +2717,15 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                   disabled={interestLoading}
                   style={{
                     display: 'flex', alignItems: 'center', gap: 8,
-                    background: 'var(--c-card)',
-                    border: '1.5px solid var(--c-border)',
+                    background: 'var(--color-surface)',
+                    border: '1.5px solid var(--color-border)',
                     borderRadius: 10, padding: '9px 20px',
-                    color: 'var(--c-muted)',
+                    color: 'var(--color-text-secondary)',
                     fontSize: 14, fontWeight: 700, cursor: interestLoading ? 'default' : 'pointer',
                     fontFamily: 'inherit', transition: 'all 0.2s',
                   }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(245,158,11,0.4)'; e.currentTarget.style.color = '#f59e0b'; e.currentTarget.style.background = 'rgba(245,158,11,0.07)' }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--c-border)'; e.currentTarget.style.color = 'var(--c-muted)'; e.currentTarget.style.background = 'var(--c-card)' }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--color-warning-subtle)'; e.currentTarget.style.color = 'var(--color-warning)'; e.currentTarget.style.background = 'var(--color-warning-subtle)' }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--color-border)'; e.currentTarget.style.color = 'var(--color-text-secondary)'; e.currentTarget.style.background = 'var(--color-surface)' }}
                 >
                   <Star size={16} fill="none" />
                   {interestLoading ? 'A guardar…' : 'Tenho interesse'}
@@ -2739,17 +2737,17 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
           {/* Confirmação de interesse: card com ações */}
           {isRecruiterRole && hasInterest && !isOwner && (
             <div style={{
-              background: 'rgba(245,158,11,0.08)',
-              border: '1.5px solid rgba(245,158,11,0.35)',
+              background: 'var(--color-warning-subtle)',
+              border: '1.5px solid var(--color-warning-subtle)',
               borderRadius: 12, padding: '16px 20px',
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               flexWrap: 'wrap', gap: 12,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Star size={18} fill="#f59e0b" color="#f59e0b" />
+                <Star size={18} fill="var(--color-warning)" color="var(--color-warning)" />
                 <div>
-                  <div style={{ fontWeight: 700, fontSize: 14, color: '#f59e0b' }}>Interesse guardado!</div>
-                  <div style={{ fontSize: 12, color: 'var(--c-muted)', marginTop: 1 }}>
+                  <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--color-warning)' }}>Interesse guardado!</div>
+                  <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 1 }}>
                     {ownerProfile?.full_name || ownerProfile?.username || 'O estudante'} foi notificado.
                   </div>
                 </div>
@@ -2761,8 +2759,8 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                     style={{
                       display: 'flex', alignItems: 'center', gap: 6,
                       padding: '7px 14px', borderRadius: 8, fontSize: 13, fontWeight: 600,
-                      background: 'var(--c-card)', border: '1px solid var(--c-border)',
-                      color: 'var(--c-text)', textDecoration: 'none',
+                      background: 'var(--color-surface)', border: '1px solid var(--color-border)',
+                      color: 'var(--color-text)', textDecoration: 'none',
                     }}
                   >
                     <UserPlus size={14} /> Ver perfil
@@ -2773,7 +2771,7 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                   style={{
                     display: 'flex', alignItems: 'center', gap: 6,
                     padding: '7px 14px', borderRadius: 8, fontSize: 13, fontWeight: 600,
-                    background: '#f59e0b', border: 'none',
+                    background: 'var(--color-warning)', border: 'none',
                     color: '#000', textDecoration: 'none',
                   }}
                 >
@@ -2784,8 +2782,8 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                   style={{
                     display: 'flex', alignItems: 'center', gap: 6,
                     padding: '7px 14px', borderRadius: 8, fontSize: 12, fontWeight: 600,
-                    background: 'none', border: '1px solid rgba(245,158,11,0.3)',
-                    color: 'rgba(245,158,11,0.7)', cursor: 'pointer', fontFamily: 'inherit',
+                    background: 'none', border: '1px solid var(--color-warning-subtle)',
+                    color: 'var(--color-warning-subtle)', cursor: 'pointer', fontFamily: 'inherit',
                   }}
                 >
                   <X size={12} /> Remover
@@ -2795,15 +2793,15 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
           )}
 
           {/* Comentários */}
-          <div style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 12, padding: '22px 24px' }}>
+          <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 12, padding: '22px 24px' }}>
             <ProjectComments projectId={project.id} projectAuthorId={project.user_id} />
           </div>
         </div>
 
         {/* Rodapé personalizado */}
         {previewStyle.footerText && (
-          <div style={{ textAlign: 'center', padding: '20px 0 8px', borderTop: '1px solid var(--c-border)', marginTop: 8 }}>
-            <span style={{ fontSize: 12, color: 'var(--c-subtle)', fontWeight: 500, letterSpacing: '0.03em' }}>{previewStyle.footerText}</span>
+          <div style={{ textAlign: 'center', padding: '20px 0 8px', borderTop: '1px solid var(--color-border)', marginTop: 8 }}>
+            <span style={{ fontSize: 12, color: 'var(--color-text-tertiary)', fontWeight: 500, letterSpacing: '0.03em' }}>{previewStyle.footerText}</span>
           </div>
         )}
 
@@ -2819,9 +2817,9 @@ function MembersPanel({ ownerName, members, colors, isOwner }) {
   const displayOwner = ownerName || 'Dono'
 
   const statusCfg = {
-    accepted: { label: 'Colaborador', color: '#22c55e', bg: 'rgba(34,197,94,0.1)', border: 'rgba(34,197,94,0.25)', avatar: '#22c55e', dim: false },
-    pending:  { label: 'Pendente', color: '#fbbf24', bg: 'rgba(234,179,8,0.1)',  border: 'rgba(234,179,8,0.25)',  avatar: '#ca8a04', dim: true  },
-    declined: { label: 'Recusou',  color: '#ef4444', bg: 'rgba(239,68,68,0.1)', border: 'rgba(239,68,68,0.25)', avatar: '#ef4444', dim: true  },
+    accepted: { label: 'Colaborador', color: 'var(--color-success)', bg: 'var(--color-success-subtle)', border: 'var(--color-success-subtle)', avatar: 'var(--color-success)', dim: false },
+    pending:  { label: 'Pendente', color: 'var(--color-warning)', bg: 'var(--color-warning-subtle)',  border: 'var(--color-warning-subtle)',  avatar: '#ca8a04', dim: true  },
+    declined: { label: 'Recusou',  color: 'var(--color-error)', bg: 'var(--color-error-subtle)', border: 'var(--color-error-subtle)', avatar: 'var(--color-error)', dim: true  },
   }
 
   // For non-owners, only show accepted; already filtered at query level but guard here too
@@ -2837,11 +2835,11 @@ function MembersPanel({ ownerName, members, colors, isOwner }) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {/* Owner */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ width: 32, height: 32, borderRadius: '50%', flexShrink: 0, background: '#1b78f7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#fff' }}>
+          <div style={{ width: 32, height: 32, borderRadius: '50%', flexShrink: 0, background: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#fff' }}>
             {displayOwner[0]?.toUpperCase()}
           </div>
           <span style={{ fontSize: 14, fontWeight: 600, color: colors.text, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{displayOwner}</span>
-          <span style={{ fontSize: 11, flexShrink: 0, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.25)', borderRadius: 5, padding: '2px 8px', color: colors.blue, fontWeight: 700 }}>Dono</span>
+          <span style={{ fontSize: 11, flexShrink: 0, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 5, padding: '2px 8px', color: colors.blue, fontWeight: 700 }}>Dono</span>
         </div>
         {/* Collaborators */}
         {visibleMembers.map(m => {
@@ -2862,7 +2860,7 @@ function MembersPanel({ ownerName, members, colors, isOwner }) {
                   </div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 5 }}>
                     {sections.map(s => (
-                      <span key={s} style={{ fontSize: 11, color: colors.muted, background: 'var(--c-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: 4, padding: '1px 6px' }}>{s}</span>
+                      <span key={s} style={{ fontSize: 11, color: colors.muted, background: 'var(--color-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: 4, padding: '1px 6px' }}>{s}</span>
                     ))}
                   </div>
                 </div>
@@ -2894,8 +2892,6 @@ export default function ProjectPage() {
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState({ visible: false, message: '' })
   const [showConfetti, setShowConfetti] = useState(false)
-  const [regenerating, setRegenerating] = useState(false)
-  const [regenCooldown, setRegenCooldown] = useState(0)
   const [defenseMode, setDefenseMode] = useState(false)
   const [collaboratorSections, setCollaboratorSections] = useState(null) // null = not a collaborator
   const [members, setMembers] = useState([]) // [{ user_id, status, sections, profiles }]
@@ -3109,12 +3105,6 @@ export default function ProjectPage() {
       state: { reviewQueue, reviewIndex: i, turmaCode: location.state?.turmaCode, turmaName: location.state?.turmaName, turmaId: location.state?.turmaId },
     })
   }
-  // Report generation state
-  const [reportModal, setReportModal] = useState(false)
-  const [reportData, setReportData] = useState(null)
-  const [reportLoading, setReportLoading] = useState(false)
-  const [reportError, setReportError] = useState(null)
-
   // Likes
   const [likeCount, setLikeCount]   = useState(0)
   const [liked, setLiked]           = useState(false)
@@ -3131,7 +3121,6 @@ export default function ProjectPage() {
   const rafRef = useRef(null)
   const autoSaveRef = useRef(null)
   const toastTimerRef = useRef(null)
-  const cooldownRef = useRef(null)
   const membersChannelRef = useRef(null) // realtime channel — must be cleaned up on unmount
 
   // ── Auto-save: debounce 1.5s quando previewBlocks ou previewStyle muda ──
@@ -3558,33 +3547,6 @@ export default function ProjectPage() {
     setInviting(false)
   }
 
-  async function handleRegenerate() {
-    if (regenCooldown > 0 || regenerating) return
-    setRegenerating(true)
-    try {
-      const aiResult = await generateProject(project)
-      const newDescription = Array.isArray(aiResult.historia)
-        ? aiResult.historia.join('\n\n')
-        : (aiResult.description ?? null)
-      const { error } = await supabase
-        .from('projects')
-        .update({ ai_tagline: aiResult.tagline, ai_description: newDescription, ai_highlights: aiResult.highlights })
-        .eq('id', project.id)
-      if (!error) {
-        setProject(p => ({ ...p, ai_tagline: aiResult.tagline, ai_description: newDescription, ai_highlights: aiResult.highlights }))
-        triggerToast('A tua história foi atualizada!')
-        let t = 60
-        setRegenCooldown(t)
-        cooldownRef.current = setInterval(() => {
-          t -= 1
-          setRegenCooldown(t)
-          if (t <= 0) clearInterval(cooldownRef.current)
-        }, 1000)
-      }
-    } catch { triggerToast('Erro ao regenerar. Tenta novamente.') }
-    setRegenerating(false)
-  }
-
   if (loading) {
     return (
       <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: 'var(--font-body)', overflowX: 'clip' }}>
@@ -3626,7 +3588,7 @@ export default function ProjectPage() {
         {profile?.role !== 'professor' && (
           <button
             onClick={() => setShowCreateModal(true)}
-            style={{ background: colors.blue, color: '#fff', border: 'none', borderRadius: 10, padding: '12px 28px', fontSize: 16, fontWeight: 700, cursor: 'pointer', marginTop: 8, boxShadow: '0 2px 8px rgba(27,120,247,0.2)', fontFamily: 'inherit' }}
+            style={{ background: colors.blue, color: '#fff', border: 'none', borderRadius: 10, padding: '12px 28px', fontSize: 16, fontWeight: 700, cursor: 'pointer', marginTop: 8, boxShadow: '0 2px 8px var(--color-primary-subtle)', fontFamily: 'inherit' }}
           >
             <span style={{display:"flex",alignItems:"center",gap:6}}>Criar o meu projeto <ArrowRight size={15} /></span>
           </button>
@@ -3770,7 +3732,7 @@ export default function ProjectPage() {
         @keyframes bounce { 0%,60%,100% { transform:translateY(0); opacity:.4 } 30% { transform:translateY(-5px); opacity:1 } }
         @keyframes coachPop { from { opacity:0; transform:translateY(12px) scale(0.97); } to { opacity:1; transform:translateY(0) scale(1); } }
         @keyframes sparkle-pulse {
-          0%, 100% { box-shadow: 0 0 0 0 rgba(139,92,246,0.5); }
+          0%, 100% { box-shadow: 0 0 0 0 var(--color-accent-subtle); }
           50%       { box-shadow: 0 0 0 10px rgba(139,92,246,0); }
         }
         @keyframes confetti-fall {
@@ -3824,13 +3786,13 @@ export default function ProjectPage() {
           overflow-y: auto;
           overscroll-behavior: contain;
           scrollbar-width: thin;
-          scrollbar-color: var(--c-border) transparent;
+          scrollbar-color: var(--color-border) transparent;
           padding-right: 4px;
           padding-bottom: 8px;
         }
         .proj-sidebar::-webkit-scrollbar { width: 6px; }
         .proj-sidebar::-webkit-scrollbar-track { background: transparent; }
-        .proj-sidebar::-webkit-scrollbar-thumb { background: var(--c-border); border-radius: 99px; }
+        .proj-sidebar::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 99px; }
         @media (max-width: 860px) {
           /* Dissolve proj-main so hero / body / sidebar can be individually ordered */
           .proj-layout { grid-template-columns: 1fr; }
@@ -3956,12 +3918,12 @@ export default function ProjectPage() {
             display: flex !important;
             overflow-x: auto;
             scrollbar-width: none;
-            border-bottom: 1px solid var(--c-border);
+            border-bottom: 1px solid var(--color-border);
             margin: 0 -14px 16px;
             padding: 0 14px;
             position: sticky;
             top: 56px;
-            background: var(--c-bg);
+            background: var(--color-bg);
             z-index: 10;
             flex-shrink: 0;
           }
@@ -3971,7 +3933,7 @@ export default function ProjectPage() {
             padding: 10px 14px;
             font-size: 13px;
             font-weight: 500;
-            color: var(--c-muted);
+            color: var(--color-text-secondary);
             background: none;
             border: none;
             border-bottom: 2px solid transparent;
@@ -3982,9 +3944,9 @@ export default function ProjectPage() {
             transition: color 0.15s;
           }
           .proj-mobile-tab-active {
-            color: #1b78f7 !important;
+            color: var(--color-primary) !important;
             font-weight: 700 !important;
-            border-bottom-color: #1b78f7 !important;
+            border-bottom-color: var(--color-primary) !important;
           }
           /* Tab content sections */
           .proj-mobile-section { display: none !important; }
@@ -4022,82 +3984,6 @@ export default function ProjectPage() {
       <Toast message={toast.message} visible={toast.visible} />
       {showCreateModal && <CreateProjectModal onClose={() => setShowCreateModal(false)} />}
 
-      {/* ── Report Generation Modal ── */}
-      {reportModal && (
-        <div
-          style={{ position: 'fixed', inset: 0, zIndex: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px 16px', background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)' }}
-          onClick={() => setReportModal(false)}
-        >
-          <div
-            style={{ background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 14, padding: '28px', maxWidth: 660, width: '100%', maxHeight: '88vh', overflowY: 'auto', position: 'relative', boxShadow: 'none' }}
-            onClick={e => e.stopPropagation()}
-          >
-            {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-              <div style={{ width: 40, height: 40, borderRadius: 10, background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <FileText size={18} color="#10b981" />
-              </div>
-              <div style={{ flex: 1 }}>
-                <h2 style={{ margin: 0, fontSize: 17, fontWeight: 400, fontFamily: 'var(--font-heading)', letterSpacing: '-0.01em', color: colors.text }}>
-                  Rascunho de {project.project_type === 'pap' ? 'Relatório PAP' : 'Relatório de Estágio'}
-                </h2>
-                <p style={{ margin: '2px 0 0', fontSize: 12, color: colors.muted }}>Gerado por IA · revê e adapta antes de entregar</p>
-              </div>
-              <button onClick={() => setReportModal(false)} className="icon-btn-ghost"><X size={18} /></button>
-            </div>
-
-            {reportLoading && (
-              <div style={{ textAlign: 'center', padding: '48px 0', color: colors.muted }}>
-                <div style={{ width: 32, height: 32, border: `2px solid ${colors.border}`, borderTop: '2px solid #10b981', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 14px' }} />
-                <p style={{ margin: 0, fontSize: 14 }}>A gerar rascunho com IA…<br/><span style={{ fontSize: 12 }}>Pode demorar até 30 segundos</span></p>
-              </div>
-            )}
-
-            {reportError && (
-              <div style={{ background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 12, padding: '16px', color: '#ef4444', fontSize: 13 }}>
-                {reportError}
-                <button onClick={async () => { setReportError(null); setReportLoading(true); try { const d = await generateReport(project, project.project_type); setReportData(d) } catch(e) { setReportError(e.message) } setReportLoading(false) }} style={{ marginLeft: 12, background: 'none', border: '1px solid rgba(239,68,68,0.4)', borderRadius: 6, padding: '3px 10px', color: '#ef4444', cursor: 'pointer', fontFamily: 'inherit', fontSize: 12 }}>Tentar novamente</button>
-              </div>
-            )}
-
-            {reportData && !reportLoading && (() => {
-              const sections = [
-                { key: 'resumo',        label: 'Resumo Executivo' },
-                { key: 'introducao',    label: '1. Introdução' },
-                { key: 'problema',      label: '2. Identificação do Problema' },
-                { key: 'solucao',       label: '3. Solução Desenvolvida' },
-                { key: 'desenvolvimento', label: '4. Desenvolvimento' },
-                { key: 'resultados',    label: '5. Resultados' },
-                { key: 'reflexao',      label: '6. Reflexão Crítica' },
-                { key: 'conclusao',     label: '7. Conclusão' },
-              ]
-              const fullText = sections.map(s => `${s.label}\n\n${reportData[s.key] || ''}`).join('\n\n───\n\n')
-              return (
-                <>
-                  <button
-                    onClick={() => { navigator.clipboard.writeText(fullText); triggerToast('Relatório copiado!') }}
-                    style={{ display: 'flex', alignItems: 'center', gap: 7, background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)', borderRadius: 9, padding: '8px 16px', color: '#10b981', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', marginBottom: 20, transition: 'all 0.14s' }}
-                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(16,185,129,0.16)'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'rgba(16,185,129,0.1)'}
-                  >
-                    <Copy size={13} /> Copiar relatório completo
-                  </button>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-                    {sections.map((s, i) => reportData[s.key] ? (
-                      <div key={s.key} style={{ paddingBottom: 22, borderBottom: i < sections.length - 1 ? `1px solid ${colors.border}` : 'none', marginBottom: i < sections.length - 1 ? 22 : 0 }}>
-                        <h3 style={{ margin: '0 0 10px', fontSize: 13, fontWeight: 800, color: '#10b981', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{s.label}</h3>
-                        <p style={{ margin: 0, fontSize: 14, color: colors.text, lineHeight: 1.85, whiteSpace: 'pre-wrap' }}>{reportData[s.key]}</p>
-                      </div>
-                    ) : null)}
-                  </div>
-                  <p style={{ margin: '20px 0 0', fontSize: 11, color: colors.subtle, lineHeight: 1.5, fontStyle: 'italic' }}>
-                    Este é um rascunho gerado por IA. Revê com atenção, adapta ao teu estilo e verifica com o teu orientador antes de entregar.
-                  </p>
-                </>
-              )
-            })()}</div>
-        </div>
-      )}
 
       {/* ── Launch overlay (shown once after project creation) ── */}
       {showLaunchOverlay && project && (
@@ -4117,7 +4003,7 @@ export default function ProjectPage() {
             style={{
               width: '100%', maxWidth: 440,
               background: '#152030',
-              border: '1px solid rgba(27,120,247,0.35)',
+              border: '1px solid var(--color-primary-subtle)',
               borderRadius: 14,
               padding: '44px 36px 36px',
               textAlign: 'center',
@@ -4127,11 +4013,11 @@ export default function ProjectPage() {
             }}
           >
             {/* Glow blobs */}
-            <div style={{ position: 'absolute', top: -80, left: '50%', transform: 'translateX(-50%)', width: 360, height: 360, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(27,120,247,0.16) 0%, transparent 70%)', pointerEvents: 'none' }} />
+            <div style={{ position: 'absolute', top: -80, left: '50%', transform: 'translateX(-50%)', width: 360, height: 360, borderRadius: '50%', background: 'radial-gradient(ellipse, var(--color-primary-subtle) 0%, transparent 70%)', pointerEvents: 'none' }} />
             <div style={{ position: 'absolute', bottom: -60, right: -40, width: 240, height: 240, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(79,70,229,0.12) 0%, transparent 70%)', pointerEvents: 'none' }} />
 
             {/* Star icon */}
-            <div style={{ fontSize: 40, marginBottom: 20, lineHeight: 1, position: 'relative', color: '#1b78f7', letterSpacing: 4 }}>✦</div>
+            <div style={{ fontSize: 40, marginBottom: 20, lineHeight: 1, position: 'relative', color: 'var(--color-primary)', letterSpacing: 4 }}>✦</div>
 
             <h2 style={{
               margin: '0 0 10px',
@@ -4169,7 +4055,7 @@ export default function ProjectPage() {
                 style={{
                   flex: 1,
                   background: 'rgba(255,255,255,0.05)',
-                  border: '1px solid rgba(27,120,247,0.25)',
+                  border: '1px solid var(--color-primary-subtle)',
                   borderRadius: 10,
                   padding: '11px 14px',
                   fontSize: 13,
@@ -4188,12 +4074,12 @@ export default function ProjectPage() {
                   setTimeout(() => setLaunchCopied(false), 2500)
                 }}
                 style={{
-                  background: launchCopied ? 'rgba(34,197,94,0.15)' : 'rgba(27,120,247,0.15)',
-                  border: `1px solid ${launchCopied ? 'rgba(34,197,94,0.4)' : 'rgba(27,120,247,0.4)'}`,
+                  background: launchCopied ? 'var(--color-success-subtle)' : 'var(--color-primary-subtle)',
+                  border: `1px solid ${launchCopied ? 'var(--color-success-subtle)' : 'var(--color-primary-subtle)'}`,
                   borderRadius: 10,
                   padding: '11px 16px',
                   cursor: 'pointer',
-                  color: launchCopied ? '#22c55e' : '#5a9ff5',
+                  color: launchCopied ? 'var(--color-success)' : '#5a9ff5',
                   fontSize: 13,
                   fontWeight: 600,
                   whiteSpace: 'nowrap',
@@ -4211,7 +4097,7 @@ export default function ProjectPage() {
               style={{
                 display: 'block',
                 width: '100%',
-                background: '#1b78f7',
+                background: 'var(--color-primary)',
                 border: 'none',
                 borderRadius: 10,
                 padding: '14px 24px',
@@ -4220,7 +4106,7 @@ export default function ProjectPage() {
                 fontWeight: 700,
                 cursor: 'pointer',
                 letterSpacing: '-0.2px',
-                boxShadow: '0 2px 8px rgba(27,120,247,0.2)',
+                boxShadow: '0 2px 8px var(--color-primary-subtle)',
                 transition: 'opacity 0.15s',
                 position: 'relative',
               }}
@@ -4245,13 +4131,13 @@ export default function ProjectPage() {
                   style={{
                     display: 'block', width: '100%',
                     background: 'transparent',
-                    border: '1px solid rgba(27,120,247,0.4)',
+                    border: '1px solid var(--color-primary-subtle)',
                     borderRadius: 10, padding: '11px 24px',
                     color: '#5a9ff5', fontSize: 14, fontWeight: 700,
                     cursor: 'pointer', letterSpacing: '-0.2px',
                     transition: 'background 0.15s',
                   }}
-                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(27,120,247,0.1)' }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'var(--color-primary-subtle)' }}
                   onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
                 >
                   Criar conta e guardar projeto
@@ -4278,8 +4164,8 @@ export default function ProjectPage() {
             onClick={e => e.stopPropagation()}
             style={{
               width: '100%', maxWidth: 400,
-              background: 'var(--c-card)',
-              border: '1px solid rgba(27,120,247,0.35)',
+              background: 'var(--color-surface)',
+              border: '1px solid var(--color-primary-subtle)',
               borderRadius: 14,
               padding: '36px 32px',
               textAlign: 'center',
@@ -4289,16 +4175,16 @@ export default function ProjectPage() {
             }}
           >
             {/* Glow blobs */}
-            <div style={{ position: 'absolute', top: -60, left: '50%', transform: 'translateX(-50%)', width: 300, height: 300, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(27,120,247,0.12) 0%, transparent 70%)', pointerEvents: 'none' }} />
+            <div style={{ position: 'absolute', top: -60, left: '50%', transform: 'translateX(-50%)', width: 300, height: 300, borderRadius: '50%', background: 'radial-gradient(ellipse, var(--color-primary-subtle) 0%, transparent 70%)', pointerEvents: 'none' }} />
             <div style={{ position: 'absolute', bottom: -40, right: -40, width: 200, height: 200, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(79,70,229,0.1) 0%, transparent 70%)', pointerEvents: 'none' }} />
 
             {/* Icon */}
             <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'center', position: 'relative' }}>
               {milestoneCard.score >= 90
-                ? <Trophy size={52} color="#22c55e" />
+                ? <Trophy size={52} color="var(--color-success)" />
                 : milestoneCard.score >= 70
                 ? <Rocket size={52} color={colors.blue} />
-                : <Target size={52} color="#fbbf24" />}
+                : <Target size={52} color="var(--color-warning)" />}
             </div>
 
             {/* Title */}
@@ -4315,10 +4201,10 @@ export default function ProjectPage() {
             {/* Score badge */}
             <div style={{
               display: 'inline-flex', alignItems: 'center', gap: 8,
-              background: milestoneCard.score >= 90 ? 'rgba(34,197,94,0.12)' : milestoneCard.score >= 70 ? 'rgba(27,120,247,0.12)' : 'rgba(251,191,36,0.12)',
-              border: `1px solid ${milestoneCard.score >= 90 ? 'rgba(34,197,94,0.3)' : milestoneCard.score >= 70 ? 'rgba(27,120,247,0.3)' : 'rgba(251,191,36,0.3)'}`,
+              background: milestoneCard.score >= 90 ? 'var(--color-success-subtle)' : milestoneCard.score >= 70 ? 'var(--color-primary-subtle)' : 'rgba(251,191,36,0.12)',
+              border: `1px solid ${milestoneCard.score >= 90 ? 'var(--color-success-subtle)' : milestoneCard.score >= 70 ? 'var(--color-primary-subtle)' : 'rgba(251,191,36,0.3)'}`,
               borderRadius: 8, padding: '6px 20px', marginBottom: 28,
-              color: milestoneCard.score >= 90 ? '#22c55e' : milestoneCard.score >= 70 ? colors.blue : '#fbbf24',
+              color: milestoneCard.score >= 90 ? 'var(--color-success)' : milestoneCard.score >= 70 ? colors.blue : 'var(--color-warning)',
               fontSize: 13, fontWeight: 800, position: 'relative',
             }}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
@@ -4340,11 +4226,11 @@ export default function ProjectPage() {
                 }}
                 style={{
                   flex: 1,
-                  background: '#1b78f7',
+                  background: 'var(--color-primary)',
                   border: 'none', borderRadius: 10,
                   padding: '13px 0', color: '#fff',
                   fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-                  boxShadow: '0 2px 8px rgba(27,120,247,0.2)',
+                  boxShadow: '0 2px 8px var(--color-primary-subtle)',
                 }}
               >
                 Copiar link
@@ -4353,7 +4239,7 @@ export default function ProjectPage() {
                 onClick={() => setMilestoneCard(null)}
                 style={{
                   flex: 1,
-                  background: 'var(--c-card-hover)',
+                  background: 'var(--color-surface-hover)',
                   border: `1px solid ${colors.border}`, borderRadius: 10,
                   padding: '13px 0', color: colors.muted,
                   fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
@@ -4375,44 +4261,44 @@ export default function ProjectPage() {
         <>
           <div style={{ position: 'fixed', inset: 0, zIndex: 700, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }} />
           <div style={{ position: 'fixed', zIndex: 701, left: '50%', top: '50%', transform: 'translate(-50%, -50%)', width: '100%', maxWidth: 540, padding: '0 16px', boxSizing: 'border-box' }}>
-            <div style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 24, padding: '36px 36px 28px', boxShadow: '0 32px 100px rgba(0,0,0,0.6)' }}>
+            <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 24, padding: '36px 36px 28px', boxShadow: '0 32px 100px rgba(0,0,0,0.6)' }}>
               {/* Header */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24 }}>
-                <div style={{ width: 52, height: 52, borderRadius: 14, background: 'rgba(27,120,247,0.12)', border: '1px solid rgba(27,120,247,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <Rocket size={24} color="#1b78f7" />
+                <div style={{ width: 52, height: 52, borderRadius: 14, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Rocket size={24} color="var(--color-primary)" />
                 </div>
                 <div>
-                  <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--c-text)', lineHeight: 1.2, fontFamily: 'var(--font-heading)' }}>Estás a ir bem!</div>
-                  <div style={{ fontSize: 13, color: 'var(--c-muted)', marginTop: 4 }}>Cria uma conta gratuita para guardar o progresso e continuar a editar.</div>
+                  <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--color-text)', lineHeight: 1.2, fontFamily: 'var(--font-heading)' }}>Estás a ir bem!</div>
+                  <div style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginTop: 4 }}>Cria uma conta gratuita para guardar o progresso e continuar a editar.</div>
                 </div>
               </div>
               {/* Feature list */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 24 }}>
                 {[
-                  { icon: <Pencil size={16} color="#1b78f7" />, label: 'Editar a qualquer momento', sub: 'Volta sempre que quiseres para atualizar o projeto.' },
-                  { icon: <Globe size={16} color="#8b5cf6" />, label: 'Partilhar com um link', sub: 'Envia o link a recrutadores, professores e amigos.' },
-                  { icon: <Star size={16} color="#f59e0b" />, label: 'Guardar permanentemente', sub: 'O projeto fica na tua conta, seguro e sempre acessível.' },
+                  { icon: <Pencil size={16} color="var(--color-primary)" />, label: 'Editar a qualquer momento', sub: 'Volta sempre que quiseres para atualizar o projeto.' },
+                  { icon: <Globe size={16} color="var(--color-accent)" />, label: 'Partilhar com um link', sub: 'Envia o link a recrutadores, professores e amigos.' },
+                  { icon: <Star size={16} color="var(--color-warning)" />, label: 'Guardar permanentemente', sub: 'O projeto fica na tua conta, seguro e sempre acessível.' },
                 ].map(({ icon, label, sub }) => (
-                  <div key={label} style={{ display: 'flex', alignItems: 'flex-start', gap: 14, background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)', borderRadius: 12, padding: '12px 14px' }}>
-                    <div style={{ width: 32, height: 32, borderRadius: 8, background: 'var(--c-card)', border: '1px solid var(--c-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>{icon}</div>
+                  <div key={label} style={{ display: 'flex', alignItems: 'flex-start', gap: 14, background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)', borderRadius: 12, padding: '12px 14px' }}>
+                    <div style={{ width: 32, height: 32, borderRadius: 8, background: 'var(--color-surface)', border: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>{icon}</div>
                     <div>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--c-text)', marginBottom: 2 }}>{label}</div>
-                      <div style={{ fontSize: 12, color: 'var(--c-muted)', lineHeight: 1.5 }}>{sub}</div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-text)', marginBottom: 2 }}>{label}</div>
+                      <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>{sub}</div>
                     </div>
                   </div>
                 ))}
               </div>
               {/* Warning */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: 10, padding: '10px 14px', marginBottom: 20 }}>
-                <AlertTriangle size={14} color="#f59e0b" style={{ flexShrink: 0 }} />
-                <span style={{ fontSize: 12, color: 'var(--c-muted)', lineHeight: 1.5 }}>Sem conta, se perderes este link não há como recuperar o projeto.</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--color-warning-subtle)', border: '1px solid var(--color-warning-subtle)', borderRadius: 10, padding: '10px 14px', marginBottom: 20 }}>
+                <AlertTriangle size={14} color="var(--color-warning)" style={{ flexShrink: 0 }} />
+                <span style={{ fontSize: 12, color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>Sem conta, se perderes este link não há como recuperar o projeto.</span>
               </div>
               {/* CTA */}
               {!registerPopupConfirm ? (
                 <>
                   <button
                     onClick={() => navigate('/register', { state: { claimSlug: project.slug } })}
-                    style={{ display: 'block', width: '100%', background: '#1b78f7', border: 'none', borderRadius: 12, padding: '14px 24px', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 24px rgba(27,120,247,0.4)', marginBottom: 10 }}
+                    style={{ display: 'block', width: '100%', background: 'var(--color-primary)', border: 'none', borderRadius: 12, padding: '14px 24px', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 24px var(--color-primary-subtle)', marginBottom: 10 }}
                   >
                     Criar conta gratuita →
                   </button>
@@ -4425,15 +4311,15 @@ export default function ProjectPage() {
                         setRegisterPopupConfirm(true)
                       }
                     }}
-                    style={{ display: 'block', width: '100%', background: 'none', border: 'none', color: 'var(--c-muted)', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', padding: '8px 0' }}
+                    style={{ display: 'block', width: '100%', background: 'none', border: 'none', color: 'var(--color-text-secondary)', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', padding: '8px 0' }}
                   >
                     {anonEditCount >= 3 ? 'Ver projeto sem editar' : 'Continuar sem conta'}
                   </button>
                 </>
               ) : (
-                <div style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 14, padding: '18px 16px' }}>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: '#ef4444', marginBottom: 4 }}>Tens a certeza?</div>
-                  <div style={{ fontSize: 13, color: 'var(--c-muted)', marginBottom: 16, lineHeight: 1.5 }}>O projeto será <strong style={{ color: 'var(--c-text)' }}>eliminado permanentemente</strong>. Esta ação não pode ser desfeita.</div>
+                <div style={{ background: 'var(--color-error-subtle)', border: '1px solid var(--color-error-subtle)', borderRadius: 14, padding: '18px 16px' }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-error)', marginBottom: 4 }}>Tens a certeza?</div>
+                  <div style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginBottom: 16, lineHeight: 1.5 }}>O projeto será <strong style={{ color: 'var(--color-text)' }}>eliminado permanentemente</strong>. Esta ação não pode ser desfeita.</div>
                   <div style={{ display: 'flex', gap: 10 }}>
                     <button
                       onClick={async () => {
@@ -4442,13 +4328,13 @@ export default function ProjectPage() {
                         localStorage.removeItem(`edit_token_${project.slug}`)
                         navigate('/')
                       }}
-                      style={{ flex: 1, background: '#ef4444', border: 'none', borderRadius: 10, padding: '11px 0', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+                      style={{ flex: 1, background: 'var(--color-error)', border: 'none', borderRadius: 10, padding: '11px 0', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
                     >
                       Sim, eliminar
                     </button>
                     <button
                       onClick={() => setRegisterPopupConfirm(false)}
-                      style={{ flex: 1, background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)', borderRadius: 10, padding: '11px 0', color: 'var(--c-text)', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+                      style={{ flex: 1, background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)', borderRadius: 10, padding: '11px 0', color: 'var(--color-text)', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
                     >
                       Cancelar
                     </button>
@@ -4492,7 +4378,7 @@ export default function ProjectPage() {
               onClick={() => setAiModalOpen(false)}
               style={{
                 position: 'absolute', top: 16, right: 16,
-                background: 'var(--c-card-hover)',
+                background: 'var(--color-surface-hover)',
                 border: `1px solid ${colors.border}`,
                 borderRadius: 8, width: 32, height: 32,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -4518,14 +4404,14 @@ export default function ProjectPage() {
                   disabled={analyzingAI}
                   style={{
                     flexShrink: 0,
-                    background: analyzingAI ? 'rgba(27,120,247,0.08)' : aiFeedback ? 'rgba(27,120,247,0.1)' : '#1b78f7',
+                    background: analyzingAI ? 'var(--color-primary-subtle)' : aiFeedback ? 'var(--color-primary-subtle)' : 'var(--color-primary)',
                     border: analyzingAI || aiFeedback ? `1px solid ${colors.blue}30` : 'none',
                     borderRadius: 8, padding: '8px 16px',
                     color: analyzingAI || aiFeedback ? colors.blue : '#fff',
                     fontSize: 12, fontWeight: 700,
                     cursor: analyzingAI ? 'default' : 'pointer',
                     fontFamily: 'inherit',
-                    boxShadow: analyzingAI || aiFeedback ? 'none' : '0 2px 8px rgba(27,120,247,0.2)',
+                    boxShadow: analyzingAI || aiFeedback ? 'none' : '0 2px 8px var(--color-primary-subtle)',
                     display: 'flex', alignItems: 'center', gap: 7,
                     transition: 'all 0.15s',
                   }}
@@ -4537,7 +4423,7 @@ export default function ProjectPage() {
             </div>
 
             {analyzeError && (
-              <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 10, padding: '12px 16px', color: '#ef4444', fontSize: 13, marginBottom: 16 }}>
+              <div style={{ background: 'var(--color-error-subtle)', border: '1px solid var(--color-error-subtle)', borderRadius: 10, padding: '12px 16px', color: 'var(--color-error)', fontSize: 13, marginBottom: 16 }}>
                 {analyzeError}
               </div>
             )}
@@ -4547,11 +4433,11 @@ export default function ProjectPage() {
                 {/* Summary */}
                 <div style={{ marginBottom: 20 }}>
                   <div style={{ fontSize: 11, fontWeight: 700, color: colors.muted, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 8 }}>Resumo</div>
-                  <p style={{ margin: 0, fontSize: 13.5, color: 'var(--c-text)', lineHeight: 1.6 }}>
+                  <p style={{ margin: 0, fontSize: 13.5, color: 'var(--color-text)', lineHeight: 1.6 }}>
                     {aiFeedback.overall}
                   </p>
                   {aiFeedback.score_hint && (
-                    <div style={{ marginTop: 10, display: 'inline-flex', alignItems: 'flex-start', gap: 6, fontSize: 12, color: colors.blue, fontWeight: 600, background: 'rgba(27,120,247,0.08)', border: '1px solid rgba(27,120,247,0.18)', borderRadius: 8, padding: '7px 10px' }}>
+                    <div style={{ marginTop: 10, display: 'inline-flex', alignItems: 'flex-start', gap: 6, fontSize: 12, color: colors.blue, fontWeight: 600, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 8, padding: '7px 10px' }}>
                       <Lightbulb size={13} style={{ flexShrink: 0, marginTop: 1 }} />
                       <span>{aiFeedback.score_hint}</span>
                     </div>
@@ -4636,7 +4522,7 @@ export default function ProjectPage() {
               borderRadius: 999,
               background: 'rgba(251,191,36,0.12)',
               border: '1px solid rgba(251,191,36,0.4)',
-              color: '#fbbf24', cursor: 'pointer',
+              color: 'var(--color-warning)', cursor: 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
               padding: '0 18px', height: 52, minWidth: 52,
               boxShadow: 'none',
@@ -4660,17 +4546,17 @@ export default function ProjectPage() {
             <button
               onClick={() => navigate(`/projeto/${project.slug}/gerir`)}
               style={{
-                background: 'rgba(27,120,247,0.08)',
-                border: '1px solid rgba(27,120,247,0.25)',
-                color: '#1b78f7',
+                background: 'var(--color-primary-subtle)',
+                border: '1px solid var(--color-primary-subtle)',
+                color: 'var(--color-primary)',
                 borderRadius: 8, padding: '8px 14px',
                 fontSize: 13, fontWeight: 600,
                 cursor: 'pointer', fontFamily: 'inherit',
                 display: 'flex', alignItems: 'center', gap: 6,
                 transition: 'background 0.15s',
               }}
-              onMouseEnter={e => e.currentTarget.style.background = 'rgba(27,120,247,0.14)'}
-              onMouseLeave={e => e.currentTarget.style.background = 'rgba(27,120,247,0.08)'}
+              onMouseEnter={e => e.currentTarget.style.background = 'var(--color-primary-subtle)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'var(--color-primary-subtle)'}
               title="Gerir projeto"
             >
               <Settings size={15} /> Gerir
@@ -4680,17 +4566,17 @@ export default function ProjectPage() {
             <button
               onClick={() => navigate(`/editar/${project.slug}`)}
               style={{
-                background: 'rgba(27,120,247,0.08)',
-                border: '1px solid rgba(27,120,247,0.25)',
-                color: '#1b78f7',
+                background: 'var(--color-primary-subtle)',
+                border: '1px solid var(--color-primary-subtle)',
+                color: 'var(--color-primary)',
                 borderRadius: 8, padding: '8px 14px',
                 fontSize: 13, fontWeight: 600,
                 cursor: 'pointer', fontFamily: 'inherit',
                 display: 'flex', alignItems: 'center', gap: 6,
                 transition: 'background 0.15s',
               }}
-              onMouseEnter={e => e.currentTarget.style.background = 'rgba(27,120,247,0.14)'}
-              onMouseLeave={e => e.currentTarget.style.background = 'rgba(27,120,247,0.08)'}
+              onMouseEnter={e => e.currentTarget.style.background = 'var(--color-primary-subtle)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'var(--color-primary-subtle)'}
               title="Editar projeto"
             >
               <Pencil size={15} /> Editar
@@ -4703,15 +4589,15 @@ export default function ProjectPage() {
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14,
           flexWrap: 'wrap', padding: '10px 20px',
-          background: 'rgba(27,120,247,0.08)', borderBottom: '1px solid rgba(27,120,247,0.2)',
+          background: 'var(--color-primary-subtle)', borderBottom: '1px solid var(--color-primary-subtle)',
         }}>
-          <span style={{ fontSize: 13, color: 'var(--c-muted)', fontWeight: 500 }}>
+          <span style={{ fontSize: 13, color: 'var(--color-text-secondary)', fontWeight: 500 }}>
             Este projeto não tem conta associada. Se perderes o link, não há forma de o recuperar.
           </span>
           <button
             onClick={() => navigate('/register', { state: { claimSlug: project.slug } })}
             style={{
-              background: '#1b78f7', border: 'none', borderRadius: 7,
+              background: 'var(--color-primary)', border: 'none', borderRadius: 7,
               padding: '6px 14px', color: '#fff', fontSize: 13, fontWeight: 700,
               cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0,
             }}
@@ -4720,7 +4606,7 @@ export default function ProjectPage() {
           </button>
           <button
             onClick={() => setClaimBannerDismissed(true)}
-            style={{ background: 'none', border: 'none', color: 'var(--c-muted)', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
+            style={{ background: 'none', border: 'none', color: 'var(--color-text-secondary)', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
           >
             Agora não
           </button>
@@ -4776,7 +4662,7 @@ export default function ProjectPage() {
               <div className="proj-cover" style={{ width: '100%', height: 320, position: 'relative' }}>
                 <img src={project.cover_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                 {/* Strong dark gradient overlay for text legibility */}
-                <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(to bottom, transparent 0%, var(--c-bg) 100%)` }} />
+                <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(to bottom, transparent 0%, var(--color-bg) 100%)` }} />
               </div>
             ) : (
               <div style={{
@@ -4789,7 +4675,7 @@ export default function ProjectPage() {
                 <div style={{ position: 'absolute', top: -40, right: '-5%', width: 380, height: 380, borderRadius: '50%', background: `radial-gradient(ellipse, ${ag.accent2}18 0%, transparent 60%)`, pointerEvents: 'none' }} />
                 <div style={{ position: 'absolute', bottom: -60, left: '30%', width: 300, height: 300, borderRadius: '50%', background: `radial-gradient(ellipse, ${ag.accent1}14 0%, transparent 70%)`, pointerEvents: 'none' }} />
                 {/* Fade to page background at bottom */}
-                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 35%, var(--c-bg) 100%)' }} />
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 35%, var(--color-bg) 100%)' }} />
               </div>
             )}
           </div>
@@ -4832,7 +4718,7 @@ export default function ProjectPage() {
 
                 {/* Tags */}
                 {project.tags && project.tags.length > 0 && project.tags.map((tag, i) => (
-                  <span key={tag} style={{ color: 'var(--c-muted)', fontSize: 12, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span key={tag} style={{ color: 'var(--color-text-secondary)', fontSize: 12, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 8 }}>
                     {(i > 0 || project.area || (project.project_type && PROJECT_TYPE_LABELS[project.project_type])) && <span style={{ color: colors.subtle }}>·</span>}
                     {tag}
                   </span>
@@ -4873,7 +4759,7 @@ export default function ProjectPage() {
                       onChange={e => { setInviteInput(e.target.value); setInviteMsg(null) }}
                       placeholder="username do colega"
                       style={{
-                        background: colors.bg, border: `1px solid ${inviteMsg?.type === 'error' ? '#ef4444' : inviteMsg?.type === 'success' ? '#22c55e' : colors.borderBright}`,
+                        background: colors.bg, border: `1px solid ${inviteMsg?.type === 'error' ? 'var(--color-error)' : inviteMsg?.type === 'success' ? 'var(--color-success)' : colors.borderBright}`,
                         borderRadius: 8, padding: '5px 12px', color: colors.text,
                         fontSize: 12, fontFamily: 'inherit', outline: 'none',
                         width: 150, transition: 'border-color 0.15s',
@@ -4895,7 +4781,7 @@ export default function ProjectPage() {
                       style={{ background: 'transparent', border: 'none', color: colors.subtle, cursor: 'pointer', padding: '4px 6px', borderRadius: 6, display: 'flex', alignItems: 'center' }}
                     ><X size={14} /></button>
                     {inviteMsg && (
-                      <span style={{ fontSize: 11, fontWeight: 600, color: inviteMsg.type === 'success' ? '#22c55e' : '#ef4444', width: '100%' }}>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: inviteMsg.type === 'success' ? 'var(--color-success)' : 'var(--color-error)', width: '100%' }}>
                         {inviteMsg.text}
                       </span>
                     )}
@@ -4934,7 +4820,7 @@ export default function ProjectPage() {
           </div>
 
           {project.ai_tagline && (
-            <p className="proj-tagline" style={{ fontSize: 20, color: 'var(--c-muted)', lineHeight: 1.55, margin: '16px 0 18px', maxWidth: 600, fontWeight: 400, letterSpacing: '-0.1px' }}>
+            <p className="proj-tagline" style={{ fontSize: 20, color: 'var(--color-text-secondary)', lineHeight: 1.55, margin: '16px 0 18px', maxWidth: 600, fontWeight: 400, letterSpacing: '-0.1px' }}>
               {project.ai_tagline}
             </p>
           )}
@@ -4949,8 +4835,8 @@ export default function ProjectPage() {
                   style={{
                     display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                     width: 28, height: 28,
-                    background: 'rgba(27,120,247,0.1)', color: '#1b78f7',
-                    border: '1px solid rgba(27,120,247,0.25)',
+                    background: 'var(--color-primary-subtle)', color: 'var(--color-primary)',
+                    border: '1px solid var(--color-primary-subtle)',
                     borderRadius: 999,
                     cursor: 'default',
                   }}
@@ -4961,10 +4847,10 @@ export default function ProjectPage() {
               {project.review_status && (() => {
                 const rs = project.review_status
                 const cfg = rs === 'ready_for_defense'
-                  ? { tone: '34,197,94', color: '#22c55e', icon: <CheckCircle size={11} strokeWidth={2.5} />, label: 'Pronto para defesa', title: 'O professor marcou este projeto como pronto para defesa' }
+                  ? { tone: '34,197,94', color: 'var(--color-success)', icon: <CheckCircle size={11} strokeWidth={2.5} />, label: 'Pronto para defesa', title: 'O professor marcou este projeto como pronto para defesa' }
                   : rs === 'resubmitted'
-                  ? { tone: '27,120,247', color: '#1b78f7', icon: <CheckCircle size={11} strokeWidth={2.5} />, label: 'Correções enviadas', title: 'O aluno marcou as correções como feitas. Aguarda nova revisão do professor' }
-                  : { tone: '249,115,22', color: '#f97316', icon: <AlertTriangle size={11} strokeWidth={2.5} />, label: 'Precisa de revisão', title: 'O professor marcou este projeto como precisando de revisão' }
+                  ? { tone: '27,120,247', color: 'var(--color-primary)', icon: <CheckCircle size={11} strokeWidth={2.5} />, label: 'Correções enviadas', title: 'O aluno marcou as correções como feitas. Aguarda nova revisão do professor' }
+                  : { tone: '249,115,22', color: 'var(--color-warning)', icon: <AlertTriangle size={11} strokeWidth={2.5} />, label: 'Precisa de revisão', title: 'O professor marcou este projeto como precisando de revisão' }
                 return (
                   <div
                     title={cfg.title}
@@ -4999,8 +4885,8 @@ export default function ProjectPage() {
               the owner sees health + next step at a glance (hidden on desktop). */}
           <div className="proj-dashboard" style={{
             display: 'none', flexDirection: 'column', gap: 13, marginBottom: 18,
-            background: 'linear-gradient(160deg, rgba(27,120,247,0.09), rgba(79,70,229,0.045))',
-            border: '1px solid rgba(27,120,247,0.25)',
+            background: 'linear-gradient(160deg, var(--color-primary-subtle), rgba(79,70,229,0.045))',
+            border: '1px solid var(--color-primary-subtle)',
             borderRadius: 16, padding: 16,
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
@@ -5009,7 +4895,7 @@ export default function ProjectPage() {
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 9.5, fontWeight: 800, color: colors.muted, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 4 }}>Score Showo</div>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: 2 }}>
-                    <span style={{ fontSize: 26, fontWeight: 900, color: '#1b78f7', letterSpacing: '-1px', lineHeight: 1 }}>{score}</span>
+                    <span style={{ fontSize: 26, fontWeight: 900, color: 'var(--color-primary)', letterSpacing: '-1px', lineHeight: 1 }}>{score}</span>
                     <span style={{ fontSize: 11, color: colors.muted, fontWeight: 600 }}>/100</span>
                   </div>
                 </div>
@@ -5017,7 +4903,7 @@ export default function ProjectPage() {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 9.5, fontWeight: 800, color: colors.muted, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 4 }}>Nota Professor</div>
                     <div style={{ display: 'flex', alignItems: 'baseline', gap: 2 }}>
-                      <span style={{ fontSize: 26, fontWeight: 900, color: '#1b78f7', letterSpacing: '-1px', lineHeight: 1 }}>{project.teacher_score}</span>
+                      <span style={{ fontSize: 26, fontWeight: 900, color: 'var(--color-primary)', letterSpacing: '-1px', lineHeight: 1 }}>{project.teacher_score}</span>
                       <span style={{ fontSize: 11, color: colors.muted, fontWeight: 600 }}>/20</span>
                     </div>
                   </div>
@@ -5029,10 +4915,10 @@ export default function ProjectPage() {
             {project.review_status ? (() => {
               const rs = project.review_status
               const cfg = rs === 'ready_for_defense'
-                ? { tone: '34,197,94', color: '#22c55e', label: 'Pronto para defesa' }
+                ? { tone: '34,197,94', color: 'var(--color-success)', label: 'Pronto para defesa' }
                 : rs === 'resubmitted'
-                ? { tone: '27,120,247', color: '#1b78f7', label: 'Correções enviadas' }
-                : { tone: '245,158,11', color: '#f59e0b', label: 'Precisa de revisão' }
+                ? { tone: '27,120,247', color: 'var(--color-primary)', label: 'Correções enviadas' }
+                : { tone: '245,158,11', color: 'var(--color-warning)', label: 'Precisa de revisão' }
               return (
                 <div style={{ alignSelf: 'flex-start', display: 'inline-flex', alignItems: 'center', gap: 6, background: `rgba(${cfg.tone},0.12)`, color: cfg.color, border: `1px solid rgba(${cfg.tone},0.28)`, borderRadius: 999, padding: '4px 11px', fontSize: 11.5, fontWeight: 700 }}>
                   {cfg.label}
@@ -5060,10 +4946,10 @@ export default function ProjectPage() {
                 onClick={() => setMobileTab('melhorar')}
                 style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                  width: '100%', background: '#1b78f7', color: '#fff', border: 'none',
+                  width: '100%', background: 'var(--color-primary)', color: '#fff', border: 'none',
                   borderRadius: 12, padding: '13px', fontSize: 15, fontWeight: 800,
                   letterSpacing: '-0.2px', cursor: 'pointer', fontFamily: 'inherit',
-                  boxShadow: '0 8px 20px -6px rgba(27,120,247,0.55)',
+                  boxShadow: '0 8px 20px -6px var(--color-primary-subtle)',
                 }}
               >
                 <Sparkles size={17} />
@@ -5123,19 +5009,18 @@ export default function ProjectPage() {
 
         {/* ── Owner mini-dashboard: defense / AI analysis / report ── */}
         {isOwner && (() => {
-          const isPapOrInternship = project.project_type === 'pap' || project.project_type === 'internship'
           const today = new Date(); today.setHours(0,0,0,0)
           const target = defenseDate ? new Date(defenseDate + 'T00:00:00') : null
           const daysLeft = target ? Math.ceil((target - today) / 86400000) : null
-          const urgentColor = daysLeft != null && daysLeft <= 7 ? '#ef4444' : daysLeft != null && daysLeft <= 30 ? '#f97316' : '#1b78f7'
+          const urgentColor = daysLeft != null && daysLeft <= 7 ? 'var(--color-error)' : daysLeft != null && daysLeft <= 30 ? 'var(--color-warning)' : 'var(--color-primary)'
 
           const miniCardBase = {
             borderRadius: 12, padding: '12px 14px',
             display: 'flex', flexDirection: 'column', gap: 6,
             cursor: 'pointer', fontFamily: 'inherit',
             textAlign: 'left', transition: 'all 0.15s',
-            border: '1px solid var(--c-border)',
-            background: 'var(--c-bg-alt)',
+            border: '1px solid var(--color-border)',
+            background: 'var(--color-bg-alt)',
           }
 
           return (
@@ -5152,15 +5037,15 @@ export default function ProjectPage() {
                 <button
                   onClick={handleMarkResubmitted}
                   disabled={resubmitting}
-                  style={{ ...miniCardBase, background: 'rgba(249,115,22,0.05)', border: '1px solid rgba(249,115,22,0.25)', opacity: resubmitting ? 0.6 : 1 }}
-                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(249,115,22,0.1)'; e.currentTarget.style.borderColor = 'rgba(249,115,22,0.4)' }}
-                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(249,115,22,0.05)'; e.currentTarget.style.borderColor = 'rgba(249,115,22,0.25)' }}
+                  style={{ ...miniCardBase, background: 'var(--color-warning-subtle)', border: '1px solid var(--color-warning-subtle)', opacity: resubmitting ? 0.6 : 1 }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'var(--color-warning-subtle)'; e.currentTarget.style.borderColor = 'var(--color-warning-subtle)' }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'var(--color-warning-subtle)'; e.currentTarget.style.borderColor = 'var(--color-warning-subtle)' }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                    <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(249,115,22,0.12)', border: '1px solid rgba(249,115,22,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <AlertTriangle size={13} color="#f97316" />
+                    <div style={{ width: 28, height: 28, borderRadius: 8, background: 'var(--color-warning-subtle)', border: '1px solid var(--color-warning-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <AlertTriangle size={13} color="var(--color-warning)" />
                     </div>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: '#f97316' }}>Revisão pedida</div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-warning)' }}>Revisão pedida</div>
                   </div>
                   <div style={{ fontSize: 11, color: colors.muted, lineHeight: 1.4 }}>
                     {resubmitting ? 'A notificar o professor…' : 'Já corrigiste? Marca como feito'}
@@ -5168,12 +5053,12 @@ export default function ProjectPage() {
                 </button>
               )}
               {project.review_status === 'resubmitted' && (
-                <div style={{ ...miniCardBase, cursor: 'default', background: 'rgba(27,120,247,0.04)', border: '1px solid rgba(27,120,247,0.15)' }}>
+                <div style={{ ...miniCardBase, cursor: 'default', background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                    <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(27,120,247,0.12)', border: '1px solid rgba(27,120,247,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <Check size={13} color="#1b78f7" />
+                    <div style={{ width: 28, height: 28, borderRadius: 8, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <Check size={13} color="var(--color-primary)" />
                     </div>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: '#1b78f7' }}>Correções enviadas</div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-primary)' }}>Correções enviadas</div>
                   </div>
                   <div style={{ fontSize: 11, color: colors.muted, lineHeight: 1.4 }}>
                     O professor vai rever em breve
@@ -5183,12 +5068,12 @@ export default function ProjectPage() {
 
               {/* PAP defense date */}
               {project.project_type === 'pap' && (
-                <div style={{ ...miniCardBase, background: `rgba(${urgentColor === '#ef4444' ? '239,68,68' : urgentColor === '#f97316' ? '249,115,22' : '27,120,247'},0.05)`, border: `1px solid ${urgentColor}30`, position: 'relative' }}>
+                <div style={{ ...miniCardBase, background: `rgba(${urgentColor === 'var(--color-error)' ? '239,68,68' : urgentColor === 'var(--color-warning)' ? '249,115,22' : '27,120,247'},0.05)`, border: `1px solid ${urgentColor}30`, position: 'relative' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
                     <div style={{ width: 28, height: 28, borderRadius: 8, background: `${urgentColor}15`, border: `1px solid ${urgentColor}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                       <Calendar size={13} color={urgentColor} />
                     </div>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: daysLeft != null && daysLeft <= 7 ? '#ef4444' : colors.text, flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: daysLeft != null && daysLeft <= 7 ? 'var(--color-error)' : colors.text, flex: 1, minWidth: 0 }}>
                       {daysLeft === null ? 'Data de defesa' :
                        daysLeft < 0 ? 'Defesa concluída' :
                        daysLeft === 0 ? 'Hoje!' :
@@ -5203,7 +5088,7 @@ export default function ProjectPage() {
                     onClick={e => e.stopPropagation()}
                     style={{
                       width: '100%', boxSizing: 'border-box',
-                      background: 'var(--c-card)', border: `1px solid ${colors.border}`,
+                      background: 'var(--color-surface)', border: `1px solid ${colors.border}`,
                       borderRadius: 6, padding: '5px 8px', color: colors.text,
                       fontSize: 11, fontFamily: 'inherit', cursor: 'pointer', outline: 'none',
                       colorScheme: theme === 'light' ? 'light' : 'dark',
@@ -5213,36 +5098,6 @@ export default function ProjectPage() {
                 </div>
               )}
 
-              {/* Report generation */}
-              {isPapOrInternship && (
-                <button
-                  onClick={async () => {
-                    if (reportData) { setReportModal(true); return }
-                    setReportLoading(true); setReportError(null); setReportModal(true)
-                    try {
-                      const data = await generateReport(project, project.project_type)
-                      setReportData(data)
-                    } catch (e) {
-                      setReportError(e.message || 'Erro ao gerar relatório')
-                    }
-                    setReportLoading(false)
-                  }}
-                  style={{ ...miniCardBase, background: 'rgba(16,185,129,0.05)', border: '1px solid rgba(16,185,129,0.2)' }}
-                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(16,185,129,0.1)'; e.currentTarget.style.borderColor = 'rgba(16,185,129,0.35)' }}
-                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(16,185,129,0.05)'; e.currentTarget.style.borderColor = 'rgba(16,185,129,0.2)' }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                    <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <FileText size={14} color="#10b981" />
-                    </div>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: '#10b981' }}>Rascunho</div>
-                    {reportData && <Check size={11} color="#22c55e" style={{ marginLeft: 'auto' }} />}
-                  </div>
-                  <div style={{ fontSize: 11, color: colors.muted, lineHeight: 1.4 }}>
-                    {reportData ? 'Ver rascunho gerado' : `Gerar relatório ${project.project_type === 'pap' ? 'PAP' : 'estágio'}`}
-                  </div>
-                </button>
-              )}
 
             </div>{/* end actionable grid */}
 
@@ -5260,11 +5115,11 @@ export default function ProjectPage() {
                       key={key}
                       onClick={() => !on && handleFeatureInterest(key)}
                       title={on ? 'Vamos avisar-te por email' : 'Notificar-me quando sair'}
-                      style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'var(--c-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: 999, padding: '7px 13px', cursor: on ? 'default' : 'pointer', fontFamily: 'inherit', opacity: on ? 0.7 : 1, WebkitTapHighlightColor: 'transparent' }}
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'var(--color-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: 999, padding: '7px 13px', cursor: on ? 'default' : 'pointer', fontFamily: 'inherit', opacity: on ? 0.7 : 1, WebkitTapHighlightColor: 'transparent' }}
                     >
                       <Icon size={13} color={colors.muted} />
                       <span style={{ fontSize: 12.5, fontWeight: 600, color: colors.text }}>{label}</span>
-                      {on ? <Check size={12} color="#1b78f7" /> : <Bell size={11} color={colors.subtle} />}
+                      {on ? <Check size={12} color="var(--color-primary)" /> : <Bell size={11} color={colors.subtle} />}
                     </button>
                   )
                 })}
@@ -5323,7 +5178,7 @@ export default function ProjectPage() {
                       {pct === 100 ? 'Perfil completo — bom trabalho.' : `${goodCount} de ${fq.length} campos · toca para editar`}
                     </div>
                   </div>
-                  <span style={{ fontSize: 22, fontWeight: 900, color: pct === 100 ? '#22c55e' : '#1b78f7', letterSpacing: '-0.5px', lineHeight: 1 }}>{pct}%</span>
+                  <span style={{ fontSize: 22, fontWeight: 900, color: pct === 100 ? 'var(--color-success)' : 'var(--color-primary)', letterSpacing: '-0.5px', lineHeight: 1 }}>{pct}%</span>
                 </div>
                 <div style={{ height: 6, background: progTrack(pct), borderRadius: 99, overflow: 'hidden' }}>
                   <div style={{ height: '100%', borderRadius: 99, width: `${pct}%`, background: progBar(pct), transition: 'width 0.5s' }} />
@@ -5332,7 +5187,7 @@ export default function ProjectPage() {
               <div>
                 {fq.map((f, i) => {
                   const done = f.quality === 'good'
-                  const tagColor = f.quality === 'short' ? '#f59e0b' : '#1b78f7'
+                  const tagColor = f.quality === 'short' ? 'var(--color-warning)' : 'var(--color-primary)'
                   return (
                     <button
                       key={f.key}
@@ -5345,8 +5200,8 @@ export default function ProjectPage() {
                         WebkitTapHighlightColor: 'transparent',
                       }}
                     >
-                      <span style={{ width: 22, height: 22, borderRadius: 7, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: done ? 'rgba(27,120,247,0.12)' : f.quality === 'short' ? 'rgba(245,158,11,0.12)' : 'var(--c-bg-alt)', border: done ? 'none' : `1px solid ${colors.border}` }}>
-                        {done ? <Check size={12} color="#1b78f7" strokeWidth={3} /> : <span style={{ width: 5, height: 5, borderRadius: '50%', background: f.quality === 'short' ? '#f59e0b' : colors.subtle }} />}
+                      <span style={{ width: 22, height: 22, borderRadius: 7, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: done ? 'var(--color-primary-subtle)' : f.quality === 'short' ? 'var(--color-warning-subtle)' : 'var(--color-bg-alt)', border: done ? 'none' : `1px solid ${colors.border}` }}>
+                        {done ? <Check size={12} color="var(--color-primary)" strokeWidth={3} /> : <span style={{ width: 5, height: 5, borderRadius: '50%', background: f.quality === 'short' ? 'var(--color-warning)' : colors.subtle }} />}
                       </span>
                       <span style={{ flex: 1, minWidth: 0, fontSize: 13.5, fontWeight: done ? 500 : 600, color: done ? colors.muted : colors.text }}>{f.label}</span>
                       {!done && (
@@ -5371,7 +5226,7 @@ export default function ProjectPage() {
         {/* A tua história — AI narrative with blue gradient */}
         {project.ai_description && (
           <div className="proj-card-pad proj-card proj-ai-story" style={{
-            background: '#1b78f7',
+            background: 'var(--color-primary)',
             border: '1px solid rgba(79,70,229,0.5)',
             position: 'relative', overflow: 'hidden',
           }}>
@@ -5382,28 +5237,6 @@ export default function ProjectPage() {
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
                 A tua história
               </span>
-              {isOwner && (
-                <button
-                  onClick={handleRegenerate}
-                  disabled={regenerating || regenCooldown > 0}
-                  style={{
-                    background: 'rgba(255,255,255,0.12)',
-                    border: '1px solid rgba(255,255,255,0.2)',
-                    color: 'rgba(255,255,255,0.85)',
-                    borderRadius: 7, padding: '4px 10px',
-                    fontSize: 11, fontWeight: 600,
-                    cursor: (regenerating || regenCooldown > 0) ? 'default' : 'pointer',
-                    opacity: (regenerating || regenCooldown > 0) ? 0.5 : 1,
-                    whiteSpace: 'nowrap',
-                    fontFamily: 'inherit',
-                    transition: 'all 0.15s',
-                  }}
-                  onMouseEnter={e => { if (!(regenerating || regenCooldown > 0)) e.currentTarget.style.background = 'rgba(255,255,255,0.2)' }}
-                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.12)' }}
-                >
-                  {regenerating ? 'A gerar...' : regenCooldown > 0 ? `${regenCooldown}s` : 'Regenerar'}
-                </button>
-              )}
             </div>
             {/* Split into paragraphs — new content has \n\n, old content is single block */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20, position: 'relative' }}>
@@ -5426,12 +5259,12 @@ export default function ProjectPage() {
         {/* Highlights — 3 column cards — blue branded */}
         {highlights.length > 0 && (() => {
           const HlIcons = [Zap, TrendingUp, Lightbulb]
-          const hlAccents = ['#1b78f7', '#1d6fe8', '#2563eb']
+          const hlAccents = ['var(--color-primary)', '#1d6fe8', '#2563eb']
           return (
             <div className="proj-highlights-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>
               {highlights.map((h, i) => {
                 const HlIcon = HlIcons[i] ?? Sparkles
-                const acc = hlAccents[i] ?? '#1b78f7'
+                const acc = hlAccents[i] ?? 'var(--color-primary)'
                 return (
                   <div key={i} className="proj-card" style={{
                     display: 'flex', flexDirection: 'column', gap: 12,
@@ -5453,7 +5286,7 @@ export default function ProjectPage() {
 
         {/* PAP details */}
         {isPap && (project.pap_supervisor || project.pap_date) && (
-          <div className="proj-card-pad proj-card" style={{ background: colors.yellowGlow, border: '1px solid rgba(234,179,8,0.18)' }}>
+          <div className="proj-card-pad proj-card" style={{ background: colors.yellowGlow, border: '1px solid var(--color-warning-subtle)' }}>
             <h3 style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 700, color: colors.yellow, textTransform: 'uppercase', letterSpacing: 0.8 }}>Detalhes da PAP</h3>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24 }}>
               {project.pap_supervisor && (
@@ -5545,14 +5378,14 @@ export default function ProjectPage() {
             loose tab section that left half the screen empty. Opened by the "IA"
             tab; the back button returns to the project. */}
         {isOwner && mobileTab === 'ia' && (
-          <div style={{ position: 'fixed', inset: 0, zIndex: 400, background: 'var(--c-bg)', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ position: 'fixed', inset: 0, zIndex: 400, background: 'var(--color-bg)', display: 'flex', flexDirection: 'column' }}>
             {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '11px 12px', borderBottom: `1px solid ${colors.border}`, flexShrink: 0 }}>
               <button onClick={() => setMobileTab('overview')} aria-label="Voltar ao projeto" style={{ background: 'none', border: 'none', color: colors.muted, cursor: 'pointer', width: 36, height: 36, borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, WebkitTapHighlightColor: 'transparent' }}>
                 <ChevronLeft size={22} />
               </button>
-              <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(27,120,247,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <Sparkles size={18} color="#1b78f7" />
+              <div style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--color-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <Sparkles size={18} color="var(--color-primary)" />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 15, fontWeight: 800, color: colors.text, lineHeight: 1.2 }}>Assistente IA</div>
@@ -5563,7 +5396,7 @@ export default function ProjectPage() {
             <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12, padding: '16px 14px' }}>
               {coachMessages.length === 0 && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  <div style={{ background: 'rgba(27,120,247,0.08)', border: '1px solid rgba(27,120,247,0.18)', borderRadius: 14, padding: '14px 16px', fontSize: 13.5, color: colors.text, lineHeight: 1.6 }}>
+                  <div style={{ background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 14, padding: '14px 16px', fontSize: 13.5, color: colors.text, lineHeight: 1.6 }}>
                     Olá! Sou o teu assistente para melhorar o <strong>{project.name}</strong>. Posso ajudar-te a tornar cada secção mais convincente para um júri ou recrutador. Em que queres trabalhar hoje?
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
@@ -5575,7 +5408,7 @@ export default function ProjectPage() {
                       <button
                         key={q}
                         onClick={() => { setCoachInput(q); setTimeout(() => document.getElementById('coach-input')?.focus(), 50) }}
-                        style={{ textAlign: 'left', background: 'var(--c-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: 11, padding: '11px 14px', fontSize: 13, color: colors.muted, cursor: 'pointer', fontFamily: 'inherit', WebkitTapHighlightColor: 'transparent' }}
+                        style={{ textAlign: 'left', background: 'var(--color-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: 11, padding: '11px 14px', fontSize: 13, color: colors.muted, cursor: 'pointer', fontFamily: 'inherit', WebkitTapHighlightColor: 'transparent' }}
                       >{q}</button>
                     ))}
                   </div>
@@ -5585,7 +5418,7 @@ export default function ProjectPage() {
                 <div key={i} style={{
                   alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start',
                   maxWidth: '85%',
-                  background: m.role === 'user' ? '#1b78f7' : 'var(--c-bg-alt)',
+                  background: m.role === 'user' ? 'var(--color-primary)' : 'var(--color-bg-alt)',
                   border: m.role === 'user' ? 'none' : `1px solid ${colors.border}`,
                   borderRadius: m.role === 'user' ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
                   padding: '10px 14px',
@@ -5596,7 +5429,7 @@ export default function ProjectPage() {
                 }}>{m.content}</div>
               ))}
               {coachLoading && (
-                <div style={{ alignSelf: 'flex-start', background: 'var(--c-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: '16px 16px 16px 4px', padding: '10px 16px', display: 'flex', gap: 5, alignItems: 'center' }}>
+                <div style={{ alignSelf: 'flex-start', background: 'var(--color-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: '16px 16px 16px 4px', padding: '10px 16px', display: 'flex', gap: 5, alignItems: 'center' }}>
                   {[0,1,2].map(i => <div key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: colors.muted, animation: `bounce 1.2s ease-in-out ${i * 0.2}s infinite` }} />)}
                 </div>
               )}
@@ -5612,7 +5445,7 @@ export default function ProjectPage() {
                 placeholder="Pergunta sobre o teu projeto..."
                 disabled={coachLoading}
                 style={{
-                  flex: 1, background: 'var(--c-bg-alt)', border: `1px solid ${colors.border}`,
+                  flex: 1, background: 'var(--color-bg-alt)', border: `1px solid ${colors.border}`,
                   borderRadius: 11, padding: '12px 14px', fontSize: 14,
                   color: colors.text, fontFamily: 'inherit', outline: 'none',
                   opacity: coachLoading ? 0.6 : 1,
@@ -5623,8 +5456,8 @@ export default function ProjectPage() {
                 disabled={!coachInput.trim() || coachLoading}
                 aria-label="Enviar"
                 style={{
-                  background: coachInput.trim() && !coachLoading ? '#1b78f7' : 'var(--c-bg-alt)',
-                  border: `1px solid ${coachInput.trim() && !coachLoading ? '#1b78f7' : colors.border}`,
+                  background: coachInput.trim() && !coachLoading ? 'var(--color-primary)' : 'var(--color-bg-alt)',
+                  border: `1px solid ${coachInput.trim() && !coachLoading ? 'var(--color-primary)' : colors.border}`,
                   borderRadius: 11, padding: '0 16px', minWidth: 48,
                   color: coachInput.trim() && !coachLoading ? '#fff' : colors.muted,
                   cursor: coachInput.trim() && !coachLoading ? 'pointer' : 'default',
@@ -5706,7 +5539,7 @@ export default function ProjectPage() {
               onClick={() => setShowQR(true)}
               title="Ver QR Code"
               style={{
-                background: 'var(--c-bg-alt)',
+                background: 'var(--color-bg-alt)',
                 border: `1px solid ${colors.border}`,
                 borderRadius: 8, padding: '7px 10px',
                 color: colors.muted, cursor: 'pointer',
@@ -5802,7 +5635,7 @@ export default function ProjectPage() {
             >
               <button
                 onClick={() => setShowQR(false)}
-                style={{ position: 'absolute', top: 14, right: 14, background: 'var(--c-card-hover)', border: `1px solid ${colors.border}`, borderRadius: 8, width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: colors.muted }}
+                style={{ position: 'absolute', top: 14, right: 14, background: 'var(--color-surface-hover)', border: `1px solid ${colors.border}`, borderRadius: 8, width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: colors.muted }}
               ><X size={14} /></button>
               <div>
                 <div style={{ fontSize: 15, fontWeight: 700, color: colors.text, textAlign: 'center', marginBottom: 4 }}>{project.name}</div>
@@ -5855,21 +5688,21 @@ export default function ProjectPage() {
               <div className="proj-author-links" style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
                 {project.linkedin_url && (
                   <a href={project.linkedin_url} target="_blank" rel="noopener noreferrer"
-                    style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: colors.muted, fontWeight: 600, textDecoration: 'none', background: 'var(--c-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: 7, padding: '5px 10px', transition: 'all 0.15s' }}
+                    style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: colors.muted, fontWeight: 600, textDecoration: 'none', background: 'var(--color-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: 7, padding: '5px 10px', transition: 'all 0.15s' }}
                     onMouseEnter={e => { e.currentTarget.style.borderColor = colors.borderBright; e.currentTarget.style.color = colors.text }}
                     onMouseLeave={e => { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.color = colors.muted }}
                   >LinkedIn</a>
                 )}
                 {project.github_url && (
                   <a href={project.github_url} target="_blank" rel="noopener noreferrer"
-                    style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: colors.muted, fontWeight: 600, textDecoration: 'none', background: 'var(--c-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: 7, padding: '5px 10px', transition: 'all 0.15s' }}
+                    style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: colors.muted, fontWeight: 600, textDecoration: 'none', background: 'var(--color-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: 7, padding: '5px 10px', transition: 'all 0.15s' }}
                     onMouseEnter={e => { e.currentTarget.style.borderColor = colors.borderBright; e.currentTarget.style.color = colors.text }}
                     onMouseLeave={e => { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.color = colors.muted }}
                   >GitHub</a>
                 )}
                 {project.portfolio_url && (
                   <a href={project.portfolio_url} target="_blank" rel="noopener noreferrer"
-                    style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: colors.muted, fontWeight: 600, textDecoration: 'none', background: 'var(--c-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: 7, padding: '5px 10px', transition: 'all 0.15s' }}
+                    style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: colors.muted, fontWeight: 600, textDecoration: 'none', background: 'var(--color-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: 7, padding: '5px 10px', transition: 'all 0.15s' }}
                     onMouseEnter={e => { e.currentTarget.style.borderColor = colors.borderBright; e.currentTarget.style.color = colors.text }}
                     onMouseLeave={e => { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.color = colors.muted }}
                   >Portfólio</a>
@@ -5895,7 +5728,7 @@ export default function ProjectPage() {
           {isProfessor && !(reviewQueue && reviewQueue.length > 0) && location.state?.turmaCode && (
             <button
               onClick={() => navigate(`/turma/${location.state.turmaCode}`)}
-              style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(27,120,247,0.06)', border: '1px solid rgba(27,120,247,0.22)', borderRadius: 8, padding: '9px', color: '#1b78f7', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+              style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 8, padding: '9px', color: 'var(--color-primary)', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
             >
               <ChevronLeft size={13} /> Voltar {location.state?.turmaName ? `a "${location.state.turmaName}"` : 'à turma'}
             </button>
@@ -5903,7 +5736,7 @@ export default function ProjectPage() {
 
           {/* Professor: batch review queue, started from the turma's "Avaliar todos" */}
           {isProfessor && reviewQueue && reviewQueue.length > 0 && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(27,120,247,0.06)', border: '1px solid rgba(27,120,247,0.22)', borderRadius: 8, padding: '6px 8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 8, padding: '6px 8px' }}>
               <button
                 onClick={() => goToReviewIndex(reviewIndex - 1)}
                 disabled={reviewIndex === 0}
@@ -5934,10 +5767,10 @@ export default function ProjectPage() {
           {isProfessor && project.review_status === 'resubmitted' && (
             <div style={{
               display: 'flex', alignItems: 'center', gap: 8,
-              background: 'rgba(27,120,247,0.06)', border: '1px solid rgba(27,120,247,0.2)',
+              background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)',
               borderRadius: 8, padding: '9px 12px',
             }}>
-              <CheckCircle size={13} color="#1b78f7" style={{ flexShrink: 0 }} />
+              <CheckCircle size={13} color="var(--color-primary)" style={{ flexShrink: 0 }} />
               <span style={{ fontSize: 11, color: colors.text, fontWeight: 600, lineHeight: 1.4 }}>
                 O aluno marcou as correções como feitas. Revê e atualiza o estado.
               </span>
@@ -5952,10 +5785,10 @@ export default function ProjectPage() {
                 disabled={reviewStatusSaving}
                 style={{
                   flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                  background: project.review_status === 'ready_for_defense' ? 'rgba(34,197,94,0.12)' : 'transparent',
-                  border: `1px solid ${project.review_status === 'ready_for_defense' ? 'rgba(34,197,94,0.4)' : colors.border}`,
+                  background: project.review_status === 'ready_for_defense' ? 'var(--color-success-subtle)' : 'transparent',
+                  border: `1px solid ${project.review_status === 'ready_for_defense' ? 'var(--color-success-subtle)' : colors.border}`,
                   borderRadius: 8, padding: '8px 6px',
-                  color: project.review_status === 'ready_for_defense' ? '#22c55e' : colors.muted,
+                  color: project.review_status === 'ready_for_defense' ? 'var(--color-success)' : colors.muted,
                   fontSize: 11, fontWeight: 700, cursor: reviewStatusSaving ? 'default' : 'pointer', fontFamily: 'inherit',
                 }}
               ><CheckCircle size={13} /> Pronto</button>
@@ -5964,10 +5797,10 @@ export default function ProjectPage() {
                 disabled={reviewStatusSaving}
                 style={{
                   flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                  background: project.review_status === 'needs_revision' ? 'rgba(249,115,22,0.12)' : 'transparent',
-                  border: `1px solid ${project.review_status === 'needs_revision' ? 'rgba(249,115,22,0.4)' : colors.border}`,
+                  background: project.review_status === 'needs_revision' ? 'var(--color-warning-subtle)' : 'transparent',
+                  border: `1px solid ${project.review_status === 'needs_revision' ? 'var(--color-warning-subtle)' : colors.border}`,
                   borderRadius: 8, padding: '8px 6px',
-                  color: project.review_status === 'needs_revision' ? '#f97316' : colors.muted,
+                  color: project.review_status === 'needs_revision' ? 'var(--color-warning)' : colors.muted,
                   fontSize: 11, fontWeight: 700, cursor: reviewStatusSaving ? 'default' : 'pointer', fontFamily: 'inherit',
                 }}
               ><AlertTriangle size={13} /> Revisão</button>
@@ -5994,7 +5827,7 @@ export default function ProjectPage() {
                     padding: '9px', color: colors.muted, fontSize: 12, fontWeight: 700,
                     cursor: 'pointer', fontFamily: 'inherit', transition: 'border-color 0.15s, color 0.15s',
                   }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(27,120,247,0.4)'; e.currentTarget.style.color = '#1b78f7' }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--color-primary-subtle)'; e.currentTarget.style.color = 'var(--color-primary)' }}
                   onMouseLeave={e => { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.color = colors.muted }}
                 >
                   <MessageSquare size={13} /> Contactar
@@ -6008,7 +5841,7 @@ export default function ProjectPage() {
                   padding: '9px', color: colors.muted, fontSize: 12, fontWeight: 700,
                   cursor: 'pointer', fontFamily: 'inherit', transition: 'border-color 0.15s, color 0.15s',
                 }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(27,120,247,0.4)'; e.currentTarget.style.color = '#1b78f7' }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--color-primary-subtle)'; e.currentTarget.style.color = 'var(--color-primary)' }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.color = colors.muted }}
               >
                 <Globe size={13} /> Visitante
@@ -6046,7 +5879,7 @@ export default function ProjectPage() {
               const sumWS = classCriteria.reduce((s, c) => s + Number(c.weight) * Number(criterionScores[c.id]), 0)
               return Math.round((sumWS / sumW) * 10) / 10
             })()
-            const scoreColorFor = s => s >= 16 ? '#22c55e' : s >= 10 ? '#1b78f7' : '#f97316'
+            const scoreColorFor = s => s >= 16 ? 'var(--color-success)' : s >= 10 ? 'var(--color-primary)' : 'var(--color-warning)'
             const hasSavedScore = project.teacher_score != null
             const finalScore    = useClassCriteria ? weightedTotal : totalScore
             const canSave       = useClassCriteria ? allCritRated  : allRated
@@ -6054,8 +5887,8 @@ export default function ProjectPage() {
             return (
               <div style={{ ...colors.glassStyle, background: colors.glass, border: `1px solid ${colors.glassBorder}`, borderRadius: 12, overflow: 'hidden', marginBottom: 4 }}>
                 {/* Header */}
-                <div style={{ padding: '13px 16px 10px', borderBottom: (juryEditing || hasSavedScore) ? '1px solid rgba(27,120,247,0.12)' : 'none', display: 'flex', alignItems: 'center', gap: 9 }}>
-                  <ClipboardList size={14} color="#1b78f7" />
+                <div style={{ padding: '13px 16px 10px', borderBottom: (juryEditing || hasSavedScore) ? '1px solid var(--color-primary-subtle)' : 'none', display: 'flex', alignItems: 'center', gap: 9 }}>
+                  <ClipboardList size={14} color="var(--color-primary)" />
                   <span style={{ fontSize: 13, fontWeight: 700, color: colors.text, flex: 1 }}>Avaliação</span>
                   {juryEditing && hasSavedScore && (
                     <button onClick={() => setJuryEditing(false)} style={{ background: 'none', border: 'none', color: colors.muted, fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}>Cancelar</button>
@@ -6074,7 +5907,7 @@ export default function ProjectPage() {
                       )}
                       <button
                         onClick={() => setJuryEditing(true)}
-                        style={{ marginLeft: 'auto', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 5, background: 'transparent', border: '1px solid rgba(27,120,247,0.3)', borderRadius: 7, padding: '6px 10px', color: '#1b78f7', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+                        style={{ marginLeft: 'auto', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 5, background: 'transparent', border: '1px solid var(--color-primary-subtle)', borderRadius: 7, padding: '6px 10px', color: 'var(--color-primary)', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
                       >
                         <Pencil size={11} /> Reavaliar
                       </button>
@@ -6113,7 +5946,7 @@ export default function ProjectPage() {
                           <div key={c.id}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 6 }}>
                               <span style={{ fontSize: 12, fontWeight: 700, color: colors.text }}>{c.name}</span>
-                              <span style={{ fontSize: 10, fontWeight: 700, color: '#1b78f7', background: 'rgba(27,120,247,0.1)', borderRadius: 4, padding: '1px 5px' }}>{c.weight}%</span>
+                              <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-primary)', background: 'var(--color-primary-subtle)', borderRadius: 4, padding: '1px 5px' }}>{c.weight}%</span>
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                               <input
@@ -6124,10 +5957,10 @@ export default function ProjectPage() {
                                   setCriterionScores(s => ({ ...s, [c.id]: n }))
                                 }}
                                 placeholder="—"
-                                style={{ width: 52, background: 'var(--c-bg)', border: `1px solid ${colors.border}`, borderRadius: 7, padding: '5px 8px', color: colors.text, fontSize: 13, fontWeight: 700, fontFamily: 'inherit', outline: 'none', textAlign: 'center' }}
+                                style={{ width: 52, background: 'var(--color-bg)', border: `1px solid ${colors.border}`, borderRadius: 7, padding: '5px 8px', color: colors.text, fontSize: 13, fontWeight: 700, fontFamily: 'inherit', outline: 'none', textAlign: 'center' }}
                               />
-                              <div style={{ flex: 1, height: 6, borderRadius: 3, background: 'var(--c-bg)', overflow: 'hidden' }}>
-                                <div style={{ height: '100%', width: `${((val ?? 0) / 20) * 100}%`, background: val >= 16 ? '#22c55e' : val >= 10 ? '#1b78f7' : '#f97316', borderRadius: 3, transition: 'width 0.15s' }} />
+                              <div style={{ flex: 1, height: 6, borderRadius: 3, background: 'var(--color-bg)', overflow: 'hidden' }}>
+                                <div style={{ height: '100%', width: `${((val ?? 0) / 20) * 100}%`, background: val >= 16 ? 'var(--color-success)' : val >= 10 ? 'var(--color-primary)' : 'var(--color-warning)', borderRadius: 3, transition: 'width 0.15s' }} />
                               </div>
                               <span style={{ fontSize: 11, color: colors.muted, minWidth: 22, textAlign: 'right' }}>/20</span>
                             </div>
@@ -6149,7 +5982,7 @@ export default function ProjectPage() {
                                   onClick={() => setJuryRatings(r => ({ ...r, [c.id]: n }))}
                                   style={{
                                     flex: 1, height: 22, borderRadius: 4, border: 'none', cursor: 'pointer', padding: 0,
-                                    background: active ? (val >= 4 ? '#22c55e' : val >= 2 ? '#1b78f7' : '#f97316') : 'var(--c-bg)',
+                                    background: active ? (val >= 4 ? 'var(--color-success)' : val >= 2 ? 'var(--color-primary)' : 'var(--color-warning)') : 'var(--color-bg)',
                                     transition: 'background 0.1s',
                                   }}
                                   title={`${n}/4`}
@@ -6179,7 +6012,7 @@ export default function ProjectPage() {
                         onChange={e => setJuryNote(e.target.value)}
                         placeholder="Nota geral para o aluno (opcional)…"
                         rows={2}
-                        style={{ width: '100%', background: 'var(--c-bg)', border: `1px solid ${colors.border}`, borderRadius: 8, padding: '8px 10px', color: colors.text, fontSize: 12, fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box', outline: 'none', lineHeight: 1.5 }}
+                        style={{ width: '100%', background: 'var(--color-bg)', border: `1px solid ${colors.border}`, borderRadius: 8, padding: '8px 10px', color: colors.text, fontSize: 12, fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box', outline: 'none', lineHeight: 1.5 }}
                       />
                     </div>
 
@@ -6217,9 +6050,9 @@ export default function ProjectPage() {
                         }}
                         style={{
                           width: '100%', padding: '10px', borderRadius: 8,
-                          background: jurySaved ? 'rgba(34,197,94,0.12)' : '#1b78f7',
-                          border: jurySaved ? '1px solid rgba(34,197,94,0.3)' : 'none',
-                          color: jurySaved ? '#22c55e' : '#fff',
+                          background: jurySaved ? 'var(--color-success-subtle)' : 'var(--color-primary)',
+                          border: jurySaved ? '1px solid var(--color-success-subtle)' : 'none',
+                          color: jurySaved ? 'var(--color-success)' : '#fff',
                           fontSize: 13, fontWeight: 700, cursor: !canSave || jurySaving ? 'default' : 'pointer',
                           opacity: !canSave ? 0.5 : 1, fontFamily: 'inherit',
                           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
@@ -6236,8 +6069,8 @@ export default function ProjectPage() {
 
           {/* ── Score Showo + Nota Professor side by side — owner only ── */}
           {isOwner && project.teacher_score != null && (() => {
-            const gradeColor = project.teacher_score >= 16 ? '#22c55e' : project.teacher_score >= 10 ? '#1b78f7' : '#f97316'
-            const scoreColor2 = score >= 86 ? '#22c55e' : score >= 51 ? '#1b78f7' : '#f59e0b'
+            const gradeColor = project.teacher_score >= 16 ? 'var(--color-success)' : project.teacher_score >= 10 ? 'var(--color-primary)' : 'var(--color-warning)'
+            const scoreColor2 = score >= 86 ? 'var(--color-success)' : score >= 51 ? 'var(--color-primary)' : 'var(--color-warning)'
             return (
               <div style={{ ...colors.glassStyle, background: colors.glass, border: `1px solid ${colors.glassBorder}`, borderRadius: 12, overflow: 'hidden' }}>
                 <div style={{ display: 'flex' }}>
@@ -6273,15 +6106,15 @@ export default function ProjectPage() {
             return (
               <div style={{ ...colors.glassStyle, background: colors.glass, border: `1px solid ${colors.glassBorder}`, borderRadius: 12, overflow: 'hidden' }}>
                 {/* Header */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 16px', borderBottom: myFeedback.length > 0 || showFeedbackForm ? '1px solid rgba(27,120,247,0.12)' : 'none' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 16px', borderBottom: myFeedback.length > 0 || showFeedbackForm ? '1px solid var(--color-primary-subtle)' : 'none' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                    <GraduationCap size={14} color="#1b78f7" />
+                    <GraduationCap size={14} color="var(--color-primary)" />
                     <span style={{ fontSize: 13, fontWeight: 700, color: colors.text }}>Feedback do Professor</span>
                   </div>
                   {isProfessor && (
                     <button
                       onClick={() => setShowFeedbackForm(f => !f)}
-                      style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, padding: '4px 9px', borderRadius: 6, border: `1px solid ${showFeedbackForm ? 'rgba(27,120,247,0.5)' : 'rgba(27,120,247,0.3)'}`, background: showFeedbackForm ? 'rgba(27,120,247,0.15)' : 'transparent', color: '#1b78f7', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700 }}
+                      style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, padding: '4px 9px', borderRadius: 6, border: `1px solid ${showFeedbackForm ? 'var(--color-primary-subtle)' : 'var(--color-primary-subtle)'}`, background: showFeedbackForm ? 'var(--color-primary-subtle)' : 'transparent', color: 'var(--color-primary)', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700 }}
                     >
                       {showFeedbackForm ? <><X size={11} /> Fechar</> : <><Pencil size={11} /> Editar</>}
                     </button>
@@ -6297,15 +6130,15 @@ export default function ProjectPage() {
                       return (
                       <div
                         key={f.id}
-                        style={{ padding: '10px 16px', borderBottom: idx < myFeedback.length - 1 ? '1px solid rgba(27,120,247,0.08)' : 'none', opacity: resolved && !isProfessor ? 0.75 : 1 }}
+                        style={{ padding: '10px 16px', borderBottom: idx < myFeedback.length - 1 ? '1px solid var(--color-primary-subtle)' : 'none', opacity: resolved && !isProfessor ? 0.75 : 1 }}
                       >
                         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-                          <span style={{ fontSize: 9, fontWeight: 800, color: '#1b78f7', background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.2)', borderRadius: 4, padding: '2px 6px', letterSpacing: 0.5, textTransform: 'uppercase', flexShrink: 0, marginTop: 2, whiteSpace: 'nowrap' }}>
+                          <span style={{ fontSize: 9, fontWeight: 800, color: 'var(--color-primary)', background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 4, padding: '2px 6px', letterSpacing: 0.5, textTransform: 'uppercase', flexShrink: 0, marginTop: 2, whiteSpace: 'nowrap' }}>
                             {FB_SECTION_LABELS[f.field_key] || humanizeFieldKey(f.field_key)}
                           </span>
                           <span style={{ flex: 1, fontSize: 13, color: colors.text, lineHeight: 1.5, textDecoration: resolved ? 'line-through' : 'none', textDecorationColor: 'rgba(148,163,184,0.5)' }}><FeedbackCommentText comment={f.comment} textColor={colors.text} /></span>
                           {resolved && (
-                            <span title="Resolvido" style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 10, fontWeight: 700, color: '#22c55e', flexShrink: 0, marginTop: 2 }}>
+                            <span title="Resolvido" style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 10, fontWeight: 700, color: 'var(--color-success)', flexShrink: 0, marginTop: 2 }}>
                               <Check size={11} /> Resolvido
                             </span>
                           )}
@@ -6319,7 +6152,7 @@ export default function ProjectPage() {
                               <button
                                 onClick={() => handleFbDelete(f.id)}
                                 title="Apagar"
-                                style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: 3, display: 'flex', alignItems: 'center', borderRadius: 4 }}
+                                style={{ background: 'none', border: 'none', color: 'var(--color-error)', cursor: 'pointer', padding: 3, display: 'flex', alignItems: 'center', borderRadius: 4 }}
                               ><X size={11} /></button>
                             </div>
                           )}
@@ -6338,12 +6171,12 @@ export default function ProjectPage() {
                               <input
                                 value={resolveNote} onChange={e => setResolveNote(e.target.value)}
                                 placeholder="O que mudaste? (opcional)"
-                                style={{ background: 'var(--c-bg)', border: `1px solid ${colors.border}`, borderRadius: 6, padding: '6px 9px', color: colors.text, fontSize: 12, fontFamily: 'inherit', outline: 'none' }}
+                                style={{ background: 'var(--color-bg)', border: `1px solid ${colors.border}`, borderRadius: 6, padding: '6px 9px', color: colors.text, fontSize: 12, fontFamily: 'inherit', outline: 'none' }}
                               />
                               <div style={{ display: 'flex', gap: 6 }}>
                                 <button
                                   onClick={() => { handleFbResolve(f.id, resolveNote); setResolvingId(null); setResolveNote('') }}
-                                  style={{ background: '#22c55e', border: 'none', borderRadius: 6, padding: '5px 10px', color: '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+                                  style={{ background: 'var(--color-success)', border: 'none', borderRadius: 6, padding: '5px 10px', color: '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
                                 >Confirmar</button>
                                 <button
                                   onClick={() => { setResolvingId(null); setResolveNote('') }}
@@ -6354,7 +6187,7 @@ export default function ProjectPage() {
                           ) : (
                             <button
                               onClick={() => setResolvingId(f.id)}
-                              style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 4, background: 'none', border: 'none', color: '#22c55e', cursor: 'pointer', fontSize: 12, fontWeight: 700, fontFamily: 'inherit', padding: 0 }}
+                              style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 4, background: 'none', border: 'none', color: 'var(--color-success)', cursor: 'pointer', fontSize: 12, fontWeight: 700, fontFamily: 'inherit', padding: 0 }}
                             ><Check size={12} /> Marcar como resolvido</button>
                           )
                         )}
@@ -6378,13 +6211,13 @@ export default function ProjectPage() {
 
                 {/* Feedback form */}
                 {isProfessor && showFeedbackForm && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '12px 16px', borderTop: myFeedback.length > 0 ? '1px solid rgba(27,120,247,0.12)' : 'none' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '12px 16px', borderTop: myFeedback.length > 0 ? '1px solid var(--color-primary-subtle)' : 'none' }}>
                     <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
                       {Object.entries(FB_SECTION_LABELS).map(([k, l]) => (
-                        <button key={k} onClick={() => setFbFieldKey(k)} style={{ fontSize: 11, padding: '3px 8px', borderRadius: 5, border: `1px solid ${fbFieldKey === k ? '#1b78f7' : colors.border}`, background: fbFieldKey === k ? 'rgba(27,120,247,0.12)' : 'transparent', color: fbFieldKey === k ? '#1b78f7' : colors.muted, cursor: 'pointer', fontFamily: 'inherit', fontWeight: fbFieldKey === k ? 700 : 400 }}>{l}</button>
+                        <button key={k} onClick={() => setFbFieldKey(k)} style={{ fontSize: 11, padding: '3px 8px', borderRadius: 5, border: `1px solid ${fbFieldKey === k ? 'var(--color-primary)' : colors.border}`, background: fbFieldKey === k ? 'var(--color-primary-subtle)' : 'transparent', color: fbFieldKey === k ? 'var(--color-primary)' : colors.muted, cursor: 'pointer', fontFamily: 'inherit', fontWeight: fbFieldKey === k ? 700 : 400 }}>{l}</button>
                       ))}
                     </div>
-                    <textarea value={fbComment} onChange={e => setFbComment(e.target.value)} placeholder={`Feedback sobre ${FB_SECTION_LABELS[fbFieldKey]}…`} rows={3} style={{ width: '100%', background: 'var(--c-bg)', border: `1px solid ${colors.border}`, borderRadius: 8, padding: '9px 11px', color: colors.text, fontSize: 13, fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box', outline: 'none' }} />
+                    <textarea value={fbComment} onChange={e => setFbComment(e.target.value)} placeholder={`Feedback sobre ${FB_SECTION_LABELS[fbFieldKey]}…`} rows={3} style={{ width: '100%', background: 'var(--color-bg)', border: `1px solid ${colors.border}`, borderRadius: 8, padding: '9px 11px', color: colors.text, fontSize: 13, fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box', outline: 'none' }} />
                     <div style={{ display: 'flex', gap: 8 }}>
                       <button onClick={handleFbSave} disabled={fbSaving || !fbComment.trim()} style={{ flex: 1, background: '#d97706', border: 'none', borderRadius: 8, padding: '9px', color: '#fff', fontSize: 13, fontWeight: 600, cursor: fbSaving || !fbComment.trim() ? 'default' : 'pointer', opacity: fbSaving || !fbComment.trim() ? 0.6 : 1, fontFamily: 'inherit' }}>
                         {fbSaving ? 'A guardar…' : fbEditing ? 'Atualizar' : 'Guardar'}
@@ -6412,25 +6245,25 @@ export default function ProjectPage() {
             const isComplete = pct === 100
             return (
               <div className="proj-card" style={isComplete ? {
-                background: 'rgba(34,197,94,0.04)',
-                border: '1px solid rgba(34,197,94,0.22)',
+                background: 'var(--color-success-subtle)',
+                border: '1px solid var(--color-success-subtle)',
               } : {}}>
                 {isComplete ? (
                   /* ── Completude 100%: celebratory completed state ── */
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <div style={{
                       width: 32, height: 32, borderRadius: 9, flexShrink: 0,
-                      background: 'rgba(34,197,94,0.12)',
-                      border: '1px solid rgba(34,197,94,0.25)',
+                      background: 'var(--color-success-subtle)',
+                      border: '1px solid var(--color-success-subtle)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                     }}>
-                      <Check size={15} color="#22c55e" strokeWidth={3} />
+                      <Check size={15} color="var(--color-success)" strokeWidth={3} />
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: '#22c55e', marginBottom: 2 }}>Perfil 100% completo</div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-success)', marginBottom: 2 }}>Perfil 100% completo</div>
                       <div style={{ fontSize: 12, color: colors.subtle }}>Todos os campos preenchidos com qualidade</div>
                     </div>
-                    <span style={{ fontSize: 13, fontWeight: 800, color: '#22c55e', flexShrink: 0 }}>100%</span>
+                    <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--color-success)', flexShrink: 0 }}>100%</span>
                   </div>
                 ) : (
                   /* ── Normal state: collapsible checklist ── */
@@ -6504,7 +6337,7 @@ export default function ProjectPage() {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                     {needsWork.map(f => (
                       <div key={f.key} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-                        <div style={{ width: 5, height: 5, borderRadius: '50%', background: f.quality === 'short' ? colors.yellow : '#1b78f7', flexShrink: 0, marginTop: 6 }} />
+                        <div style={{ width: 5, height: 5, borderRadius: '50%', background: f.quality === 'short' ? colors.yellow : 'var(--color-primary)', flexShrink: 0, marginTop: 6 }} />
                         <div>
                           <span style={{ fontSize: 11, fontWeight: 700, color: f.quality === 'short' ? colors.yellow : '#5a9ff5', display: 'block', marginBottom: 2 }}>
                             {f.label} {f.quality === 'short' ? '· muito curto' : '· em falta'}
@@ -6517,7 +6350,7 @@ export default function ProjectPage() {
                   {isOwner && (
                     <button
                       onClick={() => document.getElementById('missions-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-                      style={{ marginTop: 14, width: '100%', background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.2)', color: '#5a9ff5', borderRadius: 10, padding: '9px 0', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+                      style={{ marginTop: 14, width: '100%', background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', color: '#5a9ff5', borderRadius: 10, padding: '9px 0', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
                     >
                       <span style={{display:'flex',alignItems:'center',gap:6,justifyContent:'center'}}>Ver missões <ChevronDown size={14} /></span>
                     </button>
@@ -6547,17 +6380,17 @@ export default function ProjectPage() {
                 onClick={handleLike}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 7,
-                  background: liked ? 'rgba(239,68,68,0.1)' : 'var(--c-bg-alt)',
-                  border: `1.5px solid ${liked ? 'rgba(239,68,68,0.35)' : 'var(--c-border)'}`,
+                  background: liked ? 'var(--color-error-subtle)' : 'var(--color-bg-alt)',
+                  border: `1.5px solid ${liked ? 'var(--color-error-subtle)' : 'var(--color-border)'}`,
                   borderRadius: 10, padding: '8px 16px',
-                  color: liked ? '#ef4444' : 'var(--c-muted)',
+                  color: liked ? 'var(--color-error)' : 'var(--color-text-secondary)',
                   fontSize: 14, fontWeight: 700, cursor: likeLoading ? 'default' : 'pointer',
                   fontFamily: 'inherit', transition: 'all 0.15s',
                 }}
-                onMouseEnter={e => { if (!liked) { e.currentTarget.style.borderColor = 'rgba(239,68,68,0.3)'; e.currentTarget.style.color = '#ef4444' }}}
-                onMouseLeave={e => { if (!liked) { e.currentTarget.style.borderColor = 'var(--c-border)'; e.currentTarget.style.color = 'var(--c-muted)' }}}
+                onMouseEnter={e => { if (!liked) { e.currentTarget.style.borderColor = 'var(--color-error-subtle)'; e.currentTarget.style.color = 'var(--color-error)' }}}
+                onMouseLeave={e => { if (!liked) { e.currentTarget.style.borderColor = 'var(--color-border)'; e.currentTarget.style.color = 'var(--color-text-secondary)' }}}
               >
-                <Heart size={16} fill={liked ? '#ef4444' : 'none'} />
+                <Heart size={16} fill={liked ? 'var(--color-error)' : 'none'} />
                 {likeCount > 0 ? likeCount : ''} {likeCount === 1 ? 'gosto' : 'gostos'}
               </button>
             )}
@@ -6566,15 +6399,15 @@ export default function ProjectPage() {
             {isOwner && interestCount > 0 && (
               <button onClick={() => setShowInterestors(true)} style={{
                 display: 'flex', alignItems: 'center', gap: 6,
-                background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)',
+                background: 'var(--color-warning-subtle)', border: '1px solid var(--color-warning-subtle)',
                 borderRadius: 10, padding: '8px 14px',
-                color: '#f59e0b', fontSize: 13, fontWeight: 700,
+                color: 'var(--color-warning)', fontSize: 13, fontWeight: 700,
                 cursor: 'pointer',
               }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(245,158,11,0.15)' }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(245,158,11,0.08)' }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'var(--color-warning-subtle)' }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'var(--color-warning-subtle)' }}
               >
-                <Star size={14} fill="#f59e0b" />
+                <Star size={14} fill="var(--color-warning)" />
                 {interestCount} recrutador{interestCount !== 1 ? 'es' : ''} com interesse
               </button>
             )}
@@ -6588,13 +6421,13 @@ export default function ProjectPage() {
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
               <div onClick={e => e.stopPropagation()} style={{
-                background: 'var(--c-card)', border: '1px solid var(--c-border)',
+                background: 'var(--color-surface)', border: '1px solid var(--color-border)',
                 borderRadius: 14, padding: '28px 28px 24px', maxWidth: 440, width: '90%',
                 maxHeight: '70vh', overflowY: 'auto',
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <Star size={18} fill="#f59e0b" color="#f59e0b" />
+                    <Star size={18} fill="var(--color-warning)" color="var(--color-warning)" />
                     <span style={{ fontWeight: 700, fontSize: 16 }}>Recrutadores interessados</span>
                   </div>
                   <button onClick={() => setShowInterestors(false)} className="icon-btn-ghost">
@@ -6602,37 +6435,37 @@ export default function ProjectPage() {
                   </button>
                 </div>
                 {interestors.length === 0 ? (
-                  <p style={{ color: 'var(--c-muted)', fontSize: 14, textAlign: 'center', padding: '16px 0' }}>Ainda nenhum recrutador.</p>
+                  <p style={{ color: 'var(--color-text-secondary)', fontSize: 14, textAlign: 'center', padding: '16px 0' }}>Ainda nenhum recrutador.</p>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                     {interestors.map(rec => (
                       <div key={rec.id} style={{
                         display: 'flex', alignItems: 'center', gap: 12,
                         padding: '12px 14px', borderRadius: 12,
-                        background: 'var(--c-bg)', border: '1px solid var(--c-border)',
+                        background: 'var(--color-bg)', border: '1px solid var(--color-border)',
                       }}>
                         <div style={{
                           width: 40, height: 40, borderRadius: '50%', flexShrink: 0,
-                          background: 'var(--c-border)',
+                          background: 'var(--color-border)',
                           overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center',
                         }}>
                           {rec.avatar_url
                             ? <img src={rec.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                            : <User size={18} color="var(--c-muted)" />
+                            : <User size={18} color="var(--color-text-secondary)" />
                           }
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--c-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--color-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {rec.full_name || rec.username || 'Recrutador'}
                           </div>
                           {rec.company && (
-                            <div style={{ fontSize: 12, color: 'var(--c-muted)', marginTop: 1 }}>{rec.company}</div>
+                            <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 1 }}>{rec.company}</div>
                           )}
                         </div>
                         <a href={`/u/${rec.username || rec.id}`} style={{
                           padding: '6px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600,
-                          background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)',
-                          color: 'var(--c-text)', textDecoration: 'none', flexShrink: 0,
+                          background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)',
+                          color: 'var(--color-text)', textDecoration: 'none', flexShrink: 0,
                         }}>Ver perfil</a>
                       </div>
                     ))}
@@ -6644,7 +6477,7 @@ export default function ProjectPage() {
 
           {/* Comments */}
           <div style={{
-            background: 'var(--c-card)', border: '1px solid var(--c-border)',
+            background: 'var(--color-surface)', border: '1px solid var(--color-border)',
             borderRadius: 12, padding: '22px 24px',
           }}>
             <ProjectComments projectId={project.id} projectAuthorId={project.user_id} />
@@ -6661,9 +6494,9 @@ export default function ProjectPage() {
           style={{
             position: 'fixed', bottom: 88, right: 20, zIndex: 200,
             width: 44, height: 44, borderRadius: '50%',
-            background: coachOpen ? 'var(--c-bg-alt)' : '#1b78f7',
+            background: coachOpen ? 'var(--color-bg-alt)' : 'var(--color-primary)',
             border: coachOpen ? `2px solid ${colors.border}` : '2px solid transparent',
-            boxShadow: coachOpen ? '0 2px 12px rgba(0,0,0,0.15)' : '0 4px 20px rgba(27,120,247,0.4)',
+            boxShadow: coachOpen ? '0 2px 12px rgba(0,0,0,0.15)' : '0 4px 20px var(--color-primary-subtle)',
             cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
             transition: 'all 0.2s',
           }}
@@ -6683,8 +6516,8 @@ export default function ProjectPage() {
               width: 360, height: 480,
               maxHeight: 'calc(100dvh - 180px)',
               zIndex: 199,
-              background: 'var(--c-card)',
-              border: '1px solid var(--c-border)',
+              background: 'var(--color-surface)',
+              border: '1px solid var(--color-border)',
               borderRadius: 16,
               display: 'flex', flexDirection: 'column',
               boxShadow: '0 8px 40px rgba(0,0,0,0.28)',
@@ -6692,9 +6525,9 @@ export default function ProjectPage() {
             }}
           >
             {/* Header */}
-            <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--c-border)', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0, background: 'var(--c-bg-alt)' }}>
-              <div style={{ width: 30, height: 30, borderRadius: 9, background: 'rgba(27,120,247,0.12)', border: '1px solid rgba(27,120,247,0.22)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <Bot size={15} color="#1b78f7" />
+            <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0, background: 'var(--color-bg-alt)' }}>
+              <div style={{ width: 30, height: 30, borderRadius: 9, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <Bot size={15} color="var(--color-primary)" />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: colors.text }}>Assistente IA</div>
@@ -6713,8 +6546,8 @@ export default function ProjectPage() {
             <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12, padding: '16px 18px' }}>
               {coachMessages.length === 0 && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  <div style={{ background: 'rgba(27,120,247,0.08)', border: '1px solid rgba(27,120,247,0.18)', borderRadius: 12, padding: '14px 16px', fontSize: 13, color: colors.text, lineHeight: 1.6 }}>
-                    <span style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#1b78f7', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>Assistente IA</span>
+                  <div style={{ background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 12, padding: '14px 16px', fontSize: 13, color: colors.text, lineHeight: 1.6 }}>
+                    <span style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--color-primary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>Assistente IA</span>
                     Olá! Sou o teu assistente para o <strong>{project.name}</strong>. Posso ajudar-te a melhorar cada secção, pensar na estrutura, ou preparar a apresentação. Em que queres trabalhar?
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -6726,8 +6559,8 @@ export default function ProjectPage() {
                       <button
                         key={q}
                         onClick={() => { setCoachInput(q); setTimeout(() => document.getElementById('coach-input-desktop')?.focus(), 50) }}
-                        style={{ textAlign: 'left', background: 'var(--c-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: 10, padding: '9px 13px', fontSize: 12, color: colors.muted, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s' }}
-                        onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(27,120,247,0.4)'; e.currentTarget.style.color = colors.text }}
+                        style={{ textAlign: 'left', background: 'var(--color-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: 10, padding: '9px 13px', fontSize: 12, color: colors.muted, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s' }}
+                        onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--color-primary-subtle)'; e.currentTarget.style.color = colors.text }}
                         onMouseLeave={e => { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.color = colors.muted }}
                       >{q}</button>
                     ))}
@@ -6738,7 +6571,7 @@ export default function ProjectPage() {
                 <div key={i} style={{
                   alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start',
                   maxWidth: '87%',
-                  background: m.role === 'user' ? '#1b78f7' : 'var(--c-bg-alt)',
+                  background: m.role === 'user' ? 'var(--color-primary)' : 'var(--color-bg-alt)',
                   border: m.role === 'user' ? 'none' : `1px solid ${colors.border}`,
                   borderRadius: m.role === 'user' ? '14px 14px 4px 14px' : '14px 14px 14px 4px',
                   padding: '10px 14px',
@@ -6749,7 +6582,7 @@ export default function ProjectPage() {
                 }}>{m.content}</div>
               ))}
               {coachLoading && (
-                <div style={{ alignSelf: 'flex-start', background: 'var(--c-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: '14px 14px 14px 4px', padding: '10px 16px', display: 'flex', gap: 5, alignItems: 'center' }}>
+                <div style={{ alignSelf: 'flex-start', background: 'var(--color-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: '14px 14px 14px 4px', padding: '10px 16px', display: 'flex', gap: 5, alignItems: 'center' }}>
                   {[0,1,2].map(i => <div key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: colors.muted, animation: `bounce 1.2s ease-in-out ${i * 0.2}s infinite` }} />)}
                 </div>
               )}
@@ -6757,7 +6590,7 @@ export default function ProjectPage() {
             </div>
 
             {/* Input */}
-            <form onSubmit={sendCoach} style={{ padding: '12px 18px 18px', borderTop: '1px solid var(--c-border)', display: 'flex', gap: 8, flexShrink: 0, background: 'var(--c-bg-alt)' }}>
+            <form onSubmit={sendCoach} style={{ padding: '12px 18px 18px', borderTop: '1px solid var(--color-border)', display: 'flex', gap: 8, flexShrink: 0, background: 'var(--color-bg-alt)' }}>
               <input
                 id="coach-input-desktop"
                 value={coachInput}
@@ -6767,7 +6600,7 @@ export default function ProjectPage() {
                 disabled={coachLoading}
                 autoFocus
                 style={{
-                  flex: 1, background: 'var(--c-bg-alt)', border: `1px solid ${colors.border}`,
+                  flex: 1, background: 'var(--color-bg-alt)', border: `1px solid ${colors.border}`,
                   borderRadius: 10, padding: '10px 14px', fontSize: 13,
                   color: colors.text, fontFamily: 'inherit', outline: 'none',
                   opacity: coachLoading ? 0.6 : 1,
@@ -6777,8 +6610,8 @@ export default function ProjectPage() {
                 type="submit"
                 disabled={!coachInput.trim() || coachLoading}
                 style={{
-                  background: coachInput.trim() && !coachLoading ? '#1b78f7' : 'var(--c-bg-alt)',
-                  border: `1px solid ${coachInput.trim() && !coachLoading ? '#1b78f7' : colors.border}`,
+                  background: coachInput.trim() && !coachLoading ? 'var(--color-primary)' : 'var(--color-bg-alt)',
+                  border: `1px solid ${coachInput.trim() && !coachLoading ? 'var(--color-primary)' : colors.border}`,
                   borderRadius: 10, padding: '10px 14px',
                   color: coachInput.trim() && !coachLoading ? '#fff' : colors.muted,
                   cursor: coachInput.trim() && !coachLoading ? 'pointer' : 'default',

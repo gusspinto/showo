@@ -8,15 +8,15 @@ import { containsProfanity } from '../lib/profanity'
 import { Navbar } from '../components/Navbar'
 
 const C = {
-  bg:     'var(--c-bg)',
-  card:   'var(--c-card)',
-  border: 'var(--c-border)',
-  bright: 'var(--c-border-bright)',
-  blue:   '#1b78f7',
-  text:   'var(--c-text)',
-  muted:  'var(--c-muted)',
-  subtle: 'var(--c-subtle)',
-  glass: 'var(--c-glass)', glassBorder: 'var(--c-glass-border)', glassBorderBright: 'var(--c-glass-border-bright)',
+  bg:     'var(--color-bg)',
+  card:   'var(--color-surface)',
+  border: 'var(--color-border)',
+  bright: 'var(--color-border-hover)',
+  blue:   'var(--color-primary)',
+  text:   'var(--color-text)',
+  muted:  'var(--color-text-secondary)',
+  subtle: 'var(--color-text-tertiary)',
+  glass: 'var(--color-glass)', glassBorder: 'var(--color-glass-border)', glassBorderBright: 'var(--color-glass-border-bright)',
   glassStyle: { backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' },
 }
 
@@ -31,9 +31,9 @@ const TYPE_LABELS = {
 const TYPE_COLORS = {
   pap:         ['#6366f1', '#4f46e5'],
   internship:  ['#10b981', '#059669'],
-  group:       ['#f59e0b', '#d97706'],
-  personal:    ['#1b78f7', '#4f46e5'],
-  competition: ['#ef4444', '#dc2626'],
+  group:       ['var(--color-warning)', '#d97706'],
+  personal:    ['var(--color-primary)', '#4f46e5'],
+  competition: ['var(--color-error)', '#dc2626'],
 }
 
 function ScoreBar({ score }) {
@@ -41,12 +41,12 @@ function ScoreBar({ score }) {
     <div style={{ marginTop: 12 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
         <span style={{ fontSize: 11, color: C.muted, fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase' }}>Score estimado</span>
-        <span style={{ fontSize: 13, fontWeight: 800, color: score > 60 ? '#10b981' : score > 30 ? '#f59e0b' : C.muted }}>{score}%</span>
+        <span style={{ fontSize: 13, fontWeight: 800, color: score > 60 ? '#10b981' : score > 30 ? 'var(--color-warning)' : C.muted }}>{score}%</span>
       </div>
       <div style={{ height: 4, borderRadius: 99, background: C.border, overflow: 'hidden' }}>
         <div style={{
           height: '100%', borderRadius: 99,
-          background: score > 60 ? 'linear-gradient(90deg, #10b981, #22c55e)' : score > 30 ? 'linear-gradient(90deg, #f59e0b, #fbbf24)' : 'linear-gradient(90deg, #1b78f7, #818cf8)',
+          background: score > 60 ? 'linear-gradient(90deg, #10b981, var(--color-success))' : score > 30 ? 'linear-gradient(90deg, var(--color-warning), var(--color-warning))' : 'linear-gradient(90deg, var(--color-primary), #818cf8)',
           width: `${score}%`, transition: 'width 0.6s cubic-bezier(0.4,0,0.2,1)',
         }} />
       </div>
@@ -55,7 +55,7 @@ function ScoreBar({ score }) {
 }
 
 function LivePreview({ projectType, answers, currentField, currentValue }) {
-  const [c1, c2] = TYPE_COLORS[projectType] ?? ['#1b78f7', '#4f46e5']
+  const [c1, c2] = TYPE_COLORS[projectType] ?? ['var(--color-primary)', '#4f46e5']
   const display = { ...answers }
   if (currentField && currentValue) display[currentField] = currentValue
 
@@ -127,11 +127,11 @@ function LivePreview({ projectType, answers, currentField, currentValue }) {
 
 const PROJECT_TYPES = [
   { id: 'pap',         label: 'PAP',           desc: 'Projeto final de curso',  color: '#6366f1', Icon: GraduationCap },
-  { id: 'personal',    label: 'Pessoal',        desc: 'Projeto próprio',         color: '#1b78f7', Icon: Rocket        },
-  { id: 'group',       label: 'Grupo',          desc: 'Trabalho colaborativo',   color: '#f59e0b', Icon: Users         },
-  { id: 'competition', label: 'Competição',     desc: 'Hackathon ou concurso',   color: '#ef4444', Icon: Trophy        },
+  { id: 'personal',    label: 'Pessoal',        desc: 'Projeto próprio',         color: 'var(--color-primary)', Icon: Rocket        },
+  { id: 'group',       label: 'Grupo',          desc: 'Trabalho colaborativo',   color: 'var(--color-warning)', Icon: Users         },
+  { id: 'competition', label: 'Competição',     desc: 'Hackathon ou concurso',   color: 'var(--color-error)', Icon: Trophy        },
   { id: 'internship',  label: 'Estágio',        desc: 'Projeto de estágio',      color: '#10b981', Icon: Briefcase     },
-  { id: 'presentation',label: 'Apresentação',   desc: 'Slides ou pitch',         color: '#8b5cf6', Icon: BarChart2     },
+  { id: 'presentation',label: 'Apresentação',   desc: 'Slides ou pitch',         color: 'var(--color-accent)', Icon: BarChart2     },
 ]
 
 export default function AIInterview() {
@@ -375,9 +375,9 @@ export default function AIInterview() {
         @keyframes fadeIn { from{opacity:0} to{opacity:1} }
         @keyframes glow { 0%,100%{opacity:0.4} 50%{opacity:0.8} }
         .sug-chip { transition: all 0.12s !important; cursor: pointer; }
-        .sug-chip:hover { background: rgba(27,120,247,0.14) !important; border-color: #1b78f7 !important; color: #1b78f7 !important; }
+        .sug-chip:hover { background: var(--color-primary-subtle) !important; border-color: var(--color-primary) !important; color: var(--color-primary) !important; }
         .skip-btn { transition: all 0.12s !important; cursor: pointer; }
-        .skip-btn:hover { color: var(--c-text) !important; }
+        .skip-btn:hover { color: var(--color-text) !important; }
         .send-btn:hover { background: #1564d4 !important; }
         .send-btn { transition: background 0.12s !important; }
         @media (max-width: 900px) { .iv-preview { display: none !important; } }
@@ -397,7 +397,7 @@ export default function AIInterview() {
       {/* Progress bar */}
       <div style={{ height: 3, background: C.border, position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100 }}>
         <div style={{
-          height: '100%', background: 'linear-gradient(90deg, #1b78f7, #818cf8)',
+          height: '100%', background: 'linear-gradient(90deg, var(--color-primary), #818cf8)',
           width: `${phase === 'setup' ? 0 : phase === 'loading' ? 10 : phase === 'generating' ? 95 : progress}%`,
           transition: 'width 0.5s cubic-bezier(0.4,0,0.2,1)',
         }} />
@@ -431,9 +431,9 @@ export default function AIInterview() {
               <div style={{ marginBottom: 32, textAlign: 'center' }}>
                 <div style={{
                   width: 56, height: 56, borderRadius: 14, margin: '0 auto 20px',
-                  background: '#1b78f7',
+                  background: 'var(--color-primary)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  boxShadow: '0 2px 8px rgba(27,120,247,0.2)',
+                  boxShadow: '0 2px 8px var(--color-primary-subtle)',
                 }}>
                   <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
                 </div>
@@ -456,7 +456,7 @@ export default function AIInterview() {
                   autoFocus
                   style={{
                     width: '100%', boxSizing: 'border-box',
-                    background: 'var(--c-bg-alt)', border: `1.5px solid ${C.bright}`,
+                    background: 'var(--color-bg-alt)', border: `1.5px solid ${C.bright}`,
                     borderRadius: 10, color: C.text, fontSize: 15,
                     fontFamily: 'inherit', outline: 'none', resize: 'none',
                     padding: '14px 16px', lineHeight: 1.65,
@@ -466,7 +466,7 @@ export default function AIInterview() {
                   onBlur={e => e.target.style.borderColor = C.bright}
                 />
                 {setupError && (
-                  <p style={{ margin: '8px 0 0', fontSize: 12, color: '#ef4444', display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <p style={{ margin: '8px 0 0', fontSize: 12, color: 'var(--color-error)', display: 'flex', alignItems: 'center', gap: 5 }}>
                     <AlertTriangle size={12} /> {setupError}
                   </p>
                 )}
@@ -486,7 +486,7 @@ export default function AIInterview() {
                         type="button"
                         onClick={() => setSetupType(t.id)}
                         style={{
-                          background: selected ? `${t.color}12` : 'var(--c-bg-alt)',
+                          background: selected ? `${t.color}12` : 'var(--color-bg-alt)',
                           border: `1.5px solid ${selected ? t.color : C.border}`,
                           borderRadius: 10, padding: '12px 10px',
                           color: selected ? t.color : C.muted,
@@ -501,7 +501,7 @@ export default function AIInterview() {
                       >
                         <div style={{
                           width: 32, height: 32, borderRadius: 8, flexShrink: 0,
-                          background: selected ? `${t.color}20` : 'var(--c-card)',
+                          background: selected ? `${t.color}20` : 'var(--color-surface)',
                           border: `1px solid ${selected ? t.color + '40' : C.border}`,
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
                           color: selected ? t.color : C.subtle,
@@ -524,12 +524,12 @@ export default function AIInterview() {
                 disabled={!setupDesc.trim()}
                 style={{
                   width: '100%',
-                  background: setupDesc.trim() ? '#1b78f7' : C.border,
+                  background: setupDesc.trim() ? 'var(--color-primary)' : C.border,
                   border: 'none', borderRadius: 10,
                   color: '#fff', fontSize: 16, fontWeight: 700,
                   padding: '16px 0', cursor: setupDesc.trim() ? 'pointer' : 'not-allowed',
                   fontFamily: 'inherit', transition: 'background 0.15s',
-                  boxShadow: setupDesc.trim() ? '0 2px 8px rgba(27,120,247,0.2)' : 'none',
+                  boxShadow: setupDesc.trim() ? '0 2px 8px var(--color-primary-subtle)' : 'none',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                 }}
               >
@@ -544,9 +544,9 @@ export default function AIInterview() {
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 320, gap: 20, animation: 'fadeIn 0.4s ease' }}>
               <div style={{
                 width: 56, height: 56, borderRadius: 14,
-                background: '#1b78f7',
+                background: 'var(--color-primary)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: '0 0 24px rgba(27,120,247,0.35)',
+                boxShadow: '0 0 24px var(--color-primary-subtle)',
                 animation: 'glow 2s ease-in-out infinite',
               }}>
                 <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
@@ -557,7 +557,7 @@ export default function AIInterview() {
               </div>
               <div style={{ display: 'flex', gap: 6 }}>
                 {[0, 1, 2].map(i => (
-                  <div key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: '#1b78f7', animation: `glow 1.2s ease-in-out ${i * 0.4}s infinite` }} />
+                  <div key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--color-primary)', animation: `glow 1.2s ease-in-out ${i * 0.4}s infinite` }} />
                 ))}
               </div>
             </div>
@@ -566,12 +566,12 @@ export default function AIInterview() {
           {/* Error */}
           {phase === 'error' && (
             <div style={{ textAlign: 'center', paddingTop: 80, animation: 'fadeIn 0.4s ease' }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16, color: '#ef4444' }}><AlertTriangle size={36} /></div>
-              <p style={{ color: '#ef4444', fontSize: 15, marginBottom: 8, maxWidth: 400, margin: '0 auto 8px' }}>{errorMsg}</p>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16, color: 'var(--color-error)' }}><AlertTriangle size={36} /></div>
+              <p style={{ color: 'var(--color-error)', fontSize: 15, marginBottom: 8, maxWidth: 400, margin: '0 auto 8px' }}>{errorMsg}</p>
               <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginTop: 24, flexWrap: 'wrap' }}>
                 <button
                   onClick={() => generateAndSave(answers)}
-                  style={{ background: C.blue, color: '#fff', border: 'none', borderRadius: 10, padding: '10px 24px', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600, boxShadow: '0 2px 8px rgba(27,120,247,0.2)' }}
+                  style={{ background: C.blue, color: '#fff', border: 'none', borderRadius: 10, padding: '10px 24px', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600, boxShadow: '0 2px 8px var(--color-primary-subtle)' }}
                 >
                   Tentar novamente
                 </button>
@@ -590,9 +590,9 @@ export default function AIInterview() {
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 320, gap: 20, animation: 'fadeIn 0.4s ease' }}>
               <div style={{
                 width: 72, height: 72, borderRadius: 18,
-                background: '#1b78f7',
+                background: 'var(--color-primary)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: '0 0 32px rgba(27,120,247,0.3)',
+                boxShadow: '0 0 32px var(--color-primary-subtle)',
               }}>
                 <div style={{ width: 30, height: 30, border: '3px solid rgba(255,255,255,0.3)', borderTop: '3px solid #fff', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
               </div>
@@ -612,15 +612,15 @@ export default function AIInterview() {
               {/* Understanding banner */}
               {understanding && (
                 <div style={{
-                  background: 'rgba(27,120,247,0.06)',
-                  border: '1px solid rgba(27,120,247,0.2)',
+                  background: 'var(--color-primary-subtle)',
+                  border: '1px solid var(--color-primary-subtle)',
                   borderRadius: 10, padding: '12px 16px', marginBottom: 28,
                   animation: 'fadeSlideUp 0.5s ease', width: '100%', boxSizing: 'border-box',
                 }}>
                   <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
                     <div style={{
                       width: 28, height: 28, borderRadius: 7, flexShrink: 0,
-                      background: '#1b78f7',
+                      background: 'var(--color-primary)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                     }}>
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
@@ -683,7 +683,7 @@ export default function AIInterview() {
                                 inputRef.current?.focus()
                               }}
                               style={{
-                                background: 'rgba(27,120,247,0.07)', border: `1px solid ${C.border}`,
+                                background: 'var(--color-primary-subtle)', border: `1px solid ${C.border}`,
                                 color: C.muted, borderRadius: 6, padding: '5px 14px',
                                 fontSize: 12, fontWeight: 600, fontFamily: 'inherit',
                               }}
@@ -699,7 +699,7 @@ export default function AIInterview() {
                     <div
                       style={{
                         display: 'flex', gap: 10, alignItems: 'flex-end',
-                        background: 'var(--c-bg-alt)', border: `1.5px solid ${C.border}`,
+                        background: 'var(--color-bg-alt)', border: `1.5px solid ${C.border}`,
                         borderRadius: 10, padding: '8px 8px 8px 16px',
                       }}
                       onFocusCapture={e => e.currentTarget.style.borderColor = C.blue}
@@ -744,13 +744,13 @@ export default function AIInterview() {
                     </div>
 
                     {q.field === 'name' && inputValue.trim() && looksLikeSentence(inputValue.trim()) && (
-                      <p style={{ margin: '8px 0 0', fontSize: 12, color: '#f59e0b', display: 'flex', alignItems: 'center', gap: 5 }}>
+                      <p style={{ margin: '8px 0 0', fontSize: 12, color: 'var(--color-warning)', display: 'flex', alignItems: 'center', gap: 5 }}>
                         <AlertTriangle size={12} /> Parece uma frase. Tenta um nome curto tipo marca (ex: StudyFor, TaskFlow)
                       </p>
                     )}
 
                     {inputError && (
-                      <p style={{ margin: '8px 0 0', fontSize: 12, color: '#ef4444', display: 'flex', alignItems: 'center', gap: 5 }}>
+                      <p style={{ margin: '8px 0 0', fontSize: 12, color: 'var(--color-error)', display: 'flex', alignItems: 'center', gap: 5 }}>
                         <AlertTriangle size={12} /> {inputError}
                       </p>
                     )}

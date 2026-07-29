@@ -11,20 +11,20 @@ import { containsProfanity } from '../lib/profanity'
 import SkillsPicker from '../components/SkillsPicker'
 
 const colors = {
-  bg: 'var(--c-bg)',
-  bgAlt: 'var(--c-bg-alt)',
-  card: 'var(--c-card)',
-  border: 'var(--c-border)',
-  borderBright: 'var(--c-border-bright)',
-  blue: '#1b78f7',
-  blueHover: '#1564d4',
-  text: 'var(--c-text)',
-  muted: 'var(--c-muted)',
-  subtle: 'var(--c-subtle)',
-  green: '#22c55e',
-  red: '#f43f5e',
-  inputBg: 'var(--c-bg)',
-  glass: 'var(--c-glass)', glassBorder: 'var(--c-glass-border)',
+  bg: 'var(--color-bg)',
+  bgAlt: 'var(--color-bg-alt)',
+  card: 'var(--color-surface)',
+  border: 'var(--color-border)',
+  borderBright: 'var(--color-border-hover)',
+  blue: 'var(--color-primary)',
+  blueHover: 'var(--color-primary-hover)',
+  text: 'var(--color-text)',
+  muted: 'var(--color-text-secondary)',
+  subtle: 'var(--color-text-tertiary)',
+  green: 'var(--color-success)',
+  red: 'var(--color-error)',
+  inputBg: 'var(--color-input-bg)',
+  glass: 'var(--color-glass)', glassBorder: 'var(--color-glass-border)',
 }
 
 const PROJECT_TYPES = [
@@ -67,7 +67,7 @@ const inputStyle = {
 const inputHandlers = {
   onFocus: e => {
     e.target.style.borderColor = colors.blue
-    e.target.style.boxShadow = '0 0 0 3px rgba(27,120,247,0.1)'
+    e.target.style.boxShadow = '0 0 0 3px var(--color-primary-subtle)'
   },
   onBlur: e => {
     e.target.style.borderColor = colors.border
@@ -268,7 +268,7 @@ export default function EditProject() {
   if (accessDenied) {
     return (
       <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, fontFamily: 'var(--font-body)', padding: 24, textAlign: 'center' }}>
-        <Lock size={48} color={colors.yellow ?? '#fbbf24'} />
+        <Lock size={48} color={colors.yellow ?? 'var(--color-warning)'} />
         <h2 style={{ margin: 0, fontSize: 24, fontWeight: 400, fontFamily: 'var(--font-heading)' }}>Acesso restrito</h2>
         <p style={{ color: colors.muted, margin: 0, maxWidth: 380, lineHeight: 1.65 }}>Só o criador deste projeto pode editá-lo. Usa o link privado de edição que recebeste quando criaste o projeto.</p>
         <button onClick={() => navigate(`/projeto/${slug}`)} style={{ background: colors.blue, color: '#fff', border: 'none', borderRadius: 8, padding: '12px 28px', fontSize: 15, fontWeight: 700, cursor: 'pointer', marginTop: 8, boxShadow: '0 2px 8px rgba(27,120,247,0.2)', fontFamily: 'inherit' }}>Ver o projeto</button>
@@ -312,7 +312,7 @@ export default function EditProject() {
             aria-label="Voltar ao projeto"
             style={{
               background: 'transparent', border: 'none',
-              color: 'var(--c-muted)', cursor: 'pointer', fontFamily: 'inherit',
+              color: 'var(--color-text-secondary)', cursor: 'pointer', fontFamily: 'inherit',
               width: 38, height: 38, borderRadius: 9, padding: 0,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               WebkitTapHighlightColor: 'transparent',
@@ -341,23 +341,23 @@ export default function EditProject() {
         @keyframes spin{to{transform:rotate(360deg)}}
         @media(max-width:600px){.ep-2col{grid-template-columns:1fr!important;}}
         .ep-progress { display: flex; align-items: center; gap: 12px; margin-top: 18px; }
-        .ep-progress-track { flex: 1; height: 8px; border-radius: 99px; background: var(--c-bg-alt); overflow: hidden; }
-        .ep-progress-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, #1b78f7, #4f46e5); transition: width 0.4s cubic-bezier(0.22,1,0.36,1); }
-        .ep-progress-label { font-size: 12px; font-weight: 800; color: var(--c-muted); flex-shrink: 0; font-variant-numeric: tabular-nums; }
-        .ep-section { background: var(--c-glass); border: 1px solid var(--c-glass-border); border-radius: 14px; margin-bottom: 12px; overflow: hidden; }
+        .ep-progress-track { flex: 1; height: 8px; border-radius: 99px; background: var(--color-bg-alt); overflow: hidden; }
+        .ep-progress-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--color-primary), #4f46e5); transition: width 0.4s cubic-bezier(0.22,1,0.36,1); }
+        .ep-progress-label { font-size: 12px; font-weight: 800; color: var(--color-text-secondary); flex-shrink: 0; font-variant-numeric: tabular-nums; }
+        .ep-section { background: var(--color-glass); border: 1px solid var(--color-glass-border); border-radius: 14px; margin-bottom: 12px; overflow: hidden; }
         .ep-sec-head { display: flex; align-items: center; gap: 12px; width: 100%; padding: 15px 16px; background: none; border: none; cursor: pointer; font-family: inherit; text-align: left; -webkit-tap-highlight-color: transparent; }
-        .ep-sec-icon { width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: rgba(27,120,247,0.1); color: #1b78f7; transition: background 0.2s, color 0.2s; }
-        .ep-sec-icon.done { background: rgba(27,120,247,0.14); color: #1b78f7; }
+        .ep-sec-icon { width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: var(--color-primary-subtle); color: var(--color-primary); transition: background 0.2s, color 0.2s; }
+        .ep-sec-icon.done { background: var(--color-primary-muted); color: var(--color-primary); }
         .ep-sec-titles { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-        .ep-sec-title { font-size: 15px; font-weight: 700; color: var(--c-text); }
-        .ep-sec-sub { font-size: 12px; color: var(--c-muted); }
-        .ep-sec-badge { flex-shrink: 0; min-width: 32px; height: 22px; padding: 0 8px; border-radius: 99px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; color: var(--c-muted); background: var(--c-bg-alt); font-variant-numeric: tabular-nums; }
-        .ep-sec-badge.done { color: #1b78f7; background: rgba(27,120,247,0.14); }
-        .ep-sec-chev { color: var(--c-muted); flex-shrink: 0; transition: transform 0.2s; }
+        .ep-sec-title { font-size: 15px; font-weight: 700; color: var(--color-text); }
+        .ep-sec-sub { font-size: 12px; color: var(--color-text-secondary); }
+        .ep-sec-badge { flex-shrink: 0; min-width: 32px; height: 22px; padding: 0 8px; border-radius: 99px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; color: var(--color-text-secondary); background: var(--color-bg-alt); font-variant-numeric: tabular-nums; }
+        .ep-sec-badge.done { color: var(--color-primary); background: var(--color-primary-muted); }
+        .ep-sec-chev { color: var(--color-text-secondary); flex-shrink: 0; transition: transform 0.2s; }
         .ep-sec-body { padding: 2px 16px 16px; }
-        .ep-save-bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; display: flex; align-items: center; gap: 12px; padding: 11px 16px calc(11px + env(safe-area-inset-bottom,0px)); background: var(--c-sidebar-bg-alpha); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border-top: 1px solid var(--c-border); }
-        .ep-save-status { flex: 1; min-width: 0; font-size: 13px; font-weight: 600; color: var(--c-muted); display: flex; align-items: center; gap: 8px; }
-        .ep-save-dot { width: 8px; height: 8px; border-radius: 50%; background: #fbbf24; flex-shrink: 0; }
+        .ep-save-bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; display: flex; align-items: center; gap: 12px; padding: 11px 16px calc(11px + env(safe-area-inset-bottom,0px)); background: var(--color-bg-overlay); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border-top: 1px solid var(--color-border); }
+        .ep-save-status { flex: 1; min-width: 0; font-size: 13px; font-weight: 600; color: var(--color-text-secondary); display: flex; align-items: center; gap: 8px; }
+        .ep-save-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--color-warning); flex-shrink: 0; }
         .ep-save-btn { flex-shrink: 0; padding: 12px 30px; border-radius: 10px; border: none; font-size: 15px; font-weight: 700; font-family: inherit; letter-spacing: -0.1px; }
         @media (min-width: 601px) {
           .ep-save-bar { left: 248px; }

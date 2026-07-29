@@ -10,16 +10,16 @@ import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
 
 const colors = {
-  bg:           'var(--c-bg)',
-  card:         'var(--c-card)',
-  border:       'var(--c-border)',
-  borderBright: 'var(--c-border-bright)',
-  blue:         '#1b78f7',
-  yellow:       '#fbbf24',
-  green:        '#22c55e',
-  text:         'var(--c-text)',
-  muted:        'var(--c-muted)',
-  subtle:       'var(--c-subtle)',
+  bg:           'var(--color-bg)',
+  card:         'var(--color-surface)',
+  border:       'var(--color-border)',
+  borderBright: 'var(--color-border-hover)',
+  blue:         'var(--color-primary)',
+  yellow:       'var(--color-warning)',
+  green:        'var(--color-success)',
+  text:         'var(--color-text)',
+  muted:        'var(--color-text-secondary)',
+  subtle:       'var(--color-text-tertiary)',
 }
 
 function StaticHero({ theme }) {
@@ -32,7 +32,7 @@ function StaticHero({ theme }) {
       textAlign: 'center',
     }}>
       Da defesa da PAP{' '}
-      <em style={{ fontStyle: 'italic', color: theme === 'light' ? '#0a2d78' : '#1b78f7' }}>à tua primeira oportunidade.</em>
+      <em style={{ fontStyle: 'italic', color: 'var(--color-primary)' }}>à tua primeira oportunidade.</em>
     </h1>
   )
 }
@@ -64,17 +64,17 @@ function HeroAurora({ theme }) {
 
 // ── Roles panel — second horizontal slide, reached by swiping/clicking the peek tab ──
 const ROLE_CARDS = [
-  { Icon: GraduationCap, label: 'Aluno',      plural: 'alunos',      color: '#1b78f7', desc: 'Mostra os teus projetos escolares numa página profissional.' },
-  { Icon: BookOpen,      label: 'Professor',  plural: 'professores', color: '#10b981', desc: 'Acompanha as turmas e o progresso dos teus alunos.' },
-  { Icon: Search,        label: 'Recrutador', plural: 'recrutadores',color: '#8b5cf6', desc: 'Encontra talento real através de projetos, não só CVs.' },
-  { Icon: Building2,     label: 'Empresa',    plural: 'empresas',    color: '#f59e0b', desc: 'Publica vagas e estágios para quem já mostra trabalho.' },
+  { Icon: GraduationCap, label: 'Aluno',      plural: 'alunos',      color: 'var(--color-primary)', desc: 'Mostra os teus projetos escolares numa página profissional.' },
+  { Icon: BookOpen,      label: 'Professor',  plural: 'professores', color: 'var(--color-success)', desc: 'Acompanha as turmas e o progresso dos teus alunos.' },
+  { Icon: Search,        label: 'Recrutador', plural: 'recrutadores',color: 'var(--color-accent)', desc: 'Encontra talento real através de projetos, não só CVs.' },
+  { Icon: Building2,     label: 'Empresa',    plural: 'empresas',    color: 'var(--color-warning)', desc: 'Publica vagas e estágios para quem já mostra trabalho.' },
 ]
 
 const ROLE_PHRASES = [
-  { lead: 'Mostra o teu trabalho como',    role: 'aluno',      color: '#1b78f7' },
-  { lead: 'Acompanha as tuas turmas como', role: 'professor',  color: '#10b981' },
-  { lead: 'Encontra talento como',         role: 'recrutador', color: '#8b5cf6' },
-  { lead: 'Publica vagas como',            role: 'empresa',    color: '#f59e0b' },
+  { lead: 'Mostra o teu trabalho como',    role: 'aluno',      color: 'var(--color-primary)' },
+  { lead: 'Acompanha as tuas turmas como', role: 'professor',  color: 'var(--color-success)' },
+  { lead: 'Encontra talento como',         role: 'recrutador', color: 'var(--color-accent)' },
+  { lead: 'Publica vagas como',            role: 'empresa',    color: 'var(--color-warning)' },
 ]
 
 function RoleCyclerHeadline() {
@@ -122,10 +122,10 @@ function RoleCyclerHeadline() {
 function RolesPanel({ onBack, theme }) {
   const cardBg = theme === 'light'
     ? 'rgba(13,58,150,0.32)'
-    : 'color-mix(in srgb, var(--c-card) 70%, #000 30%)'
-  // The brand blue (#1b78f7) used for "Aluno" reads poorly as text/icon directly on
+    : 'color-mix(in srgb, var(--color-surface) 70%, #000 30%)'
+  // The brand blue (var(--color-primary)) used for "Aluno" reads poorly as text/icon directly on
   // top of this dark-navy card in the light/blue hero — lighten just that one for contrast.
-  const accent = c => (theme === 'light' && c === '#1b78f7') ? '#9fc6ff' : c
+  const accent = c => (theme === 'light' && c === 'var(--color-primary)') ? '#9fc6ff' : c
   return (
     <div className="roles-panel" style={{
       flex: '0 0 100%', minWidth: '100%', scrollSnapAlign: 'start',
@@ -183,7 +183,7 @@ function MiniScoreRing({ score, size = 72 }) {
   const r = (size - stroke) / 2
   const circ = 2 * Math.PI * r
   const dash = (score / 100) * circ
-  const color = score >= 86 ? '#22c55e' : score >= 51 ? '#1b78f7' : '#f97316'
+  const color = score >= 86 ? 'var(--color-success)' : score >= 51 ? 'var(--color-primary)' : 'var(--color-warning)'
   return (
     <div style={{ position: 'relative', width: size, height: size, filter: `drop-shadow(0 0 5px ${color}70)` }}>
       <svg width={size} height={size} style={{ transform: 'rotate(-90deg)', display: 'block' }}>
@@ -246,14 +246,14 @@ const FeatureRow = memo(function FeatureRow({ reverse, tag, tagColor, title, des
           fontSize: 'clamp(22px, 2.5vw, 32px)', fontWeight: 900,
           letterSpacing: '-0.8px', lineHeight: 1.15,
           margin: '0 0 16px', fontFamily: 'var(--font-heading)',
-          color: 'var(--c-text)',
+          color: 'var(--color-text)',
         }}>{title}</h3>
-        {desc && <p style={{ fontSize: 16, color: 'var(--c-muted)', lineHeight: 1.7, margin: '0 0 24px' }}>{desc}</p>}
+        {desc && <p style={{ fontSize: 16, color: 'var(--color-text-secondary)', lineHeight: 1.7, margin: '0 0 24px' }}>{desc}</p>}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {bullets.map(b => (
             <div key={b} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <div style={{ width: 6, height: 6, borderRadius: '50%', background: bulletColor, flexShrink: 0 }} />
-              <span style={{ fontSize: 14, color: 'var(--c-muted)', fontWeight: 500 }}>{b}</span>
+              <span style={{ fontSize: 14, color: 'var(--color-text-secondary)', fontWeight: 500 }}>{b}</span>
             </div>
           ))}
         </div>
@@ -275,19 +275,19 @@ const MockupPortfolio = memo(function MockupPortfolio({ theme }) {
   const c = MOCKUP_COLORS[theme] ?? MOCKUP_COLORS.dark
   return (
     <div style={{ background: c.bg, border: `1px solid ${c.border}`, borderRadius: 12, overflow: 'hidden' }}>
-      <div style={{ height: 64, background: '#1b78f7', position: 'relative' }}>
-        <div style={{ position: 'absolute', bottom: -16, left: 20, width: 34, height: 34, borderRadius: '50%', background: '#1b78f7', border: `3px solid ${c.bg}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: '#fff' }}>J</div>
+      <div style={{ height: 64, background: 'var(--color-primary)', position: 'relative' }}>
+        <div style={{ position: 'absolute', bottom: -16, left: 20, width: 34, height: 34, borderRadius: '50%', background: 'var(--color-primary)', border: `3px solid ${c.bg}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: '#fff' }}>J</div>
       </div>
       <div style={{ padding: '22px 20px 18px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
           <span style={{ fontSize: 11, color: c.muted, fontWeight: 600 }}>PAP · Tecnologias de Informação</span>
-          <span style={{ fontSize: 12, fontWeight: 700, color: '#22c55e' }}>88 pts</span>
+          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-success)' }}>88 pts</span>
         </div>
         <div style={{ fontSize: 17, fontWeight: 400, color: c.text, letterSpacing: '-0.3px', fontFamily: 'var(--font-heading)', marginBottom: 4 }}>StockFlow Pro</div>
         <div style={{ fontSize: 12, color: c.muted, marginBottom: 14 }}>João Silva · Escola Profissional do Porto</div>
         <div style={{ borderTop: `1px solid ${c.border}`, paddingTop: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Globe size={12} color="#1b78f7" />
-          <span style={{ fontSize: 11, color: '#1b78f7', fontWeight: 600, fontFamily: 'monospace' }}>showo.pt/p/stockflow-pro</span>
+          <Globe size={12} color="var(--color-primary)" />
+          <span style={{ fontSize: 11, color: 'var(--color-primary)', fontWeight: 600, fontFamily: 'monospace' }}>showo.pt/p/stockflow-pro</span>
         </div>
       </div>
     </div>
@@ -297,11 +297,11 @@ const MockupPortfolio = memo(function MockupPortfolio({ theme }) {
 const MockupPotencial = memo(function MockupPotencial({ theme }) {
   const c = MOCKUP_COLORS[theme] ?? MOCKUP_COLORS.dark
   const bars = [
-    { label: 'Qualidade', value: 24, max: 30, color: '#1b78f7' },
-    { label: 'Profundidade', value: 14, max: 20, color: '#1b78f7' },
-    { label: 'Perfil', value: 10, max: 15, color: '#1b78f7' },
-    { label: 'Validação', value: 12, max: 20, color: '#1b78f7' },
-    { label: 'Consistência', value: 11, max: 15, color: '#1b78f7' },
+    { label: 'Qualidade', value: 24, max: 30, color: 'var(--color-primary)' },
+    { label: 'Profundidade', value: 14, max: 20, color: 'var(--color-primary)' },
+    { label: 'Perfil', value: 10, max: 15, color: 'var(--color-primary)' },
+    { label: 'Validação', value: 12, max: 20, color: 'var(--color-primary)' },
+    { label: 'Consistência', value: 11, max: 15, color: 'var(--color-primary)' },
   ]
   return (
     <div style={{ background: c.bg, border: `1px solid ${c.border}`, borderRadius: 12, overflow: 'hidden' }}>
@@ -309,11 +309,11 @@ const MockupPotencial = memo(function MockupPotencial({ theme }) {
         <div style={{ position: 'relative', width: 48, height: 48, flexShrink: 0 }}>
           <svg width={48} height={48} style={{ transform: 'rotate(-90deg)', display: 'block' }}>
             <circle cx={24} cy={24} r={20} fill="none" stroke={c.border} strokeWidth={4} />
-            <circle cx={24} cy={24} r={20} fill="none" stroke="#1b78f7" strokeWidth={4}
+            <circle cx={24} cy={24} r={20} fill="none" stroke="var(--color-primary)" strokeWidth={4}
               strokeDasharray={`${(71 / 100) * 2 * Math.PI * 20} ${2 * Math.PI * 20}`}
               strokeLinecap="round" />
           </svg>
-          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, color: '#1b78f7' }}>71</div>
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, color: 'var(--color-primary)' }}>71</div>
         </div>
         <div>
           <span style={{ fontSize: 13, fontWeight: 400, color: c.text, fontFamily: 'var(--font-heading)' }}>Potencial</span>
@@ -348,16 +348,16 @@ const MockupVagas = memo(function MockupVagas({ theme }) {
     <div style={{ background: c.bg, border: `1px solid ${c.border}`, borderRadius: 12, overflow: 'hidden' }}>
       <div style={{ padding: '16px 20px 13px', borderBottom: `1px solid ${c.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <span style={{ fontSize: 13, fontWeight: 400, color: c.text, fontFamily: 'var(--font-heading)' }}>Vagas para ti</span>
-        <span style={{ fontSize: 11, color: '#f59e0b', fontWeight: 700 }}>3 novas</span>
+        <span style={{ fontSize: 11, color: 'var(--color-warning)', fontWeight: 700 }}>3 novas</span>
       </div>
       <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column' }}>
         {vagas.map((v, i) => (
           <div key={v.empresa} style={{ padding: '11px 4px', borderTop: i > 0 ? `1px solid ${c.border}` : 'none', display: 'flex', alignItems: 'center', gap: 12 }}>
-            <Briefcase size={14} color="#1b78f7" style={{ flexShrink: 0 }} />
+            <Briefcase size={14} color="var(--color-primary)" style={{ flexShrink: 0 }} />
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
                 <span style={{ fontSize: 12, fontWeight: 700, color: c.text }}>{v.cargo}</span>
-                {v.nova && <span style={{ fontSize: 10, fontWeight: 700, color: '#f59e0b' }}>· Nova</span>}
+                {v.nova && <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-warning)' }}>· Nova</span>}
               </div>
               <span style={{ fontSize: 11, color: c.muted }}>{v.empresa} · {v.tipo}</span>
             </div>
@@ -390,8 +390,8 @@ const MockupDefesa = memo(function MockupDefesa({ theme }) {
           </div>
         ))}
         <div style={{ borderTop: `1px solid ${c.border}`, paddingTop: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Bot size={13} color="#1b78f7" />
-          <span style={{ fontSize: 11, color: '#1b78f7', fontWeight: 600 }}>IA a gerar respostas sugeridas...</span>
+          <Bot size={13} color="var(--color-primary)" />
+          <span style={{ fontSize: 11, color: 'var(--color-primary)', fontWeight: 600 }}>IA a gerar respostas sugeridas...</span>
         </div>
       </div>
     </div>
@@ -400,8 +400,8 @@ const MockupDefesa = memo(function MockupDefesa({ theme }) {
 
 const HOW_IT_WORKS = [
   { Icon: FileText, step: '1', title: 'Descreve o teu projeto', desc: 'Em poucas frases: o que fizeste, que problema resolve, que tecnologias usaste.' },
-  { Icon: Bot,       step: '2', title: 'A IA gera a tua página', desc: 'Score automático, sugestões de melhoria e uma página pronta a partilhar.' },
-  { Icon: Share2,    step: '3', title: 'Partilha e candidata-te', desc: 'Um link para o CV ou LinkedIn, ou candidata-te direto a vagas na plataforma.' },
+  { Icon: Trophy,    step: '2', title: 'Ganha o teu score', desc: 'Score automático, sugestões de melhoria e uma página pronta a partilhar.' },
+  { Icon: Share2,    step: '3', title: 'Partilha com o mundo', desc: 'Um link para o CV ou LinkedIn — mostra o que fizeste a professores e recrutadores.' },
 ]
 
 const QUICK_GOALS = [
@@ -509,7 +509,7 @@ export default function Home() {
       return
     }
     setSpamError(false)
-    navigate('/interview', {
+    navigate('/novo', {
       state: {
         type:        selectedGoal ?? 'personal',
         description: text,
@@ -522,7 +522,7 @@ export default function Home() {
     : 'O que já construíste? Ex: uma app de fitness, um site para a escola...'
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: 'var(--c-bg)', color: 'var(--c-text)', fontFamily: 'var(--font-body)' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: 'var(--color-bg)', color: 'var(--color-text)', fontFamily: 'var(--font-body)' }}>
       {showOnboarding && <Onboarding onDone={() => setShowOnboarding(false)} />}
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -564,10 +564,10 @@ export default function Home() {
         /* Peek tab — vertical glass pill, sits flush against the hero edge */
         .hero-peek-tab {
           position: absolute; top: 50%; transform: translateY(-50%);
-          width: 38px; height: 116px; border-radius: 19px; border: 1px solid var(--c-border-bright);
-          cursor: pointer; background: var(--c-card);
+          width: 38px; height: 116px; border-radius: 19px; border: 1px solid var(--color-border-hover);
+          cursor: pointer; background: var(--color-surface);
           backdrop-filter: blur(8px);
-          color: #1b78f7; display: flex; flex-direction: column; align-items: center;
+          color: var(--color-primary); display: flex; flex-direction: column; align-items: center;
           justify-content: center; gap: 10px; padding: 14px 0;
           z-index: 2; box-shadow: 0 8px 24px -8px rgba(0,0,0,0.25);
           transition: border-color 0.18s, color 0.18s, box-shadow 0.18s;
@@ -577,7 +577,7 @@ export default function Home() {
           letter-spacing: 0.1em; text-transform: uppercase;
         }
         .hero-peek-tab:hover {
-          border-color: #1b78f7;
+          border-color: var(--color-primary);
           box-shadow: 0 10px 28px -6px rgba(27,120,247,0.35);
         }
         /* Blue (light) hero: brighter glass card means a brighter blue washes out —
@@ -611,14 +611,14 @@ export default function Home() {
           .hero-scroll-cue { display: none !important; }
         }
         .goal-pill { transition: color 0.15s !important; cursor: pointer; display: inline-block; }
-        .goal-pill:hover { color: #1b78f7 !important; }
+        .goal-pill:hover { color: var(--color-primary) !important; }
         .hero-theme-blue .goal-pill:hover { color: #fff !important; }
         .feature-card { transition: all 0.2s ease !important; cursor: default; }
         .feature-card:hover {
-          border-color: var(--c-border-bright) !important;
+          border-color: var(--color-border-hover) !important;
           transform: translateY(-3px) !important;
           box-shadow: 0 16px 48px rgba(0,0,0,0.25) !important;
-          background: var(--c-card-hover) !important;
+          background: var(--color-surface-hover) !important;
         }
         .submit-btn:hover { opacity: 0.7 !important; }
         .submit-btn { transition: opacity 0.15s !important; }
@@ -626,7 +626,7 @@ export default function Home() {
         .home-cta-btn { transition: all 0.15s !important; }
         .home-cta-btn:hover { opacity: 0.88 !important; }
         .home-sec-link { transition: color 0.15s !important; }
-        .home-sec-link:hover { color: #1b78f7 !important; }
+        .home-sec-link:hover { color: var(--color-primary) !important; }
 
         .hero-mockup-col { display: block; }
 
@@ -643,7 +643,7 @@ export default function Home() {
           align-items: center; gap: 7px;
           margin-top: 28px;
           background: transparent; border: none;
-          color: var(--c-muted); font-size: 12px; font-weight: 600;
+          color: var(--color-text-secondary); font-size: 12px; font-weight: 600;
           font-family: inherit; cursor: pointer;
           opacity: 0.7; letter-spacing: 0.02em;
           -webkit-tap-highlight-color: transparent;
@@ -708,7 +708,7 @@ export default function Home() {
           className="home-nav-cta"
           onClick={() => setShowCreateModal(true)}
           style={{
-            background: '#1b78f7',
+            background: 'var(--color-primary)',
             color: '#fff', border: 'none', borderRadius: 12,
             padding: '9px 20px', fontSize: 14, fontWeight: 700,
             cursor: 'pointer', fontFamily: 'var(--font-body)',
@@ -726,15 +726,15 @@ export default function Home() {
       <div style={{ position: 'relative' }} className={heroTheme === 'light' ? 'hero-theme-blue' : 'hero-theme-dark'}>
         <div className="hero-bleed-box" style={heroTheme === 'light' ? {
           position: 'relative', overflow: 'hidden', color: '#fff',
-          background: 'linear-gradient(115deg, #1454c2 0%, #1b78f7 45%, #2f8bff 100%)',
+          background: 'linear-gradient(115deg, #1454c2 0%, var(--color-primary) 45%, #2f8bff 100%)',
           borderBottom: '1px solid rgba(255,255,255,0.18)',
-          '--c-bg': '#1b78f7', '--c-bg-alt': '#1664d8',
+          '--c-bg': 'var(--color-primary)', '--c-bg-alt': '#1664d8',
           '--c-card': 'rgba(255,255,255,0.14)', '--c-card-hover': 'rgba(255,255,255,0.2)',
           '--c-border': 'rgba(255,255,255,0.28)', '--c-border-bright': 'rgba(255,255,255,0.45)',
           '--c-muted': 'rgba(255,255,255,0.75)', '--c-text': '#ffffff', '--c-subtle': 'rgba(255,255,255,0.6)',
           '--c-input-bg': 'rgba(255,255,255,0.12)',
         } : {
-          position: 'relative', overflow: 'hidden', color: 'var(--c-text)',
+          position: 'relative', overflow: 'hidden', color: 'var(--color-text)',
           background: 'linear-gradient(115deg, #000 0%, #050b1c 40%, #0e2249 85%, #143169 100%)',
           borderBottom: '1px solid #1e3050',
           '--c-bg': '#060c18', '--c-bg-alt': '#111c32',
@@ -781,7 +781,7 @@ export default function Home() {
                   onClick={() => setSelectedGoal(selectedGoal === g.id ? null : g.id)}
                   style={{
                     position: 'relative', background: 'transparent', border: 'none',
-                    color: selectedGoal === g.id ? (heroTheme === 'light' ? '#ffffff' : '#1b78f7') : colors.muted,
+                    color: selectedGoal === g.id ? (heroTheme === 'light' ? '#ffffff' : 'var(--color-primary)') : colors.muted,
                     borderRadius: 999, padding: '7px 14px', fontSize: 13, fontWeight: 600, fontFamily: 'inherit',
                   }}
                 >{g.label}</button>
@@ -791,14 +791,14 @@ export default function Home() {
               className="widget-box"
               style={{
                 display: 'flex', alignItems: 'center', gap: 14,
-                background: 'var(--c-card)',
+                background: 'var(--color-surface)',
                 border: `1.5px solid ${heroTheme === 'light' ? 'rgba(255,255,255,0.4)' : 'rgba(27,120,247,0.22)'}`,
                 borderRadius: 14, padding: '8px 8px 8px 20px',
                 boxShadow: 'none',
                 transition: 'border-color 0.15s, box-shadow 0.15s',
               }}
               onFocusCapture={e => {
-                e.currentTarget.style.borderColor = heroTheme === 'light' ? '#ffffff' : '#1b78f7'
+                e.currentTarget.style.borderColor = heroTheme === 'light' ? '#ffffff' : 'var(--color-primary)'
                 e.currentTarget.style.boxShadow = heroTheme === 'light' ? '0 0 0 3px rgba(255,255,255,0.3)' : '0 0 0 3px rgba(27,120,247,0.15)'
               }}
               onBlurCapture={e => {
@@ -814,7 +814,7 @@ export default function Home() {
                 placeholder={placeholder}
                 style={{
                   flex: 1, background: 'transparent', border: 'none',
-                  color: 'var(--c-text)', fontSize: 17, fontFamily: 'inherit',
+                  color: 'var(--color-text)', fontSize: 17, fontFamily: 'inherit',
                   outline: 'none', minWidth: 0, padding: '12px 0',
                 }}
               />
@@ -822,9 +822,9 @@ export default function Home() {
                 type="submit" className="submit-btn"
                 disabled={!inputText.trim()}
                 style={{
-                  background: inputText.trim() ? '#1b78f7' : 'transparent',
-                  border: inputText.trim() ? 'none' : '1px solid var(--c-border)',
-                  color: inputText.trim() ? '#fff' : 'var(--c-subtle)',
+                  background: inputText.trim() ? 'var(--color-primary)' : 'transparent',
+                  border: inputText.trim() ? 'none' : '1px solid var(--color-border)',
+                  color: inputText.trim() ? '#fff' : 'var(--color-text-tertiary)',
                   display: 'flex', alignItems: 'center', gap: 6,
                   cursor: inputText.trim() ? 'pointer' : 'not-allowed', flexShrink: 0,
                   fontSize: 14, fontWeight: 700, fontFamily: 'inherit',
@@ -837,7 +837,7 @@ export default function Home() {
               </button>
             </div>
             {spamError && (
-              <p style={{ color: '#ef4444', fontSize: 13, marginTop: 12, fontWeight: 600, textAlign: 'center' }}>
+              <p style={{ color: 'var(--color-error)', fontSize: 13, marginTop: 12, fontWeight: 600, textAlign: 'center' }}>
                 Texto inválido. Escreve uma descrição real do teu projeto.
               </p>
             )}
@@ -886,7 +886,7 @@ export default function Home() {
         borderBottom: `1px solid ${colors.border}`,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, marginBottom: 24 }}>
-          <span style={{ fontFamily: 'var(--font-heading)', fontWeight: 400, fontSize: 'clamp(34px, 4.4vw, 50px)', color: '#1b78f7', letterSpacing: '-1px', fontVariantNumeric: 'tabular-nums', minWidth: '1.4em', textAlign: 'right' }}>
+          <span style={{ fontFamily: 'var(--font-heading)', fontWeight: 400, fontSize: 'clamp(34px, 4.4vw, 50px)', color: 'var(--color-primary)', letterSpacing: '-1px', fontVariantNumeric: 'tabular-nums', minWidth: '1.4em', textAlign: 'right' }}>
             {projectCount == null ? '...' : animatedCount}
           </span>
           <span style={{ fontSize: 14, color: colors.muted, fontWeight: 500, maxWidth: 200, textAlign: 'left', lineHeight: 1.3 }}>
@@ -929,7 +929,7 @@ export default function Home() {
                   width: 40, height: 40, borderRadius: 10, background: 'rgba(27,120,247,0.12)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16,
                 }}>
-                  <s.Icon size={19} color="#1b78f7" />
+                  <s.Icon size={19} color="var(--color-primary)" />
                 </div>
                 <span style={{
                   position: 'absolute', top: 20, right: 22, fontSize: 12, fontWeight: 800,
@@ -967,11 +967,11 @@ export default function Home() {
           <FeatureRow
             reverse={false}
             tag="Defesa PAP"
-            tagColor="#8b5cf6"
+            tagColor="var(--color-accent)"
             title="Treina a defesa. Prepara as respostas do júri."
             desc=""
             bullets={['Perguntas prováveis do júri', 'Treino de apresentação cronometrado', 'Guia do apresentador por secção']}
-            bulletColor="#8b5cf6"
+            bulletColor="var(--color-accent)"
             mockup={<MockupDefesa theme={theme} />}
           />
           </Reveal>
@@ -981,11 +981,11 @@ export default function Home() {
           <FeatureRow
             reverse={true}
             tag="Potencial"
-            tagColor="#1b78f7"
+            tagColor="var(--color-primary)"
             title="Descobre o potencial do teu projeto."
             desc=""
             bullets={['Score calculado por IA', 'Ranking público entre estudantes', 'Análise detalhada por categoria']}
-            bulletColor="#1b78f7"
+            bulletColor="var(--color-primary)"
             mockup={<MockupPotencial theme={theme} />}
           />
           </Reveal>
@@ -995,11 +995,11 @@ export default function Home() {
           <FeatureRow
             reverse={false}
             tag="Portfólio"
-            tagColor="#22c55e"
+            tagColor="var(--color-success)"
             title="A tua página profissional em minutos"
             desc=""
             bullets={['Link único partilhável', 'Página personalizada com o teu estilo', 'Partilha com empresas e professores']}
-            bulletColor="#22c55e"
+            bulletColor="var(--color-success)"
             mockup={<MockupPortfolio theme={theme} />}
           />
           </Reveal>
@@ -1009,11 +1009,11 @@ export default function Home() {
           <FeatureRow
             reverse={true}
             tag="Vagas"
-            tagColor="#f59e0b"
+            tagColor="var(--color-warning)"
             title="Candidata-te com o teu projeto como portfólio"
             desc=""
             bullets={['Vagas filtradas para estudantes', 'Candidatura com link do projeto', 'Visibilidade directa para empresas']}
-            bulletColor="#f59e0b"
+            bulletColor="var(--color-warning)"
             mockup={<MockupVagas theme={theme} />}
           />
           </Reveal>

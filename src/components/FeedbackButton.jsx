@@ -76,13 +76,13 @@ export default function FeedbackButton() {
           bottom: 24px;
           z-index: 490;
           width: 46px; height: 46px;
-          background: var(--c-card);
-          border: 1px solid var(--c-border);
+          background: var(--color-surface);
+          border: 1px solid var(--color-border);
           border-radius: 23px;
           padding: 0;
           display: flex; align-items: center;
           overflow: hidden;
-          color: var(--c-muted); font-size: 13px; font-weight: 700;
+          color: var(--color-text-secondary); font-size: 13px; font-weight: 700;
           font-family: inherit; cursor: pointer;
           opacity: 0.62;
           box-shadow: 0 2px 10px rgba(0,0,0,0.08);
@@ -93,9 +93,9 @@ export default function FeedbackButton() {
         .fb-fab:hover {
           width: 186px;
           opacity: 1;
-          border-color: rgba(27,120,247,0.45);
-          color: #1b78f7;
-          box-shadow: 0 4px 18px rgba(27,120,247,0.22);
+          border-color: var(--color-primary-subtle);
+          color: var(--color-primary);
+          box-shadow: 0 4px 18px var(--color-primary-subtle);
           transform: scale(1.03);
         }
         .fb-fab:active { transform: scale(0.96); }
@@ -121,8 +121,8 @@ export default function FeedbackButton() {
 
         .fb-sheet {
           position: fixed; left: 0; right: 0; bottom: 0; z-index: 492;
-          background: var(--c-card);
-          border-top: 1px solid var(--c-border);
+          background: var(--color-surface);
+          border-top: 1px solid var(--color-border);
           border-radius: 22px 22px 0 0;
           padding: 20px 20px max(24px, env(safe-area-inset-bottom, 24px));
           animation: fb-slide-up 0.28s cubic-bezier(0.22,1,0.36,1) both;
@@ -141,7 +141,7 @@ export default function FeedbackButton() {
             transform: translate(-50%, -50%);
             width: 100%; max-width: 440px;
             border-radius: 18px;
-            border: 1px solid var(--c-border);
+            border: 1px solid var(--color-border);
             animation: fb-modal-in 0.22s cubic-bezier(0.22,1,0.36,1) both;
           }
           @keyframes fb-modal-in {
@@ -163,17 +163,17 @@ export default function FeedbackButton() {
 
         .fb-textarea {
           width: 100%; box-sizing: border-box;
-          background: var(--c-bg-alt); border: 1.5px solid var(--c-border);
-          border-radius: 10px; color: var(--c-text); font-size: 14px;
+          background: var(--color-bg-alt); border: 1.5px solid var(--color-border);
+          border-radius: 10px; color: var(--color-text); font-size: 14px;
           font-family: inherit; outline: none; resize: none;
           padding: 12px 14px; line-height: 1.6;
           transition: border-color 0.15s;
         }
-        .fb-textarea:focus { border-color: rgba(27,120,247,0.5); }
+        .fb-textarea:focus { border-color: var(--color-primary-subtle); }
         .fb-img-preview {
           position: relative; margin-top: 10px;
           border-radius: 10px; overflow: hidden;
-          border: 1px solid var(--c-border);
+          border: 1px solid var(--color-border);
         }
         .fb-img-preview img { width: 100%; max-height: 180px; object-fit: cover; display: block; }
         .fb-img-remove {
@@ -184,7 +184,7 @@ export default function FeedbackButton() {
         }
         .fb-submit {
           width: 100%; padding: 13px;
-          background: #1b78f7; border: none; border-radius: 10px;
+          background: var(--color-primary); border: none; border-radius: 10px;
           color: #fff; font-size: 14px; font-weight: 700;
           font-family: inherit; cursor: pointer;
           display: flex; align-items: center; justify-content: center; gap: 7px;
@@ -195,14 +195,14 @@ export default function FeedbackButton() {
         .fb-submit:not(:disabled):hover { opacity: 0.88; }
         .fb-add-img {
           display: flex; align-items: center; gap: 7px;
-          background: transparent; border: 1.5px dashed var(--c-border);
+          background: transparent; border: 1.5px dashed var(--color-border);
           border-radius: 10px; padding: 10px 14px;
-          color: var(--c-muted); font-size: 13px; font-weight: 600;
+          color: var(--color-text-secondary); font-size: 13px; font-weight: 600;
           font-family: inherit; cursor: pointer; width: 100%;
           margin-top: 10px; transition: border-color 0.15s, color 0.15s;
           box-sizing: border-box;
         }
-        .fb-add-img:hover { border-color: rgba(27,120,247,0.4); color: #1b78f7; }
+        .fb-add-img:hover { border-color: var(--color-primary-subtle); color: var(--color-primary); }
         .fb-add-img svg { flex-shrink: 0; }
       `}</style>
 
@@ -222,10 +222,10 @@ export default function FeedbackButton() {
             {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
               <div>
-                <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--c-text)', fontFamily: 'var(--font-heading)' }}>
+                <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
                   Dar feedback anónimo
                 </div>
-                <div style={{ fontSize: 12, color: 'var(--c-muted)', marginTop: 2 }}>
+                <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 2 }}>
                   O que aconteceu? Qual o erro ou a página?
                 </div>
               </div>
@@ -239,11 +239,11 @@ export default function FeedbackButton() {
 
             {status === 'done' ? (
               <div style={{ textAlign: 'center', padding: '32px 0 16px' }}>
-                <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
-                  <Check size={22} color="#22c55e" />
+                <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'var(--color-success-subtle)', border: '1px solid var(--color-success-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
+                  <Check size={22} color="var(--color-success)" />
                 </div>
-                <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--c-text)' }}>Obrigado!</div>
-                <div style={{ fontSize: 13, color: 'var(--c-muted)', marginTop: 4 }}>O teu feedback foi guardado.</div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--color-text)' }}>Obrigado!</div>
+                <div style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginTop: 4 }}>O teu feedback foi guardado.</div>
               </div>
             ) : (
               <form onSubmit={handleSubmit}>
@@ -282,7 +282,7 @@ export default function FeedbackButton() {
                 />
 
                 {status === 'error' && (
-                  <p style={{ color: '#ef4444', fontSize: 12, margin: '8px 0 0', fontWeight: 600 }}>
+                  <p style={{ color: 'var(--color-error)', fontSize: 12, margin: '8px 0 0', fontWeight: 600 }}>
                     Erro ao enviar. Tenta novamente.
                   </p>
                 )}

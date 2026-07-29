@@ -9,12 +9,12 @@ import { Navbar } from '../components/Navbar'
 import { Folder, ChevronLeft, ChevronRight, ExternalLink, CheckCircle, Circle, AlertTriangle, Check, Calendar, ListChecks, MessageSquare } from 'lucide-react'
 
 const C = {
-  bg: 'var(--c-bg)', bgAlt: 'var(--c-bg-alt)', card: 'var(--c-card)', cardHover: 'var(--c-card-hover)',
-  border: 'var(--c-border)', borderBright: 'var(--c-border-bright)',
-  blue: '#1b78f7', text: 'var(--c-text)', muted: 'var(--c-muted)', subtle: 'var(--c-subtle)',
-  green: '#22c55e', yellow: '#fbbf24', red: '#ef4444',
-  glass: 'var(--c-glass)', glassHover: 'var(--c-glass-hover)',
-  glassBorder: 'var(--c-glass-border)', glassBorderBright: 'var(--c-glass-border-bright)',
+  bg: 'var(--color-bg)', bgAlt: 'var(--color-bg-alt)', card: 'var(--color-surface)', cardHover: 'var(--color-surface-hover)',
+  border: 'var(--color-border)', borderBright: 'var(--color-border-hover)',
+  blue: 'var(--color-primary)', text: 'var(--color-text)', muted: 'var(--color-text-secondary)', subtle: 'var(--color-text-tertiary)',
+  green: 'var(--color-success)', yellow: 'var(--color-warning)', red: 'var(--color-error)',
+  glass: 'var(--color-glass)', glassHover: 'var(--color-glass-hover)',
+  glassBorder: 'var(--color-glass-border)', glassBorderBright: 'var(--color-glass-border-bright)',
   glassStyle: { backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' },
 }
 
@@ -30,12 +30,12 @@ function gradeColor(g) {
   if (g == null) return C.subtle
   if (g >= 16) return C.green
   if (g >= 10) return C.blue
-  return '#f97316'
+  return 'var(--color-warning)'
 }
 
 function Avatar({ avatarUrl, name, size = 40 }) {
   const initial = (name || '?')[0].toUpperCase()
-  const colors = ['#1b78f7', '#8b5cf6', '#0d9488', '#f59e0b', '#ec4899', '#10b981']
+  const colors = ['var(--color-primary)', 'var(--color-accent)', '#0d9488', 'var(--color-warning)', '#ec4899', '#10b981']
   const bg = colors[(initial.charCodeAt(0) || 0) % colors.length]
   if (avatarUrl) {
     return <img src={avatarUrl} alt="" style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
@@ -48,9 +48,9 @@ function Avatar({ avatarUrl, name, size = 40 }) {
 }
 
 const REVIEW_META = {
-  ready_for_defense: { label: 'Pronto para defesa', color: '#22c55e', Icon: CheckCircle },
-  needs_revision:    { label: 'Precisa de revisão', color: '#f97316', Icon: AlertTriangle },
-  resubmitted:       { label: 'Correções enviadas', color: '#1b78f7', Icon: Check },
+  ready_for_defense: { label: 'Pronto para defesa', color: 'var(--color-success)', Icon: CheckCircle },
+  needs_revision:    { label: 'Precisa de revisão', color: 'var(--color-warning)', Icon: AlertTriangle },
+  resubmitted:       { label: 'Correções enviadas', color: 'var(--color-primary)', Icon: Check },
 }
 
 export default function TurmaAluno() {
@@ -141,7 +141,7 @@ export default function TurmaAluno() {
         <Navbar />
         <div className="page-content" style={{ textAlign: 'center', paddingTop: 100 }}>
           <p style={{ color: C.muted, fontSize: 15 }}>Esta página é só para o professor da turma.</p>
-          <button onClick={() => navigate(`/turma/${code}`)} style={{ marginTop: 12, background: 'rgba(27,120,247,0.08)', border: '1px solid rgba(27,120,247,0.25)', borderRadius: 8, padding: '9px 18px', color: C.blue, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+          <button onClick={() => navigate(`/turma/${code}`)} style={{ marginTop: 12, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 8, padding: '9px 18px', color: C.blue, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
             Ir para a turma
           </button>
         </div>
@@ -200,7 +200,7 @@ export default function TurmaAluno() {
             )}
             <button
               onClick={() => navigate(`/mensagens?to=${userId}`, { state: { returnTo: { pathname: `/turma/${code}/aluno/${userId}`, label: name } } })}
-              style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(27,120,247,0.08)', border: '1px solid rgba(27,120,247,0.25)', borderRadius: 8, padding: '8px 14px', color: C.blue, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+              style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 8, padding: '8px 14px', color: C.blue, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
             >
               <MessageSquare size={13} /> Mensagem
             </button>
@@ -288,16 +288,16 @@ export default function TurmaAluno() {
                 const done = !!t.completed_at
                 const overdue = !done && t.due_date && new Date(t.due_date + 'T23:59:59') < new Date()
                 return (
-                  <div key={t.id} style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${overdue ? 'rgba(239,68,68,0.3)' : C.glassBorder}`, borderRadius: 10, padding: '11px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div key={t.id} style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${overdue ? 'var(--color-error-subtle)' : C.glassBorder}`, borderRadius: 10, padding: '11px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
                     {done
                       ? <CheckCircle size={16} color={C.green} style={{ flexShrink: 0 }} />
-                      : <Circle size={16} color={overdue ? '#ef4444' : C.subtle} style={{ flexShrink: 0 }} />}
+                      : <Circle size={16} color={overdue ? 'var(--color-error)' : C.subtle} style={{ flexShrink: 0 }} />}
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <span style={{ fontSize: 13, fontWeight: 600, color: done ? C.muted : C.text, textDecoration: done ? 'line-through' : 'none' }}>{t.title}</span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0, fontSize: 11 }}>
                       {t.due_date && (
-                        <span style={{ color: overdue ? '#ef4444' : C.subtle, display: 'inline-flex', alignItems: 'center', gap: 4, fontWeight: overdue ? 700 : 400 }}>
+                        <span style={{ color: overdue ? 'var(--color-error)' : C.subtle, display: 'inline-flex', alignItems: 'center', gap: 4, fontWeight: overdue ? 700 : 400 }}>
                           <Calendar size={11} />
                           {new Date(t.due_date + 'T00:00:00').toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' })}
                         </span>
@@ -307,7 +307,7 @@ export default function TurmaAluno() {
                           feita {new Date(t.completed_at).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' })}
                         </span>
                       )}
-                      {overdue && <span style={{ color: '#ef4444', fontWeight: 700 }}>atrasada</span>}
+                      {overdue && <span style={{ color: 'var(--color-error)', fontWeight: 700 }}>atrasada</span>}
                     </div>
                   </div>
                 )

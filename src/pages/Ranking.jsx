@@ -24,30 +24,30 @@ function saveCurrentPositions(projects) {
 }
 
 const C = {
-  bg:          'var(--c-bg)',
-  bgAlt:       'var(--c-bg-alt)',
-  card:        'var(--c-card)',
-  cardHover:   'var(--c-card-hover)',
-  border:      'var(--c-border)',
-  borderBright:'var(--c-border-bright)',
-  blue:        '#1b78f7',
-  text:        'var(--c-text)',
-  muted:       'var(--c-muted)',
-  subtle:      'var(--c-subtle)',
-  green:       '#22c55e',
-  yellow:      '#fbbf24',
-  orange:      '#f97316',
-  glass: 'var(--c-glass)', glassHover: 'var(--c-glass-hover)',
-  glassBorder: 'var(--c-glass-border)', glassBorderBright: 'var(--c-glass-border-bright)',
+  bg:          'var(--color-bg)',
+  bgAlt:       'var(--color-bg-alt)',
+  card:        'var(--color-surface)',
+  cardHover:   'var(--color-surface-hover)',
+  border:      'var(--color-border)',
+  borderBright:'var(--color-border-hover)',
+  blue:        'var(--color-primary)',
+  text:        'var(--color-text)',
+  muted:       'var(--color-text-secondary)',
+  subtle:      'var(--color-text-tertiary)',
+  green:       'var(--color-success)',
+  yellow:      'var(--color-warning)',
+  orange:      'var(--color-warning)',
+  glass: 'var(--color-glass)', glassHover: 'var(--color-glass-hover)',
+  glassBorder: 'var(--color-glass-border)', glassBorderBright: 'var(--color-glass-border-bright)',
   glassStyle: { backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' },
 }
 
 // Tier color based on score — connects directly to the scoring system
 function getTierColor(score) {
-  if (score >= 86) return '#22c55e'   // professional
-  if (score >= 71) return '#8b5cf6'   // almost professional
+  if (score >= 86) return 'var(--color-success)'   // professional
+  if (score >= 71) return 'var(--color-accent)'   // almost professional
   if (score >= 51) return '#3b82f6'   // gaining shape
-  if (score >= 31) return '#f59e0b'   // starting
+  if (score >= 31) return 'var(--color-warning)'   // starting
   return C.subtle                      // draft
 }
 
@@ -56,16 +56,16 @@ const RANK_ACCENT = [C.yellow, C.muted, C.orange]
 
 function RankDelta({ currentRank, prevRank }) {
   if (!prevRank || prevRank === currentRank) {
-    return <Minus size={11} color="var(--c-subtle)" />
+    return <Minus size={11} color="var(--color-text-tertiary)" />
   }
   const diff = prevRank - currentRank  // positive = moved up
   if (diff > 0) return (
-    <span style={{ display: 'flex', alignItems: 'center', gap: 2, color: '#22c55e', fontSize: 10, fontWeight: 700 }}>
+    <span style={{ display: 'flex', alignItems: 'center', gap: 2, color: 'var(--color-success)', fontSize: 10, fontWeight: 700 }}>
       <TrendingUp size={11} /> {diff}
     </span>
   )
   return (
-    <span style={{ display: 'flex', alignItems: 'center', gap: 2, color: '#ef4444', fontSize: 10, fontWeight: 700 }}>
+    <span style={{ display: 'flex', alignItems: 'center', gap: 2, color: 'var(--color-error)', fontSize: 10, fontWeight: 700 }}>
       <TrendingDown size={11} /> {Math.abs(diff)}
     </span>
   )
@@ -159,26 +159,26 @@ export default function Ranking() {
         /* Filter toggle button */
         .rank-filter-btn {
           display: flex; align-items: center; gap: 6px;
-          background: var(--c-card); border: 1px solid var(--c-border);
+          background: var(--color-surface); border: 1px solid var(--color-border);
           border-radius: 10px; padding: 0 14px; height: 40px;
-          color: var(--c-muted); font-size: 13px; font-weight: 600;
+          color: var(--color-text-secondary); font-size: 13px; font-weight: 600;
           cursor: pointer; font-family: inherit; white-space: nowrap;
           transition: border-color 0.15s, color 0.15s;
           position: relative; flex-shrink: 0;
         }
-        .rank-filter-btn:hover { border-color: var(--c-border-bright); color: var(--c-text); }
-        .rank-filter-btn.active { border-color: #1b78f7; color: #1b78f7; background: rgba(27,120,247,0.07); }
+        .rank-filter-btn:hover { border-color: var(--color-border-hover); color: var(--color-text); }
+        .rank-filter-btn.active { border-color: var(--color-primary); color: var(--color-primary); background: var(--color-primary-subtle); }
         .rank-filter-badge {
           position: absolute; top: -5px; right: -5px;
           min-width: 16px; height: 16px; border-radius: 99px;
-          background: #1b78f7; color: #fff;
+          background: var(--color-primary); color: #fff;
           font-size: 10px; font-weight: 800;
           display: flex; align-items: center; justify-content: center;
-          padding: 0 4px; border: 2px solid var(--c-bg);
+          padding: 0 4px; border: 2px solid var(--color-bg);
         }
         /* Filter panel */
         .rank-filter-panel {
-          background: var(--c-card); border: 1px solid var(--c-border);
+          background: var(--color-surface); border: 1px solid var(--color-border);
           border-radius: 14px; padding: 14px;
           margin-bottom: 20px;
           display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
@@ -284,10 +284,10 @@ export default function Ranking() {
         {/* Legend */}
         <div className="rank-legend" style={{ display: 'flex', gap: 16, marginBottom: 28, flexWrap: 'wrap' }}>
           {[
-            { color: '#22c55e', label: 'Nível profissional  86+' },
-            { color: '#8b5cf6', label: 'Quase profissional  71+' },
+            { color: 'var(--color-success)', label: 'Nível profissional  86+' },
+            { color: 'var(--color-accent)', label: 'Quase profissional  71+' },
             { color: '#3b82f6', label: 'A ganhar forma  51+' },
-            { color: '#f59e0b', label: 'A começar  31+' },
+            { color: 'var(--color-warning)', label: 'A começar  31+' },
           ].map(t => (
             <div key={t.label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <div style={{ width: 3, height: 14, borderRadius: 99, background: t.color, flexShrink: 0 }} />
@@ -375,7 +375,7 @@ export default function Ranking() {
                         {/* Platform */}
                         <div style={{
                           width: '100%', height: podiumH,
-                          background: 'var(--c-bg-alt)',
+                          background: 'var(--color-bg-alt)',
                           borderLeft: `1px solid ${C.border}`,
                           borderRight: `1px solid ${C.border}`,
                           borderBottom: `1px solid ${C.border}`,

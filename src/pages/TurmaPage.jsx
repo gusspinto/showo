@@ -8,12 +8,12 @@ import CreateProjectModal from '../components/CreateProjectModal'
 import { getCurrentAcademicYear, academicYearOptions } from '../lib/academicYear'
 
 const C = {
-  bg: 'var(--c-bg)', bgAlt: 'var(--c-bg-alt)', card: 'var(--c-card)', cardHover: 'var(--c-card-hover)',
-  border: 'var(--c-border)', borderBright: 'var(--c-border-bright)',
-  blue: '#1b78f7', text: 'var(--c-text)', muted: 'var(--c-muted)', subtle: 'var(--c-subtle)',
-  green: '#22c55e', yellow: '#fbbf24', red: '#ef4444',
-  glass: 'var(--c-glass)', glassHover: 'var(--c-glass-hover)',
-  glassBorder: 'var(--c-glass-border)', glassBorderBright: 'var(--c-glass-border-bright)',
+  bg: 'var(--color-bg)', bgAlt: 'var(--color-bg-alt)', card: 'var(--color-surface)', cardHover: 'var(--color-surface-hover)',
+  border: 'var(--color-border)', borderBright: 'var(--color-border-hover)',
+  blue: 'var(--color-primary)', text: 'var(--color-text)', muted: 'var(--color-text-secondary)', subtle: 'var(--color-text-tertiary)',
+  green: 'var(--color-success)', yellow: 'var(--color-warning)', red: 'var(--color-error)',
+  glass: 'var(--color-glass)', glassHover: 'var(--color-glass-hover)',
+  glassBorder: 'var(--color-glass-border)', glassBorderBright: 'var(--color-glass-border-bright)',
   glassStyle: { backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' },
 }
 
@@ -44,8 +44,8 @@ function ProjectCard({ project, navigate }) {
       {project.cover_url ? (
         <img src={project.cover_url} alt="" style={{ width: '100%', height: 120, objectFit: 'cover', display: 'block' }} />
       ) : (
-        <div style={{ width: '100%', height: 80, background: 'linear-gradient(135deg,rgba(27,120,247,0.08),rgba(79,70,229,0.05))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <Folder size={28} color="#1b78f7" />
+        <div style={{ width: '100%', height: 80, background: 'linear-gradient(135deg,var(--color-primary-subtle),rgba(79,70,229,0.05))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Folder size={28} color="var(--color-primary)" />
         </div>
       )}
       <div style={{ padding: '14px 16px' }}>
@@ -98,12 +98,12 @@ function FeedbackComment({ comment, textColor }) {
           <div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
               {Object.entries(parsed.ratings).map(([k, v]) => (
-                <span key={k} style={{ fontSize: 11, fontWeight: 700, color: '#1b78f7', background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.25)', borderRadius: 5, padding: '2px 7px', textTransform: 'capitalize' }}>
+                <span key={k} style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-primary)', background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 5, padding: '2px 7px', textTransform: 'capitalize' }}>
                   {k}: {v}
                 </span>
               ))}
               {parsed.avg != null && (
-                <span style={{ fontSize: 11, fontWeight: 700, color: '#22c55e', background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.25)', borderRadius: 5, padding: '2px 7px' }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-success)', background: 'var(--color-success-subtle)', border: '1px solid var(--color-success-subtle)', borderRadius: 5, padding: '2px 7px' }}>
                   média: {parsed.avg}
                 </span>
               )}
@@ -179,12 +179,12 @@ function FeedbackModal({ project, teacherId, onClose }) {
         {existing.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 18 }}>
             {existing.map(f => (
-              <div key={f.id} style={{ background: 'var(--c-bg)', border: `1px solid ${C.border}`, borderRadius: 10, padding: '12px 14px' }}>
+              <div key={f.id} style={{ background: 'var(--color-bg)', border: `1px solid ${C.border}`, borderRadius: 10, padding: '12px 14px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
                   <span style={{ fontSize: 11, fontWeight: 700, color: C.blue, textTransform: 'uppercase', letterSpacing: 0.5 }}>{SECTION_LABELS[f.field_key] || humanizeFieldKey(f.field_key)}</span>
                   <div style={{ display: 'flex', gap: 8 }}>
                     <button onClick={() => { setEditing(f.id); setFieldKey(f.field_key); setComment(f.comment) }} style={{ background: 'none', border: 'none', color: C.muted, cursor: 'pointer', fontSize: 12, padding: 0, fontFamily: 'inherit' }}>Editar</button>
-                    <button onClick={() => handleDelete(f.id)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: 12, padding: 0, fontFamily: 'inherit' }}>Apagar</button>
+                    <button onClick={() => handleDelete(f.id)} style={{ background: 'none', border: 'none', color: 'var(--color-error)', cursor: 'pointer', fontSize: 12, padding: 0, fontFamily: 'inherit' }}>Apagar</button>
                   </div>
                 </div>
                 <FeedbackComment comment={f.comment} textColor={C.text} />
@@ -196,7 +196,7 @@ function FeedbackModal({ project, teacherId, onClose }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {Object.entries(SECTION_LABELS).map(([k, l]) => (
-              <button key={k} onClick={() => setFieldKey(k)} style={{ fontSize: 12, padding: '4px 10px', borderRadius: 6, border: `1px solid ${fieldKey === k ? '#1b78f7' : C.border}`, background: fieldKey === k ? 'rgba(27,120,247,0.15)' : 'transparent', color: fieldKey === k ? C.blue : C.muted, cursor: 'pointer', fontFamily: 'inherit', fontWeight: fieldKey === k ? 700 : 400 }}>
+              <button key={k} onClick={() => setFieldKey(k)} style={{ fontSize: 12, padding: '4px 10px', borderRadius: 6, border: `1px solid ${fieldKey === k ? 'var(--color-primary)' : C.border}`, background: fieldKey === k ? 'var(--color-primary-subtle)' : 'transparent', color: fieldKey === k ? C.blue : C.muted, cursor: 'pointer', fontFamily: 'inherit', fontWeight: fieldKey === k ? 700 : 400 }}>
                 {l}
               </button>
             ))}
@@ -205,10 +205,10 @@ function FeedbackModal({ project, teacherId, onClose }) {
             value={comment} onChange={e => setComment(e.target.value)}
             placeholder={`Comentário sobre ${SECTION_LABELS[fieldKey] || fieldKey}…`}
             rows={3}
-            style={{ width: '100%', background: 'var(--c-bg)', border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 12px', color: C.text, fontSize: 13, fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box', outline: 'none' }}
+            style={{ width: '100%', background: 'var(--color-bg)', border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 12px', color: C.text, fontSize: 13, fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box', outline: 'none' }}
           />
           <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={handleSave} disabled={saving || !comment.trim()} style={{ flex: 1, background: '#1b78f7', border: 'none', borderRadius: 8, padding: '10px', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: saving || !comment.trim() ? 0.6 : 1, fontFamily: 'inherit', boxShadow: '0 2px 8px rgba(27,120,247,0.2)' }}>
+            <button onClick={handleSave} disabled={saving || !comment.trim()} style={{ flex: 1, background: 'var(--color-primary)', border: 'none', borderRadius: 8, padding: '10px', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: saving || !comment.trim() ? 0.6 : 1, fontFamily: 'inherit', boxShadow: '0 2px 8px var(--color-primary-subtle)' }}>
               {saving ? 'A guardar…' : editing ? 'Atualizar' : 'Guardar feedback'}
             </button>
             {editing && <button onClick={() => { setEditing(null); setComment('') }} style={{ background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 14px', color: C.muted, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>Cancelar</button>}
@@ -244,21 +244,21 @@ function EditTurmaModal({ turma, onClose, onSave }) {
           <div>
             <label style={{ display: 'block', fontSize: 12, color: C.muted, marginBottom: 6, fontWeight: 600 }}>Nome</label>
             <input value={name} onChange={e => setName(e.target.value)} placeholder="Nome da turma"
-              style={{ width: '100%', background: 'var(--c-bg)', border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 12px', color: C.text, fontSize: 14, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }} />
+              style={{ width: '100%', background: 'var(--color-bg)', border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 12px', color: C.text, fontSize: 14, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }} />
           </div>
           <div>
             <label style={{ display: 'block', fontSize: 12, color: C.muted, marginBottom: 6, fontWeight: 600 }}>Disciplina (opcional)</label>
             <input value={subject} onChange={e => setSubject(e.target.value)} placeholder="Ex: Programação"
-              style={{ width: '100%', background: 'var(--c-bg)', border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 12px', color: C.text, fontSize: 14, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }} />
+              style={{ width: '100%', background: 'var(--color-bg)', border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 12px', color: C.text, fontSize: 14, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }} />
           </div>
           <div>
             <label style={{ display: 'block', fontSize: 12, color: C.muted, marginBottom: 6, fontWeight: 600 }}>Ano letivo</label>
             <select value={academicYear} onChange={e => setAcademicYear(e.target.value)}
-              style={{ width: '100%', background: 'var(--c-bg)', border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 12px', color: C.text, fontSize: 14, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box', cursor: 'pointer' }}>
+              style={{ width: '100%', background: 'var(--color-bg)', border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 12px', color: C.text, fontSize: 14, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box', cursor: 'pointer' }}>
               {[...new Set([turma.academic_year, ...academicYearOptions()].filter(Boolean))].map(y => <option key={y} value={y}>{y}</option>)}
             </select>
           </div>
-          <button onClick={handleSave} disabled={saving || !name.trim()} style={{ background: '#1b78f7', border: 'none', borderRadius: 8, padding: '11px', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', opacity: saving || !name.trim() ? 0.6 : 1, fontFamily: 'inherit' }}>
+          <button onClick={handleSave} disabled={saving || !name.trim()} style={{ background: 'var(--color-primary)', border: 'none', borderRadius: 8, padding: '11px', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', opacity: saving || !name.trim() ? 0.6 : 1, fontFamily: 'inherit' }}>
             {saving ? 'A guardar…' : 'Guardar alterações'}
           </button>
         </div>
@@ -293,19 +293,19 @@ function TaskModal({ initial, onClose, onSave }) {
           <div>
             <label style={{ display: 'block', fontSize: 12, color: C.muted, marginBottom: 6, fontWeight: 600 }}>Título *</label>
             <input value={title} onChange={e => setTitle(e.target.value)} required placeholder="ex: Entregar rascunho do problema/solução"
-              style={{ width: '100%', background: 'var(--c-bg)', border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 12px', color: C.text, fontSize: 14, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }} />
+              style={{ width: '100%', background: 'var(--color-bg)', border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 12px', color: C.text, fontSize: 14, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }} />
           </div>
           <div>
             <label style={{ display: 'block', fontSize: 12, color: C.muted, marginBottom: 6, fontWeight: 600 }}>Descrição (opcional)</label>
             <textarea value={description} onChange={e => setDescription(e.target.value)} rows={3} placeholder="Detalhes da tarefa"
-              style={{ width: '100%', background: 'var(--c-bg)', border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 12px', color: C.text, fontSize: 14, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box', resize: 'vertical' }} />
+              style={{ width: '100%', background: 'var(--color-bg)', border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 12px', color: C.text, fontSize: 14, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box', resize: 'vertical' }} />
           </div>
           <div>
             <label style={{ display: 'block', fontSize: 12, color: C.muted, marginBottom: 6, fontWeight: 600 }}>Data limite (opcional)</label>
             <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)}
-              style={{ width: '100%', background: 'var(--c-bg)', border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 12px', color: C.text, fontSize: 14, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }} />
+              style={{ width: '100%', background: 'var(--color-bg)', border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 12px', color: C.text, fontSize: 14, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }} />
           </div>
-          <button type="submit" disabled={saving || !title.trim()} style={{ background: '#1b78f7', border: 'none', borderRadius: 8, padding: '11px', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', opacity: saving || !title.trim() ? 0.6 : 1, fontFamily: 'inherit' }}>
+          <button type="submit" disabled={saving || !title.trim()} style={{ background: 'var(--color-primary)', border: 'none', borderRadius: 8, padding: '11px', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', opacity: saving || !title.trim() ? 0.6 : 1, fontFamily: 'inherit' }}>
             {saving ? 'A guardar…' : initial ? 'Guardar alterações' : 'Criar tarefa'}
           </button>
         </form>
@@ -316,7 +316,7 @@ function TaskModal({ initial, onClose, onSave }) {
 
 function Avatar({ avatarUrl, name, size = 40 }) {
   const initial = (name || '?')[0].toUpperCase()
-  const colors = ['#1b78f7','#8b5cf6','#0d9488','#f59e0b','#ec4899','#10b981']
+  const colors = ['var(--color-primary)','var(--color-accent)','#0d9488','var(--color-warning)','#ec4899','#10b981']
   const bg = colors[(initial.charCodeAt(0) || 0) % colors.length]
   if (avatarUrl) return (
     <img src={avatarUrl} alt={name} style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
@@ -812,10 +812,10 @@ export default function TurmaPage() {
   if (!turma) {
     return (
       <div style={{ minHeight: '100vh', background: C.bg, color: C.text, fontFamily: 'inherit', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, padding: 24 }}>
-        <Search size={52} color="#1b78f7" />
+        <Search size={52} color="var(--color-primary)" />
         <h2 style={{ margin: 0, fontSize: 22, fontWeight: 400, fontFamily: 'var(--font-heading)', letterSpacing: '-0.4px' }}>Turma não encontrada</h2>
         <p style={{ color: C.muted, margin: 0 }}>O código <strong style={{ color: C.text }}>{code}</strong> não existe. Verifica com o professor.</p>
-        <button onClick={() => navigate('/')} style={{ background: C.blue, border: 'none', borderRadius: 8, padding: '10px 24px', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px rgba(27,120,247,0.2)' }}>
+        <button onClick={() => navigate('/')} style={{ background: C.blue, border: 'none', borderRadius: 8, padding: '10px 24px', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px var(--color-primary-subtle)' }}>
           Ir para o início
         </button>
       </div>
@@ -882,7 +882,7 @@ export default function TurmaPage() {
         position: 'fixed', bottom: 28, left: '50%',
         transform: `translateX(-50%) translateY(${toast ? 0 : 80}px)`,
         opacity: toast ? 1 : 0, transition: 'opacity 0.3s, transform 0.3s',
-        background: 'var(--c-bg-alt)', border: `1px solid ${C.borderBright}`, borderRadius: 10,
+        background: 'var(--color-bg-alt)', border: `1px solid ${C.borderBright}`, borderRadius: 10,
         padding: '12px 24px', fontSize: 14, fontWeight: 600, color: C.text,
         zIndex: 3000, pointerEvents: 'none', whiteSpace: 'nowrap',
         boxShadow: 'none',
@@ -909,8 +909,8 @@ export default function TurmaPage() {
           onClick={() => setDeletingTask(null)}>
           <div style={{ background: C.card, border: `1px solid ${C.borderBright}`, borderRadius: 14, padding: '32px 28px', width: '100%', maxWidth: 360, boxShadow: 'none', textAlign: 'center' }}
             onClick={e => e.stopPropagation()}>
-            <div style={{ width: 52, height: 52, borderRadius: 12, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px' }}>
-              <Trash2 size={22} color="#ef4444" />
+            <div style={{ width: 52, height: 52, borderRadius: 12, background: 'var(--color-error-subtle)', border: '1px solid var(--color-error-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px' }}>
+              <Trash2 size={22} color="var(--color-error)" />
             </div>
             <h3 style={{ margin: '0 0 8px', fontSize: 17, fontWeight: 400, color: C.text, fontFamily: 'var(--font-heading)', letterSpacing: '-0.3px' }}>Remover tarefa?</h3>
             <p style={{ margin: '0 0 24px', fontSize: 14, color: C.muted, lineHeight: 1.5 }}>
@@ -920,7 +920,7 @@ export default function TurmaPage() {
               <button onClick={() => setDeletingTask(null)} style={{ flex: 1, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 8, padding: '11px', color: C.muted, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
                 Cancelar
               </button>
-              <button onClick={handleDeleteTask} style={{ flex: 1, background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, padding: '11px', color: '#ef4444', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+              <button onClick={handleDeleteTask} style={{ flex: 1, background: 'var(--color-error-subtle)', border: '1px solid var(--color-error-subtle)', borderRadius: 8, padding: '11px', color: 'var(--color-error)', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
                 Remover
               </button>
             </div>
@@ -934,8 +934,8 @@ export default function TurmaPage() {
           onClick={() => setRemovingMember(null)}>
           <div style={{ background: C.card, border: `1px solid ${C.borderBright}`, borderRadius: 14, padding: '32px 28px', width: '100%', maxWidth: 360, boxShadow: 'none', textAlign: 'center' }}
             onClick={e => e.stopPropagation()}>
-            <div style={{ width: 52, height: 52, borderRadius: 12, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px' }}>
-              <UserMinus size={24} color="#ef4444" />
+            <div style={{ width: 52, height: 52, borderRadius: 12, background: 'var(--color-error-subtle)', border: '1px solid var(--color-error-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px' }}>
+              <UserMinus size={24} color="var(--color-error)" />
             </div>
             <h3 style={{ margin: '0 0 8px', fontSize: 17, fontWeight: 400, color: C.text, fontFamily: 'var(--font-heading)', letterSpacing: '-0.3px' }}>Remover aluno?</h3>
             <p style={{ margin: '0 0 24px', fontSize: 14, color: C.muted, lineHeight: 1.5 }}>
@@ -945,7 +945,7 @@ export default function TurmaPage() {
               <button onClick={() => setRemovingMember(null)} style={{ flex: 1, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 8, padding: '11px', color: C.muted, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
                 Cancelar
               </button>
-              <button onClick={() => handleRemoveMember(removingMember.user_id)} style={{ flex: 1, background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, padding: '11px', color: '#ef4444', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+              <button onClick={() => handleRemoveMember(removingMember.user_id)} style={{ flex: 1, background: 'var(--color-error-subtle)', border: '1px solid var(--color-error-subtle)', borderRadius: 8, padding: '11px', color: 'var(--color-error)', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
                 Remover
               </button>
             </div>
@@ -959,8 +959,8 @@ export default function TurmaPage() {
           onClick={() => setShowLeaveConfirm(false)}>
           <div style={{ background: C.card, border: `1px solid ${C.borderBright}`, borderRadius: 14, padding: '32px 28px', width: '100%', maxWidth: 360, boxShadow: 'none', textAlign: 'center' }}
             onClick={e => e.stopPropagation()}>
-            <div style={{ width: 52, height: 52, borderRadius: 12, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px' }}>
-              <X size={24} color="#ef4444" />
+            <div style={{ width: 52, height: 52, borderRadius: 12, background: 'var(--color-error-subtle)', border: '1px solid var(--color-error-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px' }}>
+              <X size={24} color="var(--color-error)" />
             </div>
             <h3 style={{ margin: '0 0 8px', fontSize: 17, fontWeight: 400, color: C.text, fontFamily: 'var(--font-heading)', letterSpacing: '-0.3px' }}>Sair da turma?</h3>
             <p style={{ margin: '0 0 24px', fontSize: 14, color: C.muted, lineHeight: 1.5 }}>
@@ -970,7 +970,7 @@ export default function TurmaPage() {
               <button onClick={() => setShowLeaveConfirm(false)} style={{ flex: 1, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 8, padding: '11px', color: C.muted, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
                 Cancelar
               </button>
-              <button onClick={() => { setShowLeaveConfirm(false); leaveClass() }} disabled={leavingClass} style={{ flex: 1, background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, padding: '11px', color: '#ef4444', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', opacity: leavingClass ? 0.6 : 1 }}>
+              <button onClick={() => { setShowLeaveConfirm(false); leaveClass() }} disabled={leavingClass} style={{ flex: 1, background: 'var(--color-error-subtle)', border: '1px solid var(--color-error-subtle)', borderRadius: 8, padding: '11px', color: 'var(--color-error)', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', opacity: leavingClass ? 0.6 : 1 }}>
                 {leavingClass ? 'A sair…' : 'Sair'}
               </button>
             </div>
@@ -992,7 +992,7 @@ export default function TurmaPage() {
                 {myProjects.length === 0 ? 'Ainda não tens projetos.' : 'Todos os teus projetos já estão nesta turma.'}
                 {myProjects.length === 0 && (
                   <div style={{ marginTop: 12 }}>
-                    <button onClick={() => setShowCreateModal(true)} style={{ background: C.blue, border: 'none', borderRadius: 8, padding: '9px 20px', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px rgba(27,120,247,0.2)' }}>
+                    <button onClick={() => setShowCreateModal(true)} style={{ background: C.blue, border: 'none', borderRadius: 8, padding: '9px 20px', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px var(--color-primary-subtle)' }}>
                       <span style={{display:'flex',alignItems:'center',gap:6}}>Criar projeto <ArrowRight size={14} /></span>
                     </button>
                   </div>
@@ -1009,7 +1009,7 @@ export default function TurmaPage() {
                     <button
                       onClick={() => addProject(p.id)}
                       disabled={adding === p.id}
-                      style={{ background: '#1b78f7', border: 'none', borderRadius: 8, padding: '7px 16px', color: '#fff', fontSize: 13, fontWeight: 600, cursor: adding === p.id ? 'default' : 'pointer', fontFamily: 'inherit', opacity: adding === p.id ? 0.6 : 1, flexShrink: 0 }}
+                      style={{ background: 'var(--color-primary)', border: 'none', borderRadius: 8, padding: '7px 16px', color: '#fff', fontSize: 13, fontWeight: 600, cursor: adding === p.id ? 'default' : 'pointer', fontFamily: 'inherit', opacity: adding === p.id ? 0.6 : 1, flexShrink: 0 }}
                     >
                       {adding === p.id ? '...' : 'Adicionar'}
                     </button>
@@ -1053,7 +1053,7 @@ export default function TurmaPage() {
               {/* Code badge */}
               <button
                 onClick={copyCode}
-                style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(27,120,247,0.06)', border: `1px solid rgba(27,120,247,0.2)`, borderRadius: 7, padding: '6px 10px', cursor: 'pointer', fontFamily: 'inherit' }}
+                style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--color-primary-subtle)', border: `1px solid var(--color-primary-subtle)`, borderRadius: 7, padding: '6px 10px', cursor: 'pointer', fontFamily: 'inherit' }}
               >
                 <span style={{ fontSize: 10, color: C.muted, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>Código</span>
                 <span style={{ fontSize: 14, fontWeight: 800, color: C.blue, letterSpacing: 1.5 }}>{turma.code}</span>
@@ -1062,7 +1062,7 @@ export default function TurmaPage() {
               {/* Copy link */}
               <button
                 onClick={copyLink}
-                style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(27,120,247,0.06)', border: `1px solid rgba(27,120,247,0.2)`, borderRadius: 7, padding: '6px 10px', cursor: 'pointer', fontFamily: 'inherit', color: copiedLink ? C.green : C.muted, fontSize: 12, fontWeight: 600, transition: 'color 0.15s' }}
+                style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'var(--color-primary-subtle)', border: `1px solid var(--color-primary-subtle)`, borderRadius: 7, padding: '6px 10px', cursor: 'pointer', fontFamily: 'inherit', color: copiedLink ? C.green : C.muted, fontSize: 12, fontWeight: 600, transition: 'color 0.15s' }}
               >
                 {copiedLink ? <Check size={12} /> : <Copy size={12} />}
                 {copiedLink ? 'Copiado!' : 'Copiar link'}
@@ -1071,7 +1071,7 @@ export default function TurmaPage() {
               {isTeacher && projects.length > 0 && (
                 <button
                   onClick={exportCSV}
-                  style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 7, padding: '6px 10px', color: '#4ade80', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'var(--color-success-subtle)', border: '1px solid var(--color-success-subtle)', borderRadius: 7, padding: '6px 10px', color: '#4ade80', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
                 >
                   <Download size={12} /> CSV
                 </button>
@@ -1080,9 +1080,9 @@ export default function TurmaPage() {
               {!isTeacher && user && (
                 <button
                   onClick={() => setShowLeaveConfirm(true)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 7, padding: '6px 10px', color: '#ef4444', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'background 0.15s, border-color 0.15s' }}
-                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.12)'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.35)' }}
-                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.06)'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.2)' }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'var(--color-error-subtle)', border: '1px solid var(--color-error-subtle)', borderRadius: 7, padding: '6px 10px', color: 'var(--color-error)', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'background 0.15s, border-color 0.15s' }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'var(--color-error-subtle)'; e.currentTarget.style.borderColor = 'var(--color-error-subtle)' }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'var(--color-error-subtle)'; e.currentTarget.style.borderColor = 'var(--color-error-subtle)' }}
                 >
                   <X size={12} /> Sair
                 </button>
@@ -1091,14 +1091,14 @@ export default function TurmaPage() {
               {!isTeacher && (user ? (
                 <button
                   onClick={() => setShowAdd(true)}
-                  style={{ background: '#1b78f7', border: 'none', borderRadius: 7, padding: '7px 14px', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px rgba(27,120,247,0.2)' }}
+                  style={{ background: 'var(--color-primary)', border: 'none', borderRadius: 7, padding: '7px 14px', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px var(--color-primary-subtle)' }}
                 >
                   + Adicionar projeto
                 </button>
               ) : (
                 <button
                   onClick={() => navigate('/login')}
-                  style={{ background: 'rgba(27,120,247,0.08)', border: `1px solid rgba(27,120,247,0.2)`, borderRadius: 7, padding: '7px 14px', color: C.blue, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+                  style={{ background: 'var(--color-primary-subtle)', border: `1px solid var(--color-primary-subtle)`, borderRadius: 7, padding: '7px 14px', color: C.blue, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
                 >
                   Entrar para adicionar
                 </button>
@@ -1114,8 +1114,8 @@ export default function TurmaPage() {
           return (
             <div style={{ marginBottom: 28 }}>
               <div style={{
-                background: 'linear-gradient(135deg, rgba(27,120,247,0.1), rgba(79,70,229,0.06))',
-                border: '1px solid rgba(27,120,247,0.3)',
+                background: 'linear-gradient(135deg, var(--color-primary-subtle), rgba(79,70,229,0.06))',
+                border: '1px solid var(--color-primary-subtle)',
                 borderRadius: 12, padding: '16px 20px',
                 display: 'flex', alignItems: 'center', gap: 14,
               }}>
@@ -1123,7 +1123,7 @@ export default function TurmaPage() {
                   <Avatar avatarUrl={teacherMember.avatar_url} name={teacherMember.full_name} size={46} />
                   <div style={{
                     position: 'absolute', bottom: -3, right: -3, width: 20, height: 20, borderRadius: '50%',
-                    background: '#1b78f7', border: `2px solid ${C.bg}`,
+                    background: 'var(--color-primary)', border: `2px solid ${C.bg}`,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}>
                     <GraduationCap size={11} color="#fff" />
@@ -1229,7 +1229,7 @@ export default function TurmaPage() {
                 )}
                 <button
                   onClick={() => { setCriteriaAdding(true); setNewCritName(''); setNewCritWeight('25') }}
-                  style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.22)', borderRadius: 7, padding: '6px 12px', color: C.blue, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 7, padding: '6px 12px', color: C.blue, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
                 >
                   <Plus size={13} /> Critério
                 </button>
@@ -1275,7 +1275,7 @@ export default function TurmaPage() {
                   ) : (
                     <div key={c.id} style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 10, padding: '11px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
                       <span style={{ flex: 1, fontSize: 13, color: C.text, fontWeight: 500 }}>{c.name}</span>
-                      <span style={{ fontSize: 12, fontWeight: 700, color: C.blue, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.15)', borderRadius: 5, padding: '2px 8px' }}>{c.weight}%</span>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: C.blue, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 5, padding: '2px 8px' }}>{c.weight}%</span>
                       <button onClick={() => setEditingCrit({ id: c.id, name: c.name, weight: String(c.weight) })} title="Editar" style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.subtle, display: 'flex', padding: 4 }}>
                         <Pencil size={13} />
                       </button>
@@ -1346,7 +1346,7 @@ export default function TurmaPage() {
               {isTeacher && (
                 <button
                   onClick={() => setShowTaskModal(true)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.22)', borderRadius: 7, padding: '6px 12px', color: C.blue, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 7, padding: '6px 12px', color: C.blue, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
                 >
                   <Plus size={13} /> Nova tarefa
                 </button>
@@ -1368,7 +1368,7 @@ export default function TurmaPage() {
                   const expanded = expandedTaskId === t.id
                   const completedBy = new Map((taskCompletions[t.id] || []).map(c => [c.user_id, c.completed_at]))
                   return (
-                    <div key={t.id} style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${overdue && !isTeacher ? 'rgba(239,68,68,0.3)' : C.glassBorder}`, borderRadius: 10, padding: '12px 14px' }}>
+                    <div key={t.id} style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${overdue && !isTeacher ? 'var(--color-error-subtle)' : C.glassBorder}`, borderRadius: 10, padding: '12px 14px' }}>
                       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                         {!isTeacher && (
                           <button onClick={() => toggleTaskCompletion(t.id)} style={{ background: 'none', border: 'none', padding: 2, cursor: 'pointer', marginTop: 1, flexShrink: 0 }}>
@@ -1380,7 +1380,7 @@ export default function TurmaPage() {
                           {t.description && <div style={{ fontSize: 12, color: C.muted, marginTop: 3, lineHeight: 1.5 }}>{t.description}</div>}
                           <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 6, flexWrap: 'wrap' }}>
                             {t.due_date && (
-                              <span style={{ fontSize: 11, color: overdue ? '#ef4444' : C.subtle, display: 'inline-flex', alignItems: 'center', gap: 4, fontWeight: overdue ? 700 : 400 }}>
+                              <span style={{ fontSize: 11, color: overdue ? 'var(--color-error)' : C.subtle, display: 'inline-flex', alignItems: 'center', gap: 4, fontWeight: overdue ? 700 : 400 }}>
                                 <Calendar size={11} />
                                 {new Date(t.due_date + 'T00:00:00').toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' })}
                                 {overdue && !isTeacher && ' — atrasada'}
@@ -1389,7 +1389,7 @@ export default function TurmaPage() {
                             {isTeacher && students.length > 0 && (
                               <button
                                 onClick={() => setExpandedTaskId(expanded ? null : t.id)}
-                                style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'inherit', fontSize: 11, fontWeight: 600, color: doneCount === students.length ? C.green : taskOverdue && doneCount < students.length ? '#ef4444' : C.subtle }}
+                                style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'inherit', fontSize: 11, fontWeight: 600, color: doneCount === students.length ? C.green : taskOverdue && doneCount < students.length ? 'var(--color-error)' : C.subtle }}
                               >
                                 <div style={{ width: 52, height: 4, background: C.border, borderRadius: 999, overflow: 'hidden' }}>
                                   <div style={{ width: `${students.length ? (doneCount / students.length) * 100 : 0}%`, height: '100%', background: doneCount === students.length ? C.green : C.blue, borderRadius: 999 }} />
@@ -1425,9 +1425,9 @@ export default function TurmaPage() {
                               const at = completedBy.get(m.user_id)
                               const missing = !at
                               return (
-                                <div key={m.user_id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 8px', borderRadius: 8, background: missing ? (taskOverdue ? 'rgba(239,68,68,0.05)' : 'transparent') : 'rgba(34,197,94,0.05)' }}>
+                                <div key={m.user_id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 8px', borderRadius: 8, background: missing ? (taskOverdue ? 'var(--color-error-subtle)' : 'transparent') : 'var(--color-success-subtle)' }}>
                                   {missing
-                                    ? <Circle size={13} color={taskOverdue ? '#ef4444' : C.subtle} style={{ flexShrink: 0 }} />
+                                    ? <Circle size={13} color={taskOverdue ? 'var(--color-error)' : C.subtle} style={{ flexShrink: 0 }} />
                                     : <CheckCircle size={13} color={C.green} style={{ flexShrink: 0 }} />}
                                   <Avatar avatarUrl={m.avatar_url} name={m.full_name} size={20} />
                                   <span style={{ fontSize: 12, fontWeight: 600, color: missing ? C.muted : C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
@@ -1468,14 +1468,14 @@ export default function TurmaPage() {
                 <button
                   onClick={() => handleBulkStatus('ready_for_defense')}
                   disabled={bulkSaving}
-                  style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: 7, padding: '6px 11px', color: '#22c55e', fontSize: 12, fontWeight: 700, cursor: bulkSaving ? 'default' : 'pointer', fontFamily: 'inherit' }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'var(--color-success-subtle)', border: '1px solid var(--color-success-subtle)', borderRadius: 7, padding: '6px 11px', color: 'var(--color-success)', fontSize: 12, fontWeight: 700, cursor: bulkSaving ? 'default' : 'pointer', fontFamily: 'inherit' }}
                 >
                   <CheckCircle size={12} /> Pronto
                 </button>
                 <button
                   onClick={() => handleBulkStatus('needs_revision')}
                   disabled={bulkSaving}
-                  style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.3)', borderRadius: 7, padding: '6px 11px', color: '#f97316', fontSize: 12, fontWeight: 700, cursor: bulkSaving ? 'default' : 'pointer', fontFamily: 'inherit' }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.3)', borderRadius: 7, padding: '6px 11px', color: 'var(--color-warning)', fontSize: 12, fontWeight: 700, cursor: bulkSaving ? 'default' : 'pointer', fontFamily: 'inherit' }}
                 >
                   <AlertTriangle size={12} /> Revisão
                 </button>
@@ -1498,7 +1498,7 @@ export default function TurmaPage() {
                     turmaId: turma.id,
                   },
                 })}
-                style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(27,120,247,0.08)', border: '1px solid rgba(27,120,247,0.3)', borderRadius: 7, padding: '7px 12px', color: C.blue, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+                style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 7, padding: '7px 12px', color: C.blue, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
               >
                 <GraduationCap size={13} /> Avaliar todos
               </button>
@@ -1507,7 +1507,7 @@ export default function TurmaPage() {
         )}
         {sortedProjects.length === 0 ? (
           <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '60px 32px', textAlign: 'center' }}>
-            <div style={{ marginBottom: 14 }}><Inbox size={44} color="var(--c-subtle)" /></div>
+            <div style={{ marginBottom: 14 }}><Inbox size={44} color="var(--color-text-tertiary)" /></div>
             <p style={{ color: C.text, fontSize: 17, fontWeight: 700, margin: '0 0 8px' }}>Ainda não há projetos</p>
             {isTeacher ? (
               <p style={{ color: C.muted, fontSize: 14, margin: 0 }}>Partilha o código <strong style={{ color: C.blue }}>{turma.code}</strong> com os teus alunos para que adicionem os seus projetos.</p>
@@ -1515,7 +1515,7 @@ export default function TurmaPage() {
               <>
                 <p style={{ color: C.muted, fontSize: 14, margin: '0 0 24px' }}>Sê o primeiro a adicionar o teu projeto a esta turma.</p>
                 {user && (
-                  <button onClick={() => setShowAdd(true)} style={{ background: '#1b78f7', border: 'none', borderRadius: 8, padding: '10px 22px', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px rgba(27,120,247,0.2)' }}>
+                  <button onClick={() => setShowAdd(true)} style={{ background: 'var(--color-primary)', border: 'none', borderRadius: 8, padding: '10px 22px', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px var(--color-primary-subtle)' }}>
                     + Adicionar o meu projeto
                   </button>
                 )}
@@ -1527,7 +1527,7 @@ export default function TurmaPage() {
           <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, overflow: 'hidden' }}>
             <div style={{ overflowX: 'auto' }}>
             {/* Table header */}
-            <div style={{ display: 'grid', gridTemplateColumns: '28px minmax(160px,1fr) 60px 64px 120px 88px 130px', gap: 0, padding: '10px 16px', borderBottom: `1px solid ${C.border}`, background: 'var(--c-bg)', minWidth: 668, alignItems: 'center' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '28px minmax(160px,1fr) 60px 64px 120px 88px 130px', gap: 0, padding: '10px 16px', borderBottom: `1px solid ${C.border}`, background: 'var(--color-bg)', minWidth: 668, alignItems: 'center' }}>
               <input
                 type="checkbox"
                 checked={sortedProjects.length > 0 && selectedIds.size === sortedProjects.length}
@@ -1560,7 +1560,7 @@ export default function TurmaPage() {
                       {p.review_status && (
                         <span
                           title={p.review_status === 'ready_for_defense' ? 'Pronto para defesa' : p.review_status === 'resubmitted' ? 'Correções enviadas — rever de novo' : 'Precisa de revisão'}
-                          style={{ width: 7, height: 7, borderRadius: '50%', flexShrink: 0, background: p.review_status === 'ready_for_defense' ? '#22c55e' : p.review_status === 'resubmitted' ? '#1b78f7' : '#f97316' }}
+                          style={{ width: 7, height: 7, borderRadius: '50%', flexShrink: 0, background: p.review_status === 'ready_for_defense' ? 'var(--color-success)' : p.review_status === 'resubmitted' ? 'var(--color-primary)' : 'var(--color-warning)' }}
                         />
                       )}
                       <div style={{ fontSize: 14, fontWeight: 600, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -1569,21 +1569,21 @@ export default function TurmaPage() {
                     </div>
                     {p.creator_name && <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>{p.creator_name}</div>}
                   </div>
-                  <div style={{ fontSize: 13, fontWeight: 800, color: p.teacher_score == null ? C.subtle : p.teacher_score >= 16 ? C.green : p.teacher_score >= 10 ? C.blue : '#f97316' }}>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: p.teacher_score == null ? C.subtle : p.teacher_score >= 16 ? C.green : p.teacher_score >= 10 ? C.blue : 'var(--color-warning)' }}>
                     {p.teacher_score != null ? `${p.teacher_score}/20` : '—'}
                   </div>
                   <div style={{ fontSize: 15, fontWeight: 800, color: scoreColor(p.score) }}>{p.score ?? '—'}</div>
                   <div style={{ paddingRight: 8 }}>
                     <div style={{ fontSize: 12, fontWeight: 600, color: completude >= 80 ? C.green : completude >= 50 ? C.yellow : C.muted, marginBottom: 4 }}>{completude}%</div>
                     <div style={{ height: 4, borderRadius: 2, background: C.border, overflow: 'hidden' }}>
-                      <div style={{ width: `${completude}%`, height: '100%', background: completude >= 80 ? C.green : completude >= 50 ? C.yellow : '#f97316', borderRadius: 2 }} />
+                      <div style={{ width: `${completude}%`, height: '100%', background: completude >= 80 ? C.green : completude >= 50 ? C.yellow : 'var(--color-warning)', borderRadius: 2 }} />
                     </div>
                   </div>
                   <div style={{ fontSize: 12, color: C.muted }}>{updated}</div>
                   <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
                     <button onClick={() => goToProject(p.slug)} style={{ fontSize: 12, padding: '5px 11px', borderRadius: 6, border: `1px solid ${C.border}`, background: 'transparent', color: C.muted, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>Ver</button>
-                    <button onClick={() => setFeedbackProject(p)} title="Feedback" style={{ padding: '5px 8px', borderRadius: 6, border: '1px solid rgba(27,120,247,0.3)', background: 'rgba(27,120,247,0.08)', color: C.blue, cursor: 'pointer', display: 'flex', alignItems: 'center', flexShrink: 0 }}><MessageSquare size={12} /></button>
-                    <button onClick={() => removeProject(p.id)} title="Remover" style={{ padding: '5px 8px', borderRadius: 6, border: '1px solid rgba(239,68,68,0.3)', background: 'transparent', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', flexShrink: 0 }}><X size={12} /></button>
+                    <button onClick={() => setFeedbackProject(p)} title="Feedback" style={{ padding: '5px 8px', borderRadius: 6, border: '1px solid var(--color-primary-subtle)', background: 'var(--color-primary-subtle)', color: C.blue, cursor: 'pointer', display: 'flex', alignItems: 'center', flexShrink: 0 }}><MessageSquare size={12} /></button>
+                    <button onClick={() => removeProject(p.id)} title="Remover" style={{ padding: '5px 8px', borderRadius: 6, border: '1px solid var(--color-error-subtle)', background: 'transparent', color: 'var(--color-error)', cursor: 'pointer', display: 'flex', alignItems: 'center', flexShrink: 0 }}><X size={12} /></button>
                   </div>
                 </div>
               )

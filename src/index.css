@@ -55,10 +55,10 @@ input:-webkit-autofill:focus,
 textarea:-webkit-autofill,
 textarea:-webkit-autofill:hover,
 textarea:-webkit-autofill:focus {
-  -webkit-text-fill-color: var(--c-text) !important;
-  -webkit-box-shadow: 0 0 0 1000px var(--c-card) inset !important;
-  box-shadow: 0 0 0 1000px var(--c-card) inset !important;
-  caret-color: var(--c-text) !important;
+  -webkit-text-fill-color: var(--color-text) !important;
+  -webkit-box-shadow: 0 0 0 1000px var(--color-surface) inset !important;
+  box-shadow: 0 0 0 1000px var(--color-surface) inset !important;
+  caret-color: var(--color-text) !important;
   transition: background-color 9999s ease-in-out 0s;
 }
 
@@ -66,29 +66,26 @@ textarea:-webkit-autofill:focus {
   --font-heading: 'Croogla', 'Poppins', 'Inter', sans-serif;
   --font-body: 'Montserrat', 'Inter', system-ui, -apple-system, sans-serif;
 
-  /* ── Colour tokens — dark (default) ── */
-  --c-warn:         #fbbf24;  /* amber yellow — readable on dark backgrounds */
-  --c-bg:           #060c18;
-  --c-bg-alt:       #111c32;
-  --c-card:         #152030;
-  --c-card-hover:   #1c2d44;
-  --c-border:       #1e3050;
-  --c-border-bright:#2a4275;
-  --c-muted:        #7d93b0;
-  --c-text:         #e8f2ff;
-  --c-subtle:       #6b7f9e;  /* was #3d5270 — ~2.45:1 on --c-bg, illegible on the glass cards that sit near-flush with the page background; now ~4.8:1 */
-  --c-input-bg:     #060c18;
-  --c-blue-bg:      #0a1729;
-  --c-green-bg:     #061a0f;
-  --c-sidebar-bg:   #0b1628;  /* slightly more blue than page bg */
-  --c-sidebar-bg-alpha: rgba(11, 22, 40, 0.82);
-
-  /* ── Dashboard "glass" card surface — translucent bg, visible border, used by
-     Dashboard.jsx cards only (not modals, which stay opaque for readability) ── */
-  --c-glass:          rgba(255,255,255,0.035);
-  --c-glass-hover:    rgba(255,255,255,0.06);
-  --c-glass-border:   rgba(255,255,255,0.14);
-  --c-glass-border-bright: rgba(255,255,255,0.26);
+  /* ── Legacy aliases — all values come from tokens.css now ── */
+  --c-warn:         var(--color-warning);
+  --c-bg:           var(--color-bg);
+  --c-bg-alt:       var(--color-bg-alt);
+  --c-card:         var(--color-surface);
+  --c-card-hover:   var(--color-surface-hover);
+  --c-border:       var(--color-border);
+  --c-border-bright:var(--color-border-hover);
+  --c-muted:        var(--color-text-secondary);
+  --c-text:         var(--color-text);
+  --c-subtle:       var(--color-text-tertiary);
+  --c-input-bg:     var(--color-input-bg);
+  --c-blue-bg:      var(--color-primary-subtle);
+  --c-green-bg:     var(--color-success-subtle);
+  --c-sidebar-bg:   var(--color-sidebar-bg);
+  --c-sidebar-bg-alpha: var(--color-bg-overlay);
+  --c-glass:          var(--color-glass);
+  --c-glass-hover:    var(--color-glass-hover);
+  --c-glass-border:   var(--color-glass-border);
+  --c-glass-border-bright: var(--color-glass-border-bright);
 
   /* ── Typography scale ── */
   --text-xs:   11px;   /* captions, badges, tiny labels */
@@ -116,37 +113,16 @@ body {
   margin: 0;
   padding: 0;
   min-width: 320px;
-  background-color: #060c18;
-  color: #e8f2ff;
+  background-color: var(--color-bg);
+  color: var(--color-text);
   font-family: var(--font-body);
   transition: background-color 0.25s, color 0.25s;
 }
 
-/* ── Light mode ── */
+/* ── Light mode — tokens.css handles all color overrides ── */
 body.light {
-  background-color: #e6eaf2;
-  color: #0f172a;
-
-  --c-bg:           #e6eaf2;
-  --c-bg-alt:       #d9dfe9;
-  --c-card:         #f2f5fb;
-  --c-card-hover:   #eaeffa;
-  --c-border:       #cad3e5;
-  --c-border-bright:#a8b8d4;
-  --c-muted:        #526180;
-  --c-text:         #0f172a;
-  --c-subtle:       #5c6f8f;  /* was #6b7c9a — ~3.5:1 on --c-bg, same glass-card legibility issue as dark mode; now ~4.2:1 */
-  --c-input-bg:     #ffffff;
-  --c-blue-bg:      #dbeafe;
-  --c-green-bg:     #dcfce7;
-  --c-sidebar-bg:   #d4dced;  /* deeper, more blue than page bg */
-  --c-sidebar-bg-alpha: rgba(212, 220, 237, 0.82);
-
-  --c-glass:          rgba(255,255,255,0.5);
-  --c-glass-hover:    rgba(255,255,255,0.72);
-  --c-glass-border:   rgba(15,23,42,0.13);
-  --c-glass-border-bright: rgba(15,23,42,0.24);
-  --c-warn:         #92400e;  /* amber in light mode — readable on light backgrounds */
+  background-color: var(--color-bg);
+  color: var(--color-text);
 }
 
 /* Warn color utilities for light mode */
@@ -161,31 +137,31 @@ body.light ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
 /* Light mode top nav */
 body.light nav {
   background: rgba(228,227,227,0.95) !important;
-  border-bottom-color: var(--c-border) !important;
+  border-bottom-color: var(--color-border) !important;
 }
 
 /* Light mode — form elements */
 body.light input,
 body.light textarea,
 body.light select {
-  background: var(--c-input-bg) !important;
-  color: var(--c-text) !important;
-  border-color: var(--c-border) !important;
+  background: var(--color-input-bg) !important;
+  color: var(--color-text) !important;
+  border-color: var(--color-border) !important;
 }
 body.light input::placeholder,
 body.light textarea::placeholder {
-  color: var(--c-subtle) !important;
+  color: var(--color-text-tertiary) !important;
 }
 
 /* Light mode — sidebar styling (uses CSS vars, so sidebar bg is already correct) */
 body.light .sidebar {
-  box-shadow: 2px 0 16px rgba(27,120,247,0.07);
+  box-shadow: 2px 0 16px var(--color-primary-subtle);
 }
 
 /* Nav / sidebar active item in light mode */
 body.light .sb-item.active {
-  background: rgba(27,120,247,0.1) !important;
-  color: #1b78f7 !important;
+  background: var(--color-primary-subtle) !important;
+  color: var(--color-primary) !important;
 }
 
 h1, h2, h3, h4 {
@@ -230,14 +206,14 @@ textarea, input, select, button {
 
 /* ── Shared "identity" hover for ghost icon-only buttons (close/edit/remove) ── */
 .icon-btn-ghost {
-  background: transparent; border: 1px solid transparent; color: var(--c-subtle);
+  background: transparent; border: 1px solid transparent; color: var(--color-text-tertiary);
   cursor: pointer; padding: 5px; display: inline-flex; align-items: center;
   border-radius: 7px; flex-shrink: 0;
   transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
 }
 .icon-btn-ghost:hover {
   background: rgba(27,120,247,0.08); border-color: rgba(27,120,247,0.35);
-  color: #1b78f7; transform: scale(1.08); box-shadow: 0 2px 10px rgba(27,120,247,0.18);
+  color: var(--color-primary); transform: scale(1.08); box-shadow: 0 2px 10px rgba(27,120,247,0.18);
 }
 .icon-btn-ghost:active { transform: scale(0.94); }
 

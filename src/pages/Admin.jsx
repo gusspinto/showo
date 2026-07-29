@@ -10,29 +10,29 @@ import {
 } from 'lucide-react'
 
 const C = {
-  bg: 'var(--c-bg)',
-  bgAlt: 'var(--c-bg-alt)',
-  card: 'var(--c-card)',
-  cardHover: 'var(--c-card-hover)',
-  border: 'var(--c-border)',
-  borderBright: 'var(--c-border-bright)',
-  blue: '#1b78f7',
-  blueHover: '#1564d4',
-  blueSoft: 'rgba(27,120,247,0.08)',
-  text: 'var(--c-text)',
-  muted: 'var(--c-muted)',
-  subtle: 'var(--c-subtle)',
-  green: '#22c55e',
-  greenSoft: 'rgba(34,197,94,0.08)',
-  red: '#ef4444',
-  redSoft: 'rgba(239,68,68,0.08)',
-  redBorder: 'rgba(239,68,68,0.25)',
-  yellow: '#fbbf24',
+  bg: 'var(--color-bg)',
+  bgAlt: 'var(--color-bg-alt)',
+  card: 'var(--color-surface)',
+  cardHover: 'var(--color-surface-hover)',
+  border: 'var(--color-border)',
+  borderBright: 'var(--color-border-hover)',
+  blue: 'var(--color-primary)',
+  blueHover: 'var(--color-primary-hover)',
+  blueSoft: 'var(--color-primary-subtle)',
+  text: 'var(--color-text)',
+  muted: 'var(--color-text-secondary)',
+  subtle: 'var(--color-text-tertiary)',
+  green: 'var(--color-success)',
+  greenSoft: 'var(--color-success-subtle)',
+  red: 'var(--color-error)',
+  redSoft: 'var(--color-error-subtle)',
+  redBorder: 'var(--color-error-subtle)',
+  yellow: 'var(--color-warning)',
   yellowSoft: 'rgba(251,191,36,0.08)',
-  purple: '#a855f7',
+  purple: 'var(--color-accent)',
   purpleSoft: 'rgba(168,85,247,0.08)',
-  orange: '#f97316',
-  glass: 'var(--c-glass)', glassBorder: 'var(--c-glass-border)',
+  orange: 'var(--color-warning)',
+  glass: 'var(--color-glass)', glassBorder: 'var(--color-glass-border)',
   glassStyle: { backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' },
 }
 
@@ -70,7 +70,7 @@ function Badge({ children, color = C.blue }) {
   )
 }
 
-function Avatar({ name, color = 'linear-gradient(135deg,#1b78f7,#4f46e5)', size = 32 }) {
+function Avatar({ name, color = 'linear-gradient(135deg,var(--color-primary),#4f46e5)', size = 32 }) {
   return (
     <div style={{
       width: size, height: size, borderRadius: '50%', flexShrink: 0,
@@ -97,7 +97,7 @@ function ConfirmModal({ title, body, onConfirm, onCancel, danger = true }) {
         boxShadow: 'none',
       }}>
         <div style={{ fontSize: 28, marginBottom: 12, textAlign: 'center', display: 'flex', justifyContent: 'center' }}>
-          {danger ? <AlertTriangle size={28} color="#ef4444" /> : <HelpCircle size={28} color="#1b78f7" />}
+          {danger ? <AlertTriangle size={28} color="var(--color-error)" /> : <HelpCircle size={28} color="var(--color-primary)" />}
         </div>
         <h3 style={{ margin: '0 0 10px', fontSize: 17, fontWeight: 400, fontFamily: 'var(--font-heading)', letterSpacing: '-0.3px', color: C.text, textAlign: 'center' }}>{title}</h3>
         <p style={{ margin: '0 0 24px', fontSize: 14, color: C.muted, textAlign: 'center', lineHeight: 1.6 }}>{body}</p>
@@ -173,7 +173,7 @@ function OverviewTab({ users, projects }) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {recentUsers.map(u => (
               <div key={u.id} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <Avatar name={u.full_name || u.username} color={u.is_admin ? 'linear-gradient(135deg,#a855f7,#7c3aed)' : 'linear-gradient(135deg,#1b78f7,#4f46e5)'} />
+                <Avatar name={u.full_name || u.username} color={u.is_admin ? 'linear-gradient(135deg,var(--color-accent),#7c3aed)' : 'linear-gradient(135deg,var(--color-primary),#4f46e5)'} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{u.full_name || u.username || 'Sem nome'}</div>
                   <div style={{ fontSize: 11, color: C.subtle }}>{u.email || '—'}</div>
@@ -270,7 +270,7 @@ function UsersTab({ users, projects, onToggleAdmin, onDeleteUser, onChangeRole, 
             }}>
               <Avatar
                 name={name}
-                color={u.is_admin ? 'linear-gradient(135deg,#a855f7,#7c3aed)' : 'linear-gradient(135deg,#1b78f7,#4f46e5)'}
+                color={u.is_admin ? 'linear-gradient(135deg,var(--color-accent),#7c3aed)' : 'linear-gradient(135deg,var(--color-primary),#4f46e5)'}
                 size={38}
               />
               <div style={{ flex: 1, minWidth: 180 }}>
@@ -479,7 +479,7 @@ function InvitesTab({ codes, loading, onGenerate, generating, onToggleActive }) 
           </button>
         </div>
         {justCreated && (
-          <div style={{ marginTop: 14, display: 'flex', alignItems: 'center', gap: 10, background: C.greenSoft, border: '1px solid rgba(34,197,94,0.3)', borderRadius: 8, padding: '10px 14px' }}>
+          <div style={{ marginTop: 14, display: 'flex', alignItems: 'center', gap: 10, background: C.greenSoft, border: '1px solid var(--color-success-subtle)', borderRadius: 8, padding: '10px 14px' }}>
             <span style={{ fontSize: 16, fontWeight: 800, color: C.green, letterSpacing: 2, fontFamily: 'monospace' }}>{justCreated}</span>
             <button onClick={() => copy(justCreated)} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: C.green, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, fontFamily: 'inherit' }}>
               {copied === justCreated ? <Check size={13} /> : <Copy size={13} />} {copied === justCreated ? 'Copiado' : 'Copiar'}
@@ -525,7 +525,7 @@ function InvitesTab({ codes, loading, onGenerate, generating, onToggleActive }) 
                     onClick={() => handleToggle(c)}
                     disabled={togglingId === c.id}
                     style={{
-                      background: 'none', border: `1px solid ${revoked ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}`,
+                      background: 'none', border: `1px solid ${revoked ? 'var(--color-success-subtle)' : 'var(--color-error-subtle)'}`,
                       color: revoked ? C.green : C.red, borderRadius: 6, padding: '4px 10px',
                       fontSize: 11, fontWeight: 700, cursor: togglingId === c.id ? 'default' : 'pointer',
                       fontFamily: 'inherit', flexShrink: 0, opacity: togglingId === c.id ? 0.6 : 1,
@@ -722,7 +722,7 @@ export default function Admin() {
       <div style={{
         position: 'fixed', bottom: 28, left: '50%', transform: `translateX(-50%) translateY(${toast ? 0 : 80}px)`,
         opacity: toast ? 1 : 0, transition: 'all 0.35s cubic-bezier(0.34,1.56,0.64,1)',
-        background: 'var(--c-bg-alt)', border: `1px solid ${C.borderBright}`, borderRadius: 10,
+        background: 'var(--color-bg-alt)', border: `1px solid ${C.borderBright}`, borderRadius: 10,
         padding: '12px 24px', fontSize: 14, fontWeight: 600, color: C.text,
         zIndex: 3000, pointerEvents: 'none', whiteSpace: 'nowrap',
         boxShadow: 'none',

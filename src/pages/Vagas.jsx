@@ -16,7 +16,7 @@ function matchScore(studentSkills, vagaSkills) {
 
 function MatchBadge({ score }) {
   if (score === null) return null
-  const color = score >= 70 ? '#22c55e' : score >= 40 ? '#f59e0b' : '#7d93b0'
+  const color = score >= 70 ? 'var(--color-success)' : score >= 40 ? 'var(--color-warning)' : '#7d93b0'
   return (
     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, color, flexShrink: 0 }}>
       <Zap size={10} />{score}% match
@@ -25,18 +25,18 @@ function MatchBadge({ score }) {
 }
 
 const C = {
-  bg:     'var(--c-bg)',
-  card:   'var(--c-card)',
-  border: 'var(--c-border)',
-  blue:   '#1b78f7',
-  muted:  'var(--c-muted)',
-  text:   'var(--c-text)',
-  subtle: 'var(--c-subtle)',
-  green:  '#22c55e',
-  red:    '#ef4444',
-  amber:  '#f59e0b',
-  purple: '#8b5cf6',
-  glass: 'var(--c-glass)', glassBorder: 'var(--c-glass-border)',
+  bg:     'var(--color-bg)',
+  card:   'var(--color-surface)',
+  border: 'var(--color-border)',
+  blue:   'var(--color-primary)',
+  muted:  'var(--color-text-secondary)',
+  text:   'var(--color-text)',
+  subtle: 'var(--color-text-tertiary)',
+  green:  'var(--color-success)',
+  red:    'var(--color-error)',
+  amber:  'var(--color-warning)',
+  purple: 'var(--color-accent)',
+  glass: 'var(--color-glass)', glassBorder: 'var(--color-glass-border)',
   glassStyle: { backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' },
 }
 
@@ -87,7 +87,7 @@ function RecruiterCard({ vaga, cands, onEdit, onToggle, onDelete, expanded, onTo
             <button onClick={() => onToggle(vaga)} style={{ background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 7, padding: '5px 8px', cursor: 'pointer', color: vaga.is_active ? C.amber : C.green, display: 'flex', alignItems: 'center' }} title={vaga.is_active ? 'Pausar' : 'Ativar'}>
               {vaga.is_active ? <X size={13} /> : <Check size={13} />}
             </button>
-            <button onClick={() => onDelete(vaga.id)} style={{ background: 'transparent', border: `1px solid rgba(239,68,68,0.2)`, borderRadius: 7, padding: '5px 8px', cursor: 'pointer', color: C.red, display: 'flex', alignItems: 'center' }} title="Apagar"><Trash2 size={13} /></button>
+            <button onClick={() => onDelete(vaga.id)} style={{ background: 'transparent', border: `1px solid var(--color-error-subtle)`, borderRadius: 7, padding: '5px 8px', cursor: 'pointer', color: C.red, display: 'flex', alignItems: 'center' }} title="Apagar"><Trash2 size={13} /></button>
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', justifyContent: 'space-between' }}>
@@ -97,7 +97,7 @@ function RecruiterCard({ vaga, cands, onEdit, onToggle, onDelete, expanded, onTo
             <DeadlineBadge deadline={vaga.deadline} />
           </div>
           <button onClick={onToggleExpand}
-            style={{ display: 'flex', alignItems: 'center', gap: 5, background: candList.length > 0 ? 'rgba(27,120,247,0.08)' : 'transparent', border: `1px solid ${candList.length > 0 ? 'rgba(27,120,247,0.2)' : C.border}`, borderRadius: 7, padding: '5px 10px', cursor: 'pointer', color: candList.length > 0 ? C.blue : C.muted, fontSize: 12, fontWeight: 600, fontFamily: 'inherit' }}>
+            style={{ display: 'flex', alignItems: 'center', gap: 5, background: candList.length > 0 ? 'var(--color-primary-subtle)' : 'transparent', border: `1px solid ${candList.length > 0 ? 'var(--color-primary-subtle)' : C.border}`, borderRadius: 7, padding: '5px 10px', cursor: 'pointer', color: candList.length > 0 ? C.blue : C.muted, fontSize: 12, fontWeight: 600, fontFamily: 'inherit' }}>
             <Users size={12} /> {candList.length} candidatura{candList.length !== 1 ? 's' : ''}
             {expanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
           </button>
@@ -106,7 +106,7 @@ function RecruiterCard({ vaga, cands, onEdit, onToggle, onDelete, expanded, onTo
 
       {/* Candidaturas list */}
       {expanded && (
-        <div style={{ borderTop: `1px solid ${C.border}`, background: 'var(--c-bg-alt)' }}>
+        <div style={{ borderTop: `1px solid ${C.border}`, background: 'var(--color-bg-alt)' }}>
           {candList.length === 0 ? (
             <p style={{ margin: 0, padding: '16px 20px', fontSize: 13, color: C.muted, textAlign: 'center' }}>Ainda não há candidaturas</p>
           ) : candList.map(c => {
@@ -114,7 +114,7 @@ function RecruiterCard({ vaga, cands, onEdit, onToggle, onDelete, expanded, onTo
             const st = STATUS_INFO[c.status] ?? STATUS_INFO.pendente
             return (
               <div key={c.id} style={{ padding: '14px 20px', borderBottom: `1px solid ${C.border}`, display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#1b78f7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
+                <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
                   {(p?.full_name || p?.username || '?')[0].toUpperCase()}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -126,14 +126,14 @@ function RecruiterCard({ vaga, cands, onEdit, onToggle, onDelete, expanded, onTo
                   {c.message && <p style={{ margin: '0 0 8px', fontSize: 13, color: C.muted, lineHeight: 1.5 }}>{c.message}</p>}
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                     <button onClick={() => navigate(p?.username ? `/u/${p.username}` : `/u/${p?.id}`)}
-                      style={{ fontSize: 12, fontWeight: 600, color: C.blue, background: 'rgba(27,120,247,0.08)', border: '1px solid rgba(27,120,247,0.2)', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontFamily: 'inherit' }}>Ver perfil</button>
+                      style={{ fontSize: 12, fontWeight: 600, color: C.blue, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontFamily: 'inherit' }}>Ver perfil</button>
                     <button onClick={() => navigate(`/mensagens?to=${p?.id}`)}
                       style={{ fontSize: 12, fontWeight: 600, color: C.muted, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontFamily: 'inherit' }}>Mensagem</button>
                     {c.status === 'pendente' && <>
                       <button onClick={() => onStatusChange(c.id, vaga.id, 'aceite')}
-                        style={{ fontSize: 12, fontWeight: 600, color: '#22c55e', background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.25)', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontFamily: 'inherit' }}>Aceitar</button>
+                        style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-success)', background: 'var(--color-success-subtle)', border: '1px solid var(--color-success-subtle)', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontFamily: 'inherit' }}>Aceitar</button>
                       <button onClick={() => onStatusChange(c.id, vaga.id, 'recusada')}
-                        style={{ fontSize: 12, fontWeight: 600, color: '#ef4444', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontFamily: 'inherit' }}>Recusar</button>
+                        style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-error)', background: 'var(--color-error-subtle)', border: '1px solid var(--color-error-subtle)', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontFamily: 'inherit' }}>Recusar</button>
                     </>}
                   </div>
                 </div>
@@ -157,7 +157,7 @@ function PublicCard({ vaga, recruiterProfile, myStatus, onCandidatar, isAluno, u
 
   return (
     <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '20px 22px', transition: 'border-color 0.15s', display: 'flex', flexDirection: 'column', gap: 12 }}
-      onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--c-glass-border-bright)'}
+      onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--color-glass-border-bright)'}
       onMouseLeave={e => e.currentTarget.style.borderColor = C.glassBorder}>
       {/* Company header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -203,7 +203,7 @@ function PublicCard({ vaga, recruiterProfile, myStatus, onCandidatar, isAluno, u
               </span>
             ) : (
               <button onClick={() => onCandidatar(vaga)}
-                style={{ fontSize: 12, fontWeight: 700, color: '#fff', background: C.blue, border: 'none', borderRadius: 8, padding: '5px 12px', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 4, boxShadow: '0 2px 8px rgba(27,120,247,0.2)' }}>
+                style={{ fontSize: 12, fontWeight: 700, color: '#fff', background: C.blue, border: 'none', borderRadius: 8, padding: '5px 12px', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 4, boxShadow: '0 2px 8px var(--color-primary-subtle)' }}>
                 <Send size={11} /> Candidatar
               </button>
             )
@@ -237,7 +237,7 @@ function VagaModal({ initial, onSave, onClose, saving }) {
           <div key={key} style={{ marginBottom: 16 }}>
             <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: C.muted, marginBottom: 6 }}>{label}</label>
             <input value={form[key]} onChange={e => set(key, e.target.value)} placeholder={placeholder}
-              style={{ width: '100%', background: 'var(--c-bg)', border: `1.5px solid ${C.border}`, borderRadius: 10, color: C.text, fontSize: 14, padding: '10px 14px', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }} />
+              style={{ width: '100%', background: 'var(--color-bg)', border: `1.5px solid ${C.border}`, borderRadius: 10, color: C.text, fontSize: 14, padding: '10px 14px', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }} />
           </div>
         ))}
 
@@ -245,22 +245,22 @@ function VagaModal({ initial, onSave, onClose, saving }) {
           <div>
             <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: C.muted, marginBottom: 6 }}>Tipo</label>
             <select value={form.tipo} onChange={e => set('tipo', e.target.value)}
-              style={{ width: '100%', background: 'var(--c-bg)', border: `1.5px solid ${C.border}`, borderRadius: 10, color: C.text, fontSize: 14, padding: '10px 14px', outline: 'none', fontFamily: 'inherit', cursor: 'pointer' }}>
+              style={{ width: '100%', background: 'var(--color-bg)', border: `1.5px solid ${C.border}`, borderRadius: 10, color: C.text, fontSize: 14, padding: '10px 14px', outline: 'none', fontFamily: 'inherit', cursor: 'pointer' }}>
               {Object.entries(TIPO_INFO).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
             </select>
           </div>
           <div>
             <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: C.muted, marginBottom: 6 }}>Candidaturas até</label>
             <input type="date" value={form.deadline} onChange={e => set('deadline', e.target.value)}
-              style={{ width: '100%', background: 'var(--c-bg)', border: `1.5px solid ${C.border}`, borderRadius: 10, color: C.text, fontSize: 14, padding: '10px 14px', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }} />
+              style={{ width: '100%', background: 'var(--color-bg)', border: `1.5px solid ${C.border}`, borderRadius: 10, color: C.text, fontSize: 14, padding: '10px 14px', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }} />
           </div>
         </div>
 
         {/* Remote toggle */}
         <div style={{ marginBottom: 16 }}>
           <button type="button" onClick={() => set('is_remote', !form.is_remote)}
-            style={{ display: 'flex', alignItems: 'center', gap: 10, background: form.is_remote ? 'rgba(27,120,247,0.07)' : 'transparent', border: `1.5px solid ${form.is_remote ? 'rgba(27,120,247,0.3)' : C.border}`, borderRadius: 10, padding: '10px 14px', cursor: 'pointer', fontFamily: 'inherit', width: '100%', textAlign: 'left' }}>
-            <div style={{ width: 36, height: 20, borderRadius: 10, background: form.is_remote ? C.blue : 'var(--c-subtle)', position: 'relative', transition: 'background 0.2s', flexShrink: 0 }}>
+            style={{ display: 'flex', alignItems: 'center', gap: 10, background: form.is_remote ? 'var(--color-primary-subtle)' : 'transparent', border: `1.5px solid ${form.is_remote ? 'var(--color-primary-subtle)' : C.border}`, borderRadius: 10, padding: '10px 14px', cursor: 'pointer', fontFamily: 'inherit', width: '100%', textAlign: 'left' }}>
+            <div style={{ width: 36, height: 20, borderRadius: 10, background: form.is_remote ? C.blue : 'var(--color-text-tertiary)', position: 'relative', transition: 'background 0.2s', flexShrink: 0 }}>
               <div style={{ position: 'absolute', top: 2, left: form.is_remote ? 18 : 2, width: 16, height: 16, borderRadius: '50%', background: '#fff', transition: 'left 0.2s' }} />
             </div>
             <span style={{ fontSize: 14, fontWeight: 600, color: form.is_remote ? C.blue : C.text }}>Permite trabalho remoto</span>
@@ -274,7 +274,7 @@ function VagaModal({ initial, onSave, onClose, saving }) {
           <div key={key} style={{ marginBottom: 16 }}>
             <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: C.muted, marginBottom: 6 }}>{label}</label>
             <textarea value={form[key]} onChange={e => set(key, e.target.value)} placeholder={placeholder} rows={3}
-              style={{ width: '100%', background: 'var(--c-bg)', border: `1.5px solid ${C.border}`, borderRadius: 10, color: C.text, fontSize: 14, padding: '10px 14px', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', resize: 'vertical', minHeight: 80 }} />
+              style={{ width: '100%', background: 'var(--color-bg)', border: `1.5px solid ${C.border}`, borderRadius: 10, color: C.text, fontSize: 14, padding: '10px 14px', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', resize: 'vertical', minHeight: 80 }} />
           </div>
         ))}
 
@@ -288,7 +288,7 @@ function VagaModal({ initial, onSave, onClose, saving }) {
         </div>
 
         <button onClick={() => onSave(form)} disabled={saving || !form.titulo.trim()}
-          style={{ width: '100%', background: saving || !form.titulo.trim() ? C.border : C.blue, border: 'none', borderRadius: 10, padding: '13px 0', color: '#fff', fontSize: 15, fontWeight: 700, cursor: saving || !form.titulo.trim() ? 'default' : 'pointer', fontFamily: 'inherit', boxShadow: saving ? 'none' : '0 2px 8px rgba(27,120,247,0.2)' }}>
+          style={{ width: '100%', background: saving || !form.titulo.trim() ? C.border : C.blue, border: 'none', borderRadius: 10, padding: '13px 0', color: '#fff', fontSize: 15, fontWeight: 700, cursor: saving || !form.titulo.trim() ? 'default' : 'pointer', fontFamily: 'inherit', boxShadow: saving ? 'none' : '0 2px 8px var(--color-primary-subtle)' }}>
           {saving ? 'A guardar...' : initial ? 'Guardar alterações' : 'Publicar vaga'}
         </button>
       </div>
@@ -298,9 +298,9 @@ function VagaModal({ initial, onSave, onClose, saving }) {
 
 const STATUS_INFO = {
   pendente:  { label: 'Pendente',  color: '#7d93b0', bg: 'rgba(125,147,176,0.1)' },
-  vista:     { label: 'Vista',     color: '#1b78f7', bg: 'rgba(27,120,247,0.1)'  },
-  aceite:    { label: 'Aceite',    color: '#22c55e', bg: 'rgba(34,197,94,0.1)'   },
-  recusada:  { label: 'Recusada',  color: '#ef4444', bg: 'rgba(239,68,68,0.1)'   },
+  vista:     { label: 'Vista',     color: 'var(--color-primary)', bg: 'var(--color-primary-subtle)'  },
+  aceite:    { label: 'Aceite',    color: 'var(--color-success)', bg: 'var(--color-success-subtle)'   },
+  recusada:  { label: 'Recusada',  color: 'var(--color-error)', bg: 'var(--color-error-subtle)'   },
 }
 
 function CandidatarModal({ vaga, recruiterProfile, onClose, onSubmit, sending }) {
@@ -314,7 +314,7 @@ function CandidatarModal({ vaga, recruiterProfile, onClose, onSubmit, sending })
         <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: C.muted, marginBottom: 7 }}>Mensagem de apresentação</label>
         <textarea value={msg} onChange={e => setMsg(e.target.value)} rows={5}
           placeholder="Apresenta-te brevemente e explica porque és uma boa escolha para esta vaga..."
-          style={{ width: '100%', background: 'var(--c-bg)', border: `1.5px solid ${C.border}`, borderRadius: 10, color: C.text, fontSize: 14, padding: '11px 14px', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', resize: 'vertical', minHeight: 110 }} />
+          style={{ width: '100%', background: 'var(--color-bg)', border: `1.5px solid ${C.border}`, borderRadius: 10, color: C.text, fontSize: 14, padding: '11px 14px', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', resize: 'vertical', minHeight: 110 }} />
         <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
           <button onClick={onClose} style={{ flex: 1, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 10, padding: '11px 0', color: C.text, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Cancelar</button>
           <button onClick={() => onSubmit(msg)} disabled={sending}
@@ -525,7 +525,7 @@ export default function Vagas() {
     load()
   }
 
-  const accentColor = profile?.role === 'empresa' ? '#f59e0b' : C.blue
+  const accentColor = profile?.role === 'empresa' ? 'var(--color-warning)' : C.blue
 
   return (
     <div style={{ minHeight: '100vh', background: C.bg, fontFamily: 'inherit' }}>
@@ -541,10 +541,10 @@ export default function Vagas() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
             <div style={{
               width: 48, height: 48, borderRadius: 14,
-              background: 'rgba(27,120,247,0.12)', border: '1px solid rgba(27,120,247,0.25)',
+              background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)',
               display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
             }}>
-              <Briefcase size={24} color="#1b78f7" />
+              <Briefcase size={24} color="var(--color-primary)" />
             </div>
             <div>
               <h1 style={{ color: C.text, fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 6px', letterSpacing: '-0.5px' }}>Vagas</h1>
@@ -555,7 +555,7 @@ export default function Vagas() {
           </div>
           {isRecruiter && (
             <button onClick={() => { setEditVaga(null); setShowModal(true) }}
-              style={{ display: 'flex', alignItems: 'center', gap: 8, background: accentColor, border: 'none', borderRadius: 10, padding: '11px 20px', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px rgba(27,120,247,0.2)', flexShrink: 0 }}>
+              style={{ display: 'flex', alignItems: 'center', gap: 8, background: accentColor, border: 'none', borderRadius: 10, padding: '11px 20px', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px var(--color-primary-subtle)', flexShrink: 0 }}>
               <Plus size={16} /> Nova vaga
             </button>
           )}
@@ -565,12 +565,12 @@ export default function Vagas() {
         {isAluno && (loadingInvites || myInvites.length > 0) && (
           <div style={{ marginBottom: 28 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-              <Send size={14} color="#1b78f7" />
-              <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--c-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+              <Send size={14} color="var(--color-primary)" />
+              <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                 Convites para ti
               </span>
               {myInvites.length > 0 && (
-                <span style={{ background: '#1b78f720', borderRadius: 6, padding: '2px 8px', fontSize: 10, fontWeight: 700, color: '#1b78f7' }}>
+                <span style={{ background: 'var(--color-primary)20', borderRadius: 6, padding: '2px 8px', fontSize: 10, fontWeight: 700, color: 'var(--color-primary)' }}>
                   {myInvites.length}
                 </span>
               )}
@@ -579,7 +579,7 @@ export default function Vagas() {
             {loadingInvites ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {[1, 2].map(i => (
-                  <div key={i} style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 14, height: 80, opacity: 0.5 }} />
+                  <div key={i} style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 14, height: 80, opacity: 0.5 }} />
                 ))}
               </div>
             ) : (
@@ -591,35 +591,35 @@ export default function Vagas() {
                   const alreadyCandidated = !!myCandidaturas[invite.vaga_id]
                   return (
                     <div key={invite.id} style={{
-                      background: 'rgba(27,120,247,0.06)',
-                      border: '1px solid rgba(27,120,247,0.2)',
+                      background: 'var(--color-primary-subtle)',
+                      border: '1px solid var(--color-primary-subtle)',
                       borderRadius: 12, padding: '14px 18px',
                       display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
                     }}>
                       {/* Icon */}
                       <div style={{
                         width: 40, height: 40, borderRadius: 10, flexShrink: 0,
-                        background: 'rgba(27,120,247,0.12)', border: '1px solid rgba(27,120,247,0.2)',
+                        background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         overflow: 'hidden',
                       }}>
                         {invite.recruiter?.avatar_url
                           ? <img src={invite.recruiter.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                          : <Building2 size={18} color="#1b78f7" />
+                          : <Building2 size={18} color="var(--color-primary)" />
                         }
                       </div>
                       {/* Info */}
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--c-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {invite.vaga?.title}
                         </div>
-                        <div style={{ fontSize: 12, color: 'var(--c-muted)', marginTop: 2 }}>
-                          {company ? <><span style={{ color: '#1b78f7', fontWeight: 600 }}>{company}</span> · </> : null}
+                        <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 2 }}>
+                          {company ? <><span style={{ color: 'var(--color-primary)', fontWeight: 600 }}>{company}</span> · </> : null}
                           {recruiterName}
                           {invite.vaga?.location ? ` · ${invite.vaga.location}` : ''}
                         </div>
                         {invite.message && (
-                          <div style={{ fontSize: 12, color: 'var(--c-muted)', marginTop: 4, fontStyle: 'italic', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 4, fontStyle: 'italic', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             "{invite.message}"
                           </div>
                         )}
@@ -627,7 +627,7 @@ export default function Vagas() {
                       {/* Actions */}
                       <div style={{ display: 'flex', gap: 8, flexShrink: 0, flexWrap: 'wrap' }}>
                         {alreadyCandidated ? (
-                          <span style={{ fontSize: 12, color: '#22c55e', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4 }}>
+                          <span style={{ fontSize: 12, color: 'var(--color-success)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4 }}>
                             <Check size={13} /> Já candidatado
                           </span>
                         ) : (
@@ -637,9 +637,9 @@ export default function Vagas() {
                             style={{
                               display: 'flex', alignItems: 'center', gap: 6,
                               padding: '7px 14px', borderRadius: 8, fontSize: 13, fontWeight: 700,
-                              background: '#1b78f7', border: 'none',
+                              background: 'var(--color-primary)', border: 'none',
                               color: '#fff', cursor: 'pointer', fontFamily: 'inherit',
-                              boxShadow: '0 2px 8px rgba(27,120,247,0.2)',
+                              boxShadow: '0 2px 8px var(--color-primary-subtle)',
                             }}
                           >
                             <Check size={13} />
@@ -651,8 +651,8 @@ export default function Vagas() {
                           disabled={isResponding}
                           style={{
                             padding: '7px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600,
-                            background: 'none', border: '1px solid var(--c-border)',
-                            color: 'var(--c-muted)', cursor: 'pointer', fontFamily: 'inherit',
+                            background: 'none', border: '1px solid var(--color-border)',
+                            color: 'var(--color-text-secondary)', cursor: 'pointer', fontFamily: 'inherit',
                           }}
                         >
                           Recusar
@@ -668,7 +668,7 @@ export default function Vagas() {
 
         {/* Tabs */}
         {isRecruiter && (
-          <div style={{ display: 'flex', gap: 4, marginBottom: 24, background: 'var(--c-card)', border: `1px solid ${C.border}`, borderRadius: 12, padding: 5, width: 'fit-content' }}>
+          <div style={{ display: 'flex', gap: 4, marginBottom: 24, background: 'var(--color-surface)', border: `1px solid ${C.border}`, borderRadius: 12, padding: 5, width: 'fit-content' }}>
             {[
               { id: 'minhas', label: `As minhas (${myVagas.length})` },
               { id: 'todas',  label: 'Todas as vagas' },

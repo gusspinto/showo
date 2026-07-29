@@ -8,11 +8,11 @@ import { supabase } from '../lib/supabase'
 import { Link2, Check, Sparkles, Download, ArrowLeft } from 'lucide-react'
 
 const C = {
-  bg: 'var(--c-bg)',
-  border: 'var(--c-border)',
-  blue: '#1b78f7',
-  text: 'var(--c-text)',
-  muted: 'var(--c-muted)',
+  bg: 'var(--color-bg)',
+  border: 'var(--color-border)',
+  blue: 'var(--color-primary)',
+  text: 'var(--color-text)',
+  muted: 'var(--color-text-secondary)',
 }
 
 export default function Certificate() {
@@ -132,7 +132,7 @@ export default function Certificate() {
         style={{
           width: '100%', maxWidth: 800,
           background: 'linear-gradient(135deg, #0a1020 0%, #0d1a2e 50%, #0a1020 100%)',
-          border: '1px solid rgba(27,120,247,0.3)',
+          border: '1px solid var(--color-primary-subtle)',
           borderRadius: 16,
           padding: '52px 56px',
           position: 'relative',
@@ -141,11 +141,11 @@ export default function Certificate() {
         }}
       >
         {/* Background decoration */}
-        <div style={{ position: 'absolute', top: -80, right: -80, width: 320, height: 320, borderRadius: '50%', background: 'radial-gradient(circle, rgba(27,120,247,0.08) 0%, transparent 65%)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', top: -80, right: -80, width: 320, height: 320, borderRadius: '50%', background: 'radial-gradient(circle, var(--color-primary-subtle) 0%, transparent 65%)', pointerEvents: 'none' }} />
         <div style={{ position: 'absolute', bottom: -60, left: -60, width: 240, height: 240, borderRadius: '50%', background: 'radial-gradient(circle, rgba(79,70,229,0.06) 0%, transparent 65%)', pointerEvents: 'none' }} />
 
         {/* Top line */}
-        <div style={{ width: '100%', height: 2, background: 'linear-gradient(90deg, transparent, #1b78f7, #818cf8, transparent)', marginBottom: 40, borderRadius: 1 }} />
+        <div style={{ width: '100%', height: 2, background: 'linear-gradient(90deg, transparent, var(--color-primary), #818cf8, transparent)', marginBottom: 40, borderRadius: 1 }} />
 
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 40 }}>
@@ -161,27 +161,27 @@ export default function Certificate() {
         {/* Main content */}
         <div style={{ marginBottom: 36 }}>
           <div style={{ fontSize: 13, color: C.muted, marginBottom: 10, fontWeight: 500 }}>Este certificado comprova que</div>
-          <div style={{ fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 400, color: 'var(--c-text)', letterSpacing: '-1px', lineHeight: 1.1, marginBottom: 20, fontFamily: 'var(--font-heading)' }}>
+          <div style={{ fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 400, color: 'var(--color-text)', letterSpacing: '-1px', lineHeight: 1.1, marginBottom: 20, fontFamily: 'var(--font-heading)' }}>
             {project.creator_name || 'Estudante'}
           </div>
           <div style={{ fontSize: 14, color: C.muted, marginBottom: 8, fontWeight: 500 }}>concluiu com sucesso o projeto</div>
-          <div style={{ fontSize: 'clamp(20px, 3vw, 32px)', fontWeight: 400, color: '#1b78f7', letterSpacing: '-0.5px', lineHeight: 1.2, fontFamily: 'var(--font-heading)' }}>
+          <div style={{ fontSize: 'clamp(20px, 3vw, 32px)', fontWeight: 400, color: 'var(--color-primary)', letterSpacing: '-0.5px', lineHeight: 1.2, fontFamily: 'var(--font-heading)' }}>
             {project.name}
           </div>
         </div>
 
         {/* Stats row */}
         <div style={{ display: 'flex', gap: 24, marginBottom: 40, flexWrap: 'wrap' }}>
-          <div style={{ background: 'rgba(27,120,247,0.08)', border: '1px solid rgba(27,120,247,0.2)', borderRadius: 12, padding: '14px 20px', minWidth: 100 }}>
-            <div style={{ fontSize: 28, fontWeight: 900, color: '#1b78f7', letterSpacing: '-1px', lineHeight: 1 }}>{project.score}</div>
+          <div style={{ background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 12, padding: '14px 20px', minWidth: 100 }}>
+            <div style={{ fontSize: 28, fontWeight: 900, color: 'var(--color-primary)', letterSpacing: '-1px', lineHeight: 1 }}>{project.score}</div>
             <div style={{ fontSize: 11, color: C.muted, fontWeight: 600, marginTop: 4, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Score</div>
           </div>
-          <div style={{ background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.18)', borderRadius: 12, padding: '14px 20px' }}>
-            <div style={{ fontSize: 14, fontWeight: 700, color: '#22c55e', lineHeight: 1.2 }}>Nível Profissional</div>
+          <div style={{ background: 'var(--color-success-subtle)', border: '1px solid var(--color-success-subtle)', borderRadius: 12, padding: '14px 20px' }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-success)', lineHeight: 1.2 }}>Nível Profissional</div>
             <div style={{ fontSize: 11, color: C.muted, fontWeight: 500, marginTop: 4 }}>Score ≥ 75</div>
           </div>
-          <div style={{ background: 'var(--c-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 12, padding: '14px 20px' }}>
-            <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--c-text)', lineHeight: 1.2 }}>{date}</div>
+          <div style={{ background: 'var(--color-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 12, padding: '14px 20px' }}>
+            <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text)', lineHeight: 1.2 }}>{date}</div>
             <div style={{ fontSize: 11, color: C.muted, fontWeight: 500, marginTop: 4 }}>Data de emissão</div>
           </div>
         </div>
@@ -203,7 +203,7 @@ export default function Certificate() {
         </div>
 
         {/* Bottom line */}
-        <div style={{ width: '100%', height: 2, background: 'linear-gradient(90deg, transparent, #4f46e5, #1b78f7, transparent)', marginTop: 40, borderRadius: 1 }} />
+        <div style={{ width: '100%', height: 2, background: 'linear-gradient(90deg, transparent, #4f46e5, var(--color-primary), transparent)', marginTop: 40, borderRadius: 1 }} />
       </div>
 
       {/* Actions */}
@@ -213,11 +213,11 @@ export default function Certificate() {
           onClick={handleDownload}
           disabled={downloading}
           style={{
-            background: '#1b78f7',
+            background: 'var(--color-primary)',
             color: '#fff', border: 'none', borderRadius: 10,
             padding: '14px 28px', fontSize: 15, fontWeight: 700,
             cursor: downloading ? 'default' : 'pointer', fontFamily: 'inherit',
-            boxShadow: '0 2px 8px rgba(27,120,247,0.2)',
+            boxShadow: '0 2px 8px var(--color-primary-subtle)',
             opacity: downloading ? 0.7 : 1,
           }}
         >
@@ -231,7 +231,7 @@ export default function Certificate() {
           onClick={handleCopy}
           style={{
             background: 'transparent', border: `1px solid ${C.border}`,
-            color: copied ? '#22c55e' : C.muted, borderRadius: 10,
+            color: copied ? 'var(--color-success)' : C.muted, borderRadius: 10,
             padding: '14px 28px', fontSize: 15, fontWeight: 600,
             cursor: 'pointer', fontFamily: 'inherit',
           }}

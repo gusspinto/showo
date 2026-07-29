@@ -6,29 +6,29 @@ import { Navbar } from '../components/Navbar'
 import { MessageSquare, User, X, ChevronRight, Briefcase } from 'lucide-react'
 
 const C = {
-  bg:     'var(--c-bg)',
-  card:   'var(--c-card)',
-  border: 'var(--c-border)',
-  blue:   '#1b78f7',
-  muted:  'var(--c-muted)',
-  text:   'var(--c-text)',
-  subtle: 'var(--c-subtle)',
-  glass: 'var(--c-glass)', glassBorder: 'var(--c-glass-border)',
+  bg:     'var(--color-bg)',
+  card:   'var(--color-surface)',
+  border: 'var(--color-border)',
+  blue:   'var(--color-primary)',
+  muted:  'var(--color-text-secondary)',
+  text:   'var(--color-text)',
+  subtle: 'var(--color-text-tertiary)',
+  glass: 'var(--color-glass)', glassBorder: 'var(--color-glass-border)',
 }
 
 const STAGES = [
   { id: 'novo',       label: 'Novo',        color: '#6b7280', bg: 'rgba(107,114,128,0.1)' },
-  { id: 'em_analise', label: 'Em análise',  color: '#1b78f7', bg: 'rgba(27,120,247,0.1)'  },
-  { id: 'entrevista', label: 'Entrevista',  color: '#8b5cf6', bg: 'rgba(139,92,246,0.1)'  },
-  { id: 'oferta',     label: 'Oferta',      color: '#f59e0b', bg: 'rgba(245,158,11,0.1)'  },
-  { id: 'aceite',     label: 'Aceite',      color: '#22c55e', bg: 'rgba(34,197,94,0.1)'   },
-  { id: 'rejeitado',  label: 'Rejeitado',   color: '#ef4444', bg: 'rgba(239,68,68,0.1)'   },
+  { id: 'em_analise', label: 'Em análise',  color: 'var(--color-primary)', bg: 'var(--color-primary-subtle)'  },
+  { id: 'entrevista', label: 'Entrevista',  color: 'var(--color-accent)', bg: 'var(--color-accent-subtle)'  },
+  { id: 'oferta',     label: 'Oferta',      color: 'var(--color-warning)', bg: 'var(--color-warning-subtle)'  },
+  { id: 'aceite',     label: 'Aceite',      color: 'var(--color-success)', bg: 'var(--color-success-subtle)'   },
+  { id: 'rejeitado',  label: 'Rejeitado',   color: 'var(--color-error)', bg: 'var(--color-error-subtle)'   },
 ]
 
 function Avatar({ profile, size = 36 }) {
   const name = profile?.full_name || profile?.username || '?'
   const initial = name[0].toUpperCase()
-  const colors = ['#1b78f7','#8b5cf6','#0d9488','#f59e0b','#ec4899','#10b981']
+  const colors = ['var(--color-primary)','var(--color-accent)','#0d9488','var(--color-warning)','#ec4899','#10b981']
   const bg = colors[(initial.charCodeAt(0) || 0) % colors.length]
   if (profile?.avatar_url) return (
     <img src={profile.avatar_url} alt={name} style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
@@ -67,7 +67,7 @@ function CandidatoModal({ cand, vagas, onClose, onStageChange, navigate }) {
         </div>
 
         {/* Vaga */}
-        <div style={{ background: 'var(--c-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 10, padding: '10px 14px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ background: 'var(--color-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 10, padding: '10px 14px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
           <Briefcase size={14} color={C.muted} />
           <div>
             <div style={{ fontSize: 11, fontWeight: 600, color: C.muted, textTransform: 'uppercase', letterSpacing: 0.8 }}>Candidatou-se a</div>
@@ -79,7 +79,7 @@ function CandidatoModal({ cand, vagas, onClose, onStageChange, navigate }) {
         {cand.message && (
           <div style={{ marginBottom: 18 }}>
             <div style={{ fontSize: 12, fontWeight: 600, color: C.muted, marginBottom: 6 }}>Mensagem de candidatura</div>
-            <p style={{ margin: 0, fontSize: 14, color: C.text, lineHeight: 1.6, background: 'var(--c-bg-alt)', padding: '12px 14px', borderRadius: 10, border: `1px solid ${C.border}` }}>
+            <p style={{ margin: 0, fontSize: 14, color: C.text, lineHeight: 1.6, background: 'var(--color-bg-alt)', padding: '12px 14px', borderRadius: 10, border: `1px solid ${C.border}` }}>
               {cand.message}
             </p>
           </div>
@@ -107,12 +107,12 @@ function CandidatoModal({ cand, vagas, onClose, onStageChange, navigate }) {
         <div style={{ display: 'flex', gap: 8 }}>
           {cand.profile?.username && (
             <button onClick={() => { navigate(`/u/${cand.profile.username}`); onClose() }}
-              style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, background: 'var(--c-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 10, padding: '10px 0', color: C.muted, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+              style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, background: 'var(--color-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 10, padding: '10px 0', color: C.muted, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
               <User size={14} /> Ver perfil
             </button>
           )}
           <button onClick={() => { navigate(`/mensagens?to=${cand.student_id}`); onClose() }}
-            style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, background: C.blue, border: 'none', borderRadius: 10, padding: '10px 0', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px rgba(27,120,247,0.2)' }}>
+            style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, background: C.blue, border: 'none', borderRadius: 10, padding: '10px 0', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px var(--color-primary-subtle)' }}>
             <MessageSquare size={14} /> Enviar mensagem
           </button>
         </div>
@@ -265,7 +265,7 @@ export default function Pipeline() {
           {/* Loading */}
           {loading && (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 300 }}>
-              <div style={{ width: 28, height: 28, border: '2px solid var(--c-border)', borderTop: `2px solid ${C.blue}`, borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+              <div style={{ width: 28, height: 28, border: '2px solid var(--color-border)', borderTop: `2px solid ${C.blue}`, borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
               <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
             </div>
           )}
@@ -296,7 +296,7 @@ export default function Pipeline() {
                       return (
                         <button key={c.id} onClick={() => setSelected(c)}
                           style={{ width: '100%', background: C.glass, backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', border: `1px solid ${C.glassBorder}`, borderRadius: 10, padding: '12px 14px', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', transition: 'border-color 0.15s, background 0.15s' }}
-                          onMouseEnter={e => { e.currentTarget.style.borderColor = stage.color; e.currentTarget.style.background = 'var(--c-glass-hover)' }}
+                          onMouseEnter={e => { e.currentTarget.style.borderColor = stage.color; e.currentTarget.style.background = 'var(--color-glass-hover)' }}
                           onMouseLeave={e => { e.currentTarget.style.borderColor = C.glassBorder; e.currentTarget.style.background = C.glass }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: vaga ? 8 : 0 }}>
                             <Avatar profile={c.profile} size={30} />
@@ -311,7 +311,7 @@ export default function Pipeline() {
                             <ChevronRight size={14} color={C.subtle} style={{ flexShrink: 0 }} />
                           </div>
                           {vaga && (
-                            <div style={{ fontSize: 11, color: C.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', background: 'var(--c-bg-alt)', padding: '4px 8px', borderRadius: 6 }}>
+                            <div style={{ fontSize: 11, color: C.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', background: 'var(--color-bg-alt)', padding: '4px 8px', borderRadius: 6 }}>
                               {vaga.title}
                             </div>
                           )}

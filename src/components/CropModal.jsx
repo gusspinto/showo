@@ -170,12 +170,12 @@ export function CropModal({ file, imageUrl, aspectRatio, circular = false, onCon
   }, [crop, circular, onConfirm])
 
   const C = {
-    bg:    'var(--c-bg)',
-    card:  'var(--c-card)',
-    border:'var(--c-border)',
-    text:  'var(--c-text)',
-    muted: 'var(--c-muted)',
-    blue:  '#1b78f7',
+    bg:    'var(--color-bg)',
+    card:  'var(--color-surface)',
+    border:'var(--color-border)',
+    text:  'var(--color-text)',
+    muted: 'var(--color-text-secondary)',
+    blue:  'var(--color-primary)',
   }
 
   const corners = [
@@ -203,7 +203,7 @@ export function CropModal({ file, imageUrl, aspectRatio, circular = false, onCon
                       display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <span style={{ fontWeight: 700, color: C.text, fontSize: 15 }}>Recortar imagem</span>
           <button type="button" onClick={onCancel}
-            style={{ background: 'var(--c-card-hover)', border: `1px solid ${C.border}`,
+            style={{ background: 'var(--color-surface-hover)', border: `1px solid ${C.border}`,
                      borderRadius: 8, width: 30, height: 30, display: 'flex', alignItems: 'center',
                      justifyContent: 'center', color: C.muted, cursor: 'pointer' }}>
             <X size={16} />
@@ -288,10 +288,10 @@ export function CropModal({ file, imageUrl, aspectRatio, circular = false, onCon
             Cancelar
           </button>
           <button type="button" onClick={handleConfirm}
-            style={{ background: '#1b78f7', border: 'none',
+            style={{ background: 'var(--color-primary)', border: 'none',
                      borderRadius: 8, padding: '9px 22px', color: '#fff',
                      fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-                     boxShadow: '0 4px 16px rgba(27,120,247,0.35)' }}>
+                     boxShadow: '0 4px 16px var(--color-primary-subtle)' }}>
             Recortar
           </button>
         </div>
