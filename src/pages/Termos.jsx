@@ -77,7 +77,7 @@ export default function Termos() {
       </p>
 
       <h2>12. Falar connosco</h2>
-      <p>Dúvidas sobre estas regras? Escreve para <a href="mailto:showo.app@gmail.com">showo.app@gmail.com</a>.</p>
+      <p>Dúvidas sobre estas regras? Escreve para <a href="mailto:hello@showo.pt">hello@showo.pt</a>.</p>
     </LegalLayout>
   )
 }

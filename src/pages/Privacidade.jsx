@@ -10,7 +10,7 @@ export default function Privacidade() {
       <h2>Quem somos</h2>
       <p>
         A Showo ajuda estudantes a transformar os seus projetos (PAPs, estágios, trabalhos) em páginas profissionais.
-        Quem trata os teus dados é a Showo, e podes falar connosco quando quiseres em <a href="mailto:showo.app@gmail.com">showo.app@gmail.com</a>.
+        Quem trata os teus dados é a Showo, e podes falar connosco quando quiseres em <a href="mailto:hello@showo.pt">hello@showo.pt</a>.
       </p>
 
       <h2>Que dados guardamos</h2>
@@ -67,7 +67,7 @@ export default function Privacidade() {
         <li>Opores-te ou limitar certos usos.</li>
       </ul>
       <p>
-        Para qualquer uma destas coisas, é só escreveres para <a href="mailto:showo.app@gmail.com">showo.app@gmail.com</a>. Se sentires
+        Para qualquer uma destas coisas, é só escreveres para <a href="mailto:hello@showo.pt">hello@showo.pt</a>. Se sentires
         que algo não está bem, tens também o direito de te queixares à CNPD, a Comissão Nacional de Proteção de Dados.
       </p>
 
@@ -89,7 +89,7 @@ export default function Privacidade() {
       </p>
 
       <h2>Falar connosco</h2>
-      <p>Qualquer dúvida sobre privacidade, é só dizeres: <a href="mailto:showo.app@gmail.com">showo.app@gmail.com</a>.</p>
+      <p>Qualquer dúvida sobre privacidade, é só dizeres: <a href="mailto:hello@showo.pt">hello@showo.pt</a>.</p>
     </LegalLayout>
   )
 }
