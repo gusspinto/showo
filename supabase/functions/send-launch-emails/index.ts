@@ -5,7 +5,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-const FROM = 'Showo <ola@showo.pt>'
+const FROM = 'Showo <hello@showo.pt>'
 const SUBJECT = 'O Showo já está disponível 🚀'
 
 function buildHtml() {
