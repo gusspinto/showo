@@ -1017,8 +1017,11 @@ export default function Dashboard() {
 
   if (authLoading) {
     return (
-      <div style={{ minHeight: '100vh', background: 'var(--color-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ width: 32, height: 32, border: '2px solid var(--color-border)', borderTop: '2px solid var(--color-primary)', borderRadius: '50%', animation: 'dash-spin 1s linear infinite' }} />
+      <div style={{ minHeight: '100vh', background: 'var(--color-bg)' }}>
+        <Navbar />
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 'calc(100dvh - 62px)' }}>
+          <div style={{ width: 32, height: 32, border: '2px solid var(--color-border)', borderTop: '2px solid var(--color-primary)', borderRadius: '50%', animation: 'dash-spin 1s linear infinite' }} />
+        </div>
       </div>
     )
   }
