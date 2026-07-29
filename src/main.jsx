@@ -4,9 +4,12 @@ import App from './App.jsx'
 import './index.css'
 import { initErrorTracking } from './lib/errorTracking'
 import { initAnalytics } from './lib/analytics'
+import { hasConsented } from './lib/consent'
 
-initErrorTracking()
-initAnalytics()
+if (hasConsented()) {
+  initErrorTracking()
+  initAnalytics()
+}
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

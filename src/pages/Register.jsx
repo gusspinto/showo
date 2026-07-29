@@ -99,6 +99,7 @@ export default function Register() {
   const [accountCreated, setAccountCreated] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [acceptedTerms, setAcceptedTerms] = useState(false)
 
   // ── Partner-company invite (?empresa_convite=<token>) — a professor added
   // this company in Parceiros.jsx and emailed this link. It unlocks the
@@ -175,6 +176,7 @@ export default function Register() {
       return
     }
 
+    if (!acceptedTerms) { setError('Tens de aceitar os Termos e a Política de Privacidade.'); return }
     if (!name.trim()) { setError('Introduz o teu nome.'); return }
     if (needsCompany && !company.trim()) { setError('Introduz o nome da empresa.'); return }
     if (needsSchool && !school.trim()) { setError('Introduz o nome da escola.'); return }
@@ -470,6 +472,20 @@ export default function Register() {
                   </>
                 )}
 
+                {!accountCreated && (
+                  <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer', fontSize: 13, color: C.muted, lineHeight: 1.5 }}>
+                    <input
+                      type="checkbox" checked={acceptedTerms}
+                      onChange={e => setAcceptedTerms(e.target.checked)}
+                      style={{ marginTop: 2, accentColor: C.blue, width: 16, height: 16, flexShrink: 0 }}
+                    />
+                    <span>
+                      Li e aceito os <Link to="/termos" style={{ color: C.blue }}>Termos de Utilização</Link> e a <Link to="/privacidade" style={{ color: C.blue }}>Política de Privacidade</Link>.
+                      {' '}Se tens menos de 16 anos, confirma que tens o consentimento do teu encarregado de educação.
+                    </span>
+                  </label>
+                )}
+
                 {error && (
                   <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 8, padding: '10px 14px', color: C.error, fontSize: 14 }}>
                     {error}
@@ -499,9 +515,6 @@ export default function Register() {
                     <div style={{ flex: 1, height: 1, background: C.border }} />
                   </div>
                   <GoogleButton label="Continuar com Google" />
-                  <p style={{ textAlign: 'center', color: 'var(--c-subtle)', fontSize: 11.5, marginTop: 16, lineHeight: 1.5 }}>
-                    Ao continuar, aceitas os <Link to="/termos" style={{ color: C.blue }}>Termos</Link> e a <Link to="/privacidade" style={{ color: C.blue }}>Política de Privacidade</Link>.
-                  </p>
                 </>
               )}
             </>

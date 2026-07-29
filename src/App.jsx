@@ -6,6 +6,7 @@ import { AuthProvider, useAuth } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { SidebarProvider } from './context/SidebarContext'
 import RestReminder from './components/RestReminder'
+import CookieConsent from './components/CookieConsent'
 import SplashScreen from './components/SplashScreen'
 import { captureError } from './lib/errorTracking'
 import { trackPageview } from './lib/analytics'
@@ -328,6 +329,7 @@ export default function App() {
           {splashMounted && <SplashScreen visible={splashVisible} />}
           <RestReminder />
           <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+            <CookieConsent />
             <PageViewTracker />
             <ErrorBoundary>
             <RecoveryGate pwRecovery={pwRecovery}>

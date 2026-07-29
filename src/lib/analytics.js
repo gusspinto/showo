@@ -21,7 +21,7 @@ export function trackPageview(path) {
 
 export function identifyUser(user, profile) {
   if (!analyticsEnabled || !user) return
-  posthog.identify(user.id, { email: user.email, role: profile?.role })
+  posthog.identify(user.id, { role: profile?.role })
 }
 
 export function resetAnalytics() {
