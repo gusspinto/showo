@@ -143,9 +143,6 @@ function RolesPanel({ onBack, theme }) {
       </button>
 
       <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
-        <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: colors.muted, marginBottom: 14 }}>
-          Para quem é a Showo
-        </span>
         <RoleCyclerHeadline />
         <div className="roles-card-stack" style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 560, width: '100%' }}>
           {ROLE_CARDS.map(r => (
@@ -915,10 +912,13 @@ export default function Home() {
         <div style={{ maxWidth: 960, margin: '0 auto' }}>
           <h2 style={{
             fontSize: 'clamp(22px, 2.6vw, 30px)', fontWeight: 900, letterSpacing: '-1px',
-            margin: '0 0 40px', fontFamily: 'var(--font-heading)', color: colors.text, textAlign: 'center',
+            margin: '0 0 12px', fontFamily: 'var(--font-heading)', color: colors.text, textAlign: 'center',
           }}>
-            Como funciona
+            Como funciona a Showo
           </h2>
+          <p style={{ fontSize: 15, color: colors.muted, textAlign: 'center', margin: '0 0 40px', lineHeight: 1.6 }}>
+            Software para transformar projetos escolares em páginas profissionais com análise por IA.
+          </p>
           <div className="how-it-works-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24 }}>
             {HOW_IT_WORKS.map(s => (
               <div key={s.step} style={{
@@ -1020,34 +1020,21 @@ export default function Home() {
         </>}
       </div>
 
-      {/* Bottom CTA */}
-      <Reveal style={{ padding: '0 24px 80px', textAlign: 'center' }}>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="home-cta-btn"
-          style={{
-            background: '#1b78f7',
-            color: '#fff', border: 'none', borderRadius: 14,
-            padding: '16px 40px', fontSize: 17, fontWeight: 700,
-            cursor: 'pointer', fontFamily: 'var(--font-body)',
-            boxShadow: '0 4px 24px rgba(27,120,247,0.35)',
-            letterSpacing: '-0.2px',
-          }}
-        >
-          <span style={{display:"flex",alignItems:"center",gap:6}}>Criar o meu projeto <ArrowRight size={15} /></span>
-        </button>
-        <div className="home-ctas home-hero-btns" style={{ marginTop: 20, textAlign: 'center' }}>
-          <button onClick={() => navigate('/explorar')} className="home-sec-link"
-            style={{ background: 'none', color: colors.muted, border: 'none', padding: 0, fontSize: 13, cursor: 'pointer', fontWeight: 600, fontFamily: 'var(--font-body)', textDecoration: 'underline', textDecorationColor: 'rgba(27,120,247,0.35)', textUnderlineOffset: 3 }}>
-            Ver projetos públicos
-          </button>
-          <span style={{ color: 'rgba(27,120,247,0.35)', margin: '0 12px' }}>·</span>
-          <button onClick={() => navigate('/ranking')} className="home-sec-link"
-            style={{ background: 'none', color: colors.muted, border: 'none', padding: 0, fontSize: 13, cursor: 'pointer', fontWeight: 600, fontFamily: 'var(--font-body)', textDecoration: 'underline', textDecorationColor: 'rgba(27,120,247,0.35)', textUnderlineOffset: 3 }}>
-            Ver ranking
-          </button>
-        </div>
-      </Reveal>
+      <div style={{
+        display: 'flex', justifyContent: 'center', gap: 24,
+        padding: '32px 24px 48px',
+        borderTop: `1px solid ${colors.border}`,
+      }}>
+        <button onClick={() => navigate('/termos')} style={{
+          background: 'none', border: 'none', color: colors.subtle,
+          fontSize: 12, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit',
+        }}>Termos de utilização</button>
+        <button onClick={() => navigate('/privacidade')} style={{
+          background: 'none', border: 'none', color: colors.subtle,
+          fontSize: 12, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit',
+        }}>Política de privacidade</button>
+      </div>
+
       {showCreateModal && <CreateProjectModal onClose={() => setShowCreateModal(false)} />}
     </div>
   )

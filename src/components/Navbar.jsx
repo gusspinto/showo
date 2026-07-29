@@ -1487,11 +1487,6 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
             onClick={() => navigate('/')} className="nav-logo"
             style={{ height: 30, width: 'auto', display: 'block', cursor: 'pointer', userSelect: 'none' }}
           />
-          {!user && (
-            <span style={{ fontSize: 9, fontWeight: 600, color: C.muted, letterSpacing: '0.01em', whiteSpace: 'nowrap' }}>
-              Software para projetos escolares
-            </span>
-          )}
         </div>
 
         {/* Right */}
@@ -1716,11 +1711,6 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
           <div className="sb-top-row" style={!user ? { alignItems: 'center' } : undefined}>
             <button className="sb-logo" onClick={() => navigate(user ? '/dashboard' : '/')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 1 }}>
               <img src={theme === 'light' ? '/light_mode_LI.png' : '/icon_logo.png'} alt="Showo" style={{ height: 28, width: 'auto', objectFit: 'contain' }} />
-              {!user && (
-                <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--c-muted)', letterSpacing: '0.01em', whiteSpace: 'nowrap' }}>
-                  Software para projetos escolares
-                </span>
-              )}
             </button>
           </div>
         )}
