@@ -10,23 +10,23 @@ import {
 } from 'lucide-react'
 
 const C = {
-  bg: 'var(--c-bg)',
-  bgAlt: 'var(--c-bg-alt)',
-  card: 'var(--c-card)',
-  cardHover: 'var(--c-card-hover)',
-  border: 'var(--c-border)',
-  borderBright: 'var(--c-border-bright)',
-  text: 'var(--c-text)',
-  muted: 'var(--c-muted)',
-  subtle: 'var(--c-subtle)',
-  blue: '#1b78f7',
-  green: '#22c55e',
-  yellow: '#fbbf24',
+  bg: 'var(--color-bg)',
+  bgAlt: 'var(--color-bg-alt)',
+  card: 'var(--color-surface)',
+  cardHover: 'var(--color-surface-hover)',
+  border: 'var(--color-border)',
+  borderBright: 'var(--color-border-hover)',
+  text: 'var(--color-text)',
+  muted: 'var(--color-text-secondary)',
+  subtle: 'var(--color-text-tertiary)',
+  blue: 'var(--color-primary)',
+  green: 'var(--color-success)',
+  yellow: 'var(--color-warning)',
   purple: '#a78bfa',
-  red: '#ef4444',
-  orange: '#f97316',
-  glass: 'var(--c-glass)', glassHover: 'var(--c-glass-hover)',
-  glassBorder: 'var(--c-glass-border)', glassBorderBright: 'var(--c-glass-border-bright)',
+  red: 'var(--color-error)',
+  orange: 'var(--color-warning)',
+  glass: 'var(--color-glass)', glassHover: 'var(--color-glass-hover)',
+  glassBorder: 'var(--color-glass-border)', glassBorderBright: 'var(--color-glass-border-bright)',
   glassStyle: { backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' },
 }
 
@@ -167,7 +167,7 @@ const TIER_ORDER = ['Platina', 'Ouro', 'Prata', 'Bronze']
 const TIER_COLORS = {
   Bronze: '#cd7f32',
   Prata: '#9ca3af',
-  Ouro: '#fbbf24',
+  Ouro: 'var(--color-warning)',
   Platina: '#a78bfa',
 }
 
@@ -218,7 +218,7 @@ function AchievementCard({ achievement, unlocked }) {
           <div style={{
             position: 'absolute', bottom: -4, right: -4,
             width: 18, height: 18, borderRadius: '50%',
-            background: accent, border: '2px solid var(--c-card)',
+            background: accent, border: '2px solid var(--color-surface)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
             <CheckCircle2 size={10} color="#fff" />
@@ -309,7 +309,7 @@ export default function Conquistas() {
             background: 'rgba(251,191,36,0.12)', border: '1px solid rgba(251,191,36,0.25)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
-            <Medal size={24} color="#fbbf24" />
+            <Medal size={24} color="var(--color-warning)" />
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <h1 style={{ margin: 0, fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 400, color: C.text, letterSpacing: '-1px', fontFamily: 'var(--font-heading)' }}>

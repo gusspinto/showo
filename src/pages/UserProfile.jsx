@@ -11,23 +11,23 @@ import ConvidarVagaModal from '../components/ConvidarVagaModal'
 
 // ── Design tokens (aligned with the rest of the app) ──────────────────────────
 const C = {
-  bg:           'var(--c-bg)',
-  bgAlt:        'var(--c-bg-alt)',
-  card:         'var(--c-card)',
-  cardHover:    'var(--c-card-hover)',
-  border:       'var(--c-border)',
-  borderBright: 'var(--c-border-bright)',
-  blue:         '#1b78f7',
-  blueHover:    '#1564d4',
-  text:         'var(--c-text)',
-  muted:        'var(--c-muted)',
-  subtle:       'var(--c-subtle)',
-  green:        '#22c55e',
-  yellow:       '#fbbf24',
-  orange:       '#f97316',
-  red:          '#ef4444',
-  glass: 'var(--c-glass)', glassHover: 'var(--c-glass-hover)',
-  glassBorder: 'var(--c-glass-border)', glassBorderBright: 'var(--c-glass-border-bright)',
+  bg:           'var(--color-bg)',
+  bgAlt:        'var(--color-bg-alt)',
+  card:         'var(--color-surface)',
+  cardHover:    'var(--color-surface-hover)',
+  border:       'var(--color-border)',
+  borderBright: 'var(--color-border-hover)',
+  blue:         'var(--color-primary)',
+  blueHover:    'var(--color-primary-hover)',
+  text:         'var(--color-text)',
+  muted:        'var(--color-text-secondary)',
+  subtle:       'var(--color-text-tertiary)',
+  green:        'var(--color-success)',
+  yellow:       'var(--color-warning)',
+  orange:       'var(--color-warning)',
+  red:          'var(--color-error)',
+  glass: 'var(--color-glass)', glassHover: 'var(--color-glass-hover)',
+  glassBorder: 'var(--color-glass-border)', glassBorderBright: 'var(--color-glass-border-bright)',
   glassStyle: { backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' },
 }
 
@@ -145,7 +145,7 @@ function QRModal({ profileUrl, username, onClose }) {
       onClick={e => e.target === e.currentTarget && onClose()}
     >
       <div style={{ background: C.card, border: `1px solid ${C.borderBright}`, borderRadius: 14, width: '100%', maxWidth: 340, boxShadow: 'none', position: 'relative' }}>
-        <button onClick={onClose} style={{ position: 'absolute', top: 14, right: 14, background: 'var(--c-card-hover)', border: `1px solid ${C.border}`, borderRadius: 8, width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.muted, cursor: 'pointer' }}>
+        <button onClick={onClose} style={{ position: 'absolute', top: 14, right: 14, background: 'var(--color-surface-hover)', border: `1px solid ${C.border}`, borderRadius: 8, width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.muted, cursor: 'pointer' }}>
           <X size={14} />
         </button>
 
@@ -164,9 +164,9 @@ function QRModal({ profileUrl, username, onClose }) {
           <div style={{ display: 'flex', gap: 10, width: '100%' }}>
             <button
               onClick={downloadQR}
-              style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, background: 'rgba(27,120,247,0.08)', border: `1px solid rgba(27,120,247,0.2)`, borderRadius: 10, padding: '10px 0', color: C.blue, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'background 0.15s' }}
-              onMouseEnter={e => e.currentTarget.style.background = 'rgba(27,120,247,0.14)'}
-              onMouseLeave={e => e.currentTarget.style.background = 'rgba(27,120,247,0.08)'}
+              style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, background: 'var(--color-primary-subtle)', border: `1px solid var(--color-primary-subtle)`, borderRadius: 10, padding: '10px 0', color: C.blue, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'background 0.15s' }}
+              onMouseEnter={e => e.currentTarget.style.background = 'var(--color-primary-subtle)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'var(--color-primary-subtle)'}
             >
               <Download size={14} /> Descarregar
             </button>
@@ -295,7 +295,7 @@ export default function UserProfile() {
         <Search size={44} color={C.muted} />
         <h2 style={{ color: C.text, fontSize: 22, fontWeight: 400, margin: 0, fontFamily: 'var(--font-heading)', letterSpacing: '-0.4px' }}>Perfil não encontrado</h2>
         <p style={{ color: C.muted, margin: 0, fontSize: 14 }}>O utilizador @{username} não existe.</p>
-        <button onClick={() => navigate('/')} style={{ marginTop: 8, background: C.blue, border: 'none', borderRadius: 8, padding: '10px 24px', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px rgba(27,120,247,0.2)' }}>
+        <button onClick={() => navigate('/')} style={{ marginTop: 8, background: C.blue, border: 'none', borderRadius: 8, padding: '10px 24px', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px var(--color-primary-subtle)' }}>
           Ir para o início
         </button>
       </div>
@@ -360,7 +360,7 @@ export default function UserProfile() {
 
         .up-stat-pill {
           display: inline-flex; align-items: center; gap: 5px;
-          background: var(--c-bg-alt);
+          background: var(--color-bg-alt);
           border: 1px solid ${C.border};
           border-radius: 999px;
           padding: 4px 12px;
@@ -372,7 +372,7 @@ export default function UserProfile() {
 
         .up-social-link {
           display: inline-flex; align-items: center; gap: 5px;
-          background: var(--c-bg-alt);
+          background: var(--color-bg-alt);
           border: 1px solid ${C.border};
           border-radius: 8px;
           padding: 5px 12px;
@@ -384,7 +384,7 @@ export default function UserProfile() {
         .up-social-link:hover {
           border-color: ${C.borderBright};
           color: ${C.text};
-          background: var(--c-card-hover);
+          background: var(--color-surface-hover);
         }
 
         .up-action-btn {
@@ -402,7 +402,7 @@ export default function UserProfile() {
         .up-action-btn:hover {
           border-color: ${C.borderBright};
           color: ${C.text};
-          background: var(--c-card-hover);
+          background: var(--color-surface-hover);
         }
         .up-action-btn.kit {
           background: rgba(234,179,8,0.07);
@@ -415,16 +415,16 @@ export default function UserProfile() {
           color: ${C.yellow};
         }
         .up-action-btn.primary {
-          background: #1b78f7;
+          background: var(--color-primary);
           border-color: transparent;
           color: #fff;
-          box-shadow: 0 2px 8px rgba(27,120,247,0.2);
+          box-shadow: 0 2px 8px var(--color-primary-subtle);
         }
         .up-action-btn.primary:hover {
           background: #1564d4;
           border-color: transparent;
           color: #fff;
-          box-shadow: 0 2px 8px rgba(27,120,247,0.2);
+          box-shadow: 0 2px 8px var(--color-primary-subtle);
         }
 
         .up-section-label {
@@ -482,7 +482,7 @@ export default function UserProfile() {
           >
             <button
               onClick={() => setShowQR(true)}
-              style={{ background: 'var(--c-card-hover)', border: `1px solid ${C.border}`, borderRadius: 8, width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: C.muted }}
+              style={{ background: 'var(--color-surface-hover)', border: `1px solid ${C.border}`, borderRadius: 8, width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: C.muted }}
               title="QR Code"
             >
               <QrCode size={15} />
@@ -490,7 +490,7 @@ export default function UserProfile() {
             {isOwnProfile && (
               <button
                 onClick={() => navigate('/settings')}
-                style={{ background: 'var(--c-card-hover)', border: `1px solid ${C.border}`, borderRadius: 8, width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: C.muted }}
+                style={{ background: 'var(--color-surface-hover)', border: `1px solid ${C.border}`, borderRadius: 8, width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: C.muted }}
                 title="Editar perfil"
               >
                 <Pencil size={15} />
@@ -505,16 +505,16 @@ export default function UserProfile() {
                 onClick={() => navigate(`/mensagens?to=${profile.id}`)}
                 style={{
                   display: 'inline-flex', alignItems: 'center', gap: 7,
-                  background: '#1b78f7', border: 'none',
+                  background: 'var(--color-primary)', border: 'none',
                   borderRadius: 9, padding: '9px 18px',
                   color: '#fff', fontSize: 13, fontWeight: 700,
                   cursor: 'pointer', fontFamily: 'inherit',
                   whiteSpace: 'nowrap',
-                  boxShadow: '0 2px 8px rgba(27,120,247,0.2)',
+                  boxShadow: '0 2px 8px var(--color-primary-subtle)',
                   transition: 'background 0.15s',
                 }}
-                onMouseEnter={e => { e.currentTarget.style.background = '#1564d4' }}
-                onMouseLeave={e => { e.currentTarget.style.background = '#1b78f7' }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'var(--color-primary-hover)' }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'var(--color-primary)' }}
               >
                 <MessageSquare size={14} /> Mensagem
               </button>
@@ -539,8 +539,8 @@ export default function UserProfile() {
                     <span title="Tem um projeto com score perfeito" style={{
                       display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                       width: 28, height: 28, borderRadius: 8,
-                      background: '#1b78f7',
-                      boxShadow: '0 0 8px rgba(27,120,247,0.5)',
+                      background: 'var(--color-primary)',
+                      boxShadow: '0 0 8px var(--color-primary-subtle)',
                       flexShrink: 0,
                     }}>
                       <GraduationCap size={15} color="#fff" />
@@ -556,7 +556,7 @@ export default function UserProfile() {
               {(profile.area || profile.course || profile.school) && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginBottom: 10, marginTop: 6 }}>
                   {(profile.area || profile.course) && (
-                    <span style={{ fontSize: 12, fontWeight: 700, color: '#1b78f7' }}>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-primary)' }}>
                       {profile.area || profile.course}
                     </span>
                   )}
@@ -580,9 +580,9 @@ export default function UserProfile() {
               {profile.available_for_work && profile.role === 'aluno' && (
                 <div style={{
                   display: 'inline-flex', alignItems: 'center', gap: 6,
-                  background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.3)',
+                  background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)',
                   borderRadius: 7, padding: '5px 14px', marginBottom: 12,
-                  color: '#1b78f7', fontSize: 13, fontWeight: 700,
+                  color: 'var(--color-primary)', fontSize: 13, fontWeight: 700,
                 }}>
                   <Briefcase size={13} style={{ flexShrink: 0 }} /> Disponível para estágio
                 </div>
@@ -632,8 +632,8 @@ export default function UserProfile() {
                   {profile.skills.map(skill => (
                     <span key={skill} className="up-skill-chip" style={{
                       display: 'inline-flex', alignItems: 'center',
-                      background: 'rgba(27,120,247,0.08)', color: '#1b78f7',
-                      border: '1px solid rgba(27,120,247,0.2)',
+                      background: 'var(--color-primary-subtle)', color: 'var(--color-primary)',
+                      border: '1px solid var(--color-primary-subtle)',
                       borderRadius: 6, padding: '3px 12px',
                       fontSize: 12, fontWeight: 600,
                     }}>
@@ -662,38 +662,44 @@ export default function UserProfile() {
                       disabled={savingCandidate}
                       style={{
                         display: 'inline-flex', alignItems: 'center', gap: 6,
-                        background: saved ? 'rgba(245,158,11,0.12)' : 'transparent',
-                        border: `1px solid ${saved ? 'rgba(245,158,11,0.4)' : C.border}`,
+                        background: saved ? 'var(--color-warning-subtle)' : 'transparent',
+                        border: `1px solid ${saved ? 'var(--color-warning-subtle)' : C.border}`,
                         borderRadius: 9, padding: '8px 14px',
-                        color: saved ? '#f59e0b' : C.muted,
+                        color: saved ? 'var(--color-warning)' : C.muted,
                         fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
                         transition: 'all 0.15s',
                       }}
                       title={saved ? 'Remover dos guardados' : 'Guardar candidato'}
                     >
-                      <Star size={13} fill={saved ? '#f59e0b' : 'none'} />
+                      <Star size={13} fill={saved ? 'var(--color-warning)' : 'none'} />
                       {saved ? 'Guardado' : 'Guardar'}
                     </button>
                     <button
                       onClick={() => setShowInvite(true)}
                       style={{
                         display: 'inline-flex', alignItems: 'center', gap: 6,
-                        background: '#1b78f7',
+                        background: 'var(--color-primary)',
                         border: 'none',
                         borderRadius: 9, padding: '8px 16px',
                         color: '#fff',
                         fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-                        boxShadow: '0 2px 8px rgba(27,120,247,0.2)',
+                        boxShadow: '0 2px 8px var(--color-primary-subtle)',
                         transition: 'background 0.15s',
                       }}
-                      onMouseEnter={e => { e.currentTarget.style.background = '#1564d4' }}
-                      onMouseLeave={e => { e.currentTarget.style.background = '#1b78f7' }}
+                      onMouseEnter={e => { e.currentTarget.style.background = 'var(--color-primary-hover)' }}
+                      onMouseLeave={e => { e.currentTarget.style.background = 'var(--color-primary)' }}
                     >
                       <Send size={13} /> Convidar para vaga
                     </button>
                   </>
                 )}
               </div>
+
+              {isOwnProfile && profile.role === 'aluno' && (
+                <p style={{ color: C.subtle, fontSize: 12, margin: '14px 0 0', fontStyle: 'italic', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  Brevemente: partilha o teu portfólio com empresas
+                </p>
+              )}
             </div>
 
           </div>
@@ -716,10 +722,10 @@ export default function UserProfile() {
                 {myProfile?.role !== 'professor' && (
                   <>
                     <p style={{ color: C.muted, fontSize: 14, margin: '0 0 24px', maxWidth: 360, marginLeft: 'auto', marginRight: 'auto', lineHeight: 1.65 }}>
-                      Adiciona o teu primeiro projeto e transforma-o numa página profissional com a ajuda da IA.
+                      Adiciona o teu primeiro projeto e constrói o teu portfólio profissional.
                     </p>
                     <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
-                      <button onClick={() => setShowCreateModal(true)} style={{ background: C.blue, border: 'none', borderRadius: 8, padding: '11px 24px', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px rgba(27,120,247,0.2)' }}>
+                      <button onClick={() => setShowCreateModal(true)} style={{ background: C.blue, border: 'none', borderRadius: 8, padding: '11px 24px', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px var(--color-primary-subtle)' }}>
                         <span style={{display:'flex',alignItems:'center',gap:6}}>Criar projeto <ArrowRight size={14} /></span>
                       </button>
                     </div>

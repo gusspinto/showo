@@ -9,23 +9,23 @@ import {
 } from 'lucide-react'
 
 const C = {
-  bg: 'var(--c-bg)',
-  bgAlt: 'var(--c-bg-alt)',
-  card: 'var(--c-card)',
-  cardHover: 'var(--c-card-hover)',
-  border: 'var(--c-border)',
-  borderBright: 'var(--c-border-bright)',
-  text: 'var(--c-text)',
-  muted: 'var(--c-muted)',
-  subtle: 'var(--c-subtle)',
-  blue: '#1b78f7',
-  green: '#22c55e',
-  yellow: '#fbbf24',
-  red: '#ef4444',
-  glass: 'var(--c-glass)',
-  glassHover: 'var(--c-glass-hover)',
-  glassBorder: 'var(--c-glass-border)',
-  glassBorderBright: 'var(--c-glass-border-bright)',
+  bg: 'var(--color-bg)',
+  bgAlt: 'var(--color-bg-alt)',
+  card: 'var(--color-surface)',
+  cardHover: 'var(--color-surface-hover)',
+  border: 'var(--color-border)',
+  borderBright: 'var(--color-border-hover)',
+  text: 'var(--color-text)',
+  muted: 'var(--color-text-secondary)',
+  subtle: 'var(--color-text-tertiary)',
+  blue: 'var(--color-primary)',
+  green: 'var(--color-success)',
+  yellow: 'var(--color-warning)',
+  red: 'var(--color-error)',
+  glass: 'var(--color-glass)',
+  glassHover: 'var(--color-glass-hover)',
+  glassBorder: 'var(--color-glass-border)',
+  glassBorderBright: 'var(--color-glass-border-bright)',
   glassStyle: { backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' },
 }
 
@@ -65,11 +65,11 @@ function TurmaCard({ turma }) {
       {/* Icon */}
       <div style={{
         width: 46, height: 46, borderRadius: 10, flexShrink: 0,
-        background: 'rgba(27,120,247,0.12)',
-        border: '1px solid rgba(27,120,247,0.22)',
+        background: 'var(--color-primary-subtle)',
+        border: '1px solid var(--color-primary-subtle)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>
-        <Users2 size={20} color="#1b78f7" />
+        <Users2 size={20} color="var(--color-primary)" />
       </div>
 
       {/* Info */}
@@ -147,11 +147,11 @@ function JoinModal({ onClose, onJoin, navigate }) {
         <div className="turmas-modal-content" style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: '28px 28px 24px', width: '100%', maxWidth: 420, textAlign: 'center' }}>
           <div style={{
             width: 52, height: 52, borderRadius: 14, margin: '0 auto 16px',
-            background: joined.verified ? 'rgba(34,197,94,0.1)' : 'rgba(251,191,36,0.1)',
-            border: `1px solid ${joined.verified ? 'rgba(34,197,94,0.25)' : 'rgba(251,191,36,0.3)'}`,
+            background: joined.verified ? 'var(--color-success-subtle)' : 'rgba(251,191,36,0.1)',
+            border: `1px solid ${joined.verified ? 'var(--color-success-subtle)' : 'rgba(251,191,36,0.3)'}`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
-            <Check size={24} color={joined.verified ? '#22c55e' : '#fbbf24'} />
+            <Check size={24} color={joined.verified ? 'var(--color-success)' : 'var(--color-warning)'} />
           </div>
           <h3 style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 400, color: C.text, fontFamily: 'var(--font-heading)', letterSpacing: '-0.4px' }}>
             {joined.verified ? 'Entraste na turma!' : 'Pedido enviado'}
@@ -204,7 +204,7 @@ function JoinModal({ onClose, onJoin, navigate }) {
           maxLength={8}
           style={{
             width: '100%', boxSizing: 'border-box',
-            background: C.bg, border: `1px solid ${error ? '#ef4444' : C.border}`,
+            background: C.bg, border: `1px solid ${error ? 'var(--color-error)' : C.border}`,
             borderRadius: 8, padding: '12px 14px',
             fontSize: 18, fontWeight: 700, letterSpacing: '0.1em',
             color: C.text, outline: 'none', textAlign: 'center',
@@ -213,7 +213,7 @@ function JoinModal({ onClose, onJoin, navigate }) {
         />
 
         {error && (
-          <p style={{ color: '#ef4444', fontSize: 12, margin: '0 0 16px', textAlign: 'center' }}>{error}</p>
+          <p style={{ color: 'var(--color-error)', fontSize: 12, margin: '0 0 16px', textAlign: 'center' }}>{error}</p>
         )}
 
         <button
@@ -226,7 +226,7 @@ function JoinModal({ onClose, onJoin, navigate }) {
             cursor: loading || !code.trim() ? 'not-allowed' : 'pointer',
             opacity: loading || !code.trim() ? 0.6 : 1,
             fontFamily: 'inherit', transition: 'opacity 0.15s',
-            boxShadow: '0 2px 8px rgba(27,120,247,0.2)',
+            boxShadow: '0 2px 8px var(--color-primary-subtle)',
           }}
         >
           {loading ? 'A verificar…' : 'Entrar na turma'}
@@ -323,7 +323,7 @@ export default function Turmas() {
                 background: C.blue, border: 'none', borderRadius: 8,
                 color: '#fff', fontSize: 13, fontWeight: 700,
                 padding: '10px 16px', cursor: 'pointer', fontFamily: 'inherit',
-                boxShadow: '0 2px 8px rgba(27,120,247,0.2)',
+                boxShadow: '0 2px 8px var(--color-primary-subtle)',
               }}
             >
               <Plus size={15} />
@@ -343,8 +343,8 @@ export default function Turmas() {
                   key={y}
                   onClick={() => setYearFilter(y)}
                   style={{
-                    background: yearFilter === y ? 'rgba(27,120,247,0.14)' : 'transparent',
-                    border: `1px solid ${yearFilter === y ? 'rgba(27,120,247,0.3)' : C.border}`,
+                    background: yearFilter === y ? 'var(--color-primary-subtle)' : 'transparent',
+                    border: `1px solid ${yearFilter === y ? 'var(--color-primary-subtle)' : C.border}`,
                     borderRadius: 999, padding: '6px 14px', fontSize: 12, fontWeight: 700,
                     color: yearFilter === y ? C.blue : C.muted, cursor: 'pointer', fontFamily: 'inherit',
                     transition: 'background 0.15s, border-color 0.15s',
@@ -372,10 +372,10 @@ export default function Turmas() {
           }}>
             <div style={{
               width: 56, height: 56, borderRadius: 14, margin: '0 auto 16px',
-              background: 'rgba(27,120,247,0.08)', border: '1px solid rgba(27,120,247,0.15)',
+              background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
-              <Users2 size={26} color="#1b78f7" />
+              <Users2 size={26} color="var(--color-primary)" />
             </div>
             <p style={{ margin: '0 0 6px', fontSize: 16, fontWeight: 700, color: C.text }}>
               {isTeacher ? 'Ainda não criaste turmas' : 'Ainda não estás em nenhuma turma'}
@@ -393,7 +393,7 @@ export default function Turmas() {
                     { n: 2, text: 'Insere-o aqui e junta-te à turma' },
                   ].map(s => (
                     <div key={s.n} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <div style={{ width: 22, height: 22, borderRadius: '50%', flexShrink: 0, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, color: C.blue }}>
+                      <div style={{ width: 22, height: 22, borderRadius: '50%', flexShrink: 0, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, color: C.blue }}>
                         {s.n}
                       </div>
                       <span style={{ fontSize: 13, color: C.muted, lineHeight: 1.4 }}>{s.text}</span>
@@ -429,7 +429,7 @@ export default function Turmas() {
                   background: C.blue, border: 'none', borderRadius: 8,
                   color: '#fff', fontSize: 13, fontWeight: 700,
                   padding: '11px 22px', cursor: 'pointer', fontFamily: 'inherit',
-                  boxShadow: '0 2px 8px rgba(27,120,247,0.2)',
+                  boxShadow: '0 2px 8px var(--color-primary-subtle)',
                 }}
               >
                 Tenho um código

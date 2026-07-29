@@ -49,11 +49,11 @@ function ClickBeat({ active }) {
     <div ref={wrapRef} style={{ position: 'relative', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <button ref={btnRef} style={{
         display: 'flex', alignItems: 'center', gap: 8,
-        background: clicked ? '#1660d1' : '#1b78f7',
+        background: clicked ? '#1660d1' : 'var(--color-primary)',
         border: 'none', borderRadius: 10, padding: '13px 22px',
         fontSize: 15, fontWeight: 700, color: '#fff', fontFamily: 'inherit',
         transform: clicked ? 'scale(0.94)' : 'scale(1)',
-        boxShadow: phase === 'move' ? '0 0 0 4px rgba(27,120,247,0.2)' : '0 4px 14px rgba(27,120,247,0.35)',
+        boxShadow: phase === 'move' ? '0 0 0 4px var(--color-primary-subtle)' : '0 4px 14px var(--color-primary-subtle)',
         transition: 'transform 0.15s, background 0.15s, box-shadow 0.3s',
         pointerEvents: 'none',
       }}>
@@ -82,15 +82,15 @@ function FillBeat({ active }) {
     <div style={{ padding: '4px 4px', display: 'flex', flexDirection: 'column', gap: 13, height: '100%', justifyContent: 'center' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 9, animation: 'onb-fade 0.4s both' }}>
         <span className="onb-ai-badge">✦ IA</span>
-        <div style={{ height: 9, borderRadius: 5, background: 'var(--c-border)', width: '52%',
+        <div style={{ height: 9, borderRadius: 5, background: 'var(--color-border)', width: '52%',
           animation: 'onb-grow 0.6s 0.15s cubic-bezier(0.22,1,0.36,1) both' }} />
       </div>
       {FIELDS.map((f, i) => (
         <div key={f.label} style={{ display: 'flex', alignItems: 'center', gap: 11,
           animation: `onb-fade 0.4s ${0.35 + i * 0.28}s both` }}>
-          <span style={{ fontSize: 12, fontWeight: 700, color: '#1b78f7', minWidth: 78, flexShrink: 0 }}>{f.label}</span>
-          <div style={{ flex: 1, height: 7, background: 'var(--c-border)', borderRadius: 4, overflow: 'hidden' }}>
-            <div style={{ height: '100%', background: '#1b78f7', borderRadius: 4, width: `${f.pct}%`,
+          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-primary)', minWidth: 78, flexShrink: 0 }}>{f.label}</span>
+          <div style={{ flex: 1, height: 7, background: 'var(--color-border)', borderRadius: 4, overflow: 'hidden' }}>
+            <div style={{ height: '100%', background: 'var(--color-primary)', borderRadius: 4, width: `${f.pct}%`,
               animation: `onb-grow 0.7s ${0.5 + i * 0.28}s cubic-bezier(0.22,1,0.36,1) both` }} />
           </div>
         </div>
@@ -120,24 +120,24 @@ function DoneBeat({ active }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12, height: '100%', justifyContent: 'center' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 13, animation: 'onb-fade 0.4s both' }}>
         <div style={{
-          background: `conic-gradient(#22c55e ${score / 100 * 360}deg, var(--c-border) 0deg)`,
+          background: `conic-gradient(var(--color-success) ${score / 100 * 360}deg, var(--color-border) 0deg)`,
           borderRadius: '50%', width: 48, height: 48, flexShrink: 0,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
-          <div style={{ background: 'var(--c-card)', borderRadius: '50%', width: 37, height: 37, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, color: '#22c55e' }}>{score}</div>
+          <div style={{ background: 'var(--color-surface)', borderRadius: '50%', width: 37, height: 37, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, color: 'var(--color-success)' }}>{score}</div>
         </div>
         <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--c-text)' }}>Gestão de Horários</div>
-          <div style={{ fontSize: 12, color: 'var(--c-muted)' }}>João Silva · DAM</div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text)' }}>Gestão de Horários</div>
+          <div style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>João Silva · DAM</div>
         </div>
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 9, background: 'var(--c-bg)', border: '1px solid var(--c-border)',
+      <div style={{ display: 'flex', alignItems: 'center', gap: 9, background: 'var(--color-bg)', border: '1px solid var(--color-border)',
         borderRadius: 9, padding: '10px 13px', animation: 'onb-fade 0.4s 0.25s both' }}>
-        <div style={{ width: 18, height: 18, borderRadius: '50%', background: 'rgba(34,197,94,0.14)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <Check size={12} color="#22c55e" strokeWidth={3} />
+        <div style={{ width: 18, height: 18, borderRadius: '50%', background: 'var(--color-success-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <Check size={12} color="var(--color-success)" strokeWidth={3} />
         </div>
-        <span style={{ fontSize: 12.5, color: 'var(--c-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          showo.app/projeto/<span style={{ color: '#1b78f7', fontWeight: 600 }}>gestao-horarios</span>
+        <span style={{ fontSize: 12.5, color: 'var(--color-text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          showo.app/projeto/<span style={{ color: 'var(--color-primary)', fontWeight: 600 }}>gestao-horarios</span>
         </span>
       </div>
     </div>
@@ -171,9 +171,9 @@ export default function Onboarding({ onDone }) {
         @keyframes onb-fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes onb-grow { from { width: 0 !important; } }
         @keyframes onb-beat-in { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
-        @keyframes onb-ring { from { box-shadow: 0 0 0 0 rgba(27,120,247,0.4); } to { box-shadow: 0 0 0 14px rgba(27,120,247,0); } }
+        @keyframes onb-ring { from { box-shadow: 0 0 0 0 var(--color-primary-subtle); } to { box-shadow: 0 0 0 14px rgba(27,120,247,0); } }
         .onb-ring { position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; animation: onb-ring 0.55s ease-out; pointer-events: none; }
-        .onb-ai-badge { font-size: 10.5px; font-weight: 800; letter-spacing: 0.02em; color: #1b78f7; background: rgba(27,120,247,0.1); border-radius: 5px; padding: 3px 7px; flex-shrink: 0; }
+        .onb-ai-badge { font-size: 10.5px; font-weight: 800; letter-spacing: 0.02em; color: var(--color-primary); background: var(--color-primary-subtle); border-radius: 5px; padding: 3px 7px; flex-shrink: 0; }
         .onb-beat { animation: onb-beat-in 0.35s cubic-bezier(0.16,1,0.3,1) both; }
         @media (max-width: 560px) {
           .onb-card { width: calc(100% - 32px) !important; max-width: 360px !important; }
@@ -197,14 +197,14 @@ export default function Onboarding({ onDone }) {
         transform: `translate(-50%, ${visible ? '-50%' : '-46%'})`,
         opacity: visible ? 1 : 0, transition: 'opacity 0.28s, transform 0.28s',
         width: 'calc(100% - 40px)', maxWidth: 440,
-        background: 'var(--c-card)', border: '1px solid var(--c-border)',
+        background: 'var(--color-surface)', border: '1px solid var(--color-border)',
         borderRadius: 14, overflow: 'hidden',
         boxShadow: '0 24px 60px rgba(0,0,0,0.45)', fontFamily: 'inherit',
       }}>
         {/* Title bar — mac dots left, close right */}
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '9px 10px 9px 14px', borderBottom: '1px solid var(--c-border)', background: 'var(--c-bg-alt)',
+          padding: '9px 10px 9px 14px', borderBottom: '1px solid var(--color-border)', background: 'var(--color-bg-alt)',
         }}>
           <div style={{ display: 'flex', gap: 7 }}>
             <span style={{ width: 11, height: 11, borderRadius: '50%', background: '#ff5f57' }} />
@@ -217,7 +217,7 @@ export default function Onboarding({ onDone }) {
         </div>
 
         {/* Stage — the morphing animation */}
-        <div className="onb-stage" style={{ height: 240, padding: '24px', background: 'var(--c-card)' }}>
+        <div className="onb-stage" style={{ height: 240, padding: '24px', background: 'var(--color-surface)' }}>
           <div key={beat} className="onb-beat" style={{ height: '100%' }}>
             {beat === 0 && <ClickBeat active />}
             {beat === 1 && <FillBeat active />}
@@ -228,23 +228,23 @@ export default function Onboarding({ onDone }) {
         {/* Footer — dots + start */}
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '10px 14px', borderTop: '1px solid var(--c-border)', background: 'var(--c-bg-alt)',
+          padding: '10px 14px', borderTop: '1px solid var(--color-border)', background: 'var(--color-bg-alt)',
         }}>
           <div style={{ display: 'flex', gap: 6 }}>
             {BEATS.map((b, i) => (
               <button key={b.key} onClick={() => { clearTimeout(timer.current); setBeat(i) }} aria-label={b.step} style={{
                 width: 7, height: 7, borderRadius: '50%', padding: 0, border: 'none', cursor: 'pointer',
-                background: i === beat ? '#1b78f7' : 'var(--c-border)', transition: 'background 0.3s',
+                background: i === beat ? 'var(--color-primary)' : 'var(--color-border)', transition: 'background 0.3s',
               }} />
             ))}
           </div>
           <button onClick={close} style={{
-            background: '#1b78f7', border: 'none', borderRadius: 8,
+            background: 'var(--color-primary)', border: 'none', borderRadius: 8,
             padding: '7px 16px', fontSize: 12, fontWeight: 700, color: '#fff', fontFamily: 'inherit', cursor: 'pointer',
             flexShrink: 0, transition: 'background 0.15s',
           }}
             onMouseEnter={e => { e.currentTarget.style.background = '#1660d1' }}
-            onMouseLeave={e => { e.currentTarget.style.background = '#1b78f7' }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'var(--color-primary)' }}
           >
             Começar
           </button>

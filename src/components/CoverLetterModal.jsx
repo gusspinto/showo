@@ -3,14 +3,14 @@ import { supabase } from '../lib/supabase'
 import { Check, X, GraduationCap, Briefcase, Sparkles, Lightbulb, ArrowLeft } from 'lucide-react'
 
 const C = {
-  bg: 'var(--c-bg)',
-  card: 'var(--c-card)',
-  border: 'var(--c-border)',
-  blue: '#1b78f7',
-  muted: 'var(--c-muted)',
-  text: 'var(--c-text)',
-  subtle: 'var(--c-subtle)',
-  green: '#22c55e',
+  bg: 'var(--color-bg)',
+  card: 'var(--color-surface)',
+  border: 'var(--color-border)',
+  blue: 'var(--color-primary)',
+  muted: 'var(--color-text-secondary)',
+  text: 'var(--color-text)',
+  subtle: 'var(--color-text-tertiary)',
+  green: 'var(--color-success)',
   inputBg: '#060c16',
 }
 
@@ -20,13 +20,13 @@ function Btn({ children, onClick, primary, disabled, style = {} }) {
       onClick={onClick}
       disabled={disabled}
       style={{
-        background: disabled ? 'var(--c-border)' : primary ? '#1b78f7' : 'transparent',
+        background: disabled ? 'var(--color-border)' : primary ? 'var(--color-primary)' : 'transparent',
         border: primary ? 'none' : `1px solid ${C.border}`,
         borderRadius: 9, padding: '11px 20px',
-        color: disabled ? 'var(--c-subtle)' : primary ? '#fff' : C.muted,
+        color: disabled ? 'var(--color-text-tertiary)' : primary ? '#fff' : C.muted,
         fontSize: 14, fontWeight: 600, cursor: disabled ? 'default' : 'pointer',
         fontFamily: 'inherit',
-        boxShadow: primary && !disabled ? '0 4px 16px rgba(27,120,247,0.3)' : 'none',
+        boxShadow: primary && !disabled ? '0 4px 16px var(--color-primary-subtle)' : 'none',
         transition: 'opacity 0.15s',
         ...style,
       }}
@@ -52,8 +52,8 @@ function CopyField({ label, value }) {
         <button
           onClick={copy}
           style={{
-            background: copied ? 'rgba(34,197,94,0.1)' : 'rgba(27,120,247,0.1)',
-            border: `1px solid ${copied ? 'rgba(34,197,94,0.3)' : 'rgba(27,120,247,0.2)'}`,
+            background: copied ? 'var(--color-success-subtle)' : 'var(--color-primary-subtle)',
+            border: `1px solid ${copied ? 'var(--color-success-subtle)' : 'var(--color-primary-subtle)'}`,
             borderRadius: 6, padding: '3px 10px',
             color: copied ? C.green : C.blue,
             fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
@@ -109,7 +109,7 @@ export default function CoverLetterModal({ projects, studentName, onClose }) {
       onClick={e => e.target === e.currentTarget && onClose()}
     >
       <div style={{
-        background: 'var(--c-card)', border: `1px solid var(--c-border)`,
+        background: 'var(--color-surface)', border: `1px solid var(--color-border)`,
         borderRadius: 20, width: '100%', maxWidth: 620,
         maxHeight: '90vh', overflow: 'auto',
         boxShadow: '0 32px 80px rgba(0,0,0,0.7)',
@@ -137,8 +137,8 @@ export default function CoverLetterModal({ projects, studentName, onClose }) {
                     onClick={() => setType(val)}
                     style={{
                       flex: 1, padding: '10px 0',
-                      background: type === val ? 'rgba(27,120,247,0.12)' : 'transparent',
-                      border: `1.5px solid ${type === val ? '#1b78f7' : C.border}`,
+                      background: type === val ? 'var(--color-primary-subtle)' : 'transparent',
+                      border: `1.5px solid ${type === val ? 'var(--color-primary)' : C.border}`,
                       borderRadius: 10, color: type === val ? C.blue : C.muted,
                       fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
                       transition: 'all 0.15s',
@@ -190,7 +190,7 @@ export default function CoverLetterModal({ projects, studentName, onClose }) {
               </div>
 
               {/* Projects used */}
-              <div style={{ background: 'rgba(27,120,247,0.06)', border: '1px solid rgba(27,120,247,0.15)', borderRadius: 10, padding: '12px 14px', marginBottom: 20 }}>
+              <div style={{ background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 10, padding: '12px 14px', marginBottom: 20 }}>
                 <p style={{ margin: '0 0 6px', fontSize: 12, fontWeight: 700, color: C.blue, textTransform: 'uppercase', letterSpacing: 0.8 }}>
                   Projetos incluídos
                 </p>
@@ -200,7 +200,7 @@ export default function CoverLetterModal({ projects, studentName, onClose }) {
                 {projects.length > 3 && <p style={{ margin: '3px 0', fontSize: 12, color: C.subtle }}>+{projects.length - 3} mais</p>}
               </div>
 
-              {error && <p style={{ color: '#ef4444', fontSize: 13, marginBottom: 12 }}>{error}</p>}
+              {error && <p style={{ color: 'var(--color-error)', fontSize: 13, marginBottom: 12 }}>{error}</p>}
 
               <Btn primary onClick={generate} disabled={!company.trim() || loading} style={{ width: '100%' }}>
                 {loading ? 'A gerar...' : <><Sparkles size={14} style={{ verticalAlign: 'middle', marginRight: 5 }} />Gerar candidatura</>}
@@ -209,8 +209,8 @@ export default function CoverLetterModal({ projects, studentName, onClose }) {
           ) : (
             <>
               {result.highlight && (
-                <div style={{ background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 10, padding: '10px 14px', marginBottom: 18 }}>
-                  <p style={{ margin: 0, fontSize: 13, color: '#22c55e', display: 'flex', alignItems: 'flex-start', gap: 6 }}><Lightbulb size={14} style={{ flexShrink: 0, marginTop: 1 }} />{result.highlight}</p>
+                <div style={{ background: 'var(--color-success-subtle)', border: '1px solid var(--color-success-subtle)', borderRadius: 10, padding: '10px 14px', marginBottom: 18 }}>
+                  <p style={{ margin: 0, fontSize: 13, color: 'var(--color-success)', display: 'flex', alignItems: 'flex-start', gap: 6 }}><Lightbulb size={14} style={{ flexShrink: 0, marginTop: 1 }} />{result.highlight}</p>
                 </div>
               )}
 

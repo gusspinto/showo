@@ -52,7 +52,6 @@ const TurmaPage    = lazy(() => import('./pages/TurmaPage'))
 const TurmaAluno   = lazy(() => import('./pages/TurmaAluno'))
 const Parceiros    = lazy(() => import('./pages/Parceiros'))
 const Turmas       = lazy(() => import('./pages/Turmas'))
-const AIInterview  = lazy(() => import('./pages/AIInterview'))
 const Certificate  = lazy(() => import('./pages/Certificate'))
 const Vagas        = lazy(() => import('./pages/Vagas'))
 const Estagio       = lazy(() => import('./pages/Estagio'))
@@ -66,8 +65,8 @@ const Termos         = lazy(() => import('./pages/Termos'))
 
 function PageLoader() {
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--c-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ width: 28, height: 28, border: '2px solid var(--c-border)', borderTop: '2px solid #1b78f7', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+    <div style={{ minHeight: '100vh', background: 'var(--color-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ width: 28, height: 28, border: '2px solid var(--color-border)', borderTop: '2px solid var(--color-primary)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   )
@@ -104,22 +103,22 @@ class ErrorBoundary extends Component {
 function ErrorFallback({ error, onReset }) {
   return (
     <div style={{
-      minHeight: '100vh', background: 'var(--c-bg)', color: 'var(--c-text)',
+      minHeight: '100vh', background: 'var(--color-bg)', color: 'var(--color-text)',
       display: 'flex', flexDirection: 'column', alignItems: 'center',
       justifyContent: 'center', padding: 32, fontFamily: 'var(--font-body)', gap: 20,
     }}>
       <div style={{
         width: 56, height: 56, borderRadius: 16,
-        background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)',
+        background: 'var(--color-error-subtle)', border: '1px solid var(--color-error-subtle)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>
-        <Frown size={26} color="#ef4444" />
+        <Frown size={26} color="var(--color-error)" />
       </div>
       <div style={{ textAlign: 'center', maxWidth: 400 }}>
         <h2 style={{ margin: '0 0 8px', fontSize: 20, fontWeight: 800, fontFamily: 'var(--font-heading)', letterSpacing: '-0.3px' }}>
           Algo correu mal
         </h2>
-        <p style={{ margin: 0, fontSize: 14, color: 'var(--c-muted)', lineHeight: 1.6 }}>
+        <p style={{ margin: 0, fontSize: 14, color: 'var(--color-text-secondary)', lineHeight: 1.6 }}>
           Ocorreu um erro inesperado. Tenta recarregar a página.
         </p>
       </div>
@@ -128,9 +127,9 @@ function ErrorFallback({ error, onReset }) {
           onClick={() => { onReset(); window.location.href = '/' }}
           style={{
             display: 'flex', alignItems: 'center', gap: 6,
-            background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)',
+            background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)',
             borderRadius: 10, padding: '10px 18px',
-            color: 'var(--c-muted)', fontSize: 14, fontWeight: 600,
+            color: 'var(--color-text-secondary)', fontSize: 14, fontWeight: 600,
             cursor: 'pointer', fontFamily: 'inherit',
           }}
         >
@@ -140,11 +139,11 @@ function ErrorFallback({ error, onReset }) {
           onClick={() => window.location.reload()}
           style={{
             display: 'flex', alignItems: 'center', gap: 6,
-            background: '#1b78f7',
+            background: 'var(--color-primary)',
             border: 'none', borderRadius: 10, padding: '10px 18px',
             color: '#fff', fontSize: 14, fontWeight: 700,
             cursor: 'pointer', fontFamily: 'inherit',
-            boxShadow: '0 4px 16px rgba(27,120,247,0.3)',
+            boxShadow: '0 4px 16px var(--color-primary-subtle)',
           }}
         >
           <RefreshCw size={14} /> Recarregar
@@ -159,21 +158,21 @@ function NotFound() {
   const navigate = useNavigate()
   return (
     <div style={{
-      minHeight: '100vh', background: 'var(--c-bg)', color: 'var(--c-text)',
+      minHeight: '100vh', background: 'var(--color-bg)', color: 'var(--color-text)',
       display: 'flex', flexDirection: 'column', alignItems: 'center',
       justifyContent: 'center', padding: 32, fontFamily: 'var(--font-body)', gap: 20,
     }}>
       <div style={{
         fontSize: 'clamp(64px, 12vw, 96px)', fontWeight: 900,
         fontFamily: 'var(--font-heading)', letterSpacing: '-4px', lineHeight: 1,
-        background: '#1b78f7',
+        background: 'var(--color-primary)',
         WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
       }}>404</div>
       <div style={{ textAlign: 'center', maxWidth: 360 }}>
         <h2 style={{ margin: '0 0 8px', fontSize: 20, fontWeight: 800, fontFamily: 'var(--font-heading)', letterSpacing: '-0.3px' }}>
           Página não encontrada
         </h2>
-        <p style={{ margin: 0, fontSize: 14, color: 'var(--c-muted)', lineHeight: 1.6 }}>
+        <p style={{ margin: 0, fontSize: 14, color: 'var(--color-text-secondary)', lineHeight: 1.6 }}>
           A página que procuras não existe ou foi movida.
         </p>
       </div>
@@ -182,9 +181,9 @@ function NotFound() {
           onClick={() => navigate(-1)}
           style={{
             display: 'flex', alignItems: 'center', gap: 6,
-            background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)',
+            background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)',
             borderRadius: 10, padding: '10px 18px',
-            color: 'var(--c-muted)', fontSize: 14, fontWeight: 600,
+            color: 'var(--color-text-secondary)', fontSize: 14, fontWeight: 600,
             cursor: 'pointer', fontFamily: 'inherit',
           }}
         >
@@ -193,11 +192,11 @@ function NotFound() {
         <button
           onClick={() => navigate('/')}
           style={{
-            background: '#1b78f7',
+            background: 'var(--color-primary)',
             border: 'none', borderRadius: 10, padding: '10px 18px',
             color: '#fff', fontSize: 14, fontWeight: 700,
             cursor: 'pointer', fontFamily: 'inherit',
-            boxShadow: '0 4px 16px rgba(27,120,247,0.3)',
+            boxShadow: '0 4px 16px var(--color-primary-subtle)',
           }}
         >
           Ir para o início
@@ -269,7 +268,7 @@ function AuthErrorBanner() {
     <div style={{
       position: 'fixed', top: 16, left: '50%', transform: 'translateX(-50%)',
       zIndex: 99999, maxWidth: 480, width: 'calc(100% - 32px)',
-      background: '#1a0e0e', border: '1px solid rgba(239,68,68,0.35)',
+      background: '#1a0e0e', border: '1px solid var(--color-error-subtle)',
       borderRadius: 12, padding: '14px 18px',
       display: 'flex', alignItems: 'flex-start', gap: 12,
       boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
@@ -351,7 +350,6 @@ export default function App() {
               <Route path="/turma/:code/aluno/:userId" element={<TurmaAluno />} />
               <Route path="/turmas"        element={<Turmas />}      />
               <Route path="/parceiros"     element={<Parceiros />}   />
-              <Route path="/interview"          element={<AIInterview />}  />
               <Route path="/certificado/:slug"  element={<Certificate />}  />
               <Route path="/vagas"              element={<Vagas />}        />
               <Route path="/estagio"            element={<Estagio />}      />

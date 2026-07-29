@@ -8,14 +8,14 @@ import { Navbar } from '../components/Navbar'
 import { Check, Download, Mail, Rocket } from 'lucide-react'
 
 const C = {
-  bg:           'var(--c-bg)',
-  card:         'var(--c-card)',
-  border:       'var(--c-border)',
-  borderBright: 'var(--c-border-bright)',
-  blue:         '#1b78f7',
-  text:         'var(--c-text)',
-  muted:        'var(--c-muted)',
-  green:        '#22c55e',
+  bg:           'var(--color-bg)',
+  card:         'var(--color-surface)',
+  border:       'var(--color-border)',
+  borderBright: 'var(--color-border-hover)',
+  blue:         'var(--color-primary)',
+  text:         'var(--color-text)',
+  muted:        'var(--color-text-secondary)',
+  green:        'var(--color-success)',
 }
 
 function SectionLabel({ children }) {
@@ -133,7 +133,7 @@ ${displayName}`)
                 </div>
                 <button
                   onClick={() => copy(profileUrl, 'profile')}
-                  style={{ background: copiedField === 'profile' ? 'rgba(34,197,94,0.1)' : 'rgba(27,120,247,0.08)', border: `1px solid ${copiedField === 'profile' ? 'rgba(34,197,94,0.3)' : 'rgba(27,120,247,0.2)'}`, borderRadius: 8, padding: '8px 14px', color: copiedField === 'profile' ? C.green : C.blue, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap', transition: 'all 0.15s' }}
+                  style={{ background: copiedField === 'profile' ? 'var(--color-success-subtle)' : 'var(--color-primary-subtle)', border: `1px solid ${copiedField === 'profile' ? 'var(--color-success-subtle)' : 'var(--color-primary-subtle)'}`, borderRadius: 8, padding: '8px 14px', color: copiedField === 'profile' ? C.green : C.blue, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap', transition: 'all 0.15s' }}
                 >
                   {copiedField === 'profile' ? <><Check size={13} style={{ verticalAlign: 'middle', marginRight: 3 }} />Copiado</> : 'Copiar'}
                 </button>
@@ -153,7 +153,7 @@ ${displayName}`)
               />
               <button
                 onClick={() => copy(emailText, 'email')}
-                style={{ marginTop: 8, background: copiedField === 'email' ? 'rgba(34,197,94,0.1)' : 'rgba(27,120,247,0.08)', border: `1px solid ${copiedField === 'email' ? 'rgba(34,197,94,0.3)' : 'rgba(27,120,247,0.2)'}`, borderRadius: 8, padding: '9px 18px', color: copiedField === 'email' ? C.green : C.blue, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s' }}
+                style={{ marginTop: 8, background: copiedField === 'email' ? 'var(--color-success-subtle)' : 'var(--color-primary-subtle)', border: `1px solid ${copiedField === 'email' ? 'var(--color-success-subtle)' : 'var(--color-primary-subtle)'}`, borderRadius: 8, padding: '9px 18px', color: copiedField === 'email' ? C.green : C.blue, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s' }}
               >
                 {copiedField === 'email' ? <><Check size={13} style={{ verticalAlign: 'middle', marginRight: 4 }} />Copiado</> : <><Mail size={13} style={{ verticalAlign: 'middle', marginRight: 4 }} />Copiar email</>}
               </button>
@@ -169,9 +169,9 @@ ${displayName}`)
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   <button
                     onClick={downloadQR}
-                    style={{ display: 'flex', alignItems: 'center', gap: 7, background: 'rgba(27,120,247,0.08)', border: `1px solid rgba(27,120,247,0.2)`, borderRadius: 8, padding: '9px 16px', color: C.blue, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'background 0.15s' }}
-                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(27,120,247,0.14)'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'rgba(27,120,247,0.08)'}
+                    style={{ display: 'flex', alignItems: 'center', gap: 7, background: 'var(--color-primary-subtle)', border: `1px solid var(--color-primary-subtle)`, borderRadius: 8, padding: '9px 16px', color: C.blue, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'background 0.15s' }}
+                    onMouseEnter={e => e.currentTarget.style.background = 'var(--color-primary-subtle)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'var(--color-primary-subtle)'}
                   >
                     <Download size={14} /> Descarregar QR
                   </button>

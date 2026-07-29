@@ -6,26 +6,26 @@ import { Navbar } from '../components/Navbar'
 import { MapPin, Globe, Users, Briefcase, MessageSquare, ExternalLink, Building2, Link, ArrowLeft, Settings } from 'lucide-react'
 
 const C = {
-  bg:     'var(--c-bg)',
-  card:   'var(--c-card)',
-  border: 'var(--c-border)',
-  blue:   '#1b78f7',
-  muted:  'var(--c-muted)',
-  text:   'var(--c-text)',
-  subtle: 'var(--c-subtle)',
-  glass: 'var(--c-glass)', glassBorder: 'var(--c-glass-border)',
+  bg:     'var(--color-bg)',
+  card:   'var(--color-surface)',
+  border: 'var(--color-border)',
+  blue:   'var(--color-primary)',
+  muted:  'var(--color-text-secondary)',
+  text:   'var(--color-text)',
+  subtle: 'var(--color-text-tertiary)',
+  glass: 'var(--color-glass)', glassBorder: 'var(--color-glass-border)',
   glassStyle: { backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' },
 }
 
 const TIPO_INFO = {
-  recrutador: { label: 'Recrutador',  color: '#8b5cf6', bg: 'rgba(139,92,246,0.1)' },
-  empresa:    { label: 'Empresa',     color: '#f59e0b', bg: 'rgba(245,158,11,0.1)' },
+  recrutador: { label: 'Recrutador',  color: 'var(--color-accent)', bg: 'var(--color-accent-subtle)' },
+  empresa:    { label: 'Empresa',     color: 'var(--color-warning)', bg: 'var(--color-warning-subtle)' },
 }
 
 const STATUS_INFO = {
-  pendente:  { label: 'Candidatado', color: '#f59e0b', bg: 'rgba(245,158,11,0.1)' },
-  aceite:    { label: 'Aceite',      color: '#22c55e', bg: 'rgba(34,197,94,0.1)'  },
-  rejeitado: { label: 'Rejeitado',   color: '#ef4444', bg: 'rgba(239,68,68,0.1)'  },
+  pendente:  { label: 'Candidatado', color: 'var(--color-warning)', bg: 'var(--color-warning-subtle)' },
+  aceite:    { label: 'Aceite',      color: 'var(--color-success)', bg: 'var(--color-success-subtle)'  },
+  rejeitado: { label: 'Rejeitado',   color: 'var(--color-error)', bg: 'var(--color-error-subtle)'  },
 }
 
 function timeAgo(ts) {
@@ -98,7 +98,7 @@ export default function EmpresaPage() {
     <div style={{ minHeight: '100vh', background: C.bg }}>
       <Navbar />
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 'calc(100dvh - 62px)' }}>
-        <div style={{ width: 28, height: 28, border: '2px solid var(--c-border)', borderTop: `2px solid ${C.blue}`, borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+        <div style={{ width: 28, height: 28, border: '2px solid var(--color-border)', borderTop: `2px solid ${C.blue}`, borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     </div>
@@ -118,7 +118,7 @@ export default function EmpresaPage() {
   )
 
   const tipo = TIPO_INFO[company.role] ?? TIPO_INFO.recrutador
-  const accentColor = company.role === 'empresa' ? '#f59e0b' : '#8b5cf6'
+  const accentColor = company.role === 'empresa' ? 'var(--color-warning)' : 'var(--color-accent)'
   const name = company.company || company.full_name || 'Empresa'
 
   return (
@@ -191,13 +191,13 @@ export default function EmpresaPage() {
               {isOwnPage ? (
                 <button onClick={() => navigate('/settings')}
                   style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 8, padding: '9px 16px', color: C.muted, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'border-color 0.15s, color 0.15s' }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--c-border-bright)'; e.currentTarget.style.color = C.text }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--color-border-hover)'; e.currentTarget.style.color = C.text }}
                   onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted }}>
                   <Settings size={14} /> Editar
                 </button>
               ) : user ? (
                 <button onClick={() => navigate(`/mensagens?to=${company.id}`)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 7, background: C.blue, border: 'none', borderRadius: 8, padding: '9px 18px', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px rgba(27,120,247,0.2)' }}>
+                  style={{ display: 'flex', alignItems: 'center', gap: 7, background: C.blue, border: 'none', borderRadius: 8, padding: '9px 18px', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px var(--color-primary-subtle)' }}>
                   <MessageSquare size={14} /> Contactar
                 </button>
               ) : null}
@@ -232,7 +232,7 @@ export default function EmpresaPage() {
                   const st   = cand ? STATUS_INFO[cand.status] ?? STATUS_INFO.pendente : null
                   return (
                     <div key={v.id} style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '18px 20px', transition: 'border-color 0.15s' }}
-                      onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--c-border-bright)'}
+                      onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--color-border-hover)'}
                       onMouseLeave={e => e.currentTarget.style.borderColor = C.border}>
                       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
                         <div style={{ flex: 1, minWidth: 180 }}>
@@ -264,7 +264,7 @@ export default function EmpresaPage() {
                             </span>
                           ) : user && isStudent ? (
                             <button onClick={() => navigate('/vagas')}
-                              style={{ background: C.blue, border: 'none', borderRadius: 8, padding: '8px 16px', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px rgba(27,120,247,0.2)' }}>
+                              style={{ background: C.blue, border: 'none', borderRadius: 8, padding: '8px 16px', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px var(--color-primary-subtle)' }}>
                               Candidatar
                             </button>
                           ) : !user ? (
@@ -296,7 +296,7 @@ export default function EmpresaPage() {
                 <h3 style={{ margin: '0 0 12px', fontSize: 14, fontWeight: 700, color: C.text }}>Recrutador</h3>
                 <button onClick={() => navigate(`/u/${company.username}`)}
                   style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 12px', cursor: 'pointer', fontFamily: 'inherit', transition: 'background 0.12s' }}
-                  onMouseEnter={e => e.currentTarget.style.background = 'var(--c-bg-alt)'}
+                  onMouseEnter={e => e.currentTarget.style.background = 'var(--color-bg-alt)'}
                   onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                   {company.avatar_url ? (
                     <img src={company.avatar_url} alt="" style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover' }} />

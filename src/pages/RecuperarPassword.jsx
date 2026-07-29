@@ -6,12 +6,12 @@ import AuthSidePanel from '../components/AuthSidePanel'
 import { useTheme } from '../context/ThemeContext'
 
 const C = {
-  bg:     'var(--c-bg)',
-  border: 'var(--c-border)',
-  blue:   '#1b78f7',
-  muted:  'var(--c-muted)',
-  text:   'var(--c-text)',
-  error:  '#ef4444',
+  bg:     'var(--color-bg)',
+  border: 'var(--color-border)',
+  blue:   'var(--color-primary)',
+  muted:  'var(--color-text-secondary)',
+  text:   'var(--color-text)',
+  error:  'var(--color-error)',
 }
 
 const PHRASES = [{ lead: 'Quase lá,', highlight: 'nova palavra-passe.' }]
@@ -97,12 +97,13 @@ export default function RecuperarPassword({ onDone }) {
   return (
     <div className="auth-shell">
       <style>{`
-        .auth-shell { min-height: 100vh; display: flex; background: var(--c-bg); font-family: inherit; }
+        @media (min-width: 601px) { body { padding-left: 0 !important; } .sidebar { display: none !important; } }
+        .auth-shell { min-height: 100vh; display: flex; background: var(--color-bg); font-family: inherit; }
         .auth-side {
           position: relative; overflow: hidden;
           flex: 0 0 42%; display: flex; align-items: center; justify-content: flex-start;
           padding: 0 0 0 64px; background: linear-gradient(115deg, #000 0%, #050b1c 40%, #0e2249 85%, #143169 100%);
-          border-right: 1px solid var(--c-border);
+          border-right: 1px solid var(--color-border);
         }
         .auth-side-content { position: relative; z-index: 3; display: flex; flex-direction: column; align-items: flex-start; gap: 22px; text-align: left; }
         .auth-side-mark { width: 72px; height: auto; display: block; }
@@ -111,16 +112,16 @@ export default function RecuperarPassword({ onDone }) {
           font-size: clamp(22px, 2.6vw, 36px); line-height: 1.3;
           letter-spacing: -0.5px; color: #fff; margin: 0; text-align: left;
         }
-        .auth-side-highlight { background: #1b78f7; color: #fff; padding: 2px 10px 9px; border-radius: 0 0 14px 14px; display: inline-block; }
+        .auth-side-highlight { background: var(--color-primary); color: #fff; padding: 2px 10px 9px; border-radius: 0 0 14px 14px; display: inline-block; }
         .auth-side-letter { display: inline-block; }
         .auth-main { flex: 1; display: flex; align-items: center; justify-content: center; padding: 24px 16px; }
         .auth-card { width: 100%; max-width: 380px; }
         .auth-input, body.light .auth-input {
           flex: 1; width: 100%; background: transparent !important; border: none;
-          color: var(--c-text); font-size: 16px; outline: none; font-family: inherit;
+          color: var(--color-text); font-size: 16px; outline: none; font-family: inherit;
           padding: 10px 0; box-sizing: border-box;
         }
-        .auth-field-wrap { display: flex; align-items: center; gap: 10px; border-bottom: 1.5px solid var(--c-border); transition: border-color 0.15s; }
+        .auth-field-wrap { display: flex; align-items: center; gap: 10px; border-bottom: 1.5px solid var(--color-border); transition: border-color 0.15s; }
         .auth-submit { transition: opacity 0.15s; }
         .auth-submit:hover:not(:disabled) { opacity: 0.88; }
         @media (max-width: 860px) { .auth-side { display: none; } }
@@ -148,7 +149,7 @@ export default function RecuperarPassword({ onDone }) {
               <p style={{ color: C.muted, fontSize: 14, margin: '0 0 24px', lineHeight: 1.5 }}>
                 Este link de recuperação já não é válido. Pede um novo na página de entrada.
               </p>
-              <Link to="/login" style={{ display: 'inline-block', background: '#1b78f7', color: '#fff', textDecoration: 'none', borderRadius: 8, padding: '11px 20px', fontSize: 14, fontWeight: 700 }}>
+              <Link to="/login" style={{ display: 'inline-block', background: 'var(--color-primary)', color: '#fff', textDecoration: 'none', borderRadius: 8, padding: '11px 20px', fontSize: 14, fontWeight: 700 }}>
                 Voltar a entrar
               </Link>
             </>
@@ -164,7 +165,7 @@ export default function RecuperarPassword({ onDone }) {
                 <PasswordField label="Confirmar palavra-passe" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="Repete a palavra-passe" />
 
                 {error && (
-                  <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 8, padding: '10px 14px', color: C.error, fontSize: 14 }}>
+                  <div style={{ background: 'var(--color-error-subtle)', border: '1px solid var(--color-error-subtle)', borderRadius: 8, padding: '10px 14px', color: C.error, fontSize: 14 }}>
                     {error}
                   </div>
                 )}
@@ -173,7 +174,7 @@ export default function RecuperarPassword({ onDone }) {
                   type="submit" disabled={loading}
                   className="auth-submit"
                   style={{
-                    background: loading ? 'var(--c-border)' : '#1b78f7',
+                    background: loading ? 'var(--color-border)' : 'var(--color-primary)',
                     color: '#fff', border: 'none',
                     borderRadius: 8, padding: '13px', fontSize: 14, fontWeight: 700,
                     cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
@@ -186,8 +187,8 @@ export default function RecuperarPassword({ onDone }) {
           )}
 
           {done && (
-            <div style={{ background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.25)', borderRadius: 10, padding: '16px 18px' }}>
-              <p style={{ margin: 0, color: '#22c55e', fontSize: 14, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div style={{ background: 'var(--color-success-subtle)', border: '1px solid var(--color-success-subtle)', borderRadius: 10, padding: '16px 18px' }}>
+              <p style={{ margin: 0, color: 'var(--color-success)', fontSize: 14, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
                 <Check size={14} /> Palavra-passe atualizada. A entrar…
               </p>
             </div>

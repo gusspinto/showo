@@ -10,22 +10,22 @@ import { containsProfanity } from '../lib/profanity'
 import SkillsPicker from '../components/SkillsPicker'
 
 const C = {
-  bg:          'var(--c-bg)',
-  bgAlt:       'var(--c-bg-alt)',
-  card:        'var(--c-card)',
-  cardHover:   'var(--c-card-hover)',
-  border:      'var(--c-border)',
-  borderBright:'var(--c-border-bright)',
-  borderFocus: '#1b78f7',
-  glass: 'var(--c-glass)', glassBorder: 'var(--c-glass-border)',
-  blue:        '#1b78f7',
-  blueHover:   '#1564d4',
-  muted:       'var(--c-muted)',
-  text:        'var(--c-text)',
-  subtle:      'var(--c-subtle)',
-  inputBg:     'var(--c-bg)',
-  red:         '#ef4444',
-  green:       '#22c55e',
+  bg:          'var(--color-bg)',
+  bgAlt:       'var(--color-bg-alt)',
+  card:        'var(--color-surface)',
+  cardHover:   'var(--color-surface-hover)',
+  border:      'var(--color-border)',
+  borderBright:'var(--color-border-hover)',
+  borderFocus: 'var(--color-primary)',
+  glass: 'var(--color-glass)', glassBorder: 'var(--color-glass-border)',
+  blue:        'var(--color-primary)',
+  blueHover:   'var(--color-primary-hover)',
+  muted:       'var(--color-text-secondary)',
+  text:        'var(--color-text)',
+  subtle:      'var(--color-text-tertiary)',
+  inputBg:     'var(--color-input-bg)',
+  red:         'var(--color-error)',
+  green:       'var(--color-success)',
 }
 
 function Input({ label, value, onChange, placeholder, hint, type = 'text', prefix }) {
@@ -409,7 +409,7 @@ export default function Settings() {
   if (!user) return null
 
   const isRecruiter = role === 'recrutador' || role === 'empresa'
-  const accentColor = role === 'empresa' ? '#f59e0b' : '#8b5cf6'
+  const accentColor = role === 'empresa' ? 'var(--color-warning)' : 'var(--color-accent)'
 
   // Tab definitions for recruiter/empresa
   const recruiterTabs = [
@@ -470,10 +470,10 @@ export default function Settings() {
 
   /* ── role badge ── */
   const ROLE_INFO = {
-    aluno:      { icon: <GraduationCap size={18} />, label: 'Aluno',      color: '#1b78f7' },
+    aluno:      { icon: <GraduationCap size={18} />, label: 'Aluno',      color: 'var(--color-primary)' },
     professor:  { icon: <BookOpen size={18} />,      label: 'Professor',  color: '#10b981' },
-    recrutador: { icon: <Search size={18} />,        label: 'Recrutador', color: '#8b5cf6' },
-    empresa:    { icon: <Building2 size={18} />,     label: 'Empresa',    color: '#f59e0b' },
+    recrutador: { icon: <Search size={18} />,        label: 'Recrutador', color: 'var(--color-accent)' },
+    empresa:    { icon: <Building2 size={18} />,     label: 'Empresa',    color: 'var(--color-warning)' },
   }
   const r = ROLE_INFO[role] ?? ROLE_INFO.aluno
   const roleBadge = (
@@ -507,7 +507,7 @@ export default function Settings() {
           </div>
           <button onClick={() => navigate('/dashboard')}
             style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 8, padding: '8px 14px', color: C.muted, fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0, marginTop: 4, transition: 'border-color 0.15s, color 0.15s' }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--c-border-bright)'; e.currentTarget.style.color = C.text }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--color-border-hover)'; e.currentTarget.style.color = C.text }}
             onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted }}>
             <ArrowLeft size={14} /> Dashboard
           </button>
@@ -617,7 +617,7 @@ export default function Settings() {
                   )}
                   <button onClick={handleChangePassword} disabled={pwSaving}
                     style={{ background: pwSaving ? C.border : 'transparent', border: `1px solid ${C.border}`, borderRadius: 10, padding: '11px 24px', color: C.text, fontSize: 14, fontWeight: 600, cursor: pwSaving ? 'default' : 'pointer', fontFamily: 'inherit', transition: 'border-color 0.2s, background 0.2s' }}
-                    onMouseEnter={e => { if (!pwSaving) { e.currentTarget.style.borderColor = 'var(--c-border-bright)'; e.currentTarget.style.background = 'var(--c-bg-alt)' }}}
+                    onMouseEnter={e => { if (!pwSaving) { e.currentTarget.style.borderColor = 'var(--color-border-hover)'; e.currentTarget.style.background = 'var(--color-bg-alt)' }}}
                     onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.background = 'transparent' }}>
                     {pwSaving ? 'A alterar...' : 'Alterar password'}
                   </button>
@@ -673,7 +673,7 @@ export default function Settings() {
                         <button
                           onClick={handleDeleteAccount}
                           disabled={deleteLoading}
-                          style={{ flex: 1, background: '#ef4444', border: 'none', borderRadius: 10, padding: '11px 0', color: '#fff', fontSize: 14, fontWeight: 700, cursor: deleteLoading ? 'default' : 'pointer', fontFamily: 'inherit', opacity: deleteLoading ? 0.6 : 1 }}
+                          style={{ flex: 1, background: 'var(--color-error)', border: 'none', borderRadius: 10, padding: '11px 0', color: '#fff', fontSize: 14, fontWeight: 700, cursor: deleteLoading ? 'default' : 'pointer', fontFamily: 'inherit', opacity: deleteLoading ? 0.6 : 1 }}
                         >
                           {deleteLoading ? 'A eliminar...' : 'Sim, eliminar conta'}
                         </button>
@@ -743,11 +743,11 @@ export default function Settings() {
                 <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: C.muted, marginBottom: 10 }}>Disponibilidade</label>
                 <button type="button" onClick={() => setAvailableForWork(v => !v)}
                   style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 14, background: availableForWork ? 'rgba(34,197,94,0.07)' : C.inputBg, border: `1.5px solid ${availableForWork ? 'rgba(34,197,94,0.35)' : C.border}`, borderRadius: 10, padding: '13px 16px', cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.2s', textAlign: 'left' }}>
-                  <div style={{ width: 42, height: 24, borderRadius: 12, flexShrink: 0, background: availableForWork ? '#22c55e' : C.subtle, position: 'relative', transition: 'background 0.2s' }}>
+                  <div style={{ width: 42, height: 24, borderRadius: 12, flexShrink: 0, background: availableForWork ? 'var(--color-success)' : C.subtle, position: 'relative', transition: 'background 0.2s' }}>
                     <div style={{ position: 'absolute', top: 3, left: availableForWork ? 21 : 3, width: 18, height: 18, borderRadius: '50%', background: '#fff', transition: 'left 0.2s', boxShadow: '0 1px 4px rgba(0,0,0,0.25)' }} />
                   </div>
                   <div>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: availableForWork ? '#22c55e' : C.text, marginBottom: 2, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: availableForWork ? 'var(--color-success)' : C.text, marginBottom: 2, display: 'flex', alignItems: 'center', gap: 6 }}>
                       <Briefcase size={14} style={{ flexShrink: 0 }} />
                       {availableForWork ? 'Disponível para estágio' : 'Não disponível para estágio'}
                     </div>
@@ -765,11 +765,11 @@ export default function Settings() {
                 <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: C.muted, marginBottom: 10 }}>Relatório mensal</label>
                 <button type="button" onClick={() => setMonthlyReportOptIn(v => !v)}
                   style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 14, background: monthlyReportOptIn ? 'rgba(34,197,94,0.07)' : C.inputBg, border: `1.5px solid ${monthlyReportOptIn ? 'rgba(34,197,94,0.35)' : C.border}`, borderRadius: 10, padding: '13px 16px', cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.2s', textAlign: 'left' }}>
-                  <div style={{ width: 42, height: 24, borderRadius: 12, flexShrink: 0, background: monthlyReportOptIn ? '#22c55e' : C.subtle, position: 'relative', transition: 'background 0.2s' }}>
+                  <div style={{ width: 42, height: 24, borderRadius: 12, flexShrink: 0, background: monthlyReportOptIn ? 'var(--color-success)' : C.subtle, position: 'relative', transition: 'background 0.2s' }}>
                     <div style={{ position: 'absolute', top: 3, left: monthlyReportOptIn ? 21 : 3, width: 18, height: 18, borderRadius: '50%', background: '#fff', transition: 'left 0.2s', boxShadow: '0 1px 4px rgba(0,0,0,0.25)' }} />
                   </div>
                   <div>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: monthlyReportOptIn ? '#22c55e' : C.text, marginBottom: 2, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: monthlyReportOptIn ? 'var(--color-success)' : C.text, marginBottom: 2, display: 'flex', alignItems: 'center', gap: 6 }}>
                       <BarChart2 size={14} style={{ flexShrink: 0 }} />
                       {monthlyReportOptIn ? 'Relatório mensal ativo' : 'Relatório mensal desativado'}
                     </div>
@@ -810,7 +810,7 @@ export default function Settings() {
             )}
             <button onClick={handleChangePassword} disabled={pwSaving}
               style={{ background: pwSaving ? C.border : 'transparent', border: `1px solid ${C.border}`, borderRadius: 10, padding: '11px 24px', color: C.text, fontSize: 14, fontWeight: 600, cursor: pwSaving ? 'default' : 'pointer', fontFamily: 'inherit', transition: 'border-color 0.2s, background 0.2s' }}
-              onMouseEnter={e => { if (!pwSaving) { e.currentTarget.style.borderColor = 'var(--c-border-bright)'; e.currentTarget.style.background = 'var(--c-bg-alt)' }}}
+              onMouseEnter={e => { if (!pwSaving) { e.currentTarget.style.borderColor = 'var(--color-border-hover)'; e.currentTarget.style.background = 'var(--color-bg-alt)' }}}
               onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.background = 'transparent' }}>
               {pwSaving ? 'A alterar...' : 'Alterar password'}
             </button>
@@ -867,7 +867,7 @@ export default function Settings() {
                   <button
                     onClick={handleDeleteAccount}
                     disabled={deleteLoading}
-                    style={{ flex: 1, background: '#ef4444', border: 'none', borderRadius: 10, padding: '11px 0', color: '#fff', fontSize: 14, fontWeight: 700, cursor: deleteLoading ? 'default' : 'pointer', fontFamily: 'inherit', opacity: deleteLoading ? 0.6 : 1 }}
+                    style={{ flex: 1, background: 'var(--color-error)', border: 'none', borderRadius: 10, padding: '11px 0', color: '#fff', fontSize: 14, fontWeight: 700, cursor: deleteLoading ? 'default' : 'pointer', fontFamily: 'inherit', opacity: deleteLoading ? 0.6 : 1 }}
                   >
                     {deleteLoading ? 'A eliminar...' : 'Sim, eliminar conta'}
                   </button>

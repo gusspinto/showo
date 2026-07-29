@@ -4,14 +4,14 @@ import { useAuth } from '../context/AuthContext'
 import { X, Briefcase, Send, Check } from 'lucide-react'
 
 const C = {
-  bg:           'var(--c-bg)',
-  card:         'var(--c-card)',
-  border:       'var(--c-border)',
-  borderBright: 'var(--c-border-bright)',
-  blue:         '#1b78f7',
-  text:         'var(--c-text)',
-  muted:        'var(--c-muted)',
-  green:        '#22c55e',
+  bg:           'var(--color-bg)',
+  card:         'var(--color-surface)',
+  border:       'var(--color-border)',
+  borderBright: 'var(--color-border-hover)',
+  blue:         'var(--color-primary)',
+  text:         'var(--color-text)',
+  muted:        'var(--color-text-secondary)',
+  green:        'var(--color-success)',
 }
 
 export default function ConvidarVagaModal({ studentId, studentName, vagas, onClose, onSent }) {
@@ -85,7 +85,7 @@ export default function ConvidarVagaModal({ studentId, studentName, vagas, onClo
             <div style={{ textAlign: 'center', padding: '16px 0' }}>
               <div style={{
                 width: 52, height: 52, borderRadius: '50%',
-                background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.3)',
+                background: 'var(--color-success-subtle)', border: '1px solid var(--color-success-subtle)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 margin: '0 auto 14px',
               }}>
@@ -121,8 +121,8 @@ export default function ConvidarVagaModal({ studentId, studentName, vagas, onClo
                       style={{
                         display: 'flex', alignItems: 'center', gap: 10,
                         padding: '10px 14px', borderRadius: 10, textAlign: 'left',
-                        background: selectedVaga === v.id ? 'rgba(27,120,247,0.1)' : C.bg,
-                        border: `1.5px solid ${selectedVaga === v.id ? 'rgba(27,120,247,0.4)' : C.border}`,
+                        background: selectedVaga === v.id ? 'var(--color-primary-subtle)' : C.bg,
+                        border: `1.5px solid ${selectedVaga === v.id ? 'var(--color-primary-subtle)' : C.border}`,
                         cursor: 'pointer', fontFamily: 'inherit', width: '100%', transition: 'all 0.15s',
                       }}
                     >
@@ -170,9 +170,9 @@ export default function ConvidarVagaModal({ studentId, studentName, vagas, onClo
               {/* Error */}
               {error && (
                 <div style={{
-                  fontSize: 12, color: '#ef4444', marginBottom: 12,
-                  padding: '8px 12px', background: 'rgba(239,68,68,0.08)',
-                  borderRadius: 8, border: '1px solid rgba(239,68,68,0.2)',
+                  fontSize: 12, color: 'var(--color-error)', marginBottom: 12,
+                  padding: '8px 12px', background: 'var(--color-error-subtle)',
+                  borderRadius: 8, border: '1px solid var(--color-error-subtle)',
                 }}>
                   {error}
                 </div>
@@ -185,7 +185,7 @@ export default function ConvidarVagaModal({ studentId, studentName, vagas, onClo
                 style={{
                   width: '100%', padding: '12px 0', borderRadius: 10,
                   background: selectedVaga
-                    ? '#1b78f7'
+                    ? 'var(--color-primary)'
                     : C.border,
                   border: 'none',
                   color: selectedVaga ? '#fff' : C.muted,
@@ -194,7 +194,7 @@ export default function ConvidarVagaModal({ studentId, studentName, vagas, onClo
                   fontFamily: 'inherit',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                   transition: 'all 0.15s',
-                  boxShadow: selectedVaga ? '0 4px 16px rgba(27,120,247,0.3)' : 'none',
+                  boxShadow: selectedVaga ? '0 4px 16px var(--color-primary-subtle)' : 'none',
                 }}
               >
                 <Send size={14} />

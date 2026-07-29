@@ -9,12 +9,12 @@ import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
 
 const C = {
-  bg:          'var(--c-bg)',
-  border:      'var(--c-border)',
-  blue:        '#1b78f7',
-  muted:       'var(--c-muted)',
-  text:        'var(--c-text)',
-  error:       '#ef4444',
+  bg:          'var(--color-bg)',
+  border:      'var(--color-border)',
+  blue:        'var(--color-primary)',
+  muted:       'var(--color-text-secondary)',
+  text:        'var(--color-text)',
+  error:       'var(--color-error)',
 }
 
 const REGISTER_PHRASES = [
@@ -24,10 +24,10 @@ const REGISTER_PHRASES = [
 ]
 
 const ROLES = [
-  { id: 'aluno',      icon: <GraduationCap size={22} />, label: 'Aluno',      color: '#1b78f7' },
-  { id: 'professor',  icon: <BookOpen size={22} />,      label: 'Professor',  color: '#10b981' },
-  { id: 'recrutador', icon: <Search size={22} />,        label: 'Recrutador', color: '#8b5cf6', disabled: true },
-  { id: 'empresa',    icon: <Building2 size={22} />,     label: 'Empresa',    color: '#f59e0b', disabled: true },
+  { id: 'aluno',      icon: <GraduationCap size={22} />, label: 'Aluno',      color: 'var(--color-primary)' },
+  { id: 'professor',  icon: <BookOpen size={22} />,      label: 'Professor',  color: 'var(--color-success)' },
+  { id: 'recrutador', icon: <Search size={22} />,        label: 'Recrutador', color: 'var(--color-accent)', disabled: true },
+  { id: 'empresa',    icon: <Building2 size={22} />,     label: 'Empresa',    color: 'var(--color-warning)', disabled: true },
 ]
 
 function EyeIcon({ visible }) {
@@ -248,12 +248,13 @@ export default function Register() {
   return (
     <div className="auth-shell">
       <style>{`
-        .auth-shell { min-height: 100vh; display: flex; background: var(--c-bg); font-family: inherit; }
+        @media (min-width: 601px) { body { padding-left: 0 !important; } .sidebar { display: none !important; } }
+        .auth-shell { min-height: 100vh; display: flex; background: var(--color-bg); font-family: inherit; }
         .auth-side {
           position: relative; overflow: hidden;
           flex: 0 0 42%; display: flex; align-items: center; justify-content: flex-start;
           padding: 0 0 0 64px; background: linear-gradient(115deg, #000 0%, #050b1c 40%, #0e2249 85%, #143169 100%);
-          border-right: 1px solid var(--c-border);
+          border-right: 1px solid var(--color-border);
         }
         .auth-side-content {
           position: relative; z-index: 3;
@@ -273,7 +274,7 @@ export default function Register() {
           to   { opacity: 1; transform: translateY(0); }
         }
         .auth-side-highlight {
-          background: #1b78f7; color: #fff;
+          background: var(--color-primary); color: #fff;
           padding: 2px 10px 9px; border-radius: 0 0 14px 14px;
           display: inline-block;
         }
@@ -290,22 +291,22 @@ export default function Register() {
         .auth-input,
         body.light .auth-input {
           flex: 1; width: 100%; background: transparent !important; border: none;
-          color: var(--c-text); font-size: 16px; outline: none; font-family: inherit;
+          color: var(--color-text); font-size: 16px; outline: none; font-family: inherit;
           padding: 10px 0; box-sizing: border-box;
         }
         .auth-field-wrap {
           display: flex; align-items: center; gap: 10px;
-          border-bottom: 1.5px solid var(--c-border); transition: border-color 0.15s;
+          border-bottom: 1.5px solid var(--color-border); transition: border-color 0.15s;
         }
         .auth-submit { transition: opacity 0.15s; }
         .auth-submit:hover:not(:disabled) { opacity: 0.88; }
         .auth-input:-webkit-autofill,
         .auth-input:-webkit-autofill:hover,
         .auth-input:-webkit-autofill:focus {
-          -webkit-text-fill-color: var(--c-text) !important;
-          -webkit-box-shadow: 0 0 0 1000px var(--c-bg) inset !important;
-          box-shadow: 0 0 0 1000px var(--c-bg) inset !important;
-          caret-color: var(--c-text) !important;
+          -webkit-text-fill-color: var(--color-text) !important;
+          -webkit-box-shadow: 0 0 0 1000px var(--color-bg) inset !important;
+          box-shadow: 0 0 0 1000px var(--color-bg) inset !important;
+          caret-color: var(--color-text) !important;
           transition: background-color 9999s ease-in-out 0s;
         }
         .role-card { transition: border-color 0.15s, color 0.15s; cursor: pointer; }
@@ -369,7 +370,7 @@ export default function Register() {
                         <span style={{
                           position: 'absolute', top: 6, right: 6,
                           fontSize: 8.5, fontWeight: 700, color: C.muted,
-                          background: 'var(--c-bg-alt)', border: `1px solid ${C.border}`,
+                          background: 'var(--color-bg-alt)', border: `1px solid ${C.border}`,
                           borderRadius: 4, padding: '2px 5px',
                           textTransform: 'uppercase', letterSpacing: '0.04em',
                         }}>
@@ -387,7 +388,7 @@ export default function Register() {
                 className="auth-submit"
                 style={{
                   width: '100%',
-                  background: role ? (selectedRole?.color ?? C.blue) : 'var(--c-border)',
+                  background: role ? (selectedRole?.color ?? C.blue) : 'var(--color-border)',
                   color: '#fff', border: 'none', borderRadius: 8, padding: '13px',
                   fontSize: 14, fontWeight: 700, cursor: role ? 'pointer' : 'not-allowed',
                   fontFamily: 'inherit',
@@ -480,7 +481,7 @@ export default function Register() {
                   type="submit" disabled={loading}
                   className="auth-submit"
                   style={{
-                    background: loading ? 'var(--c-border)' : '#1b78f7',
+                    background: loading ? 'var(--color-border)' : 'var(--color-primary)',
                     color: '#fff', border: 'none',
                     borderRadius: 8, padding: '13px', fontSize: 14, fontWeight: 700,
                     cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit', marginTop: 4,
@@ -495,11 +496,11 @@ export default function Register() {
                 <>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '18px 0' }}>
                     <div style={{ flex: 1, height: 1, background: C.border }} />
-                    <span style={{ fontSize: 12, color: 'var(--c-subtle)', fontWeight: 600 }}>ou</span>
+                    <span style={{ fontSize: 12, color: 'var(--color-text-tertiary)', fontWeight: 600 }}>ou</span>
                     <div style={{ flex: 1, height: 1, background: C.border }} />
                   </div>
                   <GoogleButton label="Continuar com Google" />
-                  <p style={{ textAlign: 'center', color: 'var(--c-subtle)', fontSize: 11.5, marginTop: 16, lineHeight: 1.5 }}>
+                  <p style={{ textAlign: 'center', color: 'var(--color-text-tertiary)', fontSize: 11.5, marginTop: 16, lineHeight: 1.5 }}>
                     Ao continuar, aceitas os <Link to="/termos" style={{ color: C.blue }}>Termos</Link> e a <Link to="/privacidade" style={{ color: C.blue }}>Política de Privacidade</Link>.
                   </p>
                 </>

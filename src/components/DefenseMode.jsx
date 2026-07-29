@@ -4,16 +4,16 @@ import { useAuth } from '../context/AuthContext'
 import { Hand, Search, Lightbulb, Settings, Wrench, Trophy, BookOpen, Mic, GraduationCap, Check, X, Smartphone, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, ArrowRight, Eye, EyeOff, SlidersHorizontal, AlignLeft, Play, Pause } from 'lucide-react'
 
 const C = {
-  bg: 'var(--c-bg)',
-  card: 'var(--c-card)',
-  border: 'var(--c-border)',
-  blue: '#1b78f7',
-  yellow: '#fbbf24',
-  green: '#22c55e',
-  red: '#ef4444',
-  muted: 'var(--c-muted)',
-  subtle: 'var(--c-subtle)',
-  text: 'var(--c-text)',
+  bg: 'var(--color-bg)',
+  card: 'var(--color-surface)',
+  border: 'var(--color-border)',
+  blue: 'var(--color-primary)',
+  yellow: 'var(--color-warning)',
+  green: 'var(--color-success)',
+  red: 'var(--color-error)',
+  muted: 'var(--color-text-secondary)',
+  subtle: 'var(--color-text-tertiary)',
+  text: 'var(--color-text)',
 }
 
 // ─── Notes summary (all sections in one view) ───────────────────────────────
@@ -38,12 +38,12 @@ function NotesPanel({ aiData, loadingAI, aiError, onRetry }) {
   )
 
   if (aiError) return (
-    <div style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 14, padding: '28px', textAlign: 'center' }}>
+    <div style={{ background: 'var(--color-error-subtle)', border: '1px solid var(--color-error-subtle)', borderRadius: 14, padding: '28px', textAlign: 'center' }}>
       <p style={{ color: C.red, fontSize: 15, margin: '0 0 6px', fontWeight: 600 }}>Não foi possível gerar as notas</p>
       <p style={{ color: C.muted, fontSize: 13, margin: '0 0 18px' }}>
-        Faz deploy do Edge Function <code style={{ background: 'var(--c-card-hover)', padding: '2px 6px', borderRadius: 4 }}>defense-notes</code> no Supabase e tenta novamente.
+        Faz deploy do Edge Function <code style={{ background: 'var(--color-surface-hover)', padding: '2px 6px', borderRadius: 4 }}>defense-notes</code> no Supabase e tenta novamente.
       </p>
-      <button onClick={onRetry} style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, padding: '9px 20px', color: C.red, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+      <button onClick={onRetry} style={{ background: 'var(--color-error-subtle)', border: '1px solid var(--color-error-subtle)', borderRadius: 8, padding: '9px 20px', color: C.red, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
         Tentar novamente
       </button>
     </div>
@@ -58,7 +58,7 @@ function NotesPanel({ aiData, loadingAI, aiError, onRetry }) {
   return (
     <div>
       {tip && (
-        <div style={{ background: 'rgba(27,120,247,0.07)', border: '1px solid rgba(27,120,247,0.2)', borderRadius: 12, padding: '14px 18px', marginBottom: 24, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+        <div style={{ background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 12, padding: '14px 18px', marginBottom: 24, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
           <Lightbulb size={18} color={C.blue} style={{ flexShrink: 0 }} />
           <p style={{ margin: 0, fontSize: 14, color: C.muted, lineHeight: 1.6 }}>{tip}</p>
         </div>
@@ -95,10 +95,10 @@ function JuryPanel({ aiData, loadingAI, aiError, onRetry }) {
   )
 
   if (aiError) return (
-    <div style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 14, padding: '28px', textAlign: 'center' }}>
+    <div style={{ background: 'var(--color-error-subtle)', border: '1px solid var(--color-error-subtle)', borderRadius: 14, padding: '28px', textAlign: 'center' }}>
       <p style={{ color: C.red, fontSize: 15, margin: '0 0 6px', fontWeight: 600 }}>Não foi possível gerar as perguntas</p>
-      <p style={{ color: C.muted, fontSize: 13, margin: '0 0 18px' }}>Faz deploy do Edge Function <code style={{ background: 'var(--c-card-hover)', padding: '2px 6px', borderRadius: 4 }}>defense-notes</code> no Supabase.</p>
-      <button onClick={onRetry} style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, padding: '9px 20px', color: C.red, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+      <p style={{ color: C.muted, fontSize: 13, margin: '0 0 18px' }}>Faz deploy do Edge Function <code style={{ background: 'var(--color-surface-hover)', padding: '2px 6px', borderRadius: 4 }}>defense-notes</code> no Supabase.</p>
+      <button onClick={onRetry} style={{ background: 'var(--color-error-subtle)', border: '1px solid var(--color-error-subtle)', borderRadius: 8, padding: '9px 20px', color: C.red, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
         Tentar novamente
       </button>
     </div>
@@ -149,8 +149,8 @@ function JuryPanel({ aiData, loadingAI, aiError, onRetry }) {
             <div
               key={i}
               style={{
-                background: isPracticed ? 'rgba(34,197,94,0.05)' : C.card,
-                border: `1px solid ${isPracticed ? 'rgba(34,197,94,0.25)' : C.border}`,
+                background: isPracticed ? 'var(--color-success-subtle)' : C.card,
+                border: `1px solid ${isPracticed ? 'var(--color-success-subtle)' : C.border}`,
                 borderRadius: 14, overflow: 'hidden',
                 transition: 'border-color 0.2s, background 0.2s',
               }}
@@ -159,8 +159,8 @@ function JuryPanel({ aiData, loadingAI, aiError, onRetry }) {
               <div style={{ padding: '18px 20px', display: 'flex', alignItems: 'flex-start', gap: 14 }}>
                 <span style={{
                   width: 26, height: 26, borderRadius: 8, flexShrink: 0,
-                  background: isPracticed ? 'rgba(34,197,94,0.12)' : 'rgba(251,191,36,0.08)',
-                  border: `1px solid ${isPracticed ? 'rgba(34,197,94,0.3)' : 'rgba(251,191,36,0.2)'}`,
+                  background: isPracticed ? 'var(--color-success-subtle)' : 'rgba(251,191,36,0.08)',
+                  border: `1px solid ${isPracticed ? 'var(--color-success-subtle)' : 'rgba(251,191,36,0.2)'}`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: 12, fontWeight: 700, color: isPracticed ? C.green : C.yellow,
                 }}>
@@ -173,7 +173,7 @@ function JuryPanel({ aiData, loadingAI, aiError, onRetry }) {
 
               {/* Answer (revealed) */}
               {isRevealed && (
-                <div style={{ borderTop: `1px solid ${C.border}`, padding: '16px 20px 16px 60px', background: 'var(--c-bg-alt)' }}>
+                <div style={{ borderTop: `1px solid ${C.border}`, padding: '16px 20px 16px 60px', background: 'var(--color-bg-alt)' }}>
                   <p style={{ margin: 0, fontSize: 14, color: C.muted, lineHeight: 1.7 }}>{item.a}</p>
                 </div>
               )}
@@ -199,7 +199,7 @@ function JuryPanel({ aiData, loadingAI, aiError, onRetry }) {
                   <button
                     onClick={() => setPracticed(p => ({ ...p, [i]: true }))}
                     style={{
-                      background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.2)',
+                      background: 'var(--color-success-subtle)', border: '1px solid var(--color-success-subtle)',
                       borderRadius: 7, padding: '6px 14px',
                       color: C.green, fontSize: 12, fontWeight: 600,
                       cursor: 'pointer', fontFamily: 'inherit',
@@ -226,7 +226,7 @@ function JuryPanel({ aiData, loadingAI, aiError, onRetry }) {
       </div>
 
       {practicedCount === questions.length && (
-        <div style={{ marginTop: 24, background: 'rgba(34,197,94,0.07)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 14, padding: '20px', textAlign: 'center' }}>
+        <div style={{ marginTop: 24, background: 'var(--color-success-subtle)', border: '1px solid var(--color-success-subtle)', borderRadius: 14, padding: '20px', textAlign: 'center' }}>
           <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: C.green }}>Preparação completa</p>
           <p style={{ margin: '4px 0 0', fontSize: 13, color: C.muted }}>Treinaste todas as perguntas. Boa defesa!</p>
         </div>
@@ -264,14 +264,14 @@ function tpCoverFallback(project) {
 // ─── Presenter guide (phone companion) ───────────────────────────────────────
 
 const SECTIONS = [
-  { id: 'cover',        label: 'Introdução',      Icon: Hand,     accent: '#1b78f7' },
-  { id: 'problem',      label: 'O Problema',       Icon: Search,   accent: '#f97316' },
-  { id: 'solution',     label: 'A Solução',        Icon: Lightbulb,accent: '#22c55e' },
+  { id: 'cover',        label: 'Introdução',      Icon: Hand,     accent: 'var(--color-primary)' },
+  { id: 'problem',      label: 'O Problema',       Icon: Search,   accent: 'var(--color-warning)' },
+  { id: 'solution',     label: 'A Solução',        Icon: Lightbulb,accent: 'var(--color-success)' },
   { id: 'features',     label: 'Funcionalidades',  Icon: Settings, accent: '#06b6d4' },
   { id: 'technologies', label: 'Ferramentas & Recursos',      Icon: Wrench,   accent: '#818cf8' },
-  { id: 'results',      label: 'Resultados',       Icon: Trophy,   accent: '#22c55e' },
+  { id: 'results',      label: 'Resultados',       Icon: Trophy,   accent: 'var(--color-success)' },
   { id: 'learnings',    label: 'Aprendizagens',    Icon: BookOpen, accent: '#f472b6' },
-  { id: 'closing',      label: 'Encerramento',     Icon: Mic,      accent: '#1b78f7' },
+  { id: 'closing',      label: 'Encerramento',     Icon: Mic,      accent: 'var(--color-primary)' },
 ]
 
 function hasContent(project, id) {
@@ -363,7 +363,7 @@ function GuideEditor({ project, onSave }) {
           <div key={row.id} style={{
             display: 'flex', alignItems: 'center', gap: 8,
             padding: '8px 10px', borderRadius: 10,
-            background: row.hidden ? 'transparent' : 'var(--c-bg-alt)',
+            background: row.hidden ? 'transparent' : 'var(--color-bg-alt)',
             opacity: row.hidden ? 0.5 : 1,
             transition: 'opacity 0.15s, background 0.15s',
           }}>
@@ -376,7 +376,7 @@ function GuideEditor({ project, onSave }) {
             <input
               type="number" min={1} max={15} value={row.mins}
               onChange={e => setMins(i, e.target.value)}
-              style={{ width: 40, background: 'var(--c-bg)', border: `1px solid ${C.border}`, borderRadius: 6, color: C.text, fontSize: 12, padding: '4px 2px', textAlign: 'center', fontFamily: 'inherit' }}
+              style={{ width: 40, background: 'var(--color-bg)', border: `1px solid ${C.border}`, borderRadius: 6, color: C.text, fontSize: 12, padding: '4px 2px', textAlign: 'center', fontFamily: 'inherit' }}
             />
             <span style={{ fontSize: 11, color: C.subtle }}>min</span>
             <button onClick={() => toggleHidden(i)} title={row.hidden ? 'Mostrar secção' : 'Esconder secção'} style={{ background: 'none', border: 'none', color: row.hidden ? C.subtle : C.blue, cursor: 'pointer', display: 'flex', padding: 4, borderRadius: 6 }}>
@@ -389,7 +389,7 @@ function GuideEditor({ project, onSave }) {
         onClick={handleSave}
         disabled={saving}
         className="dm-cta-btn"
-        style={{ marginTop: 14, width: '100%', padding: '10px 0', background: saved ? 'rgba(34,197,94,0.12)' : '#1b78f7', border: saved ? '1px solid rgba(34,197,94,0.3)' : 'none', borderRadius: 10, color: saved ? C.green : '#fff', fontSize: 13, fontWeight: 700, cursor: saving ? 'default' : 'pointer', fontFamily: 'inherit' }}
+        style={{ marginTop: 14, width: '100%', padding: '10px 0', background: saved ? 'var(--color-success-subtle)' : 'var(--color-primary)', border: saved ? '1px solid var(--color-success-subtle)' : 'none', borderRadius: 10, color: saved ? C.green : '#fff', fontSize: 13, fontWeight: 700, cursor: saving ? 'default' : 'pointer', fontFamily: 'inherit' }}
       >
         {saving ? 'A guardar...' : saved ? 'Guardado' : 'Guardar personalização'}
       </button>
@@ -506,14 +506,14 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
     const timeStr = mins > 0 ? `${mins}m ${String(secs).padStart(2,'0')}s` : `${secs}s`
 
     return (
-      <div style={{ position: 'fixed', inset: 0, zIndex: 10000, background: 'var(--c-bg)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit', color: C.text, padding: 32, textAlign: 'center' }}>
+      <div style={{ position: 'fixed', inset: 0, zIndex: 10000, background: 'var(--color-bg)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit', color: C.text, padding: 32, textAlign: 'center' }}>
         <style>{`
           @keyframes pop{0%{transform:scale(0.5);opacity:0}60%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}}
           @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
           .dm-cta-btn { transition: filter 0.15s, opacity 0.15s; }
           .dm-cta-btn:hover { filter: brightness(1.08); }
           .dm-ghost-btn { transition: background 0.15s, border-color 0.15s, color 0.15s; }
-          .dm-ghost-btn:hover { background: var(--c-card-hover); border-color: var(--c-border-bright); color: var(--c-text); }
+          .dm-ghost-btn:hover { background: var(--color-surface-hover); border-color: var(--color-border-hover); color: var(--color-text); }
         `}</style>
 
         <div style={{ marginBottom: 4, animation: 'pop 0.5s ease-out' }}><GraduationCap size={80} color={C.blue} /></div>
@@ -528,11 +528,11 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
         </p>
 
         <div style={{ display: 'flex', gap: 12, marginBottom: 32, animation: 'fadeUp 0.4s 0.5s ease-out both' }}>
-          <div style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 12, padding: '16px 24px' }}>
+          <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 12, padding: '16px 24px' }}>
             <div style={{ fontSize: 22, fontWeight: 800, color: C.text }}>{timeStr}</div>
             <div style={{ fontSize: 11, color: C.subtle, marginTop: 2 }}>duração</div>
           </div>
-          <div style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 12, padding: '16px 24px' }}>
+          <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 12, padding: '16px 24px' }}>
             <div style={{ fontSize: 22, fontWeight: 800, color: C.text }}>{sections.length}</div>
             <div style={{ fontSize: 11, color: C.subtle, marginTop: 2 }}>secções</div>
           </div>
@@ -542,14 +542,14 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
           <button
             onClick={() => { setFinished(false); setTimer(0); setTimerOn(false); setCurrent(0); setChecked({}); setShowNote(false) }}
             className="dm-cta-btn"
-            style={{ padding: '14px 0', background: '#1b78f7', border: 'none', borderRadius: 14, color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 6px 24px rgba(27,120,247,0.35)' }}
+            style={{ padding: '14px 0', background: 'var(--color-primary)', border: 'none', borderRadius: 14, color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 6px 24px var(--color-primary-subtle)' }}
           >
             Recomeçar do início
           </button>
           <button
             onClick={onClose}
             className="dm-ghost-btn"
-            style={{ padding: '14px 0', background: 'transparent', border: '1px solid var(--c-border)', borderRadius: 14, color: C.muted, fontSize: 15, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+            style={{ padding: '14px 0', background: 'transparent', border: '1px solid var(--color-border)', borderRadius: 14, color: C.muted, fontSize: 15, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
           >
             Fechar
           </button>
@@ -562,7 +562,7 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
   if (!started) {
     const juryCount = aiData?.jury_questions?.length ?? 0
     return (
-      <div style={{ position: 'fixed', inset: 0, zIndex: 10000, background: 'var(--c-bg)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit', color: C.text, padding: 24 }}>
+      <div style={{ position: 'fixed', inset: 0, zIndex: 10000, background: 'var(--color-bg)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit', color: C.text, padding: 24 }}>
         <style>{`
           @keyframes spin{to{transform:rotate(360deg)}}
           @keyframes pop{0%{transform:scale(0.92)}60%{transform:scale(1.04)}100%{transform:scale(1)}}
@@ -570,12 +570,12 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
           .dm-cta-btn { transition: filter 0.15s, opacity 0.15s; }
           .dm-cta-btn:hover { filter: brightness(1.08); }
           .dm-ghost-btn { transition: background 0.15s, border-color 0.15s, color 0.15s; }
-          .dm-ghost-btn:hover { background: var(--c-card-hover); border-color: var(--c-border-bright); color: var(--c-text); }
+          .dm-ghost-btn:hover { background: var(--color-surface-hover); border-color: var(--color-border-hover); color: var(--color-text); }
         `}</style>
 
         <div style={{ maxWidth: 360, width: '100%', textAlign: 'center', animation: 'fadeUp 0.3s ease-out' }}>
           {/* Icon */}
-          <div style={{ width: 72, height: 72, borderRadius: 20, background: 'rgba(27,120,247,0.12)', border: '1px solid rgba(27,120,247,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+          <div style={{ width: 72, height: 72, borderRadius: 20, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
             <Mic size={34} color={C.blue} />
           </div>
 
@@ -591,7 +591,7 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
               { n: `~${totalMins}m`, label: 'duração' },
               { n: juryCount || '—', label: 'perguntas' },
             ].map(({ n, label }) => (
-              <div key={label} style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 12, padding: '14px 8px' }}>
+              <div key={label} style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 12, padding: '14px 8px' }}>
                 <div style={{ fontSize: 22, fontWeight: 800, color: C.text }}>{n}</div>
                 <div style={{ fontSize: 11, color: C.subtle, marginTop: 2 }}>{label}</div>
               </div>
@@ -600,7 +600,7 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
 
           {/* Tips */}
           <div style={{ background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.18)', borderRadius: 12, padding: '14px 16px', marginBottom: 28, textAlign: 'left' }}>
-            <p style={{ margin: '0 0 6px', fontSize: 11, fontWeight: 700, color: '#fbbf24', textTransform: 'uppercase', letterSpacing: 1 }}>Antes de começar</p>
+            <p style={{ margin: '0 0 6px', fontSize: 11, fontWeight: 700, color: 'var(--color-warning)', textTransform: 'uppercase', letterSpacing: 1 }}>Antes de começar</p>
             {['Coloca o telemóvel em silêncio', 'Abre o teu Canva/PowerPoint no PC', 'Mantém este guia no telemóvel'].map(tip => (
               <p key={tip} style={{ margin: '4px 0 0', fontSize: 13, color: C.muted }}>· {tip}</p>
             ))}
@@ -608,7 +608,7 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
 
           {loadingAI && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center', marginBottom: 16 }}>
-              <div style={{ width: 14, height: 14, border: '2px solid #1e3050', borderTop: '2px solid #1b78f7', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+              <div style={{ width: 14, height: 14, border: '2px solid #1e3050', borderTop: '2px solid var(--color-primary)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
               <span style={{ fontSize: 13, color: C.muted }}>A preparar pontos-chave com IA...</span>
             </div>
           )}
@@ -618,11 +618,11 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
             className="dm-cta-btn"
             style={{
               width: '100%', padding: '16px 0',
-              background: '#1b78f7',
+              background: 'var(--color-primary)',
               border: 'none', borderRadius: 14,
               color: '#fff', fontSize: 17, fontWeight: 700,
               cursor: 'pointer', fontFamily: 'inherit',
-              boxShadow: '0 8px 32px rgba(27,120,247,0.4)',
+              boxShadow: '0 8px 32px var(--color-primary-subtle)',
             }}
           >
             Começar apresentação <ArrowRight size={16} style={{ verticalAlign: 'middle', marginLeft: 4 }} />
@@ -639,7 +639,7 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
   // ── Active guide ──────────────────────────────────────────────────────────
   return (
     <div
-      style={{ position: 'fixed', inset: 0, zIndex: 10000, background: 'var(--c-bg)', display: 'flex', flexDirection: 'column', fontFamily: 'inherit', color: C.text }}
+      style={{ position: 'fixed', inset: 0, zIndex: 10000, background: 'var(--color-bg)', display: 'flex', flexDirection: 'column', fontFamily: 'inherit', color: C.text }}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
@@ -649,16 +649,16 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
         .dm-cta-btn { transition: filter 0.15s, opacity 0.15s; }
         .dm-cta-btn:hover { filter: brightness(1.08); }
         .dm-ghost-btn { transition: background 0.15s, border-color 0.15s, color 0.15s; }
-        .dm-ghost-btn:hover:not(:disabled) { background: var(--c-card-hover); border-color: var(--c-border-bright); color: var(--c-text); }
+        .dm-ghost-btn:hover:not(:disabled) { background: var(--color-surface-hover); border-color: var(--color-border-hover); color: var(--color-text); }
       `}</style>
 
       {/* Top bar */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 16px', borderBottom: '1px solid var(--c-border)', flexShrink: 0, background: 'var(--c-card)', gap: 8 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 16px', borderBottom: '1px solid var(--color-border)', flexShrink: 0, background: 'var(--color-surface)', gap: 8 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           {/* Timer — tap to pause/resume */}
           <button
             onClick={() => setTimerOn(s => !s)}
-            style={{ background: timerOn ? `${accent}18` : 'var(--c-bg-alt)', border: `1px solid ${timerOn ? accent + '44' : 'var(--c-border)'}`, borderRadius: 8, padding: '5px 10px', color: timerOn ? accent : C.subtle, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', minWidth: 52, textAlign: 'center' }}
+            style={{ background: timerOn ? `${accent}18` : 'var(--color-bg-alt)', border: `1px solid ${timerOn ? accent + '44' : 'var(--color-border)'}`, borderRadius: 8, padding: '5px 10px', color: timerOn ? accent : C.subtle, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', minWidth: 52, textAlign: 'center' }}
           >
             {fmt(timer)}
           </button>
@@ -666,7 +666,7 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
           <button
             onClick={() => { setTpOn(s => !s); setTpPaused(false) }}
             title="Modo teleponto"
-            style={{ background: tpOn ? `${accent}18` : 'var(--c-bg-alt)', border: `1px solid ${tpOn ? accent + '55' : 'var(--c-border)'}`, borderRadius: 8, padding: '5px 8px', color: tpOn ? accent : C.subtle, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            style={{ background: tpOn ? `${accent}18` : 'var(--color-bg-alt)', border: `1px solid ${tpOn ? accent + '55' : 'var(--color-border)'}`, borderRadius: 8, padding: '5px 8px', color: tpOn ? accent : C.subtle, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           >
             <AlignLeft size={14} />
           </button>
@@ -675,13 +675,13 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
         <div style={{ display: 'flex', gap: 4, flex: 1, justifyContent: 'center', overflow: 'hidden' }}>
           {sections.length <= 10 ? sections.map((s, i) => (
             <button key={s.id} onClick={() => { setCurrent(i); setChecked({}); setShowNote(false); setTpPaused(false) }}
-              style={{ width: i === current ? 16 : 5, height: 5, borderRadius: 3, border: 'none', cursor: 'pointer', padding: 0, background: i === current ? accent : i < current ? '#2a4070' : 'var(--c-border)', transition: 'all 0.2s', flexShrink: 0 }}
+              style={{ width: i === current ? 16 : 5, height: 5, borderRadius: 3, border: 'none', cursor: 'pointer', padding: 0, background: i === current ? accent : i < current ? '#2a4070' : 'var(--color-border)', transition: 'all 0.2s', flexShrink: 0 }}
             />
           )) : (
             <span style={{ fontSize: 12, color: C.subtle, fontWeight: 600 }}>{current + 1}/{sections.length}</span>
           )}
         </div>
-        <button onClick={onClose} className="dm-ghost-btn" style={{ background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)', borderRadius: 8, padding: '5px 8px', color: C.subtle, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={15} /></button>
+        <button onClick={onClose} className="dm-ghost-btn" style={{ background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)', borderRadius: 8, padding: '5px 8px', color: C.subtle, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={15} /></button>
       </div>
 
       {/* Section header */}
@@ -697,12 +697,12 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
             </div>
           </div>
           {/* Time estimate badge */}
-          <div style={{ background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)', borderRadius: 8, padding: '4px 10px', textAlign: 'center' }}>
+          <div style={{ background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)', borderRadius: 8, padding: '4px 10px', textAlign: 'center' }}>
             <div style={{ fontSize: 14, fontWeight: 700, color: C.muted }}>~{sectionMins}m</div>
           </div>
         </div>
         {/* Progress bar */}
-        <div style={{ height: 3, background: 'var(--c-border)', borderRadius: 2, overflow: 'hidden', marginTop: 8 }}>
+        <div style={{ height: 3, background: 'var(--color-border)', borderRadius: 2, overflow: 'hidden', marginTop: 8 }}>
           <div style={{ height: '100%', background: accent, borderRadius: 2, width: `${((current + 1) / sections.length) * 100}%`, transition: 'width 0.3s' }} />
         </div>
       </div>
@@ -763,17 +763,17 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
         {loadingAI ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {[0,1,2].map(i => (
-              <div key={i} style={{ height: 56, background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 12, opacity: 0.5 + i * 0.15 }} />
+              <div key={i} style={{ height: 56, background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 12, opacity: 0.5 + i * 0.15 }} />
             ))}
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
-              <div style={{ width: 14, height: 14, border: '2px solid var(--c-border)', borderTop: `2px solid ${accent}`, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+              <div style={{ width: 14, height: 14, border: '2px solid var(--color-border)', borderTop: `2px solid ${accent}`, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
               <span style={{ fontSize: 13, color: C.subtle }}>A gerar pontos-chave...</span>
             </div>
           </div>
         ) : aiError ? (
-          <div style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 12, padding: '20px', textAlign: 'center' }}>
+          <div style={{ background: 'var(--color-error-subtle)', border: '1px solid var(--color-error-subtle)', borderRadius: 12, padding: '20px', textAlign: 'center' }}>
             <p style={{ color: C.red, margin: '0 0 12px', fontSize: 14 }}>Não foi possível carregar os pontos-chave.</p>
-            <button onClick={onRetry} style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, padding: '8px 18px', color: C.red, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Tentar novamente</button>
+            <button onClick={onRetry} style={{ background: 'var(--color-error-subtle)', border: '1px solid var(--color-error-subtle)', borderRadius: 8, padding: '8px 18px', color: C.red, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Tentar novamente</button>
           </div>
         ) : keyPoints.length > 0 ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -787,8 +787,8 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
                   onClick={() => setChecked(c => ({ ...c, [key]: !done }))}
                   style={{
                     display: 'flex', alignItems: 'center', gap: 14, width: '100%',
-                    background: done ? `${accent}10` : 'var(--c-card)',
-                    border: `1.5px solid ${done ? accent + '50' : 'var(--c-border)'}`,
+                    background: done ? `${accent}10` : 'var(--color-surface)',
+                    border: `1.5px solid ${done ? accent + '50' : 'var(--color-border)'}`,
                     borderRadius: 14, padding: '18px 18px', cursor: 'pointer',
                     textAlign: 'left', fontFamily: 'inherit',
                     transition: 'all 0.15s', minHeight: 64,
@@ -796,8 +796,8 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
                 >
                   <span style={{
                     width: 32, height: 32, borderRadius: 9, flexShrink: 0,
-                    background: done ? accent : 'var(--c-bg-alt)',
-                    border: `1.5px solid ${done ? accent : 'var(--c-border)'}`,
+                    background: done ? accent : 'var(--color-bg-alt)',
+                    border: `1.5px solid ${done ? accent : 'var(--color-border)'}`,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: 13, color: done ? '#fff' : C.subtle, fontWeight: 700,
                     transition: 'all 0.15s',
@@ -822,7 +822,7 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
               <div style={{ marginTop: 4 }}>
                 <button
                   onClick={() => setShowNote(s => !s)}
-                  style={{ background: 'transparent', border: `1px solid ${showNote ? 'var(--c-border-bright)' : 'var(--c-border)'}`, borderRadius: 9, padding: '7px 14px', color: showNote ? C.blue : C.subtle, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s' }}
+                  style={{ background: 'transparent', border: `1px solid ${showNote ? 'var(--color-border-hover)' : 'var(--color-border)'}`, borderRadius: 9, padding: '7px 14px', color: showNote ? C.blue : C.subtle, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s' }}
                 >
                   {showNote
                     ? <><ChevronUp size={13} style={{ verticalAlign: 'middle', marginRight: 4 }} />Esconder nota</>
@@ -830,7 +830,7 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
                   }
                 </button>
                 {showNote && (
-                  <div style={{ marginTop: 10, background: 'rgba(27,120,247,0.05)', border: '1px solid rgba(27,120,247,0.15)', borderRadius: 12, padding: '14px 16px', animation: 'pop 0.2s ease-out' }}>
+                  <div style={{ marginTop: 10, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 12, padding: '14px 16px', animation: 'pop 0.2s ease-out' }}>
                     <p style={{ margin: 0, fontSize: 14, color: C.muted, lineHeight: 1.75 }}>{speakerNote}</p>
                   </div>
                 )}
@@ -839,7 +839,7 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
           </div>
         ) : (
           /* No AI data — show raw content as fallback */
-          <div style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', borderRadius: 12, padding: '18px' }}>
+          <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 12, padding: '18px' }}>
             <p style={{ margin: '0 0 8px', fontSize: 11, fontWeight: 700, color: C.subtle, textTransform: 'uppercase', letterSpacing: 1 }}>Conteúdo</p>
             <p style={{ margin: 0, fontSize: 15, color: C.muted, lineHeight: 1.7 }}>
               {section.id === 'cover'        && (project.ai_tagline || project.goal || project.name)}
@@ -856,12 +856,12 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
       </div>
 
       {/* Nav buttons */}
-      <div style={{ display: 'flex', gap: 10, padding: '12px 16px', borderTop: '1px solid var(--c-border)', flexShrink: 0, background: 'var(--c-card)' }}>
+      <div style={{ display: 'flex', gap: 10, padding: '12px 16px', borderTop: '1px solid var(--color-border)', flexShrink: 0, background: 'var(--color-surface)' }}>
         <button
           onClick={prev}
           disabled={current === 0}
           className="dm-ghost-btn"
-          style={{ flex: 1, padding: '18px 0', background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)', borderRadius: 14, color: current === 0 ? 'var(--c-border)' : C.muted, fontSize: 20, cursor: current === 0 ? 'default' : 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          style={{ flex: 1, padding: '18px 0', background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)', borderRadius: 14, color: current === 0 ? 'var(--color-border)' : C.muted, fontSize: 20, cursor: current === 0 ? 'default' : 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
         ><ChevronLeft size={22} /></button>
         <button
           onClick={() => {
@@ -869,7 +869,7 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
             else next()
           }}
           className="dm-cta-btn"
-          style={{ flex: 3, padding: '18px 0', background: `linear-gradient(135deg, ${current === sections.length - 1 ? '#22c55e, #16a34a' : `${accent}, ${accent}bb`})`, border: 'none', borderRadius: 14, color: '#fff', fontSize: 16, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: `0 4px 20px ${current === sections.length - 1 ? 'rgba(34,197,94,0.4)' : accent + '44'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+          style={{ flex: 3, padding: '18px 0', background: `linear-gradient(135deg, ${current === sections.length - 1 ? 'var(--color-success), #16a34a' : `${accent}, ${accent}bb`})`, border: 'none', borderRadius: 14, color: '#fff', fontSize: 16, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: `0 4px 20px ${current === sections.length - 1 ? 'var(--color-success-subtle)' : accent + '44'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
         >
           {current === sections.length - 1
             ? 'Terminar apresentação'
@@ -1059,12 +1059,12 @@ function GrupoPanel({ project }) {
           onChange={e => { setSearch(e.target.value); setSearchErr(''); setSearchResult(null) }}
           onKeyDown={e => e.key === 'Enter' && doSearch()}
           placeholder="Username do colega (ex: joaosilva)"
-          style={{ flex: 1, background: 'var(--c-bg)', border: `1.5px solid ${C.border}`, borderRadius: 10, color: C.text, fontSize: 14, padding: '10px 14px', outline: 'none', fontFamily: 'inherit' }}
+          style={{ flex: 1, background: 'var(--color-bg)', border: `1.5px solid ${C.border}`, borderRadius: 10, color: C.text, fontSize: 14, padding: '10px 14px', outline: 'none', fontFamily: 'inherit' }}
         />
         <button
           onClick={doSearch}
           disabled={!search.trim() || searching}
-          style={{ background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.25)', borderRadius: 10, padding: '10px 16px', color: C.blue, fontSize: 13, fontWeight: 600, cursor: search.trim() ? 'pointer' : 'default', fontFamily: 'inherit' }}
+          style={{ background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 10, padding: '10px 16px', color: C.blue, fontSize: 13, fontWeight: 600, cursor: search.trim() ? 'pointer' : 'default', fontFamily: 'inherit' }}
         >
           {searching ? '...' : 'Procurar'}
         </button>
@@ -1073,14 +1073,14 @@ function GrupoPanel({ project }) {
       {searchErr && <p style={{ color: C.red, fontSize: 13, margin: '0 0 16px' }}>{searchErr}</p>}
 
       {searchResult && (
-        <div style={{ background: 'rgba(27,120,247,0.06)', border: '1px solid rgba(27,120,247,0.2)', borderRadius: 12, padding: '14px 16px', marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 12, padding: '14px 16px', marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
             <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{searchResult.full_name || searchResult.username}</div>
             <div style={{ fontSize: 12, color: C.muted }}>@{searchResult.username}</div>
           </div>
           <button
             onClick={addCollaborator}
-            style={{ background: '#1b78f7', border: 'none', borderRadius: 8, padding: '8px 16px', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+            style={{ background: 'var(--color-primary)', border: 'none', borderRadius: 8, padding: '8px 16px', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
           >
             Adicionar
           </button>
@@ -1099,10 +1099,10 @@ function GrupoPanel({ project }) {
             const assigned = pendingSections[collab.user_id] ?? []
             const isPending  = collab.status === 'pending'
             const isDeclined = collab.status === 'declined'
-            const statusColor = isPending ? '#fbbf24' : isDeclined ? '#ef4444' : C.green
+            const statusColor = isPending ? 'var(--color-warning)' : isDeclined ? 'var(--color-error)' : C.green
             const statusLabel = isPending ? 'Convite pendente' : isDeclined ? 'Recusou o convite' : 'Aceite'
             return (
-              <div key={collab.user_id} style={{ background: C.card, border: `1px solid ${isDeclined ? 'rgba(239,68,68,0.2)' : C.border}`, borderRadius: 14, padding: '18px 20px' }}>
+              <div key={collab.user_id} style={{ background: C.card, border: `1px solid ${isDeclined ? 'var(--color-error-subtle)' : C.border}`, borderRadius: 14, padding: '18px 20px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: isPending || isDeclined ? 6 : 14 }}>
                   <div>
                     <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{name}</div>
@@ -1136,8 +1136,8 @@ function GrupoPanel({ project }) {
                             key={s.id}
                             onClick={() => toggleSection(collab.user_id, s.id)}
                             style={{
-                              background: on ? 'rgba(27,120,247,0.12)' : 'transparent',
-                              border: `1px solid ${on ? 'rgba(27,120,247,0.4)' : C.border}`,
+                              background: on ? 'var(--color-primary-subtle)' : 'transparent',
+                              border: `1px solid ${on ? 'var(--color-primary-subtle)' : C.border}`,
                               borderRadius: 7, padding: '5px 10px',
                               color: on ? C.blue : C.muted,
                               fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
@@ -1161,8 +1161,8 @@ function GrupoPanel({ project }) {
               disabled={saving}
               style={{
                 padding: '12px 0', width: '100%',
-                background: saved ? 'rgba(34,197,94,0.1)' : '#1b78f7',
-                border: saved ? '1px solid rgba(34,197,94,0.3)' : 'none',
+                background: saved ? 'var(--color-success-subtle)' : 'var(--color-primary)',
+                border: saved ? '1px solid var(--color-success-subtle)' : 'none',
                 borderRadius: 12,
                 color: saved ? C.green : '#fff',
                 fontSize: 14, fontWeight: 700, cursor: saving ? 'default' : 'pointer', fontFamily: 'inherit',
@@ -1248,7 +1248,7 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
     >
       <style>{`@keyframes spin{to{transform:rotate(360deg)}} @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}`}</style>
 
-      <div style={{ background: 'var(--c-card)', backdropFilter: 'blur(20px)', border: '1px solid var(--c-border)', borderRadius: 22, width: '100%', maxWidth: 720, maxHeight: '90vh', display: 'flex', flexDirection: 'column', boxShadow: '0 32px 80px rgba(0,0,0,0.7)', animation: 'fadeIn 0.2s ease-out' }}>
+      <div style={{ background: 'var(--color-surface)', backdropFilter: 'blur(20px)', border: '1px solid var(--color-border)', borderRadius: 22, width: '100%', maxWidth: 720, maxHeight: '90vh', display: 'flex', flexDirection: 'column', boxShadow: '0 32px 80px rgba(0,0,0,0.7)', animation: 'fadeIn 0.2s ease-out' }}>
 
         {/* Header */}
         <div style={{ padding: '22px 28px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
@@ -1259,13 +1259,13 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
           <button
             onClick={onClose}
             className="dm-icon-btn"
-            style={{ background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)', borderRadius: 8, padding: '7px 10px', color: C.muted, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.15s, color 0.15s, border-color 0.15s' }}
+            style={{ background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)', borderRadius: 8, padding: '7px 10px', color: C.muted, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.15s, color 0.15s, border-color 0.15s' }}
           ><X size={18} /></button>
         </div>
 
         <style>{`
-          .dm-icon-btn:hover { background: var(--c-card-hover) !important; color: var(--c-text) !important; border-color: var(--c-border-bright) !important; }
-          .dm-tab-btn:hover:not(.active) { color: var(--c-text) !important; border-color: var(--c-border-bright) !important; }
+          .dm-icon-btn:hover { background: var(--color-surface-hover) !important; color: var(--color-text) !important; border-color: var(--color-border-hover) !important; }
+          .dm-tab-btn:hover:not(.active) { color: var(--color-text) !important; border-color: var(--color-border-hover) !important; }
         `}</style>
 
         {/* Tabs */}
@@ -1276,8 +1276,8 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
               onClick={() => setTab(t.id)}
               className={`dm-tab-btn${tab === t.id ? ' active' : ''}`}
               style={{
-                background: tab === t.id ? 'rgba(27,120,247,0.12)' : 'transparent',
-                border: `1px solid ${tab === t.id ? 'rgba(27,120,247,0.35)' : C.border}`,
+                background: tab === t.id ? 'var(--color-primary-subtle)' : 'transparent',
+                border: `1px solid ${tab === t.id ? 'var(--color-primary-subtle)' : C.border}`,
                 borderRadius: 9, padding: '8px 16px',
                 color: tab === t.id ? C.blue : C.muted,
                 fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
@@ -1292,7 +1292,7 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
         {/* Content */}
         <div style={{ flex: 1, overflow: 'auto', padding: '20px 28px 28px' }}>
           {!canSeeFullPrep && (
-            <div style={{ background: 'rgba(27,120,247,0.06)', border: '1px solid rgba(27,120,247,0.15)', borderRadius: 12, padding: '20px', textAlign: 'center' }}>
+            <div style={{ background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 12, padding: '20px', textAlign: 'center' }}>
               <p style={{ margin: 0, color: C.muted, fontSize: 14 }}>A preparação completa está disponível para o criador e colaboradores do projeto.</p>
             </div>
           )}
@@ -1307,8 +1307,8 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
                   className="dm-ghost-btn"
                   style={{
                     display: 'flex', alignItems: 'center', gap: 7,
-                    background: showGuideEditor ? 'rgba(27,120,247,0.1)' : 'var(--c-bg-alt)',
-                    border: `1px solid ${showGuideEditor ? 'rgba(27,120,247,0.3)' : C.border}`,
+                    background: showGuideEditor ? 'var(--color-primary-subtle)' : 'var(--color-bg-alt)',
+                    border: `1px solid ${showGuideEditor ? 'var(--color-primary-subtle)' : C.border}`,
                     borderRadius: 9, padding: '8px 14px', marginBottom: 16,
                     color: showGuideEditor ? C.blue : C.muted, fontSize: 13, fontWeight: 600,
                     cursor: 'pointer', fontFamily: 'inherit',
@@ -1325,7 +1325,7 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
               {/* Preview card — bold blue glass, matching the hero's treatment */}
               <div style={{
                 position: 'relative', overflow: 'hidden',
-                background: 'linear-gradient(135deg, #1454c2 0%, #1b78f7 55%, #2f8bff 100%)',
+                background: 'linear-gradient(135deg, #1454c2 0%, var(--color-primary) 55%, #2f8bff 100%)',
                 border: '1px solid rgba(255,255,255,0.18)', borderRadius: 20,
                 padding: '24px 26px', marginBottom: 20, color: '#fff',
               }}>

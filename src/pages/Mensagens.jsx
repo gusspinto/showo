@@ -10,15 +10,15 @@ import { looksLikeSpam } from '../lib/score'
 import { useIsMobile } from '../lib/useIsMobile'
 
 const C = {
-  bg:     'var(--c-bg)',
-  card:   'var(--c-card)',
-  border: 'var(--c-border)',
-  blue:   '#1b78f7',
-  muted:  'var(--c-muted)',
-  text:   'var(--c-text)',
-  subtle: 'var(--c-subtle)',
-  glass: 'var(--c-glass)', glassHover: 'var(--c-glass-hover)',
-  glassBorder: 'var(--c-glass-border)', glassBorderBright: 'var(--c-glass-border-bright)',
+  bg:     'var(--color-bg)',
+  card:   'var(--color-surface)',
+  border: 'var(--color-border)',
+  blue:   'var(--color-primary)',
+  muted:  'var(--color-text-secondary)',
+  text:   'var(--color-text)',
+  subtle: 'var(--color-text-tertiary)',
+  glass: 'var(--color-glass)', glassHover: 'var(--color-glass-hover)',
+  glassBorder: 'var(--color-glass-border)', glassBorderBright: 'var(--color-glass-border-bright)',
   glassStyle: { backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' },
 }
 
@@ -34,7 +34,7 @@ function timeAgo(ts) {
 function Avatar({ profile, size = 36 }) {
   const name = profile?.full_name || profile?.username || '?'
   const initial = name[0].toUpperCase()
-  const colors = ['#1b78f7','#8b5cf6','#0d9488','#f59e0b','#ec4899','#10b981']
+  const colors = ['var(--color-primary)','var(--color-accent)','#0d9488','var(--color-warning)','#ec4899','#10b981']
   const bg = colors[(initial.charCodeAt(0) || 0) % colors.length]
   if (profile?.avatar_url) return (
     <img src={profile.avatar_url} alt={name} style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
@@ -96,7 +96,7 @@ function NovaConversa({ onSelect, onClose }) {
           {results.map(p => (
             <button key={p.id} onClick={() => onSelect(p)}
               style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', transition: 'background 0.12s' }}
-              onMouseEnter={e => e.currentTarget.style.background = 'var(--c-bg-alt)'}
+              onMouseEnter={e => e.currentTarget.style.background = 'var(--color-bg-alt)'}
               onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
               <Avatar profile={p} size={38} />
               <div>
@@ -491,29 +491,29 @@ export default function Mensagens() {
                 {isMine && isHovered && !isEditing && (
                   <div className="msg-desktop-actions" style={{ display: 'flex', alignItems: 'center', gap: 4, justifyContent: 'flex-end', marginBottom: 4 }}>
                     {isConfirmingDelete ? (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'var(--c-bg)', border: `1px solid ${C.border}`, borderRadius: 8, padding: '3px 8px', fontSize: 12, color: C.muted }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'var(--color-bg)', border: `1px solid ${C.border}`, borderRadius: 8, padding: '3px 8px', fontSize: 12, color: C.muted }}>
                         <span>Apagar?</span>
-                        <button onClick={() => deleteMsg(m.id)} style={{ background: '#ef4444', border: 'none', borderRadius: 5, color: '#fff', fontSize: 11, fontWeight: 700, padding: '2px 7px', cursor: 'pointer', fontFamily: 'inherit' }}>Sim</button>
+                        <button onClick={() => deleteMsg(m.id)} style={{ background: 'var(--color-error)', border: 'none', borderRadius: 5, color: '#fff', fontSize: 11, fontWeight: 700, padding: '2px 7px', cursor: 'pointer', fontFamily: 'inherit' }}>Sim</button>
                         <button onClick={() => setConfirmDeleteId(null)} style={{ background: 'transparent', border: 'none', color: C.muted, fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', padding: '2px 4px' }}>Não</button>
                       </div>
                     ) : (
                       <>
-                        <button onClick={() => startEdit(m)} title="Editar" style={{ background: 'var(--c-bg)', border: `1px solid ${C.border}`, borderRadius: 7, padding: '4px 7px', cursor: 'pointer', display: 'flex', alignItems: 'center', color: C.muted, transition: 'color 0.1s' }} onMouseEnter={e => e.currentTarget.style.color = C.text} onMouseLeave={e => e.currentTarget.style.color = C.muted}><Pencil size={12} /></button>
-                        <button onClick={() => setConfirmDeleteId(m.id)} title="Eliminar" style={{ background: 'var(--c-bg)', border: `1px solid ${C.border}`, borderRadius: 7, padding: '4px 7px', cursor: 'pointer', display: 'flex', alignItems: 'center', color: C.muted, transition: 'color 0.1s' }} onMouseEnter={e => e.currentTarget.style.color = '#ef4444'} onMouseLeave={e => e.currentTarget.style.color = C.muted}><Trash2 size={12} /></button>
+                        <button onClick={() => startEdit(m)} title="Editar" style={{ background: 'var(--color-bg)', border: `1px solid ${C.border}`, borderRadius: 7, padding: '4px 7px', cursor: 'pointer', display: 'flex', alignItems: 'center', color: C.muted, transition: 'color 0.1s' }} onMouseEnter={e => e.currentTarget.style.color = C.text} onMouseLeave={e => e.currentTarget.style.color = C.muted}><Pencil size={12} /></button>
+                        <button onClick={() => setConfirmDeleteId(m.id)} title="Eliminar" style={{ background: 'var(--color-bg)', border: `1px solid ${C.border}`, borderRadius: 7, padding: '4px 7px', cursor: 'pointer', display: 'flex', alignItems: 'center', color: C.muted, transition: 'color 0.1s' }} onMouseEnter={e => e.currentTarget.style.color = 'var(--color-error)'} onMouseLeave={e => e.currentTarget.style.color = C.muted}><Trash2 size={12} /></button>
                       </>
                     )}
                   </div>
                 )}
                 {isEditing ? (
                   <div className="msg-desktop-actions" style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <textarea ref={editInputRef} value={editDraft} onChange={e => setEditDraft(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveEdit(m.id) } if (e.key === 'Escape') cancelEdit() }} rows={Math.min(editDraft.split('\n').length + 1, 6)} style={{ background: 'var(--c-bg)', border: `1.5px solid ${C.blue}`, borderRadius: 10, color: C.text, fontSize: 14, padding: '9px 13px', outline: 'none', fontFamily: 'inherit', resize: 'none', minWidth: 180 }} />
+                    <textarea ref={editInputRef} value={editDraft} onChange={e => setEditDraft(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveEdit(m.id) } if (e.key === 'Escape') cancelEdit() }} rows={Math.min(editDraft.split('\n').length + 1, 6)} style={{ background: 'var(--color-bg)', border: `1.5px solid ${C.blue}`, borderRadius: 10, color: C.text, fontSize: 14, padding: '9px 13px', outline: 'none', fontFamily: 'inherit', resize: 'none', minWidth: 180 }} />
                     <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
-                      <button onClick={cancelEdit} style={{ background: 'var(--c-bg)', border: `1px solid ${C.border}`, borderRadius: 7, padding: '5px 12px', color: C.muted, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Cancelar</button>
-                      <button onClick={() => saveEdit(m.id)} disabled={!editDraft.trim()} style={{ background: editDraft.trim() ? C.blue : 'var(--c-border)', border: 'none', borderRadius: 7, padding: '5px 12px', color: '#fff', fontSize: 12, fontWeight: 700, cursor: editDraft.trim() ? 'pointer' : 'default', fontFamily: 'inherit' }}>Guardar</button>
+                      <button onClick={cancelEdit} style={{ background: 'var(--color-bg)', border: `1px solid ${C.border}`, borderRadius: 7, padding: '5px 12px', color: C.muted, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Cancelar</button>
+                      <button onClick={() => saveEdit(m.id)} disabled={!editDraft.trim()} style={{ background: editDraft.trim() ? C.blue : 'var(--color-border)', border: 'none', borderRadius: 7, padding: '5px 12px', color: '#fff', fontSize: 12, fontWeight: 700, cursor: editDraft.trim() ? 'pointer' : 'default', fontFamily: 'inherit' }}>Guardar</button>
                     </div>
                   </div>
                 ) : (
-                  <div style={{ background: isMine ? C.blue : 'var(--c-bg-alt)', color: isMine ? '#fff' : C.text, borderRadius: isMine ? '14px 14px 4px 14px' : '14px 14px 14px 4px', padding: '9px 13px', fontSize: 14, lineHeight: 1.5, wordBreak: 'break-word' }}>{m.content}</div>
+                  <div style={{ background: isMine ? C.blue : 'var(--color-bg-alt)', color: isMine ? '#fff' : C.text, borderRadius: isMine ? '14px 14px 4px 14px' : '14px 14px 14px 4px', padding: '9px 13px', fontSize: 14, lineHeight: 1.5, wordBreak: 'break-word' }}>{m.content}</div>
                 )}
                 {!isEditing && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 4, justifyContent: isMine ? 'flex-end' : 'flex-start', marginTop: 3, paddingInline: 4 }}>
@@ -535,7 +535,7 @@ export default function Mensagens() {
     return (
       <div className="msg-input-area" style={{ padding: '8px 12px 12px', borderTop: `1px solid ${C.border}`, flexShrink: 0 }}>
         {sendError && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#ef4444', fontSize: 11, fontWeight: 600, marginBottom: 6, padding: '5px 10px', background: 'rgba(239,68,68,0.08)', borderRadius: 7, border: '1px solid rgba(239,68,68,0.2)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--color-error)', fontSize: 11, fontWeight: 600, marginBottom: 6, padding: '5px 10px', background: 'var(--color-error-subtle)', borderRadius: 7, border: '1px solid var(--color-error-subtle)' }}>
             <AlertTriangle size={11} /> {sendError}
           </div>
         )}
@@ -545,10 +545,10 @@ export default function Mensagens() {
             onChange={e => { setDraft(e.target.value); if (sendError) setSendError('') }}
             onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }}
             placeholder="Escreve uma mensagem..."
-            style={{ flex: 1, background: 'var(--c-bg-alt)', border: `1.5px solid ${sendError ? '#ef4444' : C.border}`, borderRadius: 10, color: C.text, fontSize: 16, padding: '10px 14px', outline: 'none', fontFamily: 'inherit', transition: 'border-color 0.15s' }}
+            style={{ flex: 1, background: 'var(--color-bg-alt)', border: `1.5px solid ${sendError ? 'var(--color-error)' : C.border}`, borderRadius: 10, color: C.text, fontSize: 16, padding: '10px 14px', outline: 'none', fontFamily: 'inherit', transition: 'border-color 0.15s' }}
           />
           <button onClick={send} disabled={!draft.trim() || sending}
-            style={{ background: draft.trim() ? C.blue : 'var(--c-border)', border: 'none', borderRadius: 10, width: 42, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: draft.trim() ? 'pointer' : 'default', transition: 'background 0.15s', flexShrink: 0 }}>
+            style={{ background: draft.trim() ? C.blue : 'var(--color-border)', border: 'none', borderRadius: 10, width: 42, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: draft.trim() ? 'pointer' : 'default', transition: 'background 0.15s', flexShrink: 0 }}>
             <Send size={16} color="#fff" />
           </button>
         </div>
@@ -592,7 +592,7 @@ export default function Mensagens() {
                 <div style={{ position: 'relative', flex: 1 }}>
                   <Search size={14} color={C.muted} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
                   <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Pesquisar..."
-                    style={{ width: '100%', background: 'var(--c-bg)', border: `1px solid ${C.border}`, borderRadius: 8, color: C.text, fontSize: 13, padding: '8px 10px 8px 30px', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }} />
+                    style={{ width: '100%', background: 'var(--color-bg)', border: `1px solid ${C.border}`, borderRadius: 8, color: C.text, fontSize: 13, padding: '8px 10px 8px 30px', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }} />
                 </div>
                 <button onClick={() => setShowNova(true)} title="Nova mensagem" className="msg-compose-btn"
                   style={{ flexShrink: 0, width: 34, height: 34, borderRadius: 8, background: C.blue, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(27,120,247,0.2)' }}>
@@ -602,7 +602,7 @@ export default function Mensagens() {
 
               <div style={{ flex: 1, overflowY: 'auto' }}>
                 {loading ? (
-                  [1,2,3].map(i => <div key={i} style={{ margin: 8, height: 60, background: 'var(--c-bg-alt)', borderRadius: 10, opacity: 0.5 }} />)
+                  [1,2,3].map(i => <div key={i} style={{ margin: 8, height: 60, background: 'var(--color-bg-alt)', borderRadius: 10, opacity: 0.5 }} />)
                 ) : filteredConvs.length === 0 ? (
                   <div style={{ padding: '40px 16px', textAlign: 'center' }}>
                     <MessageSquare size={28} color={C.muted} style={{ marginBottom: 8, opacity: 0.5 }} />
@@ -616,7 +616,7 @@ export default function Mensagens() {
                     <button key={c.otherId} onClick={() => openConversation(c.otherId)}
                       className="msg-conv-item"
                       style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: isActive ? 'rgba(27,120,247,0.08)' : 'transparent', border: 'none', borderLeft: isActive ? `3px solid ${C.blue}` : '3px solid transparent', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', transition: 'background 0.12s' }}
-                      onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = 'var(--c-bg-alt)' }}
+                      onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = 'var(--color-bg-alt)' }}
                       onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'transparent' }}>
                       <Avatar profile={p} size={38} />
                       <div style={{ flex: 1, minWidth: 0 }}>
@@ -655,7 +655,7 @@ export default function Mensagens() {
                   {/* Thread header */}
                   <div className="msg-thread-hd" style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderBottom: `1px solid ${C.border}`, flexShrink: 0 }}>
                     <button onClick={() => { setMobileView('list'); setActiveId(null) }} className="msg-back msg-back-btn"
-                      style={{ background: 'none', border: 'none', color: 'var(--c-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, padding: '0 8px 0 0', fontFamily: 'inherit', fontSize: 13, fontWeight: 600 }}>
+                      style={{ background: 'none', border: 'none', color: 'var(--color-text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, padding: '0 8px 0 0', fontFamily: 'inherit', fontSize: 13, fontWeight: 600 }}>
                       <ArrowLeft size={16} /> Voltar
                     </button>
                     <Avatar profile={activeProfile} size={32} />
@@ -703,7 +703,7 @@ export default function Mensagens() {
           {!showDeletePopup && !showEditPopup && (
             <div onClick={e => e.stopPropagation()} style={{
               display: 'flex', flexDirection: 'column', gap: 0, width: 'calc(100% - 48px)', maxWidth: 320,
-              background: 'var(--c-card)', border: `1px solid ${C.glassBorder}`,
+              background: 'var(--color-surface)', border: `1px solid ${C.glassBorder}`,
               borderRadius: 16, overflow: 'hidden',
               boxShadow: '0 24px 60px rgba(0,0,0,0.4)',
               animation: 'msg-popup-in 0.25s cubic-bezier(0.16,1,0.3,1)',
@@ -721,7 +721,7 @@ export default function Mensagens() {
               {[
                 { icon: <Copy size={18} />, label: 'Copiar', color: C.text, action: handleActionCopy },
                 { icon: <Pencil size={18} />, label: 'Editar', color: C.blue, action: handleActionEdit },
-                { icon: <Trash2 size={18} />, label: 'Eliminar', color: '#ef4444', action: handleActionDelete },
+                { icon: <Trash2 size={18} />, label: 'Eliminar', color: 'var(--color-error)', action: handleActionDelete },
               ].map((a, i) => (
                 <button key={a.label} onClick={a.action} style={{
                   display: 'flex', alignItems: 'center', gap: 14,
@@ -741,23 +741,23 @@ export default function Mensagens() {
           {showDeletePopup && (
             <div onClick={e => e.stopPropagation()} style={{
               width: 'calc(100% - 48px)', maxWidth: 300,
-              background: 'var(--c-card)', border: `1px solid ${C.glassBorder}`,
+              background: 'var(--color-surface)', border: `1px solid ${C.glassBorder}`,
               borderRadius: 16, overflow: 'hidden',
               boxShadow: '0 24px 60px rgba(0,0,0,0.4)',
               animation: 'msg-popup-in 0.25s cubic-bezier(0.16,1,0.3,1)',
               textAlign: 'center', padding: '24px 20px 16px',
             }}>
-              <Trash2 size={28} color="#ef4444" style={{ marginBottom: 12 }} />
+              <Trash2 size={28} color="var(--color-error)" style={{ marginBottom: 12 }} />
               <p style={{ color: C.text, fontSize: 16, fontWeight: 700, margin: '0 0 6px' }}>Eliminar mensagem?</p>
               <p style={{ color: C.muted, fontSize: 13, margin: '0 0 20px', lineHeight: 1.5 }}>Esta ação não pode ser revertida.</p>
               <div style={{ display: 'flex', gap: 8 }}>
                 <button onClick={closeActionOverlay} style={{
-                  flex: 1, background: 'var(--c-bg)', border: `1px solid ${C.border}`,
+                  flex: 1, background: 'var(--color-bg)', border: `1px solid ${C.border}`,
                   borderRadius: 10, padding: '11px 0', color: C.muted, fontSize: 14, fontWeight: 600,
                   cursor: 'pointer', fontFamily: 'inherit',
                 }}>Cancelar</button>
                 <button onClick={confirmActionDelete} style={{
-                  flex: 1, background: '#ef4444', border: 'none',
+                  flex: 1, background: 'var(--color-error)', border: 'none',
                   borderRadius: 10, padding: '11px 0', color: '#fff', fontSize: 14, fontWeight: 700,
                   cursor: 'pointer', fontFamily: 'inherit',
                 }}>Eliminar</button>
@@ -769,7 +769,7 @@ export default function Mensagens() {
           {showEditPopup && (
             <div onClick={e => e.stopPropagation()} style={{
               width: 'calc(100% - 48px)', maxWidth: 340,
-              background: 'var(--c-card)', border: `1px solid ${C.glassBorder}`,
+              background: 'var(--color-surface)', border: `1px solid ${C.glassBorder}`,
               borderRadius: 16, overflow: 'hidden',
               boxShadow: '0 24px 60px rgba(0,0,0,0.4)',
               animation: 'msg-popup-in 0.25s cubic-bezier(0.16,1,0.3,1)',
@@ -783,7 +783,7 @@ export default function Mensagens() {
                 rows={Math.min((editDraft || '').split('\n').length + 1, 6)}
                 style={{
                   width: '100%', boxSizing: 'border-box',
-                  background: 'var(--c-bg)', border: `1.5px solid ${C.blue}`,
+                  background: 'var(--color-bg)', border: `1.5px solid ${C.blue}`,
                   borderRadius: 10, color: C.text, fontSize: 14,
                   padding: '10px 13px', outline: 'none', fontFamily: 'inherit',
                   resize: 'none',
@@ -791,12 +791,12 @@ export default function Mensagens() {
               />
               <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
                 <button onClick={closeActionOverlay} style={{
-                  flex: 1, background: 'var(--c-bg)', border: `1px solid ${C.border}`,
+                  flex: 1, background: 'var(--color-bg)', border: `1px solid ${C.border}`,
                   borderRadius: 10, padding: '11px 0', color: C.muted, fontSize: 14, fontWeight: 600,
                   cursor: 'pointer', fontFamily: 'inherit',
                 }}>Cancelar</button>
                 <button onClick={confirmActionEdit} disabled={!editDraft?.trim()} style={{
-                  flex: 1, background: editDraft?.trim() ? C.blue : 'var(--c-border)', border: 'none',
+                  flex: 1, background: editDraft?.trim() ? C.blue : 'var(--color-border)', border: 'none',
                   borderRadius: 10, padding: '11px 0', color: '#fff', fontSize: 14, fontWeight: 700,
                   cursor: editDraft?.trim() ? 'pointer' : 'default', fontFamily: 'inherit',
                 }}>Guardar</button>
@@ -838,11 +838,11 @@ export default function Mensagens() {
         top: 62, left: 0, right: 0, bottom: 0,
         zIndex: 200,
         display: 'flex', flexDirection: 'column',
-        background: 'var(--c-bg)',
+        background: 'var(--color-bg)',
         fontFamily: 'inherit',
       }}>
         {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderBottom: '1px solid var(--c-border)', flexShrink: 0, background: 'var(--c-bg)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderBottom: '1px solid var(--color-border)', flexShrink: 0, background: 'var(--color-bg)' }}>
           <Avatar profile={activeProfile} size={32} />
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 14, fontWeight: 700, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>

@@ -6,23 +6,23 @@ import { Navbar } from '../components/Navbar'
 import { Star, Users, MessageSquare, Trash2, Search, Briefcase } from 'lucide-react'
 
 const C = {
-  bg:     'var(--c-bg)',
-  card:   'var(--c-card)',
-  border: 'var(--c-border)',
-  blue:   '#1b78f7',
-  muted:  'var(--c-muted)',
-  text:   'var(--c-text)',
-  subtle: 'var(--c-subtle)',
-  amber:  '#f59e0b',
-  green:  '#22c55e',
-  glass: 'var(--c-glass)', glassBorder: 'var(--c-glass-border)',
+  bg:     'var(--color-bg)',
+  card:   'var(--color-surface)',
+  border: 'var(--color-border)',
+  blue:   'var(--color-primary)',
+  muted:  'var(--color-text-secondary)',
+  text:   'var(--color-text)',
+  subtle: 'var(--color-text-tertiary)',
+  amber:  'var(--color-warning)',
+  green:  'var(--color-success)',
+  glass: 'var(--color-glass)', glassBorder: 'var(--color-glass-border)',
   glassStyle: { backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' },
 }
 
 function Avatar({ profile, size = 44 }) {
   const name = profile?.full_name || profile?.username || '?'
   const initial = name[0].toUpperCase()
-  const colors = ['#1b78f7','#8b5cf6','#0d9488','#f59e0b','#ec4899','#10b981']
+  const colors = ['var(--color-primary)','var(--color-accent)','#0d9488','var(--color-warning)','#ec4899','#10b981']
   const bg = colors[(initial.charCodeAt(0) || 0) % colors.length]
   if (profile?.avatar_url) return (
     <img src={profile.avatar_url} alt={name} style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
@@ -35,10 +35,10 @@ function Avatar({ profile, size = 44 }) {
 }
 
 const ROLE_LABELS = {
-  aluno:      { label: 'Aluno',      color: '#1b78f7' },
+  aluno:      { label: 'Aluno',      color: 'var(--color-primary)' },
   professor:  { label: 'Professor',  color: '#10b981' },
-  recrutador: { label: 'Recrutador', color: '#8b5cf6' },
-  empresa:    { label: 'Empresa',    color: '#f59e0b' },
+  recrutador: { label: 'Recrutador', color: 'var(--color-accent)' },
+  empresa:    { label: 'Empresa',    color: 'var(--color-warning)' },
 }
 
 export default function Candidatos() {
@@ -168,7 +168,7 @@ export default function Candidatos() {
                     </div>
                     {/* Remove star */}
                     <button onClick={() => remove(s.id, p.id)} disabled={removing === p.id}
-                      style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: 7, padding: '5px 7px', cursor: 'pointer', color: C.amber, display: 'flex', flexShrink: 0 }}
+                      style={{ background: 'var(--color-warning-subtle)', border: '1px solid var(--color-warning-subtle)', borderRadius: 7, padding: '5px 7px', cursor: 'pointer', color: C.amber, display: 'flex', flexShrink: 0 }}
                       title="Remover dos guardados">
                       <Star size={14} fill={C.amber} />
                     </button>

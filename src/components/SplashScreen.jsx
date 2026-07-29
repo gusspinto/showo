@@ -155,7 +155,7 @@ export default function SplashScreen({ visible }) {
         <div className={`sp-slogan-wrap${phase >= 2 ? ' sp-p2' : ''}`}>
           <div className="sp-slogan">
             Os teus projetos,{' '}
-            <span style={{ color: '#1b78f7', fontWeight: 800 }}>apresentados a sério.</span>
+            <span style={{ color: 'var(--color-primary)', fontWeight: 800 }}>apresentados a sério.</span>
           </div>
         </div>
 

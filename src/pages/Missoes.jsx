@@ -10,22 +10,22 @@ import {
 } from 'lucide-react'
 
 const C = {
-  bg: 'var(--c-bg)',
-  bgAlt: 'var(--c-bg-alt)',
-  card: 'var(--c-card)',
-  cardHover: 'var(--c-card-hover)',
-  border: 'var(--c-border)',
-  borderBright: 'var(--c-border-bright)',
-  text: 'var(--c-text)',
-  muted: 'var(--c-muted)',
-  subtle: 'var(--c-subtle)',
-  blue: '#1b78f7',
-  green: '#22c55e',
-  yellow: '#fbbf24',
+  bg: 'var(--color-bg)',
+  bgAlt: 'var(--color-bg-alt)',
+  card: 'var(--color-surface)',
+  cardHover: 'var(--color-surface-hover)',
+  border: 'var(--color-border)',
+  borderBright: 'var(--color-border-hover)',
+  text: 'var(--color-text)',
+  muted: 'var(--color-text-secondary)',
+  subtle: 'var(--color-text-tertiary)',
+  blue: 'var(--color-primary)',
+  green: 'var(--color-success)',
+  yellow: 'var(--color-warning)',
   purple: '#a78bfa',
-  red: '#ef4444',
-  glass: 'var(--c-glass)', glassHover: 'var(--c-glass-hover)',
-  glassBorder: 'var(--c-glass-border)', glassBorderBright: 'var(--c-glass-border-bright)',
+  red: 'var(--color-error)',
+  glass: 'var(--color-glass)', glassHover: 'var(--color-glass-hover)',
+  glassBorder: 'var(--color-glass-border)', glassBorderBright: 'var(--color-glass-border-bright)',
   glassStyle: { backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' },
 }
 
@@ -64,7 +64,7 @@ export const MISSIONS = [
     description: 'Alcança um score de 90 ou mais num projeto.',
     xp: 50,
     icon: Zap,
-    color: '#f97316',
+    color: 'var(--color-warning)',
     category: 'Qualidade',
   },
   {
@@ -109,7 +109,7 @@ export const MISSIONS = [
     description: 'Usa a análise de IA num dos teus projetos.',
     xp: 10,
     icon: Lightbulb,
-    color: '#f59e0b',
+    color: 'var(--color-warning)',
     category: 'IA',
   },
   {
@@ -127,7 +127,7 @@ export const MISSIONS = [
     description: 'Um dos teus projetos atinge "Pronto para estágio".',
     xp: 60,
     icon: Award,
-    color: '#f59e0b',
+    color: 'var(--color-warning)',
     category: 'Carreira',
   },
 
@@ -157,7 +157,7 @@ export const MISSIONS = [
     description: 'Adiciona pelo menos 3 competências ao teu perfil.',
     xp: 15,
     icon: Lightbulb,
-    color: '#f59e0b',
+    color: 'var(--color-warning)',
     category: 'Perfil',
   },
   {
@@ -463,10 +463,10 @@ export default function Missoes() {
         <div className="missoes-hd" style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 8 }}>
           <div style={{
             width: 48, height: 48, borderRadius: 12,
-            background: 'rgba(27,120,247,0.12)', border: '1px solid rgba(27,120,247,0.25)',
+            background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
-            <Swords size={24} color="#1b78f7" />
+            <Swords size={24} color="var(--color-primary)" />
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <h1 style={{ margin: 0, fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 400, color: C.text, letterSpacing: '-1px', fontFamily: 'var(--font-heading)' }}>

@@ -7,25 +7,25 @@ import { Search, Building2, Eye, Briefcase, Users, GraduationCap, BookOpen, Hear
 import CreateProjectModal from '../components/CreateProjectModal'
 
 const colors = {
-  bg: 'var(--c-bg)',
-  bgAlt: 'var(--c-bg-alt)',
-  card: 'var(--c-card)',
-  cardHover: 'var(--c-card-hover)',
-  border: 'var(--c-border)',
-  borderBright: 'var(--c-border-bright)',
-  blue: '#1b78f7',
-  blueSubtle: 'rgba(27,120,247,0.08)',
-  text: 'var(--c-text)',
-  muted: 'var(--c-muted)',
-  subtle: 'var(--c-subtle)',
-  green: '#22c55e',
-  yellow: '#fbbf24',
-  orange: '#f97316',
-  red: '#ef4444',
-  glass: 'var(--c-glass)',
-  glassHover: 'var(--c-glass-hover)',
-  glassBorder: 'var(--c-glass-border)',
-  glassBorderBright: 'var(--c-glass-border-bright)',
+  bg: 'var(--color-bg)',
+  bgAlt: 'var(--color-bg-alt)',
+  card: 'var(--color-surface)',
+  cardHover: 'var(--color-surface-hover)',
+  border: 'var(--color-border)',
+  borderBright: 'var(--color-border-hover)',
+  blue: 'var(--color-primary)',
+  blueSubtle: 'var(--color-primary-subtle)',
+  text: 'var(--color-text)',
+  muted: 'var(--color-text-secondary)',
+  subtle: 'var(--color-text-tertiary)',
+  green: 'var(--color-success)',
+  yellow: 'var(--color-warning)',
+  orange: 'var(--color-warning)',
+  red: 'var(--color-error)',
+  glass: 'var(--color-glass)',
+  glassHover: 'var(--color-glass-hover)',
+  glassBorder: 'var(--color-glass-border)',
+  glassBorderBright: 'var(--color-glass-border-bright)',
   glassStyle: { backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' },
 }
 
@@ -48,12 +48,12 @@ const ZONES = [
 ]
 
 const TYPE_COLORS = {
-  pap:         '#6366f1',
-  internship:  '#10b981',
-  group:       '#f59e0b',
-  personal:    '#1b78f7',
-  competition: '#ef4444',
-  presentation:'#8b5cf6',
+  pap:         'var(--color-info)',
+  internship:  'var(--color-success)',
+  group:       'var(--color-warning)',
+  personal:    'var(--color-primary)',
+  competition: 'var(--color-error)',
+  presentation:'var(--color-accent)',
 }
 
 function getAreaColor(area) {
@@ -127,8 +127,8 @@ function SelectFilter({ value, onChange, options, label }) {
 const VIEWS_KEY = `showo_views_${new Date().toISOString().slice(0, 13)}`
 
 const ROLE_LABELS = {
-  recrutador: { label: 'Recrutador', color: '#8b5cf6', bg: 'rgba(139,92,246,0.1)', border: 'rgba(139,92,246,0.3)', icon: <Search size={16} /> },
-  empresa:    { label: 'Empresa',    color: '#f59e0b', bg: 'rgba(245,158,11,0.1)',  border: 'rgba(245,158,11,0.3)',  icon: <Building2 size={16} /> },
+  recrutador: { label: 'Recrutador', color: 'var(--color-accent)', bg: 'var(--color-accent-subtle)', border: 'var(--color-accent-subtle)', icon: <Search size={16} /> },
+  empresa:    { label: 'Empresa',    color: 'var(--color-warning)', bg: 'var(--color-warning-subtle)',  border: 'var(--color-warning-subtle)',  icon: <Building2 size={16} /> },
 }
 
 export default function Explore() {
@@ -350,46 +350,46 @@ export default function Explore() {
           border-radius: 14px;
         }
         .explore-card { transition: border-color 0.15s, background 0.15s !important; }
-        .explore-card:hover { border-color: var(--c-border-bright) !important; background: var(--c-card-hover) !important; }
+        .explore-card:hover { border-color: var(--color-border-hover) !important; background: var(--color-surface-hover) !important; }
         .explore-card-arrow { opacity: 0; transform: translateX(-4px); transition: opacity 0.15s, transform 0.15s; }
         .explore-card:hover .explore-card-arrow { opacity: 1; transform: translateX(0); }
         .explore-grid { grid-template-columns: repeat(auto-fill, minmax(288px, 1fr)); }
 
         /* Search bar */
         .explore-search {
-          width: 100%; background: var(--c-card); border: 1px solid var(--c-border);
-          border-radius: 12px; color: var(--c-text); font-size: 14px;
+          width: 100%; background: var(--color-surface); border: 1px solid var(--color-border);
+          border-radius: 12px; color: var(--color-text); font-size: 14px;
           padding: 12px 16px 12px 44px; outline: none;
           font-family: var(--font-body); box-sizing: border-box;
           transition: border-color 0.2s, box-shadow 0.2s;
         }
-        .explore-search:focus { border-color: #1b78f7 !important; box-shadow: 0 0 0 3px rgba(27,120,247,0.12) !important; }
+        .explore-search:focus { border-color: var(--color-primary) !important; box-shadow: 0 0 0 3px var(--color-primary-subtle) !important; }
 
         /* Filter toggle button */
         .explore-filter-btn {
           flex-shrink: 0; position: relative;
           display: flex; align-items: center; justify-content: center; gap: 6px;
-          background: var(--c-card); border: 1px solid var(--c-border);
+          background: var(--color-surface); border: 1px solid var(--color-border);
           border-radius: 12px; padding: 0 14px; height: 44px;
-          color: var(--c-muted); font-size: 13px; font-weight: 600;
+          color: var(--color-text-secondary); font-size: 13px; font-weight: 600;
           cursor: pointer; font-family: inherit; white-space: nowrap;
           transition: border-color 0.15s, color 0.15s, background 0.15s;
         }
-        .explore-filter-btn:hover { border-color: var(--c-border-bright); color: var(--c-text); }
-        .explore-filter-btn.active { border-color: #1b78f7; color: #1b78f7; background: rgba(27,120,247,0.07); }
+        .explore-filter-btn:hover { border-color: var(--color-border-hover); color: var(--color-text); }
+        .explore-filter-btn.active { border-color: var(--color-primary); color: var(--color-primary); background: var(--color-primary-subtle); }
         .explore-filter-badge {
           position: absolute; top: -5px; right: -5px;
           min-width: 16px; height: 16px; border-radius: 99px;
-          background: #1b78f7; color: #fff;
+          background: var(--color-primary); color: #fff;
           font-size: 10px; font-weight: 800;
           display: flex; align-items: center; justify-content: center;
           padding: 0 4px;
-          border: 2px solid var(--c-bg);
+          border: 2px solid var(--color-bg);
         }
 
         /* Filter panel */
         .explore-filter-panel {
-          background: var(--c-card); border: 1px solid var(--c-border);
+          background: var(--color-surface); border: 1px solid var(--color-border);
           border-radius: 14px; padding: 16px;
           margin-bottom: 20px;
           display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px;
@@ -431,7 +431,7 @@ export default function Explore() {
         {profile?.role !== 'professor' && (
           <button
             onClick={() => setShowCreateModal(true)}
-            style={{ background: `linear-gradient(135deg, ${colors.blue}, #4f46e5)`, color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 16px rgba(27,120,247,0.3)' }}
+            style={{ background: `linear-gradient(135deg, ${colors.blue}, #4f46e5)`, color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 16px var(--color-primary-muted)' }}
           >
             Criar projeto
           </button>
@@ -452,18 +452,18 @@ export default function Explore() {
           {/* Animated tab switch */}
           <div className="explore-tabs-wrap" style={{
             position: 'relative', display: 'inline-flex', flexShrink: 0,
-            background: 'var(--c-card)', border: '1px solid var(--c-border)',
+            background: 'var(--color-surface)', border: '1px solid var(--color-border)',
             borderRadius: 12, padding: 4,
           }}>
             {/* Sliding pill — azul sólido sem gradiente */}
             <div style={{
               position: 'absolute', top: 4, bottom: 4, left: 4,
               width: 'calc(50% - 4px)',
-              background: '#1b78f7',
+              background: 'var(--color-primary)',
               borderRadius: 9,
               transform: `translateX(${tab === 'projetos' ? 0 : 100}%)`,
               transition: 'transform 0.32s cubic-bezier(0.4, 0, 0.2, 1)',
-              boxShadow: '0 2px 12px rgba(27,120,247,0.35)',
+              boxShadow: '0 2px 12px var(--color-primary-muted)',
               zIndex: 0,
             }} />
             {[
@@ -576,10 +576,10 @@ export default function Explore() {
               onClick={() => setFilterAvailable(v => !v)}
               style={{
                 display: 'flex', alignItems: 'center', gap: 6,
-                background: filterAvailable ? 'rgba(27,120,247,0.1)' : colors.bgAlt,
+                background: filterAvailable ? 'var(--color-primary-subtle)' : colors.bgAlt,
                 border: `1px solid ${filterAvailable ? 'rgba(27,120,247,0.4)' : colors.border}`,
                 borderRadius: 10, padding: '9px 14px',
-                color: filterAvailable ? '#1b78f7' : colors.muted,
+                color: filterAvailable ? 'var(--color-primary)' : colors.muted,
                 fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
                 transition: 'all 0.15s',
               }}
@@ -687,7 +687,7 @@ export default function Explore() {
                       {project.available_for_work && (
                         <>
                           {(project.area || project.is_pap) && <span style={{ color: colors.subtle }}>·</span>}
-                          <span style={{ color: '#1b78f7', display: 'inline-flex', alignItems: 'center', gap: 3 }} title="Disponível para estágio">
+                          <span style={{ color: 'var(--color-primary)', display: 'inline-flex', alignItems: 'center', gap: 3 }} title="Disponível para estágio">
                             <Briefcase size={10} style={{ flexShrink: 0 }} />
                           </span>
                         </>
@@ -724,13 +724,13 @@ export default function Explore() {
                           display: 'flex', alignItems: 'center', gap: 4,
                           background: 'none', border: 'none',
                           padding: '2px 0', cursor: 'pointer',
-                          color: userLiked.has(project.id) ? '#ef4444' : colors.subtle,
+                          color: userLiked.has(project.id) ? 'var(--color-error)' : colors.subtle,
                           transition: 'color 0.15s',
                         }}
-                        onMouseEnter={e => { if (!userLiked.has(project.id)) e.currentTarget.style.color = '#ef4444' }}
+                        onMouseEnter={e => { if (!userLiked.has(project.id)) e.currentTarget.style.color = 'var(--color-error)' }}
                         onMouseLeave={e => { if (!userLiked.has(project.id)) e.currentTarget.style.color = colors.subtle }}
                       >
-                        <Heart size={13} fill={userLiked.has(project.id) ? '#ef4444' : 'none'} strokeWidth={2} />
+                        <Heart size={13} fill={userLiked.has(project.id) ? 'var(--color-error)' : 'none'} strokeWidth={2} />
                         {(likeCounts[project.id] || 0) > 0 && (
                           <span style={{ fontSize: 11, fontWeight: 600 }}>{likeCounts[project.id]}</span>
                         )}
@@ -745,7 +745,7 @@ export default function Explore() {
                   {project.tags && project.tags.length > 0 && (
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
                       {project.tags.slice(0, 4).map(tag => (
-                        <span key={tag} style={{ fontSize: 11, color: colors.muted, background: 'var(--c-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: 5, padding: '2px 7px' }}>
+                        <span key={tag} style={{ fontSize: 11, color: colors.muted, background: 'var(--color-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: 5, padding: '2px 7px' }}>
                           {tag}
                         </span>
                       ))}
@@ -756,7 +756,7 @@ export default function Explore() {
                   {recruiterMode && !project.tags?.length && project.technologies && (
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
                       {project.technologies.split(/[,\s·]+/).filter(Boolean).slice(0, 4).map((t, i) => (
-                        <span key={i} style={{ fontSize: 11, color: colors.muted, background: 'var(--c-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: 5, padding: '2px 7px' }}>
+                        <span key={i} style={{ fontSize: 11, color: colors.muted, background: 'var(--color-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: 5, padding: '2px 7px' }}>
                           {t.trim()}
                         </span>
                       ))}
@@ -770,13 +770,13 @@ export default function Explore() {
                 <button
                   onClick={() => setVisibleCount(v => v + 24)}
                   style={{
-                    background: 'transparent', border: `1px solid var(--c-border)`,
-                    color: 'var(--c-muted)', borderRadius: 12, padding: '11px 28px',
+                    background: 'transparent', border: `1px solid var(--color-border)`,
+                    color: 'var(--color-text-secondary)', borderRadius: 12, padding: '11px 28px',
                     fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
                     transition: 'border-color 0.15s, color 0.15s',
                   }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = '#1b78f7'; e.currentTarget.style.color = '#1b78f7' }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--c-border)'; e.currentTarget.style.color = 'var(--c-muted)' }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--color-primary)'; e.currentTarget.style.color = 'var(--color-primary)' }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--color-border)'; e.currentTarget.style.color = 'var(--color-text-secondary)' }}
                 >
                   Carregar mais ({sorted.length - visibleCount} restantes)
                 </button>
@@ -808,7 +808,7 @@ export default function Explore() {
                             style={{
                               padding: '6px 14px', borderRadius: 20,
                               border: `1.5px solid ${filterPeopleArea === a.id ? colors.blue : colors.border}`,
-                              background: filterPeopleArea === a.id ? 'rgba(27,120,247,0.1)' : colors.bgAlt,
+                              background: filterPeopleArea === a.id ? 'var(--color-primary-subtle)' : colors.bgAlt,
                               color: filterPeopleArea === a.id ? colors.blue : colors.muted,
                               fontSize: 12, fontWeight: 600, cursor: 'pointer',
                               fontFamily: 'inherit', transition: 'all 0.15s',
@@ -837,7 +837,7 @@ export default function Explore() {
                             style={{
                               padding: '6px 14px', borderRadius: 20,
                               border: `1.5px solid ${filterSkill === s.id ? colors.blue : colors.border}`,
-                              background: filterSkill === s.id ? 'rgba(27,120,247,0.1)' : colors.bgAlt,
+                              background: filterSkill === s.id ? 'var(--color-primary-subtle)' : colors.bgAlt,
                               color: filterSkill === s.id ? colors.blue : colors.muted,
                               fontSize: 12, fontWeight: 600, cursor: 'pointer',
                               fontFamily: 'inherit', transition: 'all 0.15s',
@@ -884,15 +884,15 @@ export default function Explore() {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(288px, 1fr))', gap: 16 }}>
                   {filteredPeople.map(p => {
                     const ROLE_MAP = {
-                      aluno:      { color: '#1b78f7', bg: 'rgba(27,120,247,0.1)',  label: 'Aluno',      icon: <GraduationCap size={11} /> },
+                      aluno:      { color: 'var(--color-primary)', bg: 'var(--color-primary-subtle)',  label: 'Aluno',      icon: <GraduationCap size={11} /> },
                       professor:  { color: '#10b981', bg: 'rgba(16,185,129,0.1)',  label: 'Professor',  icon: <BookOpen size={11} /> },
-                      recrutador: { color: '#8b5cf6', bg: 'rgba(139,92,246,0.1)',  label: 'Recrutador', icon: <Search size={11} /> },
-                      empresa:    { color: '#f59e0b', bg: 'rgba(245,158,11,0.1)',  label: 'Empresa',    icon: <Building2 size={11} /> },
+                      recrutador: { color: 'var(--color-accent)', bg: 'rgba(139,92,246,0.1)',  label: 'Recrutador', icon: <Search size={11} /> },
+                      empresa:    { color: 'var(--color-warning)', bg: 'rgba(245,158,11,0.1)',  label: 'Empresa',    icon: <Building2 size={11} /> },
                     }
                     const rc = ROLE_MAP[p.role] ?? ROLE_MAP.aluno
                     const displayName = p.full_name || p.username || 'Utilizador'
                     const initial = displayName[0].toUpperCase()
-                    const avatarSeeds = ['#1b78f7','#8b5cf6','#0d9488','#f59e0b','#ec4899','#10b981']
+                    const avatarSeeds = ['var(--color-primary)','var(--color-accent)','#0d9488','var(--color-warning)','#ec4899','#10b981']
                     const avatarBg = avatarSeeds[(initial.charCodeAt(0) || 0) % avatarSeeds.length]
                     const profileUrl = p.username ? `/u/${p.username}` : null
 
@@ -927,7 +927,7 @@ export default function Explore() {
                               {displayName}
                             </span>
                             {p.available_for_work && (
-                              <span style={{ flexShrink: 0, display: 'inline-flex', alignItems: 'center', color: '#1b78f7' }} title="Disponível para estágio">
+                              <span style={{ flexShrink: 0, display: 'inline-flex', alignItems: 'center', color: 'var(--color-primary)' }} title="Disponível para estágio">
                                 <Briefcase size={12} strokeWidth={2.5} />
                               </span>
                             )}
@@ -949,8 +949,8 @@ export default function Explore() {
                                 <span key={skill} style={{
                                   fontSize: 10, fontWeight: 600,
                                   color: filterSkill === skill ? colors.blue : colors.muted,
-                                  background: filterSkill === skill ? 'rgba(27,120,247,0.08)' : 'transparent',
-                                  border: `1px solid ${filterSkill === skill ? 'rgba(27,120,247,0.3)' : colors.border}`,
+                                  background: filterSkill === skill ? 'var(--color-primary-subtle)' : 'transparent',
+                                  border: `1px solid ${filterSkill === skill ? 'var(--color-primary-muted)' : colors.border}`,
                                   borderRadius: 6, padding: '2px 8px',
                                 }}>
                                   {skill}

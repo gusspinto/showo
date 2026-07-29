@@ -3,7 +3,6 @@ import SkillsPicker from '../components/SkillsPicker'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { GraduationCap, Briefcase, Rocket, Users, ClipboardList, BarChart2, Monitor, Trophy, Sparkles, Check, Lock, Camera, X, Save, ArrowRight, ArrowLeft, ChevronRight, ShieldAlert } from 'lucide-react'
-import { generateProject } from '../lib/generateProject'
 import { saveProject } from '../lib/saveProject'
 import { calculateScore, looksLikeSpam, isTooShortForContent } from '../lib/score'
 import { containsProfanity } from '../lib/profanity'
@@ -13,27 +12,27 @@ import { useAuth } from '../context/AuthContext'
 import { CropModal } from '../components/CropModal'
 
 const colors = {
-  bg: 'var(--c-bg)',
-  bgAlt: 'var(--c-bg-alt)',
-  card: 'var(--c-card)',
-  cardHover: 'var(--c-card-hover)',
-  border: 'var(--c-border)',
-  borderBright: 'var(--c-border-bright)',
-  blue: '#1b78f7',
-  blueHover: '#1564d4',
-  blueGlow: 'rgba(27,120,247,0.15)',
-  blueSubtle: 'rgba(27,120,247,0.08)',
-  text: 'var(--c-text)',
-  muted: 'var(--c-muted)',
-  subtle: 'var(--c-subtle)',
-  green: '#22c55e',
-  greenGlow: 'rgba(34,197,94,0.12)',
-  yellow: '#fbbf24',
-  yellowGlow: 'rgba(234,179,8,0.1)',
-  orange: '#f97316',
-  red: '#ef4444',
-  inputBg: 'var(--c-bg)',
-  glass: 'var(--c-glass)', glassBorder: 'var(--c-glass-border)',
+  bg: 'var(--color-bg)',
+  bgAlt: 'var(--color-bg-alt)',
+  card: 'var(--color-surface)',
+  cardHover: 'var(--color-surface-hover)',
+  border: 'var(--color-border)',
+  borderBright: 'var(--color-border-hover)',
+  blue: 'var(--color-primary)',
+  blueHover: 'var(--color-primary-hover)',
+  blueGlow: 'var(--color-primary-subtle)',
+  blueSubtle: 'var(--color-primary-subtle)',
+  text: 'var(--color-text)',
+  muted: 'var(--color-text-secondary)',
+  subtle: 'var(--color-text-tertiary)',
+  green: 'var(--color-success)',
+  greenGlow: 'var(--color-success-subtle)',
+  yellow: 'var(--color-warning)',
+  yellowGlow: 'var(--color-warning-subtle)',
+  orange: 'var(--color-warning)',
+  red: 'var(--color-error)',
+  inputBg: 'var(--color-input-bg)',
+  glass: 'var(--color-glass)', glassBorder: 'var(--color-glass-border)',
 }
 
 const inputBase = {
@@ -53,19 +52,19 @@ const inputBase = {
 const GOAL_OPTIONS = [
   { id: 'school',     Icon: GraduationCap, title: 'Apresentar um projeto escolar', subtitle: 'PAP, trabalho de grupo ou apresentação', color: '#6366f1', bg: 'rgba(99,102,241,0.1)',   glow: 'rgba(99,102,241,0.18)'  },
   { id: 'internship', Icon: Briefcase,     title: 'Conseguir um estágio',           subtitle: 'Mostra o teu trabalho a recrutadores',  color: '#10b981', bg: 'rgba(16,185,129,0.1)',  glow: 'rgba(16,185,129,0.18)'  },
-  { id: 'show',       Icon: Rocket,        title: 'Mostrar o meu projeto',          subtitle: 'Partilha o que construíste com o mundo', color: '#1b78f7', bg: 'rgba(27,120,247,0.1)',  glow: 'rgba(27,120,247,0.18)'  },
-  { id: 'clients',    Icon: Users,         title: 'Conseguir clientes',             subtitle: 'Transforma projetos em prova profissional', color: '#f97316', bg: 'rgba(249,115,22,0.1)', glow: 'rgba(249,115,22,0.18)' },
+  { id: 'show',       Icon: Rocket,        title: 'Mostrar o meu projeto',          subtitle: 'Partilha o que construíste com o mundo', color: 'var(--color-primary)', bg: 'var(--color-primary-subtle)',  glow: 'var(--color-primary-subtle)'  },
+  { id: 'clients',    Icon: Users,         title: 'Conseguir clientes',             subtitle: 'Transforma projetos em prova profissional', color: 'var(--color-warning)', bg: 'var(--color-warning-subtle)', glow: 'var(--color-warning-subtle)' },
 ]
 
 const SCHOOL_YEARS = ['10º ano', '11º ano', '12º ano', 'Licenciatura', 'Mestrado', 'Outro']
 
 const PROJECT_TYPES = [
   { id: 'pap',          Icon: GraduationCap, label: 'PAP',          sub: 'Projeto final de curso',  color: '#6366f1', bg: 'rgba(99,102,241,0.1)',   glow: 'rgba(99,102,241,0.18)'  },
-  { id: 'personal',     Icon: Rocket,        label: 'Pessoal',      sub: 'Projeto próprio',          color: '#1b78f7', bg: 'rgba(27,120,247,0.1)',   glow: 'rgba(27,120,247,0.18)'  },
-  { id: 'group',        Icon: Users,         label: 'Grupo',        sub: 'Trabalho colaborativo',    color: '#f59e0b', bg: 'rgba(245,158,11,0.1)',   glow: 'rgba(245,158,11,0.18)'  },
-  { id: 'competition',  Icon: Trophy,        label: 'Competição',   sub: 'Hackathon ou concurso',    color: '#ef4444', bg: 'rgba(239,68,68,0.1)',    glow: 'rgba(239,68,68,0.18)'   },
+  { id: 'personal',     Icon: Rocket,        label: 'Pessoal',      sub: 'Projeto próprio',          color: 'var(--color-primary)', bg: 'var(--color-primary-subtle)',   glow: 'var(--color-primary-subtle)'  },
+  { id: 'group',        Icon: Users,         label: 'Grupo',        sub: 'Trabalho colaborativo',    color: 'var(--color-warning)', bg: 'var(--color-warning-subtle)',   glow: 'var(--color-warning-subtle)'  },
+  { id: 'competition',  Icon: Trophy,        label: 'Competição',   sub: 'Hackathon ou concurso',    color: 'var(--color-error)', bg: 'var(--color-error-subtle)',    glow: 'var(--color-error-subtle)'   },
   { id: 'internship',   Icon: Briefcase,     label: 'Estágio',      sub: 'Projeto de estágio',       color: '#10b981', bg: 'rgba(16,185,129,0.1)',   glow: 'rgba(16,185,129,0.18)'  },
-  { id: 'presentation', Icon: BarChart2,     label: 'Apresentação', sub: 'Slides ou pitch',          color: '#a855f7', bg: 'rgba(168,85,247,0.1)',   glow: 'rgba(168,85,247,0.18)'  },
+  { id: 'presentation', Icon: BarChart2,     label: 'Apresentação', sub: 'Slides ou pitch',          color: 'var(--color-accent)', bg: 'var(--color-accent-subtle)',   glow: 'var(--color-accent-subtle)'  },
 ]
 
 const STEPS = [
@@ -376,13 +375,7 @@ export default function NewProject() {
     setPhase('generating')
     setError(null)
     try {
-      let aiResult = {}
-      try {
-        aiResult = await generateProject(answers)
-      } catch (aiErr) {
-        console.warn('AI generation failed, saving without AI content:', aiErr)
-      }
-      const project = await saveProject(answers, aiResult, user?.id ?? null)
+      const project = await saveProject(answers, {}, user?.id ?? null)
       localStorage.setItem(`edit_token_${project.slug}`, project.edit_token)
       await clearDraft()
       navigate(`/projeto/${project.slug}`, {
@@ -471,7 +464,7 @@ export default function NewProject() {
                       fontFamily: 'inherit',
                       position: 'relative',
                     }}
-                    onMouseEnter={e => { if (!sel) { e.currentTarget.style.borderColor = colors.borderBright; e.currentTarget.style.background = 'var(--c-glass-hover)' }}}
+                    onMouseEnter={e => { if (!sel) { e.currentTarget.style.borderColor = colors.borderBright; e.currentTarget.style.background = 'var(--color-glass-hover)' }}}
                     onMouseLeave={e => { if (!sel) { e.currentTarget.style.borderColor = colors.glassBorder; e.currentTarget.style.background = colors.glass }}}
                   >
                     {/* Checkmark badge */}
@@ -488,7 +481,7 @@ export default function NewProject() {
                     {/* Icon container */}
                     <div style={{
                       width: 44, height: 44, borderRadius: 12, marginBottom: 12,
-                      background: sel ? opt.bg : 'var(--c-bg-alt)',
+                      background: sel ? opt.bg : 'var(--color-bg-alt)',
                       border: `1.5px solid ${sel ? `${c}55` : colors.border}`,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       flexShrink: 0,
@@ -689,7 +682,7 @@ export default function NewProject() {
                   onClick={() => copyLink(editUrl, 'edit')}
                   style={{
                     background: copiedLink === 'edit' ? colors.green : colors.yellow,
-                    color: 'var(--c-bg)', border: 'none', borderRadius: 8,
+                    color: 'var(--color-bg)', border: 'none', borderRadius: 8,
                     padding: '10px 16px', fontSize: 13, fontWeight: 700,
                     cursor: 'pointer', whiteSpace: 'nowrap',
                     transition: 'background 0.2s',
@@ -735,8 +728,8 @@ export default function NewProject() {
           boxShadow: `0 0 24px ${colors.blueGlow}`,
         }} />
         <div style={{ textAlign: 'center' }}>
-          <p style={{ fontSize: 20, fontWeight: 700, margin: '0 0 8px', letterSpacing: '-0.3px', display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}><Sparkles size={20} color={colors.blue} /> A IA está a analisar o teu projeto...</p>
-          <p style={{ color: colors.muted, fontSize: 14, margin: 0 }}>Isto pode demorar alguns segundos</p>
+          <p style={{ fontSize: 20, fontWeight: 700, margin: '0 0 8px', letterSpacing: '-0.3px', display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}>A criar o teu projeto...</p>
+          <p style={{ color: colors.muted, fontSize: 14, margin: 0 }}>Só um momento</p>
         </div>
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
@@ -781,17 +774,17 @@ export default function NewProject() {
             textAlign: 'center',
           }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}><Save size={36} color={colors.blue} /></div>
-            <h2 style={{ color: 'var(--c-text)', fontSize: 20, fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 10px', letterSpacing: '-0.3px' }}>
+            <h2 style={{ color: 'var(--color-text)', fontSize: 20, fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 10px', letterSpacing: '-0.3px' }}>
               Guarda o teu projeto
             </h2>
-            <p style={{ color: 'var(--c-muted)', fontSize: 14, lineHeight: 1.65, margin: '0 0 28px' }}>
+            <p style={{ color: 'var(--color-text-secondary)', fontSize: 14, lineHeight: 1.65, margin: '0 0 28px' }}>
               Sem conta, o teu projeto fica guardado apenas com um link privado — se o perderes, não há forma de recuperar. Com conta, fica sempre acessível.
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               <button
                 onClick={() => navigate('/register')}
                 style={{
-                  background: '#1b78f7',
+                  background: 'var(--color-primary)',
                   border: 'none', borderRadius: 8,
                   padding: '12px 0', color: '#fff',
                   fontSize: 15, fontWeight: 700,
@@ -809,13 +802,13 @@ export default function NewProject() {
                 style={{
                   background: 'transparent',
                   border: '1px solid #1e3050', borderRadius: 8,
-                  padding: '11px 0', color: 'var(--c-text)',
+                  padding: '11px 0', color: 'var(--color-text)',
                   fontSize: 15, fontWeight: 600,
                   cursor: 'pointer', fontFamily: 'inherit',
                   transition: 'border-color 0.15s, background 0.15s',
                 }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--c-border-bright)'; e.currentTarget.style.background = 'var(--c-bg-alt)' }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--c-border)'; e.currentTarget.style.background = 'transparent' }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--color-border-hover)'; e.currentTarget.style.background = 'var(--color-bg-alt)' }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--color-border)'; e.currentTarget.style.background = 'transparent' }}
               >
                 Iniciar sessão
               </button>
@@ -828,7 +821,7 @@ export default function NewProject() {
                   padding: '8px 0', marginTop: 2,
                   transition: 'color 0.15s',
                 }}
-                onMouseEnter={e => e.currentTarget.style.color = 'var(--c-muted)'}
+                onMouseEnter={e => e.currentTarget.style.color = 'var(--color-text-secondary)'}
                 onMouseLeave={e => e.currentTarget.style.color = '#4a6080'}
               >
                 Continuar sem conta
@@ -871,7 +864,7 @@ export default function NewProject() {
               borderRadius: 10, padding: '10px 14px', marginBottom: 20, gap: 10,
             }}>
               <span style={{ color: colors.blue, fontSize: 13, fontWeight: 500 }}>
-                A IA pré-preencheu alguns campos com base na tua descrição. Revê e corrige o que precisares.
+                Alguns campos foram pré-preenchidos com base na tua descrição. Revê e corrige o que precisares.
               </span>
               <button
                 onClick={() => setPrefillBanner(false)}
@@ -1108,7 +1101,7 @@ export default function NewProject() {
                           fontFamily: 'inherit',
                           position: 'relative',
                         }}
-                        onMouseEnter={e => { if (!sel) { e.currentTarget.style.borderColor = colors.borderBright; e.currentTarget.style.background = 'var(--c-glass-hover)' }}}
+                        onMouseEnter={e => { if (!sel) { e.currentTarget.style.borderColor = colors.borderBright; e.currentTarget.style.background = 'var(--color-glass-hover)' }}}
                         onMouseLeave={e => { if (!sel) { e.currentTarget.style.borderColor = colors.glassBorder; e.currentTarget.style.background = colors.glass }}}
                       >
                         {/* Checkmark badge */}
@@ -1125,7 +1118,7 @@ export default function NewProject() {
                         {/* Fixed-size icon container */}
                         <div style={{
                           width: 40, height: 40, borderRadius: 10,
-                          background: sel ? t.bg : 'var(--c-bg-alt)',
+                          background: sel ? t.bg : 'var(--color-bg-alt)',
                           border: `1.5px solid ${sel ? `${c}55` : colors.border}`,
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
                           margin: '0 auto 10px',
@@ -1235,13 +1228,13 @@ export default function NewProject() {
                 background: 'rgba(239,68,68,0.12)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}>
-                <ShieldAlert size={16} color="#ef4444" />
+                <ShieldAlert size={16} color="var(--color-error)" />
               </div>
               <div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: '#ef4444', marginBottom: 3 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-error)', marginBottom: 3 }}>
                   {currentContentIssue() === 'short' ? 'Conteúdo demasiado curto' : currentContentIssue() === 'profanity' ? 'Linguagem imprópria detetada' : 'Texto inválido detetado'}
                 </div>
-                <div style={{ fontSize: 12, color: 'var(--c-muted)', lineHeight: 1.5 }}>
+                <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
                   {currentContentIssue() === 'short'
                     ? 'Escreve pelo menos 20 caracteres. Palavras como "oi", "sim", "ok" não são conteúdo válido — descreve o teu projeto com detalhe.'
                     : currentContentIssue() === 'profanity'

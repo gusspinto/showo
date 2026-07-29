@@ -3,8 +3,8 @@ import { Check, X, Info } from 'lucide-react'
 
 const BORDER = {
   error: '#f43f5e',
-  info: '#1b78f7',
-  success: '#22c55e',
+  info: 'var(--color-primary)',
+  success: 'var(--color-success)',
 }
 
 function ToastIcon({ type, color }) {
@@ -16,8 +16,8 @@ function ToastIcon({ type, color }) {
 
 const ICON_BG = {
   error: 'rgba(244,63,94,0.15)',
-  info: 'rgba(27,120,247,0.15)',
-  success: 'rgba(34,197,94,0.15)',
+  info: 'var(--color-primary-subtle)',
+  success: 'var(--color-success-subtle)',
 }
 
 export function Toast({ message, type = 'success', visible }) {
@@ -29,12 +29,12 @@ export function Toast({ message, type = 'success', visible }) {
       position: 'fixed', bottom: 28, right: 28,
       transform: `translateY(${visible ? 0 : 120}px)`,
       opacity: visible ? 1 : 0,
-      background: 'var(--c-card)',
+      background: 'var(--color-surface)',
       border: `1px solid ${border}40`,
       borderLeft: `3px solid ${border}`,
       borderRadius: 12,
       padding: '12px 18px',
-      color: 'var(--c-text)',
+      color: 'var(--color-text)',
       fontSize: 14, fontWeight: 600,
       zIndex: 3000,
       transition: 'transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.25s',

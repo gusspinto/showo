@@ -13,13 +13,14 @@ function stripEmoji(str) {
 }
 import CreateProjectModal from './CreateProjectModal'
 import FeedbackButton from './FeedbackButton'
+import './Navbar.css'
 
 const C = {
-  bg: 'rgba(13, 20, 36, 0.88)',
-  border: 'var(--c-border)',
-  blue: '#1b78f7',
-  muted: 'var(--c-muted)',
-  text: 'var(--c-text)',
+  bg: 'var(--color-sidebar-bg)',
+  border: 'var(--color-border)',
+  blue: 'var(--color-primary)',
+  muted: 'var(--color-text-secondary)',
+  text: 'var(--color-text)',
 }
 
 const btnStyle = {
@@ -85,17 +86,17 @@ function getNotifColor(type) {
     case 'NEW_CANDIDATURA':
     case 'TASK_COMPLETED':
     case 'PROJECT_RESUBMITTED':
-      return '#1b78f7' // aluno
+      return 'var(--color-primary)'
     case 'TEACHER_FEEDBACK':
     case 'TASK_ASSIGNED':
-      return '#10b981' // professor
+      return 'var(--color-success)'
     case 'RECRUITER_INTEREST':
     case 'VAGA_INVITE':
     case 'CANDIDATURA_ACEITE':
     case 'CANDIDATURA_RECUSADA':
-      return '#8b5cf6' // recrutador / empresa
+      return 'var(--color-accent)'
     default:
-      return null // PROJECT_VIEW, COMPANY_VIEW, PROJECT_LIKE, PROJECT_COMMENT — actor unknown
+      return null
   }
 }
 
@@ -352,21 +353,21 @@ function InviteInbox({ userId, sidebar = false, collapsed = false }) {
           border: 'none',
           borderRadius: 8, width: 32, height: 32,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          cursor: 'pointer', color: open ? '#1b78f7' : 'var(--c-muted)',
+          cursor: 'pointer', color: open ? 'var(--color-primary)' : 'var(--color-text-secondary)',
           transition: 'background 0.13s, color 0.13s', flexShrink: 0,
         }}
-        onMouseEnter={e => { if (!open) { e.currentTarget.style.background = 'var(--c-card-hover)'; e.currentTarget.style.color = 'var(--c-text)' } }}
-        onMouseLeave={e => { if (!open) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--c-muted)' } }}
+        onMouseEnter={e => { if (!open) { e.currentTarget.style.background = 'var(--color-surface-hover)'; e.currentTarget.style.color = 'var(--color-text)' } }}
+        onMouseLeave={e => { if (!open) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--color-text-secondary)' } }}
         title="Notificações"
       >
         <Bell size={15} />
         {count > 0 && (
           <span style={{
             position: 'absolute', top: -4, right: -4,
-            background: '#ef4444', borderRadius: '50%',
+            background: 'var(--color-error)', borderRadius: '50%',
             width: 15, height: 15, fontSize: 8, fontWeight: 800,
             color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            border: '2px solid var(--c-bg)',
+            border: '2px solid var(--color-bg)',
           }}>
             {count > 9 ? '9+' : count}
           </span>
@@ -383,7 +384,7 @@ function InviteInbox({ userId, sidebar = false, collapsed = false }) {
                 ? { position: 'fixed', left: collapsed ? 80 : 248, bottom: 16, transition: 'left 0.25s cubic-bezier(0.22,1,0.36,1)' }
                 : { position: 'absolute', top: 'calc(100% + 8px)', right: 0 }
               ),
-              background: 'var(--c-card)', border: `1px solid var(--c-border)`,
+              background: 'var(--color-surface)', border: `1px solid var(--color-border)`,
               borderRadius: 14, padding: '8px',
               boxShadow: '0 8px 40px rgba(0,0,0,0.45)',
               backdropFilter: 'blur(16px)',
@@ -410,11 +411,11 @@ function InviteInbox({ userId, sidebar = false, collapsed = false }) {
                       <div style={{ display: 'flex', gap: 6 }}>
                         <button
                           onClick={() => respond(invite, 'accepted')} disabled={isActing}
-                          style={{ flex: 1, padding: '7px 0', background: '#1b78f7', border: 'none', borderRadius: 7, color: '#fff', fontSize: 12, fontWeight: 700, cursor: isActing ? 'default' : 'pointer', fontFamily: 'inherit' }}
+                          style={{ flex: 1, padding: '7px 0', background: 'var(--color-primary)', border: 'none', borderRadius: 7, color: '#fff', fontSize: 12, fontWeight: 700, cursor: isActing ? 'default' : 'pointer', fontFamily: 'inherit' }}
                         >{acting[invite.id] === 'accepted' ? '...' : <><Check size={12} style={{ verticalAlign: 'middle', marginRight: 3 }} />Aceitar</>}</button>
                         <button
                           onClick={() => respond(invite, 'declined')} disabled={isActing}
-                          style={{ flex: 1, padding: '7px 0', background: 'transparent', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 7, color: '#ef4444', fontSize: 12, fontWeight: 600, cursor: isActing ? 'default' : 'pointer', fontFamily: 'inherit' }}
+                          style={{ flex: 1, padding: '7px 0', background: 'transparent', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 7, color: 'var(--color-error)', fontSize: 12, fontWeight: 600, cursor: isActing ? 'default' : 'pointer', fontFamily: 'inherit' }}
                         >{acting[invite.id] === 'declined' ? '...' : 'Recusar'}</button>
                       </div>
                     </div>
@@ -438,8 +439,8 @@ function InviteInbox({ userId, sidebar = false, collapsed = false }) {
                   }}>
                     <span style={{ fontSize: 18, flexShrink: 0, marginTop: 1, display: 'flex', alignItems: 'center' }}>
                       {r.status === 'accepted'
-                        ? <Check size={16} color="#22c55e" />
-                        : <X size={16} color="#ef4444" />}
+                        ? <Check size={16} color="var(--color-success)" />
+                        : <X size={16} color="var(--color-error)" />}
                     </span>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <p style={{ margin: '0 0 2px', fontSize: 13, fontWeight: 700, color: C.text }}>
@@ -483,7 +484,7 @@ function InviteInbox({ userId, sidebar = false, collapsed = false }) {
                     <button
                       onClick={clearAll}
                       style={{ background: 'none', border: 'none', color: C.muted, fontSize: 11, fontWeight: 600, cursor: 'pointer', padding: 0, fontFamily: 'inherit' }}
-                      onMouseEnter={e => e.currentTarget.style.color = '#ef4444'}
+                      onMouseEnter={e => e.currentTarget.style.color = 'var(--color-error)'}
                       onMouseLeave={e => e.currentTarget.style.color = C.muted}
                     >
                       Limpar todas
@@ -529,7 +530,7 @@ function InviteInbox({ userId, sidebar = false, collapsed = false }) {
                         onClick={() => deleteNotifs(n.groupIds)}
                         title="Apagar notificação"
                         style={{ background: 'none', border: 'none', color: C.muted, cursor: 'pointer', padding: '2px 3px', borderRadius: 4, display: 'flex', alignItems: 'center', opacity: 0.6, transition: 'opacity 0.12s, color 0.12s', lineHeight: 1 }}
-                        onMouseEnter={e => { e.currentTarget.style.opacity = 1; e.currentTarget.style.color = '#ef4444' }}
+                        onMouseEnter={e => { e.currentTarget.style.opacity = 1; e.currentTarget.style.color = 'var(--color-error)' }}
                         onMouseLeave={e => { e.currentTarget.style.opacity = 0.6; e.currentTarget.style.color = C.muted }}
                       >
                         <X size={13} />
@@ -566,7 +567,7 @@ function AvatarCircle({ avatarUrl, initial, size = 28, fontSize = 13 }) {
   ) : (
     <div style={{
       width: size, height: size, borderRadius: '50%',
-      background: '#1b78f7',
+      background: 'var(--color-primary)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       fontSize, fontWeight: 700, color: '#fff', flexShrink: 0,
       userSelect: 'none',
@@ -587,13 +588,13 @@ function UserChip({ user, profile, onClick, onProfile, onSettings, onSignOut, on
         onClick={() => setOpen(o => !o)}
         style={{
           display: 'flex', alignItems: 'center', gap: 8,
-          background: open ? 'var(--c-card-hover)' : 'transparent',
-          border: `1px solid ${open ? 'var(--c-border-bright)' : C.border}`,
+          background: open ? 'var(--color-surface-hover)' : 'transparent',
+          border: `1px solid ${open ? 'var(--color-border-hover)' : C.border}`,
           borderRadius: 24, padding: '5px 12px 5px 6px',
           cursor: 'pointer', fontFamily: 'inherit',
           transition: 'background 0.15s, border-color 0.15s',
         }}
-        onMouseEnter={e => { e.currentTarget.style.background = 'var(--c-card-hover)'; e.currentTarget.style.borderColor = 'var(--c-border-bright)' }}
+        onMouseEnter={e => { e.currentTarget.style.background = 'var(--color-surface-hover)'; e.currentTarget.style.borderColor = 'var(--color-border-hover)' }}
         onMouseLeave={e => { if (!open) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = C.border } }}
       >
         <AvatarCircle avatarUrl={profile?.avatar_url} initial={initial} size={28} fontSize={13} />
@@ -611,7 +612,7 @@ function UserChip({ user, profile, onClick, onProfile, onSettings, onSignOut, on
           <div style={{ position: 'fixed', inset: 0, zIndex: 98 }} onClick={() => setOpen(false)} />
           <div style={{
             position: 'absolute', top: 'calc(100% + 8px)', right: 0,
-            background: 'var(--c-card)', border: `1px solid ${C.border}`,
+            background: 'var(--color-surface)', border: `1px solid ${C.border}`,
             borderRadius: 12, padding: '6px',
             boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
             backdropFilter: 'blur(16px)',
@@ -636,7 +637,7 @@ function UserChip({ user, profile, onClick, onProfile, onSettings, onSignOut, on
             <button
               onClick={() => { onClick(); setOpen(false) }}
               style={{ ...dropItemStyle, color: C.text }}
-              onMouseEnter={e => e.currentTarget.style.background = 'var(--c-card-hover)'}
+              onMouseEnter={e => e.currentTarget.style.background = 'var(--color-surface-hover)'}
               onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
             >
               <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><FolderOpen size={15} /> Dashboard</span>
@@ -645,7 +646,7 @@ function UserChip({ user, profile, onClick, onProfile, onSettings, onSignOut, on
               <button
                 onClick={() => { onProfile(); setOpen(false) }}
                 style={{ ...dropItemStyle, color: C.text }}
-                onMouseEnter={e => e.currentTarget.style.background = 'var(--c-card-hover)'}
+                onMouseEnter={e => e.currentTarget.style.background = 'var(--color-surface-hover)'}
                 onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
               >
                 <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><User size={15} /> Meu perfil</span>
@@ -654,7 +655,7 @@ function UserChip({ user, profile, onClick, onProfile, onSettings, onSignOut, on
             <button
               onClick={() => { onSettings(); setOpen(false) }}
               style={{ ...dropItemStyle, color: C.text }}
-              onMouseEnter={e => e.currentTarget.style.background = 'var(--c-card-hover)'}
+              onMouseEnter={e => e.currentTarget.style.background = 'var(--color-surface-hover)'}
               onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
             >
               <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><SettingsIcon size={15} /> Definições</span>
@@ -662,7 +663,7 @@ function UserChip({ user, profile, onClick, onProfile, onSettings, onSignOut, on
             <div style={{ height: 1, background: C.border, margin: '4px 6px' }} />
             <button
               onClick={() => { onSignOut(); setOpen(false) }}
-              style={{ ...dropItemStyle, color: '#ef4444' }}
+              style={{ ...dropItemStyle, color: 'var(--color-error)' }}
               onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.08)'}
               onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
             >
@@ -760,7 +761,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
 
   const isRecruiter = profile?.role === 'recrutador' || profile?.role === 'empresa'
   const isTeacher = profile?.role === 'professor'
-  const recruiterAccent = profile?.role === 'empresa' ? '#f59e0b' : '#8b5cf6'
+  const recruiterAccent = 'var(--color-accent)'
 
   const [unreadMsgs, setUnreadMsgs] = useState(0)
   useEffect(() => {
@@ -798,492 +799,14 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
 
   return (
     <>
-      <style>{`
-        .nav-btn:hover { color: var(--c-text) !important; background: var(--c-card-hover) !important; }
-        .nav-logo { transition: opacity 0.15s; }
-        .nav-logo:hover { opacity: 0.85; }
-
-        .nav-left   { display: flex; align-items: center; gap: 2px; flex: 1; }
-        .nav-mob-left { display: none; }
-        .nav-mid    { display: flex; align-items: center; justify-content: center; }
-        .nav-right  { display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex: 1; }
-        .nav-auth   { display: flex; align-items: center; gap: 8px; }
-        .ham-btn    { display: none !important; }
-        /* Mobile drawer trigger (left) — hidden on desktop. Borderless for a clean look. */
-        .mob-drawer-trigger {
-          display: none; width: 38px; height: 38px; border-radius: 9px; flex-shrink: 0;
-          align-items: center; justify-content: center; cursor: pointer; padding: 0;
-          background: transparent; border: none; color: var(--c-muted);
-          font-family: inherit; -webkit-tap-highlight-color: transparent;
-          transition: background 0.13s, color 0.13s;
-        }
-        .mob-drawer-trigger:active { background: var(--c-card-hover); color: var(--c-text); }
-        /* Mobile-only action cluster (create / workspace / auth) — hidden on desktop */
-        .mob-nav-actions { display: none; align-items: center; gap: 8px; }
-        .mob-nav-auth-btn {
-          padding: 8px 13px; border-radius: 8px; font-size: 13px; font-weight: 700;
-          font-family: inherit; cursor: pointer; white-space: nowrap; flex-shrink: 0;
-          -webkit-tap-highlight-color: transparent; transition: background 0.13s, border-color 0.13s;
-        }
-        .mob-nav-auth-btn.ghost { background: transparent; border: 1px solid var(--c-border); color: var(--c-text); }
-        .mob-nav-auth-btn.ghost:active { background: var(--c-card-hover); }
-        .mob-nav-auth-btn.primary { background: #1b78f7; border: none; color: #fff; box-shadow: 0 3px 12px rgba(27,120,247,0.3); }
-        .mob-nav-auth-btn.primary:active { transform: scale(0.96); }
-        .mob-nav-icon-btn {
-          width: 38px; height: 38px; border-radius: 9px;
-          display: flex; align-items: center; justify-content: center;
-          cursor: pointer; padding: 0; flex-shrink: 0; font-family: inherit;
-          -webkit-tap-highlight-color: transparent;
-          transition: background 0.13s, border-color 0.13s, color 0.13s;
-        }
-        .mob-nav-icon-btn.ghost { background: transparent; border: 1px solid var(--c-border); color: var(--c-muted); }
-        .mob-nav-icon-btn.ghost:active { background: var(--c-card-hover); color: var(--c-text); }
-        .mob-nav-icon-btn.primary { background: #1b78f7; border: none; color: #fff; box-shadow: 0 4px 12px rgba(27,120,247,0.35); }
-        .mob-nav-icon-btn.primary:active { transform: scale(0.92); }
-        .nav-mob-theme { display: none; align-items: center; justify-content: center; width: 32px; height: 32px; background: transparent; border: none; border-radius: 8px; color: var(--c-muted); cursor: pointer; transition: background 0.13s, color 0.13s; -webkit-tap-highlight-color: transparent; }
-
-        /* ── Sidebar (desktop >860px) ── */
-        /* ═══════════════════════════════════
-           SIDEBAR — redesign
-        ═══════════════════════════════════ */
-        .sidebar {
-          display: none;
-          position: fixed;
-          left: 8px; top: 8px; bottom: 8px;
-          width: 232px;
-          background: var(--c-sidebar-bg-alpha);
-          backdrop-filter: blur(20px) saturate(1.4);
-          -webkit-backdrop-filter: blur(20px) saturate(1.4);
-          border: 1px solid var(--c-border);
-          border-radius: 16px;
-          flex-direction: column;
-          padding: 0;
-          z-index: 100;
-          overflow: visible;
-          contain: style;
-          will-change: width;
-          transition: width 0.22s cubic-bezier(0.4,0,0.2,1), opacity 0.18s ease, transform 0.22s cubic-bezier(0.4,0,0.2,1);
-        }
-        .sidebar:not(.collapsed) .sb-item > span,
-        .sidebar:not(.collapsed) .sb-label {
-          animation: sb-fade-slide-in 0.18s ease both;
-        }
-        .sidebar::after {
-          content: ''; position: absolute; inset: 0; pointer-events: none;
-          box-shadow: 6px 0 28px rgba(0,0,0,0.22);
-          opacity: 0; transition: opacity 0.25s cubic-bezier(0.22,1,0.36,1);
-        }
-        .sidebar:not(.collapsed)::after { opacity: 1; }
-        .sidebar:not(.collapsed) { width: 232px; }
-        .sidebar.collapsed { width: 64px; }
-        .sidebar.collapsed .sb-top-row { justify-content: center; }
-        .sidebar.collapsed .sb-label { display: none; }
-        .sidebar.collapsed .sb-item { justify-content: center; padding: 9px 0; }
-        .sidebar.collapsed .sb-create { justify-content: center; padding: 9px 0; }
-        .sb-top-row {
-          display: flex; align-items: center; justify-content: space-between;
-          height: 56px; box-sizing: border-box;
-          padding: 0 10px 0 16px;
-        }
-        .sb-logo {
-          display: flex; align-items: center;
-          padding: 0;
-          cursor: pointer; border: none; background: transparent;
-          font-family: inherit; text-align: left;
-          transition: opacity 0.15s;
-        }
-        .sb-logo:hover { opacity: 0.75; }
-        .sb-collapse-toggle {
-          position: absolute; top: 68px; right: -11px;
-          width: 22px; height: 22px; border-radius: 50%;
-          background: var(--c-sidebar-bg); border: 1px solid var(--c-border);
-          color: var(--c-subtle); display: flex; align-items: center; justify-content: center;
-          cursor: pointer; z-index: 5; padding: 0;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-          transition: background 0.15s, color 0.15s, border-color 0.15s;
-        }
-        .sb-collapse-toggle:hover { background: var(--c-card-hover); color: var(--c-text); border-color: var(--c-border-bright); }
-        .sb-logo-divider {
-          height: 1px;
-          background: linear-gradient(90deg, transparent, var(--c-border), transparent);
-          margin: 0 0 8px; opacity: 0.8;
-        }
-        .sb-section {
-          padding: 0 10px;
-          flex: 1; overflow-y: auto; overflow-x: hidden; min-height: 0;
-        }
-        .sb-section::-webkit-scrollbar { width: 2px; }
-        .sb-section::-webkit-scrollbar-track { background: transparent; }
-        .sb-section::-webkit-scrollbar-thumb { background: var(--c-border); border-radius: 99px; }
-
-        /* Sidebar animation keyframes */
-        @keyframes sb-fade-slide-in {
-          from { opacity: 0; transform: translateY(-4px) scale(0.99); }
-          to   { opacity: 1; transform: translateY(0) scale(1); }
-        }
-        .sb-create-wrap {
-          display: grid;
-          grid-template-rows: 1fr;
-          transition: grid-template-rows 0.28s cubic-bezier(0.16,1,0.3,1),
-                      opacity 0.2s ease;
-          opacity: 1;
-        }
-        .sb-create-wrap.hidden {
-          grid-template-rows: 0fr;
-          opacity: 0;
-          pointer-events: none;
-        }
-        .sb-create-inner { overflow: hidden; min-height: 0; }
-        .sb-soon {
-          display: inline-flex; align-items: center;
-          margin-left: auto; font-size: 9px; font-weight: 700;
-          color: var(--c-subtle); background: var(--c-bg);
-          border: 1px solid var(--c-border); border-radius: 4px;
-          padding: 1px 5px; text-transform: uppercase; letter-spacing: 0.05em;
-          flex-shrink: 0;
-        }
-        .sb-label {
-          font-size: 10px; font-weight: 700; color: var(--c-subtle);
-          text-transform: uppercase; letter-spacing: 0.12em;
-          padding: 14px 4px 5px; display: block;
-        }
-        /* Nav item — flat editorial list style, subtle fill on hover (theme-aware, same in light/dark) */
-        .sb-item {
-          display: flex; align-items: center; gap: 10px;
-          width: 100%; padding: 9px 10px;
-          border-radius: 6px; border: none;
-          background: transparent; color: var(--c-muted);
-          font-size: 13px; font-weight: 500;
-          cursor: pointer; font-family: inherit;
-          transition: color 0.15s, background 0.15s;
-          text-align: left; white-space: nowrap;
-          position: relative;
-        }
-        .sb-item:hover { background: var(--c-card-hover); color: var(--c-text); }
-        .sb-item.active {
-          color: #1b78f7;
-          font-weight: 600;
-        }
-        /* Active left accent bar */
-        .sb-item.active::before {
-          content: '';
-          position: absolute;
-          left: -10px; top: 25%; bottom: 25%;
-          width: 2px;
-          background: #1b78f7;
-        }
-        .sb-item.danger { color: #ef4444; }
-        .sb-item.danger:hover { color: #f87171; }
-        /* Create button — filled, flat */
-        .sb-create {
-          display: flex; align-items: center; gap: 8px;
-          margin: 8px 0 4px;
-          padding: 9px 13px;
-          background: #1b78f7;
-          border: 1px solid #1b78f7; border-radius: 6px;
-          color: #fff; font-size: 13px; font-weight: 700;
-          cursor: pointer; font-family: inherit;
-          transition: opacity 0.15s;
-          width: 100%;
-        }
-        .sb-create:hover { opacity: 0.88; }
-        .sb-divider { height: 1px; background: var(--c-border); margin: 6px 0; opacity: 0.6; }
-        .sb-bottom { padding: 0 10px 14px; }
-        .sb-action-row {
-          display: flex; align-items: center; justify-content: space-between;
-          gap: 2px; padding: 4px 0 0;
-        }
-        .sb-action-btn {
-          flex: 0 0 auto;
-          width: 32px;
-          display: flex; align-items: center; justify-content: center;
-          height: 32px; border-radius: 8px;
-          background: transparent; border: none;
-          color: var(--c-muted); cursor: pointer;
-          transition: background 0.13s, color 0.13s;
-        }
-        .sb-action-btn:hover { background: var(--c-card-hover); color: var(--c-text); }
-        .sb-action-btn.danger:hover { background: rgba(239,68,68,0.1); color: #ef4444; }
-
-        /* ── Floating "Gerir projeto" panel ── */
-        .proj-manage-float {
-          position: fixed;
-          left: 258px;
-          top: 50%;
-          transform: translateY(-50%);
-          width: 48px;
-          z-index: 90;
-          display: none;
-          flex-direction: column;
-          align-items: center;
-          gap: 4px;
-          background: var(--c-sidebar-bg-alpha);
-          backdrop-filter: blur(20px) saturate(1.4);
-          -webkit-backdrop-filter: blur(20px) saturate(1.4);
-          border: 1px solid var(--c-border);
-          border-radius: 14px;
-          padding: 10px 6px;
-          box-shadow: 0 4px 24px rgba(0,0,0,0.25);
-          transition: left 0.22s cubic-bezier(0.4,0,0.2,1);
-        }
-        body.sidebar-collapsed .proj-manage-float { left: 84px; }
-        .proj-manage-float .pmf-btn {
-          width: 36px; height: 36px; border-radius: 10px;
-          background: transparent; border: none;
-          display: flex; align-items: center; justify-content: center;
-          cursor: pointer; color: var(--c-muted);
-          transition: color 0.15s, background 0.15s;
-          position: relative;
-        }
-        .proj-manage-float .pmf-btn:hover { color: var(--c-text); background: var(--c-glass); }
-        .proj-manage-float .pmf-btn.active { color: #1b78f7; background: rgba(27,120,247,0.1); }
-        .proj-manage-float .pmf-divider {
-          width: 24px; height: 1px;
-          background: var(--c-border);
-          margin: 2px 0;
-        }
-        .proj-manage-float .pmf-tooltip {
-          position: absolute;
-          left: calc(100% + 8px);
-          top: 50%;
-          transform: translateY(-50%);
-          white-space: nowrap;
-          font-size: 11px;
-          font-weight: 600;
-          color: var(--c-text);
-          background: var(--c-card);
-          border: 1px solid var(--c-border);
-          border-radius: 6px;
-          padding: 4px 10px;
-          pointer-events: none;
-          opacity: 0;
-          transition: opacity 0.12s;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-        }
-        .proj-manage-float .pmf-btn:hover .pmf-tooltip { opacity: 1; }
-
-        @media (min-width: 601px) {
-          .sidebar   { display: flex; }
-          .proj-manage-float { display: flex; }
-          .top-nav   { display: none !important; }
-          body { padding-left: 248px !important; padding-bottom: 0 !important; transition: padding-left 0.22s cubic-bezier(0.4,0,0.2,1); }
-          body.sidebar-collapsed { padding-left: 80px !important; }
-          .page-content { max-width: 1068px !important; }
-          .page-content-wide { max-width: 1168px !important; }
-          .msg-inner { max-width: 1088px !important; }
-        }
-        ${hideSidebar ? `
+      {hideSidebar && (
+        <style>{`
           @media (min-width: 601px) {
             .sidebar { display: none !important; }
             body { padding-left: 0 !important; }
           }
-        ` : ''}
-
-        /* Mobile (≤600px): left-drawer navigation — trigger à esquerda, ações à direita,
-           SEM logo no topo (a logo vive só na sidebar/drawer e no desktop). */
-        @media (max-width: 600px) {
-          .nav-left      { display: none !important; }
-          .nav-mob-left  { display: flex; align-items: center; }
-          .nav-mid       { display: none !important; }
-          .nav-right     { flex: 1; margin-left: auto; }
-          .nav-auth      { display: none !important; }
-          .showo-nav-pad { padding-left: 16px !important; padding-right: 16px !important; }
-          .mob-only-create { display: none !important; }
-          .nav-children-wrap { display: none !important; }
-          .ham-btn       { display: none !important; }
-          .mob-drawer-trigger { display: flex !important; }
-          .mob-nav-actions { display: flex !important; }
-          body           { padding-bottom: env(safe-area-inset-bottom, 0px); }
-          .nav-mob-theme { display: none !important; }
-
-          /* Notification dropdown — full-width anchored below navbar */
-          .notif-drop {
-            position: fixed !important;
-            top: 62px !important;
-            right: 16px !important;
-            left: 16px !important;
-            width: auto !important;
-            max-width: none !important;
-          }
-        }
-
-        /* Mobile drawer (tablet only) */
-        .mobile-drawer {
-          position: fixed;
-          top: 62px; left: 0; right: 0;
-          background: var(--c-card);
-          border-bottom: 1px solid var(--c-border);
-          backdrop-filter: blur(16px);
-          -webkit-backdrop-filter: blur(16px);
-          padding: 8px 20px 16px;
-          z-index: 98;
-          display: flex; flex-direction: column;
-          transform: translateY(-110%);
-          visibility: hidden;
-          transition: transform 0.25s cubic-bezier(0.4,0,0.2,1), visibility 0s 0.25s;
-          box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-        }
-        .mobile-drawer.is-open { transform: translateY(0); visibility: visible; transition: transform 0.25s cubic-bezier(0.4,0,0.2,1), visibility 0s; }
-        .mobile-drawer-btn {
-          background: transparent; border: none;
-          color: var(--c-muted); font-size: 15px; font-weight: 500;
-          cursor: pointer; padding: 13px 4px; text-align: left;
-          font-family: inherit; border-bottom: 1px solid var(--c-border);
-          transition: color 0.15s;
-          display: flex; align-items: center; gap: 12px;
-          width: 100%;
-        }
-        .mobile-drawer-btn:last-child { border-bottom: none; }
-        .mobile-drawer-btn:hover { color: var(--c-text); }
-        .mobile-drawer-btn.danger { color: #ef4444 !important; }
-        .mobile-drawer-pair { display: flex; gap: 8px; padding: 16px 0 4px; }
-        .mobile-drawer-pair-btn {
-          flex: 1; display: flex; align-items: center; justify-content: center; gap: 7px;
-          background: var(--c-bg-alt); border: 1px solid var(--c-border);
-          border-radius: 10px; padding: 11px 8px;
-          color: var(--c-text); font-size: 13px; font-weight: 600;
-          cursor: pointer; font-family: inherit; transition: background 0.15s, border-color 0.15s;
-        }
-        .mobile-drawer-pair-btn:hover { background: var(--c-card-hover); border-color: var(--c-border-bright); }
-        .mobile-drawer-pair-btn.danger { color: #ef4444 !important; border-color: rgba(239,68,68,0.2) !important; }
-        .mobile-drawer-pair-btn.danger:hover { background: rgba(239,68,68,0.06) !important; }
-        @media (min-width: 601px) {
-          .nav-drawer-profile { display: none !important; }
-        }
-
-        /* ── Mobile navigation drawer (≤600px) ──────────────────────────────
-           Slides in from the left like the desktop sidebar, replacing the old
-           bottom tab bar that ate screen height. Same content as before, just
-           re-oriented from a bottom sheet to a side drawer. */
-        .mob-menu-overlay {
-          position: fixed; inset: 0; z-index: 399;
-          background: rgba(0,0,0,0.55);
-          backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
-          animation: mob-overlay-fade-in 0.28s ease both;
-        }
-        .mob-menu-overlay.closing { animation: mob-overlay-fade-out 0.22s ease both; }
-        @keyframes mob-overlay-fade-in { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes mob-overlay-fade-out { from { opacity: 1; } to { opacity: 0; } }
-        .mob-menu-sheet {
-          position: fixed; left: 0; top: 0; bottom: 0; z-index: 400;
-          width: min(86vw, 328px);
-          height: 100dvh;
-          background: var(--c-card);
-          border-right: 1px solid var(--c-border);
-          border-radius: 0 20px 20px 0;
-          display: flex; flex-direction: column;
-          animation: mob-drawer-in 0.3s cubic-bezier(0.22,1,0.36,1) both;
-          box-shadow: 8px 0 48px rgba(0,0,0,0.5);
-        }
-        .mob-menu-sheet.closing { animation: mob-drawer-out 0.22s cubic-bezier(0.4,0,1,1) both; }
-        @keyframes mob-drawer-in {
-          from { transform: translateX(-100%); }
-          to   { transform: translateX(0);     }
-        }
-        @keyframes mob-drawer-out {
-          from { transform: translateX(0);     }
-          to   { transform: translateX(-100%); }
-        }
-        /* Drawer header — logo + close, mirrors the desktop sidebar's top row */
-        .mob-drawer-head {
-          display: flex; align-items: center; justify-content: space-between;
-          padding: 14px 14px 10px; flex-shrink: 0;
-          border-bottom: 1px solid var(--c-border);
-        }
-        .mob-drawer-close {
-          width: 36px; height: 36px; border-radius: 9px;
-          background: transparent; border: none;
-          color: var(--c-muted); cursor: pointer;
-          display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-          -webkit-tap-highlight-color: transparent;
-          transition: background 0.13s, color 0.13s;
-        }
-        .mob-drawer-close:active { background: var(--c-card-hover); color: var(--c-text); }
-        .mob-sheet-scroll {
-          overflow-y: auto; flex: 1;
-          display: flex; flex-direction: column;
-          padding: 6px 12px calc(14px + env(safe-area-inset-bottom, 0px));
-          min-height: 0;
-        }
-        .mob-sheet-scroll::-webkit-scrollbar { display: none; }
-        /* Profile pinned to the very bottom of the drawer */
-        .mob-drawer-foot {
-          margin-top: auto;
-          padding-top: 12px;
-          display: flex; flex-direction: column; gap: 6px;
-          border-top: 1px solid var(--c-border);
-        }
-        .mob-drawer-foot .mob-foot-profile {
-          display: flex; align-items: center; gap: 11px; flex: 1; min-width: 0;
-          background: none; border: none; cursor: pointer; font-family: inherit;
-          padding: 8px 8px; border-radius: 10px; text-align: left;
-          -webkit-tap-highlight-color: transparent; transition: background 0.13s;
-        }
-        .mob-drawer-foot .mob-foot-profile:active { background: var(--c-card-hover); }
-        .mob-drawer-foot .mob-foot-theme {
-          width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
-          background: transparent; border: none; color: var(--c-muted); cursor: pointer;
-          display: flex; align-items: center; justify-content: center;
-          -webkit-tap-highlight-color: transparent; transition: background 0.13s, color 0.13s;
-        }
-        .mob-drawer-foot .mob-foot-theme:active { background: var(--c-card-hover); color: var(--c-text); }
-        .mob-nav-section-label {
-          font-size: 10.5px; font-weight: 700; color: var(--c-subtle);
-          text-transform: uppercase; letter-spacing: 0.1em;
-          padding: 14px 12px 5px; display: block;
-        }
-        .mob-nav-btn {
-          display: flex; align-items: center; gap: 13px;
-          width: 100%; padding: 12px 12px;
-          border-radius: 10px; border: none;
-          background: transparent; color: var(--c-muted);
-          font-size: 15px; font-weight: 500;
-          cursor: pointer; font-family: inherit;
-          text-align: left; transition: background 0.12s, color 0.12s;
-          -webkit-tap-highlight-color: transparent;
-        }
-        .mob-nav-btn:active { background: var(--c-card-hover); color: var(--c-text); }
-        .mob-nav-btn.active { color: #1b78f7; background: rgba(27,120,247,0.08); }
-        .mob-nav-btn.danger { color: #ef4444; }
-        .mob-nav-btn.danger:active { background: rgba(239,68,68,0.08); color: #ef4444; }
-        .mob-nav-soon {
-          margin-left: auto; font-size: 9px; font-weight: 700;
-          color: var(--c-subtle); background: var(--c-bg-alt);
-          border: 1px solid var(--c-border); border-radius: 4px;
-          padding: 1px 5px; text-transform: uppercase; letter-spacing: 0.04em;
-          flex-shrink: 0;
-        }
-        .mob-nav-divider { height: 1px; background: var(--c-border); margin: 6px 12px; }
-        /* "Gerir projeto" popup dropped from the mobile paintbrush */
-        .mob-proj-menu {
-          position: fixed; top: 58px; right: 12px; left: auto; z-index: 399;
-          width: min(84vw, 300px);
-          background: var(--c-card); border: 1px solid var(--c-border);
-          border-radius: 14px; padding: 6px;
-          box-shadow: 0 8px 40px rgba(0,0,0,0.45);
-          backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-          display: flex; flex-direction: column;
-          animation: mob-proj-menu-in 0.16s ease both;
-        }
-        @keyframes mob-proj-menu-in {
-          from { opacity: 0; transform: translateY(-6px) scale(0.98); }
-          to   { opacity: 1; transform: translateY(0) scale(1); }
-        }
-        .mob-project-section {
-          background: rgba(27,120,247,0.06); border: 1px solid rgba(27,120,247,0.15);
-          border-radius: 12px; margin: 8px 0; padding: 4px 0 6px;
-        }
-        .mob-project-section .mob-nav-section-label { color: #1b78f7; padding-top: 8px; }
-        .mob-project-section .mob-nav-btn:active { background: rgba(27,120,247,0.12); }
-
-        /* Enhanced tablet drawer: scrollable + section labels */
-        .mobile-drawer { max-height: calc(100vh - 62px); overflow-y: auto; }
-        .mob-drawer-label {
-          font-size: 10.5px; font-weight: 700; color: var(--c-subtle);
-          text-transform: uppercase; letter-spacing: 0.1em;
-          padding: 12px 4px 4px; display: block;
-        }
-      `}</style>
+        `}</style>
+      )}
 
       {/* Mobile backdrop blur */}
       {showLinks && open && (
@@ -1315,10 +838,10 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 4px 10px' }}>
                 <AvatarCircle avatarUrl={profile?.avatar_url} initial={getInitial(user)} size={36} fontSize={14} />
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--c-text)', lineHeight: 1.2 }}>{getDisplayName(user)}</div>
-                  <div style={{ fontSize: 11, color: 'var(--c-muted)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email}</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text)', lineHeight: 1.2 }}>{getDisplayName(user)}</div>
+                  <div style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email}</div>
                 </div>
-                <button onClick={toggleTheme} style={{ width: 34, height: 34, borderRadius: 8, background: 'var(--c-bg-alt)', border: '1px solid var(--c-border)', color: 'var(--c-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <button onClick={toggleTheme} style={{ width: 34, height: 34, borderRadius: 8, background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
                 </button>
               </div>
@@ -1326,42 +849,23 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               {/* Role-based sections */}
               {isRecruiter ? (
                 <>
-                  <span className="mob-drawer-label">Recrutamento</span>
-                  <button className="mobile-drawer-btn" onClick={() => { navigate('/explorar?tab=pessoas'); setOpen(false) }}>
-                    <Users2 size={16} /> Candidatos
-                  </button>
-                  <button className="mobile-drawer-btn" onClick={() => { navigate('/vagas'); setOpen(false) }}>
-                    <Briefcase size={16} /> Vagas
-                  </button>
-                  <button className="mobile-drawer-btn" onClick={() => { navigate('/pipeline'); setOpen(false) }}>
-                    <Kanban size={16} /> Pipeline
-                  </button>
-                  <button className="mobile-drawer-btn" onClick={() => { navigate('/candidatos'); setOpen(false) }}>
-                    <Star size={16} /> Guardados
+                  <button className="mobile-drawer-btn" onClick={() => { navigate('/explorar'); setOpen(false) }}>
+                    <Compass size={16} /> Explorar
                   </button>
                   <button className="mobile-drawer-btn" onClick={() => { navigate('/mensagens'); setOpen(false) }}>
                     <MessageSquare size={16} /> Mensagens
-                    {unreadMsgs > 0 && <span style={{ marginLeft: 'auto', background: '#1b78f7', color: '#fff', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{unreadMsgs > 9 ? '9+' : unreadMsgs}</span>}
+                    {unreadMsgs > 0 && <span style={{ marginLeft: 'auto', background: 'var(--color-primary)', color: '#fff', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{unreadMsgs > 9 ? '9+' : unreadMsgs}</span>}
                   </button>
-                  {user && (
-                    <button className="mobile-drawer-btn" onClick={() => { navigate(`/empresa/${user.id}`); setOpen(false) }}>
-                      <Building2 size={16} /> Minha empresa
-                    </button>
-                  )}
                 </>
               ) : (
                 <>
-                  <span className="mob-drawer-label">Oportunidades</span>
-                  <button className="mobile-drawer-btn" onClick={() => { navigate('/vagas'); setOpen(false) }}>
-                    <Briefcase size={16} /> Vagas
-                  </button>
                   <span className="mob-drawer-label">Comunidade</span>
                   <button className="mobile-drawer-btn" onClick={() => { navigate('/turmas'); setOpen(false) }}>
                     <Users2 size={16} /> Turmas
                   </button>
                   <button className="mobile-drawer-btn" onClick={() => { navigate('/mensagens'); setOpen(false) }}>
                     <MessageSquare size={16} /> Mensagens
-                    {unreadMsgs > 0 && <span style={{ marginLeft: 'auto', background: '#1b78f7', color: '#fff', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{unreadMsgs > 9 ? '9+' : unreadMsgs}</span>}
+                    {unreadMsgs > 0 && <span style={{ marginLeft: 'auto', background: 'var(--color-primary)', color: '#fff', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{unreadMsgs > 9 ? '9+' : unreadMsgs}</span>}
                   </button>
                 </>
               )}
@@ -1369,7 +873,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               {/* Project management extras */}
               {extras?.type === 'project' && (
                 <>
-                  <span className="mob-drawer-label" style={{ color: '#1b78f7' }}>Gerir projeto</span>
+                  <span className="mob-drawer-label" style={{ color: 'var(--color-primary)' }}>Gerir projeto</span>
                   {extras.showBack && (
                     <button className="mobile-drawer-btn" onClick={() => { navigate(`/projeto/${extras.slug}`); setOpen(false) }}>
                       <ArrowLeft size={16} /> Ver projeto
@@ -1396,7 +900,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                     </button>
                   )}
                   {extras.onTogglePublicView && (
-                    <button className="mobile-drawer-btn" style={{ color: extras.viewAsPublic ? '#1b78f7' : undefined }}
+                    <button className="mobile-drawer-btn" style={{ color: extras.viewAsPublic ? 'var(--color-primary)' : undefined }}
                       onClick={() => { extras.onTogglePublicView(); setOpen(false) }}>
                       <Globe size={16} /> {extras.viewAsPublic ? 'Sair da preview' : 'Preview visitante'}
                     </button>
@@ -1426,14 +930,14 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               </button>
             </div>
           ) : (
-            <div style={{ display: 'flex', gap: 8, padding: '16px 0 4px', borderTop: '1px solid var(--c-border)', marginTop: 4 }}>
+            <div style={{ display: 'flex', gap: 8, padding: '16px 0 4px', borderTop: '1px solid var(--color-border)', marginTop: 4 }}>
               <button
                 onClick={() => { navigate('/login'); setOpen(false) }}
-                style={{ flex: 1, padding: '12px 0', background: 'transparent', border: '1px solid var(--c-border)', borderRadius: 10, color: 'var(--c-text)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+                style={{ flex: 1, padding: '12px 0', background: 'transparent', border: '1px solid var(--color-border)', borderRadius: 10, color: 'var(--color-text)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
               >Entrar</button>
               <button
                 onClick={() => { navigate('/register'); setOpen(false) }}
-                style={{ flex: 1, padding: '12px 0', background: '#1b78f7', border: 'none', borderRadius: 10, color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 16px rgba(27,120,247,0.3)' }}
+                style={{ flex: 1, padding: '12px 0', background: 'var(--color-primary)', border: 'none', borderRadius: 10, color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 16px rgba(27,120,247,0.3)' }}
               >Criar conta</button>
             </div>
           )}
@@ -1460,7 +964,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
             className="mob-drawer-trigger"
             onClick={() => setMenuOpen(o => !o)}
             aria-label="Abrir menu"
-            style={{ color: menuOpen ? '#1b78f7' : undefined, borderColor: menuOpen ? '#1b78f7' : undefined }}
+            style={{ color: menuOpen ? 'var(--color-primary)' : undefined, borderColor: menuOpen ? 'var(--color-primary)' : undefined }}
           >
             <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <rect x="3" y="3" width="18" height="18" rx="2" />
@@ -1557,7 +1061,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                     onClick={() => navigate('/admin')}
                     style={{
                       background: 'rgba(168,85,247,0.08)', border: '1px solid rgba(168,85,247,0.25)',
-                      color: '#a855f7', borderRadius: 8, padding: '6px 12px',
+                      color: 'var(--color-accent)', borderRadius: 8, padding: '6px 12px',
                       fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
                     }}
                     title="Painel de administração"
@@ -1601,7 +1105,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               onClick={() => setCreateModal(true)}
               aria-label="Criar projeto"
               style={{
-                background: '#1b78f7',
+                background: 'var(--color-primary)',
                 border: 'none',
                 borderRadius: 8, width: 38, height: 38,
                 flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
@@ -1621,7 +1125,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               className="ham-btn" onClick={() => setOpen(o => !o)} aria-label="Menu"
               style={{
                 background: 'transparent',
-                border: `1px solid ${open ? '#1b78f7' : C.border}`,
+                border: `1px solid ${open ? 'var(--color-primary)' : C.border}`,
                 borderRadius: 8, width: 38, height: 38,
                 flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                 gap: 5, cursor: 'pointer', padding: 0, transition: 'border-color 0.2s', flexShrink: 0,
@@ -1659,7 +1163,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               <button className="mob-nav-btn" onClick={() => { extras.onDefense(); setProjMenuOpen(false) }}>
                 <GraduationCap size={18} /> Modo defesa
                 {extras.defenseDate && (
-                  <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--c-muted)', fontWeight: 500 }}>
+                  <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--color-text-secondary)', fontWeight: 500 }}>
                     {new Date(extras.defenseDate).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' })}
                   </span>
                 )}
@@ -1669,7 +1173,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               <button className="mob-nav-btn" onClick={() => { extras.onAnalyze(); setProjMenuOpen(false) }} disabled={extras.analyzingAI} style={{ opacity: extras.analyzingAI ? 0.6 : 1 }}>
                 <Sparkles size={18} /> {extras.analyzingAI ? 'A analisar…' : extras.aiScore != null ? 'Ver análise IA' : 'Análise IA'}
                 {extras.aiScore != null && !extras.analyzingAI && (
-                  <span style={{ marginLeft: 'auto', fontSize: 13, fontWeight: 700, color: extras.aiScore >= 90 ? '#22c55e' : extras.aiScore >= 71 ? '#1b78f7' : extras.aiScore >= 40 ? '#fbbf24' : '#ef4444' }}>
+                  <span style={{ marginLeft: 'auto', fontSize: 13, fontWeight: 700, color: extras.aiScore >= 90 ? 'var(--color-success)' : extras.aiScore >= 71 ? 'var(--color-primary)' : extras.aiScore >= 40 ? 'var(--color-warning)' : 'var(--color-error)' }}>
                     {extras.aiScore}
                   </span>
                 )}
@@ -1681,7 +1185,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               </button>
             )}
             {extras.onTogglePublicView && (
-              <button className="mob-nav-btn" style={{ color: extras.viewAsPublic ? '#1b78f7' : undefined }}
+              <button className="mob-nav-btn" style={{ color: extras.viewAsPublic ? 'var(--color-primary)' : undefined }}
                 onClick={() => { extras.onTogglePublicView(); setProjMenuOpen(false) }}>
                 <Globe size={18} /> {extras.viewAsPublic ? 'Sair da preview' : 'Preview visitante'}
               </button>
@@ -1721,7 +1225,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
           {user && isAdmin && (
             <>
               <button className={`sb-item${isActive('/admin') ? ' active' : ''}`} onClick={() => navigate('/admin')}
-                style={{ color: isActive('/admin') ? '#a855f7' : undefined }}>
+                style={{ color: isActive('/admin') ? 'var(--color-accent)' : undefined }}>
                 <Shield size={16} />{!collapsed && showLabels && <span>Painel de Admin</span>}
               </button>
               <div className="sb-divider" style={{ margin: '8px 0 4px' }} />
@@ -1734,59 +1238,19 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                 <LayoutDashboard size={16} />{!collapsed && showLabels && <span>Dashboard</span>}
               </button>
 
-              <div className="sb-divider" style={{ margin: '8px 0 4px' }} />
-              {!collapsed && showLabels && <span className="sb-label">Recrutamento</span>}
-
-              <button className={`sb-item${location.pathname === '/explorar' && new URLSearchParams(location.search).get('tab') === 'pessoas' ? ' active' : ''}`}
-                onClick={() => navigate('/explorar?tab=pessoas')}
-                style={{ color: isActive('/explorar') && new URLSearchParams(location.search).get('tab') === 'pessoas' ? recruiterAccent : undefined }}>
-                <Users2 size={16} />{!collapsed && showLabels && <span>Candidatos</span>}
-              </button>
-
-              <button className={`sb-item${isActive('/vagas') ? ' active' : ''}`} onClick={() => navigate('/vagas')}>
-                <Briefcase size={16} />{!collapsed && showLabels && <span>Vagas</span>}
-              </button>
-
-              <button className={`sb-item${isActive('/pipeline') ? ' active' : ''}`} onClick={() => navigate('/pipeline')}>
-                <Kanban size={16} />{!collapsed && showLabels && <span>Pipeline</span>}
-              </button>
-
-              <button className={`sb-item${isActive('/candidatos') ? ' active' : ''}`} onClick={() => navigate('/candidatos')}>
-                <Star size={16} />{!collapsed && showLabels && <span>Guardados</span>}
+              <button className={`sb-item${isActive('/explorar') ? ' active' : ''}`} onClick={() => navigate('/explorar')}>
+                <Compass size={16} />{!collapsed && showLabels && <span>Explorar</span>}
               </button>
 
               <button className={`sb-item${isActive('/mensagens') ? ' active' : ''}`} onClick={() => navigate('/mensagens')}
                 style={{ position: 'relative' }}>
                 <MessageSquare size={16} />{!collapsed && showLabels && <span>Mensagens</span>}
                 {!collapsed && showLabels && unreadMsgs > 0 && (
-                  <span style={{ marginLeft: 'auto', background: '#1b78f7', color: '#fff', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>
+                  <span style={{ marginLeft: 'auto', background: 'var(--color-primary)', color: '#fff', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>
                     {unreadMsgs > 9 ? '9+' : unreadMsgs}
                   </span>
                 )}
               </button>
-
-              {user && (
-                <button className={`sb-item${location.pathname === `/empresa/${user.id}` ? ' active' : ''}`}
-                  onClick={() => navigate(`/empresa/${user.id}`)}>
-                  <Building2 size={16} />{!collapsed && showLabels && <span>Minha empresa</span>}
-                </button>
-              )}
-
-              <div className="sb-divider" style={{ margin: '8px 0 4px' }} />
-              {!collapsed && showLabels && <span className="sb-label">Explorar</span>}
-
-              <button className={`sb-item${isActive('/explorar') && !new URLSearchParams(location.search).get('tab') ? ' active' : ''}`}
-                onClick={() => navigate('/explorar')}>
-                <Compass size={16} />{!collapsed && showLabels && <span>Projetos</span>}
-              </button>
-
-              {/* New vaga button */}
-              <div style={{ margin: '10px 0 4px', padding: '0 0' }}>
-                <button onClick={() => navigate('/vagas')}
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: collapsed ? 'center' : 'flex-start', gap: 8, margin: '10px 0 4px', padding: collapsed ? '10px 0' : '10px 14px', background: `linear-gradient(135deg, ${recruiterAccent}, #4f46e5)`, border: 'none', borderRadius: 10, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: `0 2px 14px ${recruiterAccent}44`, width: '100%' }}>
-                  <Plus size={14} />{!collapsed && showLabels && <span>Nova vaga</span>}
-                </button>
-              </div>
             </>
           ) : isTeacher ? (
             /* ── PROFESSOR sidebar — no gamification/opportunities perks, those are aluno-only ── */
@@ -1806,7 +1270,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                 style={{ position: 'relative' }}>
                 <MessageSquare size={16} />{!collapsed && showLabels && <span>Mensagens</span>}
                 {!collapsed && showLabels && unreadMsgs > 0 && (
-                  <span style={{ marginLeft: 'auto', background: '#1b78f7', color: '#fff', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>
+                  <span style={{ marginLeft: 'auto', background: 'var(--color-primary)', color: '#fff', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>
                     {unreadMsgs > 9 ? '9+' : unreadMsgs}
                   </span>
                 )}
@@ -1837,9 +1301,6 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                 <>
                   <div className="sb-divider" style={{ margin: '8px 0 4px' }} />
                   {!collapsed && showLabels && <span className="sb-label">Oportunidades</span>}
-                  <button className={`sb-item${isActive('/vagas') ? ' active' : ''}`} onClick={() => navigate('/vagas')}>
-                    <Briefcase size={16} />{!collapsed && showLabels && <span>Vagas</span>}
-                  </button>
                   <button
                     className={`sb-item${isActive('/estagio') ? ' active' : ''}`}
                     onClick={() => navigate('/estagio')}
@@ -1906,20 +1367,20 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                       flexShrink: 0, width: 32, height: 32, borderRadius: 8,
                       background: isActive('/mensagens') ? 'rgba(27,120,247,0.13)' : 'transparent',
                       border: 'none',
-                      color: isActive('/mensagens') ? '#1b78f7' : 'var(--c-muted)',
+                      color: isActive('/mensagens') ? 'var(--color-primary)' : 'var(--color-text-secondary)',
                       cursor: 'pointer', position: 'relative',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       transition: 'background 0.13s, color 0.13s',
                     }}
-                    onMouseEnter={e => { if (!isActive('/mensagens')) { e.currentTarget.style.background = 'var(--c-card-hover)'; e.currentTarget.style.color = 'var(--c-text)' } }}
-                    onMouseLeave={e => { if (!isActive('/mensagens')) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--c-muted)' } }}
+                    onMouseEnter={e => { if (!isActive('/mensagens')) { e.currentTarget.style.background = 'var(--color-surface-hover)'; e.currentTarget.style.color = 'var(--color-text)' } }}
+                    onMouseLeave={e => { if (!isActive('/mensagens')) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--color-text-secondary)' } }}
                   >
                     <MessageSquare size={15} />
                     {unreadMsgs > 0 && (
                       <span style={{
                         position: 'absolute', top: 3, right: 3,
                         width: 8, height: 8, borderRadius: '50%',
-                        background: '#1b78f7', border: '1.5px solid var(--c-sidebar-bg)',
+                        background: 'var(--color-primary)', border: '1.5px solid var(--color-sidebar-bg)',
                       }} />
                     )}
                   </button>
@@ -1934,7 +1395,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                       onClick={() => setSbProfileMenuOpen(o => !o)}
                       title={getDisplayName(user)}
                       style={{
-                        width: 32, height: 32, borderRadius: 8, background: sbProfileMenuOpen ? 'var(--c-card-hover)' : 'transparent',
+                        width: 32, height: 32, borderRadius: 8, background: sbProfileMenuOpen ? 'var(--color-surface-hover)' : 'transparent',
                         border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
                         transition: 'background 0.13s', marginTop: 2,
                       }}
@@ -1945,14 +1406,14 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                       <>
                         <div style={{
                           position: 'fixed', left: 80, bottom: 16, zIndex: 199,
-                          background: 'var(--c-card)', border: '1px solid var(--c-border)',
+                          background: 'var(--color-surface)', border: '1px solid var(--color-border)',
                           borderRadius: 12, padding: 6, minWidth: 150,
                           boxShadow: '0 8px 32px rgba(0,0,0,0.4)', backdropFilter: 'blur(16px)',
                         }}>
                           <button
                             onClick={() => { navigate(profileUrl); setSbProfileMenuOpen(false) }}
                             style={{ ...dropItemStyle, color: C.text }}
-                            onMouseEnter={e => e.currentTarget.style.background = 'var(--c-card-hover)'}
+                            onMouseEnter={e => e.currentTarget.style.background = 'var(--color-surface-hover)'}
                             onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                           >
                             <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><User size={15} /> Perfil</span>
@@ -1960,7 +1421,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                           <button
                             onClick={() => { navigate('/settings'); setSbProfileMenuOpen(false) }}
                             style={{ ...dropItemStyle, color: C.text }}
-                            onMouseEnter={e => e.currentTarget.style.background = 'var(--c-card-hover)'}
+                            onMouseEnter={e => e.currentTarget.style.background = 'var(--color-surface-hover)'}
                             onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                           >
                             <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><SettingsIcon size={15} /> Definições</span>
@@ -1968,7 +1429,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                           <div style={{ height: 1, background: C.border, margin: '4px 6px' }} />
                           <button
                             onClick={() => { setSbProfileMenuOpen(false); handleSignOut() }}
-                            style={{ ...dropItemStyle, color: '#ef4444' }}
+                            style={{ ...dropItemStyle, color: 'var(--color-error)' }}
                             onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.08)'}
                             onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                           >
@@ -1992,13 +1453,13 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   </button>
                   {/* Skipped for teacher/recruiter, who already have a labeled Mensagens item in their main nav list */}
                   {!isTeacher && !isRecruiter && (
-                    <button className="sb-action-btn" onClick={() => navigate('/mensagens')} title="Mensagens" style={{ position: 'relative', color: isActive('/mensagens') ? '#1b78f7' : undefined }}>
+                    <button className="sb-action-btn" onClick={() => navigate('/mensagens')} title="Mensagens" style={{ position: 'relative', color: isActive('/mensagens') ? 'var(--color-primary)' : undefined }}>
                       <MessageSquare size={15} />
                       {unreadMsgs > 0 && (
                         <span style={{
                           position: 'absolute', top: 5, right: 5,
                           width: 7, height: 7, borderRadius: '50%',
-                          background: '#1b78f7', border: '1.5px solid var(--c-sidebar-bg)',
+                          background: 'var(--color-primary)', border: '1.5px solid var(--color-sidebar-bg)',
                         }} />
                       )}
                     </button>
@@ -2028,12 +1489,12 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                     style={{
                       flexShrink: 0, width: 32, height: 32, borderRadius: 8,
                       background: 'transparent', border: 'none',
-                      color: 'var(--c-muted)', cursor: 'pointer',
+                      color: 'var(--color-text-secondary)', cursor: 'pointer',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       transition: 'background 0.13s, color 0.13s',
                     }}
-                    onMouseEnter={e => { e.currentTarget.style.background = 'var(--c-card-hover)'; e.currentTarget.style.color = 'var(--c-text)' }}
-                    onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--c-muted)' }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'var(--color-surface-hover)'; e.currentTarget.style.color = 'var(--color-text)' }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--color-text-secondary)' }}
                   >
                     {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
                   </button>
@@ -2125,7 +1586,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
 
               {isAdmin && (
                 <>
-                  <button className={`mob-nav-btn${isActive('/admin') ? ' active' : ''}`} style={{ color: '#a855f7' }}
+                  <button className={`mob-nav-btn${isActive('/admin') ? ' active' : ''}`} style={{ color: 'var(--color-accent)' }}
                     onClick={() => { navigate('/admin'); setMenuOpen(false) }}>
                     <Shield size={20} /> Painel de Admin
                   </button>
@@ -2139,34 +1600,12 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   <button className={`mob-nav-btn${isActive('/dashboard') ? ' active' : ''}`} onClick={() => { navigate('/dashboard'); setMenuOpen(false) }}>
                     <LayoutDashboard size={20} /> Dashboard
                   </button>
-                  <span className="mob-nav-section-label">Recrutamento</span>
-                  <button className={`mob-nav-btn${isActive('/explorar') && new URLSearchParams(location.search).get('tab') === 'pessoas' ? ' active' : ''}`}
-                    onClick={() => { navigate('/explorar?tab=pessoas'); setMenuOpen(false) }}>
-                    <Users2 size={20} /> Candidatos
-                  </button>
-                  <button className={`mob-nav-btn${isActive('/vagas') ? ' active' : ''}`} onClick={() => { navigate('/vagas'); setMenuOpen(false) }}>
-                    <Briefcase size={20} /> Vagas
-                  </button>
-                  <button className={`mob-nav-btn${isActive('/pipeline') ? ' active' : ''}`} onClick={() => { navigate('/pipeline'); setMenuOpen(false) }}>
-                    <Kanban size={20} /> Pipeline
-                  </button>
-                  <button className={`mob-nav-btn${isActive('/candidatos') ? ' active' : ''}`} onClick={() => { navigate('/candidatos'); setMenuOpen(false) }}>
-                    <Star size={20} /> Guardados
+                  <button className={`mob-nav-btn${isActive('/explorar') ? ' active' : ''}`} onClick={() => { navigate('/explorar'); setMenuOpen(false) }}>
+                    <Compass size={20} /> Explorar
                   </button>
                   <button className={`mob-nav-btn${isActive('/mensagens') ? ' active' : ''}`} onClick={() => { navigate('/mensagens'); setMenuOpen(false) }}>
                     <MessageSquare size={20} /> Mensagens
-                    {unreadMsgs > 0 && <span style={{ marginLeft: 'auto', background: '#1b78f7', color: '#fff', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{unreadMsgs > 9 ? '9+' : unreadMsgs}</span>}
-                  </button>
-                  {user && (
-                    <button className={`mob-nav-btn${location.pathname === `/empresa/${user.id}` ? ' active' : ''}`}
-                      onClick={() => { navigate(`/empresa/${user.id}`); setMenuOpen(false) }}>
-                      <Building2 size={20} /> Minha empresa
-                    </button>
-                  )}
-                  <span className="mob-nav-section-label">Explorar</span>
-                  <button className={`mob-nav-btn${isActive('/explorar') && !new URLSearchParams(location.search).get('tab') ? ' active' : ''}`}
-                    onClick={() => { navigate('/explorar'); setMenuOpen(false) }}>
-                    <Compass size={20} /> Projetos
+                    {unreadMsgs > 0 && <span style={{ marginLeft: 'auto', background: 'var(--color-primary)', color: '#fff', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{unreadMsgs > 9 ? '9+' : unreadMsgs}</span>}
                   </button>
                   <button className={`mob-nav-btn${isActive('/ranking') ? ' active' : ''}`} onClick={() => { navigate('/ranking'); setMenuOpen(false) }}>
                     <Trophy size={20} /> Ranking
@@ -2184,7 +1623,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   </button>
                   <button className={`mob-nav-btn${isActive('/mensagens') ? ' active' : ''}`} onClick={() => { navigate('/mensagens'); setMenuOpen(false) }}>
                     <MessageSquare size={20} /> Mensagens
-                    {unreadMsgs > 0 && <span style={{ marginLeft: 'auto', background: '#1b78f7', color: '#fff', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{unreadMsgs > 9 ? '9+' : unreadMsgs}</span>}
+                    {unreadMsgs > 0 && <span style={{ marginLeft: 'auto', background: 'var(--color-primary)', color: '#fff', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{unreadMsgs > 9 ? '9+' : unreadMsgs}</span>}
                   </button>
                   <button className={`mob-nav-btn${isActive('/explorar') ? ' active' : ''}`} onClick={() => { navigate('/explorar'); setMenuOpen(false) }}>
                     <Compass size={20} /> Explorar
@@ -2209,9 +1648,6 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   {user && (
                     <>
                       <span className="mob-nav-section-label">Oportunidades</span>
-                      <button className={`mob-nav-btn${isActive('/vagas') ? ' active' : ''}`} onClick={() => { navigate('/vagas'); setMenuOpen(false) }}>
-                        <Briefcase size={20} /> Vagas
-                      </button>
                       <button className={`mob-nav-btn${isActive('/estagio') ? ' active' : ''}`} onClick={() => { navigate('/estagio'); setMenuOpen(false) }}>
                         <Mail size={20} /> Estágio
                       </button>
@@ -2233,7 +1669,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               {user && (
                 <>
                   {isAdmin && (
-                    <button className="mob-nav-btn" onClick={() => { navigate('/admin'); setMenuOpen(false) }} style={{ color: '#a855f7' }}>
+                    <button className="mob-nav-btn" onClick={() => { navigate('/admin'); setMenuOpen(false) }} style={{ color: 'var(--color-accent)' }}>
                       <Shield size={20} /> Administração
                     </button>
                   )}
@@ -2254,8 +1690,8 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                     <button className="mob-foot-profile" onClick={() => { profileUrl && navigate(profileUrl); setMenuOpen(false) }}>
                       <AvatarCircle avatarUrl={profile?.avatar_url} initial={getInitial(user)} size={40} fontSize={15} />
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--c-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{getDisplayName(user)}</div>
-                        <div style={{ fontSize: 12, color: 'var(--c-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email}</div>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{getDisplayName(user)}</div>
+                        <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email}</div>
                       </div>
                     </button>
                     <button className="mob-foot-theme" onClick={toggleTheme} aria-label="Alternar tema">
@@ -2264,7 +1700,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   </div>
                 ) : (
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '2px 8px' }}>
-                    <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--c-muted)' }}>Aspeto</span>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text-secondary)' }}>Aspeto</span>
                     <button className="mob-foot-theme" onClick={toggleTheme} aria-label="Alternar tema">
                       {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
                     </button>

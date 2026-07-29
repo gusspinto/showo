@@ -1,15 +1,15 @@
 import { useNavigate } from 'react-router-dom'
-import { Sparkles, PenLine, X } from 'lucide-react'
+import { PenLine, X } from 'lucide-react'
 
 const C = {
-  bg:     'var(--c-bg)',
-  card:   'var(--c-card)',
-  border: 'var(--c-border)',
-  borderBright: 'var(--c-border-bright)',
-  blue:   '#1b78f7',
-  text:   'var(--c-text)',
-  muted:  'var(--c-muted)',
-  subtle: 'var(--c-subtle)',
+  bg:     'var(--color-bg)',
+  card:   'var(--color-surface)',
+  border: 'var(--color-border)',
+  borderBright: 'var(--color-border-hover)',
+  blue:   'var(--color-primary)',
+  text:   'var(--color-text)',
+  muted:  'var(--color-text-secondary)',
+  subtle: 'var(--color-text-tertiary)',
 }
 
 export default function CreateProjectModal({ onClose }) {
@@ -42,7 +42,7 @@ export default function CreateProjectModal({ onClose }) {
               Criar projeto
             </h2>
             <p style={{ margin: '4px 0 0', fontSize: 13, color: C.muted }}>
-              Escolhe como queres começar
+              Mostra o que fizeste — preenche os campos ao teu ritmo
             </p>
           </div>
           <button
@@ -53,71 +53,36 @@ export default function CreateProjectModal({ onClose }) {
           </button>
         </div>
 
-        {/* Options */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {/* IA option — primary */}
-          <button
-            onClick={() => go('/interview')}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 16,
-              background: 'linear-gradient(135deg, rgba(27,120,247,0.1), rgba(79,70,229,0.08))',
-              border: '1px solid rgba(27,120,247,0.3)',
-              borderRadius: 14, padding: '18px 20px',
-              cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
-              transition: 'all 0.15s', width: '100%',
-            }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'linear-gradient(135deg, rgba(27,120,247,0.18), rgba(79,70,229,0.14))'; e.currentTarget.style.borderColor = 'rgba(27,120,247,0.5)' }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'linear-gradient(135deg, rgba(27,120,247,0.1), rgba(79,70,229,0.08))'; e.currentTarget.style.borderColor = 'rgba(27,120,247,0.3)' }}
-          >
-            <div style={{
-              width: 44, height: 44, borderRadius: 12, flexShrink: 0,
-              background: '#1b78f7',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: '0 4px 16px rgba(27,120,247,0.35)',
-            }}>
-              <Sparkles size={22} color="#fff" />
+        <button
+          onClick={() => go('/novo')}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 16,
+            background: 'linear-gradient(135deg, var(--color-primary-subtle), rgba(79,70,229,0.08))',
+            border: '1px solid var(--color-primary-subtle)',
+            borderRadius: 14, padding: '18px 20px',
+            cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
+            transition: 'all 0.15s', width: '100%',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'linear-gradient(135deg, var(--color-primary-subtle), rgba(79,70,229,0.14))'; e.currentTarget.style.borderColor = 'var(--color-primary-subtle)' }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'linear-gradient(135deg, var(--color-primary-subtle), rgba(79,70,229,0.08))'; e.currentTarget.style.borderColor = 'var(--color-primary-subtle)' }}
+        >
+          <div style={{
+            width: 44, height: 44, borderRadius: 12, flexShrink: 0,
+            background: 'var(--color-primary)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 4px 16px var(--color-primary-subtle)',
+          }}>
+            <PenLine size={22} color="#fff" />
+          </div>
+          <div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: C.text, marginBottom: 3 }}>
+              Começar projeto
             </div>
-            <div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: C.text, marginBottom: 3 }}>
-                Criar com IA
-              </div>
-              <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.5 }}>
-                Responde a algumas perguntas e a IA constrói o teu projeto
-              </div>
+            <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.5 }}>
+              Preenche os campos e constrói o teu portfólio
             </div>
-          </button>
-
-          {/* Manual option */}
-          <button
-            onClick={() => go('/novo')}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 16,
-              background: 'var(--c-bg-alt)',
-              border: `1px solid ${C.border}`,
-              borderRadius: 14, padding: '18px 20px',
-              cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
-              transition: 'all 0.15s', width: '100%',
-            }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'var(--c-card-hover)'; e.currentTarget.style.borderColor = C.borderBright }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'var(--c-bg-alt)'; e.currentTarget.style.borderColor = C.border }}
-          >
-            <div style={{
-              width: 44, height: 44, borderRadius: 12, flexShrink: 0,
-              background: 'var(--c-card-hover)', border: `1px solid ${C.border}`,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <PenLine size={20} color={C.muted} />
-            </div>
-            <div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: C.text, marginBottom: 3 }}>
-                Criar manualmente
-              </div>
-              <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.5 }}>
-                Preenche os campos diretamente ao teu ritmo
-              </div>
-            </div>
-          </button>
-        </div>
+          </div>
+        </button>
       </div>
     </div>
   )

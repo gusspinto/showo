@@ -8,12 +8,12 @@ import GoogleButton from '../components/GoogleButton'
 import { useTheme } from '../context/ThemeContext'
 
 const C = {
-  bg:          'var(--c-bg)',
-  border:      'var(--c-border)',
-  blue:        '#1b78f7',
-  muted:       'var(--c-muted)',
-  text:        'var(--c-text)',
-  error:       '#ef4444',
+  bg:          'var(--color-bg)',
+  border:      'var(--color-border)',
+  blue:        'var(--color-primary)',
+  muted:       'var(--color-text-secondary)',
+  text:        'var(--color-text)',
+  error:       'var(--color-error)',
 }
 
 const LOGIN_PHRASES = [
@@ -137,12 +137,13 @@ export default function Login() {
   return (
     <div className="auth-shell">
       <style>{`
-        .auth-shell { min-height: 100vh; display: flex; background: var(--c-bg); font-family: inherit; }
+        @media (min-width: 601px) { body { padding-left: 0 !important; } .sidebar { display: none !important; } }
+        .auth-shell { min-height: 100vh; display: flex; background: var(--color-bg); font-family: inherit; }
         .auth-side {
           position: relative; overflow: hidden;
           flex: 0 0 42%; display: flex; align-items: center; justify-content: flex-start;
           padding: 0 0 0 64px; background: linear-gradient(115deg, #000 0%, #050b1c 40%, #0e2249 85%, #143169 100%);
-          border-right: 1px solid var(--c-border);
+          border-right: 1px solid var(--color-border);
         }
         .auth-side-content {
           position: relative; z-index: 3;
@@ -162,7 +163,7 @@ export default function Login() {
           to   { opacity: 1; transform: translateY(0); }
         }
         .auth-side-highlight {
-          background: #1b78f7; color: #fff;
+          background: var(--color-primary); color: #fff;
           padding: 2px 10px 9px; border-radius: 0 0 14px 14px;
           display: inline-block;
         }
@@ -189,22 +190,22 @@ export default function Login() {
         .auth-input,
         body.light .auth-input {
           flex: 1; width: 100%; background: transparent !important; border: none;
-          color: var(--c-text); font-size: 16px; outline: none; font-family: inherit;
+          color: var(--color-text); font-size: 16px; outline: none; font-family: inherit;
           padding: 10px 0; box-sizing: border-box;
         }
         .auth-field-wrap {
           display: flex; align-items: center; gap: 10px;
-          border-bottom: 1.5px solid var(--c-border); transition: border-color 0.15s;
+          border-bottom: 1.5px solid var(--color-border); transition: border-color 0.15s;
         }
         .auth-submit { transition: opacity 0.15s; }
         .auth-submit:hover:not(:disabled) { opacity: 0.88; }
         .auth-input:-webkit-autofill,
         .auth-input:-webkit-autofill:hover,
         .auth-input:-webkit-autofill:focus {
-          -webkit-text-fill-color: var(--c-text) !important;
-          -webkit-box-shadow: 0 0 0 1000px var(--c-bg) inset !important;
-          box-shadow: 0 0 0 1000px var(--c-bg) inset !important;
-          caret-color: var(--c-text) !important;
+          -webkit-text-fill-color: var(--color-text) !important;
+          -webkit-box-shadow: 0 0 0 1000px var(--color-bg) inset !important;
+          box-shadow: 0 0 0 1000px var(--color-bg) inset !important;
+          caret-color: var(--color-text) !important;
           transition: background-color 9999s ease-in-out 0s;
         }
         .login-forgot-link { transition: opacity 0.15s; }
@@ -233,10 +234,10 @@ export default function Login() {
 
               {forgotSent ? (
                 <div style={{ background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.25)', borderRadius: 10, padding: '16px 18px' }}>
-                  <p style={{ margin: '0 0 6px', color: '#22c55e', fontSize: 14, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <p style={{ margin: '0 0 6px', color: 'var(--color-success)', fontSize: 14, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
                     <Check size={14} /> Verifica o teu email
                   </p>
-                  <p style={{ margin: 0, color: 'var(--c-muted)', fontSize: 13, lineHeight: 1.5 }}>
+                  <p style={{ margin: 0, color: 'var(--color-text-secondary)', fontSize: 13, lineHeight: 1.5 }}>
                     Se existir uma conta com o email <strong style={{ color: C.text }}>{forgotEmail}</strong>, vais receber um link para repor a palavra-passe.
                   </p>
                 </div>
@@ -255,7 +256,7 @@ export default function Login() {
                     type="submit" disabled={forgotLoading}
                     className="auth-submit"
                     style={{
-                      background: forgotLoading ? 'var(--c-border)' : '#1b78f7',
+                      background: forgotLoading ? 'var(--color-border)' : 'var(--color-primary)',
                       color: '#fff', border: 'none',
                       borderRadius: 8, padding: '13px', fontSize: 14, fontWeight: 700,
                       cursor: forgotLoading ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
@@ -300,7 +301,7 @@ export default function Login() {
                   type="button"
                   className="login-forgot-link"
                   onClick={() => { setMode('forgot'); setForgotEmail(email) }}
-                  style={{ background: 'none', border: 'none', color: '#1b78f7', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', padding: 0, opacity: 1 }}
+                  style={{ background: 'none', border: 'none', color: 'var(--color-primary)', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', padding: 0, opacity: 1 }}
                 >
                   Esqueceste-te da password?
                 </button>
@@ -316,14 +317,14 @@ export default function Login() {
 
             {notConfirmed && (
               <div style={{ background: 'rgba(251,191,36,0.07)', border: '1px solid rgba(251,191,36,0.25)', borderRadius: 10, padding: '14px 16px' }}>
-                <p style={{ margin: '0 0 10px', color: '#fbbf24', fontSize: 14, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <p style={{ margin: '0 0 10px', color: 'var(--color-warning)', fontSize: 14, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
                   <Mail size={14} style={{ display: 'inline-block', verticalAlign: 'middle', flexShrink: 0 }} /> Email ainda não confirmado
                 </p>
-                <p style={{ margin: '0 0 12px', color: 'var(--c-muted)', fontSize: 13, lineHeight: 1.5 }}>
+                <p style={{ margin: '0 0 12px', color: 'var(--color-text-secondary)', fontSize: 13, lineHeight: 1.5 }}>
                   Confirma o teu email antes de entrar. Se o link expirou, envia um novo.
                 </p>
                 {resendState === 'sent' ? (
-                  <p style={{ margin: 0, color: '#22c55e', fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <p style={{ margin: 0, color: 'var(--color-success)', fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
                     <Check size={14} style={{ display: 'inline-block', verticalAlign: 'middle', flexShrink: 0 }} /> Novo email enviado! Verifica a tua caixa de entrada.
                   </p>
                 ) : (
@@ -334,7 +335,7 @@ export default function Login() {
                     style={{
                       background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.3)',
                       borderRadius: 7, padding: '8px 16px',
-                      color: '#fbbf24', fontSize: 13, fontWeight: 600,
+                      color: 'var(--color-warning)', fontSize: 13, fontWeight: 600,
                       cursor: email ? 'pointer' : 'default', fontFamily: 'inherit',
                     }}
                   >
@@ -348,7 +349,7 @@ export default function Login() {
               type="submit" disabled={loading}
               className="auth-submit"
               style={{
-                background: loading ? 'var(--c-border)' : '#1b78f7',
+                background: loading ? 'var(--color-border)' : 'var(--color-primary)',
                 color: '#fff', border: 'none',
                 borderRadius: 8, padding: '13px', fontSize: 14, fontWeight: 700,
                 cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
@@ -362,7 +363,7 @@ export default function Login() {
           {/* Divider + Google sign-in */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '18px 0' }}>
             <div style={{ flex: 1, height: 1, background: C.border }} />
-            <span style={{ fontSize: 12, color: 'var(--c-subtle)', fontWeight: 600 }}>ou</span>
+            <span style={{ fontSize: 12, color: 'var(--color-text-tertiary)', fontWeight: 600 }}>ou</span>
             <div style={{ flex: 1, height: 1, background: C.border }} />
           </div>
           <GoogleButton />
