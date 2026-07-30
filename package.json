@@ -12,6 +12,7 @@
   "dependencies": {
     "@sentry/react": "^10.64.0",
     "@supabase/supabase-js": "^2.78.0",
+    "@vercel/analytics": "^2.0.1",
     "html2canvas": "^1.4.1",
     "lucide-react": "^1.18.0",
     "posthog-js": "^1.398.4",
