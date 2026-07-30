@@ -1,11 +1,72 @@
-import { useState } from 'react'
-import { Bell, Check, ArrowRight } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Bell, Check, ArrowRight, Sparkles } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+
+const TARGET = new Date('2026-08-01T13:00:00Z') // 14:00 Lisboa
+
+function getTimeLeft() {
+  const diff = Math.max(0, TARGET - Date.now())
+  return {
+    days: Math.floor(diff / 86400000),
+    hours: Math.floor((diff % 86400000) / 3600000),
+    minutes: Math.floor((diff % 3600000) / 60000),
+    seconds: Math.floor((diff % 60000) / 1000),
+  }
+}
+
+function CountdownUnit({ value, label }) {
+  const [flip, setFlip] = useState(false)
+  const [prev, setPrev] = useState(value)
+
+  useEffect(() => {
+    if (value !== prev) {
+      setFlip(true)
+      const t = setTimeout(() => { setFlip(false); setPrev(value) }, 300)
+      return () => clearTimeout(t)
+    }
+  }, [value, prev])
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+      <div style={{
+        position: 'relative',
+        width: 'clamp(56px, 16vw, 72px)', height: 'clamp(64px, 18vw, 80px)',
+        background: 'rgba(14,23,41,0.8)',
+        border: '1px solid rgba(27,120,247,0.15)',
+        borderRadius: 14,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        overflow: 'hidden',
+        boxShadow: '0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.04)',
+        transform: flip ? 'scale(1.06)' : 'scale(1)',
+        transition: 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+      }}>
+        <div style={{
+          position: 'absolute', top: '50%', left: 0, right: 0, height: 1,
+          background: 'rgba(27,120,247,0.08)',
+        }} />
+        <span style={{
+          fontFamily: 'var(--font-heading, system-ui)', fontWeight: 800,
+          fontSize: 'clamp(24px, 7vw, 32px)', color: '#e8f2ff', letterSpacing: '-0.02em',
+          fontVariantNumeric: 'tabular-nums',
+        }}>
+          {String(value).padStart(2, '0')}
+        </span>
+      </div>
+      <span style={{
+        fontFamily: 'var(--font-body, system-ui)', fontWeight: 500,
+        fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase',
+        color: 'rgba(125,147,176,0.5)',
+      }}>
+        {label}
+      </span>
+    </div>
+  )
+}
 
 function NotifyMe() {
   const [open, setOpen] = useState(false)
   const [email, setEmail] = useState('')
-  const [status, setStatus] = useState('idle') // idle | loading | done | error
+  const [status, setStatus] = useState('idle')
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -36,10 +97,13 @@ function NotifyMe() {
           borderRadius: 999, padding: '9px 18px', cursor: 'pointer',
           fontFamily: 'var(--font-body)', fontWeight: 500, fontSize: 13,
           letterSpacing: '0.02em', color: 'rgba(214,224,238,0.75)',
+          transition: 'border-color 0.2s',
         }}
+        onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(27,120,247,0.5)'}
+        onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(125,147,176,0.25)'}
       >
         <Bell size={13} strokeWidth={2} style={{ opacity: 0.7 }} />
-        Avisem-me quando estiver disponível
+        Avisa-me quando voltar
       </button>
     )
   }
@@ -84,11 +148,18 @@ function NotifyMe() {
 }
 
 export default function ComingSoon() {
+  const [time, setTime] = useState(getTimeLeft)
+
+  useEffect(() => {
+    const id = setInterval(() => setTime(getTimeLeft()), 1000)
+    return () => clearInterval(id)
+  }, [])
+
   return (
     <div style={{
       position: 'relative', minHeight: '100vh', background: '#03060d',
       display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-      gap: 40, overflow: 'hidden', padding: '24px',
+      gap: 44, overflow: 'hidden', padding: '24px',
     }}>
       <style>{`@media (min-width: 601px) { body { padding-left: 0 !important; } .sidebar { display: none !important; } }`}</style>
       <div style={{
@@ -102,29 +173,51 @@ export default function ComingSoon() {
         style={{ width: 38, opacity: 0.5, filter: 'drop-shadow(0 0 18px rgba(27,120,247,0.3))' }}
       />
 
-      <img
-        src="/logo.png"
-        alt="Showo"
-        style={{ width: 168, opacity: 0.95, filter: 'drop-shadow(0 0 28px rgba(27,120,247,0.2))' }}
-      />
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, position: 'relative' }}>
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 8,
+          padding: '6px 14px', borderRadius: 999,
+          background: 'rgba(27,120,247,0.08)', border: '1px solid rgba(27,120,247,0.15)',
+        }}>
+          <Sparkles size={12} color="rgba(127,180,255,0.7)" />
+          <span style={{
+            fontFamily: 'var(--font-body)', fontWeight: 600, fontSize: 11,
+            letterSpacing: '0.08em', color: 'rgba(127,180,255,0.7)', textTransform: 'uppercase',
+          }}>
+            Nova versão
+          </span>
+        </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
-        <p style={{
-          margin: 0, fontFamily: 'var(--font-body)', fontWeight: 600, fontSize: 11,
-          letterSpacing: '0.32em', color: 'rgba(125,147,176,0.5)', textTransform: 'uppercase',
+        <h1 style={{
+          margin: 0, fontFamily: 'var(--font-heading, system-ui)', fontWeight: 800,
+          fontSize: 'clamp(22px, 5vw, 32px)', color: '#e8f2ff',
+          textAlign: 'center', letterSpacing: '-0.02em', lineHeight: 1.3,
         }}>
-          Em breve
-        </p>
-        <div style={{ width: 22, height: 1, background: 'rgba(125,147,176,0.25)' }} />
+          Estamos a construir algo novo
+        </h1>
+
         <p style={{
-          margin: 0, fontFamily: 'var(--font-body)', fontWeight: 400, fontSize: 14,
-          letterSpacing: '0.14em', color: 'rgba(214,224,238,0.62)',
+          margin: 0, fontFamily: 'var(--font-body)', fontWeight: 400,
+          fontSize: 15, color: 'rgba(159,176,200,0.7)', textAlign: 'center',
+          maxWidth: 360, lineHeight: 1.6,
         }}>
-          1 de julho
+          O Showo vai voltar melhor do que nunca.
         </p>
       </div>
 
-      <div style={{ marginTop: 8 }}>
+      <div style={{
+        display: 'flex', gap: 'clamp(6px, 2vw, 12px)', position: 'relative',
+      }}>
+        <CountdownUnit value={time.days} label="dias" />
+        <div style={{ display: 'flex', alignItems: 'center', paddingBottom: 28, color: 'rgba(27,120,247,0.3)', fontSize: 24, fontWeight: 700 }}>:</div>
+        <CountdownUnit value={time.hours} label="horas" />
+        <div style={{ display: 'flex', alignItems: 'center', paddingBottom: 28, color: 'rgba(27,120,247,0.3)', fontSize: 24, fontWeight: 700 }}>:</div>
+        <CountdownUnit value={time.minutes} label="min" />
+        <div style={{ display: 'flex', alignItems: 'center', paddingBottom: 28, color: 'rgba(27,120,247,0.3)', fontSize: 24, fontWeight: 700 }}>:</div>
+        <CountdownUnit value={time.seconds} label="seg" />
+      </div>
+
+      <div style={{ marginTop: 4 }}>
         <NotifyMe />
       </div>
     </div>
