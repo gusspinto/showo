@@ -102,6 +102,10 @@ class ErrorBoundary extends Component {
 }
 
 function ErrorFallback({ error, onReset }) {
+  useEffect(() => {
+    document.body.classList.remove('has-sidebar', 'sidebar-collapsed')
+    return () => {}
+  }, [])
   return (
     <div style={{
       minHeight: '100vh', background: 'var(--color-bg)', color: 'var(--color-text)',
@@ -157,6 +161,9 @@ function ErrorFallback({ error, onReset }) {
 // ── 404 Not Found ─────────────────────────────────────────────────────────────
 function NotFound() {
   const navigate = useNavigate()
+  useEffect(() => {
+    document.body.classList.remove('has-sidebar', 'sidebar-collapsed')
+  }, [])
   return (
     <div style={{
       minHeight: '100vh', background: 'var(--color-bg)', color: 'var(--color-text)',
@@ -221,7 +228,7 @@ function HomeRoute() {
   const { user, loading, isAdmin } = useAuth()
   if (loading) return null
   if (user) return <Navigate to={isAdmin ? '/admin' : '/dashboard'} replace />
-  return <Navigate to="/explorar" replace />
+  return <Home />
 }
 
 function PageViewTracker() {

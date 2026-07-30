@@ -754,10 +754,15 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
   }, [expanded])
   useEffect(() => () => clearTimeout(labelTimer.current), [])
 
+  const showSidebar = !!user && !hideSidebar
   useEffect(() => {
-    document.body.classList.toggle('sidebar-collapsed', collapsed)
-    return () => document.body.classList.remove('sidebar-collapsed')
-  }, [collapsed])
+    document.body.classList.toggle('has-sidebar', showSidebar)
+    document.body.classList.toggle('sidebar-collapsed', showSidebar && collapsed)
+    return () => {
+      document.body.classList.remove('has-sidebar')
+      document.body.classList.remove('sidebar-collapsed')
+    }
+  }, [showSidebar, collapsed])
 
   const isRecruiter = profile?.role === 'recrutador' || profile?.role === 'empresa'
   const isTeacher = profile?.role === 'professor'
@@ -799,14 +804,6 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
 
   return (
     <>
-      {hideSidebar && (
-        <style>{`
-          @media (min-width: 601px) {
-            .sidebar { display: none !important; }
-            body { padding-left: 0 !important; }
-          }
-        `}</style>
-      )}
 
       {/* Mobile backdrop blur */}
       {showLinks && open && (
@@ -1189,7 +1186,8 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
         </>
       )}
 
-      {/* ── Sidebar — desktop only (>601px). Icons-only when collapsed. ── */}
+      {/* ── Sidebar — desktop only (>601px). Hidden for non-auth users and pages with hideSidebar. ── */}
+      {user && !hideSidebar && (
       <div className={`sidebar${collapsed ? ' collapsed' : ''}`}>
         <button
           className="sb-collapse-toggle"
@@ -1484,6 +1482,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
           )}
         </div>
       </div>
+      )}
 
       {/* ── Floating "Gerir projeto" panel — desktop only ── */}
       {extras?.type === 'project' && (

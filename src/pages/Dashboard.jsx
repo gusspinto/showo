@@ -996,8 +996,21 @@ export default function Dashboard() {
     return (
       <div style={{ minHeight: '100vh', background: 'var(--color-bg)' }}>
         <Navbar />
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 'calc(100dvh - 62px)' }}>
-          <div style={{ width: 32, height: 32, border: '2px solid var(--color-border)', borderTop: '2px solid var(--color-primary)', borderRadius: '50%', animation: 'dash-spin 1s linear infinite' }} />
+        <div style={{ height: 2, background: 'linear-gradient(90deg, transparent 0%, var(--color-primary) 35%, var(--color-accent) 65%, transparent 100%)', opacity: 0.4 }} />
+        <div className="page-content" style={{ maxWidth: 800, margin: '0 auto', padding: '48px 24px' }}>
+          <div className="dash-skeleton" style={{ height: 48, width: '60%', marginBottom: 24 }} />
+          <div className="dash-skeleton" style={{ height: 16, width: '30%', marginBottom: 40 }} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
+            {[1, 2, 3].map(i => (
+              <div key={i} className="dash-skeleton" style={{ height: 72, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 14, animationDelay: `${i * 0.15}s` }}>
+                <div style={{ width: 40, height: 40, borderRadius: 'var(--radius-md)', background: 'var(--color-bg-alt, rgba(255,255,255,0.04))' }} />
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <div style={{ height: 12, width: '40%', borderRadius: 4, background: 'var(--color-bg-alt, rgba(255,255,255,0.04))' }} />
+                  <div style={{ height: 10, width: '65%', borderRadius: 4, background: 'var(--color-bg-alt, rgba(255,255,255,0.04))' }} />
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     )
@@ -1212,7 +1225,15 @@ export default function Dashboard() {
 
                   {loadingProjects ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
-                      {[1, 2, 3].map(i => <div key={i} style={{ height: 72, background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', opacity: 1 - i * 0.15 }} />)}
+                      {[1, 2, 3].map(i => (
+                        <div key={i} className="dash-skeleton" style={{ height: 72, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 14, animationDelay: `${i * 0.15}s` }}>
+                          <div style={{ width: 40, height: 40, borderRadius: 'var(--radius-md)', background: 'var(--color-bg-alt, rgba(255,255,255,0.04))' }} />
+                          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                            <div style={{ height: 12, width: '40%', borderRadius: 4, background: 'var(--color-bg-alt, rgba(255,255,255,0.04))' }} />
+                            <div style={{ height: 10, width: '65%', borderRadius: 4, background: 'var(--color-bg-alt, rgba(255,255,255,0.04))' }} />
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   ) : projects.length === 0 ? (
                     <EmptyState

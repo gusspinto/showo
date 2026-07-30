@@ -280,11 +280,15 @@ export default function Explore() {
           100% { background-position:  600px 0; }
         }
         .explore-skeleton {
-          background: linear-gradient(90deg, #152030 25%, #1c2d44 50%, #152030 75%);
-          background-size: 1200px 100%;
-          animation: shimmer 1.6s infinite linear;
-          border: 1px solid #1e3050;
+          background: var(--color-surface);
+          border: 1px solid var(--color-border);
           border-radius: 14px;
+          animation: explore-pulse 1.5s ease-in-out infinite;
+        }
+        @keyframes explore-pulse {
+          0%   { opacity: 0.4; }
+          50%  { opacity: 0.7; }
+          100% { opacity: 0.4; }
         }
         .explore-card { transition: border-color 0.15s, background 0.15s !important; }
         .explore-card:hover { border-color: var(--color-border-hover) !important; background: var(--color-surface-hover) !important; }
@@ -539,7 +543,15 @@ export default function Explore() {
         {loading ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(288px, 1fr))', gap: 16 }}>
             {[1,2,3,4,5,6].map(i => (
-              <div key={i} className="explore-skeleton" style={{ height: 240, opacity: 1 - (i % 3) * 0.12 }} />
+              <div key={i} className="explore-skeleton" style={{ overflow: 'hidden', animationDelay: `${i * 0.12}s` }}>
+                <div style={{ height: 100, background: 'var(--color-bg-alt, rgba(255,255,255,0.04))' }} />
+                <div style={{ padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <div style={{ height: 10, width: '45%', borderRadius: 4, background: 'var(--color-bg-alt, rgba(255,255,255,0.04))' }} />
+                  <div style={{ height: 14, width: '75%', borderRadius: 4, background: 'var(--color-bg-alt, rgba(255,255,255,0.04))' }} />
+                  <div style={{ height: 10, width: '90%', borderRadius: 4, background: 'var(--color-bg-alt, rgba(255,255,255,0.04))' }} />
+                  <div style={{ height: 10, width: '50%', borderRadius: 4, background: 'var(--color-bg-alt, rgba(255,255,255,0.04))' }} />
+                </div>
+              </div>
             ))}
           </div>
         ) : filtered.length === 0 ? (

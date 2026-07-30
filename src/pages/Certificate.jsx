@@ -75,7 +75,7 @@ export default function Certificate() {
     })
   }
 
-  const noSidebarStyle = <style>{`@media (min-width: 601px) { body { padding-left: 0 !important; } .sidebar { display: none !important; } }`}</style>
+  const noSidebarStyle = <style>{`@media (min-width: 601px) { body.has-sidebar { padding-left: 0 !important; } .sidebar { display: none !important; } }`}</style>
 
   if (loading) {
     return (
