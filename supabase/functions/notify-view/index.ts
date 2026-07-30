@@ -1,15 +1,33 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { checkRateLimit } from '../_shared/rateLimit.ts'
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': 'https://showo.pt',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
+
+const VALID_TYPES = ['PROJECT_VIEW', 'COMPANY_VIEW']
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
+  const allowed = await checkRateLimit(req, 'notify-view', 30)
+  if (!allowed) {
+    return new Response(JSON.stringify({ ok: false }), {
+      status: 429,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
+  }
+
   try {
     const { project_slug, type, city, visitor_role } = await req.json()
+
+    if (typeof project_slug !== 'string' || !/^[a-z0-9_-]{1,100}$/i.test(project_slug)) {
+      return new Response(JSON.stringify({ ok: false }), { status: 400, headers: corsHeaders })
+    }
+    if (!VALID_TYPES.includes(type)) {
+      return new Response(JSON.stringify({ ok: false }), { status: 400, headers: corsHeaders })
+    }
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
@@ -79,6 +97,7 @@ Deno.serve(async (req) => {
 
     return new Response(JSON.stringify({ ok: true }), { headers: corsHeaders })
   } catch (e) {
-    return new Response(JSON.stringify({ error: String(e) }), { status: 500, headers: corsHeaders })
+    console.error(e)
+    return new Response(JSON.stringify({ ok: false }), { status: 500, headers: corsHeaders })
   }
 })

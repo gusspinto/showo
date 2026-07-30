@@ -20,7 +20,7 @@ export async function checkRateLimit(req: Request, fnName: string, limit = LIMIT
 
   if (error) {
     console.error('[rateLimit] check failed:', error.message)
-    return true // fail open — don't block on infra error
+    return false
   }
 
   return data === true
