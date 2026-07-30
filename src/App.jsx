@@ -42,7 +42,6 @@ const RecuperarPassword = lazy(() => import('./pages/RecuperarPassword'))
 const NewProject   = lazy(() => import('./pages/NewProject'))
 const ProjectPage  = lazy(() => import('./pages/ProjectPage'))
 const EditProject  = lazy(() => import('./pages/EditProject'))
-const Ranking      = lazy(() => import('./pages/Ranking'))
 const Explore      = lazy(() => import('./pages/Explore'))
 const Dashboard    = lazy(() => import('./pages/Dashboard'))
 const Settings     = lazy(() => import('./pages/Settings'))
@@ -337,7 +336,6 @@ export default function App() {
               <Route path="/novo"          element={<NewProject />}  />
               <Route path="/projeto/:slug" element={<ProjectPage />} />
               <Route path="/editar/:slug"  element={<EditProject />} />
-              <Route path="/ranking"       element={<Ranking />}     />
               <Route path="/explorar"      element={<Explore />}     />
               <Route path="/login"         element={<Login />}       />
               <Route path="/recuperar-password" element={<RecuperarPassword onDone={() => setPwRecovery(false)} />} />

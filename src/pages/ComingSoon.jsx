@@ -90,6 +90,7 @@ export default function ComingSoon() {
       display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
       gap: 40, overflow: 'hidden', padding: '24px',
     }}>
+      <style>{`@media (min-width: 601px) { body { padding-left: 0 !important; } .sidebar { display: none !important; } }`}</style>
       <div style={{
         position: 'absolute', inset: 0, pointerEvents: 'none',
         background: 'radial-gradient(620px 660px at 50% 44%, rgba(18,60,140,0.18) 0%, rgba(18,60,140,0.05) 45%, rgba(3,6,13,0) 70%)',

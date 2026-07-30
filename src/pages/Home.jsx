@@ -897,7 +897,7 @@ export default function Home() {
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           gap: 28, flexWrap: 'wrap',
         }}>
-          {['Ranking público', 'Análise por IA', 'Certificados verificados'].map((text, i, arr) => (
+          {['Score de completude', 'Análise por IA', 'Certificados verificados'].map((text, i, arr) => (
             <div key={text} style={{ display: 'flex', alignItems: 'center', gap: 28 }}>
               <span style={{ fontSize: 12, color: colors.subtle, fontWeight: 600, whiteSpace: 'nowrap', letterSpacing: '0.02em' }}>{text}</span>
               {i < arr.length - 1 && <span style={{ color: 'rgba(27,120,247,0.35)', userSelect: 'none' }}>/</span>}
@@ -984,7 +984,7 @@ export default function Home() {
             tagColor="var(--color-primary)"
             title="Descobre o potencial do teu projeto."
             desc=""
-            bullets={['Score calculado por IA', 'Ranking público entre estudantes', 'Análise detalhada por categoria']}
+            bullets={['Score de completude automático', 'Feedback construtivo por IA', 'Análise detalhada por categoria']}
             bulletColor="var(--color-primary)"
             mockup={<MockupPotencial theme={theme} />}
           />

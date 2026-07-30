@@ -75,9 +75,12 @@ export default function Certificate() {
     })
   }
 
+  const noSidebarStyle = <style>{`@media (min-width: 601px) { body { padding-left: 0 !important; } .sidebar { display: none !important; } }`}</style>
+
   if (loading) {
     return (
       <div style={{ minHeight: '100vh', background: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        {noSidebarStyle}
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         <div style={{ width: 32, height: 32, border: `2px solid ${C.border}`, borderTop: `2px solid ${C.blue}`, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
       </div>
@@ -87,6 +90,7 @@ export default function Certificate() {
   if (!project || project.score < 75) {
     return (
       <div style={{ minHeight: '100vh', background: C.bg, color: C.text, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, padding: 24, fontFamily: 'var(--font-body)' }}>
+        {noSidebarStyle}
         <p style={{ fontSize: 18, color: C.muted, textAlign: 'center' }}>
           {!project ? 'Projeto não encontrado.' : 'Este projeto ainda não atingiu o score mínimo de 75 para certificado.'}
         </p>
@@ -102,6 +106,7 @@ export default function Certificate() {
 
   return (
     <div style={{ minHeight: '100vh', background: C.bg, color: C.text, fontFamily: 'var(--font-body)', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '40px 24px 80px' }}>
+      {noSidebarStyle}
       <Helmet>
         <title>Certificado — {project.name}</title>
       </Helmet>

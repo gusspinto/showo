@@ -38,6 +38,7 @@ export default function LegalLayout({ title, updated, intro, children }) {
       </main>
 
       <style>{`
+        @media (min-width: 601px) { body { padding-left: 0 !important; } .sidebar { display: none !important; } }
         .legal-body h2 { font-size: 19px; font-weight: 800; letter-spacing: -0.3px; margin: 34px 0 10px; font-family: var(--font-heading); color: var(--color-text); }
         .legal-body h3 { font-size: 15px; font-weight: 700; margin: 20px 0 6px; color: var(--color-text); }
         .legal-body p { font-size: 15px; line-height: 1.7; color: var(--color-text-secondary); margin: 0 0 12px; }

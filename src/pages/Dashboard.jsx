@@ -371,10 +371,10 @@ const ONBOARDING = {
     subtitle: 'Encontra o talento certo para a tua empresa.',
     steps: [
       { icon: <Search size={20} color="var(--color-text-secondary)" />, title: 'Descobre talento jovem', desc: 'Acede a projetos reais de estudantes do ensino profissional e universitário.' },
-      { icon: <Trophy size={20} color="var(--color-text-secondary)" />, title: 'Filtra pelos melhores', desc: 'O ranking e os scores ajudam-te a identificar rapidamente os candidatos de destaque.' },
+      { icon: <Trophy size={20} color="var(--color-text-secondary)" />, title: 'Filtra pelos melhores', desc: 'Os scores ajudam-te a identificar rapidamente os candidatos de destaque.' },
       { icon: <Users size={20} color="var(--color-text-secondary)" />, title: 'Estabelece contacto', desc: 'Cada perfil inclui links de contacto direto com o estudante.' },
     ],
-    cta: 'Ver ranking', ctaPath: '/ranking',
+    cta: 'Explorar projetos', ctaPath: '/explorar',
   },
 }
 
@@ -569,7 +569,7 @@ function OnboardingModal({ user, profile, onDismiss, onCreateTurma }) {
                 {role === 'aluno' && 'Cria o teu primeiro projeto e transforma o teu trabalho numa página profissional.'}
                 {role === 'professor' && 'Cria a tua turma agora e partilha o código com os teus alunos.'}
                 {role === 'recrutador' && 'Explora os projetos e descobre os talentos que procuras.'}
-                {role === 'empresa' && 'Vê quem está no topo do ranking e encontra o teu próximo talento.'}
+                {role === 'empresa' && 'Explora os projetos e encontra o teu próximo talento.'}
               </p>
             </div>
             <Button fullWidth iconRight={<ArrowRight size={15} />} onClick={handleCta}>{cfg.cta}</Button>
@@ -725,8 +725,6 @@ export default function Dashboard() {
   const [partnerLeadsLoading, setPartnerLeadsLoading] = useState(true)
   const [inviteTarget, setInviteTarget] = useState(null)
   const [resumoOpen, setResumoOpen] = useState(false)
-  const [rankingPct, setRankingPct] = useState(null)
-  const [rankingPos, setRankingPos] = useState(null)
 
   /* ── Admin redirect ── */
   useEffect(() => {
@@ -869,27 +867,6 @@ export default function Dashboard() {
     setPartnerLeads(prev => prev.map(l => l.id === leadId ? { ...l, status } : l))
     await supabase.from('internship_leads').update({ status }).eq('id', leadId)
   }
-
-  /* ── Ranking position ── */
-  useEffect(() => {
-    if (!user || loadingProjects) return
-    if (profile?.role === 'professor' || profile?.role === 'recrutador' || profile?.role === 'empresa') return
-    const scored = projects.filter(p => p.score != null)
-    if (!scored.length) return
-    const best = Math.max(...scored.map(p => p.score))
-    if (!best) return
-    ;(async () => {
-      const { data } = await supabase.from('projects').select('user_id, score').not('score', 'is', null).gt('score', 0)
-      if (!data?.length) return
-      const maxByUser = {}
-      data.forEach(p => { if (!maxByUser[p.user_id] || p.score > maxByUser[p.user_id]) maxByUser[p.user_id] = p.score })
-      const total = Object.keys(maxByUser).length
-      if (total < 2) return
-      const higherCount = Object.values(maxByUser).filter(s => s > best).length
-      setRankingPos(higherCount + 1)
-      setRankingPct(Math.max(1, Math.round(((higherCount + 1) / total) * 100)))
-    })()
-  }, [user, projects, loadingProjects, profile?.role])
 
   /* ── Teacher turmas + review data ── */
   useEffect(() => {

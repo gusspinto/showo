@@ -828,10 +828,6 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
           <button className="mobile-drawer-btn" onClick={() => { navigate('/explorar'); setOpen(false) }}>
             <Compass size={17} /> Explorar
           </button>
-          <button className="mobile-drawer-btn" onClick={() => { navigate('/ranking'); setOpen(false) }}>
-            <Trophy size={17} /> Ranking
-          </button>
-
           {user ? (
             <div className="nav-drawer-profile">
               {/* User header */}
@@ -980,7 +976,6 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
         {showLinks && (
           <div className="nav-left">
             <button onClick={() => navigate('/explorar')} style={btnStyle} className="nav-btn">Explorar</button>
-            <button onClick={() => navigate('/ranking')} style={btnStyle} className="nav-btn">Ranking</button>
           </div>
         )}
 
@@ -1263,9 +1258,6 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               <button className={`sb-item${isActive('/turmas') ? ' active' : ''}`} onClick={() => navigate('/turmas')}>
                 <Users2 size={16} />{!collapsed && showLabels && <span>Turmas</span>}
               </button>
-              <button className={`sb-item${isActive('/parceiros') ? ' active' : ''}`} onClick={() => navigate('/parceiros')}>
-                <Building2 size={16} />{!collapsed && showLabels && <span>Empresas parceiras</span>}
-              </button>
               <button className={`sb-item${isActive('/mensagens') ? ' active' : ''}`} onClick={() => navigate('/mensagens')}
                 style={{ position: 'relative' }}>
                 <MessageSquare size={16} />{!collapsed && showLabels && <span>Mensagens</span>}
@@ -1277,9 +1269,6 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               </button>
               <button className={`sb-item${isActive('/explorar') ? ' active' : ''}`} onClick={() => navigate('/explorar')}>
                 <Compass size={16} />{!collapsed && showLabels && <span>Explorar</span>}
-              </button>
-              <button className={`sb-item${isActive('/ranking') ? ' active' : ''}`} onClick={() => navigate('/ranking')}>
-                <Trophy size={16} />{!collapsed && showLabels && <span>Ranking</span>}
               </button>
             </>
           ) : (
@@ -1293,32 +1282,23 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               <button className={`sb-item${isActive('/explorar') ? ' active' : ''}`} onClick={() => navigate('/explorar')}>
                 <Compass size={16} />{!collapsed && showLabels && <span>Explorar</span>}
               </button>
-              <button className={`sb-item${isActive('/ranking') ? ' active' : ''}`} onClick={() => navigate('/ranking')}>
-                <Trophy size={16} />{!collapsed && showLabels && <span>Ranking</span>}
-              </button>
 
               {user && (
                 <>
-                  <div className="sb-divider" style={{ margin: '8px 0 4px' }} />
-                  {!collapsed && showLabels && <span className="sb-label">Oportunidades</span>}
-                  <button
-                    className={`sb-item${isActive('/estagio') ? ' active' : ''}`}
-                    onClick={() => navigate('/estagio')}
-                    title="Kit de candidatura a estágio"
-                  >
-                    <Mail size={16} />{!collapsed && showLabels && <span>Estágio</span>}
-                  </button>
-
                   <div className="sb-divider" style={{ margin: '8px 0 4px' }} />
                   {!collapsed && showLabels && <span className="sb-label">Comunidade</span>}
                   <button className={`sb-item${isActive('/turmas') ? ' active' : ''}`} onClick={() => navigate('/turmas')}>
                     <Users2 size={16} />{!collapsed && showLabels && <span>Turmas</span>}
                   </button>
 
-                  <div className="sb-divider" style={{ margin: '8px 0 4px' }} />
-                  <button className="sb-item" disabled style={{ opacity: 0.45, cursor: 'default' }}>
-                    <FolderOpen size={16} />
-                    {!collapsed && showLabels && <><span>Portfólio</span><span className="sb-soon">breve</span></>}
+                  <button className={`sb-item${isActive('/mensagens') ? ' active' : ''}`} onClick={() => navigate('/mensagens')}
+                    style={{ position: 'relative' }}>
+                    <MessageSquare size={16} />{!collapsed && showLabels && <span>Mensagens</span>}
+                    {!collapsed && showLabels && unreadMsgs > 0 && (
+                      <span style={{ marginLeft: 'auto', background: 'var(--color-primary)', color: '#fff', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>
+                        {unreadMsgs > 9 ? '9+' : unreadMsgs}
+                      </span>
+                    )}
                   </button>
                 </>
               )}
@@ -1607,9 +1587,6 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                     <MessageSquare size={20} /> Mensagens
                     {unreadMsgs > 0 && <span style={{ marginLeft: 'auto', background: 'var(--color-primary)', color: '#fff', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{unreadMsgs > 9 ? '9+' : unreadMsgs}</span>}
                   </button>
-                  <button className={`mob-nav-btn${isActive('/ranking') ? ' active' : ''}`} onClick={() => { navigate('/ranking'); setMenuOpen(false) }}>
-                    <Trophy size={20} /> Ranking
-                  </button>
                 </>
               ) : isTeacher ? (
                 <>
@@ -1628,9 +1605,6 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   <button className={`mob-nav-btn${isActive('/explorar') ? ' active' : ''}`} onClick={() => { navigate('/explorar'); setMenuOpen(false) }}>
                     <Compass size={20} /> Explorar
                   </button>
-                  <button className={`mob-nav-btn${isActive('/ranking') ? ' active' : ''}`} onClick={() => { navigate('/ranking'); setMenuOpen(false) }}>
-                    <Trophy size={20} /> Ranking
-                  </button>
                 </>
               ) : (
                 <>
@@ -1642,21 +1616,15 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   <button className={`mob-nav-btn${isActive('/explorar') ? ' active' : ''}`} onClick={() => { navigate('/explorar'); setMenuOpen(false) }}>
                     <Compass size={20} /> Explorar
                   </button>
-                  <button className={`mob-nav-btn${isActive('/ranking') ? ' active' : ''}`} onClick={() => { navigate('/ranking'); setMenuOpen(false) }}>
-                    <Trophy size={20} /> Ranking
-                  </button>
                   {user && (
                     <>
-                      <span className="mob-nav-section-label">Oportunidades</span>
-                      <button className={`mob-nav-btn${isActive('/estagio') ? ' active' : ''}`} onClick={() => { navigate('/estagio'); setMenuOpen(false) }}>
-                        <Mail size={20} /> Estágio
-                      </button>
                       <span className="mob-nav-section-label">Comunidade</span>
                       <button className={`mob-nav-btn${isActive('/turmas') ? ' active' : ''}`} onClick={() => { navigate('/turmas'); setMenuOpen(false) }}>
                         <Users2 size={20} /> Turmas
                       </button>
-                      <button className="mob-nav-btn" style={{ opacity: 0.45, cursor: 'default' }} disabled>
-                        <FolderOpen size={20} /> Portfólio <span className="mob-nav-soon">breve</span>
+                      <button className={`mob-nav-btn${isActive('/mensagens') ? ' active' : ''}`} onClick={() => { navigate('/mensagens'); setMenuOpen(false) }}>
+                        <MessageSquare size={20} /> Mensagens
+                        {unreadMsgs > 0 && <span style={{ marginLeft: 'auto', background: 'var(--color-primary)', color: '#fff', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{unreadMsgs > 9 ? '9+' : unreadMsgs}</span>}
                       </button>
                     </>
                   )}
