@@ -1,9 +1,9 @@
-import { useEffect, useState, useCallback, useMemo, memo } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { Navbar } from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
-import { Search, Building2, Eye, Briefcase, Users, GraduationCap, BookOpen, Heart, SlidersHorizontal, X } from 'lucide-react'
+import { Search, Building2, Eye, Briefcase, Users, GraduationCap, BookOpen, SlidersHorizontal, X } from 'lucide-react'
 import CreateProjectModal from '../components/CreateProjectModal'
 
 const colors = {
@@ -65,33 +65,6 @@ function getAreaColor(area) {
   return '#1a2d6e'
 }
 
-function getLevelColor(score) {
-  if (score == null) return colors.muted
-  if (score >= 86)  return colors.green
-  if (score >= 71)  return colors.blue
-  if (score >= 31)  return colors.yellow
-  return colors.red
-}
-
-const ScoreRingSmall = memo(function ScoreRingSmall({ score }) {
-  const size = 52, stroke = 4
-  const r = (size - stroke) / 2
-  const circ = 2 * Math.PI * r
-  const dash = (score / 100) * circ
-  const color = getLevelColor(score)
-  return (
-    <div style={{ position: 'relative', width: size, height: size, filter: `drop-shadow(0 0 4px ${color}70)` }}>
-      <svg width={size} height={size} overflow="visible" style={{ transform: 'rotate(-90deg)', display: 'block' }}>
-        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={colors.border} strokeWidth={stroke} />
-        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth={stroke}
-          strokeDasharray={`${dash} ${circ-dash}`} strokeLinecap="round" />
-      </svg>
-      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <span style={{ fontSize: 12, fontWeight: 800, color, letterSpacing: '-0.3px' }}>{score}</span>
-      </div>
-    </div>
-  )
-})
 
 function SelectFilter({ value, onChange, options, label }) {
   return (
@@ -162,10 +135,6 @@ export default function Explore() {
   const [showFilters, setShowFilters] = useState(false)
   const [showPeopleFilters, setShowPeopleFilters] = useState(false)
 
-  // Likes
-  const [likeCounts, setLikeCounts]   = useState({})  // { projectId: number }
-  const [userLiked,  setUserLiked]    = useState(new Set())
-  const [likeLoading, setLikeLoading] = useState(new Set())
 
   useEffect(() => {
     async function load() {
@@ -199,19 +168,6 @@ export default function Explore() {
         const areaSet = [...new Set(merged.map(p => p.area).filter(Boolean))].sort()
         setAreas([{ id: '', label: 'Todas as áreas' }, ...areaSet.map(a => ({ id: a, label: a }))])
 
-        // Load like counts for all projects
-        const ids = merged.map(p => p.id)
-        supabase.from('project_likes').select('project_id').in('project_id', ids).then(({ data: likeRows }) => {
-          const counts = {}
-          likeRows?.forEach(l => { counts[l.project_id] = (counts[l.project_id] || 0) + 1 })
-          setLikeCounts(counts)
-        })
-        // Load user's own likes (if logged in — profile is available after auth resolves)
-        if (profile?.id) {
-          supabase.from('project_likes').select('project_id').in('project_id', ids).eq('user_id', profile.id).then(({ data: ul }) => {
-            setUserLiked(new Set(ul?.map(l => l.project_id) || []))
-          })
-        }
       }
       setLoading(false)
     }
@@ -231,23 +187,6 @@ export default function Explore() {
     setPeople(data || [])
     setPeopleLoaded(true)
     setPeopleLoading(false)
-  }
-
-  async function toggleLike(e, projectId) {
-    e.stopPropagation()
-    if (!profile?.id) { navigate('/login'); return }
-    if (likeLoading.has(projectId)) return
-    setLikeLoading(prev => new Set([...prev, projectId]))
-    const isLiked = userLiked.has(projectId)
-    // Optimistic update
-    setUserLiked(prev => { const s = new Set(prev); isLiked ? s.delete(projectId) : s.add(projectId); return s })
-    setLikeCounts(prev => ({ ...prev, [projectId]: Math.max(0, (prev[projectId] || 0) + (isLiked ? -1 : 1)) }))
-    if (isLiked) {
-      await supabase.from('project_likes').delete().eq('project_id', projectId).eq('user_id', profile.id)
-    } else {
-      await supabase.from('project_likes').insert({ project_id: projectId, user_id: profile.id })
-    }
-    setLikeLoading(prev => { const s = new Set(prev); s.delete(projectId); return s })
   }
 
   function handleTabChange(t) {
@@ -321,15 +260,13 @@ export default function Explore() {
     { id: 'score',   label: 'Melhor score' },
     { id: 'recent',  label: 'Mais recentes' },
     { id: 'views',   label: 'Mais vistos' },
-    { id: 'likes',   label: 'Mais gostos' },
   ]
 
   const sorted = useMemo(() => [...filtered].sort((a, b) => {
     if (sortBy === 'recent') return new Date(b.created_at) - new Date(a.created_at)
     if (sortBy === 'views')  return (b.views ?? 0) - (a.views ?? 0)
-    if (sortBy === 'likes')  return (likeCounts[b.id] || 0) - (likeCounts[a.id] || 0)
     return (b.score ?? 0) - (a.score ?? 0)
-  }), [filtered, sortBy, likeCounts])
+  }), [filtered, sortBy])
 
   // Reset pagination when filters/search change
   useEffect(() => { setVisibleCount(24) }, [query, filterArea, filterType, filterMinScore, filterZone, filterAvailable, sortBy])
@@ -430,7 +367,7 @@ export default function Explore() {
       <Navbar>
         {profile?.role !== 'professor' && (
           <button
-            onClick={() => setShowCreateModal(true)}
+            onClick={() => profile?.id ? setShowCreateModal(true) : navigate('/register')}
             style={{ background: `linear-gradient(135deg, ${colors.blue}, #4f46e5)`, color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 16px var(--color-primary-muted)' }}
           >
             Criar projeto
@@ -679,21 +616,18 @@ export default function Explore() {
                     </div>
                   </div>
 
-                  {/* Score + area */}
-                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 600 }}>
-                      {project.area && <span style={{ color: colors.blue }}>{project.area}</span>}
-                      {project.is_pap && <>{project.area && <span style={{ color: colors.subtle }}>·</span>}<span style={{ color: colors.yellow }}>PAP</span></>}
-                      {project.available_for_work && (
-                        <>
-                          {(project.area || project.is_pap) && <span style={{ color: colors.subtle }}>·</span>}
-                          <span style={{ color: 'var(--color-primary)', display: 'inline-flex', alignItems: 'center', gap: 3 }} title="Disponível para estágio">
-                            <Briefcase size={10} style={{ flexShrink: 0 }} />
-                          </span>
-                        </>
-                      )}
-                    </div>
-                    <ScoreRingSmall score={project.score ?? 0} />
+                  {/* Area + badges */}
+                  <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 600 }}>
+                    {project.area && <span style={{ color: colors.blue }}>{project.area}</span>}
+                    {project.is_pap && <>{project.area && <span style={{ color: colors.subtle }}>·</span>}<span style={{ color: colors.yellow }}>PAP</span></>}
+                    {project.available_for_work && (
+                      <>
+                        {(project.area || project.is_pap) && <span style={{ color: colors.subtle }}>·</span>}
+                        <span style={{ color: 'var(--color-primary)', display: 'inline-flex', alignItems: 'center', gap: 3 }} title="Disponível para estágio">
+                          <Briefcase size={10} style={{ flexShrink: 0 }} />
+                        </span>
+                      </>
+                    )}
                   </div>
 
                   {/* Name + tagline */}
@@ -715,30 +649,9 @@ export default function Explore() {
                         {[project.creator_name, project.school_year].filter(Boolean).join(' · ')}
                       </div>
                     ) : <div />}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-                      {/* Like button */}
-                      <button
-                        onClick={e => toggleLike(e, project.id)}
-                        title={userLiked.has(project.id) ? 'Remover gosto' : 'Dar gosto'}
-                        style={{
-                          display: 'flex', alignItems: 'center', gap: 4,
-                          background: 'none', border: 'none',
-                          padding: '2px 0', cursor: 'pointer',
-                          color: userLiked.has(project.id) ? 'var(--color-error)' : colors.subtle,
-                          transition: 'color 0.15s',
-                        }}
-                        onMouseEnter={e => { if (!userLiked.has(project.id)) e.currentTarget.style.color = 'var(--color-error)' }}
-                        onMouseLeave={e => { if (!userLiked.has(project.id)) e.currentTarget.style.color = colors.subtle }}
-                      >
-                        <Heart size={13} fill={userLiked.has(project.id) ? 'var(--color-error)' : 'none'} strokeWidth={2} />
-                        {(likeCounts[project.id] || 0) > 0 && (
-                          <span style={{ fontSize: 11, fontWeight: 600 }}>{likeCounts[project.id]}</span>
-                        )}
-                      </button>
-                      <svg className="explore-card-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={colors.blue} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M5 12h14M12 5l7 7-7 7"/>
-                      </svg>
-                    </div>
+                    <svg className="explore-card-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={colors.blue} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                      <path d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
                   </div>
 
                   {/* Tags */}

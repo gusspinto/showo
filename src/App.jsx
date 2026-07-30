@@ -220,7 +220,7 @@ function HomeRoute() {
   const { user, loading, isAdmin } = useAuth()
   if (loading) return null
   if (user) return <Navigate to={isAdmin ? '/admin' : '/dashboard'} replace />
-  return <Home />
+  return <Navigate to="/explorar" replace />
 }
 
 function PageViewTracker() {
@@ -335,6 +335,7 @@ export default function App() {
             <Suspense fallback={<PageLoader />}>
             <Routes>
               <Route path="/"              element={<HomeRoute />}   />
+              <Route path="/home"          element={<Home />}        />
               <Route path="/novo"          element={<NewProject />}  />
               <Route path="/projeto/:slug" element={<ProjectPage />} />
               <Route path="/editar/:slug"  element={<EditProject />} />
