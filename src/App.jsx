@@ -8,6 +8,7 @@ import { SidebarProvider } from './context/SidebarContext'
 import RestReminder from './components/RestReminder'
 import CookieConsent from './components/CookieConsent'
 import SplashScreen from './components/SplashScreen'
+import { Analytics } from '@vercel/analytics/react'
 import { captureError } from './lib/errorTracking'
 import { trackPageview } from './lib/analytics'
 import { supabase } from './lib/supabase'
@@ -328,6 +329,7 @@ export default function App() {
           {splashMounted && <SplashScreen visible={splashVisible} />}
           <RestReminder />
           <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+            <Analytics />
             <CookieConsent />
             <PageViewTracker />
             <ErrorBoundary>
