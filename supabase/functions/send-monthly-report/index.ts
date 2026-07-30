@@ -2,7 +2,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import Anthropic from 'npm:@anthropic-ai/sdk@0.36.3'
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': 'https://showo.pt',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
@@ -205,6 +205,6 @@ Deno.serve(async (req) => {
     })
   } catch (e) {
     console.error(e)
-    return new Response(JSON.stringify({ error: String(e) }), { status: 500, headers: corsHeaders })
+    return new Response(JSON.stringify({ error: 'Erro interno.' }), { status: 500, headers: corsHeaders })
   }
 })

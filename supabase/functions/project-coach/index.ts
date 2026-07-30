@@ -2,7 +2,7 @@ import Anthropic from 'npm:@anthropic-ai/sdk@0.36.3'
 import { checkRateLimit, getAuthUser, clip } from '../_shared/rateLimit.ts'
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': 'https://showo.pt',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 

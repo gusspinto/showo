@@ -2,7 +2,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { checkRateLimit, getAuthUser } from '../_shared/rateLimit.ts'
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': 'https://showo.pt',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
@@ -59,6 +59,13 @@ Deno.serve(async (req) => {
     const { company_id, invite_url } = await req.json()
     if (!company_id || !invite_url) {
       return new Response(JSON.stringify({ error: 'company_id e invite_url são obrigatórios.' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    if (typeof invite_url !== 'string' || !invite_url.startsWith('https://showo.pt/')) {
+      return new Response(JSON.stringify({ error: 'URL de convite inválido.' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
@@ -124,7 +131,8 @@ Deno.serve(async (req) => {
 
     if (!res.ok) {
       const text = await res.text()
-      return new Response(JSON.stringify({ error: 'Falha ao enviar email.', details: text }), {
+      console.error('[send-partner-invite] Resend error:', text)
+      return new Response(JSON.stringify({ error: 'Falha ao enviar email.' }), {
         status: 502,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
@@ -140,7 +148,7 @@ Deno.serve(async (req) => {
     })
   } catch (e) {
     console.error(e)
-    return new Response(JSON.stringify({ error: String(e) }), {
+    return new Response(JSON.stringify({ error: 'Erro interno.' }), {
       status: 500,
       headers: corsHeaders,
     })

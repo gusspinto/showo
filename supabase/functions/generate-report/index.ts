@@ -2,7 +2,7 @@ import Anthropic from 'npm:@anthropic-ai/sdk@0.36.3'
 import { checkRateLimit, getAuthUser } from '../_shared/rateLimit.ts'
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': 'https://showo.pt',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
@@ -90,7 +90,8 @@ Devolve APENAS este JSON (sem markdown, sem \`\`\`, só o objeto):
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } catch (err) {
-    return new Response(JSON.stringify({ error: String(err) }), {
+    console.error(err)
+    return new Response(JSON.stringify({ error: 'Erro interno. Tenta novamente.' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
