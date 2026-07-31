@@ -1290,7 +1290,7 @@ export default function Dashboard() {
       {/* Brand accent line */}
       <div style={{ height: 2, background: 'linear-gradient(90deg, transparent 0%, var(--color-primary) 35%, var(--color-accent) 65%, transparent 100%)', opacity: 0.4 }} />
 
-      <div style={{ padding: '24px 20px 40px', boxSizing: 'border-box' }}>
+      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '24px 32px 80px', boxSizing: 'border-box' }}>
 
         {/* ══════════════════════ HEADER ══════════════════════ */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--sp-4)', marginBottom: 14, flexWrap: 'wrap' }}>
