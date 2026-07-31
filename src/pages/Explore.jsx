@@ -4,30 +4,7 @@ import { supabase } from '../lib/supabase'
 import { Navbar } from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
 import { Search, Building2, Eye, Briefcase, Users, GraduationCap, BookOpen, SlidersHorizontal, X } from 'lucide-react'
-import CreateProjectModal from '../components/CreateProjectModal'
-
-const colors = {
-  bg: 'var(--color-bg)',
-  bgAlt: 'var(--color-bg-alt)',
-  card: 'var(--color-surface)',
-  cardHover: 'var(--color-surface-hover)',
-  border: 'var(--color-border)',
-  borderBright: 'var(--color-border-hover)',
-  blue: 'var(--color-primary)',
-  blueSubtle: 'var(--color-primary-subtle)',
-  text: 'var(--color-text)',
-  muted: 'var(--color-text-secondary)',
-  subtle: 'var(--color-text-tertiary)',
-  green: 'var(--color-success)',
-  yellow: 'var(--color-warning)',
-  orange: 'var(--color-warning)',
-  red: 'var(--color-error)',
-  glass: 'var(--color-glass)',
-  glassHover: 'var(--color-glass-hover)',
-  glassBorder: 'var(--color-glass-border)',
-  glassBorderBright: 'var(--color-glass-border-bright)',
-  glassStyle: { backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' },
-}
+import './Explore.css'
 
 const PROJECT_TYPES = [
   { id: '', label: 'Todos os tipos' },
@@ -58,40 +35,26 @@ const TYPE_COLORS = {
 
 function getAreaColor(area) {
   const a = (area || '').toLowerCase()
-  if (a.includes('educa')) return '#1e3a5f'
-  if (a.includes('comercial') || a.includes('marketing') || a.includes('vendas')) return '#1a3a6e'
-  if (a.includes('tecnolog') || a.includes('informátic') || a.includes('programaç') || a.includes('software')) return '#0d2137'
-  if (a.includes('saúde') || a.includes('saude') || a.includes('medical') || a.includes('bio')) return '#1a4a2e'
-  return '#1a2d6e'
+  if (a.includes('educa')) return 'var(--color-info-subtle)'
+  if (a.includes('comercial') || a.includes('marketing') || a.includes('vendas')) return 'var(--color-primary-subtle)'
+  if (a.includes('tecnolog') || a.includes('informátic') || a.includes('programaç') || a.includes('software')) return 'var(--color-surface-alt)'
+  if (a.includes('saúde') || a.includes('saude') || a.includes('medical') || a.includes('bio')) return 'var(--color-success-subtle)'
+  return 'var(--color-surface-alt)'
 }
-
 
 function SelectFilter({ value, onChange, options, label }) {
   return (
-    <div style={{ position: 'relative', minWidth: 160 }}>
+    <div className="explore-select-wrap">
       <select
         value={value}
         onChange={e => onChange(e.target.value)}
-        style={{
-          appearance: 'none', WebkitAppearance: 'none',
-          background: colors.bgAlt, border: `1px solid ${value ? colors.blue : colors.border}`,
-          color: value ? colors.text : colors.muted,
-          borderRadius: 10, padding: '9px 36px 9px 14px',
-          fontSize: 13, fontWeight: 500, cursor: 'pointer',
-          fontFamily: 'inherit', outline: 'none', width: '100%',
-          transition: 'border-color 0.15s',
-        }}
+        className={`explore-select${value ? ' has-value' : ''}`}
         aria-label={label}
       >
-        {options.map(o => (
-          <option key={o.id} value={o.id} style={{ background: colors.bg, color: colors.text }}>
-            {o.label}
-          </option>
-        ))}
+        {options.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}
       </select>
-      <svg style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}
-        width="12" height="8" viewBox="0 0 12 8" fill="none">
-        <path d="M1 1l5 5 5-5" stroke={colors.muted} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+      <svg className="explore-select-arrow" width="12" height="8" viewBox="0 0 12 8" fill="none">
+        <path d="M1 1l5 5 5-5" stroke="var(--color-text-secondary)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
       </svg>
     </div>
   )
@@ -100,8 +63,44 @@ function SelectFilter({ value, onChange, options, label }) {
 const VIEWS_KEY = `showo_views_${new Date().toISOString().slice(0, 13)}`
 
 const ROLE_LABELS = {
-  recrutador: { label: 'Recrutador', color: 'var(--color-accent)', bg: 'var(--color-accent-subtle)', border: 'var(--color-accent-subtle)', icon: <Search size={16} /> },
-  empresa:    { label: 'Empresa',    color: 'var(--color-warning)', bg: 'var(--color-warning-subtle)',  border: 'var(--color-warning-subtle)',  icon: <Building2 size={16} /> },
+  recrutador: { label: 'Recrutador', color: 'var(--color-accent)', icon: <Search size={16} /> },
+  empresa:    { label: 'Empresa',    color: 'var(--color-warning)', icon: <Building2 size={16} /> },
+}
+
+function ProjectsSkeleton() {
+  return (
+    <div className="explore-grid">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <div key={i} className="skel skel-card" style={{ animationDelay: `${i * 0.12}s` }}>
+          <div className="skel-cover" style={{ aspectRatio: '16/6' }} />
+          <div className="flex-col gap-2 p-4">
+            <div className="skel-line w-40 h-sm" />
+            <div className="skel-line w-80 h-lg" />
+            <div className="skel-line w-full" />
+            <div className="skel-line w-60" />
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function PeopleSkeleton() {
+  return (
+    <div className="explore-grid">
+      {Array.from({ length: 8 }).map((_, i) => (
+        <div key={i} className="skel skel-card" style={{ animationDelay: `${i * 0.1}s` }}>
+          <div className="flex items-center gap-3 p-4">
+            <div className="skel-circle" style={{ width: 46, height: 46 }} />
+            <div className="flex-col gap-2 flex-1">
+              <div className="skel-line w-60 h-lg" />
+              <div className="skel-line w-40 h-sm" />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
 }
 
 export default function Explore() {
@@ -124,7 +123,6 @@ export default function Explore() {
   const roleInfo = ROLE_LABELS[profile?.role] ?? null
   const [visibleCount, setVisibleCount] = useState(24)
 
-  // People tab — default to 'pessoas' if URL param says so
   const [tab, setTab] = useState(() => searchParams.get('tab') === 'pessoas' ? 'pessoas' : 'projetos')
   const [people, setPeople] = useState([])
   const [peopleLoading, setPeopleLoading] = useState(false)
@@ -135,10 +133,8 @@ export default function Explore() {
   const [showFilters, setShowFilters] = useState(false)
   const [showPeopleFilters, setShowPeopleFilters] = useState(false)
 
-
   useEffect(() => {
     async function load() {
-      // Main projects query — no FK join to avoid PostgREST relationship errors
       const { data, error } = await supabase
         .from('projects')
         .select('id,name,slug,area,creator_name,course,school_year,ai_tagline,project_type,is_pap,score,created_at,technologies,views,cover_url,user_id,tags')
@@ -146,14 +142,12 @@ export default function Explore() {
         .limit(300)
 
       if (!error && data) {
-        // Fetch available-for-work users separately (avoids FK join requirement)
         const { data: availProfs } = await supabase
           .from('profiles')
           .select('id')
           .eq('available_for_work', true)
         const availIds = new Set(availProfs?.map(p => p.id) ?? [])
 
-        // Use fresh DB values, keep highest seen this hour (avoids flickering)
         let viewCache = {}
         try { viewCache = JSON.parse(localStorage.getItem(VIEWS_KEY) || '{}') } catch {}
         const merged = data.map(p => {
@@ -167,7 +161,6 @@ export default function Explore() {
         setProjects(merged)
         const areaSet = [...new Set(merged.map(p => p.area).filter(Boolean))].sort()
         setAreas([{ id: '', label: 'Todas as áreas' }, ...areaSet.map(a => ({ id: a, label: a }))])
-
       }
       setLoading(false)
     }
@@ -197,12 +190,11 @@ export default function Explore() {
   function handleProjectClick(project) {
     const role = profile?.role ?? null
     const type = (role === 'recrutador' || role === 'empresa') ? 'COMPANY_VIEW' : 'PROJECT_VIEW'
-    const key  = `explore_notif_${project.slug}`
+    const key = `explore_notif_${project.slug}`
     const isOwn = !!(profile?.id && project.user_id && profile.id === project.user_id)
 
     if (profile?.id && !isOwn && !sessionStorage.getItem(key)) {
       sessionStorage.setItem(key, '1')
-      // Get city async — don't block navigation
       fetch('https://ip-api.com/json/?fields=city,status')
         .then(r => r.json())
         .then(geo => {
@@ -257,9 +249,9 @@ export default function Explore() {
   }), [people, peopleQuery, filterSkill, filterPeopleArea])
 
   const SORT_OPTIONS = [
-    { id: 'score',   label: 'Melhor score' },
-    { id: 'recent',  label: 'Mais recentes' },
-    { id: 'views',   label: 'Mais vistos' },
+    { id: 'score',  label: 'Melhor score' },
+    { id: 'recent', label: 'Mais recentes' },
+    { id: 'views',  label: 'Mais vistos' },
   ]
 
   const sorted = useMemo(() => [...filtered].sort((a, b) => {
@@ -268,111 +260,15 @@ export default function Explore() {
     return (b.score ?? 0) - (a.score ?? 0)
   }), [filtered, sortBy])
 
-  // Reset pagination when filters/search change
   useEffect(() => { setVisibleCount(24) }, [query, filterArea, filterType, filterMinScore, filterZone, filterAvailable, sortBy])
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: colors.bg, color: colors.text, fontFamily: 'var(--font-body)' }}>
-      <style>{`
-        @keyframes spin { to { transform: rotate(360deg); } }
-        @keyframes shimmer {
-          0%   { background-position: -600px 0; }
-          100% { background-position:  600px 0; }
-        }
-        .explore-skeleton {
-          background: var(--color-surface);
-          border: 1px solid var(--color-border);
-          border-radius: 14px;
-          animation: explore-pulse 1.5s ease-in-out infinite;
-        }
-        @keyframes explore-pulse {
-          0%   { opacity: 0.4; }
-          50%  { opacity: 0.7; }
-          100% { opacity: 0.4; }
-        }
-        .explore-card { transition: border-color 0.15s, background 0.15s !important; }
-        .explore-card:hover { border-color: var(--color-border-hover) !important; background: var(--color-surface-hover) !important; }
-        .explore-card-arrow { opacity: 0; transform: translateX(-4px); transition: opacity 0.15s, transform 0.15s; }
-        .explore-card:hover .explore-card-arrow { opacity: 1; transform: translateX(0); }
-        .explore-grid { grid-template-columns: repeat(auto-fill, minmax(288px, 1fr)); }
-
-        /* Search bar */
-        .explore-search {
-          width: 100%; background: var(--color-surface); border: 1px solid var(--color-border);
-          border-radius: 12px; color: var(--color-text); font-size: 14px;
-          padding: 12px 16px 12px 44px; outline: none;
-          font-family: var(--font-body); box-sizing: border-box;
-          transition: border-color 0.2s, box-shadow 0.2s;
-        }
-        .explore-search:focus { border-color: var(--color-primary) !important; box-shadow: 0 0 0 3px var(--color-primary-subtle) !important; }
-
-        /* Filter toggle button */
-        .explore-filter-btn {
-          flex-shrink: 0; position: relative;
-          display: flex; align-items: center; justify-content: center; gap: 6px;
-          background: var(--color-surface); border: 1px solid var(--color-border);
-          border-radius: 12px; padding: 0 14px; height: 44px;
-          color: var(--color-text-secondary); font-size: 13px; font-weight: 600;
-          cursor: pointer; font-family: inherit; white-space: nowrap;
-          transition: border-color 0.15s, color 0.15s, background 0.15s;
-        }
-        .explore-filter-btn:hover { border-color: var(--color-border-hover); color: var(--color-text); }
-        .explore-filter-btn.active { border-color: var(--color-primary); color: var(--color-primary); background: var(--color-primary-subtle); }
-        .explore-filter-badge {
-          position: absolute; top: -5px; right: -5px;
-          min-width: 16px; height: 16px; border-radius: 99px;
-          background: var(--color-primary); color: #fff;
-          font-size: 10px; font-weight: 800;
-          display: flex; align-items: center; justify-content: center;
-          padding: 0 4px;
-          border: 2px solid var(--color-bg);
-        }
-
-        /* Filter panel */
-        .explore-filter-panel {
-          background: var(--color-surface); border: 1px solid var(--color-border);
-          border-radius: 14px; padding: 16px;
-          margin-bottom: 20px;
-          display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px;
-        }
-        .explore-filter-panel .filter-score-wrap {
-          grid-column: 1 / -1;
-        }
-        .explore-filter-panel .filter-available-btn,
-        .explore-filter-panel .filter-clear-btn {
-          grid-column: span 1;
-        }
-
-        /* Filter items */
-        .filter-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-
-        @media (max-width: 680px) {
-          .explore-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)) !important; }
-        }
-        @media (max-width: 600px) {
-          /* Tabs: só ícones no mobile */
-          .explore-tab-label { display: none !important; }
-          .explore-tabs-wrap { flex-shrink: 0; }
-          .explore-tabs-wrap button { min-width: 48px !important; padding: 10px 0 !important; }
-          /* Filter panel — grid 2 colunas */
-          .explore-filter-panel { grid-template-columns: 1fr 1fr !important; gap: 8px !important; padding: 12px !important; }
-          .explore-filter-panel .filter-score-wrap { grid-column: 1 / -1 !important; }
-          /* Filter btn — só ícone no mobile */
-          .explore-filter-btn-label { display: none !important; }
-          .explore-filter-btn { padding: 0 12px !important; }
-          /* Grid de projetos — 1 coluna */
-          .explore-grid { grid-template-columns: 1fr !important; }
-        }
-        @media (max-width: 440px) {
-          .explore-grid { grid-template-columns: 1fr !important; }
-        }
-      `}</style>
-
+    <div className="min-h-screen bg-page font-body">
       <Navbar>
         {profile?.role !== 'professor' && (
           <button
-            onClick={() => profile?.id ? setShowCreateModal(true) : navigate('/register')}
-            style={{ background: `linear-gradient(135deg, ${colors.blue}, #4f46e5)`, color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 16px var(--color-primary-muted)' }}
+            className="explore-create-btn"
+            onClick={() => profile?.id ? navigate('/novo') : navigate('/register')}
           >
             Criar projeto
           </button>
@@ -381,32 +277,16 @@ export default function Explore() {
 
       <div className="page-content">
         {/* Header */}
-        <div style={{ marginBottom: 24 }}>
-          <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 400, margin: '0 0 8px', letterSpacing: '-0.5px' }}>
-            Explorar
-          </h1>
-          <p style={{ color: colors.muted, margin: 0, fontSize: 15 }}>Descobre projetos e pessoas da comunidade Showo</p>
+        <div className="explore-header">
+          <h1 className="explore-title">Explorar</h1>
+          <p className="explore-subtitle">Descobre projetos e pessoas da comunidade Showo</p>
         </div>
 
         {/* Search + Tab + Filter row */}
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: showFilters ? 12 : 20 }}>
-          {/* Animated tab switch */}
-          <div className="explore-tabs-wrap" style={{
-            position: 'relative', display: 'inline-flex', flexShrink: 0,
-            background: 'var(--color-surface)', border: '1px solid var(--color-border)',
-            borderRadius: 12, padding: 4,
-          }}>
-            {/* Sliding pill — azul sólido sem gradiente */}
-            <div style={{
-              position: 'absolute', top: 4, bottom: 4, left: 4,
-              width: 'calc(50% - 4px)',
-              background: 'var(--color-primary)',
-              borderRadius: 9,
-              transform: `translateX(${tab === 'projetos' ? 0 : 100}%)`,
-              transition: 'transform 0.32s cubic-bezier(0.4, 0, 0.2, 1)',
-              boxShadow: '0 2px 12px var(--color-primary-muted)',
-              zIndex: 0,
-            }} />
+        <div className={`explore-toolbar${showFilters ? ' has-filters' : ''}`}>
+          {/* Tab switch */}
+          <div className="explore-tabs-wrap">
+            <div className={`explore-tab-pill${tab === 'pessoas' ? ' pessoas' : ''}`} />
             {[
               { id: 'projetos', label: 'Projetos', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg> },
               { id: 'pessoas',  label: 'Pessoas',  icon: <Users size={14} /> },
@@ -414,17 +294,7 @@ export default function Explore() {
               <button
                 key={t.id}
                 onClick={() => handleTabChange(t.id)}
-                style={{
-                  position: 'relative', zIndex: 1,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                  padding: '9px 0', minWidth: 108, borderRadius: 9, border: 'none',
-                  background: 'transparent',
-                  color: tab === t.id ? '#fff' : colors.muted,
-                  fontSize: 13, fontWeight: 600, cursor: 'pointer',
-                  fontFamily: 'inherit',
-                  transition: 'color 0.25s cubic-bezier(0.4,0,0.2,1)',
-                  whiteSpace: 'nowrap',
-                }}
+                className={`explore-tab-btn${tab === t.id ? ' active' : ''}`}
               >
                 {t.icon}
                 <span className="explore-tab-label">{t.label}</span>
@@ -433,9 +303,8 @@ export default function Explore() {
           </div>
 
           {/* Search input */}
-          <div style={{ position: 'relative', flex: 1 }}>
-            <svg style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}
-              width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={colors.subtle} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <div className="explore-search-wrap">
+            <svg className="explore-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-tertiary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
             </svg>
             <input
@@ -447,7 +316,7 @@ export default function Explore() {
             />
           </div>
 
-          {/* Filter toggle button */}
+          {/* Filter toggle */}
           {tab === 'projetos' && (
             <button
               className={`explore-filter-btn${showFilters || activeFilterCount > 0 ? ' active' : ''}`}
@@ -456,9 +325,7 @@ export default function Explore() {
             >
               <SlidersHorizontal size={15} />
               <span className="explore-filter-btn-label">Filtros</span>
-              {activeFilterCount > 0 && (
-                <span className="explore-filter-badge">{activeFilterCount}</span>
-              )}
+              {activeFilterCount > 0 && <span className="explore-filter-badge">{activeFilterCount}</span>}
             </button>
           )}
           {tab === 'pessoas' && (
@@ -476,269 +343,195 @@ export default function Explore() {
           )}
         </div>
 
+        {/* ── Projetos tab ── */}
         {tab === 'projetos' && (<>
-
-        {/* Recruiter/Empresa banner — shown automatically based on account role */}
-        {recruiterMode && roleInfo && (
-          <div style={{
-            borderLeft: `2px solid ${roleInfo.color}`,
-            padding: '4px 0 4px 16px', marginBottom: 24,
-            display: 'flex', alignItems: 'center', gap: 12,
-          }}>
-            <span style={{ color: roleInfo.color, display: 'flex', flexShrink: 0, alignItems: 'center' }}>{roleInfo.icon}</span>
-            <p style={{ margin: 0, fontSize: 13, color: colors.muted, lineHeight: 1.5 }}>
-              <strong style={{ color: roleInfo.color }}>Estás em modo {roleInfo.label}</strong> — os criadores dos projetos são notificados quando os visitas.
-              Vês também as tecnologias usadas em cada projeto.
-            </p>
-          </div>
-        )}
-
-        {/* Filter panel — collapsible */}
-        {showFilters && (
-          <div className="explore-filter-panel">
-            <SelectFilter value={filterArea} onChange={setFilterArea} options={areas} label="Filtrar por área" />
-            <SelectFilter value={filterType} onChange={setFilterType} options={PROJECT_TYPES} label="Filtrar por tipo" />
-            <SelectFilter value={filterZone} onChange={setFilterZone} options={ZONES} label="Filtrar por zona" />
-            <SelectFilter value={sortBy} onChange={setSortBy} options={SORT_OPTIONS} label="Ordenar por" />
-
-            {/* Score slider */}
-            <div className="filter-score-wrap" style={{ display: 'flex', alignItems: 'center', gap: 10, background: colors.bgAlt, border: `1px solid ${filterMinScore > 0 ? colors.blue : colors.border}`, borderRadius: 10, padding: '9px 14px' }}>
-              <span style={{ fontSize: 12, color: colors.muted, whiteSpace: 'nowrap', fontWeight: 600 }}>Score ≥</span>
-              <input type="range" min={0} max={100} step={5} value={filterMinScore}
-                onChange={e => setFilterMinScore(Number(e.target.value))}
-                style={{ flex: 1, accentColor: colors.blue, cursor: 'pointer' }} />
-              <span style={{ fontSize: 12, fontWeight: 700, color: filterMinScore > 0 ? colors.blue : colors.muted, minWidth: 30, textAlign: 'right' }}>
-                {filterMinScore > 0 ? filterMinScore : 'Todos'}
-              </span>
+          {recruiterMode && roleInfo && (
+            <div className="explore-recruiter-banner" style={{ borderLeftColor: roleInfo.color }}>
+              <span className="flex-shrink-0 flex items-center" style={{ color: roleInfo.color }}>{roleInfo.icon}</span>
+              <p>
+                <strong style={{ color: roleInfo.color }}>Estás em modo {roleInfo.label}</strong> — os criadores dos projetos são notificados quando os visitas.
+                Vês também as tecnologias usadas em cada projeto.
+              </p>
             </div>
+          )}
 
-            {/* Available for work */}
-            <button
-              onClick={() => setFilterAvailable(v => !v)}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 6,
-                background: filterAvailable ? 'var(--color-primary-subtle)' : colors.bgAlt,
-                border: `1px solid ${filterAvailable ? 'rgba(27,120,247,0.4)' : colors.border}`,
-                borderRadius: 10, padding: '9px 14px',
-                color: filterAvailable ? 'var(--color-primary)' : colors.muted,
-                fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-                transition: 'all 0.15s',
-              }}
-            >
-              <Briefcase size={13} /> Disponível p/ estágio
-            </button>
+          {showFilters && (
+            <div className="explore-filter-panel">
+              <SelectFilter value={filterArea} onChange={setFilterArea} options={areas} label="Filtrar por área" />
+              <SelectFilter value={filterType} onChange={setFilterType} options={PROJECT_TYPES} label="Filtrar por tipo" />
+              <SelectFilter value={filterZone} onChange={setFilterZone} options={ZONES} label="Filtrar por zona" />
+              <SelectFilter value={sortBy} onChange={setSortBy} options={SORT_OPTIONS} label="Ordenar por" />
 
-            {/* Clear + close */}
-            {hasFilters && (
+              <div className={`filter-score-wrap${filterMinScore > 0 ? ' has-value' : ''}`}>
+                <span className="filter-score-label">Score ≥</span>
+                <input type="range" min={0} max={100} step={5} value={filterMinScore}
+                  onChange={e => setFilterMinScore(Number(e.target.value))}
+                  className="filter-score-range" />
+                <span className={`filter-score-value${filterMinScore > 0 ? ' active' : ''}`}>
+                  {filterMinScore > 0 ? filterMinScore : 'Todos'}
+                </span>
+              </div>
+
               <button
-                onClick={() => { setFilterArea(''); setFilterType(''); setFilterMinScore(0); setFilterZone(''); setFilterAvailable(false); setFilterSkill('') }}
-                style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: `1px solid ${colors.border}`, color: colors.muted, borderRadius: 10, padding: '9px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+                onClick={() => setFilterAvailable(v => !v)}
+                className={`filter-toggle-btn${filterAvailable ? ' active' : ''}`}
               >
-                <X size={13} /> Limpar filtros
+                <Briefcase size={13} /> Disponível p/ estágio
               </button>
-            )}
-          </div>
-        )}
 
-        {loading ? (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(288px, 1fr))', gap: 16 }}>
-            {[1,2,3,4,5,6].map(i => (
-              <div key={i} className="explore-skeleton" style={{ overflow: 'hidden', animationDelay: `${i * 0.12}s` }}>
-                <div style={{ height: 100, background: 'var(--color-bg-alt, rgba(255,255,255,0.04))' }} />
-                <div style={{ padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  <div style={{ height: 10, width: '45%', borderRadius: 4, background: 'var(--color-bg-alt, rgba(255,255,255,0.04))' }} />
-                  <div style={{ height: 14, width: '75%', borderRadius: 4, background: 'var(--color-bg-alt, rgba(255,255,255,0.04))' }} />
-                  <div style={{ height: 10, width: '90%', borderRadius: 4, background: 'var(--color-bg-alt, rgba(255,255,255,0.04))' }} />
-                  <div style={{ height: 10, width: '50%', borderRadius: 4, background: 'var(--color-bg-alt, rgba(255,255,255,0.04))' }} />
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : filtered.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '80px 0', color: colors.muted }}>
-            <p style={{ fontSize: 16 }}>{(query || hasFilters) ? 'Nenhum projeto encontrado com esses filtros.' : 'Ainda não há projetos. Sê o primeiro!'}</p>
-            {(query || hasFilters) && (
-              <button onClick={() => { setSearch(''); setFilterArea(''); setFilterType(''); setFilterMinScore(0); setFilterZone(''); setFilterAvailable(false) }}
-                style={{ marginTop: 12, background: 'transparent', border: `1px solid ${colors.border}`, color: colors.muted, borderRadius: 10, padding: '10px 22px', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}>
-                Limpar pesquisa
-              </button>
-            )}
-          </div>
-        ) : (
-          <>
-            <div style={{ color: colors.subtle, fontSize: 13, marginBottom: 20, fontWeight: 500 }}>
-              {sorted.length} projeto{sorted.length !== 1 ? 's' : ''}{query && ` para "${search}"`}
-            </div>
-            <div className="explore-grid" style={{ display: 'grid', gap: 16 }}>
-              {sorted.slice(0, visibleCount).map(project => (
-                <div
-                  key={project.id}
-                  className="explore-card"
-                  onClick={() => handleProjectClick(project)}
-                  style={{
-                    ...colors.glassStyle,
-                    background: colors.glass, border: `1px solid ${colors.glassBorder}`,
-                    borderRadius: 12, padding: '22px', cursor: 'pointer',
-                    display: 'flex', flexDirection: 'column', gap: 12,
-                  }}
-                >
-                  {/* Cover */}
-                  <div style={{
-                    height: project.cover_url ? 120 : 80,
-                    borderRadius: '10px 10px 0 0',
-                    marginTop: -22, marginLeft: -22, marginRight: -22, marginBottom: 16,
-                    background: getAreaColor(project.area),
-                    position: 'relative', overflow: 'hidden',
-                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    padding: project.cover_url ? 0 : '0 16px',
-                  }}>
-                    {project.cover_url ? (
-                      <>
-                        <img src={project.cover_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 40%, rgba(13,20,36,0.7) 100%)' }} />
-                        {project.project_type && TYPE_COLORS[project.project_type] && (
-                          <span style={{ position: 'absolute', top: 10, right: 10, fontSize: 11, fontWeight: 700, color: '#fff', background: TYPE_COLORS[project.project_type] + 'cc', borderRadius: 6, padding: '3px 9px' }}>
-                            {PROJECT_TYPES.find(t => t.id === project.project_type)?.label || project.project_type}
-                          </span>
-                        )}
-                      </>
-                    ) : (
-                      <>
-                        <span style={{ fontSize: 36, fontWeight: 900, color: 'rgba(255,255,255,0.25)', userSelect: 'none', lineHeight: 1 }}>
-                          {project.name ? project.name[0].toUpperCase() : '?'}
-                        </span>
-                        {project.project_type && TYPE_COLORS[project.project_type] && (
-                          <span style={{ fontSize: 11, fontWeight: 700, color: '#fff', background: TYPE_COLORS[project.project_type] + '99', border: `1px solid ${TYPE_COLORS[project.project_type]}55`, borderRadius: 6, padding: '3px 9px' }}>
-                            {PROJECT_TYPES.find(t => t.id === project.project_type)?.label || project.project_type}
-                          </span>
-                        )}
-                      </>
-                    )}
-                    {/* Views badge — always visible */}
-                    <div style={{
-                      position: 'absolute', bottom: 8, left: 10,
-                      display: 'flex', alignItems: 'center', gap: 4,
-                      background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)',
-                      borderRadius: 20, padding: '3px 8px',
-                      fontSize: 11, fontWeight: 600,
-                      color: (project.views ?? 0) > 0 ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.4)',
-                    }}>
-                      <Eye size={11} />
-                      {project.views ?? 0}
-                    </div>
-                  </div>
-
-                  {/* Area + badges */}
-                  <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 600 }}>
-                    {project.area && <span style={{ color: colors.blue }}>{project.area}</span>}
-                    {project.is_pap && <>{project.area && <span style={{ color: colors.subtle }}>·</span>}<span style={{ color: colors.yellow }}>PAP</span></>}
-                    {project.available_for_work && (
-                      <>
-                        {(project.area || project.is_pap) && <span style={{ color: colors.subtle }}>·</span>}
-                        <span style={{ color: 'var(--color-primary)', display: 'inline-flex', alignItems: 'center', gap: 3 }} title="Disponível para estágio">
-                          <Briefcase size={10} style={{ flexShrink: 0 }} />
-                        </span>
-                      </>
-                    )}
-                  </div>
-
-                  {/* Name + tagline */}
-                  <div>
-                    <h3 style={{ margin: '0 0 6px', fontSize: 16, fontWeight: 700, color: colors.text, lineHeight: 1.3, letterSpacing: '-0.1px' }}>
-                      {project.name}
-                    </h3>
-                    {project.ai_tagline && (
-                      <p style={{ margin: 0, fontSize: 13, color: colors.muted, lineHeight: 1.55, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                        {project.ai_tagline}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Creator + school year + like button + hover arrow */}
-                  <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-                    {(project.creator_name || project.school_year) ? (
-                      <div style={{ fontSize: 12, color: colors.subtle, fontWeight: 500, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {[project.creator_name, project.school_year].filter(Boolean).join(' · ')}
-                      </div>
-                    ) : <div />}
-                    <svg className="explore-card-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={colors.blue} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
-                      <path d="M5 12h14M12 5l7 7-7 7"/>
-                    </svg>
-                  </div>
-
-                  {/* Tags */}
-                  {project.tags && project.tags.length > 0 && (
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
-                      {project.tags.slice(0, 4).map(tag => (
-                        <span key={tag} style={{ fontSize: 11, color: colors.muted, background: 'var(--color-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: 5, padding: '2px 7px' }}>
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Technologies (recruiter mode) */}
-                  {recruiterMode && !project.tags?.length && project.technologies && (
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
-                      {project.technologies.split(/[,\s·]+/).filter(Boolean).slice(0, 4).map((t, i) => (
-                        <span key={i} style={{ fontSize: 11, color: colors.muted, background: 'var(--color-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: 5, padding: '2px 7px' }}>
-                          {t.trim()}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-            {visibleCount < sorted.length && (
-              <div style={{ textAlign: 'center', marginTop: 32 }}>
+              {hasFilters && (
                 <button
-                  onClick={() => setVisibleCount(v => v + 24)}
-                  style={{
-                    background: 'transparent', border: `1px solid var(--color-border)`,
-                    color: 'var(--color-text-secondary)', borderRadius: 12, padding: '11px 28px',
-                    fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
-                    transition: 'border-color 0.15s, color 0.15s',
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--color-primary)'; e.currentTarget.style.color = 'var(--color-primary)' }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--color-border)'; e.currentTarget.style.color = 'var(--color-text-secondary)' }}
+                  className="filter-clear-btn"
+                  onClick={() => { setFilterArea(''); setFilterType(''); setFilterMinScore(0); setFilterZone(''); setFilterAvailable(false); setFilterSkill('') }}
                 >
-                  Carregar mais ({sorted.length - visibleCount} restantes)
+                  <X size={13} /> Limpar filtros
                 </button>
-              </div>
-            )}
-          </>
-        )}
+              )}
+            </div>
+          )}
 
+          {loading ? (
+            <ProjectsSkeleton />
+          ) : filtered.length === 0 ? (
+            <div className="explore-empty">
+              <p className="text-md">{(query || hasFilters) ? 'Nenhum projeto encontrado com esses filtros.' : 'Ainda não há projetos. Sê o primeiro!'}</p>
+              {(query || hasFilters) && (
+                <button className="explore-empty-clear"
+                  onClick={() => { setSearch(''); setFilterArea(''); setFilterType(''); setFilterMinScore(0); setFilterZone(''); setFilterAvailable(false) }}>
+                  Limpar pesquisa
+                </button>
+              )}
+            </div>
+          ) : (
+            <>
+              <div className="explore-result-count">
+                {sorted.length} projeto{sorted.length !== 1 ? 's' : ''}{query && ` para "${search}"`}
+              </div>
+              <div className="explore-grid">
+                {sorted.slice(0, visibleCount).map(project => (
+                  <div key={project.id} className="explore-card" onClick={() => handleProjectClick(project)}>
+                    {/* Cover */}
+                    <div
+                      className="explore-card-cover"
+                      style={{
+                        height: project.cover_url ? 160 : 96,
+                        background: project.cover_url ? undefined : getAreaColor(project.area),
+                        padding: 0,
+                      }}
+                    >
+                      {project.cover_url ? (
+                        <>
+                          <img src={project.cover_url} alt="" />
+                          <div className="explore-card-cover-gradient" />
+                          {project.project_type && TYPE_COLORS[project.project_type] && (
+                            <span className="explore-type-badge on-cover" style={{ background: TYPE_COLORS[project.project_type] + 'cc' }}>
+                              {PROJECT_TYPES.find(t => t.id === project.project_type)?.label || project.project_type}
+                            </span>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          <span className="explore-card-cover-letter">
+                            {project.name ? project.name[0].toUpperCase() : '?'}
+                          </span>
+                          {project.project_type && TYPE_COLORS[project.project_type] && (
+                            <span className="explore-type-badge" style={{ background: TYPE_COLORS[project.project_type] + '99', border: `1px solid ${TYPE_COLORS[project.project_type]}55`, position: 'absolute', top: 10, right: 10 }}>
+                              {PROJECT_TYPES.find(t => t.id === project.project_type)?.label || project.project_type}
+                            </span>
+                          )}
+                        </>
+                      )}
+                      {project.score != null && (
+                        <div className="explore-score-badge">
+                          {project.score}
+                        </div>
+                      )}
+                      {(project.views ?? 0) > 0 && (
+                        <div className="explore-views-badge has-views">
+                          <Eye size={11} />
+                          {project.views}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Badges */}
+                    <div className="explore-card-badges">
+                      {project.area && <span className="text-primary">{project.area}</span>}
+                      {project.is_pap && <>{project.area && <span className="text-subtle">·</span>}<span className="text-warning">{'​'}PAP</span></>}
+                      {project.available_for_work && (
+                        <>
+                          {(project.area || project.is_pap) && <span className="text-subtle">·</span>}
+                          <span className="text-primary flex items-center gap-1" title="Disponível para estágio">
+                            <Briefcase size={10} className="flex-shrink-0" />
+                          </span>
+                        </>
+                      )}
+                    </div>
+
+                    {/* Name + tagline */}
+                    <div>
+                      <h3 className="explore-card-name">{project.name}</h3>
+                      {project.ai_tagline && <p className="explore-card-tagline">{project.ai_tagline}</p>}
+                    </div>
+
+                    {/* Footer */}
+                    <div className="explore-card-footer">
+                      {(project.creator_name || project.school_year) ? (
+                        <div className="explore-card-creator">
+                          {[project.creator_name, project.school_year].filter(Boolean).join(' · ')}
+                        </div>
+                      ) : <div />}
+                      <svg className="explore-card-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                      </svg>
+                    </div>
+
+                    {/* Tags */}
+                    {project.tags && project.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {project.tags.slice(0, 4).map(tag => (
+                          <span key={tag} className="explore-tag">{tag}</span>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Technologies (recruiter mode) */}
+                    {recruiterMode && !project.tags?.length && project.technologies && (
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {project.technologies.split(/[,\s·]+/).filter(Boolean).slice(0, 4).map((t, i) => (
+                          <span key={i} className="explore-tag">{t.trim()}</span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+              {visibleCount < sorted.length && (
+                <div className="text-center mt-8">
+                  <button className="explore-load-more" onClick={() => setVisibleCount(v => v + 24)}>
+                    Carregar mais ({sorted.length - visibleCount} restantes)
+                  </button>
+                </div>
+              )}
+            </>
+          )}
         </>)}
 
         {/* ── Pessoas tab ── */}
         {tab === 'pessoas' && (
           <>
-            {/* Collapsible filter panel */}
             {showPeopleFilters && !peopleLoading && people.length > 0 && (
-              <div className="explore-filter-panel" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {/* Area filter */}
+              <div className="explore-filter-panel people-filters">
                 {(() => {
                   const allAreas = [...new Set(people.map(p => p.area).filter(Boolean))].sort()
                   if (allAreas.length === 0) return null
                   return (
                     <div>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: colors.muted, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Área</div>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                      <div className="filter-chip-label">Área</div>
+                      <div className="filter-chip-group">
                         {[{ id: '', label: 'Todas' }, ...allAreas.map(a => ({ id: a, label: a }))].map(a => (
-                          <button
-                            key={a.id}
-                            onClick={() => setFilterPeopleArea(a.id)}
-                            style={{
-                              padding: '6px 14px', borderRadius: 20,
-                              border: `1.5px solid ${filterPeopleArea === a.id ? colors.blue : colors.border}`,
-                              background: filterPeopleArea === a.id ? 'var(--color-primary-subtle)' : colors.bgAlt,
-                              color: filterPeopleArea === a.id ? colors.blue : colors.muted,
-                              fontSize: 12, fontWeight: 600, cursor: 'pointer',
-                              fontFamily: 'inherit', transition: 'all 0.15s',
-                            }}
-                          >
+                          <button key={a.id} onClick={() => setFilterPeopleArea(a.id)}
+                            className={`filter-chip${filterPeopleArea === a.id ? ' active' : ''}`}>
                             {a.label}
                           </button>
                         ))}
@@ -747,27 +540,16 @@ export default function Explore() {
                   )
                 })()}
 
-                {/* Skill filter */}
                 {(() => {
                   const allSkills = [...new Set(people.flatMap(p => p.skills || []))].sort()
                   if (allSkills.length === 0) return null
                   return (
                     <div>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: colors.muted, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Competências</div>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                      <div className="filter-chip-label">Competências</div>
+                      <div className="filter-chip-group">
                         {[{ id: '', label: 'Todas' }, ...allSkills.map(s => ({ id: s, label: s }))].map(s => (
-                          <button
-                            key={s.id}
-                            onClick={() => setFilterSkill(s.id)}
-                            style={{
-                              padding: '6px 14px', borderRadius: 20,
-                              border: `1.5px solid ${filterSkill === s.id ? colors.blue : colors.border}`,
-                              background: filterSkill === s.id ? 'var(--color-primary-subtle)' : colors.bgAlt,
-                              color: filterSkill === s.id ? colors.blue : colors.muted,
-                              fontSize: 12, fontWeight: 600, cursor: 'pointer',
-                              fontFamily: 'inherit', transition: 'all 0.15s',
-                            }}
-                          >
+                          <button key={s.id} onClick={() => setFilterSkill(s.id)}
+                            className={`filter-chip${filterSkill === s.id ? ' active' : ''}`}>
                             {s.label}
                           </button>
                         ))}
@@ -776,12 +558,9 @@ export default function Explore() {
                   )
                 })()}
 
-                {/* Clear filters */}
                 {(filterPeopleArea || filterSkill) && (
-                  <button
-                    onClick={() => { setFilterPeopleArea(''); setFilterSkill('') }}
-                    style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: `1px solid ${colors.border}`, color: colors.muted, borderRadius: 10, padding: '9px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', alignSelf: 'flex-start' }}
-                  >
+                  <button className="filter-clear-btn" style={{ alignSelf: 'flex-start' }}
+                    onClick={() => { setFilterPeopleArea(''); setFilterSkill('') }}>
                     <X size={13} /> Limpar filtros
                   </button>
                 )}
@@ -789,30 +568,26 @@ export default function Explore() {
             )}
 
             {peopleLoading ? (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(288px, 1fr))', gap: 16 }}>
-                {Array.from({ length: 8 }).map((_, i) => (
-                  <div key={i} className="explore-skeleton" style={{ height: 100 }} />
-                ))}
-              </div>
+              <PeopleSkeleton />
             ) : filteredPeople.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '64px 24px', color: colors.muted }}>
-                <Users size={44} color={colors.subtle} style={{ marginBottom: 16 }} />
-                <p style={{ fontSize: 16, fontWeight: 600, margin: '0 0 8px', color: colors.text }}>
+              <div className="explore-people-empty">
+                <Users size={44} color="var(--color-text-tertiary)" className="mb-4" />
+                <p className="explore-people-empty-title">
                   {peopleQuery ? 'Nenhuma pessoa encontrada.' : 'Ainda não há perfis públicos.'}
                 </p>
               </div>
             ) : (
               <>
-                <p style={{ fontSize: 13, color: colors.subtle, margin: '0 0 16px' }}>
+                <p className="explore-result-count">
                   {filteredPeople.length} pessoa{filteredPeople.length !== 1 ? 's' : ''}{peopleQuery && ` para "${peopleSearch}"`}
                 </p>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(288px, 1fr))', gap: 16 }}>
+                <div className="explore-grid">
                   {filteredPeople.map(p => {
                     const ROLE_MAP = {
-                      aluno:      { color: 'var(--color-primary)', bg: 'var(--color-primary-subtle)',  label: 'Aluno',      icon: <GraduationCap size={11} /> },
-                      professor:  { color: '#10b981', bg: 'rgba(16,185,129,0.1)',  label: 'Professor',  icon: <BookOpen size={11} /> },
-                      recrutador: { color: 'var(--color-accent)', bg: 'rgba(139,92,246,0.1)',  label: 'Recrutador', icon: <Search size={11} /> },
-                      empresa:    { color: 'var(--color-warning)', bg: 'rgba(245,158,11,0.1)',  label: 'Empresa',    icon: <Building2 size={11} /> },
+                      aluno:      { color: 'var(--color-primary)', label: 'Aluno',      icon: <GraduationCap size={11} /> },
+                      professor:  { color: '#10b981',              label: 'Professor',  icon: <BookOpen size={11} /> },
+                      recrutador: { color: 'var(--color-accent)',  label: 'Recrutador', icon: <Search size={11} /> },
+                      empresa:    { color: 'var(--color-warning)', label: 'Empresa',    icon: <Building2 size={11} /> },
                     }
                     const rc = ROLE_MAP[p.role] ?? ROLE_MAP.aluno
                     const displayName = p.full_name || p.username || 'Utilizador'
@@ -822,75 +597,53 @@ export default function Explore() {
                     const profileUrl = p.username ? `/u/${p.username}` : null
 
                     return (
-                      <div
-                        key={p.id}
-                        className="explore-card"
+                      <div key={p.id} className="explore-person-card"
                         onClick={() => profileUrl && navigate(profileUrl)}
-                        style={{
-                          ...colors.glassStyle,
-                          background: colors.glass,
-                          border: `1px solid ${colors.glassBorder}`,
-                          borderRadius: 12,
-                          padding: '16px 18px',
-                          cursor: profileUrl ? 'pointer' : 'default',
-                          display: 'flex', alignItems: 'center', gap: 14,
-                        }}
-                      >
-                        {/* Avatar */}
+                        style={{ cursor: profileUrl ? 'pointer' : 'default' }}>
                         {p.avatar_url ? (
-                          <img src={p.avatar_url} alt={displayName} style={{ width: 46, height: 46, borderRadius: 12, objectFit: 'cover', flexShrink: 0 }} />
+                          <img src={p.avatar_url} alt={displayName} className="explore-avatar" />
                         ) : (
-                          <div style={{ width: 46, height: 46, borderRadius: 12, background: avatarBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 19, fontWeight: 800, color: '#fff', flexShrink: 0, letterSpacing: '-0.5px' }}>
-                            {initial}
-                          </div>
+                          <div className="explore-avatar-fallback" style={{ background: avatarBg }}>{initial}</div>
                         )}
 
-                        {/* Info */}
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                            <span style={{ fontSize: 14, fontWeight: 700, color: colors.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', letterSpacing: '-0.2px' }}>
-                              {displayName}
-                            </span>
+                        <div className="flex-1" style={{ minWidth: 0 }}>
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="explore-person-name">{displayName}</span>
                             {p.available_for_work && (
-                              <span style={{ flexShrink: 0, display: 'inline-flex', alignItems: 'center', color: 'var(--color-primary)' }} title="Disponível para estágio">
+                              <span className="flex-shrink-0 flex items-center text-primary" title="Disponível para estágio">
                                 <Briefcase size={12} strokeWidth={2.5} />
                               </span>
                             )}
                           </div>
 
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600, color: rc.color }}>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="explore-person-role" style={{ color: rc.color }}>
                               {rc.icon} {rc.label}
                             </span>
                             {(p.company || p.area || p.course) && (
-                              <span style={{ fontSize: 12, color: colors.subtle, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              <span className="explore-person-detail">
                                 · {p.company ? `${p.company}${p.company_role ? ` · ${p.company_role}` : ''}` : (p.area || p.course)}
                               </span>
                             )}
                           </div>
                           {p.skills && p.skills.length > 0 && (
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 6 }}>
+                            <div className="flex flex-wrap gap-1 mt-2">
                               {p.skills.slice(0, 4).map(skill => (
-                                <span key={skill} style={{
-                                  fontSize: 10, fontWeight: 600,
-                                  color: filterSkill === skill ? colors.blue : colors.muted,
-                                  background: filterSkill === skill ? 'var(--color-primary-subtle)' : 'transparent',
-                                  border: `1px solid ${filterSkill === skill ? 'var(--color-primary-muted)' : colors.border}`,
-                                  borderRadius: 6, padding: '2px 8px',
-                                }}>
+                                <span key={skill} className={`explore-skill-tag${filterSkill === skill ? ' active' : ''}`}>
                                   {skill}
                                 </span>
                               ))}
                               {p.skills.length > 4 && (
-                                <span style={{ fontSize: 10, color: colors.subtle }}>+{p.skills.length - 4}</span>
+                                <span className="text-2xs text-subtle">+{p.skills.length - 4}</span>
                               )}
                             </div>
                           )}
                         </div>
 
-                        {/* Arrow */}
                         {profileUrl && (
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={colors.subtle} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-tertiary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
+                            <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+                          </svg>
                         )}
                       </div>
                     )
@@ -900,9 +653,7 @@ export default function Explore() {
             )}
           </>
         )}
-
       </div>
-      {showCreateModal && <CreateProjectModal onClose={() => setShowCreateModal(false)} />}
     </div>
   )
 }

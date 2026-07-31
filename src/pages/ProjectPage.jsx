@@ -12,11 +12,10 @@ import { chatProjectCoach } from '../lib/chatProjectCoach'
 import { useAuth } from '../context/AuthContext'
 import { useSidebar } from '../context/SidebarContext'
 import { useTheme } from '../context/ThemeContext'
-import CreateProjectModal from '../components/CreateProjectModal'
 import DefenseMode from '../components/DefenseMode'
 import ProjectComments from '../components/ProjectComments'
 import { analyzeProject } from '../lib/analyzeProject'
-import { Check, X, Loader, GraduationCap, Save, Sparkles, Bot, Lightbulb, Pencil, Search, Target, Wrench, Zap, TrendingUp, Briefcase, Users, Rocket, Trophy, BarChart2, CheckCircle, BookOpen, ChevronDown, Eye, EyeOff, UserPlus, Calendar, Mail, ArrowRight, ChevronRight, ChevronLeft, Globe, Image, MessageSquare, Quote, Layout, Type, Link, GripVertical, Plus, AlignLeft, Star, Camera, FileText, ClipboardList, Copy, Monitor, Tablet, Smartphone, Minus, Video, AlignCenter, AlignRight, Palette, AlertTriangle, Heart, User, Settings, Bell, Swords, Paintbrush } from 'lucide-react'
+import { Check, X, Loader, GraduationCap, Save, Sparkles, Bot, Lightbulb, Pencil, Search, Target, Wrench, Zap, TrendingUp, Briefcase, Users, Rocket, Trophy, BarChart2, CheckCircle, BookOpen, ChevronDown, Eye, EyeOff, UserPlus, Calendar, Mail, ArrowRight, ChevronRight, ChevronLeft, Globe, Image, MessageSquare, Quote, Layout, Type, Link, GripVertical, Plus, AlignLeft, Star, Camera, FileText, ClipboardList, Copy, Monitor, Tablet, Smartphone, Minus, Video, AlignCenter, AlignRight, Palette, AlertTriangle, User, Settings, Bell, Swords, Paintbrush } from 'lucide-react'
 
 const colors = {
   bg: 'var(--color-bg)',
@@ -60,12 +59,12 @@ const PROJECT_TYPE_LABELS = {
 }
 
 const TYPE_HERO = {
-  pap:         { c1: '#6366f1', c2: '#4f46e5', Icon: GraduationCap },
-  internship:  { c1: '#10b981', c2: '#059669', Icon: Briefcase },
-  group:       { c1: 'var(--color-warning)', c2: '#d97706', Icon: Users },
-  personal:    { c1: 'var(--color-primary)', c2: '#4f46e5', Icon: Rocket },
-  competition: { c1: 'var(--color-error)', c2: '#dc2626', Icon: Trophy },
-  presentation:{ c1: 'var(--color-accent)', c2: '#7c3aed', Icon: BarChart2 },
+  pap:         { c1: 'var(--color-accent)', c2: 'var(--color-primary)', Icon: GraduationCap },
+  internship:  { c1: 'var(--color-success)', c2: 'var(--color-success)', Icon: Briefcase },
+  group:       { c1: 'var(--color-warning)', c2: 'var(--color-warning)', Icon: Users },
+  personal:    { c1: 'var(--color-primary)', c2: 'var(--color-accent)', Icon: Rocket },
+  competition: { c1: 'var(--color-error)', c2: 'var(--color-error)', Icon: Trophy },
+  presentation:{ c1: 'var(--color-accent)', c2: 'var(--color-accent)', Icon: BarChart2 },
 }
 
 const QUALITY_MIN = 60 // below this = "needs more"
@@ -147,26 +146,26 @@ function progTrack(pct) {
 }
 
 // Area-based gradient for the hero background (when no cover image)
+// Uses CSS variables so it adapts to both dark and light themes
 function getAreaGradient(area) {
   const a = (area || '').toLowerCase()
   if (a.includes('tecnolog') || a.includes('informátic') || a.includes('programaç') || a.includes('software') || a.includes('digital') || a.includes('eletrónic'))
-    return { g1: '#0a1e3d', g2: '#0d2137', accent1: 'var(--color-primary)', accent2: '#0ea5e9' }
+    return { g1: 'var(--color-surface)', g2: 'var(--color-surface-alt)', accent1: 'var(--color-primary)', accent2: 'var(--color-info)' }
   if (a.includes('comercial') || a.includes('marketing') || a.includes('vendas') || a.includes('gestão') || a.includes('negócio'))
-    return { g1: '#1a0a3d', g2: '#200a4a', accent1: 'var(--color-accent)', accent2: '#6366f1' }
+    return { g1: 'var(--color-surface)', g2: 'var(--color-surface-alt)', accent1: 'var(--color-accent)', accent2: 'var(--color-primary)' }
   if (a.includes('design') || a.includes('arte') || a.includes('visual') || a.includes('multimédia') || a.includes('gráfico'))
-    return { g1: '#051a1f', g2: '#082030', accent1: '#0d9488', accent2: '#06b6d4' }
+    return { g1: 'var(--color-surface)', g2: 'var(--color-surface-alt)', accent1: 'var(--color-success)', accent2: 'var(--color-info)' }
   if (a.includes('saúde') || a.includes('saude') || a.includes('farmác') || a.includes('medicina') || a.includes('bio'))
-    return { g1: '#051a12', g2: '#062818', accent1: '#10b981', accent2: 'var(--color-success)' }
+    return { g1: 'var(--color-surface)', g2: 'var(--color-surface-alt)', accent1: 'var(--color-success)', accent2: 'var(--color-success)' }
   if (a.includes('construção') || a.includes('civil') || a.includes('arquitet'))
-    return { g1: '#1a1005', g2: '#231500', accent1: 'var(--color-warning)', accent2: 'var(--color-warning)' }
-  // default: deep slate to dark blue
-  return { g1: '#0c1528', g2: '#0d1e38', accent1: 'var(--color-primary)', accent2: '#4f46e5' }
+    return { g1: 'var(--color-surface)', g2: 'var(--color-surface-alt)', accent1: 'var(--color-warning)', accent2: 'var(--color-warning)' }
+  return { g1: 'var(--color-surface)', g2: 'var(--color-surface-alt)', accent1: 'var(--color-primary)', accent2: 'var(--color-accent)' }
 }
 
 function getLevelInfo(score) {
   if (score >= 86) return { label: 'Nível profissional', color: 'var(--color-success)' }
   if (score >= 71) return { label: 'Quase profissional', color: 'var(--color-accent)' }
-  if (score >= 51) return { label: 'A ganhar forma', color: '#3b82f6' }
+  if (score >= 51) return { label: 'A ganhar forma', color: 'var(--color-primary)' }
   if (score >= 31) return { label: 'A começar', color: 'var(--color-warning)' }
   return { label: 'Rascunho', color: 'var(--color-error)' }
 }
@@ -921,6 +920,11 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
   const titleStyle        = previewStyle.titleStyle || 'normal'
   const selectedBg        = BG_OPTIONS.find(b => b.key === (previewStyle.bg || 'default')) || BG_OPTIONS[0]
   const resolvedBg        = selectedBg.bg || 'var(--color-bg)'
+  useEffect(() => {
+    const prev = document.documentElement.style.background
+    document.documentElement.style.background = resolvedBg
+    return () => { document.documentElement.style.background = prev }
+  }, [resolvedBg])
   // pvTheme: force dark/light CSS vars inside preview regardless of app theme
   const pvTheme           = selectedBg.isLight ? 'light' : selectedBg.key !== 'default' ? 'dark' : null
   const titleAlign        = previewStyle.titleAlign || 'left'
@@ -1210,15 +1214,42 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
         ) : (
           /* No cover — use page bg theme as base, accent as subtle overlay */
           (() => {
-            const bgBase = selectedBg.preview || '#060c18'
+            const isDefaultTheme = selectedBg.key === 'default'
+            const bgBase = isDefaultTheme ? 'var(--color-bg)' : (selectedBg.preview || 'var(--color-bg)')
             const accentA = selectedBg.isLight ? '22' : '44'
             const accentB = selectedBg.isLight ? '14' : '2a'
             const glowA   = selectedBg.isLight ? '10' : '1a'
             return (
-              <div style={{ width: '100%', height: heroHeight, position: 'relative', background: bgBase }}>
+              <div style={{ width: '100%', height: heroHeight, position: 'relative', background: bgBase, overflow: 'hidden' }}>
                 <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(135deg, ${hero.c1}${accentA} 0%, ${hero.c2}${accentB} 60%, transparent 100%)` }} />
                 <div style={{ position: 'absolute', top: -40, left: '5%', width: 500, height: 500, borderRadius: '50%', background: `radial-gradient(ellipse, ${hero.c1}${glowA} 0%, transparent 65%)`, pointerEvents: 'none' }} />
-                <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(to bottom, transparent 30%, ${bgBase} 100%)` }} />
+                {/* Large initial watermark */}
+                <div style={{
+                  position: 'absolute', right: '8%', top: '50%', transform: 'translateY(-55%)',
+                  fontSize: 'clamp(120px, 18vw, 200px)', fontWeight: 900, lineHeight: 1,
+                  color: hero.c1, opacity: 0.07,
+                  fontFamily: selectedTitleFont?.css || 'var(--font-heading)',
+                  userSelect: 'none', pointerEvents: 'none', letterSpacing: '-0.04em',
+                }}>
+                  {(project.name || '?')[0].toUpperCase()}
+                </div>
+                {/* Tech pills strip at bottom */}
+                {project.technologies && (
+                  <div style={{
+                    position: 'absolute', bottom: 18, left: 28, right: 28,
+                    display: 'flex', gap: 6, flexWrap: 'wrap',
+                  }}>
+                    {project.technologies.split(',').slice(0, 5).map(t => t.trim()).filter(Boolean).map(t => (
+                      <span key={t} style={{
+                        fontSize: 10, fontWeight: 600, letterSpacing: '0.05em',
+                        padding: '3px 8px', borderRadius: 6,
+                        background: `${hero.c1}18`, border: `1px solid ${hero.c1}28`,
+                        color: hero.c1,
+                      }}>{t}</span>
+                    ))}
+                  </div>
+                )}
+                <div style={{ position: 'absolute', inset: 0, background: isDefaultTheme ? `linear-gradient(to bottom, transparent 30%, var(--color-bg) 100%)` : `linear-gradient(to bottom, transparent 30%, ${bgBase} 100%)` }} />
               </div>
             )
           })()
@@ -1349,23 +1380,11 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
         <div className={`pv-workspace${isDesktop ? '' : ` pv-ws-sheet${wsExpanded ? '' : ' ws-collapsed'}`}`} style={{
           position: 'fixed', right: isDesktop ? 8 : 0, top: isDesktop ? 8 : bannerH, bottom: isDesktop ? 8 : 0, zIndex: 200,
           width: isDesktop ? (wsExpanded ? 360 : 60) : 360,
-          background: 'var(--color-bg-overlay)',
-          backdropFilter: 'blur(20px) saturate(1.4)',
-          WebkitBackdropFilter: 'blur(20px) saturate(1.4)',
-          border: '1px solid var(--color-border)',
-          borderRadius: isDesktop ? 16 : 0,
-          display: 'flex', flexDirection: 'column',
           fontFamily: 'var(--font-body)',
           transition: isDesktop ? 'width 0.22s cubic-bezier(0.4,0,0.2,1)' : undefined,
-          overflow: 'hidden',
+          overflow: 'visible',
         }}>
-          {/* Drag handle — mobile only, taps to close workspace */}
-          {!isDesktop && (
-            <div className="pv-ws-drag-handle" style={{ cursor: 'pointer' }}
-              onClick={() => setWsExpanded(false)} />
-          )}
-
-          {/* Collapse/expand control — same idiom as the left sidebar's edge button */}
+          {/* Collapse/expand control — outside the clipped skin so the arrow is never cut off */}
           {isDesktop && (
             <button
               onClick={() => setWsExpanded(e => !e)}
@@ -1375,12 +1394,28 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                 width: 22, height: 22, borderRadius: '50%',
                 background: 'var(--color-sidebar-bg)', border: '1px solid var(--color-border)',
                 color: 'var(--color-text-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: 'pointer', zIndex: 5, padding: 0,
+                cursor: 'pointer', zIndex: 10, padding: 0,
                 boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
               }}
             >
               <ChevronRight size={12} style={{ transform: wsExpanded ? 'none' : 'rotate(180deg)', transition: 'transform 0.2s' }} />
             </button>
+          )}
+          {/* Panel skin — background, border-radius, and clipping for all content */}
+          <div style={{
+            position: 'absolute', inset: 0,
+            background: 'var(--color-bg-overlay)',
+            backdropFilter: 'blur(20px) saturate(1.4)',
+            WebkitBackdropFilter: 'blur(20px) saturate(1.4)',
+            border: '1px solid var(--color-border)',
+            borderRadius: isDesktop ? 16 : 0,
+            overflow: 'hidden',
+            display: 'flex', flexDirection: 'column',
+          }}>
+          {/* Drag handle — mobile only, taps to close workspace */}
+          {!isDesktop && (
+            <div className="pv-ws-drag-handle" style={{ cursor: 'pointer' }}
+              onClick={() => setWsExpanded(false)} />
           )}
 
           {/* Collapsed desktop rail — just the 3 tab icons, click expands + switches tab */}
@@ -1461,13 +1496,6 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
               >
                 {previewSaveError ? <X size={13} strokeWidth={3} /> : previewSaved ? <Check size={13} strokeWidth={3} /> : <Save size={13} />}
               </button>
-              {/* Close */}
-              <button
-                onClick={() => { setPreviewEditing(false); setWsExpanded(false) }}
-                style={{ width: 28, height: 28, borderRadius: 7, background: 'var(--color-error-subtle)', border: '1px solid var(--color-error-subtle)', color: 'var(--color-error)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.14s', flexShrink: 0 }}
-                onMouseEnter={e => e.currentTarget.style.background = 'var(--color-error-subtle)'}
-                onMouseLeave={e => e.currentTarget.style.background = 'var(--color-error-subtle)'}
-              ><X size={13} /></button>
             </div>
           </div>}
 
@@ -2270,7 +2298,7 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
             )
           })()}
           </>}
-
+          </div>{/* end panel skin */}
         </div>
       )}
 
@@ -2689,26 +2717,6 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
           {!isOwner && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0 16px', flexWrap: 'wrap' }}>
 
-              {/* ❤️ Gostos — alunos, professores, visitantes */}
-              {!isRecruiterRole && (
-                <button
-                  onClick={onLike}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 7,
-                    background: liked ? 'var(--color-error-subtle)' : 'var(--color-surface)',
-                    border: `1.5px solid ${liked ? 'var(--color-error-subtle)' : 'var(--color-border)'}`,
-                    borderRadius: 10, padding: '8px 16px',
-                    color: liked ? 'var(--color-error)' : 'var(--color-text-secondary)',
-                    fontSize: 14, fontWeight: 700, cursor: likeLoading ? 'default' : 'pointer',
-                    fontFamily: 'inherit', transition: 'all 0.15s',
-                  }}
-                  onMouseEnter={e => { if (!liked) { e.currentTarget.style.borderColor = 'var(--color-error-subtle)'; e.currentTarget.style.color = 'var(--color-error)' }}}
-                  onMouseLeave={e => { if (!liked) { e.currentTarget.style.borderColor = 'var(--color-border)'; e.currentTarget.style.color = 'var(--color-text-secondary)' }}}
-                >
-                  <Heart size={16} fill={liked ? 'var(--color-error)' : 'none'} />
-                  {likeCount > 0 ? likeCount : ''} {likeCount === 1 ? 'gosto' : 'gostos'}
-                </button>
-              )}
 
               {/* ⭐ Tenho interesse — recrutadores e empresas */}
               {isRecruiterRole && !hasInterest && (
@@ -3589,13 +3597,12 @@ export default function ProjectPage() {
           <p style={{ color: colors.muted, margin: 0 }}>O link pode estar incorrecto ou o projeto foi eliminado.</p>
           {profile?.role !== 'professor' && (
             <button
-              onClick={() => setShowCreateModal(true)}
+              onClick={() => navigate('/novo')}
               style={{ background: colors.blue, color: '#fff', border: 'none', borderRadius: 10, padding: '12px 28px', fontSize: 16, fontWeight: 700, cursor: 'pointer', marginTop: 8, boxShadow: '0 2px 8px var(--color-primary-subtle)', fontFamily: 'inherit' }}
             >
               <span style={{display:"flex",alignItems:"center",gap:6}}>Criar o meu projeto <ArrowRight size={15} /></span>
             </button>
           )}
-          {showCreateModal && <CreateProjectModal onClose={() => setShowCreateModal(false)} />}
           <button
             onClick={() => navigate('/')}
             style={{ background: 'transparent', border: `1px solid ${colors.border}`, color: colors.muted, borderRadius: 8, padding: '10px 22px', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}
@@ -3985,7 +3992,6 @@ export default function ProjectPage() {
 
       {showConfetti && <Confetti />}
       <Toast message={toast.message} visible={toast.visible} />
-      {showCreateModal && <CreateProjectModal onClose={() => setShowCreateModal(false)} />}
 
 
       {/* ── Launch overlay (shown once after project creation) ── */}
@@ -4964,7 +4970,8 @@ export default function ProjectPage() {
 
           </div>{/* end left flex column */}
 
-          {/* Score ring — right flex column — secondary, smaller */}
+          {/* Score ring — right flex column — hidden from professor view */}
+          {!isProfessor && (
           <div className="proj-score-abs" style={{
             flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, alignSelf: 'flex-start', paddingTop: 4,
           }}>
@@ -4979,6 +4986,7 @@ export default function ProjectPage() {
               {level.label}
             </div>
           </div>
+          )}
           </div>{/* end flex row */}
         </div>{/* end proj-hero */}
 
@@ -5146,13 +5154,13 @@ export default function ProjectPage() {
                 Cria o teu projeto e recebe análise por IA com feedback personalizado.
               </p>
               <button
-                onClick={() => setShowCreateModal(true)}
+                onClick={() => navigate('/novo')}
                 style={{
-                  background: '#6d28d9',
+                  background: 'var(--color-accent)',
                   border: 'none', borderRadius: 8, padding: '7px 16px',
                   color: '#fff', fontSize: 12, fontWeight: 700,
                   cursor: 'pointer', fontFamily: 'inherit',
-                  boxShadow: '0 2px 8px rgba(109,40,217,0.2)',
+                  boxShadow: '0 2px 8px var(--color-accent-subtle)',
                 }}
               >
                 <span style={{display:"flex",alignItems:"center",gap:6}}>Criar o meu projeto <ArrowRight size={15} /></span>
@@ -6377,26 +6385,6 @@ export default function ProjectPage() {
           {/* Barra de gostos / interesse (owner view) */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '20px 0 8px', flexWrap: 'wrap' }}>
 
-            {/* ❤️ Gostos — alunos e professores */}
-            {!isRecruiterRole && (
-              <button
-                onClick={handleLike}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 7,
-                  background: liked ? 'var(--color-error-subtle)' : 'var(--color-bg-alt)',
-                  border: `1.5px solid ${liked ? 'var(--color-error-subtle)' : 'var(--color-border)'}`,
-                  borderRadius: 10, padding: '8px 16px',
-                  color: liked ? 'var(--color-error)' : 'var(--color-text-secondary)',
-                  fontSize: 14, fontWeight: 700, cursor: likeLoading ? 'default' : 'pointer',
-                  fontFamily: 'inherit', transition: 'all 0.15s',
-                }}
-                onMouseEnter={e => { if (!liked) { e.currentTarget.style.borderColor = 'var(--color-error-subtle)'; e.currentTarget.style.color = 'var(--color-error)' }}}
-                onMouseLeave={e => { if (!liked) { e.currentTarget.style.borderColor = 'var(--color-border)'; e.currentTarget.style.color = 'var(--color-text-secondary)' }}}
-              >
-                <Heart size={16} fill={liked ? 'var(--color-error)' : 'none'} />
-                {likeCount > 0 ? likeCount : ''} {likeCount === 1 ? 'gosto' : 'gostos'}
-              </button>
-            )}
 
             {/* Contador de interesse — dono do projeto (clicável) */}
             {isOwner && interestCount > 0 && (
@@ -6489,7 +6477,7 @@ export default function ProjectPage() {
       )}
 
       {/* ── Desktop AI Coach: floating button + slide-in panel ── */}
-      {isOwner && (<>
+      {isOwner && !previewEditing && (<>
         {/* Floating button — desktop only, sits above global feedback FAB (bottom: 24) */}
         <button
           onClick={() => setCoachOpen(o => !o)}

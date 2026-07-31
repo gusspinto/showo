@@ -11,7 +11,6 @@ function stripEmoji(str) {
   if (!str) return str
   return str.replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27FF}\u{2900}-\u{297F}\u{1F300}-\u{1F9FF}\u{FE00}-\u{FEFF}]/gu, '').replace(/\s{2,}/g, ' ').trim()
 }
-import CreateProjectModal from './CreateProjectModal'
 import FeedbackButton from './FeedbackButton'
 import './Navbar.css'
 
@@ -710,7 +709,6 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
     document.body.classList.add('drawer-open')
     return () => document.body.classList.remove('drawer-open')
   }, [menuOpen])
-  const [createModal, setCreateModal] = useState(false)
   // Mobile "Gerir projeto" popup — opened from the paintbrush that replaces the
   // "+" while viewing your own project (keeps those actions out of the drawer).
   const [projMenuOpen, setProjMenuOpen] = useState(false)
@@ -1026,7 +1024,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   <Paintbrush size={18} strokeWidth={2} />
                 </button>
               ) : !isTeacher && !isAdmin ? (
-                <button className="mob-nav-icon-btn primary" onClick={() => setCreateModal(true)} aria-label="Criar projeto">
+                <button className="mob-nav-icon-btn primary" onClick={() => navigate('/novo')} aria-label="Criar projeto">
                   <Plus size={20} strokeWidth={2.5} />
                 </button>
               ) : null}
@@ -1066,7 +1064,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   onProfile={profileUrl ? () => navigate(profileUrl) : null}
                   onSettings={() => navigate('/settings')}
                   onSignOut={handleSignOut}
-                  onCreateProject={showCreateProject && !isTeacher && !isAdmin ? () => setCreateModal(true) : undefined}
+                  onCreateProject={showCreateProject && !isTeacher && !isAdmin ? () => navigate('/novo') : undefined}
                 />
               </>
             ) : (
@@ -1094,7 +1092,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
           {showLinks && !isTeacher && !isAdmin && (
             <button
               className="ham-btn mob-only-create"
-              onClick={() => setCreateModal(true)}
+              onClick={() => navigate('/novo')}
               aria-label="Criar projeto"
               style={{
                 background: 'var(--color-primary)',
@@ -1304,7 +1302,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               {user && !isTeacher && !isAdmin && location.pathname !== '/dashboard' && (
                 <div className={`sb-create-wrap ${extras ? 'hidden' : 'visible'}`}>
                   <div className="sb-create-inner">
-                    <button className="sb-create" onClick={() => setCreateModal(true)}>
+                    <button className="sb-create" onClick={() => navigate('/novo')}>
                       <Plus size={14} />{!collapsed && showLabels && <span>Criar projeto</span>}
                     </button>
                   </div>
@@ -1335,34 +1333,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                     {showLabels && <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{getDisplayName(user)}</span>}
                   </button>
                 )}
-                {/* Mensagens — only stacked here in collapsed mode; moved to the icon row below when expanded.
-                    Skipped for teacher/recruiter, who already have a labeled Mensagens item in their main nav list. */}
-                {collapsed && !isTeacher && !isRecruiter && (
-                  <button
-                    onClick={() => navigate('/mensagens')}
-                    title="Mensagens"
-                    style={{
-                      flexShrink: 0, width: 32, height: 32, borderRadius: 8,
-                      background: isActive('/mensagens') ? 'rgba(27,120,247,0.13)' : 'transparent',
-                      border: 'none',
-                      color: isActive('/mensagens') ? 'var(--color-primary)' : 'var(--color-text-secondary)',
-                      cursor: 'pointer', position: 'relative',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      transition: 'background 0.13s, color 0.13s',
-                    }}
-                    onMouseEnter={e => { if (!isActive('/mensagens')) { e.currentTarget.style.background = 'var(--color-surface-hover)'; e.currentTarget.style.color = 'var(--color-text)' } }}
-                    onMouseLeave={e => { if (!isActive('/mensagens')) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--color-text-secondary)' } }}
-                  >
-                    <MessageSquare size={15} />
-                    {unreadMsgs > 0 && (
-                      <span style={{
-                        position: 'absolute', top: 3, right: 3,
-                        width: 8, height: 8, borderRadius: '50%',
-                        background: 'var(--color-primary)', border: '1.5px solid var(--color-sidebar-bg)',
-                      }} />
-                    )}
-                  </button>
-                )}
+
                 {/* Notificações — stays visible when collapsed */}
                 <InviteInbox userId={user.id} sidebar={true} collapsed={collapsed} />
                 {/* Avatar — collapsed: tap opens a small Perfil/Sair menu instead of
@@ -1429,19 +1400,6 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   <button className="sb-action-btn" onClick={toggleTheme} title={theme === 'dark' ? 'Modo claro' : 'Modo escuro'}>
                     {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
                   </button>
-                  {/* Skipped for teacher/recruiter, who already have a labeled Mensagens item in their main nav list */}
-                  {!isTeacher && !isRecruiter && (
-                    <button className="sb-action-btn" onClick={() => navigate('/mensagens')} title="Mensagens" style={{ position: 'relative', color: isActive('/mensagens') ? 'var(--color-primary)' : undefined }}>
-                      <MessageSquare size={15} />
-                      {unreadMsgs > 0 && (
-                        <span style={{
-                          position: 'absolute', top: 5, right: 5,
-                          width: 7, height: 7, borderRadius: '50%',
-                          background: 'var(--color-primary)', border: '1.5px solid var(--color-sidebar-bg)',
-                        }} />
-                      )}
-                    </button>
-                  )}
                   <button className="sb-action-btn danger" onClick={handleSignOut} title="Sair">
                     <LogOut size={15} />
                   </button>
@@ -1553,7 +1511,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               {previewEditingMobile && user && !isTeacher && !isAdmin && (
                 <>
                   <span className="mob-nav-section-label">Ações</span>
-                  <button className="mob-nav-btn" onClick={() => { setMenuOpen(false); setCreateModal(true) }}>
+                  <button className="mob-nav-btn" onClick={() => { setMenuOpen(false); navigate('/novo') }}>
                     <Plus size={20} /> Criar projeto
                   </button>
                   <div className="mob-nav-divider" />
@@ -1680,7 +1638,6 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
         </>
       )}
 
-      {createModal && <CreateProjectModal onClose={() => setCreateModal(false)} />}
       <FeedbackButton />
     </>
   )

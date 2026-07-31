@@ -1,0 +1,333 @@
+/* ══ Onboarding ═══════════════════════════════════════════════════════════════ */
+
+@keyframes onb-fade {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes onb-grow {
+  from { width: 0 !important; }
+}
+
+@keyframes onb-beat-in {
+  from { opacity: 0; transform: scale(0.98); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes onb-ring {
+  from { box-shadow: 0 0 0 0 var(--color-primary-subtle); }
+  to { box-shadow: 0 0 0 14px rgba(27, 120, 247, 0); }
+}
+
+.onb-ring {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  animation: onb-ring 0.55s ease-out;
+  pointer-events: none;
+}
+
+.onb-ai-badge {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: var(--color-primary);
+  background: var(--color-primary-subtle);
+  border-radius: 5px;
+  padding: 3px 7px;
+  flex-shrink: 0;
+}
+
+.onb-beat {
+  animation: onb-beat-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ── Overlay ── */
+.onb-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(3px);
+  transition: opacity 0.28s;
+}
+
+/* ── Card ── */
+.onb-card {
+  position: fixed;
+  z-index: 10001;
+  top: 50%;
+  left: 50%;
+  width: calc(100% - 40px);
+  max-width: 440px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+  font-family: inherit;
+  transition: opacity 0.28s, transform 0.28s;
+}
+
+/* ── Title bar ── */
+.onb-titlebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 10px 9px 14px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg-alt);
+}
+
+.onb-dots {
+  display: flex;
+  gap: 7px;
+}
+
+.onb-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+}
+
+.onb-dot.red { background: #ff5f57; }
+.onb-dot.yellow { background: #febc2e; }
+.onb-dot.green { background: #28c840; }
+
+/* ── Stage ── */
+.onb-stage {
+  height: 240px;
+  padding: 24px;
+  background: var(--color-surface);
+}
+
+/* ── Click beat ── */
+.onb-click-wrap {
+  position: relative;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.onb-click-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: none;
+  border-radius: 10px;
+  padding: 13px 22px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+  font-family: inherit;
+  pointer-events: none;
+  transition: transform 0.15s, background 0.15s, box-shadow 0.3s;
+}
+
+.onb-cursor {
+  position: absolute;
+  pointer-events: none;
+  transition: left 0.65s cubic-bezier(0.34, 1.4, 0.64, 1),
+              top 0.65s cubic-bezier(0.34, 1.4, 0.64, 1),
+              transform 0.15s;
+}
+
+/* ── Fill beat ── */
+.onb-fill-wrap {
+  padding: 4px 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+  height: 100%;
+  justify-content: center;
+}
+
+.onb-fill-row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.onb-fill-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-primary);
+  min-width: 78px;
+  flex-shrink: 0;
+}
+
+.onb-fill-track {
+  flex: 1;
+  height: 7px;
+  background: var(--color-border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.onb-fill-bar {
+  height: 100%;
+  background: var(--color-primary);
+  border-radius: 4px;
+}
+
+.onb-fill-header {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.onb-fill-line {
+  height: 9px;
+  border-radius: 5px;
+  background: var(--color-border);
+  width: 52%;
+}
+
+/* ── Done beat ── */
+.onb-done-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 100%;
+  justify-content: center;
+}
+
+.onb-done-top {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+
+.onb-done-ring {
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.onb-done-ring-inner {
+  background: var(--color-surface);
+  border-radius: 50%;
+  width: 37px;
+  height: 37px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--color-success);
+}
+
+.onb-done-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.onb-done-sub {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.onb-done-link {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 9px;
+  padding: 10px 13px;
+}
+
+.onb-done-check {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--color-success-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.onb-done-url {
+  font-size: 12.5px;
+  color: var(--color-text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Footer ── */
+.onb-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-bg-alt);
+}
+
+.onb-footer-dots {
+  display: flex;
+  gap: 6px;
+}
+
+.onb-footer-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  padding: 0;
+  border: none;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.onb-start-btn {
+  background: var(--color-primary);
+  border: none;
+  border-radius: 8px;
+  padding: 7px 16px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  font-family: inherit;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+
+.onb-start-btn:hover {
+  background: #1660d1;
+}
+
+/* ── Responsive ── */
+@media (max-width: 560px) {
+  .onb-card {
+    width: calc(100% - 32px) !important;
+    max-width: 360px !important;
+  }
+
+  .onb-stage {
+    height: 200px !important;
+    padding: 16px !important;
+  }
+}
+
+@media (max-width: 390px) {
+  .onb-card {
+    width: calc(100% - 24px) !important;
+  }
+
+  .onb-stage {
+    height: 180px !important;
+    padding: 14px !important;
+  }
+}

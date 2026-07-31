@@ -3,8 +3,8 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
-import { Folder, Check, Search, User, Copy, Inbox, Download, MessageSquare, X, ChevronUp, ChevronDown, ArrowRight, Pencil, UserMinus, GraduationCap, CheckCircle, AlertTriangle, ListChecks, Circle, Trash2, Plus, Calendar, ClipboardList, Scale } from 'lucide-react'
-import CreateProjectModal from '../components/CreateProjectModal'
+import { Folder, Check, Search, User, Copy, Inbox, Download, MessageSquare, X, ChevronUp, ChevronDown, ChevronRight, ArrowRight, Pencil, UserMinus, GraduationCap, CheckCircle, AlertTriangle, ListChecks, Circle, Trash2, Plus, Calendar, ClipboardList, Scale } from 'lucide-react'
+import { Button, Modal, ModalActions } from '../components/ui'
 import { getCurrentAcademicYear, academicYearOptions } from '../lib/academicYear'
 
 const C = {
@@ -820,9 +820,7 @@ export default function TurmaPage() {
           <Search size={52} color="var(--color-primary)" />
           <h2 style={{ margin: 0, fontSize: 22, fontWeight: 400, fontFamily: 'var(--font-heading)', letterSpacing: '-0.4px', color: C.text }}>Turma não encontrada</h2>
           <p style={{ color: C.muted, margin: 0 }}>O código <strong style={{ color: C.text }}>{code}</strong> não existe. Verifica com o professor.</p>
-          <button onClick={() => navigate('/')} style={{ background: C.blue, border: 'none', borderRadius: 8, padding: '10px 24px', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px var(--color-primary-subtle)' }}>
-            Ir para o início
-          </button>
+          <Button onClick={() => navigate('/')}>Ir para o início</Button>
         </div>
       </div>
     )
@@ -911,77 +909,59 @@ export default function TurmaPage() {
 
       {/* Delete task confirm */}
       {deletingTask && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
-          onClick={() => setDeletingTask(null)}>
-          <div style={{ background: C.card, border: `1px solid ${C.borderBright}`, borderRadius: 14, padding: '32px 28px', width: '100%', maxWidth: 360, boxShadow: 'none', textAlign: 'center' }}
-            onClick={e => e.stopPropagation()}>
-            <div style={{ width: 52, height: 52, borderRadius: 12, background: 'var(--color-error-subtle)', border: '1px solid var(--color-error-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px' }}>
+        <Modal onClose={() => setDeletingTask(null)} width={360}>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ width: 52, height: 52, borderRadius: 12, background: 'var(--color-error-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px' }}>
               <Trash2 size={22} color="var(--color-error)" />
             </div>
-            <h3 style={{ margin: '0 0 8px', fontSize: 17, fontWeight: 400, color: C.text, fontFamily: 'var(--font-heading)', letterSpacing: '-0.3px' }}>Remover tarefa?</h3>
+            <h3 style={{ margin: '0 0 8px', fontSize: 17, fontWeight: 700, color: C.text }}>Remover tarefa?</h3>
             <p style={{ margin: '0 0 24px', fontSize: 14, color: C.muted, lineHeight: 1.5 }}>
               <strong style={{ color: C.text }}>{deletingTask.title}</strong> deixa de aparecer para os alunos.
             </p>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button onClick={() => setDeletingTask(null)} style={{ flex: 1, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 8, padding: '11px', color: C.muted, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
-                Cancelar
-              </button>
-              <button onClick={handleDeleteTask} style={{ flex: 1, background: 'var(--color-error-subtle)', border: '1px solid var(--color-error-subtle)', borderRadius: 8, padding: '11px', color: 'var(--color-error)', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
-                Remover
-              </button>
-            </div>
+            <ModalActions>
+              <Button variant="secondary" onClick={() => setDeletingTask(null)} fullWidth>Cancelar</Button>
+              <Button variant="danger" onClick={handleDeleteTask} fullWidth>Remover</Button>
+            </ModalActions>
           </div>
-        </div>
+        </Modal>
       )}
 
       {/* Remove member confirm */}
       {removingMember && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
-          onClick={() => setRemovingMember(null)}>
-          <div style={{ background: C.card, border: `1px solid ${C.borderBright}`, borderRadius: 14, padding: '32px 28px', width: '100%', maxWidth: 360, boxShadow: 'none', textAlign: 'center' }}
-            onClick={e => e.stopPropagation()}>
-            <div style={{ width: 52, height: 52, borderRadius: 12, background: 'var(--color-error-subtle)', border: '1px solid var(--color-error-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px' }}>
+        <Modal onClose={() => setRemovingMember(null)} width={360}>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ width: 52, height: 52, borderRadius: 12, background: 'var(--color-error-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px' }}>
               <UserMinus size={24} color="var(--color-error)" />
             </div>
-            <h3 style={{ margin: '0 0 8px', fontSize: 17, fontWeight: 400, color: C.text, fontFamily: 'var(--font-heading)', letterSpacing: '-0.3px' }}>Remover aluno?</h3>
+            <h3 style={{ margin: '0 0 8px', fontSize: 17, fontWeight: 700, color: C.text }}>Remover aluno?</h3>
             <p style={{ margin: '0 0 24px', fontSize: 14, color: C.muted, lineHeight: 1.5 }}>
               <strong style={{ color: C.text }}>{removingMember.full_name}</strong> deixa de aparecer na turma. Os projetos que já submeteu ficam na turma.
             </p>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button onClick={() => setRemovingMember(null)} style={{ flex: 1, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 8, padding: '11px', color: C.muted, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
-                Cancelar
-              </button>
-              <button onClick={() => handleRemoveMember(removingMember.user_id)} style={{ flex: 1, background: 'var(--color-error-subtle)', border: '1px solid var(--color-error-subtle)', borderRadius: 8, padding: '11px', color: 'var(--color-error)', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
-                Remover
-              </button>
-            </div>
+            <ModalActions>
+              <Button variant="secondary" onClick={() => setRemovingMember(null)} fullWidth>Cancelar</Button>
+              <Button variant="danger" onClick={() => handleRemoveMember(removingMember.user_id)} fullWidth>Remover</Button>
+            </ModalActions>
           </div>
-        </div>
+        </Modal>
       )}
 
       {/* Leave class confirm */}
       {showLeaveConfirm && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
-          onClick={() => setShowLeaveConfirm(false)}>
-          <div style={{ background: C.card, border: `1px solid ${C.borderBright}`, borderRadius: 14, padding: '32px 28px', width: '100%', maxWidth: 360, boxShadow: 'none', textAlign: 'center' }}
-            onClick={e => e.stopPropagation()}>
-            <div style={{ width: 52, height: 52, borderRadius: 12, background: 'var(--color-error-subtle)', border: '1px solid var(--color-error-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px' }}>
+        <Modal onClose={() => setShowLeaveConfirm(false)} width={360}>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ width: 52, height: 52, borderRadius: 12, background: 'var(--color-error-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px' }}>
               <X size={24} color="var(--color-error)" />
             </div>
-            <h3 style={{ margin: '0 0 8px', fontSize: 17, fontWeight: 400, color: C.text, fontFamily: 'var(--font-heading)', letterSpacing: '-0.3px' }}>Sair da turma?</h3>
+            <h3 style={{ margin: '0 0 8px', fontSize: 17, fontWeight: 700, color: C.text }}>Sair da turma?</h3>
             <p style={{ margin: '0 0 24px', fontSize: 14, color: C.muted, lineHeight: 1.5 }}>
               Vais sair de <strong style={{ color: C.text }}>{turma?.name}</strong>. Os teus projetos ficam, mas deixas de aparecer na lista de membros.
             </p>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button onClick={() => setShowLeaveConfirm(false)} style={{ flex: 1, background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 8, padding: '11px', color: C.muted, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
-                Cancelar
-              </button>
-              <button onClick={() => { setShowLeaveConfirm(false); leaveClass() }} disabled={leavingClass} style={{ flex: 1, background: 'var(--color-error-subtle)', border: '1px solid var(--color-error-subtle)', borderRadius: 8, padding: '11px', color: 'var(--color-error)', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', opacity: leavingClass ? 0.6 : 1 }}>
-                {leavingClass ? 'A sair…' : 'Sair'}
-              </button>
-            </div>
+            <ModalActions>
+              <Button variant="secondary" onClick={() => setShowLeaveConfirm(false)} fullWidth>Cancelar</Button>
+              <Button variant="danger" onClick={() => { setShowLeaveConfirm(false); leaveClass() }} loading={leavingClass} fullWidth>Sair</Button>
+            </ModalActions>
           </div>
-        </div>
+        </Modal>
       )}
 
       {/* Add project modal */}
@@ -998,9 +978,7 @@ export default function TurmaPage() {
                 {myProjects.length === 0 ? 'Ainda não tens projetos.' : 'Todos os teus projetos já estão nesta turma.'}
                 {myProjects.length === 0 && (
                   <div style={{ marginTop: 12 }}>
-                    <button onClick={() => setShowCreateModal(true)} style={{ background: C.blue, border: 'none', borderRadius: 8, padding: '9px 20px', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px var(--color-primary-subtle)' }}>
-                      <span style={{display:'flex',alignItems:'center',gap:6}}>Criar projeto <ArrowRight size={14} /></span>
-                    </button>
+                    <Button size="sm" icon={<Plus size={13} />} onClick={() => navigate('/novo')}>Criar projeto</Button>
                   </div>
                 )}
               </div>
@@ -1066,52 +1044,82 @@ export default function TurmaPage() {
                 <span style={{ color: copied ? C.green : C.muted, display: 'flex' }}>{copied ? <Check size={11} /> : <Copy size={11} />}</span>
               </button>
               {/* Copy link */}
-              <button
-                onClick={copyLink}
-                style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'var(--color-primary-subtle)', border: `1px solid var(--color-primary-subtle)`, borderRadius: 7, padding: '6px 10px', cursor: 'pointer', fontFamily: 'inherit', color: copiedLink ? C.green : C.muted, fontSize: 12, fontWeight: 600, transition: 'color 0.15s' }}
-              >
-                {copiedLink ? <Check size={12} /> : <Copy size={12} />}
+              <Button variant="secondary" size="sm" icon={copiedLink ? <Check size={12} /> : <Copy size={12} />} onClick={copyLink}>
                 {copiedLink ? 'Copiado!' : 'Copiar link'}
-              </button>
+              </Button>
               {/* Professor: export CSV */}
               {isTeacher && projects.length > 0 && (
-                <button
-                  onClick={exportCSV}
-                  style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'var(--color-success-subtle)', border: '1px solid var(--color-success-subtle)', borderRadius: 7, padding: '6px 10px', color: '#4ade80', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
-                >
-                  <Download size={12} /> CSV
-                </button>
+                <Button variant="secondary" size="sm" icon={<Download size={12} />} onClick={exportCSV}>CSV</Button>
               )}
               {/* Leave class (students only) */}
               {!isTeacher && user && (
-                <button
-                  onClick={() => setShowLeaveConfirm(true)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'var(--color-error-subtle)', border: '1px solid var(--color-error-subtle)', borderRadius: 7, padding: '6px 10px', color: 'var(--color-error)', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'background 0.15s, border-color 0.15s' }}
-                  onMouseEnter={e => { e.currentTarget.style.background = 'var(--color-error-subtle)'; e.currentTarget.style.borderColor = 'var(--color-error-subtle)' }}
-                  onMouseLeave={e => { e.currentTarget.style.background = 'var(--color-error-subtle)'; e.currentTarget.style.borderColor = 'var(--color-error-subtle)' }}
-                >
-                  <X size={12} /> Sair
-                </button>
+                <Button variant="danger" size="sm" icon={<X size={12} />} onClick={() => setShowLeaveConfirm(true)}>Sair</Button>
               )}
               {/* Add project (students only) */}
               {!isTeacher && (user ? (
-                <button
-                  onClick={() => setShowAdd(true)}
-                  style={{ background: 'var(--color-primary)', border: 'none', borderRadius: 7, padding: '7px 14px', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px var(--color-primary-subtle)' }}
-                >
-                  + Adicionar projeto
-                </button>
+                <Button size="sm" icon={<Plus size={13} />} onClick={() => setShowAdd(true)}>Adicionar projeto</Button>
               ) : (
-                <button
-                  onClick={() => navigate('/login')}
-                  style={{ background: 'var(--color-primary-subtle)', border: `1px solid var(--color-primary-subtle)`, borderRadius: 7, padding: '7px 14px', color: C.blue, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
-                >
-                  Entrar para adicionar
-                </button>
+                <Button variant="secondary" size="sm" onClick={() => navigate('/login')}>Entrar para adicionar</Button>
               ))}
             </div>
           </div>
         </div>
+
+        {/* Teacher summary — quick stats + alerts. Only visible to the teacher. */}
+        {isTeacher && (() => {
+          const students = members.filter(m => m.role !== 'professor')
+          const withoutProjects = students.filter(m => m.projectCount === 0)
+          const needsRevision = projects.filter(p => p.review_status === 'needs_revision')
+          const resubmitted = projects.filter(p => p.review_status === 'resubmitted')
+          const today = new Date(); today.setHours(23, 59, 59, 999)
+          const overdueTasks = tasks.filter(t => t.due_date && new Date(t.due_date + 'T23:59:59') < new Date())
+          const scores = projects.filter(p => p.score != null)
+          const avgScore = scores.length ? Math.round(scores.reduce((s, p) => s + p.score, 0) / scores.length) : null
+          const alerts = [
+            ...needsRevision.map(p => ({ type: 'revision', msg: `"${p.name}" precisa de revisão`, color: 'var(--color-warning)', project: p })),
+            ...resubmitted.map(p => ({ type: 'resubmit', msg: `"${p.name}" enviou correções — rever de novo`, color: 'var(--color-primary)', project: p })),
+            ...withoutProjects.map(m => ({ type: 'noproj', msg: `${m.full_name} ainda não entregou`, color: C.subtle })),
+            ...overdueTasks.map(t => ({ type: 'task', msg: `Tarefa "${t.title}" passou o prazo`, color: 'var(--color-error)' })),
+          ]
+
+          return (
+            <div style={{ marginBottom: 28 }}>
+              {/* Stats strip */}
+              <div style={{ display: 'flex', gap: 10, marginBottom: alerts.length > 0 ? 10 : 0, flexWrap: 'wrap' }}>
+                {[
+                  { label: 'Alunos', value: students.length },
+                  { label: 'Projetos', value: projects.length },
+                  { label: 'Score médio', value: avgScore ?? '—', color: avgScore != null ? scoreColor(avgScore) : C.muted },
+                  { label: 'Tarefas', value: tasks.length > 0 ? `${tasks.length}` : '—' },
+                ].map(s => (
+                  <div key={s.label} style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 10, padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 3, minWidth: 90 }}>
+                    <span style={{ fontSize: 18, fontWeight: 700, fontFamily: 'var(--font-heading)', color: s.color || C.text, letterSpacing: '-0.5px', lineHeight: 1 }}>{s.value}</span>
+                    <span style={{ fontSize: 11, color: C.muted, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{s.label}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Alerts */}
+              {alerts.length > 0 && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {alerts.slice(0, 5).map((a, i) => (
+                    <div key={i}
+                      onClick={a.project ? () => goToProject(a.project.slug) : undefined}
+                      style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 14px', borderRadius: 8, background: `${a.color}10`, border: `1px solid ${a.color}28`, cursor: a.project ? 'pointer' : 'default', transition: 'opacity 0.1s' }}
+                    >
+                      <div style={{ width: 6, height: 6, borderRadius: '50%', background: a.color, flexShrink: 0 }} />
+                      <span style={{ fontSize: 13, color: C.text, flex: 1 }}>{a.msg}</span>
+                      {a.project && <ChevronRight size={13} color={C.subtle} />}
+                    </div>
+                  ))}
+                  {alerts.length > 5 && (
+                    <div style={{ fontSize: 12, color: C.subtle, paddingLeft: 4 }}>+{alerts.length - 5} mais alertas</div>
+                  )}
+                </div>
+              )}
+            </div>
+          )
+        })()}
 
         {/* Professor — own section, visually set apart from the student roster */}
         {(() => {
@@ -1605,7 +1613,6 @@ export default function TurmaPage() {
           </div>
         )}
       </div>
-      {showCreateModal && <CreateProjectModal onClose={() => setShowCreateModal(false)} />}
     </div>
   )
 }

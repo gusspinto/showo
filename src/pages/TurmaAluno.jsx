@@ -53,6 +53,106 @@ const REVIEW_META = {
   resubmitted:       { label: 'Correções enviadas', color: 'var(--color-primary)', Icon: Check },
 }
 
+const SECTION_LABELS = {
+  description: 'Descrição', tech: 'Tecnologias', links: 'Links', demo: 'Demo',
+  team: 'Equipa', gallery: 'Galeria', geral: 'Geral',
+}
+
+function InlineFeedback({ project, teacherId }) {
+  const [items, setItems] = useState(null) // null = not loaded yet
+  const [open, setOpen] = useState(false)
+  const [comment, setComment] = useState('')
+  const [fieldKey, setFieldKey] = useState('geral')
+  const [saving, setSaving] = useState(false)
+
+  async function load() {
+    if (items !== null) return
+    const { data } = await supabase.from('teacher_feedback').select('*').eq('project_id', project.id).eq('teacher_id', teacherId)
+    setItems(data || [])
+  }
+
+  function toggle() {
+    if (!open) load()
+    setOpen(o => !o)
+  }
+
+  async function handleSave() {
+    if (!comment.trim()) return
+    setSaving(true)
+    const { data } = await supabase.from('teacher_feedback')
+      .upsert({ project_id: project.id, teacher_id: teacherId, field_key: fieldKey, comment: comment.trim() }, { onConflict: 'project_id,teacher_id,field_key' })
+      .select().single()
+    if (data) {
+      setItems(prev => { const idx = (prev || []).findIndex(f => f.field_key === fieldKey); return idx >= 0 ? prev.map((f, i) => i === idx ? data : f) : [...(prev || []), data] })
+      if (project.user_id) {
+        supabase.rpc('create_notification', { p_user_id: project.user_id, p_type: 'TEACHER_FEEDBACK', p_message: `O teu professor deixou feedback no projeto "${project.name}".`, p_project_slug: project.slug })
+      }
+    }
+    setComment('')
+    setSaving(false)
+  }
+
+  async function handleDelete(id) {
+    await supabase.from('teacher_feedback').delete().eq('id', id)
+    setItems(prev => (prev || []).filter(f => f.id !== id))
+  }
+
+  const count = items?.length ?? 0
+
+  return (
+    <div style={{ marginTop: 10 }}>
+      <button onClick={toggle} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'inherit', fontSize: 12, fontWeight: 700, color: open ? C.blue : C.muted }}>
+        <MessageSquare size={13} />
+        {open ? 'Fechar feedback' : count > 0 ? `Feedback (${count})` : 'Deixar feedback'}
+        <ChevronRight size={12} style={{ transform: open ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s' }} />
+      </button>
+
+      {open && (
+        <div style={{ marginTop: 10, padding: '14px 16px', background: 'var(--color-bg)', border: `1px solid ${C.border}`, borderRadius: 10 }}>
+          {items === null ? (
+            <div style={{ fontSize: 12, color: C.subtle }}>A carregar…</div>
+          ) : (
+            <>
+              {(items || []).length > 0 && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14 }}>
+                  {items.map(f => (
+                    <div key={f.id} style={{ padding: '10px 12px', background: C.bgAlt, border: `1px solid ${C.border}`, borderRadius: 8 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                        <span style={{ fontSize: 10, fontWeight: 700, color: C.blue, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                          {SECTION_LABELS[f.field_key] || f.field_key}
+                        </span>
+                        <button onClick={() => handleDelete(f.id)} style={{ background: 'none', border: 'none', color: C.subtle, cursor: 'pointer', fontSize: 11, padding: 0, fontFamily: 'inherit' }}>Apagar</button>
+                      </div>
+                      <p style={{ margin: 0, fontSize: 13, color: C.text, lineHeight: 1.5 }}>{f.comment}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
+                {Object.entries(SECTION_LABELS).map(([k, l]) => (
+                  <button key={k} onClick={() => setFieldKey(k)} style={{ fontSize: 11, padding: '3px 9px', borderRadius: 5, border: `1px solid ${fieldKey === k ? C.blue : C.border}`, background: fieldKey === k ? 'var(--color-primary-subtle)' : 'transparent', color: fieldKey === k ? C.blue : C.muted, cursor: 'pointer', fontFamily: 'inherit', fontWeight: fieldKey === k ? 700 : 400 }}>
+                    {l}
+                  </button>
+                ))}
+              </div>
+              <textarea
+                value={comment} onChange={e => setComment(e.target.value)}
+                placeholder={`Comentário sobre ${SECTION_LABELS[fieldKey] || fieldKey}…`}
+                rows={2}
+                style={{ width: '100%', background: C.bgAlt, border: `1px solid ${C.border}`, borderRadius: 7, padding: '8px 10px', color: C.text, fontSize: 13, fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box', outline: 'none' }}
+              />
+              <button onClick={handleSave} disabled={saving || !comment.trim()} style={{ marginTop: 6, background: C.blue, border: 'none', borderRadius: 7, padding: '7px 14px', color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', opacity: saving || !comment.trim() ? 0.5 : 1, fontFamily: 'inherit' }}>
+                {saving ? 'A guardar…' : 'Guardar'}
+              </button>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function TurmaAluno() {
   const { code, userId } = useParams()
   const navigate = useNavigate()
@@ -239,36 +339,38 @@ export default function TurmaAluno() {
             {projects.map(p => {
               const rev = REVIEW_META[p.review_status]
               return (
-                <div
-                  key={p.id}
-                  onClick={() => navigate(`/projeto/${p.slug}`, { state: { turmaCode: turma.code, turmaName: turma.name } })}
-                  style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 10, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer', transition: 'background 0.12s, border-color 0.12s' }}
-                  onMouseEnter={e => { e.currentTarget.style.background = C.glassHover; e.currentTarget.style.borderColor = C.glassBorderBright }}
-                  onMouseLeave={e => { e.currentTarget.style.background = C.glass; e.currentTarget.style.borderColor = C.glassBorder }}
-                >
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ fontSize: 14, fontWeight: 700, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</span>
-                      {rev && (
-                        <span title={rev.label} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, fontWeight: 700, color: rev.color, background: `${rev.color}14`, border: `1px solid ${rev.color}30`, borderRadius: 999, padding: '2px 8px', flexShrink: 0 }}>
-                          <rev.Icon size={10} /> {rev.label}
-                        </span>
-                      )}
+                <div key={p.id}>
+                  <div
+                    onClick={() => navigate(`/projeto/${p.slug}`, { state: { turmaCode: turma.code, turmaName: turma.name } })}
+                    style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 10, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer', transition: 'background 0.12s, border-color 0.12s' }}
+                    onMouseEnter={e => { e.currentTarget.style.background = C.glassHover; e.currentTarget.style.borderColor = C.glassBorderBright }}
+                    onMouseLeave={e => { e.currentTarget.style.background = C.glass; e.currentTarget.style.borderColor = C.glassBorder }}
+                  >
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span style={{ fontSize: 14, fontWeight: 700, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</span>
+                        {rev && (
+                          <span title={rev.label} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, fontWeight: 700, color: rev.color, background: `${rev.color}14`, border: `1px solid ${rev.color}30`, borderRadius: 999, padding: '2px 8px', flexShrink: 0 }}>
+                            <rev.Icon size={10} /> {rev.label}
+                          </span>
+                        )}
+                      </div>
+                      <div style={{ fontSize: 11, color: C.subtle, marginTop: 3 }}>
+                        {p.area || 'Sem área'} · {new Date(p.created_at).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' })}
+                        {p.views != null && ` · ${p.views} visualizaç${p.views === 1 ? 'ão' : 'ões'}`}
+                      </div>
                     </div>
-                    <div style={{ fontSize: 11, color: C.subtle, marginTop: 3 }}>
-                      {p.area || 'Sem área'} · {new Date(p.created_at).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' })}
-                      {p.views != null && ` · ${p.views} visualizaç${p.views === 1 ? 'ão' : 'ões'}`}
+                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                      <div style={{ fontSize: 15, fontWeight: 800, color: scoreColor(p.score) }}>{p.score ?? '—'}</div>
+                      <div style={{ fontSize: 10, color: C.subtle }}>score</div>
                     </div>
+                    <div style={{ textAlign: 'right', flexShrink: 0, minWidth: 44 }}>
+                      <div style={{ fontSize: 15, fontWeight: 800, color: gradeColor(p.teacher_score) }}>{p.teacher_score != null ? `${p.teacher_score}/20` : '—'}</div>
+                      <div style={{ fontSize: 10, color: C.subtle }}>nota</div>
+                    </div>
+                    <ChevronRight size={15} color={C.subtle} style={{ flexShrink: 0 }} />
                   </div>
-                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                    <div style={{ fontSize: 15, fontWeight: 800, color: scoreColor(p.score) }}>{p.score ?? '—'}</div>
-                    <div style={{ fontSize: 10, color: C.subtle }}>score</div>
-                  </div>
-                  <div style={{ textAlign: 'right', flexShrink: 0, minWidth: 44 }}>
-                    <div style={{ fontSize: 15, fontWeight: 800, color: gradeColor(p.teacher_score) }}>{p.teacher_score != null ? `${p.teacher_score}/20` : '—'}</div>
-                    <div style={{ fontSize: 10, color: C.subtle }}>nota</div>
-                  </div>
-                  <ChevronRight size={15} color={C.subtle} style={{ flexShrink: 0 }} />
+                  <InlineFeedback project={p} teacherId={user.id} />
                 </div>
               )
             })}

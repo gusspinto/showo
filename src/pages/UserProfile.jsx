@@ -5,33 +5,10 @@ import { QRCodeSVG } from 'qrcode.react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
-import CreateProjectModal from '../components/CreateProjectModal'
 import { Search, FolderOpen, X, Download, Rocket, QrCode, Pencil, Globe, ExternalLink, Link, Briefcase, ArrowRight, Star, MessageSquare, GraduationCap, Send, Lock } from 'lucide-react'
 import ConvidarVagaModal from '../components/ConvidarVagaModal'
+import './UserProfile.css'
 
-// ── Design tokens (aligned with the rest of the app) ──────────────────────────
-const C = {
-  bg:           'var(--color-bg)',
-  bgAlt:        'var(--color-bg-alt)',
-  card:         'var(--color-surface)',
-  cardHover:    'var(--color-surface-hover)',
-  border:       'var(--color-border)',
-  borderBright: 'var(--color-border-hover)',
-  blue:         'var(--color-primary)',
-  blueHover:    'var(--color-primary-hover)',
-  text:         'var(--color-text)',
-  muted:        'var(--color-text-secondary)',
-  subtle:       'var(--color-text-tertiary)',
-  green:        'var(--color-success)',
-  yellow:       'var(--color-warning)',
-  orange:       'var(--color-warning)',
-  red:          'var(--color-error)',
-  glass: 'var(--color-glass)', glassHover: 'var(--color-glass-hover)',
-  glassBorder: 'var(--color-glass-border)', glassBorderBright: 'var(--color-glass-border-bright)',
-  glassStyle: { backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' },
-}
-
-// ── Helpers ────────────────────────────────────────────────────────────────────
 function areaGradient(area) {
   const a = (area || '').toLowerCase()
   if (a.includes('educa'))                                                     return ['#1e3a5f', '#2d6a4f']
@@ -42,79 +19,45 @@ function areaGradient(area) {
 }
 
 function scoreColor(score) {
-  if (score == null) return C.muted
-  if (score >= 90)   return C.green
-  if (score >= 71)   return C.blue
-  if (score >= 40)   return C.yellow
-  return C.red
+  if (score == null) return 'var(--color-text-secondary)'
+  if (score >= 90)   return 'var(--color-success)'
+  if (score >= 71)   return 'var(--color-primary)'
+  if (score >= 40)   return 'var(--color-warning)'
+  return 'var(--color-error)'
 }
 
-// ── ProjectCard ────────────────────────────────────────────────────────────────
 function ProjectCard({ project, onClick }) {
-  const [hovered, setHovered] = useState(false)
   const color = scoreColor(project.score)
   const [c1, c2] = areaGradient(project.area)
 
   return (
-    <div
-      onClick={onClick}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        ...C.glassStyle,
-        background: hovered ? C.glassHover : C.glass,
-        border: `1px solid ${hovered ? C.glassBorderBright : C.glassBorder}`,
-        borderRadius: 12,
-        cursor: 'pointer',
-        overflow: 'hidden',
-        transition: 'background 0.15s, border-color 0.15s',
-        boxShadow: 'none',
-      }}
-    >
-      {/* Cover */}
+    <div className="up-project-card" onClick={onClick}>
       {project.cover_url ? (
-        <div style={{ height: 140, overflow: 'hidden', background: C.border }}>
-          <img src={project.cover_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+        <div className="up-card-cover-img">
+          <img src={project.cover_url} alt="" />
         </div>
       ) : (
-        <div style={{
-          height: 100,
-          background: `linear-gradient(135deg, ${c1}, ${c2})`,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}>
-          <span style={{ fontSize: 40, fontWeight: 900, color: 'rgba(255,255,255,0.2)', userSelect: 'none', lineHeight: 1 }}>
+        <div className="up-card-cover-fallback" style={{ background: `linear-gradient(135deg, ${c1}, ${c2})` }}>
+          <span className="up-card-cover-letter">
             {project.name ? project.name[0].toUpperCase() : '?'}
           </span>
         </div>
       )}
 
-      <div style={{ padding: '14px 16px 16px' }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 6 }}>
-          <span style={{ color: C.text, fontSize: 14, fontWeight: 700, lineHeight: 1.3, flex: 1 }}>
-            {project.name}
-          </span>
+      <div className="up-card-body">
+        <div className="up-card-title-row">
+          <span className="up-card-name">{project.name}</span>
           {project.score != null && (
-            <span style={{ color, fontSize: 12, fontWeight: 700, flexShrink: 0 }}>
-              {project.score}
-            </span>
+            <span className="up-card-score" style={{ color }}>{project.score}</span>
           )}
         </div>
-        {project.ai_tagline && (
-          <p style={{ margin: '0 0 10px', color: C.muted, fontSize: 12, lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-            {project.ai_tagline}
-          </p>
-        )}
-        {project.area && (
-          <span style={{ fontSize: 11, color: C.muted, fontWeight: 600 }}>
-            {project.area}
-          </span>
-        )}
+        {project.ai_tagline && <p className="up-card-tagline">{project.ai_tagline}</p>}
+        {project.area && <span className="up-card-area">{project.area}</span>}
       </div>
     </div>
   )
 }
 
-// ── QR Modal ───────────────────────────────────────────────────────────────────
 function QRModal({ profileUrl, username, onClose }) {
   const qrRef = useRef(null)
 
@@ -140,42 +83,25 @@ function QRModal({ profileUrl, username, onClose }) {
   }
 
   return (
-    <div
-      style={{ position: 'fixed', inset: 0, zIndex: 9800, background: 'rgba(5,9,18,0.88)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, fontFamily: 'inherit' }}
-      onClick={e => e.target === e.currentTarget && onClose()}
-    >
-      <div style={{ background: C.card, border: `1px solid ${C.borderBright}`, borderRadius: 14, width: '100%', maxWidth: 340, boxShadow: 'none', position: 'relative' }}>
-        <button onClick={onClose} style={{ position: 'absolute', top: 14, right: 14, background: 'var(--color-surface-hover)', border: `1px solid ${C.border}`, borderRadius: 8, width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.muted, cursor: 'pointer' }}>
-          <X size={14} />
-        </button>
+    <div className="up-qr-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="up-qr-card">
+        <button onClick={onClose} className="up-qr-close"><X size={14} /></button>
 
-        <div style={{ padding: '24px 24px 0' }}>
-          <h2 style={{ margin: 0, fontSize: 16, fontWeight: 400, color: C.text, fontFamily: 'var(--font-heading)', letterSpacing: '-0.3px' }}>QR Code do perfil</h2>
-          <p style={{ margin: '4px 0 0', fontSize: 12, color: C.muted }}>Aponta a câmara para abrir o teu portfólio</p>
+        <div className="up-qr-header">
+          <h2 className="up-qr-title">QR Code do perfil</h2>
+          <p className="up-qr-subtitle">Aponta a câmara para abrir o teu portfólio</p>
         </div>
 
-        <div style={{ padding: '20px 24px 24px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18 }}>
-          <div ref={qrRef} style={{ background: '#fff', borderRadius: 12, padding: 16, boxShadow: 'none' }}>
+        <div className="up-qr-body">
+          <div ref={qrRef} className="up-qr-svg-wrap">
             <QRCodeSVG value={profileUrl} size={180} />
           </div>
-          <div style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 8, padding: '8px 14px', fontSize: 11, color: C.subtle, textAlign: 'center', wordBreak: 'break-all', width: '100%', boxSizing: 'border-box' }}>
-            {profileUrl}
-          </div>
-          <div style={{ display: 'flex', gap: 10, width: '100%' }}>
-            <button
-              onClick={downloadQR}
-              style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, background: 'var(--color-primary-subtle)', border: `1px solid var(--color-primary-subtle)`, borderRadius: 10, padding: '10px 0', color: C.blue, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'background 0.15s' }}
-              onMouseEnter={e => e.currentTarget.style.background = 'var(--color-primary-subtle)'}
-              onMouseLeave={e => e.currentTarget.style.background = 'var(--color-primary-subtle)'}
-            >
+          <div className="up-qr-url">{profileUrl}</div>
+          <div className="up-qr-actions">
+            <button onClick={downloadQR} className="up-qr-download">
               <Download size={14} /> Descarregar
             </button>
-            <button
-              onClick={() => window.print()}
-              style={{ flex: 1, background: C.blue, border: 'none', borderRadius: 10, padding: '10px 0', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
-            >
-              Imprimir
-            </button>
+            <button onClick={() => window.print()} className="up-qr-print">Imprimir</button>
           </div>
         </div>
       </div>
@@ -183,7 +109,40 @@ function QRModal({ profileUrl, username, onClose }) {
   )
 }
 
-// ── Main page ──────────────────────────────────────────────────────────────────
+function ProfileSkeleton() {
+  return (
+    <>
+      <div className="skel up-skeleton-header">
+        <div className="up-skel-row">
+          <div className="skel-circle" style={{ width: 112, height: 112 }} />
+          <div className="flex-col gap-3 flex-1">
+            <div className="skel-line w-60 h-xl" />
+            <div className="skel-line w-40" />
+            <div className="skel-line w-80 h-lg" />
+            <div className="flex gap-2 mt-2">
+              <div className="skel-line h-lg" style={{ width: 90 }} />
+              <div className="skel-line h-lg" style={{ width: 120 }} />
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="skel-line w-40 h-sm mb-4" />
+      <div className="skel up-skeleton-projects" style={{ animationDelay: '0.15s' }}>
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="skel-card">
+            <div className="skel-cover" />
+            <div className="flex-col gap-2 p-4">
+              <div className="skel-line w-80 h-lg" />
+              <div className="skel-line w-full" />
+              <div className="skel-line w-40" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </>
+  )
+}
+
 export default function UserProfile() {
   const { username } = useParams()
   const navigate = useNavigate()
@@ -212,7 +171,6 @@ export default function UserProfile() {
       if (profileErr || !profileData) { setNotFound(true); setLoading(false); return }
       setProfile(profileData)
 
-      // Fire projects + saved-check in parallel — no longer sequential
       const projectsPromise = supabase
         .from('projects')
         .select('id, name, slug, score, area, ai_tagline, cover_url, created_at, views, ai_feedback, collaborator_count:project_collaborators(count)')
@@ -249,7 +207,6 @@ export default function UserProfile() {
     load()
   }, [username])
 
-  // Load recruiter's vagas for invite modal
   useEffect(() => {
     if (!user || !isRecruiter) return
     supabase
@@ -282,31 +239,26 @@ export default function UserProfile() {
   const [c1, c2]     = areaGradient(profile?.area || profile?.course || '')
 
   if (loading) return (
-    <div style={{ minHeight: '100vh', background: C.bg }}>
+    <div className="min-h-screen bg-page">
       <Navbar />
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 'calc(100dvh - 62px)' }}>
-        <div style={{ width: 36, height: 36, border: `2px solid ${C.border}`, borderTop: `2px solid ${C.blue}`, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
-        <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-      </div>
+      <div className="page-content"><ProfileSkeleton /></div>
     </div>
   )
 
   if (notFound) return (
-    <div style={{ minHeight: '100vh', background: C.bg, fontFamily: 'inherit', display: 'flex', flexDirection: 'column' }}>
+    <div className="min-h-screen bg-page flex-col">
       <Navbar />
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, padding: 24, textAlign: 'center' }}>
-        <Search size={44} color={C.muted} />
-        <h2 style={{ color: C.text, fontSize: 22, fontWeight: 400, margin: 0, fontFamily: 'var(--font-heading)', letterSpacing: '-0.4px' }}>Perfil não encontrado</h2>
-        <p style={{ color: C.muted, margin: 0, fontSize: 14 }}>O utilizador @{username} não existe.</p>
-        <button onClick={() => navigate('/')} style={{ marginTop: 8, background: C.blue, border: 'none', borderRadius: 8, padding: '10px 24px', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px var(--color-primary-subtle)' }}>
-          Ir para o início
-        </button>
+      <div className="up-not-found">
+        <Search size={44} color="var(--color-text-secondary)" />
+        <h2>Perfil não encontrado</h2>
+        <p>O utilizador @{username} não existe.</p>
+        <button onClick={() => navigate('/')} className="up-not-found-btn">Ir para o início</button>
       </div>
     </div>
   )
 
   return (
-    <div style={{ minHeight: '100vh', background: C.bg, fontFamily: 'inherit' }}>
+    <div className="min-h-screen bg-page">
       <Helmet>
         <title>{displayName} — Showo</title>
         <meta name="description" content={profile.bio || `Projetos de ${displayName} no Showo`} />
@@ -316,21 +268,6 @@ export default function UserProfile() {
       </Helmet>
 
       <style>{`
-        @keyframes spin { to { transform: rotate(360deg) } }
-
-        .up-header {
-          background: ${C.glass};
-          backdrop-filter: blur(16px);
-          -webkit-backdrop-filter: blur(16px);
-          border: 1px solid ${C.glassBorder};
-          border-radius: 14px;
-          padding: 28px 28px 24px;
-          margin-bottom: 28px;
-          position: relative;
-          overflow: hidden;
-          box-shadow: none;
-        }
-        /* Subtle area gradient glow in top-right corner — dark mode only */
         .up-header::before {
           content: '';
           position: absolute;
@@ -340,136 +277,7 @@ export default function UserProfile() {
           background: radial-gradient(circle, ${c1}bb 0%, transparent 60%);
           pointer-events: none;
         }
-        body.light .up-header::before {
-          display: none;
-        }
-
-        .up-avatar {
-          width: 112px; height: 112px;
-          border-radius: 50%;
-          object-fit: cover;
-          flex-shrink: 0;
-          border: 3px solid ${c1};
-        }
-        .up-avatar-placeholder {
-          width: 112px; height: 112px;
-          border-radius: 50%;
-          flex-shrink: 0;
-          background: linear-gradient(135deg, ${c1}, ${c2});
-          display: flex; align-items: center; justify-content: center;
-          font-size: 42px; font-weight: 400; font-family: var(--font-heading); color: rgba(255,255,255,0.85);
-          border: 3px solid ${c1};
-        }
-
-        .up-stat-pill {
-          display: inline-flex; align-items: center; gap: 5px;
-          background: var(--color-bg-alt);
-          border: 1px solid ${C.border};
-          border-radius: 999px;
-          padding: 4px 12px;
-          font-size: 12px; color: ${C.muted};
-        }
-        .up-stat-pill strong {
-          color: ${C.text}; font-weight: 700;
-        }
-
-        .up-social-link {
-          display: inline-flex; align-items: center; gap: 5px;
-          background: var(--color-bg-alt);
-          border: 1px solid ${C.border};
-          border-radius: 8px;
-          padding: 5px 12px;
-          font-size: 12px; color: ${C.muted};
-          text-decoration: none;
-          transition: border-color 0.15s, color 0.15s, background 0.15s;
-          cursor: pointer;
-        }
-        .up-social-link:hover {
-          border-color: ${C.borderBright};
-          color: ${C.text};
-          background: var(--color-surface-hover);
-        }
-
-        .up-action-btn {
-          background: transparent;
-          border: 1px solid ${C.border};
-          border-radius: 9px;
-          padding: 8px 14px;
-          color: ${C.muted};
-          font-size: 13px; font-weight: 600;
-          cursor: pointer; font-family: inherit;
-          display: inline-flex; align-items: center; gap: 6px;
-          transition: border-color 0.15s, color 0.15s, background 0.15s;
-          white-space: nowrap;
-        }
-        .up-action-btn:hover {
-          border-color: ${C.borderBright};
-          color: ${C.text};
-          background: var(--color-surface-hover);
-        }
-        .up-action-btn.kit {
-          background: rgba(234,179,8,0.07);
-          border-color: rgba(234,179,8,0.22);
-          color: ${C.yellow};
-        }
-        .up-action-btn.kit:hover {
-          background: rgba(234,179,8,0.13);
-          border-color: rgba(234,179,8,0.35);
-          color: ${C.yellow};
-        }
-        .up-action-btn.primary {
-          background: var(--color-primary);
-          border-color: transparent;
-          color: #fff;
-          box-shadow: 0 2px 8px var(--color-primary-subtle);
-        }
-        .up-action-btn.primary:hover {
-          background: #1564d4;
-          border-color: transparent;
-          color: #fff;
-          box-shadow: 0 2px 8px var(--color-primary-subtle);
-        }
-
-        .up-section-label {
-          font-size: 12px; font-weight: 700; color: ${C.muted};
-          text-transform: uppercase; letter-spacing: 0.07em;
-          margin: 0 0 14px;
-        }
-
-        .up-projects-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-          gap: 16px;
-        }
-
-        /* ── Responsive ── */
-        @media (max-width: 860px) {
-          .up-header { padding: 20px 18px 18px; border-radius: 14px; }
-          .up-header-inner { flex-direction: column !important; gap: 16px !important; }
-          .up-avatar, .up-avatar-placeholder { width: 80px !important; height: 80px !important; font-size: 32px !important; }
-          .up-actions { flex-wrap: wrap !important; }
-          .up-projects-grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
-        }
-        /* QR + Edit always as icon buttons in card corner — hide text versions everywhere */
-        .up-action-btn.up-hide-mobile { display: none !important; }
-
-        @media (max-width: 600px) {
-          .up-header { padding: 16px 14px 14px; border-radius: 12px; margin-bottom: 18px; }
-          /* Projetos — coluna única */
-          .up-projects-grid { grid-template-columns: 1fr !important; gap: 10px !important; }
-          .up-stat-pills { flex-wrap: wrap; gap: 6px !important; }
-          /* Skills section — reduce chip sizes */
-          .up-skill-chip { padding: 5px 10px !important; font-size: 11px !important; }
-          /* Profile stats row */
-          .up-stats-row { flex-wrap: wrap !important; gap: 8px !important; }
-          /* Bio section */
-          .up-bio { font-size: 14px !important; }
-        }
-        @media (max-width: 420px) {
-          .up-projects-grid { grid-template-columns: 1fr; }
-          /* Profile header (avatar, name, etc.) */
-          .up-header-meta { flex-direction: column !important; align-items: flex-start !important; gap: 8px !important; }
-        }
+        body.light .up-header::before { display: none; }
       `}</style>
 
       <Navbar />
@@ -478,121 +286,67 @@ export default function UserProfile() {
 
         {/* ── Profile header card ── */}
         <div className="up-header">
-          {/* Mobile-only: Edit + QR icon buttons in top-right corner of card */}
-          <div
-            className="up-card-btns-mobile"
-            style={{ display: 'flex', position: 'absolute', top: 14, right: 14, zIndex: 2, gap: 6 }}
-          >
-            <button
-              onClick={() => setShowQR(true)}
-              style={{ background: 'var(--color-surface-hover)', border: `1px solid ${C.border}`, borderRadius: 8, width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: C.muted }}
-              title="QR Code"
-            >
+          <div className="up-card-btns-mobile">
+            <button onClick={() => setShowQR(true)} className="up-icon-btn" title="QR Code">
               <QrCode size={15} />
             </button>
             {isOwnProfile && (
-              <button
-                onClick={() => navigate('/settings')}
-                style={{ background: 'var(--color-surface-hover)', border: `1px solid ${C.border}`, borderRadius: 8, width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: C.muted }}
-                title="Editar perfil"
-              >
+              <button onClick={() => navigate('/settings')} className="up-icon-btn" title="Editar perfil">
                 <Pencil size={15} />
               </button>
             )}
           </div>
 
-          {/* Message button — shown for non-own profiles, positioned at bottom-right of header */}
           {!isOwnProfile && user && (
-            <div style={{ position: 'absolute', bottom: 22, right: 22, zIndex: 3 }}>
-              <button
-                onClick={() => navigate(`/mensagens?to=${profile.id}`)}
-                style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 7,
-                  background: 'var(--color-primary)', border: 'none',
-                  borderRadius: 9, padding: '9px 18px',
-                  color: '#fff', fontSize: 13, fontWeight: 700,
-                  cursor: 'pointer', fontFamily: 'inherit',
-                  whiteSpace: 'nowrap',
-                  boxShadow: '0 2px 8px var(--color-primary-subtle)',
-                  transition: 'background 0.15s',
-                }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'var(--color-primary-hover)' }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'var(--color-primary)' }}
-              >
+            <div className="up-msg-wrap">
+              <button onClick={() => navigate(`/mensagens?to=${profile.id}`)} className="up-msg-btn">
                 <MessageSquare size={14} /> Mensagem
               </button>
             </div>
           )}
 
-          <div className="up-header-inner up-header-meta" style={{ display: 'flex', alignItems: 'flex-start', gap: 22, position: 'relative', zIndex: 1 }}>
-
-            {/* Avatar */}
+          <div className="up-header-inner">
             {profile.avatar_url
-              ? <img src={profile.avatar_url} alt={displayName} className="up-avatar" />
-              : <div className="up-avatar-placeholder">{displayName[0].toUpperCase()}</div>
+              ? <img src={profile.avatar_url} alt={displayName} className="up-avatar" style={{ borderColor: c1 }} />
+              : <div className="up-avatar-placeholder" style={{ background: `linear-gradient(135deg, ${c1}, ${c2})`, borderColor: c1 }}>{displayName[0].toUpperCase()}</div>
             }
 
-            {/* Info */}
-            <div style={{ flex: 1, minWidth: 0, paddingRight: 8 }}>
-              {/* Name + username */}
-              <div style={{ marginBottom: 6 }}>
-                <h1 style={{ color: C.text, fontSize: 26, fontWeight: 400, margin: '0 0 3px', letterSpacing: '-0.6px', lineHeight: 1.15, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', fontFamily: 'var(--font-heading)' }}>
+            <div className="up-info">
+              <div className="up-name-row">
+                <h1 className="up-name">
                   {displayName}
                   {projects.some(p => (p.score || 0) >= 100) && (
-                    <span title="Tem um projeto com score perfeito" style={{
-                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                      width: 28, height: 28, borderRadius: 8,
-                      background: 'var(--color-primary)',
-                      boxShadow: '0 0 8px var(--color-primary-subtle)',
-                      flexShrink: 0,
-                    }}>
+                    <span className="up-perfect-badge" title="Tem um projeto com score perfeito">
                       <GraduationCap size={15} color="#fff" />
                     </span>
                   )}
                 </h1>
-                {profile.username && (
-                  <span style={{ color: C.muted, fontSize: 13, fontWeight: 400 }}>@{profile.username}</span>
-                )}
+                {profile.username && <span className="up-username">@{profile.username}</span>}
               </div>
 
-              {/* Area / school */}
               {(profile.area || profile.course || profile.school) && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginBottom: 10, marginTop: 6 }}>
+                <div className="up-area-row">
                   {(profile.area || profile.course) && (
-                    <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-primary)' }}>
-                      {profile.area || profile.course}
-                    </span>
+                    <span className="up-area-label">{profile.area || profile.course}</span>
                   )}
                   {profile.school && (
                     <>
-                      {(profile.area || profile.course) && <span style={{ color: C.subtle, fontSize: 12 }}>·</span>}
-                      <span style={{ fontSize: 12, color: C.muted }}>{profile.school}</span>
+                      {(profile.area || profile.course) && <span className="up-area-sep">·</span>}
+                      <span className="up-school">{profile.school}</span>
                     </>
                   )}
                 </div>
               )}
 
-              {/* Bio */}
-              {profile.bio && (
-                <p className="up-bio" style={{ color: C.muted, fontSize: 14, margin: '0 0 12px', lineHeight: 1.6, maxWidth: 480 }}>
-                  {profile.bio}
-                </p>
-              )}
+              {profile.bio && <p className="up-bio">{profile.bio}</p>}
 
-              {/* Available for work badge */}
               {profile.available_for_work && profile.role === 'aluno' && (
-                <div style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 6,
-                  background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)',
-                  borderRadius: 7, padding: '5px 14px', marginBottom: 12,
-                  color: 'var(--color-primary)', fontSize: 13, fontWeight: 700,
-                }}>
-                  <Briefcase size={13} style={{ flexShrink: 0 }} /> Disponível para estágio
+                <div className="up-available-badge">
+                  <Briefcase size={13} className="flex-shrink-0" /> Disponível para estágio
                 </div>
               )}
 
-              {/* Stats */}
-              <div className="up-stat-pills up-stats-row" style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+              <div className="up-stat-pills">
                 <span className="up-stat-pill">
                   <strong>{projects.length}</strong> projeto{projects.length !== 1 ? 's' : ''}
                 </span>
@@ -603,14 +357,13 @@ export default function UserProfile() {
                 )}
                 {profile.role === 'professor' && (
                   <span className="up-stat-pill">
-                    <strong style={{ color: C.blue }}>Professor</strong>
+                    <strong className="text-primary">Professor</strong>
                   </span>
                 )}
               </div>
 
-              {/* Social links */}
               {(profile.linkedin || profile.github || profile.website) && (
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
+                <div className="up-social-row">
                   {profile.linkedin && (
                     <a href={profile.linkedin} target="_blank" rel="noopener noreferrer" className="up-social-link">
                       <ExternalLink size={12} /> LinkedIn
@@ -629,26 +382,15 @@ export default function UserProfile() {
                 </div>
               )}
 
-              {/* Skills chips */}
               {profile.skills && profile.skills.length > 0 && (
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
+                <div className="up-skills-row">
                   {profile.skills.map(skill => (
-                    <span key={skill} className="up-skill-chip" style={{
-                      display: 'inline-flex', alignItems: 'center',
-                      background: 'var(--color-primary-subtle)', color: 'var(--color-primary)',
-                      border: '1px solid var(--color-primary-subtle)',
-                      borderRadius: 6, padding: '3px 12px',
-                      fontSize: 12, fontWeight: 600,
-                    }}>
-                      {skill}
-                    </span>
+                    <span key={skill} className="up-skill-chip">{skill}</span>
                   ))}
                 </div>
               )}
 
-
-              {/* Action buttons */}
-              <div className="up-actions" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <div className="up-actions">
                 <button className="up-action-btn up-hide-mobile" onClick={() => setShowQR(true)}>
                   <QrCode size={13} /> QR Code
                 </button>
@@ -657,41 +399,15 @@ export default function UserProfile() {
                     <Pencil size={13} /> Editar perfil
                   </button>
                 )}
-                {/* Recruiter actions — only when viewing someone else's profile */}
                 {!isOwnProfile && isRecruiter && (
                   <>
-                    <button
-                      onClick={toggleSave}
-                      disabled={savingCandidate}
-                      style={{
-                        display: 'inline-flex', alignItems: 'center', gap: 6,
-                        background: saved ? 'var(--color-warning-subtle)' : 'transparent',
-                        border: `1px solid ${saved ? 'var(--color-warning-subtle)' : C.border}`,
-                        borderRadius: 9, padding: '8px 14px',
-                        color: saved ? 'var(--color-warning)' : C.muted,
-                        fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
-                        transition: 'all 0.15s',
-                      }}
-                      title={saved ? 'Remover dos guardados' : 'Guardar candidato'}
-                    >
+                    <button onClick={toggleSave} disabled={savingCandidate}
+                      className={`up-action-btn${saved ? ' saved' : ''}`}
+                      title={saved ? 'Remover dos guardados' : 'Guardar candidato'}>
                       <Star size={13} fill={saved ? 'var(--color-warning)' : 'none'} />
                       {saved ? 'Guardado' : 'Guardar'}
                     </button>
-                    <button
-                      onClick={() => setShowInvite(true)}
-                      style={{
-                        display: 'inline-flex', alignItems: 'center', gap: 6,
-                        background: 'var(--color-primary)',
-                        border: 'none',
-                        borderRadius: 9, padding: '8px 16px',
-                        color: '#fff',
-                        fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-                        boxShadow: '0 2px 8px var(--color-primary-subtle)',
-                        transition: 'background 0.15s',
-                      }}
-                      onMouseEnter={e => { e.currentTarget.style.background = 'var(--color-primary-hover)' }}
-                      onMouseLeave={e => { e.currentTarget.style.background = 'var(--color-primary)' }}
-                    >
+                    <button onClick={() => setShowInvite(true)} className="up-action-btn primary">
                       <Send size={13} /> Convidar para vaga
                     </button>
                   </>
@@ -699,12 +415,9 @@ export default function UserProfile() {
               </div>
 
               {isOwnProfile && profile.role === 'aluno' && (
-                <p style={{ color: C.subtle, fontSize: 12, margin: '14px 0 0', fontStyle: 'italic', display: 'flex', alignItems: 'center', gap: 6 }}>
-                  Brevemente: partilha o teu portfólio com empresas
-                </p>
+                <p className="up-hint">Brevemente: partilha o teu portfólio com empresas</p>
               )}
             </div>
-
           </div>
         </div>
 
@@ -712,34 +425,32 @@ export default function UserProfile() {
         <div>
           <p className="up-section-label">
             Projetos
-            {projects.length > 0 && <span style={{ color: C.subtle, marginLeft: 6, fontWeight: 500, textTransform: 'none', letterSpacing: 0 }}>({projects.length})</span>}
+            {projects.length > 0 && <span className="up-section-count">({projects.length})</span>}
           </p>
 
           {projects.length === 0 ? (
             isOwnProfile ? (
-              <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '48px 32px', textAlign: 'center' }}>
-                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16, color: C.blue }}><Rocket size={40} /></div>
-                <p style={{ color: C.text, fontSize: 17, fontWeight: 700, margin: '0 0 8px' }}>
+              <div className="up-empty">
+                <div className="up-empty-icon"><Rocket size={40} color="var(--color-primary)" /></div>
+                <p className="up-empty-title">
                   {myProfile?.role === 'professor' ? 'Ainda não tens projetos' : 'O teu portfólio começa aqui'}
                 </p>
                 {myProfile?.role !== 'professor' && (
                   <>
-                    <p style={{ color: C.muted, fontSize: 14, margin: '0 0 24px', maxWidth: 360, marginLeft: 'auto', marginRight: 'auto', lineHeight: 1.65 }}>
+                    <p className="up-empty-desc">
                       Adiciona o teu primeiro projeto e constrói o teu portfólio profissional.
                     </p>
-                    <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
-                      <button onClick={() => setShowCreateModal(true)} style={{ background: C.blue, border: 'none', borderRadius: 8, padding: '11px 24px', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px var(--color-primary-subtle)' }}>
-                        <span style={{display:'flex',alignItems:'center',gap:6}}>Criar projeto <ArrowRight size={14} /></span>
-                      </button>
-                    </div>
+                    <button onClick={() => navigate('/novo')} className="up-empty-cta">
+                      Criar projeto <ArrowRight size={14} />
+                    </button>
                   </>
                 )}
               </div>
             ) : (
-              <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '48px 32px', textAlign: 'center' }}>
-                <FolderOpen size={40} color={C.subtle} style={{ marginBottom: 14 }} />
-                <p style={{ color: C.text, fontSize: 16, fontWeight: 700, margin: '0 0 8px' }}>Ainda sem projetos</p>
-                <p style={{ color: C.muted, fontSize: 14, margin: 0, lineHeight: 1.6 }}>
+              <div className="up-empty">
+                <FolderOpen size={40} color="var(--color-text-tertiary)" style={{ marginBottom: 14 }} />
+                <p className="up-empty-title">Ainda sem projetos</p>
+                <p className="text-base text-muted" style={{ margin: 0, lineHeight: 1.6 }}>
                   {profile?.full_name?.split(' ')[0] || 'Este utilizador'} ainda não partilhou nenhum projeto.
                 </p>
               </div>
@@ -747,21 +458,14 @@ export default function UserProfile() {
           ) : (
             <div className="up-projects-grid">
               {projects.map(project => (
-                <ProjectCard
-                  key={project.id}
-                  project={project}
-                  onClick={() => navigate(`/projeto/${project.slug}`)}
-                />
+                <ProjectCard key={project.id} project={project} onClick={() => navigate(`/projeto/${project.slug}`)} />
               ))}
             </div>
           )}
         </div>
       </div>
 
-      {showQR && (
-        <QRModal profileUrl={profileUrl} username={profile?.username || profile?.id || ''} onClose={() => setShowQR(false)} />
-      )}
-      {showCreateModal && <CreateProjectModal onClose={() => setShowCreateModal(false)} />}
+      {showQR && <QRModal profileUrl={profileUrl} username={profile?.username || profile?.id || ''} onClose={() => setShowQR(false)} />}
       {showInvite && profile && (
         <ConvidarVagaModal
           studentId={profile.id}
