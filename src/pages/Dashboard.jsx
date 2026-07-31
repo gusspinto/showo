@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
-import CreateProjectModal from '../components/CreateProjectModal'
+
 import ConvidarVagaModal from '../components/ConvidarVagaModal'
 import { getCurrentAcademicYear, academicYearOptions } from '../lib/academicYear'
 import { calculatePotential } from '../lib/score'
@@ -683,6 +683,207 @@ function InsightsBlock({ projects, profile, username, copiedSlug, setCopiedSlug 
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
+   Sub-component — Contextual next action
+   ══════════════════════════════════════════════════════════════════════════ */
+
+function NextStepBlock({ profNotifs, pendingTasks, myInterests, projects, profile, navigate, onDismissNotif }) {
+  const hasDraft = profile?.project_draft && Object.keys(profile.project_draft).length > 0
+  const overdueTasks = pendingTasks.filter(t => t.due_date && new Date(t.due_date + 'T23:59:59') < new Date())
+  const revisionProject = projects.find(p => p.review_status === 'needs_revision')
+
+  let step = null
+  if (hasDraft) {
+    const draftName = profile.project_draft?.name || 'o teu projeto'
+    step = {
+      icon: <Pencil size={16} />, iconColor: 'var(--color-warning)', iconBg: 'var(--color-warning-subtle)',
+      label: 'Rascunho por terminar',
+      title: `Continua "${draftName}"`,
+      desc: 'Tens um projeto por completar. Retoma onde ficaste.',
+      action: () => navigate('/novo'), actionLabel: 'Continuar',
+    }
+  } else if (profNotifs.length > 0) {
+    step = {
+      icon: <GraduationCap size={16} />, iconColor: 'var(--color-success)', iconBg: 'var(--color-success-subtle)',
+      label: profNotifs.length === 1 ? '1 novidade do professor' : `${profNotifs.length} novidades`,
+      title: profNotifs[0].message,
+      desc: timeAgoLabel(profNotifs[0].created_at),
+      action: () => onDismissNotif(profNotifs[0].id, profNotifs[0].project_slug), actionLabel: 'Ver feedback',
+    }
+  } else if (overdueTasks.length > 0) {
+    const t = overdueTasks[0]
+    step = {
+      icon: <AlertTriangle size={16} />, iconColor: 'var(--color-error)', iconBg: 'var(--color-error-subtle)',
+      label: `${overdueTasks.length} tarefa${overdueTasks.length > 1 ? 's' : ''} atrasada${overdueTasks.length > 1 ? 's' : ''}`,
+      title: t.title, desc: t.classes?.name,
+      action: null, actionLabel: null,
+    }
+  } else if (revisionProject) {
+    step = {
+      icon: <AlertTriangle size={16} />, iconColor: 'var(--color-warning)', iconBg: 'var(--color-warning-subtle)',
+      label: 'Projeto para rever',
+      title: `"${revisionProject.name}" precisa de melhorias`,
+      desc: 'O teu professor pediu alterações.',
+      action: () => navigate(`/editar/${revisionProject.slug}`), actionLabel: 'Ver projeto',
+    }
+  } else if (myInterests.length > 0) {
+    const rec = myInterests[0].recruiterProfile
+    step = {
+      icon: <Star size={16} />, iconColor: 'var(--color-warning)', iconBg: 'var(--color-warning-subtle)',
+      label: 'Interesse de empresa',
+      title: `${rec?.company || rec?.full_name || 'Uma empresa'} tem interesse no teu trabalho`,
+      desc: myInterests[0].project?.name,
+      action: () => navigate(`/mensagens?to=${myInterests[0].recruiter_id}`), actionLabel: 'Responder',
+    }
+  } else if (projects.length === 0) {
+    step = {
+      icon: <Rocket size={16} />, iconColor: 'var(--color-primary)', iconBg: 'var(--color-primary-subtle)',
+      label: 'Começa aqui',
+      title: 'Cria o teu primeiro projeto',
+      desc: 'O teu portfólio começa com um projeto. Leva menos de 5 minutos.',
+      action: () => navigate('/novo'), actionLabel: 'Criar projeto',
+    }
+  }
+
+  if (!step) return null
+  return (
+    <div className="dash-section" style={{ marginBottom: 'var(--sp-5)' }}>
+      <Card padding="md" style={{ borderLeft: `3px solid ${step.iconColor}` }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)' }}>
+          <div style={{ width: 36, height: 36, borderRadius: 'var(--radius-md)', background: step.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: step.iconColor }}>
+            {step.icon}
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: step.iconColor, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>{step.label}</div>
+            <div style={{ fontSize: 'var(--text-base)', fontWeight: 700, color: 'var(--color-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{step.title}</div>
+            {step.desc && <div style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', marginTop: 1 }}>{step.desc}</div>}
+          </div>
+          {step.action && (
+            <Button size="sm" variant="secondary" onClick={step.action} style={{ flexShrink: 0 }}>{step.actionLabel}</Button>
+          )}
+        </div>
+      </Card>
+    </div>
+  )
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Sub-component — Featured project card
+   ══════════════════════════════════════════════════════════════════════════ */
+
+function FeaturedProjectCard({ project, navigate, myInterests }) {
+  if (!project) return null
+  const scoreColor = getScoreColor(project.score)
+  const interestCount = myInterests.filter(i => i.project?.id === project.id).length
+  return (
+    <div className="dash-section" style={{ marginBottom: 'var(--sp-5)' }}>
+      <Card padding="none" style={{ overflow: 'hidden' }}>
+        <div style={{ display: 'flex', minHeight: 140 }}>
+          {project.cover_url && (
+            <div style={{ width: 180, flexShrink: 0, overflow: 'hidden', background: 'var(--color-surface)' }}>
+              <img src={project.cover_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+            </div>
+          )}
+          <div style={{ flex: 1, padding: 'var(--sp-5)', minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 'var(--sp-3)' }}>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: 'var(--text-2xs)', fontWeight: 700, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Projeto principal</div>
+                <h2 style={{ fontSize: 'var(--text-xl)', fontWeight: 700, fontFamily: 'var(--font-heading)', color: 'var(--color-text)', margin: '0 0 4px', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{project.name}</h2>
+                {project.ai_tagline && <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', margin: 0, lineHeight: 1.5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{project.ai_tagline}</p>}
+              </div>
+              <ProgressRing value={project.score ?? 0} size={56} strokeWidth={4.5} color={scoreColor}>
+                <span style={{ fontSize: 12, fontWeight: 800, color: scoreColor }}>{project.score ?? '—'}</span>
+              </ProgressRing>
+            </div>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-4)', marginBottom: 'var(--sp-3)', flexWrap: 'wrap' }}>
+                {project.views > 0 && <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'center', gap: 4 }}><Eye size={12} />{project.views} visualizações</span>}
+                {project.teacher_score != null && <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'center', gap: 4 }}><GraduationCap size={12} />{project.teacher_score}/20</span>}
+                {interestCount > 0 && <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-warning)', display: 'flex', alignItems: 'center', gap: 4 }}><Star size={12} />{interestCount} empresa{interestCount > 1 ? 's' : ''} interessada{interestCount > 1 ? 's' : ''}</span>}
+                {project.review_status === 'needs_revision' && <Badge variant="warning">Precisa de melhorias</Badge>}
+                {project.review_status === 'ready_for_defense' && <Badge variant="success">Pronto para defesa</Badge>}
+              </div>
+              <div style={{ display: 'flex', gap: 'var(--sp-2)' }}>
+                <Button size="sm" variant="secondary" icon={<Pencil size={13} />} onClick={() => navigate(`/editar/${project.slug}`)}>Melhorar</Button>
+                <Button size="sm" variant="ghost" icon={<ExternalLink size={13} />} onClick={() => navigate(`/projeto/${project.slug}`)}>Ver projeto</Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Card>
+    </div>
+  )
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Sub-component — 8-week activity chart (stacked bars, no lib)
+   ══════════════════════════════════════════════════════════════════════════ */
+
+function ActivityChart({ myInterests, feedbackHistory }) {
+  const weeks = []
+  const now = new Date()
+  for (let i = 7; i >= 0; i--) {
+    const end = new Date(now); end.setDate(end.getDate() - i * 7); end.setHours(23, 59, 59, 999)
+    const start = new Date(end); start.setDate(start.getDate() - 6); start.setHours(0, 0, 0, 0)
+    const label = start.toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' }).replace(/ de /g, ' ')
+    weeks.push({ label, start, end, interests: 0, feedback: 0 })
+  }
+  myInterests.forEach(item => {
+    const d = new Date(item.created_at)
+    const w = weeks.find(w => d >= w.start && d <= w.end)
+    if (w) w.interests++
+  })
+  feedbackHistory.forEach(item => {
+    const d = new Date(item.created_at)
+    const w = weeks.find(w => d >= w.start && d <= w.end)
+    if (w) w.feedback++
+  })
+  const totalEvents = weeks.reduce((s, w) => s + w.interests + w.feedback, 0)
+  if (totalEvents < 2) return null
+  const max = Math.max(1, ...weeks.map(w => w.interests + w.feedback))
+  const chartH = 72
+  return (
+    <div className="dash-section" style={{ marginBottom: 'var(--sp-5)' }}>
+      <Card padding="md">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--sp-4)', flexWrap: 'wrap', gap: 'var(--sp-3)' }}>
+          <div>
+            <h2 style={{ fontSize: 'var(--text-lg)', fontWeight: 400, fontFamily: 'var(--font-heading)', margin: 0, color: 'var(--color-text)' }}>A tua atividade</h2>
+            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', margin: '2px 0 0' }}>Últimas 8 semanas</p>
+          </div>
+          <div style={{ display: 'flex', gap: 'var(--sp-4)', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'center', gap: 5 }}>
+              <span style={{ width: 8, height: 8, borderRadius: 2, background: 'var(--color-primary)', display: 'inline-block' }} /> Interesse de empresas
+            </span>
+            <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'center', gap: 5 }}>
+              <span style={{ width: 8, height: 8, borderRadius: 2, background: 'var(--color-success)', display: 'inline-block' }} /> Feedback do professor
+            </span>
+          </div>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, height: chartH + 20 }}>
+          {weeks.map((w, i) => {
+            const total = w.interests + w.feedback
+            const iH = (w.interests / max) * chartH
+            const fH = (w.feedback / max) * chartH
+            return (
+              <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, height: '100%', justifyContent: 'flex-end' }}>
+                {total > 0 && <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--color-text-tertiary)' }}>{total}</span>}
+                <div style={{ width: '100%', maxWidth: 36, display: 'flex', flexDirection: 'column' }}>
+                  {fH > 0 && <div style={{ width: '100%', height: fH, background: 'var(--color-success)', borderRadius: iH > 0 ? '2px 2px 0 0' : 2, transition: 'height 0.4s var(--ease-out)' }} />}
+                  {iH > 0 && <div style={{ width: '100%', height: iH, background: 'var(--color-primary)', borderRadius: fH > 0 ? '0 0 2px 2px' : 2, transition: 'height 0.4s var(--ease-out)' }} />}
+                  {total === 0 && <div style={{ width: '100%', height: 3, background: 'var(--color-border)', borderRadius: 2 }} />}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+        <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
+          {weeks.map((w, i) => <span key={i} style={{ flex: 1, fontSize: 9, color: 'var(--color-text-tertiary)', textAlign: 'center', lineHeight: 1.2 }}>{w.label}</span>)}
+        </div>
+      </Card>
+    </div>
+  )
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
    DASHBOARD — Main Component
    ══════════════════════════════════════════════════════════════════════════ */
 
@@ -713,7 +914,7 @@ export default function Dashboard() {
   const [copiedSlug, setCopiedSlug] = useState(null)
   const [showOnboarding, setShowOnboarding] = useState(false)
   const [showOnboardingAluno, setShowOnboardingAluno] = useState(false)
-  const [showCreateModal, setShowCreateModal] = useState(false)
+
   const [collabProjects, setCollabProjects] = useState([])
   const [savedTalents, setSavedTalents] = useState([])
   const [savedTalentsLoading, setSavedTalentsLoading] = useState(true)
@@ -725,6 +926,7 @@ export default function Dashboard() {
   const [partnerLeadsLoading, setPartnerLeadsLoading] = useState(true)
   const [inviteTarget, setInviteTarget] = useState(null)
   const [resumoOpen, setResumoOpen] = useState(false)
+  const [feedbackHistory, setFeedbackHistory] = useState([])
 
   /* ── Admin redirect ── */
   useEffect(() => {
@@ -982,6 +1184,12 @@ export default function Dashboard() {
     supabase.from('notifications').select('id, message, project_slug, created_at').eq('user_id', user.id).eq('type', 'TEACHER_FEEDBACK').eq('read', false).order('created_at', { ascending: false }).limit(5).then(({ data }) => { if (data) setProfNotifs(data) })
   }, [user, profile?.role])
 
+  /* ── All feedback notifications (for chart) ── */
+  useEffect(() => {
+    if (!user || profile?.role === 'professor') return
+    supabase.from('notifications').select('id, created_at').eq('user_id', user.id).eq('type', 'TEACHER_FEEDBACK').order('created_at', { ascending: false }).limit(60).then(({ data }) => { if (data) setFeedbackHistory(data) })
+  }, [user, profile?.role])
+
   async function dismissProfNotif(id, slug) {
     setProfNotifs(prev => prev.filter(n => n.id !== id))
     await supabase.from('notifications').update({ read: true }).eq('id', id)
@@ -1066,29 +1274,57 @@ export default function Dashboard() {
       {/* Brand accent line */}
       <div style={{ height: 2, background: 'linear-gradient(90deg, transparent 0%, var(--color-primary) 35%, var(--color-accent) 65%, transparent 100%)', opacity: 0.4 }} />
 
-      <div className="page-content">
+      <div className="page-content-wide">
 
         {/* ══════════════════════ HEADER ══════════════════════ */}
-        <PageHeader
-          title={greeting}
-          subtitle={
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 'var(--sp-4)', marginBottom: 'var(--sp-6)', flexWrap: 'wrap' }}>
+          <div>
+            <h1 style={{ fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 400, fontFamily: 'var(--font-heading)', letterSpacing: '-0.5px', lineHeight: 1.15, margin: '0 0 6px', color: 'var(--color-text)' }}>{greeting}</h1>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
               <Badge variant="primary">
                 {{ aluno: 'Aluno', professor: 'Professor', recrutador: 'Recrutador', empresa: 'Empresa' }[profile?.role] ?? 'Aluno'}
               </Badge>
               <span style={{ color: 'var(--color-text-tertiary)', fontSize: 'var(--text-sm)' }}>{user.email}</span>
             </div>
-          }
-          actions={
-            !isTeacher ? (
+          </div>
+          <div style={{ display: 'flex', gap: 'var(--sp-2)', flexShrink: 0 }}>
+            {!isTeacher && !isRecruiter && (
+              <>
+                <Button variant="secondary" size="sm" icon={<User size={14} />} onClick={() => navigate(`/u/${profile?.username || ''}`)}>Perfil</Button>
+                <Button variant="primary" size="sm" icon={<Plus size={14} />} onClick={() => navigate('/novo')}>Novo projeto</Button>
+              </>
+            )}
+            {isTeacher && (
               <Button variant="secondary" size="sm" icon={<User size={14} />} onClick={() => navigate(`/u/${profile?.username || ''}`)}>Perfil</Button>
-            ) : null
-          }
-        />
+            )}
+          </div>
+        </div>
 
         {/* ══════════════════════ STUDENT DASHBOARD ══════════════════════ */}
         {!isTeacher && !isRecruiter && (
           <>
+            {/* Quick stats bar */}
+            {!loadingProjects && projects.length > 0 && (() => {
+              const { potential } = profile ? calculatePotential({ projects, profile }) : { potential: 0 }
+              const stats = [
+                { label: 'Potencial', value: potential, icon: <TrendingUp size={12} />, color: 'var(--color-primary)' },
+                bestScore != null ? { label: 'Melhor score', value: bestScore, icon: <Trophy size={12} />, color: getScoreColor(bestScore) } : null,
+                totalViews > 0 ? { label: 'Visualizações', value: totalViews, icon: <Eye size={12} />, color: 'var(--color-text-secondary)' } : null,
+                myInterests.length > 0 ? { label: myInterests.length === 1 ? 'empresa interessada' : 'empresas interessadas', value: myInterests.length, icon: <Star size={12} />, color: 'var(--color-warning)' } : null,
+              ].filter(Boolean)
+              return (
+                <div className="dash-section" style={{ display: 'flex', gap: 'var(--sp-6)', marginBottom: 'var(--sp-6)', paddingBottom: 'var(--sp-5)', borderBottom: '1px solid var(--color-border)', flexWrap: 'wrap' }}>
+                  {stats.map((s, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span style={{ color: s.color }}>{s.icon}</span>
+                      <span style={{ fontSize: 'var(--text-xl)', fontWeight: 700, fontFamily: 'var(--font-display)', color: s.color, lineHeight: 1 }}>{s.value}</span>
+                      <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', fontWeight: 500 }}>{s.label}</span>
+                    </div>
+                  ))}
+                </div>
+              )
+            })()}
+
             {/* Defense countdown */}
             {!loadingProjects && (() => {
               const today = new Date(); today.setHours(0, 0, 0, 0)
@@ -1117,19 +1353,36 @@ export default function Dashboard() {
               )
             })()}
 
+            {/* Next action */}
+            {!loadingProjects && (
+              <NextStepBlock
+                profNotifs={profNotifs} pendingTasks={pendingTasks} myInterests={myInterests}
+                projects={projects} profile={profile} navigate={navigate} onDismissNotif={dismissProfNotif}
+              />
+            )}
+
+            {/* Featured project */}
+            {!loadingProjects && projects.length > 0 && (() => {
+              const featured = projects.reduce((best, p) => ((p.score ?? 0) >= (best?.score ?? 0) ? p : best), projects[0])
+              return <FeaturedProjectCard project={featured} navigate={navigate} myInterests={myInterests} />
+            })()}
+
+            {/* Activity chart */}
+            <ActivityChart myInterests={myInterests} feedbackHistory={feedbackHistory} />
+
             {/* Professor notifications */}
             {profNotifs.length > 0 && (
               <div className="dash-section" style={{ marginBottom: 'var(--sp-5)' }}>
-                <div className="dash-sec-header">
-                  <div className="dash-sec-label"><GraduationCap size={13} /> Novidades do professor <span className="dash-sec-count">{profNotifs.length}</span></div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 'var(--sp-3)' }}>
+                  <h2 style={{ fontSize: 'var(--text-lg)', fontWeight: 400, fontFamily: 'var(--font-heading)', margin: 0, color: 'var(--color-text)' }}>Novidades do professor</h2>
+                  <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--color-text-tertiary)', background: 'var(--color-badge-bg)', borderRadius: 'var(--radius-full)', padding: '1px 7px' }}>{profNotifs.length}</span>
                 </div>
                 <Card padding="none" style={{ overflow: 'hidden' }}>
                   {profNotifs.map((n, i) => (
                     <FeedItem key={n.id} onClick={() => dismissProfNotif(n.id, n.project_slug)}
                       icon={<GraduationCap size={14} color="var(--color-success)" />}
                       iconBg="var(--color-success-subtle)" iconColor="var(--color-success)"
-                      title={n.message}
-                      subtitle={timeAgoLabel(n.created_at)}
+                      title={n.message} subtitle={timeAgoLabel(n.created_at)}
                       style={i < profNotifs.length - 1 ? { borderBottom: '1px solid var(--color-border)' } : undefined}
                     />
                   ))}
@@ -1137,171 +1390,153 @@ export default function Dashboard() {
               </div>
             )}
 
-            {/* 2-column: sidebar + projects */}
-            <div className="dash-student-grid">
-              {/* Sidebar */}
-              <div className="dash-sidebar" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
-                <InsightsBlock projects={projects} profile={profile} username={profile?.username} copiedSlug={copiedSlug} setCopiedSlug={setCopiedSlug} />
-
-                {!loadingStudentTurmas && (
-                  <div className="dash-section">
-                    {studentTurmas.length > 0 ? (
-                      <Card hoverable onClick={() => studentTurmas.length === 1 ? navigate(`/turma/${studentTurmas[0].code}`) : setShowTurmasModal(true)} padding="md">
+            {/* Recruiter interests */}
+            {myInterests.length > 0 && (
+              <div className="dash-section" style={{ marginBottom: 'var(--sp-5)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 'var(--sp-3)' }}>
+                  <h2 style={{ fontSize: 'var(--text-lg)', fontWeight: 400, fontFamily: 'var(--font-heading)', margin: 0, color: 'var(--color-text)' }}>Empresas interessadas</h2>
+                  <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--color-warning)', background: 'var(--color-warning-subtle)', borderRadius: 'var(--radius-full)', padding: '1px 7px' }}>{myInterests.length}</span>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
+                  {myInterests.map((item, idx) => {
+                    const rec = item.recruiterProfile
+                    return (
+                      <Card key={idx} padding="md">
                         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)' }}>
-                          <div style={{ width: 36, height: 36, borderRadius: 'var(--radius-md)', background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                            <Users2 size={16} color="var(--color-primary)" />
+                          <div style={{ width: 40, height: 40, borderRadius: '50%', flexShrink: 0, background: 'var(--color-warning-subtle)', border: '1px solid var(--color-warning)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', opacity: 0.8 }}>
+                            {rec.avatar_url ? <img src={rec.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Building2 size={17} color="var(--color-warning)" />}
                           </div>
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ fontSize: 'var(--text-base)', fontWeight: 700, color: 'var(--color-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                              {studentTurmas.length === 1 ? studentTurmas[0].name : `${studentTurmas.length} turmas`}
+                              {rec.full_name || rec.username || 'Recrutador'}
                             </div>
                             <div style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', marginTop: 1 }}>
-                              {studentTurmas.length === 1 ? (studentTurmas[0].teacher_name || 'Ver turma') : studentTurmas.map(t => t.name).join(' · ')}
+                              {rec.company && <><span style={{ color: 'var(--color-warning)' }}>{rec.company}</span> · </>}
+                              interessa-se por <span style={{ color: 'var(--color-primary)', cursor: 'pointer' }} onClick={() => navigate(`/projeto/${item.project.slug}`)}>{item.project.name}</span>
                             </div>
                           </div>
-                          <ChevronRight size={14} color="var(--color-text-tertiary)" style={{ flexShrink: 0 }} />
+                          <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                            {rec.username && <Button size="sm" variant="ghost" onClick={() => navigate(`/u/${rec.username}`)}>Perfil</Button>}
+                            <Button size="sm" variant="secondary" icon={<MessageSquare size={12} />} onClick={() => navigate(`/mensagens?to=${rec.id}`)}>Mensagem</Button>
+                          </div>
                         </div>
                       </Card>
-                    ) : (
-                      <Card hoverable onClick={() => setShowJoinModal(true)} padding="md">
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)' }}>
-                          <div style={{ width: 36, height: 36, borderRadius: 'var(--radius-md)', background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                            <Users2 size={16} color="var(--color-primary)" />
-                          </div>
-                          <div style={{ flex: 1 }}>
-                            <div style={{ fontSize: 'var(--text-base)', fontWeight: 700, color: 'var(--color-text)' }}>Junta-te a uma turma</div>
-                            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', marginTop: 1 }}>Insere o código de 6 letras do professor</div>
-                          </div>
-                          <Badge variant="primary">Entrar</Badge>
-                        </div>
-                      </Card>
-                    )}
-                  </div>
-                )}
+                    )
+                  })}
+                </div>
+              </div>
+            )}
 
-                {pendingTasks.length > 0 && (
-                  <div className="dash-section">
-                    <div className="dash-sec-header">
-                      <div className="dash-sec-label"><ListChecks size={13} /> Tarefas pendentes <span className="dash-sec-count">{pendingTasks.length}</span></div>
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
-                      {pendingTasks.slice(0, 5).map(t => {
-                        const overdue = t.due_date && new Date(t.due_date + 'T23:59:59') < new Date()
-                        return (
-                          <Card key={t.id} padding="sm" style={overdue ? { borderColor: 'var(--color-error)' } : undefined}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)' }}>
-                              <button onClick={() => completePendingTask(t.id)} style={{ background: 'none', border: 'none', padding: 2, cursor: 'pointer', flexShrink: 0, display: 'flex' }}>
-                                <Circle size={17} color="var(--color-text-tertiary)" />
-                              </button>
-                              <div style={{ flex: 1, minWidth: 0 }}>
-                                <div style={{ fontSize: 'var(--text-base)', fontWeight: 600, color: 'var(--color-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.title}</div>
-                                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', marginTop: 1 }}>
-                                  {t.classes?.name}
-                                  {t.due_date && (
-                                    <span style={{ color: overdue ? 'var(--color-error)' : undefined, fontWeight: overdue ? 700 : 400 }}>
-                                      {' — '}{new Date(t.due_date + 'T00:00:00').toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' })}{overdue ? ' (atrasada)' : ''}
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          </Card>
-                        )
-                      })}
-                    </div>
-                  </div>
+            {/* Os meus projetos */}
+            <div className="dash-section" style={{ marginBottom: 'var(--sp-5)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--sp-3)' }}>
+                <h2 style={{ fontSize: 'var(--text-lg)', fontWeight: 400, fontFamily: 'var(--font-heading)', margin: 0, color: 'var(--color-text)' }}>
+                  Os meus projetos{projects.length > 0 && <span style={{ fontSize: 'var(--text-base)', color: 'var(--color-text-tertiary)', fontWeight: 400, marginLeft: 8 }}>{projects.length}</span>}
+                </h2>
+                {!loadingProjects && projects.length > 0 && (
+                  <Button size="sm" variant="secondary" icon={<Plus size={13} />} onClick={() => navigate('/novo')}>Novo projeto</Button>
                 )}
               </div>
+              {loadingProjects ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
+                  {[1, 2, 3].map(i => (
+                    <div key={i} className="dash-skeleton" style={{ height: 72, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 14, animationDelay: `${i * 0.15}s` }}>
+                      <div style={{ width: 40, height: 40, borderRadius: 'var(--radius-md)', background: 'var(--color-bg-alt, rgba(255,255,255,0.04))' }} />
+                      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        <div style={{ height: 12, width: '40%', borderRadius: 4, background: 'var(--color-bg-alt, rgba(255,255,255,0.04))' }} />
+                        <div style={{ height: 10, width: '65%', borderRadius: 4, background: 'var(--color-bg-alt, rgba(255,255,255,0.04))' }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : projects.length === 0 ? (
+                <EmptyState icon={<Rocket size={28} />} title="O teu portfólio começa aqui" description="Cria o teu primeiro projeto e partilha o que estás a construir." action={() => navigate('/novo')} actionLabel="Criar projeto" />
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
+                  {projects.map(project => (
+                    <ProjectRow key={project.id} project={project} onView={() => navigate(`/projeto/${project.slug}`)} onEdit={() => navigate(`/editar/${project.slug}`)} onDelete={deleteProject} onCopy={() => copyProjectLink(project.slug)} copied={copiedSlug === project.slug} />
+                  ))}
+                </div>
+              )}
+            </div>
 
-              {/* Main: projects */}
-              <div className="dash-main" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-5)' }}>
-                <div className="dash-section">
-                  <div className="dash-sec-header">
-                    <div className="dash-sec-label"><Folder size={13} /> Os meus projetos {!loadingProjects && projects.length > 0 && <span className="dash-sec-count">{projects.length}</span>}</div>
-                    {!loadingProjects && projects.length > 0 && (
-                      <Button size="sm" variant="secondary" icon={<Plus size={13} />} onClick={() => setShowCreateModal(true)}>Novo projeto</Button>
-                    )}
-                  </div>
+            {/* Collab projects */}
+            {collabProjects.length > 0 && (
+              <div className="dash-section" style={{ marginBottom: 'var(--sp-5)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 'var(--sp-3)' }}>
+                  <h2 style={{ fontSize: 'var(--text-lg)', fontWeight: 400, fontFamily: 'var(--font-heading)', margin: 0, color: 'var(--color-text)' }}>Partilhados comigo</h2>
+                  <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--color-text-tertiary)', background: 'var(--color-badge-bg)', borderRadius: 'var(--radius-full)', padding: '1px 7px' }}>{collabProjects.length}</span>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
+                  {collabProjects.map(p => (
+                    <ProjectRow key={p.id} project={p} onView={() => navigate(`/projeto/${p.slug}`)} onEdit={() => navigate(`/projeto/${p.slug}`)} onDelete={() => {}} onCopy={() => copyProjectLink(p.slug)} copied={copiedSlug === p.slug} />
+                  ))}
+                </div>
+              </div>
+            )}
 
-                  {loadingProjects ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
-                      {[1, 2, 3].map(i => (
-                        <div key={i} className="dash-skeleton" style={{ height: 72, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 14, animationDelay: `${i * 0.15}s` }}>
-                          <div style={{ width: 40, height: 40, borderRadius: 'var(--radius-md)', background: 'var(--color-bg-alt, rgba(255,255,255,0.04))' }} />
-                          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
-                            <div style={{ height: 12, width: '40%', borderRadius: 4, background: 'var(--color-bg-alt, rgba(255,255,255,0.04))' }} />
-                            <div style={{ height: 10, width: '65%', borderRadius: 4, background: 'var(--color-bg-alt, rgba(255,255,255,0.04))' }} />
+            {/* Turma + tarefas (compact horizontal) */}
+            {!loadingStudentTurmas && (
+              <div className="dash-section" style={{ display: 'grid', gridTemplateColumns: pendingTasks.length > 0 ? '1fr 1fr' : '1fr', gap: 'var(--sp-4)', marginBottom: 'var(--sp-5)' }}>
+                <div>
+                  {studentTurmas.length > 0 ? (
+                    <Card hoverable onClick={() => studentTurmas.length === 1 ? navigate(`/turma/${studentTurmas[0].code}`) : setShowTurmasModal(true)} padding="md">
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)' }}>
+                        <div style={{ width: 36, height: 36, borderRadius: 'var(--radius-md)', background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          <Users2 size={16} color="var(--color-primary)" />
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 'var(--text-base)', fontWeight: 700, color: 'var(--color-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {studentTurmas.length === 1 ? studentTurmas[0].name : `${studentTurmas.length} turmas`}
+                          </div>
+                          <div style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', marginTop: 1 }}>
+                            {studentTurmas.length === 1 ? (studentTurmas[0].teacher_name || 'Ver turma') : studentTurmas.map(t => t.name).join(' · ')}
                           </div>
                         </div>
-                      ))}
-                    </div>
-                  ) : projects.length === 0 ? (
-                    <EmptyState
-                      icon={<Rocket size={28} />}
-                      title="O teu portfólio começa aqui"
-                      description="Cria o teu primeiro projeto e partilha o que estás a construir."
-                      action={() => setShowCreateModal(true)}
-                      actionLabel="Criar projeto"
-                    />
+                        <ChevronRight size={14} color="var(--color-text-tertiary)" style={{ flexShrink: 0 }} />
+                      </div>
+                    </Card>
                   ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
-                      {projects.map(project => (
-                        <ProjectRow key={project.id} project={project} onView={() => navigate(`/projeto/${project.slug}`)} onEdit={() => navigate(`/editar/${project.slug}`)} onDelete={deleteProject} onCopy={() => copyProjectLink(project.slug)} copied={copiedSlug === project.slug} />
-                      ))}
-                    </div>
+                    <Card hoverable onClick={() => setShowJoinModal(true)} padding="md">
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)' }}>
+                        <div style={{ width: 36, height: 36, borderRadius: 'var(--radius-md)', background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          <Users2 size={16} color="var(--color-primary)" />
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: 'var(--text-base)', fontWeight: 700, color: 'var(--color-text)' }}>Junta-te a uma turma</div>
+                          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', marginTop: 1 }}>Insere o código de 6 letras do professor</div>
+                        </div>
+                        <Badge variant="primary">Entrar</Badge>
+                      </div>
+                    </Card>
                   )}
                 </div>
-
-                {collabProjects.length > 0 && (
-                  <div className="dash-section">
-                    <div className="dash-sec-header">
-                      <div className="dash-sec-label"><Users size={13} /> Partilhados comigo <span className="dash-sec-count">{collabProjects.length}</span></div>
+                {pendingTasks.length > 0 && (
+                  <Card padding="sm">
+                    <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 'var(--sp-2)', display: 'flex', alignItems: 'center', gap: 5 }}>
+                      <ListChecks size={11} /> Tarefas pendentes · {pendingTasks.length}
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
-                      {collabProjects.map(p => (
-                        <ProjectRow key={p.id} project={p} onView={() => navigate(`/projeto/${p.slug}`)} onEdit={() => navigate(`/projeto/${p.slug}`)} onDelete={() => {}} onCopy={() => copyProjectLink(p.slug)} copied={copiedSlug === p.slug} />
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Recruiter interest (only shows when there's data) */}
-                {myInterests.length > 0 && (
-                  <div className="dash-section">
-                    <div className="dash-sec-header">
-                      <div className="dash-sec-label"><Star size={14} color="var(--color-warning)" /> Recrutadores com interesse <span className="dash-sec-count">{myInterests.length}</span></div>
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
-                      {myInterests.map((item, idx) => {
-                        const rec = item.recruiterProfile
+                      {pendingTasks.slice(0, 3).map(t => {
+                        const overdue = t.due_date && new Date(t.due_date + 'T23:59:59') < new Date()
                         return (
-                          <Card key={idx} padding="md">
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)' }}>
-                              <div style={{ width: 40, height: 40, borderRadius: '50%', flexShrink: 0, background: 'var(--color-warning-subtle)', border: '1px solid var(--color-warning)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', opacity: 0.8 }}>
-                                {rec.avatar_url ? <img src={rec.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Building2 size={17} color="var(--color-warning)" />}
-                              </div>
-                              <div style={{ flex: 1, minWidth: 0 }}>
-                                <div style={{ fontSize: 'var(--text-base)', fontWeight: 700, color: 'var(--color-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                  {rec.full_name || rec.username || 'Recrutador'}
-                                </div>
-                                <div style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', marginTop: 1 }}>
-                                  {rec.company && <><span style={{ color: 'var(--color-warning)' }}>{rec.company}</span> · </>}
-                                  interessa-se por <span style={{ color: 'var(--color-primary)', cursor: 'pointer' }} onClick={() => navigate(`/projeto/${item.project.slug}`)}>{item.project.name}</span>
-                                </div>
-                              </div>
-                              <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-                                {rec.username && <Button size="sm" variant="ghost" onClick={() => navigate(`/u/${rec.username}`)}>Perfil</Button>}
-                                <Button size="sm" variant="secondary" icon={<MessageSquare size={12} />} onClick={() => navigate(`/mensagens?to=${rec.id}`)}>Mensagem</Button>
-                              </div>
+                          <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)' }}>
+                            <button onClick={() => completePendingTask(t.id)} style={{ background: 'none', border: 'none', padding: 2, cursor: 'pointer', flexShrink: 0, display: 'flex' }}>
+                              <Circle size={15} color="var(--color-text-tertiary)" />
+                            </button>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--color-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.title}</div>
+                              {t.due_date && <div style={{ fontSize: 'var(--text-xs)', color: overdue ? 'var(--color-error)' : 'var(--color-text-tertiary)', fontWeight: overdue ? 700 : 400 }}>{new Date(t.due_date + 'T00:00:00').toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' })}{overdue ? ' — atrasada' : ''}</div>}
                             </div>
-                          </Card>
+                          </div>
                         )
                       })}
+                      {pendingTasks.length > 3 && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', paddingLeft: 22 }}>+{pendingTasks.length - 3} mais</div>}
                     </div>
-                  </div>
+                  </Card>
                 )}
               </div>
-            </div>
+            )}
           </>
         )}
 
@@ -1603,8 +1838,7 @@ export default function Dashboard() {
         )}
       </div>
 
-      {showCreateModal && <CreateProjectModal onClose={() => setShowCreateModal(false)} />}
-      {inviteTarget && <ConvidarVagaModal studentId={inviteTarget.studentId} studentName={inviteTarget.studentName} vagas={recruiterVagas} onClose={() => setInviteTarget(null)} />}
+{inviteTarget && <ConvidarVagaModal studentId={inviteTarget.studentId} studentName={inviteTarget.studentName} vagas={recruiterVagas} onClose={() => setInviteTarget(null)} />}
     </div>
   )
 }
