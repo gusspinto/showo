@@ -618,42 +618,42 @@ function InsightsBlock({ projects, profile, username, copiedSlug, setCopiedSlug 
   const best = Math.max(...withScore.map(p => p.score))
   const avg = Math.round(withScore.reduce((s, p) => s + p.score, 0) / withScore.length)
   const { potential, breakdown } = profile ? calculatePotential({ projects, profile }) : { potential: 0, breakdown: {} }
+  const bestColor = getScoreColor(best)
 
   return (
     <Card padding="md" style={{ overflow: 'hidden' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 'var(--sp-4)' }}>
-        <TrendingUp size={13} color="var(--color-primary)" />
-        <SectionLabel style={{ marginBottom: 0 }}>Resumo</SectionLabel>
+      {/* Hero score */}
+      <div style={{ textAlign: 'center', padding: '8px 0 16px', borderBottom: '1px solid var(--color-border)', marginBottom: 14 }}>
+        <div style={{ fontSize: 56, fontWeight: 800, fontFamily: 'var(--font-display)', color: bestColor, lineHeight: 1, letterSpacing: '-2px' }}>{best}</div>
+        <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginTop: 4 }}>Melhor score</div>
+        {withScore.length > 1 && (
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', marginTop: 6 }}>
+            Média <span style={{ fontWeight: 700, color: getScoreColor(avg) }}>{avg}</span> · {withScore.length} projetos
+          </div>
+        )}
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-4)', marginBottom: 'var(--sp-4)' }}>
-        <ProgressRing value={potential} size={80} strokeWidth={5} color="var(--color-primary)">
+      {/* Potential ring + dims */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+        <ProgressRing value={potential} size={54} strokeWidth={4} color="var(--color-primary)">
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 'var(--text-xl)', fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--color-primary)', lineHeight: 1 }}>{potential}</div>
-            <div style={{ fontSize: 8, fontWeight: 700, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginTop: 2 }}>Potencial</div>
+            <div style={{ fontSize: 13, fontWeight: 800, fontFamily: 'var(--font-display)', color: 'var(--color-primary)', lineHeight: 1 }}>{potential}</div>
           </div>
         </ProgressRing>
-
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-            <span style={{ fontSize: 'var(--text-xl)', fontWeight: 700, fontFamily: 'var(--font-display)', color: getScoreColor(best) }}>{best}</span>
-            <span style={{ fontSize: 'var(--text-2xs)', color: 'var(--color-text-tertiary)', fontWeight: 600 }}>Melhor</span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-            <span style={{ fontSize: 'var(--text-xl)', fontWeight: 700, fontFamily: 'var(--font-display)', color: getScoreColor(avg) }}>{avg}</span>
-            <span style={{ fontSize: 'var(--text-2xs)', color: 'var(--color-text-tertiary)', fontWeight: 600 }}>Média · {withScore.length}p</span>
-          </div>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--color-text)', marginBottom: 2 }}>Potencial</div>
+          <ProgressBar value={potential} max={100} size="sm" />
         </div>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
         {POTENTIAL_DIMS.map(d => {
           const val = breakdown[d.key] ?? 0
           return (
             <div key={d.key} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: 'var(--text-2xs)', color: 'var(--color-text-secondary)', width: 78, flexShrink: 0, fontWeight: 600 }}>{d.label}</span>
+              <span style={{ fontSize: 10, color: 'var(--color-text-secondary)', width: 72, flexShrink: 0 }}>{d.label}</span>
               <ProgressBar value={val} max={d.max} size="sm" style={{ flex: 1 }} />
-              <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--color-text-tertiary)', width: 28, textAlign: 'right', flexShrink: 0 }}>{val}/{d.max}</span>
+              <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--color-text-tertiary)', width: 24, textAlign: 'right', flexShrink: 0 }}>{val}</span>
             </div>
           )
         })}
@@ -665,7 +665,7 @@ function InsightsBlock({ projects, profile, username, copiedSlug, setCopiedSlug 
           <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             showo.pt/u/{username}
           </span>
-          <Button size="sm" variant={copiedSlug === '__profile__' ? 'ghost' : 'ghost'}
+          <Button size="sm" variant="ghost"
             icon={copiedSlug === '__profile__' ? <Check size={11} /> : <Copy size={11} />}
             style={copiedSlug === '__profile__' ? { color: 'var(--color-success)' } : undefined}
             onClick={() => {
@@ -774,31 +774,41 @@ function FeaturedProjectCard({ project, navigate, myInterests }) {
   const interestCount = myInterests.filter(i => i.project?.id === project.id).length
   return (
     <Card padding="none" style={{ overflow: 'hidden' }}>
-      {project.cover_url
-        ? <img src={project.cover_url} alt="" className="dash-featured-cover" />
-        : <div className="dash-featured-cover-empty"><Folder size={32} color="var(--color-primary)" style={{ opacity: 0.4 }} /></div>
-      }
-      <div style={{ padding: 'var(--sp-4)' }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 'var(--sp-3)', marginBottom: 'var(--sp-3)' }}>
-          <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 'var(--text-2xs)', fontWeight: 700, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 3 }}>Projeto principal</div>
-            <h2 style={{ fontSize: 'var(--text-lg)', fontWeight: 700, fontFamily: 'var(--font-heading)', color: 'var(--color-text)', margin: '0 0 3px', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{project.name}</h2>
-            {project.ai_tagline && <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', margin: 0, lineHeight: 1.4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{project.ai_tagline}</p>}
+      <div style={{ display: 'flex', minHeight: 160 }}>
+        {/* Cover — fixed width sidebar */}
+        <div style={{ width: 160, flexShrink: 0, position: 'relative', overflow: 'hidden' }}>
+          {project.cover_url
+            ? <img src={project.cover_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+            : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, var(--color-primary-subtle) 0%, rgba(26,138,122,0.15) 100%)' }}>
+                <Folder size={32} color="var(--color-primary)" style={{ opacity: 0.35 }} />
+              </div>
+          }
+        </div>
+        {/* Content */}
+        <div style={{ flex: 1, padding: '14px 16px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minWidth: 0 }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 6 }}>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: 'var(--text-2xs)', fontWeight: 700, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 3 }}>Projeto principal</div>
+                <h2 style={{ fontSize: 'var(--text-base)', fontWeight: 700, fontFamily: 'var(--font-heading)', color: 'var(--color-text)', margin: '0 0 3px', lineHeight: 1.25, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{project.name}</h2>
+                {project.ai_tagline && <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', margin: 0, lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{project.ai_tagline}</p>}
+              </div>
+              <ProgressRing value={project.score ?? 0} size={44} strokeWidth={3.5} color={scoreColor}>
+                <span style={{ fontSize: 10, fontWeight: 800, color: scoreColor }}>{project.score ?? '—'}</span>
+              </ProgressRing>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginTop: 6 }}>
+              {project.views > 0 && <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', display: 'flex', alignItems: 'center', gap: 3 }}><Eye size={10} />{project.views}</span>}
+              {project.teacher_score != null && <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', display: 'flex', alignItems: 'center', gap: 3 }}><GraduationCap size={10} />{project.teacher_score}/20</span>}
+              {interestCount > 0 && <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-warning)', display: 'flex', alignItems: 'center', gap: 3 }}><Star size={10} />{interestCount} empresa{interestCount > 1 ? 's' : ''}</span>}
+              {project.review_status === 'needs_revision' && <Badge variant="warning">Rever</Badge>}
+              {project.review_status === 'ready_for_defense' && <Badge variant="success">Pronto</Badge>}
+            </div>
           </div>
-          <ProgressRing value={project.score ?? 0} size={52} strokeWidth={4} color={scoreColor}>
-            <span style={{ fontSize: 11, fontWeight: 800, color: scoreColor }}>{project.score ?? '—'}</span>
-          </ProgressRing>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)', marginBottom: 'var(--sp-3)', flexWrap: 'wrap' }}>
-          {project.views > 0 && <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'center', gap: 3 }}><Eye size={11} />{project.views}</span>}
-          {project.teacher_score != null && <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'center', gap: 3 }}><GraduationCap size={11} />{project.teacher_score}/20</span>}
-          {interestCount > 0 && <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-warning)', display: 'flex', alignItems: 'center', gap: 3 }}><Star size={11} />{interestCount} empresa{interestCount > 1 ? 's' : ''}</span>}
-          {project.review_status === 'needs_revision' && <Badge variant="warning">Rever</Badge>}
-          {project.review_status === 'ready_for_defense' && <Badge variant="success">Pronto</Badge>}
-        </div>
-        <div style={{ display: 'flex', gap: 'var(--sp-2)' }}>
-          <Button size="sm" variant="secondary" icon={<Pencil size={12} />} onClick={() => navigate(`/editar/${project.slug}`)}>Melhorar</Button>
-          <Button size="sm" variant="ghost" icon={<ExternalLink size={12} />} onClick={() => navigate(`/projeto/${project.slug}`)}>Ver</Button>
+          <div style={{ display: 'flex', gap: 6, marginTop: 12 }}>
+            <Button size="sm" variant="secondary" icon={<Pencil size={12} />} onClick={() => navigate(`/editar/${project.slug}`)}>Melhorar</Button>
+            <Button size="sm" variant="ghost" icon={<ExternalLink size={12} />} onClick={() => navigate(`/projeto/${project.slug}`)}>Ver</Button>
+          </div>
         </div>
       </div>
     </Card>
@@ -831,44 +841,61 @@ function ActivityChart({ myInterests, feedbackHistory }) {
   const totalEvents = weeks.reduce((s, w) => s + w.interests + w.feedback, 0)
   if (totalEvents < 2) return null
   const max = Math.max(1, ...weeks.map(w => w.interests + w.feedback))
-  const chartH = 72
+  const chartH = 140
   return (
     <Card padding="md">
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--sp-4)', flexWrap: 'wrap', gap: 'var(--sp-3)' }}>
-          <div>
-            <h2 style={{ fontSize: 'var(--text-lg)', fontWeight: 400, fontFamily: 'var(--font-heading)', margin: 0, color: 'var(--color-text)' }}>A tua atividade</h2>
-            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', margin: '2px 0 0' }}>Últimas 8 semanas</p>
-          </div>
-          <div style={{ display: 'flex', gap: 'var(--sp-4)', flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'center', gap: 5 }}>
-              <span style={{ width: 8, height: 8, borderRadius: 2, background: 'var(--color-primary)', display: 'inline-block' }} /> Interesse de empresas
-            </span>
-            <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'center', gap: 5 }}>
-              <span style={{ width: 8, height: 8, borderRadius: 2, background: 'var(--color-success)', display: 'inline-block' }} /> Feedback do professor
-            </span>
-          </div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
+        <div>
+          <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Atividade</div>
+          <div style={{ fontSize: 'var(--text-base)', fontWeight: 700, color: 'var(--color-text)', marginTop: 1 }}>Últimas 8 semanas</div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, height: chartH + 20 }}>
-          {weeks.map((w, i) => {
-            const total = w.interests + w.feedback
-            const iH = (w.interests / max) * chartH
-            const fH = (w.feedback / max) * chartH
-            return (
-              <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, height: '100%', justifyContent: 'flex-end' }}>
-                {total > 0 && <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--color-text-tertiary)' }}>{total}</span>}
-                <div style={{ width: '100%', maxWidth: 36, display: 'flex', flexDirection: 'column' }}>
-                  {fH > 0 && <div style={{ width: '100%', height: fH, background: 'var(--color-success)', borderRadius: iH > 0 ? '2px 2px 0 0' : 2, transition: 'height 0.4s var(--ease-out)' }} />}
-                  {iH > 0 && <div style={{ width: '100%', height: iH, background: 'var(--color-primary)', borderRadius: fH > 0 ? '0 0 2px 2px' : 2, transition: 'height 0.4s var(--ease-out)' }} />}
-                  {total === 0 && <div style={{ width: '100%', height: 3, background: 'var(--color-border)', borderRadius: 2 }} />}
-                </div>
+        <div style={{ display: 'flex', gap: 12 }}>
+          <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'center', gap: 4 }}>
+            <span style={{ width: 8, height: 8, borderRadius: 2, background: 'var(--color-primary)', display: 'inline-block', flexShrink: 0 }} /> Empresas
+          </span>
+          <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'center', gap: 4 }}>
+            <span style={{ width: 8, height: 8, borderRadius: 2, background: 'var(--color-success)', display: 'inline-block', flexShrink: 0 }} /> Feedback
+          </span>
+        </div>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 5, height: chartH }}>
+        {weeks.map((w, i) => {
+          const total = w.interests + w.feedback
+          const iH = Math.max(total > 0 ? 4 : 0, (w.interests / max) * (chartH - 20))
+          const fH = Math.max(total > 0 && w.feedback > 0 ? 4 : 0, (w.feedback / max) * (chartH - 20))
+          const isLast = i === weeks.length - 1
+          return (
+            <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0, height: '100%', justifyContent: 'flex-end' }}>
+              {total > 0 && <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--color-text-secondary)', marginBottom: 4 }}>{total}</span>}
+              <div style={{ width: '100%', maxWidth: 28, display: 'flex', flexDirection: 'column', gap: 0 }}>
+                {fH > 0 && (
+                  <div style={{
+                    width: '100%', height: fH,
+                    background: 'var(--color-success)',
+                    borderRadius: iH > 0 ? '4px 4px 0 0' : '4px',
+                    transition: 'height 0.5s var(--ease-out)',
+                    opacity: isLast ? 1 : 0.85,
+                  }} />
+                )}
+                {iH > 0 && (
+                  <div style={{
+                    width: '100%', height: iH,
+                    background: 'var(--color-primary)',
+                    borderRadius: fH > 0 ? '0 0 4px 4px' : '4px',
+                    transition: 'height 0.5s var(--ease-out)',
+                    opacity: isLast ? 1 : 0.85,
+                  }} />
+                )}
+                {total === 0 && <div style={{ width: '100%', height: 3, background: 'var(--color-border)', borderRadius: 3 }} />}
               </div>
-            )
-          })}
-        </div>
-        <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
-          {weeks.map((w, i) => <span key={i} style={{ flex: 1, fontSize: 9, color: 'var(--color-text-tertiary)', textAlign: 'center', lineHeight: 1.2 }}>{w.label}</span>)}
-        </div>
-      </Card>
+            </div>
+          )
+        })}
+      </div>
+      <div style={{ display: 'flex', gap: 5, marginTop: 8 }}>
+        {weeks.map((w, i) => <span key={i} style={{ flex: 1, fontSize: 9, color: 'var(--color-text-tertiary)', textAlign: 'center', lineHeight: 1.2 }}>{w.label}</span>)}
+      </div>
+    </Card>
   )
 }
 
@@ -1263,7 +1290,7 @@ export default function Dashboard() {
       {/* Brand accent line */}
       <div style={{ height: 2, background: 'linear-gradient(90deg, transparent 0%, var(--color-primary) 35%, var(--color-accent) 65%, transparent 100%)', opacity: 0.4 }} />
 
-      <div style={{ padding: '16px 20px 40px', boxSizing: 'border-box' }}>
+      <div style={{ padding: '24px 20px 40px', boxSizing: 'border-box' }}>
 
         {/* ══════════════════════ HEADER ══════════════════════ */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--sp-4)', marginBottom: 14, flexWrap: 'wrap' }}>
@@ -1431,6 +1458,28 @@ export default function Dashboard() {
                 {!loadingProjects && (
                   <NextStepBlock profNotifs={profNotifs} pendingTasks={pendingTasks} myInterests={myInterests} projects={projects} profile={profile} navigate={navigate} onDismissNotif={dismissProfNotif} />
                 )}
+                {/* Fallback: profile share card when there's no contextual action */}
+                {!loadingProjects && projects.length > 0 && (() => {
+                  const hasDraft = profile?.project_draft && Object.keys(profile.project_draft).length > 0
+                  const hasAnyAction = hasDraft || profNotifs.length > 0 || pendingTasks.some(t => t.due_date && new Date(t.due_date + 'T23:59:59') < new Date()) || projects.some(p => p.review_status === 'needs_revision') || myInterests.length > 0
+                  if (hasAnyAction || !profile?.username) return null
+                  return (
+                    <Card padding="md">
+                      <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>O teu perfil</div>
+                      <div style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', marginBottom: 10, lineHeight: 1.4 }}>
+                        Partilha a tua página com recrutadores e professores.
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 10px', background: 'var(--color-bg)', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)', marginBottom: 10 }}>
+                        <Link size={11} color="var(--color-text-tertiary)" style={{ flexShrink: 0 }} />
+                        <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>showo.pt/u/{profile.username}</span>
+                      </div>
+                      <Button size="sm" variant="secondary" fullWidth icon={<Copy size={11} />}
+                        onClick={() => navigator.clipboard.writeText(`${window.location.origin}/u/${profile.username}`)}>
+                        Copiar link
+                      </Button>
+                    </Card>
+                  )
+                })()}
 
                 {!loadingStudentTurmas && (
                   studentTurmas.length > 0 ? (
