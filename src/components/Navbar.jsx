@@ -11,7 +11,6 @@ function stripEmoji(str) {
   if (!str) return str
   return str.replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27FF}\u{2900}-\u{297F}\u{1F300}-\u{1F9FF}\u{FE00}-\u{FEFF}]/gu, '').replace(/\s{2,}/g, ' ').trim()
 }
-import CreateProjectModal from './CreateProjectModal'
 import FeedbackButton from './FeedbackButton'
 import './Navbar.css'
 
@@ -710,7 +709,6 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
     document.body.classList.add('drawer-open')
     return () => document.body.classList.remove('drawer-open')
   }, [menuOpen])
-  const [createModal, setCreateModal] = useState(false)
   // Mobile "Gerir projeto" popup — opened from the paintbrush that replaces the
   // "+" while viewing your own project (keeps those actions out of the drawer).
   const [projMenuOpen, setProjMenuOpen] = useState(false)
@@ -1026,7 +1024,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   <Paintbrush size={18} strokeWidth={2} />
                 </button>
               ) : !isTeacher && !isAdmin ? (
-                <button className="mob-nav-icon-btn primary" onClick={() => setCreateModal(true)} aria-label="Criar projeto">
+                <button className="mob-nav-icon-btn primary" onClick={() => navigate('/novo')} aria-label="Criar projeto">
                   <Plus size={20} strokeWidth={2.5} />
                 </button>
               ) : null}
@@ -1066,7 +1064,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   onProfile={profileUrl ? () => navigate(profileUrl) : null}
                   onSettings={() => navigate('/settings')}
                   onSignOut={handleSignOut}
-                  onCreateProject={showCreateProject && !isTeacher && !isAdmin ? () => setCreateModal(true) : undefined}
+                  onCreateProject={showCreateProject && !isTeacher && !isAdmin ? () => navigate('/novo') : undefined}
                 />
               </>
             ) : (
@@ -1094,7 +1092,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
           {showLinks && !isTeacher && !isAdmin && (
             <button
               className="ham-btn mob-only-create"
-              onClick={() => setCreateModal(true)}
+              onClick={() => navigate('/novo')}
               aria-label="Criar projeto"
               style={{
                 background: 'var(--color-primary)',
@@ -1283,6 +1281,8 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
 
               {user && (
                 <>
+                  <div className="sb-divider" style={{ margin: '8px 0 4px' }} />
+                  {!collapsed && showLabels && <span className="sb-label">Comunidade</span>}
                   <button className={`sb-item${isActive('/turmas') ? ' active' : ''}`} onClick={() => navigate('/turmas')}>
                     <Users2 size={16} />{!collapsed && showLabels && <span>Turmas</span>}
                   </button>
@@ -1299,10 +1299,10 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                 </>
               )}
 
-              {user && !isTeacher && !isAdmin && (
+              {user && !isTeacher && !isAdmin && location.pathname !== '/dashboard' && (
                 <div className={`sb-create-wrap ${extras ? 'hidden' : 'visible'}`}>
                   <div className="sb-create-inner">
-                    <button className="sb-create" onClick={() => setCreateModal(true)}>
+                    <button className="sb-create" onClick={() => navigate('/novo')}>
                       <Plus size={14} />{!collapsed && showLabels && <span>Criar projeto</span>}
                     </button>
                   </div>
@@ -1319,24 +1319,40 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
         <div className="sb-bottom">
           {user ? (
             <>
-              {collapsed ? (
-                /* Collapsed: bell + avatar (avatar opens menu with Perfil/Definições/Sair) */
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '0 0 6px' }}>
-                  <InviteInbox userId={user.id} sidebar={true} collapsed={collapsed} />
-                  {profileUrl && (
-                    <div ref={profileMenuRef} style={{ position: 'relative' }}>
-                      <button
-                        onClick={() => setSbProfileMenuOpen(o => !o)}
-                        title={getDisplayName(user)}
-                        style={{
-                          width: 32, height: 32, borderRadius: 8, background: sbProfileMenuOpen ? 'var(--color-surface-hover)' : 'transparent',
-                          border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          transition: 'background 0.13s', marginTop: 2,
-                        }}
-                      >
-                        <AvatarCircle avatarUrl={profile?.avatar_url} initial={getInitial(user)} size={22} fontSize={10} />
-                      </button>
-                      {sbProfileMenuOpen && (
+              {/* Profile row + notifications — collapsed keeps only what's worth a glance
+                  without expanding (notifications, messages); profile/settings/logout
+                  require opening the sidebar. */}
+              <div style={{
+                display: 'flex', flexDirection: collapsed ? 'column' : 'row',
+                alignItems: 'center', gap: 4, padding: collapsed ? '0 0 6px' : '0 0 2px',
+                justifyContent: 'center',
+              }}>
+                {profileUrl && !collapsed && (
+                  <button className={`sb-item${isActive('profile') ? ' active' : ''}`} style={{ flex: 1, margin: 0 }} onClick={() => navigate(profileUrl)}>
+                    <AvatarCircle avatarUrl={profile?.avatar_url} initial={getInitial(user)} size={20} fontSize={9} />
+                    {showLabels && <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{getDisplayName(user)}</span>}
+                  </button>
+                )}
+
+                {/* Notificações — stays visible when collapsed */}
+                <InviteInbox userId={user.id} sidebar={true} collapsed={collapsed} />
+                {/* Avatar — collapsed: tap opens a small Perfil/Sair menu instead of
+                    navigating straight away (no room here for a full nav row) */}
+                {collapsed && profileUrl && (
+                  <div ref={profileMenuRef} style={{ position: 'relative' }}>
+                    <button
+                      onClick={() => setSbProfileMenuOpen(o => !o)}
+                      title={getDisplayName(user)}
+                      style={{
+                        width: 32, height: 32, borderRadius: 8, background: sbProfileMenuOpen ? 'var(--color-surface-hover)' : 'transparent',
+                        border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        transition: 'background 0.13s', marginTop: 2,
+                      }}
+                    >
+                      <AvatarCircle avatarUrl={profile?.avatar_url} initial={getInitial(user)} size={22} fontSize={10} />
+                    </button>
+                    {sbProfileMenuOpen && (
+                      <>
                         <div style={{
                           position: 'fixed', left: 80, bottom: 16, zIndex: 199,
                           background: 'var(--color-surface)', border: '1px solid var(--color-border)',
@@ -1359,17 +1375,6 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                           >
                             <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><SettingsIcon size={15} /> Definições</span>
                           </button>
-                          <button
-                            onClick={toggleTheme}
-                            style={{ ...dropItemStyle, color: C.text }}
-                            onMouseEnter={e => e.currentTarget.style.background = 'var(--color-surface-hover)'}
-                            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                          >
-                            <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                              {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
-                              {theme === 'dark' ? 'Modo claro' : 'Modo escuro'}
-                            </span>
-                          </button>
                           <div style={{ height: 1, background: C.border, margin: '4px 6px' }} />
                           <button
                             onClick={() => { setSbProfileMenuOpen(false); handleSignOut() }}
@@ -1380,34 +1385,25 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                             <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><LogOut size={15} /> Sair</span>
                           </button>
                         </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              ) : (
-                /* Expanded: profile row + actions row */
-                <>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '0 0 2px' }}>
-                    {profileUrl && (
-                      <button className={`sb-item${isActive('profile') ? ' active' : ''}`} style={{ flex: 1, margin: 0 }} onClick={() => navigate(profileUrl)}>
-                        <AvatarCircle avatarUrl={profile?.avatar_url} initial={getInitial(user)} size={20} fontSize={9} />
-                        {showLabels && <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{getDisplayName(user)}</span>}
-                      </button>
+                      </>
                     )}
-                    <InviteInbox userId={user.id} sidebar={true} collapsed={collapsed} />
                   </div>
-                  <div className="sb-action-row">
-                    <button className="sb-action-btn" onClick={() => navigate('/settings')} title="Definições">
-                      <SettingsIcon size={15} />
-                    </button>
-                    <button className="sb-action-btn" onClick={toggleTheme} title={theme === 'dark' ? 'Modo claro' : 'Modo escuro'}>
-                      {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
-                    </button>
-                    <button className="sb-action-btn danger" onClick={handleSignOut} title="Sair">
-                      <LogOut size={15} />
-                    </button>
-                  </div>
-                </>
+                )}
+              </div>
+
+              {collapsed ? null : (
+                /* Definições / Modo claro / Mensagens / Sair — one tidy icon row instead of a long list */
+                <div className="sb-action-row">
+                  <button className="sb-action-btn" onClick={() => navigate('/settings')} title="Definições">
+                    <SettingsIcon size={15} />
+                  </button>
+                  <button className="sb-action-btn" onClick={toggleTheme} title={theme === 'dark' ? 'Modo claro' : 'Modo escuro'}>
+                    {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
+                  </button>
+                  <button className="sb-action-btn danger" onClick={handleSignOut} title="Sair">
+                    <LogOut size={15} />
+                  </button>
+                </div>
               )}
             </>
           ) : (
@@ -1515,7 +1511,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               {previewEditingMobile && user && !isTeacher && !isAdmin && (
                 <>
                   <span className="mob-nav-section-label">Ações</span>
-                  <button className="mob-nav-btn" onClick={() => { setMenuOpen(false); setCreateModal(true) }}>
+                  <button className="mob-nav-btn" onClick={() => { setMenuOpen(false); navigate('/novo') }}>
                     <Plus size={20} /> Criar projeto
                   </button>
                   <div className="mob-nav-divider" />
@@ -1642,7 +1638,6 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
         </>
       )}
 
-      {createModal && <CreateProjectModal onClose={() => setCreateModal(false)} />}
       <FeedbackButton />
     </>
   )

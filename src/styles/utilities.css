@@ -1,0 +1,198 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   SHOWO — UTILITY CLASSES
+   Reusable layout, typography, spacing and skeleton helpers.
+   Import after tokens.css so token vars are available.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Flexbox ── */
+.flex          { display: flex; }
+.flex-col      { display: flex; flex-direction: column; }
+.flex-center   { display: flex; align-items: center; justify-content: center; }
+.flex-between  { display: flex; align-items: center; justify-content: space-between; }
+.flex-start    { display: flex; align-items: flex-start; }
+.flex-wrap     { flex-wrap: wrap; }
+.items-center  { align-items: center; }
+.items-start   { align-items: flex-start; }
+.justify-center { justify-content: center; }
+.flex-1        { flex: 1; }
+.flex-shrink-0 { flex-shrink: 0; }
+
+/* ── Gap ── */
+.gap-1  { gap: var(--sp-1); }
+.gap-2  { gap: var(--sp-2); }
+.gap-3  { gap: var(--sp-3); }
+.gap-4  { gap: var(--sp-4); }
+.gap-5  { gap: var(--sp-5); }
+.gap-6  { gap: var(--sp-6); }
+.gap-8  { gap: var(--sp-8); }
+
+/* ── Text ── */
+.text-2xs      { font-size: var(--text-2xs); }
+.text-xs       { font-size: var(--text-xs); }
+.text-sm       { font-size: var(--text-sm); }
+.text-base     { font-size: var(--text-base); }
+.text-md       { font-size: var(--text-md); }
+.text-lg       { font-size: var(--text-lg); }
+.text-xl       { font-size: var(--text-xl); }
+.text-2xl      { font-size: var(--text-2xl); }
+.text-3xl      { font-size: var(--text-3xl); }
+
+.font-heading  { font-family: var(--font-heading); }
+.font-body     { font-family: var(--font-body); }
+.font-mono     { font-family: var(--font-mono); }
+
+.font-normal   { font-weight: 400; }
+.font-medium   { font-weight: 500; }
+.font-semibold { font-weight: 600; }
+.font-bold     { font-weight: 700; }
+.font-black    { font-weight: 900; }
+
+.text-center   { text-align: center; }
+.text-left     { text-align: left; }
+.text-right    { text-align: right; }
+
+.uppercase     { text-transform: uppercase; letter-spacing: 0.08em; }
+.truncate      { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.line-clamp-2  { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.line-clamp-3  { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* ── Colors ── */
+.text-primary    { color: var(--color-primary); }
+.text-muted      { color: var(--color-text-secondary); }
+.text-subtle     { color: var(--color-text-tertiary); }
+.text-success    { color: var(--color-success); }
+.text-warning    { color: var(--color-warning); }
+.text-error      { color: var(--color-error); }
+.text-inverse    { color: var(--color-text-inverse); }
+
+.bg-page         { background: var(--color-bg); }
+.bg-alt          { background: var(--color-bg-alt); }
+.bg-surface      { background: var(--color-surface); }
+.bg-primary      { background: var(--color-primary); }
+.bg-primary-subtle { background: var(--color-primary-subtle); }
+
+/* ── Spacing ── */
+.m-0  { margin: 0; }
+.mt-1 { margin-top: var(--sp-1); }
+.mt-2 { margin-top: var(--sp-2); }
+.mt-3 { margin-top: var(--sp-3); }
+.mt-4 { margin-top: var(--sp-4); }
+.mt-6 { margin-top: var(--sp-6); }
+.mt-8 { margin-top: var(--sp-8); }
+.mb-1 { margin-bottom: var(--sp-1); }
+.mb-2 { margin-bottom: var(--sp-2); }
+.mb-3 { margin-bottom: var(--sp-3); }
+.mb-4 { margin-bottom: var(--sp-4); }
+.mb-6 { margin-bottom: var(--sp-6); }
+.mb-8 { margin-bottom: var(--sp-8); }
+
+.p-0  { padding: 0; }
+.p-2  { padding: var(--sp-2); }
+.p-3  { padding: var(--sp-3); }
+.p-4  { padding: var(--sp-4); }
+.p-5  { padding: var(--sp-5); }
+.p-6  { padding: var(--sp-6); }
+.p-8  { padding: var(--sp-8); }
+.px-4 { padding-left: var(--sp-4); padding-right: var(--sp-4); }
+.py-4 { padding-top: var(--sp-4); padding-bottom: var(--sp-4); }
+
+/* ── Borders & Radius ── */
+.border        { border: 1px solid var(--color-border); }
+.border-hover  { border: 1px solid var(--color-border-hover); }
+.rounded-sm    { border-radius: var(--radius-sm); }
+.rounded-md    { border-radius: var(--radius-md); }
+.rounded-lg    { border-radius: var(--radius-lg); }
+.rounded-xl    { border-radius: var(--radius-xl); }
+.rounded-full  { border-radius: var(--radius-full); }
+
+/* ── Sizing ── */
+.w-full  { width: 100%; }
+.h-full  { height: 100%; }
+.min-h-screen { min-height: 100vh; }
+
+/* ── Cursor / Interaction ── */
+.cursor-pointer { cursor: pointer; }
+.pointer-events-none { pointer-events: none; }
+.select-none { user-select: none; }
+
+/* ── Visibility ── */
+.sr-only {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}
+
+/* ── Transitions ── */
+.transition-fast { transition: all var(--duration-fast) var(--ease-out); }
+.transition-normal { transition: all var(--duration-normal) var(--ease-out); }
+
+
+/* ══════════════════════════════════════════════════════════════════════════
+   SKELETON LOADING SYSTEM
+   Shared shimmer animation for all skeleton placeholders.
+   Use .skel on a container, then .skel-line / .skel-block / .skel-circle
+   for content shapes. .skel-cover for image placeholders.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+@keyframes skel-shimmer {
+  0%   { opacity: 0.4; }
+  50%  { opacity: 0.7; }
+  100% { opacity: 0.4; }
+}
+
+.skel {
+  animation: skel-shimmer 1.5s ease-in-out infinite;
+}
+
+.skel-line {
+  height: 12px;
+  background: var(--color-border);
+  border-radius: var(--radius-sm);
+}
+.skel-line.w-60 { width: 60%; }
+.skel-line.w-40 { width: 40%; }
+.skel-line.w-80 { width: 80%; }
+.skel-line.w-full { width: 100%; }
+.skel-line.h-sm { height: 10px; }
+.skel-line.h-lg { height: 16px; }
+.skel-line.h-xl { height: 20px; }
+
+.skel-block {
+  background: var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.skel-circle {
+  background: var(--color-border);
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+}
+
+.skel-cover {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  background: var(--color-border);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.skel-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+/* Stagger skeleton cards for a natural feel */
+.skel-card:nth-child(2) { animation-delay: 0.1s; }
+.skel-card:nth-child(3) { animation-delay: 0.2s; }
+.skel-card:nth-child(4) { animation-delay: 0.3s; }
+.skel-card:nth-child(5) { animation-delay: 0.4s; }
+.skel-card:nth-child(6) { animation-delay: 0.5s; }
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+  .hide-mobile { display: none !important; }
+}
+@media (min-width: 601px) {
+  .hide-desktop { display: none !important; }
+}

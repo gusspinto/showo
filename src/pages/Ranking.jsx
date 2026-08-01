@@ -4,7 +4,6 @@ import { supabase } from '../lib/supabase'
 import { Navbar } from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
 import { Trophy, ChevronRight, TrendingUp, TrendingDown, Minus, SlidersHorizontal, X } from 'lucide-react'
-import CreateProjectModal from '../components/CreateProjectModal'
 
 const RANK_STORAGE_KEY = 'showo_ranking_positions'
 
@@ -212,7 +211,7 @@ export default function Ranking() {
       <Navbar>
         {profile?.role !== 'professor' && (
           <button
-            onClick={() => setShowCreateModal(true)}
+            onClick={() => navigate('/novo')}
             style={{
               background: C.blue,
               color: '#fff', border: 'none', borderRadius: 8,
@@ -457,7 +456,6 @@ export default function Ranking() {
           </div>
         )}
       </div>
-      {showCreateModal && <CreateProjectModal onClose={() => setShowCreateModal(false)} />}
     </div>
   )
 }
