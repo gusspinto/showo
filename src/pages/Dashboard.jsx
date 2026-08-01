@@ -19,7 +19,14 @@ import {
   Button, Card, CardHeader, CardTitle, SectionLabel, Badge, Modal, ModalActions,
   EmptyState, PageLayout, PageHeader, ProgressBar, ProgressRing,
 } from '../components/ui'
+import MonthCalendar from '../components/dashboard/MonthCalendar'
+import ScoreHero from '../components/dashboard/ScoreHero'
+import AddReminderModal from '../components/dashboard/AddReminderModal'
+import CalendarSyncModal from '../components/dashboard/CalendarSyncModal'
+import '../components/dashboard/MonthCalendar.css'
+import '../components/dashboard/ScoreHero.css'
 import './Dashboard.css'
+import StudentDashboard from './StudentDashboard'
 
 /* ══════════════════════════════════════════════════════════════════════════
    Helpers
@@ -54,77 +61,6 @@ function generateCode() {
   return Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join('')
 }
 
-/* ══════════════════════════════════════════════════════════════════════════
-   Sub-components — Project Row
-   ══════════════════════════════════════════════════════════════════════════ */
-
-function ProjectRow({ project, onView, onEdit, onDelete, onCopy, copied }) {
-  const [confirmDelete, setConfirmDelete] = useState(false)
-  const date = new Date(project.created_at).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' })
-  const scoreColor = getScoreColor(project.score)
-
-  return (
-    <Card padding="none" hoverable onClick={(e) => { if (window.innerWidth <= 600 && !e.target.closest('button')) onView() }} style={{ overflow: 'hidden' }}>
-      <div className="dash-project-row" style={{ display: 'flex', alignItems: 'center', padding: 'var(--sp-3) var(--sp-4)', gap: 'var(--sp-3)' }}>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-            <span onClick={onView} style={{ color: 'var(--color-text)', fontSize: 'var(--text-base)', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: 'pointer' }}>
-              {project.name}
-            </span>
-            {project.area && (
-              <Badge variant="default" className="dash-proj-area">{project.area}</Badge>
-            )}
-          </div>
-          {project.ai_tagline && (
-            <p className="dash-proj-tagline" style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--text-sm)', margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.4 }}>
-              {project.ai_tagline}
-            </p>
-          )}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 2 }}>
-            <span style={{ color: 'var(--color-text-tertiary)', fontSize: 'var(--text-xs)' }}>{date}</span>
-            {project.views > 0 && <span style={{ color: 'var(--color-text-tertiary)', fontSize: 'var(--text-xs)', display: 'flex', alignItems: 'center', gap: 3 }}><Eye size={10} /> {project.views}</span>}
-            {project.collaborator_count > 0 && <span style={{ color: 'var(--color-text-tertiary)', fontSize: 'var(--text-xs)', display: 'flex', alignItems: 'center', gap: 3 }}><Users size={10} /> {project.collaborator_count}</span>}
-          </div>
-        </div>
-
-        <ProgressRing value={project.score ?? 0} size={42} strokeWidth={3.5} color={scoreColor}>
-          <span style={{ fontSize: 10, fontWeight: 800, color: scoreColor }}>{project.score ?? '—'}</span>
-        </ProgressRing>
-
-        <div className="dash-project-actions">
-          {confirmDelete ? (
-            <>
-              <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', alignSelf: 'center', whiteSpace: 'nowrap' }}>Apagar?</span>
-              <Button size="sm" variant="danger" onClick={() => { onDelete(project.id); setConfirmDelete(false) }}>Sim</Button>
-              <Button size="sm" variant="secondary" onClick={() => setConfirmDelete(false)}>Não</Button>
-            </>
-          ) : (
-            <>
-              <button onClick={onView} title="Ver projeto" className="dash-ghost-btn"><ExternalLink size={15} /></button>
-              <button onClick={onEdit} title="Editar" className="dash-ghost-btn"><Pencil size={15} /></button>
-              <button onClick={onCopy} title={copied ? 'Copiado!' : 'Copiar link'} className="dash-ghost-btn" style={copied ? { color: 'var(--color-success)' } : undefined}>{copied ? <Check size={15} /> : <Link size={15} />}</button>
-              <button onClick={() => setConfirmDelete(true)} title="Apagar" className="dash-ghost-btn dash-ghost-btn-danger"><Trash2 size={15} /></button>
-            </>
-          )}
-        </div>
-
-        <div className="dash-proj-actions-mobile">
-          {confirmDelete ? (
-            <>
-              <Button size="sm" variant="danger" onClick={e => { e.stopPropagation(); onDelete(project.id); setConfirmDelete(false) }}>Sim</Button>
-              <Button size="sm" variant="secondary" onClick={e => { e.stopPropagation(); setConfirmDelete(false) }}>Não</Button>
-            </>
-          ) : (
-            <>
-              <button onClick={e => { e.stopPropagation(); onEdit() }} className="dash-ghost-btn" style={{ opacity: 0.6 }}><Pencil size={14} /></button>
-              <button onClick={e => { e.stopPropagation(); setConfirmDelete(true) }} className="dash-ghost-btn dash-ghost-btn-danger" style={{ opacity: 0.6 }}><Trash2 size={14} /></button>
-            </>
-          )}
-        </div>
-      </div>
-    </Card>
-  )
-}
 
 /* ══════════════════════════════════════════════════════════════════════════
    Sub-components — Feed Item (teacher lists)
@@ -586,105 +522,6 @@ function OnboardingModal({ user, profile, onDismiss, onCreateTurma }) {
   )
 }
 
-/* ══════════════════════════════════════════════════════════════════════════
-   Sub-components — Insights Block (student sidebar)
-   ══════════════════════════════════════════════════════════════════════════ */
-
-const SCORE_BREAKDOWN = [
-  { label: 'Nome do projeto', pts: 5 },
-  { label: 'Área do projeto', pts: 5 },
-  { label: 'Problema descrito', pts: 15 },
-  { label: 'Solução descrita', pts: 15 },
-  { label: 'Público-alvo', pts: 10 },
-  { label: 'Funcionalidades', pts: 10 },
-  { label: 'Tecnologias / Ferramentas', pts: 8 },
-  { label: 'Desafios encontrados', pts: 8 },
-  { label: 'Resultados obtidos', pts: 12 },
-  { label: 'Aprendizagens', pts: 12 },
-  { label: 'Imagem de capa', pts: 10 },
-]
-
-const POTENTIAL_DIMS = [
-  { key: 'quality',     label: 'Qualidade',    max: 30 },
-  { key: 'depth',       label: 'Profundidade', max: 20 },
-  { key: 'profile',     label: 'Perfil',       max: 15 },
-  { key: 'validation',  label: 'Validação',    max: 20 },
-  { key: 'consistency', label: 'Consistência', max: 15 },
-]
-
-function InsightsBlock({ projects, profile, username, copiedSlug, setCopiedSlug }) {
-  const withScore = projects.filter(p => p.score != null)
-  if (!withScore.length) return null
-  const best = Math.max(...withScore.map(p => p.score))
-  const avg = Math.round(withScore.reduce((s, p) => s + p.score, 0) / withScore.length)
-  const { potential, breakdown } = profile ? calculatePotential({ projects, profile }) : { potential: 0, breakdown: {} }
-  const bestColor = getScoreColor(best)
-
-  return (
-    <Card padding="none" style={{ overflow: 'hidden' }}>
-      {/* Hero score */}
-      <div style={{ textAlign: 'center', padding: '20px 16px 16px', borderBottom: '1px solid var(--color-border)' }}>
-        <div style={{ fontSize: 56, fontWeight: 800, fontFamily: 'var(--font-display)', color: bestColor, lineHeight: 1, letterSpacing: '-2px' }}>{best}</div>
-        <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginTop: 6 }}>Melhor score</div>
-        {withScore.length > 1 && (
-          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', marginTop: 6 }}>
-            Média <span style={{ fontWeight: 700, color: getScoreColor(avg) }}>{avg}</span> · {withScore.length} projetos
-          </div>
-        )}
-      </div>
-
-      {/* Potential ring + dims */}
-      <div style={{ padding: '14px 16px 0' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-          <ProgressRing value={potential} size={54} strokeWidth={4} color="var(--color-primary)">
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 13, fontWeight: 800, fontFamily: 'var(--font-display)', color: 'var(--color-primary)', lineHeight: 1 }}>{potential}</div>
-            </div>
-          </ProgressRing>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--color-text)', marginBottom: 2 }}>Potencial</div>
-            <ProgressBar value={potential} max={100} size="sm" />
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-          {POTENTIAL_DIMS.map(d => {
-            const val = breakdown[d.key] ?? 0
-            return (
-              <div key={d.key} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontSize: 10, color: 'var(--color-text-secondary)', width: 72, flexShrink: 0 }}>{d.label}</span>
-                <ProgressBar value={val} max={d.max} size="sm" style={{ flex: 1 }} />
-                <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--color-text-tertiary)', width: 24, textAlign: 'right', flexShrink: 0 }}>{val}</span>
-              </div>
-            )
-          })}
-        </div>
-      </div>
-
-      {username && (
-        <div style={{ padding: '0 16px 14px', marginTop: 14 }}>
-          <div style={{ paddingTop: 'var(--sp-3)', borderTop: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Link size={12} color="var(--color-text-tertiary)" style={{ flexShrink: 0 }} />
-            <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              showo.pt/u/{username}
-            </span>
-            <Button size="sm" variant="ghost"
-              icon={copiedSlug === '__profile__' ? <Check size={11} /> : <Copy size={11} />}
-              style={copiedSlug === '__profile__' ? { color: 'var(--color-success)' } : undefined}
-              onClick={() => {
-                navigator.clipboard.writeText(`${window.location.origin}/u/${username}`).then(() => {
-                  setCopiedSlug('__profile__')
-                  setTimeout(() => setCopiedSlug(null), 1500)
-                })
-              }}>
-              {copiedSlug === '__profile__' ? 'Copiado' : 'Copiar'}
-            </Button>
-          </div>
-        </div>
-      )}
-    </Card>
-  )
-}
 
 /* ══════════════════════════════════════════════════════════════════════════
    Sub-component — Contextual next action
@@ -973,6 +810,10 @@ export default function Dashboard() {
   const [inviteTarget, setInviteTarget] = useState(null)
   const [resumoOpen, setResumoOpen] = useState(false)
   const [feedbackHistory, setFeedbackHistory] = useState([])
+  const [personalReminders, setPersonalReminders] = useState([])
+  const [showAddReminder, setShowAddReminder] = useState(null) // holds initial Date or null
+  const [showCalendarSync, setShowCalendarSync] = useState(false)
+  const [icsToken, setIcsToken] = useState(null)
 
   /* ── Admin redirect ── */
   useEffect(() => {
@@ -1230,6 +1071,23 @@ export default function Dashboard() {
     supabase.from('notifications').select('id, message, project_slug, created_at').eq('user_id', user.id).eq('type', 'TEACHER_FEEDBACK').eq('read', false).order('created_at', { ascending: false }).limit(5).then(({ data }) => { if (data) setProfNotifs(data) })
   }, [user, profile?.role])
 
+  /* ── Personal reminders + ics token ── */
+  useEffect(() => {
+    if (!user || profile?.role === 'professor') return
+    supabase.from('personal_reminders')
+      .select('id, title, reminder_date, notes, done')
+      .eq('user_id', user.id).eq('done', false)
+      .order('reminder_date', { ascending: true })
+      .then(({ data }) => { if (data) setPersonalReminders(data) })
+    supabase.from('profiles').select('ics_token').eq('id', user.id).maybeSingle()
+      .then(({ data }) => { if (data?.ics_token) setIcsToken(data.ics_token) })
+  }, [user, profile?.role])
+
+  async function toggleReminderDone(id) {
+    setPersonalReminders(prev => prev.filter(r => r.id !== id))
+    await supabase.from('personal_reminders').update({ done: true }).eq('id', id)
+  }
+
   /* ── All feedback notifications (for chart) ── */
   useEffect(() => {
     if (!user || profile?.role === 'professor') return
@@ -1289,6 +1147,10 @@ export default function Dashboard() {
     return `A acabar à última da hora, ${firstName}?`
   })()
 
+  if (!isTeacher && !isRecruiter) {
+    return <StudentDashboard user={user} profile={profile} />
+  }
+
   return (
     <div style={{ minHeight: '100vh', background: 'var(--color-bg)', fontFamily: 'var(--font-body)' }}>
       <Navbar />
@@ -1316,6 +1178,12 @@ export default function Dashboard() {
         try { const lsKey = `showo_turmas_${user.id}`; const existing = JSON.parse(localStorage.getItem(lsKey) || '[]'); if (!existing.find(t => t.id === turma.id)) localStorage.setItem(lsKey, JSON.stringify([...existing, turma])) } catch {}
       }} />}
       {showTurmasModal && <TurmasListModal turmas={studentTurmas} onClose={() => setShowTurmasModal(false)} navigate={navigate} onJoin={() => setShowJoinModal(true)} />}
+      {showAddReminder && <AddReminderModal userId={user.id} initialDate={showAddReminder}
+        onClose={() => setShowAddReminder(null)}
+        onCreated={(r) => setPersonalReminders(prev => [...prev, r].sort((a, b) => a.reminder_date < b.reminder_date ? -1 : 1))} />}
+      {showCalendarSync && icsToken && <CalendarSyncModal userId={user.id} icsToken={icsToken}
+        onClose={() => setShowCalendarSync(false)}
+        onTokenRotated={(t) => setIcsToken(t)} />}
 
       {/* Brand accent line */}
       <div style={{ height: 2, background: 'linear-gradient(90deg, transparent 0%, var(--color-primary) 35%, var(--color-accent) 65%, transparent 100%)', opacity: 0.4 }} />
@@ -1345,307 +1213,6 @@ export default function Dashboard() {
             )}
           </div>
         </div>
-
-        {/* ══════════════════════ STUDENT DASHBOARD ══════════════════════ */}
-        {!isTeacher && !isRecruiter && (
-          <>
-            {/* Defense countdown — only shown if within 7 days */}
-            {!loadingProjects && (() => {
-              const today = new Date(); today.setHours(0, 0, 0, 0)
-              const upcoming = projects.filter(p => p.defense_date).map(p => ({ ...p, daysLeft: Math.ceil((new Date(p.defense_date + 'T00:00:00') - today) / 86400000) })).sort((a, b) => a.daysLeft - b.daysLeft)
-              const next = upcoming[0]
-              if (!next || next.daysLeft < 0 || next.daysLeft > 7) return null
-              const urgentVariant = next.daysLeft === 0 ? 'error' : 'warning'
-              const defenseDate = new Date(next.defense_date + 'T00:00:00').toLocaleDateString('pt-PT', { weekday: 'short', day: 'numeric', month: 'long' })
-              return (
-                <Card hoverable onClick={() => navigate(`/projeto/${next.slug}`)} padding="md" style={{ marginBottom: 14, borderColor: `var(--color-${urgentVariant})` }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <Badge variant={urgentVariant} dot style={{ marginBottom: 4 }}>{next.daysLeft === 0 ? 'Defesa hoje!' : `Defesa em ${next.daysLeft} dias`}</Badge>
-                      <div style={{ fontSize: 'var(--text-base)', fontWeight: 700, color: 'var(--color-text)' }}>{next.name} — {defenseDate}</div>
-                    </div>
-                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                      <div style={{ fontSize: 'var(--text-2xl)', fontWeight: 700, fontFamily: 'var(--font-display)', color: `var(--color-${urgentVariant})`, lineHeight: 1 }}>{next.daysLeft}</div>
-                      <div style={{ fontSize: 'var(--text-2xs)', fontWeight: 700, color: `var(--color-${urgentVariant})`, textTransform: 'uppercase' }}>dias</div>
-                    </div>
-                  </div>
-                </Card>
-              )
-            })()}
-
-            {/* ─── Quick stats strip ─── */}
-            {!loadingProjects && projects.length > 0 && (() => {
-              const totalViews = projects.reduce((s, p) => s + (p.views || 0), 0)
-              const totalFeedback = feedbackHistory.length
-              const stats = [
-                { label: 'Projetos', value: projects.length, icon: <Folder size={13} /> },
-                { label: 'Views', value: totalViews, icon: <Eye size={13} /> },
-                { label: 'Feedback', value: totalFeedback, icon: <MessageSquare size={13} /> },
-                { label: 'Empresas', value: myInterests.length, icon: <Briefcase size={13} />, highlight: myInterests.length > 0 },
-              ]
-              return (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 14 }}>
-                  {stats.map(s => (
-                    <div key={s.label} style={{
-                      padding: '10px 12px', borderRadius: 'var(--radius-md)',
-                      background: s.highlight ? 'var(--color-primary)' : 'var(--color-surface)',
-                      border: s.highlight ? 'none' : '1px solid var(--color-border)',
-                      display: 'flex', alignItems: 'center', gap: 10,
-                    }}>
-                      <span style={{ color: s.highlight ? '#fff' : 'var(--color-text-tertiary)', display: 'flex', flexShrink: 0 }}>{s.icon}</span>
-                      <div>
-                        <div style={{ fontSize: 'var(--text-lg)', fontWeight: 800, fontFamily: 'var(--font-display)', color: s.highlight ? '#fff' : 'var(--color-text)', lineHeight: 1 }}>{s.value}</div>
-                        <div style={{ fontSize: 10, fontWeight: 600, color: s.highlight ? 'rgba(255,255,255,0.7)' : 'var(--color-text-tertiary)', marginTop: 2 }}>{s.label}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )
-            })()}
-
-            {/* ─── Bento grid ─── */}
-            <div className="dash-bento">
-
-              {/* LEFT col — score + project list */}
-              <div className="dash-bento-col">
-                {!loadingProjects && (
-                  projects.length > 0
-                    ? <InsightsBlock projects={projects} profile={profile} username={profile?.username} copiedSlug={copiedSlug} setCopiedSlug={setCopiedSlug} />
-                    : (
-                      <Card padding="md" style={{ textAlign: 'center' }}>
-                        <div style={{ fontSize: 52, fontWeight: 800, fontFamily: 'var(--font-display)', color: 'var(--color-text-tertiary)', lineHeight: 1, marginBottom: 8 }}>—</div>
-                        <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>Score</div>
-                        <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', margin: 0 }}>Cria o primeiro projeto para ver o teu score</p>
-                      </Card>
-                    )
-                )}
-
-                {!loadingProjects && projects.length > 0 && (
-                  <Card padding="none" style={{ overflow: 'hidden' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderBottom: '1px solid var(--color-border)' }}>
-                      <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Projetos · {projects.length}</span>
-                      <Button size="sm" variant="ghost" icon={<Plus size={11} />} onClick={() => navigate('/novo')}>Novo</Button>
-                    </div>
-                    {projects.slice(0, 5).map((p, i) => {
-                      const sc = getScoreColor(p.score)
-                      return (
-                        <div key={p.id} className="dash-mini-proj-row"
-                          style={{ borderBottom: i < Math.min(projects.length, 5) - 1 ? '1px solid var(--color-border)' : 'none' }}
-                          onClick={() => navigate(`/projeto/${p.slug}`)}>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontSize: 'var(--text-sm)', fontWeight: 700, color: 'var(--color-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
-                            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', marginTop: 1 }}>{p.area || '—'}{p.views > 0 ? ` · ${p.views} views` : ''}</div>
-                          </div>
-                          <span style={{ fontSize: 'var(--text-base)', fontWeight: 800, fontFamily: 'var(--font-display)', color: sc, flexShrink: 0 }}>{p.score ?? '—'}</span>
-                        </div>
-                      )
-                    })}
-                  </Card>
-                )}
-
-                {collabProjects.length > 0 && (
-                  <Card padding="none" style={{ overflow: 'hidden' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', borderBottom: '1px solid var(--color-border)' }}>
-                      <Users size={12} color="var(--color-text-tertiary)" />
-                      <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.06em', flex: 1 }}>Partilhados · {collabProjects.length}</span>
-                    </div>
-                    {collabProjects.slice(0, 3).map((p, i) => {
-                      const sc = getScoreColor(p.score)
-                      return (
-                        <div key={p.id} className="dash-mini-proj-row"
-                          style={{ borderBottom: i < Math.min(collabProjects.length, 3) - 1 ? '1px solid var(--color-border)' : 'none' }}
-                          onClick={() => navigate(`/projeto/${p.slug}`)}>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--color-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
-                            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)' }}>{p.area || '—'}</div>
-                          </div>
-                          <span style={{ fontSize: 'var(--text-sm)', fontWeight: 800, fontFamily: 'var(--font-display)', color: sc }}>{p.score ?? '—'}</span>
-                        </div>
-                      )
-                    })}
-                  </Card>
-                )}
-              </div>
-
-              {/* CENTER col — featured + chart + interests */}
-              <div className="dash-bento-col">
-                {loadingProjects
-                  ? <div className="dash-skeleton" style={{ height: 280 }} />
-                  : projects.length > 0
-                    ? <FeaturedProjectCard project={projects.reduce((b, p) => ((p.score ?? 0) >= (b?.score ?? 0) ? p : b), projects[0])} navigate={navigate} myInterests={myInterests} />
-                    : (
-                      <div style={{
-                        textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                        gap: 14, minHeight: 220, padding: '32px 24px', borderRadius: 'var(--radius-lg)',
-                        background: 'var(--color-primary)', color: '#fff',
-                      }}>
-                        <Rocket size={28} color="#fff" style={{ opacity: 0.8 }} />
-                        <div>
-                          <div style={{ fontSize: 'var(--text-lg)', fontWeight: 700, fontFamily: 'var(--font-heading)', marginBottom: 6 }}>O teu portfólio começa aqui</div>
-                          <p style={{ fontSize: 'var(--text-sm)', opacity: 0.75, margin: '0 0 16px' }}>Cria o teu primeiro projeto e partilha o que estás a construir.</p>
-                          <button onClick={() => navigate('/novo')} style={{
-                            display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 18px',
-                            borderRadius: 'var(--radius-md)', background: 'rgba(255,255,255,0.2)',
-                            border: '1px solid rgba(255,255,255,0.3)', color: '#fff',
-                            fontSize: 'var(--text-sm)', fontWeight: 700, cursor: 'pointer',
-                          }}><Plus size={14} /> Criar projeto</button>
-                        </div>
-                      </div>
-                    )
-                }
-
-                <ActivityChart myInterests={myInterests} feedbackHistory={feedbackHistory} />
-
-                {myInterests.length > 0 && (
-                  <Card padding="none" style={{ overflow: 'hidden' }}>
-                    <div style={{
-                      padding: '10px 14px', background: 'var(--color-primary)',
-                      display: 'flex', alignItems: 'center', gap: 8,
-                    }}>
-                      <Briefcase size={13} color="#fff" />
-                      <span style={{ fontSize: 'var(--text-sm)', fontWeight: 700, color: '#fff', flex: 1 }}>Recrutadores</span>
-                      <span style={{
-                        fontSize: 'var(--text-xs)', fontWeight: 800, color: 'var(--color-primary)',
-                        background: '#fff', borderRadius: 'var(--radius-full)',
-                        padding: '1px 7px',
-                      }}>{myInterests.length}</span>
-                    </div>
-                    {myInterests.map((item, idx) => {
-                      const rec = item.recruiterProfile
-                      return (
-                        <div key={idx} style={{
-                          display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px',
-                          borderBottom: idx < myInterests.length - 1 ? '1px solid var(--color-border)' : 'none',
-                        }}>
-                          <div style={{
-                            width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
-                            background: 'var(--color-primary-subtle)',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
-                          }}>
-                            {rec.avatar_url
-                              ? <img src={rec.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                              : <Building2 size={14} color="var(--color-primary)" />}
-                          </div>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontSize: 'var(--text-sm)', fontWeight: 700, color: 'var(--color-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{rec.company || rec.full_name || 'Recrutador'}</div>
-                            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', marginTop: 1 }}>sobre {item.project?.name || 'o teu trabalho'}</div>
-                          </div>
-                          <Button size="sm" variant="secondary" icon={<MessageSquare size={11} />} onClick={() => navigate(`/mensagens?to=${item.recruiter_id}`)}>Msg</Button>
-                        </div>
-                      )
-                    })}
-                  </Card>
-                )}
-              </div>
-
-              {/* RIGHT col — next step + turma + tasks + prof notifs */}
-              <div className="dash-bento-col dash-bento-right">
-                {!loadingProjects && (
-                  <NextStepBlock profNotifs={profNotifs} pendingTasks={pendingTasks} myInterests={myInterests} projects={projects} profile={profile} navigate={navigate} onDismissNotif={dismissProfNotif} />
-                )}
-                {/* Fallback: profile share card when there's no contextual action */}
-                {!loadingProjects && projects.length > 0 && (() => {
-                  const hasDraft = profile?.project_draft && Object.keys(profile.project_draft).length > 0
-                  const hasAnyAction = hasDraft || profNotifs.length > 0 || pendingTasks.some(t => t.due_date && new Date(t.due_date + 'T23:59:59') < new Date()) || projects.some(p => p.review_status === 'needs_revision') || myInterests.length > 0
-                  if (hasAnyAction || !profile?.username) return null
-                  return (
-                    <Card padding="md">
-                      <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>O teu perfil</div>
-                      <div style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', marginBottom: 10, lineHeight: 1.4 }}>
-                        Partilha a tua página com recrutadores e professores.
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 10px', background: 'var(--color-bg)', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)', marginBottom: 10 }}>
-                        <Link size={11} color="var(--color-text-tertiary)" style={{ flexShrink: 0 }} />
-                        <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>showo.pt/u/{profile.username}</span>
-                      </div>
-                      <Button size="sm" variant="secondary" fullWidth icon={<Copy size={11} />}
-                        onClick={() => navigator.clipboard.writeText(`${window.location.origin}/u/${profile.username}`)}>
-                        Copiar link
-                      </Button>
-                    </Card>
-                  )
-                })()}
-
-                {!loadingStudentTurmas && (
-                  studentTurmas.length > 0 ? (
-                    <Card hoverable onClick={() => studentTurmas.length === 1 ? navigate(`/turma/${studentTurmas[0].code}`) : setShowTurmasModal(true)} padding="md">
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                        <div style={{ width: 34, height: 34, borderRadius: 'var(--radius-md)', background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                          <Users2 size={15} color="var(--color-primary)" />
-                        </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 'var(--text-sm)', fontWeight: 700, color: 'var(--color-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {studentTurmas.length === 1 ? studentTurmas[0].name : `${studentTurmas.length} turmas`}
-                          </div>
-                          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', marginTop: 1 }}>
-                            {studentTurmas.length === 1 ? (studentTurmas[0].teacher_name || 'Ver turma') : studentTurmas.map(t => t.name).join(' · ')}
-                          </div>
-                        </div>
-                        <ChevronRight size={13} color="var(--color-text-tertiary)" />
-                      </div>
-                    </Card>
-                  ) : (
-                    <Card hoverable onClick={() => setShowJoinModal(true)} padding="md">
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                        <div style={{ width: 34, height: 34, borderRadius: 'var(--radius-md)', background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                          <Users2 size={15} color="var(--color-primary)" />
-                        </div>
-                        <div style={{ flex: 1 }}>
-                          <div style={{ fontSize: 'var(--text-sm)', fontWeight: 700, color: 'var(--color-text)' }}>Junta-te a uma turma</div>
-                          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', marginTop: 1 }}>Código de 6 letras do professor</div>
-                        </div>
-                        <Badge variant="primary">Entrar</Badge>
-                      </div>
-                    </Card>
-                  )
-                )}
-
-                {pendingTasks.length > 0 && (
-                  <Card padding="sm">
-                    <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 5 }}>
-                      <ListChecks size={11} /> Tarefas · {pendingTasks.length}
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                      {pendingTasks.slice(0, 4).map(t => {
-                        const overdue = t.due_date && new Date(t.due_date + 'T23:59:59') < new Date()
-                        return (
-                          <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <button onClick={() => completePendingTask(t.id)} style={{ background: 'none', border: 'none', padding: 2, cursor: 'pointer', flexShrink: 0, display: 'flex' }}>
-                              <Circle size={14} color="var(--color-text-tertiary)" />
-                            </button>
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <div style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--color-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.title}</div>
-                              {t.due_date && <div style={{ fontSize: 'var(--text-xs)', color: overdue ? 'var(--color-error)' : 'var(--color-text-tertiary)', fontWeight: overdue ? 700 : 400 }}>{new Date(t.due_date + 'T00:00:00').toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' })}{overdue ? ' — atrasada' : ''}</div>}
-                            </div>
-                          </div>
-                        )
-                      })}
-                      {pendingTasks.length > 4 && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', paddingLeft: 22 }}>+{pendingTasks.length - 4} mais</div>}
-                    </div>
-                  </Card>
-                )}
-
-                {profNotifs.length > 0 && (
-                  <Card padding="none" style={{ overflow: 'hidden' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', borderBottom: '1px solid var(--color-border)' }}>
-                      <GraduationCap size={12} color="var(--color-success)" />
-                      <span style={{ fontSize: 'var(--text-sm)', fontWeight: 700, color: 'var(--color-text)', flex: 1 }}>Professor</span>
-                      <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--color-success)', background: 'var(--color-success-subtle)', borderRadius: 'var(--radius-full)', padding: '1px 7px' }}>{profNotifs.length}</span>
-                    </div>
-                    {profNotifs.map((n, i) => (
-                      <FeedItem key={n.id} onClick={() => dismissProfNotif(n.id, n.project_slug)}
-                        icon={<GraduationCap size={13} color="var(--color-success)" />}
-                        iconBg="var(--color-success-subtle)" iconColor="var(--color-success)"
-                        title={n.message} subtitle={timeAgoLabel(n.created_at)}
-                        style={i < profNotifs.length - 1 ? { borderBottom: '1px solid var(--color-border)' } : undefined}
-                      />
-                    ))}
-                  </Card>
-                )}
-              </div>
-            </div>
-          </>
-        )}
 
         {/* ══════════════════════ TEACHER DASHBOARD ══════════════════════ */}
         {isTeacher && (
