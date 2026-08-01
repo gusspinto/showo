@@ -1283,8 +1283,6 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
 
               {user && (
                 <>
-                  <div className="sb-divider" style={{ margin: '8px 0 4px' }} />
-                  {!collapsed && showLabels && <span className="sb-label">Comunidade</span>}
                   <button className={`sb-item${isActive('/turmas') ? ' active' : ''}`} onClick={() => navigate('/turmas')}>
                     <Users2 size={16} />{!collapsed && showLabels && <span>Turmas</span>}
                   </button>
@@ -1301,7 +1299,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                 </>
               )}
 
-              {user && !isTeacher && !isAdmin && location.pathname !== '/dashboard' && (
+              {user && !isTeacher && !isAdmin && (
                 <div className={`sb-create-wrap ${extras ? 'hidden' : 'visible'}`}>
                   <div className="sb-create-inner">
                     <button className="sb-create" onClick={() => setCreateModal(true)}>
@@ -1321,67 +1319,24 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
         <div className="sb-bottom">
           {user ? (
             <>
-              {/* Profile row + notifications — collapsed keeps only what's worth a glance
-                  without expanding (notifications, messages); profile/settings/logout
-                  require opening the sidebar. */}
-              <div style={{
-                display: 'flex', flexDirection: collapsed ? 'column' : 'row',
-                alignItems: 'center', gap: 4, padding: collapsed ? '0 0 6px' : '0 0 2px',
-                justifyContent: 'center',
-              }}>
-                {profileUrl && !collapsed && (
-                  <button className={`sb-item${isActive('profile') ? ' active' : ''}`} style={{ flex: 1, margin: 0 }} onClick={() => navigate(profileUrl)}>
-                    <AvatarCircle avatarUrl={profile?.avatar_url} initial={getInitial(user)} size={20} fontSize={9} />
-                    {showLabels && <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{getDisplayName(user)}</span>}
-                  </button>
-                )}
-                {/* Mensagens — only stacked here in collapsed mode; moved to the icon row below when expanded.
-                    Skipped for teacher/recruiter, who already have a labeled Mensagens item in their main nav list. */}
-                {collapsed && !isTeacher && !isRecruiter && (
-                  <button
-                    onClick={() => navigate('/mensagens')}
-                    title="Mensagens"
-                    style={{
-                      flexShrink: 0, width: 32, height: 32, borderRadius: 8,
-                      background: isActive('/mensagens') ? 'rgba(27,120,247,0.13)' : 'transparent',
-                      border: 'none',
-                      color: isActive('/mensagens') ? 'var(--color-primary)' : 'var(--color-text-secondary)',
-                      cursor: 'pointer', position: 'relative',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      transition: 'background 0.13s, color 0.13s',
-                    }}
-                    onMouseEnter={e => { if (!isActive('/mensagens')) { e.currentTarget.style.background = 'var(--color-surface-hover)'; e.currentTarget.style.color = 'var(--color-text)' } }}
-                    onMouseLeave={e => { if (!isActive('/mensagens')) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--color-text-secondary)' } }}
-                  >
-                    <MessageSquare size={15} />
-                    {unreadMsgs > 0 && (
-                      <span style={{
-                        position: 'absolute', top: 3, right: 3,
-                        width: 8, height: 8, borderRadius: '50%',
-                        background: 'var(--color-primary)', border: '1.5px solid var(--color-sidebar-bg)',
-                      }} />
-                    )}
-                  </button>
-                )}
-                {/* Notificações — stays visible when collapsed */}
-                <InviteInbox userId={user.id} sidebar={true} collapsed={collapsed} />
-                {/* Avatar — collapsed: tap opens a small Perfil/Sair menu instead of
-                    navigating straight away (no room here for a full nav row) */}
-                {collapsed && profileUrl && (
-                  <div ref={profileMenuRef} style={{ position: 'relative' }}>
-                    <button
-                      onClick={() => setSbProfileMenuOpen(o => !o)}
-                      title={getDisplayName(user)}
-                      style={{
-                        width: 32, height: 32, borderRadius: 8, background: sbProfileMenuOpen ? 'var(--color-surface-hover)' : 'transparent',
-                        border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        transition: 'background 0.13s', marginTop: 2,
-                      }}
-                    >
-                      <AvatarCircle avatarUrl={profile?.avatar_url} initial={getInitial(user)} size={22} fontSize={10} />
-                    </button>
-                    {sbProfileMenuOpen && (
-                      <>
+              {collapsed ? (
+                /* Collapsed: bell + avatar (avatar opens menu with Perfil/Definições/Sair) */
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '0 0 6px' }}>
+                  <InviteInbox userId={user.id} sidebar={true} collapsed={collapsed} />
+                  {profileUrl && (
+                    <div ref={profileMenuRef} style={{ position: 'relative' }}>
+                      <button
+                        onClick={() => setSbProfileMenuOpen(o => !o)}
+                        title={getDisplayName(user)}
+                        style={{
+                          width: 32, height: 32, borderRadius: 8, background: sbProfileMenuOpen ? 'var(--color-surface-hover)' : 'transparent',
+                          border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          transition: 'background 0.13s', marginTop: 2,
+                        }}
+                      >
+                        <AvatarCircle avatarUrl={profile?.avatar_url} initial={getInitial(user)} size={22} fontSize={10} />
+                      </button>
+                      {sbProfileMenuOpen && (
                         <div style={{
                           position: 'fixed', left: 80, bottom: 16, zIndex: 199,
                           background: 'var(--color-surface)', border: '1px solid var(--color-border)',
@@ -1404,6 +1359,17 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                           >
                             <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><SettingsIcon size={15} /> Definições</span>
                           </button>
+                          <button
+                            onClick={toggleTheme}
+                            style={{ ...dropItemStyle, color: C.text }}
+                            onMouseEnter={e => e.currentTarget.style.background = 'var(--color-surface-hover)'}
+                            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                          >
+                            <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                              {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
+                              {theme === 'dark' ? 'Modo claro' : 'Modo escuro'}
+                            </span>
+                          </button>
                           <div style={{ height: 1, background: C.border, margin: '4px 6px' }} />
                           <button
                             onClick={() => { setSbProfileMenuOpen(false); handleSignOut() }}
@@ -1414,38 +1380,34 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                             <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><LogOut size={15} /> Sair</span>
                           </button>
                         </div>
-                      </>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {collapsed ? null : (
-                /* Definições / Modo claro / Mensagens / Sair — one tidy icon row instead of a long list */
-                <div className="sb-action-row">
-                  <button className="sb-action-btn" onClick={() => navigate('/settings')} title="Definições">
-                    <SettingsIcon size={15} />
-                  </button>
-                  <button className="sb-action-btn" onClick={toggleTheme} title={theme === 'dark' ? 'Modo claro' : 'Modo escuro'}>
-                    {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
-                  </button>
-                  {/* Skipped for teacher/recruiter, who already have a labeled Mensagens item in their main nav list */}
-                  {!isTeacher && !isRecruiter && (
-                    <button className="sb-action-btn" onClick={() => navigate('/mensagens')} title="Mensagens" style={{ position: 'relative', color: isActive('/mensagens') ? 'var(--color-primary)' : undefined }}>
-                      <MessageSquare size={15} />
-                      {unreadMsgs > 0 && (
-                        <span style={{
-                          position: 'absolute', top: 5, right: 5,
-                          width: 7, height: 7, borderRadius: '50%',
-                          background: 'var(--color-primary)', border: '1.5px solid var(--color-sidebar-bg)',
-                        }} />
                       )}
-                    </button>
+                    </div>
                   )}
-                  <button className="sb-action-btn danger" onClick={handleSignOut} title="Sair">
-                    <LogOut size={15} />
-                  </button>
                 </div>
+              ) : (
+                /* Expanded: profile row + actions row */
+                <>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '0 0 2px' }}>
+                    {profileUrl && (
+                      <button className={`sb-item${isActive('profile') ? ' active' : ''}`} style={{ flex: 1, margin: 0 }} onClick={() => navigate(profileUrl)}>
+                        <AvatarCircle avatarUrl={profile?.avatar_url} initial={getInitial(user)} size={20} fontSize={9} />
+                        {showLabels && <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{getDisplayName(user)}</span>}
+                      </button>
+                    )}
+                    <InviteInbox userId={user.id} sidebar={true} collapsed={collapsed} />
+                  </div>
+                  <div className="sb-action-row">
+                    <button className="sb-action-btn" onClick={() => navigate('/settings')} title="Definições">
+                      <SettingsIcon size={15} />
+                    </button>
+                    <button className="sb-action-btn" onClick={toggleTheme} title={theme === 'dark' ? 'Modo claro' : 'Modo escuro'}>
+                      {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
+                    </button>
+                    <button className="sb-action-btn danger" onClick={handleSignOut} title="Sair">
+                      <LogOut size={15} />
+                    </button>
+                  </div>
+                </>
               )}
             </>
           ) : (
