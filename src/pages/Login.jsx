@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { claimAnonymousProjects } from '../lib/claimAnonymousProjects'
 import { Mail, Check } from 'lucide-react'
@@ -65,6 +65,7 @@ function PasswordInput({ value, onChange, placeholder }) {
 
 export default function Login() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { theme } = useTheme()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -73,7 +74,8 @@ export default function Login() {
   const [notConfirmed, setNotConfirmed] = useState(false)
   const [resendState, setResendState] = useState('idle') // 'idle' | 'sending' | 'sent'
   const [emailFocused, setEmailFocused] = useState(false)
-  const [mode, setMode] = useState('login') // 'login' | 'forgot'
+  const startForgot = new URLSearchParams(location.search).get('forgot') === '1'
+  const [mode, setMode] = useState(startForgot ? 'forgot' : 'login') // 'login' | 'forgot'
   const [forgotEmail, setForgotEmail] = useState('')
   const [forgotSent, setForgotSent] = useState(false)
   const [forgotLoading, setForgotLoading] = useState(false)
@@ -258,7 +260,7 @@ export default function Login() {
                     style={{
                       background: forgotLoading ? 'var(--color-border)' : 'var(--color-primary)',
                       color: '#fff', border: 'none',
-                      borderRadius: 8, padding: '13px', fontSize: 14, fontWeight: 700,
+                      borderRadius: 10, padding: '12px 0', fontSize: 15, fontWeight: 700,
                       cursor: forgotLoading ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
                     }}
                   >
@@ -280,7 +282,15 @@ export default function Login() {
           ) : (
           <>
           <h1 style={{ color: C.text, fontSize: 26, fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 8px', letterSpacing: '-0.5px' }}>Entrar</h1>
-          <p style={{ color: C.muted, fontSize: 14, margin: '0 0 32px' }}>Acede ao teu painel de projetos</p>
+          <p style={{ color: C.muted, fontSize: 14, margin: '0 0 28px' }}>Acede ao teu painel de projetos</p>
+
+          <GoogleButton />
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '18px 0' }}>
+            <div style={{ flex: 1, height: 1, background: C.border }} />
+            <span style={{ fontSize: 12, color: 'var(--color-text-tertiary)', fontWeight: 600 }}>ou</span>
+            <div style={{ flex: 1, height: 1, background: C.border }} />
+          </div>
 
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -310,7 +320,7 @@ export default function Login() {
             </div>
 
             {error && (
-              <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 8, padding: '10px 14px', color: C.error, fontSize: 14 }}>
+              <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 10, padding: '10px 14px', color: C.error, fontSize: 14 }}>
                 {error}
               </div>
             )}
@@ -351,7 +361,7 @@ export default function Login() {
               style={{
                 background: loading ? 'var(--color-border)' : 'var(--color-primary)',
                 color: '#fff', border: 'none',
-                borderRadius: 8, padding: '13px', fontSize: 14, fontWeight: 700,
+                borderRadius: 10, padding: '12px 0', fontSize: 15, fontWeight: 700,
                 cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
                 marginTop: 4,
               }}
@@ -359,14 +369,6 @@ export default function Login() {
               {loading ? 'A entrar…' : 'Entrar'}
             </button>
           </form>
-
-          {/* Divider + Google sign-in */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '18px 0' }}>
-            <div style={{ flex: 1, height: 1, background: C.border }} />
-            <span style={{ fontSize: 12, color: 'var(--color-text-tertiary)', fontWeight: 600 }}>ou</span>
-            <div style={{ flex: 1, height: 1, background: C.border }} />
-          </div>
-          <GoogleButton />
 
           <p style={{ textAlign: 'center', color: C.muted, fontSize: 14, marginTop: 24 }}>
             Não tens conta?{' '}

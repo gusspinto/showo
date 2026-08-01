@@ -391,8 +391,8 @@ export default function Register() {
                 style={{
                   width: '100%',
                   background: role ? (selectedRole?.color ?? C.blue) : 'var(--color-border)',
-                  color: '#fff', border: 'none', borderRadius: 8, padding: '13px',
-                  fontSize: 14, fontWeight: 700, cursor: role ? 'pointer' : 'not-allowed',
+                  color: '#fff', border: 'none', borderRadius: 10, padding: '12px 0',
+                  fontSize: 15, fontWeight: 700, cursor: role ? 'pointer' : 'not-allowed',
                   fontFamily: 'inherit',
                 }}
               >
@@ -429,6 +429,17 @@ export default function Register() {
               <h1 style={{ color: C.text, fontSize: 22, fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 24px', letterSpacing: '-0.5px' }}>
                 {accountCreated ? (isPartnerFlow ? 'Só falta ligar à empresa' : 'Só falta o código') : 'Os teus dados'}
               </h1>
+
+              {!accountCreated && (
+                <>
+                  <GoogleButton label="Continuar com Google" />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '18px 0' }}>
+                    <div style={{ flex: 1, height: 1, background: C.border }} />
+                    <span style={{ fontSize: 12, color: 'var(--color-text-tertiary)', fontWeight: 600 }}>ou</span>
+                    <div style={{ flex: 1, height: 1, background: C.border }} />
+                  </div>
+                </>
+              )}
 
               <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
                 {accountCreated ? (
@@ -488,7 +499,7 @@ export default function Register() {
                 )}
 
                 {error && (
-                  <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 8, padding: '10px 14px', color: C.error, fontSize: 14 }}>
+                  <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 10, padding: '10px 14px', color: C.error, fontSize: 14 }}>
                     {error}
                   </div>
                 )}
@@ -499,25 +510,13 @@ export default function Register() {
                   style={{
                     background: loading ? 'var(--color-border)' : 'var(--color-primary)',
                     color: '#fff', border: 'none',
-                    borderRadius: 8, padding: '13px', fontSize: 14, fontWeight: 700,
+                    borderRadius: 10, padding: '12px 0', fontSize: 15, fontWeight: 700,
                     cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit', marginTop: 4,
                   }}
                 >
                   {loading ? 'A verificar…' : accountCreated ? (isPartnerFlow ? 'Tentar novamente' : 'Confirmar código') : 'Criar conta'}
                 </button>
               </form>
-
-              {/* Divider + Google sign-up — hidden during the email-code confirmation step */}
-              {!accountCreated && (
-                <>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '18px 0' }}>
-                    <div style={{ flex: 1, height: 1, background: C.border }} />
-                    <span style={{ fontSize: 12, color: 'var(--color-text-tertiary)', fontWeight: 600 }}>ou</span>
-                    <div style={{ flex: 1, height: 1, background: C.border }} />
-                  </div>
-                  <GoogleButton label="Continuar com Google" />
-                </>
-              )}
             </>
           )}
 

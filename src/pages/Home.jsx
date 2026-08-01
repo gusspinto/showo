@@ -333,7 +333,7 @@ export default function Home() {
               <Link to="/register" style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', fontWeight: 500, textDecoration: 'none' }}>
                 Criar conta
               </Link>
-              <Link to="/login" style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', fontWeight: 500, textDecoration: 'none' }}>
+              <Link to="/login?forgot=1" style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', fontWeight: 500, textDecoration: 'none' }}>
                 Esqueci a palavra-passe
               </Link>
             </div>

@@ -621,11 +621,11 @@ function InsightsBlock({ projects, profile, username, copiedSlug, setCopiedSlug 
   const bestColor = getScoreColor(best)
 
   return (
-    <Card padding="md" style={{ overflow: 'hidden' }}>
+    <Card padding="none" style={{ overflow: 'hidden' }}>
       {/* Hero score */}
-      <div style={{ textAlign: 'center', padding: '8px 0 16px', borderBottom: '1px solid var(--color-border)', marginBottom: 14 }}>
+      <div style={{ textAlign: 'center', padding: '20px 16px 16px', borderBottom: '1px solid var(--color-border)' }}>
         <div style={{ fontSize: 56, fontWeight: 800, fontFamily: 'var(--font-display)', color: bestColor, lineHeight: 1, letterSpacing: '-2px' }}>{best}</div>
-        <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginTop: 4 }}>Melhor score</div>
+        <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginTop: 6 }}>Melhor score</div>
         {withScore.length > 1 && (
           <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', marginTop: 6 }}>
             Média <span style={{ fontWeight: 700, color: getScoreColor(avg) }}>{avg}</span> · {withScore.length} projetos
@@ -634,48 +634,52 @@ function InsightsBlock({ projects, profile, username, copiedSlug, setCopiedSlug 
       </div>
 
       {/* Potential ring + dims */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-        <ProgressRing value={potential} size={54} strokeWidth={4} color="var(--color-primary)">
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 13, fontWeight: 800, fontFamily: 'var(--font-display)', color: 'var(--color-primary)', lineHeight: 1 }}>{potential}</div>
+      <div style={{ padding: '14px 16px 0' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+          <ProgressRing value={potential} size={54} strokeWidth={4} color="var(--color-primary)">
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 13, fontWeight: 800, fontFamily: 'var(--font-display)', color: 'var(--color-primary)', lineHeight: 1 }}>{potential}</div>
+            </div>
+          </ProgressRing>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--color-text)', marginBottom: 2 }}>Potencial</div>
+            <ProgressBar value={potential} max={100} size="sm" />
           </div>
-        </ProgressRing>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--color-text)', marginBottom: 2 }}>Potencial</div>
-          <ProgressBar value={potential} max={100} size="sm" />
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+          {POTENTIAL_DIMS.map(d => {
+            const val = breakdown[d.key] ?? 0
+            return (
+              <div key={d.key} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 10, color: 'var(--color-text-secondary)', width: 72, flexShrink: 0 }}>{d.label}</span>
+                <ProgressBar value={val} max={d.max} size="sm" style={{ flex: 1 }} />
+                <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--color-text-tertiary)', width: 24, textAlign: 'right', flexShrink: 0 }}>{val}</span>
+              </div>
+            )
+          })}
         </div>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-        {POTENTIAL_DIMS.map(d => {
-          const val = breakdown[d.key] ?? 0
-          return (
-            <div key={d.key} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: 10, color: 'var(--color-text-secondary)', width: 72, flexShrink: 0 }}>{d.label}</span>
-              <ProgressBar value={val} max={d.max} size="sm" style={{ flex: 1 }} />
-              <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--color-text-tertiary)', width: 24, textAlign: 'right', flexShrink: 0 }}>{val}</span>
-            </div>
-          )
-        })}
-      </div>
-
       {username && (
-        <div style={{ padding: 'var(--sp-3) 0 0', marginTop: 'var(--sp-3)', borderTop: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Link size={12} color="var(--color-text-tertiary)" style={{ flexShrink: 0 }} />
-          <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            showo.pt/u/{username}
-          </span>
-          <Button size="sm" variant="ghost"
-            icon={copiedSlug === '__profile__' ? <Check size={11} /> : <Copy size={11} />}
-            style={copiedSlug === '__profile__' ? { color: 'var(--color-success)' } : undefined}
-            onClick={() => {
-              navigator.clipboard.writeText(`${window.location.origin}/u/${username}`).then(() => {
-                setCopiedSlug('__profile__')
-                setTimeout(() => setCopiedSlug(null), 1500)
-              })
-            }}>
-            {copiedSlug === '__profile__' ? 'Copiado' : 'Copiar'}
-          </Button>
+        <div style={{ padding: '0 16px 14px', marginTop: 14 }}>
+          <div style={{ paddingTop: 'var(--sp-3)', borderTop: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Link size={12} color="var(--color-text-tertiary)" style={{ flexShrink: 0 }} />
+            <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              showo.pt/u/{username}
+            </span>
+            <Button size="sm" variant="ghost"
+              icon={copiedSlug === '__profile__' ? <Check size={11} /> : <Copy size={11} />}
+              style={copiedSlug === '__profile__' ? { color: 'var(--color-success)' } : undefined}
+              onClick={() => {
+                navigator.clipboard.writeText(`${window.location.origin}/u/${username}`).then(() => {
+                  setCopiedSlug('__profile__')
+                  setTimeout(() => setCopiedSlug(null), 1500)
+                })
+              }}>
+              {copiedSlug === '__profile__' ? 'Copiado' : 'Copiar'}
+            </Button>
+          </div>
         </div>
       )}
     </Card>
@@ -745,21 +749,47 @@ function NextStepBlock({ profNotifs, pendingTasks, myInterests, projects, profil
   }
 
   if (!step) return null
+
+  const isBlueCTA = step.iconColor === 'var(--color-primary)' || step.iconColor === 'var(--color-warning)'
+
+  if (isBlueCTA) {
+    return (
+      <div style={{
+        padding: '16px', borderRadius: 'var(--radius-lg)',
+        background: 'var(--color-primary)', color: '#fff',
+      }}>
+        <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', opacity: 0.7, marginBottom: 8 }}>{step.label}</div>
+        <div style={{ fontSize: 'var(--text-sm)', fontWeight: 700, lineHeight: 1.35, marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{step.title}</div>
+        {step.desc && <div style={{ fontSize: 'var(--text-xs)', opacity: 0.7, marginBottom: 10 }}>{step.desc}</div>}
+        {step.action && (
+          <button onClick={step.action} style={{
+            width: '100%', padding: '8px 0', borderRadius: 'var(--radius-md)',
+            background: 'rgba(255,255,255,0.18)', border: '1px solid rgba(255,255,255,0.25)',
+            color: '#fff', fontSize: 'var(--text-sm)', fontWeight: 700, cursor: 'pointer',
+          }}>{step.actionLabel}</button>
+        )}
+      </div>
+    )
+  }
+
   return (
     <Card padding="md" style={{ borderLeft: `3px solid ${step.iconColor}` }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)' }}>
-        <div style={{ width: 36, height: 36, borderRadius: 'var(--radius-md)', background: step.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: step.iconColor }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{
+          width: 36, height: 36, borderRadius: 'var(--radius-md)', background: step.iconBg,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: step.iconColor,
+        }}>
           {step.icon}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: step.iconColor, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>{step.label}</div>
-          <div style={{ fontSize: 'var(--text-base)', fontWeight: 700, color: 'var(--color-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{step.title}</div>
-          {step.desc && <div style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', marginTop: 1 }}>{step.desc}</div>}
+          <div style={{ fontSize: 'var(--text-2xs)', fontWeight: 700, color: step.iconColor, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>{step.label}</div>
+          <div style={{ fontSize: 'var(--text-sm)', fontWeight: 700, color: 'var(--color-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{step.title}</div>
+          {step.desc && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', marginTop: 2 }}>{step.desc}</div>}
         </div>
-        {step.action && (
-          <Button size="sm" variant="secondary" onClick={step.action} style={{ flexShrink: 0 }}>{step.actionLabel}</Button>
-        )}
       </div>
+      {step.action && (
+        <Button size="sm" variant="secondary" onClick={step.action} style={{ marginTop: 10, width: '100%' }}>{step.actionLabel}</Button>
+      )}
     </Card>
   )
 }
@@ -1343,6 +1373,36 @@ export default function Dashboard() {
               )
             })()}
 
+            {/* ─── Quick stats strip ─── */}
+            {!loadingProjects && projects.length > 0 && (() => {
+              const totalViews = projects.reduce((s, p) => s + (p.views || 0), 0)
+              const totalFeedback = feedbackHistory.length
+              const stats = [
+                { label: 'Projetos', value: projects.length, icon: <Folder size={13} /> },
+                { label: 'Views', value: totalViews, icon: <Eye size={13} /> },
+                { label: 'Feedback', value: totalFeedback, icon: <MessageSquare size={13} /> },
+                { label: 'Empresas', value: myInterests.length, icon: <Briefcase size={13} />, highlight: myInterests.length > 0 },
+              ]
+              return (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 14 }}>
+                  {stats.map(s => (
+                    <div key={s.label} style={{
+                      padding: '10px 12px', borderRadius: 'var(--radius-md)',
+                      background: s.highlight ? 'var(--color-primary)' : 'var(--color-surface)',
+                      border: s.highlight ? 'none' : '1px solid var(--color-border)',
+                      display: 'flex', alignItems: 'center', gap: 10,
+                    }}>
+                      <span style={{ color: s.highlight ? '#fff' : 'var(--color-text-tertiary)', display: 'flex', flexShrink: 0 }}>{s.icon}</span>
+                      <div>
+                        <div style={{ fontSize: 'var(--text-lg)', fontWeight: 800, fontFamily: 'var(--font-display)', color: s.highlight ? '#fff' : 'var(--color-text)', lineHeight: 1 }}>{s.value}</div>
+                        <div style={{ fontSize: 10, fontWeight: 600, color: s.highlight ? 'rgba(255,255,255,0.7)' : 'var(--color-text-tertiary)', marginTop: 2 }}>{s.label}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )
+            })()}
+
             {/* ─── Bento grid ─── */}
             <div className="dash-bento">
 
@@ -1414,14 +1474,23 @@ export default function Dashboard() {
                   : projects.length > 0
                     ? <FeaturedProjectCard project={projects.reduce((b, p) => ((p.score ?? 0) >= (b?.score ?? 0) ? p : b), projects[0])} navigate={navigate} myInterests={myInterests} />
                     : (
-                      <Card padding="lg" style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, minHeight: 220 }}>
-                        <Rocket size={40} color="var(--color-primary)" style={{ opacity: 0.35 }} />
+                      <div style={{
+                        textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                        gap: 14, minHeight: 220, padding: '32px 24px', borderRadius: 'var(--radius-lg)',
+                        background: 'var(--color-primary)', color: '#fff',
+                      }}>
+                        <Rocket size={28} color="#fff" style={{ opacity: 0.8 }} />
                         <div>
-                          <div style={{ fontSize: 'var(--text-xl)', fontWeight: 700, fontFamily: 'var(--font-heading)', color: 'var(--color-text)', marginBottom: 8 }}>O teu portfólio começa aqui</div>
-                          <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', margin: '0 0 16px' }}>Cria o teu primeiro projeto e partilha o que estás a construir.</p>
-                          <Button variant="primary" icon={<Plus size={14} />} onClick={() => navigate('/novo')}>Criar projeto</Button>
+                          <div style={{ fontSize: 'var(--text-lg)', fontWeight: 700, fontFamily: 'var(--font-heading)', marginBottom: 6 }}>O teu portfólio começa aqui</div>
+                          <p style={{ fontSize: 'var(--text-sm)', opacity: 0.75, margin: '0 0 16px' }}>Cria o teu primeiro projeto e partilha o que estás a construir.</p>
+                          <button onClick={() => navigate('/novo')} style={{
+                            display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 18px',
+                            borderRadius: 'var(--radius-md)', background: 'rgba(255,255,255,0.2)',
+                            border: '1px solid rgba(255,255,255,0.3)', color: '#fff',
+                            fontSize: 'var(--text-sm)', fontWeight: 700, cursor: 'pointer',
+                          }}><Plus size={14} /> Criar projeto</button>
                         </div>
-                      </Card>
+                      </div>
                     )
                 }
 
@@ -1429,23 +1498,39 @@ export default function Dashboard() {
 
                 {myInterests.length > 0 && (
                   <Card padding="none" style={{ overflow: 'hidden' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', borderBottom: '1px solid var(--color-border)' }}>
-                      <Star size={12} color="var(--color-warning)" />
-                      <span style={{ fontSize: 'var(--text-sm)', fontWeight: 700, color: 'var(--color-text)', flex: 1 }}>Empresas interessadas</span>
-                      <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--color-warning)', background: 'var(--color-warning-subtle)', borderRadius: 'var(--radius-full)', padding: '1px 7px' }}>{myInterests.length}</span>
+                    <div style={{
+                      padding: '10px 14px', background: 'var(--color-primary)',
+                      display: 'flex', alignItems: 'center', gap: 8,
+                    }}>
+                      <Briefcase size={13} color="#fff" />
+                      <span style={{ fontSize: 'var(--text-sm)', fontWeight: 700, color: '#fff', flex: 1 }}>Recrutadores</span>
+                      <span style={{
+                        fontSize: 'var(--text-xs)', fontWeight: 800, color: 'var(--color-primary)',
+                        background: '#fff', borderRadius: 'var(--radius-full)',
+                        padding: '1px 7px',
+                      }}>{myInterests.length}</span>
                     </div>
                     {myInterests.map((item, idx) => {
                       const rec = item.recruiterProfile
                       return (
-                        <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderBottom: idx < myInterests.length - 1 ? '1px solid var(--color-border)' : 'none' }}>
-                          <div style={{ width: 32, height: 32, borderRadius: '50%', flexShrink: 0, background: 'var(--color-warning-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-                            {rec.avatar_url ? <img src={rec.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Building2 size={14} color="var(--color-warning)" />}
+                        <div key={idx} style={{
+                          display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px',
+                          borderBottom: idx < myInterests.length - 1 ? '1px solid var(--color-border)' : 'none',
+                        }}>
+                          <div style={{
+                            width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
+                            background: 'var(--color-primary-subtle)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
+                          }}>
+                            {rec.avatar_url
+                              ? <img src={rec.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              : <Building2 size={14} color="var(--color-primary)" />}
                           </div>
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ fontSize: 'var(--text-sm)', fontWeight: 700, color: 'var(--color-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{rec.company || rec.full_name || 'Recrutador'}</div>
-                            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)' }}>{item.project?.name}</div>
+                            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', marginTop: 1 }}>sobre {item.project?.name || 'o teu trabalho'}</div>
                           </div>
-                          <Button size="sm" variant="secondary" icon={<MessageSquare size={11} />} onClick={() => navigate(`/mensagens?to=${item.recruiter_id}`)}>Mensagem</Button>
+                          <Button size="sm" variant="secondary" icon={<MessageSquare size={11} />} onClick={() => navigate(`/mensagens?to=${item.recruiter_id}`)}>Msg</Button>
                         </div>
                       )
                     })}
