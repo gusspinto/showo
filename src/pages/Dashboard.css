@@ -1192,7 +1192,7 @@
 /* ── Main layout grid ── */
 .sdash-grid {
   display: grid;
-  grid-template-columns: 1fr 272px;
+  grid-template-columns: 1fr 300px;
   gap: var(--sp-8);
   align-items: start;
 }
@@ -1213,11 +1213,11 @@
   margin-bottom: var(--sp-3);
 }
 .sdash-section-title {
-  font-size: var(--text-xs);
-  font-weight: 700;
-  color: var(--color-text-tertiary);
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--color-text-secondary);
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.09em;
 }
 
 /* ── Featured project ── */
@@ -1227,12 +1227,15 @@
   cursor: pointer;
   position: relative;
   min-height: 148px;
-  background: var(--color-primary-subtle);
-  border: 1px solid var(--color-primary-muted);
-  transition: border-color var(--duration-fast);
+  background: linear-gradient(145deg, rgba(27,120,247,0.18) 0%, rgba(27,120,247,0.07) 100%);
+  border: 1px solid rgba(27,120,247,0.30);
+  transition: border-color var(--duration-fast), box-shadow var(--duration-fast);
   margin-bottom: var(--sp-3);
 }
-.sdash-featured:hover { border-color: var(--color-primary); }
+.sdash-featured:hover {
+  border-color: rgba(27,120,247,0.55);
+  box-shadow: 0 0 0 3px rgba(27,120,247,0.08);
+}
 .sdash-featured.sdash-featured-has-cover {
   background: transparent;
   border-color: transparent;
@@ -1486,30 +1489,50 @@
   border-radius: var(--radius-lg);
   background: var(--color-surface);
 }
+
+/* Potencial — card azul destaque */
 .sdash-context-block--blue {
-  background: var(--color-primary-subtle);
-  border-color: var(--color-primary-muted);
+  background: linear-gradient(145deg, rgba(27,120,247,0.20) 0%, rgba(27,120,247,0.08) 100%);
+  border: 1px solid rgba(27,120,247,0.38);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 2px 12px rgba(27,120,247,0.10);
 }
+
+/* Turma — card teal/accent */
+.sdash-context-block--turma {
+  background: linear-gradient(145deg, rgba(26,138,122,0.16) 0%, rgba(26,138,122,0.05) 100%);
+  border: 1px solid rgba(26,138,122,0.30);
+}
+
 .sdash-context-block-clickable {
   cursor: pointer;
-  transition: border-color var(--duration-fast), background var(--duration-fast);
+  transition: border-color var(--duration-fast), background var(--duration-fast), box-shadow var(--duration-fast);
+}
+.sdash-context-block--blue.sdash-context-block-clickable:hover {
+  border-color: rgba(27,120,247,0.55);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 2px 16px rgba(27,120,247,0.16);
+}
+.sdash-context-block--turma.sdash-context-block-clickable:hover {
+  border-color: rgba(26,138,122,0.50);
+  box-shadow: 0 2px 12px rgba(26,138,122,0.12);
 }
 .sdash-context-block-clickable:hover {
   border-color: var(--color-border-hover);
   background: var(--color-surface-hover);
 }
 .sdash-context-label {
-  font-size: var(--text-xs);
-  font-weight: 700;
+  font-size: 10px;
+  font-weight: 800;
   color: var(--color-text-tertiary);
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.10em;
   margin-bottom: var(--sp-3);
 }
+.sdash-context-block--blue .sdash-context-label { color: rgba(27,120,247,0.70); }
+.sdash-context-block--turma .sdash-context-label { color: rgba(26,138,122,0.80); }
 
 /* ── Potential block ── */
 .sdash-potential-number {
-  font-size: 52px;
+  font-size: 58px;
   font-weight: 800;
   font-family: var(--font-display);
   line-height: 1;
@@ -1518,10 +1541,10 @@
 }
 .sdash-potential-sub {
   font-size: var(--text-xs);
-  color: var(--color-text-tertiary);
-  font-weight: 600;
+  color: rgba(27,120,247,0.60);
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   margin-bottom: var(--sp-2);
 }
 .sdash-potential-narrative {
@@ -1769,12 +1792,6 @@
   border-color: var(--color-primary);
   color: var(--color-primary);
   background: var(--color-primary-subtle);
-}
-
-/* ── Context block — azul mais vivo ── */
-.sdash-context-block--blue {
-  background: var(--color-primary-subtle);
-  border-color: var(--color-primary-muted);
 }
 
 /* ── Recruiter band — mais destaque ── */

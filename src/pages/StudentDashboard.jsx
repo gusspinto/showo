@@ -504,7 +504,7 @@ function TurmaBlock({ turmas, loadingTurmas, onJoin, navigate, showModal }) {
 
   if (turmas.length === 0) {
     return (
-      <div className="sdash-context-block">
+      <div className="sdash-context-block sdash-context-block--turma">
         <div className="sdash-context-label">Turma</div>
         <div className="sdash-turma-empty-text">Não estás em nenhuma turma ainda.</div>
         <button className="sdash-cta-link" onClick={onJoin}>Entrar com código →</button>
@@ -516,7 +516,7 @@ function TurmaBlock({ turmas, loadingTurmas, onJoin, navigate, showModal }) {
   const handleClick = () => turmas.length === 1 ? navigate(`/turma/${t.code}`) : showModal()
 
   return (
-    <div className="sdash-context-block sdash-context-block-clickable" onClick={handleClick}>
+    <div className="sdash-context-block sdash-context-block--turma sdash-context-block-clickable" onClick={handleClick}>
       <div className="sdash-context-label">Turma</div>
       <div className="sdash-turma-name-block">
         {turmas.length === 1 ? t.name : `${turmas.length} turmas`}
