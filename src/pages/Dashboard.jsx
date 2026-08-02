@@ -20,11 +20,9 @@ import {
   EmptyState, PageLayout, PageHeader, ProgressBar, ProgressRing,
 } from '../components/ui'
 import MonthCalendar from '../components/dashboard/MonthCalendar'
-import ScoreHero from '../components/dashboard/ScoreHero'
 import AddReminderModal from '../components/dashboard/AddReminderModal'
 import CalendarSyncModal from '../components/dashboard/CalendarSyncModal'
 import '../components/dashboard/MonthCalendar.css'
-import '../components/dashboard/ScoreHero.css'
 import './Dashboard.css'
 import StudentDashboard from './StudentDashboard'
 
@@ -1104,7 +1102,7 @@ export default function Dashboard() {
      RENDER
      ══════════════════════════════════════════════════════════════════════════ */
 
-  if (authLoading) {
+  if (authLoading || (user && !profile)) {
     return (
       <div style={{ minHeight: '100vh', background: 'var(--color-bg)' }}>
         <Navbar />
