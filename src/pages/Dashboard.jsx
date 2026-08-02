@@ -818,6 +818,14 @@ export default function Dashboard() {
     if (!authLoading && isAdmin) navigate('/admin', { replace: true })
   }, [authLoading, isAdmin, navigate])
 
+  /* Para alunos este componente devolve <StudentDashboard/>, que faz os seus
+     próprios pedidos. Sem esta guarda, cada abertura da dashboard de um aluno
+     disparava duas vezes as mesmas oito queries — e nenhuma das cópias daqui
+     chega sequer a ser desenhada. */
+  const isStaffView = profile?.role === 'professor'
+    || profile?.role === 'recrutador'
+    || profile?.role === 'empresa'
+
   function showToast(msg) { setToast(msg); setTimeout(() => setToast(''), 3000) }
 
   function copyProjectLink(slug) {
@@ -845,7 +853,7 @@ export default function Dashboard() {
 
   /* ── Load student's own projects ── */
   useEffect(() => {
-    if (!user) return
+    if (!user || !isStaffView) return
     async function load() {
       let { data, error } = await supabase
         .from('projects')
@@ -864,7 +872,7 @@ export default function Dashboard() {
       setLoadingProjects(false)
     }
     load()
-  }, [user])
+  }, [user, isStaffView])
 
   async function deleteProject(id) {
     await supabase.from('projects').delete().eq('id', id).eq('user_id', user.id)
@@ -874,7 +882,7 @@ export default function Dashboard() {
 
   /* ── Load collab projects ── */
   useEffect(() => {
-    if (!user) return
+    if (!user || !isStaffView) return
     async function loadCollabProjects() {
       const { data: collabs } = await supabase.from('project_collaborators').select('project_id').eq('user_id', user.id).eq('status', 'accepted')
       if (!collabs?.length) return
@@ -882,7 +890,7 @@ export default function Dashboard() {
       setCollabProjects(projs || [])
     }
     loadCollabProjects()
-  }, [user])
+  }, [user, isStaffView])
 
   /* ── Saved talents (recruiter/empresa) ── */
   useEffect(() => {
@@ -1016,7 +1024,7 @@ export default function Dashboard() {
 
   /* ── Student turmas ── */
   useEffect(() => {
-    if (!user || profile?.role === 'professor') { setLoadingStudentTurmas(false); return }
+    if (!user || !isStaffView) { setLoadingStudentTurmas(false); return }
     async function loadStudentTurmas() {
       const lsKey = `showo_turmas_${user.id}`
       let cached = []; try { cached = JSON.parse(localStorage.getItem(lsKey) || '[]') } catch {}
@@ -1039,7 +1047,7 @@ export default function Dashboard() {
 
   /* ── Pending tasks (aluno) ── */
   useEffect(() => {
-    if (!user || profile?.role === 'professor') return
+    if (!user || !isStaffView) return
     async function loadPendingTasks() {
       const { data: memberships } = await supabase.from('class_members').select('class_id').eq('user_id', user.id)
       if (!memberships?.length) { setPendingTasks([]); return }
@@ -1065,13 +1073,13 @@ export default function Dashboard() {
 
   /* ── Professor notifications (aluno) ── */
   useEffect(() => {
-    if (!user || profile?.role === 'professor') return
+    if (!user || !isStaffView) return
     supabase.from('notifications').select('id, message, project_slug, created_at').eq('user_id', user.id).eq('type', 'TEACHER_FEEDBACK').eq('read', false).order('created_at', { ascending: false }).limit(5).then(({ data }) => { if (data) setProfNotifs(data) })
   }, [user, profile?.role])
 
   /* ── Personal reminders + ics token ── */
   useEffect(() => {
-    if (!user || profile?.role === 'professor') return
+    if (!user || !isStaffView) return
     supabase.from('personal_reminders')
       .select('id, title, reminder_date, notes, done')
       .eq('user_id', user.id).eq('done', false)
@@ -1088,7 +1096,7 @@ export default function Dashboard() {
 
   /* ── All feedback notifications (for chart) ── */
   useEffect(() => {
-    if (!user || profile?.role === 'professor') return
+    if (!user || !isStaffView) return
     supabase.from('notifications').select('id, created_at').eq('user_id', user.id).eq('type', 'TEACHER_FEEDBACK').order('created_at', { ascending: false }).limit(60).then(({ data }) => { if (data) setFeedbackHistory(data) })
   }, [user, profile?.role])
 
