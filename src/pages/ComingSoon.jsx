@@ -72,7 +72,12 @@ function NotifyMe() {
     e.preventDefault()
     if (!email.trim()) return
     setStatus('loading')
-    const { error } = await supabase.from('waitlist_signups').insert({ email: email.trim() })
+    const params = new URLSearchParams(window.location.search)
+    const { error } = await supabase.from('waitlist_signups').insert({
+      email: email.trim(),
+      referrer: document.referrer || null,
+      utm_source: params.get('utm_source') || null,
+    })
     setStatus(error ? 'error' : 'done')
   }
 
