@@ -1455,9 +1455,10 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
           {isDesktop && !wsExpanded && (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '16px 0' }}>
               {[
-                { id: 'estilo',  Icon: Palette },
-                { id: 'blocos',  Icon: Layout  },
-                { id: 'seccoes', Icon: Eye     },
+                { id: 'estilo',  Icon: Palette   },
+                { id: 'blocos',  Icon: Layout    },
+                { id: 'seccoes', Icon: Eye       },
+                { id: 'ia',      Icon: Sparkles  },
               ].map(t => (
                 <button
                   key={t.id}
@@ -1490,9 +1491,10 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                 borderRadius: 10, padding: '3px',
               }}>
                 {[
-                  { id: 'estilo',  label: 'Estilo',  Icon: Palette },
-                  { id: 'blocos',  label: 'Blocos',  Icon: Layout  },
-                  { id: 'seccoes', label: 'Secções', Icon: Eye     },
+                  { id: 'estilo',  label: 'Estilo',  Icon: Palette   },
+                  { id: 'blocos',  label: 'Blocos',  Icon: Layout    },
+                  { id: 'seccoes', label: 'Secções', Icon: Eye       },
+                  { id: 'ia',      label: 'IA',      Icon: Sparkles  },
                 ].map(t => (
                   <button key={t.id} onClick={() => setPreviewTab(t.id)} style={{
                     flex: 1, padding: '6px 4px', borderRadius: 7, border: 'none',
@@ -2330,6 +2332,90 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
               </div>
             )
           })()}
+
+          {/* ── TAB: IA ── */}
+          {previewTab === 'ia' && (
+            <div style={{ flex: 1, overflowY: 'auto', padding: '16px 14px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Narrativa do projeto</div>
+              <p style={{ margin: 0, fontSize: 12, color: 'var(--color-text-secondary)', lineHeight: 1.55 }}>
+                A IA lê os campos do teu projeto e escreve uma tagline, descrição e destaques personalizados.
+              </p>
+
+              {/* Current tagline preview */}
+              {project.ai_tagline && !narrativePreview && (
+                <div style={{ padding: '10px 12px', background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)', borderRadius: 8 }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Tagline atual</div>
+                  <p style={{ margin: 0, fontSize: 13, color: 'var(--color-text)', fontStyle: 'italic', lineHeight: 1.5 }}>"{project.ai_tagline}"</p>
+                </div>
+              )}
+
+              {narrativeSaved && (
+                <div style={{ padding: '10px 12px', background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.25)', borderRadius: 8, fontSize: 13, color: 'var(--color-success)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <Check size={13} /> Narrativa guardada!
+                </div>
+              )}
+
+              {narrativeError && (
+                <p style={{ margin: 0, fontSize: 13, color: 'var(--color-error)' }}>{narrativeError}</p>
+              )}
+
+              {/* Preview of generated narrative */}
+              {narrativePreview && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <div style={{ padding: '12px', background: 'var(--color-primary-subtle)', border: '1px solid rgba(27,120,247,0.18)', borderRadius: 10 }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-primary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>Nova tagline</div>
+                    <p style={{ margin: 0, fontSize: 13, color: 'var(--color-text)', fontStyle: 'italic', lineHeight: 1.5 }}>"{narrativePreview.tagline}"</p>
+                  </div>
+                  {narrativePreview.highlights?.length > 0 && (
+                    <div style={{ padding: '12px', background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)', borderRadius: 10 }}>
+                      <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Destaques</div>
+                      {narrativePreview.highlights.map((h, i) => (
+                        <div key={i} style={{ display: 'flex', gap: 8, marginBottom: 6, alignItems: 'flex-start' }}>
+                          <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-primary)', flexShrink: 0, marginTop: 2 }}>{i + 1}.</span>
+                          <span style={{ fontSize: 12, color: 'var(--color-text)', lineHeight: 1.5 }}>{h}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button
+                      onClick={handleAcceptNarrative}
+                      style={{ flex: 1, background: 'var(--color-primary)', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 0', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}
+                    >
+                      <Check size={13} /> Aplicar
+                    </button>
+                    <button
+                      onClick={() => setNarrativePreview(null)}
+                      style={{ padding: '9px 12px', background: 'transparent', border: '1px solid var(--color-border)', borderRadius: 8, color: 'var(--color-text-tertiary)', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}
+                    >
+                      Descartar
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {!narrativePreview && (
+                <button
+                  onClick={handleGenerateNarrative}
+                  disabled={generatingNarrative}
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                    background: generatingNarrative ? 'var(--color-border)' : 'var(--color-primary)',
+                    color: '#fff', border: 'none', borderRadius: 8, padding: '11px 0',
+                    fontSize: 13, fontWeight: 700,
+                    cursor: generatingNarrative ? 'not-allowed' : 'pointer',
+                    fontFamily: 'inherit', transition: 'background 0.15s',
+                  }}
+                >
+                  {generatingNarrative
+                    ? <><div style={{ width: 13, height: 13, border: '2px solid rgba(255,255,255,0.3)', borderTop: '2px solid #fff', borderRadius: '50%', animation: 'spin 1s linear infinite' }} /> A escrever…</>
+                    : <><Sparkles size={13} /> {project.ai_tagline ? 'Regenerar narrativa' : 'Gerar narrativa'}</>
+                  }
+                </button>
+              )}
+            </div>
+          )}
+
           </>}
           </div>{/* end panel skin */}
         </div>
@@ -2996,6 +3082,10 @@ export default function ProjectPage() {
   const [coachOpen, setCoachOpen] = useState(false)
   const coachBottomRef = useRef(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [generatingNarrative, setGeneratingNarrative] = useState(false)
+  const [narrativePreview, setNarrativePreview]       = useState(null)
+  const [narrativeError, setNarrativeError]           = useState('')
+  const [narrativeSaved, setNarrativeSaved]           = useState(false)
   const [viewAsPublic, setViewAsPublic] = useState(false)
   const [previewEditing, setPreviewEditing] = useState(false)
   const [wsExpanded, setWsExpanded] = useState(false)
@@ -3524,6 +3614,46 @@ export default function ProjectPage() {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     })
+  }
+
+  async function handleGenerateNarrative() {
+    if (!project) return
+    setGeneratingNarrative(true)
+    setNarrativeError('')
+    setNarrativePreview(null)
+    try {
+      const { data, error: fnErr } = await supabase.functions.invoke('generate-project', {
+        body: { data: project },
+      })
+      if (fnErr || !data?.tagline) throw new Error(data?.error || 'Resposta inválida')
+      setNarrativePreview(data)
+    } catch {
+      setNarrativeError('Não foi possível gerar agora. Tenta novamente.')
+    } finally {
+      setGeneratingNarrative(false)
+    }
+  }
+
+  async function handleAcceptNarrative() {
+    if (!narrativePreview) return
+    const ai_description = Array.isArray(narrativePreview.historia)
+      ? narrativePreview.historia.join('\n\n')
+      : (narrativePreview.description ?? null)
+    await supabase.from('projects').update({
+      ai_tagline:     narrativePreview.tagline ?? null,
+      ai_description,
+      ai_highlights:  narrativePreview.highlights ?? null,
+    }).eq('id', project.id)
+    // Reflect locally
+    setProject(p => ({
+      ...p,
+      ai_tagline:     narrativePreview.tagline ?? p.ai_tagline,
+      ai_description: ai_description ?? p.ai_description,
+      ai_highlights:  narrativePreview.highlights ?? p.ai_highlights,
+    }))
+    setNarrativePreview(null)
+    setNarrativeSaved(true)
+    setTimeout(() => setNarrativeSaved(false), 3000)
   }
 
   async function handleAnalyzeAI() {
