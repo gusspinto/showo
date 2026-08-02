@@ -1,21 +1,15 @@
 import Anthropic from 'npm:@anthropic-ai/sdk@0.36.3'
-import { checkRateLimit, getAuthUser, clip } from '../_shared/rateLimit.ts'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': 'https://showo.pt',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { checkRateLimit, getAuthUser, clip, getCorsHeaders } from '../_shared/rateLimit.ts'
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
-  }
+  const cors = getCorsHeaders(req)
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
 
   const user = await getAuthUser(req)
   if (!user) {
     return new Response(JSON.stringify({ error: 'Autenticação necessária.' }), {
       status: 401,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...cors, 'Content-Type': 'application/json' },
     })
   }
 
@@ -23,7 +17,7 @@ Deno.serve(async (req) => {
   if (!allowed) {
     return new Response(JSON.stringify({ error: 'Demasiados pedidos. Tenta mais tarde.' }), {
       status: 429,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...cors, 'Content-Type': 'application/json' },
     })
   }
 
@@ -92,13 +86,13 @@ Regras absolutas:
     }
 
     return new Response(JSON.stringify(result), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...cors, 'Content-Type': 'application/json' },
     })
   } catch (err) {
     console.error(err)
     return new Response(
       JSON.stringify({ error: 'Erro ao gerar conteúdo.' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 500, headers: { ...cors, 'Content-Type': 'application/json' } }
     )
   }
 })

@@ -4,12 +4,14 @@ import { ChevronLeft, ChevronRight, Plus } from 'lucide-react'
 const WEEKDAYS = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D']
 const MONTHS = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
 
+// Três cores, todas da família da marca: a defesa é o azul cheio, as tarefas
+// um azul derivado, os lembretes pessoais o teal de apoio.
 function eventTypeColor(type) {
   switch (type) {
-    case 'task':      return 'var(--color-primary)'
-    case 'defense':   return 'var(--color-primary-strong, #0c447c)'
-    case 'reminder':  return 'var(--color-info, #5aa3ff)'
-    default:          return 'var(--color-primary)'
+    case 'defense':  return 'var(--color-primary)'
+    case 'task':     return 'var(--color-info)'
+    case 'reminder': return 'var(--color-accent)'
+    default:         return 'var(--color-primary)'
   }
 }
 

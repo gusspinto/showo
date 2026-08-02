@@ -1,10 +1,5 @@
 import Anthropic from 'npm:@anthropic-ai/sdk@0.36.3'
-import { checkRateLimit, getAuthUser } from '../_shared/rateLimit.ts'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': 'https://showo.pt',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { checkRateLimit, getAuthUser, getCorsHeaders } from '../_shared/rateLimit.ts'
 
 const TYPE_CONTEXT: Record<string, string> = {
   pap: 'PAP (Projeto de Aptidão Profissional) — projeto final de curso profissional, com orientador, defesa perante júri, e muita pressão académica.',
@@ -15,21 +10,22 @@ const TYPE_CONTEXT: Record<string, string> = {
 }
 
 const TYPE_FIELDS: Record<string, string[]> = {
-  pap:         ['name', 'school_course', 'supervisor', 'technologies', 'problem', 'solution', 'results', 'learnings'],
-  internship:  ['name', 'company', 'technologies', 'problem', 'solution', 'results', 'learnings'],
-  group:       ['name', 'team', 'technologies', 'problem', 'solution', 'challenges', 'results'],
-  personal:    ['name', 'technologies', 'problem', 'solution', 'features', 'results', 'learnings'],
-  competition: ['name', 'competition_name', 'team', 'technologies', 'solution', 'results', 'learnings'],
+  pap:         ['name', 'area', 'goal', 'school_course', 'supervisor', 'technologies', 'problem', 'solution', 'results', 'learnings'],
+  internship:  ['name', 'area', 'goal', 'company', 'technologies', 'problem', 'solution', 'results', 'learnings'],
+  group:       ['name', 'area', 'goal', 'team', 'technologies', 'problem', 'solution', 'challenges', 'results'],
+  personal:    ['name', 'area', 'goal', 'technologies', 'problem', 'solution', 'features', 'results', 'learnings'],
+  competition: ['name', 'area', 'goal', 'competition_name', 'team', 'technologies', 'solution', 'results', 'learnings'],
 }
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
+  const cors = getCorsHeaders(req)
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
 
   const user = await getAuthUser(req)
   if (!user) {
     return new Response(JSON.stringify({ error: 'Autenticação necessária.' }), {
       status: 401,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...cors, 'Content-Type': 'application/json' },
     })
   }
 
@@ -37,7 +33,7 @@ Deno.serve(async (req) => {
   if (!allowed) {
     return new Response(JSON.stringify({ error: 'Demasiados pedidos. Tenta mais tarde.' }), {
       status: 429,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...cors, 'Content-Type': 'application/json' },
     })
   }
 
@@ -65,7 +61,7 @@ Gera EXATAMENTE este JSON (sem markdown, sem texto extra):
       "id": "<field_name>",
       "label": "<nome curto do campo, 2-3 palavras max>",
       "question": "<pergunta natural, direta, como se fosses um mentor experiente — sem 'por favor' nem formalidades excessivas>",
-      "field": "<nome do campo do projeto: name | school | course | pap_supervisor | technologies | problem | solution | features | target_audience | challenges | results | learnings>",
+      "field": "<nome do campo do projeto: name | area | goal | school | course | pap_supervisor | technologies | problem | solution | features | target_audience | challenges | results | learnings>",
       "placeholder": "<exemplo realista do que seria uma boa resposta, 5-10 palavras>",
       "suggestions": ["<sugestão 1 específica ao projeto>", "<sugestão 2>", "<sugestão 3 opcional>"]
     }
@@ -90,7 +86,8 @@ REGRAS CRÍTICAS:
 - TOM HUMANO: escreve cada "question" como um colega curioso perguntaria, nunca como um formulário. Evita jargão técnico nas perguntas em si (mesmo que o campo seja técnico) — explica em palavras simples o que queres saber
 - TEMPO VERBAL: as perguntas devem ser sempre no PASSADO ou PRESENTE — "O que fizeste?", "O que usaste?", "Que resultado tiveste?". NUNCA uses futuro como "O que queres fazer?" ou "O que vais criar?" — a Showo documenta trabalho feito, não planeia trabalho futuro
 - Se a descrição do estudante parecer uma ideia futura e não um projeto real (ex: "quero fazer uma app que..."), o "understanding" deve gentilmente esclarecer: "A Showo ajuda-te a apresentar projetos que já fizeste ou estás a fazer. Se já começaste a trabalhar nisto, vamos montar a tua página!"
-- Para estudantes que parecem ter pouca certeza ou pouco conteúdo na descrição (descrição curta, vaga ou genérica), adapta as perguntas para serem mais guiadas e concretas: em vez de "Que tecnologias usaste?" pergunta algo como "O que usaste para construir isto — apps, programas, materiais? Não tens de saber o nome técnico, descreve por palavras tuas." O objetivo é nunca deixar o estudante sem saber o que responder`
+- Para estudantes que parecem ter pouca certeza ou pouco conteúdo na descrição (descrição curta, vaga ou genérica), adapta as perguntas para serem mais guiadas e concretas: em vez de "Que tecnologias usaste?" pergunta algo como "O que usaste para construir isto — apps, programas, materiais? Não tens de saber o nome técnico, descreve por palavras tuas." O objetivo é nunca deixar o estudante sem saber o que responder
+- OBRIGATÓRIO: inclui SEMPRE uma pergunta com field="area" (ex: "Em que área se enquadra este projeto? Saúde, educação, tecnologia...") e uma com field="goal" (ex: "Qual é o objetivo principal deste projeto?"). Estas duas são essenciais para o formulário.`
 
     const msg = await client.messages.create({
       model: 'claude-haiku-4-5-20251001',
@@ -104,7 +101,7 @@ REGRAS CRÍTICAS:
     const result = JSON.parse(jsonMatch[0])
 
     return new Response(JSON.stringify(result), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...cors, 'Content-Type': 'application/json' },
     })
   } catch (err) {
     console.error(err)
@@ -112,12 +109,12 @@ REGRAS CRÍTICAS:
       understanding: 'Ótimo! Vou fazer-te algumas perguntas rápidas para criar o teu perfil de projeto.',
       questions: [
         { id: 'name', label: 'Nome', question: 'Que nome darias ao teu projeto? Pensa num nome curto, tipo marca — como "StudyFor" ou "TaskFlow".', field: 'name', placeholder: 'ex: TaskFlow, EduApp...', suggestions: [] },
-        { id: 'technologies', label: 'Tecnologias', question: 'Que tecnologias usaste?', field: 'technologies', placeholder: 'ex: React, Python, Firebase...', suggestions: ['React', 'Flutter', 'Node.js'] },
+        { id: 'area', label: 'Área', question: 'Em que área se enquadra este projeto?', field: 'area', placeholder: 'ex: Saúde, Educação, Tecnologia...', suggestions: ['Tecnologia', 'Saúde', 'Educação'] },
+        { id: 'goal', label: 'Objetivo', question: 'Qual é o objetivo principal deste projeto?', field: 'goal', placeholder: 'O que este projeto pretende alcançar...', suggestions: [] },
         { id: 'problem', label: 'Problema', question: 'Que problema resolve?', field: 'problem', placeholder: 'O problema que identificaste...', suggestions: [] },
         { id: 'solution', label: 'Solução', question: 'Como resolveste esse problema?', field: 'solution', placeholder: 'A tua abordagem...', suggestions: [] },
         { id: 'results', label: 'Resultados', question: 'Que resultados ou impacto conseguiste?', field: 'results', placeholder: 'O que mudou graças ao teu projeto...', suggestions: [] },
-        { id: 'learnings', label: 'Aprendizagens', question: 'O que aprendeste de mais valioso?', field: 'learnings', placeholder: 'A maior lição...', suggestions: [] },
       ],
-    }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    }), { headers: { ...cors, 'Content-Type': 'application/json' } })
   }
 })

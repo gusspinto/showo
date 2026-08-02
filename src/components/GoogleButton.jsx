@@ -16,9 +16,23 @@ function GoogleG({ size = 18 }) {
 // Shared "Continuar com Google" button — used on both Login and Register.
 // Supabase handles the OAuth handshake; on success the browser redirects to
 // Google and back to `redirectTo`, so we don't reset loading on the happy path.
-export default function GoogleButton({ label = 'Continuar com Google', redirectTo }) {
+const VARIANTS = {
+  default: {
+    background: '#fff',
+    color: '#1f2937',
+    border: '1px solid #dadce0',
+  },
+  subtle: {
+    background: 'rgba(27,120,247,0.07)',
+    color: 'var(--color-primary)',
+    border: '1px solid rgba(27,120,247,0.22)',
+  },
+}
+
+export default function GoogleButton({ label = 'Continuar com Google', redirectTo, variant = 'default' }) {
   const [loading, setLoading] = useState(false)
   const [err, setErr] = useState('')
+  const s = VARIANTS[variant] ?? VARIANTS.default
 
   async function go() {
     setErr('')
@@ -43,8 +57,8 @@ export default function GoogleButton({ label = 'Continuar com Google', redirectT
         style={{
           width: '100%',
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-          background: '#fff', color: '#1f2937',
-          border: '1px solid #dadce0', borderRadius: 8,
+          background: s.background, color: s.color,
+          border: s.border, borderRadius: 8,
           padding: '12px', fontSize: 14, fontWeight: 600,
           cursor: loading ? 'default' : 'pointer', fontFamily: 'inherit',
           opacity: loading ? 0.7 : 1,

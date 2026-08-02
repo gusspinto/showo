@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import SkillsPicker from '../components/SkillsPicker'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { GraduationCap, Briefcase, Rocket, Users, Camera, ShieldAlert, ArrowRight } from 'lucide-react'
+import { GraduationCap, Briefcase, Rocket, Users, Camera, ShieldAlert, ArrowRight, Sparkles } from 'lucide-react'
 import { saveProject } from '../lib/saveProject'
 import { calculateScore, looksLikeSpam, isTooShortForContent } from '../lib/score'
 import { containsProfanity } from '../lib/profanity'
@@ -10,6 +10,7 @@ import { Toast, useToast } from '../components/Toast'
 import { Navbar } from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
 import { CropModal } from '../components/CropModal'
+import AIInterview from '../components/AIInterview'
 
 const GOAL_OPTIONS = [
   { id: 'school',     Icon: GraduationCap, label: 'Projeto escolar' },
@@ -55,6 +56,7 @@ export default function NewProject() {
   const [cropFile, setCropFile] = useState(null)
   const [draftBanner, setDraftBanner] = useState(null)
   const [showAuthNudge, setShowAuthNudge] = useState(false)
+  const [showAI, setShowAI] = useState(false)
 
   function set(key, val) { setForm(p => ({ ...p, [key]: val })) }
 
@@ -138,7 +140,14 @@ export default function NewProject() {
 
   const REQUIRED = ['name', 'area', 'goal', 'problem', 'solution']
   const hasRequired = REQUIRED.every(k => (form[k] ?? '').trim().length > 0)
-  const hasErrors = [...REQUIRED, 'features', 'challenges', 'results', 'learnings'].some(k => fieldError(k))
+  // For required fields, only spam/profanity blocks — 'short' is a warning only.
+  // Optional fields block on any error (user chose to fill them, so they should be real).
+  const hasErrors = [...REQUIRED, 'features', 'challenges', 'results', 'learnings'].some(k => {
+    const err = fieldError(k)
+    if (!err) return false
+    if (REQUIRED.includes(k)) return err === 'profanity' || err === 'spam'
+    return true
+  })
   const canSubmit = hasRequired && !hasErrors
 
   const score = calculateScore(form).score
@@ -150,8 +159,20 @@ export default function NewProject() {
     if (!canSubmit) return
     setSubmitting(true)
     setError(null)
+
+    // Generate AI narrative in parallel with the project save setup.
+    // If it times out or fails, we continue without it — project creation never blocks on AI.
+    let aiResult = {}
     try {
-      const project = await saveProject(form, {}, user?.id ?? null)
+      const ctrl = new AbortController()
+      const timeout = setTimeout(() => ctrl.abort(), 20_000)
+      const { data } = await supabase.functions.invoke('generate-project', { body: { data: form } })
+      clearTimeout(timeout)
+      if (data?.tagline) aiResult = data
+    } catch { /* non-critical */ }
+
+    try {
+      const project = await saveProject(form, aiResult, user?.id ?? null)
       localStorage.setItem(`edit_token_${project.slug}`, project.edit_token)
       await clearDraft()
       navigate(`/projeto/${project.slug}`, {
@@ -172,8 +193,8 @@ export default function NewProject() {
       <div style={{ minHeight: '100vh', backgroundColor: 'var(--color-bg)', color: 'var(--color-text)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 24 }}>
         <div style={{ width: 52, height: 52, border: '3px solid var(--color-border)', borderTop: '3px solid var(--color-primary)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
         <div style={{ textAlign: 'center' }}>
-          <p style={{ fontSize: 18, fontWeight: 700, margin: '0 0 6px', letterSpacing: '-0.3px' }}>A criar o teu projeto...</p>
-          <p style={{ color: 'var(--color-text-secondary)', fontSize: 14, margin: 0 }}>Só um momento</p>
+          <p style={{ fontSize: 18, fontWeight: 700, margin: '0 0 6px', letterSpacing: '-0.3px' }}>A criar e a escrever a narrativa…</p>
+          <p style={{ color: 'var(--color-text-secondary)', fontSize: 14, margin: 0 }}>A IA está a transformar o teu projeto em texto</p>
         </div>
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
@@ -225,7 +246,43 @@ export default function NewProject() {
 
       <div className="page-content np-form" style={{ maxWidth: 640 }}>
         <h1 style={{ fontSize: 'clamp(22px, 4vw, 28px)', fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 6px', letterSpacing: '-0.5px' }}>Novo projeto</h1>
-        <p style={{ color: 'var(--color-text-secondary)', fontSize: 14, margin: '0 0 28px' }}>Preenche os campos obrigatórios e cria a tua página.</p>
+        <p style={{ color: 'var(--color-text-secondary)', fontSize: 14, margin: '0 0 20px' }}>Preenche os campos obrigatórios e cria a tua página.</p>
+
+        {/* ── AI entry card ── */}
+        {showAI ? (
+          <div style={{
+            background: 'var(--color-primary-subtle)',
+            border: '1px solid rgba(27,120,247,0.2)',
+            borderRadius: 14, padding: '18px 20px', marginBottom: 28,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+              <Sparkles size={15} color="var(--color-primary)" />
+              <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-primary)' }}>Ajuda da IA</span>
+            </div>
+            <AIInterview
+              onComplete={answers => {
+                setForm(prev => ({ ...prev, ...Object.fromEntries(Object.entries(answers).filter(([, v]) => v)) }))
+                setShowAI(false)
+              }}
+              onDismiss={() => setShowAI(false)}
+            />
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setShowAI(true)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 8, marginBottom: 28,
+              background: 'var(--color-primary-subtle)',
+              border: '1px solid rgba(27,120,247,0.18)',
+              borderRadius: 10, padding: '10px 16px',
+              color: 'var(--color-primary)', fontSize: 13, fontWeight: 600,
+              cursor: 'pointer', fontFamily: 'inherit', transition: 'opacity 0.15s',
+            }}
+          >
+            <Sparkles size={14} /> Começar com ajuda da IA
+          </button>
+        )}
 
         {/* Draft recovery */}
         {draftBanner && (

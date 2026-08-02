@@ -70,6 +70,9 @@
   --color-primary-hover: #1564d4;
   --color-primary-subtle:rgba(27,120,247,0.10);
   --color-primary-muted: rgba(27,120,247,0.20);
+  /* Degrau escuro da mesma família — para superfícies cheias da marca, onde o
+     azul base não dá contraste suficiente a texto branco pequeno (4.0:1). */
+  --color-primary-deep:  #1257c4;
 
   --color-accent:        #1a8a7a;
   --color-accent-hover:  #15756a;
@@ -133,6 +136,7 @@ body.light {
   --color-primary-hover: #1050b0;
   --color-primary-subtle:rgba(21,100,212,0.08);
   --color-primary-muted: rgba(21,100,212,0.15);
+  --color-primary-deep:  #1054b8;
 
   --color-accent:        #16796b;
   --color-accent-hover:  #12635a;

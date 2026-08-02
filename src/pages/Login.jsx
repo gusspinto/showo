@@ -284,7 +284,7 @@ export default function Login() {
           <h1 style={{ color: C.text, fontSize: 26, fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 8px', letterSpacing: '-0.5px' }}>Entrar</h1>
           <p style={{ color: C.muted, fontSize: 14, margin: '0 0 28px' }}>Acede ao teu painel de projetos</p>
 
-          <GoogleButton />
+          <GoogleButton variant="subtle" />
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '18px 0' }}>
             <div style={{ flex: 1, height: 1, background: C.border }} />

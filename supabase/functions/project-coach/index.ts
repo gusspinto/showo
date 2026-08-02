@@ -1,14 +1,9 @@
 import Anthropic from 'npm:@anthropic-ai/sdk@0.36.3'
-import { checkRateLimit, getAuthUser, clip } from '../_shared/rateLimit.ts'
+import { checkRateLimit, getAuthUser, clip, getCorsHeaders } from '../_shared/rateLimit.ts'
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': 'https://showo.pt',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+const SYSTEM = (p: Record<string, string>) => `És um assistente pessoal para estudantes portugueses que estão a documentar e melhorar os seus projetos académicos — PAPs, estágios, projetos universitários e pessoais — na plataforma Showo.
 
-const SYSTEM = (p: Record<string, string>) => `És um assistente de coaching para estudantes portugueses que estão a desenvolver projetos académicos — PAPs, estágios, projetos universitários e pessoais.
-
-O teu papel é GUIAR, não fazer pelo estudante. Nunca escrevas conteúdo completo para eles substituíres um campo. Em vez disso, faz perguntas específicas, aponta o que está vago, sugere direcções concretas, e celebra o progresso.
+O teu papel é ajudar o estudante a ter a melhor página de portfólio possível. Isso inclui dar feedback, sugerir melhorias, e quando pedido, ajudar a escrever ou reformular texto para campos do projeto. Não inventas informação — usas o que o estudante já tem e perguntas para completar o que falta.
 
 CONTEXTO DO PROJETO:
 ━━━━━━━━━━━━━━━━━━━━
@@ -28,33 +23,34 @@ Aprendizagens: ${clip(p.learnings) || '(vazio)'}
 ━━━━━━━━━━━━━━━━━━━━
 
 REGRAS:
-- Responde sempre em português de Portugal.
-- Sê direto e conciso. Máximo 3 parágrafos por resposta.
-- Quando um campo está vazio, pergunta sobre esse campo especificamente.
-- Quando um campo está presente mas vago, cita o que o estudante escreveu e explica exatamente o que falta.
-- Usa linguagem acessível para estudantes do ensino secundário/superior.
-- Nunca inventes informação sobre o projeto — baseia-te só no que está escrito acima.
-- Se o estudante pedir que escrevas o texto por ele, recusa educadamente e ajuda-o a pensar no que quer dizer.`
+- Responde sempre em português de Portugal (PT-PT).
+- Sê direto e concreto. Máximo 3 parágrafos ou uma lista curta por resposta.
+- Quando um campo está vazio, pergunta especificamente sobre esse campo.
+- Quando um campo está presente mas vago, cita o que o estudante escreveu e explica o que falta.
+- Quando o estudante pede que escrevas texto para um campo, escreve uma proposta concreta baseada no contexto do projeto — e indica que ele pode ajustar à sua voz.
+- Quando dás sugestões de texto, usa markdown: **negrito** para destacar, listas com - para múltiplos pontos.
+- Nunca inventes factos sobre o projeto — se precisas de informação que não está acima, pergunta primeiro.
+- Usa linguagem acessível e próxima, como um colega mais experiente que quer genuinamente ajudar.`
 
 Deno.serve(async (req) => {
+  const cors = getCorsHeaders(req)
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response('ok', { headers: cors })
   }
 
   const allowed = await checkRateLimit(req, 'project-coach', 30)
   if (!allowed) {
     return new Response(JSON.stringify({ error: 'Demasiados pedidos. Tenta mais tarde.' }), {
       status: 429,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...cors, 'Content-Type': 'application/json' },
     })
   }
 
-  // Coach requires authenticated user
   const user = await getAuthUser(req)
   if (!user) {
     return new Response(JSON.stringify({ error: 'Não autenticado.' }), {
       status: 401,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...cors, 'Content-Type': 'application/json' },
     })
   }
 
@@ -64,13 +60,12 @@ Deno.serve(async (req) => {
     if (!message?.trim()) {
       return new Response(JSON.stringify({ error: 'Mensagem vazia.' }), {
         status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { ...cors, 'Content-Type': 'application/json' },
       })
     }
 
     const client = new Anthropic({ apiKey: Deno.env.get('ANTHROPIC_API_KEY') ?? '' })
 
-    // Build history (max 20 turns to cap tokens)
     const history = (messages as { role: string; content: string }[])
       .slice(-20)
       .map(m => ({ role: m.role as 'user' | 'assistant', content: m.content }))
@@ -85,13 +80,13 @@ Deno.serve(async (req) => {
     const reply = response.content[0]?.type === 'text' ? response.content[0].text : ''
 
     return new Response(JSON.stringify({ reply }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...cors, 'Content-Type': 'application/json' },
     })
   } catch (err) {
     console.error('[project-coach]', err)
     return new Response(JSON.stringify({ error: 'Erro interno. Tenta novamente.' }), {
       status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...cors, 'Content-Type': 'application/json' },
     })
   }
 })

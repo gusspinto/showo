@@ -26,11 +26,32 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { project, type } = await req.json()
+    const { project, type, journal } = await req.json()
     const client = new Anthropic({ apiKey: Deno.env.get('ANTHROPIC_API_KEY') ?? '' })
 
     const isPap = type === 'pap'
     const f = (v: string | undefined | null) => (v?.trim() || '(não preenchido)').slice(0, 3000)
+
+    // O diário do projeto: o registo que o aluno foi fazendo ao longo do tempo.
+    // É o que separa um relatório genérico de um relatório com percurso — traz
+    // datas, decisões e obstáculos reais que o formulário não capta.
+    const KIND_LABEL: Record<string, string> = {
+      progresso: 'Progresso', dificuldade: 'Dificuldade', decisao: 'Decisão',
+      pesquisa: 'Pesquisa', ideia: 'Ideia', resultado: 'Resultado', nota: 'Nota',
+    }
+    const entries = Array.isArray(journal) ? journal.slice(0, 120) : []
+    const journalBlock = entries.length === 0
+      ? '(o aluno ainda não registou entradas no diário)'
+      : entries
+          .slice()
+          .sort((a, b) => String(a.date).localeCompare(String(b.date)))
+          .map((e) => {
+            const when = new Date(e.date).toLocaleDateString('pt-PT', {
+              day: 'numeric', month: 'long', year: 'numeric',
+            })
+            return `[${when}] ${KIND_LABEL[e.kind] ?? 'Nota'}: ${String(e.content ?? '').slice(0, 800)}`
+          })
+          .join('\n')
 
     const prompt = `És um redator especializado em relatórios académicos portugueses. Vais gerar um rascunho completo de ${isPap ? 'relatório de PAP (Projeto e Apresentação Profissional)' : 'relatório de estágio'} com base nos dados de um projeto de um aluno.
 
@@ -56,7 +77,14 @@ RESULTADOS OBTIDOS: ${f(project.results)}
 APRENDIZAGENS: ${f(project.learnings)}
 ━━━━━━━━━━━━━━━━
 
+DIÁRIO DO PROJETO (registos do aluno por ordem cronológica):
+━━━━━━━━━━━━━━━━
+${journalBlock}
+━━━━━━━━━━━━━━━━
+
 Gera um rascunho estruturado com as seguintes secções. Cada secção deve ter 2-4 parágrafos fluidos e bem redigidos, baseados nos dados fornecidos. Quando os dados forem vagos, expande com linguagem académica apropriada mas mantém-te fiel ao que o aluno escreveu.
+
+Usa o diário como fonte principal do percurso: as decisões tomadas e o porquê, as dificuldades encontradas e como foram ultrapassadas, a evolução ao longo do tempo. Escreve na primeira pessoa do plural ou singular conforme o projeto, e refere marcos temporais quando o diário os permitir ("numa fase inicial", "depois de testar com utilizadores"). NUNCA inventes factos, datas ou resultados que não estejam nos dados acima — se algo não foi registado, escreve de forma mais geral em vez de preencher com ficção.
 
 Devolve APENAS este JSON (sem markdown, sem \`\`\`, só o objeto):
 {

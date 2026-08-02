@@ -2,6 +2,19 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const LIMIT_PER_HOUR = 10
 
+const ALLOWED_ORIGINS = ['https://showo.pt', 'https://www.showo.pt']
+
+export function getCorsHeaders(req: Request): Record<string, string> {
+  const origin = req.headers.get('origin') ?? ''
+  const allow = ALLOWED_ORIGINS.includes(origin) || origin.startsWith('http://localhost')
+    ? origin
+    : ALLOWED_ORIGINS[0]
+  return {
+    'Access-Control-Allow-Origin': allow,
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  }
+}
+
 export async function checkRateLimit(req: Request, fnName: string, limit = LIMIT_PER_HOUR): Promise<boolean> {
   const ip =
     req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??

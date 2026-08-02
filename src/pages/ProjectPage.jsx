@@ -170,6 +170,23 @@ function getLevelInfo(score) {
   return { label: 'Rascunho', color: 'var(--color-error)' }
 }
 
+function getScoreTips(project) {
+  const v = (k) => String(project[k] || '').trim()
+  const n = (k) => v(k).length
+  const tips = []
+  if (n('problem') < 100)        tips.push({ gain: 15, text: `Problema — ${n('problem')}/100 car.` })
+  if (n('solution') < 100)       tips.push({ gain: 15, text: `Solução — ${n('solution')}/100 car.` })
+  if (n('results') < 80)         tips.push({ gain: 12, text: `Resultados — ${n('results')}/80 car.` })
+  if (n('learnings') < 80)       tips.push({ gain: 12, text: `Aprendizagens — ${n('learnings')}/80 car.` })
+  if (!v('cover_url'))            tips.push({ gain: 10, text: 'Adiciona uma capa ao projeto' })
+  if (n('target_audience') < 50) tips.push({ gain: 10, text: `Público-alvo — ${n('target_audience')}/50 car.` })
+  if (n('features') < 100)       tips.push({ gain: 10, text: `Funcionalidades — ${n('features')}/100 car.` })
+  if (!v('technologies'))         tips.push({ gain: 8,  text: 'Indica as tecnologias usadas' })
+  if (n('challenges') < 50)      tips.push({ gain: 8,  text: `Desafios — ${n('challenges')}/50 car.` })
+  if (!v('area'))                 tips.push({ gain: 5,  text: 'Define a área do projeto' })
+  return tips.sort((a, b) => b.gain - a.gain).slice(0, 3)
+}
+
 const ScoreRing = memo(function ScoreRing({ score, size = 108 }) {
   const stroke = size <= 80 ? 6 : 8
   const r = (size - stroke) / 2
@@ -988,11 +1005,19 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
           --c-bg:#060c18; --c-bg-alt:#111c32; --c-card:#152030; --c-card-hover:#1c2d44;
           --c-border:#1e3050; --c-border-bright:#2a4275; --c-muted:#7d93b0;
           --c-text:#e8f2ff; --c-subtle:#6b7f9e; --c-input-bg:#060c18;
+          --color-bg:#060c18; --color-bg-alt:#111c32;
+          --color-surface:#152030; --color-surface-hover:#1c2d44;
+          --color-border:#1e3050; --color-border-hover:#2a4275;
+          --color-text:#e8f2ff; --color-text-secondary:#7d93b0; --color-text-tertiary:#6b7f9e;
         }
         [data-pv-theme="light"] {
           --c-bg:#f5f0e8; --c-bg-alt:#ede6d8; --c-card:#faf7f2; --c-card-hover:#f0ebe1;
           --c-border:#d8d0c4; --c-border-bright:#bdb4a6; --c-muted:#6b6158;
           --c-text:#1c1714; --c-subtle:#7a7065; --c-input-bg:#e8e1d6;
+          --color-bg:#f5f0e8; --color-bg-alt:#ede6d8;
+          --color-surface:#faf7f2; --color-surface-hover:#f0ebe1;
+          --color-border:#d8d0c4; --color-border-hover:#bdb4a6;
+          --color-text:#1c1714; --color-text-secondary:#6b6158; --color-text-tertiary:#7a7065;
         }
         @keyframes pv-slidein {
           from { transform: translateX(20px); opacity: 0; }
@@ -1203,13 +1228,13 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
           /* Cover full-bleed hero */
           <div style={{ width: '100%', height: Math.round(heroHeight * 1.4), position: 'relative' }}>
             <img src={project.cover_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.1) 40%, var(--color-bg) 100%)' }} />
+            <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(to bottom, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.1) 40%, ${resolvedBg} 100%)` }} />
             <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(135deg, ${hero.c1}22, transparent 60%)` }} />
           </div>
         ) : project.cover_url ? (
           <div style={{ width: '100%', height: Math.round(heroHeight * 1.14), position: 'relative' }}>
             <img src={project.cover_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, var(--color-bg) 100%)' }} />
+            <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, ${resolvedBg} 100%)` }} />
           </div>
         ) : (
           /* No cover — use page bg theme as base, accent as subtle overlay */
@@ -1283,13 +1308,52 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
             {project.score != null && (project.project_type || project.area) && (
               <span style={{ color: colors.subtle, fontSize: 12 }}>·</span>
             )}
-            {project.score != null && (
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: colors.subtle, fontSize: 12 }}>
+            {project.score != null && isOwner && (
+              <span style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
+                <button
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 4,
+                    color: colors.subtle, fontSize: 12,
+                    background: 'none', border: 'none', cursor: 'pointer',
+                    padding: 0, fontFamily: 'inherit',
+                  }}
+                  title="Score privado — clica para saber mais"
+                  onClick={e => {
+                    e.stopPropagation()
+                    const el = e.currentTarget.nextSibling
+                    if (el) el.style.display = el.style.display === 'block' ? 'none' : 'block'
+                  }}
+                >
+                  <span style={{
+                    width: 5, height: 5, borderRadius: '50%',
+                    background: project.score >= 86 ? 'var(--color-success)' : project.score >= 51 ? 'var(--color-primary)' : 'var(--color-warning)',
+                  }} />
+                  {project.score} score
+                </button>
                 <span style={{
-                  width: 5, height: 5, borderRadius: '50%',
-                  background: project.score >= 86 ? 'var(--color-success)' : project.score >= 51 ? 'var(--color-primary)' : 'var(--color-warning)',
-                }} />
-                {project.score} score
+                  display: 'none', position: 'absolute', top: 'calc(100% + 8px)', left: 0, zIndex: 20,
+                  background: 'var(--color-surface)', border: '1px solid var(--color-border)',
+                  borderRadius: 10, padding: '12px 14px', width: 252,
+                  boxShadow: '0 4px 16px rgba(0,0,0,0.18)',
+                  fontSize: 12, lineHeight: 1.5, color: 'var(--color-text-secondary)',
+                }}>
+                  <strong style={{ color: 'var(--color-text)', display: 'block', marginBottom: 2 }}>Score privado — {project.score}/100</strong>
+                  <span style={{ display: 'block', marginBottom: 8 }}>{getLevelInfo(project.score).label}</span>
+                  {project.score < 100 && (() => {
+                    const tips = getScoreTips(project)
+                    return tips.length > 0 ? (
+                      <>
+                        <span style={{ display: 'block', fontWeight: 700, color: 'var(--color-text)', marginBottom: 5 }}>Para subir:</span>
+                        {tips.map((t, i) => (
+                          <span key={i} style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 4 }}>
+                            <span style={{ color: 'var(--color-success)', fontWeight: 700, flexShrink: 0 }}>+{t.gain}</span>
+                            <span>{t.text}</span>
+                          </span>
+                        ))}
+                      </>
+                    ) : null
+                  })()}
+                </span>
               </span>
             )}
           </div>
@@ -1422,9 +1486,10 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
           {isDesktop && !wsExpanded && (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '16px 0' }}>
               {[
-                { id: 'estilo',  Icon: Palette },
-                { id: 'blocos',  Icon: Layout  },
-                { id: 'seccoes', Icon: Eye     },
+                { id: 'estilo',  Icon: Palette   },
+                { id: 'blocos',  Icon: Layout    },
+                { id: 'seccoes', Icon: Eye       },
+                { id: 'ia',      Icon: Sparkles  },
               ].map(t => (
                 <button
                   key={t.id}
@@ -1457,9 +1522,10 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                 borderRadius: 10, padding: '3px',
               }}>
                 {[
-                  { id: 'estilo',  label: 'Estilo',  Icon: Palette },
-                  { id: 'blocos',  label: 'Blocos',  Icon: Layout  },
-                  { id: 'seccoes', label: 'Secções', Icon: Eye     },
+                  { id: 'estilo',  label: 'Estilo',  Icon: Palette   },
+                  { id: 'blocos',  label: 'Blocos',  Icon: Layout    },
+                  { id: 'seccoes', label: 'Secções', Icon: Eye       },
+                  { id: 'ia',      label: 'IA',      Icon: Sparkles  },
                 ].map(t => (
                   <button key={t.id} onClick={() => setPreviewTab(t.id)} style={{
                     flex: 1, padding: '6px 4px', borderRadius: 7, border: 'none',
@@ -2297,6 +2363,90 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
               </div>
             )
           })()}
+
+          {/* ── TAB: IA ── */}
+          {previewTab === 'ia' && (
+            <div style={{ flex: 1, overflowY: 'auto', padding: '16px 14px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Narrativa do projeto</div>
+              <p style={{ margin: 0, fontSize: 12, color: 'var(--color-text-secondary)', lineHeight: 1.55 }}>
+                A IA lê os campos do teu projeto e escreve uma tagline, descrição e destaques personalizados.
+              </p>
+
+              {/* Current tagline preview */}
+              {project.ai_tagline && !narrativePreview && (
+                <div style={{ padding: '10px 12px', background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)', borderRadius: 8 }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Tagline atual</div>
+                  <p style={{ margin: 0, fontSize: 13, color: 'var(--color-text)', fontStyle: 'italic', lineHeight: 1.5 }}>"{project.ai_tagline}"</p>
+                </div>
+              )}
+
+              {narrativeSaved && (
+                <div style={{ padding: '10px 12px', background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.25)', borderRadius: 8, fontSize: 13, color: 'var(--color-success)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <Check size={13} /> Narrativa guardada!
+                </div>
+              )}
+
+              {narrativeError && (
+                <p style={{ margin: 0, fontSize: 13, color: 'var(--color-error)' }}>{narrativeError}</p>
+              )}
+
+              {/* Preview of generated narrative */}
+              {narrativePreview && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <div style={{ padding: '12px', background: 'var(--color-primary-subtle)', border: '1px solid rgba(27,120,247,0.18)', borderRadius: 10 }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-primary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>Nova tagline</div>
+                    <p style={{ margin: 0, fontSize: 13, color: 'var(--color-text)', fontStyle: 'italic', lineHeight: 1.5 }}>"{narrativePreview.tagline}"</p>
+                  </div>
+                  {narrativePreview.highlights?.length > 0 && (
+                    <div style={{ padding: '12px', background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)', borderRadius: 10 }}>
+                      <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Destaques</div>
+                      {narrativePreview.highlights.map((h, i) => (
+                        <div key={i} style={{ display: 'flex', gap: 8, marginBottom: 6, alignItems: 'flex-start' }}>
+                          <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-primary)', flexShrink: 0, marginTop: 2 }}>{i + 1}.</span>
+                          <span style={{ fontSize: 12, color: 'var(--color-text)', lineHeight: 1.5 }}>{h}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button
+                      onClick={handleAcceptNarrative}
+                      style={{ flex: 1, background: 'var(--color-primary)', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 0', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}
+                    >
+                      <Check size={13} /> Aplicar
+                    </button>
+                    <button
+                      onClick={() => setNarrativePreview(null)}
+                      style={{ padding: '9px 12px', background: 'transparent', border: '1px solid var(--color-border)', borderRadius: 8, color: 'var(--color-text-tertiary)', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}
+                    >
+                      Descartar
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {!narrativePreview && (
+                <button
+                  onClick={handleGenerateNarrative}
+                  disabled={generatingNarrative}
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                    background: generatingNarrative ? 'var(--color-border)' : 'var(--color-primary)',
+                    color: '#fff', border: 'none', borderRadius: 8, padding: '11px 0',
+                    fontSize: 13, fontWeight: 700,
+                    cursor: generatingNarrative ? 'not-allowed' : 'pointer',
+                    fontFamily: 'inherit', transition: 'background 0.15s',
+                  }}
+                >
+                  {generatingNarrative
+                    ? <><div style={{ width: 13, height: 13, border: '2px solid rgba(255,255,255,0.3)', borderTop: '2px solid #fff', borderRadius: '50%', animation: 'spin 1s linear infinite' }} /> A escrever…</>
+                    : <><Sparkles size={13} /> {project.ai_tagline ? 'Regenerar narrativa' : 'Gerar narrativa'}</>
+                  }
+                </button>
+              )}
+            </div>
+          )}
+
           </>}
           </div>{/* end panel skin */}
         </div>
@@ -2675,6 +2825,7 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
             background: 'var(--color-surface)', border: '1px solid var(--color-border)',
             borderRadius: 12, padding: '28px 32px',
             display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap',
+            fontFamily: 'var(--font-body, system-ui, sans-serif)',
           }}>
             {avatarUrl ? (
               <img src={avatarUrl} alt="" style={{ width: 56, height: 56, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
@@ -2801,7 +2952,7 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
           )}
 
           {/* Comentários */}
-          <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 12, padding: '22px 24px' }}>
+          <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 12, padding: '22px 24px', fontFamily: 'var(--font-body, system-ui, sans-serif)' }}>
             <ProjectComments projectId={project.id} projectAuthorId={project.user_id} />
           </div>
         </div>
@@ -2886,6 +3037,40 @@ function MembersPanel({ ownerName, members, colors, isOwner }) {
   )
 }
 
+function renderMd(text) {
+  const lines = text.split('\n')
+  const out = []
+  let listItems = []
+  let k = 0
+  function flush() {
+    if (!listItems.length) return
+    out.push(<ul key={k++} style={{ margin: '4px 0 4px 4px', paddingLeft: 16, listStyleType: 'disc' }}>{listItems}</ul>)
+    listItems = []
+  }
+  function inline(line) {
+    const parts = []
+    const re = /(\*\*(.+?)\*\*|\*(.+?)\*)/g
+    let last = 0, m
+    while ((m = re.exec(line)) !== null) {
+      if (m.index > last) parts.push(line.slice(last, m.index))
+      if (m[0].startsWith('**')) parts.push(<strong key={m.index}>{m[2]}</strong>)
+      else parts.push(<em key={m.index}>{m[3]}</em>)
+      last = m.index + m[0].length
+    }
+    if (last < line.length) parts.push(line.slice(last))
+    return parts
+  }
+  for (const line of lines) {
+    const isBullet = line.startsWith('- ') || line.startsWith('• ')
+    if (isBullet) { listItems.push(<li key={k++}>{inline(line.slice(2))}</li>); continue }
+    flush()
+    if (line === '') { out.push(<br key={k++} />); continue }
+    out.push(<span key={k++} style={{ display: 'block' }}>{inline(line)}</span>)
+  }
+  flush()
+  return out
+}
+
 export default function ProjectPage() {
   const { slug } = useParams()
   const navigate = useNavigate()
@@ -2962,6 +3147,10 @@ export default function ProjectPage() {
   const [coachOpen, setCoachOpen] = useState(false)
   const coachBottomRef = useRef(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [generatingNarrative, setGeneratingNarrative] = useState(false)
+  const [narrativePreview, setNarrativePreview]       = useState(null)
+  const [narrativeError, setNarrativeError]           = useState('')
+  const [narrativeSaved, setNarrativeSaved]           = useState(false)
   const [viewAsPublic, setViewAsPublic] = useState(false)
   const [previewEditing, setPreviewEditing] = useState(false)
   const [wsExpanded, setWsExpanded] = useState(false)
@@ -3040,6 +3229,23 @@ export default function ProjectPage() {
       })
   }, [user?.id])
 
+  // Load persisted coach messages for this project
+  useEffect(() => {
+    if (!project?.id || !user?.id) return
+    let cancelled = false
+    supabase
+      .from('coach_messages')
+      .select('role, content')
+      .eq('project_id', project.id)
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: true })
+      .limit(60)
+      .then(({ data }) => {
+        if (!cancelled && data?.length) setCoachMessages(data.map(m => ({ role: m.role, content: m.content })))
+      })
+    return () => { cancelled = true }
+  }, [project?.id, user?.id])
+
   async function sendCoach(e) {
     e?.preventDefault()
     const msg = coachInput.trim()
@@ -3052,6 +3258,12 @@ export default function ProjectPage() {
       const reply = await chatProjectCoach({ project, messages: coachMessages, message: msg })
       setCoachMessages(prev => [...prev, { role: 'assistant', content: reply }])
       setTimeout(() => coachBottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
+      if (user?.id && project?.id) {
+        supabase.from('coach_messages').insert([
+          { project_id: project.id, user_id: user.id, role: 'user', content: msg },
+          { project_id: project.id, user_id: user.id, role: 'assistant', content: reply },
+        ])
+      }
     } catch (err) {
       setCoachMessages(prev => [...prev, { role: 'assistant', content: 'Ocorreu um erro. Tenta novamente.' }])
     }
@@ -3490,6 +3702,46 @@ export default function ProjectPage() {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     })
+  }
+
+  async function handleGenerateNarrative() {
+    if (!project) return
+    setGeneratingNarrative(true)
+    setNarrativeError('')
+    setNarrativePreview(null)
+    try {
+      const { data, error: fnErr } = await supabase.functions.invoke('generate-project', {
+        body: { data: project },
+      })
+      if (fnErr || !data?.tagline) throw new Error(data?.error || 'Resposta inválida')
+      setNarrativePreview(data)
+    } catch {
+      setNarrativeError('Não foi possível gerar agora. Tenta novamente.')
+    } finally {
+      setGeneratingNarrative(false)
+    }
+  }
+
+  async function handleAcceptNarrative() {
+    if (!narrativePreview) return
+    const ai_description = Array.isArray(narrativePreview.historia)
+      ? narrativePreview.historia.join('\n\n')
+      : (narrativePreview.description ?? null)
+    await supabase.from('projects').update({
+      ai_tagline:     narrativePreview.tagline ?? null,
+      ai_description,
+      ai_highlights:  narrativePreview.highlights ?? null,
+    }).eq('id', project.id)
+    // Reflect locally
+    setProject(p => ({
+      ...p,
+      ai_tagline:     narrativePreview.tagline ?? p.ai_tagline,
+      ai_description: ai_description ?? p.ai_description,
+      ai_highlights:  narrativePreview.highlights ?? p.ai_highlights,
+    }))
+    setNarrativePreview(null)
+    setNarrativeSaved(true)
+    setTimeout(() => setNarrativeSaved(false), 3000)
   }
 
   async function handleAnalyzeAI() {
@@ -5436,8 +5688,8 @@ export default function ProjectPage() {
                   fontSize: 13.5,
                   color: m.role === 'user' ? '#fff' : colors.text,
                   lineHeight: 1.6,
-                  whiteSpace: 'pre-wrap',
-                }}>{m.content}</div>
+                  whiteSpace: m.role === 'user' ? 'pre-wrap' : undefined,
+                }}>{m.role === 'assistant' ? renderMd(m.content) : m.content}</div>
               ))}
               {coachLoading && (
                 <div style={{ alignSelf: 'flex-start', background: 'var(--color-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: '16px 16px 16px 4px', padding: '10px 16px', display: 'flex', gap: 5, alignItems: 'center' }}>
@@ -6526,7 +6778,10 @@ export default function ProjectPage() {
               </div>
               {coachMessages.length > 0 && (
                 <button
-                  onClick={() => setCoachMessages([])}
+                  onClick={() => {
+                    setCoachMessages([])
+                    if (user?.id && project?.id) supabase.from('coach_messages').delete().eq('project_id', project.id).eq('user_id', user.id)
+                  }}
                   style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.muted, fontSize: 11, fontFamily: 'inherit', padding: '4px 8px', borderRadius: 6 }}
                   title="Limpar conversa"
                 >Limpar</button>
@@ -6569,8 +6824,8 @@ export default function ProjectPage() {
                   fontSize: 13,
                   color: m.role === 'user' ? '#fff' : colors.text,
                   lineHeight: 1.6,
-                  whiteSpace: 'pre-wrap',
-                }}>{m.content}</div>
+                  whiteSpace: m.role === 'user' ? 'pre-wrap' : undefined,
+                }}>{m.role === 'assistant' ? renderMd(m.content) : m.content}</div>
               ))}
               {coachLoading && (
                 <div style={{ alignSelf: 'flex-start', background: 'var(--color-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: '14px 14px 14px 4px', padding: '10px 16px', display: 'flex', gap: 5, alignItems: 'center' }}>
