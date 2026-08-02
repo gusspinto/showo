@@ -1104,7 +1104,7 @@ export default function Dashboard() {
      RENDER
      ══════════════════════════════════════════════════════════════════════════ */
 
-  if (authLoading) {
+  if (authLoading || (user && !profile)) {
     return (
       <div style={{ minHeight: '100vh', background: 'var(--color-bg)' }}>
         <Navbar />
