@@ -230,7 +230,7 @@ body.light .home-auth-input {
   text-decoration: none;
 }
 
-.google-btn {
+.home-hero-auth .google-btn {
   background: rgba(255,255,255,0.1) !important;
   color: #fff !important;
   border-color: rgba(255,255,255,0.2) !important;

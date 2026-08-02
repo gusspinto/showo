@@ -17,11 +17,13 @@ import JournalDrawer from '../components/dashboard/JournalDrawer'
 import ReportPanel from '../components/dashboard/ReportPanel'
 import AgendaPanel from '../components/dashboard/AgendaPanel'
 import { ActivityPanel, ProjectProgressPanel } from '../components/dashboard/RhythmPanel'
+import WeeklyRecap, { shouldShowRecap, RecapsPanel } from '../components/dashboard/WeeklyRecap'
 import AddReminderModal from '../components/dashboard/AddReminderModal'
 import CalendarSyncModal from '../components/dashboard/CalendarSyncModal'
 import '../components/dashboard/MonthCalendar.css'
 import {
-  computeReportCoverage, computeWeekStreak, buildWeeklyActivity, timeAgoLabel, startOfDay,
+  computeReportCoverage, computeWeekStreak, buildWeeklyActivity, computeEngagementSignal,
+  timeAgoLabel, startOfDay,
 } from '../lib/journal'
 import './Dashboard.css'          // modais e toast partilhados (namespace dash-*)
 import './StudentDashboard.css'
@@ -290,6 +292,8 @@ export default function StudentDashboard({ user, profile }) {
   const [showReport, setShowReport] = useState(false)
   const [showAddReminder, setShowAddReminder] = useState(null)
   const [showCalendarSync, setShowCalendarSync] = useState(false)
+  const [showRecap, setShowRecap] = useState(false)
+  const [recaps, setRecaps] = useState([])
   const [toast, setToast] = useState('')
   const [copiedSlug, setCopiedSlug] = useState(null)
   const [justDone, setJustDone] = useState(null)
@@ -360,6 +364,7 @@ export default function StudentDashboard({ user, profile }) {
       setFocusFull(full || focusProject)
       setEntries(rows || [])
       setLoadingEntries(false)
+      if (shouldShowRecap(user.id)) setShowRecap(true)
     }
     load()
     return () => { cancelled = true }
@@ -433,6 +438,16 @@ export default function StudentDashboard({ user, profile }) {
       })
     }
   }
+
+  /* ── Recaps semanais ── */
+  useEffect(() => {
+    supabase.from('weekly_recaps')
+      .select('id, week_start, reflection, entry_count, kinds_used, engagement_signal')
+      .eq('user_id', user.id)
+      .order('week_start', { ascending: false })
+      .limit(6)
+      .then(({ data }) => { if (data) setRecaps(data) })
+  }, [user.id])
 
   /* ── Lembretes pessoais + token do feed ICS ── */
   useEffect(() => {
@@ -593,7 +608,8 @@ export default function StudentDashboard({ user, profile }) {
   }, [myInterests, profNotifs, hasDraft, focusProject, navigate])
 
   const otherProjects = projects.filter(p => p.id !== focusProject?.id)
-  const { potential } = profile ? calculatePotential({ projects, profile }) : { potential: 0 }
+  const engagement = useMemo(() => computeEngagementSignal(entries), [entries])
+  const { potential } = profile ? calculatePotential({ projects, profile, engagement }) : { potential: 0 }
 
   const setupSteps = [
     { done: !!(profile?.username && profile?.bio), label: 'Perfil preenchido', action: () => navigate('/settings') },
@@ -671,6 +687,22 @@ export default function StudentDashboard({ user, profile }) {
           userId={user.id} icsToken={icsToken}
           onClose={() => setShowCalendarSync(false)}
           onTokenRotated={t => setIcsToken(t)}
+        />
+      )}
+      {showRecap && (
+        <WeeklyRecap
+          userId={user.id}
+          project={focusFull || focusProject}
+          entries={entries}
+          streak={streak}
+          onClose={() => setShowRecap(false)}
+          onSaved={recap => {
+            showToast('Recap da semana guardado.')
+            setRecaps(prev => {
+              const without = prev.filter(r => r.week_start !== recap.week_start)
+              return [{ ...recap, id: recap.id ?? `local-${Date.now()}` }, ...without].slice(0, 6)
+            })
+          }}
         />
       )}
 
@@ -922,6 +954,8 @@ export default function StudentDashboard({ user, profile }) {
                 </button>
               )}
             </section>
+
+            <RecapsPanel recaps={recaps} />
 
             <section className="sdb-panel sdb-o-turma">
               <header className="sdb-panel-head">

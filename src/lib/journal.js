@@ -203,6 +203,57 @@ export function buildWeeklyActivity({ entries = [], completions = [], weeks = 12
   return buckets
 }
 
+/* ── Sinal de engagement do diário ────────────────────────────────────── */
+
+/**
+ * Analisa as entradas do diário e devolve um sinal 0-100 que estima se o
+ * aluno usa o diário de forma genuína (variado, espalhado, com conteúdo real)
+ * ou mecânica (tudo num dia, um só tipo, textos curtíssimos).
+ *
+ * Os quatro eixos têm pesos diferentes: a distribuição temporal é o sinal
+ * mais difícil de falsificar, por isso pesa mais.
+ */
+export function computeEngagementSignal(entries = []) {
+  if (!entries.length) return 0
+
+  // Eixo 1 — distribuição temporal (max 35)
+  // Todas as entradas num único dia = 0; 4+ dias distintos = 35.
+  const days = new Set(entries.map(e => e.created_at.slice(0, 10)))
+  const dayScore = Math.min(35, (days.size - 1) * 10)
+
+  // Eixo 2 — variedade de tipos (max 25)
+  // 1 tipo = 8, 2 = 16, 3+ = 25.
+  const kinds = new Set(entries.map(e => e.kind))
+  const kindScore = Math.min(25, kinds.size * 9)
+
+  // Eixo 3 — volume consistente (max 30)
+  // Cada entrada conta 5pts; mais de 6 num único dia deixa de pontuar.
+  // Penaliza "rafadas" de registos feitos todos ao mesmo tempo.
+  const byDay = {}
+  entries.forEach(e => {
+    const d = e.created_at.slice(0, 10)
+    byDay[d] = (byDay[d] || 0) + 1
+  })
+  const countableEntries = Object.values(byDay).reduce((sum, n) => sum + Math.min(n, 3), 0)
+  const countScore = Math.min(30, countableEntries * 6)
+
+  // Eixo 4 — qualidade do conteúdo (max 10)
+  // Média de caracteres por entrada: <40 = 0, 40-100 = 5, >100 = 10.
+  const avgLen = entries.reduce((s, e) => s + (e.content || '').length, 0) / entries.length
+  const lenScore = avgLen >= 100 ? 10 : avgLen >= 40 ? 5 : 0
+
+  return Math.min(100, Math.round(dayScore + kindScore + countScore + lenScore))
+}
+
+/** Monday ISO string (YYYY-MM-DD) for the week that contains `date`. */
+export function weekStartISO(date = new Date()) {
+  const d = new Date(date)
+  const offset = (d.getDay() + 6) % 7  // Mon=0
+  d.setDate(d.getDate() - offset)
+  d.setHours(0, 0, 0, 0)
+  return d.toISOString().slice(0, 10)
+}
+
 /* ── Etiquetas de tempo ────────────────────────────────────────────────── */
 
 export function timeAgoLabel(ts) {

@@ -107,7 +107,7 @@ export function calculateScore(project) {
  * @param {Object} opts.profile       - user's profile object
  * @returns {{ potential: number, breakdown: Object }}
  */
-export function calculatePotential({ projects = [], profile = {} }) {
+export function calculatePotential({ projects = [], profile = {}, engagement = 0 }) {
   const p = projects.filter(Boolean)
 
   // ── 1. Quality (30pts) ──
@@ -157,13 +157,16 @@ export function calculatePotential({ projects = [], profile = {} }) {
   validation += Math.min(4, inClass * 1.5)
 
   // ── 5. Consistency (15pts) ──
-  // Rewards portfolio breadth — multiple projects, diverse types.
+  // Rewards portfolio breadth — multiple projects, diverse types, and genuine
+  // journal engagement (0-100 signal from computeEngagementSignal).
   let consistency = 0
-  // Number of projects (diminishing: 1=3, 2=5.5, 3=7.5, 5+=10)
-  if (p.length > 0) consistency += Math.min(10, 3 * Math.sqrt(p.length) * (10 / (3 * Math.sqrt(5))))
-  // Diversity of project types
+  // Number of projects (diminishing: 1=3, 2=5.5, 3=7.5, 5+=8)
+  if (p.length > 0) consistency += Math.min(8, 3 * Math.sqrt(p.length) * (8 / (3 * Math.sqrt(5))))
+  // Diversity of project types (max 3)
   const types = new Set(p.map(pr => pr.project_type).filter(Boolean))
-  consistency += Math.min(5, types.size * 2)
+  consistency += Math.min(3, types.size * 1.5)
+  // Journal engagement — up to 4pts; rewards alunos that use the diary genuinely
+  consistency += Math.min(4, (engagement / 100) * 4)
 
   const total = Math.round(quality + depth + Math.min(prof, 15) + Math.min(validation, 20) + Math.min(consistency, 15))
 

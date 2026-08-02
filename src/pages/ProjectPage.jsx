@@ -988,11 +988,19 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
           --c-bg:#060c18; --c-bg-alt:#111c32; --c-card:#152030; --c-card-hover:#1c2d44;
           --c-border:#1e3050; --c-border-bright:#2a4275; --c-muted:#7d93b0;
           --c-text:#e8f2ff; --c-subtle:#6b7f9e; --c-input-bg:#060c18;
+          --color-bg:#060c18; --color-bg-alt:#111c32;
+          --color-surface:#152030; --color-surface-hover:#1c2d44;
+          --color-border:#1e3050; --color-border-hover:#2a4275;
+          --color-text:#e8f2ff; --color-text-secondary:#7d93b0; --color-text-tertiary:#6b7f9e;
         }
         [data-pv-theme="light"] {
           --c-bg:#f5f0e8; --c-bg-alt:#ede6d8; --c-card:#faf7f2; --c-card-hover:#f0ebe1;
           --c-border:#d8d0c4; --c-border-bright:#bdb4a6; --c-muted:#6b6158;
           --c-text:#1c1714; --c-subtle:#7a7065; --c-input-bg:#e8e1d6;
+          --color-bg:#f5f0e8; --color-bg-alt:#ede6d8;
+          --color-surface:#faf7f2; --color-surface-hover:#f0ebe1;
+          --color-border:#d8d0c4; --color-border-hover:#bdb4a6;
+          --color-text:#1c1714; --color-text-secondary:#6b6158; --color-text-tertiary:#7a7065;
         }
         @keyframes pv-slidein {
           from { transform: translateX(20px); opacity: 0; }
@@ -1203,13 +1211,13 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
           /* Cover full-bleed hero */
           <div style={{ width: '100%', height: Math.round(heroHeight * 1.4), position: 'relative' }}>
             <img src={project.cover_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.1) 40%, var(--color-bg) 100%)' }} />
+            <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(to bottom, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.1) 40%, ${resolvedBg} 100%)` }} />
             <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(135deg, ${hero.c1}22, transparent 60%)` }} />
           </div>
         ) : project.cover_url ? (
           <div style={{ width: '100%', height: Math.round(heroHeight * 1.14), position: 'relative' }}>
             <img src={project.cover_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, var(--color-bg) 100%)' }} />
+            <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, ${resolvedBg} 100%)` }} />
           </div>
         ) : (
           /* No cover — use page bg theme as base, accent as subtle overlay */
@@ -1283,13 +1291,38 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
             {project.score != null && (project.project_type || project.area) && (
               <span style={{ color: colors.subtle, fontSize: 12 }}>·</span>
             )}
-            {project.score != null && (
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: colors.subtle, fontSize: 12 }}>
+            {project.score != null && isOwner && (
+              <span style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
+                <button
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 4,
+                    color: colors.subtle, fontSize: 12,
+                    background: 'none', border: 'none', cursor: 'pointer',
+                    padding: 0, fontFamily: 'inherit',
+                  }}
+                  title="Score privado — clica para saber mais"
+                  onClick={e => {
+                    e.stopPropagation()
+                    const el = e.currentTarget.nextSibling
+                    if (el) el.style.display = el.style.display === 'block' ? 'none' : 'block'
+                  }}
+                >
+                  <span style={{
+                    width: 5, height: 5, borderRadius: '50%',
+                    background: project.score >= 86 ? 'var(--color-success)' : project.score >= 51 ? 'var(--color-primary)' : 'var(--color-warning)',
+                  }} />
+                  {project.score} score
+                </button>
                 <span style={{
-                  width: 5, height: 5, borderRadius: '50%',
-                  background: project.score >= 86 ? 'var(--color-success)' : project.score >= 51 ? 'var(--color-primary)' : 'var(--color-warning)',
-                }} />
-                {project.score} score
+                  display: 'none', position: 'absolute', top: 'calc(100% + 8px)', left: 0, zIndex: 20,
+                  background: 'var(--color-surface)', border: '1px solid var(--color-border)',
+                  borderRadius: 10, padding: '12px 14px', width: 240,
+                  boxShadow: '0 4px 16px rgba(0,0,0,0.18)',
+                  fontSize: 12, lineHeight: 1.5, color: 'var(--color-text-secondary)',
+                }}>
+                  <strong style={{ color: 'var(--color-text)', display: 'block', marginBottom: 4 }}>Score privado</strong>
+                  Gerado pela IA com base no conteúdo do projeto. Não substitui a nota do professor — só tu vês este valor.
+                </span>
               </span>
             )}
           </div>
@@ -2675,6 +2708,7 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
             background: 'var(--color-surface)', border: '1px solid var(--color-border)',
             borderRadius: 12, padding: '28px 32px',
             display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap',
+            fontFamily: 'var(--font-body, system-ui, sans-serif)',
           }}>
             {avatarUrl ? (
               <img src={avatarUrl} alt="" style={{ width: 56, height: 56, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
@@ -2801,7 +2835,7 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
           )}
 
           {/* Comentários */}
-          <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 12, padding: '22px 24px' }}>
+          <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 12, padding: '22px 24px', fontFamily: 'var(--font-body, system-ui, sans-serif)' }}>
             <ProjectComments projectId={project.id} projectAuthorId={project.user_id} />
           </div>
         </div>

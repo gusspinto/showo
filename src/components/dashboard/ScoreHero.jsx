@@ -1,4 +1,5 @@
-import { TrendingUp, Sparkles } from 'lucide-react'
+import { useState } from 'react'
+import { TrendingUp, Sparkles, Info, X } from 'lucide-react'
 import { calculatePotential } from '../../lib/score'
 
 const DIMS = [
@@ -10,6 +11,7 @@ const DIMS = [
 ]
 
 export default function ScoreHero({ projects, profile }) {
+  const [tooltipOpen, setTooltipOpen] = useState(false)
   const withScore = projects.filter(p => p.score != null)
   const best = withScore.length ? Math.max(...withScore.map(p => p.score)) : 0
   const avg = withScore.length ? Math.round(withScore.reduce((s, p) => s + p.score, 0) / withScore.length) : 0
@@ -25,7 +27,34 @@ export default function ScoreHero({ projects, profile }) {
     <div className="score-hero">
       <div className="score-hero-bg" aria-hidden="true" />
 
+      {tooltipOpen && (
+        <div className="score-hero-tooltip">
+          <button className="score-hero-tooltip-close" onClick={() => setTooltipOpen(false)} aria-label="Fechar">
+            <X size={13} />
+          </button>
+          <p className="score-hero-tooltip-title">O que é o score?</p>
+          <p className="score-hero-tooltip-body">
+            O score é gerado pela IA com base no conteúdo do teu projeto —
+            completude, profundidade e validação. É <strong>privado</strong> e
+            não substitui a nota do professor. Serve para te mostrar onde podes melhorar.
+          </p>
+          <p className="score-hero-tooltip-title" style={{ marginTop: 10 }}>E o potencial?</p>
+          <p className="score-hero-tooltip-body">
+            O potencial calcula o teu perfil global: qualidade dos projetos,
+            consistência, validação externa e como usas o diário. Também privado.
+          </p>
+        </div>
+      )}
+
       <div className="score-hero-content">
+        <button
+          className="score-hero-info-btn"
+          onClick={() => setTooltipOpen(v => !v)}
+          aria-label="Informação sobre o score"
+          title="O que é o score?"
+        >
+          <Info size={14} />
+        </button>
         {/* Ring — dual concentric: score (outer) + potential (inner) */}
         <div className="score-hero-ring-wrap">
           <svg width={RING_SIZE} height={RING_SIZE} viewBox={`0 0 ${RING_SIZE} ${RING_SIZE}`}>
