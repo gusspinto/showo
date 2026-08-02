@@ -9,6 +9,7 @@ import {
   ChevronRight, User, Globe, MessageSquare, Star,
   Check, ArrowRight, Sparkles,
   Pencil, ExternalLink, Copy, Share2, Link, Circle,
+  Calendar, AlertTriangle, TrendingUp, Trophy, Clock,
 } from 'lucide-react'
 import {
   Button, Card, SectionLabel, Modal, ModalActions,
@@ -80,22 +81,24 @@ function computeFocus({ projects, myInterests, profNotifs, pendingTasks, loading
   return null
 }
 
-/* ── FocusSignal (right column) ── */
+/* ── FocusSignal — card redesenhado com ícone, fundo e botão real ── */
 
 function FocusSignal({ focus, navigate, onDismissFeedback, onCompleteTask }) {
   if (!focus) return null
 
-  let label, headline, sub, cta, ctaAction, accentVar
+  let label, headline, sub, cta, ctaAction, icon, accentVar, bgVar
 
   switch (focus.type) {
     case 'recruiter': {
       const rec = focus.data.recruiterProfile
       label = 'Nova oportunidade'
-      headline = `${rec.full_name || rec.username || 'Uma empresa'} mostrou interesse no teu trabalho`
-      sub = `${rec.company ? rec.company + ' — ' : ''}projeto "${focus.data.project.name}"`
-      cta = 'Responder'
+      headline = `${rec.full_name || rec.username || 'Uma empresa'} tem interesse no teu trabalho`
+      sub = `${rec.company ? rec.company + ' · ' : ''}projeto "${focus.data.project.name}"`
+      cta = 'Responder agora'
       ctaAction = () => navigate(`/mensagens?to=${rec.id}`)
-      accentVar = 'var(--color-warning)'
+      icon = <Star size={14} />
+      accentVar = '#d97706'
+      bgVar = 'rgba(217,119,6,0.08)'
       break
     }
     case 'teacher_feedback': {
@@ -104,18 +107,22 @@ function FocusSignal({ focus, navigate, onDismissFeedback, onCompleteTask }) {
       sub = timeAgoLabel(focus.data.created_at)
       cta = 'Ver projeto'
       ctaAction = () => onDismissFeedback(focus.data.id, focus.data.project_slug)
+      icon = <MessageSquare size={14} />
       accentVar = 'var(--color-success)'
+      bgVar = 'var(--color-success-subtle)'
       break
     }
     case 'defense': {
       const d = focus.data
       const urgency = d.daysLeft === 0 ? 'Hoje' : d.daysLeft === 1 ? 'Amanhã' : `${d.daysLeft} dias`
       label = 'Defesa do projeto'
-      headline = `${urgency} — ${d.name}`
+      headline = `${d.name} — ${urgency}`
       sub = new Date(d.defense_date + 'T00:00:00').toLocaleDateString('pt-PT', { weekday: 'long', day: 'numeric', month: 'long' })
       cta = 'Ver projeto'
       ctaAction = () => navigate(`/projeto/${d.slug}`)
+      icon = <Calendar size={14} />
       accentVar = d.daysLeft <= 3 ? 'var(--color-error)' : d.daysLeft <= 7 ? 'var(--color-warning)' : 'var(--color-primary)'
+      bgVar = d.daysLeft <= 3 ? 'var(--color-error-subtle)' : d.daysLeft <= 7 ? 'var(--color-warning-subtle)' : 'var(--color-primary-subtle)'
       break
     }
     case 'overdue_task': {
@@ -124,16 +131,20 @@ function FocusSignal({ focus, navigate, onDismissFeedback, onCompleteTask }) {
       sub = focus.data.classes?.name || ''
       cta = 'Marcar como feita'
       ctaAction = () => onCompleteTask(focus.data.id)
+      icon = <AlertTriangle size={14} />
       accentVar = 'var(--color-error)'
+      bgVar = 'var(--color-error-subtle)'
       break
     }
     case 'pending_tasks': {
       const count = focus.data.length
       label = 'A fazer'
-      headline = `${count} tarefa${count !== 1 ? 's' : ''} pendente${count !== 1 ? 's' : ''}`
+      headline = `${count} tarefa${count !== 1 ? 's' : ''} por completar`
       sub = focus.data[0].title + (focus.data[0].classes?.name ? ` — ${focus.data[0].classes.name}` : '')
       cta = null; ctaAction = null
+      icon = <Clock size={14} />
       accentVar = 'var(--color-primary)'
+      bgVar = 'var(--color-primary-subtle)'
       break
     }
     case 'improve_project': {
@@ -141,11 +152,13 @@ function FocusSignal({ focus, navigate, onDismissFeedback, onCompleteTask }) {
       label = 'Próximo passo'
       headline = `"${p.name}" pode ir mais longe`
       sub = p.cover_url
-        ? `Score atual: ${p.score ?? 0}/100 — adiciona mais detalhes ao projeto para subir.`
-        : 'Adiciona uma imagem de capa para aumentar o score.'
-      cta = 'Editar projeto'
+        ? `Score ${p.score ?? 0}/100 — adiciona mais detalhes para subir.`
+        : 'Adiciona uma capa para aumentar o score.'
+      cta = 'Melhorar projeto'
       ctaAction = () => navigate(`/editar/${p.slug}`)
+      icon = <TrendingUp size={14} />
       accentVar = 'var(--color-primary)'
+      bgVar = 'var(--color-primary-subtle)'
       break
     }
     case 'showcase': {
@@ -155,7 +168,9 @@ function FocusSignal({ focus, navigate, onDismissFeedback, onCompleteTask }) {
       sub = p.ai_tagline || `Score ${p.score}/100`
       cta = 'Ver projeto'
       ctaAction = () => navigate(`/projeto/${p.slug}`)
+      icon = <Trophy size={14} />
       accentVar = 'var(--color-primary)'
+      bgVar = 'var(--color-primary-subtle)'
       break
     }
     default:
@@ -163,15 +178,16 @@ function FocusSignal({ focus, navigate, onDismissFeedback, onCompleteTask }) {
   }
 
   return (
-    <div className="sdash-signal-block" style={{ '--focus-accent': accentVar }}>
-      <div className="sdash-focus-signal">
-        <div className="sdash-focus-label">{label}</div>
-        <div className="sdash-focus-headline">{headline}</div>
-        {sub && <div className="sdash-focus-sub">{sub}</div>}
-        {cta && ctaAction && (
-          <button className="sdash-focus-cta" onClick={ctaAction}>{cta} →</button>
-        )}
+    <div className="sdash-signal-card" style={{ '--signal-accent': accentVar, '--signal-bg': bgVar }}>
+      <div className="sdash-signal-header">
+        <span className="sdash-signal-icon-badge">{icon}</span>
+        <span className="sdash-signal-label">{label}</span>
       </div>
+      <div className="sdash-signal-headline">{headline}</div>
+      {sub && <div className="sdash-signal-sub">{sub}</div>}
+      {cta && ctaAction && (
+        <button className="sdash-signal-cta" onClick={ctaAction}>{cta} →</button>
+      )}
     </div>
   )
 }
@@ -253,6 +269,183 @@ function ProjectItem({ project, onView, onEdit, onDelete, onCopy, copied, isColl
           </>
         )}
         </div>
+      </div>
+    </div>
+  )
+}
+
+/* ── ActivityChart — sparkline de projetos criados por mês ── */
+
+function ActivityChart({ projects }) {
+  const MONTHS = 6
+  const now = new Date()
+  const buckets = Array.from({ length: MONTHS }, (_, i) => {
+    const d = new Date(now.getFullYear(), now.getMonth() - (MONTHS - 1 - i), 1)
+    return {
+      label: d.toLocaleDateString('pt-PT', { month: 'short' }),
+      start: d,
+      end: new Date(d.getFullYear(), d.getMonth() + 1, 1),
+      count: 0,
+    }
+  })
+
+  projects.forEach(p => {
+    const d = new Date(p.created_at)
+    buckets.forEach(b => { if (d >= b.start && d < b.end) b.count++ })
+  })
+
+  const max = Math.max(...buckets.map(b => b.count), 1)
+  const W = 240, H = 52
+  const padX = 6, padY = 6
+  const innerW = W - padX * 2
+  const innerH = H - padY * 2
+
+  const pts = buckets.map((b, i) => ({
+    x: padX + (i / (MONTHS - 1)) * innerW,
+    y: padY + (1 - b.count / max) * innerH,
+    count: b.count,
+    label: b.label,
+  }))
+
+  const pathD = pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ')
+  const areaD = `${pathD} L${pts[pts.length - 1].x.toFixed(1)} ${(H - padY).toFixed(1)} L${pts[0].x.toFixed(1)} ${(H - padY).toFixed(1)} Z`
+
+  const totalProjects = projects.length
+  const recentMonth = buckets[buckets.length - 1].count
+  const subLabel = totalProjects === 0
+    ? 'Ainda sem projetos'
+    : recentMonth > 0
+      ? `${recentMonth} projeto${recentMonth !== 1 ? 's' : ''} este mês`
+      : `${totalProjects} projeto${totalProjects !== 1 ? 's' : ''} no total`
+
+  return (
+    <div className="sdash-activity-block">
+      <div className="sdash-activity-header">
+        <span className="sdash-context-label" style={{ marginBottom: 0 }}>Atividade</span>
+        <span className="sdash-activity-sub">{subLabel}</span>
+      </div>
+      <svg
+        width="100%"
+        viewBox={`0 0 ${W} ${H}`}
+        preserveAspectRatio="none"
+        className="sdash-activity-chart"
+        aria-hidden="true"
+      >
+        <defs>
+          <linearGradient id="sdash-act-grad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="var(--color-primary)" stopOpacity="0.22" />
+            <stop offset="100%" stopColor="var(--color-primary)" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        <path d={areaD} fill="url(#sdash-act-grad)" />
+        <path d={pathD} fill="none" stroke="var(--color-primary)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        {pts.map((p, i) => (
+          p.count > 0 && (
+            <circle key={i} cx={p.x} cy={p.y} r="2.5" fill="var(--color-primary)" />
+          )
+        ))}
+      </svg>
+      <div className="sdash-activity-months">
+        {buckets.map((b, i) => (
+          <span key={i} className="sdash-activity-month">{b.label}</span>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+/* ── CalendarBlock — próximas defesas com sync ── */
+
+function makeGoogleCalURL(title, dateStr) {
+  const d = new Date(dateStr + 'T09:00:00')
+  const end = new Date(dateStr + 'T10:00:00')
+  const fmt = dt => dt.toISOString().replace(/[-:.]/g, '').slice(0, 15) + 'Z'
+  const params = new URLSearchParams({
+    action: 'TEMPLATE',
+    text: `Defesa: ${title}`,
+    dates: `${fmt(d)}/${fmt(end)}`,
+    details: `Defesa do projeto "${title}" via Showo`,
+  })
+  return `https://calendar.google.com/calendar/render?${params.toString()}`
+}
+
+function makeICSContent(title, dateStr) {
+  const d = new Date(dateStr + 'T09:00:00')
+  const end = new Date(dateStr + 'T10:00:00')
+  const fmt = dt => dt.toISOString().replace(/[-:.]/g, '').slice(0, 15) + 'Z'
+  return [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'BEGIN:VEVENT',
+    `DTSTART:${fmt(d)}`,
+    `DTEND:${fmt(end)}`,
+    `SUMMARY:Defesa: ${title}`,
+    `DESCRIPTION:Defesa do projeto "${title}" via Showo`,
+    'END:VEVENT',
+    'END:VCALENDAR',
+  ].join('\r\n')
+}
+
+function CalendarBlock({ projects }) {
+  const today = new Date(); today.setHours(0, 0, 0, 0)
+  const upcoming = projects
+    .filter(p => p.defense_date && new Date(p.defense_date + 'T00:00:00') >= today)
+    .sort((a, b) => a.defense_date < b.defense_date ? -1 : 1)
+    .slice(0, 3)
+
+  if (!upcoming.length) return null
+
+  function downloadICS(project) {
+    const content = makeICSContent(project.name, project.defense_date)
+    const blob = new Blob([content], { type: 'text/calendar' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url; a.download = `defesa-${project.name.replace(/\s+/g, '-').toLowerCase()}.ics`
+    a.click(); URL.revokeObjectURL(url)
+  }
+
+  return (
+    <div className="sdash-context-block sdash-cal-block">
+      <div className="sdash-cal-header">
+        <span className="sdash-context-label" style={{ marginBottom: 0 }}>Próximas defesas</span>
+        <Calendar size={13} color="var(--color-text-tertiary)" />
+      </div>
+      <div className="sdash-cal-list">
+        {upcoming.map(p => {
+          const d = new Date(p.defense_date + 'T00:00:00')
+          const daysLeft = Math.ceil((d - today) / 86400000)
+          const urgencyColor = daysLeft <= 3 ? 'var(--color-error)' : daysLeft <= 7 ? 'var(--color-warning)' : 'var(--color-text-tertiary)'
+          return (
+            <div key={p.id} className="sdash-cal-row">
+              <div className="sdash-cal-date-badge">
+                <span className="sdash-cal-day">{d.getDate()}</span>
+                <span className="sdash-cal-mon">{d.toLocaleDateString('pt-PT', { month: 'short' })}</span>
+              </div>
+              <div className="sdash-cal-info">
+                <div className="sdash-cal-name">{p.name}</div>
+                <div className="sdash-cal-days" style={{ color: urgencyColor }}>
+                  {daysLeft === 0 ? 'Hoje' : daysLeft === 1 ? 'Amanhã' : `em ${daysLeft} dias`}
+                </div>
+              </div>
+              <div className="sdash-cal-actions">
+                <a
+                  href={makeGoogleCalURL(p.name, p.defense_date)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="sdash-cal-btn"
+                  title="Google Calendar"
+                >G</a>
+                <button
+                  className="sdash-cal-btn"
+                  onClick={() => downloadICS(p)}
+                  title="Apple Calendar / iCal"
+                >
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M4 4h16v16H4zM16 2v4M8 2v4M4 10h16"/></svg>
+                </button>
+              </div>
+            </div>
+          )
+        })}
       </div>
     </div>
   )
@@ -385,7 +578,7 @@ function RecruiterBand({ interests, navigate }) {
       <div className="sdash-recruiter-band-label">
         <Star size={11} /> Interesse de empresa
       </div>
-      {interests.map((item, idx) => {
+      {interests.map((item) => {
         const rec = item.recruiterProfile
         return (
           <div key={`${item.recruiterProfile?.id}-${item.project?.id}`} className="sdash-recruiter-row">
@@ -411,7 +604,7 @@ function RecruiterBand({ interests, navigate }) {
   )
 }
 
-/* ── Modals (unchanged) ── */
+/* ── Modals ── */
 
 function JoinTurmaModal({ onClose, navigate, onJoined }) {
   const [code, setCode] = useState('')
@@ -611,7 +804,6 @@ export default function StudentDashboard({ user, profile }) {
 
   const [showJoinModal, setShowJoinModal] = useState(false)
   const [showTurmasModal, setShowTurmasModal] = useState(false)
-  const [showCreateModal, setShowCreateModal] = useState(false)
   const [showOnboardingAluno, setShowOnboardingAluno] = useState(false)
   const [toast, setToast] = useState('')
   const [copiedSlug, setCopiedSlug] = useState(null)
@@ -746,11 +938,24 @@ export default function StudentDashboard({ user, profile }) {
 
   /* ── Render ── */
   const firstName = getDisplayName(user)
+
   const greeting = (() => {
     const h = new Date().getHours()
     if (h >= 5 && h < 12) return `Bom dia, ${firstName}`
     if (h >= 12 && h < 20) return `Boa tarde, ${firstName}`
     return `Boa noite, ${firstName}`
+  })()
+
+  const motivational = (() => {
+    if (loadingProjects) return null
+    const bestScore = projects.length ? Math.max(...projects.map(p => p.score ?? 0)) : null
+    if (bestScore !== null && bestScore >= 85) return 'O teu portfólio está a destacar-se.'
+    if (bestScore !== null && bestScore >= 65) return 'Bom caminho. Continua a construir.'
+    if (projects.length === 0) return 'Vamos começar o teu portfólio.'
+    const h = new Date().getHours()
+    if (h < 10) return 'Cedo, mas cedo é bom.'
+    if (h >= 22) return 'O melhor trabalho às vezes sai à noite.'
+    return 'O teu trabalho fala por ti.'
   })()
 
   const focus = computeFocus({ projects, myInterests, profNotifs, pendingTasks, loadingProjects })
@@ -781,16 +986,16 @@ export default function StudentDashboard({ user, profile }) {
       {showTurmasModal && <TurmasListModal turmas={studentTurmas} onClose={() => setShowTurmasModal(false)} navigate={navigate} onJoin={() => setShowJoinModal(true)} />}
 
       <div className="page-content" style={{ paddingTop: 64, paddingBottom: 80 }}>
-        {/* MAIN GRID — greeting lives inside the left col, signal inside the right col */}
         <div className="sdash-grid">
 
-          {/* LEFT — Greeting + Projects */}
+          {/* LEFT — Greeting + Projects + Activity */}
           <div className="sdash-projects-col">
             <div className="sdash-greeting">
               <div className="sdash-greeting-line">
                 <span className="sdash-greeting-text">{greeting}</span>
                 <span className="sdash-role-tag">Aluno</span>
               </div>
+              {motivational && <p className="sdash-greeting-motivational">{motivational}</p>}
               <span className="sdash-greeting-date">
                 {new Date().toLocaleDateString('pt-PT', { weekday: 'long', day: 'numeric', month: 'long' })}
               </span>
@@ -873,17 +1078,19 @@ export default function StudentDashboard({ user, profile }) {
             {myInterests.length > 0 && focus?.type !== 'recruiter' && (
               <RecruiterBand interests={myInterests} navigate={navigate} />
             )}
+
+            {!loadingProjects && (
+              <ActivityChart projects={projects} />
+            )}
           </div>
 
-          {/* RIGHT — Signal + Context */}
+          {/* RIGHT — Signal + Potential + Calendar + Turma + Tasks */}
           <div className="sdash-context-col">
             {loadingProjects ? (
-              <div className="sdash-signal-block">
-                <div className="sdash-focus-signal" style={{ '--focus-accent': 'var(--color-border)' }}>
-                  <div className="skel skel-line" style={{ height: 10, width: 80, borderRadius: 3, marginBottom: 8 }} />
-                  <div className="skel skel-line" style={{ height: 14, width: '100%', borderRadius: 4, marginBottom: 5 }} />
-                  <div className="skel skel-line" style={{ height: 14, width: '60%', borderRadius: 4 }} />
-                </div>
+              <div className="sdash-signal-card" style={{ '--signal-accent': 'var(--color-border)', '--signal-bg': 'var(--color-surface)' }}>
+                <div className="skel skel-line" style={{ height: 10, width: 80, borderRadius: 3, marginBottom: 10 }} />
+                <div className="skel skel-line" style={{ height: 15, width: '100%', borderRadius: 4, marginBottom: 6 }} />
+                <div className="skel skel-line" style={{ height: 15, width: '65%', borderRadius: 4 }} />
               </div>
             ) : focus ? (
               <FocusSignal
@@ -902,6 +1109,10 @@ export default function StudentDashboard({ user, profile }) {
                 copiedSlug={copiedSlug}
                 setCopiedSlug={setCopiedSlug}
               />
+            )}
+
+            {!loadingProjects && (
+              <CalendarBlock projects={projects} />
             )}
 
             <TurmaBlock
