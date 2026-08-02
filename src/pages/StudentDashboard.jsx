@@ -274,6 +274,32 @@ function ProjectItem({ project, onView, onEdit, onDelete, onCopy, copied, isColl
   )
 }
 
+/* ── StatsStrip — métricas-chave acima dos projetos ── */
+
+function StatsStrip({ projects }) {
+  if (!projects.length) return null
+  const scores = projects.filter(p => p.score != null).map(p => p.score)
+  const bestScore = scores.length ? Math.max(...scores) : null
+  const totalViews = projects.reduce((sum, p) => sum + (p.views ?? 0), 0)
+
+  const stats = [
+    { value: projects.length, label: `projeto${projects.length !== 1 ? 's' : ''}` },
+    ...(bestScore !== null ? [{ value: bestScore, label: 'melhor score', color: getScoreColor(bestScore) }] : []),
+    ...(totalViews > 0 ? [{ value: totalViews >= 1000 ? `${(totalViews / 1000).toFixed(1)}k` : totalViews, label: 'visualizações' }] : []),
+  ]
+
+  return (
+    <div className="sdash-stats-strip">
+      {stats.map((s, i) => (
+        <div key={i} className="sdash-stat-chip">
+          <span className="sdash-stat-value" style={s.color ? { color: s.color } : undefined}>{s.value}</span>
+          <span className="sdash-stat-label">{s.label}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 /* ── ActivityChart — sparkline de projetos criados por mês ── */
 
 function ActivityChart({ projects }) {
@@ -350,6 +376,94 @@ function ActivityChart({ projects }) {
           <span key={i} className="sdash-activity-month">{b.label}</span>
         ))}
       </div>
+    </div>
+  )
+}
+
+/* ── MiniCalendar — grelha mensal com defesas assinaladas ── */
+
+function MiniCalendar({ projects }) {
+  const now = new Date()
+  const todayStr = now.toISOString().slice(0, 10)
+  const [month, setMonth] = useState(now.getMonth())
+  const [year, setYear] = useState(now.getFullYear())
+
+  const defenseMap = {}
+  projects.forEach(p => { if (p.defense_date) defenseMap[p.defense_date] = p })
+
+  const firstDay = new Date(year, month, 1)
+  const lastDay = new Date(year, month + 1, 0)
+  const startDow = (firstDay.getDay() + 6) % 7 // Seg=0 … Dom=6
+
+  const cells = []
+  for (let i = 0; i < startDow; i++) cells.push(null)
+  for (let d = 1; d <= lastDay.getDate(); d++) {
+    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`
+    cells.push({ day: d, dateStr, defense: defenseMap[dateStr] ?? null })
+  }
+
+  const prevMonth = () => month === 0 ? (setMonth(11), setYear(y => y - 1)) : setMonth(m => m - 1)
+  const nextMonth = () => month === 11 ? (setMonth(0), setYear(y => y + 1)) : setMonth(m => m + 1)
+  const monthLabel = new Date(year, month, 1).toLocaleDateString('pt-PT', { month: 'long', year: 'numeric' })
+  const DOW = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']
+
+  const upcoming = projects
+    .filter(p => p.defense_date && p.defense_date >= todayStr)
+    .sort((a, b) => a.defense_date < b.defense_date ? -1 : 1)
+    .slice(0, 2)
+
+  function makeGCalURL(title, dateStr) {
+    const d = new Date(dateStr + 'T09:00:00')
+    const end = new Date(dateStr + 'T10:00:00')
+    const fmt = dt => dt.toISOString().replace(/[-:.]/g, '').slice(0, 15) + 'Z'
+    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent('Defesa: ' + title)}&dates=${fmt(d)}/${fmt(end)}`
+  }
+
+  return (
+    <div className="sdash-context-block sdash-mini-cal">
+      <div className="sdash-mini-cal-header">
+        <button className="sdash-mini-cal-nav" onClick={prevMonth}>‹</button>
+        <span className="sdash-mini-cal-month">{monthLabel}</span>
+        <button className="sdash-mini-cal-nav" onClick={nextMonth}>›</button>
+      </div>
+      <div className="sdash-mini-cal-grid">
+        {DOW.map(d => <span key={d} className="sdash-mini-cal-dow">{d}</span>)}
+        {cells.map((c, i) => {
+          if (!c) return <span key={`e${i}`} />
+          const isToday = c.dateStr === todayStr
+          return (
+            <span
+              key={c.dateStr}
+              className={`sdash-mini-cal-day${isToday ? ' today' : ''}${c.defense ? ' has-defense' : ''}`}
+              title={c.defense ? `Defesa: ${c.defense.name}` : undefined}
+            >
+              {c.day}
+              {c.defense && <span className="sdash-mini-cal-dot" />}
+            </span>
+          )
+        })}
+      </div>
+      {upcoming.length > 0 && (
+        <div className="sdash-mini-cal-defenses">
+          {upcoming.map(p => {
+            const d = new Date(p.defense_date + 'T00:00:00')
+            const daysLeft = Math.ceil((d - new Date(todayStr)) / 86400000)
+            return (
+              <div key={p.id} className="sdash-mini-cal-defense-row">
+                <div className="sdash-mini-cal-defense-info">
+                  <span className="sdash-mini-cal-defense-name">{p.name}</span>
+                  <span className="sdash-mini-cal-defense-days" style={{
+                    color: daysLeft <= 3 ? 'var(--color-error)' : daysLeft <= 7 ? 'var(--color-warning)' : 'var(--color-text-tertiary)'
+                  }}>
+                    {daysLeft === 0 ? 'Hoje' : daysLeft === 1 ? 'Amanhã' : `${daysLeft}d`}
+                  </span>
+                </div>
+                <a href={makeGCalURL(p.name, p.defense_date)} target="_blank" rel="noopener noreferrer" className="sdash-cal-btn" title="Google Calendar">G</a>
+              </div>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }
@@ -1001,6 +1115,10 @@ export default function StudentDashboard({ user, profile }) {
               </span>
             </div>
 
+            {!loadingProjects && projects.length > 0 && (
+              <StatsStrip projects={projects} />
+            )}
+
             {loadingProjects ? (
               <div className="sdash-skeleton-col">
                 <div className="skel skel-card sdash-skel-featured" />
@@ -1111,9 +1229,7 @@ export default function StudentDashboard({ user, profile }) {
               />
             )}
 
-            {!loadingProjects && (
-              <CalendarBlock projects={projects} />
-            )}
+            <MiniCalendar projects={projects} />
 
             <TurmaBlock
               turmas={studentTurmas}

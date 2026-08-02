@@ -1658,6 +1658,151 @@
   padding-top: var(--sp-1);
 }
 
+/* ── Stats strip (entre o greeting e os projetos) ── */
+.sdash-stats-strip {
+  display: flex;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-5);
+  flex-wrap: wrap;
+}
+.sdash-stat-chip {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: var(--sp-3) var(--sp-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  min-width: 84px;
+  flex: 1;
+  max-width: 140px;
+}
+.sdash-stat-value {
+  font-size: 26px;
+  font-weight: 800;
+  font-family: var(--font-display);
+  letter-spacing: -0.03em;
+  color: var(--color-text);
+  line-height: 1;
+}
+.sdash-stat-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--color-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+/* ── Mini calendar ── */
+.sdash-mini-cal {}
+.sdash-mini-cal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--sp-3);
+}
+.sdash-mini-cal-month {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--color-text);
+  text-transform: capitalize;
+}
+.sdash-mini-cal-nav {
+  background: none;
+  border: none;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  font-size: 18px;
+  padding: 0 6px;
+  line-height: 1;
+  font-family: inherit;
+  transition: color var(--duration-fast);
+}
+.sdash-mini-cal-nav:hover { color: var(--color-text); }
+.sdash-mini-cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+.sdash-mini-cal-dow {
+  font-size: 8px;
+  font-weight: 800;
+  color: var(--color-text-tertiary);
+  text-transform: uppercase;
+  text-align: center;
+  padding-bottom: var(--sp-2);
+  letter-spacing: 0.03em;
+}
+.sdash-mini-cal-day {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-text-tertiary);
+  border-radius: var(--radius-sm);
+  padding: 5px 0 6px;
+  cursor: default;
+  line-height: 1;
+  transition: background var(--duration-fast);
+}
+.sdash-mini-cal-day.has-defense {
+  font-weight: 700;
+  color: var(--color-text);
+}
+.sdash-mini-cal-day.today {
+  background: var(--color-primary);
+  color: #fff;
+  font-weight: 800;
+  border-radius: var(--radius-sm);
+}
+.sdash-mini-cal-dot {
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--color-warning);
+}
+.sdash-mini-cal-day.today .sdash-mini-cal-dot { background: rgba(255,255,255,0.85); }
+.sdash-mini-cal-defenses {
+  margin-top: var(--sp-3);
+  padding-top: var(--sp-3);
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+.sdash-mini-cal-defense-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+.sdash-mini-cal-defense-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+.sdash-mini-cal-defense-name {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+.sdash-mini-cal-defense-days {
+  font-size: 10px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
 /* ── Activity chart (left column, abaixo dos projetos) ── */
 .sdash-activity-block {
   margin-top: var(--sp-5);
