@@ -1,0 +1,102 @@
+/* Score hero — the anchor widget. Only blues, deep to light. */
+.score-hero {
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  color: #fff;
+  background: linear-gradient(135deg, #0c447c 0%, #1b78f7 55%, #378add 100%);
+  padding: 18px 20px;
+  isolation: isolate;
+}
+.score-hero-bg {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(255,255,255,0.16) 0%, transparent 45%),
+    radial-gradient(circle at 0% 100%, rgba(12,68,124,0.55) 0%, transparent 55%);
+  pointer-events: none; z-index: 0;
+}
+.score-hero-content {
+  position: relative; z-index: 1;
+  display: flex; align-items: center; gap: 22px;
+}
+.score-hero-ring-wrap {
+  position: relative; flex-shrink: 0;
+  width: 120px; height: 120px;
+}
+.score-hero-ring-inner {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 2px;
+}
+.score-hero-value {
+  font-family: var(--font-display);
+  font-size: 36px; font-weight: 800;
+  line-height: 1; letter-spacing: -1.2px;
+  color: #fff;
+}
+.score-hero-value-label {
+  font-size: 9px; font-weight: 700;
+  letter-spacing: 0.8px; text-transform: uppercase;
+  color: rgba(255,255,255,0.7);
+}
+.score-hero-stats {
+  flex: 1; min-width: 0;
+  display: flex; flex-direction: column; gap: 14px;
+}
+.score-hero-topline {
+  display: flex; gap: 18px; align-items: baseline; flex-wrap: wrap;
+}
+.score-hero-metric {
+  display: flex; align-items: baseline; gap: 4px;
+}
+.score-hero-metric-icon {
+  display: inline-flex; align-items: center;
+  color: rgba(255,255,255,0.75);
+  transform: translateY(1px);
+}
+.score-hero-metric-val {
+  font-family: var(--font-display);
+  font-size: 20px; font-weight: 700; letter-spacing: -0.5px;
+  color: #fff; line-height: 1;
+}
+.score-hero-metric-label {
+  font-size: 10px; font-weight: 600;
+  color: rgba(255,255,255,0.7);
+  letter-spacing: 0.3px; text-transform: uppercase;
+}
+
+.score-hero-dims {
+  display: flex; flex-direction: column; gap: 5px;
+}
+.score-hero-dim {
+  display: flex; align-items: center; gap: 8px;
+}
+.score-hero-dim-label {
+  font-size: 10px; font-weight: 600;
+  color: rgba(255,255,255,0.75);
+  width: 80px; flex-shrink: 0;
+}
+.score-hero-dim-bar {
+  flex: 1; height: 4px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 2px; overflow: hidden;
+}
+.score-hero-dim-fg {
+  height: 100%;
+  background: rgba(255,255,255,0.85);
+  border-radius: 2px;
+  transition: width 0.8s ease-out;
+}
+.score-hero-dim-val {
+  font-size: 10px; font-weight: 700; color: #fff;
+  width: 32px; text-align: right; flex-shrink: 0;
+}
+.score-hero-dim-max {
+  color: rgba(255,255,255,0.5); font-weight: 500;
+}
+
+@media (max-width: 640px) {
+  .score-hero-content { flex-direction: column; align-items: stretch; gap: 16px; }
+  .score-hero-ring-wrap { margin: 0 auto; }
+}

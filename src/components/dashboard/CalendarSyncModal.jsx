@@ -1,0 +1,143 @@
+import { useState, useEffect } from 'react'
+import { Copy, Check, ExternalLink, Link as LinkIcon, RefreshCw } from 'lucide-react'
+import { supabase } from '../../lib/supabase'
+import { Modal, Button, SectionLabel } from '../ui'
+
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
+
+export default function CalendarSyncModal({ userId, icsToken, onClose, onTokenRotated }) {
+  const [copied, setCopied] = useState(false)
+  const [rotating, setRotating] = useState(false)
+  const [googleConnected, setGoogleConnected] = useState(null)
+  const [googleBusy, setGoogleBusy] = useState(false)
+  const [syncMsg, setSyncMsg] = useState('')
+
+  const icsUrl = `${SUPABASE_URL}/functions/v1/ics-feed?token=${icsToken}`
+  const webcalUrl = icsUrl.replace(/^https?:/, 'webcal:')
+
+  useEffect(() => {
+    supabase.from('google_calendar_tokens').select('connected_at').eq('user_id', userId).maybeSingle()
+      .then(({ data }) => setGoogleConnected(!!data))
+  }, [userId])
+
+  async function copyLink() {
+    await navigator.clipboard.writeText(icsUrl)
+    setCopied(true); setTimeout(() => setCopied(false), 2000)
+  }
+
+  async function rotateToken() {
+    setRotating(true)
+    const { data } = await supabase.rpc('rotate_ics_token')
+    setRotating(false)
+    if (data) onTokenRotated?.(data)
+  }
+
+  async function connectGoogle() {
+    setGoogleBusy(true); setSyncMsg('')
+    const { data: sess } = await supabase.auth.getSession()
+    const jwt = sess?.session?.access_token
+    const resp = await fetch(`${SUPABASE_URL}/functions/v1/google-calendar-oauth?action=start`, {
+      headers: { 'Authorization': `Bearer ${jwt}` },
+    })
+    const { url, error } = await resp.json()
+    setGoogleBusy(false)
+    if (error) { setSyncMsg(error); return }
+    window.location.href = url
+  }
+
+  async function syncGoogle() {
+    setGoogleBusy(true); setSyncMsg('')
+    const { data: sess } = await supabase.auth.getSession()
+    const jwt = sess?.session?.access_token
+    const resp = await fetch(`${SUPABASE_URL}/functions/v1/google-calendar-oauth?action=sync`, {
+      method: 'POST', headers: { 'Authorization': `Bearer ${jwt}` },
+    })
+    const j = await resp.json()
+    setGoogleBusy(false)
+    if (j.ok) setSyncMsg(`${j.pushed}/${j.total} eventos sincronizados.`)
+    else setSyncMsg(j.error || 'Falhou.')
+  }
+
+  async function disconnectGoogle() {
+    if (!confirm('Desligar Google Calendar? Os eventos já sincronizados ficam.')) return
+    setGoogleBusy(true)
+    const { data: sess } = await supabase.auth.getSession()
+    const jwt = sess?.session?.access_token
+    await fetch(`${SUPABASE_URL}/functions/v1/google-calendar-oauth?action=disconnect`, {
+      method: 'POST', headers: { 'Authorization': `Bearer ${jwt}` },
+    })
+    setGoogleBusy(false)
+    setGoogleConnected(false); setSyncMsg('')
+  }
+
+  return (
+    <Modal onClose={onClose} title="Sincronizar calendário"
+      subtitle="Vê os teus prazos no Google Calendar, Apple Calendar ou Outlook.">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-5)' }}>
+
+        {/* Google */}
+        <section>
+          <SectionLabel>Google Calendar</SectionLabel>
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 12, padding: 12,
+            background: 'rgba(27,120,247,0.06)', border: '1px solid var(--color-primary-muted)',
+            borderRadius: 'var(--radius-md)',
+          }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 'var(--text-sm)', fontWeight: 700, color: 'var(--color-text)' }}>
+                {googleConnected === null ? 'A verificar…' : googleConnected ? 'Ligado' : 'Não ligado'}
+              </div>
+              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', marginTop: 2 }}>
+                Sincronização bidirecional. Novos prazos aparecem automaticamente.
+              </div>
+            </div>
+            {googleConnected ? (
+              <>
+                <Button size="sm" variant="secondary" icon={<RefreshCw size={12} />} onClick={syncGoogle} disabled={googleBusy}>Sync</Button>
+                <Button size="sm" variant="ghost" onClick={disconnectGoogle} disabled={googleBusy}>Desligar</Button>
+              </>
+            ) : (
+              <Button size="sm" onClick={connectGoogle} disabled={googleBusy}>Ligar</Button>
+            )}
+          </div>
+          {syncMsg && <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', margin: '6px 0 0' }}>{syncMsg}</p>}
+        </section>
+
+        {/* ICS feed */}
+        <section>
+          <SectionLabel>Apple Calendar / Outlook (link de subscrição)</SectionLabel>
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 6,
+            padding: 10, background: 'var(--color-bg)',
+            border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)',
+            marginBottom: 8,
+          }}>
+            <LinkIcon size={12} color="var(--color-text-tertiary)" style={{ flexShrink: 0 }} />
+            <code style={{
+              flex: 1, fontSize: 11, color: 'var(--color-text-secondary)',
+              fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            }}>{icsUrl}</code>
+            <Button size="sm" variant={copied ? 'ghost' : 'secondary'}
+              icon={copied ? <Check size={11} /> : <Copy size={11} />}
+              onClick={copyLink}
+              style={copied ? { color: 'var(--color-success)' } : undefined}>
+              {copied ? 'Copiado' : 'Copiar'}
+            </Button>
+          </div>
+          <div style={{ display: 'flex', gap: 6 }}>
+            <a href={webcalUrl} style={{ flex: 1 }}>
+              <Button size="sm" variant="secondary" fullWidth icon={<ExternalLink size={12} />}>Abrir no Calendário</Button>
+            </a>
+            <Button size="sm" variant="ghost" onClick={rotateToken} disabled={rotating}
+              icon={<RefreshCw size={12} />}>
+              {rotating ? '…' : 'Rodar link'}
+            </Button>
+          </div>
+          <p style={{ fontSize: 11, color: 'var(--color-text-tertiary)', margin: '8px 0 0', lineHeight: 1.4 }}>
+            No Apple Calendar: <em>Ficheiro → Nova subscrição de calendário</em>. No Outlook: <em>Adicionar calendário → Subscrever da Internet</em>.
+          </p>
+        </section>
+      </div>
+    </Modal>
+  )
+}
