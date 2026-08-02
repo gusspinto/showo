@@ -170,6 +170,23 @@ function getLevelInfo(score) {
   return { label: 'Rascunho', color: 'var(--color-error)' }
 }
 
+function getScoreTips(project) {
+  const v = (k) => String(project[k] || '').trim()
+  const n = (k) => v(k).length
+  const tips = []
+  if (n('problem') < 100)        tips.push({ gain: 15, text: `Problema — ${n('problem')}/100 car.` })
+  if (n('solution') < 100)       tips.push({ gain: 15, text: `Solução — ${n('solution')}/100 car.` })
+  if (n('results') < 80)         tips.push({ gain: 12, text: `Resultados — ${n('results')}/80 car.` })
+  if (n('learnings') < 80)       tips.push({ gain: 12, text: `Aprendizagens — ${n('learnings')}/80 car.` })
+  if (!v('cover_url'))            tips.push({ gain: 10, text: 'Adiciona uma capa ao projeto' })
+  if (n('target_audience') < 50) tips.push({ gain: 10, text: `Público-alvo — ${n('target_audience')}/50 car.` })
+  if (n('features') < 100)       tips.push({ gain: 10, text: `Funcionalidades — ${n('features')}/100 car.` })
+  if (!v('technologies'))         tips.push({ gain: 8,  text: 'Indica as tecnologias usadas' })
+  if (n('challenges') < 50)      tips.push({ gain: 8,  text: `Desafios — ${n('challenges')}/50 car.` })
+  if (!v('area'))                 tips.push({ gain: 5,  text: 'Define a área do projeto' })
+  return tips.sort((a, b) => b.gain - a.gain).slice(0, 3)
+}
+
 const ScoreRing = memo(function ScoreRing({ score, size = 108 }) {
   const stroke = size <= 80 ? 6 : 8
   const r = (size - stroke) / 2
@@ -1316,12 +1333,26 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                 <span style={{
                   display: 'none', position: 'absolute', top: 'calc(100% + 8px)', left: 0, zIndex: 20,
                   background: 'var(--color-surface)', border: '1px solid var(--color-border)',
-                  borderRadius: 10, padding: '12px 14px', width: 240,
+                  borderRadius: 10, padding: '12px 14px', width: 252,
                   boxShadow: '0 4px 16px rgba(0,0,0,0.18)',
                   fontSize: 12, lineHeight: 1.5, color: 'var(--color-text-secondary)',
                 }}>
-                  <strong style={{ color: 'var(--color-text)', display: 'block', marginBottom: 4 }}>Score privado</strong>
-                  Gerado pela IA com base no conteúdo do projeto. Não substitui a nota do professor — só tu vês este valor.
+                  <strong style={{ color: 'var(--color-text)', display: 'block', marginBottom: 2 }}>Score privado — {project.score}/100</strong>
+                  <span style={{ display: 'block', marginBottom: 8 }}>{getLevelInfo(project.score).label}</span>
+                  {project.score < 100 && (() => {
+                    const tips = getScoreTips(project)
+                    return tips.length > 0 ? (
+                      <>
+                        <span style={{ display: 'block', fontWeight: 700, color: 'var(--color-text)', marginBottom: 5 }}>Para subir:</span>
+                        {tips.map((t, i) => (
+                          <span key={i} style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 4 }}>
+                            <span style={{ color: 'var(--color-success)', fontWeight: 700, flexShrink: 0 }}>+{t.gain}</span>
+                            <span>{t.text}</span>
+                          </span>
+                        ))}
+                      </>
+                    ) : null
+                  })()}
                 </span>
               </span>
             )}
@@ -3006,6 +3037,40 @@ function MembersPanel({ ownerName, members, colors, isOwner }) {
   )
 }
 
+function renderMd(text) {
+  const lines = text.split('\n')
+  const out = []
+  let listItems = []
+  let k = 0
+  function flush() {
+    if (!listItems.length) return
+    out.push(<ul key={k++} style={{ margin: '4px 0 4px 4px', paddingLeft: 16, listStyleType: 'disc' }}>{listItems}</ul>)
+    listItems = []
+  }
+  function inline(line) {
+    const parts = []
+    const re = /(\*\*(.+?)\*\*|\*(.+?)\*)/g
+    let last = 0, m
+    while ((m = re.exec(line)) !== null) {
+      if (m.index > last) parts.push(line.slice(last, m.index))
+      if (m[0].startsWith('**')) parts.push(<strong key={m.index}>{m[2]}</strong>)
+      else parts.push(<em key={m.index}>{m[3]}</em>)
+      last = m.index + m[0].length
+    }
+    if (last < line.length) parts.push(line.slice(last))
+    return parts
+  }
+  for (const line of lines) {
+    const isBullet = line.startsWith('- ') || line.startsWith('• ')
+    if (isBullet) { listItems.push(<li key={k++}>{inline(line.slice(2))}</li>); continue }
+    flush()
+    if (line === '') { out.push(<br key={k++} />); continue }
+    out.push(<span key={k++} style={{ display: 'block' }}>{inline(line)}</span>)
+  }
+  flush()
+  return out
+}
+
 export default function ProjectPage() {
   const { slug } = useParams()
   const navigate = useNavigate()
@@ -3164,6 +3229,23 @@ export default function ProjectPage() {
       })
   }, [user?.id])
 
+  // Load persisted coach messages for this project
+  useEffect(() => {
+    if (!project?.id || !user?.id) return
+    let cancelled = false
+    supabase
+      .from('coach_messages')
+      .select('role, content')
+      .eq('project_id', project.id)
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: true })
+      .limit(60)
+      .then(({ data }) => {
+        if (!cancelled && data?.length) setCoachMessages(data.map(m => ({ role: m.role, content: m.content })))
+      })
+    return () => { cancelled = true }
+  }, [project?.id, user?.id])
+
   async function sendCoach(e) {
     e?.preventDefault()
     const msg = coachInput.trim()
@@ -3176,6 +3258,12 @@ export default function ProjectPage() {
       const reply = await chatProjectCoach({ project, messages: coachMessages, message: msg })
       setCoachMessages(prev => [...prev, { role: 'assistant', content: reply }])
       setTimeout(() => coachBottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
+      if (user?.id && project?.id) {
+        supabase.from('coach_messages').insert([
+          { project_id: project.id, user_id: user.id, role: 'user', content: msg },
+          { project_id: project.id, user_id: user.id, role: 'assistant', content: reply },
+        ])
+      }
     } catch (err) {
       setCoachMessages(prev => [...prev, { role: 'assistant', content: 'Ocorreu um erro. Tenta novamente.' }])
     }
@@ -5600,8 +5688,8 @@ export default function ProjectPage() {
                   fontSize: 13.5,
                   color: m.role === 'user' ? '#fff' : colors.text,
                   lineHeight: 1.6,
-                  whiteSpace: 'pre-wrap',
-                }}>{m.content}</div>
+                  whiteSpace: m.role === 'user' ? 'pre-wrap' : undefined,
+                }}>{m.role === 'assistant' ? renderMd(m.content) : m.content}</div>
               ))}
               {coachLoading && (
                 <div style={{ alignSelf: 'flex-start', background: 'var(--color-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: '16px 16px 16px 4px', padding: '10px 16px', display: 'flex', gap: 5, alignItems: 'center' }}>
@@ -6690,7 +6778,10 @@ export default function ProjectPage() {
               </div>
               {coachMessages.length > 0 && (
                 <button
-                  onClick={() => setCoachMessages([])}
+                  onClick={() => {
+                    setCoachMessages([])
+                    if (user?.id && project?.id) supabase.from('coach_messages').delete().eq('project_id', project.id).eq('user_id', user.id)
+                  }}
                   style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.muted, fontSize: 11, fontFamily: 'inherit', padding: '4px 8px', borderRadius: 6 }}
                   title="Limpar conversa"
                 >Limpar</button>
@@ -6733,8 +6824,8 @@ export default function ProjectPage() {
                   fontSize: 13,
                   color: m.role === 'user' ? '#fff' : colors.text,
                   lineHeight: 1.6,
-                  whiteSpace: 'pre-wrap',
-                }}>{m.content}</div>
+                  whiteSpace: m.role === 'user' ? 'pre-wrap' : undefined,
+                }}>{m.role === 'assistant' ? renderMd(m.content) : m.content}</div>
               ))}
               {coachLoading && (
                 <div style={{ alignSelf: 'flex-start', background: 'var(--color-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: '14px 14px 14px 4px', padding: '10px 16px', display: 'flex', gap: 5, alignItems: 'center' }}>

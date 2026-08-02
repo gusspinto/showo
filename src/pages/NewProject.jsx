@@ -140,7 +140,14 @@ export default function NewProject() {
 
   const REQUIRED = ['name', 'area', 'goal', 'problem', 'solution']
   const hasRequired = REQUIRED.every(k => (form[k] ?? '').trim().length > 0)
-  const hasErrors = [...REQUIRED, 'features', 'challenges', 'results', 'learnings'].some(k => fieldError(k))
+  // For required fields, only spam/profanity blocks — 'short' is a warning only.
+  // Optional fields block on any error (user chose to fill them, so they should be real).
+  const hasErrors = [...REQUIRED, 'features', 'challenges', 'results', 'learnings'].some(k => {
+    const err = fieldError(k)
+    if (!err) return false
+    if (REQUIRED.includes(k)) return err === 'profanity' || err === 'spam'
+    return true
+  })
   const canSubmit = hasRequired && !hasErrors
 
   const score = calculateScore(form).score

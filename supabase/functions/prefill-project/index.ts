@@ -1,10 +1,5 @@
 import Anthropic from 'npm:@anthropic-ai/sdk@0.36.3'
-import { checkRateLimit, getAuthUser } from '../_shared/rateLimit.ts'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': 'https://showo.pt',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { checkRateLimit, getAuthUser, getCorsHeaders } from '../_shared/rateLimit.ts'
 
 const TYPE_LABELS: Record<string, string> = {
   pap:         'PAP (Projeto de Aptidão Profissional)',
@@ -15,15 +10,14 @@ const TYPE_LABELS: Record<string, string> = {
 }
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
-  }
+  const cors = getCorsHeaders(req)
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
 
   const user = await getAuthUser(req)
   if (!user) {
     return new Response(JSON.stringify({ error: 'Autenticação necessária.' }), {
       status: 401,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...cors, 'Content-Type': 'application/json' },
     })
   }
 
@@ -31,7 +25,7 @@ Deno.serve(async (req) => {
   if (!allowed) {
     return new Response(JSON.stringify({ prefill: {} }), {
       status: 429,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...cors, 'Content-Type': 'application/json' },
     })
   }
 
@@ -40,7 +34,7 @@ Deno.serve(async (req) => {
 
     if (!text?.trim()) {
       return new Response(JSON.stringify({ prefill: {} }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { ...cors, 'Content-Type': 'application/json' },
       })
     }
 
@@ -85,12 +79,12 @@ Devolve APENAS este JSON (sem markdown, sem explicações):
     const prefill = JSON.parse(jsonMatch[0])
 
     return new Response(JSON.stringify({ prefill }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...cors, 'Content-Type': 'application/json' },
     })
   } catch (err) {
     console.error(err)
     return new Response(JSON.stringify({ prefill: {} }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...cors, 'Content-Type': 'application/json' },
     })
   }
 })
