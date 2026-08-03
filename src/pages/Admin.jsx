@@ -133,7 +133,7 @@ function OverviewTab({ users, projects }) {
 
   const recentUsers = [...users]
     .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-    .slice(0, 6)
+    .slice(0, 10)
 
   return (
     <div>
@@ -170,7 +170,7 @@ function OverviewTab({ users, projects }) {
         {/* Recent users */}
         <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '20px 22px' }}>
           <h3 style={{ margin: '0 0 16px', fontSize: 12, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Utilizadores recentes</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {recentUsers.map(u => {
               const date = new Date(u.created_at)
               const now = new Date()
@@ -179,28 +179,45 @@ function OverviewTab({ users, projects }) {
               const lastSeen = u.last_active_at ? (() => {
                 const ld = new Date(u.last_active_at)
                 const ldH = Math.floor((now - ld) / 3600000)
-                return ldH < 1 ? 'ativo agora' : ldH < 24 ? `ativo há ${ldH}h` : ldH < 168 ? `ativo há ${Math.floor(ldH / 24)}d` : null
+                return ldH < 1 ? 'agora' : ldH < 24 ? `há ${ldH}h` : ldH < 168 ? `há ${Math.floor(ldH / 24)}d` : null
               })() : null
+              const referrerDomain = u.signup_referrer ? u.signup_referrer.replace(/^https?:\/\//, '').split('/')[0] : null
+              const projectCount = projects.filter(p => p.user_id === u.id).length
+
               return (
-                <div key={u.id} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <Avatar name={u.full_name || u.username} color={u.is_admin ? 'linear-gradient(135deg,var(--color-accent),#7c3aed)' : 'linear-gradient(135deg,var(--color-primary),#4f46e5)'} />
+                <div key={u.id} style={{
+                  display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px',
+                  background: C.card, border: `1px solid ${diffH < 24 ? 'var(--color-primary-subtle)' : C.border}`,
+                  borderRadius: 10,
+                }}>
+                  <Avatar name={u.full_name || u.username} color={u.is_admin ? 'linear-gradient(135deg,var(--color-accent),#7c3aed)' : 'linear-gradient(135deg,var(--color-primary),#4f46e5)'} size={36} />
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                       <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{u.full_name || u.username || 'Sem nome'}</span>
                       {u.role && u.role !== 'aluno' && (
                         <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 5, background: u.role === 'professor' ? C.greenSoft : C.purpleSoft, color: u.role === 'professor' ? C.green : C.purple }}>{u.role}</span>
                       )}
                       {u.is_admin && <Badge color={C.purple}>Admin</Badge>}
+                      {diffH < 24 && <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 5, background: C.blueSoft, color: C.blue }}>novo</span>}
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 2 }}>
-                      <span style={{ fontSize: 11, color: C.subtle }}>{timeAgo}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 3, flexWrap: 'wrap' }}>
+                      <span style={{ fontSize: 11, color: C.subtle }}><Calendar size={9} style={{ verticalAlign: 'middle', marginRight: 3 }} />{timeAgo}</span>
                       {u.signup_country && (
                         <span style={{ fontSize: 11, color: C.subtle, display: 'inline-flex', alignItems: 'center', gap: 3 }}>
                           <MapPin size={9} /> {u.signup_city ? `${u.signup_city}, ${u.signup_country}` : u.signup_country}
                         </span>
                       )}
-                      {lastSeen && <span style={{ fontSize: 10, color: C.green }}>● {lastSeen}</span>}
+                      {referrerDomain && <span style={{ fontSize: 11, color: C.subtle }}>via {referrerDomain}</span>}
+                      {u.signup_utm_source && <span style={{ fontSize: 11, color: C.subtle }}>utm:{u.signup_utm_source}</span>}
+                      {projectCount > 0 && <span style={{ fontSize: 11, color: C.blue }}>{projectCount} projeto{projectCount > 1 ? 's' : ''}</span>}
                     </div>
+                  </div>
+                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                    {lastSeen ? (
+                      <span style={{ fontSize: 11, color: C.green, display: 'flex', alignItems: 'center', gap: 4 }}>● {lastSeen}</span>
+                    ) : (
+                      <span style={{ fontSize: 11, color: C.subtle }}>inativo</span>
+                    )}
                   </div>
                 </div>
               )
