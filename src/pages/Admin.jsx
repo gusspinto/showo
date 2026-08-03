@@ -171,16 +171,40 @@ function OverviewTab({ users, projects }) {
         <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '20px 22px' }}>
           <h3 style={{ margin: '0 0 16px', fontSize: 12, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Utilizadores recentes</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {recentUsers.map(u => (
-              <div key={u.id} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <Avatar name={u.full_name || u.username} color={u.is_admin ? 'linear-gradient(135deg,var(--color-accent),#7c3aed)' : 'linear-gradient(135deg,var(--color-primary),#4f46e5)'} />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{u.full_name || u.username || 'Sem nome'}</div>
-                  <div style={{ fontSize: 11, color: C.subtle }}>{u.email || '—'}</div>
+            {recentUsers.map(u => {
+              const date = new Date(u.created_at)
+              const now = new Date()
+              const diffH = Math.floor((now - date) / 3600000)
+              const timeAgo = diffH < 1 ? 'agora' : diffH < 24 ? `há ${diffH}h` : diffH < 168 ? `há ${Math.floor(diffH / 24)}d` : date.toLocaleDateString('pt-PT')
+              const lastSeen = u.last_active_at ? (() => {
+                const ld = new Date(u.last_active_at)
+                const ldH = Math.floor((now - ld) / 3600000)
+                return ldH < 1 ? 'ativo agora' : ldH < 24 ? `ativo há ${ldH}h` : ldH < 168 ? `ativo há ${Math.floor(ldH / 24)}d` : null
+              })() : null
+              return (
+                <div key={u.id} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <Avatar name={u.full_name || u.username} color={u.is_admin ? 'linear-gradient(135deg,var(--color-accent),#7c3aed)' : 'linear-gradient(135deg,var(--color-primary),#4f46e5)'} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{u.full_name || u.username || 'Sem nome'}</span>
+                      {u.role && u.role !== 'aluno' && (
+                        <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 5, background: u.role === 'professor' ? C.greenSoft : C.purpleSoft, color: u.role === 'professor' ? C.green : C.purple }}>{u.role}</span>
+                      )}
+                      {u.is_admin && <Badge color={C.purple}>Admin</Badge>}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 2 }}>
+                      <span style={{ fontSize: 11, color: C.subtle }}>{timeAgo}</span>
+                      {u.signup_country && (
+                        <span style={{ fontSize: 11, color: C.subtle, display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                          <MapPin size={9} /> {u.signup_city ? `${u.signup_city}, ${u.signup_country}` : u.signup_country}
+                        </span>
+                      )}
+                      {lastSeen && <span style={{ fontSize: 10, color: C.green }}>● {lastSeen}</span>}
+                    </div>
+                  </div>
                 </div>
-                {u.is_admin && <Badge color={C.purple}>Admin</Badge>}
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       </div>
