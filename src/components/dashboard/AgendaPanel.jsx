@@ -22,7 +22,9 @@ function dayLabel(iso, todayISO, tomorrowISO) {
 export default function AgendaPanel({
   events, googleConnected, onAddReminder, onSync, onEventClick,
 }) {
-  const [showMonth, setShowMonth] = useState(false)
+  const [showMonth, setShowMonth] = useState(
+    () => localStorage.getItem('agenda-showMonth') !== 'false'
+  )
 
   const today = new Date(); today.setHours(0, 0, 0, 0)
   const todayISO = toISO(today)
@@ -128,7 +130,8 @@ export default function AgendaPanel({
       )}
 
       <button className={`sdb-agenda-toggle${showMonth ? ' is-open' : ''}`}
-        onClick={() => setShowMonth(v => !v)} aria-expanded={showMonth}>
+        onClick={() => setShowMonth(v => { const next = !v; localStorage.setItem('agenda-showMonth', String(next)); return next })}
+        aria-expanded={showMonth}>
         <CalendarDays size={13} />
         {showMonth ? 'Fechar mês' : 'Ver o mês'}
         <ChevronDown size={13} className="sdb-agenda-chev" />

@@ -16,7 +16,7 @@
   max-width: 1140px;
   width: 100%;
   margin: 0 auto;
-  padding: var(--sp-6) var(--sp-8) var(--sp-20);
+  padding: var(--sp-10) var(--sp-8) var(--sp-20);
   animation: page-in 0.3s var(--ease-out) both;
 }
 
@@ -942,6 +942,7 @@
   transition: width 0.6s var(--ease-out);
 }
 .sdb-potential-note { margin: 0; font-size: var(--text-sm); line-height: 1.55; color: var(--color-text-secondary); }
+.sdb-potential-disclaimer { margin: var(--sp-3) 0 0; font-size: 11px; color: var(--color-text-tertiary); font-style: italic; line-height: 1.4; }
 .sdb-profile-link {
   display: flex;
   align-items: center;

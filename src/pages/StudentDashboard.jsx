@@ -682,7 +682,7 @@ export default function StudentDashboard({ user, profile }) {
           onCreated={r => setReminders(prev => [...prev, r].sort((a, b) => (a.reminder_date < b.reminder_date ? -1 : 1)))}
         />
       )}
-      {showCalendarSync && icsToken && (
+      {showCalendarSync && (
         <CalendarSyncModal
           userId={user.id} icsToken={icsToken}
           onClose={() => setShowCalendarSync(false)}
@@ -940,10 +940,13 @@ export default function StudentDashboard({ user, profile }) {
               </div>
               <p className="sdb-potential-note">
                 {projects.length === 0
-                  ? 'Cresce com projetos completos, notas do professor e um perfil preenchido.'
+                  ? 'Adiciona projetos e completa o perfil para o potencial começar a subir.'
                   : potential >= 80 ? 'Perfil forte. Mantém os projetos atualizados.'
                   : potential >= 60 ? 'Bom caminho — completa os projetos mais fracos para subir.'
-                  : 'Preenche mais campos e adiciona capa aos projetos para subir.'}
+                  : 'Completa os projetos e preenche o perfil para subir.'}
+              </p>
+              <p className="sdb-potential-disclaimer">
+                O score de cada projeto é calculado por IA — não substitui a nota do professor.
               </p>
               {profile?.username && (
                 <button className="sdb-profile-link" onClick={() => {

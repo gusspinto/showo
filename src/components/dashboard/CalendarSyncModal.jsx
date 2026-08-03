@@ -11,8 +11,19 @@ export default function CalendarSyncModal({ userId, icsToken, onClose, onTokenRo
   const [googleConnected, setGoogleConnected] = useState(null)
   const [googleBusy, setGoogleBusy] = useState(false)
   const [syncMsg, setSyncMsg] = useState('')
+  const [localToken, setLocalToken] = useState(icsToken || null)
 
-  const icsUrl = `${SUPABASE_URL}/functions/v1/ics-feed?token=${icsToken}`
+  useEffect(() => {
+    if (!localToken) {
+      setRotating(true)
+      supabase.rpc('rotate_ics_token').then(({ data }) => {
+        setRotating(false)
+        if (data) { setLocalToken(data); onTokenRotated?.(data) }
+      })
+    }
+  }, [])
+
+  const icsUrl = `${SUPABASE_URL}/functions/v1/ics-feed?token=${localToken || ''}`
   const webcalUrl = icsUrl.replace(/^https?:/, 'webcal:')
 
   useEffect(() => {
@@ -29,7 +40,7 @@ export default function CalendarSyncModal({ userId, icsToken, onClose, onTokenRo
     setRotating(true)
     const { data } = await supabase.rpc('rotate_ics_token')
     setRotating(false)
-    if (data) onTokenRotated?.(data)
+    if (data) { setLocalToken(data); onTokenRotated?.(data) }
   }
 
   async function connectGoogle() {
@@ -116,10 +127,11 @@ export default function CalendarSyncModal({ userId, icsToken, onClose, onTokenRo
             <code style={{
               flex: 1, fontSize: 11, color: 'var(--color-text-secondary)',
               fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-            }}>{icsUrl}</code>
+            }}>{localToken ? icsUrl : 'A gerar link…'}</code>
             <Button size="sm" variant={copied ? 'ghost' : 'secondary'}
               icon={copied ? <Check size={11} /> : <Copy size={11} />}
               onClick={copyLink}
+              disabled={!localToken}
               style={copied ? { color: 'var(--color-success)' } : undefined}>
               {copied ? 'Copiado' : 'Copiar'}
             </Button>

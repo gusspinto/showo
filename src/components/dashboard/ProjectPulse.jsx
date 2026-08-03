@@ -119,10 +119,7 @@ export default function ProjectPulse({
 
         {recent.length === 0 ? (
           <div className="sdb-journal-empty">
-            <p>
-              Ainda não registaste nada aqui. Escreve uma linha sobre onde está o projeto —
-              cada entrada fica a alimentar o relatório.
-            </p>
+            <p>Ainda sem registos. Escreve uma linha — cada entrada alimenta o relatório.</p>
           </div>
         ) : (
           <ul className="sdb-journal-list">
@@ -184,8 +181,7 @@ export function ProjectPulseEmpty({ onCreate }) {
       <span className="sdb-pulse-type">Começa aqui</span>
       <h2 className="sdb-pulse-name">O teu projeto ainda não existe</h2>
       <p className="sdb-pulse-empty-text">
-        Cria o projeto — PAP, estágio ou trabalho de grupo — e passa a ter aqui o estado
-        real dele: o que já fizeste, o que falta e quanto do relatório está coberto.
+        Cria o teu projeto e começa a acompanhar o que fizeste, o que falta e o progresso do relatório.
       </p>
       <ul className="sdb-pulse-empty-list">
         {JOURNAL_KINDS.slice(0, 3).map(k => {

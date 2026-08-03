@@ -17,12 +17,12 @@ export function ActivityPanel({ buckets }) {
   const max = Math.max(1, ...buckets.map(b => b.entries + b.tasks))
 
   const summary = totals.all === 0
-    ? 'Ainda sem atividade registada. As entradas do diário e as tarefas concluídas aparecem aqui.'
+    ? 'Ainda nenhum registo. Usa o diário para começar a ver o teu ritmo aqui.'
     : totals.delta > 0
-      ? `Mais ${totals.delta} ${totals.delta === 1 ? 'registo' : 'registos'} nas últimas semanas do que no período anterior.`
+      ? `Mais ${totals.delta} ${totals.delta === 1 ? 'registo' : 'registos'} do que nas semanas anteriores.`
       : totals.delta < 0
-        ? `Menos ${Math.abs(totals.delta)} ${Math.abs(totals.delta) === 1 ? 'registo' : 'registos'} do que no período anterior. Um registo curto chega para retomar o ritmo.`
-        : 'Ritmo constante entre as últimas semanas e as anteriores.'
+        ? `Menos ${Math.abs(totals.delta)} ${Math.abs(totals.delta) === 1 ? 'registo' : 'registos'} do que nas semanas anteriores.`
+        : 'Ritmo igual ao período anterior.'
 
   return (
     <section className="sdb-panel sdb-chart">
