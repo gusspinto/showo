@@ -150,7 +150,7 @@ const SORT_OPTIONS = [
 
 function OverviewTab({ users, projects }) {
   const [userSearch, setUserSearch] = useState('')
-  const [sort, setSort] = useState('newest')
+  const [sort, setSort] = useState('active')
   const now = Date.now()
   const totalUsers = users.length
   const totalProjects = projects.length
