@@ -892,15 +892,21 @@ export default function Admin() {
       if (profilesRes.error) showToast('Erro ao carregar utilizadores: ' + profilesRes.error.message)
       if (projectsRes.error) showToast('Erro ao carregar projetos: ' + projectsRes.error.message)
 
-      const emailMap = {}
+      const authMap = {}
       if (emailsRes.data) {
-        emailsRes.data.forEach(e => { emailMap[e.id] = e.email })
+        emailsRes.data.forEach(e => { authMap[e.id] = e })
       }
 
-      const enrichedProfiles = (profilesRes.data || []).map(p => ({
-        ...p,
-        email: emailMap[p.id] || p.email || null,
-      }))
+      const enrichedProfiles = (profilesRes.data || []).map(p => {
+        const auth = authMap[p.id] || {}
+        return {
+          ...p,
+          email: auth.email || p.email || null,
+          last_active_at: p.last_active_at || auth.last_sign_in_at || null,
+          auth_last_sign_in: auth.last_sign_in_at || null,
+          confirmed_at: auth.confirmed_at || null,
+        }
+      })
 
       setUsers(enrichedProfiles)
       setProjects(projectsRes.data || [])
