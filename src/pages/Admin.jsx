@@ -118,6 +118,7 @@ function ConfirmModal({ title, body, onConfirm, onCancel, danger = true }) {
 
 // ─── OVERVIEW TAB ───────────────────────────────────────────
 function OverviewTab({ users, projects }) {
+  const [userSearch, setUserSearch] = useState('')
   const totalUsers = users.length
   const totalProjects = projects.length
   const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000
@@ -131,9 +132,16 @@ function OverviewTab({ users, projects }) {
     .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
     .slice(0, 8)
 
-  const recentUsers = [...users]
+  const uq = userSearch.toLowerCase()
+  const filteredUsers = (uq ? users.filter(u =>
+    (u.full_name || '').toLowerCase().includes(uq) ||
+    (u.email || '').toLowerCase().includes(uq) ||
+    (u.signup_country || '').toLowerCase().includes(uq) ||
+    (u.signup_city || '').toLowerCase().includes(uq) ||
+    (u.role || '').toLowerCase().includes(uq)
+  ) : users)
     .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-    .slice(0, 10)
+    .slice(0, 12)
 
   return (
     <div>
@@ -169,9 +177,24 @@ function OverviewTab({ users, projects }) {
 
         {/* Recent users */}
         <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '20px 22px' }}>
-          <h3 style={{ margin: '0 0 16px', fontSize: 12, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Utilizadores recentes</h3>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+            <h3 style={{ margin: 0, fontSize: 12, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Utilizadores recentes</h3>
+            <div style={{ position: 'relative' }}>
+              <Search size={12} style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', color: C.muted }} />
+              <input
+                placeholder="Filtrar…"
+                value={userSearch}
+                onChange={e => setUserSearch(e.target.value)}
+                style={{
+                  width: 140, padding: '6px 8px 6px 26px', borderRadius: 6,
+                  border: `1px solid ${C.border}`, background: C.bgAlt,
+                  color: C.text, fontSize: 12, fontFamily: 'inherit', outline: 'none',
+                }}
+              />
+            </div>
+          </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {recentUsers.map(u => {
+            {filteredUsers.map(u => {
               const date = new Date(u.created_at)
               const now = new Date()
               const diffH = Math.floor((now - date) / 3600000)
@@ -200,6 +223,7 @@ function OverviewTab({ users, projects }) {
                       {u.is_admin && <Badge color={C.purple}>Admin</Badge>}
                       {diffH < 24 && <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 5, background: C.blueSoft, color: C.blue }}>novo</span>}
                     </div>
+                    {u.email && <div style={{ fontSize: 11, color: C.subtle, marginTop: 2 }}>{u.email}</div>}
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 3, flexWrap: 'wrap' }}>
                       <span style={{ fontSize: 11, color: C.subtle }}><Calendar size={9} style={{ verticalAlign: 'middle', marginRight: 3 }} />{timeAgo}</span>
                       {u.signup_country && (
