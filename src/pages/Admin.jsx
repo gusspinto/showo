@@ -140,31 +140,77 @@ function MiniBar({ label, value, total, color = C.blue }) {
 }
 
 // ─── CHART COMPONENTS ───────────────────────────────────────
-function BarChart({ data, height = 120, color = C.blue, labelKey = 'label', valueKey = 'value' }) {
+function ChartTooltip({ x, y, children, containerRef }) {
+  if (!children) return null
+  const [pos, setPos] = useState({ left: 0, top: 0 })
+  useEffect(() => {
+    if (!containerRef?.current) return
+    const rect = containerRef.current.getBoundingClientRect()
+    const svgW = containerRef.current.querySelector('svg')?.viewBox?.baseVal?.width || 300
+    const scale = rect.width / svgW
+    let left = x * scale
+    const top = y * scale - 8
+    if (left < 60) left = 60
+    if (left > rect.width - 60) left = rect.width - 60
+    setPos({ left, top })
+  }, [x, y, containerRef])
+  return (
+    <div style={{
+      position: 'absolute', left: pos.left, top: pos.top,
+      transform: 'translate(-50%, -100%)',
+      background: 'var(--color-surface)', border: `1px solid var(--color-border-hover)`,
+      borderRadius: 8, padding: '6px 10px', fontSize: 11, color: C.text,
+      fontWeight: 600, pointerEvents: 'none', zIndex: 10,
+      boxShadow: '0 4px 12px rgba(0,0,0,0.3)', whiteSpace: 'nowrap',
+    }}>{children}</div>
+  )
+}
+
+function BarChart({ data, height = 140, color = C.blue, labelKey = 'label', valueKey = 'value', detailKey }) {
+  const [hover, setHover] = useState(null)
+  const ref = { current: null }
   if (!data.length) return null
   const max = Math.max(...data.map(d => d[valueKey]), 1)
   const W = 300
-  const pad = 8
-  const labelH = 18
-  const topPad = 16
+  const pad = 10
+  const labelH = 20
+  const topPad = 20
   const usable = W - pad * 2
-  const gap = Math.max(4, Math.round(usable * 0.15 / data.length))
-  const barW = Math.max(8, Math.floor((usable - gap * (data.length + 1)) / data.length))
+  const gap = Math.max(6, Math.round(usable * 0.12 / data.length))
+  const barW = Math.max(12, Math.floor((usable - gap * (data.length + 1)) / data.length))
   const totalBars = data.length * barW + (data.length + 1) * gap
   const offsetX = pad + (usable - totalBars) / 2
   const barArea = height - labelH - topPad
   return (
-    <div style={{ width: '100%', height, position: 'relative' }}>
-      <svg width="100%" height={height} viewBox={`0 0 ${W} ${height}`} preserveAspectRatio="xMidYMid meet" style={{ display: 'block' }}>
+    <div ref={el => ref.current = el} style={{ width: '100%', height, position: 'relative' }}
+      onMouseLeave={() => setHover(null)}>
+      {hover !== null && (
+        <ChartTooltip
+          x={offsetX + gap + hover * (barW + gap) + barW / 2}
+          y={topPad + barArea - Math.max(2, (data[hover][valueKey] / max) * barArea)}
+          containerRef={ref}
+        >
+          {data[hover][labelKey]}: {data[hover][valueKey]} {detailKey && data[hover][detailKey] ? `· ${data[hover][detailKey]}` : ''}
+        </ChartTooltip>
+      )}
+      <svg width="100%" height={height} viewBox={`0 0 ${W} ${height}`} preserveAspectRatio="xMidYMid meet" style={{ display: 'block', cursor: 'pointer' }}>
         {data.map((d, i) => {
           const barH = Math.max(2, (d[valueKey] / max) * barArea)
           const x = offsetX + gap + i * (barW + gap)
           const y = topPad + barArea - barH
+          const isHover = hover === i
           return (
-            <g key={i}>
-              <rect x={x} y={y} width={barW} height={barH} rx={3} fill={d.highlight ? color : `${color}99`} />
-              {d[valueKey] > 0 && <text x={x + barW / 2} y={y - 4} textAnchor="middle" fill={C.text} fontSize={10} fontWeight={600}>{d[valueKey]}</text>}
-              <text x={x + barW / 2} y={height - 3} textAnchor="middle" fill="var(--color-text-tertiary)" fontSize={9}>{d[labelKey]}</text>
+            <g key={i} onMouseEnter={() => setHover(i)} onClick={() => setHover(i === hover ? null : i)}>
+              <rect x={x - 2} y={0} width={barW + 4} height={height} fill="transparent" />
+              <rect x={x} y={y} width={barW} height={barH} rx={4}
+                fill={isHover ? color : d.highlight ? color : `${color}80`}
+                style={{ transition: 'all 0.15s' }}
+              />
+              {d[valueKey] > 0 && (
+                <text x={x + barW / 2} y={y - 5} textAnchor="middle" fill={C.text} fontSize={10} fontWeight={700}
+                  style={{ opacity: isHover ? 1 : 0.7 }}>{d[valueKey]}</text>
+              )}
+              <text x={x + barW / 2} y={height - 4} textAnchor="middle" fill={isHover ? C.text : 'var(--color-text-tertiary)'} fontSize={9} fontWeight={isHover ? 600 : 400}>{d[labelKey]}</text>
             </g>
           )
         })}
@@ -173,13 +219,15 @@ function BarChart({ data, height = 120, color = C.blue, labelKey = 'label', valu
   )
 }
 
-function SparkLine({ data, height = 60, color = C.blue }) {
+function SparkLine({ data, labels, height = 80, color = C.blue }) {
+  const [hover, setHover] = useState(null)
+  const ref = { current: null }
   if (data.length < 2) return null
   const max = Math.max(...data, 1)
   const W = 300
-  const pad = 12
-  const topPad = 6
-  const botPad = 6
+  const pad = 14
+  const topPad = 14
+  const botPad = 8
   const usableW = W - pad * 2
   const usableH = height - topPad - botPad
   const pts = data.map((v, i) => {
@@ -189,17 +237,35 @@ function SparkLine({ data, height = 60, color = C.blue }) {
   })
   const line = pts.map(p => `${p.x},${p.y}`).join(' ')
   const area = `${pad},${topPad + usableH} ${line} ${pad + usableW},${topPad + usableH}`
+  const hitW = usableW / (data.length - 1)
   return (
-    <svg width="100%" height={height} viewBox={`0 0 ${W} ${height}`} preserveAspectRatio="xMidYMid meet" style={{ display: 'block' }}>
-      <polygon points={area} fill={`${color}15`} />
-      <polyline points={line} fill="none" stroke={color} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
-      {pts.map((p, i) => (
-        <g key={i}>
-          <circle cx={p.x} cy={p.y} r={i === pts.length - 1 ? 4 : 2.5} fill={i === pts.length - 1 ? color : 'none'} stroke={color} strokeWidth={1.5} />
-          {p.v > 0 && i === pts.length - 1 && <text x={p.x} y={p.y - 8} textAnchor="middle" fill={color} fontSize={10} fontWeight={700}>{p.v}</text>}
-        </g>
-      ))}
-    </svg>
+    <div ref={el => ref.current = el} style={{ width: '100%', height, position: 'relative' }}
+      onMouseLeave={() => setHover(null)}>
+      {hover !== null && (
+        <ChartTooltip x={pts[hover].x} y={pts[hover].y} containerRef={ref}>
+          {labels?.[hover] || `Dia ${hover + 1}`}: {data[hover]} user{data[hover] !== 1 ? 's' : ''}
+        </ChartTooltip>
+      )}
+      <svg width="100%" height={height} viewBox={`0 0 ${W} ${height}`} preserveAspectRatio="xMidYMid meet" style={{ display: 'block', cursor: 'pointer' }}>
+        <polygon points={area} fill={`${color}12`} />
+        <polyline points={line} fill="none" stroke={color} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
+        {pts.map((p, i) => {
+          const isHover = hover === i
+          const isLast = i === pts.length - 1
+          return (
+            <g key={i}>
+              <rect x={p.x - hitW / 2} y={0} width={hitW} height={height} fill="transparent"
+                onMouseEnter={() => setHover(i)} onClick={() => setHover(i === hover ? null : i)} />
+              {isHover && <line x1={p.x} y1={topPad} x2={p.x} y2={topPad + usableH} stroke={`${color}30`} strokeWidth={1} strokeDasharray="3,3" />}
+              <circle cx={p.x} cy={p.y} r={isHover ? 5 : isLast ? 4 : 2}
+                fill={isHover || isLast ? color : `${color}40`} stroke={color} strokeWidth={isHover ? 2 : 1.5}
+                style={{ transition: 'r 0.1s' }}
+              />
+            </g>
+          )
+        })}
+      </svg>
+    </div>
   )
 }
 
@@ -300,9 +366,12 @@ function OverviewTab({ users, projects, activityLog }) {
 
   // Daily active users from activity_log (real data)
   const numDays = Math.min(days, 30)
+  const dauLabels = []
   const dauData = Array.from({ length: numDays }, (_, i) => {
     const dayStart = now - (numDays - 1 - i) * 86400000
     const dayEnd = dayStart + 86400000
+    const d = new Date(dayStart)
+    dauLabels.push(`${d.getDate()}/${d.getMonth() + 1}`)
     return new Set(activityLog.filter(e => {
       const t = new Date(e.created_at).getTime()
       return t >= dayStart && t < dayEnd
@@ -427,7 +496,7 @@ function OverviewTab({ users, projects, activityLog }) {
         <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '16px 18px' }}>
           <h3 style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Atividade diária</h3>
           <p style={{ margin: '0 0 10px', fontSize: 11, color: C.subtle }}>Users ativos / dia ({numDays} dias) — activity_log</p>
-          <SparkLine data={dauData} color={C.green} height={80} />
+          <SparkLine data={dauData} labels={dauLabels} color={C.green} height={100} />
         </div>
         <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '16px 18px' }}>
           <h3 style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Projetos por semana</h3>
