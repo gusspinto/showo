@@ -18,7 +18,7 @@ import ComingSoon from './pages/ComingSoon'
 // launch — so testers can keep using the .vercel.app URL meanwhile, and
 // showo.pt flips to the real app on its own at launch time, no deploy needed.
 const COMING_SOON_HOSTS = ['showo.pt', 'www.showo.pt']
-const LAUNCH_AT = new Date('2026-08-01T13:00:00Z') // 14:00 em Lisboa (WEST)
+const LAUNCH_AT = new Date('2026-07-01T08:00:00Z') // já passou — countdown desativado
 
 function useIsComingSoon() {
   const [isComingSoon, setIsComingSoon] = useState(

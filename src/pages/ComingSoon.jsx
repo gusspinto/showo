@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Bell, Check, ArrowRight, Sparkles } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+import { getGeoInfo } from '../lib/geolocation'
 
 const TARGET = new Date('2026-08-01T13:00:00Z') // 14:00 Lisboa
 
@@ -72,7 +73,15 @@ function NotifyMe() {
     e.preventDefault()
     if (!email.trim()) return
     setStatus('loading')
-    const { error } = await supabase.from('waitlist_signups').insert({ email: email.trim() })
+    const params = new URLSearchParams(window.location.search)
+    const geo = await getGeoInfo()
+    const { error } = await supabase.from('waitlist_signups').insert({
+      email: email.trim(),
+      referrer: document.referrer || null,
+      utm_source: params.get('utm_source') || null,
+      country: geo?.country || null,
+      city: geo?.city || null,
+    })
     setStatus(error ? 'error' : 'done')
   }
 

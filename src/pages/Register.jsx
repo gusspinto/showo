@@ -7,6 +7,7 @@ import AuthSidePanel from '../components/AuthSidePanel'
 import GoogleButton from '../components/GoogleButton'
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
+import { getGeoInfo } from '../lib/geolocation'
 
 const C = {
   bg:          'var(--color-bg)',
@@ -233,8 +234,20 @@ export default function Register() {
       await refreshProfile()
     }
 
-    // Claim all anonymously-created projects from this browser (edit_token_* in localStorage)
+    // Store geolocation and referrer on the new profile
+    const params = new URLSearchParams(window.location.search)
+    const geo = await getGeoInfo()
     const { data: { user: newUser } } = await supabase.auth.getUser()
+    if (newUser) {
+      await supabase.from('profiles').update({
+        signup_country: geo?.country || null,
+        signup_city: geo?.city || null,
+        signup_referrer: document.referrer || null,
+        signup_utm_source: params.get('utm_source') || null,
+      }).eq('id', newUser.id)
+    }
+
+    // Claim all anonymously-created projects from this browser (edit_token_* in localStorage)
     let claimedSlugs = []
     if (newUser) {
       claimedSlugs = await claimAnonymousProjects(newUser.id)
