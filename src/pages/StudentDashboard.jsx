@@ -16,7 +16,7 @@ import JournalComposer from '../components/dashboard/JournalComposer'
 import JournalDrawer from '../components/dashboard/JournalDrawer'
 import ReportPanel from '../components/dashboard/ReportPanel'
 import AgendaPanel from '../components/dashboard/AgendaPanel'
-import { ActivityPanel, ProjectProgressPanel } from '../components/dashboard/RhythmPanel'
+import { ActivityPanel } from '../components/dashboard/RhythmPanel'
 import WeeklyRecap, { shouldShowRecap, RecapsPanel } from '../components/dashboard/WeeklyRecap'
 import AddReminderModal from '../components/dashboard/AddReminderModal'
 import CalendarSyncModal from '../components/dashboard/CalendarSyncModal'
@@ -831,14 +831,9 @@ export default function StudentDashboard({ user, profile }) {
               )}
             </div>
 
-            {/* Sem projetos, o painel de progresso não teria o que dizer e o
-                convite já está no painel acima — fica só a atividade, que
-                explica o que vai aparecer aqui. */}
             <div className="sdb-duo sdb-o-rhythm">
               <ActivityPanel buckets={activityBuckets} />
-              {projects.length > 0 && (
-                <ProjectProgressPanel projects={projects} onOpen={p => navigate(`/projeto/${p.slug}`)} />
-              )}
+              <RecapsPanel recaps={recaps} />
             </div>
 
             {(otherProjects.length > 0 || collabProjects.length > 0) && (
@@ -957,8 +952,6 @@ export default function StudentDashboard({ user, profile }) {
                 </button>
               )}
             </section>
-
-            <RecapsPanel recaps={recaps} />
 
             <section className="sdb-panel sdb-o-turma">
               <header className="sdb-panel-head">

@@ -38,47 +38,64 @@ export default function CalendarSyncModal({ userId, icsToken, onClose, onTokenRo
 
   async function rotateToken() {
     setRotating(true)
-    const { data } = await supabase.rpc('rotate_ics_token')
+    try {
+      const { data } = await supabase.rpc('rotate_ics_token')
+      if (data) { setLocalToken(data); onTokenRotated?.(data) }
+    } catch {}
     setRotating(false)
-    if (data) { setLocalToken(data); onTokenRotated?.(data) }
   }
 
   async function connectGoogle() {
     setGoogleBusy(true); setSyncMsg('')
-    const { data: sess } = await supabase.auth.getSession()
-    const jwt = sess?.session?.access_token
-    const resp = await fetch(`${SUPABASE_URL}/functions/v1/google-calendar-oauth?action=start`, {
-      headers: { 'Authorization': `Bearer ${jwt}` },
-    })
-    const { url, error } = await resp.json()
-    setGoogleBusy(false)
-    if (error) { setSyncMsg(error); return }
-    window.location.href = url
+    try {
+      const { data: sess } = await supabase.auth.getSession()
+      const jwt = sess?.session?.access_token
+      const resp = await fetch(`${SUPABASE_URL}/functions/v1/google-calendar-oauth?action=start`, {
+        headers: { 'Authorization': `Bearer ${jwt}` },
+      })
+      const { url, error } = await resp.json()
+      if (error) { setSyncMsg(error); return }
+      window.location.href = url
+    } catch (e) {
+      setSyncMsg('Não foi possível ligar. Tenta novamente.')
+    } finally {
+      setGoogleBusy(false)
+    }
   }
 
   async function syncGoogle() {
     setGoogleBusy(true); setSyncMsg('')
-    const { data: sess } = await supabase.auth.getSession()
-    const jwt = sess?.session?.access_token
-    const resp = await fetch(`${SUPABASE_URL}/functions/v1/google-calendar-oauth?action=sync`, {
-      method: 'POST', headers: { 'Authorization': `Bearer ${jwt}` },
-    })
-    const j = await resp.json()
-    setGoogleBusy(false)
-    if (j.ok) setSyncMsg(`${j.pushed}/${j.total} eventos sincronizados.`)
-    else setSyncMsg(j.error || 'Falhou.')
+    try {
+      const { data: sess } = await supabase.auth.getSession()
+      const jwt = sess?.session?.access_token
+      const resp = await fetch(`${SUPABASE_URL}/functions/v1/google-calendar-oauth?action=sync`, {
+        method: 'POST', headers: { 'Authorization': `Bearer ${jwt}` },
+      })
+      const j = await resp.json()
+      if (j.ok) setSyncMsg(`${j.pushed}/${j.total} eventos sincronizados.`)
+      else setSyncMsg(j.error || 'Falhou.')
+    } catch {
+      setSyncMsg('Não foi possível sincronizar. Tenta novamente.')
+    } finally {
+      setGoogleBusy(false)
+    }
   }
 
   async function disconnectGoogle() {
     if (!confirm('Desligar Google Calendar? Os eventos já sincronizados ficam.')) return
     setGoogleBusy(true)
-    const { data: sess } = await supabase.auth.getSession()
-    const jwt = sess?.session?.access_token
-    await fetch(`${SUPABASE_URL}/functions/v1/google-calendar-oauth?action=disconnect`, {
-      method: 'POST', headers: { 'Authorization': `Bearer ${jwt}` },
-    })
-    setGoogleBusy(false)
-    setGoogleConnected(false); setSyncMsg('')
+    try {
+      const { data: sess } = await supabase.auth.getSession()
+      const jwt = sess?.session?.access_token
+      await fetch(`${SUPABASE_URL}/functions/v1/google-calendar-oauth?action=disconnect`, {
+        method: 'POST', headers: { 'Authorization': `Bearer ${jwt}` },
+      })
+      setGoogleConnected(false); setSyncMsg('')
+    } catch {
+      setSyncMsg('Não foi possível desligar. Tenta novamente.')
+    } finally {
+      setGoogleBusy(false)
+    }
   }
 
   return (
