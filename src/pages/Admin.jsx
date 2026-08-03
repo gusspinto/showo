@@ -309,24 +309,36 @@ function OverviewTab({ users, projects }) {
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
             {sortedUsers.map(u => {
-              const diffH = Math.floor((now - new Date(u.created_at)) / 3600000)
-              const regAgo = timeAgoStr(u.created_at)
-              const lastSeen = timeAgoStr(u.last_active_at)
+              const regDate = new Date(u.created_at)
+              const diffH = Math.floor((now - regDate) / 3600000)
               const lastSeenH = u.last_active_at ? Math.floor((now - new Date(u.last_active_at)) / 3600000) : null
               const isOnline = lastSeenH !== null && lastSeenH < 1
-              const isRecentActive = lastSeenH !== null && lastSeenH < 168
               const referrerDomain = u.signup_referrer ? u.signup_referrer.replace(/^https?:\/\//, '').split('/')[0] : null
               const pc = projectCountMap[u.id] || 0
 
+              const fmtDate = (d) => {
+                if (!d) return null
+                const dt = new Date(d)
+                return dt.toLocaleDateString('pt-PT', { day: '2-digit', month: 'short' }) + ' ' + dt.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })
+              }
+
+              const lastActiveLabel = u.last_active_at ? (() => {
+                if (lastSeenH < 1) return 'online agora'
+                if (lastSeenH < 24) return `ativo há ${lastSeenH}h`
+                return fmtDate(u.last_active_at)
+              })() : 'nunca entrou'
+
+              const lastActiveColor = !u.last_active_at ? C.red : isOnline ? C.green : lastSeenH < 24 ? C.green : lastSeenH < 168 ? C.yellow : C.subtle
+
               return (
                 <div key={u.id} style={{
-                  display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px',
-                  background: C.card, border: `1px solid ${diffH < 24 ? 'var(--color-primary-subtle)' : C.border}`,
+                  display: 'flex', alignItems: 'stretch', gap: 10, padding: '10px 12px',
+                  background: C.card, border: `1px solid ${isOnline ? 'var(--color-success-subtle)' : diffH < 24 ? 'var(--color-primary-subtle)' : C.border}`,
                   borderRadius: 8,
                 }}>
-                  <div style={{ position: 'relative' }}>
-                    <Avatar name={u.full_name || u.username} color={u.is_admin ? 'linear-gradient(135deg,var(--color-accent),#7c3aed)' : 'linear-gradient(135deg,var(--color-primary),#4f46e5)'} size={32} />
-                    {isOnline && <div style={{ position: 'absolute', bottom: -1, right: -1, width: 9, height: 9, borderRadius: '50%', background: C.green, border: '2px solid var(--color-surface)' }} />}
+                  <div style={{ position: 'relative', alignSelf: 'center' }}>
+                    <Avatar name={u.full_name || u.username} color={u.is_admin ? 'linear-gradient(135deg,var(--color-accent),#7c3aed)' : 'linear-gradient(135deg,var(--color-primary),#4f46e5)'} size={36} />
+                    {isOnline && <div style={{ position: 'absolute', bottom: 0, right: 0, width: 10, height: 10, borderRadius: '50%', background: C.green, border: '2px solid var(--color-surface)' }} />}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}>
@@ -334,23 +346,27 @@ function OverviewTab({ users, projects }) {
                       {u.role && u.role !== 'aluno' && (
                         <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 5px', borderRadius: 4, background: u.role === 'professor' ? C.greenSoft : C.purpleSoft, color: u.role === 'professor' ? C.green : C.purple }}>{u.role}</span>
                       )}
-                      {diffH < 24 && <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 5px', borderRadius: 4, background: C.blueSoft, color: C.blue }}>novo</span>}
+                      {diffH < 48 && <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 5px', borderRadius: 4, background: C.blueSoft, color: C.blue }}>novo</span>}
                       {pc === 0 && diffH > 48 && <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 5px', borderRadius: 4, background: C.redSoft, color: C.red }}>sem projeto</span>}
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginTop: 2, flexWrap: 'wrap' }}>
-                      {u.email && <span style={{ fontSize: 11, color: C.subtle }}>{u.email}</span>}
+                    <div style={{ fontSize: 11, color: C.subtle, marginTop: 2 }}>{u.email || '—'}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 3, flexWrap: 'wrap' }}>
                       {u.signup_country && (
                         <span style={{ fontSize: 10, color: C.subtle, display: 'inline-flex', alignItems: 'center', gap: 2 }}>
-                          <MapPin size={8} />{u.signup_city ? `${u.signup_city}` : u.signup_country}
+                          <MapPin size={8} />{[u.signup_city, u.signup_country].filter(Boolean).join(', ')}
                         </span>
                       )}
+                      {referrerDomain && <span style={{ fontSize: 10, color: C.subtle }}>via {referrerDomain}</span>}
+                      {u.signup_utm_source && <span style={{ fontSize: 10, color: C.subtle }}>utm:{u.signup_utm_source}</span>}
+                      {u.school && <span style={{ fontSize: 10, color: C.subtle }}>{u.school}</span>}
                     </div>
                   </div>
-                  <div style={{ textAlign: 'right', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2 }}>
-                    <span style={{ fontSize: 10, color: C.subtle }}>{regAgo}</span>
-                    {pc > 0 && <span style={{ fontSize: 10, color: C.blue }}>{pc} proj.</span>}
-                    {isRecentActive && !isOnline && <span style={{ fontSize: 10, color: C.green }}>ativo {lastSeen}</span>}
-                    {!isRecentActive && u.last_active_at && <span style={{ fontSize: 10, color: C.subtle }}>visto {lastSeen}</span>}
+                  <div style={{ textAlign: 'right', flexShrink: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 3, minWidth: 100 }}>
+                    <span style={{ fontSize: 10, color: lastActiveColor, fontWeight: isOnline ? 700 : 500 }}>
+                      {isOnline && '● '}{lastActiveLabel}
+                    </span>
+                    {pc > 0 && <span style={{ fontSize: 10, color: C.blue }}>{pc} projeto{pc > 1 ? 's' : ''}</span>}
+                    <span style={{ fontSize: 10, color: C.subtle }}>registado {fmtDate(u.created_at)}</span>
                   </div>
                 </div>
               )
