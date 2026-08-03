@@ -831,10 +831,12 @@ export default function StudentDashboard({ user, profile }) {
               )}
             </div>
 
-            <div className="sdb-duo sdb-o-rhythm">
-              <ActivityPanel buckets={activityBuckets} />
-              <RecapsPanel recaps={recaps} />
-            </div>
+            {focusProject && (
+              <div className="sdb-duo sdb-o-rhythm">
+                <ActivityPanel buckets={activityBuckets} />
+                <RecapsPanel recaps={recaps} />
+              </div>
+            )}
 
             {(otherProjects.length > 0 || collabProjects.length > 0) && (
               <section className="sdb-panel sdb-panel--flush sdb-o-portfolio">
