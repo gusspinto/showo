@@ -141,20 +141,30 @@ function MiniBar({ label, value, total, color = C.blue }) {
 
 // ─── CHART COMPONENTS ───────────────────────────────────────
 function BarChart({ data, height = 120, color = C.blue, labelKey = 'label', valueKey = 'value' }) {
+  if (!data.length) return null
   const max = Math.max(...data.map(d => d[valueKey]), 1)
-  const barW = Math.min(28, Math.floor((100 / data.length) * 0.7))
-  const gap = Math.max(2, Math.floor((100 - barW * data.length) / (data.length + 1)))
+  const W = 300
+  const pad = 8
+  const labelH = 18
+  const topPad = 16
+  const usable = W - pad * 2
+  const gap = Math.max(4, Math.round(usable * 0.15 / data.length))
+  const barW = Math.max(8, Math.floor((usable - gap * (data.length + 1)) / data.length))
+  const totalBars = data.length * barW + (data.length + 1) * gap
+  const offsetX = pad + (usable - totalBars) / 2
+  const barArea = height - labelH - topPad
   return (
     <div style={{ width: '100%', height, position: 'relative' }}>
-      <svg width="100%" height={height} viewBox={`0 0 ${data.length * (barW + gap) + gap} ${height}`} preserveAspectRatio="none">
+      <svg width="100%" height={height} viewBox={`0 0 ${W} ${height}`} preserveAspectRatio="xMidYMid meet" style={{ display: 'block' }}>
         {data.map((d, i) => {
-          const barH = Math.max(2, (d[valueKey] / max) * (height - 28))
-          const x = gap + i * (barW + gap)
+          const barH = Math.max(2, (d[valueKey] / max) * barArea)
+          const x = offsetX + gap + i * (barW + gap)
+          const y = topPad + barArea - barH
           return (
             <g key={i}>
-              <rect x={x} y={height - 16 - barH} width={barW} height={barH} rx={3} fill={d.highlight ? color : `${color}88`} />
-              <text x={x + barW / 2} y={height - 18 - barH} textAnchor="middle" fill={C.text} fontSize={9} fontWeight={600}>{d[valueKey] > 0 ? d[valueKey] : ''}</text>
-              <text x={x + barW / 2} y={height - 2} textAnchor="middle" fill="var(--color-text-tertiary)" fontSize={8}>{d[labelKey]}</text>
+              <rect x={x} y={y} width={barW} height={barH} rx={3} fill={d.highlight ? color : `${color}99`} />
+              {d[valueKey] > 0 && <text x={x + barW / 2} y={y - 4} textAnchor="middle" fill={C.text} fontSize={10} fontWeight={600}>{d[valueKey]}</text>}
+              <text x={x + barW / 2} y={height - 3} textAnchor="middle" fill="var(--color-text-tertiary)" fontSize={9}>{d[labelKey]}</text>
             </g>
           )
         })}
@@ -163,18 +173,31 @@ function BarChart({ data, height = 120, color = C.blue, labelKey = 'label', valu
   )
 }
 
-function SparkLine({ data, height = 48, color = C.blue }) {
+function SparkLine({ data, height = 60, color = C.blue }) {
   if (data.length < 2) return null
   const max = Math.max(...data, 1)
-  const w = 200
-  const points = data.map((v, i) => `${(i / (data.length - 1)) * w},${height - 4 - (v / max) * (height - 8)}`).join(' ')
-  const areaPoints = `0,${height - 4} ${points} ${w},${height - 4}`
+  const W = 300
+  const pad = 12
+  const topPad = 6
+  const botPad = 6
+  const usableW = W - pad * 2
+  const usableH = height - topPad - botPad
+  const pts = data.map((v, i) => {
+    const x = pad + (i / (data.length - 1)) * usableW
+    const y = topPad + usableH - (v / max) * usableH
+    return { x, y, v }
+  })
+  const line = pts.map(p => `${p.x},${p.y}`).join(' ')
+  const area = `${pad},${topPad + usableH} ${line} ${pad + usableW},${topPad + usableH}`
   return (
-    <svg width="100%" height={height} viewBox={`0 0 ${w} ${height}`} preserveAspectRatio="none" style={{ display: 'block' }}>
-      <polygon points={areaPoints} fill={`${color}15`} />
-      <polyline points={points} fill="none" stroke={color} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
-      {data.map((v, i) => (
-        <circle key={i} cx={(i / (data.length - 1)) * w} cy={height - 4 - (v / max) * (height - 8)} r={2.5} fill={i === data.length - 1 ? color : 'none'} stroke={color} strokeWidth={1.5} />
+    <svg width="100%" height={height} viewBox={`0 0 ${W} ${height}`} preserveAspectRatio="xMidYMid meet" style={{ display: 'block' }}>
+      <polygon points={area} fill={`${color}15`} />
+      <polyline points={line} fill="none" stroke={color} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
+      {pts.map((p, i) => (
+        <g key={i}>
+          <circle cx={p.x} cy={p.y} r={i === pts.length - 1 ? 4 : 2.5} fill={i === pts.length - 1 ? color : 'none'} stroke={color} strokeWidth={1.5} />
+          {p.v > 0 && i === pts.length - 1 && <text x={p.x} y={p.y - 8} textAnchor="middle" fill={color} fontSize={10} fontWeight={700}>{p.v}</text>}
+        </g>
       ))}
     </svg>
   )
@@ -395,7 +418,7 @@ function OverviewTab({ users, projects, activityLog }) {
       </div>
 
       {/* Charts row */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16, marginBottom: 24 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 16, marginBottom: 24 }}>
         <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '16px 18px' }}>
           <h3 style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Registos por semana</h3>
           <p style={{ margin: '0 0 10px', fontSize: 11, color: C.subtle }}>Últimas {numWeeks} semanas</p>
@@ -414,7 +437,7 @@ function OverviewTab({ users, projects, activityLog }) {
       </div>
 
       {/* Breakdowns row */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16, marginBottom: 24 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 16, marginBottom: 24 }}>
         {/* Roles */}
         <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '16px 18px' }}>
           <h3 style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Por role</h3>
@@ -447,7 +470,7 @@ function OverviewTab({ users, projects, activityLog }) {
       </div>
 
       {/* Bottom row: projects + users */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.4fr', gap: 24 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 24 }}>
         {/* Recent projects */}
         <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '20px 22px' }}>
           <h3 style={{ margin: '0 0 16px', fontSize: 12, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Projetos recentes</h3>
