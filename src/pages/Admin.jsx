@@ -189,12 +189,63 @@ const SORT_OPTIONS = [
   { id: 'inactive', label: 'Sem projetos' },
 ]
 
-function OverviewTab({ users, projects }) {
-  const [userSearch, setUserSearch] = useState('')
-  const [sort, setSort] = useState('active')
+const TIME_RANGES = [
+  { id: '7d', label: '7 dias', days: 7 },
+  { id: '30d', label: '30 dias', days: 30 },
+  { id: '90d', label: '90 dias', days: 90 },
+  { id: 'all', label: 'Tudo', days: null },
+]
+
+function generateMeetingSummary(users, projects, activityLog, range) {
   const now = Date.now()
   const totalUsers = users.length
   const totalProjects = projects.length
+  const days = range.days || 365
+  const cutoff = now - days * 86400000
+
+  const newUsers = users.filter(u => new Date(u.created_at) > cutoff).length
+  const newProjects = projects.filter(p => new Date(p.created_at) > cutoff).length
+
+  const uniqueActive = new Set(activityLog.filter(e => new Date(e.created_at) > cutoff).map(e => e.user_id)).size
+  const totalSessions = activityLog.filter(e => new Date(e.created_at) > cutoff && e.action === 'login').length
+
+  const projectCountMap = {}
+  projects.forEach(p => { if (p.user_id) projectCountMap[p.user_id] = (projectCountMap[p.user_id] || 0) + 1 })
+  const withProjects = users.filter(u => projectCountMap[u.id] > 0).length
+  const scores = projects.filter(p => p.score > 0).map(p => p.score)
+  const avgScore = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0
+
+  const roleCounts = {}
+  users.forEach(u => { const r = u.role || 'aluno'; roleCounts[r] = (roleCounts[r] || 0) + 1 })
+
+  const date = new Date().toLocaleDateString('pt-PT', { day: '2-digit', month: 'long', year: 'numeric' })
+
+  let md = `# Showo — Resumo ${range.label} (${date})\n\n`
+  md += `## Números gerais\n`
+  md += `- **${totalUsers}** utilizadores registados (+${newUsers} no período)\n`
+  md += `- **${totalProjects}** projetos (+${newProjects} no período)\n`
+  md += `- **${uniqueActive}** utilizadores ativos no período\n`
+  md += `- **${totalSessions}** sessões de login\n`
+  md += `- **${withProjects}** users com pelo menos 1 projeto\n`
+  md += `- Score médio: **${avgScore}**\n\n`
+  md += `## Distribuição por role\n`
+  Object.entries(roleCounts).sort((a, b) => b[1] - a[1]).forEach(([role, count]) => {
+    md += `- ${role}: ${count}\n`
+  })
+  md += `\n## Retenção\n`
+  md += `- ${uniqueActive}/${totalUsers} (${totalUsers > 0 ? Math.round((uniqueActive / totalUsers) * 100) : 0}%) voltaram no período\n`
+  return md
+}
+
+function OverviewTab({ users, projects, activityLog }) {
+  const [userSearch, setUserSearch] = useState('')
+  const [sort, setSort] = useState('active')
+  const [range, setRange] = useState(TIME_RANGES[1])
+  const now = Date.now()
+  const totalUsers = users.length
+  const totalProjects = projects.length
+  const days = range.days || 9999
+  const cutoff = now - days * 86400000
   const weekAgo = now - 7 * 86400000
   const monthAgo = now - 30 * 86400000
   const newThisWeek = projects.filter(p => new Date(p.created_at) > weekAgo).length
@@ -203,46 +254,48 @@ function OverviewTab({ users, projects }) {
   const scores = projects.filter(p => p.score > 0).map(p => p.score)
   const avgScore = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0
 
-  // Engagement metrics
-  const activeThisWeek = users.filter(u => u.last_active_at && new Date(u.last_active_at) > weekAgo).length
-  const activeThisMonth = users.filter(u => u.last_active_at && new Date(u.last_active_at) > monthAgo).length
+  // Real engagement from activity_log
+  const logInRange = activityLog.filter(e => new Date(e.created_at) > cutoff)
+  const activeUsersInRange = new Set(logInRange.map(e => e.user_id)).size
+  const activeThisWeek = new Set(activityLog.filter(e => new Date(e.created_at) > weekAgo).map(e => e.user_id)).size
+  const activeThisMonth = new Set(activityLog.filter(e => new Date(e.created_at) > monthAgo).map(e => e.user_id)).size
   const neverActive = users.filter(u => !u.last_active_at).length
-  const orphanCount = users.filter(u => u._orphan).length
   const retentionRate = totalUsers > 0 ? Math.round((activeThisMonth / totalUsers) * 100) : 0
 
-  // Registrations per week (last 8 weeks)
-  const regWeeks = Array.from({ length: 8 }, (_, i) => {
-    const weekStart = now - (7 - i) * 7 * 86400000
-    const weekEnd = now - (6 - i) * 7 * 86400000
+  // Registrations per week
+  const numWeeks = Math.min(Math.ceil(days / 7), 12)
+  const regWeeks = Array.from({ length: numWeeks }, (_, i) => {
+    const weekStart = now - (numWeeks - 1 - i) * 7 * 86400000
+    const weekEnd = weekStart + 7 * 86400000
     const count = users.filter(u => {
       const t = new Date(u.created_at).getTime()
       return t >= weekStart && t < weekEnd
     }).length
     const d = new Date(weekStart)
-    return { label: `${d.getDate()}/${d.getMonth() + 1}`, value: count, highlight: i === 7 }
+    return { label: `${d.getDate()}/${d.getMonth() + 1}`, value: count, highlight: i === numWeeks - 1 }
   })
 
-  // Daily active users (last 14 days)
-  const dauData = Array.from({ length: 14 }, (_, i) => {
-    const dayStart = now - (13 - i) * 86400000
+  // Daily active users from activity_log (real data)
+  const numDays = Math.min(days, 30)
+  const dauData = Array.from({ length: numDays }, (_, i) => {
+    const dayStart = now - (numDays - 1 - i) * 86400000
     const dayEnd = dayStart + 86400000
-    return users.filter(u => {
-      if (!u.last_active_at) return false
-      const t = new Date(u.last_active_at).getTime()
+    return new Set(activityLog.filter(e => {
+      const t = new Date(e.created_at).getTime()
       return t >= dayStart && t < dayEnd
-    }).length
+    }).map(e => e.user_id)).size
   })
 
-  // Projects per week (last 8 weeks)
-  const projWeeks = Array.from({ length: 8 }, (_, i) => {
-    const weekStart = now - (7 - i) * 7 * 86400000
-    const weekEnd = now - (6 - i) * 7 * 86400000
+  // Projects per week
+  const projWeeks = Array.from({ length: numWeeks }, (_, i) => {
+    const weekStart = now - (numWeeks - 1 - i) * 7 * 86400000
+    const weekEnd = weekStart + 7 * 86400000
     const count = projects.filter(p => {
       const t = new Date(p.created_at).getTime()
       return t >= weekStart && t < weekEnd
     }).length
     const d = new Date(weekStart)
-    return { label: `${d.getDate()}/${d.getMonth() + 1}`, value: count, highlight: i === 7 }
+    return { label: `${d.getDate()}/${d.getMonth() + 1}`, value: count, highlight: i === numWeeks - 1 }
   })
 
   // Project counts per user
@@ -287,8 +340,51 @@ function OverviewTab({ users, projects }) {
     .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
     .slice(0, 8)
 
+  const handleExport = () => {
+    const md = generateMeetingSummary(users, projects, activityLog, range)
+    const blob = new Blob([md], { type: 'text/markdown' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `showo-resumo-${range.id}-${new Date().toISOString().slice(0, 10)}.md`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const handleCopySummary = () => {
+    const md = generateMeetingSummary(users, projects, activityLog, range)
+    navigator.clipboard.writeText(md)
+  }
+
   return (
     <div>
+      {/* Time range selector + export */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 4 }}>
+          {TIME_RANGES.map(r => (
+            <button
+              key={r.id}
+              onClick={() => setRange(r)}
+              style={{
+                padding: '5px 12px', borderRadius: 6, fontSize: 11, fontWeight: 600,
+                fontFamily: 'inherit', cursor: 'pointer', border: 'none',
+                background: range.id === r.id ? C.blue : C.bgAlt,
+                color: range.id === r.id ? '#fff' : C.muted,
+                transition: 'all 0.15s',
+              }}
+            >{r.label}</button>
+          ))}
+        </div>
+        <div style={{ display: 'flex', gap: 6 }}>
+          <button onClick={handleCopySummary} style={{ padding: '5px 12px', borderRadius: 6, fontSize: 11, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', border: `1px solid ${C.border}`, background: 'transparent', color: C.muted }}>
+            Copiar resumo
+          </button>
+          <button onClick={handleExport} style={{ padding: '5px 12px', borderRadius: 6, fontSize: 11, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', border: `1px solid ${C.border}`, background: 'transparent', color: C.muted }}>
+            Exportar .md
+          </button>
+        </div>
+      </div>
+
       {/* Stats row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(175px, 1fr))', gap: 14, marginBottom: 24 }}>
         <StatCard icon={<User size={20} />} label="Utilizadores" value={totalUsers} color={C.blue} sub={`+${newUsersWeek} semana · +${newUsersMonth} mês`} />
@@ -302,17 +398,17 @@ function OverviewTab({ users, projects }) {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16, marginBottom: 24 }}>
         <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '16px 18px' }}>
           <h3 style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Registos por semana</h3>
-          <p style={{ margin: '0 0 10px', fontSize: 11, color: C.subtle }}>Últimas 8 semanas</p>
+          <p style={{ margin: '0 0 10px', fontSize: 11, color: C.subtle }}>Últimas {numWeeks} semanas</p>
           <BarChart data={regWeeks} color={C.blue} height={110} />
         </div>
         <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '16px 18px' }}>
           <h3 style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Atividade diária</h3>
-          <p style={{ margin: '0 0 10px', fontSize: 11, color: C.subtle }}>Users ativos / dia (14 dias)</p>
+          <p style={{ margin: '0 0 10px', fontSize: 11, color: C.subtle }}>Users ativos / dia ({numDays} dias) — activity_log</p>
           <SparkLine data={dauData} color={C.green} height={80} />
         </div>
         <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '16px 18px' }}>
           <h3 style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Projetos por semana</h3>
-          <p style={{ margin: '0 0 10px', fontSize: 11, color: C.subtle }}>Últimas 8 semanas</p>
+          <p style={{ margin: '0 0 10px', fontSize: 11, color: C.subtle }}>Últimas {numWeeks} semanas</p>
           <BarChart data={projWeeks} color={C.green} height={110} />
         </div>
       </div>
@@ -964,6 +1060,7 @@ export default function Admin() {
   const [loading, setLoading] = useState(true)
   const [toast, setToast] = useState('')
   const [signups, setSignups] = useState([])
+  const [activityLog, setActivityLog] = useState([])
   const [codes, setCodes] = useState([])
   const [codesLoading, setCodesLoading] = useState(false)
   const [codesLoaded, setCodesLoaded] = useState(false)
@@ -982,11 +1079,12 @@ export default function Admin() {
   const loadData = useCallback(async () => {
     setLoading(true)
     try {
-      const [profilesRes, projectsRes, emailsRes, signupsRes] = await Promise.all([
+      const [profilesRes, projectsRes, emailsRes, signupsRes, activityRes] = await Promise.all([
         supabase.from('profiles').select(PROFILE_COLUMNS).order('created_at', { ascending: false }),
         supabase.from('projects').select('*').order('created_at', { ascending: false }),
         supabase.rpc('admin_get_users'),
         supabase.from('waitlist_signups').select('*').order('created_at', { ascending: false }).limit(100),
+        supabase.from('activity_log').select('user_id, action, created_at').order('created_at', { ascending: false }).limit(5000),
       ])
       if (profilesRes.error) showToast('Erro ao carregar utilizadores: ' + profilesRes.error.message)
       if (projectsRes.error) showToast('Erro ao carregar projetos: ' + projectsRes.error.message)
@@ -1028,6 +1126,7 @@ export default function Admin() {
       setUsers([...enrichedProfiles, ...orphanUsers])
       setProjects(projectsRes.data || [])
       setSignups(signupsRes.data || [])
+      setActivityLog(activityRes.data || [])
     } catch (err) {
       console.error('Admin load error', err)
     }
@@ -1201,7 +1300,7 @@ export default function Admin() {
           </div>
         ) : (
           <>
-            {tab === 'overview' && <OverviewTab users={users} projects={projects} />}
+            {tab === 'overview' && <OverviewTab users={users} projects={projects} activityLog={activityLog} />}
             {tab === 'users' && (
               <UsersTab
                 users={users}

@@ -42,7 +42,9 @@ export function AuthProvider({ children }) {
     setProfile(data ?? null)
     if (data) {
       identifyUser(userRes.data?.user, data)
-      supabase.from('profiles').update({ last_active_at: new Date().toISOString(), last_action: 'login' }).eq('id', uid).then(() => {})
+      const ts = new Date().toISOString()
+      supabase.from('profiles').update({ last_active_at: ts, last_action: 'login' }).eq('id', uid).then(() => {})
+      supabase.from('activity_log').insert({ user_id: uid, action: 'login' }).then(() => {})
     }
   }, [])
 
