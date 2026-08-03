@@ -63,6 +63,7 @@ const EmpresaPage    = lazy(() => import('./pages/EmpresaPage'))
 const ProjectManage  = lazy(() => import('./pages/ProjectManage'))
 const Privacidade    = lazy(() => import('./pages/Privacidade'))
 const Termos         = lazy(() => import('./pages/Termos'))
+const GoogleCalendarCallback = lazy(() => import('./pages/GoogleCalendarCallback'))
 
 function PageLoader() {
   return (
@@ -370,6 +371,7 @@ export default function App() {
               <Route path="/projeto/:slug/gerir" element={<ProjectManage />} />
               <Route path="/privacidade"        element={<Privacidade />}   />
               <Route path="/termos"             element={<Termos />}        />
+              <Route path="/oauth/google-calendar" element={<GoogleCalendarCallback />} />
               <Route path="*"                   element={<NotFound />}      />
             </Routes>
             </Suspense>
