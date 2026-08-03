@@ -347,7 +347,8 @@ function OverviewTab({ users, projects }) {
                         <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 5px', borderRadius: 4, background: u.role === 'professor' ? C.greenSoft : C.purpleSoft, color: u.role === 'professor' ? C.green : C.purple }}>{u.role}</span>
                       )}
                       {diffH < 48 && <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 5px', borderRadius: 4, background: C.blueSoft, color: C.blue }}>novo</span>}
-                      {pc === 0 && diffH > 48 && <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 5px', borderRadius: 4, background: C.redSoft, color: C.red }}>sem projeto</span>}
+                      {u._orphan && <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 5px', borderRadius: 4, background: C.yellowSoft, color: C.yellow }}>sem perfil</span>}
+                      {!u._orphan && pc === 0 && diffH > 48 && <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 5px', borderRadius: 4, background: C.redSoft, color: C.red }}>sem projeto</span>}
                     </div>
                     <div style={{ fontSize: 11, color: C.subtle, marginTop: 2 }}>{u.email || '—'}</div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 3, flexWrap: 'wrap' }}>
@@ -893,11 +894,12 @@ export default function Admin() {
       if (projectsRes.error) showToast('Erro ao carregar projetos: ' + projectsRes.error.message)
 
       const authMap = {}
+      const profileIds = new Set()
       if (emailsRes.data) {
         emailsRes.data.forEach(e => { authMap[e.id] = e })
       }
-
       const enrichedProfiles = (profilesRes.data || []).map(p => {
+        profileIds.add(p.id)
         const auth = authMap[p.id] || {}
         return {
           ...p,
@@ -908,7 +910,24 @@ export default function Admin() {
         }
       })
 
-      setUsers(enrichedProfiles)
+      const orphanUsers = (emailsRes.data || [])
+        .filter(e => !profileIds.has(e.id))
+        .map(e => ({
+          id: e.id,
+          full_name: e.full_name || null,
+          username: null,
+          email: e.email,
+          role: null,
+          avatar_url: e.avatar_url || null,
+          created_at: e.created_at,
+          last_active_at: e.last_sign_in_at || null,
+          auth_last_sign_in: e.last_sign_in_at || null,
+          confirmed_at: e.confirmed_at || null,
+          is_admin: false,
+          _orphan: true,
+        }))
+
+      setUsers([...enrichedProfiles, ...orphanUsers])
       setProjects(projectsRes.data || [])
       setSignups(signupsRes.data || [])
     } catch (err) {
