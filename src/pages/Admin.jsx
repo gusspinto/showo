@@ -39,7 +39,7 @@ const C = {
 // authenticated only has column-level SELECT grant on these (no email — that
 // comes from admin_get_users() instead) since migration 033; select('*')
 // fails outright and silently returns no rows.
-const PROFILE_COLUMNS = 'id, username, total_xp, created_at, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size, skills, school, project_draft'
+const PROFILE_COLUMNS = 'id, username, total_xp, created_at, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size, skills, school, project_draft, signup_country, signup_city, signup_referrer, signup_utm_source, last_active_at, last_action'
 
 function StatCard({ icon, label, value, color = C.blue, sub }) {
   return (
@@ -425,6 +425,118 @@ function ProjectsTab({ projects, users, onDeleteProject }) {
   )
 }
 
+// ─── SIGNUPS TAB ────────────────────────────────────────────
+function SignupsTab({ signups, users }) {
+  const [filter, setFilter] = useState('')
+  const [view, setView] = useState('waitlist')
+  const q = filter.toLowerCase()
+
+  const waitlistFiltered = signups.filter(s =>
+    (s.email || '').toLowerCase().includes(q) ||
+    (s.country || '').toLowerCase().includes(q) ||
+    (s.city || '').toLowerCase().includes(q)
+  )
+
+  const registeredFiltered = users.filter(s =>
+    (s.full_name || '').toLowerCase().includes(q) ||
+    (s.email || '').toLowerCase().includes(q) ||
+    (s.signup_country || '').toLowerCase().includes(q) ||
+    (s.signup_city || '').toLowerCase().includes(q)
+  )
+
+  const filtered = view === 'waitlist' ? waitlistFiltered : registeredFiltered
+
+  return (
+    <div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+        <div style={{ position: 'relative', flex: 1, maxWidth: 320 }}>
+          <Search size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: C.muted }} />
+          <input
+            placeholder="Procurar por nome, email, país…"
+            value={filter}
+            onChange={e => setFilter(e.target.value)}
+            style={{
+              width: '100%', padding: '10px 12px 10px 34px', borderRadius: 8,
+              border: `1px solid ${C.border}`, background: C.bgAlt,
+              color: C.text, fontSize: 13, fontFamily: 'inherit', outline: 'none',
+            }}
+          />
+        </div>
+        <div style={{ display: 'flex', gap: 4, background: C.bgAlt, border: `1px solid ${C.border}`, borderRadius: 8, padding: 3 }}>
+          {['waitlist', 'registered'].map(v => (
+            <button key={v} onClick={() => setView(v)} style={{
+              background: view === v ? C.blue : 'transparent', color: view === v ? '#fff' : C.muted,
+              border: 'none', borderRadius: 6, padding: '5px 12px', fontSize: 12, fontWeight: 600,
+              cursor: 'pointer', fontFamily: 'inherit',
+            }}>{v === 'waitlist' ? `Waitlist (${signups.length})` : `Registados (${users.length})`}</button>
+          ))}
+        </div>
+        <span style={{ fontSize: 12, color: C.muted }}>{filtered.length} resultado{filtered.length !== 1 ? 's' : ''}</span>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        {filtered.map((s, i) => {
+          const date = new Date(s.created_at)
+          const now = new Date()
+          const diffH = Math.floor((now - date) / 3600000)
+          const timeAgo = diffH < 1 ? 'agora' : diffH < 24 ? `há ${diffH}h` : diffH < 168 ? `há ${Math.floor(diffH / 24)}d` : date.toLocaleDateString('pt-PT')
+          const isNew = diffH < 24
+          const country = view === 'waitlist' ? s.country : s.signup_country
+          const city = view === 'waitlist' ? s.city : s.signup_city
+          const referrer = view === 'waitlist' ? s.referrer : s.signup_referrer
+          const utm = view === 'waitlist' ? s.utm_source : s.signup_utm_source
+          const name = s.full_name || s.email || '?'
+
+          return (
+            <div key={s.id || i} style={{
+              display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px',
+              background: C.card, border: `1px solid ${isNew ? 'var(--color-primary-subtle)' : C.border}`,
+              borderRadius: 10, transition: 'border-color 0.15s',
+            }}>
+              <div style={{
+                width: 38, height: 38, borderRadius: '50%',
+                background: s.avatar_url ? 'none' : C.blueSoft,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                overflow: 'hidden', flexShrink: 0,
+              }}>
+                {s.avatar_url
+                  ? <img src={s.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  : <span style={{ fontSize: 14, fontWeight: 700, color: C.blue }}>{name[0].toUpperCase()}</span>
+                }
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{s.full_name || 'Sem nome'}</span>
+                  {s.role && s.role !== 'aluno' && (
+                    <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: s.role === 'professor' ? C.greenSoft : C.purpleSoft, color: s.role === 'professor' ? C.green : C.purple }}>{s.role}</span>
+                  )}
+                  {isNew && <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: C.blueSoft, color: C.blue }}>novo</span>}
+                </div>
+                <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>{s.email}</div>
+              </div>
+              <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                {(country || city) && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4, justifyContent: 'flex-end', marginBottom: 2 }}>
+                    <MapPin size={11} color={C.muted} />
+                    <span style={{ fontSize: 12, color: C.muted }}>{[city, country].filter(Boolean).join(', ')}</span>
+                  </div>
+                )}
+                {referrer && (
+                  <div style={{ fontSize: 11, color: C.subtle }}>via {referrer.replace(/^https?:\/\//, '').split('/')[0]}</div>
+                )}
+                {utm && (
+                  <div style={{ fontSize: 11, color: C.subtle }}>utm: {utm}</div>
+                )}
+                <div style={{ fontSize: 11, color: C.subtle, marginTop: 2 }}>{timeAgo}</div>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 // ─── INVITES TAB (professor access codes) ────────────────────
 function InvitesTab({ codes, loading, onGenerate, generating, onToggleActive }) {
   const [label, setLabel] = useState('')
@@ -562,6 +674,7 @@ export default function Admin() {
   const [projects, setProjects] = useState([])
   const [loading, setLoading] = useState(true)
   const [toast, setToast] = useState('')
+  const [signups, setSignups] = useState([])
   const [codes, setCodes] = useState([])
   const [codesLoading, setCodesLoading] = useState(false)
   const [codesLoaded, setCodesLoaded] = useState(false)
@@ -580,10 +693,11 @@ export default function Admin() {
   const loadData = useCallback(async () => {
     setLoading(true)
     try {
-      const [profilesRes, projectsRes, emailsRes] = await Promise.all([
+      const [profilesRes, projectsRes, emailsRes, signupsRes] = await Promise.all([
         supabase.from('profiles').select(PROFILE_COLUMNS).order('created_at', { ascending: false }),
         supabase.from('projects').select('*').order('created_at', { ascending: false }),
         supabase.rpc('admin_get_users'),
+        supabase.from('waitlist_signups').select('*').order('created_at', { ascending: false }).limit(100),
       ])
       if (profilesRes.error) showToast('Erro ao carregar utilizadores: ' + profilesRes.error.message)
       if (projectsRes.error) showToast('Erro ao carregar projetos: ' + projectsRes.error.message)
@@ -600,6 +714,7 @@ export default function Admin() {
 
       setUsers(enrichedProfiles)
       setProjects(projectsRes.data || [])
+      setSignups(signupsRes.data || [])
     } catch (err) {
       console.error('Admin load error', err)
     }
@@ -707,6 +822,7 @@ export default function Admin() {
     { id: 'overview', label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><BarChart2 size={14} /> Visão geral</span> },
     { id: 'users',    label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><User size={14} /> Utilizadores ({users.length})</span> },
     { id: 'projects', label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Folder size={14} /> Projetos ({projects.length})</span> },
+    { id: 'signups',  label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Star size={14} /> Signups ({signups.length})</span> },
     { id: 'invites',  label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><KeyRound size={14} /> Convites Professor</span> },
   ]
 
@@ -790,6 +906,7 @@ export default function Admin() {
                 onDeleteProject={handleDeleteProject}
               />
             )}
+            {tab === 'signups' && <SignupsTab signups={signups} users={users} />}
             {tab === 'invites' && (
               <InvitesTab
                 codes={codes}

@@ -40,7 +40,10 @@ export function AuthProvider({ children }) {
     }
 
     setProfile(data ?? null)
-    if (data) identifyUser(userRes.data?.user, data)
+    if (data) {
+      identifyUser(userRes.data?.user, data)
+      supabase.from('profiles').update({ last_active_at: new Date().toISOString(), last_action: 'login' }).eq('id', uid).then(() => {})
+    }
   }, [])
 
   useEffect(() => {
