@@ -116,43 +116,144 @@ function ConfirmModal({ title, body, onConfirm, onCancel, danger = true }) {
   )
 }
 
+// ─── HELPERS ────────────────────────────────────────────────
+function timeAgoStr(dateStr) {
+  if (!dateStr) return null
+  const diffH = Math.floor((Date.now() - new Date(dateStr)) / 3600000)
+  if (diffH < 1) return 'agora'
+  if (diffH < 24) return `há ${diffH}h`
+  if (diffH < 168) return `há ${Math.floor(diffH / 24)}d`
+  return new Date(dateStr).toLocaleDateString('pt-PT')
+}
+
+function MiniBar({ label, value, total, color = C.blue }) {
+  const pct = total > 0 ? Math.round((value / total) * 100) : 0
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+      <span style={{ fontSize: 12, color: C.muted, width: 90, flexShrink: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</span>
+      <div style={{ flex: 1, height: 6, borderRadius: 3, background: C.bgAlt }}>
+        <div style={{ width: `${pct}%`, height: '100%', borderRadius: 3, background: color, minWidth: pct > 0 ? 4 : 0, transition: 'width 0.3s' }} />
+      </div>
+      <span style={{ fontSize: 12, fontWeight: 600, color: C.text, width: 28, textAlign: 'right' }}>{value}</span>
+    </div>
+  )
+}
+
 // ─── OVERVIEW TAB ───────────────────────────────────────────
+const SORT_OPTIONS = [
+  { id: 'newest', label: 'Mais recente' },
+  { id: 'oldest', label: 'Mais antigo' },
+  { id: 'active', label: 'Última atividade' },
+  { id: 'projects', label: 'Mais projetos' },
+  { id: 'inactive', label: 'Sem projetos' },
+]
+
 function OverviewTab({ users, projects }) {
   const [userSearch, setUserSearch] = useState('')
+  const [sort, setSort] = useState('newest')
+  const now = Date.now()
   const totalUsers = users.length
   const totalProjects = projects.length
-  const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000
+  const weekAgo = now - 7 * 86400000
+  const monthAgo = now - 30 * 86400000
   const newThisWeek = projects.filter(p => new Date(p.created_at) > weekAgo).length
   const newUsersWeek = users.filter(u => new Date(u.created_at) > weekAgo).length
+  const newUsersMonth = users.filter(u => new Date(u.created_at) > monthAgo).length
   const scores = projects.filter(p => p.score > 0).map(p => p.score)
   const avgScore = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0
-  const admins = users.filter(u => u.is_admin).length
+
+  // Engagement metrics
+  const activeThisWeek = users.filter(u => u.last_active_at && new Date(u.last_active_at) > weekAgo).length
+  const activeThisMonth = users.filter(u => u.last_active_at && new Date(u.last_active_at) > monthAgo).length
+  const neverActive = users.filter(u => !u.last_active_at).length
+
+  // Project counts per user
+  const projectCountMap = {}
+  projects.forEach(p => { if (p.user_id) projectCountMap[p.user_id] = (projectCountMap[p.user_id] || 0) + 1 })
+  const usersWithProjects = users.filter(u => projectCountMap[u.id] > 0).length
+  const usersWithoutProjects = totalUsers - usersWithProjects
+
+  // Role distribution
+  const roleCounts = {}
+  users.forEach(u => { const r = u.role || 'aluno'; roleCounts[r] = (roleCounts[r] || 0) + 1 })
+
+  // Country distribution
+  const countryCounts = {}
+  users.forEach(u => { if (u.signup_country) countryCounts[u.signup_country] = (countryCounts[u.signup_country] || 0) + 1 })
+  const topCountries = Object.entries(countryCounts).sort((a, b) => b[1] - a[1]).slice(0, 5)
+
+  // Referrer distribution
+  const refCounts = {}
+  users.forEach(u => {
+    if (u.signup_referrer) {
+      const d = u.signup_referrer.replace(/^https?:\/\//, '').split('/')[0]
+      refCounts[d] = (refCounts[d] || 0) + 1
+    }
+  })
+  const topReferrers = Object.entries(refCounts).sort((a, b) => b[1] - a[1]).slice(0, 5)
+
+  // Sorted & filtered users
+  const uq = userSearch.toLowerCase()
+  const sortedUsers = [...users]
+    .filter(u => !uq || (u.full_name || '').toLowerCase().includes(uq) || (u.email || '').toLowerCase().includes(uq) || (u.signup_country || '').toLowerCase().includes(uq) || (u.role || '').toLowerCase().includes(uq))
+    .sort((a, b) => {
+      if (sort === 'oldest') return new Date(a.created_at) - new Date(b.created_at)
+      if (sort === 'active') return (b.last_active_at ? new Date(b.last_active_at) : 0) - (a.last_active_at ? new Date(a.last_active_at) : 0)
+      if (sort === 'projects') return (projectCountMap[b.id] || 0) - (projectCountMap[a.id] || 0)
+      if (sort === 'inactive') return (projectCountMap[a.id] || 0) - (projectCountMap[b.id] || 0)
+      return new Date(b.created_at) - new Date(a.created_at)
+    })
+    .slice(0, 15)
 
   const recentProjects = [...projects]
     .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
     .slice(0, 8)
 
-  const uq = userSearch.toLowerCase()
-  const filteredUsers = (uq ? users.filter(u =>
-    (u.full_name || '').toLowerCase().includes(uq) ||
-    (u.email || '').toLowerCase().includes(uq) ||
-    (u.signup_country || '').toLowerCase().includes(uq) ||
-    (u.signup_city || '').toLowerCase().includes(uq) ||
-    (u.role || '').toLowerCase().includes(uq)
-  ) : users)
-    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-    .slice(0, 12)
-
   return (
     <div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 16, marginBottom: 32 }}>
-        <StatCard icon={<User size={20} />} label="Total de utilizadores" value={totalUsers} color={C.blue} sub={`+${newUsersWeek} esta semana`} />
-        <StatCard icon={<Folder size={20} />} label="Total de projetos" value={totalProjects} color={C.green} sub={`+${newThisWeek} esta semana`} />
-        <StatCard icon={<Star size={20} />} label="Score médio" value={avgScore} color={C.yellow} sub="nos projetos com score" />
-        <StatCard icon={<Shield size={20} />} label="Administradores" value={admins} color={C.purple} />
+      {/* Stats row */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(190px, 1fr))', gap: 14, marginBottom: 24 }}>
+        <StatCard icon={<User size={20} />} label="Utilizadores" value={totalUsers} color={C.blue} sub={`+${newUsersWeek} esta semana · +${newUsersMonth} este mês`} />
+        <StatCard icon={<Folder size={20} />} label="Projetos" value={totalProjects} color={C.green} sub={`+${newThisWeek} esta semana · ${usersWithoutProjects} users sem projeto`} />
+        <StatCard icon={<Star size={20} />} label="Score médio" value={avgScore} color={C.yellow} sub={`${scores.length} projetos com score`} />
+        <StatCard icon={<BarChart2 size={20} />} label="Ativos esta semana" value={activeThisWeek} color={activeThisWeek > 0 ? C.green : C.red} sub={`${activeThisMonth} este mês · ${neverActive} nunca entraram`} />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+      {/* Middle row: breakdowns */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16, marginBottom: 24 }}>
+        {/* Roles */}
+        <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '16px 18px' }}>
+          <h3 style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Por role</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {Object.entries(roleCounts).sort((a, b) => b[1] - a[1]).map(([role, count]) => (
+              <MiniBar key={role} label={role} value={count} total={totalUsers} color={role === 'professor' ? C.green : role === 'empresa' ? C.yellow : C.blue} />
+            ))}
+          </div>
+        </div>
+
+        {/* Countries */}
+        <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '16px 18px' }}>
+          <h3 style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Por país</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {topCountries.length > 0 ? topCountries.map(([country, count]) => (
+              <MiniBar key={country} label={country} value={count} total={totalUsers} color={C.blue} />
+            )) : <span style={{ fontSize: 12, color: C.subtle }}>Sem dados ainda</span>}
+          </div>
+        </div>
+
+        {/* Referrers */}
+        <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '16px 18px' }}>
+          <h3 style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Origem (referrer)</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {topReferrers.length > 0 ? topReferrers.map(([ref, count]) => (
+              <MiniBar key={ref} label={ref} value={count} total={totalUsers} color={C.purple} />
+            )) : <span style={{ fontSize: 12, color: C.subtle }}>Sem dados ainda</span>}
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom row: projects + users */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.4fr', gap: 24 }}>
         {/* Recent projects */}
         <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '20px 22px' }}>
           <h3 style={{ margin: '0 0 16px', fontSize: 12, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Projetos recentes</h3>
@@ -175,73 +276,81 @@ function OverviewTab({ users, projects }) {
           </div>
         </div>
 
-        {/* Recent users */}
+        {/* Users list with sort */}
         <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '20px 22px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-            <h3 style={{ margin: 0, fontSize: 12, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Utilizadores recentes</h3>
-            <div style={{ position: 'relative' }}>
-              <Search size={12} style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', color: C.muted }} />
-              <input
-                placeholder="Filtrar…"
-                value={userSearch}
-                onChange={e => setUserSearch(e.target.value)}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, gap: 8, flexWrap: 'wrap' }}>
+            <h3 style={{ margin: 0, fontSize: 12, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Utilizadores</h3>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div style={{ position: 'relative' }}>
+                <Search size={12} style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', color: C.muted }} />
+                <input
+                  placeholder="Procurar…"
+                  value={userSearch}
+                  onChange={e => setUserSearch(e.target.value)}
+                  style={{
+                    width: 120, padding: '5px 8px 5px 26px', borderRadius: 6,
+                    border: `1px solid ${C.border}`, background: C.bgAlt,
+                    color: C.text, fontSize: 11, fontFamily: 'inherit', outline: 'none',
+                  }}
+                />
+              </div>
+              <select
+                value={sort}
+                onChange={e => setSort(e.target.value)}
                 style={{
-                  width: 140, padding: '6px 8px 6px 26px', borderRadius: 6,
-                  border: `1px solid ${C.border}`, background: C.bgAlt,
-                  color: C.text, fontSize: 12, fontFamily: 'inherit', outline: 'none',
+                  padding: '5px 8px', borderRadius: 6, border: `1px solid ${C.border}`,
+                  background: C.bgAlt, color: C.text, fontSize: 11, fontFamily: 'inherit',
+                  outline: 'none', cursor: 'pointer',
                 }}
-              />
+              >
+                {SORT_OPTIONS.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}
+              </select>
             </div>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {filteredUsers.map(u => {
-              const date = new Date(u.created_at)
-              const now = new Date()
-              const diffH = Math.floor((now - date) / 3600000)
-              const timeAgo = diffH < 1 ? 'agora' : diffH < 24 ? `há ${diffH}h` : diffH < 168 ? `há ${Math.floor(diffH / 24)}d` : date.toLocaleDateString('pt-PT')
-              const lastSeen = u.last_active_at ? (() => {
-                const ld = new Date(u.last_active_at)
-                const ldH = Math.floor((now - ld) / 3600000)
-                return ldH < 1 ? 'agora' : ldH < 24 ? `há ${ldH}h` : ldH < 168 ? `há ${Math.floor(ldH / 24)}d` : null
-              })() : null
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+            {sortedUsers.map(u => {
+              const diffH = Math.floor((now - new Date(u.created_at)) / 3600000)
+              const regAgo = timeAgoStr(u.created_at)
+              const lastSeen = timeAgoStr(u.last_active_at)
+              const lastSeenH = u.last_active_at ? Math.floor((now - new Date(u.last_active_at)) / 3600000) : null
+              const isOnline = lastSeenH !== null && lastSeenH < 1
+              const isRecentActive = lastSeenH !== null && lastSeenH < 168
               const referrerDomain = u.signup_referrer ? u.signup_referrer.replace(/^https?:\/\//, '').split('/')[0] : null
-              const projectCount = projects.filter(p => p.user_id === u.id).length
+              const pc = projectCountMap[u.id] || 0
 
               return (
                 <div key={u.id} style={{
-                  display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px',
+                  display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px',
                   background: C.card, border: `1px solid ${diffH < 24 ? 'var(--color-primary-subtle)' : C.border}`,
-                  borderRadius: 10,
+                  borderRadius: 8,
                 }}>
-                  <Avatar name={u.full_name || u.username} color={u.is_admin ? 'linear-gradient(135deg,var(--color-accent),#7c3aed)' : 'linear-gradient(135deg,var(--color-primary),#4f46e5)'} size={36} />
+                  <div style={{ position: 'relative' }}>
+                    <Avatar name={u.full_name || u.username} color={u.is_admin ? 'linear-gradient(135deg,var(--color-accent),#7c3aed)' : 'linear-gradient(135deg,var(--color-primary),#4f46e5)'} size={32} />
+                    {isOnline && <div style={{ position: 'absolute', bottom: -1, right: -1, width: 9, height: 9, borderRadius: '50%', background: C.green, border: '2px solid var(--color-surface)' }} />}
+                  </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}>
                       <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{u.full_name || u.username || 'Sem nome'}</span>
                       {u.role && u.role !== 'aluno' && (
-                        <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 5, background: u.role === 'professor' ? C.greenSoft : C.purpleSoft, color: u.role === 'professor' ? C.green : C.purple }}>{u.role}</span>
+                        <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 5px', borderRadius: 4, background: u.role === 'professor' ? C.greenSoft : C.purpleSoft, color: u.role === 'professor' ? C.green : C.purple }}>{u.role}</span>
                       )}
-                      {u.is_admin && <Badge color={C.purple}>Admin</Badge>}
-                      {diffH < 24 && <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 5, background: C.blueSoft, color: C.blue }}>novo</span>}
+                      {diffH < 24 && <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 5px', borderRadius: 4, background: C.blueSoft, color: C.blue }}>novo</span>}
+                      {pc === 0 && diffH > 48 && <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 5px', borderRadius: 4, background: C.redSoft, color: C.red }}>sem projeto</span>}
                     </div>
-                    {u.email && <div style={{ fontSize: 11, color: C.subtle, marginTop: 2 }}>{u.email}</div>}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 3, flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: 11, color: C.subtle }}><Calendar size={9} style={{ verticalAlign: 'middle', marginRight: 3 }} />{timeAgo}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginTop: 2, flexWrap: 'wrap' }}>
+                      {u.email && <span style={{ fontSize: 11, color: C.subtle }}>{u.email}</span>}
                       {u.signup_country && (
-                        <span style={{ fontSize: 11, color: C.subtle, display: 'inline-flex', alignItems: 'center', gap: 3 }}>
-                          <MapPin size={9} /> {u.signup_city ? `${u.signup_city}, ${u.signup_country}` : u.signup_country}
+                        <span style={{ fontSize: 10, color: C.subtle, display: 'inline-flex', alignItems: 'center', gap: 2 }}>
+                          <MapPin size={8} />{u.signup_city ? `${u.signup_city}` : u.signup_country}
                         </span>
                       )}
-                      {referrerDomain && <span style={{ fontSize: 11, color: C.subtle }}>via {referrerDomain}</span>}
-                      {u.signup_utm_source && <span style={{ fontSize: 11, color: C.subtle }}>utm:{u.signup_utm_source}</span>}
-                      {projectCount > 0 && <span style={{ fontSize: 11, color: C.blue }}>{projectCount} projeto{projectCount > 1 ? 's' : ''}</span>}
                     </div>
                   </div>
-                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                    {lastSeen ? (
-                      <span style={{ fontSize: 11, color: C.green, display: 'flex', alignItems: 'center', gap: 4 }}>● {lastSeen}</span>
-                    ) : (
-                      <span style={{ fontSize: 11, color: C.subtle }}>inativo</span>
-                    )}
+                  <div style={{ textAlign: 'right', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2 }}>
+                    <span style={{ fontSize: 10, color: C.subtle }}>{regAgo}</span>
+                    {pc > 0 && <span style={{ fontSize: 10, color: C.blue }}>{pc} proj.</span>}
+                    {isRecentActive && !isOnline && <span style={{ fontSize: 10, color: C.green }}>ativo {lastSeen}</span>}
+                    {!isRecentActive && u.last_active_at && <span style={{ fontSize: 10, color: C.subtle }}>visto {lastSeen}</span>}
                   </div>
                 </div>
               )
