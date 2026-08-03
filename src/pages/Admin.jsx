@@ -139,6 +139,47 @@ function MiniBar({ label, value, total, color = C.blue }) {
   )
 }
 
+// ─── CHART COMPONENTS ───────────────────────────────────────
+function BarChart({ data, height = 120, color = C.blue, labelKey = 'label', valueKey = 'value' }) {
+  const max = Math.max(...data.map(d => d[valueKey]), 1)
+  const barW = Math.min(28, Math.floor((100 / data.length) * 0.7))
+  const gap = Math.max(2, Math.floor((100 - barW * data.length) / (data.length + 1)))
+  return (
+    <div style={{ width: '100%', height, position: 'relative' }}>
+      <svg width="100%" height={height} viewBox={`0 0 ${data.length * (barW + gap) + gap} ${height}`} preserveAspectRatio="none">
+        {data.map((d, i) => {
+          const barH = Math.max(2, (d[valueKey] / max) * (height - 28))
+          const x = gap + i * (barW + gap)
+          return (
+            <g key={i}>
+              <rect x={x} y={height - 16 - barH} width={barW} height={barH} rx={3} fill={d.highlight ? color : `${color}88`} />
+              <text x={x + barW / 2} y={height - 18 - barH} textAnchor="middle" fill={C.text} fontSize={9} fontWeight={600}>{d[valueKey] > 0 ? d[valueKey] : ''}</text>
+              <text x={x + barW / 2} y={height - 2} textAnchor="middle" fill="var(--color-text-tertiary)" fontSize={8}>{d[labelKey]}</text>
+            </g>
+          )
+        })}
+      </svg>
+    </div>
+  )
+}
+
+function SparkLine({ data, height = 48, color = C.blue }) {
+  if (data.length < 2) return null
+  const max = Math.max(...data, 1)
+  const w = 200
+  const points = data.map((v, i) => `${(i / (data.length - 1)) * w},${height - 4 - (v / max) * (height - 8)}`).join(' ')
+  const areaPoints = `0,${height - 4} ${points} ${w},${height - 4}`
+  return (
+    <svg width="100%" height={height} viewBox={`0 0 ${w} ${height}`} preserveAspectRatio="none" style={{ display: 'block' }}>
+      <polygon points={areaPoints} fill={`${color}15`} />
+      <polyline points={points} fill="none" stroke={color} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
+      {data.map((v, i) => (
+        <circle key={i} cx={(i / (data.length - 1)) * w} cy={height - 4 - (v / max) * (height - 8)} r={2.5} fill={i === data.length - 1 ? color : 'none'} stroke={color} strokeWidth={1.5} />
+      ))}
+    </svg>
+  )
+}
+
 // ─── OVERVIEW TAB ───────────────────────────────────────────
 const SORT_OPTIONS = [
   { id: 'newest', label: 'Mais recente' },
@@ -166,6 +207,43 @@ function OverviewTab({ users, projects }) {
   const activeThisWeek = users.filter(u => u.last_active_at && new Date(u.last_active_at) > weekAgo).length
   const activeThisMonth = users.filter(u => u.last_active_at && new Date(u.last_active_at) > monthAgo).length
   const neverActive = users.filter(u => !u.last_active_at).length
+  const orphanCount = users.filter(u => u._orphan).length
+  const retentionRate = totalUsers > 0 ? Math.round((activeThisMonth / totalUsers) * 100) : 0
+
+  // Registrations per week (last 8 weeks)
+  const regWeeks = Array.from({ length: 8 }, (_, i) => {
+    const weekStart = now - (7 - i) * 7 * 86400000
+    const weekEnd = now - (6 - i) * 7 * 86400000
+    const count = users.filter(u => {
+      const t = new Date(u.created_at).getTime()
+      return t >= weekStart && t < weekEnd
+    }).length
+    const d = new Date(weekStart)
+    return { label: `${d.getDate()}/${d.getMonth() + 1}`, value: count, highlight: i === 7 }
+  })
+
+  // Daily active users (last 14 days)
+  const dauData = Array.from({ length: 14 }, (_, i) => {
+    const dayStart = now - (13 - i) * 86400000
+    const dayEnd = dayStart + 86400000
+    return users.filter(u => {
+      if (!u.last_active_at) return false
+      const t = new Date(u.last_active_at).getTime()
+      return t >= dayStart && t < dayEnd
+    }).length
+  })
+
+  // Projects per week (last 8 weeks)
+  const projWeeks = Array.from({ length: 8 }, (_, i) => {
+    const weekStart = now - (7 - i) * 7 * 86400000
+    const weekEnd = now - (6 - i) * 7 * 86400000
+    const count = projects.filter(p => {
+      const t = new Date(p.created_at).getTime()
+      return t >= weekStart && t < weekEnd
+    }).length
+    const d = new Date(weekStart)
+    return { label: `${d.getDate()}/${d.getMonth() + 1}`, value: count, highlight: i === 7 }
+  })
 
   // Project counts per user
   const projectCountMap = {}
@@ -212,14 +290,34 @@ function OverviewTab({ users, projects }) {
   return (
     <div>
       {/* Stats row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(190px, 1fr))', gap: 14, marginBottom: 24 }}>
-        <StatCard icon={<User size={20} />} label="Utilizadores" value={totalUsers} color={C.blue} sub={`+${newUsersWeek} esta semana · +${newUsersMonth} este mês`} />
-        <StatCard icon={<Folder size={20} />} label="Projetos" value={totalProjects} color={C.green} sub={`+${newThisWeek} esta semana · ${usersWithoutProjects} users sem projeto`} />
-        <StatCard icon={<Star size={20} />} label="Score médio" value={avgScore} color={C.yellow} sub={`${scores.length} projetos com score`} />
-        <StatCard icon={<BarChart2 size={20} />} label="Ativos esta semana" value={activeThisWeek} color={activeThisWeek > 0 ? C.green : C.red} sub={`${activeThisMonth} este mês · ${neverActive} nunca entraram`} />
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(175px, 1fr))', gap: 14, marginBottom: 24 }}>
+        <StatCard icon={<User size={20} />} label="Utilizadores" value={totalUsers} color={C.blue} sub={`+${newUsersWeek} semana · +${newUsersMonth} mês`} />
+        <StatCard icon={<Folder size={20} />} label="Projetos" value={totalProjects} color={C.green} sub={`+${newThisWeek} semana · ${usersWithoutProjects} sem projeto`} />
+        <StatCard icon={<BarChart2 size={20} />} label="Ativos (semana)" value={activeThisWeek} color={activeThisWeek > 0 ? C.green : C.red} sub={`${activeThisMonth} mês · ${neverActive} nunca`} />
+        <StatCard icon={<Star size={20} />} label="Retenção mensal" value={`${retentionRate}%`} color={retentionRate > 30 ? C.green : retentionRate > 10 ? C.yellow : C.red} sub={`${activeThisMonth}/${totalUsers} voltaram`} />
+        <StatCard icon={<Star size={20} />} label="Score médio" value={avgScore} color={C.yellow} sub={`${scores.length} com score`} />
       </div>
 
-      {/* Middle row: breakdowns */}
+      {/* Charts row */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16, marginBottom: 24 }}>
+        <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '16px 18px' }}>
+          <h3 style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Registos por semana</h3>
+          <p style={{ margin: '0 0 10px', fontSize: 11, color: C.subtle }}>Últimas 8 semanas</p>
+          <BarChart data={regWeeks} color={C.blue} height={110} />
+        </div>
+        <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '16px 18px' }}>
+          <h3 style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Atividade diária</h3>
+          <p style={{ margin: '0 0 10px', fontSize: 11, color: C.subtle }}>Users ativos / dia (14 dias)</p>
+          <SparkLine data={dauData} color={C.green} height={80} />
+        </div>
+        <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '16px 18px' }}>
+          <h3 style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Projetos por semana</h3>
+          <p style={{ margin: '0 0 10px', fontSize: 11, color: C.subtle }}>Últimas 8 semanas</p>
+          <BarChart data={projWeeks} color={C.green} height={110} />
+        </div>
+      </div>
+
+      {/* Breakdowns row */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16, marginBottom: 24 }}>
         {/* Roles */}
         <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '16px 18px' }}>
