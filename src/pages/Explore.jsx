@@ -264,16 +264,7 @@ export default function Explore() {
 
   return (
     <div className="min-h-screen bg-page font-body">
-      <Navbar>
-        {profile?.id && profile?.role !== 'professor' && (
-          <button
-            className="explore-create-btn"
-            onClick={() => navigate('/novo')}
-          >
-            Criar projeto
-          </button>
-        )}
-      </Navbar>
+      <Navbar />
 
       <div className="page-content">
         {/* Header */}

@@ -2,7 +2,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const LIMIT_PER_HOUR = 10
 
-const ALLOWED_ORIGINS = ['https://showo.pt', 'https://www.showo.pt']
+const ALLOWED_ORIGINS = ['https://showo.pt', 'https://www.showo.pt', 'https://showo.vercel.app']
 
 export function getCorsHeaders(req: Request): Record<string, string> {
   const origin = req.headers.get('origin') ?? ''
