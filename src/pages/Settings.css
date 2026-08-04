@@ -616,7 +616,8 @@
 }
 .settings-visibility-option.active {
   border-color: var(--color-accent);
-  background: rgba(99,102,241,0.06);
+  background: rgba(99,102,241,0.12);
+  box-shadow: 0 0 0 1px var(--color-accent);
 }
 .settings-visibility-icon {
   margin-top: 2px;
