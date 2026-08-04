@@ -265,10 +265,10 @@ export default function Explore() {
   return (
     <div className="min-h-screen bg-page font-body">
       <Navbar>
-        {profile?.role !== 'professor' && (
+        {profile?.id && profile?.role !== 'professor' && (
           <button
             className="explore-create-btn"
-            onClick={() => profile?.id ? navigate('/novo') : navigate('/register')}
+            onClick={() => navigate('/novo')}
           >
             Criar projeto
           </button>
