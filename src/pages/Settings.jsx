@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
 import { Navbar } from '../components/Navbar'
-import { Loader, Check, X, AlertTriangle, Camera, ArrowLeft, GraduationCap, BookOpen, Search, Building2, Lock, Briefcase, Sun, Moon, BarChart2 } from 'lucide-react'
+import { Loader, Check, X, AlertTriangle, Camera, ArrowLeft, GraduationCap, BookOpen, Search, Building2, Lock, Briefcase, Sun, Moon, BarChart2, Bell, Mail, Megaphone, Rocket, FolderOpen, Eye, EyeOff, Globe, Shield } from 'lucide-react'
 import { CropModal } from '../components/CropModal'
 import { containsProfanity } from '../lib/profanity'
 import SkillsPicker from '../components/SkillsPicker'
@@ -112,6 +112,12 @@ export default function Settings() {
   const [confirmPw, setConfirmPw] = useState('')
   const [pwSaving, setPwSaving] = useState(false)
   const [pwMsg, setPwMsg] = useState(null)
+  const [notifyNewsletter, setNotifyNewsletter] = useState(true)
+  const [notifyMarketing, setNotifyMarketing] = useState(true)
+  const [notifyProductUpdates, setNotifyProductUpdates] = useState(true)
+  const [notifyProjectActivity, setNotifyProjectActivity] = useState(true)
+  const [profileVisibility, setProfileVisibility] = useState('public')
+  const [showEmailPublicly, setShowEmailPublicly] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState(false)
   const [deleteLoading, setDeleteLoading] = useState(false)
   const [deleteError, setDeleteError] = useState(null)
@@ -123,7 +129,7 @@ export default function Settings() {
   useEffect(() => {
     if (!user) return
     setFullName(user.user_metadata?.full_name ?? '')
-    supabase.from('profiles').select('username, bio, role, avatar_url, available_for_work, monthly_report_opt_in, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size, skills, area').eq('id', user.id).single().then(({ data }) => {
+    supabase.from('profiles').select('username, bio, role, avatar_url, available_for_work, monthly_report_opt_in, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size, skills, area, notify_newsletter, notify_marketing, notify_product_updates, notify_project_activity, profile_visibility, show_email_publicly').eq('id', user.id).single().then(({ data }) => {
       if (data) {
         setUsername(data.username ?? '')
         setOriginalUsername(data.username ?? '')
@@ -143,6 +149,12 @@ export default function Settings() {
         setCompanySize(data.company_size ?? '')
         setSkills(data.skills ?? [])
         setArea(data.area ?? '')
+        setNotifyNewsletter(data.notify_newsletter ?? true)
+        setNotifyMarketing(data.notify_marketing ?? true)
+        setNotifyProductUpdates(data.notify_product_updates ?? true)
+        setNotifyProjectActivity(data.notify_project_activity ?? true)
+        setProfileVisibility(data.profile_visibility ?? 'public')
+        setShowEmailPublicly(data.show_email_publicly ?? false)
       }
     })
   }, [user])
@@ -211,6 +223,8 @@ export default function Settings() {
       if (metaError) throw metaError
       const { error: profileError } = await supabase.from('profiles').upsert({
         id: user.id, full_name: fullName.trim(), username: username.trim() || null, bio: bio.trim() || null, role: safeRole, available_for_work: availableForWork,
+        notify_newsletter: notifyNewsletter, notify_marketing: notifyMarketing, notify_product_updates: notifyProductUpdates, notify_project_activity: notifyProjectActivity,
+        profile_visibility: profileVisibility, show_email_publicly: showEmailPublicly,
         ...(role === 'professor' ? { monthly_report_opt_in: monthlyReportOptIn } : {}),
         ...((role === 'aluno' || role === 'professor') ? { skills } : {}),
         ...(role === 'aluno' ? { area: area || null } : {}),
@@ -265,6 +279,7 @@ export default function Settings() {
     { id: 'perfil', label: 'Perfil', icon: <Camera size={15} /> },
     { id: 'empresa', label: 'Empresa', icon: <Building2 size={15} /> },
     { id: 'recrutamento', label: 'Recrutamento', icon: <Search size={15} /> },
+    { id: 'notificacoes', label: 'Notificações', icon: <Bell size={15} /> },
     { id: 'conta', label: 'Conta', icon: <Lock size={15} /> },
   ]
 
@@ -458,6 +473,35 @@ export default function Settings() {
               </SectionCard>
             )}
 
+            {activeTab === 'notificacoes' && (
+              <>
+                <SectionCard title="Notificações por email">
+                  <p className="text-sm text-muted mb-4">Escolhe que comunicações queres receber por email.</p>
+                  {[
+                    { key: 'notifyProjectActivity', state: notifyProjectActivity, setter: setNotifyProjectActivity, icon: <FolderOpen size={14} />, title: 'Atividade nos projetos', desc: 'Novos candidatos, atualizações de perfis e projetos relevantes.' },
+                    { key: 'notifyProductUpdates', state: notifyProductUpdates, setter: setNotifyProductUpdates, icon: <Rocket size={14} />, title: 'Novidades do produto', desc: 'Novas funcionalidades, melhorias e atualizações da plataforma.' },
+                    { key: 'notifyNewsletter', state: notifyNewsletter, setter: setNotifyNewsletter, icon: <Mail size={14} />, title: 'Newsletter', desc: 'Dicas, casos de sucesso e conteúdo educativo — enviado ocasionalmente.' },
+                    { key: 'notifyMarketing', state: notifyMarketing, setter: setNotifyMarketing, icon: <Megaphone size={14} />, title: 'Promoções e ofertas', desc: 'Ofertas especiais, eventos e oportunidades exclusivas.' },
+                  ].map(n => (
+                    <div key={n.key} className="settings-field" style={{ marginBottom: 8 }}>
+                      <button type="button" onClick={() => n.setter(v => !v)} className={`settings-toggle${n.state ? ' active' : ''}`}>
+                        <div className={`settings-toggle-track ${n.state ? 'on' : 'off'}`}>
+                          <div className={`settings-toggle-knob ${n.state ? 'on' : 'off'}`} />
+                        </div>
+                        <div>
+                          <div className="settings-toggle-title" style={{ color: n.state ? 'var(--color-success)' : undefined }}>
+                            {n.icon} {n.title}
+                          </div>
+                          <div className="settings-toggle-desc">{n.desc}</div>
+                        </div>
+                      </button>
+                    </div>
+                  ))}
+                  {saveBlock}
+                </SectionCard>
+              </>
+            )}
+
             {activeTab === 'conta' && (
               <>
                 <SectionCard title="Email">
@@ -558,6 +602,67 @@ export default function Settings() {
               </div>
 
               {roleBadge}
+              {saveBlock}
+            </SectionCard>
+
+            <SectionCard title="Notificações">
+              <p className="text-sm text-muted mb-4">Escolhe que comunicações queres receber por email.</p>
+              {[
+                { key: 'notifyProjectActivity', state: notifyProjectActivity, setter: setNotifyProjectActivity, icon: <FolderOpen size={14} />, title: 'Atividade nos projetos', desc: 'Comentários, convites de colaboração e atualizações nos teus projetos.' },
+                { key: 'notifyProductUpdates', state: notifyProductUpdates, setter: setNotifyProductUpdates, icon: <Rocket size={14} />, title: 'Novidades do produto', desc: 'Novas funcionalidades, melhorias e atualizações da plataforma.' },
+                { key: 'notifyNewsletter', state: notifyNewsletter, setter: setNotifyNewsletter, icon: <Mail size={14} />, title: 'Newsletter', desc: 'Dicas, casos de sucesso e conteúdo educativo — enviado ocasionalmente.' },
+                { key: 'notifyMarketing', state: notifyMarketing, setter: setNotifyMarketing, icon: <Megaphone size={14} />, title: 'Promoções e ofertas', desc: 'Ofertas especiais, eventos e oportunidades exclusivas.' },
+              ].map(n => (
+                <div key={n.key} className="settings-field" style={{ marginBottom: 8 }}>
+                  <button type="button" onClick={() => n.setter(v => !v)} className={`settings-toggle${n.state ? ' active' : ''}`}>
+                    <div className={`settings-toggle-track ${n.state ? 'on' : 'off'}`}>
+                      <div className={`settings-toggle-knob ${n.state ? 'on' : 'off'}`} />
+                    </div>
+                    <div>
+                      <div className="settings-toggle-title" style={{ color: n.state ? 'var(--color-success)' : undefined }}>
+                        {n.icon} {n.title}
+                      </div>
+                      <div className="settings-toggle-desc">{n.desc}</div>
+                    </div>
+                  </button>
+                </div>
+              ))}
+              {saveBlock}
+            </SectionCard>
+
+            <SectionCard title="Privacidade">
+              <div className="settings-field">
+                <label className="settings-label">Visibilidade do perfil</label>
+                <div className="settings-visibility-options">
+                  {[
+                    { value: 'public', icon: <Globe size={16} />, label: 'Público', desc: 'Qualquer pessoa pode ver o teu perfil e projetos.' },
+                    { value: 'registered', icon: <Eye size={16} />, label: 'Apenas utilizadores', desc: 'Só quem tem conta no Showo pode ver o teu perfil.' },
+                    { value: 'private', icon: <EyeOff size={16} />, label: 'Privado', desc: 'Só tu consegues ver o teu perfil.' },
+                  ].map(v => (
+                    <button key={v.value} type="button" onClick={() => setProfileVisibility(v.value)}
+                      className={`settings-visibility-option${profileVisibility === v.value ? ' active' : ''}`}>
+                      <div className="settings-visibility-icon" style={{ color: profileVisibility === v.value ? 'var(--color-accent)' : undefined }}>{v.icon}</div>
+                      <div>
+                        <div className="text-base font-semibold">{v.label}</div>
+                        <div className="text-sm text-muted">{v.desc}</div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="settings-field" style={{ marginBottom: 8 }}>
+                <button type="button" onClick={() => setShowEmailPublicly(v => !v)} className={`settings-toggle${showEmailPublicly ? ' active' : ''}`}>
+                  <div className={`settings-toggle-track ${showEmailPublicly ? 'on' : 'off'}`}>
+                    <div className={`settings-toggle-knob ${showEmailPublicly ? 'on' : 'off'}`} />
+                  </div>
+                  <div>
+                    <div className="settings-toggle-title" style={{ color: showEmailPublicly ? 'var(--color-success)' : undefined }}>
+                      <Mail size={14} /> Mostrar email no perfil
+                    </div>
+                    <div className="settings-toggle-desc">Permite que outros utilizadores vejam o teu email no teu perfil público.</div>
+                  </div>
+                </button>
+              </div>
               {saveBlock}
             </SectionCard>
 

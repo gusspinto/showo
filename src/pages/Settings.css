@@ -591,3 +591,35 @@
     gap: 12px;
   }
 }
+
+/* ── Visibility options ── */
+.settings-visibility-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.settings-visibility-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1.5px solid var(--color-border);
+  background: var(--color-surface);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.2s, background 0.2s;
+}
+.settings-visibility-option:hover {
+  border-color: var(--color-accent);
+  background: var(--color-hover);
+}
+.settings-visibility-option.active {
+  border-color: var(--color-accent);
+  background: rgba(99,102,241,0.06);
+}
+.settings-visibility-icon {
+  margin-top: 2px;
+  color: var(--color-muted);
+  flex-shrink: 0;
+}
