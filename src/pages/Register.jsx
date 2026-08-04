@@ -247,6 +247,11 @@ export default function Register() {
       }).eq('id', newUser.id)
     }
 
+    // Send welcome email (fire-and-forget)
+    if (newUser) {
+      supabase.functions.invoke('send-welcome-email').catch(() => {})
+    }
+
     // Claim all anonymously-created projects from this browser (edit_token_* in localStorage)
     let claimedSlugs = []
     if (newUser) {

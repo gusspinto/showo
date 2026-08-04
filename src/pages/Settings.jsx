@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
 import { Navbar } from '../components/Navbar'
-import { Loader, Check, X, AlertTriangle, Camera, ArrowLeft, GraduationCap, BookOpen, Search, Building2, Lock, Briefcase, Sun, Moon, BarChart2 } from 'lucide-react'
+import { Loader, Check, X, AlertTriangle, Camera, ArrowLeft, GraduationCap, BookOpen, Search, Building2, Lock, Briefcase, Sun, Moon, BarChart2, Bell, Mail, Megaphone, Rocket, FolderOpen, Eye, EyeOff, Globe, Shield } from 'lucide-react'
 import { CropModal } from '../components/CropModal'
 import { containsProfanity } from '../lib/profanity'
 import SkillsPicker from '../components/SkillsPicker'
@@ -112,6 +112,12 @@ export default function Settings() {
   const [confirmPw, setConfirmPw] = useState('')
   const [pwSaving, setPwSaving] = useState(false)
   const [pwMsg, setPwMsg] = useState(null)
+  const [notifyNewsletter, setNotifyNewsletter] = useState(true)
+  const [notifyMarketing, setNotifyMarketing] = useState(true)
+  const [notifyProductUpdates, setNotifyProductUpdates] = useState(true)
+  const [notifyProjectActivity, setNotifyProjectActivity] = useState(true)
+  const [profileVisibility, setProfileVisibility] = useState('public')
+  const [showEmailPublicly, setShowEmailPublicly] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState(false)
   const [deleteLoading, setDeleteLoading] = useState(false)
   const [deleteError, setDeleteError] = useState(null)
@@ -123,7 +129,7 @@ export default function Settings() {
   useEffect(() => {
     if (!user) return
     setFullName(user.user_metadata?.full_name ?? '')
-    supabase.from('profiles').select('username, bio, role, avatar_url, available_for_work, monthly_report_opt_in, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size, skills, area').eq('id', user.id).single().then(({ data }) => {
+    supabase.from('profiles').select('username, bio, role, avatar_url, available_for_work, monthly_report_opt_in, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size, skills, area, notify_newsletter, notify_marketing, notify_product_updates, notify_project_activity, profile_visibility, show_email_publicly').eq('id', user.id).single().then(({ data }) => {
       if (data) {
         setUsername(data.username ?? '')
         setOriginalUsername(data.username ?? '')
@@ -143,6 +149,12 @@ export default function Settings() {
         setCompanySize(data.company_size ?? '')
         setSkills(data.skills ?? [])
         setArea(data.area ?? '')
+        setNotifyNewsletter(data.notify_newsletter ?? true)
+        setNotifyMarketing(data.notify_marketing ?? true)
+        setNotifyProductUpdates(data.notify_product_updates ?? true)
+        setNotifyProjectActivity(data.notify_project_activity ?? true)
+        setProfileVisibility(data.profile_visibility ?? 'public')
+        setShowEmailPublicly(data.show_email_publicly ?? false)
       }
     })
   }, [user])
@@ -211,6 +223,8 @@ export default function Settings() {
       if (metaError) throw metaError
       const { error: profileError } = await supabase.from('profiles').upsert({
         id: user.id, full_name: fullName.trim(), username: username.trim() || null, bio: bio.trim() || null, role: safeRole, available_for_work: availableForWork,
+        notify_newsletter: notifyNewsletter, notify_marketing: notifyMarketing, notify_product_updates: notifyProductUpdates, notify_project_activity: notifyProjectActivity,
+        profile_visibility: profileVisibility, show_email_publicly: showEmailPublicly,
         ...(role === 'professor' ? { monthly_report_opt_in: monthlyReportOptIn } : {}),
         ...((role === 'aluno' || role === 'professor') ? { skills } : {}),
         ...(role === 'aluno' ? { area: area || null } : {}),
@@ -261,11 +275,20 @@ export default function Settings() {
   const isRecruiter = role === 'recrutador' || role === 'empresa'
   const accentColor = role === 'empresa' ? 'var(--color-warning)' : 'var(--color-accent)'
 
-  const recruiterTabs = [
-    { id: 'perfil', label: 'Perfil', icon: <Camera size={15} /> },
-    { id: 'empresa', label: 'Empresa', icon: <Building2 size={15} /> },
-    { id: 'recrutamento', label: 'Recrutamento', icon: <Search size={15} /> },
-    { id: 'conta', label: 'Conta', icon: <Lock size={15} /> },
+  const sidebarTabs = isRecruiter ? [
+    { id: 'perfil', label: 'Perfil', icon: <Camera size={16} /> },
+    { id: 'empresa', label: 'Empresa', icon: <Building2 size={16} /> },
+    { id: 'recrutamento', label: 'Recrutamento', icon: <Search size={16} /> },
+    { id: 'notificacoes', label: 'Notificações', icon: <Bell size={16} /> },
+    { id: 'privacidade', label: 'Privacidade', icon: <Shield size={16} /> },
+    { id: 'aparencia', label: 'Aparência', icon: theme === 'dark' ? <Moon size={16} /> : <Sun size={16} /> },
+    { id: 'conta', label: 'Conta', icon: <Lock size={16} /> },
+  ] : [
+    { id: 'perfil', label: 'Perfil', icon: <Camera size={16} /> },
+    { id: 'notificacoes', label: 'Notificações', icon: <Bell size={16} /> },
+    { id: 'privacidade', label: 'Privacidade', icon: <Shield size={16} /> },
+    { id: 'aparencia', label: 'Aparência', icon: theme === 'dark' ? <Moon size={16} /> : <Sun size={16} /> },
+    { id: 'conta', label: 'Conta', icon: <Lock size={16} /> },
   ]
 
   const avatarBlock = (
@@ -391,30 +414,98 @@ export default function Settings() {
           </button>
         </div>
 
-        {isRecruiter ? (
-          <>
-            <div className="settings-tab-row">
-              {recruiterTabs.map(t => (
-                <button key={t.id} onClick={() => setActiveTab(t.id)}
-                  className={`settings-tab-btn${activeTab === t.id ? ' active' : ''}`}
-                  style={activeTab === t.id ? { background: accentColor } : undefined}>
-                  {t.icon} {t.label}
-                </button>
-              ))}
-            </div>
+        <div className="settings-layout">
+          <nav className="settings-sidebar">
+            {sidebarTabs.map(t => (
+              <button key={t.id} onClick={() => setActiveTab(t.id)}
+                className={`settings-sidebar-item${activeTab === t.id ? ' active' : ''}`}>
+                {t.icon} <span>{t.label}</span>
+              </button>
+            ))}
+          </nav>
 
+          <div className="settings-main">
             {activeTab === 'perfil' && (
-              <SectionCard title="Perfil público">
-                {avatarBlock}
-                <Input label="Nome" value={fullName} onChange={setFullName} placeholder="O teu nome" />
-                <Input label="Username" value={username} onChange={v => setUsername(v.toLowerCase().replace(/[^a-z0-9_]/g, ''))} placeholder="ex: rh_empresa" prefix="@" hint={usernameHint} />
-                <Textarea label="Apresentação" value={bio} onChange={setBio} placeholder="Apresenta a tua empresa ou o teu trabalho como recrutador..." hint="Aparece no teu perfil público — os alunos vêem isto." />
-                {roleBadge}
-                {saveBlock}
-              </SectionCard>
+              <>
+                <SectionCard title="Perfil público">
+                  {avatarBlock}
+                  <Input label="Nome" value={fullName} onChange={setFullName} placeholder="O teu nome" />
+                  <Input label="Username" value={username} onChange={v => setUsername(v.toLowerCase().replace(/[^a-z0-9_]/g, ''))} placeholder={isRecruiter ? 'ex: rh_empresa' : 'ex: gustavo_silva'} prefix="@" hint={usernameHint} />
+                  <Textarea label={isRecruiter ? 'Apresentação' : 'Bio'} value={bio} onChange={setBio} placeholder={isRecruiter ? 'Apresenta a tua empresa ou o teu trabalho como recrutador...' : 'Conta um pouco sobre ti e os teus projetos...'} hint="Aparece no teu perfil público." />
+
+                  {role === 'aluno' && (
+                    <div className="settings-field">
+                      <label className="settings-label">Área</label>
+                      <select value={area} onChange={e => setArea(e.target.value)} className={`settings-select${area ? ' has-value' : ''}`}>
+                        <option value="">Seleciona a tua área</option>
+                        <option value="Programação e Informática">Programação e Informática</option>
+                        <option value="Design e Multimédia">Design e Multimédia</option>
+                        <option value="Marketing e Comunicação">Marketing e Comunicação</option>
+                        <option value="Gestão e Administração">Gestão e Administração</option>
+                        <option value="Eletrónica e Automação">Eletrónica e Automação</option>
+                        <option value="Audiovisual e Cinema">Audiovisual e Cinema</option>
+                        <option value="Turismo e Hotelaria">Turismo e Hotelaria</option>
+                        <option value="Saúde">Saúde</option>
+                        <option value="Desporto">Desporto</option>
+                        <option value="Artes e Espetáculo">Artes e Espetáculo</option>
+                        <option value="Construção e Engenharia">Construção e Engenharia</option>
+                        <option value="Outra">Outra</option>
+                      </select>
+                      <p className="settings-hint">Permite que recrutadores filtrem por área.</p>
+                    </div>
+                  )}
+
+                  {role === 'aluno' && (
+                    <div className="settings-field">
+                      <label className="settings-label">Disponibilidade</label>
+                      <button type="button" onClick={() => setAvailableForWork(v => !v)} className={`settings-toggle${availableForWork ? ' active' : ''}`}>
+                        <div className={`settings-toggle-track ${availableForWork ? 'on' : 'off'}`}>
+                          <div className={`settings-toggle-knob ${availableForWork ? 'on' : 'off'}`} />
+                        </div>
+                        <div>
+                          <div className="settings-toggle-title" style={{ color: availableForWork ? 'var(--color-success)' : undefined }}>
+                            <Briefcase size={14} className="flex-shrink-0" />
+                            {availableForWork ? 'Disponível para estágio' : 'Não disponível para estágio'}
+                          </div>
+                          <div className="settings-toggle-desc">
+                            {availableForWork ? 'O teu perfil aparece nos resultados de recrutadores e empresas.' : 'Ativa para aparecer em pesquisas de recrutadores.'}
+                          </div>
+                        </div>
+                      </button>
+                    </div>
+                  )}
+
+                  {role === 'professor' && (
+                    <div className="settings-field">
+                      <label className="settings-label">Relatório mensal</label>
+                      <button type="button" onClick={() => setMonthlyReportOptIn(v => !v)} className={`settings-toggle${monthlyReportOptIn ? ' active' : ''}`}>
+                        <div className={`settings-toggle-track ${monthlyReportOptIn ? 'on' : 'off'}`}>
+                          <div className={`settings-toggle-knob ${monthlyReportOptIn ? 'on' : 'off'}`} />
+                        </div>
+                        <div>
+                          <div className="settings-toggle-title" style={{ color: monthlyReportOptIn ? 'var(--color-success)' : undefined }}>
+                            <BarChart2 size={14} className="flex-shrink-0" />
+                            {monthlyReportOptIn ? 'Relatório mensal ativo' : 'Relatório mensal desativado'}
+                          </div>
+                          <div className="settings-toggle-desc">
+                            Recebe por email, uma vez por mês, um resumo da atividade das tuas turmas (projetos submetidos, scores, turma mais ativa).
+                          </div>
+                        </div>
+                      </button>
+                    </div>
+                  )}
+
+                  <div className="settings-field">
+                    <SkillsPicker value={skills} onChange={setSkills} max={12} label="Competências" />
+                  </div>
+
+                  {roleBadge}
+                  {saveBlock}
+                </SectionCard>
+              </>
             )}
 
-            {activeTab === 'empresa' && (
+            {activeTab === 'empresa' && isRecruiter && (
               <SectionCard title="Dados da empresa">
                 <div className="settings-info-banner" style={{ background: `${accentColor}0d`, border: `1px solid ${accentColor}33` }}>
                   <Building2 size={14} color={accentColor} />
@@ -445,7 +536,7 @@ export default function Settings() {
               </SectionCard>
             )}
 
-            {activeTab === 'recrutamento' && (
+            {activeTab === 'recrutamento' && isRecruiter && (
               <SectionCard title="O que procuras">
                 <div className="settings-info-banner" style={{ background: `${accentColor}0d`, border: `1px solid ${accentColor}33` }}>
                   <Search size={14} color={accentColor} />
@@ -458,9 +549,78 @@ export default function Settings() {
               </SectionCard>
             )}
 
+            {activeTab === 'notificacoes' && (
+              <SectionCard title="Notificações por email">
+                <p className="text-sm text-muted mb-4">Escolhe que comunicações queres receber por email.</p>
+                {[
+                  { key: 'notifyProjectActivity', state: notifyProjectActivity, setter: setNotifyProjectActivity, icon: <FolderOpen size={14} />, title: 'Atividade nos projetos', desc: isRecruiter ? 'Novos candidatos, atualizações de perfis e projetos relevantes.' : 'Comentários, convites de colaboração e atualizações nos teus projetos.' },
+                  { key: 'notifyProductUpdates', state: notifyProductUpdates, setter: setNotifyProductUpdates, icon: <Rocket size={14} />, title: 'Novidades do produto', desc: 'Novas funcionalidades, melhorias e atualizações da plataforma.' },
+                  { key: 'notifyNewsletter', state: notifyNewsletter, setter: setNotifyNewsletter, icon: <Mail size={14} />, title: 'Newsletter', desc: 'Dicas, casos de sucesso e conteúdo educativo — enviado ocasionalmente.' },
+                  { key: 'notifyMarketing', state: notifyMarketing, setter: setNotifyMarketing, icon: <Megaphone size={14} />, title: 'Promoções e ofertas', desc: 'Ofertas especiais, eventos e oportunidades exclusivas.' },
+                ].map(n => (
+                  <div key={n.key} className="settings-field" style={{ marginBottom: 8 }}>
+                    <button type="button" onClick={() => n.setter(v => !v)} className={`settings-toggle${n.state ? ' active' : ''}`}>
+                      <div className={`settings-toggle-track ${n.state ? 'on' : 'off'}`}>
+                        <div className={`settings-toggle-knob ${n.state ? 'on' : 'off'}`} />
+                      </div>
+                      <div>
+                        <div className="settings-toggle-title" style={{ color: n.state ? 'var(--color-success)' : undefined }}>
+                          {n.icon} {n.title}
+                        </div>
+                        <div className="settings-toggle-desc">{n.desc}</div>
+                      </div>
+                    </button>
+                  </div>
+                ))}
+                {saveBlock}
+              </SectionCard>
+            )}
+
+            {activeTab === 'privacidade' && (
+              <SectionCard title="Privacidade">
+                <div className="settings-field">
+                  <label className="settings-label">Visibilidade do perfil</label>
+                  <div className="settings-visibility-options">
+                    {[
+                      { value: 'public', icon: <Globe size={16} />, label: 'Público', desc: 'Qualquer pessoa pode ver o teu perfil e projetos.' },
+                      { value: 'registered', icon: <Eye size={16} />, label: 'Apenas utilizadores', desc: 'Só quem tem conta no Showo pode ver o teu perfil.' },
+                      { value: 'private', icon: <EyeOff size={16} />, label: 'Privado', desc: 'Só tu consegues ver o teu perfil.' },
+                    ].map(v => (
+                      <button key={v.value} type="button" onClick={() => setProfileVisibility(v.value)}
+                        className={`settings-visibility-option${profileVisibility === v.value ? ' active' : ''}`}>
+                        <div className="settings-visibility-icon" style={{ color: profileVisibility === v.value ? 'var(--color-accent)' : undefined }}>{v.icon}</div>
+                        <div>
+                          <div className="text-base font-semibold">{v.label}</div>
+                          <div className="text-sm text-muted">{v.desc}</div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="settings-field" style={{ marginBottom: 8 }}>
+                  <button type="button" onClick={() => setShowEmailPublicly(v => !v)} className={`settings-toggle${showEmailPublicly ? ' active' : ''}`}>
+                    <div className={`settings-toggle-track ${showEmailPublicly ? 'on' : 'off'}`}>
+                      <div className={`settings-toggle-knob ${showEmailPublicly ? 'on' : 'off'}`} />
+                    </div>
+                    <div>
+                      <div className="settings-toggle-title" style={{ color: showEmailPublicly ? 'var(--color-success)' : undefined }}>
+                        <Mail size={14} /> Mostrar email no perfil
+                      </div>
+                      <div className="settings-toggle-desc">Permite que outros utilizadores vejam o teu email no teu perfil público.</div>
+                    </div>
+                  </button>
+                </div>
+                {saveBlock}
+              </SectionCard>
+            )}
+
+            {activeTab === 'aparencia' && (
+              <SectionCard title="Aparência">{themeBlock}</SectionCard>
+            )}
+
             {activeTab === 'conta' && (
               <>
-                <SectionCard title="Email">
+                <SectionCard title="Conta">
                   <div className="settings-field">
                     <label className="settings-label">Email</label>
                     <div className="settings-static-field">{user.email}</div>
@@ -468,118 +628,15 @@ export default function Settings() {
                   </div>
                 </SectionCard>
                 <SectionCard title="Alterar password">{passwordBlock}</SectionCard>
-                <SectionCard title="Aparência">{themeBlock}</SectionCard>
                 <SectionCard title="Sessão">
-                  <p className="text-base text-muted mb-4" style={{ lineHeight: 1.65 }}>Terminar sessão em todos os dispositivos.</p>
+                  <p className="text-base text-muted mb-3" style={{ lineHeight: 1.65 }}>Terminar sessão em todos os dispositivos.</p>
                   <button onClick={async () => { await supabase.auth.signOut(); navigate('/') }} className="settings-danger-btn">Terminar sessão</button>
                 </SectionCard>
                 <SectionCard title="Zona de perigo">{dangerZone}</SectionCard>
               </>
             )}
-          </>
-        ) : (
-          <>
-            <SectionCard title="Perfil público">
-              {avatarBlock}
-              <Input label="Nome" value={fullName} onChange={setFullName} placeholder="O teu nome" />
-              <Input label="Username" value={username} onChange={v => setUsername(v.toLowerCase().replace(/[^a-z0-9_]/g, ''))} placeholder="ex: gustavo_silva" prefix="@"
-                hint={usernameStatus === 'checking' ? <span className="flex items-center gap-1"><Loader size={12} /> A verificar disponibilidade...</span> :
-                  usernameStatus === 'available' ? <span className="flex items-center gap-1"><Check size={12} /> Username disponível!</span> :
-                  usernameStatus === 'taken' ? <span className="flex items-center gap-1"><X size={12} /> Este username já está a ser usado.</span> :
-                  usernameStatus === 'invalid' ? <span className="flex items-center gap-1"><AlertTriangle size={12} /> Só letras minúsculas, números e _ (mín. 3 caracteres).</span> :
-                  `Link público: showo.vercel.app/u/${username || 'username'}`}
-              />
-              <Textarea label="Bio" value={bio} onChange={setBio} placeholder="Conta um pouco sobre ti e os teus projetos..." hint="Aparece no teu perfil público." />
-
-              {role === 'aluno' && (
-                <div className="settings-field">
-                  <label className="settings-label">Área</label>
-                  <select value={area} onChange={e => setArea(e.target.value)} className={`settings-select${area ? ' has-value' : ''}`}>
-                    <option value="">Seleciona a tua área</option>
-                    <option value="Programação e Informática">Programação e Informática</option>
-                    <option value="Design e Multimédia">Design e Multimédia</option>
-                    <option value="Marketing e Comunicação">Marketing e Comunicação</option>
-                    <option value="Gestão e Administração">Gestão e Administração</option>
-                    <option value="Eletrónica e Automação">Eletrónica e Automação</option>
-                    <option value="Audiovisual e Cinema">Audiovisual e Cinema</option>
-                    <option value="Turismo e Hotelaria">Turismo e Hotelaria</option>
-                    <option value="Saúde">Saúde</option>
-                    <option value="Desporto">Desporto</option>
-                    <option value="Artes e Espetáculo">Artes e Espetáculo</option>
-                    <option value="Construção e Engenharia">Construção e Engenharia</option>
-                    <option value="Outra">Outra</option>
-                  </select>
-                  <p className="settings-hint">Permite que recrutadores filtrem por área.</p>
-                </div>
-              )}
-
-              {role === 'aluno' && (
-                <div className="settings-field">
-                  <label className="settings-label">Disponibilidade</label>
-                  <button type="button" onClick={() => setAvailableForWork(v => !v)} className={`settings-toggle${availableForWork ? ' active' : ''}`}>
-                    <div className={`settings-toggle-track ${availableForWork ? 'on' : 'off'}`}>
-                      <div className={`settings-toggle-knob ${availableForWork ? 'on' : 'off'}`} />
-                    </div>
-                    <div>
-                      <div className="settings-toggle-title" style={{ color: availableForWork ? 'var(--color-success)' : undefined }}>
-                        <Briefcase size={14} className="flex-shrink-0" />
-                        {availableForWork ? 'Disponível para estágio' : 'Não disponível para estágio'}
-                      </div>
-                      <div className="settings-toggle-desc">
-                        {availableForWork ? 'O teu perfil aparece nos resultados de recrutadores e empresas.' : 'Ativa para aparecer em pesquisas de recrutadores.'}
-                      </div>
-                    </div>
-                  </button>
-                </div>
-              )}
-
-              {role === 'professor' && (
-                <div className="settings-field">
-                  <label className="settings-label">Relatório mensal</label>
-                  <button type="button" onClick={() => setMonthlyReportOptIn(v => !v)} className={`settings-toggle${monthlyReportOptIn ? ' active' : ''}`}>
-                    <div className={`settings-toggle-track ${monthlyReportOptIn ? 'on' : 'off'}`}>
-                      <div className={`settings-toggle-knob ${monthlyReportOptIn ? 'on' : 'off'}`} />
-                    </div>
-                    <div>
-                      <div className="settings-toggle-title" style={{ color: monthlyReportOptIn ? 'var(--color-success)' : undefined }}>
-                        <BarChart2 size={14} className="flex-shrink-0" />
-                        {monthlyReportOptIn ? 'Relatório mensal ativo' : 'Relatório mensal desativado'}
-                      </div>
-                      <div className="settings-toggle-desc">
-                        Recebe por email, uma vez por mês, um resumo da atividade das tuas turmas (projetos submetidos, scores, turma mais ativa).
-                      </div>
-                    </div>
-                  </button>
-                </div>
-              )}
-
-              <div className="settings-field">
-                <SkillsPicker value={skills} onChange={setSkills} max={12} label="Competências" />
-              </div>
-
-              {roleBadge}
-              {saveBlock}
-            </SectionCard>
-
-            <SectionCard title="Conta">
-              <div className="settings-field">
-                <label className="settings-label">Email</label>
-                <div className="settings-static-field">{user.email}</div>
-                <p className="settings-hint">O email não pode ser alterado.</p>
-              </div>
-            </SectionCard>
-
-            <SectionCard title="Alterar password">{passwordBlock}</SectionCard>
-            <SectionCard title="Aparência">{themeBlock}</SectionCard>
-
-            <SectionCard title="Zona de perigo">
-              <p className="text-base text-muted mb-3" style={{ lineHeight: 1.65 }}>Terminar sessão em todos os dispositivos.</p>
-              <button onClick={async () => { await supabase.auth.signOut(); navigate('/') }} className="settings-danger-btn mb-5">Terminar sessão</button>
-              <div className="settings-divider" />
-              {dangerZone}
-            </SectionCard>
-          </>
-        )}
+          </div>
+        </div>
       </div>
     </div>
   )

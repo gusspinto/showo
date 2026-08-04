@@ -4,6 +4,20 @@ import { identifyUser, resetAnalytics } from '../lib/analytics'
 
 const AuthContext = createContext({})
 
+async function persistGoogleAvatar(uid, googleUrl) {
+  try {
+    const res = await fetch(googleUrl)
+    if (!res.ok) return null
+    const blob = await res.blob()
+    const ext = blob.type === 'image/png' ? 'png' : 'jpg'
+    const path = `${uid}/avatar.${ext}`
+    const { error } = await supabase.storage.from('avatars').upload(path, blob, { upsert: true, contentType: blob.type })
+    if (error) return null
+    const { data } = supabase.storage.from('avatars').getPublicUrl(path)
+    return data?.publicUrl ? `${data.publicUrl}?t=${Date.now()}` : null
+  } catch { return null }
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser]       = useState(null)
   const [profile, setProfile] = useState(null)
@@ -18,7 +32,7 @@ export function AuthProvider({ children }) {
     const meta = userRes.data?.user?.user_metadata ?? {}
     let data = profileRes.data
 
-    if (!data && profileRes.error) {
+    if (!data && profileRes.error && profileRes.error.code !== 'PGRST116') {
       setProfile(null)
       return
     }
@@ -33,14 +47,28 @@ export function AuthProvider({ children }) {
         .from('profiles')
         // avatar_url/full_name come from Google's user_metadata on OAuth sign-ups
         // (email/password users simply have these undefined → null).
-        .upsert({ id: uid, full_name: meta.full_name ?? meta.name ?? null, role: 'aluno', company: meta.company ?? null, school: meta.school ?? null, avatar_url: meta.avatar_url ?? meta.picture ?? null })
+        .upsert({ id: uid, full_name: meta.full_name ?? meta.name ?? null, role: 'aluno', company: meta.company ?? null, school: meta.school ?? null, avatar_url: (meta.avatar_url ?? meta.picture ?? '').replace(/=s\d+-c$/, '=s400-c') || null })
         .select('id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, linkedin_url, skills, monthly_report_opt_in, area')
         .single()
       data = created
     }
 
     setProfile(data ?? null)
-    if (data) identifyUser(userRes.data?.user, data)
+    if (data) {
+      identifyUser(userRes.data?.user, data)
+      const ts = new Date().toISOString()
+      supabase.from('profiles').update({ last_active_at: ts, last_action: 'login' }).eq('id', uid).then(() => {})
+      supabase.from('activity_log').insert({ user_id: uid, action: 'login' }).then(() => {})
+      const freshGoogleAvatar = (meta.avatar_url ?? meta.picture ?? '').replace(/=s\d+-c$/, '=s400-c')
+      if (freshGoogleAvatar && (data.avatar_url?.includes('googleusercontent.com') || !data.avatar_url)) {
+        persistGoogleAvatar(uid, freshGoogleAvatar).then(permanent => {
+          if (permanent) {
+            supabase.from('profiles').update({ avatar_url: permanent }).eq('id', uid).then(() => {})
+            setProfile(prev => prev ? { ...prev, avatar_url: permanent } : prev)
+          }
+        })
+      }
+    }
   }, [])
 
   useEffect(() => {

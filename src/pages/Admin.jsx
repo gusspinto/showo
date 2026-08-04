@@ -39,7 +39,7 @@ const C = {
 // authenticated only has column-level SELECT grant on these (no email — that
 // comes from admin_get_users() instead) since migration 033; select('*')
 // fails outright and silently returns no rows.
-const PROFILE_COLUMNS = 'id, username, total_xp, created_at, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size, skills, school, project_draft'
+const PROFILE_COLUMNS = 'id, username, total_xp, created_at, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size, skills, school, project_draft, signup_country, signup_city, signup_referrer, signup_utm_source, last_active_at, last_action'
 
 function StatCard({ icon, label, value, color = C.blue, sub }) {
   return (
@@ -116,35 +116,430 @@ function ConfirmModal({ title, body, onConfirm, onCancel, danger = true }) {
   )
 }
 
+// ─── HELPERS ────────────────────────────────────────────────
+function timeAgoStr(dateStr) {
+  if (!dateStr) return null
+  const diffH = Math.floor((Date.now() - new Date(dateStr)) / 3600000)
+  if (diffH < 1) return 'agora'
+  if (diffH < 24) return `há ${diffH}h`
+  if (diffH < 168) return `há ${Math.floor(diffH / 24)}d`
+  return new Date(dateStr).toLocaleDateString('pt-PT')
+}
+
+function MiniBar({ label, value, total, color = C.blue }) {
+  const pct = total > 0 ? Math.round((value / total) * 100) : 0
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+      <span style={{ fontSize: 12, color: C.muted, width: 90, flexShrink: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</span>
+      <div style={{ flex: 1, height: 6, borderRadius: 3, background: C.bgAlt }}>
+        <div style={{ width: `${pct}%`, height: '100%', borderRadius: 3, background: color, minWidth: pct > 0 ? 4 : 0, transition: 'width 0.3s' }} />
+      </div>
+      <span style={{ fontSize: 12, fontWeight: 600, color: C.text, width: 28, textAlign: 'right' }}>{value}</span>
+    </div>
+  )
+}
+
+// ─── CHART COMPONENTS ───────────────────────────────────────
+function ChartTooltip({ x, y, children, containerRef }) {
+  if (!children) return null
+  const [pos, setPos] = useState({ left: 0, top: 0 })
+  useEffect(() => {
+    if (!containerRef?.current) return
+    const rect = containerRef.current.getBoundingClientRect()
+    const svgW = containerRef.current.querySelector('svg')?.viewBox?.baseVal?.width || 300
+    const scale = rect.width / svgW
+    let left = x * scale
+    const top = y * scale - 8
+    if (left < 60) left = 60
+    if (left > rect.width - 60) left = rect.width - 60
+    setPos({ left, top })
+  }, [x, y, containerRef])
+  return (
+    <div style={{
+      position: 'absolute', left: pos.left, top: pos.top,
+      transform: 'translate(-50%, -100%)',
+      background: 'var(--color-surface)', border: `1px solid var(--color-border-hover)`,
+      borderRadius: 8, padding: '6px 10px', fontSize: 11, color: C.text,
+      fontWeight: 600, pointerEvents: 'none', zIndex: 10,
+      boxShadow: '0 4px 12px rgba(0,0,0,0.3)', whiteSpace: 'nowrap',
+    }}>{children}</div>
+  )
+}
+
+function BarChart({ data, height = 140, color = C.blue, labelKey = 'label', valueKey = 'value', detailKey }) {
+  const [hover, setHover] = useState(null)
+  const ref = { current: null }
+  if (!data.length) return null
+  const max = Math.max(...data.map(d => d[valueKey]), 1)
+  const W = 300
+  const pad = 10
+  const labelH = 20
+  const topPad = 20
+  const usable = W - pad * 2
+  const gap = Math.max(6, Math.round(usable * 0.12 / data.length))
+  const barW = Math.max(12, Math.floor((usable - gap * (data.length + 1)) / data.length))
+  const totalBars = data.length * barW + (data.length + 1) * gap
+  const offsetX = pad + (usable - totalBars) / 2
+  const barArea = height - labelH - topPad
+  return (
+    <div ref={el => ref.current = el} style={{ width: '100%', height, position: 'relative' }}
+      onMouseLeave={() => setHover(null)}>
+      {hover !== null && (
+        <ChartTooltip
+          x={offsetX + gap + hover * (barW + gap) + barW / 2}
+          y={topPad + barArea - Math.max(2, (data[hover][valueKey] / max) * barArea)}
+          containerRef={ref}
+        >
+          {data[hover][labelKey]}: {data[hover][valueKey]} {detailKey && data[hover][detailKey] ? `· ${data[hover][detailKey]}` : ''}
+        </ChartTooltip>
+      )}
+      <svg width="100%" height={height} viewBox={`0 0 ${W} ${height}`} preserveAspectRatio="xMidYMid meet" style={{ display: 'block', cursor: 'pointer' }}>
+        {data.map((d, i) => {
+          const barH = Math.max(2, (d[valueKey] / max) * barArea)
+          const x = offsetX + gap + i * (barW + gap)
+          const y = topPad + barArea - barH
+          const isHover = hover === i
+          return (
+            <g key={i} onMouseEnter={() => setHover(i)} onClick={() => setHover(i === hover ? null : i)}>
+              <rect x={x - 2} y={0} width={barW + 4} height={height} fill="transparent" />
+              <rect x={x} y={y} width={barW} height={barH} rx={4}
+                fill={isHover ? color : d.highlight ? color : `${color}80`}
+                style={{ transition: 'all 0.15s' }}
+              />
+              {d[valueKey] > 0 && (
+                <text x={x + barW / 2} y={y - 5} textAnchor="middle" fill={C.text} fontSize={10} fontWeight={700}
+                  style={{ opacity: isHover ? 1 : 0.7 }}>{d[valueKey]}</text>
+              )}
+              <text x={x + barW / 2} y={height - 4} textAnchor="middle" fill={isHover ? C.text : 'var(--color-text-tertiary)'} fontSize={9} fontWeight={isHover ? 600 : 400}>{d[labelKey]}</text>
+            </g>
+          )
+        })}
+      </svg>
+    </div>
+  )
+}
+
+function SparkLine({ data, labels, height = 80, color = C.blue }) {
+  const [hover, setHover] = useState(null)
+  const ref = { current: null }
+  if (data.length < 2) return null
+  const max = Math.max(...data, 1)
+  const W = 300
+  const pad = 14
+  const topPad = 14
+  const botPad = 8
+  const usableW = W - pad * 2
+  const usableH = height - topPad - botPad
+  const pts = data.map((v, i) => {
+    const x = pad + (i / (data.length - 1)) * usableW
+    const y = topPad + usableH - (v / max) * usableH
+    return { x, y, v }
+  })
+  const line = pts.map(p => `${p.x},${p.y}`).join(' ')
+  const area = `${pad},${topPad + usableH} ${line} ${pad + usableW},${topPad + usableH}`
+  const hitW = usableW / (data.length - 1)
+  return (
+    <div ref={el => ref.current = el} style={{ width: '100%', height, position: 'relative' }}
+      onMouseLeave={() => setHover(null)}>
+      {hover !== null && (
+        <ChartTooltip x={pts[hover].x} y={pts[hover].y} containerRef={ref}>
+          {labels?.[hover] || `Dia ${hover + 1}`}: {data[hover]} user{data[hover] !== 1 ? 's' : ''}
+        </ChartTooltip>
+      )}
+      <svg width="100%" height={height} viewBox={`0 0 ${W} ${height}`} preserveAspectRatio="xMidYMid meet" style={{ display: 'block', cursor: 'pointer' }}>
+        <polygon points={area} fill={`${color}12`} />
+        <polyline points={line} fill="none" stroke={color} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
+        {pts.map((p, i) => {
+          const isHover = hover === i
+          const isLast = i === pts.length - 1
+          return (
+            <g key={i}>
+              <rect x={p.x - hitW / 2} y={0} width={hitW} height={height} fill="transparent"
+                onMouseEnter={() => setHover(i)} onClick={() => setHover(i === hover ? null : i)} />
+              {isHover && <line x1={p.x} y1={topPad} x2={p.x} y2={topPad + usableH} stroke={`${color}30`} strokeWidth={1} strokeDasharray="3,3" />}
+              <circle cx={p.x} cy={p.y} r={isHover ? 5 : isLast ? 4 : 2}
+                fill={isHover || isLast ? color : `${color}40`} stroke={color} strokeWidth={isHover ? 2 : 1.5}
+                style={{ transition: 'r 0.1s' }}
+              />
+            </g>
+          )
+        })}
+      </svg>
+    </div>
+  )
+}
+
 // ─── OVERVIEW TAB ───────────────────────────────────────────
-function OverviewTab({ users, projects }) {
+const SORT_OPTIONS = [
+  { id: 'newest', label: 'Mais recente' },
+  { id: 'oldest', label: 'Mais antigo' },
+  { id: 'active', label: 'Última atividade' },
+  { id: 'projects', label: 'Mais projetos' },
+  { id: 'inactive', label: 'Sem projetos' },
+]
+
+const TIME_RANGES = [
+  { id: '7d', label: '7 dias', days: 7 },
+  { id: '30d', label: '30 dias', days: 30 },
+  { id: '90d', label: '90 dias', days: 90 },
+  { id: 'all', label: 'Tudo', days: null },
+]
+
+function generateMeetingSummary(users, projects, activityLog, range) {
+  const now = Date.now()
   const totalUsers = users.length
   const totalProjects = projects.length
-  const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000
-  const newThisWeek = projects.filter(p => new Date(p.created_at) > weekAgo).length
-  const newUsersWeek = users.filter(u => new Date(u.created_at) > weekAgo).length
+  const days = range.days || 365
+  const cutoff = now - days * 86400000
+
+  const newUsers = users.filter(u => new Date(u.created_at) > cutoff).length
+  const newProjects = projects.filter(p => new Date(p.created_at) > cutoff).length
+
+  const uniqueActive = new Set(activityLog.filter(e => new Date(e.created_at) > cutoff).map(e => e.user_id)).size
+  const totalSessions = activityLog.filter(e => new Date(e.created_at) > cutoff && e.action === 'login').length
+
+  const projectCountMap = {}
+  projects.forEach(p => { if (p.user_id) projectCountMap[p.user_id] = (projectCountMap[p.user_id] || 0) + 1 })
+  const withProjects = users.filter(u => projectCountMap[u.id] > 0).length
   const scores = projects.filter(p => p.score > 0).map(p => p.score)
   const avgScore = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0
-  const admins = users.filter(u => u.is_admin).length
+
+  const roleCounts = {}
+  users.forEach(u => { const r = u.role || 'aluno'; roleCounts[r] = (roleCounts[r] || 0) + 1 })
+
+  const date = new Date().toLocaleDateString('pt-PT', { day: '2-digit', month: 'long', year: 'numeric' })
+
+  let md = `# Showo — Resumo ${range.label} (${date})\n\n`
+  md += `## Números gerais\n`
+  md += `- **${totalUsers}** utilizadores registados (+${newUsers} no período)\n`
+  md += `- **${totalProjects}** projetos (+${newProjects} no período)\n`
+  md += `- **${uniqueActive}** utilizadores ativos no período\n`
+  md += `- **${totalSessions}** sessões de login\n`
+  md += `- **${withProjects}** users com pelo menos 1 projeto\n`
+  md += `- Score médio: **${avgScore}**\n\n`
+  md += `## Distribuição por role\n`
+  Object.entries(roleCounts).sort((a, b) => b[1] - a[1]).forEach(([role, count]) => {
+    md += `- ${role}: ${count}\n`
+  })
+  md += `\n## Retenção\n`
+  md += `- ${uniqueActive}/${totalUsers} (${totalUsers > 0 ? Math.round((uniqueActive / totalUsers) * 100) : 0}%) voltaram no período\n`
+  return md
+}
+
+function OverviewTab({ users, projects, activityLog }) {
+  const [userSearch, setUserSearch] = useState('')
+  const [sort, setSort] = useState('active')
+  const [range, setRange] = useState(TIME_RANGES[1])
+  const now = Date.now()
+  const totalUsers = users.length
+  const totalProjects = projects.length
+  const days = range.days || 9999
+  const cutoff = now - days * 86400000
+  const weekAgo = now - 7 * 86400000
+  const monthAgo = now - 30 * 86400000
+  const newThisWeek = projects.filter(p => new Date(p.created_at) > weekAgo).length
+  const newUsersWeek = users.filter(u => new Date(u.created_at) > weekAgo).length
+  const newUsersMonth = users.filter(u => new Date(u.created_at) > monthAgo).length
+  const scores = projects.filter(p => p.score > 0).map(p => p.score)
+  const avgScore = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0
+
+  // Real engagement from activity_log
+  const logInRange = activityLog.filter(e => new Date(e.created_at) > cutoff)
+  const activeUsersInRange = new Set(logInRange.map(e => e.user_id)).size
+  const activeThisWeek = new Set(activityLog.filter(e => new Date(e.created_at) > weekAgo).map(e => e.user_id)).size
+  const activeThisMonth = new Set(activityLog.filter(e => new Date(e.created_at) > monthAgo).map(e => e.user_id)).size
+  const neverActive = users.filter(u => !u.last_active_at).length
+  const retentionRate = totalUsers > 0 ? Math.round((activeThisMonth / totalUsers) * 100) : 0
+
+  // Registrations per week
+  const numWeeks = Math.min(Math.ceil(days / 7), 12)
+  const regWeeks = Array.from({ length: numWeeks }, (_, i) => {
+    const weekStart = now - (numWeeks - 1 - i) * 7 * 86400000
+    const weekEnd = weekStart + 7 * 86400000
+    const count = users.filter(u => {
+      const t = new Date(u.created_at).getTime()
+      return t >= weekStart && t < weekEnd
+    }).length
+    const d = new Date(weekStart)
+    return { label: `${d.getDate()}/${d.getMonth() + 1}`, value: count, highlight: i === numWeeks - 1 }
+  })
+
+  // Daily active users from activity_log (real data)
+  const numDays = Math.min(days, 30)
+  const dauLabels = []
+  const dauData = Array.from({ length: numDays }, (_, i) => {
+    const dayStart = now - (numDays - 1 - i) * 86400000
+    const dayEnd = dayStart + 86400000
+    const d = new Date(dayStart)
+    dauLabels.push(`${d.getDate()}/${d.getMonth() + 1}`)
+    return new Set(activityLog.filter(e => {
+      const t = new Date(e.created_at).getTime()
+      return t >= dayStart && t < dayEnd
+    }).map(e => e.user_id)).size
+  })
+
+  // Projects per week
+  const projWeeks = Array.from({ length: numWeeks }, (_, i) => {
+    const weekStart = now - (numWeeks - 1 - i) * 7 * 86400000
+    const weekEnd = weekStart + 7 * 86400000
+    const count = projects.filter(p => {
+      const t = new Date(p.created_at).getTime()
+      return t >= weekStart && t < weekEnd
+    }).length
+    const d = new Date(weekStart)
+    return { label: `${d.getDate()}/${d.getMonth() + 1}`, value: count, highlight: i === numWeeks - 1 }
+  })
+
+  // Project counts per user
+  const projectCountMap = {}
+  projects.forEach(p => { if (p.user_id) projectCountMap[p.user_id] = (projectCountMap[p.user_id] || 0) + 1 })
+  const usersWithProjects = users.filter(u => projectCountMap[u.id] > 0).length
+  const usersWithoutProjects = totalUsers - usersWithProjects
+
+  // Role distribution
+  const roleCounts = {}
+  users.forEach(u => { const r = u.role || 'aluno'; roleCounts[r] = (roleCounts[r] || 0) + 1 })
+
+  // Country distribution
+  const countryCounts = {}
+  users.forEach(u => { if (u.signup_country) countryCounts[u.signup_country] = (countryCounts[u.signup_country] || 0) + 1 })
+  const topCountries = Object.entries(countryCounts).sort((a, b) => b[1] - a[1]).slice(0, 5)
+
+  // Referrer distribution
+  const refCounts = {}
+  users.forEach(u => {
+    if (u.signup_referrer) {
+      const d = u.signup_referrer.replace(/^https?:\/\//, '').split('/')[0]
+      refCounts[d] = (refCounts[d] || 0) + 1
+    }
+  })
+  const topReferrers = Object.entries(refCounts).sort((a, b) => b[1] - a[1]).slice(0, 5)
+
+  // Sorted & filtered users
+  const uq = userSearch.toLowerCase()
+  const sortedUsers = [...users]
+    .filter(u => !uq || (u.full_name || '').toLowerCase().includes(uq) || (u.email || '').toLowerCase().includes(uq) || (u.signup_country || '').toLowerCase().includes(uq) || (u.role || '').toLowerCase().includes(uq))
+    .sort((a, b) => {
+      if (sort === 'oldest') return new Date(a.created_at) - new Date(b.created_at)
+      if (sort === 'active') return (b.last_active_at ? new Date(b.last_active_at) : 0) - (a.last_active_at ? new Date(a.last_active_at) : 0)
+      if (sort === 'projects') return (projectCountMap[b.id] || 0) - (projectCountMap[a.id] || 0)
+      if (sort === 'inactive') return (projectCountMap[a.id] || 0) - (projectCountMap[b.id] || 0)
+      return new Date(b.created_at) - new Date(a.created_at)
+    })
+    .slice(0, 15)
 
   const recentProjects = [...projects]
     .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
     .slice(0, 8)
 
-  const recentUsers = [...users]
-    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-    .slice(0, 6)
+  const handleExport = () => {
+    const md = generateMeetingSummary(users, projects, activityLog, range)
+    const blob = new Blob([md], { type: 'text/markdown' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `showo-resumo-${range.id}-${new Date().toISOString().slice(0, 10)}.md`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const handleCopySummary = () => {
+    const md = generateMeetingSummary(users, projects, activityLog, range)
+    navigator.clipboard.writeText(md)
+  }
 
   return (
     <div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 16, marginBottom: 32 }}>
-        <StatCard icon={<User size={20} />} label="Total de utilizadores" value={totalUsers} color={C.blue} sub={`+${newUsersWeek} esta semana`} />
-        <StatCard icon={<Folder size={20} />} label="Total de projetos" value={totalProjects} color={C.green} sub={`+${newThisWeek} esta semana`} />
-        <StatCard icon={<Star size={20} />} label="Score médio" value={avgScore} color={C.yellow} sub="nos projetos com score" />
-        <StatCard icon={<Shield size={20} />} label="Administradores" value={admins} color={C.purple} />
+      {/* Time range selector + export */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 4 }}>
+          {TIME_RANGES.map(r => (
+            <button
+              key={r.id}
+              onClick={() => setRange(r)}
+              style={{
+                padding: '5px 12px', borderRadius: 6, fontSize: 11, fontWeight: 600,
+                fontFamily: 'inherit', cursor: 'pointer', border: 'none',
+                background: range.id === r.id ? C.blue : C.bgAlt,
+                color: range.id === r.id ? '#fff' : C.muted,
+                transition: 'all 0.15s',
+              }}
+            >{r.label}</button>
+          ))}
+        </div>
+        <div style={{ display: 'flex', gap: 6 }}>
+          <button onClick={handleCopySummary} style={{ padding: '5px 12px', borderRadius: 6, fontSize: 11, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', border: `1px solid ${C.border}`, background: 'transparent', color: C.muted }}>
+            Copiar resumo
+          </button>
+          <button onClick={handleExport} style={{ padding: '5px 12px', borderRadius: 6, fontSize: 11, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', border: `1px solid ${C.border}`, background: 'transparent', color: C.muted }}>
+            Exportar .md
+          </button>
+        </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+      {/* Stats row */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(175px, 1fr))', gap: 14, marginBottom: 24 }}>
+        <StatCard icon={<User size={20} />} label="Utilizadores" value={totalUsers} color={C.blue} sub={`+${newUsersWeek} semana · +${newUsersMonth} mês`} />
+        <StatCard icon={<Folder size={20} />} label="Projetos" value={totalProjects} color={C.green} sub={`+${newThisWeek} semana · ${usersWithoutProjects} sem projeto`} />
+        <StatCard icon={<BarChart2 size={20} />} label="Ativos (semana)" value={activeThisWeek} color={activeThisWeek > 0 ? C.green : C.red} sub={`${activeThisMonth} mês · ${neverActive} nunca`} />
+        <StatCard icon={<Star size={20} />} label="Retenção mensal" value={`${retentionRate}%`} color={retentionRate > 30 ? C.green : retentionRate > 10 ? C.yellow : C.red} sub={`${activeThisMonth}/${totalUsers} voltaram`} />
+        <StatCard icon={<Star size={20} />} label="Score médio" value={avgScore} color={C.yellow} sub={`${scores.length} com score`} />
+      </div>
+
+      {/* Charts row */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 16, marginBottom: 24 }}>
+        <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '16px 18px' }}>
+          <h3 style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Registos por semana</h3>
+          <p style={{ margin: '0 0 10px', fontSize: 11, color: C.subtle }}>Últimas {numWeeks} semanas</p>
+          <BarChart data={regWeeks} color={C.blue} height={110} />
+        </div>
+        <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '16px 18px' }}>
+          <h3 style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Atividade diária</h3>
+          <p style={{ margin: '0 0 10px', fontSize: 11, color: C.subtle }}>Users ativos / dia ({numDays} dias) — activity_log</p>
+          <SparkLine data={dauData} labels={dauLabels} color={C.green} height={100} />
+        </div>
+        <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '16px 18px' }}>
+          <h3 style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Projetos por semana</h3>
+          <p style={{ margin: '0 0 10px', fontSize: 11, color: C.subtle }}>Últimas {numWeeks} semanas</p>
+          <BarChart data={projWeeks} color={C.green} height={110} />
+        </div>
+      </div>
+
+      {/* Breakdowns row */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 16, marginBottom: 24 }}>
+        {/* Roles */}
+        <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '16px 18px' }}>
+          <h3 style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Por role</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {Object.entries(roleCounts).sort((a, b) => b[1] - a[1]).map(([role, count]) => (
+              <MiniBar key={role} label={role} value={count} total={totalUsers} color={role === 'professor' ? C.green : role === 'empresa' ? C.yellow : C.blue} />
+            ))}
+          </div>
+        </div>
+
+        {/* Countries */}
+        <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '16px 18px' }}>
+          <h3 style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Por país</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {topCountries.length > 0 ? topCountries.map(([country, count]) => (
+              <MiniBar key={country} label={country} value={count} total={totalUsers} color={C.blue} />
+            )) : <span style={{ fontSize: 12, color: C.subtle }}>Sem dados ainda</span>}
+          </div>
+        </div>
+
+        {/* Referrers */}
+        <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '16px 18px' }}>
+          <h3 style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Origem (referrer)</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {topReferrers.length > 0 ? topReferrers.map(([ref, count]) => (
+              <MiniBar key={ref} label={ref} value={count} total={totalUsers} color={C.purple} />
+            )) : <span style={{ fontSize: 12, color: C.subtle }}>Sem dados ainda</span>}
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom row: projects + users */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 24 }}>
         {/* Recent projects */}
         <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '20px 22px' }}>
           <h3 style={{ margin: '0 0 16px', fontSize: 12, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Projetos recentes</h3>
@@ -167,20 +562,102 @@ function OverviewTab({ users, projects }) {
           </div>
         </div>
 
-        {/* Recent users */}
+        {/* Users list with sort */}
         <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '20px 22px' }}>
-          <h3 style={{ margin: '0 0 16px', fontSize: 12, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Utilizadores recentes</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {recentUsers.map(u => (
-              <div key={u.id} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <Avatar name={u.full_name || u.username} color={u.is_admin ? 'linear-gradient(135deg,var(--color-accent),#7c3aed)' : 'linear-gradient(135deg,var(--color-primary),#4f46e5)'} />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{u.full_name || u.username || 'Sem nome'}</div>
-                  <div style={{ fontSize: 11, color: C.subtle }}>{u.email || '—'}</div>
-                </div>
-                {u.is_admin && <Badge color={C.purple}>Admin</Badge>}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, gap: 8, flexWrap: 'wrap' }}>
+            <h3 style={{ margin: 0, fontSize: 12, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Utilizadores</h3>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div style={{ position: 'relative' }}>
+                <Search size={12} style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', color: C.muted }} />
+                <input
+                  placeholder="Procurar…"
+                  value={userSearch}
+                  onChange={e => setUserSearch(e.target.value)}
+                  style={{
+                    width: 120, padding: '5px 8px 5px 26px', borderRadius: 6,
+                    border: `1px solid ${C.border}`, background: C.bgAlt,
+                    color: C.text, fontSize: 11, fontFamily: 'inherit', outline: 'none',
+                  }}
+                />
               </div>
-            ))}
+              <select
+                value={sort}
+                onChange={e => setSort(e.target.value)}
+                style={{
+                  padding: '5px 8px', borderRadius: 6, border: `1px solid ${C.border}`,
+                  background: C.bgAlt, color: C.text, fontSize: 11, fontFamily: 'inherit',
+                  outline: 'none', cursor: 'pointer',
+                }}
+              >
+                {SORT_OPTIONS.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}
+              </select>
+            </div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+            {sortedUsers.map(u => {
+              const regDate = new Date(u.created_at)
+              const diffH = Math.floor((now - regDate) / 3600000)
+              const lastSeenH = u.last_active_at ? Math.floor((now - new Date(u.last_active_at)) / 3600000) : null
+              const isOnline = lastSeenH !== null && lastSeenH < 1
+              const referrerDomain = u.signup_referrer ? u.signup_referrer.replace(/^https?:\/\//, '').split('/')[0] : null
+              const pc = projectCountMap[u.id] || 0
+
+              const fmtDate = (d) => {
+                if (!d) return null
+                const dt = new Date(d)
+                return dt.toLocaleDateString('pt-PT', { day: '2-digit', month: 'short' }) + ' ' + dt.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })
+              }
+
+              const lastActiveLabel = u.last_active_at ? (() => {
+                if (lastSeenH < 1) return 'online agora'
+                if (lastSeenH < 24) return `ativo há ${lastSeenH}h`
+                return fmtDate(u.last_active_at)
+              })() : 'nunca entrou'
+
+              const lastActiveColor = !u.last_active_at ? C.red : isOnline ? C.green : lastSeenH < 24 ? C.green : lastSeenH < 168 ? C.yellow : C.subtle
+
+              return (
+                <div key={u.id} style={{
+                  display: 'flex', alignItems: 'stretch', gap: 10, padding: '10px 12px',
+                  background: C.card, border: `1px solid ${isOnline ? 'var(--color-success-subtle)' : diffH < 24 ? 'var(--color-primary-subtle)' : C.border}`,
+                  borderRadius: 8,
+                }}>
+                  <div style={{ position: 'relative', alignSelf: 'center' }}>
+                    <Avatar name={u.full_name || u.username} color={u.is_admin ? 'linear-gradient(135deg,var(--color-accent),#7c3aed)' : 'linear-gradient(135deg,var(--color-primary),#4f46e5)'} size={36} />
+                    {isOnline && <div style={{ position: 'absolute', bottom: 0, right: 0, width: 10, height: 10, borderRadius: '50%', background: C.green, border: '2px solid var(--color-surface)' }} />}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{u.full_name || u.username || 'Sem nome'}</span>
+                      {u.role && u.role !== 'aluno' && (
+                        <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 5px', borderRadius: 4, background: u.role === 'professor' ? C.greenSoft : C.purpleSoft, color: u.role === 'professor' ? C.green : C.purple }}>{u.role}</span>
+                      )}
+                      {diffH < 48 && <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 5px', borderRadius: 4, background: C.blueSoft, color: C.blue }}>novo</span>}
+                      {u._orphan && <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 5px', borderRadius: 4, background: C.yellowSoft, color: C.yellow }}>sem perfil</span>}
+                      {!u._orphan && pc === 0 && diffH > 48 && <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 5px', borderRadius: 4, background: C.redSoft, color: C.red }}>sem projeto</span>}
+                    </div>
+                    <div style={{ fontSize: 11, color: C.subtle, marginTop: 2 }}>{u.email || '—'}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 3, flexWrap: 'wrap' }}>
+                      {u.signup_country && (
+                        <span style={{ fontSize: 10, color: C.subtle, display: 'inline-flex', alignItems: 'center', gap: 2 }}>
+                          <MapPin size={8} />{[u.signup_city, u.signup_country].filter(Boolean).join(', ')}
+                        </span>
+                      )}
+                      {referrerDomain && <span style={{ fontSize: 10, color: C.subtle }}>via {referrerDomain}</span>}
+                      {u.signup_utm_source && <span style={{ fontSize: 10, color: C.subtle }}>utm:{u.signup_utm_source}</span>}
+                      {u.school && <span style={{ fontSize: 10, color: C.subtle }}>{u.school}</span>}
+                    </div>
+                  </div>
+                  <div style={{ textAlign: 'right', flexShrink: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 3, minWidth: 100 }}>
+                    <span style={{ fontSize: 10, color: lastActiveColor, fontWeight: isOnline ? 700 : 500 }}>
+                      {isOnline && '● '}{lastActiveLabel}
+                    </span>
+                    {pc > 0 && <span style={{ fontSize: 10, color: C.blue }}>{pc} projeto{pc > 1 ? 's' : ''}</span>}
+                    <span style={{ fontSize: 10, color: C.subtle }}>registado {fmtDate(u.created_at)}</span>
+                  </div>
+                </div>
+              )
+            })}
           </div>
         </div>
       </div>
@@ -425,6 +902,118 @@ function ProjectsTab({ projects, users, onDeleteProject }) {
   )
 }
 
+// ─── SIGNUPS TAB ────────────────────────────────────────────
+function SignupsTab({ signups, users }) {
+  const [filter, setFilter] = useState('')
+  const [view, setView] = useState('waitlist')
+  const q = filter.toLowerCase()
+
+  const waitlistFiltered = signups.filter(s =>
+    (s.email || '').toLowerCase().includes(q) ||
+    (s.country || '').toLowerCase().includes(q) ||
+    (s.city || '').toLowerCase().includes(q)
+  )
+
+  const registeredFiltered = users.filter(s =>
+    (s.full_name || '').toLowerCase().includes(q) ||
+    (s.email || '').toLowerCase().includes(q) ||
+    (s.signup_country || '').toLowerCase().includes(q) ||
+    (s.signup_city || '').toLowerCase().includes(q)
+  )
+
+  const filtered = view === 'waitlist' ? waitlistFiltered : registeredFiltered
+
+  return (
+    <div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+        <div style={{ position: 'relative', flex: 1, maxWidth: 320 }}>
+          <Search size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: C.muted }} />
+          <input
+            placeholder="Procurar por nome, email, país…"
+            value={filter}
+            onChange={e => setFilter(e.target.value)}
+            style={{
+              width: '100%', padding: '10px 12px 10px 34px', borderRadius: 8,
+              border: `1px solid ${C.border}`, background: C.bgAlt,
+              color: C.text, fontSize: 13, fontFamily: 'inherit', outline: 'none',
+            }}
+          />
+        </div>
+        <div style={{ display: 'flex', gap: 4, background: C.bgAlt, border: `1px solid ${C.border}`, borderRadius: 8, padding: 3 }}>
+          {['waitlist', 'registered'].map(v => (
+            <button key={v} onClick={() => setView(v)} style={{
+              background: view === v ? C.blue : 'transparent', color: view === v ? '#fff' : C.muted,
+              border: 'none', borderRadius: 6, padding: '5px 12px', fontSize: 12, fontWeight: 600,
+              cursor: 'pointer', fontFamily: 'inherit',
+            }}>{v === 'waitlist' ? `Waitlist (${signups.length})` : `Registados (${users.length})`}</button>
+          ))}
+        </div>
+        <span style={{ fontSize: 12, color: C.muted }}>{filtered.length} resultado{filtered.length !== 1 ? 's' : ''}</span>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        {filtered.map((s, i) => {
+          const date = new Date(s.created_at)
+          const now = new Date()
+          const diffH = Math.floor((now - date) / 3600000)
+          const timeAgo = diffH < 1 ? 'agora' : diffH < 24 ? `há ${diffH}h` : diffH < 168 ? `há ${Math.floor(diffH / 24)}d` : date.toLocaleDateString('pt-PT')
+          const isNew = diffH < 24
+          const country = view === 'waitlist' ? s.country : s.signup_country
+          const city = view === 'waitlist' ? s.city : s.signup_city
+          const referrer = view === 'waitlist' ? s.referrer : s.signup_referrer
+          const utm = view === 'waitlist' ? s.utm_source : s.signup_utm_source
+          const name = s.full_name || s.email || '?'
+
+          return (
+            <div key={s.id || i} style={{
+              display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px',
+              background: C.card, border: `1px solid ${isNew ? 'var(--color-primary-subtle)' : C.border}`,
+              borderRadius: 10, transition: 'border-color 0.15s',
+            }}>
+              <div style={{
+                width: 38, height: 38, borderRadius: '50%',
+                background: s.avatar_url ? 'none' : C.blueSoft,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                overflow: 'hidden', flexShrink: 0,
+              }}>
+                {s.avatar_url
+                  ? <img src={s.avatar_url} alt="" referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  : <span style={{ fontSize: 14, fontWeight: 700, color: C.blue }}>{name[0].toUpperCase()}</span>
+                }
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{s.full_name || 'Sem nome'}</span>
+                  {s.role && s.role !== 'aluno' && (
+                    <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: s.role === 'professor' ? C.greenSoft : C.purpleSoft, color: s.role === 'professor' ? C.green : C.purple }}>{s.role}</span>
+                  )}
+                  {isNew && <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: C.blueSoft, color: C.blue }}>novo</span>}
+                </div>
+                <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>{s.email}</div>
+              </div>
+              <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                {(country || city) && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4, justifyContent: 'flex-end', marginBottom: 2 }}>
+                    <MapPin size={11} color={C.muted} />
+                    <span style={{ fontSize: 12, color: C.muted }}>{[city, country].filter(Boolean).join(', ')}</span>
+                  </div>
+                )}
+                {referrer && (
+                  <div style={{ fontSize: 11, color: C.subtle }}>via {referrer.replace(/^https?:\/\//, '').split('/')[0]}</div>
+                )}
+                {utm && (
+                  <div style={{ fontSize: 11, color: C.subtle }}>utm: {utm}</div>
+                )}
+                <div style={{ fontSize: 11, color: C.subtle, marginTop: 2 }}>{timeAgo}</div>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 // ─── INVITES TAB (professor access codes) ────────────────────
 function InvitesTab({ codes, loading, onGenerate, generating, onToggleActive }) {
   const [label, setLabel] = useState('')
@@ -562,6 +1151,8 @@ export default function Admin() {
   const [projects, setProjects] = useState([])
   const [loading, setLoading] = useState(true)
   const [toast, setToast] = useState('')
+  const [signups, setSignups] = useState([])
+  const [activityLog, setActivityLog] = useState([])
   const [codes, setCodes] = useState([])
   const [codesLoading, setCodesLoading] = useState(false)
   const [codesLoaded, setCodesLoaded] = useState(false)
@@ -580,26 +1171,54 @@ export default function Admin() {
   const loadData = useCallback(async () => {
     setLoading(true)
     try {
-      const [profilesRes, projectsRes, emailsRes] = await Promise.all([
+      const [profilesRes, projectsRes, emailsRes, signupsRes, activityRes] = await Promise.all([
         supabase.from('profiles').select(PROFILE_COLUMNS).order('created_at', { ascending: false }),
         supabase.from('projects').select('*').order('created_at', { ascending: false }),
         supabase.rpc('admin_get_users'),
+        supabase.from('waitlist_signups').select('*').order('created_at', { ascending: false }).limit(100),
+        supabase.from('activity_log').select('user_id, action, created_at').order('created_at', { ascending: false }).limit(5000),
       ])
       if (profilesRes.error) showToast('Erro ao carregar utilizadores: ' + profilesRes.error.message)
       if (projectsRes.error) showToast('Erro ao carregar projetos: ' + projectsRes.error.message)
 
-      const emailMap = {}
+      const authMap = {}
+      const profileIds = new Set()
       if (emailsRes.data) {
-        emailsRes.data.forEach(e => { emailMap[e.id] = e.email })
+        emailsRes.data.forEach(e => { authMap[e.id] = e })
       }
+      const enrichedProfiles = (profilesRes.data || []).map(p => {
+        profileIds.add(p.id)
+        const auth = authMap[p.id] || {}
+        return {
+          ...p,
+          email: auth.email || p.email || null,
+          last_active_at: p.last_active_at || auth.last_sign_in_at || null,
+          auth_last_sign_in: auth.last_sign_in_at || null,
+          confirmed_at: auth.confirmed_at || null,
+        }
+      })
 
-      const enrichedProfiles = (profilesRes.data || []).map(p => ({
-        ...p,
-        email: emailMap[p.id] || p.email || null,
-      }))
+      const orphanUsers = (emailsRes.data || [])
+        .filter(e => !profileIds.has(e.id))
+        .map(e => ({
+          id: e.id,
+          full_name: e.full_name || null,
+          username: null,
+          email: e.email,
+          role: null,
+          avatar_url: e.avatar_url || null,
+          created_at: e.created_at,
+          last_active_at: e.last_sign_in_at || null,
+          auth_last_sign_in: e.last_sign_in_at || null,
+          confirmed_at: e.confirmed_at || null,
+          is_admin: false,
+          _orphan: true,
+        }))
 
-      setUsers(enrichedProfiles)
+      setUsers([...enrichedProfiles, ...orphanUsers])
       setProjects(projectsRes.data || [])
+      setSignups(signupsRes.data || [])
+      setActivityLog(activityRes.data || [])
     } catch (err) {
       console.error('Admin load error', err)
     }
@@ -707,6 +1326,7 @@ export default function Admin() {
     { id: 'overview', label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><BarChart2 size={14} /> Visão geral</span> },
     { id: 'users',    label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><User size={14} /> Utilizadores ({users.length})</span> },
     { id: 'projects', label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Folder size={14} /> Projetos ({projects.length})</span> },
+    { id: 'signups',  label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Star size={14} /> Signups ({signups.length})</span> },
     { id: 'invites',  label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><KeyRound size={14} /> Convites Professor</span> },
   ]
 
@@ -772,7 +1392,7 @@ export default function Admin() {
           </div>
         ) : (
           <>
-            {tab === 'overview' && <OverviewTab users={users} projects={projects} />}
+            {tab === 'overview' && <OverviewTab users={users} projects={projects} activityLog={activityLog} />}
             {tab === 'users' && (
               <UsersTab
                 users={users}
@@ -790,6 +1410,7 @@ export default function Admin() {
                 onDeleteProject={handleDeleteProject}
               />
             )}
+            {tab === 'signups' && <SignupsTab signups={signups} users={users} />}
             {tab === 'invites' && (
               <InvitesTab
                 codes={codes}
