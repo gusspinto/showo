@@ -601,7 +601,7 @@ export default function Explore() {
                         onClick={() => navigate(profileUrl)}
                         style={{ cursor: 'pointer' }}>
                         {p.avatar_url ? (
-                          <img src={p.avatar_url} alt={displayName} className="explore-avatar" />
+                          <img src={p.avatar_url} alt={displayName} className="explore-avatar" referrerPolicy="no-referrer" />
                         ) : (
                           <div className="explore-avatar-fallback" style={{ background: avatarBg }}>{initial}</div>
                         )}
