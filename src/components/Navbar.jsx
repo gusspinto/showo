@@ -1299,7 +1299,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                 </>
               )}
 
-              {user && !isTeacher && !isAdmin && location.pathname !== '/dashboard' && (
+              {user && !isTeacher && !isAdmin && (
                 <div className={`sb-create-wrap ${extras ? 'hidden' : 'visible'}`}>
                   <div className="sb-create-inner">
                     <button className="sb-create" onClick={() => navigate('/novo')}>

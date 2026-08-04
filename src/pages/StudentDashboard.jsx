@@ -826,11 +826,13 @@ export default function StudentDashboard({ user, profile }) {
             ) : entries.length > 0 ? (
               <>
                 <div className="sdb-streak">
-                  <Flame size={16} />
-                  <span className="sdb-streak-value">{streak}</span>
-                  <span className="sdb-streak-label">
-                    {streak === 1 ? 'semana seguida com registos' : 'semanas seguidas com registos'}
-                  </span>
+                  <Flame size={22} strokeWidth={2} />
+                  <div className="sdb-streak-main">
+                    <span className="sdb-streak-value">{streak}</span>
+                    <span className="sdb-streak-label">
+                      {streak === 1 ? 'semana seguida com registos' : 'semanas seguidas com registos'}
+                    </span>
+                  </div>
                 </div>
                 <div className="sdb-daystrip" aria-label="Atividade dos últimos 7 dias">
                   {last7.map(d => (
@@ -1065,6 +1067,13 @@ function ProjectRow({ project, shared, onOpen, onEdit, onCopy, copied, onDelete 
 
   return (
     <li className="sdb-projrow">
+      <span className="sdb-projrow-score">
+        <span className="sdb-projrow-num">{project.score ?? '—'}</span>
+        <span className="sdb-projrow-track">
+          <span className="sdb-projrow-fill" style={{ width: `${project.score ?? 0}%` }} />
+        </span>
+      </span>
+
       <button className="sdb-projrow-main" onClick={onOpen}>
         <span className="sdb-projrow-name">
           {project.name}
@@ -1072,13 +1081,6 @@ function ProjectRow({ project, shared, onOpen, onEdit, onCopy, copied, onDelete 
         </span>
         <span className="sdb-projrow-area">{project.area || 'Sem área definida'}</span>
       </button>
-
-      <span className="sdb-projrow-score">
-        <span className="sdb-projrow-track">
-          <span className="sdb-projrow-fill" style={{ width: `${project.score ?? 0}%` }} />
-        </span>
-        <span className="sdb-projrow-num">{project.score ?? '—'}</span>
-      </span>
 
       <span className="sdb-projrow-actions">
         {confirm ? (
