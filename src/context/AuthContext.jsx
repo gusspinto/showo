@@ -33,7 +33,7 @@ export function AuthProvider({ children }) {
         .from('profiles')
         // avatar_url/full_name come from Google's user_metadata on OAuth sign-ups
         // (email/password users simply have these undefined → null).
-        .upsert({ id: uid, full_name: meta.full_name ?? meta.name ?? null, role: 'aluno', company: meta.company ?? null, school: meta.school ?? null, avatar_url: meta.avatar_url ?? meta.picture ?? null })
+        .upsert({ id: uid, full_name: meta.full_name ?? meta.name ?? null, role: 'aluno', company: meta.company ?? null, school: meta.school ?? null, avatar_url: (meta.avatar_url ?? meta.picture ?? '').replace(/=s\d+-c$/, '=s400-c') || null })
         .select('id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, linkedin_url, skills, monthly_report_opt_in, area')
         .single()
       data = created
