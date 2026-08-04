@@ -1,12 +1,8 @@
 import Anthropic from 'npm:@anthropic-ai/sdk@0.36.3'
-import { checkRateLimit, getAuthUser } from '../_shared/rateLimit.ts'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': 'https://showo.pt',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { checkRateLimit, getAuthUser, getCorsHeaders } from '../_shared/rateLimit.ts'
 
 Deno.serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req)
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -75,7 +71,7 @@ REGRAS CRÍTICAS:
 2. O "tip" deve ser uma ação concreta e específica — nunca "podes melhorar" sem dizer COMO. Ex mau: "Adiciona mais detalhes". Ex bom: "Acrescenta quantos utilizadores testaram a app e o que disseram — mesmo que seja 'testei com 3 colegas e conseguiram X sem ajuda'."
 3. Se o campo tiver 1-2 palavras como "a" ou "teste", considera FRACO e diz isso claramente
 4. Para campos vazios: feedback = "Este campo está vazio." e tip = o que escrever especificamente naquele campo dado o contexto do projeto
-5. Usa PT-PT natural, direto, sem formalidades nem elogios vazios
+5. Usa PT-PT natural, direto, sem formalidades nem elogios vazios. Nunca uses travessões (—) no texto gerado
 6. O "overall" nomeia especificamente os 1-2 campos mais fracos e diz o que falta — não é um elogio de encorajamento
 7. O "score_hint" identifica o campo com MAIOR gap entre o que está e o que poderia estar, e diz exatamente o que acrescentar — 1 frase curta e direta
 8. Para o campo "challenges": um júri quer ver que o estudante enfrentou dificuldades reais e as resolveu. Se o campo estiver vazio ou genérico, é sempre um ponto fraco porque parece que o projeto foi fácil demais ou que o estudante não refletiu.

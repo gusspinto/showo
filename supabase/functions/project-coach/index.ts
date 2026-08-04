@@ -30,7 +30,8 @@ REGRAS:
 - Quando o estudante pede que escrevas texto para um campo, escreve uma proposta concreta baseada no contexto do projeto — e indica que ele pode ajustar à sua voz.
 - Quando dás sugestões de texto, usa markdown: **negrito** para destacar, listas com - para múltiplos pontos.
 - Nunca inventes factos sobre o projeto — se precisas de informação que não está acima, pergunta primeiro.
-- Usa linguagem acessível e próxima, como um colega mais experiente que quer genuinamente ajudar.`
+- Usa linguagem acessível e próxima, como um colega mais experiente que quer genuinamente ajudar.
+- Nunca uses travessões (—) no texto gerado.`
 
 Deno.serve(async (req) => {
   const cors = getCorsHeaders(req)

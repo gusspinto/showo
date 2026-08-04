@@ -1,12 +1,8 @@
 import Anthropic from 'npm:@anthropic-ai/sdk@0.36.3'
-import { checkRateLimit, getAuthUser } from '../_shared/rateLimit.ts'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': 'https://showo.pt',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { checkRateLimit, getAuthUser, getCorsHeaders } from '../_shared/rateLimit.ts'
 
 Deno.serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req)
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
   const user = await getAuthUser(req)
@@ -49,7 +45,7 @@ Aprendizagens: ${f(project.learnings) || '(não preenchido)'}
 
 REGRAS CRÍTICAS — lê antes de gerar qualquer conteúdo:
 
-1. ZERO FRASES GENÉRICAS. Nunca escrevas: "foi um desafio enorme", "aprendi muito", "foi muito importante para mim", "é fundamental", "de forma eficaz", "no âmbito de", "neste sentido". Cada frase deve ser específica a ESTE projeto.
+1. ZERO FRASES GENÉRICAS. Nunca escrevas: "foi um desafio enorme", "aprendi muito", "foi muito importante para mim", "é fundamental", "de forma eficaz", "no âmbito de", "neste sentido". Cada frase deve ser específica a ESTE projeto. Nunca uses travessões (—) no texto gerado.
 
 2. NOTAS DE ORADOR: Escreve o que o estudante vai DIZER EM VOZ ALTA — frases completas, naturais, que soam bem faladas. Não instruções do tipo "explica a solução" — escreve a frase em si. Usa o nome real do projeto e detalhes reais.
 

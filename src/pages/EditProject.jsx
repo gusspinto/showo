@@ -29,12 +29,9 @@ const colors = {
 
 const PROJECT_TYPES = [
   { value: '', label: 'Selecionar tipo...' },
-  { value: 'group', label: 'Trabalho de grupo' },
-  { value: 'pap', label: 'PAP / Projeto final' },
-  { value: 'presentation', label: 'Apresentação' },
+  { value: 'school', label: 'Projeto de escola' },
+  { value: 'pap', label: 'PAP' },
   { value: 'personal', label: 'Projeto pessoal' },
-  { value: 'competition', label: 'Projeto de competição' },
-  { value: 'other', label: 'Outro' },
 ]
 
 const FIELDS = [

@@ -8,11 +8,9 @@ import { useAuth } from '../context/AuthContext'
 import { Toast, useToast } from '../components/Toast'
 
 const PROJECT_TYPES = [
-  { id: 'personal',    label: 'Pessoal' },
-  { id: 'pap',         label: 'PAP' },
-  { id: 'group',       label: 'Grupo' },
-  { id: 'competition', label: 'Competição' },
-  { id: 'internship',  label: 'Estágio' },
+  { id: 'school',   label: 'Projeto de escola' },
+  { id: 'pap',      label: 'PAP' },
+  { id: 'personal', label: 'Projeto pessoal' },
 ]
 
 const REVIEW_FIELDS = [
@@ -32,7 +30,7 @@ export default function NewProject() {
 
   const [step, setStep] = useState('describe')
   const [description, setDescription] = useState('')
-  const [projectType, setProjectType] = useState('personal')
+  const [projectType, setProjectType] = useState('school')
   const [form, setForm] = useState({})
   const [editingField, setEditingField] = useState(null)
   const [editValue, setEditValue] = useState('')

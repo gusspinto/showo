@@ -2,11 +2,9 @@ import Anthropic from 'npm:@anthropic-ai/sdk@0.36.3'
 import { checkRateLimit, getAuthUser, getCorsHeaders } from '../_shared/rateLimit.ts'
 
 const TYPE_LABELS: Record<string, string> = {
-  pap:         'PAP (Projeto de Aptidão Profissional)',
-  internship:  'Projeto de Estágio',
-  group:       'Trabalho de Grupo',
-  personal:    'Projeto Pessoal',
-  competition: 'Projeto de Competição',
+  school:   'Projeto de Escola',
+  pap:      'PAP (Projeto de Aptidão Profissional)',
+  personal: 'Projeto Pessoal',
 }
 
 Deno.serve(async (req) => {
@@ -52,7 +50,7 @@ O utilizador descreveu o seu projeto assim:
 
 Tipo de projeto: ${typeLabel}
 
-Com base nesta descrição, preenche os campos que conseguires inferir com confiança. Usa Português de Portugal (PT-PT). Se não tiveres informação suficiente para um campo, deixa-o como string vazia "".
+Com base nesta descrição, preenche os campos que conseguires inferir com confiança. Usa Português de Portugal (PT-PT), escrita natural e fluida. Nunca uses travessões (—) no texto gerado. Se não tiveres informação suficiente para um campo, deixa-o como string vazia "".
 
 Devolve APENAS este JSON (sem markdown, sem explicações):
 {

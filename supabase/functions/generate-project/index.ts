@@ -64,6 +64,7 @@ Gera exatamente este JSON (sem mais nada, só o JSON válido):
 Regras absolutas:
 - Nunca uses linguagem corporativa fria
 - Nunca uses clichês como "solução inovadora" ou "abordagem revolucionária"
+- Nunca uses travessões (—) no texto gerado
 - Escreve como um mentor orgulhoso que acredita genuinamente neste estudante
 - Sê específico ao projeto dele — nunca genérico
 - Sempre em Português de Portugal (PT-PT)`

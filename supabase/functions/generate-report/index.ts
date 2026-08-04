@@ -51,7 +51,7 @@ Deno.serve(async (req) => {
 
     const prompt = `És um redator especializado em relatórios académicos portugueses. Vais gerar um rascunho completo de ${isPap ? 'relatório de PAP (Projeto e Apresentação Profissional)' : 'relatório de estágio'} com base nos dados de um projeto de um aluno.
 
-O rascunho deve estar em português europeu, ser formal mas natural, e ter a estrutura típica exigida pelas escolas profissionais portuguesas.
+O rascunho deve estar em português europeu, ser formal mas natural, sem travessões (—), e ter a estrutura típica exigida pelas escolas profissionais portuguesas.
 
 DADOS DO PROJETO:
 ━━━━━━━━━━━━━━━━

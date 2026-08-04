@@ -2,19 +2,15 @@ import Anthropic from 'npm:@anthropic-ai/sdk@0.36.3'
 import { checkRateLimit, getAuthUser, getCorsHeaders } from '../_shared/rateLimit.ts'
 
 const TYPE_CONTEXT: Record<string, string> = {
-  pap: 'PAP (Projeto de Aptidão Profissional) — projeto final de curso profissional, com orientador, defesa perante júri, e muita pressão académica.',
-  internship: 'Estágio — experiência profissional real numa empresa, com projetos, aprendizagens e impacto mensurável.',
-  group: 'Trabalho de grupo — projeto colaborativo com equipa, divisão de tarefas e dinâmica de equipa.',
-  personal: 'Projeto pessoal — criado por iniciativa própria, por paixão ou para aprender algo novo.',
-  competition: 'Competição — projeto criado para ganhar, com resultados e classificação reais.',
+  school:   'Projeto de escola — trabalho desenvolvido no contexto académico, pode ser individual ou de grupo, para uma disciplina ou unidade curricular.',
+  pap:      'PAP (Projeto de Aptidão Profissional) — projeto final de curso profissional, com orientador, defesa perante júri, e muita pressão académica.',
+  personal: 'Projeto pessoal — criado por iniciativa própria, por paixão ou para aprender algo novo, fora do contexto escolar.',
 }
 
 const TYPE_FIELDS: Record<string, string[]> = {
-  pap:         ['name', 'area', 'goal', 'school_course', 'supervisor', 'technologies', 'problem', 'solution', 'results', 'learnings'],
-  internship:  ['name', 'area', 'goal', 'company', 'technologies', 'problem', 'solution', 'results', 'learnings'],
-  group:       ['name', 'area', 'goal', 'team', 'technologies', 'problem', 'solution', 'challenges', 'results'],
-  personal:    ['name', 'area', 'goal', 'technologies', 'problem', 'solution', 'features', 'results', 'learnings'],
-  competition: ['name', 'area', 'goal', 'competition_name', 'team', 'technologies', 'solution', 'results', 'learnings'],
+  school:   ['name', 'area', 'goal', 'problem', 'solution', 'technologies', 'features', 'results', 'learnings'],
+  pap:      ['name', 'area', 'goal', 'school_course', 'supervisor', 'technologies', 'problem', 'solution', 'results', 'learnings'],
+  personal: ['name', 'area', 'goal', 'technologies', 'problem', 'solution', 'features', 'results', 'learnings'],
 }
 
 Deno.serve(async (req) => {
@@ -45,7 +41,7 @@ Deno.serve(async (req) => {
     const fields  = (TYPE_FIELDS[projectType] ?? TYPE_FIELDS.personal).join(', ')
     const safeDesc = String(description ?? '').trim().slice(0, 1000)
 
-    const prompt = `És um assistente ultra-inteligente que ajuda estudantes a APRESENTAR e DOCUMENTAR projetos que já fizeram ou estão a fazer. A Showo NÃO cria projetos por eles — ajuda-os a montar uma página de portfólio para mostrar o trabalho deles ao mundo. Usas Português de Portugal (PT-PT) fluente e natural. Nunca usas palavras difíceis ou jargão desnecessário.
+    const prompt = `És um assistente ultra-inteligente que ajuda estudantes a APRESENTAR e DOCUMENTAR projetos que já fizeram ou estão a fazer. A Showo NÃO cria projetos por eles — ajuda-os a montar uma página de portfólio para mostrar o trabalho deles ao mundo. Usas Português de Portugal (PT-PT) fluente e natural. Nunca usas palavras difíceis ou jargão desnecessário. Nunca uses travessões (—) no texto que geras.
 
 O estudante descreveu o projeto assim:
 "${safeDesc || '(sem descrição)'}"
