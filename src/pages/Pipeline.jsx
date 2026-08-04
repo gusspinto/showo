@@ -105,8 +105,8 @@ function CandidatoModal({ cand, vagas, onClose, onStageChange, navigate }) {
 
         {/* Actions */}
         <div style={{ display: 'flex', gap: 8 }}>
-          {cand.profile?.username && (
-            <button onClick={() => { navigate(`/u/${cand.profile.username}`); onClose() }}
+          {(cand.profile?.username || cand.profile?.id) && (
+            <button onClick={() => { navigate(`/u/${cand.profile.username || cand.profile.id}`); onClose() }}
               style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, background: 'var(--color-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 10, padding: '10px 0', color: C.muted, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
               <User size={14} /> Ver perfil
             </button>

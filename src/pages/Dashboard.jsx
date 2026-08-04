@@ -1230,12 +1230,12 @@ export default function Dashboard() {
           <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
             {!isTeacher && !isRecruiter && (
               <>
-                <Button variant="secondary" size="sm" icon={<User size={14} />} onClick={() => navigate(`/u/${profile?.username || ''}`)}>Perfil</Button>
+                <Button variant="secondary" size="sm" icon={<User size={14} />} onClick={() => navigate(`/u/${profile?.username || user?.id || ''}`)}>Perfil</Button>
                 <Button variant="primary" size="sm" icon={<Plus size={14} />} onClick={() => navigate('/novo')}>Novo projeto</Button>
               </>
             )}
             {isTeacher && (
-              <Button variant="secondary" size="sm" icon={<User size={14} />} onClick={() => navigate(`/u/${profile?.username || ''}`)}>Perfil</Button>
+              <Button variant="secondary" size="sm" icon={<User size={14} />} onClick={() => navigate(`/u/${profile?.username || user?.id || ''}`)}>Perfil</Button>
             )}
           </div>
         </div>

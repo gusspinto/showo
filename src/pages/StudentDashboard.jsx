@@ -945,12 +945,13 @@ export default function StudentDashboard({ user, profile }) {
               <p className="sdb-potential-disclaimer">
                 O score de cada projeto é calculado por IA — não substitui a nota do professor.
               </p>
-              {profile?.username && (
+              {(profile?.username || user?.id) && (
                 <button className="sdb-profile-link" onClick={() => {
-                  navigator.clipboard.writeText(`${window.location.origin}/u/${profile.username}`)
+                  const slug = profile?.username || user?.id
+                  navigator.clipboard.writeText(`${window.location.origin}/u/${slug}`)
                     .then(() => showToast('Link do perfil copiado.'))
                 }}>
-                  <Link size={11} /> showo.pt/u/{profile.username}
+                  <Link size={11} /> showo.pt/u/{profile?.username || user?.id}
                 </button>
               )}
             </section>
