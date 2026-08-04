@@ -594,12 +594,12 @@ export default function Explore() {
                     const initial = displayName[0].toUpperCase()
                     const avatarSeeds = ['var(--color-primary)','var(--color-accent)','#0d9488','var(--color-warning)','#ec4899','#10b981']
                     const avatarBg = avatarSeeds[(initial.charCodeAt(0) || 0) % avatarSeeds.length]
-                    const profileUrl = p.username ? `/u/${p.username}` : null
+                    const profileUrl = `/u/${p.username || p.id}`
 
                     return (
                       <div key={p.id} className="explore-person-card"
-                        onClick={() => profileUrl && navigate(profileUrl)}
-                        style={{ cursor: profileUrl ? 'pointer' : 'default' }}>
+                        onClick={() => navigate(profileUrl)}
+                        style={{ cursor: 'pointer' }}>
                         {p.avatar_url ? (
                           <img src={p.avatar_url} alt={displayName} className="explore-avatar" />
                         ) : (
