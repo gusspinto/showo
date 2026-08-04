@@ -273,6 +273,17 @@ export default function Home() {
               </div>
             ))}
           </div>
+
+          {!user && (
+            <div className="home-cta-banner">
+              <div className="home-cta-text">
+                <span className="home-cta-label">O teu projeto também merece uma página assim.</span>
+              </div>
+              <button className="home-cta-btn" onClick={() => navigate('/register')}>
+                Cria o teu <ArrowRight size={15} />
+              </button>
+            </div>
+          )}
         </div>
       </Reveal>
 

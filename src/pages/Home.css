@@ -380,6 +380,50 @@ body.light .home-auth-input {
   color: var(--color-text-tertiary);
 }
 
+/* ── CTA Banner ── */
+.home-cta-banner {
+  margin-top: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  background: var(--color-primary-subtle);
+  border: 1px solid var(--color-primary-border, rgba(27,120,247,0.2));
+  border-radius: 14px;
+  padding: 20px 24px;
+}
+.home-cta-label {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+.home-cta-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--color-primary);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 11px 20px;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: opacity 0.15s;
+}
+.home-cta-btn:hover { opacity: 0.88; }
+
+@media (max-width: 600px) {
+  .home-cta-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+}
+
 /* ══ HOW IT WORKS ══ */
 .home-how-section {
   padding: 64px 24px 8px;
