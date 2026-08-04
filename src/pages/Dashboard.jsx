@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
@@ -322,13 +322,31 @@ function OnboardingAlunoModal({ user, profile, onDismiss, firstProject, claimedS
   const [saving, setSaving] = useState(false)
   const [saveErr, setSaveErr] = useState(null)
   const [copied, setCopied] = useState(false)
+  const [usernameStatus, setUsernameStatus] = useState(null)
+  const usernameCheckRef = useRef(null)
   const resolvedUsername = username.trim() || profile?.username || user?.id
   const profileUrl = `${window.location.origin}/u/${resolvedUsername}`
 
+  useEffect(() => {
+    const val = username.trim()
+    if (!val || val.length < 3) { setUsernameStatus(null); return }
+    if (val === profile?.username) { setUsernameStatus('own'); return }
+    clearTimeout(usernameCheckRef.current)
+    setUsernameStatus('checking')
+    usernameCheckRef.current = setTimeout(async () => {
+      const { data } = await supabase.from('profiles').select('id').eq('username', val).neq('id', user.id).maybeSingle()
+      setUsernameStatus(data ? 'taken' : 'available')
+    }, 400)
+    return () => clearTimeout(usernameCheckRef.current)
+  }, [username])
+
   async function saveProfile() {
+    const val = username.trim()
+    if (!val || val.length < 3) { setSaveErr('Escolhe um username com pelo menos 3 caracteres.'); return }
+    if (usernameStatus === 'taken') { setSaveErr('Este username já está a ser usado.'); return }
     setSaving(true); setSaveErr(null)
     const { error } = await supabase.from('profiles').upsert({
-      id: user.id, username: username.trim() || null, bio: bio.trim() || null, area: area || null, skills,
+      id: user.id, username: val, bio: bio.trim() || null, area: area || null, skills,
     }, { onConflict: 'id' })
     setSaving(false)
     if (error) { setSaveErr(error.code === '23505' ? 'Este username já está a ser usado.' : 'Erro ao guardar.'); return }
@@ -375,8 +393,11 @@ function OnboardingAlunoModal({ user, profile, onDismiss, firstProject, claimedS
                 <SectionLabel>Username</SectionLabel>
                 <div style={{ position: 'relative' }}>
                   <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 'var(--text-base)', color: 'var(--color-text-secondary)', pointerEvents: 'none' }}>@</span>
-                  <input type="text" value={username} onChange={e => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))} placeholder="o_teu_username" maxLength={30} style={{ ...inputStyle, paddingLeft: 30 }} />
+                  <input type="text" value={username} onChange={e => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))} placeholder="o_teu_username" maxLength={30} style={{ ...inputStyle, paddingLeft: 30, borderColor: usernameStatus === 'taken' ? 'var(--color-error)' : usernameStatus === 'available' ? 'var(--color-success)' : undefined }} />
                 </div>
+                {usernameStatus === 'taken' && <p style={{ margin: '4px 0 0', fontSize: 'var(--text-sm)', color: 'var(--color-error)' }}>Este username já está a ser usado.</p>}
+                {usernameStatus === 'available' && <p style={{ margin: '4px 0 0', fontSize: 'var(--text-sm)', color: 'var(--color-success)' }}>Username disponível ✓</p>}
+                {usernameStatus === 'checking' && <p style={{ margin: '4px 0 0', fontSize: 'var(--text-sm)', color: 'var(--color-text-tertiary)' }}>A verificar...</p>}
               </div>
               <div>
                 <SectionLabel>Bio (opcional)</SectionLabel>
@@ -392,8 +413,7 @@ function OnboardingAlunoModal({ user, profile, onDismiss, firstProject, claimedS
               <div><SkillsPicker label="Competências (opcional)" value={skills} onChange={setSkills} max={8} /></div>
             </div>
             {saveErr && <div style={{ fontSize: 'var(--text-sm)', color: 'var(--color-error)', padding: '8px 12px', background: 'var(--color-error-subtle)', borderRadius: 'var(--radius-md)', marginBottom: 'var(--sp-3)' }}>{saveErr}</div>}
-            <Button onClick={saveProfile} disabled={saving} loading={saving} fullWidth iconRight={<ArrowRight size={15} />}>Guardar perfil</Button>
-            <button onClick={() => { if (step < 2) setStep(s => s + 1); else onDismiss() }} style={{ display: 'block', width: '100%', background: 'none', border: 'none', color: 'var(--color-text-secondary)', fontSize: 'var(--text-base)', cursor: 'pointer', marginTop: 12, fontFamily: 'inherit', padding: 0 }}>Saltar por agora</button>
+            <Button onClick={saveProfile} disabled={saving || !username.trim() || username.trim().length < 3 || usernameStatus === 'taken' || usernameStatus === 'checking'} loading={saving} fullWidth iconRight={<ArrowRight size={15} />}>Guardar perfil</Button>
           </div>
         )}
 
@@ -845,7 +865,7 @@ export default function Dashboard() {
     if (!user || !profile) return
     const isAluno = !profile.role || profile.role === 'aluno'
     if (isAluno) {
-      if (!localStorage.getItem(`showo_onb_v2_${user.id}`)) setShowOnboardingAluno(true)
+      if (!profile.username || !localStorage.getItem(`showo_onb_v2_${user.id}`)) setShowOnboardingAluno(true)
     } else {
       if (!localStorage.getItem(`showo_onboarded_${user.id}`)) setShowOnboarding(true)
     }
