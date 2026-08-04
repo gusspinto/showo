@@ -977,7 +977,7 @@ function SignupsTab({ signups, users }) {
                 overflow: 'hidden', flexShrink: 0,
               }}>
                 {s.avatar_url
-                  ? <img src={s.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ? <img src={s.avatar_url} alt="" referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   : <span style={{ fontSize: 14, fontWeight: 700, color: C.blue }}>{name[0].toUpperCase()}</span>
                 }
               </div>
