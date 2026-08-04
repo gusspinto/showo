@@ -4,6 +4,20 @@ import { identifyUser, resetAnalytics } from '../lib/analytics'
 
 const AuthContext = createContext({})
 
+async function persistGoogleAvatar(uid, googleUrl) {
+  try {
+    const res = await fetch(googleUrl)
+    if (!res.ok) return null
+    const blob = await res.blob()
+    const ext = blob.type === 'image/png' ? 'png' : 'jpg'
+    const path = `${uid}/avatar.${ext}`
+    const { error } = await supabase.storage.from('avatars').upload(path, blob, { upsert: true, contentType: blob.type })
+    if (error) return null
+    const { data } = supabase.storage.from('avatars').getPublicUrl(path)
+    return data?.publicUrl ? `${data.publicUrl}?t=${Date.now()}` : null
+  } catch { return null }
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser]       = useState(null)
   const [profile, setProfile] = useState(null)
@@ -45,6 +59,15 @@ export function AuthProvider({ children }) {
       const ts = new Date().toISOString()
       supabase.from('profiles').update({ last_active_at: ts, last_action: 'login' }).eq('id', uid).then(() => {})
       supabase.from('activity_log').insert({ user_id: uid, action: 'login' }).then(() => {})
+      const freshGoogleAvatar = (meta.avatar_url ?? meta.picture ?? '').replace(/=s\d+-c$/, '=s400-c')
+      if (freshGoogleAvatar && (data.avatar_url?.includes('googleusercontent.com') || !data.avatar_url)) {
+        persistGoogleAvatar(uid, freshGoogleAvatar).then(permanent => {
+          if (permanent) {
+            supabase.from('profiles').update({ avatar_url: permanent }).eq('id', uid).then(() => {})
+            setProfile(prev => prev ? { ...prev, avatar_url: permanent } : prev)
+          }
+        })
+      }
     }
   }, [])
 
