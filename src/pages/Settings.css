@@ -2,6 +2,85 @@
    SETTINGS PAGE
    ══════════════════════════════════════════════════════════════════════════ */
 
+/* ── Sidebar layout ── */
+.settings-layout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 28px;
+  align-items: flex-start;
+}
+.settings-sidebar {
+  position: sticky;
+  top: 90px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px;
+  border-radius: 14px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+.settings-sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: var(--color-muted);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  text-align: left;
+  width: 100%;
+}
+.settings-sidebar-item:hover {
+  background: var(--color-hover);
+  color: var(--color-text);
+}
+.settings-sidebar-item.active {
+  background: var(--color-accent);
+  color: #fff;
+  font-weight: 600;
+}
+.settings-main {
+  min-width: 0;
+}
+@media (max-width: 768px) {
+  .settings-layout {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .settings-sidebar {
+    position: static;
+    flex-direction: row;
+    overflow-x: auto;
+    gap: 2px;
+    padding: 6px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .settings-sidebar-item {
+    white-space: nowrap;
+    padding: 8px 12px;
+    font-size: 13px;
+    gap: 6px;
+  }
+  .settings-sidebar-item span {
+    display: inline;
+  }
+}
+@media (max-width: 480px) {
+  .settings-sidebar-item span {
+    display: none;
+  }
+  .settings-sidebar-item {
+    padding: 10px;
+    justify-content: center;
+  }
+}
+
 /* ── Page header ── */
 .settings-header {
   margin-bottom: 28px;
