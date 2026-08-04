@@ -287,6 +287,7 @@ export default function StudentDashboard({ user, profile }) {
   const [showJoinModal, setShowJoinModal] = useState(false)
   const [showTurmasModal, setShowTurmasModal] = useState(false)
   const [showOnboarding, setShowOnboarding] = useState(false)
+  const [tipsDone, setTipsDone] = useState(() => !!localStorage.getItem(`showo_proj_tips_${user.id}`))
   const [composerKind, setComposerKind] = useState(null)
   const [showJournal, setShowJournal] = useState(false)
   const [showReport, setShowReport] = useState(false)
@@ -316,6 +317,11 @@ export default function StudentDashboard({ user, profile }) {
   function dismissOnboarding() {
     localStorage.setItem(`showo_onb_v2_${user.id}`, '1')
     setShowOnboarding(false)
+  }
+
+  function dismissTips() {
+    localStorage.setItem(`showo_proj_tips_${user.id}`, '1')
+    setTipsDone(true)
   }
 
   /* ── Projetos ── */
@@ -610,6 +616,8 @@ export default function StudentDashboard({ user, profile }) {
   const otherProjects = projects.filter(p => p.id !== focusProject?.id)
   const engagement = useMemo(() => computeEngagementSignal(entries), [entries])
   const { potential } = profile ? calculatePotential({ projects, profile, engagement }) : { potential: 0 }
+  const isEmptyState = !loadingProjects && projects.length === 0
+  const showTips = !tipsDone && !loadingProjects && projects.length > 0
 
   const setupSteps = [
     { done: !!(profile?.username && profile?.bio), label: 'Perfil preenchido', action: () => navigate('/settings') },
@@ -620,6 +628,73 @@ export default function StudentDashboard({ user, profile }) {
   function handleEventClick(e) {
     if (e.type === 'defense' && e.slug) navigate(`/projeto/${e.slug}`)
   }
+
+  /* ── Painéis partilhados (reposicionados em empty state) ── */
+  const potentialPanel = (
+    <section className="sdb-panel sdb-panel--tint sdb-o-potential">
+      <header className="sdb-panel-head">
+        <span className="sdb-eyebrow sdb-eyebrow--brand">Potencial do perfil</span>
+      </header>
+      <div className="sdb-potential">
+        <span className="sdb-potential-value" style={{ color: getScoreColor(potential) }}>{potential}</span>
+        <span className="sdb-potential-of">/100</span>
+      </div>
+      <div className="sdb-potential-track">
+        <span className="sdb-potential-fill" style={{ width: `${potential}%` }} />
+      </div>
+      <p className="sdb-potential-note">
+        {projects.length === 0
+          ? 'Adiciona projetos e completa o perfil para o potencial começar a subir.'
+          : potential >= 80 ? 'Perfil forte. Mantém os projetos atualizados.'
+          : potential >= 60 ? 'Bom caminho — completa os projetos mais fracos para subir.'
+          : 'Completa os projetos e preenche o perfil para subir.'}
+      </p>
+      <p className="sdb-potential-disclaimer">
+        O score de cada projeto é calculado por IA — não substitui a nota do professor.
+      </p>
+      {profile?.username && (
+        <button className="sdb-profile-link" onClick={() => {
+          navigator.clipboard.writeText(`${window.location.origin}/u/${profile.username}`)
+            .then(() => showToast('Link do perfil copiado.'))
+        }}>
+          <Link size={11} /> showo.pt/u/{profile.username}
+        </button>
+      )}
+    </section>
+  )
+
+  const turmaPanel = (
+    <section className="sdb-panel sdb-o-turma">
+      <header className="sdb-panel-head">
+        <span className="sdb-eyebrow">Turma</span>
+        {turmas.length > 1 && (
+          <button className="sdb-linkbtn" onClick={() => setShowTurmasModal(true)}>ver todas</button>
+        )}
+      </header>
+      {loadingTurmas ? (
+        <div className="skel skel-line" style={{ height: 14, width: '70%' }} />
+      ) : turmas.length === 0 ? (
+        <>
+          <p className="sdb-empty-line">
+            Não estás em nenhuma turma. Com o código do professor, os teus projetos
+            passam a ser acompanhados por ele.
+          </p>
+          <button className="sdb-linkbtn sdb-linkbtn--strong" onClick={() => setShowJoinModal(true)}>
+            Entrar com código
+          </button>
+        </>
+      ) : (
+        <button className="sdb-turma" onClick={() => navigate(`/turma/${turmas[0].code}`)}>
+          <span className="sdb-turma-icon"><GraduationCap size={15} /></span>
+          <span className="sdb-turma-body">
+            <span className="sdb-turma-name">{turmas[0].name}</span>
+            {turmas[0].teacher_name && <span className="sdb-turma-teacher">{turmas[0].teacher_name}</span>}
+          </span>
+          <ArrowUpRight size={14} />
+        </button>
+      )}
+    </section>
+  )
 
   /* ══════════════════════════════════════════════════════════════════════
      Render
@@ -782,7 +857,7 @@ export default function StudentDashboard({ user, profile }) {
         </header>
 
         {/* ══════════════ GRELHA ══════════════ */}
-        <div className="sdb-grid">
+        <div className={`sdb-grid${isEmptyState ? ' sdb-grid--empty' : ''}`}>
 
           {/* ── Coluna principal ── */}
           <div className="sdb-col">
@@ -831,6 +906,12 @@ export default function StudentDashboard({ user, profile }) {
               )}
             </div>
 
+            {showTips && (
+              <div className="sdb-o-tips">
+                <FirstProjectTips onDismiss={dismissTips} />
+              </div>
+            )}
+
             {focusProject && (
               <div className="sdb-duo sdb-o-rhythm">
                 <ActivityPanel buckets={activityBuckets} />
@@ -869,6 +950,9 @@ export default function StudentDashboard({ user, profile }) {
                 </ul>
               </section>
             )}
+
+            {isEmptyState && potentialPanel}
+            {isEmptyState && turmaPanel}
           </div>
 
           {/* ── Coluna de contexto ── */}
@@ -924,71 +1008,52 @@ export default function StudentDashboard({ user, profile }) {
               )}
             </section>
 
-            <section className="sdb-panel sdb-panel--tint sdb-o-potential">
-              <header className="sdb-panel-head">
-                <span className="sdb-eyebrow sdb-eyebrow--brand">Potencial do perfil</span>
-              </header>
-              <div className="sdb-potential">
-                <span className="sdb-potential-value" style={{ color: getScoreColor(potential) }}>{potential}</span>
-                <span className="sdb-potential-of">/100</span>
-              </div>
-              <div className="sdb-potential-track">
-                <span className="sdb-potential-fill" style={{ width: `${potential}%` }} />
-              </div>
-              <p className="sdb-potential-note">
-                {projects.length === 0
-                  ? 'Adiciona projetos e completa o perfil para o potencial começar a subir.'
-                  : potential >= 80 ? 'Perfil forte. Mantém os projetos atualizados.'
-                  : potential >= 60 ? 'Bom caminho — completa os projetos mais fracos para subir.'
-                  : 'Completa os projetos e preenche o perfil para subir.'}
-              </p>
-              <p className="sdb-potential-disclaimer">
-                O score de cada projeto é calculado por IA — não substitui a nota do professor.
-              </p>
-              {profile?.username && (
-                <button className="sdb-profile-link" onClick={() => {
-                  navigator.clipboard.writeText(`${window.location.origin}/u/${profile.username}`)
-                    .then(() => showToast('Link do perfil copiado.'))
-                }}>
-                  <Link size={11} /> showo.pt/u/{profile.username}
-                </button>
-              )}
-            </section>
-
-            <section className="sdb-panel sdb-o-turma">
-              <header className="sdb-panel-head">
-                <span className="sdb-eyebrow">Turma</span>
-                {turmas.length > 1 && (
-                  <button className="sdb-linkbtn" onClick={() => setShowTurmasModal(true)}>ver todas</button>
-                )}
-              </header>
-              {loadingTurmas ? (
-                <div className="skel skel-line" style={{ height: 14, width: '70%' }} />
-              ) : turmas.length === 0 ? (
-                <>
-                  <p className="sdb-empty-line">
-                    Não estás em nenhuma turma. Com o código do professor, os teus projetos
-                    passam a ser acompanhados por ele.
-                  </p>
-                  <button className="sdb-linkbtn sdb-linkbtn--strong" onClick={() => setShowJoinModal(true)}>
-                    Entrar com código
-                  </button>
-                </>
-              ) : (
-                <button className="sdb-turma" onClick={() => navigate(`/turma/${turmas[0].code}`)}>
-                  <span className="sdb-turma-icon"><GraduationCap size={15} /></span>
-                  <span className="sdb-turma-body">
-                    <span className="sdb-turma-name">{turmas[0].name}</span>
-                    {turmas[0].teacher_name && <span className="sdb-turma-teacher">{turmas[0].teacher_name}</span>}
-                  </span>
-                  <ArrowUpRight size={14} />
-                </button>
-              )}
-            </section>
+            {!isEmptyState && potentialPanel}
+            {!isEmptyState && turmaPanel}
           </div>
         </div>
       </div>
     </div>
+  )
+}
+
+/* ── Dicas do primeiro projeto ────────────────────────────────────────────── */
+
+function FirstProjectTips({ onDismiss }) {
+  const tips = [
+    {
+      title: 'Personaliza o teu projeto',
+      desc: 'Adiciona secções, reordena blocos e escolhe a capa — o projeto é teu, faz com que pareça.',
+    },
+    {
+      title: 'Ganha Score e destaca-te',
+      desc: 'Cada entrada no Diário, cada ficheiro, cada colaboração conta. O Score diferencia-te dos teus colegas.',
+    },
+    {
+      title: 'O Diário constrói o teu relatório',
+      desc: 'Regista progresso, decisões e dificuldades ao longo das semanas — a plataforma organiza tudo para a tua PAP.',
+    },
+  ]
+  return (
+    <section className="sdb-panel">
+      <header className="sdb-panel-head">
+        <span className="sdb-eyebrow">Primeiros passos</span>
+        <button className="sdb-linkbtn" onClick={onDismiss} aria-label="Fechar dicas">
+          Dispensar
+        </button>
+      </header>
+      <ul className="sdb-tips-list">
+        {tips.map((t, i) => (
+          <li key={i} className="sdb-tip">
+            <span className="sdb-tip-num">{i + 1}</span>
+            <div className="sdb-tip-body">
+              <span className="sdb-tip-title">{t.title}</span>
+              <span className="sdb-tip-desc">{t.desc}</span>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </section>
   )
 }
 

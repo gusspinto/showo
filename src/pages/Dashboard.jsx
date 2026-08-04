@@ -340,7 +340,7 @@ function OnboardingAlunoModal({ user, profile, onDismiss, firstProject, claimedS
   const inputStyle = { width: '100%', background: 'var(--color-primary-subtle)', border: '1.5px solid var(--color-primary-muted)', borderRadius: 'var(--radius-lg)', color: 'var(--color-text)', fontSize: 'var(--text-base)', padding: '11px 14px', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 4000, background: 'rgba(0,0,0,0.78)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+    <div style={{ position: 'fixed', inset: 0, zIndex: 4000, background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
       <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-primary-muted)', borderRadius: 'var(--radius-xl)', width: '100%', maxWidth: 460, maxHeight: '90vh', overflowY: 'auto', animation: 'dash-fade-up 0.25s var(--ease-out)' }}>
 
         {step === -1 && claimedSlug && (
@@ -348,7 +348,7 @@ function OnboardingAlunoModal({ user, profile, onDismiss, firstProject, claimedS
             <div style={{ width: 54, height: 54, borderRadius: '50%', background: 'var(--color-success-subtle)', border: '1px solid var(--color-success)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px', opacity: 0.8 }}>
               <Check size={26} color="var(--color-success)" />
             </div>
-            <h2 style={{ margin: '0 0 8px', fontSize: 'var(--text-lg)', fontWeight: 700, color: 'var(--color-text)', fontFamily: 'var(--font-display)' }}>
+            <h2 style={{ margin: '0 0 8px', fontSize: 'var(--text-lg)', fontWeight: 700, color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
               Olá{profile?.full_name ? ` ${profile.full_name.split(' ')[0]}` : ''}! O teu projeto está guardado.
             </h2>
             <p style={{ margin: '0 0 24px', fontSize: 'var(--text-base)', color: 'var(--color-text-secondary)', lineHeight: 1.65 }}>
@@ -367,7 +367,7 @@ function OnboardingAlunoModal({ user, profile, onDismiss, firstProject, claimedS
               <div style={{ width: 54, height: 54, borderRadius: '50%', background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
                 <User size={24} color="var(--color-primary)" />
               </div>
-              <h2 style={{ margin: '0 0 6px', fontSize: 'var(--text-lg)', fontWeight: 700, color: 'var(--color-text)', fontFamily: 'var(--font-display)' }}>Completa o teu perfil</h2>
+              <h2 style={{ margin: '0 0 6px', fontSize: 'var(--text-lg)', fontWeight: 700, color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>Completa o teu perfil</h2>
               <p style={{ margin: 0, fontSize: 'var(--text-base)', color: 'var(--color-text-secondary)' }}>O teu perfil é o teu cartão de visita.</p>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)', marginBottom: 'var(--sp-5)' }}>
@@ -402,7 +402,7 @@ function OnboardingAlunoModal({ user, profile, onDismiss, firstProject, claimedS
             <div style={{ width: 54, height: 54, borderRadius: '50%', background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
               <Rocket size={24} color="var(--color-primary)" />
             </div>
-            <h2 style={{ margin: '0 0 10px', fontSize: 'var(--text-lg)', fontWeight: 700, color: 'var(--color-text)', fontFamily: 'var(--font-display)' }}>Cria o teu primeiro projeto</h2>
+            <h2 style={{ margin: '0 0 10px', fontSize: 'var(--text-lg)', fontWeight: 700, color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>Cria o teu primeiro projeto</h2>
             <p style={{ margin: '0 auto 24px', fontSize: 'var(--text-base)', color: 'var(--color-text-secondary)', lineHeight: 1.6, maxWidth: 340 }}>
               Conta-nos o que fizeste, em poucas frases. Tratamos do resto.
             </p>
@@ -428,7 +428,7 @@ function OnboardingAlunoModal({ user, profile, onDismiss, firstProject, claimedS
             <div style={{ width: 54, height: 54, borderRadius: '50%', background: 'var(--color-success-subtle)', border: '1px solid var(--color-success)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px', opacity: 0.8 }}>
               <Share2 size={24} color="var(--color-success)" />
             </div>
-            <h2 style={{ margin: '0 0 10px', fontSize: 'var(--text-lg)', fontWeight: 700, color: 'var(--color-text)', fontFamily: 'var(--font-display)' }}>Partilha a tua página</h2>
+            <h2 style={{ margin: '0 0 10px', fontSize: 'var(--text-lg)', fontWeight: 700, color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>Partilha a tua página</h2>
             <p style={{ margin: '0 auto 24px', fontSize: 'var(--text-base)', color: 'var(--color-text-secondary)', lineHeight: 1.6, maxWidth: 340 }}>
               A tua página de perfil está pronta. Envia-a a quem quiseres.
             </p>
@@ -469,13 +469,13 @@ function OnboardingModal({ user, profile, onDismiss, onCreateTurma }) {
   }
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 4000, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+    <div style={{ position: 'fixed', inset: 0, zIndex: 4000, background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
       <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-primary-muted)', borderRadius: 'var(--radius-xl)', padding: '36px 32px', width: '100%', maxWidth: 440 }}>
         {step === 0 ? (
           <>
             <div style={{ textAlign: 'center', marginBottom: 28 }}>
               <img src="/icon.png" alt="Showo" style={{ width: 60, height: 60, objectFit: 'contain', margin: '0 auto 14px', display: 'block' }} />
-              <h2 style={{ color: 'var(--color-text)', fontSize: 'var(--text-xl)', fontWeight: 700, margin: '0 0 8px', fontFamily: 'var(--font-display)' }}>{cfg.title}</h2>
+              <h2 style={{ color: 'var(--color-text)', fontSize: 'var(--text-xl)', fontWeight: 700, margin: '0 0 8px', fontFamily: 'var(--font-heading)' }}>{cfg.title}</h2>
               <p style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--text-md)', margin: 0, lineHeight: 1.5 }}>{cfg.subtitle}</p>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)', marginBottom: 28 }}>
@@ -498,7 +498,7 @@ function OnboardingModal({ user, profile, onDismiss, onCreateTurma }) {
           <>
             <div style={{ textAlign: 'center', marginBottom: 28 }}>
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 14 }}><Rocket size={44} color="var(--color-primary)" /></div>
-              <h2 style={{ color: 'var(--color-text)', fontSize: 'var(--text-lg)', fontWeight: 700, margin: '0 0 8px', fontFamily: 'var(--font-display)' }}>Pronto para começar?</h2>
+              <h2 style={{ color: 'var(--color-text)', fontSize: 'var(--text-lg)', fontWeight: 700, margin: '0 0 8px', fontFamily: 'var(--font-heading)' }}>Pronto para começar?</h2>
               <p style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--text-base)', margin: 0, lineHeight: 1.55, maxWidth: 320, marginLeft: 'auto', marginRight: 'auto' }}>
                 {role === 'aluno' && 'Cria o teu primeiro projeto e transforma o teu trabalho numa página profissional.'}
                 {role === 'professor' && 'Cria a tua turma agora e partilha o código com os teus alunos.'}
@@ -1233,7 +1233,7 @@ export default function Dashboard() {
                   { label: 'Por rever', value: needsReview.length, accent: needsReview.length > 0 },
                 ].map(stat => (
                   <Card key={stat.label} padding="md" style={stat.accent ? { borderColor: 'var(--color-error)' } : undefined}>
-                    <div style={{ fontSize: 'var(--text-2xl)', fontWeight: 700, fontFamily: 'var(--font-display)', color: stat.accent ? 'var(--color-error)' : 'var(--color-primary)', lineHeight: 1 }}>{stat.value}</div>
+                    <div style={{ fontSize: 'var(--text-2xl)', fontWeight: 700, fontFamily: 'var(--font-heading)', color: stat.accent ? 'var(--color-error)' : 'var(--color-primary)', lineHeight: 1 }}>{stat.value}</div>
                     <div style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', fontWeight: 600, marginTop: 6 }}>{stat.label}</div>
                   </Card>
                 ))}

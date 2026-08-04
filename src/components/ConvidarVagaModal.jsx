@@ -50,15 +50,15 @@ export default function ConvidarVagaModal({ studentId, studentName, vagas, onClo
       onClick={e => e.target === e.currentTarget && onClose()}
       style={{
         position: 'fixed', inset: 0, zIndex: 600,
-        background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
+        background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(6px)',
         display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
         fontFamily: 'var(--font-body)',
       }}
     >
       <div style={{
-        background: C.card, border: `1px solid ${C.borderBright}`,
-        borderRadius: 18, width: '100%', maxWidth: 420,
-        boxShadow: '0 24px 64px rgba(0,0,0,0.6)',
+        background: 'var(--color-surface)', border: '1px solid var(--color-border)',
+        borderRadius: 'var(--radius-xl)', width: '100%', maxWidth: 420,
+        boxShadow: 'var(--shadow-xl)',
         animation: 'fadeUp 0.22s ease',
       }}>
         <style>{`@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}`}</style>
@@ -69,7 +69,7 @@ export default function ConvidarVagaModal({ studentId, studentName, vagas, onClo
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         }}>
           <div>
-            <div style={{ fontWeight: 700, fontSize: 15, color: C.text }}>Convidar para vaga</div>
+            <div style={{ fontWeight: 700, fontSize: 15, color: C.text, fontFamily: 'var(--font-heading)', letterSpacing: '-0.02em' }}>Convidar para vaga</div>
             <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>{studentName}</div>
           </div>
           <button

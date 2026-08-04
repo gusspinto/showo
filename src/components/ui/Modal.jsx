@@ -45,7 +45,7 @@ export default function Modal({ children, onClose, title, subtitle, width = 440 
                 <h3 style={{
                   margin: 0, fontSize: 'var(--text-lg)',
                   fontWeight: 700, color: 'var(--color-text)',
-                  fontFamily: 'var(--font-body)',
+                  fontFamily: 'var(--font-heading)',
                   letterSpacing: '-0.02em',
                 }}>
                   {title}

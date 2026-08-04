@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Copy, Check, ExternalLink, Link as LinkIcon, RefreshCw } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
-import { Modal, Button, SectionLabel } from '../ui'
+import { Modal, Button } from '../ui'
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
 
@@ -21,15 +21,15 @@ export default function CalendarSyncModal({ userId, icsToken, onClose, onTokenRo
         if (data) { setLocalToken(data); onTokenRotated?.(data) }
       })
     }
-  }, [])
-
-  const icsUrl = `${SUPABASE_URL}/functions/v1/ics-feed?token=${localToken || ''}`
-  const webcalUrl = icsUrl.replace(/^https?:/, 'webcal:')
+  }, []) // eslint-disable-line
 
   useEffect(() => {
     supabase.from('google_calendar_tokens').select('connected_at').eq('user_id', userId).maybeSingle()
       .then(({ data }) => setGoogleConnected(!!data))
   }, [userId])
+
+  const icsUrl = `${SUPABASE_URL}/functions/v1/ics-feed?token=${localToken || ''}`
+  const webcalUrl = icsUrl.replace(/^https?:/, 'webcal:')
 
   async function copyLink() {
     await navigator.clipboard.writeText(icsUrl)
@@ -56,7 +56,7 @@ export default function CalendarSyncModal({ userId, icsToken, onClose, onTokenRo
       const { url, error } = await resp.json()
       if (error) { setSyncMsg(error); return }
       window.location.href = url
-    } catch (e) {
+    } catch {
       setSyncMsg('Não foi possível ligar. Tenta novamente.')
     } finally {
       setGoogleBusy(false)
@@ -99,52 +99,55 @@ export default function CalendarSyncModal({ userId, icsToken, onClose, onTokenRo
   }
 
   return (
-    <Modal onClose={onClose} title="Sincronizar calendário"
-      subtitle="Vê os teus prazos no Google Calendar, Apple Calendar ou Outlook.">
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-5)' }}>
+    <Modal onClose={onClose} title="Sincronizar calendário">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
 
-        {/* Google */}
-        <section>
-          <SectionLabel>Google Calendar</SectionLabel>
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 12, padding: 12,
-            background: 'rgba(27,120,247,0.06)', border: '1px solid var(--color-primary-muted)',
-            borderRadius: 'var(--radius-md)',
-          }}>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 'var(--text-sm)', fontWeight: 700, color: 'var(--color-text)' }}>
-                {googleConnected === null ? 'A verificar…' : googleConnected ? 'Ligado' : 'Não ligado'}
-              </div>
-              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', marginTop: 2 }}>
-                Sincronização bidirecional. Novos prazos aparecem automaticamente.
-              </div>
+        {/* Google Calendar */}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 'var(--sp-3)',
+          padding: 'var(--sp-3) var(--sp-4)',
+          background: 'var(--color-bg)',
+          border: '1px solid var(--color-border)',
+          borderRadius: 'var(--radius-md)',
+        }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--color-text)' }}>
+              Google Calendar
             </div>
-            {googleConnected ? (
-              <>
-                <Button size="sm" variant="secondary" icon={<RefreshCw size={12} />} onClick={syncGoogle} disabled={googleBusy}>Sync</Button>
-                <Button size="sm" variant="ghost" onClick={disconnectGoogle} disabled={googleBusy}>Desligar</Button>
-              </>
-            ) : (
-              <Button size="sm" onClick={connectGoogle} disabled={googleBusy}>Ligar</Button>
-            )}
+            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', marginTop: 2 }}>
+              {googleConnected === null ? 'A verificar…' : googleConnected ? 'Ligado' : 'Não ligado'}
+            </div>
           </div>
-          {syncMsg && <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', margin: '6px 0 0' }}>{syncMsg}</p>}
-        </section>
+          {googleConnected ? (
+            <div style={{ display: 'flex', gap: 'var(--sp-2)', flexShrink: 0 }}>
+              <Button size="sm" variant="secondary" icon={<RefreshCw size={12} />} onClick={syncGoogle} disabled={googleBusy}>Sync</Button>
+              <Button size="sm" variant="ghost" onClick={disconnectGoogle} disabled={googleBusy}>Desligar</Button>
+            </div>
+          ) : (
+            <Button size="sm" onClick={connectGoogle} disabled={googleBusy}>Ligar</Button>
+          )}
+        </div>
+        {syncMsg && (
+          <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', margin: '-8px 0 0' }}>{syncMsg}</p>
+        )}
 
-        {/* ICS feed */}
-        <section>
-          <SectionLabel>Apple Calendar / Outlook (link de subscrição)</SectionLabel>
+        {/* ICS / outros calendários */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
+          <div style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--color-text)' }}>
+            Apple Calendar · Outlook
+          </div>
           <div style={{
-            display: 'flex', alignItems: 'center', gap: 6,
-            padding: 10, background: 'var(--color-bg)',
-            border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)',
-            marginBottom: 8,
+            display: 'flex', alignItems: 'center', gap: 'var(--sp-2)',
+            padding: 'var(--sp-2) var(--sp-3)',
+            background: 'var(--color-bg)',
+            border: '1px solid var(--color-border)',
+            borderRadius: 'var(--radius-md)',
           }}>
             <LinkIcon size={12} color="var(--color-text-tertiary)" style={{ flexShrink: 0 }} />
             <code style={{
               flex: 1, fontSize: 11, color: 'var(--color-text-secondary)',
               fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-            }}>{localToken ? icsUrl : 'A gerar link…'}</code>
+            }}>{localToken ? icsUrl : 'A gerar…'}</code>
             <Button size="sm" variant={copied ? 'ghost' : 'secondary'}
               icon={copied ? <Check size={11} /> : <Copy size={11} />}
               onClick={copyLink}
@@ -153,19 +156,19 @@ export default function CalendarSyncModal({ userId, icsToken, onClose, onTokenRo
               {copied ? 'Copiado' : 'Copiar'}
             </Button>
           </div>
-          <div style={{ display: 'flex', gap: 6 }}>
+          <div style={{ display: 'flex', gap: 'var(--sp-2)' }}>
             <a href={webcalUrl} style={{ flex: 1 }}>
-              <Button size="sm" variant="secondary" fullWidth icon={<ExternalLink size={12} />}>Abrir no Calendário</Button>
+              <Button size="sm" variant="secondary" fullWidth icon={<ExternalLink size={12} />}>
+                Abrir no Calendário
+              </Button>
             </a>
             <Button size="sm" variant="ghost" onClick={rotateToken} disabled={rotating}
               icon={<RefreshCw size={12} />}>
-              {rotating ? '…' : 'Rodar link'}
+              {rotating ? '…' : 'Novo link'}
             </Button>
           </div>
-          <p style={{ fontSize: 11, color: 'var(--color-text-tertiary)', margin: '8px 0 0', lineHeight: 1.4 }}>
-            No Apple Calendar: <em>Ficheiro → Nova subscrição de calendário</em>. No Outlook: <em>Adicionar calendário → Subscrever da Internet</em>.
-          </p>
-        </section>
+        </div>
+
       </div>
     </Modal>
   )

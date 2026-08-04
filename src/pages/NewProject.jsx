@@ -1,523 +1,546 @@
 import { useState, useRef, useEffect } from 'react'
-import SkillsPicker from '../components/SkillsPicker'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { GraduationCap, Briefcase, Rocket, Users, Camera, ShieldAlert, ArrowRight, Sparkles } from 'lucide-react'
 import { saveProject } from '../lib/saveProject'
-import { calculateScore, looksLikeSpam, isTooShortForContent } from '../lib/score'
-import { containsProfanity } from '../lib/profanity'
-import { Toast, useToast } from '../components/Toast'
+import { Sparkles, ArrowRight, Pencil, Check, ChevronRight } from 'lucide-react'
 import { Navbar } from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
-import { CropModal } from '../components/CropModal'
-import AIInterview from '../components/AIInterview'
-
-const GOAL_OPTIONS = [
-  { id: 'school',     Icon: GraduationCap, label: 'Projeto escolar' },
-  { id: 'internship', Icon: Briefcase,     label: 'Para estágio' },
-  { id: 'show',       Icon: Rocket,        label: 'Partilha pública' },
-  { id: 'clients',    Icon: Users,         label: 'Prova profissional' },
-]
-
-const SCHOOL_YEARS = ['10º ano', '11º ano', '12º ano', 'Licenciatura', 'Mestrado', 'Outro']
+import { Toast, useToast } from '../components/Toast'
 
 const PROJECT_TYPES = [
-  { id: 'pap', label: 'PAP' }, { id: 'personal', label: 'Pessoal' },
-  { id: 'group', label: 'Grupo' }, { id: 'competition', label: 'Competição' },
-  { id: 'internship', label: 'Estágio' }, { id: 'presentation', label: 'Apresentação' },
+  { id: 'personal',    label: 'Pessoal' },
+  { id: 'pap',         label: 'PAP' },
+  { id: 'group',       label: 'Grupo' },
+  { id: 'competition', label: 'Competição' },
+  { id: 'internship',  label: 'Estágio' },
 ]
 
-function timeAgo(iso) {
-  if (!iso) return ''
-  const diff = Date.now() - new Date(iso).getTime()
-  const mins = Math.floor(diff / 60000)
-  if (mins < 2) return 'agora mesmo'
-  if (mins < 60) return `há ${mins} min`
-  const hrs = Math.floor(mins / 60)
-  if (hrs < 24) return `há ${hrs}h`
-  return `há ${Math.floor(hrs / 24)}d`
-}
-
-const TEXTAREA_KEYS = new Set(['goal', 'problem', 'solution', 'features', 'challenges', 'results', 'learnings'])
+const REVIEW_FIELDS = [
+  { key: 'name',     label: 'Nome do projeto',      multiline: false, required: true },
+  { key: 'area',     label: 'Área',                 multiline: false, required: true },
+  { key: 'goal',     label: 'Objetivo',             multiline: true,  required: true },
+  { key: 'problem',  label: 'Problema que resolve', multiline: true,  required: true },
+  { key: 'solution', label: 'Como resolve',         multiline: true,  required: true },
+  { key: 'features', label: 'Funcionalidades',      multiline: true,  required: false },
+]
 
 export default function NewProject() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { user, loading: authLoading } = useAuth()
+  const { user } = useAuth()
   const { toast, show: showToast } = useToast()
-  const fileInputRef = useRef(null)
-  const syncTimerRef = useRef(null)
-  const draftCheckedRef = useRef(false)
 
+  const [step, setStep] = useState('describe')
+  const [description, setDescription] = useState('')
+  const [projectType, setProjectType] = useState('personal')
   const [form, setForm] = useState({})
-  const [submitting, setSubmitting] = useState(false)
+  const [editingField, setEditingField] = useState(null)
+  const [editValue, setEditValue] = useState('')
   const [error, setError] = useState(null)
-  const [dragOver, setDragOver] = useState(false)
-  const [cropFile, setCropFile] = useState(null)
-  const [draftBanner, setDraftBanner] = useState(null)
-  const [showAuthNudge, setShowAuthNudge] = useState(false)
-  const [showAI, setShowAI] = useState(false)
+  const [interviewData, setInterviewData] = useState(null)
 
   function set(key, val) { setForm(p => ({ ...p, [key]: val })) }
-
-  // ── Draft ──────────────────────────────────────────────────────────────────
-
-  async function clearDraft() {
-    try { localStorage.removeItem('showo_new_project_draft') } catch {}
-    if (user) await supabase.from('profiles').update({ project_draft: null }).eq('id', user.id)
-  }
 
   useEffect(() => {
     const state = location.state?.prefill
     if (state?.fromWidget) {
       setForm(state.answers ?? {})
+      setStep('review')
       window.history.replaceState({}, '')
-      return
     }
-    async function checkDraft() {
-      let draft = null
-      if (user) {
-        const { data } = await supabase.from('profiles').select('project_draft').eq('id', user.id).single()
-        draft = data?.project_draft || null
-      }
-      if (!draft) {
-        try { const raw = localStorage.getItem('showo_new_project_draft'); if (raw) draft = JSON.parse(raw) } catch {}
-      }
-      if (draft?.answers && Object.keys(draft.answers).length > 0) setDraftBanner(draft)
-    }
-    if (!authLoading && !draftCheckedRef.current) { draftCheckedRef.current = true; checkDraft() }
-  }, [authLoading, user]) // eslint-disable-line
+  }, []) // eslint-disable-line
 
-  useEffect(() => {
-    const { cover_url: _omit, ...withoutCover } = form
-    if (Object.keys(withoutCover).length === 0) return
-    const draft = { answers: withoutCover, savedAt: new Date().toISOString() }
-    try { localStorage.setItem('showo_new_project_draft', JSON.stringify(draft)) } catch {}
-    clearTimeout(syncTimerRef.current)
-    if (user) syncTimerRef.current = setTimeout(() => {
-      supabase.from('profiles').update({ project_draft: draft }).eq('id', user.id)
-    }, 1500)
-  }, [form, user]) // eslint-disable-line
-
-  useEffect(() => {
-    if (authLoading) return
-    if (!user && !sessionStorage.getItem('showo_auth_nudge_dismissed')) setShowAuthNudge(true)
-    if (user) setShowAuthNudge(false)
-  }, [user, authLoading])
-
-  // ── Image ──────────────────────────────────────────────────────────────────
-
-  function handleImageFile(file) {
-    if (!file) return
-    if (file.size > 10 * 1024 * 1024) { showToast('Imagem demasiado grande (máx. 10MB)', 'error'); return }
-    if (!file.type.startsWith('image/')) { showToast('Ficheiro inválido. Usa PNG, JPG ou WEBP.', 'error'); return }
-    setCropFile(file)
-  }
-
-  async function handleCropConfirm(blob) {
-    setCropFile(null)
-    set('cover_url', '__uploading__')
-    try {
-      const path = `draft-${Date.now()}.jpg`
-      const { error: upErr } = await supabase.storage.from('covers').upload(path, blob, { upsert: true, contentType: 'image/jpeg' })
-      if (upErr) throw upErr
-      const { data: { publicUrl } } = supabase.storage.from('covers').getPublicUrl(path)
-      set('cover_url', publicUrl)
-      showToast('Imagem adicionada!')
-    } catch { set('cover_url', ''); showToast('Erro ao carregar imagem.', 'error') }
-  }
-
-  // ── Validation ─────────────────────────────────────────────────────────────
-
-  function fieldError(key) {
-    const v = form[key] ?? ''
-    if (!v.trim()) return null
-    if (containsProfanity(v)) return 'profanity'
-    if (looksLikeSpam(v)) return 'spam'
-    if (TEXTAREA_KEYS.has(key) && isTooShortForContent(v)) return 'short'
-    return null
-  }
-
-  const REQUIRED = ['name', 'area', 'goal', 'problem', 'solution']
-  const hasRequired = REQUIRED.every(k => (form[k] ?? '').trim().length > 0)
-  // For required fields, only spam/profanity blocks — 'short' is a warning only.
-  // Optional fields block on any error (user chose to fill them, so they should be real).
-  const hasErrors = [...REQUIRED, 'features', 'challenges', 'results', 'learnings'].some(k => {
-    const err = fieldError(k)
-    if (!err) return false
-    if (REQUIRED.includes(k)) return err === 'profanity' || err === 'spam'
-    return true
-  })
-  const canSubmit = hasRequired && !hasErrors
-
-  const score = calculateScore(form).score
-
-  // ── Submit ─────────────────────────────────────────────────────────────────
-
-  async function handleSubmit(e) {
-    e.preventDefault()
-    if (!canSubmit) return
-    setSubmitting(true)
+  /* ── Generate (prefill) ── */
+  async function handleGenerate() {
+    if (!description.trim()) return
+    setStep('loading')
     setError(null)
+    try {
+      const { data, error: fnErr } = await supabase.functions.invoke('prefill-project', {
+        body: { text: description, projectType },
+      })
+      if (fnErr) throw new Error()
+      setForm({ ...(data?.prefill ?? {}), project_type: projectType })
+      setStep('review')
+    } catch {
+      setError('Não foi possível gerar. Tenta novamente.')
+      setStep('describe')
+    }
+  }
 
-    // Generate AI narrative in parallel with the project save setup.
-    // If it times out or fails, we continue without it — project creation never blocks on AI.
+  /* ── Interview (guided questions) ── */
+  async function handleInterview() {
+    if (!description.trim()) return
+    setStep('loading')
+    setError(null)
+    try {
+      const { data, error: fnErr } = await supabase.functions.invoke('interview-project', {
+        body: { description, projectType },
+      })
+      if (fnErr || !data?.questions?.length) throw new Error()
+      setInterviewData({ ...data, projectType })
+      setStep('interview')
+    } catch {
+      setError('Não foi possível iniciar a entrevista. Tenta novamente.')
+      setStep('describe')
+    }
+  }
+
+  /* ── Inline editing ── */
+  function startEdit(field) {
+    setEditingField(field.key)
+    setEditValue(form[field.key] ?? '')
+  }
+
+  function commitEdit() {
+    if (editingField) {
+      set(editingField, editValue)
+      setEditingField(null)
+    }
+  }
+
+  /* ── Submit ── */
+  async function handleSubmit() {
+    setStep('submitting')
+    setError(null)
     let aiResult = {}
     try {
-      const ctrl = new AbortController()
-      const timeout = setTimeout(() => ctrl.abort(), 20_000)
       const { data } = await supabase.functions.invoke('generate-project', { body: { data: form } })
-      clearTimeout(timeout)
       if (data?.tagline) aiResult = data
     } catch { /* non-critical */ }
-
     try {
       const project = await saveProject(form, aiResult, user?.id ?? null)
-      localStorage.setItem(`edit_token_${project.slug}`, project.edit_token)
-      await clearDraft()
+      if (user?.id) localStorage.setItem(`edit_token_${project.slug}`, project.edit_token)
       navigate(`/projeto/${project.slug}`, {
         state: { newProject: true, message: 'Projeto criado! Começa a melhorar o teu score.' }
       })
     } catch (err) {
       console.error(err)
-      setError('Ocorreu um erro. Tenta novamente.')
       showToast('Erro ao criar o projeto. Tenta novamente.', 'error')
-      setSubmitting(false)
+      setStep('review')
     }
   }
 
-  // ── Generating state ───────────────────────────────────────────────────────
+  const canSubmit = REVIEW_FIELDS.filter(f => f.required)
+    .every(f => (form[f.key] ?? '').trim().length > 0)
 
-  if (submitting) {
+  /* ──────────────────────────────────────────────────────────────────────────
+     STEP: describe
+  ────────────────────────────────────────────────────────────────────────── */
+  if (step === 'describe') {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: 'var(--color-bg)', color: 'var(--color-text)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 24 }}>
-        <div style={{ width: 52, height: 52, border: '3px solid var(--color-border)', borderTop: '3px solid var(--color-primary)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
-        <div style={{ textAlign: 'center' }}>
-          <p style={{ fontSize: 18, fontWeight: 700, margin: '0 0 6px', letterSpacing: '-0.3px' }}>A criar e a escrever a narrativa…</p>
-          <p style={{ color: 'var(--color-text-secondary)', fontSize: 14, margin: 0 }}>A IA está a transformar o teu projeto em texto</p>
+      <NpShell>
+        <Toast {...toast} />
+        <Navbar showLinks={false} />
+        <div style={S.center}>
+          <div style={S.describeWrap}>
+            <div style={S.eyebrowRow}>
+              <Sparkles size={15} color="var(--color-primary)" />
+              <span style={S.eyebrow}>Novo projeto</span>
+            </div>
+
+            <h1 style={S.headline}>Conta-nos sobre o teu projeto.</h1>
+            <p style={S.sub}>
+              Descreve em 2–3 frases. A IA estrutura o conteúdo — tu revês e ajustas.
+            </p>
+
+            <DescribeTextarea
+              value={description}
+              onChange={setDescription}
+              onSubmit={handleGenerate}
+            />
+
+            <div style={S.typeRow}>
+              {PROJECT_TYPES.map(t => (
+                <TypeChip
+                  key={t.id}
+                  label={t.label}
+                  active={projectType === t.id}
+                  onClick={() => setProjectType(t.id)}
+                />
+              ))}
+            </div>
+
+            {error && <p style={S.err}>{error}</p>}
+
+            <button
+              type="button"
+              onClick={handleGenerate}
+              disabled={!description.trim()}
+              style={btnStyle(description.trim())}
+            >
+              <Sparkles size={15} />
+              Criar com IA
+              <ArrowRight size={15} />
+            </button>
+
+            <button
+              type="button"
+              onClick={handleInterview}
+              disabled={!description.trim()}
+              style={secondaryBtnStyle(description.trim())}
+            >
+              <ChevronRight size={14} />
+              Prefiro responder a perguntas
+            </button>
+          </div>
         </div>
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-      </div>
+      </NpShell>
     )
   }
 
-  // ── Render ─────────────────────────────────────────────────────────────────
-
-  return (
-    <div style={{ minHeight: '100vh', backgroundColor: 'var(--color-bg)', color: 'var(--color-text)' }}>
-      <style>{`
-        .np-form input[type="text"],
-        .np-form input[type="url"],
-        .np-form textarea,
-        .np-form select {
-          width: 100%; background: var(--color-input-bg);
-          border: 1.5px solid var(--color-input-border); border-radius: var(--radius-md);
-          color: var(--color-text); font-size: var(--text-base); padding: 11px 14px;
-          outline: none; font-family: inherit; box-sizing: border-box;
-          transition: border-color 0.2s, box-shadow 0.2s;
-        }
-        .np-form input:focus, .np-form textarea:focus, .np-form select:focus {
-          border-color: var(--color-primary);
-          box-shadow: 0 0 0 3px var(--color-primary-subtle);
-        }
-        .np-form textarea { resize: vertical; line-height: 1.65; }
-        .np-form select { cursor: pointer; }
-        @media (max-width: 560px) { .np-grid-2 { grid-template-columns: 1fr !important; } }
-      `}</style>
-      <Toast {...toast} />
-      <Navbar showLinks={false} />
-
-      {/* Auth nudge */}
-      {showAuthNudge && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(8,14,26,0.82)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 16px', backdropFilter: 'blur(4px)' }}>
-          <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 14, padding: '32px 28px', maxWidth: 400, width: '100%', textAlign: 'center' }}>
-            <h2 style={{ fontSize: 20, fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 10px', letterSpacing: '-0.3px' }}>Guarda o teu projeto</h2>
-            <p style={{ color: 'var(--color-text-secondary)', fontSize: 14, lineHeight: 1.65, margin: '0 0 24px' }}>
-              Sem conta, o teu projeto fica guardado apenas com um link privado. Se o perderes, não há forma de recuperar.
-            </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <button onClick={() => navigate('/register')} style={{ background: 'var(--color-primary)', border: 'none', borderRadius: 8, padding: '11px 0', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>Criar conta</button>
-              <button onClick={() => navigate('/login')} style={{ background: 'transparent', border: '1px solid var(--color-border)', borderRadius: 8, padding: '10px 0', color: 'var(--color-text)', fontSize: 15, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Iniciar sessão</button>
-              <button onClick={() => { sessionStorage.setItem('showo_auth_nudge_dismissed', '1'); setShowAuthNudge(false) }} style={{ background: 'transparent', border: 'none', color: 'var(--color-text-tertiary)', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', padding: '6px 0' }}>Continuar sem conta</button>
-            </div>
-          </div>
+  /* ──────────────────────────────────────────────────────────────────────────
+     STEP: loading / submitting
+  ────────────────────────────────────────────────────────────────────────── */
+  if (step === 'loading' || step === 'submitting') {
+    return (
+      <NpShell>
+        <div style={S.loadingCenter}>
+          <div style={S.spinner} />
+          <p style={S.loadingTitle}>
+            {step === 'submitting' ? 'A guardar o teu projeto…' : 'A estruturar o teu projeto…'}
+          </p>
+          <p style={S.loadingSub}>
+            {step === 'submitting' ? 'Quase pronto.' : 'A IA está a organizar o que descreveste.'}
+          </p>
+          <style>{`@keyframes np-spin { to { transform: rotate(360deg); } }`}</style>
         </div>
-      )}
+      </NpShell>
+    )
+  }
 
-      <div className="page-content np-form" style={{ maxWidth: 640 }}>
-        <h1 style={{ fontSize: 'clamp(22px, 4vw, 28px)', fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 6px', letterSpacing: '-0.5px' }}>Novo projeto</h1>
-        <p style={{ color: 'var(--color-text-secondary)', fontSize: 14, margin: '0 0 20px' }}>Preenche os campos obrigatórios e cria a tua página.</p>
-
-        {/* ── AI entry card ── */}
-        {showAI ? (
-          <div style={{
-            background: 'var(--color-primary-subtle)',
-            border: '1px solid rgba(27,120,247,0.2)',
-            borderRadius: 14, padding: '18px 20px', marginBottom: 28,
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-              <Sparkles size={15} color="var(--color-primary)" />
-              <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-primary)' }}>Ajuda da IA</span>
+  /* ──────────────────────────────────────────────────────────────────────────
+     STEP: interview (guided questions)
+  ────────────────────────────────────────────────────────────────────────── */
+  if (step === 'interview' && interviewData) {
+    return (
+      <NpShell>
+        <Toast {...toast} />
+        <Navbar showLinks={false} />
+        <div style={S.center}>
+          <div style={S.reviewWrap}>
+            <div style={{ marginBottom: 24 }}>
+              <h2 style={S.reviewHead}>Vamos construir o teu projeto juntos.</h2>
+              <p style={S.reviewSub}>Responde a cada pergunta — a IA usa as tuas respostas para criar o projeto.</p>
             </div>
-            <AIInterview
+            <InterviewPanel
+              data={interviewData}
               onComplete={answers => {
-                setForm(prev => ({ ...prev, ...Object.fromEntries(Object.entries(answers).filter(([, v]) => v)) }))
-                setShowAI(false)
+                setForm({ ...Object.fromEntries(Object.entries(answers).filter(([, v]) => v)), project_type: interviewData.projectType })
+                setStep('review')
               }}
-              onDismiss={() => setShowAI(false)}
+              onBack={() => setStep('describe')}
             />
           </div>
-        ) : (
+        </div>
+      </NpShell>
+    )
+  }
+
+  /* ──────────────────────────────────────────────────────────────────────────
+     STEP: review
+  ────────────────────────────────────────────────────────────────────────── */
+  return (
+    <NpShell>
+      <Toast {...toast} />
+      <Navbar showLinks={false} />
+      <div style={{ maxWidth: 640, margin: '0 auto', padding: '40px 20px 80px' }}>
+
+        <div style={{ marginBottom: 28 }}>
+          <h2 style={S.reviewHead}>Parece bem?</h2>
+          <p style={S.reviewSub}>
+            A IA estruturou o teu projeto. Clica em qualquer campo para editar antes de criar.
+          </p>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {REVIEW_FIELDS.map(field => (
+            <ReviewField
+              key={field.key}
+              field={field}
+              value={form[field.key] ?? ''}
+              isEditing={editingField === field.key}
+              editValue={editValue}
+              onEdit={() => startEdit(field)}
+              onEditValueChange={setEditValue}
+              onCommit={commitEdit}
+            />
+          ))}
+        </div>
+
+        {error && <p style={S.err}>{error}</p>}
+
+        <div style={{ marginTop: 32, display: 'flex', flexDirection: 'column', gap: 10 }}>
           <button
             type="button"
-            onClick={() => setShowAI(true)}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 8, marginBottom: 28,
-              background: 'var(--color-primary-subtle)',
-              border: '1px solid rgba(27,120,247,0.18)',
-              borderRadius: 10, padding: '10px 16px',
-              color: 'var(--color-primary)', fontSize: 13, fontWeight: 600,
-              cursor: 'pointer', fontFamily: 'inherit', transition: 'opacity 0.15s',
-            }}
+            onClick={handleSubmit}
+            disabled={!canSubmit}
+            style={btnStyle(canSubmit)}
           >
-            <Sparkles size={14} /> Começar com ajuda da IA
+            Criar projeto <ArrowRight size={15} />
           </button>
-        )}
-
-        {/* Draft recovery */}
-        {draftBanner && (
-          <div style={{ background: 'var(--color-glass)', backdropFilter: 'blur(16px)', border: '1px solid var(--color-glass-border)', borderLeft: '3px solid var(--color-primary)', borderRadius: 12, padding: '14px 16px', marginBottom: 24 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 700 }}>Tens um rascunho guardado</div>
-                {draftBanner.savedAt && <div style={{ fontSize: 11, color: 'var(--color-text-tertiary)', marginTop: 2 }}>{timeAgo(draftBanner.savedAt)}</div>}
-              </div>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button onClick={() => { setForm(draftBanner.answers || {}); setDraftBanner(null) }} style={{ background: 'var(--color-primary)', border: 'none', borderRadius: 7, padding: '7px 14px', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>Continuar</button>
-                <button onClick={async () => { await clearDraft(); setDraftBanner(null) }} style={{ background: 'transparent', border: '1px solid var(--color-border)', borderRadius: 7, padding: '7px 12px', color: 'var(--color-text-secondary)', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>Apagar</button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
-
-          {/* ── Básico ── */}
-          <FormSection label="Básico">
-            <FormField label="Nome do projeto" required>
-              <input type="text" placeholder="Ex: EcoTrack, StudyBuddy, FoodSaver..." value={form.name ?? ''} onChange={e => set('name', e.target.value)} />
-            </FormField>
-            <FormField label="Área" required>
-              <input type="text" placeholder="Ex: Saúde, Educação, Sustentabilidade..." value={form.area ?? ''} onChange={e => set('area', e.target.value)} />
-            </FormField>
-            <FormField label="Objetivo do projeto">
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }} className="np-grid-2">
-                {GOAL_OPTIONS.map(opt => {
-                  const sel = form.formGoal === opt.id
-                  return (
-                    <button type="button" key={opt.id} onClick={() => set('formGoal', sel ? null : opt.id)}
-                      style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', borderRadius: 8, border: `1.5px solid ${sel ? 'var(--color-primary)' : 'var(--color-border)'}`, background: sel ? 'var(--color-primary-subtle)' : 'transparent', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13, fontWeight: sel ? 700 : 500, color: sel ? 'var(--color-primary)' : 'var(--color-text-secondary)', transition: 'all 0.15s', textAlign: 'left' }}>
-                      <opt.Icon size={14} strokeWidth={sel ? 2.2 : 1.8} />
-                      {opt.label}
-                    </button>
-                  )
-                })}
-              </div>
-            </FormField>
-          </FormSection>
-
-          {/* ── Descrição ── */}
-          <FormSection label="Descrição">
-            <TextareaField label="Qual é o objetivo principal?" fieldKey="goal" form={form} set={set} fieldError={fieldError}
-              placeholder="Descreve o que este projeto pretende alcançar..." required />
-            <TextareaField label="Que problema resolve?" fieldKey="problem" form={form} set={set} fieldError={fieldError}
-              placeholder="Descreve o problema que identificaste e que motivou este projeto..." required />
-            <TextareaField label="Como é que o resolve?" fieldKey="solution" form={form} set={set} fieldError={fieldError}
-              placeholder="Explica a tua abordagem e solução de forma clara..." required />
-          </FormSection>
-
-          {/* ── Detalhes ── */}
-          <FormSection label="Detalhes" hint="opcional">
-            <FormField label="Tecnologias utilizadas">
-              <input type="text" placeholder="Ex: React, Python, PostgreSQL, Firebase..." value={form.technologies ?? ''} onChange={e => set('technologies', e.target.value)} />
-            </FormField>
-            <FormField label="Público-alvo">
-              <input type="text" placeholder="Ex: Estudantes universitários, pequenas empresas..." value={form.target_audience ?? ''} onChange={e => set('target_audience', e.target.value)} />
-            </FormField>
-            <TextareaField label="Principais funcionalidades" fieldKey="features" form={form} set={set} fieldError={fieldError}
-              placeholder="Lista as 3-5 funcionalidades mais importantes..." rows={3} />
-            <TextareaField label="Maiores desafios" fieldKey="challenges" form={form} set={set} fieldError={fieldError}
-              placeholder="O que foi mais difícil de implementar ou resolver?" rows={3} />
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }} className="np-grid-2">
-              <TextareaField label="Resultados" fieldKey="results" form={form} set={set} fieldError={fieldError}
-                placeholder="Métricas, feedback, conquistas..." rows={3} />
-              <TextareaField label="Aprendizagens" fieldKey="learnings" form={form} set={set} fieldError={fieldError}
-                placeholder="Competências, lições importantes..." rows={3} />
-            </div>
-          </FormSection>
-
-          {/* ── Sobre ti ── */}
-          <FormSection label="Sobre ti" hint="opcional">
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }} className="np-grid-2">
-              <FormField label="Nome">
-                <input type="text" placeholder="Ex: João" value={form.creator_name ?? ''} onChange={e => set('creator_name', e.target.value)} />
-              </FormField>
-              <FormField label="Curso">
-                <input type="text" placeholder="Ex: Técnico de Informática" value={form.course ?? ''} onChange={e => set('course', e.target.value)} />
-              </FormField>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }} className="np-grid-2">
-              <FormField label="Ano escolar">
-                <select value={form.school_year ?? ''} onChange={e => set('school_year', e.target.value)} style={{ color: form.school_year ? 'var(--color-text)' : 'var(--color-text-tertiary)' }}>
-                  <option value="" disabled>Seleciona...</option>
-                  {SCHOOL_YEARS.map(y => <option key={y} value={y}>{y}</option>)}
-                </select>
-              </FormField>
-              <FormField label="Escola">
-                <input type="text" placeholder="Nome da escola" value={form.school ?? ''} onChange={e => set('school', e.target.value)} />
-              </FormField>
-            </div>
-            {form.formGoal === 'school' && (
-              <label style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', padding: '12px 14px', background: 'var(--color-input-bg)', borderRadius: 8, border: `1.5px solid ${form.is_pap ? 'var(--color-primary)' : 'var(--color-border)'}`, transition: 'border-color 0.2s' }}>
-                <input type="checkbox" checked={form.is_pap ?? false} onChange={e => set('is_pap', e.target.checked)} style={{ width: 16, height: 16, accentColor: 'var(--color-primary)', cursor: 'pointer', flexShrink: 0 }} />
-                <span style={{ fontSize: 14 }}>Este projeto é a minha <strong>PAP</strong></span>
-              </label>
-            )}
-            {form.is_pap && (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }} className="np-grid-2">
-                <FormField label="Orientador">
-                  <input type="text" placeholder="Nome do orientador" value={form.pap_supervisor ?? ''} onChange={e => set('pap_supervisor', e.target.value)} />
-                </FormField>
-                <FormField label="Data de apresentação">
-                  <input type="text" placeholder="Ex: 15 de Junho de 2025" value={form.pap_date ?? ''} onChange={e => set('pap_date', e.target.value)} />
-                </FormField>
-              </div>
-            )}
-          </FormSection>
-
-          {/* ── Links ── */}
-          <FormSection label="Links" hint="opcional">
-            <FormField label="LinkedIn">
-              <input type="url" placeholder="https://linkedin.com/in/..." value={form.linkedin_url ?? ''} onChange={e => set('linkedin_url', e.target.value)} />
-            </FormField>
-            <FormField label="GitHub">
-              <input type="url" placeholder="https://github.com/..." value={form.github_url ?? ''} onChange={e => set('github_url', e.target.value)} />
-            </FormField>
-            <FormField label="Portfólio">
-              <input type="url" placeholder="Site ou portfólio pessoal" value={form.portfolio_url ?? ''} onChange={e => set('portfolio_url', e.target.value)} />
-            </FormField>
-          </FormSection>
-
-          {/* ── Extras ── */}
-          <FormSection label="Extras" hint="opcional">
-            <FormField label="Tipo de projeto">
-              <select value={form.project_type ?? ''} onChange={e => set('project_type', e.target.value)} style={{ color: form.project_type ? 'var(--color-text)' : 'var(--color-text-tertiary)' }}>
-                <option value="">Seleciona...</option>
-                {PROJECT_TYPES.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
-              </select>
-            </FormField>
-            <SkillsPicker label="Tags do projeto" value={form.tags ?? []} onChange={v => set('tags', v)} max={10} />
-            <FormField label="Imagem de capa">
-              {form.cover_url && form.cover_url !== '__uploading__' ? (
-                <div>
-                  <img src={form.cover_url} alt="" style={{ width: '100%', height: 160, objectFit: 'cover', borderRadius: 10, border: '1px solid var(--color-border)', display: 'block' }} />
-                  <button type="button" onClick={() => set('cover_url', null)} style={{ marginTop: 8, background: 'transparent', border: '1px solid var(--color-border)', color: 'var(--color-text-secondary)', borderRadius: 7, padding: '6px 12px', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>Remover</button>
-                </div>
-              ) : form.cover_url === '__uploading__' ? (
-                <div style={{ border: '2px dashed var(--color-border)', borderRadius: 10, padding: '28px 20px', textAlign: 'center', color: 'var(--color-text-secondary)', fontSize: 13 }}>A carregar…</div>
-              ) : (
-                <div
-                  onClick={() => fileInputRef.current?.click()}
-                  onDragOver={e => { e.preventDefault(); setDragOver(true) }}
-                  onDragLeave={() => setDragOver(false)}
-                  onDrop={e => { e.preventDefault(); setDragOver(false); handleImageFile(e.dataTransfer.files?.[0]) }}
-                  style={{ border: `2px dashed ${dragOver ? 'var(--color-primary)' : 'var(--color-border)'}`, background: dragOver ? 'var(--color-primary-subtle)' : 'transparent', borderRadius: 10, padding: '28px 20px', textAlign: 'center', cursor: 'pointer', transition: 'all 0.2s' }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}>
-                    <Camera size={24} color={dragOver ? 'var(--color-primary)' : 'var(--color-text-tertiary)'} />
-                  </div>
-                  <p style={{ color: dragOver ? 'var(--color-primary)' : 'var(--color-text-secondary)', margin: 0, fontSize: 13, fontWeight: 500 }}>Clica ou arrasta uma imagem</p>
-                  <p style={{ color: 'var(--color-text-tertiary)', margin: '4px 0 0', fontSize: 11 }}>PNG, JPG ou WEBP · máx. 10MB</p>
-                </div>
-              )}
-              <input ref={fileInputRef} type="file" accept="image/*" onChange={e => { handleImageFile(e.target.files?.[0]); if (e.target) e.target.value = '' }} style={{ display: 'none' }} />
-              {cropFile && <CropModal file={cropFile} aspectRatio={16 / 9} onConfirm={handleCropConfirm} onCancel={() => setCropFile(null)} />}
-            </FormField>
-          </FormSection>
-
-          {/* ── Score preview ── */}
-          {score > 0 && (
-            <div style={{ padding: '14px 16px', background: 'var(--color-glass)', backdropFilter: 'blur(16px)', borderRadius: 12, border: '1px solid var(--color-glass-border)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                <span style={{ fontSize: 13, color: 'var(--color-text-secondary)', fontWeight: 500 }}>Score estimado</span>
-                <span style={{ fontSize: 16, fontWeight: 800, color: score > 80 ? 'var(--color-success)' : score >= 60 ? 'var(--color-warning)' : 'var(--color-primary)' }}>{score}</span>
-              </div>
-              <div style={{ height: 4, background: 'var(--color-border)', borderRadius: 2, overflow: 'hidden' }}>
-                <div style={{ height: '100%', width: `${score}%`, background: score > 80 ? 'var(--color-success)' : score >= 60 ? 'var(--color-warning)' : 'var(--color-primary)', borderRadius: 2, transition: 'width 0.4s ease' }} />
-              </div>
-            </div>
-          )}
-
-          {error && <p style={{ color: 'var(--color-error)', fontSize: 14, margin: 0, fontWeight: 500 }}>{error}</p>}
-
-          <button type="submit" disabled={!canSubmit}
-            style={{ background: canSubmit ? 'var(--color-primary)' : 'var(--color-border)', color: '#fff', border: 'none', borderRadius: 10, padding: '14px 0', fontSize: 16, fontWeight: 700, cursor: canSubmit ? 'pointer' : 'not-allowed', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, boxShadow: canSubmit ? '0 2px 8px rgba(27,120,247,0.2)' : 'none', transition: 'background 0.2s, box-shadow 0.2s', marginBottom: 40 }}>
-            Criar página <ArrowRight size={15} />
+          <button
+            type="button"
+            onClick={() => setStep('describe')}
+            style={secondaryBtnStyle(true)}
+          >
+            ← Voltar e descrever novamente
           </button>
-        </form>
+        </div>
       </div>
-    </div>
+    </NpShell>
   )
 }
 
-// ── Helper components ──────────────────────────────────────────────────────────
+/* ── Sub-components ──────────────────────────────────────────────────────── */
 
-function FormSection({ label, hint, children }) {
+function NpShell({ children }) {
   return (
-    <div>
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 16, paddingBottom: 10, borderBottom: '1px solid var(--color-border)' }}>
-        <span style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.8, color: 'var(--color-text-tertiary)' }}>{label}</span>
-        {hint && <span style={{ fontSize: 11, color: 'var(--color-text-tertiary)' }}>— {hint}</span>}
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-        {children}
-      </div>
-    </div>
-  )
-}
-
-function FormField({ label, required, children }) {
-  return (
-    <div>
-      {label && (
-        <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--color-text-secondary)', marginBottom: 6, letterSpacing: 0.2 }}>
-          {label}{required && <span style={{ color: 'var(--color-error)', marginLeft: 3 }}>*</span>}
-        </label>
-      )}
+    <div style={{ minHeight: '100vh', background: 'var(--color-bg)', color: 'var(--color-text)', display: 'flex', flexDirection: 'column' }}>
       {children}
     </div>
   )
 }
 
-function TextareaField({ label, fieldKey, form, set, fieldError, placeholder, required, rows = 4 }) {
-  const err = fieldError(fieldKey)
+function DescribeTextarea({ value, onChange, onSubmit }) {
   return (
-    <FormField label={label} required={required}>
-      <textarea
-        value={form[fieldKey] ?? ''}
-        onChange={e => set(fieldKey, e.target.value)}
-        placeholder={placeholder}
-        rows={rows}
-        style={err ? { borderColor: 'rgba(239,68,68,0.6)' } : undefined}
-      />
-      {err && (
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginTop: 8, padding: '10px 12px', background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8 }}>
-          <ShieldAlert size={14} color="var(--color-error)" style={{ flexShrink: 0, marginTop: 1 }} />
-          <span style={{ fontSize: 12, color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
-            {err === 'short' ? 'Escreve pelo menos 20 caracteres.' : err === 'profanity' ? 'Linguagem inapropriada detetada.' : 'Texto inválido — escreve conteúdo real.'}
-          </span>
+    <textarea
+      autoFocus
+      value={value}
+      onChange={e => onChange(e.target.value)}
+      placeholder="Ex: Desenvolvi uma app mobile em Flutter para ajudar estudantes do secundário a gerir as suas tarefas e receber lembretes personalizados."
+      rows={5}
+      style={{
+        width: '100%', boxSizing: 'border-box',
+        background: 'var(--color-surface)',
+        border: '1.5px solid var(--color-border)',
+        borderRadius: 14, color: 'var(--color-text)',
+        fontSize: 15, padding: '16px 18px',
+        outline: 'none', fontFamily: 'inherit',
+        resize: 'none', lineHeight: 1.65,
+        transition: 'border-color 0.2s, box-shadow 0.2s',
+      }}
+      onFocus={e => { e.currentTarget.style.borderColor = 'var(--color-primary)'; e.currentTarget.style.boxShadow = '0 0 0 3px var(--color-primary-subtle)' }}
+      onBlur={e => { e.currentTarget.style.borderColor = 'var(--color-border)'; e.currentTarget.style.boxShadow = 'none' }}
+      onKeyDown={e => { if (e.key === 'Enter' && e.metaKey && value.trim()) { e.preventDefault(); onSubmit() } }}
+    />
+  )
+}
+
+function TypeChip({ label, active, onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      style={{
+        padding: '6px 14px', borderRadius: 20,
+        border: `1.5px solid ${active ? 'var(--color-primary)' : 'var(--color-border)'}`,
+        background: active ? 'var(--color-primary-subtle)' : 'transparent',
+        color: active ? 'var(--color-primary)' : 'var(--color-text-secondary)',
+        fontSize: 13, fontWeight: active ? 700 : 500,
+        cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s',
+      }}
+    >{label}</button>
+  )
+}
+
+function ReviewField({ field, value, isEditing, editValue, onEdit, onEditValueChange, onCommit }) {
+  const ref = useRef(null)
+
+  useEffect(() => {
+    if (isEditing && ref.current) {
+      ref.current.focus()
+      const len = ref.current.value?.length ?? 0
+      if (ref.current.setSelectionRange) ref.current.setSelectionRange(len, len)
+    }
+  }, [isEditing])
+
+  return (
+    <div
+      onClick={() => { if (!isEditing) onEdit() }}
+      style={{
+        padding: '16px 18px',
+        background: 'var(--color-surface)',
+        border: `1.5px solid ${isEditing ? 'var(--color-primary)' : 'var(--color-border)'}`,
+        borderRadius: 12,
+        cursor: isEditing ? 'default' : 'pointer',
+        transition: 'border-color 0.15s',
+        boxShadow: isEditing ? '0 0 0 3px var(--color-primary-subtle)' : 'none',
+      }}
+      onMouseEnter={e => { if (!isEditing) e.currentTarget.style.borderColor = 'var(--color-primary)' }}
+      onMouseLeave={e => { if (!isEditing) e.currentTarget.style.borderColor = 'var(--color-border)' }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+        <span style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.8, color: 'var(--color-text-tertiary)' }}>
+          {field.label}
+          {field.required && <span style={{ color: 'var(--color-error)', marginLeft: 3 }}>*</span>}
+        </span>
+        {isEditing ? (
+          <button
+            type="button"
+            onClick={e => { e.stopPropagation(); onCommit() }}
+            style={{ background: 'var(--color-primary)', border: 'none', borderRadius: 6, padding: '4px 10px', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 4 }}
+          >
+            <Check size={11} /> Guardar
+          </button>
+        ) : (
+          <Pencil size={12} color="var(--color-text-tertiary)" style={{ flexShrink: 0 }} />
+        )}
+      </div>
+      {isEditing ? (
+        field.multiline ? (
+          <textarea
+            ref={ref}
+            value={editValue}
+            onChange={e => onEditValueChange(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Escape') onCommit() }}
+            rows={4}
+            style={{ width: '100%', boxSizing: 'border-box', background: 'transparent', border: 'none', outline: 'none', color: 'var(--color-text)', fontSize: 14, fontFamily: 'inherit', lineHeight: 1.65, resize: 'vertical', padding: 0 }}
+          />
+        ) : (
+          <input
+            ref={ref}
+            type="text"
+            value={editValue}
+            onChange={e => onEditValueChange(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter' || e.key === 'Escape') { e.preventDefault(); onCommit() } }}
+            style={{ width: '100%', boxSizing: 'border-box', background: 'transparent', border: 'none', outline: 'none', color: 'var(--color-text)', fontSize: 14, fontFamily: 'inherit', padding: 0 }}
+          />
+        )
+      ) : (
+        <p style={{ margin: 0, fontSize: 14, lineHeight: 1.65, color: value ? 'var(--color-text)' : 'var(--color-text-tertiary)', whiteSpace: 'pre-wrap' }}>
+          {value || 'Clica para adicionar…'}
+        </p>
+      )}
+    </div>
+  )
+}
+
+function InterviewPanel({ data, onComplete, onBack }) {
+  const [currentQ, setCurrentQ] = useState(0)
+  const [currentAnswer, setCurrentAnswer] = useState('')
+  const [answers, setAnswers] = useState({})
+
+  function advance(val = currentAnswer.trim()) {
+    const q = data.questions[currentQ]
+    const next = { ...answers, [q.field]: val }
+    setAnswers(next)
+    setCurrentAnswer('')
+    if (currentQ + 1 >= data.questions.length) {
+      onComplete(next)
+    } else {
+      setCurrentQ(i => i + 1)
+    }
+  }
+
+  const q = data.questions[currentQ]
+  const total = data.questions.length
+  const pct = Math.round(((currentQ + 1) / total) * 100)
+  const isLast = currentQ + 1 >= total
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      {currentQ === 0 && data.understanding && (
+        <div style={{ padding: '12px 14px', background: 'var(--color-primary-subtle)', border: '1px solid rgba(27,120,247,0.18)', borderLeft: '3px solid var(--color-primary)', borderRadius: 10, fontSize: 13, lineHeight: 1.65, color: 'var(--color-text)' }}>
+          {data.understanding}
         </div>
       )}
-    </FormField>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-text-tertiary)', letterSpacing: 0.5, whiteSpace: 'nowrap' }}>
+          {currentQ + 1}/{total}
+        </span>
+        <div style={{ flex: 1, height: 3, background: 'var(--color-border)', borderRadius: 2 }}>
+          <div style={{ height: '100%', width: `${pct}%`, background: 'var(--color-primary)', borderRadius: 2, transition: 'width 0.35s cubic-bezier(0.4,0,0.2,1)' }} />
+        </div>
+      </div>
+
+      <div>
+        <p style={{ margin: '0 0 10px', fontSize: 15, fontWeight: 600, color: 'var(--color-text)', lineHeight: 1.5 }}>{q.question}</p>
+        {q.suggestions?.length > 0 && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
+            {q.suggestions.map((s, i) => (
+              <button key={i} type="button"
+                onClick={() => setCurrentAnswer(a => a ? `${a}, ${s}` : s)}
+                style={{ padding: '4px 10px', borderRadius: 20, border: '1px solid var(--color-border)', background: 'var(--color-surface)', color: 'var(--color-text-secondary)', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}
+              >{s}</button>
+            ))}
+          </div>
+        )}
+        <textarea
+          autoFocus
+          value={currentAnswer}
+          onChange={e => setCurrentAnswer(e.target.value)}
+          placeholder={q.placeholder || ''}
+          rows={3}
+          style={{ width: '100%', boxSizing: 'border-box', background: 'var(--color-surface)', border: '1.5px solid var(--color-border)', borderRadius: 10, color: 'var(--color-text)', fontSize: 14, padding: '12px 14px', outline: 'none', fontFamily: 'inherit', resize: 'vertical', lineHeight: 1.6, transition: 'border-color 0.15s' }}
+          onFocus={e => { e.currentTarget.style.borderColor = 'var(--color-primary)'; e.currentTarget.style.boxShadow = '0 0 0 3px var(--color-primary-subtle)' }}
+          onBlur={e => { e.currentTarget.style.borderColor = 'var(--color-border)'; e.currentTarget.style.boxShadow = 'none' }}
+          onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey && currentAnswer.trim()) { e.preventDefault(); advance() } }}
+        />
+      </div>
+
+      <div style={{ display: 'flex', gap: 8 }}>
+        <button type="button" onClick={() => advance()} disabled={!currentAnswer.trim()}
+          style={btnStyle(!!currentAnswer.trim())}
+        >
+          {isLast ? <><Sparkles size={14} /> Concluir</> : <>Próxima <ChevronRight size={14} /></>}
+        </button>
+        <button type="button" onClick={() => advance('')}
+          style={{ padding: '11px 16px', background: 'transparent', border: '1px solid var(--color-border)', borderRadius: 10, color: 'var(--color-text-tertiary)', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}
+        >Saltar</button>
+      </div>
+
+      <button type="button" onClick={onBack}
+        style={{ background: 'none', border: 'none', color: 'var(--color-text-tertiary)', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', padding: '4px 0', textAlign: 'left' }}
+      >← Voltar</button>
+    </div>
   )
+}
+
+/* ── Styles ──────────────────────────────────────────────────────────────── */
+
+const S = {
+  center: {
+    flex: 1, display: 'flex', flexDirection: 'column',
+    alignItems: 'center', justifyContent: 'center',
+    padding: '40px 20px',
+  },
+  describeWrap: { width: '100%', maxWidth: 560 },
+  reviewWrap: { width: '100%', maxWidth: 560 },
+  eyebrowRow: { display: 'flex', alignItems: 'center', gap: 7, marginBottom: 24 },
+  eyebrow: { fontSize: 12, fontWeight: 700, color: 'var(--color-primary)', letterSpacing: 0.8, textTransform: 'uppercase' },
+  headline: { fontSize: 'clamp(26px, 5vw, 36px)', fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 10px', letterSpacing: '-0.5px', lineHeight: 1.25 },
+  sub: { color: 'var(--color-text-secondary)', fontSize: 15, margin: '0 0 24px', lineHeight: 1.6 },
+  typeRow: { display: 'flex', gap: 6, flexWrap: 'wrap', margin: '14px 0 28px' },
+  err: { color: 'var(--color-error)', fontSize: 13, margin: '0 0 14px' },
+  loadingCenter: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 18 },
+  spinner: { width: 44, height: 44, border: '3px solid var(--color-border)', borderTop: '3px solid var(--color-primary)', borderRadius: '50%', animation: 'np-spin 1s linear infinite' },
+  loadingTitle: { fontSize: 17, fontWeight: 600, margin: 0, color: 'var(--color-text)' },
+  loadingSub: { fontSize: 13, color: 'var(--color-text-secondary)', margin: 0 },
+  reviewHead: { fontSize: 22, fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 6px', letterSpacing: '-0.3px' },
+  reviewSub: { color: 'var(--color-text-secondary)', fontSize: 14, margin: 0, lineHeight: 1.6 },
+}
+
+function btnStyle(active) {
+  return {
+    width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+    background: active ? 'var(--color-primary)' : 'var(--color-border)',
+    color: '#fff', border: 'none', borderRadius: 12, padding: '14px 0',
+    fontSize: 15, fontWeight: 700,
+    cursor: active ? 'pointer' : 'not-allowed',
+    fontFamily: 'inherit', transition: 'background 0.2s, box-shadow 0.2s',
+    boxShadow: active ? '0 2px 12px rgba(27,120,247,0.25)' : 'none',
+    marginBottom: 0,
+  }
+}
+
+function secondaryBtnStyle(active) {
+  return {
+    width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+    background: 'transparent', border: 'none',
+    color: active ? 'var(--color-text-secondary)' : 'var(--color-text-tertiary)',
+    fontSize: 13, cursor: active ? 'pointer' : 'not-allowed',
+    fontFamily: 'inherit', padding: '10px 0', marginTop: 4,
+  }
 }
