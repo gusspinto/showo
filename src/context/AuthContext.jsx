@@ -18,7 +18,7 @@ export function AuthProvider({ children }) {
     const meta = userRes.data?.user?.user_metadata ?? {}
     let data = profileRes.data
 
-    if (!data && profileRes.error) {
+    if (!data && profileRes.error && profileRes.error.code !== 'PGRST116') {
       setProfile(null)
       return
     }
