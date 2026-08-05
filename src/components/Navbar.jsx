@@ -1457,13 +1457,13 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
             </button>
           )}
           {extras.onDefense && (
-            <button className="pmf-btn" onClick={extras.onDefense} title="Modo defesa">
+            <button className="pmf-btn" data-tour="defense" onClick={extras.onDefense} title="Modo defesa">
               <GraduationCap size={16} />
               <span className="pmf-tooltip">Modo defesa</span>
             </button>
           )}
           {extras.onAnalyze && (
-            <button className={`pmf-btn${extras.analyzingAI ? ' active' : ''}`} onClick={extras.onAnalyze} disabled={extras.analyzingAI} title="Análise IA">
+            <button className={`pmf-btn${extras.analyzingAI ? ' active' : ''}`} data-tour="ai" onClick={extras.onAnalyze} disabled={extras.analyzingAI} title="Análise IA">
               <Sparkles size={16} />
               <span className="pmf-tooltip">{extras.analyzingAI ? 'A analisar…' : 'Análise IA'}</span>
             </button>

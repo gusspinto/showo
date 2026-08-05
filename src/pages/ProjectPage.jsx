@@ -3071,13 +3071,141 @@ function renderMd(text) {
   return out
 }
 
+/* ── Spotlight Tour ─────────────────────────────────────────────────────────── */
+
+const TOUR_STEPS_PAP = [
+  { target: 'score',    title: 'O teu Score',      body: 'A IA avalia o teu projeto continuamente. Quanto mais completo, mais alto sobe — serve para te orientares, não é uma nota.' },
+  { target: 'defense',  title: 'Modo Defesa',       body: 'Simula as perguntas que a banca te pode fazer. Usa antes da apresentação para chegares preparado.' },
+  { target: 'ai',       title: 'Análise IA',        body: 'Analisa tudo o que preencheste e diz-te o que está bem e o que podes ainda melhorar.' },
+  { target: 'missions', title: 'Missões',            body: 'São tarefas concretas que o projeto te sugere. Completa-as para não te esqueceres de nada importante.' },
+  { target: 'invite',   title: 'Convidar colegas',  body: 'Se é um projeto de grupo, convida os teus colegas aqui. Cada um regista o seu trabalho.' },
+]
+const TOUR_STEPS_OTHER = TOUR_STEPS_PAP.filter(s => s.target !== 'defense')
+
+function ProjectTour({ isPap, onClose }) {
+  const steps = isPap ? TOUR_STEPS_PAP : TOUR_STEPS_OTHER
+  const [stepIdx, setStepIdx] = useState(0)
+  const [rect, setRect] = useState(null)
+
+  useEffect(() => {
+    const step = steps[stepIdx]
+    const el = document.querySelector(`[data-tour="${step.target}"]`)
+    if (!el) { setRect(null); return }
+    el.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+    const timer = setTimeout(() => setRect(el.getBoundingClientRect()), 380)
+    return () => clearTimeout(timer)
+  }, [stepIdx, steps])
+
+  useEffect(() => {
+    function onResize() {
+      const el = document.querySelector(`[data-tour="${steps[stepIdx].target}"]`)
+      if (el) setRect(el.getBoundingClientRect())
+    }
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [stepIdx, steps])
+
+  const step = steps[stepIdx]
+  const PAD = 10
+  const spotlight = rect ? {
+    left: rect.left - PAD, top: rect.top - PAD,
+    width: rect.width + PAD * 2, height: rect.height + PAD * 2,
+  } : null
+
+  function tooltipPos() {
+    if (!rect) return { left: -999, top: -999 }
+    const TW = 296, TH = 210, P = 16
+    const vw = window.innerWidth, vh = window.innerHeight
+    const cy = rect.top + rect.height / 2
+    const centeredTop = Math.max(P, Math.min(cy - TH / 2, vh - TH - P))
+    if (rect.right + P + TW <= vw) return { left: rect.right + P, top: centeredTop }
+    if (rect.left - P - TW >= 0) return { left: rect.left - P - TW, top: centeredTop }
+    return {
+      left: Math.max(P, Math.min(rect.left + rect.width / 2 - TW / 2, vw - TW - P)),
+      top: Math.min(rect.bottom + P, vh - TH - P),
+    }
+  }
+
+  const tp = tooltipPos()
+  const isLast = stepIdx === steps.length - 1
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 9100, pointerEvents: 'none' }}>
+      {spotlight && (
+        <div style={{
+          position: 'fixed',
+          left: spotlight.left, top: spotlight.top,
+          width: spotlight.width, height: spotlight.height,
+          borderRadius: 10,
+          boxShadow: '0 0 0 9999px rgba(7,13,26,0.87)',
+          outline: '2.5px solid var(--color-primary)',
+          outlineOffset: 1,
+          transition: 'all 0.32s cubic-bezier(0.25,0.8,0.25,1)',
+          pointerEvents: 'none',
+          zIndex: 9101,
+        }} />
+      )}
+      {rect && (
+        <div style={{
+          position: 'fixed',
+          left: tp.left, top: tp.top,
+          width: 296,
+          background: 'var(--color-surface)',
+          border: '1px solid var(--color-border)',
+          borderRadius: 14,
+          padding: '20px 20px 16px',
+          boxShadow: '0 8px 48px rgba(0,0,0,0.5)',
+          display: 'flex', flexDirection: 'column', gap: 10,
+          zIndex: 9102,
+          pointerEvents: 'all',
+        }}>
+          <span style={{ fontSize: 11, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: 600 }}>
+            {stepIdx + 1} / {steps.length}
+          </span>
+          <p style={{ margin: 0, fontFamily: 'var(--font-heading)', fontSize: 15, fontWeight: 700, color: 'var(--color-text)', letterSpacing: '-0.02em' }}>
+            {step.title}
+          </p>
+          <p style={{ margin: 0, fontSize: 13.5, color: 'var(--color-text-secondary)', lineHeight: 1.6 }}>
+            {step.body}
+          </p>
+          <div style={{ display: 'flex', gap: 5, marginTop: 2 }}>
+            {steps.map((_, i) => (
+              <span key={i} style={{
+                width: i === stepIdx ? 18 : 6, height: 6, borderRadius: 3,
+                background: i === stepIdx ? 'var(--color-primary)' : 'var(--color-border)',
+                transition: 'width 0.2s, background 0.2s',
+                flexShrink: 0,
+              }} />
+            ))}
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 6 }}>
+            <button onClick={onClose} style={{
+              background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+              fontSize: 12, color: 'var(--color-text-tertiary)', fontFamily: 'inherit',
+            }}>
+              Saltar tour
+            </button>
+            <button onClick={() => isLast ? onClose() : setStepIdx(i => i + 1)} style={{
+              background: 'var(--color-primary)', border: 'none', borderRadius: 8,
+              padding: '9px 18px', color: '#fff', fontSize: 13, fontWeight: 600,
+              cursor: 'pointer', fontFamily: 'inherit',
+            }}>
+              {isLast ? 'Começar' : 'Próximo'}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function ProjectPage() {
   const { slug } = useParams()
   const navigate = useNavigate()
   const location = useLocation()
   const { user, profile, loading: authLoading } = useAuth()
-  const [project, setProject] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const [project, setProject] = useState(() => location.state?.projectData ?? null)
+  const [loading, setLoading] = useState(!location.state?.projectData)
   const [copied, setCopied] = useState(false)
   const [score, setScore] = useState(0)
   const [displayScore, setDisplayScore] = useState(0)
@@ -3118,8 +3246,10 @@ export default function ProjectPage() {
   const [inviting, setInviting] = useState(false)
   const [inviteMsg, setInviteMsg] = useState(null) // { type: 'success'|'error', text }
   const [milestoneCard, setMilestoneCard] = useState(null) // { score, tier }
-  const [showLaunchOverlay, setShowLaunchOverlay] = useState(false)
+  const [showLaunchOverlay, setShowLaunchOverlay] = useState(() => !!location.state?.newProject)
   const [launchCopied, setLaunchCopied] = useState(false)
+  const [showTour, setShowTour] = useState(false)
+  const tourPendingRef = useRef(false)
   const [claimBannerDismissed, setClaimBannerDismissed] = useState(false)
   const [defenseDate, setDefenseDate] = useState('')
   const [savingDefense, setSavingDefense] = useState(false)
@@ -3174,6 +3304,26 @@ export default function ProjectPage() {
     setJuryEditing(project.teacher_score == null)
     juryHydrated.current = true
   }, [project])
+
+  // Spotlight tour: trigger on first visit or ?tour=1
+  const tourCheckedRef = useRef(false)
+  useEffect(() => {
+    if (!project?.id || !profile?.id) return
+    if (tourCheckedRef.current) return
+    tourCheckedRef.current = true
+    if (profile.id !== project.user_id) return
+    const params = new URLSearchParams(window.location.search)
+    const isTourParam = params.get('tour') === '1'
+    const firstVisit = !localStorage.getItem(`showo_proj_tour_${project.id}`)
+    if (isTourParam || firstVisit) {
+      if (showLaunchOverlay) {
+        tourPendingRef.current = true
+      } else {
+        setShowTour(true)
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [project?.id, profile?.id])
 
   // Class-defined evaluation criteria (fetched when the page is opened from a turma)
   const [classCriteria, setClassCriteria] = useState([])   // [{id, name, weight}]
@@ -3357,10 +3507,6 @@ export default function ProjectPage() {
 
   // Show launch overlay for newly created projects
   useEffect(() => {
-    if (location.state?.newProject) {
-      setShowLaunchOverlay(true)
-      window.history.replaceState({}, '')
-    }
     // Track that this is an anonymous creator (for gentle nudge banner)
     if (!user && (location.state?.justCreated || location.state?.newProject || location.state?.edit_token)) {
       setIsAnonCreator(true)
@@ -4257,7 +4403,7 @@ export default function ProjectPage() {
             backdropFilter: 'blur(16px)',
             animation: 'fadeIn 0.4s ease',
           }}
-          onClick={() => setShowLaunchOverlay(false)}
+          onClick={() => { setShowLaunchOverlay(false); window.history.replaceState({}, ''); if (tourPendingRef.current) { tourPendingRef.current = false; setShowTour(true) } }}
         >
           <div
             onClick={e => e.stopPropagation()}
@@ -4354,7 +4500,7 @@ export default function ProjectPage() {
 
             {/* CTA button */}
             <button
-              onClick={() => setShowLaunchOverlay(false)}
+              onClick={() => { setShowLaunchOverlay(false); window.history.replaceState({}, ''); if (tourPendingRef.current) { tourPendingRef.current = false; setShowTour(true) } }}
               style={{
                 display: 'block',
                 width: '100%',
@@ -4407,6 +4553,17 @@ export default function ProjectPage() {
             )}
           </div>
         </div>
+      )}
+
+      {/* ── Spotlight Tour ── */}
+      {showTour && (
+        <ProjectTour
+          isPap={isPap}
+          onClose={() => {
+            setShowTour(false)
+            if (project?.id) localStorage.setItem(`showo_proj_tour_${project.id}`, '1')
+          }}
+        />
       )}
 
       {/* ── Milestone shareable card overlay ── */}
@@ -4990,6 +5147,7 @@ export default function ProjectPage() {
                   <button
                     onClick={() => setShowInvite(true)}
                     title="Convida o teu colega"
+                    data-tour="invite"
                     className="proj-invite-btn"
                     style={{
                       display: 'flex', alignItems: 'center', gap: 6,
@@ -5224,7 +5382,7 @@ export default function ProjectPage() {
 
           {/* Score ring — right flex column — hidden from professor view */}
           {!isProfessor && (
-          <div className="proj-score-abs" style={{
+          <div className="proj-score-abs" data-tour="score" style={{
             flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, alignSelf: 'flex-start', paddingTop: 4,
           }}>
             <ScoreRing score={displayScore} size={84} />
@@ -5600,7 +5758,7 @@ export default function ProjectPage() {
         <div className={`proj-mobile-section${mobileTab === 'missoes' ? ' proj-mobile-active' : ''}`}>
 
         {/* Missions — owner only */}
-        {(isOwner || collaboratorSections !== null) && <div id="missions-section" className="proj-card" style={{ scrollMarginTop: 88 }}>
+        {(isOwner || collaboratorSections !== null) && <div id="missions-section" data-tour="missions" className="proj-card" style={{ scrollMarginTop: 88 }}>
           {/* Header */}
           <div className="proj-missions-header" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 16, gap: 12 }}>
             <div>

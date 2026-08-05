@@ -7,7 +7,7 @@ import { calculatePotential } from '../lib/score'
 import {
   Rocket, Plus, Users2, ChevronRight, User, Globe, MessageSquare, Star,
   Check, ArrowRight, Sparkles, Pencil, ExternalLink, Copy, Share2, Link,
-  Trash2, Flame, GraduationCap, ArrowUpRight,
+  Trash2, Flame, GraduationCap, ArrowUpRight, FileText,
 } from 'lucide-react'
 import { Button, Card, SectionLabel, Modal, ModalActions } from '../components/ui'
 
@@ -287,7 +287,7 @@ export default function StudentDashboard({ user, profile }) {
   const [showJoinModal, setShowJoinModal] = useState(false)
   const [showTurmasModal, setShowTurmasModal] = useState(false)
   const [showOnboarding, setShowOnboarding] = useState(false)
-  const [tipsDone, setTipsDone] = useState(() => !!localStorage.getItem(`showo_proj_tips_${user.id}`))
+  const [tutorialPotentialSeen, setTutorialPotentialSeen] = useState(() => !!localStorage.getItem(`showo_tut_potential_${user.id}`))
   const [composerKind, setComposerKind] = useState(null)
   const [showJournal, setShowJournal] = useState(false)
   const [showReport, setShowReport] = useState(false)
@@ -319,9 +319,9 @@ export default function StudentDashboard({ user, profile }) {
     setShowOnboarding(false)
   }
 
-  function dismissTips() {
-    localStorage.setItem(`showo_proj_tips_${user.id}`, '1')
-    setTipsDone(true)
+  function dismissPotentialTutorial() {
+    localStorage.setItem(`showo_tut_potential_${user.id}`, '1')
+    setTutorialPotentialSeen(true)
   }
 
   /* ── Projetos ── */
@@ -617,7 +617,7 @@ export default function StudentDashboard({ user, profile }) {
   const engagement = useMemo(() => computeEngagementSignal(entries), [entries])
   const { potential } = profile ? calculatePotential({ projects, profile, engagement }) : { potential: 0 }
   const isEmptyState = !loadingProjects && projects.length === 0
-  const showTips = !tipsDone && !loadingProjects && projects.length > 0
+  const showPotentialTutorial = !tutorialPotentialSeen && !loadingProjects && projects.length >= 1
 
   const setupSteps = [
     { done: !!(profile?.username && profile?.bio), label: 'Perfil preenchido', action: () => navigate('/settings') },
@@ -765,6 +765,10 @@ export default function StudentDashboard({ user, profile }) {
           onTokenRotated={t => setIcsToken(t)}
         />
       )}
+      {showPotentialTutorial && (
+        <PotentialTutorial potential={potential} onDismiss={dismissPotentialTutorial} />
+      )}
+
       {showRecap && (
         <WeeklyRecap
           userId={user.id}
@@ -782,7 +786,7 @@ export default function StudentDashboard({ user, profile }) {
         />
       )}
 
-      <div className="sdb-page">
+      <div className={`sdb-page${isEmptyState ? ' sdb-page--empty' : ''}`}>
 
         {/* ══════════════ CABEÇALHO DO DIA ══════════════ */}
         <header className="sdb-hero">
@@ -791,30 +795,34 @@ export default function StudentDashboard({ user, profile }) {
               {new Date().toLocaleDateString('pt-PT', { weekday: 'long', day: 'numeric', month: 'long' })}
             </span>
             <h1 className="sdb-hero-greeting">{greeting}</h1>
-            {contextClauses.length > 0 ? (
-              <p className="sdb-hero-context">
-                {contextClauses.map((c, i) => (
-                  <span key={i}>
-                    {i > 0 && <i className="sdb-hero-sep" />}
-                    {c}
-                  </span>
-                ))}
-              </p>
-            ) : (
-              <p className="sdb-hero-context sdb-hero-context--quiet">
-                {loadingProjects ? 'A carregar o teu dia…' : 'Está tudo em dia.'}
-              </p>
+            {!isEmptyState && (
+              <>
+                {contextClauses.length > 0 ? (
+                  <p className="sdb-hero-context">
+                    {contextClauses.map((c, i) => (
+                      <span key={i}>
+                        {i > 0 && <i className="sdb-hero-sep" />}
+                        {c}
+                      </span>
+                    ))}
+                  </p>
+                ) : (
+                  <p className="sdb-hero-context sdb-hero-context--quiet">
+                    {loadingProjects ? 'A carregar o teu dia…' : 'Está tudo em dia.'}
+                  </p>
+                )}
+                <div className="sdb-hero-actions">
+                  <button className="sdb-btn sdb-btn--solid" onClick={primaryAction.onClick}>
+                    {primaryAction.label}
+                  </button>
+                  {focusProject && (
+                    <button className="sdb-btn sdb-btn--quiet" onClick={() => navigate(`/projeto/${focusProject.slug}`)}>
+                      Ver projeto
+                    </button>
+                  )}
+                </div>
+              </>
             )}
-            <div className="sdb-hero-actions">
-              <button className="sdb-btn sdb-btn--solid" onClick={primaryAction.onClick}>
-                {primaryAction.label}
-              </button>
-              {focusProject && (
-                <button className="sdb-btn sdb-btn--quiet" onClick={() => navigate(`/projeto/${focusProject.slug}`)}>
-                  Ver projeto
-                </button>
-              )}
-            </div>
           </div>
 
           <aside className="sdb-hero-side">
@@ -844,17 +852,7 @@ export default function StudentDashboard({ user, profile }) {
                 </div>
               </>
             ) : (
-              <div className="sdb-setup">
-                <span className="sdb-eyebrow">Primeiros passos</span>
-                <ul className="sdb-setup-list">
-                  {setupSteps.map((s, i) => (
-                    <li key={i} className={s.done ? 'is-done' : ''}>
-                      <span className="sdb-setup-mark">{s.done ? <Check size={11} /> : i + 1}</span>
-                      {s.done ? s.label : <button onClick={s.action}>{s.label}</button>}
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              <NextMissionCard steps={setupSteps} userId={user.id} />
             )}
           </aside>
         </header>
@@ -903,16 +901,18 @@ export default function StudentDashboard({ user, profile }) {
                   onOpenJournal={() => setShowJournal(true)}
                   onOpen={() => navigate(`/projeto/${focusFull.slug}`)}
                   onEdit={() => navigate(`/editar/${focusFull.slug}`)}
+                  onDelete={() => deleteProject(focusFull.id)}
                 />
               ) : (
                 <ProjectPulseEmpty onCreate={() => navigate('/novo')} />
               )}
             </div>
 
-            {showTips && (
-              <div className="sdb-o-tips">
-                <FirstProjectTips onDismiss={dismissTips} />
-              </div>
+            {focusFull && (focusFull.is_pap || focusFull.project_type === 'pap') && (
+              <PapCoverageCard
+                coverage={coverage}
+                onOpenReport={() => setShowReport(true)}
+              />
             )}
 
             {focusProject && (
@@ -954,7 +954,6 @@ export default function StudentDashboard({ user, profile }) {
               </section>
             )}
 
-            {isEmptyState && potentialPanel}
             {isEmptyState && turmaPanel}
           </div>
 
@@ -1020,43 +1019,151 @@ export default function StudentDashboard({ user, profile }) {
   )
 }
 
-/* ── Dicas do primeiro projeto ────────────────────────────────────────────── */
+/* ── Card PAP: cobertura do relatório ────────────────────────────────────── */
 
-function FirstProjectTips({ onDismiss }) {
-  const tips = [
-    {
-      title: 'Personaliza o teu projeto',
-      desc: 'Adiciona secções, reordena blocos e escolhe a capa — o projeto é teu, faz com que pareça.',
-    },
-    {
-      title: 'Ganha Score e destaca-te',
-      desc: 'Cada entrada no Diário, cada ficheiro, cada colaboração conta. O Score diferencia-te dos teus colegas.',
-    },
-    {
-      title: 'O Diário constrói o teu relatório',
-      desc: 'Regista progresso, decisões e dificuldades ao longo das semanas — a plataforma organiza tudo para a tua PAP.',
-    },
-  ]
+function PapCoverageCard({ coverage, onOpenReport }) {
   return (
-    <section className="sdb-panel">
+    <section className="sdb-panel sdb-pap-card">
       <header className="sdb-panel-head">
-        <span className="sdb-eyebrow">Primeiros passos</span>
-        <button className="sdb-linkbtn" onClick={onDismiss} aria-label="Fechar dicas">
-          Dispensar
+        <span className="sdb-eyebrow">Relatório PAP</span>
+        <button className="sdb-linkbtn" onClick={onOpenReport}>
+          <FileText size={12} /> Ver rascunho
         </button>
       </header>
-      <ul className="sdb-tips-list">
-        {tips.map((t, i) => (
-          <li key={i} className="sdb-tip">
-            <span className="sdb-tip-num">{i + 1}</span>
-            <div className="sdb-tip-body">
-              <span className="sdb-tip-title">{t.title}</span>
-              <span className="sdb-tip-desc">{t.desc}</span>
-            </div>
-          </li>
-        ))}
-      </ul>
+      <div className="sdb-coverage sdb-coverage--neutral">
+        <div className="sdb-coverage-top">
+          <span className="sdb-coverage-value">
+            {coverage.covered}<span className="sdb-coverage-total">/{coverage.total}</span>
+          </span>
+          <span className="sdb-coverage-caption">secções com matéria</span>
+        </div>
+        <div className="sdb-coverage-rail sdb-coverage-rail--plain" role="img"
+          aria-label={`${coverage.covered} de ${coverage.total} secções cobertas`}>
+          {coverage.sections.map(s => (
+            <span
+              key={s.id}
+              className={`sdb-coverage-seg${s.covered ? ' is-on' : ''}`}
+              title={`${s.label} — ${s.covered ? 'com matéria' : 'ainda vazia'}`}
+            />
+          ))}
+        </div>
+        {coverage.missing.length > 0 ? (
+          <p className="sdb-coverage-missing">
+            Falta matéria em <strong>{coverage.missing.map(s => s.label).join(', ')}</strong>.
+          </p>
+        ) : (
+          <p className="sdb-coverage-missing">
+            Todas as secções têm matéria. Podes gerar o rascunho completo.
+          </p>
+        )}
+      </div>
     </section>
+  )
+}
+
+/* ── Missão única: próximo passo do utilizador novo ──────────────────────── */
+
+function NextMissionCard({ steps, userId }) {
+  const storageKey = `showo_steps_done_${userId}`
+
+  const firstUncompleted = steps.findIndex(s => !s.done)
+  const allDone = firstUncompleted === -1
+
+  const [animIdx, setAnimIdx] = useState(null)   // índice a animar (strikethrough)
+  const [phase, setPhase] = useState('idle')     // 'idle' | 'striking' | 'out' | 'in'
+
+  useEffect(() => {
+    const prevDone = JSON.parse(localStorage.getItem(storageKey) || '[false,false,false]')
+    const currDone = steps.map(s => s.done)
+
+    // Guardar estado atual imediatamente para evitar re-animação em refresh
+    localStorage.setItem(storageKey, JSON.stringify(currDone))
+
+    // Detetar qual step foi concluído desde a última visita
+    const justCompleted = prevDone.findIndex((was, i) => !was && currDone[i])
+    if (justCompleted < 0) return
+
+    setAnimIdx(justCompleted)
+    setPhase('striking')
+
+    const t1 = setTimeout(() => setPhase('out'), 700)
+    const t2 = setTimeout(() => { setAnimIdx(null); setPhase('in') }, 1050)
+    const t3 = setTimeout(() => setPhase('idle'), 1400)
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3) }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (allDone) return null
+
+  const displayIdx = animIdx !== null ? animIdx : firstUncompleted
+  const step = steps[displayIdx]
+  if (!step) return null
+
+  return (
+    <div className={`sdb-mission sdb-mission--${phase}`}>
+      <span className="sdb-eyebrow">Próximos passos</span>
+      <button className="sdb-mission-label" onClick={step.action}>
+        {step.label}
+      </button>
+    </div>
+  )
+}
+
+/* ── Tutorial: Potencial ──────────────────────────────────────────────────── */
+
+function PotentialTutorial({ potential, onDismiss }) {
+  const [step, setStep] = useState(0)
+  const color = potential >= 80 ? 'var(--color-success)'
+    : potential >= 60 ? 'var(--color-primary)'
+    : potential >= 40 ? 'var(--color-info)'
+    : potential >= 20 ? 'var(--color-warning)'
+    : 'var(--color-error)'
+
+  return (
+    <div className="ptut-backdrop" onClick={onDismiss}>
+      <div className="ptut-card" onClick={e => e.stopPropagation()}>
+        {step === 0 ? (
+          <>
+            <span className="sdb-eyebrow sdb-eyebrow--brand">O teu perfil</span>
+            <h2 className="ptut-title">O teu Potencial</h2>
+            <div className="ptut-score-row">
+              <span className="ptut-score" style={{ color }}>{potential}</span>
+              <span className="ptut-of">/100</span>
+            </div>
+            <div className="ptut-bar">
+              <span className="ptut-bar-fill" style={{ width: `${potential}%`, background: color }} />
+            </div>
+            <p className="ptut-body">
+              O Potencial sobe à medida que completas projetos, usas o diário e recebes validação
+              de professores e recrutadores. É o teu indicador de crescimento na plataforma e
+              só tu o consegues ver.
+            </p>
+            <div className="ptut-actions">
+              <button className="sdb-btn sdb-btn--solid" onClick={() => setStep(1)}>Continuar</button>
+            </div>
+          </>
+        ) : (
+          <>
+            <span className="sdb-eyebrow sdb-eyebrow--brand">Antes de continuares</span>
+            <h2 className="ptut-title">Sobre os scores dos projetos</h2>
+            <p className="ptut-body">
+              Os projetos têm um score gerado automaticamente pela IA com base no que
+              preencheste. Serve para te dar uma ideia de onde podes melhorar antes de entregar.
+            </p>
+            <p className="ptut-body ptut-body--warn">
+              Este score é completamente privado e não substitui a avaliação do teu professor.
+              É uma ferramenta tua, não uma nota.
+            </p>
+            <div className="ptut-actions">
+              <button className="sdb-btn sdb-btn--solid" onClick={onDismiss}>Percebi, vamos lá</button>
+            </div>
+          </>
+        )}
+        <div className="ptut-steps">
+          <span className={`ptut-dot${step === 0 ? ' is-active' : ''}`} />
+          <span className={`ptut-dot${step === 1 ? ' is-active' : ''}`} />
+        </div>
+      </div>
+    </div>
   )
 }
 

@@ -110,7 +110,7 @@ export default function NewProject() {
       const project = await saveProject(form, aiResult, user?.id ?? null)
       if (user?.id) localStorage.setItem(`edit_token_${project.slug}`, project.edit_token)
       navigate(`/projeto/${project.slug}`, {
-        state: { newProject: true, message: 'Projeto criado! Começa a melhorar o teu score.' }
+        state: { newProject: true, projectData: project, message: 'Projeto criado! Começa a melhorar o teu score.' }
       })
     } catch (err) {
       console.error(err)

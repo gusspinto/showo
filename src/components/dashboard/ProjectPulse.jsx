@@ -1,4 +1,5 @@
-import { ArrowUpRight, Plus, FileText, CalendarClock, Pencil } from 'lucide-react'
+import { ArrowUpRight, Plus, CalendarClock, Pencil, Trash2 } from 'lucide-react'
+import { useState } from 'react'
 import { KIND_BY_ID, JOURNAL_KINDS, timeAgoLabel, suggestNextKind } from '../../lib/journal'
 
 const TYPE_LABEL = {
@@ -37,8 +38,9 @@ function DeadlineChip({ defenseDate }) {
 
 export default function ProjectPulse({
   project, entries, coverage, loading,
-  onLog, onOpenReport, onOpenJournal, onOpen, onEdit,
+  onLog, onOpenReport, onOpenJournal, onOpen, onEdit, onDelete,
 }) {
+  const [confirmDelete, setConfirmDelete] = useState(false)
   if (loading) {
     return (
       <section className="sdb-panel sdb-panel--brand sdb-pulse">
@@ -66,45 +68,32 @@ export default function ProjectPulse({
           </div>
         </div>
         <div className="sdb-pulse-head-actions">
-          <button className="sdb-icon-btn" onClick={onEdit} title="Editar projeto" aria-label="Editar projeto">
-            <Pencil size={15} />
-          </button>
-          <button className="sdb-icon-btn" onClick={onOpen} title="Abrir página do projeto" aria-label="Abrir página do projeto">
-            <ArrowUpRight size={16} />
-          </button>
+          {confirmDelete ? (
+            <>
+              <button className="sdb-pulse-danger-confirm" onClick={() => { onDelete?.(); setConfirmDelete(false) }}>
+                Apagar
+              </button>
+              <button className="sdb-icon-btn" onClick={() => setConfirmDelete(false)} title="Cancelar">
+                ✕
+              </button>
+            </>
+          ) : (
+            <>
+              {onDelete && (
+                <button className="sdb-icon-btn sdb-icon-btn--danger" onClick={() => setConfirmDelete(true)} title="Apagar projeto" aria-label="Apagar projeto">
+                  <Trash2 size={14} />
+                </button>
+              )}
+              <button className="sdb-icon-btn" onClick={onEdit} title="Editar projeto" aria-label="Editar projeto">
+                <Pencil size={15} />
+              </button>
+              <button className="sdb-icon-btn" onClick={onOpen} title="Abrir página do projeto" aria-label="Abrir página do projeto">
+                <ArrowUpRight size={16} />
+              </button>
+            </>
+          )}
         </div>
       </header>
-
-      {/* ── Cobertura do relatório ── */}
-      <div className="sdb-coverage">
-        <div className="sdb-coverage-top">
-          <span className="sdb-coverage-value">
-            {coverage.covered}<span className="sdb-coverage-total">/{coverage.total}</span>
-          </span>
-          <span className="sdb-coverage-caption">
-            secções do relatório já com matéria
-          </span>
-        </div>
-        <div className="sdb-coverage-rail" role="img"
-          aria-label={`${coverage.covered} de ${coverage.total} secções cobertas`}>
-          {coverage.sections.map(s => (
-            <span
-              key={s.id}
-              className={`sdb-coverage-seg${s.covered ? ' is-on' : ''}`}
-              title={`${s.label} — ${s.covered ? 'com matéria' : 'ainda vazia'}`}
-            />
-          ))}
-        </div>
-        {coverage.missing.length > 0 ? (
-          <p className="sdb-coverage-missing">
-            Falta matéria em <strong>{coverage.missing.map(s => s.label).join(', ')}</strong>.
-          </p>
-        ) : (
-          <p className="sdb-coverage-missing">
-            Todas as secções têm matéria. O rascunho já pode ser gerado por inteiro.
-          </p>
-        )}
-      </div>
 
       {/* ── Diário ── */}
       <div className="sdb-journal">
@@ -165,9 +154,6 @@ export default function ProjectPulse({
         <button className="sdb-btn sdb-btn--onbrand" onClick={() => onLog(next?.kind?.id || 'progresso')}>
           <Plus size={15} /> Registar entrada
         </button>
-        <button className="sdb-btn sdb-btn--onbrand-quiet" onClick={onOpenReport}>
-          <FileText size={15} /> Relatório
-        </button>
       </footer>
     </section>
   )
@@ -175,27 +161,52 @@ export default function ProjectPulse({
 
 /* Estado antes de existir projeto — a mesma peça, mas a convidar em vez de
    acompanhar. O aluno vê desde o primeiro dia onde é que o trabalho vai viver. */
+/* [top%, left% dentro do container deco, size px, opacity] — padrão diagonal */
+const DECO_MARKS = [
+  /* fila direita — grandes, mais visíveis */
+  [ 5, 76, 26, 0.30],
+  [32, 82, 28, 0.32],
+  [62, 78, 25, 0.28],
+  [83, 85, 22, 0.26],
+  /* fila central */
+  [14, 52, 18, 0.18],
+  [40, 58, 20, 0.20],
+  [67, 54, 17, 0.17],
+  [90, 60, 16, 0.16],
+  /* fila esquerda — pequenos (máscara trata do fade) */
+  [ 8, 28, 12, 0.11],
+  [36, 32, 13, 0.12],
+  [63, 26, 11, 0.10],
+  [88, 34, 12, 0.10],
+  /* pontas */
+  [22, 10,  9, 0.06],
+  [55, 12,  8, 0.05],
+  [78,  8,  9, 0.05],
+]
+
 export function ProjectPulseEmpty({ onCreate }) {
   return (
     <section className="sdb-panel sdb-panel--brand sdb-pulse sdb-pulse--empty">
-      <span className="sdb-pulse-type">Começa aqui</span>
-      <h2 className="sdb-pulse-name">O teu projeto ainda não existe</h2>
-      <p className="sdb-pulse-empty-text">
-        Cria o teu projeto e começa a acompanhar o que fizeste, o que falta e o progresso do relatório.
-      </p>
-      <ul className="sdb-pulse-empty-list">
-        {JOURNAL_KINDS.slice(0, 3).map(k => {
-          const Icon = k.icon
-          return (
-            <li key={k.id}><Icon size={13} /> {k.prompt}</li>
-          )
-        })}
-      </ul>
-      <footer className="sdb-pulse-foot">
-        <button className="sdb-btn sdb-btn--onbrand" onClick={onCreate}>
-          <Plus size={15} /> Criar projeto
-        </button>
-      </footer>
+      <div className="sdb-pulse-empty-body">
+        <h2 className="sdb-pulse-empty-heading">Pronto para começar?</h2>
+        <footer className="sdb-pulse-foot">
+          <button className="sdb-btn sdb-btn--onbrand" onClick={onCreate}>
+            <Plus size={15} /> Criar projeto
+          </button>
+        </footer>
+      </div>
+      <div className="sdb-pulse-deco" aria-hidden>
+        {DECO_MARKS.map(([top, left, size, opacity], i) => (
+          <img
+            key={i}
+            src="/icon_light.png"
+            width={size}
+            height={size}
+            alt=""
+            style={{ position: 'absolute', top: `${top}%`, left: `${left}%`, opacity }}
+          />
+        ))}
+      </div>
     </section>
   )
 }

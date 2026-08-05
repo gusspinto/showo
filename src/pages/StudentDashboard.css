@@ -160,6 +160,20 @@
 .sdb-icon-btn--quiet:hover { background: var(--color-surface-hover); color: var(--color-text); }
 .sdb-icon-btn--danger:hover { background: var(--color-error-subtle); color: var(--color-error); }
 
+.sdb-pulse-danger-confirm {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: var(--radius-sm);
+  padding: 2px 10px;
+  font-family: inherit;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  transition: background var(--duration-fast);
+}
+.sdb-pulse-danger-confirm:hover { background: rgba(220, 50, 50, 0.5); }
+
 .sdb-linkbtn {
   background: none;
   border: none;
@@ -198,7 +212,7 @@
 .sdb-hero {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  align-items: end;
+  align-items: start;
   gap: var(--sp-8);
   padding-bottom: var(--sp-6);
   margin-bottom: var(--sp-6);
@@ -356,6 +370,98 @@
   border-color: var(--color-primary);
   color: #fff;
 }
+
+/* ── Missão única ── */
+.sdb-mission {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.sdb-mission-label {
+  position: relative;
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: var(--font-heading);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--color-text);
+  cursor: pointer;
+  text-align: left;
+  transition: color var(--duration-fast);
+}
+.sdb-mission-label:hover { color: var(--color-primary); }
+
+/* Linha de risco */
+.sdb-mission-label::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  height: 1.5px;
+  background: var(--color-text-secondary);
+  width: 0;
+  border-radius: 2px;
+}
+
+/* Striking: linha cresce + texto fica a 35% de opacidade ao mesmo tempo */
+.sdb-mission--striking .sdb-mission-label::after {
+  animation: mission-strike 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.08s forwards;
+}
+.sdb-mission--striking .sdb-mission-label {
+  animation: mission-dim 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.08s forwards;
+}
+@keyframes mission-strike {
+  from { width: 0; }
+  to   { width: 100%; }
+}
+@keyframes mission-dim {
+  from { opacity: 1; }
+  to   { opacity: 0.35; }
+}
+
+/* Saída: slide up + fade */
+.sdb-mission--out .sdb-mission-label {
+  animation: mission-out 0.28s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+@keyframes mission-out {
+  from { opacity: 0.35; transform: translateY(0); }
+  to   { opacity: 0;    transform: translateY(-10px); }
+}
+
+/* Entrada: slide up from below + fade in */
+.sdb-mission--in .sdb-mission-label {
+  animation: mission-in 0.32s cubic-bezier(0, 0, 0.2, 1) both;
+}
+@keyframes mission-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.sdb-mission-desc {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+  line-height: 1.5;
+  transition: opacity var(--duration-fast);
+}
+
+.sdb-mission-dots {
+  display: flex;
+  gap: 5px;
+  margin-top: var(--sp-1);
+}
+.sdb-mission-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: var(--color-border-hover);
+  transition: background var(--duration-normal);
+}
+.sdb-mission-dot.is-done { background: var(--color-primary); }
+.sdb-mission-dot.is-current { background: var(--color-text-secondary); }
 
 /* ══════════════════════════════════════════════════════════════════════════
    GRELHA
@@ -606,31 +712,47 @@
   flex-wrap: wrap;
 }
 
-/* ── Estado sem projeto ── */
-.sdb-pulse--empty .sdb-pulse-name { white-space: normal; }
-.sdb-pulse-empty-text {
-  margin: 0 0 var(--sp-4);
-  font-size: var(--text-md);
-  line-height: 1.6;
-  color: var(--on-dim);
-  max-width: 52ch;
+/* ── Decoração: logo marks em diagonal ── */
+.sdb-pulse-deco {
+  position: absolute;
+  top: 0; right: 0; bottom: 0;
+  left: 38%;
+  pointer-events: none;
+  overflow: hidden;
+  border-radius: 0 var(--radius-xl) var(--radius-xl) 0;
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, rgba(0,0,0,1) 42%);
+  mask-image: linear-gradient(to right, transparent 0%, rgba(0,0,0,1) 42%);
 }
-.sdb-pulse-empty-list {
-  list-style: none;
-  margin: 0;
-  padding: var(--sp-4);
-  border: 1px dashed var(--on-line);
-  border-radius: var(--radius-md);
+
+/* ── Card PAP (cobertura fora do card azul) ── */
+.sdb-pap-card .sdb-coverage {
+  background: var(--color-surface-hover);
+}
+.sdb-pap-card .sdb-coverage-value { color: var(--color-text); }
+.sdb-pap-card .sdb-coverage-total { color: var(--color-text-tertiary); }
+.sdb-pap-card .sdb-coverage-caption { color: var(--color-text-secondary); }
+.sdb-pap-card .sdb-coverage-missing { color: var(--color-text-secondary); }
+.sdb-pap-card .sdb-coverage-missing strong { color: var(--color-text); }
+
+/* ── Estado sem projeto ── */
+.sdb-pulse--empty {
+  position: relative;
+  overflow: hidden;
+}
+.sdb-pulse-empty-body {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
-  gap: var(--sp-2);
+  gap: var(--sp-5);
 }
-.sdb-pulse-empty-list li {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-2);
-  font-size: var(--text-sm);
-  color: var(--on-dim);
+.sdb-pulse-empty-heading {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--on);
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -1362,7 +1484,7 @@
 @media (max-width: 900px) {
   .sdb-page { padding: var(--sp-5) var(--sp-4) var(--sp-16); }
 
-  .sdb-hero { grid-template-columns: 1fr; gap: var(--sp-4); align-items: stretch; }
+  .sdb-hero { grid-template-columns: 1fr; gap: var(--sp-4); align-items: start; }
   .sdb-hero-side { min-width: 0; }
 
   .sdb-grid { grid-template-columns: 1fr; }
@@ -1389,6 +1511,8 @@
   .sdb-hero { padding-bottom: var(--sp-5); margin-bottom: var(--sp-5); }
   .sdb-hero-context { font-size: var(--text-base); margin-bottom: var(--sp-4); }
   .sdb-hero-actions .sdb-btn { flex: 1; }
+
+
 
   .sdb-pulse { padding: var(--sp-5) var(--sp-4); }
   .sdb-pulse-foot .sdb-btn { flex: 1; }
@@ -1999,3 +2123,115 @@
   .recap-actions { flex-direction: column; }
   .recap-btn { width: 100%; }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   TUTORIAL — POTENCIAL
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.ptut-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-5);
+  animation: fade-in 0.2s var(--ease-out) both;
+}
+
+.ptut-card {
+  width: 100%;
+  max-width: 400px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--sp-6);
+  box-shadow: var(--shadow-xl);
+  animation: modal-up 0.22s var(--ease-out) both;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.ptut-title {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--color-text);
+}
+
+.ptut-score-row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-1);
+}
+
+.ptut-score {
+  font-family: var(--font-heading);
+  font-size: 52px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.ptut-of {
+  font-size: var(--text-base);
+  color: var(--color-text-tertiary);
+}
+
+.ptut-bar {
+  height: 5px;
+  border-radius: var(--radius-full);
+  background: var(--color-primary-muted);
+  overflow: hidden;
+}
+
+.ptut-bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: var(--radius-full);
+  background: var(--color-primary);
+  transition: width 0.6s var(--ease-out);
+}
+
+.ptut-body {
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: 1.65;
+  color: var(--color-text-secondary);
+}
+.ptut-body + .ptut-body { margin-top: var(--sp-3); }
+.ptut-body--warn {
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--radius-md);
+  background: var(--color-warning-subtle, rgba(234, 179, 8, 0.08));
+  border-left: 3px solid var(--color-warning, #eab308);
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+.ptut-actions {
+  display: flex;
+  gap: var(--sp-2);
+  padding-top: var(--sp-1);
+}
+
+.ptut-steps {
+  display: flex;
+  justify-content: center;
+  gap: var(--sp-2);
+  padding-top: var(--sp-2);
+}
+.ptut-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: var(--color-border);
+  transition: background 0.2s;
+}
+.ptut-dot.is-active { background: var(--color-primary); }
