@@ -3577,6 +3577,11 @@ export default function ProjectPage() {
         supabase.from('projects').update({ score: s }).eq('id', data.id)
       }
 
+      // Fetch grades via RPC (only returns data for owner/teacher/admin)
+      supabase.rpc('get_project_grades', { p_project_id: data.id }).then(({ data: grades }) => {
+        if (grades) setProject(p => p ? { ...p, ...grades } : p)
+      }).catch(() => {})
+
       if (data.ai_feedback) setAiFeedback(data.ai_feedback)
       if (data.defense_date) setDefenseDate(data.defense_date)
       if (Array.isArray(data.preview_blocks)) setPreviewBlocks(data.preview_blocks)
