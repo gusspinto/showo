@@ -457,8 +457,8 @@ export default function StudentDashboard({ user, profile }) {
       .order('reminder_date', { ascending: true })
       .then(({ data }) => { if (data) setReminders(data) })
 
-    supabase.from('profiles').select('ics_token').eq('id', user.id).maybeSingle()
-      .then(({ data }) => { if (data?.ics_token) setIcsToken(data.ics_token) })
+    supabase.rpc('get_my_ics_token')
+      .then(({ data }) => { if (data) setIcsToken(data) })
 
     supabase.from('google_calendar_tokens').select('connected_at').eq('user_id', user.id).maybeSingle()
       .then(({ data }) => setGoogleConnected(!!data))
