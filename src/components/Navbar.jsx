@@ -1477,7 +1477,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
           {extras.onTogglePublicView && (
             <>
               <div className="pmf-divider" />
-              <button className={`pmf-btn${extras.viewAsPublic ? ' active' : ''}`} onClick={extras.onTogglePublicView} title="Preview visitante">
+              <button className={`pmf-btn${extras.viewAsPublic ? ' active' : ''}`} data-tour="preview" onClick={extras.onTogglePublicView} title="Preview visitante">
                 <Globe size={16} />
                 <span className="pmf-tooltip">{extras.viewAsPublic ? 'Sair preview' : 'Preview visitante'}</span>
               </button>

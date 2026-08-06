@@ -3074,11 +3074,60 @@ function renderMd(text) {
 /* ── Spotlight Tour ─────────────────────────────────────────────────────────── */
 
 const TOUR_STEPS_PAP = [
-  { target: 'score',    title: 'O teu Score',      body: 'A IA avalia o teu projeto continuamente. Quanto mais completo, mais alto sobe — serve para te orientares, não é uma nota.' },
-  { target: 'defense',  title: 'Modo Defesa',       body: 'Simula as perguntas que a banca te pode fazer. Usa antes da apresentação para chegares preparado.' },
-  { target: 'ai',       title: 'Análise IA',        body: 'Analisa tudo o que preencheste e diz-te o que está bem e o que podes ainda melhorar.' },
-  { target: 'missions', title: 'Missões',            body: 'São tarefas concretas que o projeto te sugere. Completa-as para não te esqueceres de nada importante.' },
-  { target: 'invite',   title: 'Convidar colegas',  body: 'Se é um projeto de grupo, convida os teus colegas aqui. Cada um regista o seu trabalho.' },
+  {
+    target: 'score',
+    title: 'O teu Score',
+    bullets: [
+      'A IA avalia o que preencheste e dá uma pontuação ao projeto',
+      'Quanto mais completo estiver, mais alto fica o score',
+      'Serve para te orientar, não é uma nota',
+    ],
+  },
+  {
+    target: 'defense',
+    title: 'Modo Defesa',
+    bullets: [
+      'A IA assume o papel da banca e faz-te perguntas sobre o teu projeto',
+      'As perguntas são geradas com base no que escreveste, por isso são questões reais',
+      'Quanto mais treinares, mais confiante chegas à apresentação',
+    ],
+  },
+  {
+    target: 'ai',
+    title: 'Análise IA',
+    bullets: [
+      'A IA faz uma revisão completa e dá feedback sobre cada parte do projeto',
+      'Aponta o que está bem explicado e o que ainda precisa de mais detalhe',
+      'É como teres um revisor mesmo antes de entregar',
+    ],
+  },
+  {
+    target: 'preview',
+    title: 'Modo Preview',
+    bullets: [
+      'Vê o projeto exatamente como um visitante ou recrutador o vê',
+      'Útil para perceber o que está visível ao público e se falta alguma coisa',
+      'Clica novamente para sair e voltar à vista normal',
+    ],
+  },
+  {
+    target: 'missions',
+    title: 'Missões',
+    bullets: [
+      'São tarefas geradas automaticamente para o teu projeto',
+      'Completa-as para subir o score e não perder nenhum detalhe',
+      'Vão atualizando à medida que o projeto cresce',
+    ],
+  },
+  {
+    target: 'invite',
+    title: 'Convidar colegas',
+    bullets: [
+      'Convida os colegas para trabalharem contigo no projeto',
+      'Cada um regista o seu trabalho separadamente',
+      'Perfeito se o projeto for de grupo',
+    ],
+  },
 ]
 const TOUR_STEPS_OTHER = TOUR_STEPS_PAP.filter(s => s.target !== 'defense')
 
@@ -3086,20 +3135,52 @@ function ProjectTour({ isPap, onClose }) {
   const steps = isPap ? TOUR_STEPS_PAP : TOUR_STEPS_OTHER
   const [stepIdx, setStepIdx] = useState(0)
   const [rect, setRect] = useState(null)
+  const skipRef = useRef(false)
+
+  function measureStep(idx, stepsArr) {
+    const step = stepsArr[idx]
+    const el = document.querySelector(`[data-tour="${step.target}"]`)
+    if (!el) return null
+    const r = el.getBoundingClientRect()
+    // Element found but not visible (display:none or off-screen with zero size)
+    if (r.width === 0 && r.height === 0) return null
+    return r
+  }
+
+  function advanceToVisible(fromIdx) {
+    for (let i = fromIdx; i < steps.length; i++) {
+      const r = measureStep(i, steps)
+      if (r) return { idx: i, rect: r }
+    }
+    return null
+  }
 
   useEffect(() => {
-    const step = steps[stepIdx]
-    const el = document.querySelector(`[data-tour="${step.target}"]`)
-    if (!el) { setRect(null); return }
-    el.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
-    const timer = setTimeout(() => setRect(el.getBoundingClientRect()), 380)
-    return () => clearTimeout(timer)
-  }, [stepIdx, steps])
+    skipRef.current = false
+    const el = document.querySelector(`[data-tour="${steps[stepIdx].target}"]`)
+    if (el) el.scrollIntoView({ behavior: 'instant', block: 'center' })
+
+    let raf1, raf2
+    raf1 = requestAnimationFrame(() => {
+      raf2 = requestAnimationFrame(() => {
+        if (skipRef.current) return
+        const found = advanceToVisible(stepIdx)
+        if (!found) { onClose(); return }
+        if (found.idx !== stepIdx) { setStepIdx(found.idx); return }
+        setRect(found.rect)
+      })
+    })
+    return () => { skipRef.current = true; cancelAnimationFrame(raf1); cancelAnimationFrame(raf2) }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stepIdx])
 
   useEffect(() => {
     function onResize() {
       const el = document.querySelector(`[data-tour="${steps[stepIdx].target}"]`)
-      if (el) setRect(el.getBoundingClientRect())
+      if (el) {
+        const r = el.getBoundingClientRect()
+        if (r.width > 0 || r.height > 0) setRect(r)
+      }
     }
     window.addEventListener('resize', onResize)
     return () => window.removeEventListener('resize', onResize)
@@ -3114,7 +3195,7 @@ function ProjectTour({ isPap, onClose }) {
 
   function tooltipPos() {
     if (!rect) return { left: -999, top: -999 }
-    const TW = 296, TH = 210, P = 16
+    const TW = 300, TH = 240, P = 16
     const vw = window.innerWidth, vh = window.innerHeight
     const cy = rect.top + rect.height / 2
     const centeredTop = Math.max(P, Math.min(cy - TH / 2, vh - TH - P))
@@ -3140,7 +3221,7 @@ function ProjectTour({ isPap, onClose }) {
           boxShadow: '0 0 0 9999px rgba(7,13,26,0.87)',
           outline: '2.5px solid var(--color-primary)',
           outlineOffset: 1,
-          transition: 'all 0.32s cubic-bezier(0.25,0.8,0.25,1)',
+          transition: 'left 0.3s ease, top 0.3s ease, width 0.3s ease, height 0.3s ease',
           pointerEvents: 'none',
           zIndex: 9101,
         }} />
@@ -3149,7 +3230,7 @@ function ProjectTour({ isPap, onClose }) {
         <div style={{
           position: 'fixed',
           left: tp.left, top: tp.top,
-          width: 296,
+          width: 300,
           background: 'var(--color-surface)',
           border: '1px solid var(--color-border)',
           borderRadius: 14,
@@ -3165,9 +3246,11 @@ function ProjectTour({ isPap, onClose }) {
           <p style={{ margin: 0, fontFamily: 'var(--font-heading)', fontSize: 15, fontWeight: 700, color: 'var(--color-text)', letterSpacing: '-0.02em' }}>
             {step.title}
           </p>
-          <p style={{ margin: 0, fontSize: 13.5, color: 'var(--color-text-secondary)', lineHeight: 1.6 }}>
-            {step.body}
-          </p>
+          <ul style={{ margin: 0, padding: '0 0 0 16px', display: 'flex', flexDirection: 'column', gap: 5 }}>
+            {step.bullets.map((b, i) => (
+              <li key={i} style={{ fontSize: 13, color: 'var(--color-text-secondary)', lineHeight: 1.55 }}>{b}</li>
+            ))}
+          </ul>
           <div style={{ display: 'flex', gap: 5, marginTop: 2 }}>
             {steps.map((_, i) => (
               <span key={i} style={{
@@ -3178,7 +3261,7 @@ function ProjectTour({ isPap, onClose }) {
               }} />
             ))}
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 6 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
             <button onClick={onClose} style={{
               background: 'none', border: 'none', cursor: 'pointer', padding: 0,
               fontSize: 12, color: 'var(--color-text-tertiary)', fontFamily: 'inherit',
