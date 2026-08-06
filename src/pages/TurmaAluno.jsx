@@ -229,7 +229,12 @@ export default function TurmaAluno() {
       <div style={{ minHeight: '100vh', background: C.bg }}>
         <Navbar />
         <div className="page-content" style={{ display: 'flex', justifyContent: 'center', paddingTop: 120 }}>
-          <div style={{ width: 28, height: 28, border: `3px solid ${C.border}`, borderTop: `3px solid ${C.blue}`, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+          <style>{`@keyframes ta-sh{0%{background-position:-300px 0}100%{background-position:300px 0}}`}</style>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+            {[130, 85, 110].map((w, i) => (
+              <div key={i} style={{ height: i === 0 ? 14 : 9, width: w, borderRadius: 6, background: 'linear-gradient(90deg,var(--color-bg-alt) 25%,var(--color-surface-hover) 50%,var(--color-bg-alt) 75%)', backgroundSize: '300px 100%', animation: `ta-sh 1.5s ease-in-out infinite ${i*0.12}s` }} />
+            ))}
+          </div>
         </div>
       </div>
     )

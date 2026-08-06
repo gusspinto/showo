@@ -5,7 +5,7 @@ import { updateProject } from '../lib/updateProject'
 import { Navbar } from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
 import { useSidebar } from '../context/SidebarContext'
-import { Sparkles, Lock, Search, Image, ArrowLeft, ChevronDown, Check, FileText, User, Layers } from 'lucide-react'
+import { Lock, Search, Image, ArrowLeft, Check, FileText, User, Layers, Link2 } from 'lucide-react'
 import { looksLikeSpam } from '../lib/score'
 import { containsProfanity } from '../lib/profanity'
 import SkillsPicker from '../components/SkillsPicker'
@@ -88,32 +88,6 @@ function Field({ label, children, required, filled }) {
   )
 }
 
-// Collapsible section — turns the long form into a scannable checklist where each
-// group shows how many of its fields are filled, so editing reads as progress
-// instead of an endless wall of inputs.
-function CollapsibleSection({ title, Icon, filled, total, defaultOpen = false, children }) {
-  const [open, setOpen] = useState(defaultOpen)
-  const complete = total > 0 && filled >= total
-  return (
-    <div className="ep-section">
-      <button type="button" className="ep-sec-head" onClick={() => setOpen(o => !o)} aria-expanded={open}>
-        <span className={`ep-sec-icon${complete ? ' done' : ''}`}><Icon size={17} /></span>
-        <span className="ep-sec-titles">
-          <span className="ep-sec-title">{title}</span>
-          {total > 0 && <span className="ep-sec-sub">{filled} de {total} preenchidos</span>}
-        </span>
-        {total > 0 && (
-          <span className={`ep-sec-badge${complete ? ' done' : ''}`}>
-            {complete ? <Check size={13} strokeWidth={3} /> : `${filled}/${total}`}
-          </span>
-        )}
-        <ChevronDown size={18} className="ep-sec-chev" style={{ transform: open ? 'rotate(180deg)' : 'none' }} />
-      </button>
-      {open && <div className="ep-sec-body">{children}</div>}
-    </div>
-  )
-}
-
 export default function EditProject() {
   const { slug } = useParams()
   const navigate = useNavigate()
@@ -127,6 +101,7 @@ export default function EditProject() {
   const [error, setError] = useState(null)
   const [accessDenied, setAccessDenied] = useState(false)
   const [dirty, setDirty] = useState(false)
+  const [activeSection, setActiveSection] = useState('conteudo')
   const coverInputRef = useRef(null)
 
   useEffect(() => {
@@ -143,7 +118,6 @@ export default function EditProject() {
       const tokenFromStorage = localStorage.getItem(`edit_token_${slug}`)
       const token = tokenFromUrl || tokenFromStorage
 
-      // Dual ownership: logged-in owner OR valid edit token OR legacy project OR accepted collaborator
       const isOwner = user && data.user_id && user.id === data.user_id
       const hasToken = data.edit_token && token === data.edit_token
       const isLegacy = !data.edit_token && !data.user_id
@@ -198,7 +172,6 @@ export default function EditProject() {
     load()
   }, [slug])
 
-  // Keep sidebar showing project controls while editing
   useEffect(() => {
     if (!project) return
     setExtras({ type: 'project', slug: project.slug, title: project.name, showBack: true })
@@ -233,7 +206,6 @@ export default function EditProject() {
     e.preventDefault()
     if (!form.name?.trim() || !form.area?.trim()) return
 
-    // Content moderation — check all text fields
     const textFields = ['name', 'area', 'goal', 'problem', 'solution', 'target_audience', 'features', 'technologies', 'challenges', 'results', 'learnings']
     for (const key of textFields) {
       const v = String(form[key] || '')
@@ -258,8 +230,12 @@ export default function EditProject() {
       <div style={{ minHeight: '100vh', backgroundColor: colors.bg }}>
         <Navbar />
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 'calc(100dvh - 62px)' }}>
-          <div style={{ width: 36, height: 36, border: `3px solid ${colors.border}`, borderTop: `3px solid ${colors.blue}`, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
-          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+          <style>{`@keyframes ep2-sh{0%{background-position:-300px 0}100%{background-position:300px 0}}`}</style>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+            {[140, 90, 115].map((w, i) => (
+              <div key={i} style={{ height: i === 0 ? 14 : 9, width: w, borderRadius: 6, background: 'linear-gradient(90deg,var(--color-bg-alt) 25%,var(--color-surface-hover) 50%,var(--color-bg-alt) 75%)', backgroundSize: '300px 100%', animation: `ep2-sh 1.5s ease-in-out infinite ${i*0.12}s` }} />
+            ))}
+          </div>
         </div>
       </div>
     )
@@ -270,7 +246,7 @@ export default function EditProject() {
       <div style={{ minHeight: '100vh', backgroundColor: colors.bg }}>
         <Navbar />
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, padding: 24, textAlign: 'center', height: 'calc(100dvh - 62px)', color: colors.text }}>
-          <Lock size={48} color={colors.yellow ?? 'var(--color-warning)'} />
+          <Lock size={48} color="var(--color-warning)" />
           <h2 style={{ margin: 0, fontSize: 24, fontWeight: 400, fontFamily: 'var(--font-heading)' }}>Acesso restrito</h2>
           <p style={{ color: colors.muted, margin: 0, maxWidth: 380, lineHeight: 1.65 }}>Só o criador deste projeto pode editá-lo. Usa o link privado de edição que recebeste quando criaste o projeto.</p>
           <button onClick={() => navigate(`/projeto/${slug}`)} style={{ background: colors.blue, color: '#fff', border: 'none', borderRadius: 8, padding: '12px 28px', fontSize: 15, fontWeight: 700, cursor: 'pointer', marginTop: 8, boxShadow: '0 2px 8px rgba(27,120,247,0.2)', fontFamily: 'inherit' }}>Ver o projeto</button>
@@ -294,19 +270,27 @@ export default function EditProject() {
 
   const isPap = form.project_type === 'pap'
 
-  // ── Completeness, per section and overall — drives the checklist UI ──
   const isFilled = k => String(form[k] ?? '').trim().length > 0
   const contentFilled = FIELDS.filter(f => isFilled(f.key)).length + ((form.tags?.length > 0) ? 1 : 0)
   const contentTotal  = FIELDS.length + 1
   const creatorKeys   = ['creator_name', 'course', 'school_year', 'school']
   const creatorFilled = creatorKeys.filter(isFilled).length
   const creatorTotal  = creatorKeys.length
+  const linkKeys      = ['linkedin_url', 'github_url', 'portfolio_url']
+  const linkFilled    = linkKeys.filter(isFilled).length
   const typeFilled    = form.project_type ? 1 : 0
   const coverFilled   = (form.cover_url && form.cover_url !== '__uploading__') ? 1 : 0
   const totalFilled   = contentFilled + creatorFilled + typeFilled + coverFilled
   const totalAll      = contentTotal + creatorTotal + 1 + 1
   const pct           = Math.round((totalFilled / totalAll) * 100)
   const canSave       = !saving && !!form.name?.trim() && !!form.area?.trim()
+
+  const sections = [
+    { id: 'conteudo', label: 'Conteúdo', Icon: FileText, filled: contentFilled, total: contentTotal },
+    { id: 'criador',  label: 'Criador',  Icon: User,     filled: creatorFilled + linkFilled, total: creatorTotal + linkKeys.length },
+    { id: 'tipo',     label: 'Tipo',     Icon: Layers,   filled: typeFilled,    total: 1 },
+    { id: 'imagem',   label: 'Imagem',   Icon: Image,    filled: coverFilled,   total: 1 },
+  ]
 
   return (
     <div style={{ minHeight: '100dvh', backgroundColor: colors.bg, color: colors.text, fontFamily: 'var(--font-body)' }}>
@@ -339,7 +323,7 @@ export default function EditProject() {
             transition: 'border-color 0.2s',
           }}
         >
-          <><ArrowLeft size={14} style={{marginRight:5,verticalAlign:"middle"}} />Cancelar</>
+          <ArrowLeft size={14} style={{ marginRight: 5, verticalAlign: 'middle' }} />Cancelar
         </button>
       </Navbar>
 
@@ -350,17 +334,19 @@ export default function EditProject() {
         .ep-progress-track { flex: 1; height: 8px; border-radius: 99px; background: var(--color-bg-alt); overflow: hidden; }
         .ep-progress-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--color-primary), #4f46e5); transition: width 0.4s cubic-bezier(0.22,1,0.36,1); }
         .ep-progress-label { font-size: 12px; font-weight: 800; color: var(--color-text-secondary); flex-shrink: 0; font-variant-numeric: tabular-nums; }
-        .ep-section { background: var(--color-glass); border: 1px solid var(--color-glass-border); border-radius: 14px; margin-bottom: 12px; overflow: hidden; }
-        .ep-sec-head { display: flex; align-items: center; gap: 12px; width: 100%; padding: 15px 16px; background: none; border: none; cursor: pointer; font-family: inherit; text-align: left; -webkit-tap-highlight-color: transparent; }
-        .ep-sec-icon { width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: var(--color-primary-subtle); color: var(--color-primary); transition: background 0.2s, color 0.2s; }
-        .ep-sec-icon.done { background: var(--color-primary-muted); color: var(--color-primary); }
-        .ep-sec-titles { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-        .ep-sec-title { font-size: 15px; font-weight: 700; color: var(--color-text); }
-        .ep-sec-sub { font-size: 12px; color: var(--color-text-secondary); }
-        .ep-sec-badge { flex-shrink: 0; min-width: 32px; height: 22px; padding: 0 8px; border-radius: 99px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; color: var(--color-text-secondary); background: var(--color-bg-alt); font-variant-numeric: tabular-nums; }
-        .ep-sec-badge.done { color: var(--color-primary); background: var(--color-primary-muted); }
-        .ep-sec-chev { color: var(--color-text-secondary); flex-shrink: 0; transition: transform 0.2s; }
-        .ep-sec-body { padding: 2px 16px 16px; }
+        .ep-layout { display: flex; gap: 20px; align-items: flex-start; }
+        .ep-tabs { width: 164px; flex-shrink: 0; display: flex; flex-direction: column; gap: 3px; position: sticky; top: 20px; }
+        .ep-tab-btn { display: flex; align-items: center; gap: 10px; width: 100%; padding: 9px 10px; border-radius: 10px; border: none; background: transparent; cursor: pointer; font-family: inherit; text-align: left; -webkit-tap-highlight-color: transparent; color: var(--color-text-secondary); transition: background 0.15s, color 0.15s; }
+        .ep-tab-btn:hover { background: var(--color-bg-alt); color: var(--color-text); }
+        .ep-tab-btn.active { background: var(--color-primary-subtle); color: var(--color-primary); }
+        .ep-tab-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: var(--color-bg-alt); transition: background 0.15s; }
+        .ep-tab-btn.active .ep-tab-icon { background: var(--color-primary-muted); }
+        .ep-tab-label { flex: 1; font-size: 14px; font-weight: 600; }
+        .ep-tab-badge { font-size: 11px; font-weight: 700; color: var(--color-text-secondary); background: var(--color-bg-alt); padding: 2px 6px; border-radius: 99px; font-variant-numeric: tabular-nums; flex-shrink: 0; }
+        .ep-tab-badge.done { color: var(--color-primary); background: var(--color-primary-muted); }
+        .ep-main { flex: 1; min-width: 0; }
+        .ep-sec-card { background: var(--color-glass); border: 1px solid var(--color-glass-border); border-radius: 14px; padding: 20px 18px; }
+        .ep-sec-heading { font-size: 17px; font-weight: 700; color: var(--color-text); margin: 0 0 20px; font-family: var(--font-heading); }
         .ep-save-bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; display: flex; align-items: center; gap: 12px; padding: 11px 16px calc(11px + env(safe-area-inset-bottom,0px)); background: var(--color-bg-overlay); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border-top: 1px solid var(--color-border); }
         .ep-save-status { flex: 1; min-width: 0; font-size: 13px; font-weight: 600; color: var(--color-text-secondary); display: flex; align-items: center; gap: 8px; }
         .ep-save-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--color-warning); flex-shrink: 0; }
@@ -369,9 +355,19 @@ export default function EditProject() {
           .ep-save-bar { left: 248px; }
           body.sidebar-collapsed .ep-save-bar { left: 80px; }
         }
+        @media (max-width: 600px) {
+          .ep-layout { flex-direction: column; gap: 12px; }
+          .ep-tabs { width: 100%; flex-direction: row; overflow-x: auto; position: static; gap: 6px; padding-bottom: 4px; scrollbar-width: none; }
+          .ep-tabs::-webkit-scrollbar { display: none; }
+          .ep-tab-btn { flex-direction: column; gap: 5px; padding: 8px 10px; min-width: 60px; align-items: center; justify-content: center; border-radius: 10px; }
+          .ep-tab-label { font-size: 11px; font-weight: 700; }
+          .ep-tab-badge { display: none; }
+          .ep-tab-icon { width: 28px; height: 28px; border-radius: 7px; }
+        }
       `}</style>
+
       <div className="page-content">
-        <div className="ep-header" style={{ marginBottom: 22 }}>
+        <div style={{ marginBottom: 22 }}>
           <h1 style={{ fontSize: 'clamp(24px, 4vw, 34px)', fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 6px', letterSpacing: '-0.5px', color: colors.text }}>Editar projeto</h1>
           <p style={{ color: colors.muted, margin: 0, fontSize: 15 }}>{project.name}</p>
           <div className="ep-progress">
@@ -381,147 +377,168 @@ export default function EditProject() {
         </div>
 
         <form onSubmit={handleSubmit}>
-          {/* Content */}
-          <CollapsibleSection title="Conteúdo do projeto" Icon={FileText} filled={contentFilled} total={contentTotal} defaultOpen>
-            {FIELDS.map(f => (
-              <Field key={f.key} label={f.label} required={f.required} filled={isFilled(f.key)}>
-                {f.type === 'textarea' ? (
-                  <textarea
-                    value={form[f.key] || ''}
-                    onChange={e => set(f.key, e.target.value)}
-                    rows={4}
-                    placeholder={f.hint}
-                    style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.65 }}
-                    {...inputHandlers}
-                  />
-                ) : (
-                  <input
-                    type="text"
-                    value={form[f.key] || ''}
-                    onChange={e => set(f.key, e.target.value)}
-                    placeholder={f.hint}
-                    style={inputStyle}
-                    {...inputHandlers}
-                  />
-                )}
-              </Field>
-            ))}
-            <Field label="Tags / Tecnologias" filled={form.tags?.length > 0}>
-              <SkillsPicker
-                value={form.tags || []}
-                onChange={v => set('tags', v)}
-                max={8}
-                label=""
-              />
-            </Field>
-          </CollapsibleSection>
+          <div className="ep-layout">
+            {/* Section nav */}
+            <nav className="ep-tabs">
+              {sections.map(s => (
+                <button key={s.id} type="button" onClick={() => setActiveSection(s.id)}
+                  className={`ep-tab-btn${activeSection === s.id ? ' active' : ''}`}>
+                  <span className="ep-tab-icon"><s.Icon size={16} /></span>
+                  <span className="ep-tab-label">{s.label}</span>
+                  <span className={`ep-tab-badge${s.filled === s.total ? ' done' : ''}`}>{s.filled}/{s.total}</span>
+                </button>
+              ))}
+            </nav>
 
-          {/* Creator */}
-          <CollapsibleSection title="Sobre o criador" Icon={User} filled={creatorFilled} total={creatorTotal}>
-            <div className="ep-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-              <Field label="O teu nome" filled={isFilled('creator_name')}>
-                <input type="text" value={form.creator_name} onChange={e => set('creator_name', e.target.value)} style={inputStyle} placeholder="Ex: João Silva" {...inputHandlers} />
-              </Field>
-              <Field label="Curso" filled={isFilled('course')}>
-                <input type="text" value={form.course} onChange={e => set('course', e.target.value)} style={inputStyle} placeholder="Ex: Informática" {...inputHandlers} />
-              </Field>
-              <Field label="Ano letivo" filled={isFilled('school_year')}>
-                <input type="text" value={form.school_year} onChange={e => set('school_year', e.target.value)} style={inputStyle} placeholder="Ex: 2024/2025" {...inputHandlers} />
-              </Field>
-              <Field label="Escola" filled={isFilled('school')}>
-                <input type="text" value={form.school} onChange={e => set('school', e.target.value)} style={inputStyle} placeholder="Ex: ESMAD" {...inputHandlers} />
-              </Field>
+            <div className="ep-main">
+              {/* Conteúdo */}
+              {activeSection === 'conteudo' && (
+                <div className="ep-sec-card">
+                  <h2 className="ep-sec-heading">Conteúdo do projeto</h2>
+                  {FIELDS.map(f => (
+                    <Field key={f.key} label={f.label} required={f.required} filled={isFilled(f.key)}>
+                      {f.type === 'textarea' ? (
+                        <textarea
+                          value={form[f.key] || ''}
+                          onChange={e => set(f.key, e.target.value)}
+                          rows={4}
+                          placeholder={f.hint}
+                          style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.65 }}
+                          {...inputHandlers}
+                        />
+                      ) : (
+                        <input
+                          type="text"
+                          value={form[f.key] || ''}
+                          onChange={e => set(f.key, e.target.value)}
+                          placeholder={f.hint}
+                          style={inputStyle}
+                          {...inputHandlers}
+                        />
+                      )}
+                    </Field>
+                  ))}
+                  <Field label="Tags / Tecnologias" filled={form.tags?.length > 0}>
+                    <SkillsPicker value={form.tags || []} onChange={v => set('tags', v)} max={8} label="" />
+                  </Field>
+                </div>
+              )}
+
+              {/* Criador */}
+              {activeSection === 'criador' && (
+                <div className="ep-sec-card">
+                  <h2 className="ep-sec-heading">Sobre o criador</h2>
+                  <div className="ep-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                    <Field label="O teu nome" filled={isFilled('creator_name')}>
+                      <input type="text" value={form.creator_name} onChange={e => set('creator_name', e.target.value)} style={inputStyle} placeholder="Ex: João Silva" {...inputHandlers} />
+                    </Field>
+                    <Field label="Curso" filled={isFilled('course')}>
+                      <input type="text" value={form.course} onChange={e => set('course', e.target.value)} style={inputStyle} placeholder="Ex: Informática" {...inputHandlers} />
+                    </Field>
+                    <Field label="Ano letivo" filled={isFilled('school_year')}>
+                      <input type="text" value={form.school_year} onChange={e => set('school_year', e.target.value)} style={inputStyle} placeholder="Ex: 2024/2025" {...inputHandlers} />
+                    </Field>
+                    <Field label="Escola" filled={isFilled('school')}>
+                      <input type="text" value={form.school} onChange={e => set('school', e.target.value)} style={inputStyle} placeholder="Ex: ESMAD" {...inputHandlers} />
+                    </Field>
+                  </div>
+                  <div style={{ marginTop: 20 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 700, color: colors.subtle, marginBottom: 14, textTransform: 'uppercase', letterSpacing: 0.6 }}>
+                      <Link2 size={12} /> Links e redes
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      <Field label="LinkedIn" filled={isFilled('linkedin_url')}>
+                        <input type="url" value={form.linkedin_url} onChange={e => set('linkedin_url', e.target.value)} style={inputStyle} placeholder="https://linkedin.com/in/..." {...inputHandlers} />
+                      </Field>
+                      <Field label="GitHub" filled={isFilled('github_url')}>
+                        <input type="url" value={form.github_url} onChange={e => set('github_url', e.target.value)} style={inputStyle} placeholder="https://github.com/..." {...inputHandlers} />
+                      </Field>
+                      <Field label="Portfólio" filled={isFilled('portfolio_url')}>
+                        <input type="url" value={form.portfolio_url} onChange={e => set('portfolio_url', e.target.value)} style={inputStyle} placeholder="Portfólio ou site pessoal" {...inputHandlers} />
+                      </Field>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Tipo */}
+              {activeSection === 'tipo' && (
+                <div className="ep-sec-card">
+                  <h2 className="ep-sec-heading">Tipo de projeto</h2>
+                  <Field label="Tipo" filled={!!form.project_type}>
+                    <select value={form.project_type} onChange={e => set('project_type', e.target.value)} style={{ ...inputStyle, cursor: 'pointer' }} {...inputHandlers}>
+                      {PROJECT_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                    </select>
+                  </Field>
+                  {isPap && (
+                    <div className="ep-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 4 }}>
+                      <Field label="Orientador" filled={isFilled('pap_supervisor')}>
+                        <input type="text" value={form.pap_supervisor} onChange={e => set('pap_supervisor', e.target.value)} style={inputStyle} placeholder="Nome do orientador" {...inputHandlers} />
+                      </Field>
+                      <Field label="Data de apresentação" filled={isFilled('pap_date')}>
+                        <input type="text" value={form.pap_date} onChange={e => set('pap_date', e.target.value)} style={inputStyle} placeholder="Ex: Junho 2025" {...inputHandlers} />
+                      </Field>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Imagem */}
+              {activeSection === 'imagem' && (
+                <div className="ep-sec-card">
+                  <h2 className="ep-sec-heading">Imagem de capa</h2>
+                  {form.cover_url === '__uploading__' ? (
+                    <div style={{ height: 180, borderRadius: 10, overflow: 'hidden', marginBottom: 12, background: 'linear-gradient(90deg,var(--color-bg-alt) 25%,var(--color-surface-hover) 50%,var(--color-bg-alt) 75%)', backgroundSize: '400px 100%', animation: 'ep2-sh 1.5s ease-in-out infinite' }} />
+                  ) : form.cover_url ? (
+                    <div style={{ position: 'relative', marginBottom: 12 }}>
+                      <img src={form.cover_url} alt="" style={{ width: '100%', height: 180, objectFit: 'cover', borderRadius: 10, display: 'block' }} />
+                      <button
+                        type="button"
+                        onClick={() => set('cover_url', '')}
+                        style={{
+                          position: 'absolute', top: 10, right: 10,
+                          background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)',
+                          color: '#fff', border: 'none', borderRadius: 8,
+                          padding: '6px 12px', fontSize: 12, cursor: 'pointer',
+                          fontWeight: 600, fontFamily: 'inherit',
+                        }}
+                      >Remover</button>
+                    </div>
+                  ) : (
+                    <div
+                      onClick={() => coverInputRef.current?.click()}
+                      style={{
+                        border: `2px dashed ${colors.border}`, borderRadius: 12,
+                        padding: '36px 20px', textAlign: 'center', cursor: 'pointer',
+                        color: colors.muted, transition: 'border-color 0.2s, background 0.2s',
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor = colors.blue; e.currentTarget.style.background = 'rgba(27,120,247,0.03)' }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.background = 'transparent' }}
+                    >
+                      <div style={{ marginBottom: 10 }}><Image size={28} color={colors.muted} /></div>
+                      <p style={{ margin: 0, fontSize: 14, fontWeight: 500 }}>Clica para carregar uma imagem</p>
+                      <p style={{ margin: '4px 0 0', fontSize: 12, color: colors.subtle }}>PNG, JPG ou WEBP · máx. 10MB</p>
+                    </div>
+                  )}
+                  <input ref={coverInputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={handleCoverImage} style={{ display: 'none' }} />
+                </div>
+              )}
             </div>
-            <div style={{ marginTop: 4 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: colors.subtle, marginBottom: 12, marginTop: 4, textTransform: 'uppercase', letterSpacing: 0.6 }}>Links e redes</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <input type="url" value={form.linkedin_url} onChange={e => set('linkedin_url', e.target.value)} style={inputStyle} placeholder="LinkedIn (https://linkedin.com/in/...)" {...inputHandlers} />
-                <input type="url" value={form.github_url} onChange={e => set('github_url', e.target.value)} style={inputStyle} placeholder="GitHub (https://github.com/...)" {...inputHandlers} />
-                <input type="url" value={form.portfolio_url} onChange={e => set('portfolio_url', e.target.value)} style={inputStyle} placeholder="Portfólio ou site pessoal" {...inputHandlers} />
-              </div>
-            </div>
-          </CollapsibleSection>
-
-          {/* Type */}
-          <CollapsibleSection title="Tipo de projeto" Icon={Layers} filled={typeFilled} total={1}>
-            <Field label="Tipo" filled={!!form.project_type}>
-              <select
-                value={form.project_type}
-                onChange={e => set('project_type', e.target.value)}
-                style={{ ...inputStyle, cursor: 'pointer' }}
-                {...inputHandlers}
-              >
-                {PROJECT_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-              </select>
-            </Field>
-            {isPap && (
-              <div className="ep-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 4 }}>
-                <Field label="Orientador" filled={isFilled('pap_supervisor')}>
-                  <input type="text" value={form.pap_supervisor} onChange={e => set('pap_supervisor', e.target.value)} style={inputStyle} placeholder="Nome do orientador" {...inputHandlers} />
-                </Field>
-                <Field label="Data de apresentação" filled={isFilled('pap_date')}>
-                  <input type="text" value={form.pap_date} onChange={e => set('pap_date', e.target.value)} style={inputStyle} placeholder="Ex: Junho 2025" {...inputHandlers} />
-                </Field>
-              </div>
-            )}
-          </CollapsibleSection>
-
-          {/* Cover image */}
-          <CollapsibleSection title="Imagem de capa" Icon={Image} filled={coverFilled} total={1}>
-            {form.cover_url === '__uploading__' ? (
-              <div style={{ height: 180, borderRadius: 10, background: colors.card, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, color: colors.muted, fontSize: 14, marginBottom: 12 }}>
-                <div style={{ width: 20, height: 20, border: `2px solid ${colors.border}`, borderTop: `2px solid ${colors.blue}`, borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-                A carregar imagem…
-              </div>
-            ) : form.cover_url ? (
-              <div style={{ position: 'relative', marginBottom: 12 }}>
-                <img src={form.cover_url} alt="" style={{ width: '100%', height: 180, objectFit: 'cover', borderRadius: 10, display: 'block' }} />
-                <button
-                  type="button"
-                  onClick={() => set('cover_url', '')}
-                  style={{
-                    position: 'absolute', top: 10, right: 10,
-                    background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)',
-                    color: '#fff', border: 'none', borderRadius: 8,
-                    padding: '6px 12px', fontSize: 12, cursor: 'pointer',
-                    fontWeight: 600, fontFamily: 'inherit',
-                  }}
-                >Remover</button>
-              </div>
-            ) : (
-              <div
-                onClick={() => coverInputRef.current?.click()}
-                style={{
-                  border: `2px dashed ${colors.border}`, borderRadius: 12,
-                  padding: '36px 20px', textAlign: 'center', cursor: 'pointer',
-                  color: colors.muted, transition: 'border-color 0.2s, background 0.2s',
-                }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = colors.blue; e.currentTarget.style.background = 'rgba(27,120,247,0.03)' }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.background = 'transparent' }}
-              >
-                <div style={{ marginBottom: 10 }}><Image size={28} color={colors.muted} /></div>
-                <p style={{ margin: 0, fontSize: 14, fontWeight: 500 }}>Clica para carregar uma imagem</p>
-                <p style={{ margin: '4px 0 0', fontSize: 12, color: colors.subtle }}>PNG, JPG ou WEBP · máx. 10MB</p>
-              </div>
-            )}
-            <input ref={coverInputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={handleCoverImage} style={{ display: 'none' }} />
-          </CollapsibleSection>
+          </div>
 
           {error && (
             <div style={{
               background: 'rgba(244,63,94,0.08)',
               border: '1px solid rgba(244,63,94,0.25)',
               borderRadius: 10, padding: '12px 16px',
-              color: colors.red, fontSize: 14, marginBottom: 16, fontWeight: 500,
+              color: colors.red, fontSize: 14, marginTop: 16, marginBottom: 0, fontWeight: 500,
             }}>
               {error}
             </div>
           )}
 
-          {/* Clearance so the last section clears the fixed save bar */}
           <div style={{ height: 72 }} />
 
-          {/* Sticky save bar — always in reach, shows unsaved state */}
           <div className="ep-save-bar">
             <div className="ep-save-status">
               {!canSave && !saving ? (

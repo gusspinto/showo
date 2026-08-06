@@ -70,17 +70,15 @@ export default function AIInterview({ onComplete, onDismiss }) {
   /* ── Loading ── */
   if (step === 'loading') {
     return (
-      <div style={{ padding: '32px 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
-        <div style={{
-          width: 32, height: 32,
-          border: '2.5px solid var(--color-border)',
-          borderTop: '2.5px solid var(--color-primary)',
-          borderRadius: '50%',
-          animation: 'spin 1s linear infinite',
-        }} />
-        <p style={{ margin: 0, fontSize: 14, color: 'var(--color-text-secondary)', textAlign: 'center' }}>
-          A IA está a analisar o teu projeto…
-        </p>
+      <div style={{ padding: '24px 0', display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <style>{`@keyframes ai-sh{0%{background-position:-400px 0}100%{background-position:400px 0}} @keyframes ai-in{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}`}</style>
+        <p style={{ margin: '0 0 8px', fontSize: 13, color: 'var(--color-text-secondary)' }}>A IA está a analisar o teu projeto…</p>
+        {[0,1,2,3].map(i => (
+          <div key={i} style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 12, padding: '16px 18px', animation: `ai-in 0.3s ease-out ${i*120}ms both` }}>
+            <div style={{ height: 11, width: `${45+i*12}%`, borderRadius: 5, marginBottom: 10, background: 'linear-gradient(90deg,var(--color-bg-alt) 25%,var(--color-surface-hover) 50%,var(--color-bg-alt) 75%)', backgroundSize: '400px 100%', animation: `ai-sh 1.5s ease-in-out infinite` }} />
+            <div style={{ height: 9, width: '85%', borderRadius: 5, background: 'linear-gradient(90deg,var(--color-bg-alt) 25%,var(--color-surface-hover) 50%,var(--color-bg-alt) 75%)', backgroundSize: '400px 100%', animation: `ai-sh 1.5s ease-in-out infinite 0.15s` }} />
+          </div>
+        ))}
       </div>
     )
   }

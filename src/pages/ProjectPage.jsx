@@ -4871,76 +4871,74 @@ export default function ProjectPage() {
       {aiModalOpen && (
         <div
           style={{
-            position: 'fixed', inset: 0, zIndex: 500,
+            position: 'fixed', inset: 0, zIndex: 2000,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            padding: '20px 16px',
-            background: 'rgba(0,0,0,0.72)',
-            backdropFilter: 'blur(8px)',
+            padding: 'var(--sp-4)',
+            background: 'rgba(0,0,0,0.6)',
+            backdropFilter: 'blur(4px)',
           }}
           onClick={() => setAiModalOpen(false)}
         >
           <div
             style={{
-              background: colors.card,
-              border: `1px solid ${colors.border}`,
-              borderRadius: 14,
-              padding: '28px',
+              background: 'var(--color-surface)',
+              border: '1px solid var(--color-border)',
+              borderRadius: 'var(--radius-xl)',
+              padding: 'var(--sp-6)',
               maxWidth: 660,
               width: '100%',
-              maxHeight: '85vh',
+              maxHeight: 'calc(100vh - 48px)',
               overflowY: 'auto',
-              position: 'relative',
-              boxShadow: 'none',
+              boxShadow: 'var(--shadow-xl)',
             }}
             onClick={e => e.stopPropagation()}
           >
-            {/* Close */}
-            <button
-              onClick={() => setAiModalOpen(false)}
-              style={{
-                position: 'absolute', top: 16, right: 16,
-                background: 'var(--color-surface-hover)',
-                border: `1px solid ${colors.border}`,
-                borderRadius: 8, width: 32, height: 32,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: 'pointer', color: colors.muted,
-              }}
-            ><X size={16} /></button>
-
             {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 20, paddingRight: 44 }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 'var(--sp-5)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <div style={{ width: 38, height: 38, borderRadius: 10, flexShrink: 0, background: 'rgba(129,140,248,0.12)', border: '1px solid rgba(129,140,248,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Bot size={20} color="#818cf8" />
                 </div>
                 <div>
-                  <h3 style={{ margin: 0, fontSize: 17, fontWeight: 400, fontFamily: 'var(--font-heading)', letterSpacing: '-0.01em' }}>Análise da IA</h3>
-                  <p style={{ margin: 0, fontSize: 12, color: colors.muted, marginTop: 2 }}>Feedback personalizado para melhorar o teu projeto</p>
+                  <h3 style={{ margin: 0, fontSize: 'var(--text-lg)', fontWeight: 700, fontFamily: 'var(--font-heading)', letterSpacing: '-0.02em', color: 'var(--color-text)' }}>Análise da IA</h3>
+                  <p style={{ margin: '4px 0 0', fontSize: 'var(--text-sm)', color: colors.muted }}>Feedback personalizado para melhorar o teu projeto</p>
                 </div>
               </div>
-              {/* Analyze / Reanalisar button — always in header */}
-              {isOwner && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                {isOwner && (
+                  <button
+                    onClick={handleAnalyzeAI}
+                    disabled={analyzingAI}
+                    style={{
+                      background: analyzingAI ? 'var(--color-primary-subtle)' : aiFeedback ? 'var(--color-primary-subtle)' : 'var(--color-primary)',
+                      border: analyzingAI || aiFeedback ? `1px solid ${colors.blue}30` : 'none',
+                      borderRadius: 8, padding: '8px 16px',
+                      color: analyzingAI || aiFeedback ? colors.blue : '#fff',
+                      fontSize: 12, fontWeight: 700,
+                      cursor: analyzingAI ? 'default' : 'pointer',
+                      fontFamily: 'inherit',
+                      boxShadow: analyzingAI || aiFeedback ? 'none' : '0 2px 8px var(--color-primary-subtle)',
+                      display: 'flex', alignItems: 'center', gap: 7,
+                      transition: 'all 0.15s',
+                    }}
+                  >
+                    <Sparkles size={13} />
+                    {analyzingAI ? 'A analisar…' : aiFeedback ? 'Reanalisar' : 'Analisar'}
+                  </button>
+                )}
                 <button
-                  onClick={handleAnalyzeAI}
-                  disabled={analyzingAI}
+                  onClick={() => setAiModalOpen(false)}
                   style={{
-                    flexShrink: 0,
-                    background: analyzingAI ? 'var(--color-primary-subtle)' : aiFeedback ? 'var(--color-primary-subtle)' : 'var(--color-primary)',
-                    border: analyzingAI || aiFeedback ? `1px solid ${colors.blue}30` : 'none',
-                    borderRadius: 8, padding: '8px 16px',
-                    color: analyzingAI || aiFeedback ? colors.blue : '#fff',
-                    fontSize: 12, fontWeight: 700,
-                    cursor: analyzingAI ? 'default' : 'pointer',
-                    fontFamily: 'inherit',
-                    boxShadow: analyzingAI || aiFeedback ? 'none' : '0 2px 8px var(--color-primary-subtle)',
-                    display: 'flex', alignItems: 'center', gap: 7,
-                    transition: 'all 0.15s',
+                    background: 'transparent', border: 'none',
+                    color: 'var(--color-text-tertiary)',
+                    cursor: 'pointer', padding: 4, display: 'flex',
+                    borderRadius: 'var(--radius-sm)',
+                    transition: 'color var(--duration-fast)',
                   }}
-                >
-                  <Sparkles size={13} />
-                  {analyzingAI ? 'A analisar…' : aiFeedback ? 'Reanalisar' : 'Analisar'}
-                </button>
-              )}
+                  onMouseEnter={e => e.currentTarget.style.color = 'var(--color-text)'}
+                  onMouseLeave={e => e.currentTarget.style.color = 'var(--color-text-tertiary)'}
+                ><X size={18} /></button>
+              </div>
             </div>
 
             {analyzeError && (
@@ -4996,9 +4994,19 @@ export default function ProjectPage() {
               </div>
             )}
 
+            {analyzingAI && (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, padding: '48px 0', color: colors.muted }}>
+                <div style={{ width: 28, height: 28, border: `3px solid ${colors.border}`, borderTop: `3px solid ${colors.blue}`, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+                <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+                <span style={{ fontSize: 14 }}>A analisar o teu projeto com IA…</span>
+              </div>
+            )}
+
             {!aiFeedback && !analyzingAI && (
-              <div style={{ textAlign: 'center', padding: '24px 0', color: colors.muted, fontSize: 13 }}>
-                Clica em "Analisar com IA" para receber feedback personalizado do teu projeto.
+              <div style={{ textAlign: 'center', padding: '32px 0', color: colors.muted, fontSize: 14 }}>
+                {isOwner
+                  ? 'Clica em "Analisar" para receberes feedback personalizado do teu projeto.'
+                  : 'O dono do projeto ainda não gerou uma análise.'}
               </div>
             )}
           </div>
@@ -5783,7 +5791,7 @@ export default function ProjectPage() {
         {/* Highlights — 3 column cards — blue branded */}
         {highlights.length > 0 && (() => {
           const HlIcons = [Zap, TrendingUp, Lightbulb]
-          const hlAccents = ['var(--color-primary)', '#1d6fe8', '#2563eb']
+          const hlAccents = ['#4f46e5', '#1d6fe8', '#2563eb']
           return (
             <div className="proj-highlights-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>
               {highlights.map((h, i) => {
@@ -6991,46 +6999,53 @@ export default function ProjectPage() {
 
       {/* ── Desktop AI Coach: floating button + slide-in panel ── */}
       {isOwner && !previewEditing && (<>
-        {/* Floating button — desktop only, sits above global feedback FAB (bottom: 24) */}
-        <button
-          data-tour="coach"
-          onClick={() => setCoachOpen(o => !o)}
-          className="proj-coach-fab"
-          style={{
-            position: 'fixed', bottom: 88, right: 20, zIndex: 200,
-            width: 44, height: 44, borderRadius: '50%',
-            background: coachOpen ? 'var(--color-bg-alt)' : 'var(--color-primary)',
-            border: coachOpen ? `2px solid ${colors.border}` : '2px solid transparent',
-            boxShadow: coachOpen ? '0 2px 12px rgba(0,0,0,0.15)' : '0 4px 20px var(--color-primary-subtle)',
-            cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            transition: 'all 0.2s',
-          }}
-          title={coachOpen ? 'Fechar assistente' : 'Assistente IA'}
-        >
-          {coachOpen
-            ? <X size={18} color={colors.text} />
-            : <Bot size={20} color="#fff" />}
-        </button>
+        {/* Floating button — only shown when panel is closed */}
+        {!coachOpen && (
+          <button
+            data-tour="coach"
+            onClick={() => setCoachOpen(true)}
+            className="proj-coach-fab"
+            style={{
+              position: 'fixed', bottom: 88, right: 20, zIndex: 200,
+              width: 44, height: 44, borderRadius: '50%',
+              background: 'var(--color-primary)',
+              border: '2px solid transparent',
+              boxShadow: '0 4px 20px var(--color-primary-subtle)',
+              cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              transition: 'all 0.2s',
+            }}
+            title="Assistente IA"
+          >
+            <Bot size={20} color="#fff" />
+          </button>
+        )}
 
         {/* Floating chat widget */}
         {coachOpen && (
+          <>
+            {/* Click-outside backdrop */}
+            <div
+              style={{ position: 'fixed', inset: 0, zIndex: 199 }}
+              onClick={() => setCoachOpen(false)}
+            />
           <div
             className="proj-coach-panel"
             style={{
-              position: 'fixed', bottom: 72, right: 20,
-              width: 360, height: 'calc(100dvh - 120px)',
+              position: 'fixed', bottom: 80, right: 20,
+              width: 360, height: 'calc(100dvh - 136px)',
               maxHeight: 560,
-              zIndex: 199,
+              zIndex: 200,
               background: 'var(--color-surface)',
               border: '1px solid var(--color-border)',
               borderRadius: 16,
+              overflow: 'hidden',
               display: 'flex', flexDirection: 'column',
               boxShadow: '0 8px 40px rgba(0,0,0,0.28)',
               animation: 'coachPop 0.18s ease-out',
             }}
           >
             {/* Header */}
-            <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0, background: 'var(--color-bg-alt)' }}>
+            <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0, background: 'var(--color-bg-alt)', borderRadius: '16px 16px 0 0' }}>
               <div style={{ width: 30, height: 30, borderRadius: 9, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <Bot size={15} color="var(--color-primary)" />
               </div>
@@ -7048,6 +7063,11 @@ export default function ProjectPage() {
                   title="Limpar conversa"
                 >Limpar</button>
               )}
+              <button
+                onClick={() => setCoachOpen(false)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 4, borderRadius: 6 }}
+                title="Fechar"
+              ><X size={16} /></button>
             </div>
 
             {/* Messages */}
@@ -7098,7 +7118,7 @@ export default function ProjectPage() {
             </div>
 
             {/* Input */}
-            <form onSubmit={sendCoach} style={{ padding: '12px 18px 18px', borderTop: '1px solid var(--color-border)', display: 'flex', gap: 8, flexShrink: 0, background: 'var(--color-bg-alt)' }}>
+            <form onSubmit={sendCoach} style={{ padding: '10px 14px 14px', borderTop: '1px solid var(--color-border)', display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0, background: 'var(--color-bg-alt)', boxSizing: 'border-box', width: '100%' }}>
               <input
                 id="coach-input-desktop"
                 value={coachInput}
@@ -7108,8 +7128,8 @@ export default function ProjectPage() {
                 disabled={coachLoading}
                 autoFocus
                 style={{
-                  flex: 1, background: 'var(--color-bg-alt)', border: `1px solid ${colors.border}`,
-                  borderRadius: 10, padding: '10px 14px', fontSize: 13,
+                  flex: 1, minWidth: 0, background: 'var(--color-bg)', border: `1px solid ${colors.border}`,
+                  borderRadius: 10, padding: '9px 12px', fontSize: 13,
                   color: colors.text, fontFamily: 'inherit', outline: 'none',
                   opacity: coachLoading ? 0.6 : 1,
                 }}
@@ -7117,18 +7137,20 @@ export default function ProjectPage() {
               <button
                 type="submit"
                 disabled={!coachInput.trim() || coachLoading}
+                title="Enviar"
                 style={{
-                  background: coachInput.trim() && !coachLoading ? 'var(--color-primary)' : 'var(--color-bg-alt)',
+                  flexShrink: 0, width: 36, height: 36,
+                  background: coachInput.trim() && !coachLoading ? 'var(--color-primary)' : 'transparent',
                   border: `1px solid ${coachInput.trim() && !coachLoading ? 'var(--color-primary)' : colors.border}`,
-                  borderRadius: 10, padding: '10px 14px',
+                  borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center',
                   color: coachInput.trim() && !coachLoading ? '#fff' : colors.muted,
                   cursor: coachInput.trim() && !coachLoading ? 'pointer' : 'default',
-                  fontFamily: 'inherit', fontSize: 13, fontWeight: 600,
-                  transition: 'all 0.15s', flexShrink: 0,
+                  transition: 'all 0.15s',
                 }}
-              >Enviar</button>
+              ><ArrowRight size={15} /></button>
             </form>
           </div>
+          </>
         )}
       </>)}
 

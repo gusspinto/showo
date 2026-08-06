@@ -1385,10 +1385,18 @@ export default function Admin() {
 
         {/* Content */}
         {loading ? (
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '80px 0', gap: 14 }}>
-            <div style={{ width: 36, height: 36, border: `3px solid ${C.border}`, borderTop: `3px solid ${C.blue}`, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
-            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-            <span style={{ color: C.muted }}>A carregar dados…</span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 16 }}>
+            <style>{`@keyframes ad-sh{0%{background-position:-400px 0}100%{background-position:400px 0}} @keyframes ad-in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}`}</style>
+            {Array.from({length: 8}).map((_, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', background: 'var(--color-surface)', border: `1px solid ${C.border}`, borderRadius: 10, animation: `ad-in 0.25s ease-out ${i*60}ms both` }}>
+                <div style={{ width: 32, height: 32, borderRadius: '50%', flexShrink: 0, background: 'linear-gradient(90deg,var(--color-bg-alt) 25%,var(--color-surface-hover) 50%,var(--color-bg-alt) 75%)', backgroundSize: '400px 100%', animation: `ad-sh 1.5s ease-in-out infinite` }} />
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <div style={{ height: 10, width: `${40+i*5}%`, borderRadius: 4, background: 'linear-gradient(90deg,var(--color-bg-alt) 25%,var(--color-surface-hover) 50%,var(--color-bg-alt) 75%)', backgroundSize: '400px 100%', animation: `ad-sh 1.5s ease-in-out infinite` }} />
+                  <div style={{ height: 8, width: '25%', borderRadius: 4, background: 'linear-gradient(90deg,var(--color-bg-alt) 25%,var(--color-surface-hover) 50%,var(--color-bg-alt) 75%)', backgroundSize: '400px 100%', animation: `ad-sh 1.5s ease-in-out infinite 0.2s` }} />
+                </div>
+                <div style={{ width: 60, height: 22, borderRadius: 99, background: 'linear-gradient(90deg,var(--color-bg-alt) 25%,var(--color-surface-hover) 50%,var(--color-bg-alt) 75%)', backgroundSize: '400px 100%', animation: `ad-sh 1.5s ease-in-out infinite 0.1s` }} />
+              </div>
+            ))}
           </div>
         ) : (
           <>

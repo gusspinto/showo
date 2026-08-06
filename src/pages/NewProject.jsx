@@ -194,14 +194,14 @@ export default function NewProject() {
     return (
       <NpShell>
         <div style={S.loadingCenter}>
-          <div style={S.spinner} />
-          <p style={S.loadingTitle}>
-            {step === 'submitting' ? 'A guardar o teu projeto…' : 'A estruturar o teu projeto…'}
-          </p>
-          <p style={S.loadingSub}>
-            {step === 'submitting' ? 'Quase pronto.' : 'A IA está a organizar o que descreveste.'}
-          </p>
-          <style>{`@keyframes np-spin { to { transform: rotate(360deg); } }`}</style>
+          <style>{`@keyframes np-sh{0%{background-position:-400px 0}100%{background-position:400px 0}} @keyframes np-in{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}`}</style>
+          <p style={S.loadingTitle}>{step === 'submitting' ? 'A guardar o teu projeto…' : 'A estruturar o teu projeto…'}</p>
+          <p style={S.loadingSub}>{step === 'submitting' ? 'Quase pronto.' : 'A IA está a organizar o que descreveste.'}</p>
+          <div style={{ width: '100%', maxWidth: 380, display: 'flex', flexDirection: 'column', gap: 10, marginTop: 8 }}>
+            {[['55%',100],['80%',60],['70%',80],['45%',90]].map(([w, delay], i) => (
+              <div key={i} style={{ height: i === 0 ? 12 : 9, width: w, borderRadius: 5, background: 'linear-gradient(90deg,var(--color-bg-alt) 25%,var(--color-surface-hover) 50%,var(--color-bg-alt) 75%)', backgroundSize: '400px 100%', animation: `np-sh 1.5s ease-in-out infinite ${delay}ms, np-in 0.3s ease-out ${i*80}ms both` }} />
+            ))}
+          </div>
         </div>
       </NpShell>
     )
@@ -513,8 +513,7 @@ const S = {
   typeRow: { display: 'flex', gap: 6, flexWrap: 'wrap', margin: '14px 0 28px' },
   err: { color: 'var(--color-error)', fontSize: 13, margin: '0 0 14px' },
   loadingCenter: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 18 },
-  spinner: { width: 44, height: 44, border: '3px solid var(--color-border)', borderTop: '3px solid var(--color-primary)', borderRadius: '50%', animation: 'np-spin 1s linear infinite' },
-  loadingTitle: { fontSize: 17, fontWeight: 600, margin: 0, color: 'var(--color-text)' },
+loadingTitle: { fontSize: 17, fontWeight: 600, margin: 0, color: 'var(--color-text)' },
   loadingSub: { fontSize: 13, color: 'var(--color-text-secondary)', margin: 0 },
   reviewHead: { fontSize: 22, fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 6px', letterSpacing: '-0.3px' },
   reviewSub: { color: 'var(--color-text-secondary)', fontSize: 14, margin: 0, lineHeight: 1.6 },

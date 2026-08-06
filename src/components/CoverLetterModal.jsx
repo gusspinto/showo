@@ -101,24 +101,24 @@ export default function CoverLetterModal({ projects, studentName, onClose }) {
   return (
     <div
       style={{
-        position: 'fixed', inset: 0, zIndex: 9800,
-        background: 'rgba(5,9,18,0.88)', backdropFilter: 'blur(6px)',
+        position: 'fixed', inset: 0, zIndex: 2000,
+        background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: '16px', fontFamily: 'inherit',
+        padding: 'var(--sp-4)', fontFamily: 'inherit',
       }}
       onClick={e => e.target === e.currentTarget && onClose()}
     >
       <div style={{
-        background: 'var(--color-surface)', border: `1px solid var(--color-border)`,
-        borderRadius: 20, width: '100%', maxWidth: 620,
-        maxHeight: '90vh', overflow: 'auto',
-        boxShadow: '0 32px 80px rgba(0,0,0,0.7)',
+        background: 'var(--color-surface)', border: '1px solid var(--color-border)',
+        borderRadius: 'var(--radius-xl)', width: '100%', maxWidth: 620,
+        maxHeight: 'calc(100vh - 48px)', overflow: 'auto',
+        boxShadow: 'var(--shadow-xl)',
       }}>
         {/* Header */}
         <div style={{ padding: '24px 28px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
-            <h2 style={{ margin: '0 0 4px', fontSize: 20, fontWeight: 800, color: C.text }}>Kit de Estágio</h2>
-            <p style={{ margin: 0, fontSize: 13, color: C.muted }}>Gerado com base nos teus projetos no Showo</p>
+            <h2 style={{ margin: '0 0 4px', fontSize: 'var(--text-lg)', fontWeight: 700, color: C.text, fontFamily: 'var(--font-heading)', letterSpacing: '-0.02em' }}>Kit de Estágio</h2>
+            <p style={{ margin: 0, fontSize: 'var(--text-sm)', color: C.muted }}>Gerado com base nos teus projetos no Showo</p>
           </div>
           <button onClick={onClose} className="icon-btn-ghost"><X size={20} /></button>
         </div>

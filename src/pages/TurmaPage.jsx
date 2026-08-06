@@ -805,8 +805,12 @@ export default function TurmaPage() {
       <div style={{ minHeight: '100vh', background: C.bg }}>
         <Navbar />
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 'calc(100dvh - 62px)' }}>
-          <div style={{ width: 36, height: 36, border: `3px solid ${C.border}`, borderTop: `3px solid ${C.blue}`, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
-          <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+          <style>{`@keyframes tp-sh{0%{background-position:-300px 0}100%{background-position:300px 0}}`}</style>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+            {[150, 95, 125].map((w, i) => (
+              <div key={i} style={{ height: i === 0 ? 14 : 9, width: w, borderRadius: 6, background: 'linear-gradient(90deg,var(--color-bg-alt) 25%,var(--color-surface-hover) 50%,var(--color-bg-alt) 75%)', backgroundSize: '300px 100%', animation: `tp-sh 1.5s ease-in-out infinite ${i*0.12}s` }} />
+            ))}
+          </div>
         </div>
       </div>
     )
@@ -865,8 +869,7 @@ export default function TurmaPage() {
   return (
     <div style={{ minHeight: '100vh', background: C.bg, color: C.text, fontFamily: 'inherit' }}>
       <style>{`
-        @keyframes spin{to{transform:rotate(360deg)}}
-        @media (max-width: 480px) { .turmapage-grid { grid-template-columns: 1fr !important; } }
+@media (max-width: 480px) { .turmapage-grid { grid-template-columns: 1fr !important; } }
         @media (max-width: 600px) { .turmapage-hd { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; } }
         @media (max-width: 520px) { .turmapage-modal { padding: 20px 16px !important; } }
       `}</style>

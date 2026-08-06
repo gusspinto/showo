@@ -103,9 +103,19 @@ ${displayName}`)
         </div>
 
         {loading ? (
-          <div style={{ display: 'flex', justifyContent: 'center', padding: 60 }}>
-            <div style={{ width: 28, height: 28, border: `2px solid ${C.border}`, borderTop: `2px solid ${C.blue}`, borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <style>{`@keyframes es-sh{0%{background-position:-400px 0}100%{background-position:400px 0}} @keyframes es-in{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}`}</style>
+            {[0, 1, 2].map(i => (
+              <div key={i} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: '18px 20px', animation: `es-in 0.3s ease-out ${i * 150}ms both` }}>
+                <div style={{ height: 14, width: '55%', borderRadius: 6, marginBottom: 10, background: 'linear-gradient(90deg,var(--color-bg-alt) 25%,var(--color-surface-hover) 50%,var(--color-bg-alt) 75%)', backgroundSize: '400px 100%', animation: `es-sh 1.5s ease-in-out infinite` }} />
+                <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
+                  {[60, 80, 50].map((w, j) => (
+                    <div key={j} style={{ height: 22, width: w, borderRadius: 99, background: 'linear-gradient(90deg,var(--color-bg-alt) 25%,var(--color-surface-hover) 50%,var(--color-bg-alt) 75%)', backgroundSize: '400px 100%', animation: `es-sh 1.5s ease-in-out infinite ${j * 0.1}s` }} />
+                  ))}
+                </div>
+                <div style={{ height: 10, width: '80%', borderRadius: 5, background: 'linear-gradient(90deg,var(--color-bg-alt) 25%,var(--color-surface-hover) 50%,var(--color-bg-alt) 75%)', backgroundSize: '400px 100%', animation: `es-sh 1.5s ease-in-out infinite 0.15s` }} />
+              </div>
+            ))}
           </div>
         ) : projects.length === 0 ? (
           <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: '48px 24px', textAlign: 'center' }}>

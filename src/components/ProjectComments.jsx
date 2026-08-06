@@ -188,9 +188,17 @@ export default function ProjectComments({ projectId, projectAuthorId }) {
 
       {/* Comments list */}
       {loading ? (
-        <div style={{ display: 'flex', justifyContent: 'center', padding: '24px 0' }}>
-          <div style={{ width: 22, height: 22, border: '2px solid var(--color-border)', borderTop: '2px solid var(--color-primary)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-          <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <style>{`@keyframes pc-shimmer{0%{background-position:-400px 0}100%{background-position:400px 0}}`}</style>
+          {[0,1,2].map(i => (
+            <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', opacity: 1 - i * 0.15 }}>
+              <div style={{ width: 28, height: 28, borderRadius: '50%', flexShrink: 0, background: 'linear-gradient(90deg,var(--color-bg-alt) 25%,var(--color-surface-hover) 50%,var(--color-bg-alt) 75%)', backgroundSize: '400px 100%', animation: `pc-shimmer 1.5s ease-in-out infinite ${i * 0.1}s` }} />
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <div style={{ height: 10, width: 90, borderRadius: 5, background: 'linear-gradient(90deg,var(--color-bg-alt) 25%,var(--color-surface-hover) 50%,var(--color-bg-alt) 75%)', backgroundSize: '400px 100%', animation: `pc-shimmer 1.5s ease-in-out infinite ${i * 0.1 + 0.05}s` }} />
+                <div style={{ height: 12, width: `${70 + i * 10}%`, borderRadius: 5, background: 'linear-gradient(90deg,var(--color-bg-alt) 25%,var(--color-surface-hover) 50%,var(--color-bg-alt) 75%)', backgroundSize: '400px 100%', animation: `pc-shimmer 1.5s ease-in-out infinite ${i * 0.1 + 0.1}s` }} />
+              </div>
+            </div>
+          ))}
         </div>
       ) : comments.length === 0 ? (
         <p style={{ margin: 0, fontSize: 14, color: 'var(--color-text-secondary)', textAlign: 'center', padding: '16px 0' }}>

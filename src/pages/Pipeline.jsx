@@ -264,9 +264,21 @@ export default function Pipeline() {
 
           {/* Loading */}
           {loading && (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 300 }}>
-              <div style={{ width: 28, height: 28, border: '2px solid var(--color-border)', borderTop: `2px solid ${C.blue}`, borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-              <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+            <div style={{ display: 'flex', gap: 12, paddingBottom: 32, alignItems: 'flex-start', overflowX: 'auto' }}>
+              <style>{`@keyframes pl-sh{0%{background-position:-400px 0}100%{background-position:400px 0}} @keyframes pl-in{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}`}</style>
+              {[3,2,4,1].map((cards, ci) => (
+                <div key={ci} style={{ minWidth: 220, width: 240, flexShrink: 0, display: 'flex', flexDirection: 'column', animation: `pl-in 0.3s ease-out ${ci*100}ms both` }}>
+                  <div style={{ height: 12, width: 100, borderRadius: 5, marginBottom: 12, background: 'linear-gradient(90deg,var(--color-bg-alt) 25%,var(--color-surface-hover) 50%,var(--color-bg-alt) 75%)', backgroundSize: '400px 100%', animation: `pl-sh 1.5s ease-in-out infinite` }} />
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {Array.from({length: cards}).map((_, i) => (
+                      <div key={i} style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 10, padding: '12px 14px' }}>
+                        <div style={{ height: 10, width: `${60+i*10}%`, borderRadius: 4, marginBottom: 8, background: 'linear-gradient(90deg,var(--color-bg-alt) 25%,var(--color-surface-hover) 50%,var(--color-bg-alt) 75%)', backgroundSize: '400px 100%', animation: `pl-sh 1.5s ease-in-out infinite ${i*0.1}s` }} />
+                        <div style={{ height: 8, width: '80%', borderRadius: 4, background: 'linear-gradient(90deg,var(--color-bg-alt) 25%,var(--color-surface-hover) 50%,var(--color-bg-alt) 75%)', backgroundSize: '400px 100%', animation: `pl-sh 1.5s ease-in-out infinite 0.2s` }} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
             </div>
           )}
 

@@ -296,8 +296,24 @@ export default function Ranking() {
         </div>
 
         {loading ? (
-          <div style={{ display: 'flex', justifyContent: 'center', padding: '80px 0' }}>
-            <div style={{ width: 36, height: 36, border: `3px solid ${C.border}`, borderTop: `3px solid ${C.blue}`, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+          <div>
+            <style>{`@keyframes rk-sh{0%{background-position:-400px 0}100%{background-position:400px 0}} @keyframes rk-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}`}</style>
+            {/* Podium skeleton */}
+            <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: 12, marginBottom: 32, height: 180 }}>
+              {[140, 180, 110].map((h, i) => (
+                <div key={i} style={{ width: 110, height: h, borderRadius: 12, background: 'linear-gradient(90deg,var(--color-bg-alt) 25%,var(--color-surface-hover) 50%,var(--color-bg-alt) 75%)', backgroundSize: '400px 100%', animation: `rk-sh 1.5s ease-in-out infinite ${i * 0.12}s, rk-in 0.35s ease-out ${i * 150}ms both` }} />
+              ))}
+            </div>
+            {/* Row skeletons */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', background: 'var(--color-glass)', border: '1px solid var(--color-glass-border)', borderRadius: 12, animation: `rk-in 0.3s ease-out ${i * 80}ms both` }}>
+                  <div style={{ width: 22, height: 22, borderRadius: '50%', flexShrink: 0, background: 'linear-gradient(90deg,var(--color-bg-alt) 25%,var(--color-surface-hover) 50%,var(--color-bg-alt) 75%)', backgroundSize: '400px 100%', animation: `rk-sh 1.5s ease-in-out infinite ${i * 0.07}s` }} />
+                  <div style={{ flex: 1, height: 12, borderRadius: 5, background: 'linear-gradient(90deg,var(--color-bg-alt) 25%,var(--color-surface-hover) 50%,var(--color-bg-alt) 75%)', backgroundSize: '400px 100%', animation: `rk-sh 1.5s ease-in-out infinite ${i * 0.07 + 0.1}s` }} />
+                  <div style={{ width: 48, height: 20, borderRadius: 99, flexShrink: 0, background: 'linear-gradient(90deg,var(--color-bg-alt) 25%,var(--color-surface-hover) 50%,var(--color-bg-alt) 75%)', backgroundSize: '400px 100%', animation: `rk-sh 1.5s ease-in-out infinite ${i * 0.07 + 0.2}s` }} />
+                </div>
+              ))}
+            </div>
           </div>
         ) : filtered.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '80px 0', color: C.muted }}>

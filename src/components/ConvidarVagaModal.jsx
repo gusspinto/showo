@@ -49,8 +49,8 @@ export default function ConvidarVagaModal({ studentId, studentName, vagas, onClo
     <div
       onClick={e => e.target === e.currentTarget && onClose()}
       style={{
-        position: 'fixed', inset: 0, zIndex: 600,
-        background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(6px)',
+        position: 'fixed', inset: 0, zIndex: 2000,
+        background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
         display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
         fontFamily: 'var(--font-body)',
       }}

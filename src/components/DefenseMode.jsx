@@ -29,21 +29,84 @@ const NOTE_SECTIONS = [
   { id: 'closing',      label: 'Encerramento',     Icon: Mic },
 ]
 
-function NotesPanel({ aiData, loadingAI, aiError, onRetry }) {
-  if (loadingAI) return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, padding: '60px 0', color: C.muted }}>
-      <div style={{ width: 28, height: 28, border: `3px solid ${C.border}`, borderTop: `3px solid ${C.blue}`, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
-      <span style={{ fontSize: 15 }}>A preparar as tuas notas com IA...</span>
+const DM_SKEL_CSS = `
+  @keyframes dm-shimmer { 0%{background-position:-400px 0} 100%{background-position:400px 0} }
+  @keyframes dm-card-in { from{opacity:0;transform:translateY(7px)} to{opacity:1;transform:translateY(0)} }
+`
+const skelLine = (w = '100%', delay = '0s') => ({
+  height: 12, width: w, borderRadius: 6,
+  background: 'linear-gradient(90deg,var(--color-bg-alt) 25%,var(--color-surface-hover) 50%,var(--color-bg-alt) 75%)',
+  backgroundSize: '400px 100%',
+  animation: `dm-shimmer 1.5s ease-in-out infinite ${delay}`,
+})
+
+function NotesSkeleton() {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <style>{DM_SKEL_CSS}</style>
+      {NOTE_SECTIONS.map((section, i) => (
+        <div key={section.id} style={{
+          background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: '18px 20px',
+          animation: `dm-card-in 0.35s ease-out ${i * 200}ms both`,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+            <section.Icon size={16} color={C.muted} />
+            <span style={{ fontSize: 12, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>{section.label}</span>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+            <div style={skelLine('100%', '0s')} />
+            <div style={skelLine('82%', '0.12s')} />
+            <div style={skelLine('60%', '0.24s')} />
+          </div>
+        </div>
+      ))}
     </div>
   )
+}
+
+function JurySkeleton() {
+  return (
+    <div>
+      <style>{DM_SKEL_CSS}</style>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+        <div style={skelLine(100, '0s')} />
+      </div>
+      <div style={{ height: 4, background: C.border, borderRadius: 2, marginBottom: 24 }} />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} style={{
+            background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, overflow: 'hidden',
+            animation: `dm-card-in 0.35s ease-out ${i * 270}ms both`,
+          }}>
+            <div style={{ padding: '18px 20px', display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+              <span style={{
+                width: 26, height: 26, borderRadius: 8, flexShrink: 0,
+                background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.2)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 12, fontWeight: 700, color: C.yellow,
+              }}>{i + 1}</span>
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 3 }}>
+                <div style={skelLine('100%', '0s')} />
+                <div style={skelLine('72%', '0.15s')} />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function NotesPanel({ aiData, loadingAI, aiError, onRetry }) {
+  if (loadingAI) return <NotesSkeleton />
 
   if (aiError) return (
-    <div style={{ background: 'var(--color-error-subtle)', border: '1px solid var(--color-error-subtle)', borderRadius: 14, padding: '28px', textAlign: 'center' }}>
-      <p style={{ color: C.red, fontSize: 15, margin: '0 0 6px', fontWeight: 600 }}>Não foi possível gerar as notas</p>
-      <p style={{ color: C.muted, fontSize: 13, margin: '0 0 18px' }}>
-        Faz deploy do Edge Function <code style={{ background: 'var(--color-surface-hover)', padding: '2px 6px', borderRadius: 4 }}>defense-notes</code> no Supabase e tenta novamente.
+    <div style={{ background: 'var(--color-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 14, padding: '32px 28px', textAlign: 'center' }}>
+      <p style={{ color: C.text, fontSize: 15, margin: '0 0 8px', fontWeight: 600 }}>Não foi possível gerar as notas</p>
+      <p style={{ color: C.muted, fontSize: 13, margin: '0 0 20px', lineHeight: 1.6 }}>
+        A IA não conseguiu processar o projeto de momento. Certifica-te de que os campos principais estão preenchidos e tenta novamente.
       </p>
-      <button onClick={onRetry} style={{ background: 'var(--color-error-subtle)', border: '1px solid var(--color-error-subtle)', borderRadius: 8, padding: '9px 20px', color: C.red, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+      <button onClick={onRetry} style={{ background: C.blue, color: '#fff', border: 'none', borderRadius: 8, padding: '10px 22px', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
         Tentar novamente
       </button>
     </div>
@@ -74,7 +137,12 @@ function NotesPanel({ aiData, loadingAI, aiError, onRetry }) {
           </div>
         ))}
         {filled.length === 0 && (
-          <p style={{ color: C.subtle, fontSize: 14, textAlign: 'center', padding: '20px 0' }}>Sem notas geradas.</p>
+          <div style={{ textAlign: 'center', padding: '40px 0', color: C.muted }}>
+            <p style={{ fontSize: 14, margin: '0 0 16px' }}>Não foi possível gerar notas para este projeto.</p>
+            <button onClick={onRetry} style={{ background: C.blue, color: '#fff', border: 'none', borderRadius: 8, padding: '9px 20px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+              Tentar novamente
+            </button>
+          </div>
         )}
       </div>
     </div>
@@ -87,18 +155,15 @@ function JuryPanel({ aiData, loadingAI, aiError, onRetry }) {
   const [revealed, setRevealed] = useState({})
   const [practiced, setPracticed] = useState({})
 
-  if (loadingAI) return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, padding: '60px 0', color: C.muted }}>
-      <div style={{ width: 28, height: 28, border: `3px solid ${C.border}`, borderTop: `3px solid ${C.yellow}`, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
-      <span style={{ fontSize: 15 }}>A preparar perguntas do júri...</span>
-    </div>
-  )
+  if (loadingAI) return <JurySkeleton />
 
   if (aiError) return (
-    <div style={{ background: 'var(--color-error-subtle)', border: '1px solid var(--color-error-subtle)', borderRadius: 14, padding: '28px', textAlign: 'center' }}>
-      <p style={{ color: C.red, fontSize: 15, margin: '0 0 6px', fontWeight: 600 }}>Não foi possível gerar as perguntas</p>
-      <p style={{ color: C.muted, fontSize: 13, margin: '0 0 18px' }}>Faz deploy do Edge Function <code style={{ background: 'var(--color-surface-hover)', padding: '2px 6px', borderRadius: 4 }}>defense-notes</code> no Supabase.</p>
-      <button onClick={onRetry} style={{ background: 'var(--color-error-subtle)', border: '1px solid var(--color-error-subtle)', borderRadius: 8, padding: '9px 20px', color: C.red, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+    <div style={{ background: 'var(--color-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 14, padding: '32px 28px', textAlign: 'center' }}>
+      <p style={{ color: C.text, fontSize: 15, margin: '0 0 8px', fontWeight: 600 }}>Não foi possível gerar as perguntas</p>
+      <p style={{ color: C.muted, fontSize: 13, margin: '0 0 20px', lineHeight: 1.6 }}>
+        A IA não conseguiu processar o projeto de momento. Certifica-te de que os campos principais estão preenchidos e tenta novamente.
+      </p>
+      <button onClick={onRetry} style={{ background: C.blue, color: '#fff', border: 'none', borderRadius: 8, padding: '10px 22px', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
         Tentar novamente
       </button>
     </div>
@@ -110,7 +175,12 @@ function JuryPanel({ aiData, loadingAI, aiError, onRetry }) {
   const practicedCount = Object.values(practiced).filter(Boolean).length
 
   if (questions.length === 0) return (
-    <p style={{ color: C.subtle, fontSize: 14, textAlign: 'center', padding: '20px 0' }}>Sem perguntas geradas.</p>
+    <div style={{ textAlign: 'center', padding: '40px 0', color: C.muted }}>
+      <p style={{ fontSize: 14, margin: '0 0 16px' }}>Não foi possível gerar perguntas para este projeto.</p>
+      <button onClick={onRetry} style={{ background: C.blue, color: '#fff', border: 'none', borderRadius: 8, padding: '9px 20px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+        Tentar novamente
+      </button>
+    </div>
   )
 
   return (
@@ -1216,6 +1286,9 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
     supabase.functions.invoke('defense-notes', { body: { project } })
       .then(({ data, error }) => {
         if (error || !data) { setAiError(true); return }
+        const hasNotes = data.slide_notes && Object.values(data.slide_notes).some(Boolean)
+        const hasQuestions = Array.isArray(data.jury_questions) && data.jury_questions.length > 0
+        if (!hasNotes && !hasQuestions) { setAiError(true); return }
         setAiData(data)
       })
       .catch(() => setAiError(true))
@@ -1243,28 +1316,28 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
   ].filter(t => t.show)
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 9900, background: 'rgba(5,9,18,0.92)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, fontFamily: 'inherit' }}
+    <div style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, fontFamily: 'inherit' }}
       onClick={e => e.target === e.currentTarget && onClose()}
     >
       <style>{`@keyframes spin{to{transform:rotate(360deg)}} @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}`}</style>
 
-      <div style={{ background: 'var(--color-surface)', backdropFilter: 'blur(20px)', border: '1px solid var(--color-border)', borderRadius: 22, width: '100%', maxWidth: 720, maxHeight: '90vh', display: 'flex', flexDirection: 'column', boxShadow: '0 32px 80px rgba(0,0,0,0.7)', animation: 'fadeIn 0.2s ease-out' }}>
+      <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-xl)', width: '100%', maxWidth: 720, maxHeight: '90vh', display: 'flex', flexDirection: 'column', boxShadow: 'var(--shadow-xl)', animation: 'fadeIn 0.2s ease-out' }}>
 
         {/* Header */}
         <div style={{ padding: '22px 28px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
           <div>
-            <h2 style={{ margin: '0 0 2px', fontSize: 18, fontWeight: 800, color: C.text }}>Preparar defesa</h2>
-            <p style={{ margin: 0, fontSize: 13, color: C.subtle }}>{project.name}</p>
+            <h2 style={{ margin: '0 0 2px', fontSize: 'var(--text-lg)', fontWeight: 700, color: C.text, fontFamily: 'var(--font-heading)', letterSpacing: '-0.02em' }}>Preparar defesa</h2>
+            <p style={{ margin: 0, fontSize: 'var(--text-sm)', color: C.muted }}>{project.name}</p>
           </div>
           <button
             onClick={onClose}
             className="dm-icon-btn"
-            style={{ background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)', borderRadius: 8, padding: '7px 10px', color: C.muted, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.15s, color 0.15s, border-color 0.15s' }}
+            style={{ background: 'transparent', border: 'none', borderRadius: 'var(--radius-sm)', padding: 4, color: C.subtle, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'color 0.15s' }}
           ><X size={18} /></button>
         </div>
 
         <style>{`
-          .dm-icon-btn:hover { background: var(--color-surface-hover) !important; color: var(--color-text) !important; border-color: var(--color-border-hover) !important; }
+          .dm-icon-btn:hover { color: var(--color-text) !important; }
           .dm-tab-btn:hover:not(.active) { color: var(--color-text) !important; border-color: var(--color-border-hover) !important; }
         `}</style>
 

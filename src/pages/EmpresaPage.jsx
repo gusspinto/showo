@@ -98,8 +98,12 @@ export default function EmpresaPage() {
     <div style={{ minHeight: '100vh', background: C.bg }}>
       <Navbar />
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 'calc(100dvh - 62px)' }}>
-        <div style={{ width: 28, height: 28, border: '2px solid var(--color-border)', borderTop: `2px solid ${C.blue}`, borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        <style>{`@keyframes ep-sh{0%{background-position:-300px 0}100%{background-position:300px 0}}`}</style>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+          {[140, 90, 120].map((w, i) => (
+            <div key={i} style={{ height: i === 0 ? 14 : 9, width: w, borderRadius: 6, background: 'linear-gradient(90deg,var(--color-bg-alt) 25%,var(--color-surface-hover) 50%,var(--color-bg-alt) 75%)', backgroundSize: '300px 100%', animation: `ep-sh 1.5s ease-in-out infinite ${i*0.12}s` }} />
+          ))}
+        </div>
       </div>
     </div>
   )

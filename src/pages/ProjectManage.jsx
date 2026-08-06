@@ -330,9 +330,8 @@ function ContentSection({ project, onSaved }) {
       <Card>
         <CardTitle>Imagem de capa</CardTitle>
         {form.cover_url === '__uploading__' ? (
-          <div style={{ height: 160, borderRadius: 10, background: C.bgAlt, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, color: C.muted, fontSize: 14 }}>
-            <div style={{ width: 20, height: 20, border: `2px solid ${C.border}`, borderTop: `2px solid ${C.blue}`, borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-            A carregar…
+          <div style={{ height: 160, borderRadius: 10, background: 'linear-gradient(90deg,var(--color-bg-alt) 25%,var(--color-surface-hover) 50%,var(--color-bg-alt) 75%)', backgroundSize: '400px 100%', animation: 'pm-sh 1.5s ease-in-out infinite' }}>
+            <style>{`@keyframes pm-sh{0%{background-position:-400px 0}100%{background-position:400px 0}}`}</style>
           </div>
         ) : form.cover_url ? (
           <div style={{ position: 'relative' }}>
@@ -798,8 +797,12 @@ export default function ProjectManage() {
     <div style={{ minHeight: '100vh', background: C.bg }}>
       <Navbar showLinks={false} />
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 'calc(100dvh - 62px)' }}>
-        <div style={{ width: 36, height: 36, border: `3px solid ${C.border}`, borderTop: `3px solid ${C.blue}`, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        <style>{`@keyframes pm2-sh{0%{background-position:-300px 0}100%{background-position:300px 0}}`}</style>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+          {[140, 90, 115].map((w, i) => (
+            <div key={i} style={{ height: i === 0 ? 14 : 9, width: w, borderRadius: 6, background: 'linear-gradient(90deg,var(--color-bg-alt) 25%,var(--color-surface-hover) 50%,var(--color-bg-alt) 75%)', backgroundSize: '300px 100%', animation: `pm2-sh 1.5s ease-in-out infinite ${i*0.12}s` }} />
+          ))}
+        </div>
       </div>
     </div>
   )
