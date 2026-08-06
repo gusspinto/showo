@@ -3204,15 +3204,18 @@ function ProjectTour({ isPap, onClose }) {
 
   function tooltipPos() {
     if (!rect) return { left: -999, top: -999 }
-    const TW = 300, TH = 260, P = 16
+    const TW = 300, TH = 280, P = 16
     const vw = window.innerWidth, vh = window.innerHeight
     const cy = rect.top + rect.height / 2
     const centeredTop = Math.max(P, Math.min(cy - TH / 2, vh - TH - P))
     const cx = Math.max(P, Math.min(rect.left + rect.width / 2 - TW / 2, vw - TW - P))
+    const aboveTop = rect.top - 12 - TH
 
+    // Elements in the bottom 40%: always go above
+    if (rect.top > vh * 0.6 && aboveTop >= P) return { left: cx, top: aboveTop }
     if (rect.right + P + TW <= vw) return { left: rect.right + P, top: centeredTop }
     if (rect.left - P - TW >= 0) return { left: rect.left - P - TW, top: centeredTop }
-    if (rect.top - P - TH >= 0) return { left: cx, top: rect.top - P - TH }
+    if (aboveTop >= P) return { left: cx, top: aboveTop }
     return { left: cx, top: Math.max(P, vh - TH - P) }
   }
 
