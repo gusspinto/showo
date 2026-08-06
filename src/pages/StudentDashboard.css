@@ -212,7 +212,7 @@
 .sdb-hero {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  align-items: start;
+  align-items: end;
   gap: var(--sp-8);
   padding-bottom: var(--sp-6);
   margin-bottom: var(--sp-6);
@@ -231,7 +231,7 @@
   margin-bottom: var(--sp-2);
 }
 .sdb-hero-greeting {
-  margin: 0 0 var(--sp-2);
+  margin: 0;
   font-family: var(--font-heading);
   font-size: clamp(26px, 3.6vw, 36px);
   font-weight: 400;
@@ -270,58 +270,28 @@
   border-radius: var(--radius-xl);
   background: var(--color-primary-subtle);
 }
-.sdb-streak {
+.sdb-streak-row {
   display: flex;
   align-items: center;
-  gap: var(--sp-3);
-  color: var(--color-primary);
-}
-.sdb-streak-main {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.sdb-streak-value {
-  font-family: var(--font-heading);
-  font-size: 36px;
-  font-weight: 700;
-  line-height: 1;
-  letter-spacing: -0.03em;
-  color: var(--color-primary);
-}
-.sdb-streak-label {
-  font-size: var(--text-xs);
+  gap: 6px;
+  font-size: 13px;
   font-weight: 600;
-  color: var(--color-text-secondary);
-  line-height: 1.4;
+  color: var(--color-primary);
 }
-
-.sdb-daystrip {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 5px;
-  padding-top: var(--sp-4);
-  border-top: 1px solid var(--color-primary-muted);
-}
-.sdb-daystrip-day {
+.sdb-daydots {
   display: flex;
-  flex-direction: column;
-  align-items: center;
   gap: 5px;
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  color: var(--color-text-tertiary);
+  align-items: center;
 }
-.sdb-daystrip-day i {
-  width: 100%;
-  height: 6px;
-  border-radius: var(--radius-full);
+.sdb-daydot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
   background: var(--color-border-hover);
-  transition: background var(--duration-normal) var(--ease-out);
+  flex-shrink: 0;
+  transition: background 0.2s;
 }
-.sdb-daystrip-day.is-active i { background: var(--color-primary); }
-.sdb-daystrip-day.is-active { color: var(--color-primary); }
+.sdb-daydot.is-active { background: var(--color-primary); }
 
 /* ── Primeiros passos (utilizador novo) ── */
 .sdb-setup-list {
@@ -1531,7 +1501,6 @@
   .sdb-scorerow-go { display: none; }
 
   .sdb-potential-value { font-size: 38px; }
-  .sdb-streak-value { font-size: 28px; }
 }
 
 /* ── Respeitar quem prefere menos movimento ── */
@@ -1543,7 +1512,7 @@
   .sdb-coverage-seg,
   .sdb-potential-fill,
   .sdb-scorerow-fill,
-  .sdb-daystrip-day i,
+  .sdb-daydot,
   .sdb-task { transition: none; }
 }
 

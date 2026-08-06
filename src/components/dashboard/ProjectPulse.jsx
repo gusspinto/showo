@@ -159,31 +159,6 @@ export default function ProjectPulse({
   )
 }
 
-/* Estado antes de existir projeto — a mesma peça, mas a convidar em vez de
-   acompanhar. O aluno vê desde o primeiro dia onde é que o trabalho vai viver. */
-/* [top%, left% dentro do container deco, size px, opacity] — padrão diagonal */
-const DECO_MARKS = [
-  /* fila direita — grandes, mais visíveis */
-  [ 5, 76, 26, 0.30],
-  [32, 82, 28, 0.32],
-  [62, 78, 25, 0.28],
-  [83, 85, 22, 0.26],
-  /* fila central */
-  [14, 52, 18, 0.18],
-  [40, 58, 20, 0.20],
-  [67, 54, 17, 0.17],
-  [90, 60, 16, 0.16],
-  /* fila esquerda — pequenos (máscara trata do fade) */
-  [ 8, 28, 12, 0.11],
-  [36, 32, 13, 0.12],
-  [63, 26, 11, 0.10],
-  [88, 34, 12, 0.10],
-  /* pontas */
-  [22, 10,  9, 0.06],
-  [55, 12,  8, 0.05],
-  [78,  8,  9, 0.05],
-]
-
 export function ProjectPulseEmpty({ onCreate }) {
   return (
     <section className="sdb-panel sdb-panel--brand sdb-pulse sdb-pulse--empty">
@@ -194,18 +169,6 @@ export function ProjectPulseEmpty({ onCreate }) {
             <Plus size={15} /> Criar projeto
           </button>
         </footer>
-      </div>
-      <div className="sdb-pulse-deco" aria-hidden>
-        {DECO_MARKS.map(([top, left, size, opacity], i) => (
-          <img
-            key={i}
-            src="/icon_light.png"
-            width={size}
-            height={size}
-            alt=""
-            style={{ position: 'absolute', top: `${top}%`, left: `${left}%`, opacity }}
-          />
-        ))}
       </div>
     </section>
   )

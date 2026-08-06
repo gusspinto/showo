@@ -630,39 +630,48 @@ export default function StudentDashboard({ user, profile }) {
   }
 
   /* ── Painéis partilhados (reposicionados em empty state) ── */
-  const potentialPanel = (
-    <section className="sdb-panel sdb-panel--tint sdb-o-potential">
-      <header className="sdb-panel-head">
-        <span className="sdb-eyebrow sdb-eyebrow--brand">Potencial do perfil</span>
-      </header>
-      <div className="sdb-potential">
-        <span className="sdb-potential-value" style={{ color: getScoreColor(potential) }}>{potential}</span>
-        <span className="sdb-potential-of">/100</span>
-      </div>
-      <div className="sdb-potential-track">
-        <span className="sdb-potential-fill" style={{ width: `${potential}%` }} />
-      </div>
-      <p className="sdb-potential-note">
-        {projects.length === 0
-          ? 'Adiciona projetos e completa o perfil para o potencial começar a subir.'
-          : potential >= 80 ? 'Perfil forte. Mantém os projetos atualizados.'
-          : potential >= 60 ? 'Bom caminho — completa os projetos mais fracos para subir.'
-          : 'Completa os projetos e preenche o perfil para subir.'}
-      </p>
-      <p className="sdb-potential-disclaimer">
-        O score de cada projeto é calculado por IA — não substitui a nota do professor.
-      </p>
-      {(profile?.username || user?.id) && (
-        <button className="sdb-profile-link" onClick={() => {
-          const slug = profile?.username || user?.id
-          navigator.clipboard.writeText(`${window.location.origin}/u/${slug}`)
-            .then(() => showToast('Link do perfil copiado.'))
-        }}>
-          <Link size={11} /> showo.pt/u/{profile?.username || user?.id}
-        </button>
-      )}
-    </section>
-  )
+  const potentialPanel = (() => {
+    const r = 24
+    const circ = 2 * Math.PI * r
+    const filled = (potential / 100) * circ
+    const scoreColor = getScoreColor(potential)
+    const scoreLabel = potential >= 80 ? 'Perfil forte' : potential >= 60 ? 'Bom caminho' : potential >= 40 ? 'A crescer' : 'Em início'
+    return (
+      <section className="sdb-panel sdb-panel--tint sdb-o-potential">
+        <header className="sdb-panel-head">
+          <span className="sdb-eyebrow sdb-eyebrow--brand">Potencial do perfil</span>
+        </header>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <div style={{ position: 'relative', width: 60, height: 60, flexShrink: 0 }}>
+            <svg width={60} height={60} style={{ transform: 'rotate(-90deg)', display: 'block' }}>
+              <circle cx={30} cy={30} r={r} fill="none" stroke="var(--color-border)" strokeWidth={5} />
+              <circle cx={30} cy={30} r={r} fill="none"
+                stroke={scoreColor} strokeWidth={5}
+                strokeDasharray={`${filled} ${circ}`}
+                strokeLinecap="round"
+              />
+            </svg>
+            <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 700, color: scoreColor, lineHeight: 1 }}>
+              {potential}
+            </span>
+          </div>
+          <div>
+            <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: 'var(--color-text)' }}>{scoreLabel}</p>
+            <p style={{ margin: '2px 0 0', fontSize: 11, color: 'var(--color-text-tertiary)' }}>/100</p>
+          </div>
+        </div>
+        {(profile?.username || user?.id) && (
+          <button className="sdb-profile-link" onClick={() => {
+            const slug = profile?.username || user?.id
+            navigator.clipboard.writeText(`${window.location.origin}/u/${slug}`)
+              .then(() => showToast('Link do perfil copiado.'))
+          }}>
+            <Link size={11} /> showo.pt/u/{profile?.username || user?.id}
+          </button>
+        )}
+      </section>
+    )
+  })()
 
   const turmaPanel = (
     <section className="sdb-panel sdb-o-turma">
@@ -795,34 +804,6 @@ export default function StudentDashboard({ user, profile }) {
               {new Date().toLocaleDateString('pt-PT', { weekday: 'long', day: 'numeric', month: 'long' })}
             </span>
             <h1 className="sdb-hero-greeting">{greeting}</h1>
-            {!isEmptyState && (
-              <>
-                {contextClauses.length > 0 ? (
-                  <p className="sdb-hero-context">
-                    {contextClauses.map((c, i) => (
-                      <span key={i}>
-                        {i > 0 && <i className="sdb-hero-sep" />}
-                        {c}
-                      </span>
-                    ))}
-                  </p>
-                ) : (
-                  <p className="sdb-hero-context sdb-hero-context--quiet">
-                    {loadingProjects ? 'A carregar o teu dia…' : 'Está tudo em dia.'}
-                  </p>
-                )}
-                <div className="sdb-hero-actions">
-                  <button className="sdb-btn sdb-btn--solid" onClick={primaryAction.onClick}>
-                    {primaryAction.label}
-                  </button>
-                  {focusProject && (
-                    <button className="sdb-btn sdb-btn--quiet" onClick={() => navigate(`/projeto/${focusProject.slug}`)}>
-                      Ver projeto
-                    </button>
-                  )}
-                </div>
-              </>
-            )}
           </div>
 
           <aside className="sdb-hero-side">
@@ -833,21 +814,14 @@ export default function StudentDashboard({ user, profile }) {
               </>
             ) : entries.length > 0 ? (
               <>
-                <div className="sdb-streak">
-                  <Flame size={22} strokeWidth={2} />
-                  <div className="sdb-streak-main">
-                    <span className="sdb-streak-value">{streak}</span>
-                    <span className="sdb-streak-label">
-                      {streak === 1 ? 'semana seguida com registos' : 'semanas seguidas com registos'}
-                    </span>
-                  </div>
+                <span className="sdb-eyebrow">Atividade</span>
+                <div className="sdb-streak-row">
+                  <Flame size={14} strokeWidth={2.5} />
+                  <span>{streak} {streak === 1 ? 'semana seguida' : 'semanas seguidas'}</span>
                 </div>
-                <div className="sdb-daystrip" aria-label="Atividade dos últimos 7 dias">
+                <div className="sdb-daydots" aria-label="Atividade dos últimos 7 dias">
                   {last7.map(d => (
-                    <span key={d.iso} className={`sdb-daystrip-day${d.active ? ' is-active' : ''}`} title={d.iso}>
-                      <i />
-                      {d.label}
-                    </span>
+                    <span key={d.iso} className={`sdb-daydot${d.active ? ' is-active' : ''}`} title={d.iso} />
                   ))}
                 </div>
               </>
