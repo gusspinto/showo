@@ -3111,6 +3111,15 @@ const TOUR_STEPS_PAP = [
     ],
   },
   {
+    target: 'coach',
+    title: 'Assistente IA',
+    bullets: [
+      'Um tutor sempre disponível para te ajudar com qualquer parte do projeto',
+      'Podes pedir sugestões, melhorar secções ou preparar a defesa em conversa',
+      'Conhece o teu projeto — as respostas são sempre contextualizadas',
+    ],
+  },
+  {
     target: 'missions',
     title: 'Missões',
     bullets: [
@@ -4458,6 +4467,9 @@ export default function ProjectPage() {
         @media (max-width: 600px) {
           .proj-coach-fab { display: none !important; }
           .proj-coach-panel { display: none !important; }
+        }
+        @media (min-width: 701px) {
+          .proj-coach-panel { width: 280px !important; right: 20px !important; }
         }
         ${viewAsPublic ? `
           /* ── Preview mode: the sidebar stays visible (so the owner can keep
@@ -6978,6 +6990,7 @@ export default function ProjectPage() {
       {isOwner && !previewEditing && (<>
         {/* Floating button — desktop only, sits above global feedback FAB (bottom: 24) */}
         <button
+          data-tour="coach"
           onClick={() => setCoachOpen(o => !o)}
           className="proj-coach-fab"
           style={{
@@ -7001,9 +7014,9 @@ export default function ProjectPage() {
           <div
             className="proj-coach-panel"
             style={{
-              position: 'fixed', bottom: 142, right: 20,
-              width: 360, height: 480,
-              maxHeight: 'calc(100dvh - 180px)',
+              position: 'fixed', bottom: 72, right: 20,
+              width: 360, height: 'calc(100dvh - 120px)',
+              maxHeight: 560,
               zIndex: 199,
               background: 'var(--color-surface)',
               border: '1px solid var(--color-border)',

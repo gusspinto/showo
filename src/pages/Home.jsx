@@ -101,7 +101,7 @@ export default function Home() {
 
       const { count } = await supabase
         .from('projects')
-        .select('*', { count: 'exact', head: true })
+        .select('id', { count: 'exact', head: true })
       if (count != null) setProjectCount(count)
     }
     load()
