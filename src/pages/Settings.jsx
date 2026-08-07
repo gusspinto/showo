@@ -240,7 +240,15 @@ export default function Settings() {
       }
       setOriginalUsername(username.trim()); setUsernameStatus(null); refreshProfile()
       setSaveMsg({ type: 'ok', text: 'Perfil guardado.' })
-    } catch (err) { setSaveMsg({ type: 'err', text: err.message ?? 'Erro ao guardar.' }) }
+    } catch (err) {
+      const raw = err.message ?? ''
+      const text = raw.includes('row-level security') || raw.includes('RLS')
+        ? 'Não foi possível guardar o perfil. O teu username pode já estar a ser usado, ou tenta fechar sessão e entrar de novo.'
+        : raw.includes('duplicate') || raw.includes('23505')
+        ? 'Este username já está a ser usado.'
+        : raw || 'Erro ao guardar. Tenta novamente.'
+      setSaveMsg({ type: 'err', text })
+    }
     setSaving(false)
   }
 
