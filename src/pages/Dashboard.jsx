@@ -1178,7 +1178,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--color-bg)', fontFamily: 'var(--font-body)' }}>
+    <div className="dashboard-root" style={{ minHeight: '100vh', background: 'var(--color-bg)', fontFamily: 'var(--font-body)' }}>
       <Navbar />
 
       {showOnboardingAluno && (

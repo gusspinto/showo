@@ -152,7 +152,7 @@ export default function Login() {
           display: flex; flex-direction: column; align-items: flex-start; gap: 22px;
           text-align: left;
         }
-        .auth-side-mark { width: 72px; height: auto; display: block; }
+        .auth-side-mark { width: 160px; height: auto; display: block; }
         .auth-side-phrase {
           font-family: var(--font-heading); font-weight: 400;
           font-size: clamp(22px, 2.6vw, 36px); line-height: 1.3;
@@ -223,8 +223,9 @@ export default function Login() {
         <div className="auth-card">
           <div className="auth-main-logo" style={{ marginBottom: 36 }}>
             <img
-              src="/icon.png" alt="Showo"
-              style={{ height: 32, width: 32, cursor: 'pointer', objectFit: 'contain' }}
+              src={theme === 'light' ? '/lightmode_icon_logo.png' : '/darkmode_icon_logo.png'}
+              alt="Showo"
+              style={{ height: 32, width: 'auto', cursor: 'pointer', objectFit: 'contain' }}
               onClick={() => navigate('/')}
             />
           </div>

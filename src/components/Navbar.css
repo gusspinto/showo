@@ -112,13 +112,15 @@
 .sb-collapse-toggle {
   position: absolute; top: 68px; right: -11px;
   width: 22px; height: 22px; border-radius: 50%;
-  background: var(--color-sidebar-bg); border: 1px solid var(--color-border);
-  color: var(--color-text-tertiary); display: flex; align-items: center; justify-content: center;
+  background: var(--color-sidebar-bg); border: 1.5px solid rgba(255,255,255,0.55);
+  color: var(--color-text-secondary); display: flex; align-items: center; justify-content: center;
   cursor: pointer; z-index: 5; padding: 0;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.35);
   transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
-.sb-collapse-toggle:hover { background: var(--color-surface-hover); color: var(--color-text); border-color: var(--color-border-hover); }
+.sb-collapse-toggle:hover { background: var(--color-surface-hover); color: var(--color-text); border-color: rgba(255,255,255,0.85); }
+body.light .sb-collapse-toggle { border-color: rgba(0,0,0,0.45); }
+body.light .sb-collapse-toggle:hover { border-color: rgba(0,0,0,0.75); }
 .sb-logo-divider {
   height: 1px;
   background: linear-gradient(90deg, transparent, var(--color-border), transparent);

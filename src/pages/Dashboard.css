@@ -3,6 +3,16 @@
    Colors and spacing use tokens.css variables exclusively.
    ══════════════════════════════════════════════════════════════════════════ */
 
+.dashboard-root {
+  --font-heading: 'Stack Sans Notch', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+.dashboard-root h1,
+.dashboard-root h2,
+.dashboard-root h3,
+.dashboard-root h4 {
+  font-family: 'Stack Sans Notch', 'Helvetica Neue', Helvetica, Arial, sans-serif !important;
+}
+
 @keyframes dash-fade-up {
   from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }

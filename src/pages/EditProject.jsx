@@ -5,10 +5,9 @@ import { updateProject } from '../lib/updateProject'
 import { Navbar } from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
 import { useSidebar } from '../context/SidebarContext'
-import { Lock, Search, Image, ArrowLeft, Check, FileText, User, Layers, Link2 } from 'lucide-react'
+import { Lock, Search, Image, ArrowLeft, Check, User, Layers, Link2 } from 'lucide-react'
 import { looksLikeSpam } from '../lib/score'
 import { containsProfanity } from '../lib/profanity'
-import SkillsPicker from '../components/SkillsPicker'
 
 const colors = {
   bg: 'var(--color-bg)',
@@ -34,18 +33,6 @@ const PROJECT_TYPES = [
   { value: 'personal', label: 'Projeto pessoal' },
 ]
 
-const FIELDS = [
-  { key: 'name', label: 'Nome do projeto', type: 'text', required: true, hint: 'Um nome curto e memorável — como uma marca' },
-  { key: 'area', label: 'Área / Tecnologia principal', type: 'text', required: true, hint: 'Ex: Desenvolvimento web, Design, Robótica' },
-  { key: 'problem', label: 'Problema que resolve', type: 'textarea', hint: 'Que problema identificaste? E para quem é um problema?' },
-  { key: 'solution', label: 'Solução desenvolvida', type: 'textarea', hint: 'Como o resolveste? O que é que a tua solução faz?' },
-  { key: 'target_audience', label: 'Público-alvo', type: 'textarea', hint: 'Quem usa ou beneficia do teu projeto?' },
-  { key: 'features', label: 'Funcionalidades principais', type: 'textarea', hint: 'As 3-5 coisas mais importantes que faz' },
-  { key: 'technologies', label: 'Tecnologias utilizadas', type: 'textarea', hint: 'Linguagens, ferramentas e frameworks que usaste' },
-  { key: 'challenges', label: 'Desafios encontrados', type: 'textarea', hint: 'Que dificuldades tiveste — e como as resolveste?' },
-  { key: 'results', label: 'Resultados obtidos', type: 'textarea', hint: 'Números, testes, feedback real — o impacto que teve' },
-  { key: 'learnings', label: 'O que aprendeste', type: 'textarea', hint: 'A lição mais valiosa que levas deste projeto' },
-]
 
 const inputStyle = {
   width: '100%',
@@ -101,7 +88,7 @@ export default function EditProject() {
   const [error, setError] = useState(null)
   const [accessDenied, setAccessDenied] = useState(false)
   const [dirty, setDirty] = useState(false)
-  const [activeSection, setActiveSection] = useState('conteudo')
+  const [activeSection, setActiveSection] = useState('criador')
   const coverInputRef = useRef(null)
 
   useEffect(() => {
@@ -271,8 +258,6 @@ export default function EditProject() {
   const isPap = form.project_type === 'pap'
 
   const isFilled = k => String(form[k] ?? '').trim().length > 0
-  const contentFilled = FIELDS.filter(f => isFilled(f.key)).length + ((form.tags?.length > 0) ? 1 : 0)
-  const contentTotal  = FIELDS.length + 1
   const creatorKeys   = ['creator_name', 'course', 'school_year', 'school']
   const creatorFilled = creatorKeys.filter(isFilled).length
   const creatorTotal  = creatorKeys.length
@@ -280,16 +265,15 @@ export default function EditProject() {
   const linkFilled    = linkKeys.filter(isFilled).length
   const typeFilled    = form.project_type ? 1 : 0
   const coverFilled   = (form.cover_url && form.cover_url !== '__uploading__') ? 1 : 0
-  const totalFilled   = contentFilled + creatorFilled + typeFilled + coverFilled
-  const totalAll      = contentTotal + creatorTotal + 1 + 1
+  const totalFilled   = creatorFilled + linkFilled + typeFilled + coverFilled
+  const totalAll      = creatorTotal + linkKeys.length + 1 + 1
   const pct           = Math.round((totalFilled / totalAll) * 100)
   const canSave       = !saving && !!form.name?.trim() && !!form.area?.trim()
 
   const sections = [
-    { id: 'conteudo', label: 'Conteúdo', Icon: FileText, filled: contentFilled, total: contentTotal },
-    { id: 'criador',  label: 'Criador',  Icon: User,     filled: creatorFilled + linkFilled, total: creatorTotal + linkKeys.length },
-    { id: 'tipo',     label: 'Tipo',     Icon: Layers,   filled: typeFilled,    total: 1 },
-    { id: 'imagem',   label: 'Imagem',   Icon: Image,    filled: coverFilled,   total: 1 },
+    { id: 'criador',  label: 'Criador',  Icon: User,   filled: creatorFilled + linkFilled, total: creatorTotal + linkKeys.length },
+    { id: 'tipo',     label: 'Tipo',     Icon: Layers, filled: typeFilled,    total: 1 },
+    { id: 'imagem',   label: 'Imagem',   Icon: Image,  filled: coverFilled,   total: 1 },
   ]
 
   return (
@@ -391,39 +375,6 @@ export default function EditProject() {
             </nav>
 
             <div className="ep-main">
-              {/* Conteúdo */}
-              {activeSection === 'conteudo' && (
-                <div className="ep-sec-card">
-                  <h2 className="ep-sec-heading">Conteúdo do projeto</h2>
-                  {FIELDS.map(f => (
-                    <Field key={f.key} label={f.label} required={f.required} filled={isFilled(f.key)}>
-                      {f.type === 'textarea' ? (
-                        <textarea
-                          value={form[f.key] || ''}
-                          onChange={e => set(f.key, e.target.value)}
-                          rows={4}
-                          placeholder={f.hint}
-                          style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.65 }}
-                          {...inputHandlers}
-                        />
-                      ) : (
-                        <input
-                          type="text"
-                          value={form[f.key] || ''}
-                          onChange={e => set(f.key, e.target.value)}
-                          placeholder={f.hint}
-                          style={inputStyle}
-                          {...inputHandlers}
-                        />
-                      )}
-                    </Field>
-                  ))}
-                  <Field label="Tags / Tecnologias" filled={form.tags?.length > 0}>
-                    <SkillsPicker value={form.tags || []} onChange={v => set('tags', v)} max={8} label="" />
-                  </Field>
-                </div>
-              )}
-
               {/* Criador */}
               {activeSection === 'criador' && (
                 <div className="ep-sec-card">

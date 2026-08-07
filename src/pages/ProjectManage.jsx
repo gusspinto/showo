@@ -8,7 +8,7 @@ import { calculateScore, looksLikeSpam } from '../lib/score'
 import { containsProfanity } from '../lib/profanity'
 import SkillsPicker from '../components/SkillsPicker'
 import {
-  Pencil, Eye, Users, Sparkles, Settings, ArrowLeft, ExternalLink,
+  Eye, Users, Sparkles, Settings, ArrowLeft, ExternalLink,
   Check, Lock, Image, X, Trash2, Copy, Link2, AlertTriangle,
   UserPlus, Send, Monitor, Search, ChevronRight, Globe,
   TrendingUp, Star, Zap, BarChart2, RefreshCw, GraduationCap,
@@ -49,7 +49,6 @@ const inputHandlers = {
 
 // ── Nav sections ──────────────────────────────────────────────────────────────
 const NAV = [
-  { id: 'content',  Icon: Pencil,   label: 'Conteúdo',     color: 'var(--color-primary)', desc: 'Campos e informação do projeto' },
   { id: 'preview',  Icon: Eye,      label: 'Preview',      color: 'var(--color-accent)', desc: 'Personalização da página pública' },
   { id: 'team',     Icon: Users,    label: 'Colaboradores', color: '#10b981', desc: 'Equipa e convites' },
   { id: 'ai',       Icon: Sparkles, label: 'Análise IA',   color: 'var(--color-warning)', desc: 'Feedback e sugestões inteligentes' },
@@ -439,10 +438,8 @@ function PreviewSection({ project }) {
 function TeamSection({ project, isOwner }) {
   const [members, setMembers] = useState([])
   const [loading, setLoading] = useState(true)
-  const [inviteInput, setInviteInput] = useState('')
-  const [inviting, setInviting] = useState(false)
-  const [inviteMsg, setInviteMsg] = useState(null)
   const [removing, setRemoving] = useState(null)
+  const [showInviteModal, setShowInviteModal] = useState(false)
 
   async function loadMembers() {
     if (!project?.id) return
@@ -460,22 +457,6 @@ function TeamSection({ project, isOwner }) {
 
   useEffect(() => { loadMembers() }, [project?.id])
 
-  async function handleInvite(e) {
-    e.preventDefault()
-    const q = inviteInput.trim()
-    if (!q) return
-    setInviting(true); setInviteMsg(null)
-    const { data: found } = await supabase.from('profiles').select('id, username, full_name').or(`username.eq.${q},full_name.ilike.${q}`).single()
-    if (!found) { setInviteMsg({ type: 'error', text: 'Utilizador não encontrado.' }); setInviting(false); return }
-    if (found.id === project.user_id) { setInviteMsg({ type: 'error', text: 'Não podes convidar o dono do projeto.' }); setInviting(false); return }
-    const { error } = await supabase.from('project_collaborators').upsert({ project_id: project.id, user_id: found.id, status: 'pending', sections: [] }, { onConflict: 'project_id,user_id' })
-    if (error) { setInviteMsg({ type: 'error', text: 'Erro ao convidar. Tenta novamente.' }); setInviting(false); return }
-    setInviteMsg({ type: 'success', text: `Convite enviado para ${found.full_name || found.username}!` })
-    setInviteInput('')
-    loadMembers()
-    setInviting(false)
-  }
-
   async function handleRemove(userId) {
     setRemoving(userId)
     await supabase.from('project_collaborators').delete().eq('project_id', project.id).eq('user_id', userId)
@@ -484,38 +465,38 @@ function TeamSection({ project, isOwner }) {
   }
 
   const STATUS_CHIP = {
-    accepted: { label: 'Aceite',   bg: 'var(--color-success-subtle)',  color: 'var(--color-success)', border: 'var(--color-success-subtle)' },
-    pending:  { label: 'Pendente', bg: 'rgba(251,191,36,0.12)', color: 'var(--color-warning)', border: 'rgba(251,191,36,0.3)' },
-    declined: { label: 'Recusado', bg: 'var(--color-error-subtle)',   color: 'var(--color-error)', border: 'var(--color-error-subtle)' },
+    accepted: { label: 'Aceite',   color: 'var(--color-success)' },
+    pending:  { label: 'Pendente', color: 'var(--color-warning)' },
+    declined: { label: 'Recusado', color: 'var(--color-error)'   },
   }
 
   return (
     <>
-      {isOwner && (
-        <Card>
-          <CardTitle color="#10b981"><UserPlus size={13} /> Convidar colaborador</CardTitle>
-          <form onSubmit={handleInvite} style={{ display: 'flex', gap: 8 }}>
-            <input
-              value={inviteInput}
-              onChange={e => setInviteInput(e.target.value)}
-              placeholder="Username ou nome completo"
-              style={{ ...inputStyle, flex: 1 }}
-              {...inputHandlers}
-            />
-            <button type="submit" disabled={!inviteInput.trim() || inviting} style={{ padding: '11px 18px', background: C.blue, border: 'none', borderRadius: 8, color: '#fff', fontSize: 14, fontWeight: 700, cursor: inviteInput.trim() ? 'pointer' : 'not-allowed', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, opacity: !inviteInput.trim() ? 0.5 : 1 }}>
-              <Send size={14} /> Convidar
-            </button>
-          </form>
-          {inviteMsg && (
-            <p style={{ margin: '10px 0 0', fontSize: 13, fontWeight: 600, color: inviteMsg.type === 'success' ? C.green : C.red }}>
-              {inviteMsg.text}
-            </p>
-          )}
-        </Card>
+      {showInviteModal && (
+        <InviteModal
+          project={project}
+          onClose={() => setShowInviteModal(false)}
+          onInvited={() => { loadMembers(); setShowInviteModal(false) }}
+        />
       )}
 
       <Card>
-        <CardTitle color="#10b981"><Users size={13} /> Equipa ({members.length})</CardTitle>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+          <CardTitle color="#10b981" style={{ margin: 0 }}><Users size={13} /> Equipa ({members.length})</CardTitle>
+          {isOwner && (
+            <button onClick={() => setShowInviteModal(true)} style={{
+              display: 'flex', alignItems: 'center', gap: 6, padding: '7px 13px',
+              background: 'transparent', border: `1.5px solid #10b981`,
+              borderRadius: 8, color: '#10b981', fontSize: 13, fontWeight: 700,
+              cursor: 'pointer', fontFamily: 'inherit', transition: 'background 0.15s',
+            }}
+            onMouseEnter={e => e.currentTarget.style.background = 'rgba(16,185,129,0.08)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+            >
+              <UserPlus size={13} /> Convidar
+            </button>
+          )}
+        </div>
         {loading ? (
           <p style={{ color: C.muted, fontSize: 14, margin: 0 }}>A carregar…</p>
         ) : members.length === 0 ? (
@@ -554,6 +535,179 @@ function TeamSection({ project, isOwner }) {
         )}
       </Card>
     </>
+  )
+}
+
+function InviteModal({ project, onClose, onInvited }) {
+  const [inviteInput, setInviteInput] = useState('')
+  const [inviting, setInviting] = useState(false)
+  const [inviteMsg, setInviteMsg] = useState(null)
+  const [searchResults, setSearchResults] = useState([])
+  const [selectedUser, setSelectedUser] = useState(null)
+  const [showDropdown, setShowDropdown] = useState(false)
+  const searchTimerRef = useRef(null)
+  const inputRef = useRef(null)
+
+  useEffect(() => { setTimeout(() => inputRef.current?.focus(), 80) }, [])
+
+  function handleSearchInput(e) {
+    const val = e.target.value
+    setInviteInput(val)
+    setSelectedUser(null)
+    setInviteMsg(null)
+    clearTimeout(searchTimerRef.current)
+    if (!val.trim()) { setSearchResults([]); setShowDropdown(false); return }
+    searchTimerRef.current = setTimeout(async () => {
+      const q = val.trim()
+      const { data } = await supabase
+        .from('profiles')
+        .select('id, username, full_name, avatar_url')
+        .or(`username.ilike.%${q}%,full_name.ilike.%${q}%`)
+        .limit(8)
+      setSearchResults(data || [])
+      setShowDropdown(true)
+    }, 250)
+  }
+
+  function selectUser(u) {
+    setSelectedUser(u)
+    setInviteInput(u.full_name || u.username)
+    setShowDropdown(false)
+    setSearchResults([])
+  }
+
+  async function handleInvite(e) {
+    e.preventDefault()
+    if (!selectedUser && !inviteInput.trim()) return
+    setInviting(true); setInviteMsg(null)
+    let found = selectedUser
+    if (!found) {
+      const q = inviteInput.trim()
+      const { data } = await supabase.from('profiles').select('id, username, full_name').or(`username.ilike.${q},full_name.ilike.${q}`).limit(1)
+      found = data?.[0] || null
+    }
+    if (!found) { setInviteMsg({ type: 'error', text: 'Utilizador não encontrado.' }); setInviting(false); return }
+    if (found.id === project.user_id) { setInviteMsg({ type: 'error', text: 'Não podes convidar o dono do projeto.' }); setInviting(false); return }
+    const { error } = await supabase.from('project_collaborators').upsert({ project_id: project.id, user_id: found.id, status: 'pending', sections: [] }, { onConflict: 'project_id,user_id' })
+    if (error) { setInviteMsg({ type: 'error', text: 'Erro ao convidar. Tenta novamente.' }); setInviting(false); return }
+    setInviteMsg({ type: 'success', text: `Convite enviado para ${found.full_name || found.username}!` })
+    setInviting(false)
+    setTimeout(onInvited, 1200)
+  }
+
+  return (
+    <div onClick={e => e.target === e.currentTarget && onClose()} style={{
+      position: 'fixed', inset: 0, zIndex: 2000,
+      background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
+      fontFamily: 'var(--font-body)',
+    }}>
+      <style>{`@keyframes pmFadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}`}</style>
+      <div style={{
+        background: 'var(--color-surface)', border: `1px solid ${C.border}`,
+        borderRadius: 16, width: '100%', maxWidth: 420,
+        boxShadow: '0 24px 64px rgba(0,0,0,0.4)',
+        animation: 'pmFadeUp 0.2s ease',
+      }}>
+        {/* Header */}
+        <div style={{ padding: '18px 20px 14px', borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <UserPlus size={15} color="#10b981" />
+            </div>
+            <div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>Convidar colaborador</div>
+              <div style={{ fontSize: 12, color: C.muted }}>Pesquisa pelo nome ou username</div>
+            </div>
+          </div>
+          <button onClick={onClose} className="icon-btn-ghost"><X size={17} /></button>
+        </div>
+
+        {/* Body */}
+        <form onSubmit={handleInvite} style={{ padding: '18px 20px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div style={{ position: 'relative' }}>
+            <input
+              ref={inputRef}
+              value={inviteInput}
+              onChange={handleSearchInput}
+              onFocus={() => { if (searchResults.length) setShowDropdown(true) }}
+              onBlur={() => setTimeout(() => setShowDropdown(false), 150)}
+              placeholder="Pesquisar utilizador..."
+              style={{ ...inputStyle }}
+              {...inputHandlers}
+            />
+            {showDropdown && searchResults.length > 0 && (
+              <div style={{
+                position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0,
+                background: 'var(--color-surface)', border: `1.5px solid ${C.border}`,
+                borderRadius: 10, zIndex: 50, overflow: 'hidden',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.35)',
+              }}>
+                {searchResults.map(u => (
+                  <button key={u.id} type="button" onMouseDown={() => selectUser(u)} style={{
+                    width: '100%', display: 'flex', alignItems: 'center', gap: 10,
+                    padding: '10px 14px', background: 'transparent', border: 'none',
+                    cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
+                    transition: 'background 0.12s',
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'var(--color-surface-hover)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                  >
+                    <div style={{
+                      width: 34, height: 34, borderRadius: '50%', flexShrink: 0,
+                      background: 'var(--color-primary-subtle)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 13, fontWeight: 700, color: C.blue, overflow: 'hidden',
+                    }}>
+                      {u.avatar_url
+                        ? <img src={u.avatar_url} alt="" style={{ width: 34, height: 34, objectFit: 'cover' }} />
+                        : (u.full_name || u.username || '?')[0].toUpperCase()
+                      }
+                    </div>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.full_name || u.username}</div>
+                      {u.username && <div style={{ fontSize: 12, color: C.muted }}>@{u.username}</div>}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {selectedUser && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: 'rgba(16,185,129,0.07)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: 10 }}>
+              <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--color-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: C.blue, flexShrink: 0, overflow: 'hidden' }}>
+                {selectedUser.avatar_url
+                  ? <img src={selectedUser.avatar_url} alt="" style={{ width: 32, height: 32, objectFit: 'cover' }} />
+                  : (selectedUser.full_name || selectedUser.username || '?')[0].toUpperCase()
+                }
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{selectedUser.full_name || selectedUser.username}</div>
+                {selectedUser.username && <div style={{ fontSize: 11, color: C.muted }}>@{selectedUser.username}</div>}
+              </div>
+              <Check size={15} color="#10b981" />
+            </div>
+          )}
+
+          {inviteMsg && (
+            <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: inviteMsg.type === 'success' ? C.green : C.red }}>
+              {inviteMsg.text}
+            </p>
+          )}
+
+          <button type="submit" disabled={(!inviteInput.trim() && !selectedUser) || inviting} style={{
+            width: '100%', padding: '12px', background: C.blue, border: 'none', borderRadius: 10,
+            color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+            opacity: (!inviteInput.trim() && !selectedUser) ? 0.5 : 1,
+            transition: 'opacity 0.15s',
+          }}>
+            <Send size={14} /> {inviting ? 'A convidar…' : 'Enviar convite'}
+          </button>
+        </form>
+      </div>
+    </div>
   )
 }
 
@@ -745,7 +899,7 @@ export default function ProjectManage() {
   const [project, setProject] = useState(null)
   const [loading, setLoading]   = useState(true)
   const [accessDenied, setAccessDenied] = useState(false)
-  const [activeSection, setActiveSection] = useState('content')
+  const [activeSection, setActiveSection] = useState('preview')
   const [score, setScore] = useState(0)
   const [isOwner, setIsOwner] = useState(false)
 
@@ -980,7 +1134,7 @@ export default function ProjectManage() {
           </div>
 
           {/* Section content */}
-          {activeSection === 'content'  && <ContentSection  project={project} onSaved={handleSaved} />}
+
           {activeSection === 'preview'  && <PreviewSection  project={project} />}
           {activeSection === 'team'     && <TeamSection     project={project} isOwner={isOwner} />}
           {activeSection === 'ai'       && <AISection       project={project} />}

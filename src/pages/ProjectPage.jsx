@@ -3414,7 +3414,7 @@ function TourVisualCoach() {
           <div style={{
             background:'var(--color-primary)', borderRadius:'7px 0 7px 7px',
             padding:'5px 8px', fontSize:10, color:'#fff', lineHeight:1.4, maxWidth:'80%',
-          }}>Melhora a minha secção de Problema</div>
+          }}>Como melhoro a minha secção de Problema?</div>
         </div>
         <div style={{display:'flex', gap:6, alignItems:'flex-start'}}>
           <div style={{width:18,height:18,flexShrink:0}} />
@@ -3429,23 +3429,78 @@ function TourVisualCoach() {
 }
 
 function TourVisualMissions() {
+  const pending = [
+    { label:'Score 60+', desc:'Alcança um score de 60 num projeto', xp:25, color:'#2a9d6a', prog:{cur:42,max:60},
+      icon: <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><circle cx={12} cy={12} r={10}/><line x1={12} y1={8} x2={12} y2={16}/><line x1={8} y1={12} x2={16} y2={12}/></svg> },
+    { label:'Portfólio', desc:'Cria 3 projetos diferentes', xp:30, color:'#2B7EF5', prog:null,
+      icon: <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> },
+    { label:'Partilhado', desc:'Partilha o link do teu projeto', xp:10, color:'#06b6d4', prog:null,
+      icon: <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><circle cx={12} cy={12} r={10}/><line x1={2} y1={12} x2={22} y2={12}/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> },
+  ]
+  const done = [
+    { label:'Primeiro projeto', xp:20 },
+    { label:'Perfil completo', xp:15 },
+  ]
+  const earnedXP = done.reduce((s,m)=>s+m.xp,0)
+  const totalXP = [...pending,...done].reduce((s,m)=>s+m.xp,0)
+  const pct = Math.round(earnedXP/totalXP*100)
   return (
     <MacWindow title="Missões">
-      <div style={{padding:'10px 14px', display:'flex', flexDirection:'column', gap:6}}>
-        {[
-          {text:'Adiciona uma imagem ao projeto', done:true},
-          {text:'Preenche as funcionalidades', done:true},
-          {text:'Descreve o teu papel no projeto', done:false},
-        ].map((m,i) => (
-          <div key={i} style={{display:'flex', alignItems:'center', gap:7}}>
-            <div style={{
-              width:13, height:13, borderRadius:3, flexShrink:0,
-              border:`1.5px solid ${m.done?'var(--color-primary)':'rgba(255,255,255,0.12)'}`,
-              background:m.done?'var(--color-primary)':'transparent',
-              display:'flex', alignItems:'center', justifyContent:'center',
-              color:'#fff', fontSize:8, fontWeight:900,
-            }}>{m.done?'✓':''}</div>
-            <span style={{fontSize:10,color:m.done?'rgba(255,255,255,0.25)':'rgba(255,255,255,0.7)',textDecoration:m.done?'line-through':'none',lineHeight:1.3}}>{m.text}</span>
+      <div style={{padding:'10px 12px', display:'flex', flexDirection:'column', gap:8}}>
+        {/* XP progress card */}
+        <div style={{background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.07)',borderRadius:8,padding:'8px 10px'}}>
+          <div style={{display:'flex',justifyContent:'space-between',marginBottom:6}}>
+            <div>
+              <div style={{fontSize:8,color:'rgba(255,255,255,0.4)',fontWeight:600,marginBottom:2}}>XP Total</div>
+              <div style={{fontSize:14,fontWeight:900,color:'var(--color-primary)',letterSpacing:'-0.5px'}}>
+                {earnedXP}<span style={{fontSize:9,color:'rgba(255,255,255,0.3)',fontWeight:500}}>/{totalXP}</span>
+              </div>
+            </div>
+            <div style={{textAlign:'right'}}>
+              <div style={{fontSize:8,color:'rgba(255,255,255,0.4)',fontWeight:600,marginBottom:2}}>Completas</div>
+              <div style={{fontSize:14,fontWeight:900,color:'#2a9d6a',letterSpacing:'-0.5px'}}>
+                {done.length}<span style={{fontSize:9,color:'rgba(255,255,255,0.3)',fontWeight:500}}>/{pending.length+done.length}</span>
+              </div>
+            </div>
+          </div>
+          <div style={{height:3,background:'rgba(255,255,255,0.07)',borderRadius:99,overflow:'hidden'}}>
+            <div style={{height:'100%',width:`${pct}%`,background:'var(--color-primary)',borderRadius:99}} />
+          </div>
+        </div>
+        {/* Pending */}
+        <div style={{fontSize:8,fontWeight:700,color:'rgba(255,255,255,0.3)',textTransform:'uppercase',letterSpacing:'0.08em'}}>Por completar · {pending.length}</div>
+        {pending.map((m,i) => (
+          <div key={i} style={{display:'flex',alignItems:'center',gap:8,padding:'7px 8px',background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.06)',borderRadius:7}}>
+            <div style={{width:26,height:26,borderRadius:6,flexShrink:0,background:`${m.color}18`,border:`1px solid ${m.color}30`,display:'flex',alignItems:'center',justifyContent:'center',color:m.color}}>{m.icon}</div>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontSize:10,fontWeight:700,color:'rgba(255,255,255,0.8)',marginBottom:1}}>{m.label}</div>
+              <div style={{fontSize:8,color:'rgba(255,255,255,0.35)',lineHeight:1.3,marginBottom:m.prog?4:0}}>{m.desc}</div>
+              {m.prog && (
+                <div>
+                  <div style={{display:'flex',justifyContent:'space-between',marginBottom:2}}>
+                    <span style={{fontSize:7,color:'rgba(255,255,255,0.3)',fontWeight:600}}>{m.prog.cur}/{m.prog.max}</span>
+                    <span style={{fontSize:7,color:m.color,fontWeight:700}}>{Math.round(m.prog.cur/m.prog.max*100)}%</span>
+                  </div>
+                  <div style={{height:2,background:`${m.color}20`,borderRadius:99,overflow:'hidden'}}>
+                    <div style={{height:'100%',width:`${Math.round(m.prog.cur/m.prog.max*100)}%`,background:m.color,borderRadius:99}} />
+                  </div>
+                </div>
+              )}
+            </div>
+            <div style={{fontSize:10,fontWeight:800,color:m.color,flexShrink:0}}>+{m.xp}</div>
+          </div>
+        ))}
+        {/* Done */}
+        <div style={{fontSize:8,fontWeight:700,color:'rgba(255,255,255,0.3)',textTransform:'uppercase',letterSpacing:'0.08em'}}>Concluídas · {done.length}</div>
+        {done.map((m,i) => (
+          <div key={i} style={{display:'flex',alignItems:'center',gap:8,padding:'6px 8px',background:'rgba(255,255,255,0.02)',border:'1px solid rgba(255,255,255,0.04)',borderRadius:7,opacity:0.5}}>
+            <div style={{width:26,height:26,borderRadius:6,flexShrink:0,background:'rgba(255,255,255,0.05)',display:'flex',alignItems:'center',justifyContent:'center'}}>
+              <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <div style={{flex:1,minWidth:0}}>
+              <span style={{fontSize:10,fontWeight:600,color:'rgba(255,255,255,0.3)',textDecoration:'line-through'}}>{m.label}</span>
+            </div>
+            <div style={{fontSize:10,fontWeight:700,color:'rgba(255,255,255,0.25)',flexShrink:0}}>+{m.xp}</div>
           </div>
         ))}
       </div>
@@ -3758,6 +3813,10 @@ export default function ProjectPage() {
   const [inviteInput, setInviteInput] = useState('')
   const [inviting, setInviting] = useState(false)
   const [inviteMsg, setInviteMsg] = useState(null) // { type: 'success'|'error', text }
+  const [inviteSearchResults, setInviteSearchResults] = useState([])
+  const [inviteSelectedUser, setInviteSelectedUser] = useState(null)
+  const [inviteShowDropdown, setInviteShowDropdown] = useState(false)
+  const inviteSearchTimerRef = useRef(null)
   const [milestoneCard, setMilestoneCard] = useState(null) // { score, tier }
   const [showLaunchOverlay, setShowLaunchOverlay] = useState(() => !!location.state?.newProject)
   const [launchCopied, setLaunchCopied] = useState(false)
@@ -3818,26 +3877,32 @@ export default function ProjectPage() {
     juryHydrated.current = true
   }, [project])
 
-  // Spotlight tour: trigger on first visit or ?tour=1
+  // Spotlight tour: only on ?tour=1 (dev) or when the user just created their very first project
   const tourCheckedRef = useRef(false)
   useEffect(() => {
     if (!project?.id || !profile?.id) return
     if (tourCheckedRef.current) return
     tourCheckedRef.current = true
     if (profile.id !== project.user_id) return
+
     const params = new URLSearchParams(window.location.search)
     const isTourParam = params.get('tour') === '1'
-    const tourKey = `showo_proj_tour_${profile.id}_${project.id}`
-    const firstVisit = !localStorage.getItem(tourKey)
-    if (isTourParam || firstVisit) {
-      // Mark immediately so re-visits (or navigating away mid-tour) don't retrigger
-      localStorage.setItem(tourKey, '1')
-      if (showLaunchOverlay) {
-        tourPendingRef.current = true
-      } else {
-        setShowTour(true)
-      }
+    const isNewProject = !!location.state?.newProject
+
+    function triggerTour() {
+      if (showLaunchOverlay) tourPendingRef.current = true
+      else setShowTour(true)
     }
+
+    if (isTourParam) { triggerTour(); return }
+    if (!isNewProject) return
+
+    // Only show for their very first project
+    supabase
+      .from('projects')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', profile.id)
+      .then(({ count }) => { if (count === 1) triggerTour() })
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [project?.id, profile?.id])
 
@@ -4434,40 +4499,62 @@ export default function ProjectPage() {
     }
   }
 
+  function handleInviteSearchInput(e) {
+    const val = e.target.value
+    setInviteInput(val)
+    setInviteSelectedUser(null)
+    setInviteMsg(null)
+    clearTimeout(inviteSearchTimerRef.current)
+    if (!val.trim()) { setInviteSearchResults([]); setInviteShowDropdown(false); return }
+    inviteSearchTimerRef.current = setTimeout(async () => {
+      const q = val.trim()
+      const { data } = await supabase
+        .from('profiles')
+        .select('id, username, full_name, avatar_url')
+        .or(`username.ilike.%${q}%,full_name.ilike.%${q}%`)
+        .limit(8)
+      setInviteSearchResults(data || [])
+      setInviteShowDropdown(true)
+    }, 250)
+  }
+
+  function selectInviteUser(u) {
+    setInviteSelectedUser(u)
+    setInviteInput(u.full_name || u.username)
+    setInviteShowDropdown(false)
+    setInviteSearchResults([])
+  }
+
+  function closeInviteModal() {
+    setShowInvite(false)
+    setInviteInput('')
+    setInviteSelectedUser(null)
+    setInviteSearchResults([])
+    setInviteShowDropdown(false)
+    setInviteMsg(null)
+  }
+
   async function handleInvite(e) {
     e.preventDefault()
-    const val = inviteInput.trim()
-    if (!val || !project?.id) return
-    setInviting(true)
-    setInviteMsg(null)
+    if (!project?.id) return
+    let found = inviteSelectedUser
+    if (!found) {
+      const val = inviteInput.trim()
+      if (!val) return
+      const { data } = await supabase.from('profiles').select('id, full_name, username').or(`username.ilike.${val},full_name.ilike.${val}`).limit(1)
+      found = data?.[0] || null
+    }
+    if (!found) { setInviteMsg({ type: 'error', text: 'Utilizador não encontrado.' }); return }
+    if (found.id === user?.id) { setInviteMsg({ type: 'error', text: 'Não podes convidar-te a ti próprio.' }); return }
+    setInviting(true); setInviteMsg(null)
     try {
-      // Look up by username first, then email
-      let { data: found } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('username', val)
-        .maybeSingle()
-      if (!found) {
-        const { data: byEmailId } = await supabase.rpc('find_user_by_email', { p_email: val })
-        found = byEmailId ? { id: byEmailId } : null
-      }
-      if (!found) {
-        setInviteMsg({ type: 'error', text: 'Utilizador não encontrado. Verifica o username.' })
-        setInviting(false)
-        return
-      }
-      if (found.id === user?.id) {
-        setInviteMsg({ type: 'error', text: 'Não podes convidar-te a ti próprio.' })
-        setInviting(false)
-        return
-      }
       const { error } = await supabase
         .from('project_collaborators')
         .upsert({ project_id: project.id, user_id: found.id, status: 'pending', sections: [] }, { onConflict: 'project_id,user_id' })
       if (error) throw error
-      setInviteMsg({ type: 'success', text: 'Convite enviado!' })
-      setInviteInput('')
-      setTimeout(() => { setShowInvite(false); setInviteMsg(null) }, 2000)
+      setInviteMsg({ type: 'success', text: `Convite enviado para ${found.full_name || found.username}!` })
+      setInviteInput(''); setInviteSelectedUser(null)
+      setTimeout(closeInviteModal, 1800)
     } catch {
       setInviteMsg({ type: 'error', text: 'Erro ao enviar convite. Tenta novamente.' })
     }
@@ -5413,10 +5500,29 @@ export default function ProjectPage() {
             )}
 
             {analyzingAI && (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, padding: '48px 0', color: colors.muted }}>
-                <div style={{ width: 28, height: 28, border: `3px solid ${colors.border}`, borderTop: `3px solid ${colors.blue}`, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
-                <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-                <span style={{ fontSize: 14 }}>A analisar o teu projeto com IA…</span>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20, padding: '44px 24px' }}>
+                <style>{`
+                  @keyframes ai-spin { to { transform: rotate(360deg) } }
+                  @keyframes ai-glow { 0%,100%{opacity:0.35;transform:scale(0.92)} 50%{opacity:0.7;transform:scale(1.08)} }
+                  @keyframes ai-dot  { 0%,80%,100%{opacity:0.2;transform:scale(0.8)} 40%{opacity:1;transform:scale(1)} }
+                `}</style>
+                <div style={{ position: 'relative', width: 60, height: 60, flexShrink: 0 }}>
+                  {/* Pulsing glow */}
+                  <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'radial-gradient(circle, rgba(43,126,245,0.22) 0%, transparent 72%)', animation: 'ai-glow 2s ease-in-out infinite' }} />
+                  {/* Spinning ring */}
+                  <div style={{ position: 'absolute', inset: 6, borderRadius: '50%', border: `2px solid ${colors.border}`, borderTop: `2px solid ${colors.blue}`, animation: 'ai-spin 1.1s linear infinite' }} />
+                  {/* Center sparkle */}
+                  <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, color: colors.blue }}>✦</div>
+                </div>
+                <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <span style={{ fontSize: 15, fontWeight: 700, color: colors.text }}>A analisar o teu projeto</span>
+                  <span style={{ fontSize: 13, color: colors.muted }}>A IA avalia cada secção com detalhe. Pode demorar uns segundos.</span>
+                </div>
+                <div style={{ display: 'flex', gap: 5 }}>
+                  {[0, 1, 2].map(i => (
+                    <div key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: colors.blue, animation: `ai-dot 1.5s ease-in-out ${i * 0.22}s infinite` }} />
+                  ))}
+                </div>
               </div>
             )}
 
@@ -5695,45 +5801,124 @@ export default function ProjectPage() {
                   </button>
                 )}
 
-                {/* Invite inline form */}
+                {/* Invite modal */}
                 {isOwner && showInvite && (
-                  <form
-                    onSubmit={handleInvite}
-                    style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}
-                  >
-                    <input
-                      autoFocus
-                      value={inviteInput}
-                      onChange={e => { setInviteInput(e.target.value); setInviteMsg(null) }}
-                      placeholder="username do colega"
-                      style={{
-                        background: colors.bg, border: `1px solid ${inviteMsg?.type === 'error' ? 'var(--color-error)' : inviteMsg?.type === 'success' ? 'var(--color-success)' : colors.borderBright}`,
-                        borderRadius: 8, padding: '5px 12px', color: colors.text,
-                        fontSize: 12, fontFamily: 'inherit', outline: 'none',
-                        width: 150, transition: 'border-color 0.15s',
-                      }}
-                    />
-                    <button
-                      type="submit"
-                      disabled={inviting || !inviteInput.trim()}
-                      style={{
-                        background: `${colors.blue}18`, border: `1px solid ${colors.blue}30`,
-                        borderRadius: 8, padding: '5px 12px', color: colors.blue,
-                        fontSize: 12, fontWeight: 700, cursor: inviting ? 'default' : 'pointer',
-                        fontFamily: 'inherit', opacity: inviting ? 0.6 : 1,
-                      }}
-                    >{inviting ? '…' : 'Convidar'}</button>
-                    <button
-                      type="button"
-                      onClick={() => { setShowInvite(false); setInviteInput(''); setInviteMsg(null) }}
-                      style={{ background: 'transparent', border: 'none', color: colors.subtle, cursor: 'pointer', padding: '4px 6px', borderRadius: 6, display: 'flex', alignItems: 'center' }}
-                    ><X size={14} /></button>
-                    {inviteMsg && (
-                      <span style={{ fontSize: 11, fontWeight: 600, color: inviteMsg.type === 'success' ? 'var(--color-success)' : 'var(--color-error)', width: '100%' }}>
-                        {inviteMsg.text}
-                      </span>
-                    )}
-                  </form>
+                  <div onClick={e => e.target === e.currentTarget && closeInviteModal()} style={{
+                    position: 'fixed', inset: 0, zIndex: 2000,
+                    background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
+                    fontFamily: 'var(--font-body)',
+                  }}>
+                    <style>{`@keyframes ppInvFade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}`}</style>
+                    <div style={{
+                      background: 'var(--color-surface)', border: `1px solid ${colors.border}`,
+                      borderRadius: 16, width: '100%', maxWidth: 420,
+                      boxShadow: '0 24px 64px rgba(0,0,0,0.4)',
+                      animation: 'ppInvFade 0.2s ease',
+                    }}>
+                      {/* Header */}
+                      <div style={{ padding: '18px 20px 14px', borderBottom: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <UserPlus size={15} color={colors.blue} />
+                          </div>
+                          <div>
+                            <div style={{ fontSize: 15, fontWeight: 700, color: colors.text }}>Convidar colaborador</div>
+                            <div style={{ fontSize: 12, color: colors.muted }}>Pesquisa pelo nome ou username</div>
+                          </div>
+                        </div>
+                        <button onClick={closeInviteModal} style={{ background: 'none', border: 'none', color: colors.muted, cursor: 'pointer', padding: 4, borderRadius: 6, display: 'flex', alignItems: 'center' }}><X size={17} /></button>
+                      </div>
+                      {/* Body */}
+                      <form onSubmit={handleInvite} style={{ padding: '18px 20px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                        <div style={{ position: 'relative' }}>
+                          <input
+                            autoFocus
+                            value={inviteInput}
+                            onChange={handleInviteSearchInput}
+                            onFocus={() => { if (inviteSearchResults.length) setInviteShowDropdown(true) }}
+                            onBlur={() => setTimeout(() => setInviteShowDropdown(false), 150)}
+                            placeholder="Pesquisar utilizador..."
+                            style={{
+                              width: '100%', background: 'var(--color-bg)', border: `1.5px solid ${colors.border}`,
+                              borderRadius: 10, padding: '11px 14px', color: colors.text,
+                              fontSize: 15, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box',
+                              transition: 'border-color 0.15s',
+                            }}
+                            onFocus={e => e.target.style.borderColor = colors.blue}
+                          />
+                          {inviteShowDropdown && inviteSearchResults.length > 0 && (
+                            <div style={{
+                              position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0,
+                              background: 'var(--color-surface)', border: `1.5px solid ${colors.border}`,
+                              borderRadius: 10, zIndex: 50, overflow: 'hidden',
+                              boxShadow: '0 8px 32px rgba(0,0,0,0.35)',
+                            }}>
+                              {inviteSearchResults.map(u => (
+                                <button key={u.id} type="button" onMouseDown={() => selectInviteUser(u)} style={{
+                                  width: '100%', display: 'flex', alignItems: 'center', gap: 10,
+                                  padding: '10px 14px', background: 'transparent', border: 'none',
+                                  cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
+                                  transition: 'background 0.12s',
+                                }}
+                                onMouseEnter={e => e.currentTarget.style.background = 'var(--color-surface-hover)'}
+                                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                                >
+                                  <div style={{
+                                    width: 34, height: 34, borderRadius: '50%', flexShrink: 0,
+                                    background: 'var(--color-primary-subtle)',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    fontSize: 13, fontWeight: 700, color: colors.blue, overflow: 'hidden',
+                                  }}>
+                                    {u.avatar_url
+                                      ? <img src={u.avatar_url} alt="" style={{ width: 34, height: 34, objectFit: 'cover' }} />
+                                      : (u.full_name || u.username || '?')[0].toUpperCase()
+                                    }
+                                  </div>
+                                  <div style={{ minWidth: 0 }}>
+                                    <div style={{ fontSize: 14, fontWeight: 600, color: colors.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.full_name || u.username}</div>
+                                    {u.username && <div style={{ fontSize: 12, color: colors.muted }}>@{u.username}</div>}
+                                  </div>
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
+                        {inviteSelectedUser && (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: 'rgba(27,120,247,0.07)', border: '1px solid rgba(27,120,247,0.2)', borderRadius: 10 }}>
+                            <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--color-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: colors.blue, flexShrink: 0, overflow: 'hidden' }}>
+                              {inviteSelectedUser.avatar_url
+                                ? <img src={inviteSelectedUser.avatar_url} alt="" style={{ width: 32, height: 32, objectFit: 'cover' }} />
+                                : (inviteSelectedUser.full_name || inviteSelectedUser.username || '?')[0].toUpperCase()
+                              }
+                            </div>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ fontSize: 13, fontWeight: 600, color: colors.text }}>{inviteSelectedUser.full_name || inviteSelectedUser.username}</div>
+                              {inviteSelectedUser.username && <div style={{ fontSize: 11, color: colors.muted }}>@{inviteSelectedUser.username}</div>}
+                            </div>
+                            <Check size={15} color={colors.blue} />
+                          </div>
+                        )}
+
+                        {inviteMsg && (
+                          <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: inviteMsg.type === 'success' ? 'var(--color-success)' : 'var(--color-error)' }}>
+                            {inviteMsg.text}
+                          </p>
+                        )}
+
+                        <button type="submit" disabled={(!inviteInput.trim() && !inviteSelectedUser) || inviting} style={{
+                          width: '100%', padding: '12px', background: colors.blue, border: 'none', borderRadius: 10,
+                          color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+                          opacity: (!inviteInput.trim() && !inviteSelectedUser) ? 0.5 : 1,
+                          transition: 'opacity 0.15s',
+                        }}>
+                          {inviting ? 'A convidar…' : 'Enviar convite'}
+                        </button>
+                      </form>
+                    </div>
+                  </div>
                 )}
               </div>
             )
