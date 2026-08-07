@@ -3853,7 +3853,7 @@ export default function ProjectPage() {
   const [defenseDate, setDefenseDate] = useState('')
   const [savingDefense, setSavingDefense] = useState(false)
   const [teacherFeedback, setTeacherFeedback] = useState([])
-  const [showFeedbackForm, setShowFeedbackForm] = useState(false)
+  const [showFeedbackForm, setShowFeedbackForm] = useState(true)
   const [fbComment, setFbComment] = useState('')
   const [fbFieldKey, setFbFieldKey] = useState('geral')
   const [fbSaving, setFbSaving] = useState(false)
@@ -7263,7 +7263,11 @@ export default function ProjectPage() {
 
           {/* Teacher feedback — sidebar: desktop first/second slot, mobile above author */}
           {(isOwner || isProfessor) && (teacherFeedback.some(f => f.field_key !== 'jury_eval') || isProfessor) && (() => {
-            const FB_SECTION_LABELS = { description: 'Descrição', tech: 'Tecnologias', links: 'Links', demo: 'Demo', team: 'Equipa', gallery: 'Galeria', geral: 'Geral' }
+            const FB_SECTION_LABELS = {
+              geral: 'Nota geral', description: 'Descrição', tech: 'Tecnologias',
+              metodologia: 'Metodologia', resultados: 'Resultados', apresentacao: 'Apresentação',
+              links: 'Links', demo: 'Demo', team: 'Equipa', gallery: 'Galeria',
+            }
             const visibleFeedback = teacherFeedback.filter(f => f.field_key !== 'jury_eval')
             const myFeedback = isProfessor ? visibleFeedback.filter(f => f.teacher_id === user?.id) : visibleFeedback
             return (
@@ -7284,16 +7288,45 @@ export default function ProjectPage() {
                   )}
                 </div>
 
+                {/* Nota geral — highlighted at top if it exists */}
+                {(() => {
+                  const geral = myFeedback.find(f => f.field_key === 'geral')
+                  if (!geral) return null
+                  const resolved = geral.status === 'resolved'
+                  return (
+                    <div style={{ padding: '12px 16px', background: 'var(--color-primary-subtle)', borderBottom: '1px solid var(--color-primary-subtle)' }}>
+                      <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--color-primary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Nota geral do professor</div>
+                      <p style={{ margin: 0, fontSize: 13, color: colors.text, lineHeight: 1.6, textDecoration: resolved ? 'line-through' : 'none', textDecorationColor: 'rgba(148,163,184,0.5)', fontStyle: 'italic' }}>
+                        <FeedbackCommentText comment={geral.comment} textColor={colors.text} />
+                      </p>
+                      {isProfessor && (
+                        <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+                          <button onClick={() => { setFbEditing(geral.id); setFbFieldKey('geral'); setFbComment(geral.comment); setShowFeedbackForm(true) }} className="icon-btn-ghost" title="Editar nota geral"><Pencil size={11} /></button>
+                          <button onClick={() => handleFbDelete(geral.id)} style={{ background: 'none', border: 'none', color: 'var(--color-error)', cursor: 'pointer', padding: 3, display: 'flex', alignItems: 'center', borderRadius: 4 }} title="Apagar"><X size={11} /></button>
+                        </div>
+                      )}
+                      {isOwner && !resolved && (
+                        <button onClick={() => setResolvingId(geral.id)} style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 4, background: 'none', border: 'none', color: 'var(--color-success)', cursor: 'pointer', fontSize: 12, fontWeight: 700, fontFamily: 'inherit', padding: 0 }}>
+                          <Check size={12} /> Marcar como resolvido
+                        </button>
+                      )}
+                    </div>
+                  )
+                })()}
+
                 {/* Feedback items — each on one compact row */}
-                {myFeedback.length > 0 && (
+                {(() => {
+                  const sectionFeedback = myFeedback.filter(f => f.field_key !== 'geral')
+                  if (!sectionFeedback.length) return null
+                  return (
                   <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    {myFeedback.map((f, idx) => {
+                    {sectionFeedback.map((f, idx) => {
                       const resolved = f.status === 'resolved'
                       const isResolving = resolvingId === f.id
                       return (
                       <div
                         key={f.id}
-                        style={{ padding: '10px 16px', borderBottom: idx < myFeedback.length - 1 ? '1px solid var(--color-primary-subtle)' : 'none', opacity: resolved && !isProfessor ? 0.75 : 1 }}
+                        style={{ padding: '10px 16px', borderBottom: idx < sectionFeedback.length - 1 ? '1px solid var(--color-primary-subtle)' : 'none', opacity: resolved && !isProfessor ? 0.75 : 1 }}
                       >
                         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
                           <span style={{ fontSize: 9, fontWeight: 800, color: 'var(--color-primary)', background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 4, padding: '2px 6px', letterSpacing: 0.5, textTransform: 'uppercase', flexShrink: 0, marginTop: 2, whiteSpace: 'nowrap' }}>
@@ -7366,11 +7399,8 @@ export default function ProjectPage() {
                       )
                     })}
                   </div>
-                )}
-
-                {isProfessor && myFeedback.length === 0 && !showFeedbackForm && (
-                  <p style={{ margin: 0, fontSize: 13, color: colors.muted, padding: '10px 16px' }}>Ainda não deixaste feedback.</p>
-                )}
+                  )
+                })()}
 
                 {/* Feedback form */}
                 {isProfessor && showFeedbackForm && (
@@ -7380,9 +7410,14 @@ export default function ProjectPage() {
                         <button key={k} onClick={() => setFbFieldKey(k)} style={{ fontSize: 11, padding: '3px 8px', borderRadius: 5, border: `1px solid ${fbFieldKey === k ? 'var(--color-primary)' : colors.border}`, background: fbFieldKey === k ? 'var(--color-primary-subtle)' : 'transparent', color: fbFieldKey === k ? 'var(--color-primary)' : colors.muted, cursor: 'pointer', fontFamily: 'inherit', fontWeight: fbFieldKey === k ? 700 : 400 }}>{l}</button>
                       ))}
                     </div>
-                    <textarea value={fbComment} onChange={e => setFbComment(e.target.value)} placeholder={`Feedback sobre ${FB_SECTION_LABELS[fbFieldKey]}…`} rows={3} style={{ width: '100%', background: 'var(--color-bg)', border: `1px solid ${colors.border}`, borderRadius: 8, padding: '9px 11px', color: colors.text, fontSize: 13, fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box', outline: 'none' }} />
+                    <textarea
+                      value={fbComment} onChange={e => setFbComment(e.target.value)}
+                      placeholder={fbFieldKey === 'geral' ? 'Escreve uma nota geral sobre o projeto — avaliação, observações, pontos a melhorar…' : `Feedback sobre ${FB_SECTION_LABELS[fbFieldKey]}…`}
+                      rows={fbFieldKey === 'geral' ? 4 : 3}
+                      style={{ width: '100%', background: 'var(--color-bg)', border: `1px solid ${colors.border}`, borderRadius: 8, padding: '9px 11px', color: colors.text, fontSize: 13, fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box', outline: 'none' }}
+                    />
                     <div style={{ display: 'flex', gap: 8 }}>
-                      <button onClick={handleFbSave} disabled={fbSaving || !fbComment.trim()} style={{ flex: 1, background: '#d97706', border: 'none', borderRadius: 8, padding: '9px', color: '#fff', fontSize: 13, fontWeight: 600, cursor: fbSaving || !fbComment.trim() ? 'default' : 'pointer', opacity: fbSaving || !fbComment.trim() ? 0.6 : 1, fontFamily: 'inherit' }}>
+                      <button onClick={handleFbSave} disabled={fbSaving || !fbComment.trim()} style={{ flex: 1, background: 'var(--color-primary)', border: 'none', borderRadius: 8, padding: '9px', color: '#fff', fontSize: 13, fontWeight: 600, cursor: fbSaving || !fbComment.trim() ? 'default' : 'pointer', opacity: fbSaving || !fbComment.trim() ? 0.6 : 1, fontFamily: 'inherit' }}>
                         {fbSaving ? 'A guardar…' : fbEditing ? 'Atualizar' : 'Guardar'}
                       </button>
                       {fbEditing && <button onClick={() => { setFbEditing(null); setFbComment('') }} style={{ background: 'transparent', border: `1px solid ${colors.border}`, borderRadius: 8, padding: '9px 12px', color: colors.muted, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>Cancelar</button>}

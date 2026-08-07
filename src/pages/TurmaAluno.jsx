@@ -54,8 +54,9 @@ const REVIEW_META = {
 }
 
 const SECTION_LABELS = {
-  description: 'Descrição', tech: 'Tecnologias', links: 'Links', demo: 'Demo',
-  team: 'Equipa', gallery: 'Galeria', geral: 'Geral',
+  geral: 'Nota geral', description: 'Descrição', tech: 'Tecnologias',
+  metodologia: 'Metodologia', resultados: 'Resultados', apresentacao: 'Apresentação',
+  links: 'Links', demo: 'Demo', team: 'Equipa', gallery: 'Galeria',
 }
 
 function InlineFeedback({ project, teacherId }) {
