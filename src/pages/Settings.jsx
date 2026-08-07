@@ -221,21 +221,37 @@ export default function Settings() {
       const safeRole = (profile?.role === 'professor' || profile?.role === 'recrutador' || profile?.role === 'empresa') ? profile.role : role
       const { error: metaError } = await supabase.auth.updateUser({ data: { full_name: fullName.trim(), role: safeRole } })
       if (metaError) throw metaError
-      const { error: profileError } = await supabase.from('profiles').upsert({
-        id: user.id, full_name: fullName.trim(), username: username.trim() || null, bio: bio.trim() || null, role: safeRole, available_for_work: availableForWork,
-        notify_newsletter: notifyNewsletter, notify_marketing: notifyMarketing, notify_product_updates: notifyProductUpdates, notify_project_activity: notifyProjectActivity,
-        profile_visibility: profileVisibility, show_email_publicly: showEmailPublicly,
-        ...(role === 'professor' ? { monthly_report_opt_in: monthlyReportOptIn } : {}),
-        ...((role === 'aluno' || role === 'professor') ? { skills } : {}),
-        ...(role === 'aluno' ? { area: area || null } : {}),
+      const { error: profileError } = await supabase.rpc('upsert_own_profile', {
+        p_full_name:               fullName.trim() || null,
+        p_username:                username.trim() || null,
+        p_bio:                     bio.trim() || null,
+        p_role:                    safeRole,
+        p_available_for_work:      availableForWork,
+        p_skills:                  (role === 'aluno' || role === 'professor') ? skills : [],
+        p_area:                    role === 'aluno' ? (area || null) : null,
+        p_monthly_report_opt_in:   role === 'professor' ? monthlyReportOptIn : false,
+        p_notify_newsletter:       notifyNewsletter,
+        p_notify_marketing:        notifyMarketing,
+        p_notify_product_updates:  notifyProductUpdates,
+        p_notify_project_activity: notifyProjectActivity,
+        p_profile_visibility:      profileVisibility,
+        p_show_email_publicly:     showEmailPublicly,
         ...(role === 'recrutador' || role === 'empresa' ? {
-          company: company.trim() || null, company_role: companyRole.trim() || null, company_website: companyWebsite.trim() || null,
-          linkedin_url: linkedinUrl.trim() || null, looking_for: lookingFor.trim() || null, company_description: companyDescription.trim() || null,
-          company_location: companyLocation.trim() || null, company_industry: companyIndustry.trim() || null, company_size: companySize.trim() || null,
+          p_company:             company.trim() || null,
+          p_company_role:        companyRole.trim() || null,
+          p_company_website:     companyWebsite.trim() || null,
+          p_linkedin_url:        linkedinUrl.trim() || null,
+          p_looking_for:         lookingFor.trim() || null,
+          p_company_description: companyDescription.trim() || null,
+          p_company_location:    companyLocation.trim() || null,
+          p_company_industry:    companyIndustry.trim() || null,
+          p_company_size:        companySize.trim() || null,
         } : {}),
       })
       if (profileError) {
-        if (profileError.code === '23505') { setSaveMsg({ type: 'err', text: 'Este username já está a ser usado.' }); setSaving(false); return }
+        if (profileError.message?.includes('23505') || profileError.message?.includes('unique')) {
+          setSaveMsg({ type: 'err', text: 'Este username já está a ser usado.' }); setSaving(false); return
+        }
         throw profileError
       }
       setOriginalUsername(username.trim()); setUsernameStatus(null); refreshProfile()
