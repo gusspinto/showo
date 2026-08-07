@@ -6,7 +6,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
-import { Folder, ChevronLeft, ChevronRight, ExternalLink, CheckCircle, Circle, AlertTriangle, Check, Calendar, ListChecks, MessageSquare } from 'lucide-react'
+import { Folder, ChevronLeft, ChevronRight, ExternalLink, CheckCircle, Circle, AlertTriangle, Check, Calendar, ListChecks, MessageSquare, BookOpen, TrendingUp, Clock, Cpu } from 'lucide-react'
 
 const C = {
   bg: 'var(--color-bg)', bgAlt: 'var(--color-bg-alt)', card: 'var(--color-surface)', cardHover: 'var(--color-surface-hover)',
@@ -165,6 +165,7 @@ export default function TurmaAluno() {
   const [projects, setProjects] = useState([])
   const [tasks, setTasks] = useState([])           // class tasks with this student's completion
   const [joinedAt, setJoinedAt] = useState(null)
+  const [journalEntries, setJournalEntries] = useState([]) // all entries across projects in this turma
 
   useEffect(() => {
     if (authLoading) return
@@ -197,10 +198,21 @@ export default function TurmaAluno() {
       if (ids.length) {
         const { data: projs } = await supabase
           .from('projects')
-          .select('id, name, slug, score, area, cover_url, created_at, user_id, review_status, teacher_score, views')
+          .select('id, name, slug, score, area, cover_url, created_at, user_id, review_status, teacher_score, views, technologies')
           .in('id', ids)
           .eq('user_id', userId)
         if (!cancelled) setProjects(projs || [])
+      }
+
+      // Journal entries for all this student's projects in the turma
+      if (ids.length) {
+        const { data: journalRows } = await supabase
+          .from('project_journal_entries')
+          .select('id, project_id, kind, content, created_at')
+          .in('project_id', ids)
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false })
+        if (!cancelled) setJournalEntries(journalRows || [])
       }
 
       // Task completion for this student
@@ -264,6 +276,38 @@ export default function TurmaAluno() {
 
   const headingNum = { fontFamily: 'var(--font-heading)', fontVariantNumeric: 'tabular-nums', letterSpacing: '-1.5px', lineHeight: 1, fontWeight: 400 }
 
+  // Journal analytics
+  const totalEntries = journalEntries.length
+  const activeDays = new Set(journalEntries.map(e => e.created_at.slice(0, 10))).size
+  const lastEntry = journalEntries[0] ? new Date(journalEntries[0].created_at) : null
+  const kindsUsed = [...new Set(journalEntries.map(e => e.kind))]
+  const kindCounts = journalEntries.reduce((acc, e) => { acc[e.kind] = (acc[e.kind] || 0) + 1; return acc }, {})
+  const allTechs = projects.flatMap(p => {
+    if (!p.technologies) return []
+    if (Array.isArray(p.technologies)) return p.technologies
+    if (typeof p.technologies === 'string') return p.technologies.split(',').map(t => t.trim()).filter(Boolean)
+    return []
+  })
+  const uniqueTechs = [...new Set(allTechs)].slice(0, 12)
+
+  const KIND_LABELS = {
+    progresso: 'Progresso', dificuldade: 'Dificuldade', decisao: 'Decisão',
+    pesquisa: 'Pesquisa', ideia: 'Ideia', resultado: 'Resultado', nota: 'Nota',
+  }
+  const KIND_COLORS = {
+    progresso: 'var(--color-primary)', dificuldade: 'var(--color-warning)', decisao: 'var(--color-accent)',
+    pesquisa: '#0d9488', ideia: '#f59e0b', resultado: 'var(--color-success)', nota: 'var(--color-text-secondary)',
+  }
+
+  function formatRelativeDate(d) {
+    const diff = Math.floor((Date.now() - d.getTime()) / 86400000)
+    if (diff === 0) return 'hoje'
+    if (diff === 1) return 'ontem'
+    if (diff < 7) return `há ${diff} dias`
+    if (diff < 30) return `há ${Math.floor(diff / 7)} sem.`
+    return d.toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' })
+  }
+
   return (
     <div style={{ minHeight: '100vh', background: C.bg }}>
       <Navbar />
@@ -318,6 +362,7 @@ export default function TurmaAluno() {
             { label: 'Projetos na turma', value: projects.length, color: C.blue },
             { label: 'Score médio', value: avgScore ?? '—', color: scoreColor(avgScore) },
             { label: 'Nota média', value: avgGrade != null ? `${avgGrade}` : '—', color: gradeColor(avgGrade), sub: avgGrade != null ? '/20' : null },
+            { label: 'Registos no diário', value: totalEntries || '—', color: totalEntries > 0 ? 'var(--color-success)' : C.subtle },
             { label: 'Tarefas concluídas', value: tasks.length ? `${doneTasks}/${tasks.length}` : '—', color: tasks.length && doneTasks === tasks.length ? C.green : C.blue },
           ].map(s => (
             <div key={s.label} style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '16px 18px' }}>
@@ -381,6 +426,76 @@ export default function TurmaAluno() {
             })}
           </div>
         )}
+
+        {/* Journal activity */}
+        <div style={{ marginBottom: 28 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+            <BookOpen size={14} color={C.muted} />
+            <span style={{ fontSize: 13, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.07em' }}>Diário de Projeto</span>
+          </div>
+
+          {totalEntries === 0 ? (
+            <div style={{ ...C.glassStyle, background: C.glass, border: `1px dashed ${C.glassBorder}`, borderRadius: 10, padding: '20px', textAlign: 'center' }}>
+              <p style={{ margin: 0, fontSize: 13, color: C.subtle }}>Ainda sem registos no diário.</p>
+            </div>
+          ) : (
+            <>
+              {/* Stats row */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10, marginBottom: 14 }}>
+                {[
+                  { Icon: TrendingUp, label: 'Registos', value: totalEntries, color: C.blue },
+                  { Icon: Clock, label: 'Dias ativos', value: activeDays, color: 'var(--color-success)' },
+                  { Icon: Calendar, label: 'Último registo', value: lastEntry ? formatRelativeDate(lastEntry) : '—', color: C.text, small: true },
+                ].map(s => (
+                  <div key={s.label} style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 10, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{ width: 32, height: 32, borderRadius: 8, background: `${s.color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <s.Icon size={15} color={s.color} />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: s.small ? 15 : 20, fontWeight: 700, fontFamily: 'var(--font-heading)', color: s.color, letterSpacing: '-0.5px', lineHeight: 1.1 }}>{s.value}</div>
+                      <div style={{ fontSize: 10, color: C.subtle, fontWeight: 600, marginTop: 3 }}>{s.label}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Kinds used */}
+              <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 10, padding: '14px 16px', marginBottom: 10 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: C.subtle, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>Tipos de registo</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {Object.entries(kindCounts).sort((a, b) => b[1] - a[1]).map(([kind, count]) => (
+                    <span key={kind} style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 5,
+                      fontSize: 12, fontWeight: 600,
+                      color: KIND_COLORS[kind] || C.muted,
+                      background: `${KIND_COLORS[kind] || C.muted}14`,
+                      border: `1px solid ${KIND_COLORS[kind] || C.muted}28`,
+                      borderRadius: 999, padding: '4px 10px',
+                    }}>
+                      {KIND_LABELS[kind] || kind}
+                      <span style={{ fontSize: 10, opacity: 0.7 }}>{count}</span>
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Technologies */}
+              {uniqueTechs.length > 0 && (
+                <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 10, padding: '14px 16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+                    <Cpu size={12} color={C.subtle} />
+                    <span style={{ fontSize: 11, fontWeight: 700, color: C.subtle, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Tecnologias</span>
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                    {uniqueTechs.map(t => (
+                      <span key={t} style={{ fontSize: 12, fontWeight: 600, color: C.muted, background: C.bgAlt, border: `1px solid ${C.border}`, borderRadius: 999, padding: '4px 10px' }}>{t}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
 
         {/* Tasks */}
         {tasks.length > 0 && (
