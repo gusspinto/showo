@@ -5,20 +5,6 @@
   font-style: normal;
   font-display: swap;
 }
-@font-face {
-  font-family: 'Helvetica World';
-  src: url('/fonts/HelveticaWorld-Bold.ttf') format('truetype');
-  font-weight: 100 900;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'Stack Sans Notch';
-  src: url('/fonts/StackSansNotch-SemiBold.ttf') format('truetype');
-  font-weight: 100 900;
-  font-style: normal;
-  font-display: swap;
-}
 
 *, *::before, *::after {
   box-sizing: border-box;
@@ -77,7 +63,7 @@ textarea:-webkit-autofill:focus {
 }
 
 :root {
-  --font-heading: 'Stack Sans Notch', 'Helvetica World', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --font-heading: 'Sora', 'Inter', system-ui, sans-serif;
   --font-body: 'Montserrat', 'Inter', system-ui, -apple-system, sans-serif;
 
   /* ── Legacy aliases — all values come from tokens.css now ── */
