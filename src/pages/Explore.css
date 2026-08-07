@@ -649,6 +649,85 @@
   color: var(--color-text);
 }
 
+/* ── Anon CTA ── */
+.explore-people-cta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 72px 24px 80px;
+  max-width: 400px;
+  margin: 0 auto;
+}
+.explore-people-cta-avatars {
+  display: flex;
+  margin-bottom: 28px;
+}
+.explore-people-cta-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 2.5px solid var(--color-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+  margin-left: -12px;
+}
+.explore-people-cta-avatar:first-child { margin-left: 0; }
+
+.explore-people-cta-title {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+  color: var(--color-text);
+  margin: 0 0 10px;
+  font-family: var(--font-heading);
+}
+.explore-people-cta-sub {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+  margin: 0 0 28px;
+}
+.explore-people-cta-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+.explore-people-cta-btn-primary {
+  background: var(--color-primary);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 13px 0;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.explore-people-cta-btn-primary:hover { opacity: 0.88; }
+.explore-people-cta-btn-ghost {
+  background: none;
+  border: 1.5px solid var(--color-border);
+  border-radius: 10px;
+  padding: 12px 0;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.explore-people-cta-btn-ghost:hover {
+  border-color: var(--color-border-hover);
+  color: var(--color-text);
+}
+
 /* ══ RESPONSIVE ══ */
 @media (max-width: 680px) {
   .explore-grid {

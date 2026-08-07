@@ -115,7 +115,7 @@ function PeopleSkeleton() {
 export default function Explore() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const { profile } = useAuth()
+  const { profile, user } = useAuth()
   const [projects, setProjects] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -573,12 +573,37 @@ export default function Explore() {
             {peopleLoading ? (
               <PeopleSkeleton />
             ) : filteredPeople.length === 0 ? (
-              <div className="explore-people-empty">
-                <Users size={44} color="var(--color-text-tertiary)" className="mb-4" />
-                <p className="explore-people-empty-title">
-                  {peopleQuery ? 'Nenhuma pessoa encontrada.' : 'Ainda não há perfis públicos.'}
-                </p>
-              </div>
+              !user && !peopleQuery ? (
+                <div className="explore-people-cta">
+                  <div className="explore-people-cta-avatars" aria-hidden="true">
+                    {['A','B','C','D','E'].map((l, i) => (
+                      <div key={l} className="explore-people-cta-avatar" style={{
+                        background: ['var(--color-primary)','#0d9488','var(--color-accent)','#10b981','var(--color-warning)'][i],
+                        zIndex: 5 - i,
+                      }}>{l}</div>
+                    ))}
+                  </div>
+                  <p className="explore-people-cta-title">Conhece quem está a construir</p>
+                  <p className="explore-people-cta-sub">
+                    Cria a tua conta para descobrir alunos, projetos e oportunidades da comunidade Showo.
+                  </p>
+                  <div className="explore-people-cta-btns">
+                    <button className="explore-people-cta-btn-primary" onClick={() => navigate('/register')}>
+                      Criar conta grátis
+                    </button>
+                    <button className="explore-people-cta-btn-ghost" onClick={() => navigate('/')}>
+                      Já tenho conta
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="explore-people-empty">
+                  <Users size={44} color="var(--color-text-tertiary)" className="mb-4" />
+                  <p className="explore-people-empty-title">
+                    {peopleQuery ? 'Nenhuma pessoa encontrada.' : 'Ainda não há perfis públicos.'}
+                  </p>
+                </div>
+              )
             ) : (
               <>
                 <p className="explore-result-count">
