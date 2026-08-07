@@ -381,13 +381,15 @@ export default function TurmaPage() {
     async function load() {
       const { data: cls, error } = await supabase
         .from('classes')
-        .select('id, name, subject, code, teacher_name, teacher_id, academic_year, created_at, show_ranking')
+        .select('id, name, subject, code, teacher_name, teacher_id, academic_year, created_at')
         .eq('code', code.toUpperCase())
         .single()
 
       if (error || !cls) { setLoading(false); return }
       setTurma(cls)
-      setRankingEnabled(!!cls.show_ranking)
+      // show_ranking só existe depois da migration 067 — falha silenciosamente se ainda não existir
+      supabase.from('classes').select('show_ranking').eq('id', cls.id).maybeSingle()
+        .then(({ data }) => { if (data?.show_ranking != null) setRankingEnabled(!!data.show_ranking) })
       const teacherNow = user && cls.teacher_id === user.id
       if (teacherNow) setIsTeacher(true)
 
