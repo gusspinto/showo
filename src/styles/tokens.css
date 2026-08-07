@@ -6,7 +6,7 @@
 
 :root {
   /* ── Brand fonts ── */
-  --font-display: 'Croogla', 'Manrope', system-ui, sans-serif;
+  --font-display: 'Croogla', 'Rubik', system-ui, sans-serif;
   --font-body: 'Montserrat', 'Inter', system-ui, -apple-system, sans-serif;
   --font-mono: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
 
