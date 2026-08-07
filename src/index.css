@@ -5,6 +5,13 @@
   font-style: normal;
   font-display: swap;
 }
+@font-face {
+  font-family: 'Helvetica World';
+  src: url('/fonts/HelveticaWorld-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
 
 *, *::before, *::after {
   box-sizing: border-box;
@@ -63,7 +70,7 @@ textarea:-webkit-autofill:focus {
 }
 
 :root {
-  --font-heading: 'Croogla', 'Poppins', 'Inter', sans-serif;
+  --font-heading: 'Helvetica World', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   --font-body: 'Montserrat', 'Inter', system-ui, -apple-system, sans-serif;
 
   /* ── Legacy aliases — all values come from tokens.css now ── */
@@ -218,8 +225,8 @@ textarea, input, select, button {
 .icon-btn-ghost:active { transform: scale(0.94); }
 
 ::selection {
-  background: rgba(27, 120, 247, 0.3);
-  color: #e8f2ff;
+  background: var(--sel-bg, rgba(196,154,32,0.38));
+  color: var(--sel-color, #fff);
 }
 
 ::-webkit-scrollbar {
@@ -228,16 +235,16 @@ textarea, input, select, button {
 }
 
 ::-webkit-scrollbar-track {
-  background: #060c18;
+  background: #111111;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1e3050;
+  background: #333333;
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #2a4275;
+  background: #444444;
 }
 
 /* ═══════════════════════════════════════

@@ -22,7 +22,10 @@ export default function LegalLayout({ title, updated, intro, children }) {
           <ArrowLeft size={20} />
         </button>
         <Link to="/" style={{ display: 'flex', alignItems: 'center' }}>
-          <img src="/icon_logo.png" alt="Showo" style={{ height: 24, width: 'auto', objectFit: 'contain' }} />
+          <img
+            src={document.documentElement.getAttribute('data-theme') === 'light' ? '/lightmode_icon_logo.png' : '/darkmode_icon_logo.png'}
+            alt="Showo" style={{ height: 24, width: 'auto', objectFit: 'contain' }}
+          />
         </Link>
       </header>
 

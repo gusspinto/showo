@@ -266,9 +266,13 @@
   gap: var(--sp-4);
   padding: var(--sp-4) var(--sp-5);
   min-width: 216px;
-  border: 1px solid var(--color-primary-muted);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
-  background: var(--color-primary-subtle);
+  background: var(--color-surface);
+}
+.sdb-hero-side--activity {
+  border-color: rgba(196,154,32,0.25);
+  background: rgba(196,154,32,0.06);
 }
 .sdb-streak-row {
   display: flex;
@@ -276,7 +280,7 @@
   gap: 6px;
   font-size: 13px;
   font-weight: 600;
-  color: var(--color-primary);
+  color: var(--color-warning);
 }
 .sdb-daydots {
   display: flex;
@@ -291,7 +295,7 @@
   flex-shrink: 0;
   transition: background 0.2s;
 }
-.sdb-daydot.is-active { background: var(--color-primary); }
+.sdb-daydot.is-active { background: var(--color-warning); }
 
 /* ── Primeiros passos (utilizador novo) ── */
 .sdb-setup-list {

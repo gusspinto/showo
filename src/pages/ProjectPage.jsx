@@ -3073,68 +3073,481 @@ function renderMd(text) {
 
 /* ── Spotlight Tour ─────────────────────────────────────────────────────────── */
 
+function MacWindow({ title, children }) {
+  return (
+    <div style={{
+      borderRadius:10, overflow:'hidden',
+      boxShadow:'0 10px 32px rgba(0,0,0,0.6), 0 2px 6px rgba(0,0,0,0.4)',
+      border:'1px solid rgba(255,255,255,0.07)',
+    }}>
+      <div style={{
+        background:'#2c2c2c', padding:'7px 10px',
+        display:'flex', alignItems:'center', gap:5,
+        borderBottom:'1px solid rgba(0,0,0,0.35)',
+      }}>
+        <span style={{width:9,height:9,borderRadius:'50%',background:'#E04848',flexShrink:0}} />
+        <span style={{width:9,height:9,borderRadius:'50%',background:'#C49A20',flexShrink:0}} />
+        <span style={{width:9,height:9,borderRadius:'50%',background:'#2a9d6a',flexShrink:0}} />
+        {title && <span style={{flex:1,textAlign:'center',fontSize:9,color:'rgba(255,255,255,0.3)',fontWeight:500,marginRight:23,letterSpacing:'0.01em'}}>{title}</span>}
+      </div>
+      <div style={{background:'#0e0e0e'}}>{children}</div>
+    </div>
+  )
+}
+
+function TourVisualScore() {
+  const r = 18, circ = 2 * Math.PI * r
+  return (
+    <MacWindow title="MonteSado — Score">
+      <div style={{padding:'14px 16px', display:'flex', alignItems:'center', gap:14}}>
+        <svg width={44} height={44} style={{flexShrink:0}}>
+          <circle cx={22} cy={22} r={r} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth={4} />
+          <circle cx={22} cy={22} r={r} fill="none" stroke="#2a9d6a" strokeWidth={4}
+            strokeDasharray={`${0.88*circ} ${circ}`} strokeLinecap="round"
+            style={{transform:'rotate(-90deg)',transformOrigin:'22px 22px'}}
+          />
+          <text x={22} y={27} textAnchor="middle" fontSize={11} fontWeight={700} fill="#2a9d6a">88</text>
+        </svg>
+        <div style={{flex:1}}>
+          <div style={{fontSize:8,fontWeight:800,color:'#2a9d6a',textTransform:'uppercase',letterSpacing:'0.1em',marginBottom:5}}>Nível Profissional</div>
+          <div style={{height:3,width:'100%',borderRadius:2,background:'rgba(255,255,255,0.05)',overflow:'hidden',marginBottom:7}}>
+            <div style={{height:'100%',width:'88%',background:'#2a9d6a',borderRadius:2}} />
+          </div>
+          <div style={{fontSize:9,color:'rgba(255,255,255,0.3)'}}>Avaliado pela IA · Só tu vês</div>
+        </div>
+      </div>
+    </MacWindow>
+  )
+}
+
+function TourVisualDefense() {
+  const cards = [
+    {
+      n: 1, practiced: true,
+      q: 'Quais foram os principais desafios técnicos do projeto?',
+    },
+    {
+      n: 2, practiced: false, revealed: true,
+      q: 'Que tecnologias usaste e porquê essa escolha?',
+      a: 'Utilizei React para o frontend pela componentização e Supabase pelo backend em tempo real, evitando construir APIs de raiz.',
+    },
+    {
+      n: 3, practiced: false, revealed: false,
+      q: 'Como apresentarias o projeto a alguém sem conhecimentos técnicos?',
+    },
+  ]
+  return (
+    <MacWindow title="Preparar Defesa — MonteSado">
+      <div style={{display:'flex', flexDirection:'column'}}>
+        {/* Tabs */}
+        <div style={{display:'flex', borderBottom:'1px solid rgba(255,255,255,0.06)', flexShrink:0}}>
+          {[{l:'Notas',a:false},{l:'Juri',a:true},{l:'No dia',a:false}].map(t => (
+            <div key={t.l} style={{
+              padding:'6px 13px', fontSize:10, fontWeight:700,
+              color:t.a?'#C49A20':'rgba(255,255,255,0.3)',
+              borderBottom:t.a?'2px solid #C49A20':'2px solid transparent',
+            }}>{t.l}</div>
+          ))}
+        </div>
+        {/* Progress */}
+        <div style={{padding:'8px 12px 5px', display:'flex', alignItems:'center', gap:7}}>
+          <span style={{fontSize:9,color:'rgba(255,255,255,0.5)',flexShrink:0}}>
+            <span style={{color:'rgba(255,255,255,0.75)',fontWeight:700}}>1</span>/6 treinadas
+          </span>
+          <div style={{flex:1, height:3, borderRadius:2, background:'rgba(255,255,255,0.07)', overflow:'hidden'}}>
+            <div style={{height:'100%', width:'16%', borderRadius:2, background:'linear-gradient(90deg,#2B7EF5,#2a9d6a)'}} />
+          </div>
+        </div>
+        {/* Flashcards */}
+        <div style={{padding:'0 10px 10px', display:'flex', flexDirection:'column', gap:5}}>
+          {cards.map(c => (
+            <div key={c.n} style={{
+              borderRadius:7, overflow:'hidden',
+              background: c.practiced ? 'rgba(42,157,106,0.08)' : 'rgba(255,255,255,0.03)',
+              border: `1px solid ${c.practiced ? 'rgba(42,157,106,0.25)' : 'rgba(255,255,255,0.07)'}`,
+            }}>
+              <div style={{padding:'7px 10px', display:'flex', gap:8, alignItems:'flex-start'}}>
+                {/* Badge */}
+                <div style={{
+                  width:20, height:20, borderRadius:6, flexShrink:0,
+                  background: c.practiced ? 'rgba(42,157,106,0.15)' : 'rgba(196,154,32,0.1)',
+                  border: `1px solid ${c.practiced ? 'rgba(42,157,106,0.3)' : 'rgba(196,154,32,0.25)'}`,
+                  display:'flex', alignItems:'center', justifyContent:'center',
+                  fontSize:9, fontWeight:700, color: c.practiced ? '#2a9d6a' : '#C49A20',
+                }}>
+                  {c.practiced
+                    ? <svg width={10} height={10} viewBox="0 0 10 10"><path d="M2 5l2.5 2.5 4-4" stroke="#2a9d6a" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" fill="none"/></svg>
+                    : c.n
+                  }
+                </div>
+                <p style={{margin:0, fontSize:9.5, fontWeight:600, color: c.practiced ? '#6ee7b7' : 'rgba(255,255,255,0.7)', lineHeight:1.45, flex:1}}>{c.q}</p>
+              </div>
+              {/* Revealed answer */}
+              {c.revealed && (
+                <div style={{borderTop:'1px solid rgba(255,255,255,0.05)', padding:'6px 10px 6px 38px', background:'rgba(0,0,0,0.15)'}}>
+                  <p style={{margin:0, fontSize:8.5, color:'rgba(255,255,255,0.4)', lineHeight:1.5}}>{c.a}</p>
+                </div>
+              )}
+              {/* Actions */}
+              {!c.practiced && (
+                <div style={{padding:'0 10px 7px 38px', display:'flex', gap:5}}>
+                  {!c.revealed && (
+                    <div style={{border:'1px solid rgba(255,255,255,0.1)',borderRadius:5,padding:'3px 8px',fontSize:8,color:'rgba(255,255,255,0.4)'}}>Ver resposta sugerida</div>
+                  )}
+                  <div style={{background:'rgba(42,157,106,0.12)',border:'1px solid rgba(42,157,106,0.25)',borderRadius:5,padding:'3px 8px',fontSize:8,fontWeight:600,color:'#2a9d6a'}}>Marcar como treinada</div>
+                </div>
+              )}
+              {c.practiced && (
+                <div style={{padding:'0 10px 7px 38px'}}>
+                  <span style={{fontSize:8,color:'rgba(255,255,255,0.2)'}}>Desfazer</span>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </MacWindow>
+  )
+}
+
+function TourVisualAI() {
+  const sections = [
+    {label:'Problema', status:'ok', note:'Bem definido com contexto claro.'},
+    {label:'Solução', status:'ok', note:'Abordagem técnica bem descrita.'},
+    {label:'Funcionalidades', status:'warn', note:'Podes detalhar mais cada feature.'},
+    {label:'Resultados', status:'missing', note:'Secção em falta — adiciona impacto.'},
+  ]
+  function StatusIcon({status}) {
+    const c = status==='ok'?'#2a9d6a':status==='warn'?'#C49A20':'#E04848'
+    if (status === 'ok') return (
+      <svg width={14} height={14} viewBox="0 0 14 14" style={{flexShrink:0,marginTop:1}}>
+        <circle cx={7} cy={7} r={6} fill="none" stroke={c} strokeWidth={1.5}/>
+        <path d="M4 7l2 2 4-4" stroke={c} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+      </svg>
+    )
+    if (status === 'warn') return (
+      <svg width={14} height={14} viewBox="0 0 14 14" style={{flexShrink:0,marginTop:1}}>
+        <path d="M7 2L12.5 11.5H1.5L7 2Z" fill="none" stroke={c} strokeWidth={1.5} strokeLinejoin="round"/>
+        <line x1={7} y1={5.5} x2={7} y2={8.5} stroke={c} strokeWidth={1.5} strokeLinecap="round"/>
+        <circle cx={7} cy={10.2} r={0.7} fill={c}/>
+      </svg>
+    )
+    return (
+      <svg width={14} height={14} viewBox="0 0 14 14" style={{flexShrink:0,marginTop:1}}>
+        <circle cx={7} cy={7} r={6} fill="none" stroke={c} strokeWidth={1.5}/>
+        <path d="M4.5 4.5l5 5M9.5 4.5l-5 5" stroke={c} strokeWidth={1.5} strokeLinecap="round"/>
+      </svg>
+    )
+  }
+  return (
+    <MacWindow title="Análise IA — MonteSado">
+      <div style={{padding:'10px 14px'}}>
+        <div style={{display:'flex', alignItems:'center', gap:6, marginBottom:10}}>
+          <span style={{fontSize:9,fontWeight:800,background:'var(--color-primary)',color:'#fff',padding:'3px 7px',borderRadius:3}}>✦ IA</span>
+          <div style={{flex:1,height:3,borderRadius:2,background:'rgba(255,255,255,0.05)',overflow:'hidden'}}>
+            <div style={{height:'100%',width:'64%',background:'var(--color-primary)',borderRadius:2}} />
+          </div>
+          <span style={{fontSize:9,fontWeight:700,color:'var(--color-primary)'}}>64%</span>
+        </div>
+        {sections.map(s => (
+          <div key={s.label} style={{borderTop:'1px solid rgba(255,255,255,0.05)', padding:'7px 0', display:'flex', gap:8, alignItems:'flex-start'}}>
+            <StatusIcon status={s.status}/>
+            <div style={{minWidth:0}}>
+              <div style={{fontSize:10, fontWeight:700, color:'rgba(255,255,255,0.75)', marginBottom:2}}>{s.label}</div>
+              <div style={{fontSize:9, color:'rgba(255,255,255,0.35)', lineHeight:1.4}}>{s.note}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </MacWindow>
+  )
+}
+
+function TourVisualPreview() {
+  const sideIcons = [
+    {active:true, path:'M9 2L13 6L5.5 13.5L2 14L2.5 10.5L9 2Z'},
+    {active:false, path:'M2 8a6 6 0 1 0 12 0A6 6 0 0 0 2 8ZM8 5v3l2 2'},
+    {active:false, path:'M8 2l1.5 4h4l-3 2.5 1 4-3.5-2.5L4.5 12.5l1-4-3-2.5h4Z'},
+    {active:false, path:'M2 3h12M2 7h8M2 11h10'},
+    {active:false, path:'M8 2a6 6 0 1 0 0 12A6 6 0 0 0 8 2ZM5 8l2 2 4-4'},
+  ]
+  const bgOptions = ['Padrão','Midnight','Navy','Ardósia','Papel','Cinza']
+  const fontOptions = ['Croogla','Syne','Playfair','Inter']
+  return (
+    <div style={{display:'flex', flexDirection:'column', gap:6}}>
+      {/* Workspace — the actual editor */}
+      <MacWindow title="Workspace — Editor de estilo">
+        <div style={{display:'flex', height:148}}>
+          {/* Left icon sidebar */}
+          <div style={{
+            width:28, background:'#080808', borderRight:'1px solid rgba(255,255,255,0.06)',
+            display:'flex', flexDirection:'column', alignItems:'center', paddingTop:8, gap:7,
+          }}>
+            {sideIcons.map((ic,i) => (
+              <div key={i} style={{
+                width:18,height:18,borderRadius:4,flexShrink:0,
+                background:ic.active?'rgba(43,126,245,0.18)':'transparent',
+                display:'flex',alignItems:'center',justifyContent:'center',
+              }}>
+                <svg width={11} height={11} viewBox="0 0 14 14" fill="none">
+                  <path d={ic.path} stroke={ic.active?'#2B7EF5':'rgba(255,255,255,0.25)'} strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+            ))}
+          </div>
+          {/* Project view */}
+          <div style={{flex:1, display:'flex', flexDirection:'column', overflow:'hidden'}}>
+            <div style={{
+              height:52, background:'linear-gradient(135deg,#1a1a1a,#2a2a2a)',
+              display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:2, flexShrink:0,
+            }}>
+              <div style={{fontSize:13,fontWeight:900,color:'rgba(255,255,255,0.85)',letterSpacing:'-0.5px'}}>MONTESADO</div>
+              <div style={{fontSize:7.5,color:'rgba(255,255,255,0.3)'}}>Bruno Silva · Turismo</div>
+            </div>
+            <div style={{padding:'7px 9px', display:'flex', flexDirection:'column', gap:3}}>
+              {[85,70,90,62].map((w,i) => (
+                <div key={i} style={{height:3,width:`${w}%`,borderRadius:1,background:'rgba(255,255,255,0.07)'}} />
+              ))}
+            </div>
+          </div>
+          {/* Right style panel */}
+          <div style={{
+            width:98, background:'#141414', borderLeft:'1px solid rgba(255,255,255,0.06)',
+            display:'flex', flexDirection:'column', overflow:'hidden', flexShrink:0,
+          }}>
+            {/* Panel tabs */}
+            <div style={{display:'flex', borderBottom:'1px solid rgba(255,255,255,0.06)', flexShrink:0}}>
+              {['Estilo','Blocos','IA'].map((t,i) => (
+                <div key={t} style={{
+                  flex:1, padding:'4px 0', textAlign:'center', fontSize:7, fontWeight:700,
+                  color:i===0?'#2B7EF5':'rgba(255,255,255,0.28)',
+                  borderBottom:i===0?'1.5px solid #2B7EF5':'1.5px solid transparent',
+                }}>{t}</div>
+              ))}
+            </div>
+            <div style={{padding:'5px 7px', overflowY:'hidden', display:'flex', flexDirection:'column', gap:5}}>
+              {/* Color swatches */}
+              <div>
+                <div style={{fontSize:6.5,color:'rgba(255,255,255,0.28)',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:3}}>Cor de destaque</div>
+                <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:2}}>
+                  {['#E8A020','#9333ea','#ec4899','#16a34a','#2B7EF5','#E04848','#06b6d4','#f59e0b'].map((c,i) => (
+                    <div key={i} style={{height:9,borderRadius:2,background:c,outline:i===4?'1.5px solid #fff':'none',outlineOffset:1}} />
+                  ))}
+                </div>
+              </div>
+              {/* Background */}
+              <div>
+                <div style={{fontSize:6.5,color:'rgba(255,255,255,0.28)',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:3}}>Fundo</div>
+                <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:2}}>
+                  {bgOptions.map((l,i) => (
+                    <div key={l} style={{
+                      background:['#0e0e0e','#0d1424','#0a1220','#1e2530','#f5f0e8','#2a2a2a'][i],
+                      border:i===3?'1px solid rgba(43,126,245,0.6)':'1px solid rgba(255,255,255,0.08)',
+                      borderRadius:2, padding:'2px 1px', display:'flex', alignItems:'center', justifyContent:'center',
+                    }}>
+                      <div style={{fontSize:5.5,color:i>=4?'rgba(0,0,0,0.4)':'rgba(255,255,255,0.4)',textAlign:'center'}}>{l}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              {/* Typography */}
+              <div>
+                <div style={{fontSize:6.5,color:'rgba(255,255,255,0.28)',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:3}}>Tipografia</div>
+                <div style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:2}}>
+                  {fontOptions.map((f,i) => (
+                    <div key={f} style={{
+                      background:i===0?'rgba(43,126,245,0.12)':'rgba(255,255,255,0.04)',
+                      border:i===0?'1px solid rgba(43,126,245,0.35)':'1px solid rgba(255,255,255,0.07)',
+                      borderRadius:2, padding:'2px 4px', fontSize:6.5, color:i===0?'#2B7EF5':'rgba(255,255,255,0.35)', textAlign:'center',
+                    }}>{f}</div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </MacWindow>
+      {/* Public view */}
+      <MacWindow title="showo.pt/p/montesado — Vista pública">
+        <div style={{padding:'9px 12px', display:'flex', flexDirection:'column', gap:5}}>
+          <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+            <div>
+              <div style={{height:8, width:75, borderRadius:2, background:'rgba(255,255,255,0.6)', marginBottom:4}} />
+              <div style={{height:4, width:42, borderRadius:1, background:'rgba(255,255,255,0.18)'}} />
+            </div>
+            <svg width={32} height={32}>
+              <circle cx={16} cy={16} r={12} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth={3}/>
+              <circle cx={16} cy={16} r={12} fill="none" stroke="#2a9d6a" strokeWidth={3}
+                strokeDasharray={`${0.88*2*Math.PI*12} ${2*Math.PI*12}`} strokeLinecap="round"
+                style={{transform:'rotate(-90deg)',transformOrigin:'16px 16px'}}
+              />
+              <text x={16} y={20} textAnchor="middle" fontSize={8} fontWeight={700} fill="#2a9d6a">88</text>
+            </svg>
+          </div>
+          <div style={{display:'flex', flexDirection:'column', gap:3}}>
+            {[88,70,92,60].map((w,i) => (
+              <div key={i} style={{height:3, width:`${w}%`, borderRadius:1, background:'rgba(255,255,255,0.07)'}} />
+            ))}
+          </div>
+        </div>
+      </MacWindow>
+    </div>
+  )
+}
+
+function TourVisualCoach() {
+  return (
+    <MacWindow title="Assistente IA">
+      <div style={{padding:'10px 12px', display:'flex', flexDirection:'column', gap:5}}>
+        <div style={{display:'flex', gap:6, alignItems:'flex-start'}}>
+          <div style={{
+            flexShrink:0, width:18, height:18, borderRadius:'50%',
+            background:'var(--color-primary)', display:'flex', alignItems:'center',
+            justifyContent:'center', fontSize:8, color:'#fff', fontWeight:800,
+          }}>✦</div>
+          <div style={{
+            background:'rgba(255,255,255,0.05)', borderRadius:'0 7px 7px 7px',
+            padding:'5px 8px', fontSize:10, color:'rgba(255,255,255,0.7)', lineHeight:1.4,
+          }}>Como posso ajudar-te com o projeto hoje?</div>
+        </div>
+        <div style={{display:'flex', justifyContent:'flex-end'}}>
+          <div style={{
+            background:'var(--color-primary)', borderRadius:'7px 0 7px 7px',
+            padding:'5px 8px', fontSize:10, color:'#fff', lineHeight:1.4, maxWidth:'80%',
+          }}>Melhora a minha secção de Problema</div>
+        </div>
+        <div style={{display:'flex', gap:6, alignItems:'flex-start'}}>
+          <div style={{width:18,height:18,flexShrink:0}} />
+          <div style={{
+            background:'rgba(255,255,255,0.05)', borderRadius:'0 7px 7px 7px',
+            padding:'5px 8px', fontSize:10, color:'rgba(255,255,255,0.5)', lineHeight:1.4,
+          }}>Tenta incluir dados concretos e citar fontes...</div>
+        </div>
+      </div>
+    </MacWindow>
+  )
+}
+
+function TourVisualMissions() {
+  return (
+    <MacWindow title="Missões">
+      <div style={{padding:'10px 14px', display:'flex', flexDirection:'column', gap:6}}>
+        {[
+          {text:'Adiciona uma imagem ao projeto', done:true},
+          {text:'Preenche as funcionalidades', done:true},
+          {text:'Descreve o teu papel no projeto', done:false},
+        ].map((m,i) => (
+          <div key={i} style={{display:'flex', alignItems:'center', gap:7}}>
+            <div style={{
+              width:13, height:13, borderRadius:3, flexShrink:0,
+              border:`1.5px solid ${m.done?'var(--color-primary)':'rgba(255,255,255,0.12)'}`,
+              background:m.done?'var(--color-primary)':'transparent',
+              display:'flex', alignItems:'center', justifyContent:'center',
+              color:'#fff', fontSize:8, fontWeight:900,
+            }}>{m.done?'✓':''}</div>
+            <span style={{fontSize:10,color:m.done?'rgba(255,255,255,0.25)':'rgba(255,255,255,0.7)',textDecoration:m.done?'line-through':'none',lineHeight:1.3}}>{m.text}</span>
+          </div>
+        ))}
+      </div>
+    </MacWindow>
+  )
+}
+
+function TourVisualInvite() {
+  const members = [
+    {name:'Bruno Silva', initial:'B', color:'#2B7EF5', role:'Autor'},
+    {name:'Ana Costa', initial:'A', color:'#C49A20', role:'Colaborador'},
+    {name:'Carlos M.', initial:'C', color:'#E04848', role:'Colaborador'},
+  ]
+  return (
+    <MacWindow title="Colaboradores — MonteSado">
+      <div style={{padding:'12px 14px', display:'flex', flexDirection:'column', gap:8}}>
+        {members.map((m,i) => (
+          <div key={i} style={{display:'flex', alignItems:'center', gap:10}}>
+            <div style={{
+              width:32, height:32, borderRadius:'50%', background:m.color,
+              display:'flex', alignItems:'center', justifyContent:'center',
+              fontSize:13, fontWeight:800, color:'#fff', flexShrink:0,
+            }}>{m.initial}</div>
+            <div style={{flex:1}}>
+              <div style={{fontSize:11, fontWeight:700, color:'rgba(255,255,255,0.8)'}}>{m.name}</div>
+              <div style={{fontSize:9, color:'rgba(255,255,255,0.3)'}}>{m.role}</div>
+            </div>
+            {i === 0 && <div style={{fontSize:9,fontWeight:700,color:'#2a9d6a',background:'rgba(42,157,106,0.12)',padding:'2px 7px',borderRadius:3}}>Tu</div>}
+          </div>
+        ))}
+        <div style={{borderTop:'1px solid rgba(255,255,255,0.06)', paddingTop:8, display:'flex', alignItems:'center', gap:8}}>
+          <div style={{
+            width:32, height:32, borderRadius:'50%', background:'rgba(255,255,255,0.05)',
+            border:'1.5px dashed rgba(255,255,255,0.15)',
+            display:'flex', alignItems:'center', justifyContent:'center',
+            fontSize:16, color:'rgba(255,255,255,0.25)', flexShrink:0,
+          }}>+</div>
+          <div style={{fontSize:10, color:'rgba(255,255,255,0.3)'}}>Convidar colega por email...</div>
+        </div>
+      </div>
+    </MacWindow>
+  )
+}
+
 const TOUR_STEPS_PAP = [
   {
     target: 'score',
     title: 'O teu Score',
+    visual: <TourVisualScore />,
     bullets: [
-      'A IA avalia o que preencheste e dá uma pontuação ao projeto',
-      'Quanto mais completo estiver, mais alto fica o score',
-      'Serve para te orientar, não é uma nota',
+      'Gerado pela IA com base no que preencheste',
+      'Serve para te orientar — não é uma nota',
     ],
   },
   {
     target: 'defense',
     title: 'Modo Defesa',
+    visual: <TourVisualDefense />,
     bullets: [
-      'A IA assume o papel da banca e faz-te perguntas sobre o teu projeto',
-      'As perguntas são geradas com base no que escreveste, por isso são questões reais',
+      'A IA simula a banca com perguntas reais sobre o teu projeto',
       'Quanto mais treinares, mais confiante chegas à apresentação',
     ],
   },
   {
     target: 'ai',
     title: 'Análise IA',
+    visual: <TourVisualAI />,
     bullets: [
-      'A IA faz uma revisão completa e dá feedback sobre cada parte do projeto',
-      'Aponta o que está bem explicado e o que ainda precisa de mais detalhe',
-      'É como teres um revisor mesmo antes de entregar',
+      'Revisão completa de cada secção com feedback concreto',
+      'Aponta o que falta e o que podes melhorar antes de entregar',
     ],
   },
   {
     target: 'preview',
     title: 'Modo Preview',
+    visual: <TourVisualPreview />,
     bullets: [
-      'Vê o projeto exatamente como um visitante ou recrutador o vê',
-      'Útil para perceber o que está visível ao público e se falta alguma coisa',
-      'Clica novamente para sair e voltar à vista normal',
+      'Alterna entre a tua vista de edição e o que o público vê',
     ],
   },
   {
     target: 'coach',
     title: 'Assistente IA',
+    visual: <TourVisualCoach />,
     bullets: [
-      'Um tutor sempre disponível para te ajudar com qualquer parte do projeto',
-      'Podes pedir sugestões, melhorar secções ou preparar a defesa em conversa',
-      'Conhece o teu projeto — as respostas são sempre contextualizadas',
+      'Conhece o teu projeto e ajuda a melhorar qualquer secção',
     ],
   },
   {
     target: 'missions',
     title: 'Missões',
+    visual: <TourVisualMissions />,
     bullets: [
-      'São tarefas geradas automaticamente para o teu projeto',
-      'Completa-as para subir o score e não perder nenhum detalhe',
-      'Vão atualizando à medida que o projeto cresce',
+      'Tarefas geradas automaticamente para subires o score',
     ],
   },
   {
     target: 'invite',
     title: 'Convidar colegas',
+    visual: <TourVisualInvite />,
     bullets: [
-      'Convida os colegas para trabalharem contigo no projeto',
-      'Cada um regista o seu trabalho separadamente',
-      'Perfeito se o projeto for de grupo',
+      'Cada colaborador regista o seu trabalho separadamente',
     ],
   },
 ]
@@ -3204,7 +3617,7 @@ function ProjectTour({ isPap, onClose }) {
 
   function tooltipPos() {
     if (!rect) return { left: -999, top: -999 }
-    const TW = 300, TH = 340, P = 16
+    const TW = 320, TH = 540, P = 16
     const vw = window.innerWidth, vh = window.innerHeight
     const cy = rect.top + rect.height / 2
     const centeredTop = Math.max(P, Math.min(cy - TH / 2, vh - TH - P))
@@ -3242,7 +3655,7 @@ function ProjectTour({ isPap, onClose }) {
         <div style={{
           position: 'fixed',
           left: tp.left, top: tp.top,
-          width: 300,
+          width: 320,
           background: 'var(--color-surface)',
           border: '1px solid var(--color-border)',
           borderRadius: 14,
@@ -3258,6 +3671,11 @@ function ProjectTour({ isPap, onClose }) {
           <p style={{ margin: 0, fontFamily: 'var(--font-heading)', fontSize: 15, fontWeight: 700, color: 'var(--color-text)', letterSpacing: '-0.02em' }}>
             {step.title}
           </p>
+          {step.visual && (
+            <div style={{ borderRadius: 10, overflow: 'hidden' }}>
+              {step.visual}
+            </div>
+          )}
           <ul style={{ margin: 0, padding: '0 0 0 16px', display: 'flex', flexDirection: 'column', gap: 5 }}>
             {step.bullets.map((b, i) => (
               <li key={i} style={{ fontSize: 13, color: 'var(--color-text-secondary)', lineHeight: 1.55 }}>{b}</li>
@@ -3409,8 +3827,11 @@ export default function ProjectPage() {
     if (profile.id !== project.user_id) return
     const params = new URLSearchParams(window.location.search)
     const isTourParam = params.get('tour') === '1'
-    const firstVisit = !localStorage.getItem(`showo_proj_tour_${project.id}`)
+    const tourKey = `showo_proj_tour_${profile.id}_${project.id}`
+    const firstVisit = !localStorage.getItem(tourKey)
     if (isTourParam || firstVisit) {
+      // Mark immediately so re-visits (or navigating away mid-tour) don't retrigger
+      localStorage.setItem(tourKey, '1')
       if (showLaunchOverlay) {
         tourPendingRef.current = true
       } else {
@@ -4662,10 +5083,7 @@ export default function ProjectPage() {
       {showTour && (
         <ProjectTour
           isPap={isPap}
-          onClose={() => {
-            setShowTour(false)
-            if (project?.id) localStorage.setItem(`showo_proj_tour_${project.id}`, '1')
-          }}
+          onClose={() => setShowTour(false)}
         />
       )}
 
@@ -6249,7 +6667,7 @@ export default function ProjectPage() {
 
         <div style={{ textAlign: 'center', padding: '40px 0 0', color: colors.subtle, fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, flexWrap: 'wrap' }}>
           Criado com{' '}
-          <img src={theme === 'light' ? '/light_mode_LI.png' : '/logo.png'} alt="Showo" style={{ height: 16, width: 'auto', verticalAlign: 'middle', opacity: 0.7 }} />
+          <img src={theme === 'light' ? '/lightmode_icon_logo.png' : '/darkmode_icon_logo.png'} alt="Showo" style={{ height: 16, width: 'auto', verticalAlign: 'middle', opacity: 0.7 }} />
         </div>
         </div>{/* end proj-body */}
         </div>{/* end proj-main */}

@@ -132,7 +132,7 @@ export default function SplashScreen({ visible }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexShrink: 0 }}>
           <img src="/icon.png" alt="" draggable={false} className={`sp-icon${iconIn ? ' sp-in' : ''}`} />
           <div className={`sp-logo-wrap${phase >= 1 ? ' sp-p1' : ''}`}>
-            <img src="/logo.png" alt="Showo" draggable={false} className="sp-logo" />
+            <img src="/darkmode_icon_logo.png" alt="Showo" draggable={false} className="sp-logo" />
           </div>
         </div>
 

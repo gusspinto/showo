@@ -164,7 +164,7 @@ export default function Certificate() {
             </div>
             <div style={{ fontSize: 11, color: C.muted, letterSpacing: '0.06em' }}>Verificado por IA · Showo</div>
           </div>
-          <img src="/logo.png" alt="Showo" style={{ height: 32, opacity: 0.9 }} />
+          <img src="/darkmode_icon_logo.png" alt="Showo" style={{ height: 32, opacity: 0.9 }} />
         </div>
 
         {/* Main content */}

@@ -236,6 +236,18 @@ body.sidebar-collapsed .proj-manage-float { left: 84px; }
 .proj-manage-float .pmf-btn:hover { color: var(--color-text); background: var(--color-surface-hover); }
 .proj-manage-float .pmf-btn.active { color: var(--color-primary); background: var(--color-primary-subtle); }
 .proj-manage-float .pmf-divider { width: 24px; height: 1px; background: var(--color-border); margin: 2px 0; }
+
+/* Preview button — tricolor outer glow that tracks the mouse */
+.proj-manage-float .pmf-btn[data-tour="preview"] {
+  --ox: 0px; --oy: 0px;
+  transition: color 0.15s, background 0.15s, box-shadow 0.06s;
+}
+.proj-manage-float .pmf-btn[data-tour="preview"]:hover {
+  box-shadow:
+    var(--ox) var(--oy) 8px -2px rgba(43,126,245,0.9),
+    calc(var(--ox) * 0.55) calc(var(--oy) * 0.55) 12px -2px rgba(43,126,245,0.5),
+    0 0 14px -2px rgba(43,126,245,0.25);
+}
 .proj-manage-float .pmf-tooltip {
   position: absolute;
   left: calc(100% + 8px); top: 50%; transform: translateY(-50%);

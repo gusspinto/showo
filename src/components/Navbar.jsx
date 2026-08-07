@@ -977,7 +977,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
         {/* Centre */}
         <div className="nav-mid" style={{ flexDirection: 'column', gap: 1 }}>
           <img
-            src={theme === 'light' ? '/light_mode_LI.png' : '/logo.png'} alt="Showo" draggable={false}
+            src={theme === 'light' ? '/lightmode_icon_logo.png' : '/darkmode_icon_logo.png'} alt="Showo" draggable={false}
             onClick={() => navigate('/')} className="nav-logo"
             style={{ height: 30, width: 'auto', display: 'block', cursor: 'pointer', userSelect: 'none' }}
           />
@@ -1199,13 +1199,13 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
         {collapsed ? (
           <div className="sb-top-row" style={{ padding: 0 }}>
             <button className="sb-logo" onClick={() => navigate(user ? '/dashboard' : '/')} title="Showo">
-              <img src="/icon.png" alt="Showo" style={{ height: 18, width: 18, objectFit: 'contain' }} />
+              <img src="/icon.png" alt="Showo" style={{ height: 28, width: 28, objectFit: 'contain' }} />
             </button>
           </div>
         ) : (
           <div className="sb-top-row" style={!user ? { alignItems: 'center' } : undefined}>
             <button className="sb-logo" onClick={() => navigate(user ? '/dashboard' : '/')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 1 }}>
-              <img src={theme === 'light' ? '/light_mode_LI.png' : '/icon_logo.png'} alt="Showo" style={{ height: 28, width: 'auto', objectFit: 'contain' }} />
+              <img src={theme === 'light' ? '/lightmode_icon_logo.png' : '/darkmode_icon_logo.png'} alt="Showo" style={{ height: 28, width: 'auto', objectFit: 'contain' }} />
             </button>
           </div>
         )}
@@ -1446,30 +1446,30 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
       {extras?.type === 'project' && (
         <div className="proj-manage-float">
           {extras.showBack ? (
-            <button className="pmf-btn" onClick={() => navigate(`/projeto/${extras.slug}`)} title="Ver projeto">
+            <button className="pmf-btn" aria-label="Ver projeto" onClick={() => navigate(`/projeto/${extras.slug}`)}>
               <ArrowLeft size={16} />
               <span className="pmf-tooltip">Ver projeto</span>
             </button>
           ) : (
-            <button className="pmf-btn" onClick={() => navigate(`/editar/${extras.slug}`)} title="Editar">
+            <button className="pmf-btn" aria-label="Editar" onClick={() => navigate(`/editar/${extras.slug}`)}>
               <Pencil size={16} />
               <span className="pmf-tooltip">Editar</span>
             </button>
           )}
           {extras.onDefense && (
-            <button className="pmf-btn" data-tour="defense" onClick={extras.onDefense} title="Modo defesa">
+            <button className="pmf-btn" data-tour="defense" aria-label="Modo defesa" onClick={extras.onDefense}>
               <GraduationCap size={16} />
               <span className="pmf-tooltip">Modo defesa</span>
             </button>
           )}
           {extras.onAnalyze && (
-            <button className={`pmf-btn${extras.analyzingAI ? ' active' : ''}`} data-tour="ai" onClick={extras.onAnalyze} disabled={extras.analyzingAI} title="Análise IA">
+            <button className={`pmf-btn${extras.analyzingAI ? ' active' : ''}`} data-tour="ai" aria-label="Análise IA" onClick={extras.onAnalyze} disabled={extras.analyzingAI}>
               <Sparkles size={16} />
               <span className="pmf-tooltip">{extras.analyzingAI ? 'A analisar…' : 'Análise IA'}</span>
             </button>
           )}
           {extras.showCertificate && (
-            <button className="pmf-btn" onClick={() => navigate(`/certificado/${extras.slug}`)} title="Certificado">
+            <button className="pmf-btn" aria-label="Certificado" onClick={() => navigate(`/certificado/${extras.slug}`)}>
               <Trophy size={16} />
               <span className="pmf-tooltip">Certificado</span>
             </button>
@@ -1477,7 +1477,23 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
           {extras.onTogglePublicView && (
             <>
               <div className="pmf-divider" />
-              <button className={`pmf-btn${extras.viewAsPublic ? ' active' : ''}`} data-tour="preview" onClick={extras.onTogglePublicView} title="Preview visitante">
+              <button
+                className={`pmf-btn${extras.viewAsPublic ? ' active' : ''}`}
+                data-tour="preview"
+                aria-label="Preview visitante"
+                onClick={extras.onTogglePublicView}
+                onMouseMove={e => {
+                  const r = e.currentTarget.getBoundingClientRect()
+                  const dx = (e.clientX - r.left - r.width / 2) / (r.width / 2)
+                  const dy = (e.clientY - r.top - r.height / 2) / (r.height / 2)
+                  e.currentTarget.style.setProperty('--ox', `${dx * 7}px`)
+                  e.currentTarget.style.setProperty('--oy', `${dy * 7}px`)
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.setProperty('--ox', '0px')
+                  e.currentTarget.style.setProperty('--oy', '0px')
+                }}
+              >
                 <Globe size={16} />
                 <span className="pmf-tooltip">{extras.viewAsPublic ? 'Sair preview' : 'Preview visitante'}</span>
               </button>
@@ -1493,7 +1509,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
           <div className={`mob-menu-sheet${menuOpen ? '' : ' closing'}`}>
             <div className="mob-drawer-head">
               <img
-                src={theme === 'light' ? '/light_mode_LI.png' : '/icon_logo.png'} alt="Showo" draggable={false}
+                src={theme === 'light' ? '/lightmode_icon_logo.png' : '/darkmode_icon_logo.png'} alt="Showo" draggable={false}
                 onClick={() => { navigate(user ? '/dashboard' : '/'); setMenuOpen(false) }}
                 style={{ height: 26, width: 'auto', objectFit: 'contain', cursor: 'pointer', userSelect: 'none' }}
               />

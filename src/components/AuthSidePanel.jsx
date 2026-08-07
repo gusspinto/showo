@@ -26,7 +26,7 @@ export default function AuthSidePanel({ phrases }) {
         `,
       }} />
       <div className="auth-side-content">
-        <img src="/icon_light.png" alt="Showo" className="auth-side-mark" />
+        <img src="/icon.png" alt="Showo" className="auth-side-mark" />
         <p className="auth-side-phrase" key={idx}>
           {current.lead}{' '}
           <span className="auth-side-highlight">

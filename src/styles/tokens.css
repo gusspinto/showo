@@ -63,68 +63,66 @@
 
 /* ══════════════════════════════════════════════════════════════════════════
    DARK THEME (default)
-   Deep navy with brand blue primary, teal accent for secondary highlights.
+   True black ground, tricolor brand (blue / gold / red), neutral text.
    ══════════════════════════════════════════════════════════════════════════ */
 :root {
-  --color-primary:       #1b78f7;
-  --color-primary-hover: #1564d4;
-  --color-primary-subtle:rgba(27,120,247,0.10);
-  --color-primary-muted: rgba(27,120,247,0.20);
-  /* Degrau escuro da mesma família — para superfícies cheias da marca, onde o
-     azul base não dá contraste suficiente a texto branco pequeno (4.0:1). */
-  --color-primary-deep:  #1257c4;
+  --color-primary:       #2B7EF5;
+  --color-primary-hover: #1a6fdc;
+  --color-primary-subtle:rgba(43,126,245,0.10);
+  --color-primary-muted: rgba(43,126,245,0.18);
+  --color-primary-deep:  #1a60c8;
 
   --color-accent:        #1a8a7a;
   --color-accent-hover:  #15756a;
   --color-accent-subtle: rgba(26,138,122,0.10);
 
-  --color-bg:            #0b1118;
-  --color-bg-alt:        #111c32;
-  --color-bg-raised:     #131c26;
-  --color-bg-overlay:    rgba(11,17,24,0.80);
+  --color-bg:            #080808;
+  --color-bg-alt:        #111111;
+  --color-bg-raised:     #181818;
+  --color-bg-overlay:    rgba(0,0,0,0.85);
 
-  --color-surface:       #172231;
-  --color-surface-hover: #1e2d3e;
-  --color-surface-alt:   #111b27;
+  --color-surface:       #1a1a1a;
+  --color-surface-hover: #222222;
+  --color-surface-alt:   #141414;
 
-  --color-border:        #1e3045;
-  --color-border-hover:  #2a4260;
-  --color-border-subtle: rgba(255,255,255,0.06);
+  --color-border:        rgba(255,255,255,0.08);
+  --color-border-hover:  rgba(255,255,255,0.14);
+  --color-border-subtle: rgba(255,255,255,0.04);
 
-  --color-text:          #e4eaf0;
-  --color-text-secondary:#8da0b8;
-  --color-text-tertiary: #5a7290;
-  --color-text-inverse:  #0b1118;
+  --color-text:          #f0f0f0;
+  --color-text-secondary:#888888;
+  --color-text-tertiary: #555555;
+  --color-text-inverse:  #000000;
 
-  --color-input-bg:      #0e1720;
-  --color-input-border:  #1e3045;
+  --color-input-bg:      #141414;
+  --color-input-border:  rgba(255,255,255,0.10);
   --color-input-focus:   var(--color-primary);
 
   --color-success:       #2a9d6a;
   --color-success-subtle:rgba(42,157,106,0.10);
-  --color-warning:       #c8911a;
-  --color-warning-subtle:rgba(200,145,26,0.10);
-  --color-error:         #d44040;
-  --color-error-subtle:  rgba(212,64,64,0.10);
+  --color-warning:       #C49A20;
+  --color-warning-subtle:rgba(196,154,32,0.12);
+  --color-error:         #E04848;
+  --color-error-subtle:  rgba(224,72,72,0.10);
   --color-info:          #3a8fd4;
   --color-info-subtle:   rgba(58,143,212,0.10);
 
-  --color-sidebar-bg:    #0d1620;
-  --color-sidebar-active:rgba(27,120,247,0.12);
+  --color-sidebar-bg:    #000000;
+  --color-sidebar-active:rgba(255,255,255,0.07);
   --color-sidebar-hover: rgba(255,255,255,0.04);
 
-  --color-badge-bg:      rgba(255,255,255,0.06);
+  --color-badge-bg:      rgba(255,255,255,0.07);
   --color-badge-text:    var(--color-text-secondary);
 
-  --color-glass:         rgba(255,255,255,0.035);
-  --color-glass-hover:   rgba(255,255,255,0.06);
-  --color-glass-border:  rgba(255,255,255,0.14);
-  --color-glass-border-bright: rgba(255,255,255,0.26);
+  --color-glass:         rgba(255,255,255,0.04);
+  --color-glass-hover:   rgba(255,255,255,0.07);
+  --color-glass-border:  rgba(255,255,255,0.10);
+  --color-glass-border-bright: rgba(255,255,255,0.20);
 
-  --shadow-sm:  0 1px 2px rgba(0,0,0,0.20);
-  --shadow-md:  0 2px 8px rgba(0,0,0,0.25);
-  --shadow-lg:  0 4px 16px rgba(0,0,0,0.30);
-  --shadow-xl:  0 8px 32px rgba(0,0,0,0.35);
+  --shadow-sm:  0 1px 2px rgba(0,0,0,0.40);
+  --shadow-md:  0 2px 8px rgba(0,0,0,0.45);
+  --shadow-lg:  0 4px 16px rgba(0,0,0,0.50);
+  --shadow-xl:  0 8px 32px rgba(0,0,0,0.55);
 }
 
 /* ══════════════════════════════════════════════════════════════════════════

@@ -342,8 +342,8 @@ export default function Register() {
         <div className="auth-card">
           <div className="auth-main-logo" style={{ marginBottom: 36 }}>
             <img
-              src={theme === 'light' ? '/light_mode_LI.png' : '/icon_logo.png'} alt="Showo"
-              style={{ height: 32, width: 'auto', cursor: 'pointer' }}
+              src="/icon.png" alt="Showo"
+              style={{ height: 32, width: 32, cursor: 'pointer', objectFit: 'contain' }}
               onClick={() => navigate('/')}
             />
           </div>

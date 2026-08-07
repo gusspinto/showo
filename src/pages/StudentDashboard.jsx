@@ -806,7 +806,7 @@ export default function StudentDashboard({ user, profile }) {
             <h1 className="sdb-hero-greeting">{greeting}</h1>
           </div>
 
-          <aside className="sdb-hero-side">
+          <aside className={`sdb-hero-side${entries.length > 0 && !loadingProjects && !loadingEntries ? ' sdb-hero-side--activity' : ''}`}>
             {loadingProjects || loadingEntries ? (
               <>
                 <div className="skel skel-line" style={{ height: 26, width: '55%' }} />
@@ -814,7 +814,7 @@ export default function StudentDashboard({ user, profile }) {
               </>
             ) : entries.length > 0 ? (
               <>
-                <span className="sdb-eyebrow">Atividade</span>
+                <span className="sdb-eyebrow" style={{ color: 'var(--color-warning)' }}>Atividade</span>
                 <div className="sdb-streak-row">
                   <Flame size={14} strokeWidth={2.5} />
                   <span>{streak} {streak === 1 ? 'semana seguida' : 'semanas seguidas'}</span>
