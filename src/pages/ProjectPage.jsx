@@ -3689,6 +3689,53 @@ function ProjectTour({ isPap, onClose }) {
 
   const tp = tooltipPos()
   const isLast = stepIdx === steps.length - 1
+  const isMobile = window.innerWidth < 640
+
+  const tooltipContent = (
+    <>
+      <span style={{ fontSize: 11, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: 600 }}>
+        {stepIdx + 1} / {steps.length}
+      </span>
+      <p style={{ margin: 0, fontFamily: 'var(--font-heading)', fontSize: 15, fontWeight: 700, color: 'var(--color-text)', letterSpacing: '-0.02em' }}>
+        {step.title}
+      </p>
+      {step.visual && !isMobile && (
+        <div style={{ borderRadius: 10, overflow: 'hidden' }}>
+          {step.visual}
+        </div>
+      )}
+      <ul style={{ margin: 0, padding: '0 0 0 16px', display: 'flex', flexDirection: 'column', gap: 5 }}>
+        {step.bullets.map((b, i) => (
+          <li key={i} style={{ fontSize: 13, color: 'var(--color-text-secondary)', lineHeight: 1.55 }}>{b}</li>
+        ))}
+      </ul>
+      <div style={{ display: 'flex', gap: 5, marginTop: 2 }}>
+        {steps.map((_, i) => (
+          <span key={i} style={{
+            width: i === stepIdx ? 18 : 6, height: 6, borderRadius: 3,
+            background: i === stepIdx ? 'var(--color-primary)' : 'var(--color-border)',
+            transition: 'width 0.2s, background 0.2s',
+            flexShrink: 0,
+          }} />
+        ))}
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
+        <button onClick={onClose} style={{
+          background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+          fontSize: 12, color: 'var(--color-text-tertiary)', fontFamily: 'inherit',
+        }}>
+          Saltar tour
+        </button>
+        <button onClick={() => isLast ? onClose() : setStepIdx(i => i + 1)} style={{
+          background: 'var(--color-primary)', border: 'none', borderRadius: 8,
+          padding: '9px 18px', color: '#fff', fontSize: 13, fontWeight: 600,
+          cursor: 'pointer', fontFamily: 'inherit',
+        }}>
+          {isLast ? 'Começar' : 'Próximo'}
+        </button>
+      </div>
+    </>
+  )
 
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 9100, pointerEvents: 'none' }}>
@@ -3707,61 +3754,41 @@ function ProjectTour({ isPap, onClose }) {
         }} />
       )}
       {rect && (
-        <div style={{
-          position: 'fixed',
-          left: tp.left, top: tp.top,
-          width: 320,
-          background: 'var(--color-surface)',
-          border: '1px solid var(--color-border)',
-          borderRadius: 14,
-          padding: '20px 20px 16px',
-          boxShadow: '0 8px 48px rgba(0,0,0,0.5)',
-          display: 'flex', flexDirection: 'column', gap: 10,
-          zIndex: 9102,
-          pointerEvents: 'all',
-        }}>
-          <span style={{ fontSize: 11, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: 600 }}>
-            {stepIdx + 1} / {steps.length}
-          </span>
-          <p style={{ margin: 0, fontFamily: 'var(--font-heading)', fontSize: 15, fontWeight: 700, color: 'var(--color-text)', letterSpacing: '-0.02em' }}>
-            {step.title}
-          </p>
-          {step.visual && (
-            <div style={{ borderRadius: 10, overflow: 'hidden' }}>
-              {step.visual}
-            </div>
-          )}
-          <ul style={{ margin: 0, padding: '0 0 0 16px', display: 'flex', flexDirection: 'column', gap: 5 }}>
-            {step.bullets.map((b, i) => (
-              <li key={i} style={{ fontSize: 13, color: 'var(--color-text-secondary)', lineHeight: 1.55 }}>{b}</li>
-            ))}
-          </ul>
-          <div style={{ display: 'flex', gap: 5, marginTop: 2 }}>
-            {steps.map((_, i) => (
-              <span key={i} style={{
-                width: i === stepIdx ? 18 : 6, height: 6, borderRadius: 3,
-                background: i === stepIdx ? 'var(--color-primary)' : 'var(--color-border)',
-                transition: 'width 0.2s, background 0.2s',
-                flexShrink: 0,
-              }} />
-            ))}
+        isMobile ? (
+          /* ── Mobile: bottom sheet ── */
+          <div style={{
+            position: 'fixed',
+            left: 0, right: 0, bottom: 0,
+            background: 'var(--color-surface)',
+            borderTop: '1px solid var(--color-border)',
+            borderRadius: '16px 16px 0 0',
+            padding: '16px 20px calc(16px + env(safe-area-inset-bottom))',
+            boxShadow: '0 -8px 40px rgba(0,0,0,0.5)',
+            display: 'flex', flexDirection: 'column', gap: 10,
+            zIndex: 9102,
+            pointerEvents: 'all',
+          }}>
+            <div style={{ width: 36, height: 4, borderRadius: 2, background: 'var(--color-border)', margin: '0 auto 4px' }} />
+            {tooltipContent}
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
-            <button onClick={onClose} style={{
-              background: 'none', border: 'none', cursor: 'pointer', padding: 0,
-              fontSize: 12, color: 'var(--color-text-tertiary)', fontFamily: 'inherit',
-            }}>
-              Saltar tour
-            </button>
-            <button onClick={() => isLast ? onClose() : setStepIdx(i => i + 1)} style={{
-              background: 'var(--color-primary)', border: 'none', borderRadius: 8,
-              padding: '9px 18px', color: '#fff', fontSize: 13, fontWeight: 600,
-              cursor: 'pointer', fontFamily: 'inherit',
-            }}>
-              {isLast ? 'Começar' : 'Próximo'}
-            </button>
+        ) : (
+          /* ── Desktop: floating tooltip ── */
+          <div style={{
+            position: 'fixed',
+            left: tp.left, top: tp.top,
+            width: 320,
+            background: 'var(--color-surface)',
+            border: '1px solid var(--color-border)',
+            borderRadius: 14,
+            padding: '20px 20px 16px',
+            boxShadow: '0 8px 48px rgba(0,0,0,0.5)',
+            display: 'flex', flexDirection: 'column', gap: 10,
+            zIndex: 9102,
+            pointerEvents: 'all',
+          }}>
+            {tooltipContent}
           </div>
-        </div>
+        )
       )}
     </div>
   )
@@ -5924,16 +5951,17 @@ export default function ProjectPage() {
             )
           })()}
 
-          {/* Title row — Syne font, large */}
+          {/* Title row — uses titleFont + titleStyle from previewStyle */}
           <div className="proj-h1-row" style={{ alignItems: 'flex-start' }}>
             <h1 className="proj-h1" style={{
               fontSize: 'clamp(34px, 5.5vw, 48px)',
               fontWeight: 500,
               margin: 0,
               lineHeight: 1.08,
-              letterSpacing: '-0.02em',
+              letterSpacing: (previewStyle.titleStyle === 'caps') ? '0.04em' : '-0.02em',
               flex: 1,
-              fontFamily: 'var(--font-heading)',
+              fontFamily: (TITLE_FONT_OPTIONS.find(f => f.key === (previewStyle.titleFont || 'croogla'))?.css) || 'var(--font-heading)',
+              textTransform: previewStyle.titleStyle === 'caps' ? 'uppercase' : 'none',
               color: colors.text,
             }}>
               {project.name}

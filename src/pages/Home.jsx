@@ -8,6 +8,15 @@ import GoogleButton from '../components/GoogleButton'
 import { useAuth } from '../context/AuthContext'
 import './Home.css'
 
+const TITLE_FONT_CSS = {
+  croogla:  'Croogla, sans-serif',
+  syne:     'Syne, sans-serif',
+  playfair: '"Playfair Display", serif',
+  space:    '"Space Grotesk", sans-serif',
+  fredoka:  '"Fredoka One", cursive',
+  inter:    'Inter, sans-serif',
+}
+
 const HOW_IT_WORKS = [
   { Icon: FileText, step: '1', title: 'Descreve o teu projeto', desc: 'Em poucas frases: o que fizeste, que problema resolve, que tecnologias usaste.' },
   { Icon: Trophy,    step: '2', title: 'Ganha o teu score', desc: 'Score automático, sugestões de melhoria e uma página pronta a partilhar.' },
@@ -93,7 +102,7 @@ export default function Home() {
     async function load() {
       const { data } = await supabase
         .from('projects')
-        .select('id,name,slug,area,creator_name,ai_tagline,score,cover_url,views,project_type')
+        .select('id,name,slug,area,creator_name,ai_tagline,score,cover_url,views,project_type,preview_style')
         .order('score', { ascending: false })
         .limit(6)
       if (data) setProjects(data)
@@ -264,7 +273,10 @@ export default function Home() {
                   <div className="home-card-meta">
                     {p.creator_name || 'Estudante'}{p.area ? ` · ${p.area}` : ''}
                   </div>
-                  <h3 className="home-card-name">{p.name}</h3>
+                  <h3 className="home-card-name" style={{
+                    ...(p.preview_style?.titleFont ? { fontFamily: TITLE_FONT_CSS[p.preview_style.titleFont] } : {}),
+                    ...(p.preview_style?.titleStyle === 'caps' ? { textTransform: 'uppercase', letterSpacing: '0.04em' } : {}),
+                  }}>{p.name}</h3>
                   {p.ai_tagline && <p className="home-card-tagline">{p.ai_tagline}</p>}
                   {p.views != null && (
                     <div className="home-card-views"><Eye size={12} /> {p.views}</div>

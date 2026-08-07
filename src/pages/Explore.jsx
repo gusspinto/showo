@@ -6,6 +6,15 @@ import { useAuth } from '../context/AuthContext'
 import { Search, Building2, Eye, Briefcase, Users, GraduationCap, BookOpen, SlidersHorizontal, X } from 'lucide-react'
 import './Explore.css'
 
+const TITLE_FONT_CSS = {
+  croogla:  'Croogla, sans-serif',
+  syne:     'Syne, sans-serif',
+  playfair: '"Playfair Display", serif',
+  space:    '"Space Grotesk", sans-serif',
+  fredoka:  '"Fredoka One", cursive',
+  inter:    'Inter, sans-serif',
+}
+
 const PROJECT_TYPES = [
   { id: '', label: 'Todos os tipos' },
   { id: 'pap', label: 'PAP / Projeto final' },
@@ -137,7 +146,7 @@ export default function Explore() {
     async function load() {
       const { data, error } = await supabase
         .from('projects')
-        .select('id,name,slug,area,creator_name,course,school_year,ai_tagline,project_type,is_pap,score,created_at,technologies,views,cover_url,user_id,tags')
+        .select('id,name,slug,area,creator_name,course,school_year,ai_tagline,project_type,is_pap,score,created_at,technologies,views,cover_url,user_id,tags,preview_style')
         .order('score', { ascending: false })
         .limit(300)
 
@@ -461,7 +470,10 @@ export default function Explore() {
 
                     {/* Name + tagline */}
                     <div>
-                      <h3 className="explore-card-name">{project.name}</h3>
+                      <h3 className="explore-card-name" style={{
+                        ...(project.preview_style?.titleFont ? { fontFamily: TITLE_FONT_CSS[project.preview_style.titleFont] } : {}),
+                        ...(project.preview_style?.titleStyle === 'caps' ? { textTransform: 'uppercase', letterSpacing: '0.04em' } : {}),
+                      }}>{project.name}</h3>
                       {project.ai_tagline && <p className="explore-card-tagline">{project.ai_tagline}</p>}
                     </div>
 

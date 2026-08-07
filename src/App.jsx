@@ -218,13 +218,13 @@ function NotFound() {
 }
 
 // ── Animation timeline ────────────────────────────────────────────────────────
-// 1.9s  — splash animation plays
-// 1.0s  — hold at final state so the user can read it
-// 0.65s — fade out transition (handled by CSS on SplashScreen)
+// 0.5s  — logo fades/scales in
+// 0.6s  — hold at final state
+// 0.6s  — fade out transition (handled by CSS on SplashScreen)
 // 0.65s — unmount after fade completes
 
-const HOLD_MS    = 1900 + 1800   // when to start fading (3700ms)
-const UNMOUNT_MS = HOLD_MS + 700 // when to remove from DOM (4400ms)
+const HOLD_MS    = 1100           // when to start fading (1100ms)
+const UNMOUNT_MS = HOLD_MS + 700  // when to remove from DOM (1800ms)
 const SPLASH_KEY = 'showo_seen_splash'
 
 function HomeRoute() {
