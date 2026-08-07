@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
-import { Folder, Check, Search, User, Copy, Inbox, Download, MessageSquare, X, ChevronUp, ChevronDown, ChevronRight, ArrowRight, Pencil, UserMinus, GraduationCap, CheckCircle, AlertTriangle, ListChecks, Circle, Trash2, Plus, Calendar, ClipboardList, Scale } from 'lucide-react'
+import { Folder, Check, Search, User, Copy, Inbox, Download, MessageSquare, X, ChevronUp, ChevronDown, ChevronRight, ArrowRight, Pencil, UserMinus, GraduationCap, CheckCircle, AlertTriangle, ListChecks, Circle, Trash2, Plus, Calendar, ClipboardList, Scale, Trophy } from 'lucide-react'
 import { Button, Modal, ModalActions } from '../components/ui'
 import { getCurrentAcademicYear, academicYearOptions } from '../lib/academicYear'
 
@@ -362,6 +362,8 @@ export default function TurmaPage() {
   const [showTaskModal, setShowTaskModal] = useState(false)
   const [editingTask, setEditingTask] = useState(null)
   const [deletingTask, setDeletingTask] = useState(null)
+  const [rankingEnabled, setRankingEnabled] = useState(false)
+  const [rankingToggling, setRankingToggling] = useState(false)
   const [criteria, setCriteria] = useState([])
   const [criteriaAdding, setCriteriaAdding] = useState(false)
   const [newCritName, setNewCritName] = useState('')
@@ -379,12 +381,13 @@ export default function TurmaPage() {
     async function load() {
       const { data: cls, error } = await supabase
         .from('classes')
-        .select('id, name, subject, code, teacher_name, teacher_id, academic_year, created_at')
+        .select('id, name, subject, code, teacher_name, teacher_id, academic_year, created_at, show_ranking')
         .eq('code', code.toUpperCase())
         .single()
 
       if (error || !cls) { setLoading(false); return }
       setTurma(cls)
+      setRankingEnabled(!!cls.show_ranking)
       const teacherNow = user && cls.teacher_id === user.id
       if (teacherNow) setIsTeacher(true)
 
@@ -845,6 +848,15 @@ export default function TurmaPage() {
     } catch {}
     setLeavingClass(false)
     navigate('/dashboard')
+  }
+
+  async function toggleRanking() {
+    if (!turma || rankingToggling) return
+    setRankingToggling(true)
+    const next = !rankingEnabled
+    const { error } = await supabase.from('classes').update({ show_ranking: next }).eq('id', turma.id)
+    if (!error) setRankingEnabled(next)
+    setRankingToggling(false)
   }
 
   async function handleUpdateTurma(name, subject, academicYear) {
@@ -1467,6 +1479,112 @@ export default function TurmaPage() {
             )}
           </div>
         )}
+
+        {/* Ranking */}
+        {(rankingEnabled || isTeacher) && (() => {
+          // Build ranking: best score per student (their projects in this turma)
+          const studentMembers = members.filter(m => m.role !== 'professor')
+          const ranked = studentMembers.map(m => {
+            const studentProjects = projects.filter(p => p.user_id === m.user_id && p.score != null)
+            const best = studentProjects.reduce((top, p) => p.score > (top?.score ?? -1) ? p : top, null)
+            return { ...m, bestProject: best, bestScore: best?.score ?? null }
+          }).sort((a, b) => {
+            if (a.bestScore == null && b.bestScore == null) return 0
+            if (a.bestScore == null) return 1
+            if (b.bestScore == null) return -1
+            return b.bestScore - a.bestScore
+          })
+
+          const medals = ['🥇', '🥈', '🥉']
+
+          return (
+            <div style={{ marginBottom: 32 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 14 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Trophy size={14} color={C.muted} />
+                  <span style={{ fontSize: 13, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.07em' }}>
+                    Ranking da turma
+                  </span>
+                </div>
+                {isTeacher && (
+                  <button
+                    onClick={toggleRanking}
+                    disabled={rankingToggling}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 6,
+                      background: rankingEnabled ? 'var(--color-success-subtle)' : C.bgAlt,
+                      border: `1px solid ${rankingEnabled ? 'var(--color-success-subtle)' : C.border}`,
+                      borderRadius: 7, padding: '5px 11px', cursor: rankingToggling ? 'default' : 'pointer',
+                      fontFamily: 'inherit', fontSize: 12, fontWeight: 700,
+                      color: rankingEnabled ? 'var(--color-success)' : C.muted,
+                      opacity: rankingToggling ? 0.6 : 1,
+                    }}
+                  >
+                    <div style={{ width: 28, height: 16, borderRadius: 999, background: rankingEnabled ? 'var(--color-success)' : C.border, position: 'relative', transition: 'background 0.2s', flexShrink: 0 }}>
+                      <div style={{ position: 'absolute', top: 2, left: rankingEnabled ? 14 : 2, width: 12, height: 12, borderRadius: '50%', background: '#fff', transition: 'left 0.2s' }} />
+                    </div>
+                    {rankingEnabled ? 'Visível para a turma' : 'Só visível para ti'}
+                  </button>
+                )}
+              </div>
+
+              {ranked.length === 0 ? (
+                <div style={{ ...C.glassStyle, background: C.glass, border: `1px dashed ${C.glassBorder}`, borderRadius: 10, padding: '20px', textAlign: 'center' }}>
+                  <p style={{ margin: 0, fontSize: 13, color: C.subtle }}>Sem alunos para classificar.</p>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {ranked.map((m, idx) => {
+                    const pos = idx + 1
+                    const medal = medals[idx] || null
+                    const isMe = user && m.user_id === user.id
+                    return (
+                      <div
+                        key={m.user_id}
+                        onClick={isTeacher ? () => navigate(`/turma/${turma.code}/aluno/${m.user_id}`) : undefined}
+                        style={{
+                          ...C.glassStyle,
+                          background: isMe ? 'var(--color-primary-subtle)' : C.glass,
+                          border: `1px solid ${isMe ? 'var(--color-primary-subtle)' : C.glassBorder}`,
+                          borderRadius: 10, padding: '11px 14px',
+                          display: 'flex', alignItems: 'center', gap: 12,
+                          cursor: isTeacher ? 'pointer' : 'default',
+                          transition: 'background 0.12s, border-color 0.12s',
+                        }}
+                        onMouseEnter={isTeacher ? e => { e.currentTarget.style.background = C.glassHover; e.currentTarget.style.borderColor = C.glassBorderBright } : undefined}
+                        onMouseLeave={isTeacher ? e => { e.currentTarget.style.background = isMe ? 'var(--color-primary-subtle)' : C.glass; e.currentTarget.style.borderColor = isMe ? 'var(--color-primary-subtle)' : C.glassBorder } : undefined}
+                      >
+                        <div style={{ width: 28, textAlign: 'center', fontSize: medal ? 18 : 13, fontWeight: 800, color: pos === 1 ? '#f59e0b' : pos === 2 ? '#94a3b8' : pos === 3 ? '#b45309' : C.subtle, flexShrink: 0 }}>
+                          {medal || `${pos}º`}
+                        </div>
+                        <Avatar avatarUrl={m.avatar_url} name={m.full_name} size={32} />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 14, fontWeight: isMe ? 700 : 600, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {m.full_name}{isMe && <span style={{ fontSize: 11, color: 'var(--color-primary)', marginLeft: 6, fontWeight: 700 }}>tu</span>}
+                          </div>
+                          {m.bestProject && (
+                            <div style={{ fontSize: 11, color: C.subtle, marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.bestProject.name}</div>
+                          )}
+                        </div>
+                        <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                          {m.bestScore != null
+                            ? <span style={{ fontSize: 16, fontWeight: 800, color: scoreColor(m.bestScore), fontFamily: 'var(--font-heading)', letterSpacing: '-0.5px' }}>{m.bestScore}</span>
+                            : <span style={{ fontSize: 13, color: C.subtle }}>—</span>}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+
+              {!rankingEnabled && isTeacher && (
+                <p style={{ margin: '10px 0 0', fontSize: 12, color: C.subtle, textAlign: 'center' }}>
+                  Ativa o ranking para os alunos também o verem.
+                </p>
+              )}
+            </div>
+          )
+        })()}
 
         {/* Projects */}
         {sortedProjects.length > 0 && (
