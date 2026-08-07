@@ -4,13 +4,13 @@
    ══════════════════════════════════════════════════════════════════════════ */
 
 .dashboard-root {
-  --font-heading: 'Stack Sans Notch', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --font-heading: 'Geist', 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 .dashboard-root h1,
 .dashboard-root h2,
 .dashboard-root h3,
 .dashboard-root h4 {
-  font-family: 'Stack Sans Notch', 'Helvetica Neue', Helvetica, Arial, sans-serif !important;
+  font-family: 'Geist', 'Helvetica Neue', Helvetica, Arial, sans-serif !important;
 }
 
 @keyframes dash-fade-up {
