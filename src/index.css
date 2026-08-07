@@ -63,7 +63,7 @@ textarea:-webkit-autofill:focus {
 }
 
 :root {
-  --font-heading: 'Sora', 'Inter', system-ui, sans-serif;
+  --font-heading: 'Manrope', 'Inter', system-ui, sans-serif;
   --font-body: 'Montserrat', 'Inter', system-ui, -apple-system, sans-serif;
 
   /* ── Legacy aliases — all values come from tokens.css now ── */
