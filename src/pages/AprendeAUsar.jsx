@@ -1,299 +1,529 @@
 import { useState, useEffect, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { Navbar } from '../components/Navbar'
+import { supabase } from '../lib/supabase'
+import { useAuth } from '../context/AuthContext'
 import {
-  LayoutDashboard, FolderOpen, BookOpen, Palette, User, Compass,
-  Users2, MessageSquare, Swords, Star, Plus, Pin, ChevronRight,
-  CheckCircle2, Zap, Target, TrendingUp, ArrowRight, AlignLeft,
-  Quote, Image, BarChart2, Video, Layers, FileText, CalendarClock,
-  Pencil, Trash2, ArrowUpRight, GraduationCap, Trophy, Eye, Lock,
-  Sparkles, Globe, Settings,
+  Pin, Pencil, Trash2, ArrowUpRight, ArrowLeft,
+  TrendingUp, AlertTriangle, GitBranch, Search, Lightbulb, CheckCircle2, StickyNote,
+  ZoomIn, ZoomOut, RotateCcw, Quote, Send, Check, Loader2,
 } from 'lucide-react'
 import './AprendeAUsar.css'
 
-// ── Sections index ──────────────────────────────────────────────────────────
 const SECTIONS = [
-  { id: 'dashboard',   label: 'Dashboard',          Icon: LayoutDashboard,  color: '#1b78f7' },
-  { id: 'projetos',    label: 'Projetos',            Icon: FolderOpen,       color: '#10b981' },
-  { id: 'diario',      label: 'Diário de Projeto',   Icon: BookOpen,         color: '#f59e0b' },
-  { id: 'preview',     label: 'Preview & Templates', Icon: Palette,          color: '#a78bfa' },
-  { id: 'perfil',      label: 'Perfil Público',      Icon: User,             color: '#ec4899' },
-  { id: 'explorar',    label: 'Explorar',            Icon: Compass,          color: '#06b6d4' },
-  { id: 'turmas',      label: 'Turmas',              Icon: Users2,           color: '#f97316' },
-  { id: 'mensagens',   label: 'Mensagens',           Icon: MessageSquare,    color: '#8b5cf6' },
-  { id: 'missoes',     label: 'Missões',             Icon: Swords,           color: '#ef4444' },
-  { id: 'score',       label: 'Sistema de Score',    Icon: Star,             color: '#d97706' },
+  { id: 'dashboard',   label: 'Dashboard' },
+  { id: 'projetos',    label: 'Projetos' },
+  { id: 'diario',      label: 'Diário de Projeto' },
+  { id: 'preview',     label: 'Preview e Templates' },
+  { id: 'perfil',      label: 'Perfil Público' },
+  { id: 'explorar',    label: 'Explorar' },
+  { id: 'turmas',      label: 'Turmas' },
+  { id: 'mensagens',   label: 'Mensagens' },
+  { id: 'missoes',     label: 'Missões' },
+  { id: 'score',       label: 'Sistema de Score' },
 ]
 
-// ── Mini mockup components ──────────────────────────────────────────────────
-function MockupShell({ children, label }) {
+// ── Mockup shell ──────────────────────────────────────────────────────────────
+function Mockup({ label, children, dark }) {
   return (
-    <div className="atu-mockup">
-      <div className="atu-mockup-bar">
-        <span className="atu-mockup-dot" style={{ background: '#ef4444' }} />
-        <span className="atu-mockup-dot" style={{ background: '#f59e0b' }} />
-        <span className="atu-mockup-dot" style={{ background: '#22c55e' }} />
-        {label && <span className="atu-mockup-label">{label}</span>}
+    <figure className={`atu-mockup${dark ? ' atu-mockup--dark' : ''}`}>
+      <div className="atu-mockup-bar" style={dark ? { background: 'rgba(8,14,28,0.95)', borderColor: 'rgba(255,255,255,0.07)' } : {}}>
+        <span className="atu-mockup-dot" />
+        <span className="atu-mockup-dot" />
+        <span className="atu-mockup-dot" />
+        {label && <span className="atu-mockup-label" style={dark ? { color: '#475569' } : {}}>{label}</span>}
       </div>
       <div className="atu-mockup-body">{children}</div>
-    </div>
+    </figure>
   )
 }
 
-function MockupDashboard() {
+// ── Mockups ───────────────────────────────────────────────────────────────────
+function MkDashboard() {
   return (
-    <MockupShell label="Dashboard">
-      <div style={{ display: 'flex', gap: 6 }}>
-        <div style={{ width: 44, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
-          {['#1b78f7', '#10b981', '#f59e0b', '#a78bfa'].map((c, i) => (
-            <div key={i} style={{ height: 28, borderRadius: 5, background: i === 0 ? c + '22' : 'var(--color-bg-alt)', border: i === 0 ? `1px solid ${c}44` : '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <div style={{ width: 10, height: 10, borderRadius: 2, background: i === 0 ? c : 'var(--color-border)' }} />
-            </div>
+    <Mockup label="showo — Dashboard">
+      <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ width: 38, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 3 }}>
+          {[1,2,3,4].map(i => (
+            <div key={i} style={{ height: 22, borderRadius: 6, background: i === 1 ? 'var(--color-primary-subtle)' : 'var(--color-bg-alt)', border: i === 1 ? '1px solid var(--color-primary-muted)' : '1px solid var(--color-border)' }} />
           ))}
         </div>
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 5 }}>
-          <div style={{ height: 54, borderRadius: 6, background: 'rgba(27,120,247,0.12)', border: '1px solid rgba(27,120,247,0.22)', padding: '6px 8px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-              <div style={{ width: 28, height: 5, borderRadius: 2, background: 'rgba(255,255,255,0.6)' }} />
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {/* Project Pulse */}
+          <div style={{ borderRadius: 9, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.22)', padding: '9px 11px', display: 'flex', flexDirection: 'column', gap: 7 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div style={{ fontSize: 7, fontWeight: 700, color: 'rgba(255,255,255,0.85)', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 3, padding: '1px 5px' }}>PAP</div>
+              <div style={{ marginLeft: 'auto', display: 'flex', gap: 3 }}>
+                <Trash2 size={8} color="rgba(255,255,255,0.4)" />
+                <Pencil size={8} color="rgba(255,255,255,0.5)" />
+                <ArrowUpRight size={8} color="rgba(255,255,255,0.5)" />
+              </div>
             </div>
-            <div style={{ display: 'flex', gap: 4 }}>
-              <div style={{ height: 14, width: 38, borderRadius: 4, background: '#1b78f7' }} />
-              <div style={{ height: 14, width: 30, borderRadius: 4, background: 'rgba(27,120,247,0.3)', border: '1px solid rgba(27,120,247,0.4)' }} />
+            <div style={{ height: 7, width: '60%', borderRadius: 3, background: 'rgba(255,255,255,0.75)' }} />
+            <div style={{ height: 3, width: '40%', borderRadius: 2, background: 'rgba(255,255,255,0.35)' }} />
+            <div style={{ display: 'flex', gap: 5 }}>
+              <div style={{ height: 16, width: 52, borderRadius: 5, background: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 3 }}>
+                <div style={{ width: 16, height: 2.5, borderRadius: 1, background: 'rgba(255,255,255,0.8)' }} />
+              </div>
+              <div style={{ height: 16, width: 44, borderRadius: 5, border: '1px solid rgba(27,120,247,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: 14, height: 2.5, borderRadius: 1, background: 'rgba(27,120,247,0.7)' }} />
+              </div>
             </div>
           </div>
-          <div style={{ display: 'flex', gap: 5 }}>
-            <div style={{ flex: 1, height: 38, borderRadius: 6, background: 'var(--color-glass)', border: '1px solid var(--color-glass-border)', padding: '5px 6px', display: 'flex', flexDirection: 'column', gap: 3 }}>
-              <div style={{ width: 20, height: 3, borderRadius: 2, background: 'var(--color-text-tertiary)' }} />
-              <div style={{ width: '70%', height: 4, borderRadius: 2, background: 'var(--color-text)' }} />
+          {/* Pinned card */}
+          <div style={{ borderRadius: 9, overflow: 'hidden', border: '1px solid var(--color-glass-border)' }}>
+            <div style={{ height: 22, background: 'linear-gradient(90deg, rgba(27,120,247,0.28), rgba(27,120,247,0.06))', display: 'flex', alignItems: 'center', padding: '0 8px', gap: 4 }}>
+              <div style={{ fontSize: 6, fontWeight: 700, color: 'rgba(255,255,255,0.85)', background: 'rgba(255,255,255,0.1)', borderRadius: 3, padding: '1px 4px' }}>Pessoal</div>
+              <div style={{ marginLeft: 'auto', display: 'flex', gap: 3 }}>
+                <Pin size={7} color="rgba(255,255,255,0.7)" fill="rgba(255,255,255,0.7)" />
+                <Pencil size={7} color="rgba(255,255,255,0.5)" />
+                <Trash2 size={7} color="rgba(255,255,255,0.4)" />
+              </div>
             </div>
-            <div style={{ flex: 1, height: 38, borderRadius: 6, background: 'var(--color-glass)', border: '1px solid var(--color-glass-border)', padding: '5px 6px', display: 'flex', flexDirection: 'column', gap: 3 }}>
-              <div style={{ width: 20, height: 3, borderRadius: 2, background: 'var(--color-text-tertiary)' }} />
-              <div style={{ width: '55%', height: 4, borderRadius: 2, background: 'var(--color-text)' }} />
+            <div style={{ background: 'var(--color-glass)', padding: '7px 9px', display: 'flex', flexDirection: 'column', gap: 5 }}>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <div style={{ flex: 1, height: 5, borderRadius: 2, background: 'var(--color-text)', opacity: 0.6 }} />
+                <div style={{ fontSize: 9, fontWeight: 900, color: 'var(--color-primary)' }}>74</div>
+              </div>
+              <div style={{ display: 'flex', gap: 4 }}>
+                <div style={{ height: 14, flex: 1, borderRadius: 4, background: 'var(--color-primary)' }} />
+                <div style={{ height: 14, flex: 1, borderRadius: 4, border: '1px solid var(--color-border)' }} />
+                <div style={{ height: 14, flex: 1, borderRadius: 4, border: '1px solid var(--color-border)' }} />
+              </div>
             </div>
-          </div>
-        </div>
-      </div>
-    </MockupShell>
-  )
-}
-
-function MockupPinnedCard() {
-  return (
-    <MockupShell label="Projeto fixado">
-      <div style={{ borderRadius: 8, overflow: 'hidden', border: '1px solid var(--color-glass-border)' }}>
-        <div style={{ height: 24, background: 'linear-gradient(90deg, rgba(27,120,247,0.4), rgba(27,120,247,0.1))', display: 'flex', alignItems: 'center', padding: '0 8px', gap: 5 }}>
-          <div style={{ fontSize: 7, fontWeight: 700, color: '#fff', background: 'rgba(255,255,255,0.15)', borderRadius: 3, padding: '1px 4px' }}>PAP</div>
-          <Pin size={8} color="rgba(255,255,255,0.8)" fill="rgba(255,255,255,0.8)" style={{ marginLeft: 'auto' }} />
-          <Pencil size={8} color="rgba(255,255,255,0.7)" />
-          <Trash2 size={8} color="rgba(255,255,255,0.5)" />
-        </div>
-        <div style={{ background: 'var(--color-glass)', padding: '8px 8px 8px', display: 'flex', flexDirection: 'column', gap: 5 }}>
-          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-            <div style={{ flex: 1, height: 7, borderRadius: 3, background: 'var(--color-text)', opacity: 0.7 }} />
-            <div style={{ fontSize: 9, fontWeight: 900, color: 'var(--color-primary)', lineHeight: 1 }}>82</div>
-          </div>
-          <div style={{ display: 'flex', gap: 4 }}>
-            <div style={{ height: 14, flex: 1, borderRadius: 4, background: '#1b78f7', opacity: 0.9 }} />
-            <div style={{ height: 14, flex: 1, borderRadius: 4, background: 'transparent', border: '1px solid var(--color-border)' }} />
-            <div style={{ height: 14, flex: 1, borderRadius: 4, background: 'transparent', border: '1px solid var(--color-border)' }} />
           </div>
         </div>
       </div>
-    </MockupShell>
+    </Mockup>
   )
 }
 
-function MockupDiary() {
-  const kinds = [
-    { label: 'Progresso', c: '#1b78f7' },
-    { label: 'Dificuldade', c: '#ef4444' },
-    { label: 'Decisão', c: '#f59e0b' },
-    { label: 'Resultado', c: '#10b981' },
-  ]
+function MkProjectList() {
   return (
-    <MockupShell label="Diário de Projeto">
+    <Mockup label="showo — Os meus projetos">
       <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-        {kinds.map(k => (
-          <div key={k.label} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 6px', borderRadius: 5, background: k.c + '12', border: `1px solid ${k.c}28` }}>
-            <div style={{ width: 6, height: 6, borderRadius: '50%', background: k.c, flexShrink: 0 }} />
-            <div style={{ fontSize: 8, fontWeight: 700, color: k.c }}>{k.label}</div>
-            <div style={{ flex: 1, height: 3, borderRadius: 2, background: k.c + '44' }} />
+        {[
+          { name: 'App de Gestão de Stock', score: 82, pinned: true, star: true },
+          { name: 'Site Institucional — Grupo', score: 61, pinned: false, star: false },
+          { name: 'Jogo Educativo Unity', score: 44, pinned: true, star: false },
+        ].map((p, i) => (
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 9px', borderRadius: 7, background: 'var(--color-glass)', border: '1px solid var(--color-glass-border)' }}>
+            <div style={{ flex: 1, fontSize: 8, fontWeight: 600, color: 'var(--color-text)' }}>{p.name}</div>
+            <Pin size={8} color={p.pinned ? 'var(--color-primary)' : 'var(--color-text-tertiary)'} fill={p.pinned ? 'var(--color-primary)' : 'none'} />
+            <div style={{ fontSize: 8, color: p.star ? '#f59e0b' : 'var(--color-text-tertiary)' }}>★</div>
+            <div style={{ fontSize: 9, fontWeight: 900, color: 'var(--color-primary)', minWidth: 20, textAlign: 'right' }}>{p.score}</div>
           </div>
         ))}
       </div>
-    </MockupShell>
+    </Mockup>
   )
 }
 
-function MockupPreview() {
+function MkJournalComposer() {
+  const kinds = [
+    { id: 'progresso', label: 'Progresso', Icon: TrendingUp },
+    { id: 'dificuldade', label: 'Dificuldade', Icon: AlertTriangle },
+    { id: 'decisao', label: 'Decisão', Icon: GitBranch },
+    { id: 'pesquisa', label: 'Pesquisa', Icon: Search },
+    { id: 'ideia', label: 'Ideia', Icon: Lightbulb },
+    { id: 'resultado', label: 'Resultado', Icon: CheckCircle2 },
+    { id: 'nota', label: 'Nota', Icon: StickyNote },
+  ]
   return (
-    <MockupShell label="Editor de Preview">
-      <div style={{ display: 'flex', gap: 6, height: 90 }}>
-        <div style={{ width: 56, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 3 }}>
-          {['Estilo', 'Blocos', 'Templates'].map((t, i) => (
-            <div key={t} style={{ height: i === 2 ? 22 : 18, borderRadius: 4, background: i === 2 ? 'var(--color-primary-subtle)' : 'var(--color-bg-alt)', border: i === 2 ? '1px solid var(--color-primary-muted)' : '1px solid var(--color-border)', display: 'flex', alignItems: 'center', padding: '0 5px', fontSize: 7, fontWeight: 700, color: i === 2 ? 'var(--color-primary)' : 'var(--color-text-secondary)' }}>
-              {t}
+    <Mockup label="Registar no diário">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {/* Modal header */}
+        <div style={{ paddingBottom: 8, borderBottom: '1px solid var(--color-border)', display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <div style={{ height: 6, width: 100, borderRadius: 2, background: 'var(--color-text)', opacity: 0.7 }} />
+          <div style={{ height: 4, width: 70, borderRadius: 2, background: 'var(--color-text-tertiary)' }} />
+        </div>
+        {/* Kind chips */}
+        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+          {kinds.map((k, i) => (
+            <div key={k.id} style={{ display: 'flex', alignItems: 'center', gap: 3, padding: '3px 7px', borderRadius: 99, background: i === 0 ? 'var(--color-primary-subtle)' : 'var(--color-bg-alt)', border: i === 0 ? '1px solid var(--color-primary-muted)' : '1px solid var(--color-border)', fontSize: 7, fontWeight: 700, color: i === 0 ? 'var(--color-primary)' : 'var(--color-text-tertiary)' }}>
+              <k.Icon size={7} />
+              {k.label}
             </div>
           ))}
         </div>
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
+        {/* Prompt */}
+        <div style={{ fontSize: 8, fontWeight: 600, color: 'var(--color-text-secondary)' }}>O que avançaste desde a última vez?</div>
+        {/* Textarea */}
+        <div style={{ height: 36, borderRadius: 7, background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)', padding: '6px 8px', display: 'flex', alignItems: 'flex-start' }}>
+          <div style={{ width: '72%', height: 3, borderRadius: 2, background: 'var(--color-text-tertiary)', opacity: 0.5 }} />
+        </div>
+        {/* Submit */}
+        <div style={{ alignSelf: 'flex-end', height: 20, width: 68, borderRadius: 6, background: 'var(--color-primary)' }} />
+      </div>
+    </Mockup>
+  )
+}
+
+function MkDiaryCanvas() {
+  // Accurate representation of the real DiaryCanvas
+  const cards = [
+    { type: 'note', x: 14, y: 28, w: 100, h: 68, label: 'Nota', lines: ['Implementei o login', 'com Google OAuth.', 'Funciona em staging.'] },
+    { type: 'idea', x: 128, y: 14, w: 96, h: 60, label: 'Ideia', lines: ['Notificações quando', 'professor comenta'] },
+    { type: 'highlight', x: 52, y: 106, w: 120, h: 50, label: 'Destaque', lines: ['MVP entregue!', 'Testado com 5 colegas.'] },
+  ]
+  const cardColors = { note: '#0f1623', idea: '#0d1733', highlight: '#1a1200' }
+  const accentColors = { note: '#475569', idea: '#3b82f6', highlight: '#f59e0b' }
+  const textColors = { note: '#94a3b8', idea: '#93c5fd', highlight: '#fbbf24' }
+
+  return (
+    <Mockup label="showo — Diário" dark>
+      {/* Toolbar */}
+      <div style={{ height: 30, display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8, paddingBottom: 8, borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+        <div style={{ width: 22, height: 22, borderRadius: 6, background: 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <ArrowLeft size={9} color="#94a3b8" />
+        </div>
+        <div style={{ height: 4, width: 60, borderRadius: 2, background: 'rgba(255,255,255,0.25)' }} />
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: 4 }}>
+          {[{ label: 'Nota', cls: 'note' }, { label: 'Ideia', cls: 'idea' }, { label: 'Destaque', cls: 'highlight' }].map(b => (
+            <div key={b.label} style={{ padding: '2px 7px', borderRadius: 5, background: { note: 'rgba(100,116,139,0.12)', idea: 'rgba(59,130,246,0.1)', highlight: 'rgba(245,158,11,0.1)' }[b.cls], border: `1px solid ${{ note: 'rgba(100,116,139,0.2)', idea: 'rgba(59,130,246,0.2)', highlight: 'rgba(245,158,11,0.2)' }[b.cls]}`, fontSize: 7, fontWeight: 600, color: { note: '#94a3b8', idea: '#60a5fa', highlight: '#fbbf24' }[b.cls] }}>
+              {b.label}
+            </div>
+          ))}
+          {/* Zoom controls */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 1, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 6, padding: '2px 3px' }}>
+            <ZoomOut size={8} color="#64748b" />
+            <span style={{ fontSize: 7, color: '#475569', fontWeight: 700, padding: '0 4px' }}>100%</span>
+            <ZoomIn size={8} color="#64748b" />
+          </div>
+        </div>
+      </div>
+      {/* Canvas area */}
+      <div style={{ position: 'relative', height: 168, borderRadius: 6, overflow: 'hidden', background: '#030810', backgroundImage: 'radial-gradient(circle, #1e2a3e 1px, transparent 1px)', backgroundSize: '14px 14px' }}>
+        {cards.map(c => (
+          <div key={c.type} style={{ position: 'absolute', left: c.x, top: c.y, width: c.w, height: c.h, background: cardColors[c.type], border: '1px solid rgba(255,255,255,0.07)', borderRadius: 7, overflow: 'hidden', boxShadow: '0 4px 16px rgba(0,0,0,0.5)' }}>
+            {/* accent line */}
+            <div style={{ height: 2.5, background: accentColors[c.type] }} />
+            <div style={{ padding: '5px 7px', display: 'flex', flexDirection: 'column', gap: 3 }}>
+              <div style={{ fontSize: 6.5, fontWeight: 700, color: textColors[c.type] }}>{c.label}</div>
+              {c.lines.map((l, i) => (
+                <div key={i} style={{ fontSize: 6.5, color: 'rgba(255,255,255,0.45)', lineHeight: 1.3 }}>{l}</div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </Mockup>
+  )
+}
+
+function MkPreviewEditor() {
+  return (
+    <Mockup label="showo — Editor de apresentação">
+      <div style={{ display: 'flex', gap: 8, height: 108 }}>
+        {/* Tab sidebar */}
+        <div style={{ width: 62, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 3 }}>
+          {['Estilo', 'Blocos', 'Templates', 'Secções'].map((t, i) => (
+            <div key={t} style={{ padding: '5px 7px', borderRadius: 6, fontSize: 7, fontWeight: i === 2 ? 700 : 500, background: i === 2 ? 'var(--color-primary-subtle)' : 'transparent', border: 'none', color: i === 2 ? 'var(--color-primary)' : 'var(--color-text-tertiary)' }}>{t}</div>
+          ))}
+        </div>
+        <div style={{ width: 1, background: 'var(--color-border)', flexShrink: 0 }} />
+        {/* Template list */}
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4, overflow: 'hidden' }}>
+          <div style={{ fontSize: 7, fontWeight: 700, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Templates completos</div>
           {[
-            { label: 'Midnight Tech', bg: '#030508', ac: '#1b78f7' },
-            { label: 'Cosmic', bg: '#160b2a', ac: '#7c3aed' },
-            { label: 'Forest', bg: '#081408', ac: '#0d9488' },
+            { name: 'Midnight Tech', bg: '#030508', ac: '#1b78f7' },
+            { name: 'Editorial', bg: '#f5f0e8', ac: '#475569', light: true },
+            { name: 'Cosmic', bg: '#160b2a', ac: '#7c3aed' },
           ].map(tpl => (
-            <div key={tpl.label} style={{ display: 'flex', gap: 4, borderRadius: 4, overflow: 'hidden', border: '1px solid var(--color-border)' }}>
-              <div style={{ width: 18, background: tpl.bg, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2, padding: '3px 2px' }}>
-                <div style={{ width: 10, height: 2, borderRadius: 1, background: tpl.ac }} />
-                <div style={{ width: 12, height: 3, borderRadius: 1, background: 'rgba(255,255,255,0.6)' }} />
+            <div key={tpl.name} style={{ display: 'flex', borderRadius: 6, overflow: 'hidden', border: '1px solid var(--color-border)' }}>
+              <div style={{ width: 28, background: tpl.bg, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', gap: 2, padding: '5px 6px' }}>
+                <div style={{ width: 14, height: 2, borderRadius: 1, background: tpl.ac }} />
+                <div style={{ width: 16, height: 3.5, borderRadius: 1, background: tpl.light ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.65)' }} />
               </div>
-              <div style={{ flex: 1, display: 'flex', alignItems: 'center', padding: '0 4px', fontSize: 7, fontWeight: 700, color: 'var(--color-text)' }}>{tpl.label}</div>
+              <div style={{ flex: 1, padding: '0 7px', display: 'flex', alignItems: 'center', fontSize: 7.5, fontWeight: 600, color: 'var(--color-text)' }}>{tpl.name}</div>
             </div>
           ))}
         </div>
       </div>
-    </MockupShell>
+    </Mockup>
   )
 }
 
-function MockupProfile() {
+function MkBlocks() {
   return (
-    <MockupShell label="Perfil Público">
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          <div style={{ width: 30, height: 30, borderRadius: '50%', background: 'var(--color-primary-subtle)', border: '2px solid var(--color-primary-muted)', flexShrink: 0 }} />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-            <div style={{ width: 60, height: 5, borderRadius: 2, background: 'var(--color-text)', opacity: 0.7 }} />
-            <div style={{ width: 40, height: 3, borderRadius: 2, background: 'var(--color-text-tertiary)' }} />
+    <Mockup label="Blocos de conteúdo">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+        {/* Citação */}
+        <div style={{ borderLeft: '2px solid var(--color-primary)', paddingLeft: 9 }}>
+          <Quote size={9} color="var(--color-primary)" style={{ display: 'block', marginBottom: 4 }} />
+          <div style={{ height: 3, width: '88%', borderRadius: 2, background: 'var(--color-text)', opacity: 0.5, marginBottom: 3 }} />
+          <div style={{ height: 3, width: '65%', borderRadius: 2, background: 'var(--color-text)', opacity: 0.35 }} />
+        </div>
+        {/* Destaque / callout */}
+        <div style={{ borderRadius: 6, background: 'rgba(27,120,247,0.08)', border: '1px solid rgba(27,120,247,0.2)', padding: '6px 9px' }}>
+          <div style={{ height: 3.5, width: '72%', borderRadius: 2, background: 'var(--color-primary)', opacity: 0.65 }} />
+        </div>
+        {/* Stats */}
+        <div style={{ display: 'flex', gap: 5 }}>
+          {[1,2,3].map(i => (
+            <div key={i} style={{ flex: 1, borderRadius: 6, border: '1px solid var(--color-border)', padding: '5px 6px', display: 'flex', flexDirection: 'column', gap: 3 }}>
+              <div style={{ height: 9, width: 22, borderRadius: 2, background: 'var(--color-text)', opacity: 0.65 }} />
+              <div style={{ height: 3, width: 28, borderRadius: 2, background: 'var(--color-text-tertiary)' }} />
+            </div>
+          ))}
+        </div>
+      </div>
+    </Mockup>
+  )
+}
+
+function MkProfile() {
+  return (
+    <Mockup label="showo — /u/username">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'var(--color-primary-subtle)', border: '2px solid var(--color-primary-muted)', flexShrink: 0 }} />
+          <div>
+            <div style={{ width: 72, height: 6, borderRadius: 3, background: 'var(--color-text)', opacity: 0.7, marginBottom: 4 }} />
+            <div style={{ width: 50, height: 4, borderRadius: 2, background: 'var(--color-text-tertiary)' }} />
           </div>
         </div>
         <div>
-          <div style={{ fontSize: 7, fontWeight: 700, color: '#f59e0b', marginBottom: 4 }}>⭐ Em destaque</div>
-          <div style={{ display: 'flex', gap: 4 }}>
-            {[1, 2, 3].map(i => (
-              <div key={i} style={{ flex: 1, height: 32, borderRadius: 5, background: 'var(--color-glass)', border: '1px solid rgba(245,158,11,0.28)' }} />
+          <div style={{ fontSize: 7, fontWeight: 700, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 5 }}>Em destaque</div>
+          <div style={{ display: 'flex', gap: 5 }}>
+            {[1,2,3].map(i => (
+              <div key={i} style={{ flex: 1, height: 38, borderRadius: 6, background: 'var(--color-glass)', border: '1px solid rgba(245,158,11,0.25)' }} />
             ))}
           </div>
         </div>
+        <div>
+          <div style={{ fontSize: 7, fontWeight: 700, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Portfólio</div>
+          {[82, 66, 51].map(s => (
+            <div key={s} style={{ display: 'flex', gap: 6, alignItems: 'center', padding: '5px 0', borderBottom: '1px solid var(--color-border)' }}>
+              <div style={{ flex: 1, height: 4, borderRadius: 2, background: 'var(--color-text)', opacity: 0.5 }} />
+              <div style={{ fontSize: 8, fontWeight: 900, color: 'var(--color-primary)' }}>{s}</div>
+            </div>
+          ))}
+        </div>
       </div>
-    </MockupShell>
+    </Mockup>
   )
 }
 
-function MockupScore() {
-  const bars = [
-    { label: 'Projeto', pct: 80, c: '#1b78f7' },
-    { label: 'Apresentação', pct: 60, c: '#a78bfa' },
-    { label: 'Diário', pct: 90, c: '#10b981' },
-    { label: 'Conteúdo', pct: 70, c: '#f59e0b' },
-    { label: 'Validação', pct: 40, c: '#ec4899' },
-  ]
+function MkExplore() {
   return (
-    <MockupShell label="Score do projeto">
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-        {bars.map(b => (
-          <div key={b.label} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-            <div style={{ fontSize: 7, color: 'var(--color-text-secondary)', width: 48, flexShrink: 0 }}>{b.label}</div>
-            <div style={{ flex: 1, height: 4, borderRadius: 2, background: 'var(--color-bg-alt)', overflow: 'hidden' }}>
-              <div style={{ height: '100%', width: `${b.pct}%`, borderRadius: 2, background: b.c }} />
+    <Mockup label="showo — Explorar">
+      <div style={{ marginBottom: 8, display: 'flex', gap: 5 }}>
+        <div style={{ flex: 1, height: 22, borderRadius: 6, background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)' }} />
+        <div style={{ height: 22, width: 22, borderRadius: 6, background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)' }} />
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+        {['App IoT para Estufas', 'Plataforma de Tutoria', 'Jogo Unity 2D', 'API REST — Gestão'].map((name, i) => (
+          <div key={name} style={{ borderRadius: 7, overflow: 'hidden', border: '1px solid var(--color-border)' }}>
+            <div style={{ height: 30, background: 'var(--color-bg-alt)' }} />
+            <div style={{ padding: '5px 7px' }}>
+              <div style={{ fontSize: 7.5, fontWeight: 600, color: 'var(--color-text)', marginBottom: 3, lineHeight: 1.3 }}>{name}</div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <div style={{ fontSize: 7, color: 'var(--color-text-tertiary)' }}>Informática</div>
+                <div style={{ fontSize: 8, fontWeight: 900, color: 'var(--color-primary)' }}>{[88, 79, 72, 65][i]}</div>
+              </div>
             </div>
           </div>
         ))}
       </div>
-    </MockupShell>
+    </Mockup>
   )
 }
 
-// ── Section component ───────────────────────────────────────────────────────
-function Section({ id, icon: Icon, color, title, subtitle, children }) {
+function MkTurma() {
+  return (
+    <Mockup label="showo — Turma 12º CT">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: 7, borderBottom: '1px solid var(--color-border)' }}>
+          <div style={{ height: 5, width: 90, borderRadius: 2, background: 'var(--color-text)', opacity: 0.6 }} />
+          <div style={{ fontSize: 7, color: 'var(--color-text-tertiary)' }}>24 alunos</div>
+        </div>
+        {[{ name: 'Ana Ferreira', proj: 'PAP', score: 82 }, { name: 'João Silva', proj: 'Projeto pessoal', score: 71 }, { name: 'Maria Costa', proj: 'Estágio', score: 65 }].map(s => (
+          <div key={s.name} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '4px 0' }}>
+            <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)', flexShrink: 0 }} />
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 8, fontWeight: 600, color: 'var(--color-text)' }}>{s.name}</div>
+              <div style={{ fontSize: 7, color: 'var(--color-text-tertiary)' }}>{s.proj}</div>
+            </div>
+            <div style={{ fontSize: 9, fontWeight: 900, color: 'var(--color-primary)' }}>{s.score}</div>
+            <ArrowUpRight size={9} color="var(--color-text-tertiary)" />
+          </div>
+        ))}
+      </div>
+    </Mockup>
+  )
+}
+
+function MkMessages() {
+  return (
+    <Mockup label="showo — Mensagens">
+      <div style={{ display: 'flex', gap: 8, height: 100 }}>
+        <div style={{ width: 56, display: 'flex', flexDirection: 'column', gap: 3, borderRight: '1px solid var(--color-border)', paddingRight: 7 }}>
+          {[{ n: 'João S.', unread: true }, { n: 'Prof. Mota', unread: false }, { n: 'Maria C.', unread: false }].map(c => (
+            <div key={c.n} style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 5px', borderRadius: 6, background: c.unread ? 'var(--color-primary-subtle)' : 'transparent', border: `1px solid ${c.unread ? 'var(--color-primary-muted)' : 'transparent'}` }}>
+              <div style={{ width: 16, height: 16, borderRadius: '50%', background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)', flexShrink: 0 }} />
+              <div style={{ fontSize: 7, color: c.unread ? 'var(--color-primary)' : 'var(--color-text-secondary)', fontWeight: c.unread ? 700 : 400 }}>{c.n}</div>
+            </div>
+          ))}
+        </div>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 5, justifyContent: 'flex-end' }}>
+          <div style={{ alignSelf: 'flex-end', padding: '4px 8px', borderRadius: '8px 8px 2px 8px', background: 'var(--color-primary)', fontSize: 7, color: '#fff', maxWidth: '85%' }}>Sobre o projeto...</div>
+          <div style={{ alignSelf: 'flex-start', padding: '4px 8px', borderRadius: '8px 8px 8px 2px', background: 'var(--color-glass)', border: '1px solid var(--color-glass-border)', fontSize: 7, color: 'var(--color-text)', maxWidth: '85%' }}>Claro, quando é a entrega?</div>
+          <div style={{ height: 18, borderRadius: 6, background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)' }} />
+        </div>
+      </div>
+    </Mockup>
+  )
+}
+
+function MkMissions() {
+  return (
+    <Mockup label="showo — Missões">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+        {[
+          { label: 'Primeiro projeto', xp: 20, done: true },
+          { label: 'Perfil completo', xp: 15, done: true },
+          { label: 'Score 60+', xp: 25, done: false },
+          { label: 'Diário ativo', xp: 20, done: false },
+          { label: 'Projeto público', xp: 10, done: false },
+        ].map(m => (
+          <div key={m.label} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 0', borderBottom: '1px solid var(--color-border)' }}>
+            <div style={{ width: 15, height: 15, borderRadius: '50%', border: `1.5px solid ${m.done ? 'var(--color-success)' : 'var(--color-border)'}`, background: m.done ? 'var(--color-success)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              {m.done && <CheckCircle2 size={8} color="#fff" strokeWidth={3} />}
+            </div>
+            <div style={{ flex: 1, fontSize: 8, color: 'var(--color-text)', opacity: m.done ? 0.45 : 1, textDecoration: m.done ? 'line-through' : 'none' }}>{m.label}</div>
+            <div style={{ fontSize: 8, fontWeight: 700, color: 'var(--color-text-tertiary)' }}>+{m.xp} XP</div>
+          </div>
+        ))}
+      </div>
+    </Mockup>
+  )
+}
+
+function MkScore() {
+  const bars = [
+    { label: 'Projeto', pct: 80, weight: '30%' },
+    { label: 'Apresentação', pct: 60, weight: '20%' },
+    { label: 'Diário', pct: 90, weight: '25%' },
+    { label: 'Conteúdo', pct: 70, weight: '15%' },
+    { label: 'Validação', pct: 40, weight: '10%' },
+  ]
+  return (
+    <Mockup label="Score — decomposição">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+        {bars.map(b => (
+          <div key={b.label} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ width: 55, flexShrink: 0, fontSize: 7.5, color: 'var(--color-text-secondary)' }}>{b.label}</div>
+            <div style={{ flex: 1, height: 5, borderRadius: 3, background: 'var(--color-bg-alt)', overflow: 'hidden' }}>
+              <div style={{ height: '100%', width: `${b.pct}%`, borderRadius: 3, background: 'var(--color-primary)', opacity: 0.72 }} />
+            </div>
+            <div style={{ width: 26, flexShrink: 0, fontSize: 7.5, color: 'var(--color-text-tertiary)', textAlign: 'right' }}>{b.weight}</div>
+          </div>
+        ))}
+      </div>
+    </Mockup>
+  )
+}
+
+// ── Text helpers ──────────────────────────────────────────────────────────────
+function Lead({ children }) { return <p className="atu-lead">{children}</p> }
+function Body({ children }) { return <p className="atu-body">{children}</p> }
+function H3({ children }) { return <h3 className="atu-h3">{children}</h3> }
+function Note({ children }) { return <p className="atu-note">{children}</p> }
+
+function Steps({ items }) {
+  return (
+    <ol className="atu-steps">
+      {items.map((item, i) => (
+        <li key={i}><span className="atu-step-num">{i + 1}</span><span>{item}</span></li>
+      ))}
+    </ol>
+  )
+}
+
+function DefList({ items }) {
+  return (
+    <dl className="atu-dl">
+      {items.map(({ term, def }) => (
+        <div key={term} className="atu-dl-row">
+          <dt>{term}</dt>
+          <dd>{def}</dd>
+        </div>
+      ))}
+    </dl>
+  )
+}
+
+function Section({ id, title, subtitle, children }) {
   return (
     <section id={id} className="atu-section">
       <div className="atu-section-head">
-        <div className="atu-section-icon" style={{ background: color + '18', border: `1px solid ${color}30` }}>
-          <Icon size={18} color={color} />
-        </div>
-        <div>
-          <h2 className="atu-section-title">{title}</h2>
-          {subtitle && <p className="atu-section-subtitle">{subtitle}</p>}
-        </div>
+        <h2 className="atu-section-title">{title}</h2>
+        {subtitle && <p className="atu-section-subtitle">{subtitle}</p>}
       </div>
       {children}
     </section>
   )
 }
 
-function Tip({ children }) {
-  return (
-    <div className="atu-tip">
-      <Sparkles size={13} color="#f59e0b" />
-      <span>{children}</span>
+// ── Inline feedback form ──────────────────────────────────────────────────────
+function FeedbackForm() {
+  const { user } = useAuth()
+  const [msg, setMsg] = useState('')
+  const [status, setStatus] = useState('idle')
+
+  async function submit(e) {
+    e.preventDefault()
+    if (!msg.trim() || status === 'sending') return
+    setStatus('sending')
+    try {
+      const { error } = await supabase.from('feedback').insert({ message: msg.trim(), page_url: '/aprende', user_id: user?.id ?? null })
+      if (error) throw error
+      setStatus('done')
+    } catch {
+      setStatus('error')
+    }
+  }
+
+  if (status === 'done') return (
+    <div className="atu-feedback-done">
+      <Check size={15} />
+      Obrigado, recebemos o teu feedback.
     </div>
   )
-}
 
-function Steps({ items }) {
   return (
-    <ol className="atu-steps">
-      {items.map((item, i) => (
-        <li key={i} className="atu-step">
-          <span className="atu-step-num">{i + 1}</span>
-          <span>{item}</span>
-        </li>
-      ))}
-    </ol>
+    <form className="atu-feedback-form" onSubmit={submit}>
+      <textarea
+        className="atu-feedback-ta"
+        rows={3}
+        placeholder="Algo que não percebeste, uma secção que está errada, ou algo que devíamos acrescentar..."
+        value={msg}
+        onChange={e => setMsg(e.target.value)}
+      />
+      {status === 'error' && <p style={{ fontSize: 12, color: 'var(--color-error)', margin: '4px 0 0' }}>Não foi possível enviar. Tenta outra vez.</p>}
+      <button type="submit" className="atu-feedback-btn" disabled={!msg.trim() || status === 'sending'}>
+        {status === 'sending' ? <><Loader2 size={13} style={{ animation: 'spin 1s linear infinite' }} /> A enviar...</> : <><Send size={13} /> Enviar</>}
+      </button>
+    </form>
   )
 }
 
-function Tags({ items }) {
-  return (
-    <div className="atu-tags">
-      {items.map(({ label, color: c }) => (
-        <span key={label} className="atu-tag" style={{ background: c + '18', color: c, border: `1px solid ${c}30` }}>{label}</span>
-      ))}
-    </div>
-  )
-}
-
-function InfoCard({ icon: Icon, color, title, body }) {
-  return (
-    <div className="atu-info-card">
-      <div className="atu-info-icon" style={{ background: color + '15', border: `1px solid ${color}25` }}>
-        <Icon size={14} color={color} />
-      </div>
-      <div>
-        <div className="atu-info-title">{title}</div>
-        <div className="atu-info-body">{body}</div>
-      </div>
-    </div>
-  )
-}
-
-// ── Main page ───────────────────────────────────────────────────────────────
+// ── Page ──────────────────────────────────────────────────────────────────────
 export default function AprendeAUsar() {
-  const navigate = useNavigate()
   const [activeSection, setActiveSection] = useState('dashboard')
-  const contentRef = useRef(null)
 
   useEffect(() => {
-    const el = contentRef.current
-    if (!el) return
-    function onScroll() {
-      const sectionEls = SECTIONS.map(s => document.getElementById(s.id)).filter(Boolean)
-      let current = SECTIONS[0].id
-      for (const sec of sectionEls) {
-        if (sec.getBoundingClientRect().top <= 100) current = sec.id
-      }
-      setActiveSection(current)
-    }
-    el.addEventListener('scroll', onScroll)
-    return () => el.removeEventListener('scroll', onScroll)
+    const roots = SECTIONS.map(s => document.getElementById(s.id)).filter(Boolean)
+    const obs = new IntersectionObserver(
+      entries => { for (const e of entries) { if (e.isIntersecting) setActiveSection(e.target.id) } },
+      { rootMargin: '-20% 0px -70% 0px', threshold: 0 }
+    )
+    roots.forEach(el => obs.observe(el))
+    return () => obs.disconnect()
   }, [])
 
   function scrollTo(id) {
-    const el = document.getElementById(id)
-    if (!el) return
-    el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    setActiveSection(id)
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
   return (
@@ -301,434 +531,227 @@ export default function AprendeAUsar() {
       <Navbar />
       <div className="atu-layout">
 
-        {/* ── Left sidebar index ── */}
         <aside className="atu-sidebar">
-          <div className="atu-sidebar-header">
-            <div className="atu-sidebar-title">Guia da plataforma</div>
-            <div className="atu-sidebar-sub">Aprende a usar todas as funcionalidades</div>
-          </div>
+          <div className="atu-sidebar-intro">Índice</div>
           <nav className="atu-sidebar-nav">
-            {SECTIONS.map(({ id, label, Icon, color }) => (
-              <button
-                key={id}
-                className={`atu-nav-btn${activeSection === id ? ' active' : ''}`}
-                onClick={() => scrollTo(id)}
-                style={activeSection === id ? { color, background: color + '12', borderColor: color + '30' } : {}}
-              >
-                <span className="atu-nav-icon" style={activeSection === id ? { background: color + '20' } : {}}>
-                  <Icon size={14} color={activeSection === id ? color : undefined} />
-                </span>
-                <span>{label}</span>
-                {activeSection === id && <ChevronRight size={12} style={{ marginLeft: 'auto' }} />}
+            {SECTIONS.map(({ id, label }) => (
+              <button key={id} className={`atu-nav-btn${activeSection === id ? ' active' : ''}`} onClick={() => scrollTo(id)}>
+                {label}
               </button>
             ))}
           </nav>
         </aside>
 
-        {/* ── Content ── */}
-        <main className="atu-content" ref={contentRef}>
+        <main className="atu-content">
 
-          <div className="atu-hero">
+          <header className="atu-hero">
             <h1 className="atu-hero-title">Aprende a usar o Showo</h1>
-            <p className="atu-hero-desc">Tudo o que precisas de saber para tirar o máximo partido da plataforma — da dashboard ao perfil público.</p>
-          </div>
+            <p className="atu-hero-desc">Um guia a todas as funcionalidades da plataforma.</p>
+          </header>
 
-          {/* ── DASHBOARD ── */}
-          <Section id="dashboard" icon={LayoutDashboard} color="#1b78f7" title="Dashboard" subtitle="O centro de controlo dos teus projetos">
-            <div className="atu-two-col">
-              <div>
-                <p className="atu-text">A dashboard é o sítio onde acompanhas o estado dos teus projetos ativos. É a primeira coisa que vês ao entrar na plataforma.</p>
-                <h3 className="atu-h3">O que encontras na dashboard</h3>
-                <div className="atu-info-grid">
-                  <InfoCard icon={LayoutDashboard} color="#1b78f7" title="Project Pulse" body="O teu projeto principal em destaque azul. Mostra as últimas entradas do diário e dá acesso rápido a Registar e ao Diário." />
-                  <InfoCard icon={Pin} color="#60a5fa" title="Projetos fixados" body="Podes fixar até 2 projetos na dashboard. Aparecem como cards grandes com acesso rápido a todas as ações." />
-                  <InfoCard icon={BarChart2} color="#10b981" title="Atividade recente" body="Resumo visual das entradas do diário nos últimos dias." />
-                  <InfoCard icon={CalendarClock} color="#f59e0b" title="Recap semanal" body="No fim de cada semana recebes um resumo automático do que fizeste." />
-                </div>
-                <h3 className="atu-h3">Projetos fixados na dashboard</h3>
-                <p className="atu-text">Podes fixar até 2 projetos para teres acesso rápido a partir da dashboard. Para fixar um projeto, vai à lista do teu portfólio e clica no ícone 📌 ao lado de cada projeto.</p>
-                <Tip>O projeto em destaque (Project Pulse) é sempre o mais recente. Se fixares esse projeto, o card azul desaparece — o projeto fixado substitui-o.</Tip>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                <MockupDashboard />
-                <MockupPinnedCard />
-              </div>
-            </div>
+          <Section id="dashboard" title="Dashboard" subtitle="O centro de controlo dos teus projetos">
+            <Lead>A dashboard é o primeiro ecrã que vês ao entrar na plataforma. É onde acompanhas os teus projetos, registas entradas no diário e vês o progresso geral.</Lead>
+
+            <H3>Project Pulse</H3>
+            <Body>O Project Pulse é o card azul que aparece no topo. Mostra sempre o teu projeto mais recente com as últimas entradas do diário e dá acesso rápido a dois botões: Registar, para adicionar uma entrada, e Diário, para ver o historial completo.</Body>
+
+            <H3>Projetos fixados</H3>
+            <Body>Podes fixar até 2 projetos na dashboard com o ícone de pino que aparece na lista do portfólio. Os projetos fixados aparecem como cards imediatamente abaixo do Project Pulse, com acesso a todas as ações: Registar, Diário, Ver, Editar e Eliminar.</Body>
+
+            <Note>Se fixares o mesmo projeto que está em destaque no Project Pulse, o card azul desaparece e é substituído pelo card fixado. Os dois não coexistem para o mesmo projeto.</Note>
+
+            <MkDashboard />
           </Section>
 
-          {/* ── PROJETOS ── */}
-          <Section id="projetos" icon={FolderOpen} color="#10b981" title="Projetos" subtitle="Criar, editar e gerir os teus projetos">
-            <div className="atu-two-col">
-              <div>
-                <p className="atu-text">Cada projeto na plataforma tem uma página pública com o teu trabalho. Podes personalizar tudo: nome, área, descrição, imagem de capa, tecnologias e muito mais.</p>
-                <h3 className="atu-h3">Criar um projeto</h3>
-                <Steps items={[
-                  'Clica em "Criar projeto" na sidebar ou no botão (+) da dashboard.',
-                  'Escolhe o nome e o tipo de projeto (PAP, Estágio, Pessoal...).',
-                  'Adiciona a área de trabalho e uma breve descrição.',
-                  'O projeto fica publicado com a tua página pública acessível por link.',
-                ]} />
-                <h3 className="atu-h3">Tipos de projeto</h3>
-                <Tags items={[
-                  { label: 'PAP', color: '#1b78f7' },
-                  { label: 'Estágio', color: '#10b981' },
-                  { label: 'Trabalho de grupo', color: '#f59e0b' },
-                  { label: 'Projeto pessoal', color: '#a78bfa' },
-                  { label: 'Competição', color: '#ef4444' },
-                  { label: 'Apresentação', color: '#06b6d4' },
-                ]} />
-                <h3 className="atu-h3">Editar o projeto</h3>
-                <p className="atu-text">Acede à edição pelo botão ✏️ de qualquer lugar onde o projeto apareça. Podes preencher os campos de conteúdo (problema, solução, tecnologias, resultados...) — cada campo preenchido aumenta o teu score.</p>
-                <Tip>Quanto mais campos preencheres, maior o score do projeto. Os campos de Resultados e Aprendizagens valem mais pontos.</Tip>
-              </div>
-              <div>
-                <MockupShell label="Lista de projetos">
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-                    {[{ name: 'App de Gestão', score: 82, pinned: true }, { name: 'Site do Grupo', score: 61, pinned: false }, { name: 'Jogo Educativo', score: 45, pinned: false }].map((p, i) => (
-                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 7px', borderRadius: 6, background: 'var(--color-glass)', border: '1px solid var(--color-glass-border)' }}>
-                        <div style={{ flex: 1, fontSize: 8, fontWeight: 700, color: 'var(--color-text)' }}>{p.name}</div>
-                        <div style={{ fontSize: 8, fontWeight: 900, color: 'var(--color-primary)' }}>{p.score}</div>
-                        <Pin size={9} color={p.pinned ? '#60a5fa' : 'var(--color-text-tertiary)'} fill={p.pinned ? '#60a5fa' : 'none'} />
-                        <Pencil size={9} color="var(--color-text-tertiary)" />
-                        <Trash2 size={9} color="var(--color-text-tertiary)" />
-                      </div>
-                    ))}
-                  </div>
-                </MockupShell>
-              </div>
-            </div>
+          <Section id="projetos" title="Projetos" subtitle="Criar, editar e gerir o teu portfólio">
+            <Lead>Cada projeto tem uma página pública. Podes ter quantos projetos quiseres, desde PAP a trabalhos de grupo ou projetos pessoais.</Lead>
+
+            <H3>Criar um projeto</H3>
+            <Steps items={[
+              'Clica em "Criar projeto" na sidebar.',
+              'Escolhe o nome, tipo e área do projeto.',
+              'O projeto fica criado e a página pública fica acessível por link.',
+              'Preenche os campos no editor para aumentar o score.',
+            ]} />
+
+            <H3>Tipos de projeto</H3>
+            <DefList items={[
+              { term: 'PAP', def: 'Projeto de Aptidão Profissional, com campos específicos como orientador e data de defesa.' },
+              { term: 'Estágio', def: 'Projeto de estágio curricular ou profissional.' },
+              { term: 'Trabalho de grupo', def: 'Projeto colaborativo com outros alunos.' },
+              { term: 'Projeto pessoal', def: 'Trabalho autónomo fora do contexto escolar.' },
+              { term: 'Competição', def: 'Participação em hackathons ou concursos.' },
+              { term: 'Apresentação', def: 'Trabalho de apresentação oral ou escrito.' },
+            ]} />
+
+            <H3>Fixar e destacar</H3>
+            <Body>O pino fixa um projeto na dashboard (máximo 2). A estrela destaca um projeto no perfil público (máximo 3). São dois sistemas completamente independentes.</Body>
+
+            <MkProjectList />
           </Section>
 
-          {/* ── DIÁRIO ── */}
-          <Section id="diario" icon={BookOpen} color="#f59e0b" title="Diário de Projeto" subtitle="Regista o processo do teu projeto dia a dia">
-            <div className="atu-two-col">
-              <div>
-                <p className="atu-text">O Diário é onde documentas tudo o que acontece no teu projeto: o que fizeste, o que aprendeste, que decisões tomaste, que dificuldades encontraste.</p>
-                <p className="atu-text">Cada entrada é um registo datado que fica associado ao projeto. No final, o conjunto das entradas é o teu portfólio de processo.</p>
-                <h3 className="atu-h3">Tipos de registo</h3>
-                <div className="atu-info-grid">
-                  <InfoCard icon={TrendingUp} color="#1b78f7" title="Progresso" body="O que fizeste hoje. Avanços, tarefas concluídas, features implementadas." />
-                  <InfoCard icon={Target} color="#ef4444" title="Dificuldade" body="Obstáculos encontrados, bugs, bloqueios — e como tentaste resolver." />
-                  <InfoCard icon={Zap} color="#f59e0b" title="Decisão" body="Escolhas importantes que fizeste no projeto e o raciocínio por trás delas." />
-                  <InfoCard icon={CheckCircle2} color="#10b981" title="Resultado" body="Conquistas, marcos alcançados, outputs concretos do projeto." />
-                  <InfoCard icon={Eye} color="#a78bfa" title="Reflexão" body="O que aprendeste, o que farias diferente, insights sobre o processo." />
-                  <InfoCard icon={GraduationCap} color="#06b6d4" title="Reunião" body="Encontros com o orientador, feedback recebido, notas de reunião." />
-                </div>
-                <h3 className="atu-h3">Como registar uma entrada</h3>
-                <Steps items={[
-                  'Na dashboard, clica em "Registar" no Project Pulse ou num projeto fixado.',
-                  'Escolhe o tipo de registo (Progresso, Dificuldade, Decisão...).',
-                  'Escreve a entrada — podes ser breve ou detalhado.',
-                  'Clica em Guardar. A entrada fica no Diário do projeto.',
-                ]} />
-                <Tip>Registar com regularidade (mesmo que brevemente) vale pontos no score e mostra evolução ao longo do tempo.</Tip>
-                <h3 className="atu-h3">Ver o Diário</h3>
-                <p className="atu-text">Acedes ao diário completo clicando em "Diário" no Project Pulse, num projeto fixado, ou navegando para <strong>/projeto/[slug]/diario</strong>. Podes filtrar por tipo de entrada, ver a cronologia completa e editar entradas antigas.</p>
-              </div>
-              <div>
-                <MockupDiary />
-                <div style={{ marginTop: 12 }}>
-                  <MockupShell label="Composição de entrada">
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                      <div style={{ display: 'flex', gap: 3 }}>
-                        {['Progresso', 'Dificuldade', 'Decisão'].map((k, i) => (
-                          <div key={k} style={{ flex: 1, height: 14, borderRadius: 4, fontSize: 6, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', background: i === 0 ? '#1b78f714' : 'var(--color-bg-alt)', border: i === 0 ? '1px solid #1b78f733' : '1px solid var(--color-border)', color: i === 0 ? '#1b78f7' : 'var(--color-text-secondary)' }}>{k}</div>
-                        ))}
-                      </div>
-                      <div style={{ height: 32, borderRadius: 5, background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', padding: '0 6px' }}>
-                        <div style={{ width: '70%', height: 3, borderRadius: 2, background: 'var(--color-text-tertiary)' }} />
-                      </div>
-                      <div style={{ height: 16, borderRadius: 4, background: '#1b78f7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <div style={{ width: 30, height: 3, borderRadius: 2, background: 'rgba(255,255,255,0.8)' }} />
-                      </div>
-                    </div>
-                  </MockupShell>
-                </div>
-              </div>
-            </div>
+          <Section id="diario" title="Diário de Projeto" subtitle="Documenta o processo do teu trabalho">
+            <Lead>O Diário tem duas partes. O Compositor, acessível a partir da dashboard, é onde adicionas entradas rápidas. O Canvas do Diário é um espaço visual livre, com cartões que podes mover e organizar à tua vontade.</Lead>
+
+            <H3>Registar uma entrada a partir da dashboard</H3>
+            <Body>Clica em "Registar" no Project Pulse ou num projeto fixado. Escolhes o tipo de registo, escreves o conteúdo e guardas. A entrada fica associada ao projeto e aparece no Canvas do Diário.</Body>
+
+            <H3>Tipos de registo</H3>
+            <DefList items={[
+              { term: 'Progresso', def: 'O que fizeste: avanços, tarefas concluídas, funcionalidades implementadas.' },
+              { term: 'Dificuldade', def: 'Obstáculos, bugs e bloqueios que encontraste, e como tentaste resolver.' },
+              { term: 'Decisão', def: 'Escolhas importantes que fizeste no projeto e o raciocínio por trás delas.' },
+              { term: 'Pesquisa', def: 'Algo que pesquisaste ou aprendeste durante o processo.' },
+              { term: 'Ideia', def: 'Uma ideia que tiveste e que pode ou não avançar para o projeto.' },
+              { term: 'Resultado', def: 'Conquistas, marcos alcançados e outputs concretos.' },
+              { term: 'Nota', def: 'Qualquer coisa que não queiras esquecer.' },
+            ]} />
+
+            <H3>O Compositor</H3>
+            <MkJournalComposer />
+
+            <H3>O Canvas do Diário</H3>
+            <Body>O Canvas é um espaço de trabalho livre e infinito que abre em ecrã completo. Podes adicionar três tipos de cartões: Nota, para registos livres; Ideia, para ideias a explorar; e Destaque, para momentos importantes. Cada cartão pode ser arrastado, redimensionado e editado diretamente. Usas o scroll ou os botões de zoom para navegar.</Body>
+
+            <MkDiaryCanvas />
           </Section>
 
-          {/* ── PREVIEW & TEMPLATES ── */}
-          <Section id="preview" icon={Palette} color="#a78bfa" title="Preview & Templates" subtitle="Personaliza a apresentação pública do teu projeto">
-            <div className="atu-two-col">
-              <div>
-                <p className="atu-text">A preview é a página pública do teu projeto — o que qualquer pessoa vê ao visitar o teu link. Podes personalizar completamente a aparência e adicionar conteúdo extra através de blocos.</p>
-                <h3 className="atu-h3">Editor de preview</h3>
-                <p className="atu-text">Para editar a preview, abre o teu projeto e clica em "Editar apresentação". O editor tem três tabs:</p>
-                <div className="atu-info-grid">
-                  <InfoCard icon={Palette} color="#a78bfa" title="Estilo" body="Cor de destaque, fundo, tipografia, alinhamento do título, tamanho do hero, modo claro/escuro." />
-                  <InfoCard icon={AlignLeft} color="#06b6d4" title="Blocos" body="Adiciona conteúdo extra: notas, citações, imagens, vídeos, métricas, botões CTA, links e mais." />
-                  <InfoCard icon={Layers} color="#10b981" title="Templates" body="Aplica um template completo: visual + layout + blocos iniciais. Podes modificar tudo depois." />
-                </div>
-                <h3 className="atu-h3">Tipos de blocos</h3>
-                <Tags items={[
-                  { label: 'Nota', color: '#1b78f7' },
-                  { label: 'Citação', color: '#a78bfa' },
-                  { label: 'Destaque', color: '#f59e0b' },
-                  { label: 'Título', color: '#10b981' },
-                  { label: 'Métrica', color: '#ec4899' },
-                  { label: 'Estatísticas', color: '#06b6d4' },
-                  { label: 'Imagem', color: '#f97316' },
-                  { label: 'Galeria', color: '#8b5cf6' },
-                  { label: 'Vídeo', color: '#ef4444' },
-                  { label: 'Card', color: '#d97706' },
-                  { label: 'Botão CTA', color: '#1b78f7' },
-                  { label: 'Link', color: '#10b981' },
-                  { label: 'Divisor', color: '#6b7280' },
-                ]} />
-                <h3 className="atu-h3">Templates</h3>
-                <p className="atu-text">Os templates aplicam de uma vez o estilo visual completo <strong>e</strong> os blocos base da página. Há templates para diferentes estilos: técnico, editorial, minimalista, expressivo. Podes modificar tudo depois de aplicar.</p>
-                <Tip>Se já tens blocos, o Showo pede confirmação antes de os substituir ao aplicar um template.</Tip>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                <MockupPreview />
-                <MockupShell label="Bloco de citação">
-                  <div style={{ borderLeft: '3px solid #a78bfa', paddingLeft: 8, display: 'flex', flexDirection: 'column', gap: 3 }}>
-                    <Quote size={10} color="#a78bfa" />
-                    <div style={{ height: 3, width: '90%', borderRadius: 2, background: 'var(--color-text)', opacity: 0.5 }} />
-                    <div style={{ height: 3, width: '70%', borderRadius: 2, background: 'var(--color-text)', opacity: 0.5 }} />
-                    <div style={{ height: 3, width: '80%', borderRadius: 2, background: 'var(--color-text)', opacity: 0.5 }} />
-                  </div>
-                </MockupShell>
-              </div>
-            </div>
+          <Section id="preview" title="Preview e Templates" subtitle="A apresentação pública do teu projeto">
+            <Lead>A preview é o que qualquer pessoa vê quando visita o link do teu projeto. Podes personalizar completamente a aparência e adicionar blocos de conteúdo.</Lead>
+
+            <H3>Editor de apresentação</H3>
+            <Body>Abre o teu projeto e clica em "Editar apresentação". O editor tem quatro áreas: Estilo, Blocos, Templates e Secções.</Body>
+
+            <DefList items={[
+              { term: 'Estilo', def: 'Cor de destaque, fundo, tipografia, alinhamento do título, tamanho do hero e modo claro ou escuro.' },
+              { term: 'Blocos', def: 'Conteúdo extra que aparece na página: notas, citações, destaques, imagens, vídeos, métricas, botões e links.' },
+              { term: 'Templates', def: 'Aplica o estilo visual e os blocos base de uma vez. Podes modificar tudo depois.' },
+              { term: 'Secções', def: 'Controla a ordem e visibilidade das secções automáticas geradas a partir dos campos do projeto.' },
+            ]} />
+
+            <H3>Templates</H3>
+            <Body>Ao aplicar um template escolhes de uma vez o visual e os blocos iniciais. Se já tiveres blocos, a plataforma pede confirmação antes de os substituir. Todos os templates têm nome e blocos pensados para o tipo de apresentação que propõem.</Body>
+
+            <MkPreviewEditor />
+
+            <H3>Tipos de blocos</H3>
+            <Body>Os blocos adicionam conteúdo livre à página: Nota, Título, Destaque, Citação, Métrica, Estatísticas, Imagem, Galeria, Vídeo, Card, Botão CTA, Link e Divisor. Podes reordená-los e editá-los a qualquer momento.</Body>
+
+            <MkBlocks />
           </Section>
 
-          {/* ── PERFIL ── */}
-          <Section id="perfil" icon={User} color="#ec4899" title="Perfil Público" subtitle="A tua página de portfólio para o mundo ver">
-            <div className="atu-two-col">
-              <div>
-                <p className="atu-text">O teu perfil público (<strong>/u/username</strong>) é a tua página de portfólio. Qualquer pessoa — recrutadores, professores, outras escolas — pode visitar e ver os teus projetos.</p>
-                <h3 className="atu-h3">Projetos em destaque</h3>
-                <p className="atu-text">Podes destacar até 3 projetos no teu perfil. Estes aparecem no topo com um visual especial (borda âmbar). Para destacar um projeto, clica na estrela ⭐ na lista do teu portfólio.</p>
-                <div className="atu-info-grid">
-                  <InfoCard icon={Star} color="#f59e0b" title="Em destaque no perfil" body="Até 3 projetos com borda âmbar no topo do perfil. Usas a estrela ⭐ para escolher." />
-                  <InfoCard icon={Pin} color="#60a5fa" title="Fixado na dashboard" body="Diferente do destaque do perfil — o 📌 é só para a tua dashboard, não aparece no perfil público." />
-                </div>
-                <h3 className="atu-h3">O que aparece no perfil</h3>
-                <Steps items={[
-                  'Foto de perfil, nome, bio e escola.',
-                  'Projetos em destaque (até 3, escolhidos por ti).',
-                  'Todos os outros projetos públicos ordenados por score.',
-                  'Score médio, área principal, tecnologias usadas.',
-                ]} />
-                <h3 className="atu-h3">Completar o perfil</h3>
-                <p className="atu-text">Vai a Definições para completar o teu perfil: foto, bio, links (LinkedIn, GitHub, portfólio). Um perfil completo é mais apelativo para quem visita.</p>
-                <Tip>O teu perfil é público por defeito. Podes ver como ele aparece aos outros clicando em "Ver perfil" nas definições.</Tip>
-              </div>
-              <div>
-                <MockupProfile />
-              </div>
-            </div>
+          <Section id="perfil" title="Perfil Público" subtitle="A tua página de portfólio">
+            <Lead>O teu perfil em /u/username é visível a toda a gente, incluindo recrutadores, professores e outras escolas.</Lead>
+
+            <H3>Projetos em destaque</H3>
+            <Body>Podes destacar até 3 projetos no teu perfil com a estrela na lista do portfólio. Aparecem no topo com uma borda âmbar, antes dos restantes projetos.</Body>
+
+            <H3>O que aparece no perfil</H3>
+            <DefList items={[
+              { term: 'Foto e dados', def: 'Foto de perfil, nome, bio, escola e curso.' },
+              { term: 'Em destaque', def: 'Até 3 projetos escolhidos por ti, com destaque visual no topo.' },
+              { term: 'Portfólio', def: 'Todos os projetos públicos ordenados por score.' },
+              { term: 'Links', def: 'LinkedIn, GitHub e portfólio, definidos nas Definições.' },
+            ]} />
+
+            <Body>Podes completar o teu perfil nas Definições: foto, bio e links sociais. Um perfil preenchido é mais apelativo para quem visita.</Body>
+
+            <MkProfile />
           </Section>
 
-          {/* ── EXPLORAR ── */}
-          <Section id="explorar" icon={Compass} color="#06b6d4" title="Explorar" subtitle="Descobre projetos de outros alunos">
-            <div className="atu-two-col">
-              <div>
-                <p className="atu-text">A página Explorar é uma galeria pública com projetos de alunos de toda a plataforma. Podes descobrir trabalhos de outras escolas e cursos, filtrar por área e encontrar inspiração.</p>
-                <h3 className="atu-h3">Filtros disponíveis</h3>
-                <Tags items={[
-                  { label: 'Área / curso', color: '#06b6d4' },
-                  { label: 'Score mínimo', color: '#1b78f7' },
-                  { label: 'Ordenação', color: '#10b981' },
-                  { label: 'Tipo de projeto', color: '#f59e0b' },
-                ]} />
-                <h3 className="atu-h3">Projetos em destaque</h3>
-                <p className="atu-text">A plataforma destaca automaticamente os projetos mais bem avaliados e mais completos através de um algoritmo que analisa score, diário, apresentação e validação.</p>
-                <Tip>Se o teu projeto tem um bom score e o diário atualizado, maior a probabilidade de aparecer em destaque no Explorar.</Tip>
-              </div>
-              <div>
-                <MockupShell label="Galeria de projetos">
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 5 }}>
-                    {[
-                      { name: 'App IoT', score: 88, c: '#1b78f7' },
-                      { name: 'Plataforma Web', score: 79, c: '#10b981' },
-                      { name: 'Jogo Unity', score: 72, c: '#a78bfa' },
-                      { name: 'API REST', score: 65, c: '#f59e0b' },
-                    ].map((p, i) => (
-                      <div key={i} style={{ borderRadius: 6, overflow: 'hidden', border: '1px solid var(--color-border)' }}>
-                        <div style={{ height: 28, background: `${p.c}18` }} />
-                        <div style={{ padding: '4px 5px' }}>
-                          <div style={{ fontSize: 7, fontWeight: 700, color: 'var(--color-text)', marginBottom: 2 }}>{p.name}</div>
-                          <div style={{ fontSize: 7, color: p.c, fontWeight: 900 }}>{p.score}</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </MockupShell>
-              </div>
-            </div>
+          <Section id="explorar" title="Explorar" subtitle="Descobre trabalhos de outros alunos">
+            <Lead>A página Explorar é uma galeria com projetos de alunos de toda a plataforma. Podes filtrar por área, tipo e ordenar por score ou data.</Lead>
+
+            <H3>Destaque automático</H3>
+            <Body>A plataforma destaca automaticamente os projetos mais completos e bem avaliados. O algoritmo analisa score, qualidade do diário, apresentação visual e validação externa. Um projeto mais completo tem maior visibilidade no Explorar.</Body>
+
+            <MkExplore />
           </Section>
 
-          {/* ── TURMAS ── */}
-          <Section id="turmas" icon={Users2} color="#f97316" title="Turmas" subtitle="O sistema de turmas para professores e alunos">
-            <div className="atu-two-col">
-              <div>
-                <p className="atu-text">As turmas ligam alunos e professores. Um professor cria uma turma e partilha o código de entrada. Os alunos entram com esse código e ficam associados à turma.</p>
-                <h3 className="atu-h3">Para alunos</h3>
-                <Steps items={[
-                  'O teu professor partilha o código da turma.',
-                  'Vai a Turmas → Entrar numa turma.',
-                  'Insere o código e confirma.',
-                  'Podes ver os projetos dos colegas e receber feedback do professor.',
-                ]} />
-                <h3 className="atu-h3">Para professores</h3>
-                <Steps items={[
-                  'Cria uma turma com o nome e ano letivo.',
-                  'Partilha o código gerado com os alunos.',
-                  'Acompanha os projetos de cada aluno, dá feedback e avalia.',
-                  'Podes ver o progresso de toda a turma num painel único.',
-                ]} />
-                <Tip>O professor pode comentar diretamente na página do projeto com feedback estruturado por critérios.</Tip>
-              </div>
-              <div>
-                <MockupShell label="Painel de turma">
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-                    <div style={{ fontSize: 8, fontWeight: 700, color: 'var(--color-text-secondary)', borderBottom: '1px solid var(--color-border)', paddingBottom: 4, marginBottom: 2 }}>Turma 12º CT — 2024/25</div>
-                    {['Ana Ferreira', 'João Silva', 'Maria Costa'].map((name, i) => (
-                      <div key={name} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '3px 5px', borderRadius: 5, background: 'var(--color-glass)', border: '1px solid var(--color-glass-border)' }}>
-                        <div style={{ width: 16, height: 16, borderRadius: '50%', background: ['#1b78f7', '#10b981', '#f59e0b'][i] + '30', flexShrink: 0 }} />
-                        <div style={{ flex: 1, fontSize: 7, fontWeight: 600, color: 'var(--color-text)' }}>{name}</div>
-                        <div style={{ fontSize: 7, fontWeight: 900, color: 'var(--color-primary)' }}>{[82, 71, 65][i]}</div>
-                        <ArrowUpRight size={8} color="var(--color-text-tertiary)" />
-                      </div>
-                    ))}
-                  </div>
-                </MockupShell>
-              </div>
-            </div>
+          <Section id="turmas" title="Turmas" subtitle="A ligação entre alunos e professores">
+            <Lead>As turmas permitem que professores acompanhem os projetos dos seus alunos diretamente na plataforma.</Lead>
+
+            <H3>Para alunos</H3>
+            <Steps items={[
+              'O teu professor partilha um código de turma.',
+              'Vai a Turmas e entra com o código.',
+              'Ficas ligado à turma e o professor passa a ver os teus projetos.',
+            ]} />
+
+            <H3>Para professores</H3>
+            <Steps items={[
+              'Cria uma turma com nome e ano letivo.',
+              'Partilha o código com os alunos.',
+              'Acompanha os projetos de cada aluno e dá feedback estruturado.',
+            ]} />
+
+            <Note>O professor pode comentar diretamente na página do projeto com feedback por critérios. Esse feedback conta para o score do projeto.</Note>
+
+            <MkTurma />
           </Section>
 
-          {/* ── MENSAGENS ── */}
-          <Section id="mensagens" icon={MessageSquare} color="#8b5cf6" title="Mensagens" subtitle="Comunica diretamente com outros utilizadores">
-            <div className="atu-two-col">
-              <div>
-                <p className="atu-text">As mensagens permitem comunicar com outros alunos, professores ou recrutadores diretamente na plataforma.</p>
-                <h3 className="atu-h3">Como enviar uma mensagem</h3>
-                <Steps items={[
-                  'Acede à secção Mensagens na sidebar.',
-                  'Clica em "Nova conversa" e pesquisa pelo nome do utilizador.',
-                  'Escreve a mensagem e envia.',
-                  'Podes ver as conversas ativas e as não lidas na lista.',
-                ]} />
-                <h3 className="atu-h3">Notificações</h3>
-                <p className="atu-text">Quando tens mensagens não lidas, aparece um badge com o número na sidebar. Também recebes uma notificação no sino 🔔.</p>
-              </div>
-              <div>
-                <MockupShell label="Mensagens">
-                  <div style={{ display: 'flex', gap: 5, height: 80 }}>
-                    <div style={{ width: 50, display: 'flex', flexDirection: 'column', gap: 3 }}>
-                      {['João', 'Prof. Mota', 'Maria'].map((n, i) => (
-                        <div key={n} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '3px 4px', borderRadius: 4, background: i === 0 ? 'var(--color-primary-subtle)' : 'var(--color-bg-alt)', border: `1px solid ${i === 0 ? 'var(--color-primary-muted)' : 'var(--color-border)'}` }}>
-                          <div style={{ width: 10, height: 10, borderRadius: '50%', background: 'var(--color-border)', flexShrink: 0 }} />
-                          <div style={{ fontSize: 6, fontWeight: 600, color: 'var(--color-text)' }}>{n}</div>
-                        </div>
-                      ))}
-                    </div>
-                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                      <div style={{ alignSelf: 'flex-end', maxWidth: '80%', padding: '4px 6px', borderRadius: '7px 7px 2px 7px', background: 'var(--color-primary)', fontSize: 6, color: '#fff' }}>Olá, sobre o projeto...</div>
-                      <div style={{ alignSelf: 'flex-start', maxWidth: '80%', padding: '4px 6px', borderRadius: '7px 7px 7px 2px', background: 'var(--color-glass)', border: '1px solid var(--color-glass-border)', fontSize: 6, color: 'var(--color-text)' }}>Claro, posso ajudar!</div>
-                    </div>
-                  </div>
-                </MockupShell>
-              </div>
-            </div>
+          <Section id="mensagens" title="Mensagens" subtitle="Comunicação direta na plataforma">
+            <Lead>As mensagens permitem falar com outros alunos, professores ou recrutadores sem sair do Showo.</Lead>
+
+            <H3>Enviar uma mensagem</H3>
+            <Steps items={[
+              'Clica em Mensagens na sidebar.',
+              'Clica em "Nova conversa" e pesquisa o utilizador pelo nome.',
+              'Escreve a mensagem e envia.',
+            ]} />
+
+            <Body>Mensagens por ler aparecem com um badge numérico na sidebar. Clica no sino para ver todas as notificações da plataforma.</Body>
+
+            <MkMessages />
           </Section>
 
-          {/* ── MISSÕES ── */}
-          <Section id="missoes" icon={Swords} color="#ef4444" title="Missões" subtitle="Desafios que ajudam a evoluir o teu portfólio">
-            <div className="atu-two-col">
-              <div>
-                <p className="atu-text">As missões são desafios que te guiam a completar o teu portfólio. Cada missão completada dá XP e ajuda a melhorar o score dos teus projetos.</p>
-                <h3 className="atu-h3">Como funcionam</h3>
-                <p className="atu-text">Algumas missões completam-se automaticamente (ex: "Cria o teu primeiro projeto"). Outras requerem ação explícita (ex: "Adiciona uma tecnologia ao projeto"). Quando uma missão estiver completada, aparece com um ✓ verde.</p>
-                <h3 className="atu-h3">Exemplos de missões</h3>
-                <div className="atu-info-grid">
-                  <InfoCard icon={FolderOpen} color="#1b78f7" title="Primeiro projeto" body="Cria o teu primeiro projeto na plataforma. +20 XP" />
-                  <InfoCard icon={User} color="#f59e0b" title="Perfil completo" body="Preenche o teu perfil com foto, bio e escola. +15 XP" />
-                  <InfoCard icon={Target} color="#10b981" title="Score 60+" body="Alcança um score de 60 ou mais num projeto. +25 XP" />
-                  <InfoCard icon={BookOpen} color="#a78bfa" title="Diário ativo" body="Faz 5 entradas no diário de qualquer projeto. +20 XP" />
-                  <InfoCard icon={Globe} color="#06b6d4" title="Projeto público" body="Torna um projeto visível a toda a plataforma. +10 XP" />
-                  <InfoCard icon={Star} color="#ec4899" title="Projeto em destaque" body="Coloca um projeto em destaque no teu perfil. +10 XP" />
-                </div>
-                <Tip>Completa as missões por ordem — as mais simples desbloqueiam as seguintes.</Tip>
-              </div>
-              <div>
-                <MockupShell label="Lista de missões">
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-                    {[
-                      { label: 'Primeiro projeto', xp: 20, done: true, c: '#1b78f7' },
-                      { label: 'Perfil completo', xp: 15, done: true, c: '#f59e0b' },
-                      { label: 'Score 60+', xp: 25, done: false, c: '#10b981' },
-                      { label: 'Diário ativo', xp: 20, done: false, c: '#a78bfa' },
-                    ].map(m => (
-                      <div key={m.label} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 7px', borderRadius: 6, background: m.done ? m.c + '10' : 'var(--color-glass)', border: `1px solid ${m.done ? m.c + '30' : 'var(--color-glass-border)'}`, opacity: m.done ? 1 : 0.85 }}>
-                        <div style={{ width: 14, height: 14, borderRadius: '50%', background: m.done ? m.c : 'var(--color-bg-alt)', border: `2px solid ${m.c}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                          {m.done && <CheckCircle2 size={8} color="#fff" />}
-                        </div>
-                        <div style={{ flex: 1, fontSize: 7, fontWeight: 700, color: 'var(--color-text)', textDecoration: m.done ? 'line-through' : 'none', opacity: m.done ? 0.6 : 1 }}>{m.label}</div>
-                        <div style={{ fontSize: 7, fontWeight: 700, color: m.c }}>+{m.xp} XP</div>
-                      </div>
-                    ))}
-                  </div>
-                </MockupShell>
-              </div>
-            </div>
+          <Section id="missoes" title="Missões" subtitle="Desafios que guiam a evolução do teu portfólio">
+            <Lead>As missões são objetivos concretos que te ajudam a construir um portfólio mais completo. Cada missão completada dá XP.</Lead>
+
+            <H3>Como funcionam</H3>
+            <Body>Algumas missões completam-se automaticamente quando realizas uma ação, como criar o primeiro projeto. Outras precisam de ser ativas na página de Missões. Quando concluída, a missão fica marcada com um visto.</Body>
+
+            <DefList items={[
+              { term: 'Primeiro projeto (+20 XP)', def: 'Criar o primeiro projeto na plataforma.' },
+              { term: 'Perfil completo (+15 XP)', def: 'Preencher o perfil com foto, bio e escola.' },
+              { term: 'Score 60+ (+25 XP)', def: 'Alcançar um score de 60 ou mais num projeto.' },
+              { term: 'Diário ativo (+20 XP)', def: 'Escrever 5 entradas no diário de um projeto.' },
+              { term: 'Projeto público (+10 XP)', def: 'Tornar um projeto visível na plataforma.' },
+              { term: 'Em destaque (+10 XP)', def: 'Colocar um projeto em destaque no perfil.' },
+            ]} />
+
+            <MkMissions />
           </Section>
 
-          {/* ── SCORE ── */}
-          <Section id="score" icon={Star} color="#d97706" title="Sistema de Score" subtitle="Como é calculado o score dos teus projetos">
-            <div className="atu-two-col">
-              <div>
-                <p className="atu-text">Cada projeto tem um score de 0 a 100 que reflete a qualidade e completude do teu trabalho. O score é calculado automaticamente com base em vários critérios.</p>
-                <h3 className="atu-h3">Componentes do score</h3>
-                <div className="atu-info-grid">
-                  <InfoCard icon={FolderOpen} color="#1b78f7" title="Projeto (30%)" body="Campos preenchidos: nome, área, descrição, tipo, escola, colaboradores." />
-                  <InfoCard icon={Palette} color="#a78bfa" title="Apresentação (20%)" body="Capa, blocos de conteúdo na preview, estilo personalizado, tagline gerada por IA." />
-                  <InfoCard icon={BookOpen} color="#f59e0b" title="Diário (25%)" body="Número e regularidade das entradas no diário de projeto." />
-                  <InfoCard icon={FileText} color="#10b981" title="Conteúdo (15%)" body="Campos aprofundados: problema, solução, tecnologias, resultados, aprendizagens." />
-                  <InfoCard icon={Trophy} color="#ec4899" title="Validação (10%)" body="Score do professor, número de visualizações, likes." />
-                </div>
-                <h3 className="atu-h3">Como aumentar o score</h3>
-                <Steps items={[
-                  'Preenche todos os campos do projeto no editor.',
-                  'Escreve entradas no diário regularmente.',
-                  'Personaliza a preview com capa, blocos e estilo.',
-                  'Completa os campos de Resultados e Aprendizagens (valem mais).',
-                  'Partilha o link do projeto para ganhar visualizações.',
-                ]} />
-                <Tip>O campo "Resultados" e o campo "Aprendizagens" têm peso extra no score de conteúdo. Escreve pelo menos 80 caracteres em cada um.</Tip>
-              </div>
-              <div>
-                <MockupScore />
-                <div style={{ marginTop: 12 }}>
-                  <MockupShell label="Score no perfil">
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(27,120,247,0.1)', border: '3px solid #1b78f7', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                          <span style={{ fontSize: 9, fontWeight: 900, color: '#1b78f7' }}>82</span>
-                        </div>
-                        <div>
-                          <div style={{ fontSize: 7, fontWeight: 700, color: 'var(--color-text)' }}>App de Gestão</div>
-                          <div style={{ fontSize: 6, color: 'var(--color-text-secondary)' }}>Informática · 2024/25</div>
-                        </div>
-                      </div>
-                    </div>
-                  </MockupShell>
-                </div>
-              </div>
-            </div>
+          <Section id="score" title="Sistema de Score" subtitle="Como é calculado o score de cada projeto">
+            <Lead>O score vai de 0 a 100 e reflete a qualidade e completude do projeto. Atualiza automaticamente sempre que editas o projeto ou adicionas entradas ao diário.</Lead>
+
+            <H3>Componentes do score</H3>
+            <DefList items={[
+              { term: 'Projeto (30%)', def: 'Completude dos campos básicos: nome, área, tipo, escola, colaboradores e descrição.' },
+              { term: 'Apresentação (20%)', def: 'Capa, blocos de conteúdo na preview, estilo personalizado e tagline gerada por IA.' },
+              { term: 'Diário (25%)', def: 'Número e regularidade das entradas no diário.' },
+              { term: 'Conteúdo (15%)', def: 'Profundidade dos campos: problema, solução, tecnologias, resultados e aprendizagens.' },
+              { term: 'Validação (10%)', def: 'Score do professor, visualizações e gostos.' },
+            ]} />
+
+            <H3>Como aumentar o score</H3>
+            <Steps items={[
+              'Preenche todos os campos no editor do projeto.',
+              'Adiciona uma imagem de capa.',
+              'Escreve regularmente no diário.',
+              'Personaliza a preview com estilo e blocos.',
+              'Escreve pelo menos 80 caracteres nos campos de Resultados e Aprendizagens, que valem pontos extra.',
+              'Partilha o link do projeto para ganhar visualizações.',
+            ]} />
+
+            <MkScore />
           </Section>
 
-          <div className="atu-footer">
-            <div className="atu-footer-inner">
-              <Sparkles size={16} color="#f59e0b" />
-              <span>Tens dúvidas ou encontraste algo que não funciona?</span>
-              <button className="atu-footer-btn" onClick={() => navigate('/mensagens')}>
-                Fala connosco <ArrowRight size={13} />
-              </button>
-            </div>
+          <div className="atu-footer-block">
+            <h3 className="atu-footer-title">Algo está errado neste guia?</h3>
+            <p className="atu-footer-desc">Se encontraste um erro, algo desatualizado ou uma funcionalidade que não está explicada, conta-nos aqui.</p>
+            <FeedbackForm />
           </div>
 
         </main>
