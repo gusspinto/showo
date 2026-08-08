@@ -65,6 +65,7 @@ const Privacidade    = lazy(() => import('./pages/Privacidade'))
 const Termos         = lazy(() => import('./pages/Termos'))
 const GoogleCalendarCallback = lazy(() => import('./pages/GoogleCalendarCallback'))
 const DiaryCanvas  = lazy(() => import('./pages/DiaryCanvas'))
+const AprendeAUsar = lazy(() => import('./pages/AprendeAUsar'))
 
 function PageLoader() {
   return (
@@ -376,6 +377,7 @@ export default function App() {
               <Route path="/privacidade"        element={<Privacidade />}   />
               <Route path="/termos"             element={<Termos />}        />
               <Route path="/oauth/google-calendar" element={<GoogleCalendarCallback />} />
+              <Route path="/aprende"            element={<AprendeAUsar />}  />
               <Route path="*"                   element={<NotFound />}      />
             </Routes>
             </Suspense>
