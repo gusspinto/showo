@@ -818,6 +818,9 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
 
   function handleApplyTemplate(tpl) {
     setPreviewStyle(ps => ({ ...ps, ...tpl.style }))
+    if (tpl.blocks && tpl.blocks.length > 0) {
+      setPreviewBlocks(tpl.blocks.map((b, i) => ({ ...newBlock(b.type, i), ...b, id: Date.now().toString(36) + i })))
+    }
     setTemplateApplied(tpl.id)
     setTimeout(() => setTemplateApplied(''), 3000)
     setTemplateConfirm(null)
@@ -2401,80 +2404,155 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                 id: 'midnight-tech',
                 label: 'Midnight Tech',
                 desc: 'Escuro profundo, azul elétrico, tipografia técnica',
-                style: { bg: 'midnight', accent: 'blue', titleFont: 'space', font: 'inter', cardStyle: 'glass', titleStyle: 'caps', heroSize: 'full' },
-                preview: { bg: '#030508', accent: '#1b78f7', title: 'Space Grotesk', body: 'Inter' },
+                tags: ['hero', 'citação', 'métrica'],
+                style: { bg: 'midnight', accent: 'blue', titleFont: 'space', font: 'inter', cardStyle: 'glass', titleStyle: 'caps', heroSize: 'full', titleAlign: 'left', coverAsHero: true },
+                blocks: [
+                  { type: 'callout', content: 'O que torna este projeto único?', color: 'var(--color-primary)', align: 'left', width: 'full' },
+                  { type: 'quote', content: 'A tecnologia é a ferramenta; a criatividade é o motor.', align: 'left', width: 'full' },
+                  { type: 'metric', label: 'Impacto', content: '—', align: 'left', width: 'full' },
+                ],
+                preview: { bg: '#030508', accent: '#1b78f7', title: 'Space Grotesk', body: 'Inter', align: 'left', hero: true },
               },
               {
                 id: 'cosmic-purple',
                 label: 'Cosmic',
                 desc: 'Cosmos escuro, roxo vibrante, fontes expressivas',
-                style: { bg: 'cosmic', accent: 'purple', titleFont: 'syne', font: 'syne', cardStyle: 'glass', titleStyle: 'gradient', heroSize: 'full' },
-                preview: { bg: '#160b2a', accent: '#7c3aed', title: 'Syne', body: 'Syne' },
+                tags: ['hero', 'título', 'citação'],
+                style: { bg: 'cosmic', accent: 'purple', titleFont: 'syne', font: 'syne', cardStyle: 'glass', titleStyle: 'gradient', heroSize: 'full', titleAlign: 'center', coverAsHero: true },
+                blocks: [
+                  { type: 'heading', content: 'A visão por trás do projeto', align: 'center', width: 'full' },
+                  { type: 'quote', content: 'Cada projeto começa com uma pergunta que ainda não tem resposta.', align: 'center', width: 'full' },
+                  { type: 'divider', dividerStyle: 'dashed', width: 'full' },
+                ],
+                preview: { bg: '#160b2a', accent: '#7c3aed', title: 'Syne', body: 'Syne', align: 'center', hero: true },
               },
               {
                 id: 'forest-green',
                 label: 'Forest',
                 desc: 'Verde natureza, fundo floresta, cards sólidos',
-                style: { bg: 'forest', accent: 'teal', titleFont: 'croogla', font: 'default', cardStyle: 'border', titleStyle: 'normal', heroSize: 'default' },
-                preview: { bg: '#081408', accent: '#0d9488', title: 'Croogla', body: 'Montserrat' },
+                tags: ['nota', 'métrica'],
+                style: { bg: 'forest', accent: 'teal', titleFont: 'croogla', font: 'default', cardStyle: 'border', titleStyle: 'normal', heroSize: 'default', titleAlign: 'left', coverAsHero: false },
+                blocks: [
+                  { type: 'note', content: 'Apresenta o teu projeto com as tuas palavras. O que aprendeste? Que problema resolveste?', align: 'left', width: 'full' },
+                  { type: 'metric', label: 'Horas dedicadas', content: '—', align: 'left', width: 'full' },
+                ],
+                preview: { bg: '#081408', accent: '#0d9488', title: 'Croogla', body: 'Montserrat', align: 'left', hero: false },
               },
               {
                 id: 'warm-amber',
                 label: 'Warm Amber',
                 desc: 'Tom quente, âmbar, tipografia arredondada e amigável',
-                style: { bg: 'warm', accent: 'amber', titleFont: 'fredoka', font: 'fredoka', cardStyle: 'flat', titleStyle: 'normal', heroSize: 'default' },
-                preview: { bg: '#140c02', accent: '#d97706', title: 'Fredoka', body: 'Fredoka' },
+                tags: ['destaque', 'nota', 'botão'],
+                style: { bg: 'warm', accent: 'amber', titleFont: 'fredoka', font: 'fredoka', cardStyle: 'flat', titleStyle: 'normal', heroSize: 'default', titleAlign: 'left', coverAsHero: false },
+                blocks: [
+                  { type: 'callout', content: '✨ Destaque do projeto: escreve aqui o momento que mais te orgulha', color: '#d97706', align: 'left', width: 'full' },
+                  { type: 'note', content: 'Uma nota pessoal para quem visita o teu projeto.', align: 'left', width: 'full' },
+                  { type: 'cta', content: 'Ver o projeto', url: '', align: 'left', width: 'full' },
+                ],
+                preview: { bg: '#140c02', accent: '#d97706', title: 'Fredoka', body: 'Fredoka', align: 'left', hero: false },
               },
               {
                 id: 'paper-editorial',
                 label: 'Editorial',
                 desc: 'Fundo papel claro, serifa clássica, estilo revista',
-                style: { bg: 'paper', accent: 'slate', titleFont: 'playfair', font: 'serif', cardStyle: 'border', titleStyle: 'normal', heroSize: 'compact' },
-                preview: { bg: '#f5f0e8', accent: '#475569', title: 'Playfair', body: 'Georgia', isLight: true },
+                tags: ['hero', 'título', 'citação', 'divisor'],
+                style: { bg: 'paper', accent: 'slate', titleFont: 'playfair', font: 'serif', cardStyle: 'border', titleStyle: 'normal', heroSize: 'compact', titleAlign: 'center', coverAsHero: true },
+                blocks: [
+                  { type: 'heading', content: 'Introdução', align: 'center', width: 'full' },
+                  { type: 'quote', content: 'A apresentação é parte do projeto.', align: 'center', width: 'full' },
+                  { type: 'divider', dividerStyle: 'solid', width: 'full' },
+                ],
+                preview: { bg: '#f5f0e8', accent: '#475569', title: 'Playfair', body: 'Georgia', isLight: true, align: 'center', hero: true },
               },
               {
                 id: 'crimson-bold',
                 label: 'Crimson Bold',
                 desc: 'Vermelho intenso, navy profundo, impacto máximo',
-                style: { bg: 'navy', accent: 'crimson', titleFont: 'syne', font: 'inter', cardStyle: 'flat', titleStyle: 'caps', heroSize: 'full' },
-                preview: { bg: '#0c1e38', accent: '#dc2626', title: 'Syne CAPS', body: 'Inter' },
+                tags: ['hero', 'destaque', 'métrica', 'botão'],
+                style: { bg: 'navy', accent: 'crimson', titleFont: 'syne', font: 'inter', cardStyle: 'flat', titleStyle: 'caps', heroSize: 'full', titleAlign: 'left', coverAsHero: true },
+                blocks: [
+                  { type: 'callout', content: '🔥 Este projeto existe porque —', color: '#dc2626', align: 'left', width: 'full' },
+                  { type: 'stats', stat1Value: '—', stat1Label: 'Resultado 1', stat2Value: '—', stat2Label: 'Resultado 2', stat3Value: '—', stat3Label: 'Resultado 3', width: 'full' },
+                  { type: 'cta', content: 'Ver demonstração', url: '', align: 'left', width: 'full' },
+                ],
+                preview: { bg: '#0c1e38', accent: '#dc2626', title: 'Syne CAPS', body: 'Inter', align: 'left', hero: true },
               },
               {
                 id: 'slate-minimal',
                 label: 'Minimal',
                 desc: 'Ardósia neutra, sem cores fortes, espaço e clareza',
-                style: { bg: 'slate', accent: 'slate', titleFont: 'inter', font: 'inter', cardStyle: 'flat', titleStyle: 'normal', heroSize: 'compact' },
-                preview: { bg: '#0c1018', accent: '#475569', title: 'Inter', body: 'Inter' },
+                tags: ['nota', 'divisor'],
+                style: { bg: 'slate', accent: 'slate', titleFont: 'inter', font: 'inter', cardStyle: 'flat', titleStyle: 'normal', heroSize: 'compact', titleAlign: 'left', coverAsHero: false },
+                blocks: [
+                  { type: 'note', content: 'Descreve o essencial do teu projeto, sem ruído.', align: 'left', width: 'full' },
+                  { type: 'divider', dividerStyle: 'solid', width: 'full' },
+                ],
+                preview: { bg: '#0c1018', accent: '#475569', title: 'Inter', body: 'Inter', align: 'left', hero: false },
               },
               {
                 id: 'chalk-clean',
                 label: 'Clean Light',
                 desc: 'Fundo claro cinza, azul padrão, layout limpo',
-                style: { bg: 'chalk', accent: 'default', titleFont: 'croogla', font: 'default', cardStyle: 'border', titleStyle: 'normal', heroSize: 'default' },
-                preview: { bg: '#eff0f2', accent: '#1b78f7', title: 'Croogla', body: 'Montserrat', isLight: true },
+                tags: ['nota', 'destaque'],
+                style: { bg: 'chalk', accent: 'default', titleFont: 'croogla', font: 'default', cardStyle: 'border', titleStyle: 'normal', heroSize: 'default', titleAlign: 'left', coverAsHero: false },
+                blocks: [
+                  { type: 'note', content: 'Escreve aqui uma apresentação do teu projeto para quem visita.', align: 'left', width: 'full' },
+                  { type: 'callout', content: '💡 Ideia principal do projeto', color: 'var(--color-primary)', align: 'left', width: 'full' },
+                ],
+                preview: { bg: '#eff0f2', accent: '#1b78f7', title: 'Croogla', body: 'Montserrat', isLight: true, align: 'left', hero: false },
               },
             ]
 
+            const pendingTpl = VISUAL_TEMPLATES.find(t => t.id === templateConfirm)
+
             return (
               <div style={{ flex: 1, overflowY: 'auto', padding: '12px 10px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 2, padding: '0 4px' }}>Temas visuais</div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 2, padding: '0 4px' }}>Templates completos</div>
 
                 {templateApplied && (
                   <div style={{ padding: '8px 10px', background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.25)', borderRadius: 8, fontSize: 12, color: 'var(--color-success)', display: 'flex', alignItems: 'center', gap: 5 }}>
-                    <Check size={12} /> Tema aplicado!
+                    <Check size={12} /> Template aplicado!
+                  </div>
+                )}
+
+                {/* Confirm overlay when blocks exist */}
+                {templateConfirm && pendingTpl && (
+                  <div style={{ padding: '10px 12px', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: '#d97706' }}>Substituir blocos actuais?</div>
+                    <div style={{ fontSize: 10, color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
+                      O template <strong>{pendingTpl.label}</strong> vai substituir os teus blocos actuais pelos blocos de base do template.
+                    </div>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <button onClick={() => handleApplyTemplate(pendingTpl)} style={{ flex: 1, padding: '6px 0', fontSize: 11, fontWeight: 700, background: '#d97706', color: '#fff', border: 'none', borderRadius: 7, cursor: 'pointer', fontFamily: 'inherit' }}>
+                        Aplicar mesmo assim
+                      </button>
+                      <button onClick={() => setTemplateConfirm(null)} style={{ flex: 1, padding: '6px 0', fontSize: 11, fontWeight: 700, background: 'var(--color-bg-alt)', color: 'var(--color-text)', border: '1px solid var(--color-border)', borderRadius: 7, cursor: 'pointer', fontFamily: 'inherit' }}>
+                        Cancelar
+                      </button>
+                    </div>
                   </div>
                 )}
 
                 {VISUAL_TEMPLATES.map(tpl => {
                   const isActive = templateApplied === tpl.id
+                  const isPending = templateConfirm === tpl.id
+                  const textFg = tpl.preview.isLight ? 'rgba(0,0,0,0.55)' : 'rgba(255,255,255,0.8)'
+                  const textFaint = tpl.preview.isLight ? 'rgba(0,0,0,0.22)' : 'rgba(255,255,255,0.22)'
+                  const titleOffset = tpl.preview.align === 'center' ? { marginLeft: 'auto', marginRight: 'auto' } : {}
                   return (
                     <button
                       key={tpl.id}
-                      onClick={() => handleApplyTemplate(tpl)}
+                      onClick={() => {
+                        if (tpl.blocks?.length > 0 && previewBlocks.length > 0 && !isPending) {
+                          setTemplateConfirm(tpl.id)
+                        } else {
+                          handleApplyTemplate(tpl)
+                        }
+                      }}
                       style={{
                         display: 'flex', alignItems: 'stretch', gap: 0, textAlign: 'left',
-                        background: isActive ? 'rgba(34,197,94,0.06)' : 'var(--color-bg-alt)',
-                        border: `1px solid ${isActive ? 'rgba(34,197,94,0.4)' : 'var(--color-border)'}`,
+                        background: isActive ? 'rgba(34,197,94,0.06)' : isPending ? 'rgba(245,158,11,0.06)' : 'var(--color-bg-alt)',
+                        border: `1px solid ${isActive ? 'rgba(34,197,94,0.4)' : isPending ? 'rgba(245,158,11,0.4)' : 'var(--color-border)'}`,
                         borderRadius: 10, cursor: 'pointer', fontFamily: 'inherit',
                         transition: 'border-color 0.15s, background 0.15s, box-shadow 0.15s',
                         overflow: 'hidden', width: '100%',
@@ -2483,29 +2561,43 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                     >
                       {/* Mini preview swatch */}
                       <div style={{
-                        width: 56, flexShrink: 0,
+                        width: 60, flexShrink: 0,
                         background: tpl.preview.bg,
-                        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                        gap: 4, padding: '10px 4px',
-                        borderRight: '1px solid rgba(255,255,255,0.06)',
+                        display: 'flex', flexDirection: 'column', justifyContent: 'center',
+                        gap: 3, padding: '10px 8px',
+                        borderRight: tpl.preview.isLight ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.06)',
                       }}>
-                        {/* accent bar */}
-                        <div style={{ width: 28, height: 3, borderRadius: 2, background: tpl.preview.accent }} />
-                        {/* fake title block */}
-                        <div style={{ width: 36, height: 6, borderRadius: 2, background: tpl.preview.isLight ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.75)' }} />
-                        {/* fake body lines */}
-                        <div style={{ width: 36, height: 3, borderRadius: 2, background: tpl.preview.isLight ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.25)' }} />
-                        <div style={{ width: 28, height: 3, borderRadius: 2, background: tpl.preview.isLight ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.25)' }} />
-                        {/* accent dot */}
-                        <div style={{ width: 8, height: 8, borderRadius: '50%', background: tpl.preview.accent, marginTop: 2 }} />
+                        {/* hero bar or just accent bar */}
+                        {tpl.preview.hero
+                          ? <div style={{ width: '100%', height: 10, borderRadius: 3, background: `linear-gradient(90deg, ${tpl.preview.accent}66, ${tpl.preview.accent}22)`, marginBottom: 2 }} />
+                          : <div style={{ width: 20, height: 3, borderRadius: 2, background: tpl.preview.accent, ...titleOffset }} />
+                        }
+                        {/* fake title (alignment-aware) */}
+                        <div style={{ width: tpl.preview.align === 'center' ? 32 : 38, height: 5, borderRadius: 2, background: textFg, ...titleOffset }} />
+                        {/* fake body line */}
+                        <div style={{ width: tpl.preview.align === 'center' ? 28 : 34, height: 3, borderRadius: 2, background: textFaint, ...titleOffset }} />
+                        {/* block tags row */}
+                        <div style={{ display: 'flex', gap: 2, marginTop: 3, flexWrap: 'wrap', justifyContent: tpl.preview.align === 'center' ? 'center' : 'flex-start' }}>
+                          {(tpl.tags || []).slice(0, 3).map(tag => (
+                            <div key={tag} style={{ height: 4, width: tag.length * 3.2 + 4, borderRadius: 2, background: tpl.preview.accent + '99' }} />
+                          ))}
+                        </div>
                       </div>
                       {/* Text info */}
-                      <div style={{ padding: '9px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 2 }}>
-                        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-text)' }}>{tpl.label}</div>
-                        <div style={{ fontSize: 10, color: 'var(--color-text-secondary)', lineHeight: 1.4 }}>{tpl.desc}</div>
-                        <div style={{ fontSize: 9, color: 'var(--color-text-tertiary)', marginTop: 2 }}>
-                          {tpl.preview.title} · {tpl.preview.body}
+                      <div style={{ padding: '9px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 2, flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-text)' }}>{tpl.label}</span>
+                          {tpl.preview.hero && <span style={{ fontSize: 8, fontWeight: 700, background: 'var(--color-primary-subtle)', color: 'var(--color-primary)', borderRadius: 4, padding: '1px 4px', letterSpacing: '0.05em', textTransform: 'uppercase', flexShrink: 0 }}>hero</span>}
+                          {tpl.preview.align === 'center' && <span style={{ fontSize: 8, fontWeight: 700, background: 'var(--color-bg)', color: 'var(--color-text-secondary)', border: '1px solid var(--color-border)', borderRadius: 4, padding: '1px 4px', letterSpacing: '0.05em', flexShrink: 0 }}>centrado</span>}
                         </div>
+                        <div style={{ fontSize: 10, color: 'var(--color-text-secondary)', lineHeight: 1.4 }}>{tpl.desc}</div>
+                        {tpl.tags?.length > 0 && (
+                          <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap', marginTop: 3 }}>
+                            {tpl.tags.map(tag => (
+                              <span key={tag} style={{ fontSize: 9, color: 'var(--color-text-tertiary)', background: 'var(--color-bg)', border: '1px solid var(--color-border)', borderRadius: 4, padding: '1px 5px' }}>{tag}</span>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </button>
                   )

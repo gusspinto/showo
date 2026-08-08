@@ -957,24 +957,26 @@ export default function StudentDashboard({ user, profile }) {
             )}
 
             <div className="sdb-o-pulse">
-              {loadingProjects || (focusProject && loadingEntries) ? (
-                <ProjectPulse loading />
-              ) : focusFull ? (
-                <ProjectPulse
-                  project={focusFull}
-                  entries={entries}
-                  coverage={coverage}
-                  onLog={kind => setComposerKind(kind)}
-                  onOpenReport={() => setShowReport(true)}
-                  onOpenJournal={() => setShowJournal(true)}
-                  onOpenCanvas={() => navigate(`/projeto/${focusFull.slug}/diario`)}
-                  onOpen={() => navigate(`/projeto/${focusFull.slug}`)}
-                  onEdit={() => navigate(`/editar/${focusFull.slug}`)}
-                  onDelete={() => deleteProject(focusFull.id)}
-                />
-              ) : (
-                <ProjectPulseEmpty onCreate={() => navigate('/novo')} />
-              )}
+              {(() => {
+                const focusIsPinned = focusFull && projects.some(p => p.id === focusFull.id && p.dashboard_pinned)
+                if (loadingProjects || (focusProject && loadingEntries)) return <ProjectPulse loading />
+                if (focusFull && !focusIsPinned) return (
+                  <ProjectPulse
+                    project={focusFull}
+                    entries={entries}
+                    coverage={coverage}
+                    onLog={kind => setComposerKind(kind)}
+                    onOpenReport={() => setShowReport(true)}
+                    onOpenJournal={() => setShowJournal(true)}
+                    onOpenCanvas={() => navigate(`/projeto/${focusFull.slug}/diario`)}
+                    onOpen={() => navigate(`/projeto/${focusFull.slug}`)}
+                    onEdit={() => navigate(`/editar/${focusFull.slug}`)}
+                    onDelete={() => deleteProject(focusFull.id)}
+                  />
+                )
+                if (!projects.some(p => p.dashboard_pinned)) return <ProjectPulseEmpty onCreate={() => navigate('/novo')} />
+                return null
+              })()}
 
               {projects.filter(p => p.dashboard_pinned).map(pinned => (
                 <PinnedProjectCard
@@ -1341,56 +1343,72 @@ function PinnedProjectCard({ project, onUnpin, onEdit, onDelete, onOpen, onOpenD
 
   return (
     <section className="sdb-pinned-card">
-      <div className="sdb-pinned-top">
-        <span className="sdb-pinned-type">{typeLabel}</span>
-        <div className="sdb-pinned-actions">
+      <div
+        className="sdb-pinned-head"
+        style={project.cover_url ? { '--cover-bg': `url(${project.cover_url})` } : {}}
+        data-has-cover={!!project.cover_url}
+      >
+        {/* Esquerda: type + pin + edit */}
+        <div className="sdb-pinned-head-left">
+          <span className="sdb-pinned-type">{typeLabel}</span>
+          {!confirmDelete && (
+            <>
+              <button className="sdb-icon-btn sdb-icon-btn--pin is-pinned" onClick={onUnpin} title="Retirar da dashboard">
+                <Pin size={14} fill="currentColor" />
+              </button>
+              <button className="sdb-icon-btn" onClick={onEdit} title="Editar projeto">
+                <Pencil size={14} />
+              </button>
+            </>
+          )}
+        </div>
+        {/* Direita: eliminar */}
+        <div className="sdb-pinned-head-right">
           {confirmDelete ? (
             <>
               <button className="sdb-pulse-danger-confirm" onClick={() => { onDelete(); setConfirmDelete(false) }}>Apagar</button>
               <button className="sdb-icon-btn" onClick={() => setConfirmDelete(false)}>✕</button>
             </>
           ) : (
-            <>
-              <button className="sdb-icon-btn sdb-icon-btn--pin is-pinned" onClick={onUnpin} title="Retirar da dashboard">
-                <Pin size={14} fill="currentColor" />
-              </button>
-              <button className="sdb-icon-btn sdb-icon-btn--danger" onClick={() => setConfirmDelete(true)} title="Apagar projeto">
-                <Trash2 size={14} />
-              </button>
-              <button className="sdb-icon-btn" onClick={onEdit} title="Editar projeto">
-                <Pencil size={15} />
-              </button>
-              <button className="sdb-icon-btn" onClick={onOpen} title="Abrir página do projeto">
-                <ArrowUpRight size={16} />
-              </button>
-            </>
+            <button className="sdb-icon-btn sdb-icon-btn--danger" onClick={() => setConfirmDelete(true)} title="Apagar projeto">
+              <Trash2 size={14} />
+            </button>
           )}
         </div>
       </div>
 
       <div className="sdb-pinned-body">
-        <div className="sdb-pinned-name-block">
+        <div className="sdb-pinned-name-row">
           <h2 className="sdb-pinned-name" title={project.name}>{project.name}</h2>
-          {project.score != null && (
-            <span className="sdb-pinned-score">{project.score}</span>
-          )}
+          {project.score != null && <span className="sdb-pinned-score">{project.score}</span>}
         </div>
         <div className="sdb-pinned-meta">
           {project.area && <span>{project.area}</span>}
           {project.ai_tagline && <span className="sdb-pinned-tagline">"{project.ai_tagline}"</span>}
+          {project.defense_date && (() => {
+            const today = new Date(); today.setHours(0,0,0,0)
+            const target = new Date(project.defense_date + 'T00:00:00')
+            const days = Math.ceil((target - today) / 86400000)
+            if (days < 0) return null
+            const label = days === 0 ? 'é hoje' : days === 1 ? 'é amanhã' : `faltam ${days} dias`
+            return (
+              <span className={`sdb-deadline${days <= 7 ? ' is-close' : ''}`} style={{ fontSize: 12 }}>
+                {target.toLocaleDateString('pt-PT', { day: 'numeric', month: 'long' })} — {label}
+              </span>
+            )
+          })()}
         </div>
-      </div>
-
-      <div className="sdb-pinned-foot">
-        <button className="sdb-btn sdb-btn--onbrand sdb-btn--sm" onClick={() => onLog?.('progresso')}>
-          <Plus size={13} /> Registar
-        </button>
-        <button className="sdb-btn sdb-btn--onbrand-ghost sdb-btn--sm" onClick={onOpenDiary}>
-          <BookOpen size={13} /> Diário
-        </button>
-        <button className="sdb-btn sdb-btn--onbrand-ghost sdb-btn--sm" onClick={onOpen}>
-          <ArrowUpRight size={13} /> Ver
-        </button>
+        <div className="sdb-pinned-foot">
+          <button className="sdb-btn sdb-btn--onbrand sdb-btn--sm" onClick={() => onLog?.('progresso')}>
+            <Plus size={13} /> Registar
+          </button>
+          <button className="sdb-btn sdb-btn--onbrand-ghost sdb-btn--sm" onClick={onOpenDiary}>
+            <BookOpen size={13} /> Diário
+          </button>
+          <button className="sdb-btn sdb-btn--onbrand-ghost sdb-btn--sm" onClick={onOpen}>
+            <ArrowUpRight size={13} /> Ver
+          </button>
+        </div>
       </div>
     </section>
   )

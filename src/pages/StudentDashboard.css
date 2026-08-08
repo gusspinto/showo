@@ -1523,87 +1523,138 @@
   .sdb-o-portfolio { order: 9; }
 }
 
-/* ── Dashboard pinned card ───────────────────────────────────────────────── */
-/* Painel escuro com borda esquerda azul — visualmente distinto do ProjectPulse */
-.sdb-pinned-card {
-  background: var(--color-glass);
-  border: 1px solid var(--color-glass-border);
-  border-left: 3px solid rgba(96, 165, 250, 0.6);
-  border-radius: 16px;
-  padding: 16px 20px;
+/* ── Dashboard pinned cards ──────────────────────────────────────────────── */
+.sdb-o-pulse {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
-.sdb-pinned-top {
+.sdb-pinned-card {
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+/* Header: imagem desfocada (suave) quando existe capa */
+.sdb-pinned-head {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--color-glass-border);
+  border-bottom: none;
+  border-radius: 16px 16px 0 0;
+  padding: 12px 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+  min-height: 50px;
+  background: rgba(27,120,247,0.1);
+}
+.sdb-pinned-head[data-has-cover='true']::before {
+  content: '';
+  position: absolute;
+  inset: -20px;
+  background-image: var(--cover-bg);
+  background-size: cover;
+  background-position: center;
+  filter: blur(10px);
+  opacity: 0.55;
+  z-index: 0;
+}
+.sdb-pinned-head[data-has-cover='true']::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(4, 10, 24, 0.52);
+  z-index: 1;
+}
+.sdb-pinned-head > * { position: relative; z-index: 2; }
+/* Forçar ícones a branco no header (sempre escuro por causa do overlay/bg) */
+.sdb-pinned-head .sdb-icon-btn {
+  color: rgba(255,255,255,0.7) !important;
+}
+.sdb-pinned-head .sdb-icon-btn:hover {
+  color: #fff !important;
+  background: rgba(255,255,255,0.12) !important;
+}
+.sdb-pinned-head-left {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.sdb-pinned-head-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 .sdb-pinned-type {
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--color-text-secondary);
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.85);
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.14);
   border-radius: 5px;
-  padding: 2px 7px;
+  padding: 3px 8px;
+  margin-right: 4px;
 }
-.sdb-pinned-actions {
-  display: flex;
-  gap: 2px;
-  flex-shrink: 0;
-}
+/* Corpo */
 .sdb-pinned-body {
+  background: var(--color-glass);
+  border: 1px solid var(--color-glass-border);
+  border-top: none;
+  border-radius: 0 0 16px 16px;
+  padding: 18px 20px 20px;
   display: flex;
-  align-items: flex-start;
-  gap: 12px;
+  flex-direction: column;
+  gap: 10px;
 }
-.sdb-pinned-name-block {
-  flex: 1;
-  min-width: 0;
+.sdb-pinned-name-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
 }
 .sdb-pinned-name {
-  margin: 0 0 4px;
+  flex: 1;
+  min-width: 0;
+  margin: 0;
   font-family: var(--font-heading);
-  font-size: clamp(18px, 2.2vw, 24px);
+  font-size: clamp(20px, 2.4vw, 28px);
   font-weight: 400;
-  letter-spacing: -0.3px;
+  letter-spacing: -0.4px;
   line-height: 1.1;
   color: var(--color-text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.sdb-pinned-score {
+  flex-shrink: 0;
+  font-size: 30px;
+  font-weight: 800;
+  color: var(--color-primary);
+  line-height: 1;
+  letter-spacing: -1.5px;
+}
 .sdb-pinned-meta {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   flex-wrap: wrap;
   font-size: var(--text-sm);
   color: var(--color-text-secondary);
 }
 .sdb-pinned-tagline {
   font-style: italic;
-  opacity: 0.8;
-}
-.sdb-pinned-score {
-  flex-shrink: 0;
-  font-size: 28px;
-  font-weight: 800;
-  color: #60a5fa;
-  line-height: 1;
-  letter-spacing: -1px;
-  align-self: center;
+  opacity: 0.75;
 }
 .sdb-pinned-foot {
   display: flex;
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
+  padding-top: 2px;
 }
 
 @media (max-width: 600px) {
