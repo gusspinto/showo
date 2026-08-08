@@ -15,7 +15,7 @@ import { useTheme } from '../context/ThemeContext'
 import DefenseMode from '../components/DefenseMode'
 import ProjectComments from '../components/ProjectComments'
 import { analyzeProject } from '../lib/analyzeProject'
-import { Check, X, Loader, GraduationCap, Save, Sparkles, Bot, Lightbulb, Pencil, Search, Target, Wrench, Zap, TrendingUp, Briefcase, Users, Rocket, Trophy, BarChart2, CheckCircle, BookOpen, ChevronDown, Eye, EyeOff, UserPlus, Calendar, Mail, ArrowRight, ChevronRight, ChevronLeft, Globe, Image, MessageSquare, Quote, Layout, Type, Link, GripVertical, Plus, AlignLeft, Star, Camera, FileText, ClipboardList, Copy, Monitor, Tablet, Smartphone, Minus, Video, AlignCenter, AlignRight, Palette, AlertTriangle, User, Settings, Bell, Swords, Paintbrush } from 'lucide-react'
+import { Check, X, Loader, GraduationCap, Save, Sparkles, Bot, Lightbulb, Pencil, Search, Target, Wrench, Zap, TrendingUp, Briefcase, Users, Rocket, Trophy, BarChart2, CheckCircle, BookOpen, ChevronDown, Eye, EyeOff, UserPlus, Calendar, Mail, ArrowRight, ChevronRight, ChevronLeft, Globe, Image, MessageSquare, Quote, Layout, Type, Link, GripVertical, Plus, AlignLeft, Star, Camera, FileText, ClipboardList, Copy, Monitor, Tablet, Smartphone, Minus, Video, AlignCenter, AlignRight, Palette, AlertTriangle, User, Settings, Bell, Swords, Paintbrush, LayoutTemplate } from 'lucide-react'
 
 const colors = {
   bg: 'var(--color-bg)',
@@ -792,6 +792,7 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
   isRecruiterRole,
   wsExpanded, setWsExpanded,
   onCoverChange,
+  onProjectUpdate,
   previewDevice, setPreviewDevice,
 }) {
   const navigate = useNavigate()
@@ -801,6 +802,8 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
   const dragIdx    = useRef(null)
   const dragOver   = useRef(null)
   const [dragOverIdx, setDragOverIdx] = useState(null)
+  const [templateConfirm, setTemplateConfirm] = useState(null)
+  const [templateApplied, setTemplateApplied] = useState('')
   const sectionDragRef = useRef(null)
   const [dragOverSectionIdx, setDragOverSectionIdx] = useState(null)
   const [mediaEditKey, setMediaEditKey] = useState(null)
@@ -812,6 +815,13 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
     document.body.classList.add('pv-active')
     return () => document.body.classList.remove('pv-active')
   }, [])
+
+  function handleApplyTemplate(tpl) {
+    setPreviewStyle(ps => ({ ...ps, ...tpl.style }))
+    setTemplateApplied(tpl.id)
+    setTimeout(() => setTemplateApplied(''), 3000)
+    setTemplateConfirm(null)
+  }
 
   function uploadSectionMedia(sectionKey) {
     const input = document.createElement('input')
@@ -1486,10 +1496,10 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
           {isDesktop && !wsExpanded && (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '16px 0' }}>
               {[
-                { id: 'estilo',  Icon: Palette   },
-                { id: 'blocos',  Icon: Layout    },
-                { id: 'seccoes', Icon: Eye       },
-                { id: 'ia',      Icon: Sparkles  },
+                { id: 'estilo',    Icon: Palette        },
+                { id: 'blocos',    Icon: Layout         },
+                { id: 'seccoes',   Icon: Eye            },
+                { id: 'templates', Icon: LayoutTemplate },
               ].map(t => (
                 <button
                   key={t.id}
@@ -1515,32 +1525,52 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
           }}>
             {/* Tabs + actions row */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
-              {/* Segmented tab control */}
-              <div style={{
-                display: 'flex', gap: 2, flex: 1,
-                background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)',
-                borderRadius: 10, padding: '3px',
-              }}>
-                {[
-                  { id: 'estilo',  label: 'Estilo',  Icon: Palette   },
-                  { id: 'blocos',  label: 'Blocos',  Icon: Layout    },
-                  { id: 'seccoes', label: 'Secções', Icon: Eye       },
-                  { id: 'ia',      label: 'IA',      Icon: Sparkles  },
-                ].map(t => (
-                  <button key={t.id} onClick={() => setPreviewTab(t.id)} style={{
-                    flex: 1, padding: '6px 4px', borderRadius: 7, border: 'none',
-                    cursor: 'pointer', fontFamily: 'inherit',
-                    background: previewTab === t.id ? 'var(--color-primary)' : 'transparent',
-                    color: previewTab === t.id ? '#fff' : 'var(--color-text-secondary)',
-                    fontSize: 11, fontWeight: previewTab === t.id ? 700 : 500,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
-                    transition: 'all 0.15s',
-                    boxShadow: previewTab === t.id ? '0 1px 8px var(--color-primary-subtle)' : 'none',
+              {/* Segmented tab control with sliding pill */}
+              {(() => {
+                const wsTabs = [
+                  { id: 'estilo',    label: 'Estilo',    Icon: Palette        },
+                  { id: 'blocos',    label: 'Blocos',    Icon: Layout         },
+                  { id: 'seccoes',   label: 'Secções',   Icon: Eye            },
+                  { id: 'templates', label: 'Templates', Icon: LayoutTemplate },
+                ]
+                const activeIdx = wsTabs.findIndex(t => t.id === previewTab)
+                return (
+                  <div style={{
+                    position: 'relative', display: 'flex', flex: 1,
+                    background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)',
+                    borderRadius: 10, padding: '3px', overflow: 'hidden',
                   }}>
-                    <t.Icon size={11} /> {t.label}
-                  </button>
-                ))}
-              </div>
+                    {/* sliding pill */}
+                    <div style={{
+                      position: 'absolute',
+                      top: 3, bottom: 3,
+                      left: 3,
+                      width: `calc(${100 / wsTabs.length}% - 3px)`,
+                      transform: `translateX(${activeIdx * 100}%)`,
+                      transition: 'transform 0.28s cubic-bezier(0.4,0,0.2,1)',
+                      background: 'var(--color-primary)',
+                      borderRadius: 7,
+                      boxShadow: '0 1px 8px var(--color-primary-subtle)',
+                      pointerEvents: 'none',
+                    }} />
+                    {wsTabs.map(t => (
+                      <button key={t.id} onClick={() => setPreviewTab(t.id)} style={{
+                        flex: 1, padding: '6px 4px', borderRadius: 7, border: 'none',
+                        cursor: 'pointer', fontFamily: 'inherit',
+                        background: 'transparent',
+                        color: previewTab === t.id ? '#fff' : 'var(--color-text-secondary)',
+                        fontSize: 11, fontWeight: previewTab === t.id ? 700 : 500,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+                        position: 'relative', zIndex: 1,
+                        transition: 'color 0.25s cubic-bezier(0.4,0,0.2,1)',
+                      }}>
+                        <t.Icon size={11} /> {t.label}
+                      </button>
+                    ))}
+                  </div>
+                )
+              })()}
+
               {/* Save icon */}
               <button
                 onClick={async () => {
@@ -2364,88 +2394,125 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
             )
           })()}
 
-          {/* ── TAB: IA ── */}
-          {previewTab === 'ia' && (
-            <div style={{ flex: 1, overflowY: 'auto', padding: '16px 14px', display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Narrativa do projeto</div>
-              <p style={{ margin: 0, fontSize: 12, color: 'var(--color-text-secondary)', lineHeight: 1.55 }}>
-                A IA lê os campos do teu projeto e escreve uma tagline, descrição e destaques personalizados.
-              </p>
+          {/* ── Templates tab ── */}
+          {previewTab === 'templates' && (() => {
+            const VISUAL_TEMPLATES = [
+              {
+                id: 'midnight-tech',
+                label: 'Midnight Tech',
+                desc: 'Escuro profundo, azul elétrico, tipografia técnica',
+                style: { bg: 'midnight', accent: 'blue', titleFont: 'space', font: 'inter', cardStyle: 'glass', titleStyle: 'caps', heroSize: 'full' },
+                preview: { bg: '#030508', accent: '#1b78f7', title: 'Space Grotesk', body: 'Inter' },
+              },
+              {
+                id: 'cosmic-purple',
+                label: 'Cosmic',
+                desc: 'Cosmos escuro, roxo vibrante, fontes expressivas',
+                style: { bg: 'cosmic', accent: 'purple', titleFont: 'syne', font: 'syne', cardStyle: 'glass', titleStyle: 'gradient', heroSize: 'full' },
+                preview: { bg: '#160b2a', accent: '#7c3aed', title: 'Syne', body: 'Syne' },
+              },
+              {
+                id: 'forest-green',
+                label: 'Forest',
+                desc: 'Verde natureza, fundo floresta, cards sólidos',
+                style: { bg: 'forest', accent: 'teal', titleFont: 'croogla', font: 'default', cardStyle: 'border', titleStyle: 'normal', heroSize: 'default' },
+                preview: { bg: '#081408', accent: '#0d9488', title: 'Croogla', body: 'Montserrat' },
+              },
+              {
+                id: 'warm-amber',
+                label: 'Warm Amber',
+                desc: 'Tom quente, âmbar, tipografia arredondada e amigável',
+                style: { bg: 'warm', accent: 'amber', titleFont: 'fredoka', font: 'fredoka', cardStyle: 'flat', titleStyle: 'normal', heroSize: 'default' },
+                preview: { bg: '#140c02', accent: '#d97706', title: 'Fredoka', body: 'Fredoka' },
+              },
+              {
+                id: 'paper-editorial',
+                label: 'Editorial',
+                desc: 'Fundo papel claro, serifa clássica, estilo revista',
+                style: { bg: 'paper', accent: 'slate', titleFont: 'playfair', font: 'serif', cardStyle: 'border', titleStyle: 'normal', heroSize: 'compact' },
+                preview: { bg: '#f5f0e8', accent: '#475569', title: 'Playfair', body: 'Georgia', isLight: true },
+              },
+              {
+                id: 'crimson-bold',
+                label: 'Crimson Bold',
+                desc: 'Vermelho intenso, navy profundo, impacto máximo',
+                style: { bg: 'navy', accent: 'crimson', titleFont: 'syne', font: 'inter', cardStyle: 'flat', titleStyle: 'caps', heroSize: 'full' },
+                preview: { bg: '#0c1e38', accent: '#dc2626', title: 'Syne CAPS', body: 'Inter' },
+              },
+              {
+                id: 'slate-minimal',
+                label: 'Minimal',
+                desc: 'Ardósia neutra, sem cores fortes, espaço e clareza',
+                style: { bg: 'slate', accent: 'slate', titleFont: 'inter', font: 'inter', cardStyle: 'flat', titleStyle: 'normal', heroSize: 'compact' },
+                preview: { bg: '#0c1018', accent: '#475569', title: 'Inter', body: 'Inter' },
+              },
+              {
+                id: 'chalk-clean',
+                label: 'Clean Light',
+                desc: 'Fundo claro cinza, azul padrão, layout limpo',
+                style: { bg: 'chalk', accent: 'default', titleFont: 'croogla', font: 'default', cardStyle: 'border', titleStyle: 'normal', heroSize: 'default' },
+                preview: { bg: '#eff0f2', accent: '#1b78f7', title: 'Croogla', body: 'Montserrat', isLight: true },
+              },
+            ]
 
-              {/* Current tagline preview */}
-              {project.ai_tagline && !narrativePreview && (
-                <div style={{ padding: '10px 12px', background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)', borderRadius: 8 }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Tagline atual</div>
-                  <p style={{ margin: 0, fontSize: 13, color: 'var(--color-text)', fontStyle: 'italic', lineHeight: 1.5 }}>"{project.ai_tagline}"</p>
-                </div>
-              )}
+            return (
+              <div style={{ flex: 1, overflowY: 'auto', padding: '12px 10px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 2, padding: '0 4px' }}>Temas visuais</div>
 
-              {narrativeSaved && (
-                <div style={{ padding: '10px 12px', background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.25)', borderRadius: 8, fontSize: 13, color: 'var(--color-success)', display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <Check size={13} /> Narrativa guardada!
-                </div>
-              )}
-
-              {narrativeError && (
-                <p style={{ margin: 0, fontSize: 13, color: 'var(--color-error)' }}>{narrativeError}</p>
-              )}
-
-              {/* Preview of generated narrative */}
-              {narrativePreview && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  <div style={{ padding: '12px', background: 'var(--color-primary-subtle)', border: '1px solid rgba(27,120,247,0.18)', borderRadius: 10 }}>
-                    <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-primary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>Nova tagline</div>
-                    <p style={{ margin: 0, fontSize: 13, color: 'var(--color-text)', fontStyle: 'italic', lineHeight: 1.5 }}>"{narrativePreview.tagline}"</p>
+                {templateApplied && (
+                  <div style={{ padding: '8px 10px', background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.25)', borderRadius: 8, fontSize: 12, color: 'var(--color-success)', display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <Check size={12} /> Tema aplicado!
                   </div>
-                  {narrativePreview.highlights?.length > 0 && (
-                    <div style={{ padding: '12px', background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)', borderRadius: 10 }}>
-                      <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Destaques</div>
-                      {narrativePreview.highlights.map((h, i) => (
-                        <div key={i} style={{ display: 'flex', gap: 8, marginBottom: 6, alignItems: 'flex-start' }}>
-                          <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-primary)', flexShrink: 0, marginTop: 2 }}>{i + 1}.</span>
-                          <span style={{ fontSize: 12, color: 'var(--color-text)', lineHeight: 1.5 }}>{h}</span>
+                )}
+
+                {VISUAL_TEMPLATES.map(tpl => {
+                  const isActive = templateApplied === tpl.id
+                  return (
+                    <button
+                      key={tpl.id}
+                      onClick={() => handleApplyTemplate(tpl)}
+                      style={{
+                        display: 'flex', alignItems: 'stretch', gap: 0, textAlign: 'left',
+                        background: isActive ? 'rgba(34,197,94,0.06)' : 'var(--color-bg-alt)',
+                        border: `1px solid ${isActive ? 'rgba(34,197,94,0.4)' : 'var(--color-border)'}`,
+                        borderRadius: 10, cursor: 'pointer', fontFamily: 'inherit',
+                        transition: 'border-color 0.15s, background 0.15s, box-shadow 0.15s',
+                        overflow: 'hidden', width: '100%',
+                        boxShadow: isActive ? '0 0 0 1px rgba(34,197,94,0.2)' : 'none',
+                      }}
+                    >
+                      {/* Mini preview swatch */}
+                      <div style={{
+                        width: 56, flexShrink: 0,
+                        background: tpl.preview.bg,
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                        gap: 4, padding: '10px 4px',
+                        borderRight: '1px solid rgba(255,255,255,0.06)',
+                      }}>
+                        {/* accent bar */}
+                        <div style={{ width: 28, height: 3, borderRadius: 2, background: tpl.preview.accent }} />
+                        {/* fake title block */}
+                        <div style={{ width: 36, height: 6, borderRadius: 2, background: tpl.preview.isLight ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.75)' }} />
+                        {/* fake body lines */}
+                        <div style={{ width: 36, height: 3, borderRadius: 2, background: tpl.preview.isLight ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.25)' }} />
+                        <div style={{ width: 28, height: 3, borderRadius: 2, background: tpl.preview.isLight ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.25)' }} />
+                        {/* accent dot */}
+                        <div style={{ width: 8, height: 8, borderRadius: '50%', background: tpl.preview.accent, marginTop: 2 }} />
+                      </div>
+                      {/* Text info */}
+                      <div style={{ padding: '9px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 2 }}>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-text)' }}>{tpl.label}</div>
+                        <div style={{ fontSize: 10, color: 'var(--color-text-secondary)', lineHeight: 1.4 }}>{tpl.desc}</div>
+                        <div style={{ fontSize: 9, color: 'var(--color-text-tertiary)', marginTop: 2 }}>
+                          {tpl.preview.title} · {tpl.preview.body}
                         </div>
-                      ))}
-                    </div>
-                  )}
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    <button
-                      onClick={handleAcceptNarrative}
-                      style={{ flex: 1, background: 'var(--color-primary)', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 0', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}
-                    >
-                      <Check size={13} /> Aplicar
+                      </div>
                     </button>
-                    <button
-                      onClick={() => setNarrativePreview(null)}
-                      style={{ padding: '9px 12px', background: 'transparent', border: '1px solid var(--color-border)', borderRadius: 8, color: 'var(--color-text-tertiary)', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}
-                    >
-                      Descartar
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {!narrativePreview && (
-                <button
-                  onClick={handleGenerateNarrative}
-                  disabled={generatingNarrative}
-                  style={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                    background: generatingNarrative ? 'var(--color-border)' : 'var(--color-primary)',
-                    color: '#fff', border: 'none', borderRadius: 8, padding: '11px 0',
-                    fontSize: 13, fontWeight: 700,
-                    cursor: generatingNarrative ? 'not-allowed' : 'pointer',
-                    fontFamily: 'inherit', transition: 'background 0.15s',
-                  }}
-                >
-                  {generatingNarrative
-                    ? <><div style={{ width: 13, height: 13, border: '2px solid rgba(255,255,255,0.3)', borderTop: '2px solid #fff', borderRadius: '50%', animation: 'spin 1s linear infinite' }} /> A escrever…</>
-                    : <><Sparkles size={13} /> {project.ai_tagline ? 'Regenerar narrativa' : 'Gerar narrativa'}</>
-                  }
-                </button>
-              )}
-            </div>
-          )}
+                  )
+                })}
+              </div>
+            )
+          })()}
 
           </>}
           </div>{/* end panel skin */}
@@ -5725,6 +5792,7 @@ export default function ProjectPage() {
           wsExpanded={wsExpanded}
           setWsExpanded={setWsExpanded}
           onCoverChange={url => setProject(p => ({ ...p, cover_url: url }))}
+          onProjectUpdate={fields => setProject(p => ({ ...p, ...fields }))}
           previewDevice={previewDevice}
           setPreviewDevice={setPreviewDevice}
         />

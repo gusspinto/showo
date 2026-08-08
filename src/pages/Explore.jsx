@@ -576,11 +576,14 @@ export default function Explore() {
               !user && !peopleQuery ? (
                 <div className="explore-people-cta">
                   <div className="explore-people-cta-avatars" aria-hidden="true">
-                    {['A','B','C','D','E'].map((l, i) => (
-                      <div key={l} className="explore-people-cta-avatar" style={{
-                        background: ['var(--color-primary)','#0d9488','var(--color-accent)','#10b981','var(--color-warning)'][i],
-                        zIndex: 5 - i,
-                      }}>{l}</div>
+                    {[
+                      { l: 'M', bg: 'var(--color-primary)' },
+                      { l: 'R', bg: '#0d9488' },
+                      { l: 'J', bg: 'var(--color-accent)' },
+                      { l: 'S', bg: '#10b981' },
+                      { l: 'C', bg: 'var(--color-warning)' },
+                    ].map(({ l, bg }, i) => (
+                      <div key={i} className="explore-people-cta-avatar" style={{ background: bg, zIndex: 5 - i }}>{l}</div>
                     ))}
                   </div>
                   <p className="explore-people-cta-title">Conhece quem está a construir</p>
