@@ -26,12 +26,12 @@ function scoreColor(score) {
   return 'var(--color-error)'
 }
 
-function ProjectCard({ project, onClick }) {
+function ProjectCard({ project, onClick, featured }) {
   const color = scoreColor(project.score)
   const [c1, c2] = areaGradient(project.area)
 
   return (
-    <div className="up-project-card" onClick={onClick}>
+    <div className={`up-project-card${featured ? ' up-project-card--featured' : ''}`} onClick={onClick}>
       {project.cover_url ? (
         <div className="up-card-cover-img">
           <img src={project.cover_url} alt="" />
@@ -173,7 +173,7 @@ export default function UserProfile() {
 
       const projectsPromise = supabase
         .from('projects')
-        .select('id, name, slug, score, area, ai_tagline, cover_url, created_at, views, ai_feedback, collaborator_count:project_collaborators(count)')
+        .select('id, name, slug, score, area, ai_tagline, cover_url, created_at, views, ai_feedback, featured, featured_order, collaborator_count:project_collaborators(count)')
         .eq('user_id', profileData.id)
         .order('score', { ascending: false })
 
@@ -188,7 +188,7 @@ export default function UserProfile() {
       if (projErr || !projectsData) {
         const { data: fallback } = await supabase
           .from('projects')
-          .select('id, name, slug, score, area, ai_tagline, cover_url, created_at, views, ai_feedback')
+          .select('id, name, slug, score, area, ai_tagline, cover_url, created_at, views, ai_feedback, featured, featured_order')
           .eq('user_id', profileData.id)
           .order('score', { ascending: false })
         finalProjects = fallback
@@ -427,6 +427,26 @@ export default function UserProfile() {
             Projetos
             {projects.length > 0 && <span className="up-section-count">({projects.length})</span>}
           </p>
+
+          {/* Featured projects */}
+          {(() => {
+            const featured = projects
+              .filter(p => p.featured)
+              .sort((a, b) => (a.featured_order ?? 99) - (b.featured_order ?? 99))
+            if (!featured.length) return null
+            return (
+              <div className="up-featured-section">
+                <p className="up-featured-label">
+                  <Star size={12} fill="currentColor" /> Em destaque
+                </p>
+                <div className="up-featured-grid">
+                  {featured.map(project => (
+                    <ProjectCard key={project.id} project={project} onClick={() => navigate(`/projeto/${project.slug}`)} featured />
+                  ))}
+                </div>
+              </div>
+            )
+          })()}
 
           {projects.length === 0 ? (
             isOwnProfile ? (

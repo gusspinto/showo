@@ -122,22 +122,33 @@ export function calculateScore(project, journalEntries = []) {
   }
   const len = (key) => val(key).length
 
-  // Text fields — max 70pts (down from 100 to make room for diary component)
-  if (raw('name') && !looksLikeSpam(raw('name'))) total += 4
-  if (raw('area') && !looksLikeSpam(raw('area'))) total += 3
+  // ── Campos de texto — máx 60pts ──────────────────────────────────────────
+  // Mínimos mais exigentes para garantir conteúdo real, não preenchimento rápido
+  if (raw('name') && !looksLikeSpam(raw('name'))) total += 3
+  if (raw('area') && !looksLikeSpam(raw('area'))) total += 2
 
-  // Each threshold matches CHALLENGES definitions
-  if (len('problem') >= 100)        total += 11
-  if (len('solution') >= 100)       total += 11
-  if (len('target_audience') >= 50) total += 7
-  if (len('features') >= 100)       total += 7
-  if (val('technologies'))           total += 6
-  if (len('challenges') >= 50)      total += 6
-  if (len('results') >= 80)         total += 9
-  if (len('learnings') >= 80)       total += 9
-  if (raw('cover_url'))              total += 7
+  if (len('problem') >= 120)        total += 8
+  if (len('solution') >= 120)       total += 8
+  if (len('target_audience') >= 60) total += 5
+  if (len('features') >= 120)       total += 5
+  if (val('technologies'))           total += 4
+  if (len('challenges') >= 60)      total += 5
+  if (len('results') >= 100)        total += 8
+  if (len('learnings') >= 100)      total += 8
+  if (raw('cover_url'))              total += 4
 
-  // Diary consistency — max 30pts; requires sustained real usage over time
+  // ── Bónus de apresentação — máx 10pts ────────────────────────────────────
+  // Recompensa quem constrói a preview — não basta preencher campos de texto
+  const blocks = Array.isArray(project.preview_blocks) ? project.preview_blocks : []
+  if (blocks.length >= 2) total += 4
+
+  const style = project.preview_style || {}
+  if (style.bg || style.accent || style.titleFont || style.cardStyle) total += 3
+
+  if (project.ai_tagline && String(project.ai_tagline).trim()) total += 3
+
+  // ── Diário — máx 30pts ───────────────────────────────────────────────────
+  // Requer meses de uso real — não se consegue numa tarde
   total += calculateDiaryScore(journalEntries)
 
   return { score: Math.min(total, 100) }

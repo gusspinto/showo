@@ -1,4 +1,4 @@
-import { ArrowUpRight, Plus, CalendarClock, Pencil, Trash2 } from 'lucide-react'
+import { ArrowUpRight, Plus, CalendarClock, Pencil, Trash2, BookOpen } from 'lucide-react'
 import { useState } from 'react'
 import { KIND_BY_ID, JOURNAL_KINDS, timeAgoLabel, suggestNextKind } from '../../lib/journal'
 
@@ -38,7 +38,7 @@ function DeadlineChip({ defenseDate }) {
 
 export default function ProjectPulse({
   project, entries, coverage, loading,
-  onLog, onOpenReport, onOpenJournal, onOpen, onEdit, onDelete,
+  onLog, onOpenReport, onOpenJournal, onOpenCanvas, onOpen, onEdit, onDelete,
 }) {
   const [confirmDelete, setConfirmDelete] = useState(false)
   if (loading) {
@@ -57,104 +57,52 @@ export default function ProjectPulse({
 
   return (
     <section className="sdb-panel sdb-panel--brand sdb-pulse">
-      {/* ── Identificação ── */}
       <header className="sdb-pulse-head">
-        <div className="sdb-pulse-id">
+        {/* type badge + icon actions row */}
+        <div className="sdb-pulse-top">
           <span className="sdb-pulse-type">{projectTypeLabel(project)}</span>
-          <h2 className="sdb-pulse-name" title={project.name}>{project.name}</h2>
-          <div className="sdb-pulse-meta">
-            {project.area && <span>{project.area}</span>}
-            <DeadlineChip defenseDate={project.defense_date} />
+          <div className="sdb-pulse-head-actions">
+            {confirmDelete ? (
+              <>
+                <button className="sdb-pulse-danger-confirm" onClick={() => { onDelete?.(); setConfirmDelete(false) }}>
+                  Apagar
+                </button>
+                <button className="sdb-icon-btn" onClick={() => setConfirmDelete(false)} title="Cancelar">✕</button>
+              </>
+            ) : (
+              <>
+                {onDelete && (
+                  <button className="sdb-icon-btn sdb-icon-btn--danger" onClick={() => setConfirmDelete(true)} title="Apagar projeto">
+                    <Trash2 size={14} />
+                  </button>
+                )}
+                <button className="sdb-icon-btn" onClick={onEdit} title="Editar projeto"><Pencil size={15} /></button>
+                <button className="sdb-icon-btn" onClick={onOpen} title="Abrir página do projeto"><ArrowUpRight size={16} /></button>
+              </>
+            )}
           </div>
         </div>
-        <div className="sdb-pulse-head-actions">
-          {confirmDelete ? (
-            <>
-              <button className="sdb-pulse-danger-confirm" onClick={() => { onDelete?.(); setConfirmDelete(false) }}>
-                Apagar
+
+        <div className="sdb-pulse-name-row">
+          <div className="sdb-pulse-name-left">
+            <h2 className="sdb-pulse-name" title={project.name}>{project.name}</h2>
+            <div className="sdb-pulse-meta">
+              {project.area && <span>{project.area}</span>}
+              <DeadlineChip defenseDate={project.defense_date} />
+            </div>
+          </div>
+          <div className="sdb-pulse-name-btns">
+            <button className="sdb-btn sdb-btn--onbrand sdb-btn--sm" onClick={() => onLog(next?.kind?.id || 'progresso')}>
+              <Plus size={13} /> Registar
+            </button>
+            {onOpenCanvas && (
+              <button className="sdb-btn sdb-btn--onbrand-ghost sdb-btn--sm" onClick={onOpenCanvas}>
+                <BookOpen size={13} /> Diário
               </button>
-              <button className="sdb-icon-btn" onClick={() => setConfirmDelete(false)} title="Cancelar">
-                ✕
-              </button>
-            </>
-          ) : (
-            <>
-              {onDelete && (
-                <button className="sdb-icon-btn sdb-icon-btn--danger" onClick={() => setConfirmDelete(true)} title="Apagar projeto" aria-label="Apagar projeto">
-                  <Trash2 size={14} />
-                </button>
-              )}
-              <button className="sdb-icon-btn" onClick={onEdit} title="Editar projeto" aria-label="Editar projeto">
-                <Pencil size={15} />
-              </button>
-              <button className="sdb-icon-btn" onClick={onOpen} title="Abrir página do projeto" aria-label="Abrir página do projeto">
-                <ArrowUpRight size={16} />
-              </button>
-            </>
-          )}
+            )}
+          </div>
         </div>
       </header>
-
-      {/* ── Diário ── */}
-      <div className="sdb-journal">
-        <div className="sdb-journal-head">
-          <span className="sdb-eyebrow sdb-eyebrow--on">Diário do projeto</span>
-          {lastEntry && (
-            <button className="sdb-linkbtn" onClick={onOpenJournal}>
-              {entries.length} entrada{entries.length !== 1 ? 's' : ''} · última {timeAgoLabel(lastEntry.created_at)}
-            </button>
-          )}
-        </div>
-
-        {recent.length === 0 ? (
-          <div className="sdb-journal-empty">
-            <p>Ainda sem registos. Escreve uma linha — cada entrada alimenta o relatório.</p>
-          </div>
-        ) : (
-          <ul className="sdb-journal-list">
-            {recent.map(e => {
-              const kind = KIND_BY_ID[e.kind] ?? KIND_BY_ID.nota
-              const Icon = kind.icon
-              return (
-                <li key={e.id} className="sdb-journal-item">
-                  <span className="sdb-journal-icon"><Icon size={13} /></span>
-                  <div className="sdb-journal-body">
-                    <p className="sdb-journal-text">{e.content}</p>
-                    <span className="sdb-journal-when">{kind.label} · {timeAgoLabel(e.created_at)}</span>
-                  </div>
-                </li>
-              )
-            })}
-          </ul>
-        )}
-
-        {/* Atalhos de registo — o gesto que traz o aluno de volta */}
-        <div className="sdb-quicklog">
-          {QUICK_KINDS.map(id => {
-            const k = KIND_BY_ID[id]
-            const Icon = k.icon
-            const suggested = next?.kind?.id === id
-            return (
-              <button
-                key={id}
-                className={`sdb-quicklog-btn${suggested ? ' is-suggested' : ''}`}
-                onClick={() => onLog(id)}
-                title={suggested ? `Ainda falta matéria em ${next.section.label}` : k.prompt}
-              >
-                <Icon size={13} />
-                {k.short}
-              </button>
-            )
-          })}
-        </div>
-      </div>
-
-      {/* ── Ações ── */}
-      <footer className="sdb-pulse-foot">
-        <button className="sdb-btn sdb-btn--onbrand" onClick={() => onLog(next?.kind?.id || 'progresso')}>
-          <Plus size={15} /> Registar entrada
-        </button>
-      </footer>
     </section>
   )
 }

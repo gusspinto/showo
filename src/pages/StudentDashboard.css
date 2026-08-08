@@ -136,6 +136,13 @@
   color: var(--on);
 }
 .sdb-btn--onbrand-quiet:hover { background: rgba(255,255,255,0.19); }
+.sdb-btn--onbrand-ghost {
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.75);
+}
+.sdb-btn--onbrand-ghost:hover { background: rgba(255,255,255,0.14); color: #fff; }
+.sdb-btn--sm { height: 30px; padding: 0 10px; font-size: 12px; gap: 5px; }
 .sdb-btn:active { transform: translateY(0); }
 
 .sdb-icon-btn {
@@ -153,6 +160,23 @@
   transition: background var(--duration-fast), color var(--duration-fast);
 }
 .sdb-icon-btn:hover { background: rgba(255,255,255,0.2); }
+.sdb-icon-btn--star { color: #94a3b8; }
+.sdb-icon-btn--star.is-featured { color: #f59e0b !important; }
+.sdb-icon-btn--star:disabled { opacity: 0.35; cursor: not-allowed; }
+.sdb-icon-btn--pin { color: #94a3b8; }
+.sdb-icon-btn--pin.is-pinned { color: #60a5fa !important; }
+.sdb-projrow--featured { background: rgba(245,158,11,0.04); }
+.sdb-projrow--featured .sdb-projrow-name::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #f59e0b;
+  margin-right: 6px;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
 .sdb-icon-btn--quiet {
   background: transparent;
   color: var(--color-text-tertiary);
@@ -475,16 +499,18 @@
 
 .sdb-pulse-head {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--sp-4);
-  margin-bottom: var(--sp-5);
+  flex-direction: column;
+  gap: var(--sp-2);
 }
-.sdb-pulse-id { min-width: 0; }
+.sdb-pulse-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
 .sdb-pulse-type {
   display: inline-block;
   padding: 3px 9px;
-  margin-bottom: var(--sp-2);
   border: 1px solid var(--on-line);
   border-radius: var(--radius-full);
   background: var(--on-fill);
@@ -494,10 +520,20 @@
   letter-spacing: 0.1em;
   color: var(--on);
 }
+.sdb-pulse-name-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.sdb-pulse-name-left {
+  flex: 1;
+  min-width: 0;
+}
 .sdb-pulse-name {
-  margin: 0 0 var(--sp-2);
+  margin: 0;
   font-family: var(--font-heading);
-  font-size: clamp(22px, 2.6vw, 30px);
+  font-size: clamp(20px, 2.4vw, 28px);
   font-weight: 400;
   letter-spacing: -0.4px;
   line-height: 1.12;
@@ -505,6 +541,12 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.sdb-pulse-name-btns {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
 }
 .sdb-pulse-meta {
   display: flex;
@@ -682,9 +724,10 @@
 .sdb-pulse-foot {
   display: flex;
   gap: var(--sp-2);
-  margin-top: var(--sp-5);
+  margin-top: var(--sp-4);
   flex-wrap: wrap;
 }
+.sdb-pulse-foot--end { justify-content: flex-end; }
 
 /* ── Decoração: logo marks em diagonal ── */
 .sdb-pulse-deco {
@@ -1476,7 +1519,91 @@
   .sdb-o-rhythm    { order: 6; }
   .sdb-o-turma     { order: 7; }
   .sdb-o-potential { order: 8; }
+  .sdb-o-pinned    { order: 8; }
   .sdb-o-portfolio { order: 9; }
+}
+
+/* ── Dashboard pinned card ───────────────────────────────────────────────── */
+/* Painel escuro com borda esquerda azul — visualmente distinto do ProjectPulse */
+.sdb-pinned-card {
+  background: var(--color-glass);
+  border: 1px solid var(--color-glass-border);
+  border-left: 3px solid rgba(96, 165, 250, 0.6);
+  border-radius: 16px;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.sdb-pinned-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.sdb-pinned-type {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 5px;
+  padding: 2px 7px;
+}
+.sdb-pinned-actions {
+  display: flex;
+  gap: 2px;
+  flex-shrink: 0;
+}
+.sdb-pinned-body {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.sdb-pinned-name-block {
+  flex: 1;
+  min-width: 0;
+}
+.sdb-pinned-name {
+  margin: 0 0 4px;
+  font-family: var(--font-heading);
+  font-size: clamp(18px, 2.2vw, 24px);
+  font-weight: 400;
+  letter-spacing: -0.3px;
+  line-height: 1.1;
+  color: var(--color-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sdb-pinned-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+.sdb-pinned-tagline {
+  font-style: italic;
+  opacity: 0.8;
+}
+.sdb-pinned-score {
+  flex-shrink: 0;
+  font-size: 28px;
+  font-weight: 800;
+  color: #60a5fa;
+  line-height: 1;
+  letter-spacing: -1px;
+  align-self: center;
+}
+.sdb-pinned-foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 @media (max-width: 600px) {

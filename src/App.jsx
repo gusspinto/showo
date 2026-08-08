@@ -64,6 +64,7 @@ const ProjectManage  = lazy(() => import('./pages/ProjectManage'))
 const Privacidade    = lazy(() => import('./pages/Privacidade'))
 const Termos         = lazy(() => import('./pages/Termos'))
 const GoogleCalendarCallback = lazy(() => import('./pages/GoogleCalendarCallback'))
+const DiaryCanvas  = lazy(() => import('./pages/DiaryCanvas'))
 
 function PageLoader() {
   return (
@@ -370,7 +371,8 @@ export default function App() {
               <Route path="/candidatos"         element={<Candidatos />}   />
               <Route path="/pipeline"           element={<Pipeline />}     />
               <Route path="/empresa/:id"        element={<EmpresaPage />}   />
-              <Route path="/projeto/:slug/gerir" element={<ProjectManage />} />
+              <Route path="/projeto/:slug/gerir"  element={<ProjectManage />} />
+              <Route path="/projeto/:slug/diario" element={<DiaryCanvas />}  />
               <Route path="/privacidade"        element={<Privacidade />}   />
               <Route path="/termos"             element={<Termos />}        />
               <Route path="/oauth/google-calendar" element={<GoogleCalendarCallback />} />

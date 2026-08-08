@@ -5699,24 +5699,40 @@ export default function ProjectPage() {
       >
         <div className="proj-nav-btns" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {isOwner && (
-            <button
-              onClick={() => navigate(`/projeto/${project.slug}/gerir`)}
-              style={{
-                background: 'var(--color-primary-subtle)',
-                border: '1px solid var(--color-primary-subtle)',
-                color: 'var(--color-primary)',
-                borderRadius: 8, padding: '8px 14px',
-                fontSize: 13, fontWeight: 600,
-                cursor: 'pointer', fontFamily: 'inherit',
-                display: 'flex', alignItems: 'center', gap: 6,
-                transition: 'background 0.15s',
-              }}
-              onMouseEnter={e => e.currentTarget.style.background = 'var(--color-primary-subtle)'}
-              onMouseLeave={e => e.currentTarget.style.background = 'var(--color-primary-subtle)'}
-              title="Gerir projeto"
-            >
-              <Settings size={15} /> Gerir
-            </button>
+            <>
+              <button
+                onClick={() => navigate(`/projeto/${project.slug}/diario`)}
+                style={{
+                  background: 'rgba(245,158,11,0.08)',
+                  border: '1px solid rgba(245,158,11,0.18)',
+                  color: '#f59e0b',
+                  borderRadius: 8, padding: '8px 14px',
+                  fontSize: 13, fontWeight: 600,
+                  cursor: 'pointer', fontFamily: 'inherit',
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  transition: 'background 0.15s',
+                }}
+                title="Abrir diário do projeto"
+              >
+                <BookOpen size={15} /> Diário
+              </button>
+              <button
+                onClick={() => navigate(`/projeto/${project.slug}/gerir`)}
+                style={{
+                  background: 'var(--color-primary-subtle)',
+                  border: '1px solid var(--color-primary-subtle)',
+                  color: 'var(--color-primary)',
+                  borderRadius: 8, padding: '8px 14px',
+                  fontSize: 13, fontWeight: 600,
+                  cursor: 'pointer', fontFamily: 'inherit',
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  transition: 'background 0.15s',
+                }}
+                title="Gerir projeto"
+              >
+                <Settings size={15} /> Gerir
+              </button>
+            </>
           )}
           {!isOwner && collaboratorSections !== null && (
             <button
