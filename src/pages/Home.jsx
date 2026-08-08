@@ -97,6 +97,24 @@ export default function Home() {
   const [animatedCount, setAnimatedCount] = useState(0)
   const [emailFocused, setEmailFocused] = useState(false)
   const [passFocused, setPassFocused] = useState(false)
+  const [projectOfMonth, setProjectOfMonth] = useState(null)
+
+  useEffect(() => {
+    const currentMonth = new Date().toISOString().slice(0, 7) // "2026-08"
+    supabase
+      .from('project_of_month')
+      .select(`month, note, project:project_id (id, name, slug, area, ai_tagline, score, cover_url, preview_style, user_id, creator_name)`)
+      .eq('month', currentMonth)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!data?.project) return
+        // Fetch owner profile
+        supabase.from('profiles').select('full_name, username, avatar_url').eq('id', data.project.user_id).maybeSingle()
+          .then(({ data: profile }) => {
+            setProjectOfMonth({ ...data, profile: profile || null })
+          })
+      })
+  }, [])
 
   useEffect(() => {
     async function load() {
@@ -234,6 +252,90 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      {/* ══ Projeto do Mês ══ */}
+      {projectOfMonth && (() => {
+        const p = projectOfMonth.project
+        const profile = projectOfMonth.profile
+        const monthLabel = (() => {
+          const [y, m] = projectOfMonth.month.split('-')
+          return new Date(+y, +m - 1, 1).toLocaleString('pt-PT', { month: 'long', year: 'numeric' })
+        })()
+        const displayName = profile?.full_name || p.creator_name || 'Estudante'
+        const avatar = profile?.avatar_url
+        return (
+          <Reveal className="home-pom-wrap">
+            <div className="home-pom-inner">
+              <div
+                className="home-pom-card"
+                onClick={() => navigate(`/projeto/${p.slug}`)}
+                style={{ cursor: 'pointer' }}
+              >
+                {/* Background cover or gradient */}
+                <div className="home-pom-bg">
+                  {p.cover_url
+                    ? <img src={p.cover_url} alt="" className="home-pom-cover-img" />
+                    : <div className="home-pom-cover-gradient" style={{ background: AREA_COLORS[p.area] || 'var(--color-primary)' }} />
+                  }
+                  <div className="home-pom-overlay" />
+                </div>
+
+                {/* Content */}
+                <div className="home-pom-content">
+                  {/* Badge */}
+                  <div className="home-pom-badge">
+                    <Trophy size={13} />
+                    Projeto do mês · {monthLabel}
+                  </div>
+
+                  {/* Title */}
+                  <h2 className="home-pom-title" style={{
+                    fontFamily: p.preview_style?.titleFont ? TITLE_FONT_CSS[p.preview_style.titleFont] : undefined,
+                    textTransform: p.preview_style?.titleStyle === 'caps' ? 'uppercase' : undefined,
+                  }}>
+                    {p.name}
+                  </h2>
+
+                  {/* Tagline */}
+                  {p.ai_tagline && (
+                    <p className="home-pom-tagline">{p.ai_tagline}</p>
+                  )}
+
+                  {/* Author row */}
+                  <div className="home-pom-author">
+                    {avatar
+                      ? <img src={avatar} alt="" className="home-pom-avatar" />
+                      : <div className="home-pom-avatar home-pom-avatar-fallback">{displayName[0]?.toUpperCase()}</div>
+                    }
+                    <div>
+                      <div className="home-pom-author-name">{displayName}</div>
+                      {p.area && <div className="home-pom-author-area">{p.area}</div>}
+                    </div>
+                  </div>
+
+                  {/* Score + CTA */}
+                  <div className="home-pom-footer">
+                    {p.score != null && (
+                      <div className="home-pom-score">
+                        <span className="home-pom-score-num">{p.score}</span>
+                        <span className="home-pom-score-label">score</span>
+                      </div>
+                    )}
+                    <button className="home-pom-cta" onClick={e => { e.stopPropagation(); navigate(`/projeto/${p.slug}`) }}>
+                      Ver projeto <ArrowRight size={14} />
+                    </button>
+                  </div>
+
+                  {/* Optional admin note */}
+                  {projectOfMonth.note && (
+                    <p className="home-pom-note">"{projectOfMonth.note}"</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </Reveal>
+        )
+      })()}
 
       {/* ══ Projects ══ */}
       <Reveal className="home-section">

@@ -67,7 +67,52 @@ export function looksLikeSpam(text) {
   return false
 }
 
-export function calculateScore(project) {
+// Returns week key "YYYY-Www" for a given date string
+function isoWeek(dateStr) {
+  const d = new Date(dateStr)
+  if (isNaN(d)) return null
+  // ISO week: Thursday of the week determines the year
+  const tmp = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()))
+  tmp.setUTCDate(tmp.getUTCDate() + 4 - (tmp.getUTCDay() || 7))
+  const year = tmp.getUTCFullYear()
+  const week = Math.ceil(((tmp - Date.UTC(year, 0, 1)) / 86400000 + 1) / 7)
+  return `${year}-W${String(week).padStart(2, '0')}`
+}
+
+// Computes diary consistency score (0–30) from journal entry array.
+// Requires real sustained usage — can't be gamed in one session.
+export function calculateDiaryScore(entries = []) {
+  if (!entries || entries.length === 0) return 0
+
+  const valid = entries.filter(e => e.created_at)
+  if (valid.length === 0) return 0
+
+  const now = Date.now()
+  const weeks = new Set(valid.map(e => isoWeek(e.created_at)).filter(Boolean))
+  const kinds = new Set(valid.map(e => e.kind).filter(Boolean))
+  const recentEntry = valid.find(e => now - new Date(e.created_at).getTime() < 14 * 24 * 3600 * 1000)
+
+  const n = valid.length
+  const w = weeks.size
+  const k = kinds.size
+
+  // Tier 1 — 5pts: any entry at all
+  if (n < 1) return 0
+  if (n < 5 || w < 3) return 5
+
+  // Tier 2 — 12pts: ≥5 entries across ≥3 weeks
+  if (n < 10 || w < 6) return 12
+
+  // Tier 3 — 22pts: ≥10 entries, ≥6 weeks, recent activity
+  if (!recentEntry) return 16   // inactive penalty
+  if (n < 20 || w < 10) return 22
+
+  // Tier 4 — 30pts: ≥20 entries, ≥10 weeks, recent, ≥2 kinds
+  if (k >= 2) return 30
+  return 26  // near-max but missing kind variety
+}
+
+export function calculateScore(project, journalEntries = []) {
   let total = 0
 
   const raw = (key) => String(project[key] || '').trim()
@@ -77,22 +122,23 @@ export function calculateScore(project) {
   }
   const len = (key) => val(key).length
 
-  if (raw('name') && !looksLikeSpam(raw('name'))) total += 5
-  if (raw('area') && !looksLikeSpam(raw('area'))) total += 5
+  // Text fields — max 70pts (down from 100 to make room for diary component)
+  if (raw('name') && !looksLikeSpam(raw('name'))) total += 4
+  if (raw('area') && !looksLikeSpam(raw('area'))) total += 3
 
-  // Each threshold exactly matches the CHALLENGES definitions — no partial credit
-  // so ScoreRing and earnedXP are always the same number.
-  if (len('problem') >= 100)        total += 15
-  if (len('solution') >= 100)       total += 15
-  if (len('target_audience') >= 50) total += 10
-  if (len('features') >= 100)       total += 10
-  if (val('technologies'))           total += 8
-  if (len('challenges') >= 50)      total += 8
-  if (len('results') >= 80)         total += 12
-  if (len('learnings') >= 80)       total += 12
+  // Each threshold matches CHALLENGES definitions
+  if (len('problem') >= 100)        total += 11
+  if (len('solution') >= 100)       total += 11
+  if (len('target_audience') >= 50) total += 7
+  if (len('features') >= 100)       total += 7
+  if (val('technologies'))           total += 6
+  if (len('challenges') >= 50)      total += 6
+  if (len('results') >= 80)         total += 9
+  if (len('learnings') >= 80)       total += 9
+  if (raw('cover_url'))              total += 7
 
-  // Cover image (bonus — capped at 100 anyway)
-  if (raw('cover_url')) total += 10
+  // Diary consistency — max 30pts; requires sustained real usage over time
+  total += calculateDiaryScore(journalEntries)
 
   return { score: Math.min(total, 100) }
 }

@@ -7,7 +7,7 @@ import { calculatePotential } from '../lib/score'
 import {
   Rocket, Plus, Users2, ChevronRight, User, Globe, MessageSquare, Star,
   Check, ArrowRight, Sparkles, Pencil, ExternalLink, Copy, Share2, Link,
-  Trash2, Flame, GraduationCap, ArrowUpRight, FileText,
+  Trash2, Flame, GraduationCap, ArrowUpRight, FileText, Trophy,
 } from 'lucide-react'
 import { Button, Card, SectionLabel, Modal, ModalActions } from '../components/ui'
 
@@ -269,6 +269,7 @@ export default function StudentDashboard({ user, profile }) {
   /* ── Dados ── */
   const [projects, setProjects] = useState([])
   const [loadingProjects, setLoadingProjects] = useState(true)
+  const [projectOfMonth, setProjectOfMonth] = useState(null)
   const [focusFull, setFocusFull] = useState(null)      // linha completa do projeto em foco
   const [entries, setEntries] = useState([])
   const [loadingEntries, setLoadingEntries] = useState(true)
@@ -308,6 +309,21 @@ export default function StudentDashboard({ user, profile }) {
       setCopiedSlug(slug); setTimeout(() => setCopiedSlug(null), 2500)
     })
   }
+
+  /* ── Projeto do Mês ── */
+  useEffect(() => {
+    const currentMonth = new Date().toISOString().slice(0, 7)
+    supabase
+      .from('project_of_month')
+      .select('month, note, project:project_id (id, name, slug, area, ai_tagline, score, cover_url, preview_style, user_id, creator_name)')
+      .eq('month', currentMonth)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!data?.project) return
+        supabase.from('profiles').select('full_name, avatar_url').eq('id', data.project.user_id).maybeSingle()
+          .then(({ data: profile }) => setProjectOfMonth({ ...data, profile: profile || null }))
+      })
+  }, [])
 
   /* ── Onboarding ── */
   useEffect(() => {
@@ -830,6 +846,57 @@ export default function StudentDashboard({ user, profile }) {
             )}
           </aside>
         </header>
+
+        {/* ══════════════ PROJETO DO MÊS ══════════════ */}
+        {projectOfMonth && (() => {
+          const p = projectOfMonth.project
+          const profile = projectOfMonth.profile
+          const displayName = profile?.full_name || p.creator_name || 'Estudante'
+          const monthLabel = (() => {
+            const [y, m] = projectOfMonth.month.split('-')
+            return new Date(+y, +m - 1, 1).toLocaleString('pt-PT', { month: 'long', year: 'numeric' })
+          })()
+          const isOwn = p.user_id === user.id
+          return (
+            <div
+              className="sdb-pom"
+              onClick={() => navigate(`/projeto/${p.slug}`)}
+              style={{ cursor: 'pointer' }}
+            >
+              {/* Cover strip */}
+              {p.cover_url && (
+                <div className="sdb-pom-cover">
+                  <img src={p.cover_url} alt="" />
+                  <div className="sdb-pom-cover-overlay" />
+                </div>
+              )}
+              <div className="sdb-pom-body" style={{ background: !p.cover_url ? 'linear-gradient(135deg, #0c1e38 0%, #060d1a 100%)' : undefined }}>
+                <div className="sdb-pom-badge">
+                  <Trophy size={11} /> Projeto do mês · {monthLabel}
+                </div>
+                <div className="sdb-pom-info">
+                  <div>
+                    <div className="sdb-pom-name">{p.name}</div>
+                    {p.ai_tagline && <div className="sdb-pom-tagline">{p.ai_tagline}</div>}
+                    <div className="sdb-pom-author">
+                      {profile?.avatar_url
+                        ? <img src={profile.avatar_url} alt="" className="sdb-pom-avatar" />
+                        : <div className="sdb-pom-avatar sdb-pom-avatar-fb">{displayName[0]?.toUpperCase()}</div>
+                      }
+                      <span>{isOwn ? 'O teu projeto!' : displayName}</span>
+                    </div>
+                  </div>
+                  {p.score != null && (
+                    <div className="sdb-pom-score">
+                      <span className="sdb-pom-score-num">{p.score}</span>
+                      <span className="sdb-pom-score-lbl">pts</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )
+        })()}
 
         {/* ══════════════ GRELHA ══════════════ */}
         <div className={`sdb-grid${isEmptyState ? ' sdb-grid--empty' : ''}`}>

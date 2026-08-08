@@ -2208,3 +2208,112 @@
   transition: background 0.2s;
 }
 .ptut-dot.is-active { background: var(--color-primary); }
+
+/* ══ PROJETO DO MÊS (dashboard banner) ══ */
+.sdb-pom {
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  margin: 0 0 20px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.06);
+  transition: transform 0.18s cubic-bezier(0.4,0,0.2,1), box-shadow 0.18s;
+}
+.sdb-pom:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.1);
+}
+.sdb-pom-cover {
+  position: absolute;
+  inset: 0;
+}
+.sdb-pom-cover img {
+  width: 100%; height: 100%; object-fit: cover;
+}
+.sdb-pom-cover-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to right, rgba(4,8,20,0.92) 40%, rgba(4,8,20,0.5) 100%);
+}
+.sdb-pom-body {
+  position: relative;
+  z-index: 1;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.sdb-pom-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: #fbbf24;
+  background: rgba(255,193,7,0.12);
+  border: 1px solid rgba(255,193,7,0.28);
+  padding: 4px 10px;
+  border-radius: 20px;
+  width: fit-content;
+}
+.sdb-pom-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.sdb-pom-name {
+  font-size: 18px;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1.15;
+  font-family: var(--font-heading);
+}
+.sdb-pom-tagline {
+  font-size: 12px;
+  color: rgba(255,255,255,0.6);
+  margin-top: 3px;
+  line-height: 1.4;
+  max-width: 400px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sdb-pom-author {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.55);
+  font-weight: 500;
+}
+.sdb-pom-avatar {
+  width: 20px; height: 20px;
+  border-radius: 50%; object-fit: cover;
+  border: 1px solid rgba(255,255,255,0.2);
+  flex-shrink: 0;
+}
+.sdb-pom-avatar-fb {
+  display: flex; align-items: center; justify-content: center;
+  background: var(--color-primary); color: #fff;
+  font-size: 9px; font-weight: 700;
+}
+.sdb-pom-score {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+}
+.sdb-pom-score-num {
+  font-size: 32px;
+  font-weight: 800;
+  color: #fbbf24;
+  line-height: 1;
+}
+.sdb-pom-score-lbl {
+  font-size: 10px;
+  color: rgba(255,255,255,0.35);
+  font-weight: 500;
+  margin-top: 2px;
+}

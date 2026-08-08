@@ -3867,6 +3867,7 @@ export default function ProjectPage() {
   const location = useLocation()
   const { user, profile, loading: authLoading } = useAuth()
   const [project, setProject] = useState(() => location.state?.projectData ?? null)
+  const [projectJournalEntries, setProjectJournalEntries] = useState([])
   const [loading, setLoading] = useState(!location.state?.projectData)
   const [copied, setCopied] = useState(false)
   const [score, setScore] = useState(0)
@@ -4241,7 +4242,15 @@ export default function ProjectPage() {
         return
       }
 
-      const { score: s } = calculateScore(data)
+      // Fetch diary entries to include in score calculation
+      const { data: journalEntries } = await supabase
+        .from('project_journal_entries')
+        .select('created_at, kind')
+        .eq('project_id', data.id)
+
+      const entries = journalEntries || []
+      setProjectJournalEntries(entries)
+      const { score: s } = calculateScore(data, entries)
       setProject(data)
       setScore(s)
       setDisplayScore(s)
@@ -4462,7 +4471,7 @@ export default function ProjectPage() {
     const wasCompleted = getChallengeStatus(challenge, project) === 'completed'
 
     const updatedProject = { ...project, [challenge.field]: fieldValue }
-    const { score: newScore } = calculateScore(updatedProject)
+    const { score: newScore } = calculateScore(updatedProject, projectJournalEntries)
 
     const { error } = await supabase
       .from('projects')
