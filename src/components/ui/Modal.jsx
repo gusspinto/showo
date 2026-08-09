@@ -30,7 +30,7 @@ export default function Modal({ children, onClose, title, subtitle, width = 440 
         padding: 'var(--sp-6)',
         width: '100%',
         maxWidth: width,
-        maxHeight: 'calc(100vh - 48px)',
+        maxHeight: 'calc(100dvh - 48px)',
         overflowY: 'auto',
         boxShadow: 'var(--shadow-xl)',
       }}>

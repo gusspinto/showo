@@ -440,6 +440,13 @@
 
 /* ── Mobile ───────────────────────────────────────────────────────────── */
 @media (max-width: 640px) {
+  .dc-tb-center {
+    position: static;
+    transform: none;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+  }
   .dc-tb-title { max-width: 120px; font-size: 12px; }
   .dc-tb-back span { display: none; }
   .dc-tb-back { padding: 0 8px; }

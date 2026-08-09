@@ -52,6 +52,9 @@ export function AuthProvider({ children }) {
         .select('id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, linkedin_url, skills, monthly_report_opt_in, area, plan')
         .single()
       data = created
+      // Flag so the welcome page can show role selection for brand-new Google sign-ups.
+      // Email/password users pick a role before submitting, so they never need this.
+      if (data) localStorage.setItem(`showo_needs_role_${uid}`, '1')
     }
 
     setProfile(data ?? null)

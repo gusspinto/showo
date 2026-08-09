@@ -5,11 +5,11 @@ import { Navbar } from '../components/Navbar'
 import SkillsPicker from '../components/SkillsPicker'
 import { calculatePotential, calculateScore } from '../lib/score'
 import {
-  Rocket, Plus, Users2, ChevronRight, User, Globe, MessageSquare, Star,
+  Rocket, Plus, User, Globe, MessageSquare, Star,
   Check, ArrowRight, Sparkles, Pencil, ExternalLink, Copy, Share2, Link,
-  Trash2, Flame, GraduationCap, ArrowUpRight, Trophy, Pin, BookOpen,
+  Trash2, Flame, ArrowUpRight, Trophy, Pin, BookOpen,
 } from 'lucide-react'
-import { Button, Card, SectionLabel, Modal, ModalActions } from '../components/ui'
+import { Button, Card, SectionLabel, Modal } from '../components/ui'
 import { useAuth } from '../context/AuthContext'
 
 // ProjectPulse removed — focus project now shown as auto-pinned card
@@ -77,69 +77,8 @@ function pickFocusProject(projects) {
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
-   Modais herdados (turmas + onboarding) — inalterados na lógica
+   Modais herdados (onboarding) — inalterados na lógica
    ══════════════════════════════════════════════════════════════════════════ */
-
-function JoinTurmaModal({ onClose, navigate, onJoined }) {
-  const [code, setCode] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
-  const [joined, setJoined] = useState(null)
-  const [verified, setVerified] = useState(false)
-
-  async function handleJoin(e) {
-    e.preventDefault()
-    setLoading(true); setError(null)
-    const { data, error: sbErr } = await supabase.rpc('join_class_by_code', { p_code: code.toUpperCase().trim() })
-    setLoading(false)
-    if (sbErr || !data) { setError(sbErr && sbErr.message !== 'class_not_found' ? sbErr.message : 'Código inválido. Verifica com o professor.'); return }
-    setJoined(data)
-    const { error: verifyErr } = await supabase.from('class_members').select('id').eq('class_id', data.id).single()
-    if (!verifyErr) setVerified(true)
-    onJoined(data)
-  }
-
-  return (
-    <Modal onClose={onClose} title={joined ? undefined : 'Entrar numa turma'} subtitle={joined ? undefined : 'Pede o código de 6 letras ao teu professor'}>
-      {joined ? (
-        <div className="dash-center">
-          <div className="dash-icon-round dash-icon-round-success"><Check size={26} color="var(--color-success)" /></div>
-          <h3 className="dash-onb-title">{verified ? 'Entraste na turma!' : 'Turma encontrada'}</h3>
-          <p className="dash-onb-subtitle">{verified ? joined.name : `${joined.name} — não consegui confirmar o teu registo. Verifica na turma.`}</p>
-          <Button fullWidth icon={<ArrowRight size={15} />} onClick={() => { navigate(`/turma/${joined.code}`); onClose() }}>Ir para a turma</Button>
-        </div>
-      ) : (
-        <form onSubmit={handleJoin}>
-          <input value={code} onChange={e => setCode(e.target.value.toUpperCase())} placeholder="ABC123" maxLength={6} className="dash-input" style={{ textAlign: 'center', fontSize: 24, letterSpacing: 6, fontWeight: 700 }} autoFocus />
-          {error && <p style={{ color: 'var(--color-error)', fontSize: 13, marginTop: 8 }}>{error}</p>}
-          <ModalActions>
-            <Button type="submit" disabled={code.trim().length < 6 || loading} loading={loading} fullWidth>Entrar na turma</Button>
-          </ModalActions>
-        </form>
-      )}
-    </Modal>
-  )
-}
-
-function TurmasListModal({ turmas, onClose, navigate, onJoin }) {
-  return (
-    <Modal onClose={onClose} title="As minhas turmas" subtitle={`${turmas.length} turma${turmas.length !== 1 ? 's' : ''}`}>
-      {turmas.map(t => (
-        <Card key={t.id} hoverable onClick={() => { navigate(`/turma/${t.code}`); onClose() }} padding="md">
-          <div className="dash-row-3">
-            <div className="dash-icon-circle dash-icon-circle-primary"><Users2 size={16} color="var(--color-primary)" /></div>
-            <div className="dash-proj-info">
-              <div className="dash-turma-list-name">{t.name}</div>
-              {t.teacher_name && <div className="dash-turma-list-teacher">{t.teacher_name}</div>}
-            </div>
-            <ChevronRight size={14} color="var(--color-text-tertiary)" />
-          </div>
-        </Card>
-      ))}
-      <Button variant="secondary" fullWidth onClick={onJoin} style={{ marginTop: 8 }}>Entrar noutra turma</Button>
-    </Modal>
-  )
-}
 
 function OnboardingAlunoModal({ user, profile, onDismiss, claimedSlug }) {
   const navigate = useNavigate()
@@ -276,8 +215,6 @@ export default function StudentDashboard({ user, profile }) {
   const [entries, setEntries] = useState([])
   const [loadingEntries, setLoadingEntries] = useState(true)
   const [collabProjects, setCollabProjects] = useState([])
-  const [turmas, setTurmas] = useState([])
-  const [loadingTurmas, setLoadingTurmas] = useState(true)
   const [profNotifs, setProfNotifs] = useState([])
   const [pendingTasks, setPendingTasks] = useState([])
   const [completions, setCompletions] = useState([])
@@ -287,8 +224,6 @@ export default function StudentDashboard({ user, profile }) {
   const [googleConnected, setGoogleConnected] = useState(null)
 
   /* ── UI ── */
-  const [showJoinModal, setShowJoinModal] = useState(false)
-  const [showTurmasModal, setShowTurmasModal] = useState(false)
   const [showOnboarding, setShowOnboarding] = useState(false)
   const [tutorialPotentialSeen, setTutorialPotentialSeen] = useState(() => !!localStorage.getItem(`showo_tut_potential_${user.id}`))
   const [composerKind, setComposerKind] = useState(null)
@@ -407,27 +342,6 @@ export default function StudentDashboard({ user, profile }) {
     load()
   }, [user.id])
 
-  /* ── Turmas ── */
-  useEffect(() => {
-    async function load() {
-      const lsKey = `showo_turmas_${user.id}`
-      let cached = []; try { cached = JSON.parse(localStorage.getItem(lsKey) || '[]') } catch {}
-      let dbTurmas = []
-      const { data: myProjs } = await supabase.from('projects').select('id').eq('user_id', user.id)
-      if (myProjs?.length) {
-        const { data: cp } = await supabase.from('class_projects').select('class_id').in('project_id', myProjs.map(p => p.id))
-        if (cp?.length) {
-          const classIds = [...new Set(cp.map(r => r.class_id))]
-          const { data: classes } = await supabase.from('classes').select('id, name, code, teacher_name').in('id', classIds)
-          dbTurmas = classes || []
-        }
-      }
-      const dbIds = new Set(dbTurmas.map(t => t.id))
-      setTurmas([...dbTurmas, ...cached.filter(t => !dbIds.has(t.id))])
-      setLoadingTurmas(false)
-    }
-    load()
-  }, [user.id])
 
   /* ── Tarefas de turma (pendentes + concluídas para o gráfico) ── */
   useEffect(() => {
@@ -733,39 +647,6 @@ export default function StudentDashboard({ user, profile }) {
     )
   })()
 
-  const turmaPanel = (
-    <section className="sdb-panel sdb-o-turma">
-      <header className="sdb-panel-head">
-        <span className="sdb-eyebrow">Turma</span>
-        {turmas.length > 1 && (
-          <button className="sdb-linkbtn" onClick={() => setShowTurmasModal(true)}>ver todas</button>
-        )}
-      </header>
-      {loadingTurmas ? (
-        <div className="skel skel-line" style={{ height: 14, width: '70%' }} />
-      ) : turmas.length === 0 ? (
-        <>
-          <p className="sdb-empty-line">
-            Não estás em nenhuma turma. Com o código do professor, os teus projetos
-            passam a ser acompanhados por ele.
-          </p>
-          <button className="sdb-linkbtn sdb-linkbtn--strong" onClick={() => setShowJoinModal(true)}>
-            Entrar com código
-          </button>
-        </>
-      ) : (
-        <button className="sdb-turma" onClick={() => navigate(`/turma/${turmas[0].code}`)}>
-          <span className="sdb-turma-icon"><GraduationCap size={15} /></span>
-          <span className="sdb-turma-body">
-            <span className="sdb-turma-name">{turmas[0].name}</span>
-            {turmas[0].teacher_name && <span className="sdb-turma-teacher">{turmas[0].teacher_name}</span>}
-          </span>
-          <ArrowUpRight size={14} />
-        </button>
-      )}
-    </section>
-  )
-
   /* ══════════════════════════════════════════════════════════════════════
      Render
      ══════════════════════════════════════════════════════════════════════ */
@@ -779,19 +660,6 @@ export default function StudentDashboard({ user, profile }) {
       )}
       <div className={`dash-toast${toast ? ' visible' : ''}`}>{toast}</div>
 
-      {showJoinModal && (
-        <JoinTurmaModal onClose={() => setShowJoinModal(false)} navigate={navigate} onJoined={turma => {
-          setTurmas(prev => (prev.find(t => t.id === turma.id) ? prev : [...prev, turma]))
-          try {
-            const lsKey = `showo_turmas_${user.id}`
-            const existing = JSON.parse(localStorage.getItem(lsKey) || '[]')
-            if (!existing.find(t => t.id === turma.id)) localStorage.setItem(lsKey, JSON.stringify([...existing, turma]))
-          } catch {}
-        }} />
-      )}
-      {showTurmasModal && (
-        <TurmasListModal turmas={turmas} onClose={() => setShowTurmasModal(false)} navigate={navigate} onJoin={() => { setShowTurmasModal(false); setShowJoinModal(true) }} />
-      )}
       {composerKind && focusFull && (
         <JournalComposer
           userId={user.id}
@@ -1087,7 +955,6 @@ export default function StudentDashboard({ user, profile }) {
               )
             })()}
 
-            {isEmptyState && turmaPanel}
           </div>
 
           {/* ── Coluna de contexto ── */}
@@ -1105,45 +972,6 @@ export default function StudentDashboard({ user, profile }) {
 
             {!isEmptyState && potentialPanel}
 
-            {(pendingTasks.length > 0 || turmas.length > 0) && (
-              <section className="sdb-panel sdb-o-tasks">
-                <header className="sdb-panel-head">
-                  <span className="sdb-eyebrow">
-                    Tarefas {pendingTasks.length > 0 && <span className="sdb-count">{pendingTasks.length}</span>}
-                  </span>
-                </header>
-                {pendingTasks.length === 0 ? (
-                  <p className="sdb-empty-line">Sem tarefas pendentes. Está tudo feito.</p>
-                ) : (
-                  <ul className="sdb-tasks">
-                    {pendingTasks.slice(0, 5).map(t => {
-                      const late = t.due_date && new Date(t.due_date + 'T23:59:59') < new Date()
-                      return (
-                        <li key={t.id} className={`sdb-task${justDone === t.id ? ' is-done' : ''}${late ? ' is-late' : ''}`}>
-                          <button className="sdb-task-check" onClick={() => completeTask(t.id)}
-                            aria-label={`Marcar "${t.title}" como concluída`}>
-                            <Check size={12} />
-                          </button>
-                          <span className="sdb-task-body">
-                            <span className="sdb-task-title">{t.title}</span>
-                            <span className="sdb-task-meta">
-                              {t.classes?.name}
-                              {t.due_date && ` · ${new Date(t.due_date + 'T00:00:00').toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' })}`}
-                              {late && ' · em atraso'}
-                            </span>
-                          </span>
-                        </li>
-                      )
-                    })}
-                    {pendingTasks.length > 5 && (
-                      <li className="sdb-tasks-more">+{pendingTasks.length - 5} por mostrar</li>
-                    )}
-                  </ul>
-                )}
-              </section>
-            )}
-
-            {!isEmptyState && turmaPanel}
           </div>
         </div>
       </div>

@@ -66,6 +66,12 @@
   }
 }
 
+@media (max-width: 600px) {
+  .pricing-container {
+    padding: 48px 16px 80px;
+  }
+}
+
 /* Card */
 .pricing-card {
   background: var(--color-surface);

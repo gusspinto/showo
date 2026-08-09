@@ -377,6 +377,12 @@ export default function TurmaPage() {
     setTimeout(() => setToast(''), 3500)
   }
 
+  // Turmas are a school feature — only accounts connected to a school
+  // (professors, verified via invite code) can access them for now.
+  useEffect(() => {
+    if (profile && profile.role !== 'professor') navigate('/dashboard')
+  }, [profile, navigate])
+
   useEffect(() => {
     async function load() {
       const { data: cls, error } = await supabase
@@ -804,6 +810,8 @@ export default function TurmaPage() {
     if (av > bv) return sortAsc ? 1 : -1
     return 0
   })
+
+  if (profile && profile.role !== 'professor') return null
 
   if (loading) {
     return (

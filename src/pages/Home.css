@@ -535,6 +535,11 @@ body.light .home-auth-input {
   .home-hero-sub { margin-left: auto; margin-right: auto; }
 }
 
+@media (max-width: 860px) and (min-width: 601px) {
+  .home-projects-grid { grid-template-columns: repeat(2, 1fr); }
+  .how-it-works-grid  { grid-template-columns: repeat(2, 1fr); }
+}
+
 @media (max-width: 600px) {
   .home-hero { padding: 88px 20px 40px; }
   .home-hero-grid { gap: 28px; }

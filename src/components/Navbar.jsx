@@ -851,9 +851,11 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               ) : (
                 <>
                   <span className="mob-drawer-label">Comunidade</span>
-                  <button className="mobile-drawer-btn" onClick={() => { navigate('/turmas'); setOpen(false) }}>
-                    <Users2 size={16} /> Turmas
-                  </button>
+                  {isTeacher && (
+                    <button className="mobile-drawer-btn" onClick={() => { navigate('/turmas'); setOpen(false) }}>
+                      <Users2 size={16} /> Turmas
+                    </button>
+                  )}
                   <button className="mobile-drawer-btn" onClick={() => { navigate('/mensagens'); setOpen(false) }}>
                     <MessageSquare size={16} /> Mensagens
                     {unreadMsgs > 0 && <span style={{ marginLeft: 'auto', background: 'var(--color-primary)', color: '#fff', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{unreadMsgs > 9 ? '9+' : unreadMsgs}</span>}
@@ -1288,9 +1290,6 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                 <>
                   <div className="sb-divider" style={{ margin: '8px 0 4px' }} />
                   {!collapsed && showLabels && <span className="sb-label">Comunidade</span>}
-                  <button className={`sb-item${isActive('/turmas') ? ' active' : ''}`} onClick={() => navigate('/turmas')}>
-                    <Users2 size={16} />{!collapsed && showLabels && <span>Turmas</span>}
-                  </button>
 
                   <button className={`sb-item${isActive('/mensagens') ? ' active' : ''}`} onClick={() => navigate('/mensagens')}
                     style={{ position: 'relative' }}>
@@ -1607,9 +1606,6 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   {user && (
                     <>
                       <span className="mob-nav-section-label">Comunidade</span>
-                      <button className={`mob-nav-btn${isActive('/turmas') ? ' active' : ''}`} onClick={() => { navigate('/turmas'); setMenuOpen(false) }}>
-                        <Users2 size={20} /> Turmas
-                      </button>
                       <button className={`mob-nav-btn${isActive('/mensagens') ? ' active' : ''}`} onClick={() => { navigate('/mensagens'); setMenuOpen(false) }}>
                         <MessageSquare size={20} /> Mensagens
                         {unreadMsgs > 0 && <span style={{ marginLeft: 'auto', background: 'var(--color-primary)', color: '#fff', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{unreadMsgs > 9 ? '9+' : unreadMsgs}</span>}

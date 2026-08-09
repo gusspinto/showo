@@ -328,6 +328,13 @@
   z-index: 3;
 }
 
+@media (max-width: 600px) {
+  .up-msg-wrap {
+    position: static;
+    margin-top: 16px;
+  }
+}
+
 .up-msg-btn {
   display: inline-flex;
   align-items: center;

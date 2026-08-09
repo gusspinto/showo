@@ -39,7 +39,7 @@ export default function GoogleButton({ label = 'Continuar com Google', redirectT
     setLoading(true)
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: redirectTo || `${window.location.origin}/dashboard` },
+      options: { redirectTo: redirectTo || `${window.location.origin}/welcome` },
     })
     if (error) {
       setErr('Não foi possível continuar com o Google. Tenta novamente.')
