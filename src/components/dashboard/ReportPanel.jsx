@@ -3,6 +3,7 @@ import { Check, Circle, Copy, RefreshCw, FileText } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { Modal, Button } from '../ui'
 import { REPORT_SECTIONS, timeAgoLabel } from '../../lib/journal'
+import { useAuth } from '../../context/AuthContext'
 
 const MIN_SECTIONS_TO_GENERATE = 3
 
@@ -14,6 +15,7 @@ function draftToText(draft) {
 }
 
 export default function ReportPanel({ project, entries, coverage, onClose, onDraftSaved }) {
+  const { checkGate, consumeAI } = useAuth()
   const [draft, setDraft] = useState(project.report_draft ?? null)
   const [updatedAt, setUpdatedAt] = useState(project.report_updated_at ?? null)
   const [busy, setBusy] = useState(false)
@@ -23,6 +25,8 @@ export default function ReportPanel({ project, entries, coverage, onClose, onDra
   const canGenerate = coverage.covered >= MIN_SECTIONS_TO_GENERATE
 
   async function generate() {
+    const gate = checkGate('diaryReport')
+    if (!gate.allowed) { setError(gate.message?.body ?? gate.message); return }
     setBusy(true); setError('')
     try {
       // Só os campos que o relatório usa — não vale a pena reenviar o rascunho
@@ -44,6 +48,7 @@ export default function ReportPanel({ project, entries, coverage, onClose, onDra
       })
       if (fnErr || data?.error) { setError(data?.error || 'Não foi possível gerar agora.'); return }
 
+      consumeAI('diaryReport')
       const now = new Date().toISOString()
       setDraft(data); setUpdatedAt(now)
       await supabase.from('projects')

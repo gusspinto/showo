@@ -66,6 +66,7 @@ const Termos         = lazy(() => import('./pages/Termos'))
 const GoogleCalendarCallback = lazy(() => import('./pages/GoogleCalendarCallback'))
 const DiaryCanvas  = lazy(() => import('./pages/DiaryCanvas'))
 const AprendeAUsar = lazy(() => import('./pages/AprendeAUsar'))
+const Pricing      = lazy(() => import('./pages/Pricing'))
 
 function PageLoader() {
   return (
@@ -378,6 +379,7 @@ export default function App() {
               <Route path="/termos"             element={<Termos />}        />
               <Route path="/oauth/google-calendar" element={<GoogleCalendarCallback />} />
               <Route path="/aprende"            element={<AprendeAUsar />}  />
+              <Route path="/pricing"            element={<Pricing />}       />
               <Route path="*"                   element={<NotFound />}      />
             </Routes>
             </Suspense>

@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { identifyUser, resetAnalytics } from '../lib/analytics'
+import { getPlan, remainingUses, recordUse, PLAN_GATE_MESSAGES } from '../lib/plans'
 
 const AuthContext = createContext({})
 
@@ -26,7 +27,7 @@ export function AuthProvider({ children }) {
   const fetchProfile = useCallback(async (uid) => {
     if (!uid) { setProfile(null); resetAnalytics(); return }
     const [profileRes, userRes] = await Promise.all([
-      supabase.from('profiles').select('id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, linkedin_url, skills, monthly_report_opt_in, area').eq('id', uid).single(),
+      supabase.from('profiles').select('id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, linkedin_url, skills, monthly_report_opt_in, area, plan').eq('id', uid).single(),
       supabase.auth.getUser(),
     ])
     const meta = userRes.data?.user?.user_metadata ?? {}
@@ -48,7 +49,7 @@ export function AuthProvider({ children }) {
         // avatar_url/full_name come from Google's user_metadata on OAuth sign-ups
         // (email/password users simply have these undefined → null).
         .upsert({ id: uid, full_name: meta.full_name ?? meta.name ?? null, role: 'aluno', company: meta.company ?? null, school: meta.school ?? null, avatar_url: (meta.avatar_url ?? meta.picture ?? '').replace(/=s\d+-c$/, '=s400-c') || null })
-        .select('id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, linkedin_url, skills, monthly_report_opt_in, area')
+        .select('id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, linkedin_url, skills, monthly_report_opt_in, area, plan')
         .single()
       data = created
     }
@@ -108,9 +109,30 @@ export function AuthProvider({ children }) {
   }
 
   const isAdmin = profile?.is_admin === true
+  const planId  = profile?.plan ?? 'free'
+  const plan    = getPlan(planId)
+
+  // Gate check: returns { allowed: bool, message: string }
+  function checkGate(feature, projectCount) {
+    if (feature === 'maxProjects') {
+      const allowed = projectCount < plan.maxProjects
+      return { allowed, message: allowed ? null : PLAN_GATE_MESSAGES.maxProjects(planId) }
+    }
+    if (feature === 'internshipPage' || feature === 'weeklyRecap') {
+      const allowed = plan.career[feature] === true
+      return { allowed, message: allowed ? null : PLAN_GATE_MESSAGES[feature]?.() }
+    }
+    const remaining = remainingUses(planId, feature, user?.id)
+    const allowed = remaining > 0
+    return { allowed, message: allowed ? null : PLAN_GATE_MESSAGES[feature]?.(planId) }
+  }
+
+  function consumeAI(feature) {
+    recordUse(planId, feature, user?.id)
+  }
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, signOut, refreshProfile, isAdmin }}>
+    <AuthContext.Provider value={{ user, profile, loading, signOut, refreshProfile, isAdmin, plan, planId, checkGate, consumeAI }}>
       {children}
     </AuthContext.Provider>
   )

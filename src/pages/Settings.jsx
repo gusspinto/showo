@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
 import { Navbar } from '../components/Navbar'
-import { Loader, Check, X, AlertTriangle, Camera, ArrowLeft, GraduationCap, BookOpen, Search, Building2, Lock, Briefcase, Sun, Moon, BarChart2, Bell, Mail, Megaphone, Rocket, FolderOpen, Eye, EyeOff, Globe, Shield } from 'lucide-react'
+import { Loader, Check, X, AlertTriangle, Camera, ArrowLeft, GraduationCap, BookOpen, Search, Building2, Lock, Briefcase, Sun, Moon, BarChart2, Bell, Mail, Megaphone, Rocket, FolderOpen, Eye, EyeOff, Globe, Shield, CreditCard } from 'lucide-react'
 import { CropModal } from '../components/CropModal'
 import { containsProfanity } from '../lib/profanity'
 import SkillsPicker from '../components/SkillsPicker'
@@ -38,6 +38,56 @@ function Textarea({ label, value, onChange, placeholder, hint }) {
       />
       {hint && <p className="settings-hint">{hint}</p>}
     </div>
+  )
+}
+
+const PLAN_META = {
+  free:   { name: 'Grátis',  color: 'var(--color-text-tertiary)', desc: 'O plano base, sem custos.' },
+  build:  { name: 'Build',   color: '#2B7EF5', desc: 'IA sem limites em cada projeto.' },
+  launch: { name: 'Launch',  color: '#C49A20', desc: 'Do projeto à oportunidade de carreira.' },
+}
+
+function PlanSection({ planId, navigate }) {
+  const meta = PLAN_META[planId] ?? PLAN_META.free
+
+  return (
+    <SectionCard title="Plano">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <span style={{
+            padding: '4px 14px', borderRadius: 100,
+            background: meta.color + '22', color: meta.color,
+            border: `1px solid ${meta.color}44`,
+            fontSize: 13, fontWeight: 700,
+          }}>
+            {meta.name}
+          </span>
+          <span className="settings-hint" style={{ margin: 0 }}>{meta.desc}</span>
+        </div>
+
+        {planId !== 'launch' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {planId === 'free' && (
+              <button className="settings-save-btn" onClick={() => navigate('/pricing')}>
+                Fazer upgrade
+              </button>
+            )}
+            {planId === 'build' && (
+              <button className="settings-save-btn" onClick={() => navigate('/pricing')}>
+                Upgrade para Launch
+              </button>
+            )}
+            <p className="settings-hint">Serás redirecionado para a página de planos.</p>
+          </div>
+        )}
+
+        {planId !== 'free' && (
+          <div>
+            <p className="settings-hint">Para cancelar ou gerir a subscrição, contacta <a href="mailto:suporte@showo.pt" style={{ color: 'var(--color-primary)' }}>suporte@showo.pt</a>.</p>
+          </div>
+        )}
+      </div>
+    </SectionCard>
   )
 }
 
@@ -76,7 +126,7 @@ function SettingsSkeleton() {
 }
 
 export default function Settings() {
-  const { user, profile, loading: authLoading, refreshProfile } = useAuth()
+  const { user, profile, loading: authLoading, refreshProfile, planId } = useAuth()
   const { theme, toggleTheme } = useTheme()
   const navigate = useNavigate()
 
@@ -309,6 +359,7 @@ export default function Settings() {
     { id: 'conta', label: 'Conta', icon: <Lock size={16} /> },
   ] : [
     { id: 'perfil', label: 'Perfil', icon: <Camera size={16} /> },
+    { id: 'plano', label: 'Plano', icon: <CreditCard size={16} /> },
     { id: 'notificacoes', label: 'Notificações', icon: <Bell size={16} /> },
     { id: 'privacidade', label: 'Privacidade', icon: <Shield size={16} /> },
     { id: 'aparencia', label: 'Aparência', icon: theme === 'dark' ? <Moon size={16} /> : <Sun size={16} /> },
@@ -636,6 +687,10 @@ export default function Settings() {
                 </div>
                 {saveBlock}
               </SectionCard>
+            )}
+
+            {activeTab === 'plano' && (
+              <PlanSection planId={planId} navigate={navigate} />
             )}
 
             {activeTab === 'aparencia' && (

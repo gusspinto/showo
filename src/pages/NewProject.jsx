@@ -6,6 +6,7 @@ import { Sparkles, ArrowRight, Pencil, Check, ChevronRight } from 'lucide-react'
 import { Navbar } from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
 import { Toast, useToast } from '../components/Toast'
+import { PlanGateModal } from '../components/PlanGate'
 
 const PROJECT_TYPES = [
   { id: 'school',   label: 'Projeto de escola' },
@@ -25,7 +26,7 @@ const REVIEW_FIELDS = [
 export default function NewProject() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { user } = useAuth()
+  const { user, checkGate, consumeAI } = useAuth()
   const { toast, show: showToast } = useToast()
 
   const [step, setStep] = useState('describe')
@@ -36,6 +37,7 @@ export default function NewProject() {
   const [editValue, setEditValue] = useState('')
   const [error, setError] = useState(null)
   const [interviewData, setInterviewData] = useState(null)
+  const [gateMsg, setGateMsg] = useState(null)
 
   function set(key, val) { setForm(p => ({ ...p, [key]: val })) }
 
@@ -51,6 +53,16 @@ export default function NewProject() {
   /* ── Generate (prefill) ── */
   async function handleGenerate() {
     if (!description.trim()) return
+    // Check max projects
+    if (user?.id) {
+      const { count } = await supabase.from('projects').select('id', { count: 'exact', head: true }).eq('user_id', user.id)
+      const maxGate = checkGate('maxProjects', count ?? 0)
+      if (!maxGate.allowed) { setGateMsg(maxGate.message); return }
+    }
+    // Check AI create limit
+    const aiGate = checkGate('createProject')
+    if (!aiGate.allowed) { setGateMsg(aiGate.message); return }
+
     setStep('loading')
     setError(null)
     try {
@@ -58,6 +70,7 @@ export default function NewProject() {
         body: { text: description, projectType },
       })
       if (fnErr) throw new Error()
+      consumeAI('createProject')
       setForm({ ...(data?.prefill ?? {}), project_type: projectType })
       setStep('review')
     } catch {
@@ -69,6 +82,9 @@ export default function NewProject() {
   /* ── Interview (guided questions) ── */
   async function handleInterview() {
     if (!description.trim()) return
+    const gate = checkGate('interviewProject')
+    if (!gate.allowed) { setGateMsg(gate.message); return }
+
     setStep('loading')
     setError(null)
     try {
@@ -76,6 +92,7 @@ export default function NewProject() {
         body: { description, projectType },
       })
       if (fnErr || !data?.questions?.length) throw new Error()
+      consumeAI('interviewProject')
       setInterviewData({ ...data, projectType })
       setStep('interview')
     } catch {
@@ -128,6 +145,7 @@ export default function NewProject() {
   if (step === 'describe') {
     return (
       <NpShell>
+        {gateMsg && <PlanGateModal message={gateMsg} onClose={() => setGateMsg(null)} />}
         <Toast {...toast} />
         <Navbar showLinks={false} />
         <div style={S.center}>

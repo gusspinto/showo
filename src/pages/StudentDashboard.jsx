@@ -10,6 +10,7 @@ import {
   Trash2, Flame, GraduationCap, ArrowUpRight, Trophy, Pin, BookOpen,
 } from 'lucide-react'
 import { Button, Card, SectionLabel, Modal, ModalActions } from '../components/ui'
+import { useAuth } from '../context/AuthContext'
 
 // ProjectPulse removed — focus project now shown as auto-pinned card
 import JournalComposer from '../components/dashboard/JournalComposer'
@@ -264,6 +265,7 @@ function OnboardingAlunoModal({ user, profile, onDismiss, claimedSlug }) {
 export default function StudentDashboard({ user, profile }) {
   const navigate = useNavigate()
   const location = useLocation()
+  const { checkGate } = useAuth()
   const [claimedSlug] = useState(() => location.state?.claimedSlug ?? null)
 
   /* ── Dados ── */
@@ -388,7 +390,7 @@ export default function StudentDashboard({ user, profile }) {
       setLoadingEntries(false)
       // Use oldest project's created_at to guard recap from appearing on day 1
       const oldestProjectDate = projects.length ? projects[projects.length - 1].created_at : null
-      if (shouldShowRecap(user.id, oldestProjectDate)) setShowRecap(true)
+      if (checkGate('weeklyRecap').allowed && shouldShowRecap(user.id, oldestProjectDate)) setShowRecap(true)
     }
     load()
     return () => { cancelled = true }
@@ -1037,7 +1039,7 @@ export default function StudentDashboard({ user, profile }) {
             {focusProject && (
               <div className="sdb-duo sdb-o-rhythm">
                 <ActivityPanel buckets={activityBuckets} />
-                <RecapsPanel recaps={recaps} />
+                {checkGate('weeklyRecap').allowed && <RecapsPanel recaps={recaps} />}
               </div>
             )}
 

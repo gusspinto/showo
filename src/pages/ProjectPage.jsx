@@ -9,6 +9,7 @@ import { calculateScore, looksLikeSpam } from '../lib/score'
 import { containsProfanity } from '../lib/profanity'
 import { CHALLENGES, getChallengeStatus } from '../lib/challenges'
 import { Navbar } from '../components/Navbar'
+import { PlanGateModal } from '../components/PlanGate'
 import { chatProjectCoach } from '../lib/chatProjectCoach'
 import { useAuth } from '../context/AuthContext'
 import { useSidebar } from '../context/SidebarContext'
@@ -3953,7 +3954,7 @@ export default function ProjectPage() {
   const { slug } = useParams()
   const navigate = useNavigate()
   const location = useLocation()
-  const { user, profile, loading: authLoading } = useAuth()
+  const { user, profile, loading: authLoading, checkGate, consumeAI } = useAuth()
   const [project, setProject] = useState(() => location.state?.projectData ?? null)
   const [projectJournalEntries, setProjectJournalEntries] = useState([])
   const [loading, setLoading] = useState(!location.state?.projectData)
@@ -3986,6 +3987,7 @@ export default function ProjectPage() {
   const [aiFeedback, setAiFeedback] = useState(null)
   const [analyzingAI, setAnalyzingAI] = useState(false)
   const [analyzeError, setAnalyzeError] = useState(null)
+  const [analyzeGateMsg, setAnalyzeGateMsg] = useState(null)
   const [aiModalOpen, setAiModalOpen] = useState(false)
   const [completudeOpen, setCompletudeOpen] = useState(true)
   const [tipsOpen, setTipsOpen] = useState(true)
@@ -4164,12 +4166,18 @@ export default function ProjectPage() {
     e?.preventDefault()
     const msg = coachInput.trim()
     if (!msg || coachLoading) return
+    const gate = checkGate('coach')
+    if (!gate.allowed) {
+      setCoachMessages(prev => [...prev, { role: 'assistant', isGate: true, content: gate.message?.body ?? gate.message }])
+      return
+    }
     const next = [...coachMessages, { role: 'user', content: msg }]
     setCoachMessages(next)
     setCoachInput('')
     setCoachLoading(true)
     try {
       const reply = await chatProjectCoach({ project, messages: coachMessages, message: msg })
+      consumeAI('coach')
       setCoachMessages(prev => [...prev, { role: 'assistant', content: reply }])
       setTimeout(() => coachBottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
       if (user?.id && project?.id) {
@@ -4630,6 +4638,8 @@ export default function ProjectPage() {
 
   async function handleGenerateNarrative() {
     if (!project) return
+    const gate = checkGate('narrative')
+    if (!gate.allowed) { setNarrativeError(gate.message?.body ?? gate.message); return }
     setGeneratingNarrative(true)
     setNarrativeError('')
     setNarrativePreview(null)
@@ -4638,6 +4648,7 @@ export default function ProjectPage() {
         body: { data: project },
       })
       if (fnErr || !data?.tagline) throw new Error(data?.error || 'Resposta inválida')
+      consumeAI('narrative')
       setNarrativePreview(data)
     } catch {
       setNarrativeError('Não foi possível gerar agora. Tenta novamente.')
@@ -4670,12 +4681,14 @@ export default function ProjectPage() {
 
   async function handleAnalyzeAI() {
     if (!project) return
+    const gate = checkGate('analyzeProject')
+    if (!gate.allowed) { setAnalyzeGateMsg(gate.message); return }
     setAnalyzingAI(true)
     setAnalyzeError(null)
     try {
       const result = await analyzeProject(project)
+      consumeAI('analyzeProject')
       setAiFeedback(result)
-      // persist to DB so it loads next time
       await supabase.from('projects').update({ ai_feedback: result }).eq('id', project.id)
     } catch (e) {
       setAnalyzeError('Erro ao analisar. Tenta novamente.')
@@ -5639,6 +5652,7 @@ export default function ProjectPage() {
               </div>
             </div>
 
+            {analyzeGateMsg && <PlanGateModal message={analyzeGateMsg} onClose={() => setAnalyzeGateMsg(null)} />}
             {analyzeError && (
               <div style={{ background: 'var(--color-error-subtle)', border: '1px solid var(--color-error-subtle)', borderRadius: 10, padding: '12px 16px', color: 'var(--color-error)', fontSize: 13, marginBottom: 16 }}>
                 {analyzeError}
@@ -6200,7 +6214,7 @@ export default function ProjectPage() {
                   </div>
                 )
               })()}
-              {[project.creator_name, project.area, project.course, project.school_year]
+              {[...new Set([project.creator_name, project.area, project.course, project.school_year])]
                 .filter(Boolean)
                 .map((item, i) => (
                   <span key={i} style={{ fontSize: 13, color: colors.muted, display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -6724,12 +6738,12 @@ export default function ProjectPage() {
                 <div key={i} style={{
                   alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start',
                   maxWidth: '85%',
-                  background: m.role === 'user' ? 'var(--color-primary)' : 'var(--color-bg-alt)',
-                  border: m.role === 'user' ? 'none' : `1px solid ${colors.border}`,
+                  background: m.isGate ? 'rgba(245,158,11,0.1)' : m.role === 'user' ? 'var(--color-primary)' : 'var(--color-bg-alt)',
+                  border: m.isGate ? '1px solid rgba(245,158,11,0.35)' : m.role === 'user' ? 'none' : `1px solid ${colors.border}`,
                   borderRadius: m.role === 'user' ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
                   padding: '10px 14px',
                   fontSize: 13.5,
-                  color: m.role === 'user' ? '#fff' : colors.text,
+                  color: m.isGate ? '#B45309' : m.role === 'user' ? '#fff' : colors.text,
                   lineHeight: 1.6,
                   whiteSpace: m.role === 'user' ? 'pre-wrap' : undefined,
                 }}>{m.role === 'assistant' ? renderMd(m.content) : m.content}</div>
@@ -7915,12 +7929,12 @@ export default function ProjectPage() {
                 <div key={i} style={{
                   alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start',
                   maxWidth: '87%',
-                  background: m.role === 'user' ? 'var(--color-primary)' : 'var(--color-bg-alt)',
-                  border: m.role === 'user' ? 'none' : `1px solid ${colors.border}`,
+                  background: m.isGate ? 'rgba(245,158,11,0.1)' : m.role === 'user' ? 'var(--color-primary)' : 'var(--color-bg-alt)',
+                  border: m.isGate ? '1px solid rgba(245,158,11,0.35)' : m.role === 'user' ? 'none' : `1px solid ${colors.border}`,
                   borderRadius: m.role === 'user' ? '14px 14px 4px 14px' : '14px 14px 14px 4px',
                   padding: '10px 14px',
                   fontSize: 13,
-                  color: m.role === 'user' ? '#fff' : colors.text,
+                  color: m.isGate ? '#B45309' : m.role === 'user' ? '#fff' : colors.text,
                   lineHeight: 1.6,
                   whiteSpace: m.role === 'user' ? 'pre-wrap' : undefined,
                 }}>{m.role === 'assistant' ? renderMd(m.content) : m.content}</div>

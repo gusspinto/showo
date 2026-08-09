@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { useAuth } from '../context/AuthContext'
+import { PlanGateModal } from './PlanGate'
 import { Check, X, GraduationCap, Briefcase, Sparkles, Lightbulb, ArrowLeft } from 'lucide-react'
 
 const C = {
@@ -75,15 +77,19 @@ function CopyField({ label, value }) {
 }
 
 export default function CoverLetterModal({ projects, studentName, onClose }) {
+  const { checkGate, consumeAI } = useAuth()
   const [company, setCompany]   = useState('')
   const [sector, setSector]     = useState('')
   const [type, setType]         = useState('internship')
   const [result, setResult]     = useState(null)
   const [loading, setLoading]   = useState(false)
   const [error, setError]       = useState(null)
+  const [gateMsg, setGateMsg]   = useState(null)
 
   async function generate() {
     if (!company.trim()) return
+    const gate = checkGate('coverLetter')
+    if (!gate.allowed) { setGateMsg(gate.message); return }
     setLoading(true)
     setError(null)
     setResult(null)
@@ -93,12 +99,15 @@ export default function CoverLetterModal({ projects, studentName, onClose }) {
     if (err || data?.error) {
       setError('Erro ao gerar. Tenta novamente.')
     } else {
+      consumeAI('coverLetter')
       setResult(data)
     }
     setLoading(false)
   }
 
   return (
+    <>
+    {gateMsg && <PlanGateModal message={gateMsg} onClose={() => setGateMsg(null)} />}
     <div
       style={{
         position: 'fixed', inset: 0, zIndex: 2000,
@@ -227,5 +236,6 @@ export default function CoverLetterModal({ projects, studentName, onClose }) {
         </div>
       </div>
     </div>
+    </>
   )
 }

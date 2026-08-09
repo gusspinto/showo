@@ -1250,7 +1250,7 @@ function GrupoPanel({ project }) {
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function DefenseMode({ project, isOwner, collaboratorSections, onClose }) {
-  const { profile } = useAuth()
+  const { profile, checkGate, consumeAI } = useAuth()
   const studentName = profile?.full_name || profile?.username || ''
   const isCollaborator = collaboratorSections !== null && !isOwner
   const canSeeFullPrep = isOwner || isCollaborator
@@ -1281,6 +1281,8 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
   }, [guideMode])
 
   function loadAI() {
+    const gate = checkGate('defense')
+    if (!gate.allowed) { setAiError(true); return }
     setLoadingAI(true)
     setAiError(false)
     supabase.functions.invoke('defense-notes', { body: { project } })
@@ -1289,6 +1291,7 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
         const hasNotes = data.slide_notes && Object.values(data.slide_notes).some(Boolean)
         const hasQuestions = Array.isArray(data.jury_questions) && data.jury_questions.length > 0
         if (!hasNotes && !hasQuestions) { setAiError(true); return }
+        consumeAI('defense')
         setAiData(data)
       })
       .catch(() => setAiError(true))

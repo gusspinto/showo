@@ -7,6 +7,7 @@ import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
 import { Search, FolderOpen, X, Download, Rocket, QrCode, Pencil, Globe, ExternalLink, Link, Briefcase, ArrowRight, Star, MessageSquare, GraduationCap, Send, Lock } from 'lucide-react'
 import ConvidarVagaModal from '../components/ConvidarVagaModal'
+import { PlanBadge } from '../components/PlanGate'
 import './UserProfile.css'
 
 function areaGradient(area) {
@@ -322,6 +323,7 @@ export default function UserProfile() {
                   )}
                 </h1>
                 {profile.username && <span className="up-username">@{profile.username}</span>}
+                {isOwnProfile && <PlanBadge style={{ marginTop: 2 }} />}
               </div>
 
               {(profile.area || profile.course || profile.school) && (
