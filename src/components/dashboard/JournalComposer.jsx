@@ -35,6 +35,27 @@ export default function JournalComposer({
 
     setSaving(false)
     if (err) { setError('Não foi possível guardar. Tenta outra vez.'); return }
+
+    // Sync to diary canvas — map kind to card type
+    const KIND_CARD = { progresso: 'note', dificuldade: 'note', decisao: 'idea', resultado: 'note', aprendizagem: 'note', conquista: 'highlight' }
+    const cardType = KIND_CARD[kind] || 'note'
+    const W = cardType === 'highlight' ? 260 : 220
+    const H = cardType === 'highlight' ? 120 : 160
+    // Auto-position: spread cards based on existing count to avoid overlap
+    const { count } = await supabase.from('diary_canvas_items').select('*', { count: 'exact', head: true }).eq('project_id', project.id).eq('user_id', userId)
+    const col = (count || 0) % 4
+    const row = Math.floor((count || 0) / 4)
+    const x = 40 + col * (W + 20)
+    const y = 40 + row * (H + 20)
+    supabase.from('diary_canvas_items').insert({
+      project_id: project.id, user_id: userId,
+      type: cardType, x, y, w: W, h: H,
+      content: content.trim(), color: cardType === 'highlight' ? '#1a1200' : cardType === 'idea' ? '#0d1733' : '#0f1623',
+      pinned: false, source_kind: kind,
+    }).then(({ error: canvasErr }) => {
+      if (canvasErr) console.error('[JournalComposer] diary_canvas_items insert failed:', canvasErr)
+    })
+
     onCreated?.(data)
     onClose()
   }

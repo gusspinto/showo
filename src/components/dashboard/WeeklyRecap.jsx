@@ -1,11 +1,16 @@
 import { useState, useMemo } from 'react'
-import { X, CheckCircle, Flame, Sparkles, BookOpen, ChevronRight } from 'lucide-react'
+import { X, CheckCircle, Flame, Sparkles, BookOpen, ChevronLeft, ChevronRight } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { KIND_BY_ID, computeEngagementSignal, weekStartISO } from '../../lib/journal'
 
-export function shouldShowRecap(userId) {
+export function shouldShowRecap(userId, firstProjectCreatedAt) {
   const day = new Date().getDay() // 0=Dom, 5=Sex, 6=Sáb
   if (![0, 5, 6].includes(day)) return false
+  // Só aparece se o primeiro projeto tem pelo menos 2 dias
+  if (firstProjectCreatedAt) {
+    const daysSince = (Date.now() - new Date(firstProjectCreatedAt)) / 86400000
+    if (daysSince < 2) return false
+  }
   const key = `showo_recap_${userId}_${weekStartISO()}`
   return !localStorage.getItem(key)
 }
@@ -219,67 +224,60 @@ export default function WeeklyRecap({ userId, project, entries, streak, onClose,
 
 /* ── Painel de histórico de recaps na dashboard ── */
 export function RecapsPanel({ recaps }) {
+  const [idx, setIdx] = useState(0)
   if (!recaps.length) return null
 
-  /* barra de engagement: verde/azul/laranja com largura proporcional ao sinal */
-  function engBar(signal) {
-    const pct = signal ?? 0
-    const color = pct >= 70 ? 'var(--color-success)' : pct >= 40 ? 'var(--color-primary)' : 'var(--color-warning)'
-    return { pct, color }
-  }
+  const r = recaps[idx]
+  const pct = r.engagement_signal ?? 0
+  const color = pct >= 70 ? 'var(--color-success)' : pct >= 40 ? 'var(--color-primary)' : 'var(--color-warning)'
+  const engLabel = pct >= 70 ? 'Alto' : pct >= 40 ? 'Médio' : 'Baixo'
 
   return (
     <section className="sdb-panel sdb-o-recaps">
-      {/* cabeçalho azul da marca */}
-      <header className="rp-header">
-        <div className="rp-header-left">
-          <span className="rp-icon"><Sparkles size={14} /></span>
-          <div>
-            <div className="rp-title">Recaps semanais</div>
-            <div className="rp-sub">{recaps.length} semana{recaps.length !== 1 ? 's' : ''} registadas</div>
+      <div className="rp-row-top">
+        <div className="rp-label-group">
+          <Sparkles size={12} className="rp-label-icon" />
+          <span className="rp-label-text">Recap</span>
+          <span className="rp-label-week">{weekLabel(r.week_start)}</span>
+        </div>
+        {recaps.length > 1 && (
+          <div className="rp-nav">
+            <button
+              className="rp-nav-btn"
+              onClick={() => setIdx(i => Math.min(recaps.length - 1, i + 1))}
+              disabled={idx >= recaps.length - 1}
+              title="Semana anterior"
+            ><ChevronLeft size={13} /></button>
+            <span className="rp-nav-pos">{idx + 1}/{recaps.length}</span>
+            <button
+              className="rp-nav-btn"
+              onClick={() => setIdx(i => Math.max(0, i - 1))}
+              disabled={idx <= 0}
+              title="Semana seguinte"
+            ><ChevronRight size={13} /></button>
+          </div>
+        )}
+      </div>
+
+      <div className="rp-body">
+        <div className="rp-eng-row">
+          <span className="rp-eng-label" style={{ color }}>{engLabel}</span>
+          <div className="rp-item-track">
+            <span className="rp-item-fill" style={{ width: `${pct}%`, background: color }} />
           </div>
         </div>
-      </header>
-
-      <ul className="rp-list">
-        {recaps.map(r => {
-          const { pct, color } = engBar(r.engagement_signal)
-          const engLabel = pct >= 70 ? 'Alto' : pct >= 40 ? 'Médio' : 'Baixo'
-          return (
-            <li key={r.id} className="rp-item">
-              {/* barra lateral colorida por engagement */}
-              <span className="rp-item-bar" style={{ background: color }} />
-
-              <div className="rp-item-body">
-                <div className="rp-item-top">
-                  <span className="rp-item-week">{weekLabel(r.week_start)}</span>
-                  <span className="rp-item-eng" style={{ color }}>{engLabel}</span>
-                </div>
-
-                {/* mini barra de progresso */}
-                <div className="rp-item-track">
-                  <span className="rp-item-fill" style={{ width: `${pct}%`, background: color }} />
-                </div>
-
-                <div className="rp-item-meta">
-                  <span className="rp-item-chip">
-                    <BookOpen size={10} /> {r.entry_count} registo{r.entry_count !== 1 ? 's' : ''}
-                  </span>
-                  {r.kinds_used?.length > 0 && (
-                    <span className="rp-item-chip">
-                      {r.kinds_used.length} tipo{r.kinds_used.length !== 1 ? 's' : ''}
-                    </span>
-                  )}
-                </div>
-
-                {r.reflection && (
-                  <p className="rp-item-quote">"{r.reflection}"</p>
-                )}
-              </div>
-            </li>
-          )
-        })}
-      </ul>
+        <div className="rp-meta-row">
+          <span className="rp-item-chip">
+            <BookOpen size={10} /> {r.entry_count} registo{r.entry_count !== 1 ? 's' : ''}
+          </span>
+          {r.kinds_used?.length > 0 && (
+            <span className="rp-item-chip">{r.kinds_used.length} tipo{r.kinds_used.length !== 1 ? 's' : ''}</span>
+          )}
+        </div>
+        {r.reflection && (
+          <p className="rp-item-quote">"{r.reflection}"</p>
+        )}
+      </div>
     </section>
   )
 }

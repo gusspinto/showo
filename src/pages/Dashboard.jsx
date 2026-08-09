@@ -314,6 +314,7 @@ const ONBOARDING = {
 
 function OnboardingAlunoModal({ user, profile, onDismiss, firstProject, claimedSlug }) {
   const navigate = useNavigate()
+  const { refreshProfile } = useAuth()
   const [step, setStep] = useState(claimedSlug ? -1 : 0)
   const [username, setUsername] = useState(profile?.username ?? '')
   const [bio, setBio] = useState(profile?.bio ?? '')
@@ -350,6 +351,7 @@ function OnboardingAlunoModal({ user, profile, onDismiss, firstProject, claimedS
     }, { onConflict: 'id' })
     setSaving(false)
     if (error) { setSaveErr(error.code === '23505' ? 'Este username já está a ser usado.' : 'Erro ao guardar.'); return }
+    await refreshProfile()
     setStep(1)
   }
 

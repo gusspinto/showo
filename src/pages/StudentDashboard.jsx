@@ -3,15 +3,15 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { Navbar } from '../components/Navbar'
 import SkillsPicker from '../components/SkillsPicker'
-import { calculatePotential } from '../lib/score'
+import { calculatePotential, calculateScore } from '../lib/score'
 import {
   Rocket, Plus, Users2, ChevronRight, User, Globe, MessageSquare, Star,
   Check, ArrowRight, Sparkles, Pencil, ExternalLink, Copy, Share2, Link,
-  Trash2, Flame, GraduationCap, ArrowUpRight, FileText, Trophy, Pin, BookOpen,
+  Trash2, Flame, GraduationCap, ArrowUpRight, Trophy, Pin, BookOpen,
 } from 'lucide-react'
 import { Button, Card, SectionLabel, Modal, ModalActions } from '../components/ui'
 
-import ProjectPulse, { ProjectPulseEmpty } from '../components/dashboard/ProjectPulse'
+// ProjectPulse removed — focus project now shown as auto-pinned card
 import JournalComposer from '../components/dashboard/JournalComposer'
 import JournalDrawer from '../components/dashboard/JournalDrawer'
 import ReportPanel from '../components/dashboard/ReportPanel'
@@ -386,7 +386,9 @@ export default function StudentDashboard({ user, profile }) {
       setFocusFull(full || focusProject)
       setEntries(rows || [])
       setLoadingEntries(false)
-      if (shouldShowRecap(user.id)) setShowRecap(true)
+      // Use oldest project's created_at to guard recap from appearing on day 1
+      const oldestProjectDate = projects.length ? projects[projects.length - 1].created_at : null
+      if (shouldShowRecap(user.id, oldestProjectDate)) setShowRecap(true)
     }
     load()
     return () => { cancelled = true }
@@ -674,42 +676,55 @@ export default function StudentDashboard({ user, profile }) {
 
   /* ── Painéis partilhados (reposicionados em empty state) ── */
   const potentialPanel = (() => {
-    const r = 24
+    const r = 26
     const circ = 2 * Math.PI * r
     const filled = (potential / 100) * circ
     const scoreColor = getScoreColor(potential)
     const scoreLabel = potential >= 80 ? 'Perfil forte' : potential >= 60 ? 'Bom caminho' : potential >= 40 ? 'A crescer' : 'Em início'
+    const scoreHint = potential >= 80
+      ? 'O teu perfil está sólido. Continua a atualizar os projetos.'
+      : potential >= 60
+      ? 'Falta pouco. Adiciona mais projetos e registos no diário.'
+      : potential >= 40
+      ? 'Completa o perfil e publica mais projetos para subir.'
+      : 'Começa por completar o teu perfil e criar o primeiro projeto.'
+    const slug = profile?.username
     return (
       <section className="sdb-panel sdb-panel--tint sdb-o-potential">
         <header className="sdb-panel-head">
           <span className="sdb-eyebrow sdb-eyebrow--brand">Potencial do perfil</span>
+          <span style={{ fontSize: 11, fontWeight: 700, color: scoreColor }}>{potential}/100</span>
         </header>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          <div style={{ position: 'relative', width: 60, height: 60, flexShrink: 0 }}>
-            <svg width={60} height={60} style={{ transform: 'rotate(-90deg)', display: 'block' }}>
-              <circle cx={30} cy={30} r={r} fill="none" stroke="var(--color-border)" strokeWidth={5} />
-              <circle cx={30} cy={30} r={r} fill="none"
-                stroke={scoreColor} strokeWidth={5}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          <div style={{ position: 'relative', width: 68, height: 68, flexShrink: 0 }}>
+            <svg width={68} height={68} style={{ transform: 'rotate(-90deg)', display: 'block' }}>
+              <circle cx={34} cy={34} r={r} fill="none" stroke="var(--color-border)" strokeWidth={6} />
+              <circle cx={34} cy={34} r={r} fill="none"
+                stroke={scoreColor} strokeWidth={6}
                 strokeDasharray={`${filled} ${circ}`}
                 strokeLinecap="round"
+                style={{ transition: 'stroke-dasharray 0.6s ease' }}
               />
             </svg>
-            <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 700, color: scoreColor, lineHeight: 1 }}>
+            <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, fontWeight: 800, color: scoreColor, lineHeight: 1 }}>
               {potential}
             </span>
           </div>
-          <div>
-            <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: 'var(--color-text)' }}>{scoreLabel}</p>
-            <p style={{ margin: '2px 0 0', fontSize: 11, color: 'var(--color-text-tertiary)' }}>/100</p>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: 'var(--color-text)' }}>{scoreLabel}</p>
+            <p style={{ margin: '4px 0 0', fontSize: 11, color: 'var(--color-text-tertiary)', lineHeight: 1.5 }}>{scoreHint}</p>
           </div>
         </div>
-        {(profile?.username || user?.id) && (
+        {slug ? (
           <button className="sdb-profile-link" onClick={() => {
-            const slug = profile?.username || user?.id
             navigator.clipboard.writeText(`${window.location.origin}/u/${slug}`)
               .then(() => showToast('Link do perfil copiado.'))
           }}>
-            <Link size={11} /> showo.pt/u/{profile?.username || user?.id}
+            <Link size={11} /> showo.pt/u/{slug}
+          </button>
+        ) : (
+          <button className="sdb-profile-link" onClick={() => navigate('/settings')}>
+            <Link size={11} /> Completa o perfil para teres um link público
           </button>
         )}
       </section>
@@ -781,7 +796,19 @@ export default function StudentDashboard({ user, profile }) {
           project={focusFull}
           initialKind={composerKind}
           onClose={() => setComposerKind(null)}
-          onCreated={entry => { setEntries(prev => [entry, ...prev]); showToast('Registo guardado no diário.') }}
+          onCreated={entry => {
+            const newEntries = [entry, ...entries]
+            setEntries(newEntries)
+            showToast('Registo guardado no diário.')
+            // Recalculate and sync score
+            if (focusFull) {
+              const { score: s } = calculateScore(focusFull, newEntries)
+              if (s !== focusFull.score) {
+                setProjects(prev => prev.map(p => p.id === focusFull.id ? { ...p, score: s } : p))
+                supabase.from('projects').update({ score: s }).eq('id', focusFull.id)
+              }
+            }
+          }}
         />
       )}
       {showJournal && focusFull && (
@@ -958,46 +985,54 @@ export default function StudentDashboard({ user, profile }) {
 
             <div className="sdb-o-pulse">
               {(() => {
-                const focusIsPinned = focusFull && projects.some(p => p.id === focusFull.id && p.dashboard_pinned)
-                if (loadingProjects || (focusProject && loadingEntries)) return <ProjectPulse loading />
-                if (focusFull && !focusIsPinned) return (
-                  <ProjectPulse
-                    project={focusFull}
-                    entries={entries}
-                    coverage={coverage}
-                    onLog={kind => setComposerKind(kind)}
-                    onOpenReport={() => setShowReport(true)}
-                    onOpenJournal={() => setShowJournal(true)}
-                    onOpenCanvas={() => navigate(`/projeto/${focusFull.slug}/diario`)}
-                    onOpen={() => navigate(`/projeto/${focusFull.slug}`)}
-                    onEdit={() => navigate(`/editar/${focusFull.slug}`)}
-                    onDelete={() => deleteProject(focusFull.id)}
-                  />
+                if (loadingProjects || (focusProject && loadingEntries)) {
+                  return <div className="sdb-pinned-card" style={{ height: 160, display:'flex', alignItems:'center', justifyContent:'center' }}><div className="skel" style={{ width:'80%', height:20, borderRadius:6 }} /></div>
+                }
+                const manuallyPinned = projects.filter(p => p.dashboard_pinned === true)
+                const focusExplicitlyUnpinned = focusFull?.dashboard_pinned === false
+                const showAutoFocus = focusFull && manuallyPinned.length === 0 && !focusExplicitlyUnpinned
+                const focusIsPap = focusFull && (focusFull.is_pap || focusFull.project_type === 'pap')
+                return (
+                  <>
+                    {showAutoFocus && (
+                      <PinnedProjectCard
+                        project={focusFull}
+                        auto
+                        coverage={focusIsPap ? coverage : null}
+                        onOpenReport={focusIsPap ? () => setShowReport(true) : null}
+                        onUnpin={() => {
+                          setProjects(prev => prev.map(p => p.id === focusFull.id ? { ...p, dashboard_pinned: false } : p))
+                          setFocusFull(p => ({ ...p, dashboard_pinned: false }))
+                          supabase.from('projects').update({ dashboard_pinned: false }).eq('id', focusFull.id)
+                        }}
+                        onEdit={() => navigate(`/editar/${focusFull.slug}`)}
+                        onDelete={() => deleteProject(focusFull.id)}
+                        onOpen={() => navigate(`/projeto/${focusFull.slug}`)}
+                        onOpenDiary={() => navigate(`/projeto/${focusFull.slug}/diario`)}
+                        onLog={kind => setComposerKind(kind)}
+                      />
+                    )}
+                    {manuallyPinned.map(pinned => {
+                      const pinnedIsPap = pinned.is_pap || pinned.project_type === 'pap'
+                      return (
+                        <PinnedProjectCard
+                          key={pinned.id}
+                          project={pinned}
+                          coverage={pinnedIsPap ? coverage : null}
+                          onOpenReport={pinnedIsPap ? () => setShowReport(true) : null}
+                          onUnpin={() => toggleDashboardPinned(pinned.id)}
+                          onEdit={() => navigate(`/editar/${pinned.slug}`)}
+                          onDelete={() => deleteProject(pinned.id)}
+                          onOpen={() => navigate(`/projeto/${pinned.slug}`)}
+                          onOpenDiary={() => navigate(`/projeto/${pinned.slug}/diario`)}
+                          onLog={kind => setComposerKind(kind)}
+                        />
+                      )
+                    })}
+                  </>
                 )
-                if (!projects.some(p => p.dashboard_pinned)) return <ProjectPulseEmpty onCreate={() => navigate('/novo')} />
-                return null
               })()}
-
-              {projects.filter(p => p.dashboard_pinned).map(pinned => (
-                <PinnedProjectCard
-                  key={pinned.id}
-                  project={pinned}
-                  onUnpin={() => toggleDashboardPinned(pinned.id)}
-                  onEdit={() => navigate(`/editar/${pinned.slug}`)}
-                  onDelete={() => deleteProject(pinned.id)}
-                  onOpen={() => navigate(`/projeto/${pinned.slug}`)}
-                  onOpenDiary={() => navigate(`/projeto/${pinned.slug}/diario`)}
-                  onLog={kind => { setComposerKind(kind) }}
-                />
-              ))}
             </div>
-
-            {focusFull && (focusFull.is_pap || focusFull.project_type === 'pap') && (
-              <PapCoverageCard
-                coverage={coverage}
-                onOpenReport={() => setShowReport(true)}
-              />
-            )}
 
             {focusProject && (
               <div className="sdb-duo sdb-o-rhythm">
@@ -1066,47 +1101,46 @@ export default function StudentDashboard({ user, profile }) {
               />
             </div>
 
-            <section className="sdb-panel sdb-o-tasks">
-              <header className="sdb-panel-head">
-                <span className="sdb-eyebrow">
-                  Tarefas {pendingTasks.length > 0 && <span className="sdb-count">{pendingTasks.length}</span>}
-                </span>
-              </header>
-              {pendingTasks.length === 0 ? (
-                <p className="sdb-empty-line">
-                  {turmas.length === 0
-                    ? 'As tarefas dos teus professores aparecem aqui quando entrares numa turma.'
-                    : 'Sem tarefas pendentes. Está tudo feito.'}
-                </p>
-              ) : (
-                <ul className="sdb-tasks">
-                  {pendingTasks.slice(0, 5).map(t => {
-                    const late = t.due_date && new Date(t.due_date + 'T23:59:59') < new Date()
-                    return (
-                      <li key={t.id} className={`sdb-task${justDone === t.id ? ' is-done' : ''}${late ? ' is-late' : ''}`}>
-                        <button className="sdb-task-check" onClick={() => completeTask(t.id)}
-                          aria-label={`Marcar "${t.title}" como concluída`}>
-                          <Check size={12} />
-                        </button>
-                        <span className="sdb-task-body">
-                          <span className="sdb-task-title">{t.title}</span>
-                          <span className="sdb-task-meta">
-                            {t.classes?.name}
-                            {t.due_date && ` · ${new Date(t.due_date + 'T00:00:00').toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' })}`}
-                            {late && ' · em atraso'}
-                          </span>
-                        </span>
-                      </li>
-                    )
-                  })}
-                  {pendingTasks.length > 5 && (
-                    <li className="sdb-tasks-more">+{pendingTasks.length - 5} por mostrar</li>
-                  )}
-                </ul>
-              )}
-            </section>
-
             {!isEmptyState && potentialPanel}
+
+            {(pendingTasks.length > 0 || turmas.length > 0) && (
+              <section className="sdb-panel sdb-o-tasks">
+                <header className="sdb-panel-head">
+                  <span className="sdb-eyebrow">
+                    Tarefas {pendingTasks.length > 0 && <span className="sdb-count">{pendingTasks.length}</span>}
+                  </span>
+                </header>
+                {pendingTasks.length === 0 ? (
+                  <p className="sdb-empty-line">Sem tarefas pendentes. Está tudo feito.</p>
+                ) : (
+                  <ul className="sdb-tasks">
+                    {pendingTasks.slice(0, 5).map(t => {
+                      const late = t.due_date && new Date(t.due_date + 'T23:59:59') < new Date()
+                      return (
+                        <li key={t.id} className={`sdb-task${justDone === t.id ? ' is-done' : ''}${late ? ' is-late' : ''}`}>
+                          <button className="sdb-task-check" onClick={() => completeTask(t.id)}
+                            aria-label={`Marcar "${t.title}" como concluída`}>
+                            <Check size={12} />
+                          </button>
+                          <span className="sdb-task-body">
+                            <span className="sdb-task-title">{t.title}</span>
+                            <span className="sdb-task-meta">
+                              {t.classes?.name}
+                              {t.due_date && ` · ${new Date(t.due_date + 'T00:00:00').toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' })}`}
+                              {late && ' · em atraso'}
+                            </span>
+                          </span>
+                        </li>
+                      )
+                    })}
+                    {pendingTasks.length > 5 && (
+                      <li className="sdb-tasks-more">+{pendingTasks.length - 5} por mostrar</li>
+                    )}
+                  </ul>
+                )}
+              </section>
+            )}
+
             {!isEmptyState && turmaPanel}
           </div>
         </div>
@@ -1115,47 +1149,6 @@ export default function StudentDashboard({ user, profile }) {
   )
 }
 
-/* ── Card PAP: cobertura do relatório ────────────────────────────────────── */
-
-function PapCoverageCard({ coverage, onOpenReport }) {
-  return (
-    <section className="sdb-panel sdb-pap-card">
-      <header className="sdb-panel-head">
-        <span className="sdb-eyebrow">Relatório PAP</span>
-        <button className="sdb-linkbtn" onClick={onOpenReport}>
-          <FileText size={12} /> Ver rascunho
-        </button>
-      </header>
-      <div className="sdb-coverage sdb-coverage--neutral">
-        <div className="sdb-coverage-top">
-          <span className="sdb-coverage-value">
-            {coverage.covered}<span className="sdb-coverage-total">/{coverage.total}</span>
-          </span>
-          <span className="sdb-coverage-caption">secções com matéria</span>
-        </div>
-        <div className="sdb-coverage-rail sdb-coverage-rail--plain" role="img"
-          aria-label={`${coverage.covered} de ${coverage.total} secções cobertas`}>
-          {coverage.sections.map(s => (
-            <span
-              key={s.id}
-              className={`sdb-coverage-seg${s.covered ? ' is-on' : ''}`}
-              title={`${s.label} — ${s.covered ? 'com matéria' : 'ainda vazia'}`}
-            />
-          ))}
-        </div>
-        {coverage.missing.length > 0 ? (
-          <p className="sdb-coverage-missing">
-            Falta matéria em <strong>{coverage.missing.map(s => s.label).join(', ')}</strong>.
-          </p>
-        ) : (
-          <p className="sdb-coverage-missing">
-            Todas as secções têm matéria. Podes gerar o rascunho completo.
-          </p>
-        )}
-      </div>
-    </section>
-  )
-}
 
 /* ── Missão única: próximo passo do utilizador novo ──────────────────────── */
 
@@ -1337,9 +1330,9 @@ function ProjectRow({ project, shared, onOpen, onEdit, onCopy, copied, onDelete,
 /* ── Card de projecto fixado na dashboard ─────────────────────────────────── */
 const TYPE_MAP = { pap: 'PAP', internship: 'Estágio', group: 'Trabalho de grupo', personal: 'Projeto pessoal', competition: 'Competição', presentation: 'Apresentação' }
 
-function PinnedProjectCard({ project, onUnpin, onEdit, onDelete, onOpen, onOpenDiary, onLog }) {
+function PinnedProjectCard({ project, auto, coverage, onOpenReport, onUnpin, onEdit, onDelete, onOpen, onOpenDiary, onLog }) {
   const [confirmDelete, setConfirmDelete] = useState(false)
-  const typeLabel = project.is_pap ? 'PAP' : (TYPE_MAP[project.project_type] || 'Projeto')
+  const typeLabel = auto ? 'Em foco' : (project.is_pap ? 'PAP' : (TYPE_MAP[project.project_type] || 'Projeto'))
 
   return (
     <section className="sdb-pinned-card">
@@ -1348,21 +1341,21 @@ function PinnedProjectCard({ project, onUnpin, onEdit, onDelete, onOpen, onOpenD
         style={project.cover_url ? { '--cover-bg': `url(${project.cover_url})` } : {}}
         data-has-cover={!!project.cover_url}
       >
-        {/* Esquerda: type + pin + edit */}
         <div className="sdb-pinned-head-left">
           <span className="sdb-pinned-type">{typeLabel}</span>
           {!confirmDelete && (
             <>
-              <button className="sdb-icon-btn sdb-icon-btn--pin is-pinned" onClick={onUnpin} title="Retirar da dashboard">
-                <Pin size={14} fill="currentColor" />
-              </button>
+              {!auto && (
+                <button className="sdb-icon-btn sdb-icon-btn--pin is-pinned" onClick={onUnpin} title="Retirar da dashboard">
+                  <Pin size={14} fill="currentColor" />
+                </button>
+              )}
               <button className="sdb-icon-btn" onClick={onEdit} title="Editar projeto">
                 <Pencil size={14} />
               </button>
             </>
           )}
         </div>
-        {/* Direita: eliminar */}
         <div className="sdb-pinned-head-right">
           {confirmDelete ? (
             <>
@@ -1370,9 +1363,18 @@ function PinnedProjectCard({ project, onUnpin, onEdit, onDelete, onOpen, onOpenD
               <button className="sdb-icon-btn" onClick={() => setConfirmDelete(false)}>✕</button>
             </>
           ) : (
-            <button className="sdb-icon-btn sdb-icon-btn--danger" onClick={() => setConfirmDelete(true)} title="Apagar projeto">
-              <Trash2 size={14} />
-            </button>
+            <>
+              {auto && (
+                <button className="sdb-icon-btn sdb-icon-btn--quiet" onClick={onUnpin} title="Remover da dashboard">
+                  ✕
+                </button>
+              )}
+              {!auto && (
+                <button className="sdb-icon-btn sdb-icon-btn--danger" onClick={() => setConfirmDelete(true)} title="Apagar projeto">
+                  <Trash2 size={14} />
+                </button>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -1398,6 +1400,23 @@ function PinnedProjectCard({ project, onUnpin, onEdit, onDelete, onOpen, onOpenD
             )
           })()}
         </div>
+
+        {coverage && (
+          <div className="sdb-pinned-pap">
+            <div className="sdb-coverage-rail sdb-coverage-rail--plain" style={{ margin: '6px 0 4px' }}>
+              {coverage.sections.map(s => (
+                <span key={s.id} className={`sdb-coverage-seg${s.covered ? ' is-on' : ''}`} title={s.label} />
+              ))}
+            </div>
+            <div className="sdb-pinned-pap-foot">
+              <span>PAP · {coverage.covered}/{coverage.total} secções</span>
+              {onOpenReport && (
+                <button className="sdb-linkbtn" onClick={onOpenReport}>Ver rascunho</button>
+              )}
+            </div>
+          </div>
+        )}
+
         <div className="sdb-pinned-foot">
           <button className="sdb-btn sdb-btn--onbrand sdb-btn--sm" onClick={() => onLog?.('progresso')}>
             <Plus size={13} /> Registar

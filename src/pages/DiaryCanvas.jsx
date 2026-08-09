@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
   ArrowLeft, StickyNote, Lightbulb, Star, Trash2,
-  ZoomIn, ZoomOut, RotateCcw, Plus,
+  ZoomIn, ZoomOut, RotateCcw, Plus, Undo2, Redo2, Save, Check,
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
@@ -12,6 +12,22 @@ const CARD_TYPES = {
   note:      { label: 'Nota',     w: 220, h: 160, color: '#0f1623' },
   idea:      { label: 'Ideia',    w: 220, h: 160, color: '#0d1733' },
   highlight: { label: 'Destaque', w: 260, h: 120, color: '#1a1200' },
+}
+
+const KIND_LABELS = {
+  progresso: 'Progresso', dificuldade: 'Dificuldade', decisao: 'Decisão',
+  pesquisa: 'Pesquisa', ideia: 'Ideia', resultado: 'Resultado',
+  nota: 'Nota', aprendizagem: 'Aprendizagem', conquista: 'Conquista',
+}
+
+/* Map the key stored in previewStyle to the actual CSS font-family string */
+const TITLE_FONT_MAP = {
+  croogla:  { css: 'Croogla, sans-serif',            gfName: null },
+  syne:     { css: 'Syne, sans-serif',               gfName: 'Syne' },
+  playfair: { css: '"Playfair Display", serif',       gfName: 'Playfair+Display' },
+  space:    { css: '"Space Grotesk", sans-serif',     gfName: 'Space+Grotesk' },
+  fredoka:  { css: '"Fredoka One", cursive',          gfName: 'Fredoka+One' },
+  inter:    { css: 'Inter, sans-serif',               gfName: null },
 }
 
 const MIN_SCALE = 0.12
@@ -27,16 +43,24 @@ export default function DiaryCanvas() {
   const [items,      setItems]      = useState([])
   const [loading,    setLoading]    = useState(true)
   const [selectedId, setSelectedId] = useState(null)
+  const [showAddMenu, setShowAddMenu] = useState(false)
 
   const containerRef = useRef(null)
   const worldRef     = useRef(null)
   const transform    = useRef({ x: 0, y: 0, scale: 1 })
   const itemsRef     = useRef([])
-  const dragState    = useRef(null)
   const pinchRef     = useRef(null)
-  const activePtr    = useRef(new Map())
+  const activePtrs   = useRef(new Map())
   const saveTimers   = useRef({})
   const zoomLabelRef = useRef(null)
+  const dirtyRef     = useRef(new Set())
+  const historyRef   = useRef([])   // [{id,x,y,w,h}[]]
+  const histIdxRef   = useRef(-1)
+  const [histIdx, setHistIdx] = useState(-1) // mirror for button enable/disable
+  const [saveState, setSaveState] = useState('idle') // 'idle'|'saving'|'saved'
+
+  // font size state: { [itemId]: 'sm'|'md'|'lg' }
+  const [fontSizes, setFontSizes] = useState({})
 
   useEffect(() => { itemsRef.current = items }, [items])
 
@@ -63,6 +87,11 @@ export default function DiaryCanvas() {
     const px = cx - rect.left, py = cy - rect.top
     const wx = (px - t.x) / t.scale, wy = (py - t.y) / t.scale
     transform.current = { scale: ns, x: px - wx * ns, y: py - wy * ns }
+    applyTransform()
+  }
+
+  function resetZoom() {
+    transform.current = { x: 0, y: 0, scale: 1 }
     applyTransform()
   }
 
@@ -94,100 +123,240 @@ export default function DiaryCanvas() {
     return () => { cancelled = true }
   }, [slug, user])
 
-  // Load project title font
+  // Load title font from Google Fonts
   useEffect(() => {
-    const font = project?.preview_style?.titleFont
-    if (!font || font === 'Inter') return
-    const id = `gf-${font.replace(/\s+/g, '-').toLowerCase()}`
+    const key = project?.preview_style?.titleFont
+    if (!key) return
+    const font = TITLE_FONT_MAP[key]
+    if (!font?.gfName) return
+    const id = `gf-${key}`
     if (document.getElementById(id)) return
     const link = document.createElement('link')
     link.id = id; link.rel = 'stylesheet'
-    link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(font)}:wght@400;700;900&display=swap`
+    link.href = `https://fonts.googleapis.com/css2?family=${font.gfName}:wght@400;700;900&display=swap`
     document.head.appendChild(link)
   }, [project])
 
-  // ── Wheel zoom ───────────────────────────────────────────────────────────
+  // Auto-save all dirty items on unmount / page unload
   useEffect(() => {
+    function flushAll() {
+      Object.keys(saveTimers.current).forEach(id => clearTimeout(saveTimers.current[id]))
+      dirtyRef.current.forEach(id => {
+        const item = itemsRef.current.find(it => it.id === id)
+        if (!item) return
+        supabase.from('diary_canvas_items').update({
+          x: item.x, y: item.y, w: item.w, h: item.h, content: item.content,
+        }).eq('id', id)
+      })
+    }
+    window.addEventListener('beforeunload', flushAll)
+    return () => { flushAll(); window.removeEventListener('beforeunload', flushAll) }
+  }, [])
+
+  // ── History helpers ───────────────────────────────────────────────────────
+  function pushHistory() {
+    const snap = itemsRef.current.map(({ id, x, y, w, h }) => ({ id, x, y, w, h }))
+    historyRef.current = historyRef.current.slice(0, histIdxRef.current + 1)
+    historyRef.current.push(snap)
+    if (historyRef.current.length > 60) historyRef.current.shift()
+    histIdxRef.current = historyRef.current.length - 1
+    setHistIdx(histIdxRef.current)
+  }
+
+  function applyHistorySnap(snap) {
+    setItems(prev => prev.map(it => {
+      const s = snap.find(s => s.id === it.id)
+      return s ? { ...it, x: s.x, y: s.y, w: s.w, h: s.h } : it
+    }))
+    snap.forEach(s => scheduleSave(s.id))
+    snap.forEach(s => {
+      const el = worldRef.current?.querySelector(`[data-card-id="${s.id}"]`)
+      if (el) { el.style.left = `${s.x}px`; el.style.top = `${s.y}px`; el.style.width = `${s.w}px`; el.style.height = `${s.h}px` }
+    })
+    setHistIdx(histIdxRef.current)
+  }
+
+  function doUndo() {
+    if (histIdxRef.current <= 0) return
+    histIdxRef.current--
+    applyHistorySnap(historyRef.current[histIdxRef.current])
+  }
+
+  function doRedo() {
+    if (histIdxRef.current >= historyRef.current.length - 1) return
+    histIdxRef.current++
+    applyHistorySnap(historyRef.current[histIdxRef.current])
+  }
+
+  // ── Manual save ───────────────────────────────────────────────────────────
+  async function saveAll() {
+    setSaveState('saving')
+    Object.keys(saveTimers.current).forEach(id => clearTimeout(saveTimers.current[id]))
+    await Promise.all(
+      itemsRef.current.map(item =>
+        supabase.from('diary_canvas_items').update({
+          x: item.x, y: item.y, w: item.w, h: item.h, content: item.content,
+        }).eq('id', item.id)
+      )
+    )
+    dirtyRef.current.clear()
+    setSaveState('saved')
+    setTimeout(() => setSaveState('idle'), 2000)
+  }
+
+  // ── Keyboard: undo/redo + deselect ───────────────────────────────────────
+  useEffect(() => {
+    if (loading) return
+    function onKey(e) {
+      const z = e.key === 'z' || e.key === 'Z'
+      const y = e.key === 'y' || e.key === 'Y'
+      if ((e.ctrlKey || e.metaKey) && z && !e.shiftKey) {
+        e.preventDefault(); doUndo()
+      }
+      if ((e.ctrlKey || e.metaKey) && (y || (z && e.shiftKey))) {
+        e.preventDefault(); doRedo()
+      }
+      if (e.key === 'Escape') setSelectedId(null)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [loading])
+
+  // ── Wheel: scroll = pan, Ctrl+scroll = zoom ───────────────────────────────
+  useEffect(() => {
+    if (loading) return
     const el = containerRef.current
     if (!el) return
     const onWheel = e => {
       e.preventDefault()
-      zoomAt(e.clientX, e.clientY, e.deltaY < 0 ? 1 + ZOOM_F : 1 / (1 + ZOOM_F))
+      if (e.ctrlKey || e.metaKey) {
+        zoomAt(e.clientX, e.clientY, e.deltaY < 0 ? 1 + ZOOM_F : 1 / (1 + ZOOM_F))
+      } else {
+        transform.current = {
+          ...transform.current,
+          x: transform.current.x - (e.shiftKey ? e.deltaY : e.deltaX),
+          y: transform.current.y - (e.shiftKey ? 0 : e.deltaY),
+        }
+        applyTransform()
+      }
     }
     el.addEventListener('wheel', onWheel, { passive: false })
-    return () => el.removeEventListener('wheel', onWheel)
-  }, [])
+    // Block Chrome browser zoom globally while diary is mounted
+    const blockBrowserZoom = e => { if (e.ctrlKey || e.metaKey) e.preventDefault() }
+    window.addEventListener('wheel', blockBrowserZoom, { passive: false })
+    return () => {
+      el.removeEventListener('wheel', onWheel)
+      window.removeEventListener('wheel', blockBrowserZoom)
+    }
+  }, [loading])
 
-  // ── Unified pointer handler ───────────────────────────────────────────────
-  useEffect(() => {
-    const el = containerRef.current
-    if (!el) return
+  // ── Card drag ─────────────────────────────────────────────────────────────
+  function startCardDrag(e, item) {
+    if (e.button !== 0 && e.pointerType === 'mouse') return
+    e.preventDefault()
+    e.stopPropagation()
+    setSelectedId(item.id)
+    pushHistory()
+    const pos = s2c(e.clientX, e.clientY)
+    const ox = pos.x - item.x
+    const oy = pos.y - item.y
+    const id = item.id
 
-    function onDown(e) {
-      if (e.button > 0 && e.pointerType === 'mouse') return
-      activePtr.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
+    function onMove(mv) {
+      const p = s2c(mv.clientX, mv.clientY)
+      const el = worldRef.current?.querySelector(`[data-card-id="${id}"]`)
+      if (el) { el.style.left = `${p.x - ox}px`; el.style.top = `${p.y - oy}px` }
+    }
+    function onUp(uv) {
+      window.removeEventListener('pointermove', onMove)
+      window.removeEventListener('pointerup', onUp)
+      const p = s2c(uv.clientX, uv.clientY)
+      const nx = p.x - ox, ny = p.y - oy
+      setItems(prev => prev.map(it => it.id === id ? { ...it, x: nx, y: ny } : it))
+      scheduleSave(id)
+    }
+    window.addEventListener('pointermove', onMove)
+    window.addEventListener('pointerup', onUp)
+  }
 
-      // Pinch — 2 active touch pointers
-      if (activePtr.current.size >= 2) {
-        const pts = [...activePtr.current.values()]
-        const d = Math.hypot(pts[1].x - pts[0].x, pts[1].y - pts[0].y)
-        pinchRef.current = {
-          startDist: d, startScale: transform.current.scale,
-          startTx: transform.current.x, startTy: transform.current.y,
-          midX: (pts[0].x + pts[1].x) / 2, midY: (pts[0].y + pts[1].y) / 2,
-        }
-        dragState.current = null
-        return
+  // ── Resize ────────────────────────────────────────────────────────────────
+  function startResize(e, item) {
+    if (e.button !== 0 && e.pointerType === 'mouse') return
+    e.preventDefault()
+    e.stopPropagation()
+    pushHistory()
+    const pos = s2c(e.clientX, e.clientY)
+    const startX = pos.x, startY = pos.y
+    const origW = item.w, origH = item.h
+    const id = item.id
+
+    function onMove(mv) {
+      const p = s2c(mv.clientX, mv.clientY)
+      const nw = Math.max(140, origW + p.x - startX)
+      const nh = Math.max(80,  origH + p.y - startY)
+      const el = worldRef.current?.querySelector(`[data-card-id="${id}"]`)
+      if (el) { el.style.width = `${nw}px`; el.style.height = `${nh}px` }
+    }
+    function onUp(uv) {
+      window.removeEventListener('pointermove', onMove)
+      window.removeEventListener('pointerup', onUp)
+      const p = s2c(uv.clientX, uv.clientY)
+      const nw = Math.max(140, origW + p.x - startX)
+      const nh = Math.max(80,  origH + p.y - startY)
+      setItems(prev => prev.map(it => it.id === id ? { ...it, w: nw, h: nh } : it))
+      scheduleSave(id)
+    }
+    window.addEventListener('pointermove', onMove)
+    window.addEventListener('pointerup', onUp)
+  }
+
+  // ── Font size ─────────────────────────────────────────────────────────────
+  const FONT_SIZES = { sm: 11, md: 13, lg: 16 }
+  const FONT_CYCLE = ['sm', 'md', 'lg']
+  function cycleFontSize(id) {
+    setFontSizes(prev => {
+      const cur = prev[id] || 'md'
+      const next = FONT_CYCLE[(FONT_CYCLE.indexOf(cur) + 1) % FONT_CYCLE.length]
+      return { ...prev, [id]: next }
+    })
+  }
+
+  // ── Canvas pan + pinch ───────────────────────────────────────────────────
+  function onContainerPointerDown(e) {
+    if (e.target.closest('[data-card-id]') || e.target.closest('button')) return
+    if (e.button !== 0 && e.pointerType === 'mouse') return
+    e.preventDefault()
+    setSelectedId(null)
+    setShowAddMenu(false)
+
+    activePtrs.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+    if (activePtrs.current.size >= 2) {
+      // Start pinch
+      const pts = [...activePtrs.current.values()]
+      const d = Math.hypot(pts[1].x - pts[0].x, pts[1].y - pts[0].y)
+      pinchRef.current = {
+        startDist: d, startScale: transform.current.scale,
+        startTx: transform.current.x, startTy: transform.current.y,
+        midX: (pts[0].x + pts[1].x) / 2, midY: (pts[0].y + pts[1].y) / 2,
       }
-
-      if (pinchRef.current) return
-
-      // Resize handle
-      const resizeEl = e.target.closest('[data-resize-for]')
-      if (resizeEl) {
-        const id = resizeEl.dataset.resizeFor
-        const item = itemsRef.current.find(it => it.id === id)
-        if (item) {
-          const pos = s2c(e.clientX, e.clientY)
-          dragState.current = { type: 'resize', id, startX: pos.x, startY: pos.y, origW: item.w, origH: item.h }
-        }
-        return
-      }
-
-      // Card — but not textarea/button
-      const cardEl = e.target.closest('[data-card-id]')
-      if (cardEl && !e.target.closest('textarea') && !e.target.closest('button')) {
-        const id = cardEl.dataset.cardId
-        const item = itemsRef.current.find(it => it.id === id)
-        if (item) {
-          const pos = s2c(e.clientX, e.clientY)
-          dragState.current = { type: 'card', id, offsetX: pos.x - item.x, offsetY: pos.y - item.y }
-          setSelectedId(id)
-        }
-        return
-      }
-
-      // Background → pan
-      if (!e.target.closest('[data-card-id]') && !e.target.closest('button')) {
-        setSelectedId(null)
-        dragState.current = {
-          type: 'pan',
-          startX: e.clientX, startY: e.clientY,
-          origX: transform.current.x, origY: transform.current.y,
-        }
-      }
+      return
     }
 
-    function onMove(e) {
-      activePtr.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
+    const startX = e.clientX, startY = e.clientY
+    const origX = transform.current.x, origY = transform.current.y
 
-      // Pinch zoom
-      if (pinchRef.current && activePtr.current.size >= 2) {
-        const pts = [...activePtr.current.values()]
+    function onMove(mv) {
+      activePtrs.current.set(mv.pointerId, { x: mv.clientX, y: mv.clientY })
+
+      if (pinchRef.current && activePtrs.current.size >= 2) {
+        const pts = [...activePtrs.current.values()]
         const d = Math.hypot(pts[1].x - pts[0].x, pts[1].y - pts[0].y)
-        const ns = Math.min(MAX_SCALE, Math.max(MIN_SCALE, pinchRef.current.startScale * d / pinchRef.current.startDist))
-        const rect = el.getBoundingClientRect()
-        const px = pinchRef.current.midX - rect.left, py = pinchRef.current.midY - rect.top
+        const el = containerRef.current
+        const ns = Math.min(MAX_SCALE, Math.max(MIN_SCALE,
+          pinchRef.current.startScale * d / pinchRef.current.startDist))
+        const px = pinchRef.current.midX - (el?.getBoundingClientRect().left ?? 0)
+        const py = pinchRef.current.midY - (el?.getBoundingClientRect().top  ?? 0)
         const wx = (px - pinchRef.current.startTx) / pinchRef.current.startScale
         const wy = (py - pinchRef.current.startTy) / pinchRef.current.startScale
         transform.current = { scale: ns, x: px - wx * ns, y: py - wy * ns }
@@ -195,76 +364,33 @@ export default function DiaryCanvas() {
         return
       }
 
-      const ds = dragState.current
-      if (!ds) return
-
-      if (ds.type === 'pan') {
-        transform.current = {
-          ...transform.current,
-          x: ds.origX + e.clientX - ds.startX,
-          y: ds.origY + e.clientY - ds.startY,
-        }
-        applyTransform()
-        return
+      transform.current = {
+        ...transform.current,
+        x: origX + mv.clientX - startX,
+        y: origY + mv.clientY - startY,
       }
+      applyTransform()
+    }
 
-      if (ds.type === 'card') {
-        const pos = s2c(e.clientX, e.clientY)
-        const cardEl = document.querySelector(`[data-card-id="${ds.id}"]`)
-        if (cardEl) {
-          cardEl.style.left = `${pos.x - ds.offsetX}px`
-          cardEl.style.top  = `${pos.y - ds.offsetY}px`
-        }
-        return
-      }
-
-      if (ds.type === 'resize') {
-        const pos = s2c(e.clientX, e.clientY)
-        const nw = Math.max(140, ds.origW + pos.x - ds.startX)
-        const nh = Math.max(80,  ds.origH + pos.y - ds.startY)
-        const cardEl = document.querySelector(`[data-card-id="${ds.id}"]`)
-        if (cardEl) { cardEl.style.width = `${nw}px`; cardEl.style.height = `${nh}px` }
+    function onUp(uv) {
+      activePtrs.current.delete(uv.pointerId)
+      if (activePtrs.current.size < 2) pinchRef.current = null
+      if (activePtrs.current.size === 0) {
+        window.removeEventListener('pointermove', onMove)
+        window.removeEventListener('pointerup', onUp)
+        window.removeEventListener('pointercancel', onUp)
       }
     }
 
-    function onUp(e) {
-      const ds = dragState.current
-
-      if (ds?.type === 'card') {
-        const pos = s2c(e.clientX, e.clientY)
-        const nx = pos.x - ds.offsetX, ny = pos.y - ds.offsetY
-        setItems(prev => prev.map(it => it.id === ds.id ? { ...it, x: nx, y: ny } : it))
-        scheduleSave(ds.id)
-      }
-
-      if (ds?.type === 'resize') {
-        const pos = s2c(e.clientX, e.clientY)
-        const nw = Math.max(140, ds.origW + pos.x - ds.startX)
-        const nh = Math.max(80,  ds.origH + pos.y - ds.startY)
-        setItems(prev => prev.map(it => it.id === ds.id ? { ...it, w: nw, h: nh } : it))
-        scheduleSave(ds.id)
-      }
-
-      activePtr.current.delete(e.pointerId)
-      if (activePtr.current.size < 2) pinchRef.current = null
-      dragState.current = null
-    }
-
-    el.addEventListener('pointerdown', onDown)
     window.addEventListener('pointermove', onMove)
     window.addEventListener('pointerup', onUp)
     window.addEventListener('pointercancel', onUp)
-    return () => {
-      el.removeEventListener('pointerdown', onDown)
-      window.removeEventListener('pointermove', onMove)
-      window.removeEventListener('pointerup', onUp)
-      window.removeEventListener('pointercancel', onUp)
-    }
-  }, [])
+  }
 
   // ── CRUD ─────────────────────────────────────────────────────────────────
   async function addItem(type) {
     if (!project || !user) return
+    setShowAddMenu(false)
     const def = CARD_TYPES[type]
     const rect = containerRef.current.getBoundingClientRect()
     const pos = s2c(rect.left + rect.width / 2, rect.top + rect.height / 2)
@@ -283,6 +409,7 @@ export default function DiaryCanvas() {
     await supabase.from('diary_canvas_items').delete().eq('id', id)
     setItems(prev => prev.filter(it => it.id !== id))
     if (selectedId === id) setSelectedId(null)
+    dirtyRef.current.delete(id)
   }
 
   function updateContent(id, content) {
@@ -291,13 +418,14 @@ export default function DiaryCanvas() {
   }
 
   function scheduleSave(id) {
+    dirtyRef.current.add(id)
     clearTimeout(saveTimers.current[id])
     saveTimers.current[id] = setTimeout(() => {
       const item = itemsRef.current.find(it => it.id === id)
       if (!item) return
       supabase.from('diary_canvas_items').update({
         x: item.x, y: item.y, w: item.w, h: item.h, content: item.content,
-      }).eq('id', id)
+      }).eq('id', id).then(() => dirtyRef.current.delete(id))
     }, 800)
   }
 
@@ -305,55 +433,66 @@ export default function DiaryCanvas() {
   if (loading) return <div className="dc-loading"><div className="dc-loading-spin" /></div>
   if (!project) return null
 
-  const titleFont = project.preview_style?.titleFont
+  const fontKey = project.preview_style?.titleFont
+  const titleFontCss = fontKey ? (TITLE_FONT_MAP[fontKey]?.css || 'var(--font-heading)') : 'var(--font-heading)'
 
   return (
     <div className="dc-root">
       {/* Toolbar */}
       <div className="dc-toolbar">
+        {/* Left: back */}
         <button className="dc-tb-back" onClick={() => navigate(`/projeto/${slug}`)} title="Voltar ao projeto">
-          <ArrowLeft size={16} />
+          <ArrowLeft size={15} />
+          <span>Voltar</span>
         </button>
 
-        <div className="dc-tb-title" style={titleFont ? { fontFamily: `'${titleFont}', var(--font-heading)` } : undefined}>
-          Diário · <span className="dc-tb-project-name">{project.name}</span>
+        {/* Center: logo + project name */}
+        <div className="dc-tb-center">
+          <img src="/icon.png" alt="Showo" className="dc-logo" />
+          <div className="dc-tb-title" style={{ fontFamily: titleFontCss }}>
+            <span className="dc-tb-project-name">{project.name}</span>
+          </div>
         </div>
 
-        <div className="dc-tb-divider" />
-
-        <div className="dc-tb-add-group">
-          <button className="dc-add dc-add--note"      onClick={() => addItem('note')}      title="Adicionar nota">
-            <StickyNote size={13} /><span>Nota</span>
+        {/* Right: undo/redo + save */}
+        <div style={{ flex: 1 }} />
+        <div className="dc-tb-actions">
+          <button
+            className="dc-tb-action-btn"
+            onClick={doUndo}
+            disabled={histIdx <= 0}
+            title="Desfazer (Ctrl+Z)"
+          >
+            <Undo2 size={15} />
           </button>
-          <button className="dc-add dc-add--idea"      onClick={() => addItem('idea')}      title="Adicionar ideia">
-            <Lightbulb size={13} /><span>Ideia</span>
+          <button
+            className="dc-tb-action-btn"
+            onClick={doRedo}
+            disabled={histIdx >= historyRef.current.length - 1}
+            title="Refazer (Ctrl+Y)"
+          >
+            <Redo2 size={15} />
           </button>
-          <button className="dc-add dc-add--highlight" onClick={() => addItem('highlight')} title="Adicionar destaque">
-            <Star size={13} /><span>Destaque</span>
-          </button>
-        </div>
-
-        <div className="dc-tb-divider" />
-
-        <div className="dc-zoom-group">
-          <button className="dc-zoom-btn" title="Reduzir"
-            onClick={() => zoomAt(window.innerWidth / 2, window.innerHeight / 2, 1 / (1 + ZOOM_F))}>
-            <ZoomOut size={14} />
-          </button>
-          <span ref={zoomLabelRef} className="dc-zoom-label">100%</span>
-          <button className="dc-zoom-btn" title="Aumentar"
-            onClick={() => zoomAt(window.innerWidth / 2, window.innerHeight / 2, 1 + ZOOM_F)}>
-            <ZoomIn size={14} />
-          </button>
-          <button className="dc-zoom-btn" title="Repor"
-            onClick={() => { transform.current = { x: 0, y: 0, scale: 1 }; applyTransform() }}>
-            <RotateCcw size={13} />
+          <div className="dc-tb-divider" />
+          <button
+            className={`dc-tb-save-btn${saveState === 'saved' ? ' is-saved' : ''}`}
+            onClick={saveAll}
+            disabled={saveState === 'saving'}
+            title="Guardar"
+          >
+            {saveState === 'saved' ? <Check size={14} /> : <Save size={14} />}
+            <span>{saveState === 'saving' ? 'A guardar…' : saveState === 'saved' ? 'Guardado' : 'Guardar'}</span>
           </button>
         </div>
       </div>
 
       {/* Canvas */}
-      <div ref={containerRef} className="dc-container" style={{ touchAction: 'none' }}>
+      <div
+        ref={containerRef}
+        className="dc-container"
+        style={{ touchAction: 'none' }}
+        onPointerDown={onContainerPointerDown}
+      >
         <div ref={worldRef} className="dc-world">
           {items.map(item => {
             const def = CARD_TYPES[item.type] || CARD_TYPES.note
@@ -364,17 +503,32 @@ export default function DiaryCanvas() {
                 data-card-id={item.id}
                 className={`dc-card dc-card--${item.type}${sel ? ' dc-card--sel' : ''}`}
                 style={{ left: item.x, top: item.y, width: item.w, height: item.h }}
+                onClick={() => setSelectedId(item.id)}
               >
-                <div className="dc-card-header">
-                  <span className="dc-card-type-label">{def.label}</span>
-                  <button
-                    className="dc-card-del"
-                    onPointerDown={e => e.stopPropagation()}
-                    onClick={e => { e.stopPropagation(); deleteItem(item.id) }}
-                    title="Eliminar card"
-                  >
-                    <Trash2 size={11} />
-                  </button>
+                <div
+                  className="dc-card-header"
+                  onPointerDown={e => startCardDrag(e, item)}
+                >
+                  <span className="dc-card-type-label">{(item.source_kind && KIND_LABELS[item.source_kind]) || def.label}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <button
+                      className="dc-card-del"
+                      onPointerDown={e => e.stopPropagation()}
+                      onClick={e => { e.stopPropagation(); cycleFontSize(item.id) }}
+                      title="Tamanho do texto"
+                      style={{ fontSize: 9, fontWeight: 700, width: 'auto', padding: '0 4px', letterSpacing: 0 }}
+                    >
+                      {(fontSizes[item.id] || 'md').toUpperCase()}
+                    </button>
+                    <button
+                      className="dc-card-del"
+                      onPointerDown={e => e.stopPropagation()}
+                      onClick={e => { e.stopPropagation(); deleteItem(item.id) }}
+                      title="Eliminar card"
+                    >
+                      <Trash2 size={11} />
+                    </button>
+                  </div>
                 </div>
                 <textarea
                   className="dc-card-body"
@@ -382,12 +536,11 @@ export default function DiaryCanvas() {
                   placeholder="Escreve aqui..."
                   onChange={e => updateContent(item.id, e.target.value)}
                   onPointerDown={e => e.stopPropagation()}
-                  onClick={e => { e.stopPropagation(); setSelectedId(item.id) }}
+                  style={{ fontSize: FONT_SIZES[fontSizes[item.id] || 'md'] }}
                 />
                 <div
                   className="dc-resize"
-                  data-resize-for={item.id}
-                  onPointerDown={e => e.stopPropagation()}
+                  onPointerDown={e => startResize(e, item)}
                   title="Redimensionar"
                 />
               </div>
@@ -403,6 +556,46 @@ export default function DiaryCanvas() {
           <p>Canvas em branco. Adiciona uma nota, ideia ou destaque.</p>
         </div>
       )}
+
+      {/* Floating add buttons — bottom center */}
+      <div className="dc-float-add">
+        {showAddMenu && (
+          <div className="dc-float-add-menu">
+            <button className="dc-add dc-add--note" onClick={() => addItem('note')}>
+              <StickyNote size={13} /><span>Nota</span>
+            </button>
+            <button className="dc-add dc-add--idea" onClick={() => addItem('idea')}>
+              <Lightbulb size={13} /><span>Ideia</span>
+            </button>
+            <button className="dc-add dc-add--highlight" onClick={() => addItem('highlight')}>
+              <Star size={13} /><span>Destaque</span>
+            </button>
+          </div>
+        )}
+        <button
+          className={`dc-float-add-btn${showAddMenu ? ' is-open' : ''}`}
+          onClick={() => setShowAddMenu(v => !v)}
+          title="Adicionar"
+        >
+          <Plus size={20} />
+        </button>
+      </div>
+
+      {/* Floating zoom — bottom right */}
+      <div className="dc-float-zoom">
+        <button className="dc-zoom-btn" title="Reduzir"
+          onClick={() => zoomAt(window.innerWidth / 2, window.innerHeight / 2, 1 / (1 + ZOOM_F))}>
+          <ZoomOut size={14} />
+        </button>
+        <span ref={zoomLabelRef} className="dc-zoom-label">100%</span>
+        <button className="dc-zoom-btn" title="Aumentar"
+          onClick={() => zoomAt(window.innerWidth / 2, window.innerHeight / 2, 1 + ZOOM_F)}>
+          <ZoomIn size={14} />
+        </button>
+        <button className="dc-zoom-btn" title="Repor zoom" onClick={resetZoom}>
+          <RotateCcw size={13} />
+        </button>
+      </div>
     </div>
   )
 }

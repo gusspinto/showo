@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef, useMemo, memo } from 'react'
+import { createPortal } from 'react-dom'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import { QRCodeSVG } from 'qrcode.react'
@@ -950,11 +951,6 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
   const titleStyle        = previewStyle.titleStyle || 'normal'
   const selectedBg        = BG_OPTIONS.find(b => b.key === (previewStyle.bg || 'default')) || BG_OPTIONS[0]
   const resolvedBg        = selectedBg.bg || 'var(--color-bg)'
-  useEffect(() => {
-    const prev = document.documentElement.style.background
-    document.documentElement.style.background = resolvedBg
-    return () => { document.documentElement.style.background = prev }
-  }, [resolvedBg])
   // pvTheme: force dark/light CSS vars inside preview regardless of app theme
   const pvTheme           = selectedBg.isLight ? 'light' : selectedBg.key !== 'default' ? 'dark' : null
   const titleAlign        = previewStyle.titleAlign || 'left'
@@ -995,7 +991,7 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
   const deviceMaxWidth = previewDevice === 'mobile' ? 390 : previewDevice === 'tablet' ? 768 : undefined
 
   return (
-    <div className="pv-outer" style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', flexDirection: 'column' }}>
+    <div className="pv-outer" style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', flexDirection: 'column', background: resolvedBg }}>
 
       {/* ── Card style + preview theme scoped CSS ── */}
       <style>{`
@@ -4300,6 +4296,7 @@ export default function ProjectPage() {
         analyzingAI,
         viewAsPublic,
         showCertificate: score >= 100,
+        showDiary: true,
         onDefense: project.project_type === 'pap' ? () => setDefenseMode(true) : null,
         onAnalyze: handleAIClick,
         onTogglePublicView: () => {
@@ -4727,6 +4724,7 @@ export default function ProjectPage() {
     setInviteSearchResults([])
     setInviteShowDropdown(false)
     setInviteMsg(null)
+    document.body.style.overflow = ''
   }
 
   async function handleInvite(e) {
@@ -4912,7 +4910,7 @@ export default function ProjectPage() {
     setTeacherFeedback(prev => prev.map(f => f.id === id ? { ...f, status: 'pending', resolved_at: null, resolution_note: null } : f))
   }
 
-  const scoreSuffix = project.score != null ? ` · Score ${project.score}` : ''
+  const scoreSuffix = score > 0 ? ` · Score ${score}` : (project.score != null ? ` · Score ${project.score}` : '')
   const shareTitle = `${project.name} · Showo${scoreSuffix}`
   const shareDescription = project.ai_tagline || project.goal || `Projeto de ${project.creator_name || 'estudante'} no Showo`
 
@@ -5695,20 +5693,8 @@ export default function ProjectPage() {
             )}
 
             {analyzingAI && (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20, padding: '44px 24px' }}>
-                <style>{`
-                  @keyframes ai-spin { to { transform: rotate(360deg) } }
-                  @keyframes ai-glow { 0%,100%{opacity:0.35;transform:scale(0.92)} 50%{opacity:0.7;transform:scale(1.08)} }
-                  @keyframes ai-dot  { 0%,80%,100%{opacity:0.2;transform:scale(0.8)} 40%{opacity:1;transform:scale(1)} }
-                `}</style>
-                <div style={{ position: 'relative', width: 60, height: 60, flexShrink: 0 }}>
-                  {/* Pulsing glow */}
-                  <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'radial-gradient(circle, rgba(43,126,245,0.22) 0%, transparent 72%)', animation: 'ai-glow 2s ease-in-out infinite' }} />
-                  {/* Spinning ring */}
-                  <div style={{ position: 'absolute', inset: 6, borderRadius: '50%', border: `2px solid ${colors.border}`, borderTop: `2px solid ${colors.blue}`, animation: 'ai-spin 1.1s linear infinite' }} />
-                  {/* Center sparkle */}
-                  <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, color: colors.blue }}>✦</div>
-                </div>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, padding: '44px 24px' }}>
+                <style>{`@keyframes ai-dot{0%,80%,100%{opacity:0.2;transform:scale(0.8)}40%{opacity:1;transform:scale(1)}}`}</style>
                 <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <span style={{ fontSize: 15, fontWeight: 700, color: colors.text }}>A analisar o teu projeto</span>
                   <span style={{ fontSize: 13, color: colors.muted }}>A IA avalia cada secção com detalhe. Pode demorar uns segundos.</span>
@@ -5992,7 +5978,7 @@ export default function ProjectPage() {
                 {/* Invite collaborator — owner only */}
                 {isOwner && !showInvite && (
                   <button
-                    onClick={() => setShowInvite(true)}
+                    onClick={() => { setShowInvite(true); document.body.style.overflow = 'hidden' }}
                     title="Convida o teu colega"
                     data-tour="invite"
                     className="proj-invite-btn"
@@ -6013,8 +5999,8 @@ export default function ProjectPage() {
                   </button>
                 )}
 
-                {/* Invite modal */}
-                {isOwner && showInvite && (
+                {/* Invite modal — portal so position:fixed is never broken by ancestor transforms */}
+                {isOwner && showInvite && createPortal(
                   <div onClick={e => e.target === e.currentTarget && closeInviteModal()} style={{
                     position: 'fixed', inset: 0, zIndex: 2000,
                     background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
@@ -6045,7 +6031,6 @@ export default function ProjectPage() {
                       <form onSubmit={handleInvite} style={{ padding: '18px 20px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
                         <div style={{ position: 'relative' }}>
                           <input
-                            autoFocus
                             value={inviteInput}
                             onChange={handleInviteSearchInput}
                             onFocus={() => { if (inviteSearchResults.length) setInviteShowDropdown(true) }}
@@ -6063,7 +6048,7 @@ export default function ProjectPage() {
                             <div style={{
                               position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0,
                               background: 'var(--color-surface)', border: `1.5px solid ${colors.border}`,
-                              borderRadius: 10, zIndex: 50, overflow: 'hidden',
+                              borderRadius: 10, zIndex: 50, overflowY: 'auto', maxHeight: 280,
                               boxShadow: '0 8px 32px rgba(0,0,0,0.35)',
                             }}>
                               {inviteSearchResults.map(u => (
@@ -6131,7 +6116,7 @@ export default function ProjectPage() {
                       </form>
                     </div>
                   </div>
-                )}
+                , document.body)}
               </div>
             )
           })()}
@@ -6604,33 +6589,6 @@ export default function ProjectPage() {
           </div>
         )}
 
-        {/* Highlights — 3 column cards — blue branded */}
-        {highlights.length > 0 && (() => {
-          const HlIcons = [Zap, TrendingUp, Lightbulb]
-          const hlAccents = ['#4f46e5', '#1d6fe8', '#2563eb']
-          return (
-            <div className="proj-highlights-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>
-              {highlights.map((h, i) => {
-                const HlIcon = HlIcons[i] ?? Sparkles
-                const acc = hlAccents[i] ?? 'var(--color-primary)'
-                return (
-                  <div key={i} className="proj-card" style={{
-                    display: 'flex', flexDirection: 'column', gap: 12,
-                    background: `${acc}10`,
-                    border: `1px solid ${acc}30`,
-                    position: 'relative', overflow: 'hidden',
-                  }}>
-                    <div style={{ position: 'absolute', bottom: -20, right: -16, width: 80, height: 80, borderRadius: '50%', background: `radial-gradient(ellipse, ${acc}14 0%, transparent 70%)`, pointerEvents: 'none' }} />
-                    <div style={{ width: 32, height: 32, borderRadius: 9, flexShrink: 0, background: `${acc}18`, border: `1px solid ${acc}30`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <HlIcon size={15} color={acc} />
-                    </div>
-                    <p style={{ margin: 0, fontSize: 13, color: colors.text, lineHeight: 1.65, position: 'relative' }}>{h}</p>
-                  </div>
-                )
-              })}
-            </div>
-          )
-        })()}
 
         {/* PAP details */}
         {isPap && (project.pap_supervisor || project.pap_date) && (
@@ -7627,26 +7585,33 @@ export default function ProjectPage() {
 
             const isComplete = pct === 100
             return (
-              <div className="proj-card" style={isComplete ? {
-                background: 'var(--color-success-subtle)',
-                border: '1px solid var(--color-success-subtle)',
-              } : {}}>
+              <div className="proj-card" style={isComplete ? {} : {}}>
                 {isComplete ? (
-                  /* ── Completude 100%: celebratory completed state ── */
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <div style={{
-                      width: 32, height: 32, borderRadius: 9, flexShrink: 0,
-                      background: 'var(--color-success-subtle)',
-                      border: '1px solid var(--color-success-subtle)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    }}>
-                      <Check size={15} color="var(--color-success)" strokeWidth={3} />
+                  /* ── Completude 100%: redirect focus to diary ── */
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <div style={{
+                        width: 30, height: 30, borderRadius: 8, flexShrink: 0,
+                        background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.2)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      }}>
+                        <BookOpen size={14} color="#f59e0b" />
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: colors.text, marginBottom: 1 }}>Missões concluídas</div>
+                        <div style={{ fontSize: 11, color: colors.subtle, lineHeight: 1.4 }}>O diário aumenta o score. Regista notas e ideias regularmente.</div>
+                      </div>
                     </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-success)', marginBottom: 2 }}>Perfil 100% completo</div>
-                      <div style={{ fontSize: 12, color: colors.subtle }}>Todos os campos preenchidos com qualidade</div>
-                    </div>
-                    <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--color-success)', flexShrink: 0 }}>100%</span>
+                    <button
+                      onClick={() => navigate(`/projeto/${project.slug}/diario`)}
+                      style={{
+                        width: '100%', padding: '7px 0', border: '1px solid rgba(245,158,11,0.25)',
+                        borderRadius: 8, background: 'rgba(245,158,11,0.07)', color: '#f59e0b',
+                        fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                      }}
+                    >
+                      Abrir diário do projeto →
+                    </button>
                   </div>
                 ) : (
                   /* ── Normal state: collapsible checklist ── */

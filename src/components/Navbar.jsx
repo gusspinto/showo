@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
 import { useSidebar } from '../context/SidebarContext'
 import { supabase } from '../lib/supabase'
-import { Check, X, FolderOpen, User, Settings as SettingsIcon, Shield, Globe, Trophy, LogOut, ArrowRightToLine, Bell, Eye, Target, TrendingUp, GraduationCap, UserPlus, LayoutDashboard, Plus, Compass, Sun, Moon, Sparkles, Pencil, ArrowLeft, Briefcase, Users2, Building2, Search, Star, MessageSquare, Kanban, Heart, CheckCircle, XCircle, AlignJustify, Paintbrush, Mail, ChevronRight, Monitor, Tablet, Smartphone, ListChecks, CheckCircle2, BookMarked } from 'lucide-react'
+import { Check, X, FolderOpen, User, Settings as SettingsIcon, Shield, Globe, Trophy, LogOut, ArrowRightToLine, Bell, Eye, Target, TrendingUp, GraduationCap, UserPlus, LayoutDashboard, Plus, Compass, Sun, Moon, Sparkles, Pencil, ArrowLeft, Briefcase, Users2, Building2, Search, Star, MessageSquare, Kanban, Heart, CheckCircle, XCircle, AlignJustify, Paintbrush, Mail, ChevronRight, Monitor, Tablet, Smartphone, ListChecks, CheckCircle2, BookMarked, BookOpen } from 'lucide-react'
 
 // Strip emoji characters from notification messages coming from the DB
 function stripEmoji(str) {
@@ -875,6 +875,11 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                       <Pencil size={16} /> Editar
                     </button>
                   )}
+                  {extras.showDiary && (
+                    <button className="mobile-drawer-btn" onClick={() => { navigate(`/projeto/${extras.slug}/diario`); setOpen(false) }}>
+                      <BookOpen size={16} /> Diário
+                    </button>
+                  )}
                   {extras.onDefense && (
                     <button className="mobile-drawer-btn" onClick={() => { extras.onDefense(); setOpen(false) }}>
                       <GraduationCap size={16} /> Modo defesa
@@ -1458,6 +1463,12 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
             <button className="pmf-btn" aria-label="Editar" onClick={() => navigate(`/editar/${extras.slug}`)}>
               <Pencil size={16} />
               <span className="pmf-tooltip">Editar</span>
+            </button>
+          )}
+          {extras.showDiary && (
+            <button className="pmf-btn" aria-label="Diário" onClick={() => navigate(`/projeto/${extras.slug}/diario`)}>
+              <BookOpen size={16} />
+              <span className="pmf-tooltip">Diário</span>
             </button>
           )}
           {extras.onDefense && (

@@ -218,8 +218,6 @@ body.light .sb-collapse-toggle:hover { border-color: rgba(0,0,0,0.75); }
   display: none; flex-direction: column;
   align-items: center; gap: 4px;
   background: var(--color-sidebar-bg);
-  backdrop-filter: blur(20px) saturate(1.4);
-  -webkit-backdrop-filter: blur(20px) saturate(1.4);
   border: 1px solid var(--color-border);
   border-radius: 14px;
   padding: 10px 6px;
@@ -259,6 +257,7 @@ body.sidebar-collapsed .proj-manage-float { left: 84px; }
   padding: 4px 10px; pointer-events: none;
   opacity: 0; transition: opacity 0.12s;
   box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  z-index: 200;
 }
 .proj-manage-float .pmf-btn:hover .pmf-tooltip { opacity: 1; }
 

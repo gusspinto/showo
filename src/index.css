@@ -225,6 +225,14 @@ textarea, input, select, button {
   font-family: var(--font-body);
 }
 
+/* Dark-theme selects: force browser native dropdown to render dark */
+select {
+  color-scheme: dark;
+}
+body.light select {
+  color-scheme: light;
+}
+
 /* ── Shared "identity" hover for ghost icon-only buttons (close/edit/remove) ── */
 .icon-btn-ghost {
   background: transparent; border: 1px solid transparent; color: var(--color-text-tertiary);
