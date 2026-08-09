@@ -88,8 +88,14 @@ export function AuthProvider({ children }) {
       if (_event === 'TOKEN_REFRESHED') return
       const u = session?.user ?? null
       setUser(u)
-      fetchProfile(u?.id)
-      if (!sawInitial) { sawInitial = true; setLoading(false) }
+      // Awaited before clearing loading — fetchProfile sets the
+      // showo_needs_role_ localStorage flag for brand-new profiles, and
+      // Welcome.jsx reads that flag as soon as loading goes false. Firing
+      // setLoading(false) before the flag was written raced it past
+      // /welcome straight to /dashboard on first Google sign-up.
+      fetchProfile(u?.id).then(() => {
+        if (!sawInitial) { sawInitial = true; setLoading(false) }
+      })
     })
 
     return () => subscription.unsubscribe()
