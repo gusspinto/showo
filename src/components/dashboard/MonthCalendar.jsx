@@ -4,11 +4,11 @@ import { ChevronLeft, ChevronRight, Plus } from 'lucide-react'
 const WEEKDAYS = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D']
 const MONTHS = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
 
-// Três cores, todas da família da marca: a defesa é o azul cheio, as tarefas
-// um azul derivado, os lembretes pessoais o teal de apoio.
+// Três cores, todas da família da marca (e do ícone da Showo): a defesa é
+// vermelha, as tarefas azul, os lembretes pessoais o teal de apoio.
 function eventTypeColor(type) {
   switch (type) {
-    case 'defense':  return 'var(--color-primary)'
+    case 'defense':  return 'var(--color-error)'
     case 'task':     return 'var(--color-info)'
     case 'reminder': return 'var(--color-accent)'
     default:         return 'var(--color-primary)'

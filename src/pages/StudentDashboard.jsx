@@ -905,16 +905,14 @@ export default function StudentDashboard({ user, profile }) {
             </div>
 
             {isEmptyState && (
-              <section className="sdb-panel sdb-panel--tint">
-                <header className="sdb-panel-head">
-                  <span className="sdb-eyebrow sdb-eyebrow--brand">Começa aqui</span>
-                </header>
-                <p className="sdb-empty-line">
-                  Ainda não tens projetos. Cria o primeiro e a tua página fica pronta a partilhar em minutos.
-                </p>
-                <button className="sdb-linkbtn sdb-linkbtn--strong" onClick={() => navigate('/novo')}>
-                  Criar o meu primeiro projeto
-                </button>
+              <section className="sdb-first-project" onClick={() => navigate('/novo')}>
+                <h2 className="sdb-first-project-title">Cria o teu primeiro projeto</h2>
+                <Button
+                  iconRight={<ArrowRight size={15} />}
+                  onClick={e => { e.stopPropagation(); navigate('/novo') }}
+                >
+                  Começar
+                </Button>
               </section>
             )}
 

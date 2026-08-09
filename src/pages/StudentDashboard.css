@@ -971,8 +971,8 @@
   transition: background var(--duration-fast);
 }
 .sdb-agenda-item:hover { background: var(--color-surface-hover); }
-/* Mesma família de cores do calendário: defesa = azul cheio, tarefa = azul
-   derivado, lembrete = teal de apoio. */
+/* Mesma família de cores do calendário e do ícone da marca: defesa = vermelho
+   (é a data que mais dói perder), tarefa = azul, lembrete = teal de apoio. */
 .sdb-agenda-bar {
   width: 3px;
   flex-shrink: 0;
@@ -981,6 +981,7 @@
 }
 .sdb-agenda-item--task     .sdb-agenda-bar { background: var(--color-info); }
 .sdb-agenda-item--reminder .sdb-agenda-bar { background: var(--color-accent); }
+.sdb-agenda-item--defense  .sdb-agenda-bar { background: var(--color-error); }
 .sdb-agenda-body { display: flex; flex-direction: column; gap: 2px; padding: 4px 0; min-width: 0; }
 .sdb-agenda-title {
   font-size: var(--text-sm);
@@ -994,6 +995,7 @@
 
 .sdb-agenda-empty { display: flex; flex-direction: column; gap: var(--sp-2); align-items: flex-start; }
 .sdb-agenda-empty p { margin: 0; font-size: var(--text-sm); color: var(--color-text-secondary); }
+.sdb-agenda-empty .sdb-linkbtn--strong { color: var(--color-warning); }
 
 .sdb-agenda-toggle {
   display: flex;
@@ -2502,4 +2504,41 @@
   color: rgba(255,255,255,0.35);
   font-weight: 500;
   margin-top: 2px;
+}
+
+/* ── Cartão "cria o teu primeiro projeto" (empty state) ─────────────────── */
+.sdb-first-project {
+  position: relative;
+  overflow: hidden;
+  margin: 0 0 20px;
+  padding: 56px 24px;
+  border-radius: 16px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  text-align: center;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(43,126,245,0.28), transparent 60%),
+    linear-gradient(135deg, #0c1e38 0%, #060d1a 100%);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.06);
+  transition: transform 0.18s cubic-bezier(0.4,0,0.2,1), box-shadow 0.18s;
+}
+.sdb-first-project:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.1);
+}
+.sdb-first-project-title {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1.25;
+  font-family: var(--font-heading);
+}
+@media (max-width: 640px) {
+  .sdb-first-project { padding: 40px 20px; gap: 22px; }
+  .sdb-first-project-title { font-size: 22px; }
 }
