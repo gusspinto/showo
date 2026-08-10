@@ -35,28 +35,33 @@ Deno.serve(async (req) => {
       `Projeto ${i+1}: ${clip(p.name, 100)} — ${clip(p.ai_tagline || p.goal, 200)} (tecnologias: ${clip(p.technologies, 200)})`
     ).join('\n')
 
-    const prompt = `És um assistente que ajuda estudantes portugueses a escrever candidaturas de ${type === 'job' ? 'emprego' : 'estágio'} profissionais e autênticas.
+    const prompt = `És um assistente que ajuda estudantes portugueses a escrever candidaturas de ${type === 'job' ? 'emprego' : 'estágio'} que soem autênticas e convencem um recrutador real.
 
 ESTUDANTE: ${clip(studentName, 100)}
 EMPRESA/ORGANIZAÇÃO: ${clip(company, 200)}
-SETOR: ${clip(sector || 'tecnologia', 100)}
+SETOR: ${clip(sector || 'não especificado', 100)}
 TIPO: ${type === 'job' ? 'Emprego' : 'Estágio'}
 
-PROJETOS DO ESTUDANTE:
+PROJETOS DO ESTUDANTE (usa estes para contextualizar, menciona 1-2 de forma natural):
 ${projectSummaries}
 
-Gera uma candidatura autêntica, em português de Portugal, que:
-- Soe a um jovem real (não a um robô corporativo)
-- Mencione projetos específicos de forma natural
-- Mostre entusiasmo genuíno pela empresa
-- Seja concisa (email: máx 150 palavras, LinkedIn: máx 80 palavras)
+REGRAS CRÍTICAS:
+- Escreve em português europeu (PT-PT): "candidatura" (não "aplicação"), "estagiário" (não "estagiante"), "à vossa atenção" se necessário.
+- Tom: jovem, direto e confiante — sem ser arrogante. Não usa frases corporativas vazias como "venho por este meio", "sou uma pessoa proativa e dinâmica", "tenho muito a oferecer". Soa a uma pessoa real.
+- Saudação do email: "Olá," ou "Bom dia," seguido do nome da empresa (não "Caro/Cara" — é demasiado formal para candidaturas jovens).
+- O assunto do email deve ser específico: inclui nome e tipo de candidatura. Ex: "Ana Costa — Candidatura a Estágio em Design".
+- Menciona 1-2 projetos do estudante de forma natural, não como uma lista — integra-os na narrativa.
+- Mensagem LinkedIn: sem saudação formal, vai direto ao ponto, máx 3 frases. Ex: "Olá [nome], vi uma vaga de estágio na [empresa] e fiquei muito curioso. Tenho um projeto de X que pode ser relevante — posso partilhar o meu portfólio?"
+- Email: máx 140 palavras no corpo. LinkedIn: máx 70 palavras.
+- Nunca uses travessões (—).
+- highlight: identifica QUAL projeto do estudante é mais relevante para ESTA empresa/setor e diz porquê em 1 frase curta.
 
 Devolve APENAS este JSON (sem markdown):
 {
-  "email_subject": "Assunto do email (direto e específico)",
-  "email_body": "Corpo do email completo com saudação e despedida",
-  "linkedin_message": "Mensagem curta para LinkedIn (1º contacto com recrutador)",
-  "highlight": "O projeto mais relevante para esta candidatura e porquê (1 frase)"
+  "email_subject": "Assunto específico com nome do estudante e tipo de candidatura",
+  "email_body": "Corpo completo do email com saudação, 2-3 parágrafos e despedida natural",
+  "linkedin_message": "Mensagem direta para LinkedIn, sem saudação formal, máx 3 frases",
+  "highlight": "1 frase: qual projeto e porquê é o mais relevante para esta empresa"
 }`
 
     const message = await client.messages.create({

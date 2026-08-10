@@ -49,9 +49,15 @@ Deno.serve(async (req) => {
           })
           .join('\n')
 
-    const prompt = `És um redator especializado em relatórios académicos portugueses. Vais gerar um rascunho completo de ${isPap ? 'relatório de PAP (Projeto e Apresentação Profissional)' : 'relatório de estágio'} com base nos dados de um projeto de um aluno.
+    const prompt = `És um redator especializado em relatórios académicos portugueses. Vais gerar um rascunho completo de ${isPap ? 'relatório de PAP (Projeto de Aptidão Profissional)' : 'relatório de estágio'} com base nos dados de um projeto de um aluno.
 
-O rascunho deve estar em português europeu, ser formal mas natural, sem travessões (—), e ter a estrutura típica exigida pelas escolas profissionais portuguesas.
+REGRAS DE ESCRITA:
+- Português europeu (PT-PT): "utilizador" (não "usuário"), "ecrã" (não "tela"), "aplicação" (não "aplicativo").
+- Tom formal mas natural — como um aluno que sabe escrever, não como um relatório gerado por IA.
+- Sem travessões (—). Sem expressões genéricas: "de forma eficaz", "no âmbito de", "neste sentido", "é de salientar", "foi um desafio enorme".
+- Cada parágrafo deve conter informação real e específica deste projeto — nunca enche com frases vazias.
+- Escreve na primeira pessoa do singular ("desenvolvi", "identifiquei", "aprendi") para PAP; primeira pessoa do plural ("desenvolvemos") para projetos de grupo.
+- NUNCA inventes factos, datas, números ou resultados que não estejam nos dados — se algo não foi registado, generaliza com cuidado.
 
 DADOS DO PROJETO:
 ━━━━━━━━━━━━━━━━
@@ -73,26 +79,31 @@ RESULTADOS OBTIDOS: ${f(project.results)}
 APRENDIZAGENS: ${f(project.learnings)}
 ━━━━━━━━━━━━━━━━
 
-DIÁRIO DO PROJETO (registos do aluno por ordem cronológica):
+DIÁRIO DO PROJETO (registos cronológicos do aluno — usa como fonte principal do percurso):
 ━━━━━━━━━━━━━━━━
 ${journalBlock}
 ━━━━━━━━━━━━━━━━
 
-Gera um rascunho estruturado com as seguintes secções. Cada secção deve ter 2-4 parágrafos fluidos e bem redigidos, baseados nos dados fornecidos. Quando os dados forem vagos, expande com linguagem académica apropriada mas mantém-te fiel ao que o aluno escreveu.
+O diário é ouro: tem decisões reais, dificuldades reais e a voz do aluno. Usa-o para:
+- Mostrar a evolução cronológica do projeto ("numa fase inicial", "após os primeiros testes", "no final do desenvolvimento").
+- Mencionar decisões concretas e o raciocínio por trás delas.
+- Referir dificuldades reais e como foram superadas.
+- Dar vida ao relatório com detalhe que o formulário não captura.
+Se o diário estiver vazio, baseia-te apenas nos campos do formulário e escreve de forma mais geral.
 
-Usa o diário como fonte principal do percurso: as decisões tomadas e o porquê, as dificuldades encontradas e como foram ultrapassadas, a evolução ao longo do tempo. Escreve na primeira pessoa do plural ou singular conforme o projeto, e refere marcos temporais quando o diário os permitir ("numa fase inicial", "depois de testar com utilizadores"). NUNCA inventes factos, datas ou resultados que não estejam nos dados acima — se algo não foi registado, escreve de forma mais geral em vez de preencher com ficção.
+Cada secção deve ter 2-4 parágrafos fluidos. Qualidade > quantidade — é melhor um parágrafo sólido do que dois com enchimento.
 
 Devolve APENAS este JSON (sem markdown, sem \`\`\`, só o objeto):
 {
-  "resumo": "Parágrafo de resumo executivo (3-4 frases)",
-  "introducao": "Secção de introdução com contexto e motivação (2-3 parágrafos)",
-  "problema": "Secção de identificação e análise do problema (2-3 parágrafos)",
-  "solucao": "Secção de descrição da solução e metodologia (2-3 parágrafos)",
-  "desenvolvimento": "Secção de desenvolvimento técnico e funcionalidades (2-3 parágrafos)",
-  "resultados": "Secção de resultados e validação (2-3 parágrafos)",
-  "reflexao": "Secção de reflexão crítica e aprendizagens (2 parágrafos)",
-  "conclusao": "Secção de conclusão (1-2 parágrafos)",
-  "word_count": 800
+  "resumo": "Resumo executivo: o que é o projeto, o que resolve e o principal resultado — 3-4 frases específicas",
+  "introducao": "Introdução com contexto, motivação pessoal/académica e estrutura do relatório — 2-3 parágrafos",
+  "problema": "Identificação e análise do problema: quem sofre com ele, porquê existe, como foi identificado — 2-3 parágrafos",
+  "solucao": "Descrição da solução e metodologia: abordagem escolhida, porquê esta e não outra, como foi planeada — 2-3 parágrafos",
+  "desenvolvimento": "Desenvolvimento: tecnologias usadas e porquê, funcionalidades construídas, decisões técnicas relevantes do diário — 2-3 parágrafos",
+  "resultados": "Resultados e validação: o que foi concretamente alcançado, testes, feedback ou impacto real — 2-3 parágrafos",
+  "reflexao": "Reflexão crítica: o que correu bem, o que faria diferente, aprendizagens específicas técnicas e pessoais — 2 parágrafos",
+  "conclusao": "Conclusão: síntese do percurso, valor do projeto e perspetivas futuras — 1-2 parágrafos",
+  "word_count": 900
 }`
 
     const message = await client.messages.create({
