@@ -128,20 +128,20 @@
   color: var(--color-text);
 }
 .sdb-btn--quiet:hover { border-color: var(--color-border-hover); background: var(--color-surface-hover); }
-.sdb-btn--onbrand { background: #fff; color: var(--color-primary-deep); }
-.sdb-btn--onbrand:hover { transform: translateY(-1px); }
-.sdb-btn--onbrand-quiet {
+.sdb-panel--brand .sdb-btn--onbrand { background: #fff; color: var(--color-primary-deep); }
+.sdb-panel--brand .sdb-btn--onbrand:hover { transform: translateY(-1px); }
+.sdb-panel--brand .sdb-btn--onbrand-quiet {
   background: var(--on-fill);
   border-color: var(--on-line);
   color: var(--on);
 }
-.sdb-btn--onbrand-quiet:hover { background: rgba(255,255,255,0.19); }
-.sdb-btn--onbrand-ghost {
+.sdb-panel--brand .sdb-btn--onbrand-quiet:hover { background: rgba(255,255,255,0.19); }
+.sdb-panel--brand .sdb-btn--onbrand-ghost {
   background: rgba(255,255,255,0.08);
   border-color: rgba(255,255,255,0.15);
   color: rgba(255,255,255,0.75);
 }
-.sdb-btn--onbrand-ghost:hover { background: rgba(255,255,255,0.14); color: #fff; }
+.sdb-panel--brand .sdb-btn--onbrand-ghost:hover { background: rgba(255,255,255,0.14); color: #fff; }
 .sdb-btn--sm { height: 30px; padding: 0 10px; font-size: 12px; gap: 5px; }
 .sdb-btn:active { transform: translateY(0); }
 
@@ -159,7 +159,8 @@
   cursor: pointer;
   transition: background var(--duration-fast), color var(--duration-fast);
 }
-.sdb-icon-btn:hover { background: rgba(255,255,255,0.2); }
+.sdb-icon-btn:hover { background: var(--color-surface-hover); }
+.sdb-panel--brand .sdb-icon-btn:hover { background: rgba(255,255,255,0.2); }
 .sdb-icon-btn--star { color: #94a3b8; }
 .sdb-icon-btn--star.is-featured { color: #f59e0b !important; }
 .sdb-icon-btn--star:disabled { opacity: 0.35; cursor: not-allowed; }
@@ -1571,13 +1572,20 @@
   z-index: 1;
 }
 .sdb-pinned-head > * { position: relative; z-index: 2; }
-/* Forçar ícones a branco no header (sempre escuro por causa do overlay/bg) */
-.sdb-pinned-head .sdb-icon-btn {
+/* Com capa: overlay escuro → ícones brancos. Sem capa: fundo claro → ícones da marca */
+.sdb-pinned-head[data-has-cover='true'] .sdb-icon-btn {
   color: rgba(255,255,255,0.7) !important;
 }
-.sdb-pinned-head .sdb-icon-btn:hover {
+.sdb-pinned-head[data-has-cover='true'] .sdb-icon-btn:hover {
   color: #fff !important;
   background: rgba(255,255,255,0.12) !important;
+}
+.sdb-pinned-head:not([data-has-cover='true']) .sdb-icon-btn {
+  color: var(--color-primary) !important;
+}
+.sdb-pinned-head:not([data-has-cover='true']) .sdb-icon-btn:hover {
+  color: var(--color-primary-hover) !important;
+  background: var(--color-primary-subtle) !important;
 }
 .sdb-pinned-head-left {
   display: flex;
@@ -1600,6 +1608,12 @@
   border-radius: 5px;
   padding: 3px 8px;
   margin-right: 4px;
+}
+/* Sem capa (fundo claro): tag usa cor da marca em vez de branco invisível */
+.sdb-pinned-head:not([data-has-cover='true']) .sdb-pinned-type {
+  color: var(--color-primary);
+  background: var(--color-primary-subtle);
+  border-color: var(--color-primary-muted);
 }
 /* Corpo */
 .sdb-pinned-body {
@@ -1675,9 +1689,17 @@
 @media (max-width: 600px) {
   .sdb-page { padding: var(--sp-4) var(--sp-4) var(--sp-12); }
   .sdb-duo  { grid-auto-flow: row; grid-auto-columns: auto; }
-  .sdb-hero { padding-bottom: var(--sp-5); margin-bottom: var(--sp-5); }
+  .sdb-hero { padding-bottom: var(--sp-4); margin-bottom: var(--sp-4); }
   .sdb-hero-context { font-size: var(--text-base); margin-bottom: var(--sp-4); }
   .sdb-hero-actions .sdb-btn { flex: 1; }
+  /* Hero side sem capa de card no mobile — visual limpo, sem competir com o greeting */
+  .sdb-hero-side {
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    min-width: 0 !important;
+  }
 
 
 

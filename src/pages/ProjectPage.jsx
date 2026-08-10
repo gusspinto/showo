@@ -264,7 +264,7 @@ const Section = memo(function Section({ fieldKey, content, isOwner, canEdit, onI
         {editable && challenge && !isEmpty && (
           <button
             onClick={() => onImprove(challenge)}
-            style={{ background: `${colors.blue}10`, border: `1px solid ${colors.blue}22`, color: colors.blue, cursor: 'pointer', fontSize: 11, fontWeight: 700, fontFamily: 'inherit', padding: '3px 9px', borderRadius: 6, flexShrink: 0, transition: 'all 0.15s' }}
+            style={{ background: `${colors.blue}10`, border: `1px solid ${colors.blue}22`, color: colors.blue, cursor: 'pointer', fontSize: 11, fontWeight: 700, fontFamily: 'inherit', padding: '8px 12px', borderRadius: 6, flexShrink: 0, transition: 'all 0.15s', minHeight: 36 }}
             onMouseEnter={e => { e.currentTarget.style.background = `${colors.blue}1e`; e.currentTarget.style.borderColor = `${colors.blue}44` }}
             onMouseLeave={e => { e.currentTarget.style.background = `${colors.blue}10`; e.currentTarget.style.borderColor = `${colors.blue}22` }}
           >
@@ -412,8 +412,8 @@ const MissionRow = memo(function MissionRow({ challenge, project, onImprove, isO
           onClick={() => onImprove(challenge)}
           style={{
             background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)',
-            color: colors.blue, borderRadius: 8, padding: '5px 12px',
-            fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0,
+            color: colors.blue, borderRadius: 8, padding: '8px 14px',
+            fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0, minHeight: 36,
           }}
         >
           <span style={{display:'flex',alignItems:'center',gap:4}}>Fazer <ChevronRight size={12} /></span>
@@ -455,9 +455,11 @@ function EditModal({ challenge, project, onClose, onSave, saving }) {
         background: colors.card,
         border: `1px solid ${colors.borderBright}`,
         borderRadius: 14,
-        padding: '28px 32px',
+        padding: '20px 20px',
         width: '100%', maxWidth: 560,
         boxShadow: 'none',
+        maxHeight: 'calc(100dvh - 80px)',
+        overflowY: 'auto',
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -547,7 +549,7 @@ function EditModal({ challenge, project, onClose, onSave, saving }) {
 function Toast({ message, visible }) {
   return (
     <div style={{
-      position: 'fixed', bottom: 32, left: '50%',
+      position: 'fixed', bottom: 'calc(32px + env(safe-area-inset-bottom, 0px))', left: '50%',
       transform: `translateX(-50%) translateY(${visible ? 0 : 100}px)`,
       opacity: visible ? 1 : 0,
       background: 'var(--color-surface)',
@@ -1055,25 +1057,22 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
           left: 0 !important; right: 0 !important;
           bottom: 0 !important; top: auto !important;
           width: 100% !important;
-          height: auto !important;
-          max-height: calc(48vh + env(safe-area-inset-bottom, 0px)) !important;
-          padding-bottom: env(safe-area-inset-bottom, 0px) !important;
+          height: calc(52vh + env(safe-area-inset-bottom, 0px)) !important;
           border-radius: 18px 18px 0 0 !important;
           border-left: none !important;
           border-top: 1px solid var(--color-border) !important;
           box-shadow: none !important;
           animation: pv-slidein-up 0.26s cubic-bezier(0.22,1,0.36,1) !important;
           z-index: 510 !important;
-          transition: max-height 0.26s cubic-bezier(0.22,1,0.36,1) !important;
+          transition: height 0.26s cubic-bezier(0.22,1,0.36,1) !important;
           overflow: hidden !important;
         }
         .pv-ws-sheet.ws-collapsed {
-          max-height: 0 !important;
-          border-top: none !important;
+          height: 48px !important;
         }
         /* Overlay behind bottom sheet */
         .pv-ws-overlay {
-          position: fixed; inset: 0; z-index: 499;
+          position: fixed; inset: 0; z-index: 195;
           background: rgba(0,0,0,0.45);
           backdrop-filter: blur(2px);
           -webkit-backdrop-filter: blur(2px);
@@ -1099,7 +1098,6 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
         @media (max-width: 600px) {
           .pv-banner-inner { flex-wrap: wrap; gap: 6px !important; padding: 8px 12px !important; }
           .pv-banner-label { display: none; }
-          .pv-device-toggles { display: none !important; }
           .pv-banner-sep { display: none !important; }
         }
         /* ── Mobile: content ── */
@@ -1132,59 +1130,30 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
             Preview do visitante
           </span>
 
-          {/* Separator */}
-          <div className="pv-banner-sep" style={{ width: 1, height: 18, background: 'var(--color-border)', flexShrink: 0, marginLeft: 4, marginRight: 4 }} />
-
-          {/* Device size toggles — pill azul + texto branco */}
-          <div className="pv-device-toggles" style={{ display: 'flex', alignItems: 'center', gap: 2, background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)', borderRadius: 9, padding: '3px' }}>
-            {DEVICES.map(({ id, Icon, label, title }) => {
-              const isAct = previewDevice === id
-              return (
-                <button
-                  key={id}
-                  title={title}
-                  onClick={() => setPreviewDevice(id)}
-                  className="pv-device-btn"
-                  style={{
-                    background: isAct ? 'var(--color-primary)' : 'transparent',
-                    border: 'none',
-                    borderRadius: 7,
-                    height: 28,
-                    padding: isAct ? '0 10px' : '0',
-                    minWidth: 28,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
-                    cursor: 'pointer',
-                    color: isAct ? '#fff' : 'var(--color-text-secondary)',
-                    transition: 'all 0.15s',
-                    boxShadow: isAct ? '0 2px 8px var(--color-primary-subtle)' : 'none',
-                  }}
-                >
-                  <Icon size={13} strokeWidth={isAct ? 2.2 : 1.8} />
-                  {isAct && <span style={{ fontSize: 11, fontWeight: 700, whiteSpace: 'nowrap' }}>{label}</span>}
-                </button>
-              )
-            })}
-          </div>
-
           <div style={{ flex: 1 }} />
 
-          {isOwner && !previewEditing && (
+          {isOwner && (
             <button
-              onClick={() => setPreviewEditing(true)}
-              title="Editar workspace"
+              onClick={() => {
+                if (!previewEditing) { setPreviewEditing(true); setWsExpanded(true) }
+                else setWsExpanded(e => !e)
+              }}
+              title={wsExpanded ? 'Fechar editor' : 'Editar workspace'}
               style={{
-                background: 'var(--color-primary)', border: 'none',
+                background: previewEditing && wsExpanded ? 'var(--color-bg-alt)' : 'var(--color-primary)',
+                border: previewEditing && wsExpanded ? '1px solid var(--color-border)' : 'none',
                 borderRadius: 9,
                 width: isDesktop ? 'auto' : 36, height: 36,
                 padding: isDesktop ? '0 14px' : 0,
-                color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+                color: previewEditing && wsExpanded ? 'var(--color-text-secondary)' : '#fff',
+                fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, flexShrink: 0,
-                boxShadow: '0 4px 12px var(--color-primary-subtle)',
+                boxShadow: previewEditing && wsExpanded ? 'none' : '0 4px 12px var(--color-primary-subtle)',
                 WebkitTapHighlightColor: 'transparent',
               }}
             >
               <Paintbrush size={16} />
-              {isDesktop && <span>Editar workspace</span>}
+              {isDesktop && <span>{wsExpanded ? 'Fechar editor' : 'Editar workspace'}</span>}
             </button>
           )}
           <button
@@ -1206,9 +1175,9 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
         </div>
       )}
 
-      {/* ── Overlay behind mobile bottom sheet ── */}
-      {isOwner && previewEditing && !isDesktop && (
-        <div className="pv-ws-overlay" onClick={() => setPreviewEditing(false)} />
+      {/* ── Overlay behind mobile bottom sheet (only when sheet is actually open) ── */}
+      {isOwner && previewEditing && !isDesktop && wsExpanded && (
+        <div className="pv-ws-overlay" onClick={() => setWsExpanded(false)} />
       )}
 
       {/* ── Scrollable preview area — full height, background set here ── */}
@@ -1478,9 +1447,7 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
           {/* Panel skin — background, border-radius, and clipping for all content */}
           <div style={{
             position: 'absolute', inset: 0,
-            background: 'var(--color-bg-overlay)',
-            backdropFilter: 'blur(20px) saturate(1.4)',
-            WebkitBackdropFilter: 'blur(20px) saturate(1.4)',
+            background: 'var(--color-surface)',
             border: '1px solid var(--color-border)',
             borderRadius: isDesktop ? 16 : 0,
             overflow: 'hidden',
@@ -1488,8 +1455,10 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
           }}>
           {/* Drag handle — mobile only, taps to close workspace */}
           {!isDesktop && (
-            <div className="pv-ws-drag-handle" style={{ cursor: 'pointer' }}
-              onClick={() => setWsExpanded(false)} />
+            <div style={{ padding: '12px 0 8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              onClick={() => setWsExpanded(e => !e)}>
+              <div className="pv-ws-drag-handle" style={{ pointerEvents: 'none' }} />
+            </div>
           )}
 
           {/* Collapsed desktop rail — just the 3 tab icons, click expands + switches tab */}
@@ -2152,13 +2121,13 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                             <button key={c.value} title={c.label}
                               onClick={() => upd(block.id, 'color', block.color === c.value ? '' : c.value)}
                               style={{
-                                width: 16, height: 16, borderRadius: '50%', background: c.value,
+                                width: 28, height: 28, borderRadius: '50%', background: c.value,
                                 border: block.color === c.value ? '2px solid var(--color-text)' : '1.5px solid transparent',
                                 cursor: 'pointer', padding: 0, flexShrink: 0,
                                 boxShadow: block.color === c.value ? `0 0 0 1px ${c.value}` : 'none',
                                 transition: 'transform 0.1s',
                               }}
-                              onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.3)'}
+                              onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.2)'}
                               onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
                             />
                           ))}
@@ -2168,13 +2137,13 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                             {[{ val: 'left', Icon: AlignLeft }, { val: 'center', Icon: AlignCenter }, { val: 'right', Icon: AlignRight }].map(a => (
                               <button key={a.val} onClick={() => upd(block.id, 'align', a.val)}
                                 style={{
-                                  width: 24, height: 22, borderRadius: 5,
+                                  width: 32, height: 32, borderRadius: 7,
                                   background: (block.align || 'left') === a.val ? 'var(--color-primary)' : 'transparent',
                                   border: `1px solid ${(block.align || 'left') === a.val ? 'var(--color-primary)' : 'var(--color-border)'}`,
                                   cursor: 'pointer', color: (block.align || 'left') === a.val ? '#fff' : 'var(--color-text-secondary)',
                                   display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
                                 }}
-                              ><a.Icon size={11} /></button>
+                              ><a.Icon size={13} /></button>
                             ))}
                           </div>
                         )}
@@ -2533,9 +2502,9 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                 {VISUAL_TEMPLATES.map(tpl => {
                   const isActive = templateApplied === tpl.id
                   const isPending = templateConfirm === tpl.id
-                  const textFg = tpl.preview.isLight ? 'rgba(0,0,0,0.55)' : 'rgba(255,255,255,0.8)'
-                  const textFaint = tpl.preview.isLight ? 'rgba(0,0,0,0.22)' : 'rgba(255,255,255,0.22)'
-                  const titleOffset = tpl.preview.align === 'center' ? { marginLeft: 'auto', marginRight: 'auto' } : {}
+                  const textFg = tpl.preview.isLight ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.85)'
+                  const textFaint = tpl.preview.isLight ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.2)'
+                  const centered = tpl.preview.align === 'center'
                   return (
                     <button
                       key={tpl.id}
@@ -2549,52 +2518,38 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                       style={{
                         display: 'flex', alignItems: 'stretch', gap: 0, textAlign: 'left',
                         background: isActive ? 'rgba(34,197,94,0.06)' : isPending ? 'rgba(245,158,11,0.06)' : 'var(--color-bg-alt)',
-                        border: `1px solid ${isActive ? 'rgba(34,197,94,0.4)' : isPending ? 'rgba(245,158,11,0.4)' : 'var(--color-border)'}`,
-                        borderRadius: 10, cursor: 'pointer', fontFamily: 'inherit',
-                        transition: 'border-color 0.15s, background 0.15s, box-shadow 0.15s',
+                        border: `1.5px solid ${isActive ? 'rgba(34,197,94,0.45)' : isPending ? 'rgba(245,158,11,0.45)' : 'var(--color-border)'}`,
+                        borderRadius: 12, cursor: 'pointer', fontFamily: 'inherit',
+                        transition: 'border-color 0.15s, background 0.15s, transform 0.1s',
                         overflow: 'hidden', width: '100%',
-                        boxShadow: isActive ? '0 0 0 1px rgba(34,197,94,0.2)' : 'none',
+                        WebkitTapHighlightColor: 'transparent',
                       }}
                     >
                       {/* Mini preview swatch */}
                       <div style={{
-                        width: 60, flexShrink: 0,
+                        width: 64, flexShrink: 0,
                         background: tpl.preview.bg,
-                        display: 'flex', flexDirection: 'column', justifyContent: 'center',
-                        gap: 3, padding: '10px 8px',
-                        borderRight: tpl.preview.isLight ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.06)',
+                        display: 'flex', flexDirection: 'column',
+                        justifyContent: 'center', alignItems: centered ? 'center' : 'flex-start',
+                        gap: 4, padding: '12px 10px',
+                        borderRight: tpl.preview.isLight ? '1px solid rgba(0,0,0,0.07)' : '1px solid rgba(255,255,255,0.05)',
                       }}>
-                        {/* hero bar or just accent bar */}
                         {tpl.preview.hero
-                          ? <div style={{ width: '100%', height: 10, borderRadius: 3, background: `linear-gradient(90deg, ${tpl.preview.accent}66, ${tpl.preview.accent}22)`, marginBottom: 2 }} />
-                          : <div style={{ width: 20, height: 3, borderRadius: 2, background: tpl.preview.accent, ...titleOffset }} />
+                          ? <div style={{ width: '100%', height: 11, borderRadius: 3, background: `linear-gradient(90deg, ${tpl.preview.accent}88, ${tpl.preview.accent}22)` }} />
+                          : <div style={{ width: 18, height: 3, borderRadius: 2, background: tpl.preview.accent }} />
                         }
-                        {/* fake title (alignment-aware) */}
-                        <div style={{ width: tpl.preview.align === 'center' ? 32 : 38, height: 5, borderRadius: 2, background: textFg, ...titleOffset }} />
-                        {/* fake body line */}
-                        <div style={{ width: tpl.preview.align === 'center' ? 28 : 34, height: 3, borderRadius: 2, background: textFaint, ...titleOffset }} />
-                        {/* block tags row */}
-                        <div style={{ display: 'flex', gap: 2, marginTop: 3, flexWrap: 'wrap', justifyContent: tpl.preview.align === 'center' ? 'center' : 'flex-start' }}>
-                          {(tpl.tags || []).slice(0, 3).map(tag => (
-                            <div key={tag} style={{ height: 4, width: tag.length * 3.2 + 4, borderRadius: 2, background: tpl.preview.accent + '99' }} />
-                          ))}
-                        </div>
+                        <div style={{ width: centered ? 30 : 38, height: 5, borderRadius: 2, background: textFg }} />
+                        <div style={{ width: centered ? 24 : 32, height: 3, borderRadius: 2, background: textFaint }} />
+                        <div style={{ width: centered ? 20 : 28, height: 3, borderRadius: 2, background: textFaint, opacity: 0.6 }} />
                       </div>
                       {/* Text info */}
-                      <div style={{ padding: '9px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 2, flex: 1, minWidth: 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-text)' }}>{tpl.label}</span>
-                          {tpl.preview.hero && <span style={{ fontSize: 8, fontWeight: 700, background: 'var(--color-primary-subtle)', color: 'var(--color-primary)', borderRadius: 4, padding: '1px 4px', letterSpacing: '0.05em', textTransform: 'uppercase', flexShrink: 0 }}>hero</span>}
-                          {tpl.preview.align === 'center' && <span style={{ fontSize: 8, fontWeight: 700, background: 'var(--color-bg)', color: 'var(--color-text-secondary)', border: '1px solid var(--color-border)', borderRadius: 4, padding: '1px 4px', letterSpacing: '0.05em', flexShrink: 0 }}>centrado</span>}
+                      <div style={{ padding: '10px 11px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 3, flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
+                          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-text)', lineHeight: 1.2 }}>{tpl.label}</span>
+                          {tpl.preview.hero && <span style={{ fontSize: 8, fontWeight: 800, background: 'var(--color-primary-subtle)', color: 'var(--color-primary)', borderRadius: 4, padding: '1px 5px', letterSpacing: '0.06em', textTransform: 'uppercase', flexShrink: 0 }}>hero</span>}
+                          {isActive && <span style={{ fontSize: 8, fontWeight: 800, background: 'rgba(34,197,94,0.15)', color: '#16a34a', borderRadius: 4, padding: '1px 5px', flexShrink: 0 }}>ativo</span>}
                         </div>
-                        <div style={{ fontSize: 10, color: 'var(--color-text-secondary)', lineHeight: 1.4 }}>{tpl.desc}</div>
-                        {tpl.tags?.length > 0 && (
-                          <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap', marginTop: 3 }}>
-                            {tpl.tags.map(tag => (
-                              <span key={tag} style={{ fontSize: 9, color: 'var(--color-text-tertiary)', background: 'var(--color-bg)', border: '1px solid var(--color-border)', borderRadius: 4, padding: '1px 5px' }}>{tag}</span>
-                            ))}
-                          </div>
-                        )}
+                        <div style={{ fontSize: 10, color: 'var(--color-text-secondary)', lineHeight: 1.45, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{tpl.desc}</div>
                       </div>
                     </button>
                   )
@@ -3764,20 +3719,67 @@ const TOUR_STEPS_PAP = [
 ]
 const TOUR_STEPS_OTHER = TOUR_STEPS_PAP.filter(s => s.target !== 'defense')
 
-function ProjectTour({ isPap, onClose }) {
-  const steps = isPap ? TOUR_STEPS_PAP : TOUR_STEPS_OTHER
+// Mobile tour — simpler flow that matches the mobile UI layout
+const TOUR_STEPS_MOBILE_PAP = [
+  {
+    target: 'score',
+    title: 'O teu Score',
+    bullets: [
+      'Gerado pela IA com base no que preencheste',
+      'Serve para te orientar — não é uma nota',
+    ],
+  },
+  {
+    target: 'missions',
+    title: 'Missões',
+    bullets: [
+      'Tarefas geradas automaticamente para subires o score',
+      'Toca no tab Missões para as ver todas',
+    ],
+  },
+  {
+    target: 'coach',
+    title: 'Assistente IA',
+    bullets: [
+      'Toca neste botão para abrir o chat com o teu assistente',
+      'Conhece o teu projeto e ajuda a melhorar qualquer secção',
+    ],
+  },
+  {
+    target: 'preview',
+    title: 'Menu do projeto',
+    bullets: [
+      'Toca aqui para aceder a: Editar, Diário, Modo Defesa, Análise IA, Preview e Convidar colegas',
+    ],
+  },
+]
+const TOUR_STEPS_MOBILE_OTHER = TOUR_STEPS_MOBILE_PAP.filter(s => s.target !== 'defense')
+
+function ProjectTour({ isPap, onClose, onStep }) {
+  const isMobileSteps = window.innerWidth < 640
+  const steps = isMobileSteps
+    ? (isPap ? TOUR_STEPS_MOBILE_PAP : TOUR_STEPS_MOBILE_OTHER)
+    : (isPap ? TOUR_STEPS_PAP : TOUR_STEPS_OTHER)
   const [stepIdx, setStepIdx] = useState(0)
   const [rect, setRect] = useState(null)
   const skipRef = useRef(false)
 
   function measureStep(idx, stepsArr) {
     const step = stepsArr[idx]
-    const el = document.querySelector(`[data-tour="${step.target}"]`)
-    if (!el) return null
-    const r = el.getBoundingClientRect()
-    // Element found but not visible (display:none or off-screen with zero size)
-    if (r.width === 0 && r.height === 0) return null
-    return r
+    const isMob = window.innerWidth < 640
+    // On mobile, defense/ai/invite all fall back to the paintbrush button (data-tour="preview")
+    const mobileAliasToPaintbrush = ['defense', 'ai', 'invite']
+    const targets = isMob && mobileAliasToPaintbrush.includes(step.target)
+      ? ['preview']
+      : [step.target]
+    for (const t of targets) {
+      const el = document.querySelector(`[data-tour="${t}"]`)
+      if (!el) continue
+      const r = el.getBoundingClientRect()
+      if (r.width === 0 && r.height === 0) continue
+      return r
+    }
+    return null
   }
 
   function advanceToVisible(fromIdx) {
@@ -3788,9 +3790,21 @@ function ProjectTour({ isPap, onClose }) {
     return null
   }
 
+  function resolveEl(target) {
+    const isMob = window.innerWidth < 640
+    const alias = ['defense', 'ai', 'invite']
+    const targets = isMob && alias.includes(target) ? ['preview'] : [target]
+    for (const t of targets) {
+      const el = document.querySelector(`[data-tour="${t}"]`)
+      if (el) return el
+    }
+    return null
+  }
+
   useEffect(() => {
     skipRef.current = false
-    const el = document.querySelector(`[data-tour="${steps[stepIdx].target}"]`)
+    onStep?.(steps[stepIdx].target)
+    const el = resolveEl(steps[stepIdx].target)
     if (el) el.scrollIntoView({ behavior: 'instant', block: 'center' })
 
     let raf1, raf2
@@ -3809,7 +3823,7 @@ function ProjectTour({ isPap, onClose }) {
 
   useEffect(() => {
     function onResize() {
-      const el = document.querySelector(`[data-tour="${steps[stepIdx].target}"]`)
+      const el = resolveEl(steps[stepIdx].target)
       if (el) {
         const r = el.getBoundingClientRect()
         if (r.width > 0 || r.height > 0) setRect(r)
@@ -3846,6 +3860,7 @@ function ProjectTour({ isPap, onClose }) {
   const tp = tooltipPos()
   const isLast = stepIdx === steps.length - 1
   const isMobile = window.innerWidth < 640
+  const mobileSheetAtBottom = rect ? (rect.top + rect.height / 2) < window.innerHeight / 2 : true
 
   const tooltipContent = (
     <>
@@ -3911,22 +3926,37 @@ function ProjectTour({ isPap, onClose }) {
       )}
       {rect && (
         isMobile ? (
-          /* ── Mobile: bottom sheet ── */
-          <div style={{
-            position: 'fixed',
-            left: 0, right: 0, bottom: 0,
-            background: 'var(--color-surface)',
-            borderTop: '1px solid var(--color-border)',
-            borderRadius: '16px 16px 0 0',
-            padding: '16px 20px calc(16px + env(safe-area-inset-bottom))',
-            boxShadow: '0 -8px 40px rgba(0,0,0,0.5)',
-            display: 'flex', flexDirection: 'column', gap: 10,
-            zIndex: 9102,
-            pointerEvents: 'all',
-          }}>
-            <div style={{ width: 36, height: 4, borderRadius: 2, background: 'var(--color-border)', margin: '0 auto 4px' }} />
-            {tooltipContent}
-          </div>
+          mobileSheetAtBottom ? (
+            /* target in top half → sheet at bottom */
+            <div style={{
+              position: 'fixed', left: 0, right: 0, bottom: 0,
+              background: 'var(--color-surface)',
+              borderTop: '1px solid var(--color-border)',
+              borderRadius: '16px 16px 0 0',
+              padding: `20px 20px calc(20px + env(safe-area-inset-bottom, 0px))`,
+              boxShadow: '0 -8px 40px rgba(0,0,0,0.5)',
+              display: 'flex', flexDirection: 'column', gap: 10,
+              zIndex: 9102, pointerEvents: 'all',
+            }}>
+              <div style={{ width: 36, height: 4, borderRadius: 2, background: 'var(--color-border)', margin: '0 auto' }} />
+              {tooltipContent}
+            </div>
+          ) : (
+            /* target in bottom half → sheet at top */
+            <div style={{
+              position: 'fixed', left: 0, right: 0, top: 0,
+              background: 'var(--color-surface)',
+              borderBottom: '1px solid var(--color-border)',
+              borderRadius: '0 0 16px 16px',
+              padding: `calc(env(safe-area-inset-top, 0px) + 16px) 20px 20px`,
+              boxShadow: '0 8px 40px rgba(0,0,0,0.5)',
+              display: 'flex', flexDirection: 'column', gap: 10,
+              zIndex: 9102, pointerEvents: 'all',
+            }}>
+              {tooltipContent}
+              <div style={{ width: 36, height: 4, borderRadius: 2, background: 'var(--color-border)', margin: '0 auto' }} />
+            </div>
+          )
         ) : (
           /* ── Desktop: floating tooltip ── */
           <div style={{
@@ -4310,7 +4340,7 @@ export default function ProjectPage() {
         onTogglePublicView: () => {
           const entering = !viewAsPublic
           setViewAsPublic(entering)
-          if (entering) { setPreviewEditing(true); setWsExpanded(true) }
+          if (entering) { setPreviewEditing(true); setWsExpanded(false) }
         },
         previewEditing,
         onEditWorkspace: () => { setPreviewEditing(true); setWsExpanded(e => !e) },
@@ -5045,7 +5075,7 @@ export default function ProjectPage() {
         .proj-views-widget.expanded .proj-views-count { opacity: 1; max-width: 80px; }
         @media (max-width: 860px) {
           /* Edit button proportional to mobile title */
-          .proj-edit-inline { width: 26px !important; height: 26px !important; border-radius: 7px !important; }
+          .proj-edit-inline { width: 36px !important; height: 36px !important; border-radius: 9px !important; }
           .proj-h1-row { margin-bottom: 6px !important; gap: 8px !important; align-items: center !important; }
           .proj-tagline { margin-top: 4px !important; margin-bottom: 14px !important; font-size: 15px !important; }
           /* AI FAB hidden on mobile/tablet — AI card in body is sufficient */
@@ -5088,7 +5118,7 @@ export default function ProjectPage() {
           .proj-share-qr-label { display: none; }
         }
         @media (max-width: 600px) {
-          .proj-wrap         { padding: 0 14px 80px !important; overflow-x: hidden !important; }
+          .proj-wrap         { padding: 0 14px calc(60px + env(safe-area-inset-bottom, 0px)) !important; overflow-x: hidden !important; }
           .proj-cover        { height: 180px !important; margin-top: 16px !important; border-radius: 12px !important; }
           .proj-hero         { padding: 16px 0 12px !important; }
           .proj-h1           { font-size: 26px !important; }
@@ -5144,7 +5174,7 @@ export default function ProjectPage() {
             margin: 0 -14px 16px;
             padding: 0 14px;
             position: sticky;
-            top: 56px;
+            top: 62px;
             background: var(--color-bg);
             z-index: 10;
             flex-shrink: 0;
@@ -5184,7 +5214,12 @@ export default function ProjectPage() {
         @media (max-width: 600px) {
           .proj-coach-fab { display: none !important; }
           .proj-coach-panel { display: none !important; }
+          .proj-ia-mobile-fab { display: flex !important; }
         }
+        @media (min-width: 601px) {
+          .proj-ia-mobile-fab { display: none !important; }
+        }
+        body.pv-active .proj-ia-mobile-fab { display: none !important; }
         @media (min-width: 701px) {
           .proj-coach-panel { width: 280px !important; right: 20px !important; }
         }
@@ -5377,6 +5412,12 @@ export default function ProjectPage() {
         <ProjectTour
           isPap={isPap}
           onClose={() => setShowTour(false)}
+          onStep={target => {
+            if (window.innerWidth < 640) {
+              if (target === 'missions') setMobileTab('missoes')
+              else setMobileTab('overview')
+            }
+          }}
         />
       )}
 
@@ -5736,6 +5777,7 @@ export default function ProjectPage() {
       <div className="proj-fab-area" style={{
         position: 'fixed', bottom: 24, right: 20,
         flexDirection: 'column', gap: 10, zIndex: 90,
+        pointerEvents: 'none',
       }}>
         {/* AI Analyse FAB */}
         {isOwner && (
@@ -5754,6 +5796,7 @@ export default function ProjectPage() {
               opacity: analyzingAI ? 0.7 : 1,
               boxShadow: 'none',
               fontFamily: 'inherit', fontSize: 14, fontWeight: 700,
+              pointerEvents: 'auto',
             }}
           >
             <Sparkles size={20} />
@@ -5776,6 +5819,7 @@ export default function ProjectPage() {
               boxShadow: 'none',
               backdropFilter: 'blur(8px)',
               fontFamily: 'inherit', fontSize: 14, fontWeight: 700,
+              pointerEvents: 'auto',
             }}
           >
             <GraduationCap size={22} />
@@ -6228,7 +6272,7 @@ export default function ProjectPage() {
           {/* Mobile status card — unifies the score ring, both scores, review state,
               missions progress and the primary "improve" action into one block so
               the owner sees health + next step at a glance (hidden on desktop). */}
-          <div className="proj-dashboard" style={{
+          <div className="proj-dashboard" data-tour="score" style={{
             display: 'none', flexDirection: 'column', gap: 13, marginBottom: 18,
             background: 'linear-gradient(160deg, var(--color-primary-subtle), rgba(79,70,229,0.045))',
             border: '1px solid var(--color-primary-subtle)',
@@ -6336,16 +6380,20 @@ export default function ProjectPage() {
             { id: 'melhorar', label: 'Melhorar' },
             { id: 'historia', label: 'História' },
             { id: 'explorar', label: 'Explorar' },
-            { id: 'missoes', label: 'Missões' },
-          { id: 'ia', label: 'IA' },
+            { id: 'missoes', label: 'Missões', dataTour: 'missions' },
           ] : [
             { id: 'overview', label: 'Projeto' },
             { id: 'historia', label: 'História' },
             { id: 'explorar', label: 'Explorar' },
-          ]).map(({ id, label }) => (
+          ]).map(({ id, label, dataTour }) => (
             <button
               key={id}
-              onClick={() => { setMobileTab(id); if (id === 'explorar') setSectionsOpen(true) }}
+              data-tour={dataTour || undefined}
+              onClick={() => {
+                if (id === 'diario') { navigate(`/projeto/${project.slug}/diario`); return }
+                setMobileTab(id)
+                if (id === 'explorar') setSectionsOpen(true)
+              }}
               className={`proj-mobile-tab-btn${mobileTab === id ? ' proj-mobile-tab-active' : ''}`}
             >{label}</button>
           ))}
@@ -6713,7 +6761,7 @@ export default function ProjectPage() {
               </div>
             </div>
             {/* Messages */}
-            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12, padding: '16px 14px' }}>
+            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12, padding: '16px 14px', paddingBottom: 'calc(16px + env(safe-area-inset-bottom, 0px))' }}>
               {coachMessages.length === 0 && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                   <div style={{ background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 14, padding: '14px 16px', fontSize: 13.5, color: colors.text, lineHeight: 1.6 }}>
@@ -7828,6 +7876,30 @@ export default function ProjectPage() {
       )}
 
       {/* ── Desktop AI Coach: floating button + slide-in panel ── */}
+      {/* Mobile-only AI FAB — to the left of the feedback button (bottom-right) */}
+      {isOwner && (
+        <button
+          className="proj-ia-mobile-fab"
+          data-tour="coach"
+          onClick={() => setMobileTab('ia')}
+          style={{
+            position: 'fixed',
+            bottom: 'calc(18px + env(safe-area-inset-bottom, 0px))',
+            right: 78,
+            zIndex: 200,
+            width: 46, height: 46, borderRadius: '50%',
+            background: 'var(--color-primary)',
+            border: 'none',
+            boxShadow: '0 4px 20px rgba(27,120,247,0.35)',
+            cursor: 'pointer', alignItems: 'center', justifyContent: 'center',
+            transition: 'all 0.2s',
+          }}
+          title="Assistente IA"
+        >
+          <Bot size={20} color="#fff" />
+        </button>
+      )}
+
       {isOwner && !previewEditing && (<>
         {/* Floating button — only shown when panel is closed */}
         {!coachOpen && (

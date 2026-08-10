@@ -1260,13 +1260,13 @@ function PinnedProjectCard({ project, auto, coverage, onOpenReport, onUnpin, onE
         )}
 
         <div className="sdb-pinned-foot">
-          <button className="sdb-btn sdb-btn--onbrand sdb-btn--sm" onClick={() => onLog?.('progresso')}>
+          <button className="sdb-btn sdb-btn--solid sdb-btn--sm" onClick={() => onLog?.('progresso')}>
             <Plus size={13} /> Registar
           </button>
-          <button className="sdb-btn sdb-btn--onbrand-ghost sdb-btn--sm" onClick={onOpenDiary}>
+          <button className="sdb-btn sdb-btn--quiet sdb-btn--sm" onClick={onOpenDiary}>
             <BookOpen size={13} /> Diário
           </button>
-          <button className="sdb-btn sdb-btn--onbrand-ghost sdb-btn--sm" onClick={onOpen}>
+          <button className="sdb-btn sdb-btn--quiet sdb-btn--sm" onClick={onOpen}>
             <ArrowUpRight size={13} /> Ver
           </button>
         </div>

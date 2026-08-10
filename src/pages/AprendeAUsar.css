@@ -21,6 +21,8 @@
   position: sticky;
   top: 84px;
   margin-right: 64px;
+  background: transparent;
+  border: none;
 }
 
 .atu-sidebar-intro {
@@ -77,8 +79,8 @@
 
 /* ── Hero ── */
 .atu-hero {
-  margin-bottom: 48px;
-  padding-bottom: 32px;
+  margin-bottom: 0;
+  padding-bottom: 24px;
   border-bottom: 1px solid var(--color-border);
 }
 
@@ -101,7 +103,7 @@
 
 /* ── Sections ──────────────────────────────────────────────────────────────── */
 .atu-section {
-  padding: 40px 0;
+  padding: 32px 0;
   border-bottom: 1px solid var(--color-border);
   scroll-margin-top: 84px;
 }
@@ -348,10 +350,55 @@
 
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* ── Fix: global body.light nav rule in index.css hits atu-sidebar-nav ── */
+body.light .atu-sidebar-nav {
+  background: transparent !important;
+  border-bottom: none !important;
+}
+
+/* ── Mobile section tabs ────────────────────────────────────────────────────── */
+.atu-mobile-tabs {
+  display: none;
+  overflow-x: auto;
+  gap: 4px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg);
+  position: sticky;
+  top: 62px;
+  z-index: 10;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.atu-mobile-tabs::-webkit-scrollbar { display: none; }
+.atu-mobile-tab {
+  flex-shrink: 0;
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--color-border);
+  background: transparent;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.13s, color 0.13s, border-color 0.13s;
+  -webkit-tap-highlight-color: transparent;
+}
+.atu-mobile-tab.active {
+  background: var(--color-primary-subtle);
+  border-color: var(--color-primary-muted);
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
 /* ── Responsive ─────────────────────────────────────────────────────────────── */
 @media (max-width: 860px) {
   .atu-sidebar { display: none; }
   .atu-layout { padding: 24px 16px 48px; }
+  .atu-mobile-tabs { display: flex; }
+  .atu-section { scroll-margin-top: 110px; }
 }
 
 @media (max-width: 540px) {

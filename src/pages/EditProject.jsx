@@ -331,7 +331,7 @@ export default function EditProject() {
         .ep-main { flex: 1; min-width: 0; }
         .ep-sec-card { background: var(--color-glass); border: 1px solid var(--color-glass-border); border-radius: 14px; padding: 20px 18px; }
         .ep-sec-heading { font-size: 17px; font-weight: 700; color: var(--color-text); margin: 0 0 20px; font-family: var(--font-heading); }
-        .ep-save-bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; display: flex; align-items: center; gap: 12px; padding: 11px 16px calc(11px + env(safe-area-inset-bottom,0px)); background: var(--color-bg-overlay); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border-top: 1px solid var(--color-border); }
+        .ep-save-bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 300; display: flex; align-items: center; gap: 12px; padding: 11px 16px calc(11px + env(safe-area-inset-bottom,0px)); background: var(--color-bg-overlay); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border-top: 1px solid var(--color-border); }
         .ep-save-status { flex: 1; min-width: 0; font-size: 13px; font-weight: 600; color: var(--color-text-secondary); display: flex; align-items: center; gap: 8px; }
         .ep-save-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--color-warning); flex-shrink: 0; }
         .ep-save-btn { flex-shrink: 0; padding: 12px 30px; border-radius: 10px; border: none; font-size: 15px; font-weight: 700; font-family: inherit; letter-spacing: -0.1px; }
@@ -340,13 +340,47 @@ export default function EditProject() {
           body.sidebar-collapsed .ep-save-bar { left: 80px; }
         }
         @media (max-width: 600px) {
-          .ep-layout { flex-direction: column; gap: 12px; }
-          .ep-tabs { width: 100%; flex-direction: row; overflow-x: auto; position: static; gap: 6px; padding-bottom: 4px; scrollbar-width: none; }
+          .ep-layout { flex-direction: column; gap: 0; }
+          .ep-tabs {
+            width: 100%;
+            flex-direction: row;
+            overflow-x: auto;
+            position: static;
+            gap: 0;
+            padding: 0 0 12px;
+            scrollbar-width: none;
+            border-bottom: 1px solid var(--color-border);
+            margin-bottom: 16px;
+          }
           .ep-tabs::-webkit-scrollbar { display: none; }
-          .ep-tab-btn { flex-direction: column; gap: 5px; padding: 8px 10px; min-width: 60px; align-items: center; justify-content: center; border-radius: 10px; }
+          .ep-tab-btn {
+            flex-direction: column;
+            gap: 4px;
+            padding: 10px 14px;
+            min-width: 72px;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0;
+            border-bottom: 2px solid transparent;
+            background: transparent !important;
+            color: var(--color-text-secondary);
+          }
+          .ep-tab-btn.active {
+            background: transparent !important;
+            color: var(--color-primary) !important;
+            border-bottom-color: var(--color-primary);
+          }
           .ep-tab-label { font-size: 11px; font-weight: 700; }
           .ep-tab-badge { display: none; }
-          .ep-tab-icon { width: 28px; height: 28px; border-radius: 7px; }
+          .ep-tab-icon {
+            width: 24px; height: 24px;
+            border-radius: 0;
+            background: transparent !important;
+          }
+          .ep-tab-btn.active .ep-tab-icon { background: transparent !important; }
+          .ep-main { width: 100%; }
+          .ep-sec-card { border-radius: 0; border-left: none; border-right: none; margin: 0 -16px; padding: 20px 16px; }
+          .page-content { padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important; }
         }
       `}</style>
 
@@ -488,34 +522,35 @@ export default function EditProject() {
             </div>
           )}
 
-          <div style={{ height: 72 }} />
-
-          <div className="ep-save-bar">
-            <div className="ep-save-status">
-              {!canSave && !saving ? (
-                <span style={{ color: colors.red }}>Falta o nome e a área</span>
-              ) : dirty ? (
-                <><span className="ep-save-dot" /> Alterações por guardar</>
-              ) : (
-                <><Check size={15} color={colors.blue} strokeWidth={3} /> Tudo guardado</>
-              )}
-            </div>
-            <button
-              type="submit"
-              disabled={!canSave}
-              className="ep-save-btn"
-              style={{
-                background: canSave ? colors.blue : colors.border,
-                color: '#fff',
-                cursor: canSave ? 'pointer' : 'default',
-                opacity: saving ? 0.7 : 1,
-                boxShadow: canSave ? '0 4px 14px rgba(27,120,247,0.3)' : 'none',
-              }}
-            >
-              {saving ? 'A guardar…' : 'Guardar'}
-            </button>
-          </div>
+          <div style={{ height: 80 }} />
         </form>
+      </div>
+
+      {/* Save bar — rendered outside all scrollable containers so position:fixed is never trapped */}
+      <div className="ep-save-bar">
+        <div className="ep-save-status">
+          {!canSave && !saving ? (
+            <span style={{ color: colors.red }}>Falta o nome e a área</span>
+          ) : dirty ? (
+            <><span className="ep-save-dot" /> Alterações por guardar</>
+          ) : (
+            <><Check size={15} color={colors.blue} strokeWidth={3} /> Tudo guardado</>
+          )}
+        </div>
+        <button
+          onClick={handleSubmit}
+          disabled={!canSave}
+          className="ep-save-btn"
+          style={{
+            background: canSave ? colors.blue : colors.border,
+            color: canSave ? '#fff' : 'var(--color-text-tertiary)',
+            cursor: canSave ? 'pointer' : 'default',
+            opacity: saving ? 0.7 : 1,
+            boxShadow: canSave ? '0 4px 14px rgba(27,120,247,0.3)' : 'none',
+          }}
+        >
+          {saving ? 'A guardar…' : 'Guardar'}
+        </button>
       </div>
     </div>
   )

@@ -529,6 +529,19 @@ export default function AprendeAUsar() {
   return (
     <div className="atu-root">
       <Navbar />
+
+      <div className="atu-mobile-tabs">
+        {SECTIONS.map(({ id, label }) => (
+          <button
+            key={id}
+            className={`atu-mobile-tab${activeSection === id ? ' active' : ''}`}
+            onClick={() => scrollTo(id)}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
       <div className="atu-layout">
 
         <aside className="atu-sidebar">
@@ -553,12 +566,15 @@ export default function AprendeAUsar() {
             <Lead>A dashboard é o primeiro ecrã que vês ao entrar na plataforma. É onde acompanhas os teus projetos, registas entradas no diário e vês o progresso geral.</Lead>
 
             <H3>Project Pulse</H3>
-            <Body>O Project Pulse é o card azul que aparece no topo. Mostra sempre o teu projeto mais recente com as últimas entradas do diário e dá acesso rápido a dois botões: Registar, para adicionar uma entrada, e Diário, para ver o historial completo.</Body>
+            <Body>O Project Pulse é o card azul que aparece no topo. Mostra sempre o teu projeto mais recente e dá acesso rápido a dois botões: Registar, para adicionar uma entrada no diário, e Diário, para ver o historial completo.</Body>
 
-            <H3>Projetos fixados</H3>
-            <Body>Podes fixar até 2 projetos na dashboard com o ícone de pino que aparece na lista do portfólio. Os projetos fixados aparecem como cards imediatamente abaixo do Project Pulse, com acesso a todas as ações: Registar, Diário, Ver, Editar e Eliminar.</Body>
+            <H3>Em Foco</H3>
+            <Body>O card "Em Foco" destaca o projeto que escolheste como foco atual. Mostra o score, a data de defesa (se for PAP), o progresso das secções e três ações diretas: Registar, Diário e Ver. Para definir um projeto em foco, usa o ícone de pino na lista do portfólio.</Body>
 
-            <Note>Se fixares o mesmo projeto que está em destaque no Project Pulse, o card azul desaparece e é substituído pelo card fixado. Os dois não coexistem para o mesmo projeto.</Note>
+            <Note>Se o projeto em foco for o mesmo que o Project Pulse está a mostrar, o card azul desaparece e só aparece o Em Foco. Os dois não coexistem para o mesmo projeto.</Note>
+
+            <H3>Atividade e agenda</H3>
+            <Body>A coluna da direita mostra o gráfico de atividade semanal com registos do diário e tarefas concluídas, a streak de semanas consecutivas, e a agenda com eventos e lembretes ligados às datas de defesa.</Body>
 
             <MkDashboard />
           </Section>
@@ -617,10 +633,10 @@ export default function AprendeAUsar() {
           </Section>
 
           <Section id="preview" title="Preview e Templates" subtitle="A apresentação pública do teu projeto">
-            <Lead>A preview é o que qualquer pessoa vê quando visita o link do teu projeto. Podes personalizar completamente a aparência e adicionar blocos de conteúdo.</Lead>
+            <Lead>A preview é o que qualquer pessoa vê quando visita o link do teu projeto. Podes personalizar completamente a aparência e adicionar blocos de conteúdo extra.</Lead>
 
-            <H3>Editor de apresentação</H3>
-            <Body>Abre o teu projeto e clica em "Editar apresentação". O editor tem quatro áreas: Estilo, Blocos, Templates e Secções.</Body>
+            <H3>Abrir o editor</H3>
+            <Body>Na página do projeto, clica no ícone de pincel no canto superior direito para entrar em modo de preview. No desktop, o painel de edição abre à direita. No mobile, aparece uma sheet em baixo — toca no pincel para expandir ou fechar o painel.</Body>
 
             <DefList items={[
               { term: 'Estilo', def: 'Cor de destaque, fundo, tipografia, alinhamento do título, tamanho do hero e modo claro ou escuro.' },
@@ -630,7 +646,7 @@ export default function AprendeAUsar() {
             ]} />
 
             <H3>Templates</H3>
-            <Body>Ao aplicar um template escolhes de uma vez o visual e os blocos iniciais. Se já tiveres blocos, a plataforma pede confirmação antes de os substituir. Todos os templates têm nome e blocos pensados para o tipo de apresentação que propõem.</Body>
+            <Body>Ao aplicar um template escolhes de uma vez o visual e os blocos iniciais. Se já tiveres blocos, a plataforma pede confirmação antes de os substituir. O template ativo fica marcado na lista.</Body>
 
             <MkPreviewEditor />
 

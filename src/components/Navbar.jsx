@@ -860,6 +860,9 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                     <MessageSquare size={16} /> Mensagens
                     {unreadMsgs > 0 && <span style={{ marginLeft: 'auto', background: 'var(--color-primary)', color: '#fff', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{unreadMsgs > 9 ? '9+' : unreadMsgs}</span>}
                   </button>
+                  <button className="mobile-drawer-btn" onClick={() => { navigate('/aprende'); setOpen(false) }}>
+                    <BookMarked size={16} /> Aprende a usar
+                  </button>
                 </>
               )}
 
@@ -1024,6 +1027,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               ) : extras?.type === 'project' ? (
                 <button
                   className="mob-nav-icon-btn primary"
+                  data-tour="preview"
                   onClick={() => setProjMenuOpen(o => !o)}
                   aria-label="Gerir projeto"
                   style={{ background: projMenuOpen ? '#1564d4' : undefined }}
@@ -1156,6 +1160,11 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
             <button className="mob-nav-btn" onClick={() => { navigate(`/editar/${extras.slug}`); setProjMenuOpen(false) }}>
               <Pencil size={18} /> Editar
             </button>
+            {extras.showDiary && (
+              <button className="mob-nav-btn" onClick={() => { navigate(`/projeto/${extras.slug}/diario`); setProjMenuOpen(false) }}>
+                <BookOpen size={18} /> Diário
+              </button>
+            )}
             {extras.onDefense && (
               <button className="mob-nav-btn" onClick={() => { extras.onDefense(); setProjMenuOpen(false) }}>
                 <GraduationCap size={18} /> Modo defesa
