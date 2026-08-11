@@ -263,16 +263,18 @@ export default function EditProject() {
   const creatorTotal  = creatorKeys.length
   const linkKeys      = ['linkedin_url', 'github_url', 'portfolio_url']
   const linkFilled    = linkKeys.filter(isFilled).length
-  const typeFilled    = form.project_type ? 1 : 0
+  const nameFilled    = isFilled('name') ? 1 : 0
+  const typeFilled    = (nameFilled + (form.project_type ? 1 : 0))
+  const typeTotal     = 2
   const coverFilled   = (form.cover_url && form.cover_url !== '__uploading__') ? 1 : 0
   const totalFilled   = creatorFilled + linkFilled + typeFilled + coverFilled
-  const totalAll      = creatorTotal + linkKeys.length + 1 + 1
+  const totalAll      = creatorTotal + linkKeys.length + typeTotal + 1
   const pct           = Math.round((totalFilled / totalAll) * 100)
   const canSave       = !saving && !!form.name?.trim() && !!form.area?.trim()
 
   const sections = [
     { id: 'criador',  label: 'Criador',  Icon: User,   filled: creatorFilled + linkFilled, total: creatorTotal + linkKeys.length },
-    { id: 'tipo',     label: 'Tipo',     Icon: Layers, filled: typeFilled,    total: 1 },
+    { id: 'tipo',     label: 'Tipo',     Icon: Layers, filled: typeFilled,    total: typeTotal },
     { id: 'imagem',   label: 'Imagem',   Icon: Image,  filled: coverFilled,   total: 1 },
   ]
 
@@ -450,6 +452,9 @@ export default function EditProject() {
               {activeSection === 'tipo' && (
                 <div className="ep-sec-card">
                   <h2 className="ep-sec-heading">Tipo de projeto</h2>
+                  <Field label="Nome do projeto" filled={isFilled('name')}>
+                    <input type="text" value={form.name} onChange={e => set('name', e.target.value)} style={inputStyle} placeholder="Ex: TaskFlow, EduApp..." {...inputHandlers} />
+                  </Field>
                   <Field label="Tipo" filled={!!form.project_type}>
                     <select value={form.project_type} onChange={e => set('project_type', e.target.value)} style={{ ...inputStyle, cursor: 'pointer' }} {...inputHandlers}>
                       {PROJECT_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
