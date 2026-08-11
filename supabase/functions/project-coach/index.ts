@@ -1,5 +1,5 @@
 import Anthropic from 'npm:@anthropic-ai/sdk@0.36.3'
-import { checkRateLimit, getAuthUser, clip, getCorsHeaders } from '../_shared/rateLimit.ts'
+import { checkRateLimit, getAuthUser, clip, getCorsHeaders, checkPlanLimit } from '../_shared/rateLimit.ts'
 
 const SYSTEM = (p: Record<string, string>) => `És um assistente pessoal para estudantes portugueses que estão a documentar e melhorar os seus projetos académicos — PAPs, estágios, projetos universitários e pessoais — na plataforma Showo.
 
@@ -52,6 +52,13 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ error: 'Não autenticado.' }), {
       status: 401,
       headers: { ...cors, 'Content-Type': 'application/json' },
+    })
+  }
+
+  const planCheck = await checkPlanLimit(req, 'coach', user.id)
+  if (planCheck && !planCheck.allowed) {
+    return new Response(JSON.stringify({ error: 'Limite do plano atingido.', remaining: 0, limit: planCheck.limit }), {
+      status: 403, headers: { ...cors, 'Content-Type': 'application/json' },
     })
   }
 

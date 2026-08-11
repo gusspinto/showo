@@ -1,5 +1,5 @@
 import Anthropic from 'npm:@anthropic-ai/sdk@0.36.3'
-import { checkRateLimit, getAuthUser, getCorsHeaders } from '../_shared/rateLimit.ts'
+import { checkRateLimit, getAuthUser, getCorsHeaders, checkPlanLimit } from '../_shared/rateLimit.ts'
 
 const TYPE_CONTEXT: Record<string, string> = {
   school:   'Projeto de escola — trabalho desenvolvido no contexto académico, pode ser individual ou de grupo, para uma disciplina ou unidade curricular.',
@@ -30,6 +30,13 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ error: 'Demasiados pedidos. Tenta mais tarde.' }), {
       status: 429,
       headers: { ...cors, 'Content-Type': 'application/json' },
+    })
+  }
+
+  const planCheck = await checkPlanLimit(req, 'interviewProject', user.id)
+  if (planCheck && !planCheck.allowed) {
+    return new Response(JSON.stringify({ error: 'Limite do plano atingido.', remaining: 0, limit: planCheck.limit }), {
+      status: 403, headers: { ...cors, 'Content-Type': 'application/json' },
     })
   }
 

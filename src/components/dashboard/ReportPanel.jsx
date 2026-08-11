@@ -4,6 +4,7 @@ import { supabase } from '../../lib/supabase'
 import { Modal, Button } from '../ui'
 import { REPORT_SECTIONS, timeAgoLabel } from '../../lib/journal'
 import { useAuth } from '../../context/AuthContext'
+import { AiUsageBadge } from '../PlanGate'
 
 const MIN_SECTIONS_TO_GENERATE = 3
 
@@ -110,6 +111,7 @@ export default function ReportPanel({ project, entries, coverage, onClose, onDra
           icon={draft ? <RefreshCw size={14} /> : <FileText size={14} />}>
           {busy ? 'A escrever…' : draft ? 'Atualizar rascunho' : 'Gerar rascunho'}
         </Button>
+        <AiUsageBadge feature="diaryReport" />
         {draft && (
           <Button variant="secondary" onClick={copyAll} icon={copied ? <Check size={14} /> : <Copy size={14} />}>
             {copied ? 'Copiado' : 'Copiar tudo'}

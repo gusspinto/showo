@@ -1,5 +1,5 @@
 import Anthropic from 'npm:@anthropic-ai/sdk@0.36.3'
-import { checkRateLimit, getAuthUser, clip } from '../_shared/rateLimit.ts'
+import { checkRateLimit, getAuthUser, clip, checkPlanLimit } from '../_shared/rateLimit.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': 'https://showo.pt',
@@ -22,6 +22,13 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ error: 'Demasiados pedidos. Tenta mais tarde.' }), {
       status: 429,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
+  }
+
+  const planCheck = await checkPlanLimit(req, 'coverLetter', user.id)
+  if (planCheck && !planCheck.allowed) {
+    return new Response(JSON.stringify({ error: 'Limite do plano atingido.', remaining: 0, limit: planCheck.limit }), {
+      status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   }
 

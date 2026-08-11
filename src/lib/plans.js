@@ -4,12 +4,12 @@ export const PLANS = {
     name: 'Grátis',
     maxProjects: 3,
     ai: {
-      createProject: 2,      // uses/month
-      interviewProject: 0,   // not available
-      coach: 10,             // messages/month
-      defense: 1,            // uses/month
-      diaryReport: 1,        // uses/month
-      narrative: 1,          // uses/month
+      createProject: 2,
+      interviewProject: 0,
+      coach: 10,
+      defense: 1,
+      diaryReport: 1,
+      narrative: 1,
       analyzeProject: 0,
       coverLetter: 0,
     },
@@ -58,35 +58,39 @@ export const PLANS = {
   },
 }
 
-// Returns the plan object for a given plan id (defaults to free)
 export function getPlan(planId) {
   return PLANS[planId] ?? PLANS.free
 }
 
-// Keys used to track monthly AI usage in localStorage / DB
-// Format: `ai_usage_${userId}_${feature}_${YYYY-MM}`
-export function usageKey(userId, feature) {
-  const month = new Date().toISOString().slice(0, 7) // "2026-08"
-  return `ai_usage_${userId}_${feature}_${month}`
-}
-
-// Returns remaining uses for a feature this month.
-// Returns Infinity when unlimited, 0 when exhausted, n when limited.
-export function remainingUses(planId, feature, userId) {
+// Returns remaining uses for a feature this month using server-side usage data.
+// usageMap is { feature: usedCount } from get_ai_usage() RPC.
+export function remainingUses(planId, feature, usageMap) {
   const limit = getPlan(planId).ai[feature]
   if (limit === Infinity) return Infinity
   if (limit === 0) return 0
-  const used = parseInt(localStorage.getItem(usageKey(userId, feature)) ?? '0', 10)
+  const used = usageMap?.[feature] ?? 0
   return Math.max(0, limit - used)
 }
 
-// Call this after a successful AI action to record usage.
-export function recordUse(planId, feature, userId) {
-  const limit = getPlan(planId).ai[feature]
-  if (limit === Infinity || limit === 0) return
-  const key = usageKey(userId, feature)
-  const used = parseInt(localStorage.getItem(key) ?? '0', 10)
-  localStorage.setItem(key, String(used + 1))
+// Returns the monthly limit for a feature on a plan
+export function featureLimit(planId, feature) {
+  return getPlan(planId).ai[feature] ?? 0
+}
+
+// Returns the used count for a feature from usage map
+export function featureUsed(feature, usageMap) {
+  return usageMap?.[feature] ?? 0
+}
+
+export const AI_FEATURE_LABELS = {
+  createProject: 'Criar projeto com IA',
+  interviewProject: 'Entrevista guiada',
+  coach: 'Coach IA',
+  defense: 'Defesa IA',
+  diaryReport: 'Relatório do diário',
+  narrative: 'Narrativa IA',
+  analyzeProject: 'Análise de projeto',
+  coverLetter: 'Carta de apresentação',
 }
 
 export const PLAN_GATE_MESSAGES = {

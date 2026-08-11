@@ -53,6 +53,31 @@ export async function getAuthUser(req: Request) {
   return user ?? null
 }
 
+// Check plan-based AI limit. Returns { allowed, remaining, limit, used } or null on error.
+// On success, usage is atomically incremented server-side.
+export async function checkPlanLimit(
+  req: Request,
+  feature: string,
+  userId: string
+): Promise<{ allowed: boolean; remaining: number; limit: number; used: number } | null> {
+  const supabase = createClient(
+    Deno.env.get('SUPABASE_URL')!,
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+  )
+
+  const { data, error } = await supabase.rpc('check_ai_limit', {
+    p_user_id: userId,
+    p_feature: feature,
+  })
+
+  if (error) {
+    console.error('[planLimit] check failed:', error.message)
+    return null
+  }
+
+  return data as { allowed: boolean; remaining: number; limit: number; used: number }
+}
+
 // Truncate a value to maxLen characters (prevents oversized prompts).
 export function clip(v: unknown, maxLen = 4000): string {
   return String(v ?? '').slice(0, maxLen)

@@ -6,7 +6,7 @@ import { Sparkles, ArrowRight, Pencil, Check, ChevronRight } from 'lucide-react'
 import { Navbar } from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
 import { Toast, useToast } from '../components/Toast'
-import { PlanGateModal } from '../components/PlanGate'
+import { PlanGateModal, AiUsageBadge } from '../components/PlanGate'
 
 const PROJECT_TYPES = [
   { id: 'school',   label: 'Projeto de escola' },
@@ -199,6 +199,7 @@ export default function NewProject() {
               <ChevronRight size={14} />
               Prefiro responder a perguntas
             </button>
+            <AiUsageBadge feature="createProject" style={{ marginTop: 4 }} />
           </div>
         </div>
       </NpShell>

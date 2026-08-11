@@ -1,5 +1,5 @@
 import Anthropic from 'npm:@anthropic-ai/sdk@0.36.3'
-import { checkRateLimit, getAuthUser, clip, getCorsHeaders } from '../_shared/rateLimit.ts'
+import { checkRateLimit, getAuthUser, clip, getCorsHeaders, checkPlanLimit } from '../_shared/rateLimit.ts'
 
 Deno.serve(async (req) => {
   const cors = getCorsHeaders(req)
@@ -24,6 +24,15 @@ Deno.serve(async (req) => {
   try {
     const body = await req.json()
     const projectData = body.data ?? body
+    const feature = body.feature ?? 'createProject'
+
+    const planCheck = await checkPlanLimit(req, feature, user.id)
+    if (planCheck && !planCheck.allowed) {
+      return new Response(JSON.stringify({ error: 'Limite do plano atingido.', remaining: 0, limit: planCheck.limit }), {
+        status: 403,
+        headers: { ...cors, 'Content-Type': 'application/json' },
+      })
+    }
 
     const client = new Anthropic({
       apiKey: Deno.env.get('ANTHROPIC_API_KEY') ?? '',

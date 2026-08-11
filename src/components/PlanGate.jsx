@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { getPlan } from '../lib/plans'
 
 const C = {
   overlay: {
@@ -38,6 +39,29 @@ export function PlanGateModal({ message, onClose }) {
         </div>
       </div>
     </div>
+  )
+}
+
+// Shows remaining AI uses: "2/10 restantes" or "Ilimitado"
+export function AiUsageBadge({ feature, style }) {
+  const { planId, aiUsage } = useAuth()
+  const plan = getPlan(planId)
+  const limit = plan.ai[feature]
+  if (limit === undefined) return null
+  if (limit === 0) return null
+  if (limit === Infinity) return null
+  const used = aiUsage?.[feature] ?? 0
+  const remaining = Math.max(0, limit - used)
+  const isLow = remaining <= Math.ceil(limit * 0.25)
+  return (
+    <span style={{
+      display: 'inline-flex', alignItems: 'center', gap: 4,
+      fontSize: '0.72rem', fontWeight: 600,
+      color: remaining === 0 ? 'var(--color-error)' : isLow ? 'var(--color-warning)' : 'var(--color-text-tertiary)',
+      ...style,
+    }}>
+      {remaining}/{limit} restantes
+    </span>
   )
 }
 

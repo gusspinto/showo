@@ -9,7 +9,7 @@ import { calculateScore, looksLikeSpam } from '../lib/score'
 import { containsProfanity } from '../lib/profanity'
 import { CHALLENGES, getChallengeStatus } from '../lib/challenges'
 import { Navbar } from '../components/Navbar'
-import { PlanGateModal } from '../components/PlanGate'
+import { PlanGateModal, AiUsageBadge } from '../components/PlanGate'
 import { chatProjectCoach } from '../lib/chatProjectCoach'
 import { useAuth } from '../context/AuthContext'
 import { useSidebar } from '../context/SidebarContext'
@@ -4675,10 +4675,9 @@ export default function ProjectPage() {
     setNarrativePreview(null)
     try {
       const { data, error: fnErr } = await supabase.functions.invoke('generate-project', {
-        body: { data: project },
+        body: { data: project, feature: 'narrative' },
       })
       if (fnErr || !data?.tagline) throw new Error(data?.error || 'Resposta inválida')
-      consumeAI('narrative')
       setNarrativePreview(data)
     } catch {
       setNarrativeError('Não foi possível gerar agora. Tenta novamente.')
@@ -7953,7 +7952,7 @@ export default function ProjectPage() {
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: colors.text }}>Assistente IA</div>
-                <div style={{ fontSize: 11, color: colors.muted }}>Tutor do teu projeto</div>
+                <div style={{ fontSize: 11, color: colors.muted, display: 'flex', alignItems: 'center', gap: 6 }}>Tutor do teu projeto <AiUsageBadge feature="coach" /></div>
               </div>
               {coachMessages.length > 0 && (
                 <button
