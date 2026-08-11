@@ -860,11 +860,11 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                     <MessageSquare size={16} /> Mensagens
                     {unreadMsgs > 0 && <span style={{ marginLeft: 'auto', background: 'var(--color-primary)', color: '#fff', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{unreadMsgs > 9 ? '9+' : unreadMsgs}</span>}
                   </button>
-                  <button className="mobile-drawer-btn" onClick={() => { navigate('/aprende'); setOpen(false) }}>
-                    <BookMarked size={16} /> Aprende a usar
-                  </button>
                 </>
               )}
+              <button className="mobile-drawer-btn" onClick={() => { navigate('/aprende'); setOpen(false) }}>
+                <BookMarked size={16} /> Aprende a usar
+              </button>
 
               {/* Project management extras */}
               {extras?.type === 'project' && (
@@ -1618,6 +1618,9 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                       <button className={`mob-nav-btn${isActive('/mensagens') ? ' active' : ''}`} onClick={() => { navigate('/mensagens'); setMenuOpen(false) }}>
                         <MessageSquare size={20} /> Mensagens
                         {unreadMsgs > 0 && <span style={{ marginLeft: 'auto', background: 'var(--color-primary)', color: '#fff', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{unreadMsgs > 9 ? '9+' : unreadMsgs}</span>}
+                      </button>
+                      <button className={`mob-nav-btn${isActive('/aprende') ? ' active' : ''}`} onClick={() => { navigate('/aprende'); setMenuOpen(false) }}>
+                        <BookMarked size={20} /> Aprende a usar
                       </button>
                     </>
                   )}

@@ -122,10 +122,10 @@ export default function Explore() {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [filterArea, setFilterArea] = useState('')
   const [filterType, setFilterType] = useState('')
-  const [filterMinScore, setFilterMinScore] = useState(0)
+  const [filterMinScore] = useState(0)
   const [filterZone, setFilterZone] = useState('')
   const [areas, setAreas] = useState([])
-  const [sortBy, setSortBy] = useState('score')
+  const [sortBy, setSortBy] = useState('views')
   const [filterAvailable, setFilterAvailable] = useState(false)
 
   const recruiterMode = profile?.role === 'recrutador' || profile?.role === 'empresa'
@@ -240,8 +240,8 @@ export default function Explore() {
     return true
   }), [projects, query, filterArea, filterType, filterMinScore, filterZone, filterAvailable])
 
-  const hasFilters = filterArea || filterType || filterMinScore > 0 || filterZone || filterAvailable
-  const activeFilterCount = [filterArea, filterType, filterZone, filterMinScore > 0, filterAvailable].filter(Boolean).length
+  const hasFilters = filterArea || filterType || filterZone || filterAvailable
+  const activeFilterCount = [filterArea, filterType, filterZone, filterAvailable].filter(Boolean).length
 
   const peopleQuery = peopleSearch.toLowerCase().trim()
   const filteredPeople = useMemo(() => people.filter(p => {
@@ -258,18 +258,16 @@ export default function Explore() {
   }), [people, peopleQuery, filterSkill, filterPeopleArea])
 
   const SORT_OPTIONS = [
-    { id: 'score',  label: 'Melhor score' },
     { id: 'recent', label: 'Mais recentes' },
     { id: 'views',  label: 'Mais vistos' },
   ]
 
   const sorted = useMemo(() => [...filtered].sort((a, b) => {
-    if (sortBy === 'recent') return new Date(b.created_at) - new Date(a.created_at)
-    if (sortBy === 'views')  return (b.views ?? 0) - (a.views ?? 0)
-    return (b.score ?? 0) - (a.score ?? 0)
+    if (sortBy === 'views') return (b.views ?? 0) - (a.views ?? 0)
+    return new Date(b.created_at) - new Date(a.created_at)
   }), [filtered, sortBy])
 
-  useEffect(() => { setVisibleCount(24) }, [query, filterArea, filterType, filterMinScore, filterZone, filterAvailable, sortBy])
+  useEffect(() => { setVisibleCount(24) }, [query, filterArea, filterType, filterZone, filterAvailable, sortBy])
 
   return (
     <div className="min-h-screen bg-page font-body">
@@ -362,16 +360,6 @@ export default function Explore() {
               <SelectFilter value={filterZone} onChange={setFilterZone} options={ZONES} label="Filtrar por zona" />
               <SelectFilter value={sortBy} onChange={setSortBy} options={SORT_OPTIONS} label="Ordenar por" />
 
-              <div className={`filter-score-wrap${filterMinScore > 0 ? ' has-value' : ''}`}>
-                <span className="filter-score-label">Score ≥</span>
-                <input type="range" min={0} max={100} step={5} value={filterMinScore}
-                  onChange={e => setFilterMinScore(Number(e.target.value))}
-                  className="filter-score-range" />
-                <span className={`filter-score-value${filterMinScore > 0 ? ' active' : ''}`}>
-                  {filterMinScore > 0 ? filterMinScore : 'Todos'}
-                </span>
-              </div>
-
               <button
                 onClick={() => setFilterAvailable(v => !v)}
                 className={`filter-toggle-btn${filterAvailable ? ' active' : ''}`}
@@ -382,7 +370,7 @@ export default function Explore() {
               {hasFilters && (
                 <button
                   className="filter-clear-btn"
-                  onClick={() => { setFilterArea(''); setFilterType(''); setFilterMinScore(0); setFilterZone(''); setFilterAvailable(false); setFilterSkill('') }}
+                  onClick={() => { setFilterArea(''); setFilterType(''); setFilterZone(''); setFilterAvailable(false); setFilterSkill('') }}
                 >
                   <X size={13} /> Limpar filtros
                 </button>
@@ -397,7 +385,7 @@ export default function Explore() {
               <p className="text-md">{(query || hasFilters) ? 'Nenhum projeto encontrado com esses filtros.' : 'Ainda não há projetos. Sê o primeiro!'}</p>
               {(query || hasFilters) && (
                 <button className="explore-empty-clear"
-                  onClick={() => { setSearch(''); setFilterArea(''); setFilterType(''); setFilterMinScore(0); setFilterZone(''); setFilterAvailable(false) }}>
+                  onClick={() => { setSearch(''); setFilterArea(''); setFilterType(''); setFilterZone(''); setFilterAvailable(false) }}>
                   Limpar pesquisa
                 </button>
               )}
@@ -440,11 +428,6 @@ export default function Explore() {
                             </span>
                           )}
                         </>
-                      )}
-                      {project.score != null && (
-                        <div className="explore-score-badge">
-                          {project.score}
-                        </div>
                       )}
                       {(project.views ?? 0) > 0 && (
                         <div className="explore-views-badge has-views">

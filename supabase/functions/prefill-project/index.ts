@@ -50,30 +50,43 @@ Deno.serve(async (req) => {
     const typeLabel = TYPE_LABELS[projectType] ?? 'Projeto'
     const safeText = String(text).trim().slice(0, 1000)
 
-    const prompt = `És um assistente que analisa descrições curtas de projetos de estudantes portugueses e infere campos de um formulário.
+    const prompt = `És um assistente que analisa descrições curtas de projetos de estudantes portugueses e infere campos de um formulário de portfólio.
 
 O utilizador descreveu o seu projeto assim:
 "${safeText}"
 
 Tipo de projeto: ${typeLabel}
 
-Com base nesta descrição, preenche os campos que conseguires inferir com confiança. Usa Português de Portugal (PT-PT), escrita natural e fluida. Nunca uses travessões (—) no texto gerado. Se não tiveres informação suficiente para um campo, deixa-o como string vazia "".
+Com base nesta descrição, preenche os campos que conseguires inferir com confiança. Regras:
+- Usa Português de Portugal (PT-PT): "utilizador" (não "usuário"), "ecrã" (não "tela").
+- Escrita natural e fluida — não é uma lista de palavras-chave, é texto corrido para um portfólio.
+- Nunca uses travessões (—) nem expressões genéricas como "de forma eficaz" ou "no âmbito de".
+- Se não tiveres informação suficiente para um campo, deixa-o como string vazia "".
+- "goal": 1-2 frases completas que explicam o propósito do projeto.
+- "problem": o problema concreto identificado, em 1-2 frases.
+- "solution": como o projeto resolve esse problema, em 1-2 frases.
+- "features": lista de funcionalidades separadas por vírgula — apenas as que estão claramente na descrição.
+- "technologies": ferramentas/linguagens/frameworks mencionadas, separadas por vírgula.
+- "challenges": se houver indicação de dificuldades ou obstáculos na descrição, resume-os em 1 frase. Senão "".
+- "results": se houver indicação de resultados, impacto ou utilizadores, resume em 1 frase. Senão "".
 
 Devolve APENAS este JSON (sem markdown, sem explicações):
 {
-  "name": "<nome do projeto, se mencionado ou óbvio, senão \\"\\">",
-  "area": "<área tecnológica/temática: ex: Saúde, Educação, Web, Mobile, IA... senão \\"\\">",
-  "goal": "<objetivo principal do projeto em 1-2 frases, senão \\"\\">",
-  "problem": "<problema que o projeto resolve, senão \\"\\">",
-  "solution": "<como resolve o problema, senão \\"\\">",
+  "name": "<nome curto do projeto, se mencionado, senão \\"\\">",
+  "area": "<área temática: ex: Saúde, Educação, Web, Mobile, IA, Gestão... senão \\"\\">",
+  "goal": "<objetivo principal em 1-2 frases, senão \\"\\">",
+  "problem": "<problema que resolve em 1-2 frases, senão \\"\\">",
+  "solution": "<como resolve o problema em 1-2 frases, senão \\"\\">",
   "target_audience": "<público-alvo, se inferível, senão \\"\\">",
-  "features": "<funcionalidades principais separadas por vírgula, se mencionadas, senão \\"\\">",
-  "technologies": "<tecnologias mencionadas separadas por vírgula, senão \\"\\">"
+  "features": "<funcionalidades separadas por vírgula, senão \\"\\">",
+  "technologies": "<tecnologias separadas por vírgula, senão \\"\\">",
+  "challenges": "<dificuldades encontradas, se mencionadas, senão \\"\\">",
+  "results": "<resultados ou impacto obtido, se mencionado, senão \\"\\">"
 }`
 
     const message = await client.messages.create({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 500,
+      max_tokens: 700,
       messages: [{ role: 'user', content: prompt }],
     })
 

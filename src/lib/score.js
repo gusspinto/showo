@@ -27,9 +27,11 @@ export function looksLikeSpam(text) {
 
   const words = str.split(/\s+/).filter(Boolean)
 
-  // B: word with letters AND ≥2 embedded digits — e.g. "wuid238j28", "abc123def"
+  // B: long word with letters AND ≥4 embedded digits — catches random hashes/ids
+  //    (threshold raised from 2→4 and word length gated at ≥8 to avoid flagging
+  //    legitimate tech version strings like "Vue3.0", "ES2020", "Angular@14")
   for (const w of words) {
-    if (/[a-zA-ZÀ-ɏ]/.test(w) && (w.match(/\d/g) || []).length >= 2) return true
+    if (w.length >= 8 && /[a-zA-ZÀ-ɏ]/.test(w) && (w.match(/\d/g) || []).length >= 4) return true
   }
 
   // C: 4+ consecutive vowels — not found in real PT/EN words ("aeuiedah", "ooouuu")

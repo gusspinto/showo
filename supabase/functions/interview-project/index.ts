@@ -2,15 +2,23 @@ import Anthropic from 'npm:@anthropic-ai/sdk@0.36.3'
 import { checkRateLimit, getAuthUser, getCorsHeaders, checkPlanLimit } from '../_shared/rateLimit.ts'
 
 const TYPE_CONTEXT: Record<string, string> = {
-  school:   'Projeto de escola — trabalho desenvolvido no contexto académico, pode ser individual ou de grupo, para uma disciplina ou unidade curricular.',
-  pap:      'PAP (Projeto de Aptidão Profissional) — projeto final de curso profissional, com orientador, defesa perante júri, e muita pressão académica.',
-  personal: 'Projeto pessoal — criado por iniciativa própria, por paixão ou para aprender algo novo, fora do contexto escolar.',
+  school:       'Projeto de escola — trabalho desenvolvido no contexto académico, individual ou de grupo, para uma disciplina ou unidade curricular.',
+  pap:          'PAP (Projeto de Aptidão Profissional) — projeto final de curso profissional, com orientador, defesa perante júri, e muita pressão académica.',
+  personal:     'Projeto pessoal — criado por iniciativa própria, por paixão ou para aprender algo novo, fora do contexto escolar.',
+  internship:   'Estágio profissional — período de trabalho numa empresa ou organização, com tarefas reais, supervisor e aprendizagens práticas.',
+  group:        'Trabalho de grupo — projeto desenvolvido em equipa, com divisão de tarefas, coordenação e contribuição individual.',
+  competition:  'Competição ou hackathon — projeto desenvolvido para concorrer numa competição, com prazo apertado, júri externo e classificação.',
+  presentation: 'Apresentação ou trabalho académico — projeto de investigação, análise ou exposição de um tema, sem necessariamente ter desenvolvimento técnico.',
 }
 
 const TYPE_FIELDS: Record<string, string[]> = {
-  school:   ['name', 'area', 'goal', 'problem', 'solution', 'technologies', 'features', 'results', 'learnings'],
-  pap:      ['name', 'area', 'goal', 'school_course', 'supervisor', 'technologies', 'problem', 'solution', 'results', 'learnings'],
-  personal: ['name', 'area', 'goal', 'technologies', 'problem', 'solution', 'features', 'results', 'learnings'],
+  school:       ['name', 'area', 'goal', 'problem', 'solution', 'technologies', 'features', 'results', 'learnings'],
+  pap:          ['name', 'area', 'goal', 'school_course', 'supervisor', 'technologies', 'problem', 'solution', 'results', 'learnings'],
+  personal:     ['name', 'area', 'goal', 'technologies', 'problem', 'solution', 'features', 'results', 'learnings'],
+  internship:   ['name', 'area', 'goal', 'technologies', 'target_audience', 'results', 'challenges', 'learnings'],
+  group:        ['name', 'area', 'goal', 'problem', 'solution', 'technologies', 'features', 'results', 'learnings'],
+  competition:  ['name', 'area', 'goal', 'problem', 'solution', 'technologies', 'results', 'challenges', 'learnings'],
+  presentation: ['name', 'area', 'goal', 'problem', 'solution', 'target_audience', 'results', 'learnings'],
 }
 
 Deno.serve(async (req) => {

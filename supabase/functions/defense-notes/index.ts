@@ -103,8 +103,8 @@ Devolve APENAS este JSON (sem markdown):
 }`
 
     const message = await client.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 2400,
+      model: 'claude-sonnet-4-6',
+      max_tokens: 2800,
       messages: [{ role: 'user', content: prompt }],
     })
 
