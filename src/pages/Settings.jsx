@@ -157,6 +157,7 @@ export default function Settings() {
   const [companySize, setCompanySize] = useState('')
   const [area, setArea] = useState('')
   const [skills, setSkills] = useState([])
+  const [phone, setPhone] = useState('')
   const [currentPw, setCurrentPw] = useState('')
   const [newPw, setNewPw] = useState('')
   const [confirmPw, setConfirmPw] = useState('')
@@ -179,7 +180,7 @@ export default function Settings() {
   useEffect(() => {
     if (!user) return
     setFullName(user.user_metadata?.full_name ?? '')
-    supabase.from('profiles').select('username, bio, role, avatar_url, available_for_work, monthly_report_opt_in, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size, skills, area, notify_newsletter, notify_marketing, notify_product_updates, notify_project_activity, profile_visibility, show_email_publicly').eq('id', user.id).single().then(({ data }) => {
+    supabase.from('profiles').select('username, bio, role, avatar_url, available_for_work, monthly_report_opt_in, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size, skills, area, phone, notify_newsletter, notify_marketing, notify_product_updates, notify_project_activity, profile_visibility, show_email_publicly').eq('id', user.id).single().then(({ data }) => {
       if (data) {
         setUsername(data.username ?? '')
         setOriginalUsername(data.username ?? '')
@@ -199,6 +200,7 @@ export default function Settings() {
         setCompanySize(data.company_size ?? '')
         setSkills(data.skills ?? [])
         setArea(data.area ?? '')
+        setPhone(data.phone ?? '')
         setNotifyNewsletter(data.notify_newsletter ?? true)
         setNotifyMarketing(data.notify_marketing ?? true)
         setNotifyProductUpdates(data.notify_product_updates ?? true)
@@ -275,6 +277,7 @@ export default function Settings() {
         p_full_name:               fullName.trim() || null,
         p_username:                username.trim() || null,
         p_bio:                     bio.trim() || null,
+        p_phone:                   phone.trim() || null,
         p_role:                    safeRole,
         p_available_for_work:      availableForWork,
         p_skills:                  (role === 'aluno' || role === 'professor') ? skills : [],
@@ -507,6 +510,8 @@ export default function Settings() {
                   <Input label="Nome" value={fullName} onChange={setFullName} placeholder="O teu nome" />
                   <Input label="Username" value={username} onChange={v => setUsername(v.toLowerCase().replace(/[^a-z0-9_]/g, ''))} placeholder={isRecruiter ? 'ex: rh_empresa' : 'ex: gustavo_silva'} prefix="@" hint={usernameHint} />
                   <Textarea label={isRecruiter ? 'Apresentação' : 'Bio'} value={bio} onChange={setBio} placeholder={isRecruiter ? 'Apresenta a tua empresa ou o teu trabalho como recrutador...' : 'Conta um pouco sobre ti e os teus projetos...'} hint="Aparece no teu perfil público." />
+
+                  <Input label="Telemóvel (opcional)" value={phone} onChange={setPhone} placeholder="912 345 678" hint="Para te contactarmos sobre o teu portfolio e oportunidades. Nunca partilhado publicamente." />
 
                   {role === 'aluno' && (
                     <div className="settings-field">

@@ -87,6 +87,7 @@ function OnboardingAlunoModal({ user, profile, onDismiss, claimedSlug }) {
   const [bio, setBio] = useState(profile?.bio ?? '')
   const [area, setArea] = useState(profile?.area ?? '')
   const [skills, setSkills] = useState(profile?.skills ?? [])
+  const [phone, setPhone] = useState('')
   const [saving, setSaving] = useState(false)
   const [saveErr, setSaveErr] = useState(null)
   const [copied, setCopied] = useState(false)
@@ -97,7 +98,7 @@ function OnboardingAlunoModal({ user, profile, onDismiss, claimedSlug }) {
 
   async function saveProfile() {
     setSaving(true); setSaveErr(null)
-    const { error } = await supabase.from('profiles').upsert({ id: user.id, username: username.trim() || null, bio: bio.trim() || null, area: area || null, skills }, { onConflict: 'id' })
+    const { error } = await supabase.from('profiles').upsert({ id: user.id, username: username.trim() || null, bio: bio.trim() || null, area: area || null, skills, phone: phone.trim() || null }, { onConflict: 'id' })
     setSaving(false)
     if (error) { setSaveErr(error.code === '23505' ? 'Este username já está a ser usado.' : 'Erro ao guardar.'); return }
     setStep(1)
@@ -144,6 +145,11 @@ function OnboardingAlunoModal({ user, profile, onDismiss, claimedSlug }) {
                 </select>
               </div>
               <div><SkillsPicker label="Competências (opcional)" value={skills} onChange={setSkills} max={8} /></div>
+              <div>
+                <SectionLabel>Telemóvel (opcional)</SectionLabel>
+                <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="912 345 678" className="dash-input-onb" />
+                <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 4 }}>Para te contactarmos sobre o teu portfolio e oportunidades. Nunca partilhado publicamente.</p>
+              </div>
             </div>
             {saveErr && <div className="dash-error-box">{saveErr}</div>}
             <Button onClick={saveProfile} disabled={saving} loading={saving} fullWidth iconRight={<ArrowRight size={15} />}>Guardar perfil</Button>
