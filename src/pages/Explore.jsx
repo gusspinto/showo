@@ -125,7 +125,7 @@ export default function Explore() {
   const [filterMinScore] = useState(0)
   const [filterZone, setFilterZone] = useState('')
   const [areas, setAreas] = useState([])
-  const [sortBy, setSortBy] = useState('score')
+  const [sortBy, setSortBy] = useState('views')
   const [filterAvailable, setFilterAvailable] = useState(false)
 
   const recruiterMode = profile?.role === 'recrutador' || profile?.role === 'empresa'
