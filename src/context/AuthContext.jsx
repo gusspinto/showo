@@ -57,6 +57,10 @@ export function AuthProvider({ children }) {
     setProfile(data ?? null)
     if (data) {
       identifyUser(userRes.data?.user, data)
+      const storedRef = localStorage.getItem('showo_ref')
+      if (storedRef && !data.referred_by) {
+        supabase.rpc('claim_referral', { code: storedRef }).then(() => localStorage.removeItem('showo_ref'))
+      }
       const ts = new Date().toISOString()
       supabase.from('profiles').update({ last_active_at: ts, last_action: 'login' }).eq('id', uid).then(() => {})
       supabase.from('activity_log').insert({ user_id: uid, action: 'login' }).then(() => {})
