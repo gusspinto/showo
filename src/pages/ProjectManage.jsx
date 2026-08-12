@@ -798,14 +798,29 @@ function AISection({ project }) {
 }
 
 // ── SECTION: Definições ───────────────────────────────────────────────────────
+const VISIBILITY_OPTIONS = [
+  { value: 'public',   label: 'Público',       desc: 'Aparece no Explorar e na Home' },
+  { value: 'unlisted', label: 'Só com link',   desc: 'Acessível apenas com o link direto' },
+  { value: 'private',  label: 'Privado',       desc: 'Visível apenas para ti' },
+]
+
 function SettingsSection({ project, isOwner, navigate }) {
   const [copied, setCopied] = useState(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [visibility, setVisibility] = useState(project?.visibility || 'public')
+  const [savingVis, setSavingVis] = useState(false)
 
   const publicUrl = `${window.location.origin}/projeto/${project?.slug}`
   const editToken = localStorage.getItem(`edit_token_${project?.slug}`)
   const editUrl   = editToken ? `${window.location.origin}/editar/${project?.slug}?token=${editToken}` : null
+
+  async function saveVisibility(val) {
+    setVisibility(val)
+    setSavingVis(true)
+    await supabase.from('projects').update({ visibility: val }).eq('id', project.id)
+    setSavingVis(false)
+  }
 
   function copy(text, key) {
     navigator.clipboard.writeText(text).then(() => {
@@ -824,6 +839,43 @@ function SettingsSection({ project, isOwner, navigate }) {
 
   return (
     <>
+      {/* Visibilidade */}
+      {isOwner && (
+        <Card>
+          <CardTitle><Globe size={13} /> Visibilidade</CardTitle>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {VISIBILITY_OPTIONS.map(opt => (
+              <button
+                key={opt.value}
+                onClick={() => saveVisibility(opt.value)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 12,
+                  padding: '12px 14px',
+                  background: visibility === opt.value ? 'var(--color-primary-subtle)' : C.bgAlt,
+                  border: `1.5px solid ${visibility === opt.value ? 'var(--color-primary-muted)' : C.border}`,
+                  borderRadius: 10, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
+                  transition: 'all 0.15s',
+                }}
+              >
+                <div style={{
+                  width: 16, height: 16, borderRadius: '50%', flexShrink: 0,
+                  border: `2px solid ${visibility === opt.value ? 'var(--color-primary)' : C.border}`,
+                  background: visibility === opt.value ? 'var(--color-primary)' : 'transparent',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  {visibility === opt.value && <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#fff' }} />}
+                </div>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{opt.label}</div>
+                  <div style={{ fontSize: 12, color: C.muted }}>{opt.desc}</div>
+                </div>
+                {savingVis && visibility === opt.value && <div style={{ marginLeft: 'auto', fontSize: 11, color: C.muted }}>A guardar…</div>}
+              </button>
+            ))}
+          </div>
+        </Card>
+      )}
+
       {/* Links de partilha */}
       <Card>
         <CardTitle><Globe size={13} /> Links do projeto</CardTitle>

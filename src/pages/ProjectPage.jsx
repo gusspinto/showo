@@ -4373,6 +4373,17 @@ export default function ProjectPage() {
         return
       }
 
+      // Visibility gate: private projects are owner-only
+      if (data.visibility === 'private') {
+        const { data: { user: currentUser } } = await supabase.auth.getUser()
+        const isOwner = currentUser?.id === data.user_id
+        const hasToken = data.edit_token && localStorage.getItem(`edit_token_${data.slug}`) === data.edit_token
+        if (!isOwner && !hasToken) {
+          setLoading(false)
+          return
+        }
+      }
+
       // Fetch diary entries to include in score calculation
       const { data: journalEntries } = await supabase
         .from('project_journal_entries')
