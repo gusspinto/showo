@@ -313,14 +313,8 @@ export default function Home() {
                     </div>
                   </div>
 
-                  {/* Score + CTA */}
+                  {/* CTA */}
                   <div className="home-pom-footer">
-                    {p.score != null && (
-                      <div className="home-pom-score">
-                        <span className="home-pom-score-num">{p.score}</span>
-                        <span className="home-pom-score-label">score</span>
-                      </div>
-                    )}
                     <button className="home-pom-cta" onClick={e => { e.stopPropagation(); navigate(`/projeto/${p.slug}`) }}>
                       Ver projeto <ArrowRight size={14} />
                     </button>
@@ -368,7 +362,6 @@ export default function Home() {
                       {p.name?.[0]?.toUpperCase() || '?'}
                     </span>
                   )}
-                  {p.score != null && <span className="home-card-score">{p.score} pts</span>}
                 </div>
 
                 <div className="home-card-body">
