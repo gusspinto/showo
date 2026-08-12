@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
 import { Folder, Check, Search, User, Copy, Inbox, Download, MessageSquare, X, ChevronUp, ChevronDown, ChevronRight, ArrowRight, Pencil, UserMinus, GraduationCap, CheckCircle, AlertTriangle, ListChecks, Circle, Trash2, Plus, Calendar, ClipboardList, Scale, Trophy } from 'lucide-react'
-import { Button, Modal, ModalActions } from '../components/ui'
+import { Button, Modal, ModalActions, Select } from '../components/ui'
 import { getCurrentAcademicYear, academicYearOptions } from '../lib/academicYear'
 
 const C = {
@@ -253,10 +253,9 @@ function EditTurmaModal({ turma, onClose, onSave }) {
           </div>
           <div>
             <label style={{ display: 'block', fontSize: 12, color: C.muted, marginBottom: 6, fontWeight: 600 }}>Ano letivo</label>
-            <select value={academicYear} onChange={e => setAcademicYear(e.target.value)}
-              style={{ width: '100%', background: 'var(--color-bg)', border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 12px', color: C.text, fontSize: 14, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box', cursor: 'pointer' }}>
-              {[...new Set([turma.academic_year, ...academicYearOptions()].filter(Boolean))].map(y => <option key={y} value={y}>{y}</option>)}
-            </select>
+            <Select value={academicYear} onChange={setAcademicYear}
+              options={[...new Set([turma.academic_year, ...academicYearOptions()].filter(Boolean))].map(y => ({ value: y, label: y }))}
+              inputStyle={{ background: 'var(--color-bg)', border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 14 }} />
           </div>
           <button onClick={handleSave} disabled={saving || !name.trim()} style={{ background: 'var(--color-primary)', border: 'none', borderRadius: 8, padding: '11px', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', opacity: saving || !name.trim() ? 0.6 : 1, fontFamily: 'inherit' }}>
             {saving ? 'A guardar…' : 'Guardar alterações'}

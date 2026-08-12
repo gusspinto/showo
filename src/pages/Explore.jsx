@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import { Navbar } from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
 import { Search, Building2, Eye, Briefcase, Users, GraduationCap, BookOpen, SlidersHorizontal, X } from 'lucide-react'
+import { Select } from '../components/ui'
 import './Explore.css'
 
 const TITLE_FONT_CSS = {
@@ -53,19 +54,14 @@ function getAreaColor(area) {
 
 function SelectFilter({ value, onChange, options, label }) {
   return (
-    <div className="explore-select-wrap">
-      <select
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        className={`explore-select${value ? ' has-value' : ''}`}
-        aria-label={label}
-      >
-        {options.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}
-      </select>
-      <svg className="explore-select-arrow" width="12" height="8" viewBox="0 0 12 8" fill="none">
-        <path d="M1 1l5 5 5-5" stroke="var(--color-text-secondary)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-      </svg>
-    </div>
+    <Select
+      value={value}
+      onChange={onChange}
+      options={options.map(o => ({ value: o.id, label: o.label }))}
+      placeholder={label}
+      className="explore-select-wrap"
+      inputStyle={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', padding: '7px 32px 7px 12px', fontSize: 'var(--text-sm)' }}
+    />
   )
 }
 

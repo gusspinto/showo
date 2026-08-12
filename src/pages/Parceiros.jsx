@@ -7,6 +7,7 @@ import {
   Building2, Plus, X, ChevronDown, ChevronRight, Mail, Phone, Globe2,
   UserPlus, Trash2, Pencil, ExternalLink, Send, CheckCircle2,
 } from 'lucide-react'
+import { Select } from '../components/ui'
 
 const C = {
   bg: 'var(--color-bg)', bgAlt: 'var(--color-bg-alt)', card: 'var(--color-surface)', cardHover: 'var(--color-surface-hover)',
@@ -131,18 +132,15 @@ function LeadModal({ students, onClose, onSave }) {
         <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <div>
             <label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>Aluno</label>
-            <select value={studentId} onChange={e => setStudentId(e.target.value)} required
-              style={{ width: '100%', background: C.bg, border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 12px', color: C.text, fontSize: 14, fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none', cursor: 'pointer' }}>
-              <option value="">Seleciona um aluno…</option>
-              {students.map(s => <option key={s.id} value={s.id}>{s.full_name} {s.turmaName ? `— ${s.turmaName}` : ''}</option>)}
-            </select>
+            <Select value={studentId} onChange={setStudentId} placeholder="Seleciona um aluno…"
+              options={students.map(s => ({ value: s.id, label: `${s.full_name}${s.turmaName ? ` — ${s.turmaName}` : ''}` }))}
+              inputStyle={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 14 }} />
           </div>
           <div>
             <label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>Estado</label>
-            <select value={status} onChange={e => setStatus(e.target.value)}
-              style={{ width: '100%', background: C.bg, border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 12px', color: C.text, fontSize: 14, fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none', cursor: 'pointer' }}>
-              {STATUS_ORDER.map(s => <option key={s} value={s}>{STATUS_META[s].label}</option>)}
-            </select>
+            <Select value={status} onChange={setStatus}
+              options={STATUS_ORDER.map(s => ({ value: s, label: STATUS_META[s].label }))}
+              inputStyle={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 14 }} />
           </div>
           <button type="submit" disabled={saving || !studentId} style={{ background: 'var(--color-primary)', border: 'none', borderRadius: 8, padding: '11px', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', opacity: saving || !studentId ? 0.6 : 1, fontFamily: 'inherit', marginTop: 4 }}>
             {saving ? 'A guardar…' : 'Associar'}
@@ -160,13 +158,9 @@ function LeadRow({ lead, onChangeStatus, onRemove }) {
       <div style={{ flex: 1, minWidth: 0, fontSize: 13, fontWeight: 600, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
         {lead.studentName}
       </div>
-      <select
-        value={lead.status}
-        onChange={e => onChangeStatus(lead.id, e.target.value)}
-        style={{ background: `${meta.color}18`, border: `1px solid ${meta.color}40`, borderRadius: 6, padding: '4px 8px', color: meta.color, fontSize: 11, fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer', outline: 'none' }}
-      >
-        {STATUS_ORDER.map(s => <option key={s} value={s} style={{ background: C.card, color: C.text }}>{STATUS_META[s].label}</option>)}
-      </select>
+      <Select value={lead.status} onChange={v => onChangeStatus(lead.id, v)}
+        options={STATUS_ORDER.map(s => ({ value: s, label: STATUS_META[s].label }))}
+        inputStyle={{ background: `${meta.color}18`, border: `1px solid ${meta.color}40`, borderRadius: 6, padding: '4px 24px 4px 8px', color: meta.color, fontSize: 11, fontWeight: 700 }} />
       <button onClick={() => onRemove(lead.id)} className="icon-btn-ghost" title="Remover" style={{ padding: 4 }}>
         <Trash2 size={13} color={C.subtle} />
       </button>

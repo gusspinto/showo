@@ -10,7 +10,7 @@ import {
 import { academicYearOptions } from '../lib/academicYear'
 import {
   Button, Card, SectionLabel, Badge, Modal, ModalActions,
-  EmptyState, ProgressBar,
+  EmptyState, ProgressBar, Select,
 } from '../components/ui'
 
 /* ── Helpers ── */
@@ -140,10 +140,8 @@ function CreateTurmaModal({ onClose, onCreated, user, profile }) {
           </div>
           <div>
             <SectionLabel>Ano letivo</SectionLabel>
-            <select value={academicYear} onChange={e => setAcademicYear(e.target.value)} className="dash-input">
-              <option value="">Seleciona...</option>
-              {academicYearOptions().map(y => <option key={y} value={y}>{y}</option>)}
-            </select>
+            <Select value={academicYear} onChange={setAcademicYear} placeholder="Seleciona..."
+              options={academicYearOptions().map(y => ({ value: y, label: y }))} />
           </div>
         </div>
         <ModalActions>

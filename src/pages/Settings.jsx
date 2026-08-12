@@ -8,6 +8,7 @@ import { Loader, Check, X, AlertTriangle, Camera, ArrowLeft, GraduationCap, Book
 import { CropModal } from '../components/CropModal'
 import { containsProfanity } from '../lib/profanity'
 import SkillsPicker from '../components/SkillsPicker'
+import { Select } from '../components/ui'
 import './Settings.css'
 
 function Input({ label, value, onChange, placeholder, hint, type = 'text', prefix }) {
@@ -539,21 +540,8 @@ export default function Settings() {
                   {role === 'aluno' && (
                     <div className="settings-field">
                       <label className="settings-label">Área</label>
-                      <select value={area} onChange={e => setArea(e.target.value)} className={`settings-select${area ? ' has-value' : ''}`}>
-                        <option value="">Seleciona a tua área</option>
-                        <option value="Programação e Informática">Programação e Informática</option>
-                        <option value="Design e Multimédia">Design e Multimédia</option>
-                        <option value="Marketing e Comunicação">Marketing e Comunicação</option>
-                        <option value="Gestão e Administração">Gestão e Administração</option>
-                        <option value="Eletrónica e Automação">Eletrónica e Automação</option>
-                        <option value="Audiovisual e Cinema">Audiovisual e Cinema</option>
-                        <option value="Turismo e Hotelaria">Turismo e Hotelaria</option>
-                        <option value="Saúde">Saúde</option>
-                        <option value="Desporto">Desporto</option>
-                        <option value="Artes e Espetáculo">Artes e Espetáculo</option>
-                        <option value="Construção e Engenharia">Construção e Engenharia</option>
-                        <option value="Outra">Outra</option>
-                      </select>
+                      <Select value={area} onChange={setArea} placeholder="Seleciona a tua área"
+                        options={['Programação e Informática','Design e Multimédia','Marketing e Comunicação','Gestão e Administração','Eletrónica e Automação','Audiovisual e Cinema','Turismo e Hotelaria','Saúde','Desporto','Artes e Espetáculo','Construção e Engenharia','Outra']} />
                       <p className="settings-hint">Permite que recrutadores filtrem por área.</p>
                     </div>
                   )}

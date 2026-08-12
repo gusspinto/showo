@@ -7,6 +7,7 @@ import { useAuth } from '../context/AuthContext'
 import { useSidebar } from '../context/SidebarContext'
 import { Lock, Search, Image, ArrowLeft, Check, User, Layers, Link2 } from 'lucide-react'
 import { looksLikeSpam } from '../lib/score'
+import { Select } from '../components/ui'
 import { containsProfanity } from '../lib/profanity'
 
 const colors = {
@@ -456,9 +457,7 @@ export default function EditProject() {
                     <input type="text" value={form.name} onChange={e => set('name', e.target.value)} style={inputStyle} placeholder="Ex: TaskFlow, EduApp..." {...inputHandlers} />
                   </Field>
                   <Field label="Tipo" filled={!!form.project_type}>
-                    <select value={form.project_type} onChange={e => set('project_type', e.target.value)} style={{ ...inputStyle, cursor: 'pointer' }} {...inputHandlers}>
-                      {PROJECT_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-                    </select>
+                    <Select value={form.project_type} onChange={v => set('project_type', v)} options={PROJECT_TYPES} inputStyle={inputStyle} />
                   </Field>
                   {isPap && (
                     <div className="ep-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 4 }}>

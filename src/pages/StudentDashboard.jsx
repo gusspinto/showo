@@ -9,7 +9,7 @@ import {
   Check, ArrowRight, Sparkles, Pencil, ExternalLink, Copy, Share2, Link,
   Trash2, Flame, ArrowUpRight, Trophy, Pin, BookOpen, X,
 } from 'lucide-react'
-import { Button, Card, SectionLabel, Modal } from '../components/ui'
+import { Button, Card, SectionLabel, Modal, Select } from '../components/ui'
 import { useAuth } from '../context/AuthContext'
 
 // ProjectPulse removed — focus project now shown as auto-pinned card
@@ -140,10 +140,7 @@ function OnboardingAlunoModal({ user, profile, onDismiss, claimedSlug }) {
               </div>
               <div>
                 <SectionLabel>Área (opcional)</SectionLabel>
-                <select value={area} onChange={e => setArea(e.target.value)} className="dash-input-onb" style={{ cursor: 'pointer', colorScheme: 'dark light' }}>
-                  <option value="">Seleciona a tua área</option>
-                  {AREAS.map(a => <option key={a} value={a}>{a}</option>)}
-                </select>
+                <Select value={area} onChange={setArea} placeholder="Seleciona a tua área" options={AREAS} inputStyle={{ background: 'var(--color-primary-subtle)', border: '1.5px solid var(--color-primary-muted)' }} />
               </div>
               <div><SkillsPicker label="Competências (opcional)" value={skills} onChange={setSkills} max={8} /></div>
               <div>

@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import { Navbar } from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
 import { Trophy, ChevronRight, TrendingUp, TrendingDown, Minus, SlidersHorizontal, X } from 'lucide-react'
+import { Select } from '../components/ui'
 
 const RANK_STORAGE_KEY = 'showo_ranking_positions'
 
@@ -251,22 +252,13 @@ export default function Ranking() {
         {/* Collapsible filter panel */}
         {showFilters && (
           <div className="rank-filter-panel" style={{ marginBottom: 24 }}>
-            <select value={areaFilter} onChange={e => setAreaFilter(e.target.value)} style={selectStyle}
-              onFocus={e => (e.target.style.borderColor = C.blue)} onBlur={e => (e.target.style.borderColor = C.border)}>
-              <option value="">Todas as áreas</option>
-              {areas.map(a => <option key={a} value={a}>{a}</option>)}
-            </select>
-            <select value={yearFilter} onChange={e => setYearFilter(e.target.value)} style={selectStyle}
-              onFocus={e => (e.target.style.borderColor = C.blue)} onBlur={e => (e.target.style.borderColor = C.border)}>
-              <option value="">Todos os anos</option>
-              {years.map(y => <option key={y} value={y}>{y}</option>)}
-            </select>
+            <Select value={areaFilter} onChange={setAreaFilter} placeholder="Todas as áreas"
+              options={areas.map(a => ({ value: a, label: a }))} inputStyle={selectStyle} />
+            <Select value={yearFilter} onChange={setYearFilter} placeholder="Todos os anos"
+              options={years.map(y => ({ value: y, label: y }))} inputStyle={selectStyle} />
             {courses.length > 0 && (
-              <select value={courseFilter} onChange={e => setCourseFilter(e.target.value)} style={selectStyle}
-                onFocus={e => (e.target.style.borderColor = C.blue)} onBlur={e => (e.target.style.borderColor = C.border)}>
-                <option value="">Todos os cursos</option>
-                {courses.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
+              <Select value={courseFilter} onChange={setCourseFilter} placeholder="Todos os cursos"
+                options={courses.map(c => ({ value: c, label: c }))} inputStyle={selectStyle} />
             )}
             {activeFilterCount > 0 && (
               <button

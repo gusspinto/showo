@@ -7,6 +7,7 @@ import { useAuth } from '../context/AuthContext'
 import { calculateScore, looksLikeSpam } from '../lib/score'
 import { containsProfanity } from '../lib/profanity'
 import SkillsPicker from '../components/SkillsPicker'
+import { Select } from '../components/ui'
 import {
   Eye, Users, Sparkles, Settings, ArrowLeft, ExternalLink,
   Check, Lock, Image, X, Trash2, Copy, Link2, AlertTriangle,
@@ -272,10 +273,8 @@ function ContentSection({ project, onSaved }) {
       <Card>
         <CardTitle>Tipo de projeto</CardTitle>
         <FieldBlock label="Tipo">
-          <select value={form.project_type} onChange={e => set('project_type', e.target.value)}
-            style={{ ...inputStyle, cursor: 'pointer' }} {...inputHandlers}>
-            {PROJECT_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-          </select>
+          <Select value={form.project_type} onChange={v => set('project_type', v)}
+            options={PROJECT_TYPES} inputStyle={inputStyle} />
         </FieldBlock>
         {isPap && (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>

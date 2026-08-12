@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
 import { Briefcase, MapPin, Globe, Plus, X, Check, Clock, Building2, ChevronRight, Pencil, Trash2, ExternalLink, Send, Users, ChevronDown, ChevronUp, Zap } from 'lucide-react'
 import SkillsPicker from '../components/SkillsPicker'
+import { Select } from '../components/ui'
 
 // % de compatibilidade: skills do aluno vs skills requeridas pela vaga
 function matchScore(studentSkills, vagaSkills) {
@@ -244,10 +245,9 @@ function VagaModal({ initial, onSave, onClose, saving }) {
         <div className="vagas-filter-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
           <div>
             <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: C.muted, marginBottom: 6 }}>Tipo</label>
-            <select value={form.tipo} onChange={e => set('tipo', e.target.value)}
-              style={{ width: '100%', background: 'var(--color-bg)', border: `1.5px solid ${C.border}`, borderRadius: 10, color: C.text, fontSize: 14, padding: '10px 14px', outline: 'none', fontFamily: 'inherit', cursor: 'pointer' }}>
-              {Object.entries(TIPO_INFO).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
-            </select>
+            <Select value={form.tipo} onChange={v => set('tipo', v)}
+              options={Object.entries(TIPO_INFO).map(([k, v]) => ({ value: k, label: v.label }))}
+              inputStyle={{ background: 'var(--color-bg)', border: `1.5px solid ${C.border}`, borderRadius: 10, fontSize: 14, padding: '10px 14px' }} />
           </div>
           <div>
             <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: C.muted, marginBottom: 6 }}>Candidaturas até</label>

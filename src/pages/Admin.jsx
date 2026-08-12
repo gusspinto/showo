@@ -8,6 +8,7 @@ import {
   Shield, BarChart2, MapPin, Calendar, Check, X, Search,
   KeyRound, Plus, Copy,
 } from 'lucide-react'
+import { Select } from '../components/ui'
 
 const C = {
   bg: 'var(--color-bg)',
@@ -587,17 +588,8 @@ function OverviewTab({ users, projects, activityLog }) {
                   }}
                 />
               </div>
-              <select
-                value={sort}
-                onChange={e => setSort(e.target.value)}
-                style={{
-                  padding: '5px 8px', borderRadius: 6, border: `1px solid ${C.border}`,
-                  background: C.bgAlt, color: C.text, fontSize: 11, fontFamily: 'inherit',
-                  outline: 'none', cursor: 'pointer',
-                }}
-              >
-                {SORT_OPTIONS.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}
-              </select>
+              <Select value={sort} onChange={setSort} options={SORT_OPTIONS.map(o => ({ value: o.id, label: o.label }))}
+                inputStyle={{ padding: '5px 24px 5px 8px', borderRadius: 6, border: `1px solid ${C.border}`, background: C.bgAlt, fontSize: 11 }} />
             </div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
@@ -778,13 +770,9 @@ function UsersTab({ users, projects, onToggleAdmin, onDeleteUser, onChangeRole, 
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 8, flexShrink: 0, flexWrap: 'wrap', alignItems: 'center' }}>
-                <select
-                  value={u.role || 'aluno'}
-                  onChange={e => setConfirm({ type: 'changeRole', user: u, newRole: e.target.value })}
-                  style={{ background: C.bgAlt, border: `1px solid ${C.border}`, color: C.text, borderRadius: 7, padding: '6px 8px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
-                >
-                  {Object.entries(ROLE_LABELS).map(([id, label]) => <option key={id} value={id}>{label}</option>)}
-                </select>
+                <Select value={u.role || 'aluno'} onChange={v => setConfirm({ type: 'changeRole', user: u, newRole: v })}
+                  options={Object.entries(ROLE_LABELS).map(([id, label]) => ({ value: id, label }))}
+                  inputStyle={{ background: C.bgAlt, border: `1px solid ${C.border}`, borderRadius: 7, padding: '6px 24px 6px 8px', fontSize: 12, fontWeight: 600 }} />
                 <button
                   onClick={() => setConfirm({ type: 'resetPassword', user: u })}
                   style={{ background: 'transparent', border: `1px solid ${C.border}`, color: C.muted, borderRadius: 7, padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}

@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
 import { MessageSquare, User, X, ChevronRight, Briefcase } from 'lucide-react'
+import { Select } from '../components/ui'
 
 const C = {
   bg:     'var(--color-bg)',
@@ -232,11 +233,9 @@ export default function Pipeline() {
               </p>
             </div>
             {vagas.length > 1 && (
-              <select value={filterVaga} onChange={e => setFilterVaga(e.target.value)}
-                style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 9, color: C.text, fontSize: 13, padding: '8px 12px', outline: 'none', fontFamily: 'inherit', cursor: 'pointer' }}>
-                <option value="all">Todas as vagas</option>
-                {vagas.map(v => <option key={v.id} value={v.id}>{v.title}</option>)}
-              </select>
+              <Select value={filterVaga} onChange={setFilterVaga}
+                options={[{ value: 'all', label: 'Todas as vagas' }, ...vagas.map(v => ({ value: v.id, label: v.title }))]}
+                inputStyle={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 9, color: C.text, fontSize: 13, padding: '8px 28px 8px 12px' }} />
             )}
           </div>
 

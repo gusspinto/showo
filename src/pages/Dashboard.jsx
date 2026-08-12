@@ -17,7 +17,7 @@ import {
 } from 'lucide-react'
 import {
   Button, Card, CardHeader, CardTitle, SectionLabel, Badge, Modal, ModalActions,
-  EmptyState, PageLayout, PageHeader, ProgressBar, ProgressRing,
+  EmptyState, PageLayout, PageHeader, ProgressBar, ProgressRing, Select,
 } from '../components/ui'
 import MonthCalendar from '../components/dashboard/MonthCalendar'
 import AddReminderModal from '../components/dashboard/AddReminderModal'
@@ -151,10 +151,7 @@ function CreateTurmaModal({ onClose, onCreated }) {
         </div>
         <div>
           <SectionLabel>Ano letivo</SectionLabel>
-          <select value={academicYear} onChange={e => setAcademicYear(e.target.value)}
-            style={{ width: '100%', background: 'var(--color-input-bg)', border: '1px solid var(--color-input-border)', borderRadius: 'var(--radius-md)', padding: '10px 12px', color: 'var(--color-text)', fontSize: 'var(--text-base)', fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none', cursor: 'pointer' }}>
-            {academicYearOptions().map(y => <option key={y} value={y}>{y}</option>)}
-          </select>
+          <Select value={academicYear} onChange={setAcademicYear} options={academicYearOptions().map(y => ({ value: y, label: y }))} />
         </div>
         {error && <p style={{ color: 'var(--color-error)', fontSize: 'var(--text-base)', margin: 0 }}>{error}</p>}
         <Button type="submit" disabled={saving || !name.trim()} loading={saving} fullWidth style={{ marginTop: 'var(--sp-1)' }}>
@@ -408,10 +405,7 @@ function OnboardingAlunoModal({ user, profile, onDismiss, firstProject, claimedS
               </div>
               <div>
                 <SectionLabel>Área (opcional)</SectionLabel>
-                <select value={area} onChange={e => setArea(e.target.value)} style={{ ...inputStyle, cursor: 'pointer' }}>
-                  <option value="">Seleciona a tua área</option>
-                  {AREAS.map(a => <option key={a} value={a}>{a}</option>)}
-                </select>
+                <Select value={area} onChange={setArea} placeholder="Seleciona a tua área" options={AREAS} inputStyle={inputStyle} />
               </div>
               <div><SkillsPicker label="Competências (opcional)" value={skills} onChange={setSkills} max={8} /></div>
             </div>
@@ -1526,10 +1520,9 @@ export default function Dashboard() {
                           </div>
                           <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', marginTop: 2 }}>via {l.companyName}</div>
                         </div>
-                        <select value={l.status} onChange={e => updatePartnerLeadStatus(l.id, e.target.value)}
-                          style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', padding: '4px 8px', color: 'var(--color-text)', fontSize: 'var(--text-xs)', fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer', outline: 'none' }}>
-                          {['interessado', 'contactado', 'resposta', 'entrevista', 'aceite', 'recusado'].map(k => <option key={k} value={k}>{k.charAt(0).toUpperCase() + k.slice(1)}</option>)}
-                        </select>
+                        <Select value={l.status} onChange={v => updatePartnerLeadStatus(l.id, v)}
+                          options={['interessado', 'contactado', 'resposta', 'entrevista', 'aceite', 'recusado'].map(k => ({ value: k, label: k.charAt(0).toUpperCase() + k.slice(1) }))}
+                          inputStyle={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', padding: '4px 8px', fontSize: 'var(--text-xs)', fontWeight: 700 }} />
                         {l.student?.username && <Button size="sm" variant="ghost" icon={<ChevronRight size={15} />} onClick={() => navigate(`/u/${l.student.username}`)} />}
                       </div>
                     </Card>
