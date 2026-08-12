@@ -5801,6 +5801,7 @@ export default function ProjectPage() {
         {isOwner && (
           <button
             className="proj-ai-fab"
+            data-tour="ai"
             onClick={handleAIClick}
             title="Análise com IA"
             disabled={analyzingAI}
@@ -5825,6 +5826,7 @@ export default function ProjectPage() {
         {(isOwner || collaboratorSections !== null) && (
           <button
             className="proj-fab-defense"
+            data-tour="defense"
             onClick={() => setDefenseMode(true)}
             title="Preparar defesa"
             style={{
@@ -7220,6 +7222,7 @@ export default function ProjectPage() {
                 </button>
               )}
               <button
+                data-tour="preview"
                 onClick={() => setViewAsPublic(v => !v)}
                 style={{
                   flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
