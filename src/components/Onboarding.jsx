@@ -3,12 +3,13 @@ import { X, MousePointer, Plus, Check } from 'lucide-react'
 import './Onboarding.css'
 
 const BEATS = [
-  { key: 'click', step: 'Criar projeto' },
-  { key: 'fill',  step: 'IA preenche' },
-  { key: 'done',  step: 'Partilhar' },
+  { key: 'click',      step: 'Criar projeto' },
+  { key: 'fill',       step: 'IA preenche' },
+  { key: 'visibility', step: 'Visibilidade' },
+  { key: 'done',       step: 'Partilhar' },
 ]
 
-const DWELL = [2200, 2000, 2400]
+const DWELL = [2200, 2000, 2200, 2400]
 
 const FIELDS = [
   { label: 'Objetivo', pct: 78 },
@@ -74,6 +75,48 @@ function FillBeat({ active }) {
           <span className="onb-fill-label">{f.label}</span>
           <div className="onb-fill-track">
             <div className="onb-fill-bar" style={{ width: `${f.pct}%`, animation: `onb-grow 0.7s ${0.5 + i * 0.28}s cubic-bezier(0.22,1,0.36,1) both` }} />
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function VisibilityBeat({ active }) {
+  const [selected, setSelected] = useState('public')
+  useEffect(() => {
+    if (!active) { setSelected('public'); return }
+    const t1 = setTimeout(() => setSelected('unlisted'), 700)
+    const t2 = setTimeout(() => setSelected('public'), 1400)
+    return () => { clearTimeout(t1); clearTimeout(t2) }
+  }, [active])
+
+  if (!active) return null
+  const opts = [
+    { value: 'public',   label: 'Público',     desc: 'Aparece no Explorar' },
+    { value: 'unlisted', label: 'Só com link', desc: 'Apenas quem tiver o link' },
+    { value: 'private',  label: 'Privado',     desc: 'Visível só para ti' },
+  ]
+  return (
+    <div className="onb-fill-wrap" style={{ gap: 8 }}>
+      {opts.map((o, i) => (
+        <div key={o.value} className="onb-vis-row" style={{
+          display: 'flex', alignItems: 'center', gap: 10,
+          padding: '10px 12px', borderRadius: 10,
+          border: `1.5px solid ${selected === o.value ? 'var(--color-primary)' : 'var(--color-border)'}`,
+          background: selected === o.value ? 'var(--color-primary-subtle)' : 'var(--color-bg-alt)',
+          animation: `onb-fade 0.35s ${i * 0.12}s both`,
+          transition: 'all 0.25s',
+        }}>
+          <div style={{
+            width: 14, height: 14, borderRadius: '50%', flexShrink: 0,
+            border: `2px solid ${selected === o.value ? 'var(--color-primary)' : 'var(--color-border)'}`,
+            background: selected === o.value ? 'var(--color-primary)' : 'transparent',
+            transition: 'all 0.25s',
+          }} />
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-text)' }}>{o.label}</div>
+            <div style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>{o.desc}</div>
           </div>
         </div>
       ))}
@@ -164,7 +207,8 @@ export default function Onboarding({ onDone }) {
           <div key={beat} className="onb-beat" style={{ height: '100%' }}>
             {beat === 0 && <ClickBeat active />}
             {beat === 1 && <FillBeat active />}
-            {beat === 2 && <DoneBeat active />}
+            {beat === 2 && <VisibilityBeat active />}
+            {beat === 3 && <DoneBeat active />}
           </div>
         </div>
 

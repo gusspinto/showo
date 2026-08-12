@@ -121,6 +121,7 @@ export default function Home() {
       const { data } = await supabase
         .from('projects')
         .select('id,name,slug,area,creator_name,ai_tagline,score,cover_url,views,project_type,preview_style')
+        .or('visibility.eq.public,visibility.is.null')
         .order('score', { ascending: false })
         .limit(6)
       if (data) setProjects(data)
@@ -129,6 +130,7 @@ export default function Home() {
       const { count } = await supabase
         .from('projects')
         .select('id', { count: 'exact', head: true })
+        .or('visibility.eq.public,visibility.is.null')
       if (count != null) setProjectCount(count)
     }
     load()

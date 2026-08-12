@@ -143,6 +143,7 @@ export default function Explore() {
       const { data, error } = await supabase
         .from('projects')
         .select('id,name,slug,area,creator_name,course,school_year,ai_tagline,project_type,is_pap,score,created_at,technologies,views,cover_url,user_id,tags,preview_style')
+        .or('visibility.eq.public,visibility.is.null')
         .order('score', { ascending: false })
         .limit(300)
 
