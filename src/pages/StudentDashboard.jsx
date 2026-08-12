@@ -98,9 +98,15 @@ function OnboardingAlunoModal({ user, profile, onDismiss, claimedSlug }) {
 
   async function saveProfile() {
     setSaving(true); setSaveErr(null)
-    const { error } = await supabase.from('profiles').upsert({ id: user.id, username: username.trim() || null, bio: bio.trim() || null, area: area || null, skills, phone: phone.trim() || null }, { onConflict: 'id' })
+    const { error } = await supabase.rpc('upsert_own_profile', {
+      p_username: username.trim() || null,
+      p_bio: bio.trim() || null,
+      p_area: area || null,
+      p_skills: skills,
+      p_phone: phone.trim() || null,
+    })
     setSaving(false)
-    if (error) { setSaveErr(error.code === '23505' ? 'Este username já está a ser usado.' : 'Erro ao guardar.'); return }
+    if (error) { console.error('[StudentDashboard] saveProfile error:', error); setSaveErr(error.code === '23505' ? 'Este username já está a ser usado.' : `Erro ao guardar. (${error.message})`); return }
     setStep(1)
   }
 

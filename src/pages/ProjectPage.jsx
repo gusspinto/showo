@@ -3656,6 +3656,59 @@ function TourVisualInvite() {
   )
 }
 
+function TourVisualEdit() {
+  const fields = [
+    { label: 'Nome', value: 'Gestão de Horários', w: '82%' },
+    { label: 'Área', value: 'Programação e Informática', w: '100%' },
+    { label: 'Objetivo', value: 'Automatizar a gestão de horários...', w: '90%' },
+  ]
+  return (
+    <MacWindow title="Editar projeto">
+      <div style={{padding:'10px 14px', display:'flex', flexDirection:'column', gap:8}}>
+        {fields.map(f => (
+          <div key={f.label}>
+            <div style={{fontSize:8,fontWeight:700,color:'rgba(255,255,255,0.35)',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:4}}>{f.label}</div>
+            <div style={{background:'rgba(255,255,255,0.05)',border:'1px solid rgba(255,255,255,0.09)',borderRadius:6,padding:'6px 9px',fontSize:10,color:'rgba(255,255,255,0.65)',width:f.w}}>
+              {f.value}
+            </div>
+          </div>
+        ))}
+        <div style={{marginTop:2,display:'flex',justifyContent:'flex-end'}}>
+          <div style={{background:'var(--color-primary)',borderRadius:6,padding:'5px 12px',fontSize:10,fontWeight:700,color:'#fff'}}>Guardar</div>
+        </div>
+      </div>
+    </MacWindow>
+  )
+}
+
+function TourVisualDiary() {
+  const entries = [
+    { date: 'Hoje', text: 'Finalizei o módulo de exportação PDF. Falta testar em mobile.', tag: 'Progresso' },
+    { date: 'Ontem', text: 'Reunião com o orientador — feedback positivo na estrutura.', tag: 'Reunião' },
+    { date: 'Seg', text: 'Problema com a biblioteca de charts. Mudei para Recharts.', tag: 'Bloqueio' },
+  ]
+  const tagColor = { Progresso: '#2a9d6a', Reunião: '#2B7EF5', Bloqueio: '#E04848' }
+  return (
+    <MacWindow title="Diário do projeto">
+      <div style={{padding:'10px 12px', display:'flex', flexDirection:'column', gap:6}}>
+        {entries.map((e, i) => (
+          <div key={i} style={{background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.06)',borderRadius:7,padding:'7px 9px'}}>
+            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:4}}>
+              <span style={{fontSize:8,color:'rgba(255,255,255,0.3)',fontWeight:600}}>{e.date}</span>
+              <span style={{fontSize:7,fontWeight:700,color:tagColor[e.tag],background:`${tagColor[e.tag]}18`,padding:'2px 6px',borderRadius:3}}>{e.tag}</span>
+            </div>
+            <div style={{fontSize:9,color:'rgba(255,255,255,0.6)',lineHeight:1.45}}>{e.text}</div>
+          </div>
+        ))}
+        <div style={{display:'flex',alignItems:'center',gap:6,padding:'6px 8px',border:'1px dashed rgba(255,255,255,0.1)',borderRadius:7,cursor:'pointer'}}>
+          <svg width={10} height={10} viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth={2.5} strokeLinecap="round"><line x1={12} y1={5} x2={12} y2={19}/><line x1={5} y1={12} x2={19} y2={12}/></svg>
+          <span style={{fontSize:9,color:'rgba(255,255,255,0.3)'}}>Nova entrada…</span>
+        </div>
+      </div>
+    </MacWindow>
+  )
+}
+
 const TOUR_STEPS_PAP = [
   {
     target: 'score',
@@ -3664,6 +3717,24 @@ const TOUR_STEPS_PAP = [
     bullets: [
       'Gerado pela IA com base no que preencheste',
       'Serve para te orientar — não é uma nota',
+    ],
+  },
+  {
+    target: 'edit',
+    title: 'Editar projeto',
+    visual: <TourVisualEdit />,
+    bullets: [
+      'Atualiza o nome, área, descrição e todas as secções',
+      'As alterações refletem-se imediatamente na página pública',
+    ],
+  },
+  {
+    target: 'diary',
+    title: 'Diário do projeto',
+    visual: <TourVisualDiary />,
+    bullets: [
+      'Regista o teu progresso, bloqueios e decisões ao longo do tempo',
+      'As entradas contribuem para o score do projeto',
     ],
   },
   {
@@ -3727,6 +3798,20 @@ const TOUR_STEPS_MOBILE_PAP = [
     bullets: [
       'Gerado pela IA com base no que preencheste',
       'Serve para te orientar — não é uma nota',
+    ],
+  },
+  {
+    target: 'edit',
+    title: 'Editar projeto',
+    bullets: [
+      'Atualiza o nome, área, descrição e todas as secções do projeto',
+    ],
+  },
+  {
+    target: 'diary',
+    title: 'Diário do projeto',
+    bullets: [
+      'Regista o teu progresso, bloqueios e decisões ao longo do tempo',
     ],
   },
   {
@@ -5871,6 +5956,7 @@ export default function ProjectPage() {
           {isOwner && (
             <>
               <button
+                data-tour="diary"
                 onClick={() => navigate(`/projeto/${project.slug}/diario`)}
                 style={{
                   background: 'rgba(245,158,11,0.08)',
@@ -5887,6 +5973,7 @@ export default function ProjectPage() {
                 <BookOpen size={15} /> Diário
               </button>
               <button
+                data-tour="edit"
                 onClick={() => navigate(`/projeto/${project.slug}/gerir`)}
                 style={{
                   background: 'var(--color-primary-subtle)',
@@ -6530,8 +6617,8 @@ export default function ProjectPage() {
 
             </div>{/* end actionable grid */}
 
-            {/* ── Em breve — small chips instead of full cards (they're just teasers) ── */}
-            <div style={{ marginTop: 2 }}>
+            {/* ── Em breve — only relevant for PAP projects ── */}
+            {isPap && <div style={{ marginTop: 2 }}>
               <div style={{ fontSize: 10, fontWeight: 700, color: colors.subtle, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>Em breve</div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 {[
@@ -6553,7 +6640,7 @@ export default function ProjectPage() {
                   )
                 })}
               </div>
-            </div>
+            </div>}
             </div>
           )
         })()}
