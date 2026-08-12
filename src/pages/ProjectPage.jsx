@@ -7971,7 +7971,7 @@ export default function ProjectPage() {
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: colors.text }}>Assistente IA</div>
-                <div style={{ fontSize: 11, color: colors.muted, display: 'flex', alignItems: 'center', gap: 6 }}>Tutor do teu projeto <AiUsageBadge feature="coach" /></div>
+                <div style={{ fontSize: 11, color: colors.muted, display: 'flex', alignItems: 'center', gap: 6 }}>Tutor do teu projeto <AiUsageBadge feature="coach" compact /></div>
               </div>
               {coachMessages.length > 0 && (
                 <button

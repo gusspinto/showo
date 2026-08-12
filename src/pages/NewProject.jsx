@@ -199,7 +199,7 @@ export default function NewProject() {
               <ChevronRight size={14} />
               Prefiro responder a perguntas
             </button>
-            <AiUsageBadge feature="createProject" style={{ marginTop: 4 }} />
+            <AiUsageBadge feature="createProject" style={{ marginTop: 8 }} />
           </div>
         </div>
       </NpShell>

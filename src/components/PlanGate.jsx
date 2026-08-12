@@ -43,7 +43,7 @@ export function PlanGateModal({ message, onClose }) {
 }
 
 // Shows remaining AI uses: "2/10 restantes" or "Ilimitado"
-export function AiUsageBadge({ feature, style }) {
+export function AiUsageBadge({ feature, style, compact }) {
   const { planId, aiUsage } = useAuth()
   const plan = getPlan(planId)
   const limit = plan.ai[feature]
@@ -53,11 +53,26 @@ export function AiUsageBadge({ feature, style }) {
   const used = aiUsage?.[feature] ?? 0
   const remaining = Math.max(0, limit - used)
   const isLow = remaining <= Math.ceil(limit * 0.25)
+  const color = remaining === 0 ? 'var(--color-error)' : isLow ? 'var(--color-warning)' : 'var(--color-text-secondary)'
+  const bg = remaining === 0 ? 'rgba(239,68,68,0.1)' : isLow ? 'rgba(251,191,36,0.1)' : 'rgba(148,163,184,0.1)'
+  const border = remaining === 0 ? 'rgba(239,68,68,0.25)' : isLow ? 'rgba(251,191,36,0.25)' : 'rgba(148,163,184,0.15)'
+  if (compact) {
+    return (
+      <span style={{
+        display: 'inline-flex', alignItems: 'center', gap: 4,
+        fontSize: '0.72rem', fontWeight: 600, color,
+        ...style,
+      }}>
+        {remaining}/{limit} restantes
+      </span>
+    )
+  }
   return (
     <span style={{
-      display: 'inline-flex', alignItems: 'center', gap: 4,
-      fontSize: '0.72rem', fontWeight: 600,
-      color: remaining === 0 ? 'var(--color-error)' : isLow ? 'var(--color-warning)' : 'var(--color-text-tertiary)',
+      display: 'inline-flex', alignItems: 'center', gap: 5,
+      fontSize: '0.8rem', fontWeight: 700,
+      color, background: bg, border: `1px solid ${border}`,
+      padding: '5px 12px', borderRadius: '100px',
       ...style,
     }}>
       {remaining}/{limit} restantes

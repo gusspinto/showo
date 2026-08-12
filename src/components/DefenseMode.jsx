@@ -1350,7 +1350,7 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
         <div style={{ padding: '22px 28px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
           <div>
             <h2 style={{ margin: '0 0 2px', fontSize: 'var(--text-lg)', fontWeight: 700, color: C.text, fontFamily: 'var(--font-heading)', letterSpacing: '-0.02em' }}>Preparar defesa</h2>
-            <p style={{ margin: 0, fontSize: 'var(--text-sm)', color: C.muted, display: 'flex', alignItems: 'center', gap: 8 }}>{project.name} <AiUsageBadge feature="defense" /></p>
+            <p style={{ margin: 0, fontSize: 'var(--text-sm)', color: C.muted, display: 'flex', alignItems: 'center', gap: 8 }}>{project.name} <AiUsageBadge feature="defense" compact /></p>
           </div>
           <button
             onClick={onClose}
