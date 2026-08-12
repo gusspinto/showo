@@ -48,27 +48,6 @@ function MkDashboard() {
           ))}
         </div>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
-          {/* Project Pulse */}
-          <div style={{ borderRadius: 9, background: 'rgba(27,120,247,0.1)', border: '1px solid rgba(27,120,247,0.22)', padding: '9px 11px', display: 'flex', flexDirection: 'column', gap: 7 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <div style={{ fontSize: 7, fontWeight: 700, color: 'rgba(255,255,255,0.85)', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 3, padding: '1px 5px' }}>PAP</div>
-              <div style={{ marginLeft: 'auto', display: 'flex', gap: 3 }}>
-                <Trash2 size={8} color="rgba(255,255,255,0.4)" />
-                <Pencil size={8} color="rgba(255,255,255,0.5)" />
-                <ArrowUpRight size={8} color="rgba(255,255,255,0.5)" />
-              </div>
-            </div>
-            <div style={{ height: 7, width: '60%', borderRadius: 3, background: 'rgba(255,255,255,0.75)' }} />
-            <div style={{ height: 3, width: '40%', borderRadius: 2, background: 'rgba(255,255,255,0.35)' }} />
-            <div style={{ display: 'flex', gap: 5 }}>
-              <div style={{ height: 16, width: 52, borderRadius: 5, background: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 3 }}>
-                <div style={{ width: 16, height: 2.5, borderRadius: 1, background: 'rgba(255,255,255,0.8)' }} />
-              </div>
-              <div style={{ height: 16, width: 44, borderRadius: 5, border: '1px solid rgba(27,120,247,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <div style={{ width: 14, height: 2.5, borderRadius: 1, background: 'rgba(27,120,247,0.7)' }} />
-              </div>
-            </div>
-          </div>
           {/* Pinned card */}
           <div style={{ borderRadius: 9, overflow: 'hidden', border: '1px solid var(--color-glass-border)' }}>
             <div style={{ height: 22, background: 'linear-gradient(90deg, rgba(27,120,247,0.28), rgba(27,120,247,0.06))', display: 'flex', alignItems: 'center', padding: '0 8px', gap: 4 }}>
@@ -565,16 +544,11 @@ export default function AprendeAUsar() {
           <Section id="dashboard" title="Dashboard" subtitle="O centro de controlo dos teus projetos">
             <Lead>A dashboard é o primeiro ecrã que vês ao entrar na plataforma. É onde acompanhas os teus projetos, registas entradas no diário e vês o progresso geral.</Lead>
 
-            <H3>Project Pulse</H3>
-            <Body>O Project Pulse é o card azul que aparece no topo. Mostra sempre o teu projeto mais recente e dá acesso rápido a dois botões: Registar, para adicionar uma entrada no diário, e Diário, para ver o historial completo.</Body>
-
-            <H3>Em Foco</H3>
-            <Body>O card "Em Foco" destaca o projeto que escolheste como foco atual. Mostra o score, a data de defesa (se for PAP), o progresso das secções e três ações diretas: Registar, Diário e Ver. Para definir um projeto em foco, usa o ícone de pino na lista do portfólio.</Body>
-
-            <Note>Se o projeto em foco for o mesmo que o Project Pulse está a mostrar, o card azul desaparece e só aparece o Em Foco. Os dois não coexistem para o mesmo projeto.</Note>
+            <H3>Projetos fixados</H3>
+            <Body>Podes fixar até 2 projetos na dashboard com o ícone de pino na lista do portfólio. O card fixado mostra o score, a data de defesa (se for PAP), e três ações diretas: Registar, para adicionar uma entrada no diário; Diário, para ver o historial; e Ver, para abrir a página pública. Se não tiveres nenhum projeto fixado manualmente, o projeto mais recente aparece automaticamente.</Body>
 
             <H3>Atividade e agenda</H3>
-            <Body>A coluna da direita mostra o gráfico de atividade semanal com registos do diário e tarefas concluídas, a streak de semanas consecutivas, e a agenda com eventos e lembretes ligados às datas de defesa.</Body>
+            <Body>A coluna da direita mostra a atividade dos últimos 7 dias, a streak de semanas consecutivas com registos, e a agenda com eventos e lembretes ligados às datas de defesa.</Body>
 
             <MkDashboard />
           </Section>
@@ -618,7 +592,7 @@ export default function AprendeAUsar() {
             <Lead>O Diário tem duas partes. O Compositor, acessível a partir da dashboard, é onde adicionas entradas rápidas. O Canvas do Diário é um espaço visual livre, com cartões que podes mover e organizar à tua vontade.</Lead>
 
             <H3>Registar uma entrada a partir da dashboard</H3>
-            <Body>Clica em "Registar" no Project Pulse ou num projeto fixado. Escolhes o tipo de registo, escreves o conteúdo e guardas. A entrada fica associada ao projeto e aparece no Canvas do Diário.</Body>
+            <Body>Clica em "Registar" num projeto fixado na dashboard. Escolhes o tipo de registo, escreves o conteúdo e guardas. A entrada fica associada ao projeto e aparece no Canvas do Diário.</Body>
 
             <H3>Tipos de registo</H3>
             <DefList items={[
