@@ -64,6 +64,26 @@ export default function DiaryCanvas() {
 
   useEffect(() => { itemsRef.current = items }, [items])
 
+  // Centre view on content after initial load
+  useEffect(() => {
+    if (loading || !containerRef.current) return
+    const its = itemsRef.current
+    if (its.length === 0) return
+    const minX = Math.min(...its.map(r => r.x))
+    const minY = Math.min(...its.map(r => r.y))
+    const maxX = Math.max(...its.map(r => r.x + r.w))
+    const maxY = Math.max(...its.map(r => r.y + r.h))
+    const cW = maxX - minX, cH = maxY - minY
+    const rect = containerRef.current.getBoundingClientRect()
+    const scale = Math.min(1, Math.min((rect.width - 80) / cW, (rect.height - 80) / cH))
+    transform.current = {
+      scale,
+      x: (rect.width  - cW * scale) / 2 - minX * scale,
+      y: (rect.height - cH * scale) / 2 - minY * scale,
+    }
+    applyTransform()
+  }, [loading])
+
   // ── Transform helpers ────────────────────────────────────────────────────
   function applyTransform() {
     const { x, y, scale } = transform.current
