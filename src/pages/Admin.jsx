@@ -1293,9 +1293,16 @@ export default function Admin() {
   }, [isAdmin, tab, ambassadorsLoaded, loadAmbassadors])
 
   async function handleCreateAmbassador() {
-    if (!newAmbUser.trim() || !newAmbCode.trim()) { showToast('Preenche username e código'); return }
+    if (!newAmbUser.trim() || !newAmbCode.trim()) { showToast('Preenche nome/username e código'); return }
     setCreatingAmb(true)
-    const { data: target } = await supabase.from('profiles').select('id').eq('username', newAmbUser.trim()).single()
+    const q = newAmbUser.trim()
+    let target = null
+    const { data: byUsername } = await supabase.from('profiles').select('id').eq('username', q).single()
+    if (byUsername) { target = byUsername }
+    else {
+      const { data: byName } = await supabase.from('profiles').select('id').ilike('full_name', `%${q}%`).limit(1).single()
+      target = byName
+    }
     if (!target) { showToast('Utilizador não encontrado'); setCreatingAmb(false); return }
     const { error } = await supabase.rpc('admin_create_ambassador', {
       target_user_id: target.id,
