@@ -31,6 +31,7 @@ export async function updateProject(id, formData, editToken = null) {
     pap_date: formData.pap_date || null,
     project_type: formData.project_type || null,
     tags: formData.tags || [],
+    visibility: formData.visibility || 'public',
     score,
   }
 

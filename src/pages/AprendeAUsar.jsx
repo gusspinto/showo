@@ -600,6 +600,14 @@ export default function AprendeAUsar() {
               { term: 'Apresentação', def: 'Trabalho de apresentação oral ou escrito.' },
             ]} />
 
+            <H3>Visibilidade</H3>
+            <Body>Cada projeto tem uma opção de visibilidade que defines no editor, na tab Tipo. Tens três opções:</Body>
+            <DefList items={[
+              { term: 'Público', def: 'O projeto aparece no Explorar, na Home e é acessível pelo link direto.' },
+              { term: 'Só com link', def: 'O projeto não aparece em nenhuma listagem, mas qualquer pessoa com o link consegue vê-lo.' },
+              { term: 'Privado', def: 'O projeto só é visível por ti. Ninguém mais consegue aceder, mesmo com o link.' },
+            ]} />
+
             <H3>Fixar e destacar</H3>
             <Body>O pino fixa um projeto na dashboard (máximo 2). A estrela destaca um projeto no perfil público (máximo 3). São dois sistemas completamente independentes.</Body>
 
