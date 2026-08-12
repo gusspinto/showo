@@ -361,7 +361,8 @@ function OnboardingAlunoModal({ user, profile, onDismiss, firstProject, claimedS
 
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 4000, background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-      <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-primary-muted)', borderRadius: 'var(--radius-xl)', width: '100%', maxWidth: 460, maxHeight: '90vh', overflowY: 'auto', animation: 'dash-fade-up 0.25s var(--ease-out)' }}>
+      <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-primary-muted)', borderRadius: 'var(--radius-xl)', width: '100%', maxWidth: 460, maxHeight: '90vh', overflowY: 'auto', animation: 'dash-fade-up 0.25s var(--ease-out)', position: 'relative' }}>
+        <button onClick={onDismiss} style={{ position: 'absolute', top: 14, right: 14, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-secondary)', padding: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 6, zIndex: 1 }} aria-label="Fechar"><X size={18} /></button>
 
         {step === -1 && claimedSlug && (
           <div style={{ padding: '36px 30px 28px', textAlign: 'center' }}>

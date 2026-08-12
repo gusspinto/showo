@@ -356,6 +356,7 @@ export default function App() {
               <Route path="/projeto/:slug" element={<ProjectPage />} />
               <Route path="/editar/:slug"  element={<EditProject />} />
               <Route path="/explorar"      element={<Explore />}     />
+              <Route path="/explore"       element={<Navigate to="/explorar" replace />} />
               <Route path="/login"         element={<Login />}       />
               <Route path="/recuperar-password" element={<RecuperarPassword onDone={() => setPwRecovery(false)} />} />
               <Route path="/register"      element={<Register />}    />

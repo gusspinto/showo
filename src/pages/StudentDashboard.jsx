@@ -7,7 +7,7 @@ import { calculatePotential, calculateScore } from '../lib/score'
 import {
   Rocket, Plus, User, Globe, MessageSquare, Star,
   Check, ArrowRight, Sparkles, Pencil, ExternalLink, Copy, Share2, Link,
-  Trash2, Flame, ArrowUpRight, Trophy, Pin, BookOpen,
+  Trash2, Flame, ArrowUpRight, Trophy, Pin, BookOpen, X,
 } from 'lucide-react'
 import { Button, Card, SectionLabel, Modal } from '../components/ui'
 import { useAuth } from '../context/AuthContext'
@@ -106,7 +106,8 @@ function OnboardingAlunoModal({ user, profile, onDismiss, claimedSlug }) {
 
   return (
     <div className="dash-modal-overlay dash-modal-overlay-dark">
-      <div className="dash-modal-card dash-modal-card-lg">
+      <div className="dash-modal-card dash-modal-card-lg" style={{ position: 'relative' }}>
+        <button onClick={onDismiss} style={{ position: 'absolute', top: 14, right: 14, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-secondary)', padding: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 6, zIndex: 1 }} aria-label="Fechar"><X size={18} /></button>
         {step === -1 && claimedSlug && (
           <div className="dash-modal-section dash-center">
             <div className="dash-icon-round dash-icon-round-success"><Check size={26} color="var(--color-success)" /></div>

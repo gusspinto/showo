@@ -246,7 +246,7 @@ export default function Home() {
             </form>
 
             <div className="home-auth-links">
-              <Link to="/register">Criar conta</Link>
+              <Link to="/novo">Criar conta</Link>
               <Link to="/recuperar-password">Esqueceste a password?</Link>
             </div>
           </div>
@@ -393,7 +393,7 @@ export default function Home() {
               <div className="home-cta-text">
                 <span className="home-cta-label">O teu projeto também merece uma página assim.</span>
               </div>
-              <button className="home-cta-btn" onClick={() => navigate('/register')}>
+              <button className="home-cta-btn" onClick={() => navigate('/novo')}>
                 Cria o teu <ArrowRight size={15} />
               </button>
             </div>

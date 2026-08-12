@@ -101,7 +101,7 @@ export default function Register() {
   const [school, setSchool] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
+
   const [inviteCode, setInviteCode] = useState(professorCodeParam)
   const [accountCreated, setAccountCreated] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -189,7 +189,7 @@ export default function Register() {
     if (needsSchool && !school.trim()) { setError('Introduz o nome da escola.'); return }
     if (needsInviteCode && !inviteCode.trim()) { setError('Introduz o código de acesso enviado pela Showo.'); return }
     if (password.length < 6) { setError('A palavra-passe tem de ter pelo menos 6 caracteres.'); return }
-    if (password !== confirmPassword) { setError('As palavras-passe não coincidem.'); return }
+
 
     setLoading(true)
     const { data, error: err } = await supabase.auth.signUp({
@@ -489,9 +489,6 @@ export default function Register() {
                     </Field>
                     <Field label="Palavra-passe">
                       <Input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Mínimo 6 caracteres" required />
-                    </Field>
-                    <Field label="Confirmar palavra-passe">
-                      <Input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="Repete a palavra-passe" required />
                     </Field>
                   </>
                 )}
