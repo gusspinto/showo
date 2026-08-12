@@ -6,7 +6,7 @@ import { Navbar } from '../components/Navbar'
 import {
   AlertTriangle, HelpCircle, User, Folder, Star,
   Shield, BarChart2, MapPin, Calendar, Check, X, Search,
-  KeyRound, Plus, Copy,
+  KeyRound, Plus, Copy, Megaphone,
 } from 'lucide-react'
 import { Select } from '../components/ui'
 
@@ -1153,6 +1153,12 @@ export default function Admin() {
   const [codesLoading, setCodesLoading] = useState(false)
   const [codesLoaded, setCodesLoaded] = useState(false)
   const [generatingCode, setGeneratingCode] = useState(false)
+  const [ambassadors, setAmbassadors] = useState([])
+  const [ambassadorsLoaded, setAmbassadorsLoaded] = useState(false)
+  const [newAmbCode, setNewAmbCode] = useState('')
+  const [newAmbUser, setNewAmbUser] = useState('')
+  const [newAmbRate, setNewAmbRate] = useState('0.20')
+  const [creatingAmb, setCreatingAmb] = useState(false)
 
   // Guard
   useEffect(() => {
@@ -1276,6 +1282,38 @@ export default function Admin() {
     loadCodes()
   }
 
+  const loadAmbassadors = useCallback(async () => {
+    const { data } = await supabase.from('ambassadors').select('*, profiles!ambassadors_user_id_fkey(username, full_name)').order('created_at', { ascending: false })
+    setAmbassadors(data || [])
+    setAmbassadorsLoaded(true)
+  }, [])
+
+  useEffect(() => {
+    if (isAdmin && tab === 'ambassadors' && !ambassadorsLoaded) loadAmbassadors()
+  }, [isAdmin, tab, ambassadorsLoaded, loadAmbassadors])
+
+  async function handleCreateAmbassador() {
+    if (!newAmbUser.trim() || !newAmbCode.trim()) { showToast('Preenche username e código'); return }
+    setCreatingAmb(true)
+    const { data: target } = await supabase.from('profiles').select('id').eq('username', newAmbUser.trim()).single()
+    if (!target) { showToast('Utilizador não encontrado'); setCreatingAmb(false); return }
+    const { error } = await supabase.rpc('admin_create_ambassador', {
+      target_user_id: target.id,
+      code: newAmbCode.trim().toLowerCase(),
+      rate: parseFloat(newAmbRate) || 0.20,
+    })
+    setCreatingAmb(false)
+    if (error) { showToast('Erro: ' + error.message); return }
+    showToast('Embaixador criado!')
+    setNewAmbUser(''); setNewAmbCode(''); setNewAmbRate('0.20')
+    loadAmbassadors()
+  }
+
+  async function handleToggleAmbassador(id, active) {
+    await supabase.from('ambassadors').update({ active: !active }).eq('id', id)
+    loadAmbassadors()
+  }
+
   async function handleToggleAdmin(userId, makeAdmin) {
     const { error } = await supabase
       .from('profiles')
@@ -1324,6 +1362,7 @@ export default function Admin() {
     { id: 'projects', label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Folder size={14} /> Projetos ({projects.length})</span> },
     { id: 'signups',  label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Star size={14} /> Signups ({signups.length})</span> },
     { id: 'invites',  label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><KeyRound size={14} /> Convites Professor</span> },
+    { id: 'ambassadors', label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Megaphone size={14} /> Embaixadores</span> },
   ]
 
   return (
@@ -1423,6 +1462,63 @@ export default function Admin() {
                 onGenerate={handleGenerateCode}
                 onToggleActive={handleToggleCodeActive}
               />
+            )}
+            {tab === 'ambassadors' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                <div style={{ background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)', borderRadius: 12, padding: 20 }}>
+                  <h3 style={{ margin: '0 0 16px', fontSize: 15, fontWeight: 700 }}>Criar embaixador</h3>
+                  <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+                    <div>
+                      <label style={{ fontSize: 12, color: 'var(--color-text-secondary)', display: 'block', marginBottom: 4 }}>Username</label>
+                      <input value={newAmbUser} onChange={e => setNewAmbUser(e.target.value)} placeholder="username" style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid var(--color-border)', background: 'var(--color-bg)', color: 'var(--color-text)', fontSize: 14, width: 160 }} />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: 12, color: 'var(--color-text-secondary)', display: 'block', marginBottom: 4 }}>Código</label>
+                      <input value={newAmbCode} onChange={e => setNewAmbCode(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))} placeholder="rafa10" style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid var(--color-border)', background: 'var(--color-bg)', color: 'var(--color-text)', fontSize: 14, width: 120 }} />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: 12, color: 'var(--color-text-secondary)', display: 'block', marginBottom: 4 }}>Comissão</label>
+                      <input value={newAmbRate} onChange={e => setNewAmbRate(e.target.value)} placeholder="0.20" style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid var(--color-border)', background: 'var(--color-bg)', color: 'var(--color-text)', fontSize: 14, width: 80 }} />
+                    </div>
+                    <button disabled={creatingAmb} onClick={handleCreateAmbassador} style={{ padding: '8px 18px', borderRadius: 8, background: 'var(--color-primary)', color: '#fff', border: 'none', fontSize: 14, fontWeight: 600, cursor: 'pointer', opacity: creatingAmb ? 0.6 : 1 }}>
+                      {creatingAmb ? '...' : 'Criar'}
+                    </button>
+                  </div>
+                </div>
+
+                <div style={{ background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)', borderRadius: 12, overflow: 'hidden' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
+                    <thead>
+                      <tr style={{ borderBottom: '1px solid var(--color-border)' }}>
+                        {['Utilizador', 'Código', 'Comissão', 'Connect', 'Estado', ''].map(h => (
+                          <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: 12, color: 'var(--color-text-secondary)', fontWeight: 600 }}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {ambassadors.map(a => (
+                        <tr key={a.id} style={{ borderBottom: '1px solid var(--color-border)' }}>
+                          <td style={{ padding: '10px 14px' }}>{a.profiles?.username || a.profiles?.full_name || a.user_id.slice(0, 8)}</td>
+                          <td style={{ padding: '10px 14px', fontFamily: 'monospace' }}>{a.referral_code}</td>
+                          <td style={{ padding: '10px 14px' }}>{Math.round(a.commission_rate * 100)}%</td>
+                          <td style={{ padding: '10px 14px' }}>{a.stripe_connect_onboarded ? <Check size={14} style={{ color: 'var(--color-success)' }} /> : <X size={14} style={{ color: 'var(--color-text-tertiary)' }} />}</td>
+                          <td style={{ padding: '10px 14px' }}>
+                            <span style={{ fontSize: 12, fontWeight: 600, color: a.active ? 'var(--color-success)' : 'var(--color-error)' }}>{a.active ? 'Ativo' : 'Inativo'}</span>
+                          </td>
+                          <td style={{ padding: '10px 14px' }}>
+                            <button onClick={() => handleToggleAmbassador(a.id, a.active)} style={{ fontSize: 12, color: 'var(--color-primary)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>
+                              {a.active ? 'Desativar' : 'Ativar'}
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                      {ambassadors.length === 0 && (
+                        <tr><td colSpan={6} style={{ padding: 20, textAlign: 'center', color: 'var(--color-text-secondary)' }}>Nenhum embaixador criado</td></tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             )}
           </>
         )}

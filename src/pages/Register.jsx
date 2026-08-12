@@ -112,6 +112,11 @@ export default function Register() {
   // this company in Parceiros.jsx and emailed this link. It unlocks the
   // otherwise-disabled 'empresa' role for this one signup and, once claimed,
   // links the new account to the leads the professor already tracked. ──
+  const refCode = params.get('ref') || ''
+  useEffect(() => {
+    if (refCode) localStorage.setItem('showo_ref', refCode)
+  }, [refCode])
+
   const partnerToken = new URLSearchParams(location.search).get('empresa_convite')
   const [partnerInvite, setPartnerInvite] = useState(null) // { name, sector, already_claimed } | 'invalid' | null (loading)
   const isPartnerFlow = partnerInvite && partnerInvite !== 'invalid' && !partnerInvite.already_claimed
@@ -251,6 +256,15 @@ export default function Register() {
         signup_referrer: document.referrer || null,
         signup_utm_source: params.get('utm_source') || null,
       }).eq('id', newUser.id)
+    }
+
+    // Claim referral code (ambassador system)
+    if (newUser) {
+      const storedRef = localStorage.getItem('showo_ref')
+      if (storedRef) {
+        await supabase.rpc('claim_referral', { code: storedRef }).catch(() => {})
+        localStorage.removeItem('showo_ref')
+      }
     }
 
     // Send welcome email (fire-and-forget)

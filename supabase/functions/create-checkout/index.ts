@@ -36,7 +36,7 @@ Deno.serve(async (req) => {
     // Get or create Stripe customer
     const { data: profile } = await supabase
       .from('profiles')
-      .select('stripe_customer_id')
+      .select('stripe_customer_id, referred_by')
       .eq('id', user.id)
       .single()
 
@@ -54,7 +54,10 @@ Deno.serve(async (req) => {
         .eq('id', user.id)
     }
 
-    const session = await stripe.checkout.sessions.create({
+    const couponId = Deno.env.get('STRIPE_REFERRAL_COUPON_ID')
+    const isReferred = !!profile?.referred_by && !!couponId
+
+    const sessionParams: Stripe.Checkout.SessionCreateParams = {
       customer: customerId,
       mode: 'subscription',
       line_items: [{ price: priceId, quantity: 1 }],
@@ -63,7 +66,13 @@ Deno.serve(async (req) => {
       subscription_data: {
         metadata: { supabase_uid: user.id, plan },
       },
-    })
+    }
+
+    if (isReferred) {
+      sessionParams.discounts = [{ coupon: couponId }]
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionParams)
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...cors, 'Content-Type': 'application/json' },

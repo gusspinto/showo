@@ -154,7 +154,10 @@ export default function Settings() {
   const { theme, toggleTheme } = useTheme()
   const navigate = useNavigate()
 
-  const [activeTab, setActiveTab] = useState('perfil')
+  const [activeTab, setActiveTab] = useState(() => {
+    const t = new URLSearchParams(window.location.search).get('tab')
+    return t || 'perfil'
+  })
   const [fullName, setFullName] = useState('')
   const [username, setUsername] = useState('')
   const [originalUsername, setOriginalUsername] = useState('')
@@ -196,6 +199,8 @@ export default function Settings() {
   const [deleteConfirm, setDeleteConfirm] = useState(false)
   const [deleteLoading, setDeleteLoading] = useState(false)
   const [deleteError, setDeleteError] = useState(null)
+  const [ambassadorStats, setAmbassadorStats] = useState(null)
+  const [connectLoading, setConnectLoading] = useState(false)
 
   useEffect(() => {
     if (!authLoading && !user) navigate('/login')
@@ -232,6 +237,9 @@ export default function Settings() {
         setProfileVisibility(data.profile_visibility ?? 'public')
         setShowEmailPublicly(data.show_email_publicly ?? false)
       }
+    })
+    supabase.rpc('get_ambassador_stats').then(({ data }) => {
+      if (data && Object.keys(data).length > 0) setAmbassadorStats(data)
     })
   }, [user])
 
@@ -376,7 +384,7 @@ export default function Settings() {
   const isRecruiter = role === 'recrutador' || role === 'empresa'
   const accentColor = role === 'empresa' ? 'var(--color-warning)' : 'var(--color-accent)'
 
-  const sidebarTabs = isRecruiter ? [
+  const baseTabs = isRecruiter ? [
     { id: 'perfil', label: 'Perfil', icon: <Camera size={16} /> },
     { id: 'empresa', label: 'Empresa', icon: <Building2 size={16} /> },
     { id: 'recrutamento', label: 'Recrutamento', icon: <Search size={16} /> },
@@ -392,6 +400,9 @@ export default function Settings() {
     { id: 'aparencia', label: 'Aparência', icon: theme === 'dark' ? <Moon size={16} /> : <Sun size={16} /> },
     { id: 'conta', label: 'Conta', icon: <Lock size={16} /> },
   ]
+  const sidebarTabs = ambassadorStats
+    ? [...baseTabs.slice(0, -1), { id: 'embaixador', label: 'Embaixador', icon: <Megaphone size={16} /> }, baseTabs[baseTabs.length - 1]]
+    : baseTabs
 
   const avatarBlock = (
     <div className="settings-avatar-wrap">
@@ -707,6 +718,60 @@ export default function Settings() {
 
             {activeTab === 'plano' && (
               <PlanSection planId={planId} navigate={navigate} />
+            )}
+
+            {activeTab === 'embaixador' && ambassadorStats && (
+              <SectionCard title="Programa de Embaixador">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <label className="settings-label">O teu link de referral</label>
+                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                      <input readOnly value={`https://showo.pt/?ref=${ambassadorStats.referral_code}`}
+                        className="settings-input" style={{ flex: 1, fontSize: 13 }} />
+                      <button onClick={() => { navigator.clipboard.writeText(`https://showo.pt/?ref=${ambassadorStats.referral_code}`); setSaveMsg('Link copiado!'); setTimeout(() => setSaveMsg(null), 2000) }}
+                        className="settings-save-btn" style={{ whiteSpace: 'nowrap' }}>Copiar</button>
+                    </div>
+                    <p className="settings-hint">Código: <strong>{ambassadorStats.referral_code}</strong></p>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12 }}>
+                    {[
+                      { label: 'Registos', value: ambassadorStats.total_signups },
+                      { label: 'Conversões pagas', value: ambassadorStats.paid_conversions },
+                      { label: 'Comissões ativas', value: ambassadorStats.active_commissions },
+                      { label: 'Total ganho', value: `€${Number(ambassadorStats.total_earned || 0).toFixed(2)}` },
+                    ].map(s => (
+                      <div key={s.label} style={{
+                        background: 'var(--color-bg-secondary)', borderRadius: 10, padding: '14px 16px',
+                        border: '1px solid var(--color-border)',
+                      }}>
+                        <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 4 }}>{s.label}</div>
+                        <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--color-text)' }}>{s.value}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <label className="settings-label">Pagamentos (Stripe Connect)</label>
+                    {ambassadorStats.stripe_connect_onboarded ? (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--color-success)', fontSize: 14, fontWeight: 600 }}>
+                        <Check size={16} /> Pagamentos configurados
+                      </div>
+                    ) : (
+                      <button disabled={connectLoading} onClick={async () => {
+                        setConnectLoading(true)
+                        try {
+                          const { data, error } = await supabase.functions.invoke('ambassador-connect-onboard')
+                          if (data?.url) window.location.href = data.url
+                        } finally { setConnectLoading(false) }
+                      }} className="settings-save-btn">
+                        {connectLoading ? 'A abrir...' : 'Configurar pagamentos'}
+                      </button>
+                    )}
+                    <p className="settings-hint">Configura a tua conta Stripe para receber comissões automaticamente.</p>
+                  </div>
+                </div>
+              </SectionCard>
             )}
 
             {activeTab === 'aparencia' && (

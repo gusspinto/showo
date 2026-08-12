@@ -65,6 +65,68 @@ Deno.serve(async (req) => {
       break
     }
 
+    case 'invoice.payment_succeeded': {
+      const invoice = event.data.object as Stripe.Invoice
+      if (!invoice.customer || !invoice.subscription) break
+
+      const sb = supabase()
+      const { data: profile } = await sb
+        .from('profiles')
+        .select('id, referred_by')
+        .eq('stripe_customer_id', invoice.customer as string)
+        .single()
+
+      if (!profile?.referred_by) break
+
+      const { data: referral } = await sb
+        .from('referrals')
+        .select('id, commission_ends_at, ambassador_id')
+        .eq('referred_user_id', profile.id)
+        .single()
+
+      if (!referral) break
+      if (referral.commission_ends_at && new Date(referral.commission_ends_at) < new Date()) break
+
+      // Set commission_ends_at on first payment
+      if (!referral.commission_ends_at) {
+        const endsAt = new Date()
+        endsAt.setMonth(endsAt.getMonth() + 6)
+        await sb.from('referrals').update({ commission_ends_at: endsAt.toISOString() }).eq('id', referral.id)
+      }
+
+      const { data: ambassador } = await sb
+        .from('ambassadors')
+        .select('commission_rate, stripe_connect_account_id, stripe_connect_onboarded')
+        .eq('id', referral.ambassador_id)
+        .single()
+
+      if (!ambassador) break
+
+      const netRevenue = (invoice.amount_paid ?? 0) - (invoice.tax ?? 0)
+      const commission = Math.round(netRevenue * Number(ambassador.commission_rate))
+
+      if (commission <= 0) break
+
+      await sb.from('referrals').update({
+        total_commission_earned: referral.total_commission_earned + commission / 100,
+      }).eq('id', referral.id)
+
+      // Auto-transfer if Stripe Connect is onboarded
+      if (ambassador.stripe_connect_onboarded && ambassador.stripe_connect_account_id) {
+        try {
+          await stripe.transfers.create({
+            amount: commission,
+            currency: invoice.currency || 'eur',
+            destination: ambassador.stripe_connect_account_id,
+            transfer_group: `referral_${referral.id}`,
+          })
+        } catch (err) {
+          console.error('[stripe-webhook] Transfer failed:', err.message)
+        }
+      }
+      break
+    }
+
     default:
       break
   }
