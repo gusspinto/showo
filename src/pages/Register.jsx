@@ -88,15 +88,21 @@ export default function Register() {
   const claimSlug = location.state?.claimSlug ?? null
   const { theme } = useTheme()
   const { refreshProfile } = useAuth()
-  const [step, setStep] = useState('role') // 'role' | 'form'
-  const [role, setRole] = useState('')
+
+  // Detect context to skip role selection
+  const params = new URLSearchParams(location.search)
+  const professorCodeParam = params.get('professor_code') ?? ''
+  const autoRole = claimSlug ? 'aluno' : professorCodeParam ? 'professor' : ''
+
+  const [step, setStep] = useState(autoRole ? 'form' : 'role')
+  const [role, setRole] = useState(autoRole)
   const [name, setName] = useState('')
   const [company, setCompany] = useState('')
   const [school, setSchool] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [inviteCode, setInviteCode] = useState('')
+  const [inviteCode, setInviteCode] = useState(professorCodeParam)
   const [accountCreated, setAccountCreated] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -367,37 +373,24 @@ export default function Register() {
               )}
 
               <div className="register-role-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 28 }}>
-                {ROLES.map(r => {
+                {ROLES.filter(r => !r.disabled).map(r => {
                   const selected = role === r.id
                   return (
                     <div
                       key={r.id}
                       className="role-card"
-                      onClick={() => { if (!r.disabled) setRole(r.id) }}
+                      onClick={() => setRole(r.id)}
                       style={{
                         border: `1px solid ${selected ? r.color : C.border}`,
                         borderRadius: 8, padding: '16px 14px',
                         display: 'flex', alignItems: 'center', gap: 10,
-                        opacity: r.disabled ? 0.5 : 1,
-                        cursor: r.disabled ? 'default' : 'pointer',
-                        position: 'relative',
+                        cursor: 'pointer',
                       }}
                     >
                       <span style={{ color: r.color, display: 'flex', alignItems: 'center' }}>{r.icon}</span>
                       <div style={{ fontSize: 14, fontWeight: 700, color: selected ? r.color : C.text }}>
                         {r.label}
                       </div>
-                      {r.disabled && (
-                        <span style={{
-                          position: 'absolute', top: 6, right: 6,
-                          fontSize: 8.5, fontWeight: 700, color: C.muted,
-                          background: 'var(--color-bg-alt)', border: `1px solid ${C.border}`,
-                          borderRadius: 4, padding: '2px 5px',
-                          textTransform: 'uppercase', letterSpacing: '0.04em',
-                        }}>
-                          Em fase de testes
-                        </span>
-                      )}
                     </div>
                   )
                 })}
@@ -429,7 +422,7 @@ export default function Register() {
                     {selectedRole?.label}
                   </span>
                 </div>
-                {!isPartnerFlow && (
+                {!isPartnerFlow && !autoRole && (
                   <button
                     onClick={() => setStep('role')}
                     style={{ background: 'none', border: 'none', color: C.muted, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', padding: 0, display: 'flex', alignItems: 'center', gap: 5 }}
