@@ -3773,11 +3773,11 @@ function ProjectTour({ isPap, onClose, onStep }) {
       ? ['preview']
       : [step.target]
     for (const t of targets) {
-      const el = document.querySelector(`[data-tour="${t}"]`)
-      if (!el) continue
-      const r = el.getBoundingClientRect()
-      if (r.width === 0 && r.height === 0) continue
-      return r
+      const els = document.querySelectorAll(`[data-tour="${t}"]`)
+      for (const el of els) {
+        const r = el.getBoundingClientRect()
+        if (r.width > 0 || r.height > 0) return r
+      }
     }
     return null
   }
@@ -3795,8 +3795,11 @@ function ProjectTour({ isPap, onClose, onStep }) {
     const alias = ['defense', 'ai', 'invite']
     const targets = isMob && alias.includes(target) ? ['preview'] : [target]
     for (const t of targets) {
-      const el = document.querySelector(`[data-tour="${t}"]`)
-      if (el) return el
+      const els = document.querySelectorAll(`[data-tour="${t}"]`)
+      for (const el of els) {
+        const r = el.getBoundingClientRect()
+        if (r.width > 0 || r.height > 0) return el
+      }
     }
     return null
   }
