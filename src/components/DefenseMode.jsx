@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
-import { AiUsageBadge } from './PlanGate'
+import { AiUsageBadge, ConfirmUseModal } from './PlanGate'
 import { Hand, Search, Lightbulb, Settings, Wrench, Trophy, BookOpen, Mic, GraduationCap, Check, X, Smartphone, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, ArrowRight, Eye, EyeOff, SlidersHorizontal, AlignLeft, Play, Pause } from 'lucide-react'
 
 const C = {
@@ -1263,6 +1263,7 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
   const [guideMode, setGuideMode] = useState(false)
   const [guideConfig, setGuideConfig] = useState(project.guide_config || null)
   const [showGuideEditor, setShowGuideEditor] = useState(false)
+  const [confirmUse, setConfirmUse] = useState(null)
   const effectiveProject = { ...project, guide_config: guideConfig }
 
   async function saveGuideConfig(next) {
@@ -1272,7 +1273,7 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
 
   useEffect(() => {
     if (!canSeeFullPrep) return
-    loadAI()
+    tryLoadAI()
   }, [])
 
   useEffect(() => {
@@ -1281,11 +1282,20 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
     return () => window.removeEventListener('keydown', onKey)
   }, [guideMode])
 
-  function loadAI() {
+  function tryLoadAI() {
     const gate = checkGate('defense')
     if (!gate.allowed) { setAiError(true); return }
+    if (gate.remaining <= 2 && gate.remaining !== Infinity) {
+      setConfirmUse({ remaining: gate.remaining, limit: gate.limit })
+      return
+    }
+    loadAI()
+  }
+
+  function loadAI() {
     setLoadingAI(true)
     setAiError(false)
+    setConfirmUse(null)
     supabase.functions.invoke('defense-notes', { body: { project } })
       .then(({ data, error }) => {
         if (error || !data) { setAiError(true); return }
@@ -1305,7 +1315,7 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
       aiData={aiData}
       loadingAI={loadingAI}
       aiError={aiError}
-      onRetry={loadAI}
+      onRetry={tryLoadAI}
       onClose={() => setGuideMode(false)}
       collaboratorSections={collaboratorSections}
       studentName={studentName}
@@ -1323,6 +1333,15 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
     <div style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, fontFamily: 'inherit' }}
       onClick={e => e.target === e.currentTarget && onClose()}
     >
+      {confirmUse && (
+        <ConfirmUseModal
+          feature="defense"
+          remaining={confirmUse.remaining}
+          limit={confirmUse.limit}
+          onConfirm={loadAI}
+          onCancel={onClose}
+        />
+      )}
       <style>{`@keyframes spin{to{transform:rotate(360deg)}} @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}`}</style>
 
       <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-xl)', width: '100%', maxWidth: 720, maxHeight: '90vh', display: 'flex', flexDirection: 'column', boxShadow: 'var(--shadow-xl)', animation: 'fadeIn 0.2s ease-out' }}>
@@ -1373,8 +1392,8 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
               <p style={{ margin: 0, color: C.muted, fontSize: 14 }}>A preparação completa está disponível para o criador e colaboradores do projeto.</p>
             </div>
           )}
-          {tab === 'notes' && canSeeFullPrep && <NotesPanel aiData={aiData} loadingAI={loadingAI} aiError={aiError} onRetry={loadAI} />}
-          {tab === 'jury'  && canSeeFullPrep && <JuryPanel  aiData={aiData} loadingAI={loadingAI} aiError={aiError} onRetry={loadAI} />}
+          {tab === 'notes' && canSeeFullPrep && <NotesPanel aiData={aiData} loadingAI={loadingAI} aiError={aiError} onRetry={tryLoadAI} />}
+          {tab === 'jury'  && canSeeFullPrep && <JuryPanel  aiData={aiData} loadingAI={loadingAI} aiError={aiError} onRetry={tryLoadAI} />}
           {tab === 'grupo' && isOwner && <GrupoPanel project={project} />}
           {tab === 'guide' && (
             <div>

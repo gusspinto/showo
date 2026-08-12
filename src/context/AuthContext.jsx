@@ -112,9 +112,10 @@ export function AuthProvider({ children }) {
       const allowed = plan.career[feature] === true
       return { allowed, message: allowed ? null : PLAN_GATE_MESSAGES[feature]?.() }
     }
+    const limit = plan.ai[feature] ?? 0
     const remaining = remainingUses(planId, feature, aiUsage)
     const allowed = remaining > 0
-    return { allowed, remaining, message: allowed ? null : PLAN_GATE_MESSAGES[feature]?.(planId) }
+    return { allowed, remaining, limit, message: allowed ? null : PLAN_GATE_MESSAGES[feature]?.(planId) }
   }
 
   // After a successful AI call, refresh usage from server

@@ -39,7 +39,10 @@ const C = {
 // authenticated only has column-level SELECT grant on these (no email — that
 // comes from admin_get_users() instead) since migration 033; select('*')
 // fails outright and silently returns no rows.
-const PROFILE_COLUMNS = 'id, username, total_xp, created_at, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size, skills, school, project_draft, signup_country, signup_city, signup_referrer, signup_utm_source, last_active_at, last_action'
+const PROFILE_COLUMNS = 'id, username, total_xp, created_at, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size, skills, school, project_draft, signup_country, signup_city, signup_referrer, signup_utm_source, last_active_at, last_action, plan'
+
+const PLAN_COLORS = { free: '#6b7280', build: '#2B7EF5', launch: '#C49A20' }
+const PLAN_LABELS = { free: 'Free', build: 'Build', launch: 'Launch' }
 
 function StatCard({ icon, label, value, color = C.blue, sub }) {
   return (
@@ -350,6 +353,9 @@ function OverviewTab({ users, projects, activityLog }) {
   const activeThisMonth = new Set(activityLog.filter(e => new Date(e.created_at) > monthAgo).map(e => e.user_id)).size
   const neverActive = users.filter(u => !u.last_active_at).length
   const retentionRate = totalUsers > 0 ? Math.round((activeThisMonth / totalUsers) * 100) : 0
+  const planCounts = { free: 0, build: 0, launch: 0 }
+  users.forEach(u => { const p = u.plan || 'free'; if (planCounts[p] !== undefined) planCounts[p]++; else planCounts[p] = 1 })
+  const paidUsers = planCounts.build + planCounts.launch
 
   // Registrations per week
   const numWeeks = Math.min(Math.ceil(days / 7), 12)
@@ -484,6 +490,7 @@ function OverviewTab({ users, projects, activityLog }) {
         <StatCard icon={<BarChart2 size={20} />} label="Ativos (semana)" value={activeThisWeek} color={activeThisWeek > 0 ? C.green : C.red} sub={`${activeThisMonth} mês · ${neverActive} nunca`} />
         <StatCard icon={<Star size={20} />} label="Retenção mensal" value={`${retentionRate}%`} color={retentionRate > 30 ? C.green : retentionRate > 10 ? C.yellow : C.red} sub={`${activeThisMonth}/${totalUsers} voltaram`} />
         <StatCard icon={<Star size={20} />} label="Score médio" value={avgScore} color={C.yellow} sub={`${scores.length} com score`} />
+        <StatCard icon={<Star size={20} />} label="Planos pagos" value={paidUsers} color={paidUsers > 0 ? C.green : C.muted} sub={`${planCounts.build} Build · ${planCounts.launch} Launch`} />
       </div>
 
       {/* Charts row */}
@@ -755,6 +762,7 @@ function UsersTab({ users, projects, onToggleAdmin, onDeleteUser, onChangeRole, 
                   <span style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{name}</span>
                   {u.username && <span style={{ fontSize: 12, color: C.subtle }}>@{u.username}</span>}
                   {u.is_admin && <Badge color={C.purple}><span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Shield size={11} /> Admin</span></Badge>}
+                  {u.plan && u.plan !== 'free' && <Badge color={PLAN_COLORS[u.plan] || C.blue}>{PLAN_LABELS[u.plan] || u.plan}</Badge>}
                   {u.banned_at && <Badge color={C.red}>Banido</Badge>}
                 </div>
                 <div style={{ fontSize: 12, color: C.muted }}>{u.email || '—'}</div>

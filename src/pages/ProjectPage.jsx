@@ -9,7 +9,7 @@ import { calculateScore, looksLikeSpam } from '../lib/score'
 import { containsProfanity } from '../lib/profanity'
 import { CHALLENGES, getChallengeStatus } from '../lib/challenges'
 import { Navbar } from '../components/Navbar'
-import { PlanGateModal, AiUsageBadge } from '../components/PlanGate'
+import { PlanGateModal, AiUsageBadge, ConfirmUseModal } from '../components/PlanGate'
 import { chatProjectCoach } from '../lib/chatProjectCoach'
 import { useAuth } from '../context/AuthContext'
 import { useSidebar } from '../context/SidebarContext'
@@ -4068,6 +4068,7 @@ export default function ProjectPage() {
   const [narrativePreview, setNarrativePreview]       = useState(null)
   const [narrativeError, setNarrativeError]           = useState('')
   const [narrativeSaved, setNarrativeSaved]           = useState(false)
+  const [confirmNarrativeUse, setConfirmNarrativeUse] = useState(null)
   const [viewAsPublic, setViewAsPublic] = useState(false)
   const [previewEditing, setPreviewEditing] = useState(false)
   const [wsExpanded, setWsExpanded] = useState(false)
@@ -4666,10 +4667,19 @@ export default function ProjectPage() {
     })
   }
 
-  async function handleGenerateNarrative() {
+  function handleGenerateNarrative() {
     if (!project) return
     const gate = checkGate('narrative')
     if (!gate.allowed) { setNarrativeError(gate.message?.body ?? gate.message); return }
+    if (gate.remaining <= 2 && gate.remaining !== Infinity) {
+      setConfirmNarrativeUse({ remaining: gate.remaining, limit: gate.limit })
+      return
+    }
+    doGenerateNarrative()
+  }
+
+  async function doGenerateNarrative() {
+    setConfirmNarrativeUse(null)
     setGeneratingNarrative(true)
     setNarrativeError('')
     setNarrativePreview(null)
@@ -5693,6 +5703,15 @@ export default function ProjectPage() {
             </div>
 
             {analyzeGateMsg && <PlanGateModal message={analyzeGateMsg} onClose={() => setAnalyzeGateMsg(null)} />}
+            {confirmNarrativeUse && (
+              <ConfirmUseModal
+                feature="narrative"
+                remaining={confirmNarrativeUse.remaining}
+                limit={confirmNarrativeUse.limit}
+                onConfirm={doGenerateNarrative}
+                onCancel={() => setConfirmNarrativeUse(null)}
+              />
+            )}
             {analyzeError && (
               <div style={{ background: 'var(--color-error-subtle)', border: '1px solid var(--color-error-subtle)', borderRadius: 10, padding: '12px 16px', color: 'var(--color-error)', fontSize: 13, marginBottom: 16 }}>
                 {analyzeError}

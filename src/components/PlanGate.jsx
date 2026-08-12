@@ -65,6 +65,33 @@ export function AiUsageBadge({ feature, style }) {
   )
 }
 
+// Confirmation modal before consuming a limited AI use
+export function ConfirmUseModal({ feature, remaining, limit, onConfirm, onCancel }) {
+  const labels = {
+    defense: 'Preparação de Defesa',
+    diaryReport: 'Relatório do Diário',
+    narrative: 'Narrativa IA',
+    createProject: 'Criar Projeto com IA',
+    coach: 'Coach IA',
+  }
+  const label = labels[feature] || feature
+  return (
+    <div style={C.overlay} onClick={onCancel}>
+      <div style={C.modal} onClick={e => e.stopPropagation()}>
+        <p style={C.title}>Usar {label}?</p>
+        <p style={C.msg}>
+          Tens apenas <strong>{remaining}</strong> de {limit} utilização{limit !== 1 ? 'ões' : ''} restante{remaining !== 1 ? 's' : ''} este mês no teu plano.
+          {remaining === 1 && ' Esta é a tua última vez este mês.'}
+        </p>
+        <div style={C.actions}>
+          <button style={C.btn(false)} onClick={onCancel}>Cancelar</button>
+          <button style={C.btn(true)} onClick={onConfirm}>Usar agora</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // Inline badge showing current plan
 export function PlanBadge({ style }) {
   const { planId } = useAuth()

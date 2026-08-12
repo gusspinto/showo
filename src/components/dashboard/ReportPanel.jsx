@@ -4,7 +4,7 @@ import { supabase } from '../../lib/supabase'
 import { Modal, Button } from '../ui'
 import { REPORT_SECTIONS, timeAgoLabel } from '../../lib/journal'
 import { useAuth } from '../../context/AuthContext'
-import { AiUsageBadge } from '../PlanGate'
+import { AiUsageBadge, ConfirmUseModal } from '../PlanGate'
 
 const MIN_SECTIONS_TO_GENERATE = 3
 
@@ -22,12 +22,22 @@ export default function ReportPanel({ project, entries, coverage, onClose, onDra
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [copied, setCopied] = useState(false)
+  const [confirmUse, setConfirmUse] = useState(null)
 
   const canGenerate = coverage.covered >= MIN_SECTIONS_TO_GENERATE
 
-  async function generate() {
+  function handleGenerate() {
     const gate = checkGate('diaryReport')
     if (!gate.allowed) { setError(gate.message?.body ?? gate.message); return }
+    if (gate.remaining <= 2 && gate.remaining !== Infinity) {
+      setConfirmUse({ remaining: gate.remaining, limit: gate.limit })
+      return
+    }
+    generate()
+  }
+
+  async function generate() {
+    setConfirmUse(null)
     setBusy(true); setError('')
     try {
       // Só os campos que o relatório usa — não vale a pena reenviar o rascunho
@@ -70,6 +80,16 @@ export default function ReportPanel({ project, entries, coverage, onClose, onDra
   }
 
   return (
+    <>
+    {confirmUse && (
+      <ConfirmUseModal
+        feature="diaryReport"
+        remaining={confirmUse.remaining}
+        limit={confirmUse.limit}
+        onConfirm={generate}
+        onCancel={() => setConfirmUse(null)}
+      />
+    )}
     <Modal
       onClose={onClose}
       width={640}
@@ -107,7 +127,7 @@ export default function ReportPanel({ project, entries, coverage, onClose, onDra
 
       {/* ── Gerar / atualizar ── */}
       <div className="sdb-report-actions">
-        <Button onClick={generate} disabled={!canGenerate || busy} loading={busy}
+        <Button onClick={handleGenerate} disabled={!canGenerate || busy} loading={busy}
           icon={draft ? <RefreshCw size={14} /> : <FileText size={14} />}>
           {busy ? 'A escrever…' : draft ? 'Atualizar rascunho' : 'Gerar rascunho'}
         </Button>
@@ -147,5 +167,6 @@ export default function ReportPanel({ project, entries, coverage, onClose, onDra
         </div>
       )}
     </Modal>
+    </>
   )
 }
