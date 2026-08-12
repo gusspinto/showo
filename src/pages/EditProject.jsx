@@ -154,6 +154,7 @@ export default function EditProject() {
         github_url: data.github_url || '',
         portfolio_url: data.portfolio_url || '',
         tags: data.tags || [],
+        visibility: data.visibility || 'public',
       })
       setLoading(false)
     }
@@ -458,6 +459,29 @@ export default function EditProject() {
                   </Field>
                   <Field label="Tipo" filled={!!form.project_type}>
                     <Select value={form.project_type} onChange={v => set('project_type', v)} options={PROJECT_TYPES} inputStyle={inputStyle} />
+                  </Field>
+                  <Field label="Visibilidade" filled={true}>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      {[
+                        { value: 'public',   label: 'Público' },
+                        { value: 'unlisted', label: 'Só com link' },
+                        { value: 'private',  label: 'Privado' },
+                      ].map(opt => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => set('visibility', opt.value)}
+                          style={{
+                            flex: 1, padding: '9px 4px', fontSize: 13, fontWeight: 600, fontFamily: 'inherit',
+                            border: `1.5px solid ${form.visibility === opt.value ? 'var(--color-primary)' : 'var(--color-border)'}`,
+                            borderRadius: 8, cursor: 'pointer',
+                            background: form.visibility === opt.value ? 'var(--color-primary-subtle)' : 'transparent',
+                            color: form.visibility === opt.value ? 'var(--color-primary)' : 'var(--color-text-muted)',
+                            transition: 'all 0.15s',
+                          }}
+                        >{opt.label}</button>
+                      ))}
+                    </div>
                   </Field>
                   {isPap && (
                     <div className="ep-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 4 }}>
