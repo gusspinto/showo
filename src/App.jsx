@@ -17,6 +17,10 @@ import ComingSoon from './pages/ComingSoon'
 // Shows the "coming soon" cover only on the public domain, and only before
 // launch — so testers can keep using the .vercel.app URL meanwhile, and
 // showo.pt flips to the real app on its own at launch time, no deploy needed.
+// Capture referral code from any entry page
+const refParam = new URLSearchParams(window.location.search).get('ref')
+if (refParam) localStorage.setItem('showo_ref', refParam)
+
 const COMING_SOON_HOSTS = ['showo.pt', 'www.showo.pt']
 const LAUNCH_AT = new Date('2026-07-01T08:00:00Z') // já passou — countdown desativado
 
