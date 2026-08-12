@@ -270,6 +270,7 @@ export default function DiaryCanvas() {
     function onUp(uv) {
       window.removeEventListener('pointermove', onMove)
       window.removeEventListener('pointerup', onUp)
+      window.removeEventListener('pointercancel', onUp)
       const p = s2c(uv.clientX, uv.clientY)
       const nx = p.x - ox, ny = p.y - oy
       setItems(prev => prev.map(it => it.id === id ? { ...it, x: nx, y: ny } : it))
@@ -277,6 +278,7 @@ export default function DiaryCanvas() {
     }
     window.addEventListener('pointermove', onMove)
     window.addEventListener('pointerup', onUp)
+    window.addEventListener('pointercancel', onUp)
   }
 
   // ── Resize ────────────────────────────────────────────────────────────────
@@ -300,6 +302,7 @@ export default function DiaryCanvas() {
     function onUp(uv) {
       window.removeEventListener('pointermove', onMove)
       window.removeEventListener('pointerup', onUp)
+      window.removeEventListener('pointercancel', onUp)
       const p = s2c(uv.clientX, uv.clientY)
       const nw = Math.max(140, origW + p.x - startX)
       const nh = Math.max(80,  origH + p.y - startY)
@@ -308,6 +311,7 @@ export default function DiaryCanvas() {
     }
     window.addEventListener('pointermove', onMove)
     window.addEventListener('pointerup', onUp)
+    window.addEventListener('pointercancel', onUp)
   }
 
   // ── Font size ─────────────────────────────────────────────────────────────
@@ -332,7 +336,6 @@ export default function DiaryCanvas() {
     activePtrs.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
 
     if (activePtrs.current.size >= 2) {
-      // Start pinch
       const pts = [...activePtrs.current.values()]
       const d = Math.hypot(pts[1].x - pts[0].x, pts[1].y - pts[0].y)
       pinchRef.current = {
@@ -343,8 +346,8 @@ export default function DiaryCanvas() {
       return
     }
 
-    const startX = e.clientX, startY = e.clientY
-    const origX = transform.current.x, origY = transform.current.y
+    // Delta-based pan: track last position so pinch→single-finger doesn't jump
+    let lastX = e.clientX, lastY = e.clientY
 
     function onMove(mv) {
       activePtrs.current.set(mv.pointerId, { x: mv.clientX, y: mv.clientY })
@@ -361,20 +364,28 @@ export default function DiaryCanvas() {
         const wy = (py - pinchRef.current.startTy) / pinchRef.current.startScale
         transform.current = { scale: ns, x: px - wx * ns, y: py - wy * ns }
         applyTransform()
+        lastX = mv.clientX; lastY = mv.clientY
         return
       }
 
       transform.current = {
         ...transform.current,
-        x: origX + mv.clientX - startX,
-        y: origY + mv.clientY - startY,
+        x: transform.current.x + mv.clientX - lastX,
+        y: transform.current.y + mv.clientY - lastY,
       }
+      lastX = mv.clientX; lastY = mv.clientY
       applyTransform()
     }
 
     function onUp(uv) {
       activePtrs.current.delete(uv.pointerId)
       if (activePtrs.current.size < 2) pinchRef.current = null
+      // When dropping from 2→1 finger, reset lastX/Y to remaining pointer
+      // so next move doesn't compute a wrong delta
+      if (activePtrs.current.size === 1) {
+        const rem = [...activePtrs.current.values()][0]
+        lastX = rem.x; lastY = rem.y
+      }
       if (activePtrs.current.size === 0) {
         window.removeEventListener('pointermove', onMove)
         window.removeEventListener('pointerup', onUp)

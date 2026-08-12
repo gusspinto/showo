@@ -369,6 +369,7 @@
   font-family: inherit;
   cursor: text;
   user-select: text;
+  touch-action: auto; /* allow keyboard + scroll inside textarea on iOS */
 }
 .dc-card-body::placeholder { color: #2d3f56; }
 .dc-card--highlight .dc-card-body { color: #fde68a; font-size: 14px; font-weight: 500; }
@@ -455,4 +456,8 @@
   .dc-zoom-label { min-width: 30px; font-size: 10px; }
   .dc-float-zoom { bottom: 80px; right: 12px; }
   .dc-float-add { bottom: 80px; }
+
+  /* On touch devices there's no hover — always show card controls */
+  .dc-card .dc-card-del { opacity: 1; }
+  .dc-card .dc-resize   { opacity: 1; }
 }
