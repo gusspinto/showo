@@ -49,10 +49,33 @@ const PLAN_META = {
 
 function PlanSection({ planId, navigate }) {
   const meta = PLAN_META[planId] ?? PLAN_META.free
+  const [portalLoading, setPortalLoading] = useState(false)
+  const params = new URLSearchParams(window.location.search)
+  const stripeSuccess = params.get('stripe') === 'success'
+
+  async function openPortal() {
+    setPortalLoading(true)
+    try {
+      const { data, error } = await supabase.functions.invoke('create-portal')
+      if (error || !data?.url) return
+      window.location.href = data.url
+    } finally {
+      setPortalLoading(false)
+    }
+  }
 
   return (
     <SectionCard title="Plano">
       <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+        {stripeSuccess && (
+          <div style={{
+            background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)',
+            borderRadius: 10, padding: '12px 16px', fontSize: 14, color: 'var(--color-success)', fontWeight: 600,
+          }}>
+            Pagamento confirmado! O teu plano foi atualizado.
+          </div>
+        )}
+
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <span style={{
             padding: '4px 14px', borderRadius: 100,
@@ -67,23 +90,23 @@ function PlanSection({ planId, navigate }) {
 
         {planId !== 'launch' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {planId === 'free' && (
-              <button className="settings-save-btn" onClick={() => navigate('/pricing')}>
-                Fazer upgrade
-              </button>
-            )}
-            {planId === 'build' && (
-              <button className="settings-save-btn" onClick={() => navigate('/pricing')}>
-                Upgrade para Launch
-              </button>
-            )}
-            <p className="settings-hint">Serás redirecionado para a página de planos.</p>
+            <button className="settings-save-btn" onClick={() => navigate('/pricing')}>
+              {planId === 'free' ? 'Fazer upgrade' : 'Upgrade para Launch'}
+            </button>
           </div>
         )}
 
         {planId !== 'free' && (
-          <div>
-            <p className="settings-hint">Para cancelar ou gerir a subscrição, contacta <a href="mailto:suporte@showo.pt" style={{ color: 'var(--color-primary)' }}>suporte@showo.pt</a>.</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <button
+              className="settings-save-btn"
+              onClick={openPortal}
+              disabled={portalLoading}
+              style={{ background: 'transparent', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}
+            >
+              {portalLoading ? 'A abrir…' : 'Gerir subscrição'}
+            </button>
+            <p className="settings-hint">Altera o método de pagamento, vê faturas ou cancela.</p>
           </div>
         )}
       </div>

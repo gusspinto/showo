@@ -3,6 +3,7 @@ import { Navbar } from '../components/Navbar'
 import { Check } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useState } from 'react'
+import { supabase } from '../lib/supabase'
 import './Pricing.css'
 
 const PLANS = [
@@ -111,23 +112,35 @@ function FeatureRow({ label, value }) {
 export default function Pricing() {
   const navigate = useNavigate()
   const { user, planId } = useAuth()
-  const [comingSoon, setComingSoon] = useState(false)
+  const [loading, setLoading] = useState(null)
+  const [error, setError] = useState('')
 
-  function handleCta(plan) {
+  async function handleCta(plan) {
     if (!user) { navigate('/register'); return }
     if (plan.id === 'free') { navigate('/dashboard'); return }
     if (plan.id === planId) return
-    setComingSoon(true)
-    setTimeout(() => setComingSoon(false), 3500)
+    setLoading(plan.id)
+    setError('')
+    try {
+      const { data, error: fnErr } = await supabase.functions.invoke('create-checkout', {
+        body: { plan: plan.id },
+      })
+      if (fnErr || !data?.url) { setError('Erro ao iniciar pagamento. Tenta novamente.'); return }
+      window.location.href = data.url
+    } catch {
+      setError('Erro ao iniciar pagamento. Tenta novamente.')
+    } finally {
+      setLoading(null)
+    }
   }
 
   return (
     <div className="pricing-page">
       <Navbar />
       <div className="pricing-container">
-        {comingSoon && (
-          <div className="pricing-toast">
-            Pagamentos em breve — estamos a preparar tudo.
+        {error && (
+          <div className="pricing-toast" style={{ background: 'var(--color-error)' }}>
+            {error}
           </div>
         )}
 
@@ -153,8 +166,9 @@ export default function Pricing() {
               <button
                 className={`pricing-cta pricing-cta--${plan.ctaVariant}`}
                 onClick={() => handleCta(plan)}
+                disabled={loading === plan.id || (user && plan.id === planId)}
               >
-                {user && plan.id === planId ? 'Plano atual' : plan.cta}
+                {loading === plan.id ? 'A redirecionar…' : user && plan.id === planId ? 'Plano atual' : plan.cta}
               </button>
 
               <div className="pricing-section">
