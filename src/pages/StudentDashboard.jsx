@@ -140,7 +140,7 @@ function OnboardingAlunoModal({ user, profile, onDismiss, claimedSlug }) {
               </div>
               <div>
                 <SectionLabel>Área (opcional)</SectionLabel>
-                <select value={area} onChange={e => setArea(e.target.value)} className="dash-input-onb" style={{ cursor: 'pointer' }}>
+                <select value={area} onChange={e => setArea(e.target.value)} className="dash-input-onb" style={{ cursor: 'pointer', colorScheme: 'dark light' }}>
                   <option value="">Seleciona a tua área</option>
                   {AREAS.map(a => <option key={a} value={a}>{a}</option>)}
                 </select>
