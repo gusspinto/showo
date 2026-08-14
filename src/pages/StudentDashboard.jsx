@@ -796,7 +796,7 @@ export default function StudentDashboard({ user, profile }) {
               >
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <span style={{ fontSize: 18, fontWeight: 800, fontFamily: 'var(--font-heading)', letterSpacing: '-0.3px', color: 'var(--color-text)' }}>
-                    Novo por aqui? 👋
+                    Novo por aqui?
                   </span>
                   <span style={{ fontSize: 13, color: 'var(--color-text-secondary)', lineHeight: 1.6 }}>
                     Em menos de 5 minutos aprendes tudo o que precisas para tirar o máximo partido do Showo.
