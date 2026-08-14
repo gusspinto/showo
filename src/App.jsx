@@ -125,50 +125,49 @@ function PhoneGate({ children }) {
       background: 'var(--color-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center',
       fontFamily: 'var(--font-body)', padding: 24,
     }}>
-      <div style={{ width: '100%', maxWidth: 400, display: 'flex', flexDirection: 'column', gap: 28 }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <div style={{
-            width: 48, height: 48, borderRadius: 14,
-            background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 8,
-          }}>
-            <Phone size={22} color="var(--color-primary)" />
-          </div>
-          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, fontFamily: 'var(--font-heading)', letterSpacing: '-0.4px', color: 'var(--color-text)' }}>
-            Só mais um passo
+      <div style={{
+        width: '100%', maxWidth: 360,
+        background: 'var(--color-surface)', border: '1px solid var(--color-border)',
+        borderRadius: 20, padding: '32px 28px',
+        display: 'flex', flexDirection: 'column', gap: 20,
+        boxShadow: '0 8px 40px rgba(0,0,0,0.18)',
+      }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <img src="/darkmode_icon_logo.png" alt="Showo" style={{ height: 24, width: 'auto', objectFit: 'contain', alignSelf: 'flex-start', marginBottom: 4 }} />
+          <h1 style={{ margin: 0, fontSize: 18, fontWeight: 700, fontFamily: 'var(--font-heading)', letterSpacing: '-0.3px', color: 'var(--color-text)' }}>
+            Uma última coisa
           </h1>
-          <p style={{ margin: 0, fontSize: 14, color: 'var(--color-text-secondary)', lineHeight: 1.6 }}>
-            Para teres acesso ao plano free, precisamos do teu número de telemóvel. Usamo-lo para te contactar sobre o teu portfólio e oportunidades — nunca partilhado publicamente.
+          <p style={{ margin: 0, fontSize: 13, color: 'var(--color-text-secondary)', lineHeight: 1.6 }}>
+            Deixa o teu telemóvel para activarmos o teu acesso gratuito. Nunca partilhado, só usado pela nossa equipa.
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <label style={{ fontSize: 13, fontWeight: 500, color: 'var(--color-text-secondary)' }}>Telemóvel</label>
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: 10,
-              borderBottom: '1.5px solid var(--color-border)',
-              paddingBottom: 2,
-            }}>
-              <span style={{ fontSize: 14, color: 'var(--color-text-secondary)', flexShrink: 0 }}>+351</span>
-              <input
-                type="tel"
-                value={phone}
-                onChange={e => setPhone(e.target.value)}
-                placeholder="912 345 678"
-                autoFocus
-                style={{
-                  flex: 1, background: 'transparent', border: 'none', outline: 'none',
-                  fontSize: 16, color: 'var(--color-text)', fontFamily: 'inherit', padding: '8px 0',
-                }}
-              />
-            </div>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div style={{
+            display: 'flex', alignItems: 'center',
+            background: 'var(--color-bg)', border: '1px solid var(--color-border)',
+            borderRadius: 10, overflow: 'hidden',
+          }}>
+            <span style={{
+              padding: '11px 12px', fontSize: 14, color: 'var(--color-text-secondary)',
+              borderRight: '1px solid var(--color-border)', flexShrink: 0, userSelect: 'none',
+            }}>+351</span>
+            <input
+              type="tel"
+              value={phone}
+              onChange={e => setPhone(e.target.value)}
+              placeholder="912 345 678"
+              autoFocus
+              style={{
+                flex: 1, background: 'transparent', border: 'none', outline: 'none',
+                fontSize: 15, color: 'var(--color-text)', fontFamily: 'inherit',
+                padding: '11px 14px',
+              }}
+            />
           </div>
 
           {error && (
-            <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 10, padding: '10px 14px', color: 'var(--color-error)', fontSize: 13 }}>
-              {error}
-            </div>
+            <p style={{ margin: 0, fontSize: 12, color: 'var(--color-error)' }}>{error}</p>
           )}
 
           <button
@@ -176,12 +175,12 @@ function PhoneGate({ children }) {
             disabled={saving}
             style={{
               background: saving ? 'var(--color-border)' : 'var(--color-primary)',
-              color: '#fff', border: 'none', borderRadius: 10, padding: '13px 0',
-              fontSize: 15, fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer',
-              fontFamily: 'inherit', marginTop: 4,
+              color: '#fff', border: 'none', borderRadius: 10, padding: '12px 0',
+              fontSize: 14, fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer',
+              fontFamily: 'inherit',
             }}
           >
-            {saving ? 'A guardar…' : 'Confirmar e entrar'}
+            {saving ? 'A guardar…' : 'Activar acesso gratuito'}
           </button>
         </form>
       </div>
