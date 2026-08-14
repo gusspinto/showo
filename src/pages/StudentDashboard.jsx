@@ -768,6 +768,22 @@ export default function StudentDashboard({ user, profile }) {
             </div>
 
             {isEmptyState && (
+              <section
+                className="sdb-panel"
+                onClick={() => navigate('/aprende')}
+                style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: '18px 20px' }}
+              >
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-text)' }}>Novo por aqui?</span>
+                  <span style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>Aprende a tirar o máximo partido do Showo em menos de 5 minutos.</span>
+                </div>
+                <Button size="sm" variant="secondary" iconRight={<ArrowRight size={13} />} onClick={e => { e.stopPropagation(); navigate('/aprende') }} style={{ flexShrink: 0 }}>
+                  Ver guia
+                </Button>
+              </section>
+            )}
+
+            {isEmptyState && (
               <section className="sdb-first-project" onClick={() => navigate('/novo')}>
                 <h2 className="sdb-first-project-title">Cria o teu primeiro projeto</h2>
                 <Button
