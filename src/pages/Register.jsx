@@ -101,6 +101,7 @@ export default function Register() {
   const [school, setSchool] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [phone, setPhone] = useState('')
 
   const [inviteCode, setInviteCode] = useState(professorCodeParam)
   const [accountCreated, setAccountCreated] = useState(false)
@@ -194,6 +195,7 @@ export default function Register() {
     if (needsSchool && !school.trim()) { setError('Introduz o nome da escola.'); return }
     if (needsInviteCode && !inviteCode.trim()) { setError('Introduz o código de acesso enviado pela Showo.'); return }
     if (password.length < 6) { setError('A palavra-passe tem de ter pelo menos 6 caracteres.'); return }
+    if (!phone.trim()) { setError('Introduz o teu número de telemóvel.'); return }
 
 
     setLoading(true)
@@ -245,7 +247,7 @@ export default function Register() {
       await refreshProfile()
     }
 
-    // Store geolocation and referrer on the new profile
+    // Store geolocation, referrer and phone on the new profile
     const params = new URLSearchParams(window.location.search)
     const geo = await getGeoInfo()
     const { data: { user: newUser } } = await supabase.auth.getUser()
@@ -255,6 +257,7 @@ export default function Register() {
         signup_city: geo?.city || null,
         signup_referrer: document.referrer || null,
         signup_utm_source: params.get('utm_source') || null,
+        phone: phone.trim() || null,
       }).eq('id', newUser.id)
     }
 
@@ -503,6 +506,9 @@ export default function Register() {
                     </Field>
                     <Field label="Palavra-passe">
                       <Input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Mínimo 6 caracteres" required />
+                    </Field>
+                    <Field label="Telemóvel">
+                      <Input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="912 345 678" required />
                     </Field>
                   </>
                 )}

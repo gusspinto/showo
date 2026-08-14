@@ -464,7 +464,7 @@ export default function Settings() {
     usernameStatus === 'available' ? <span className="flex items-center gap-1"><Check size={12} /> Disponível!</span> :
     usernameStatus === 'taken'     ? <span className="flex items-center gap-1"><X size={12} /> Já está a ser usado.</span> :
     usernameStatus === 'invalid'   ? <span className="flex items-center gap-1"><AlertTriangle size={12} /> Só letras minúsculas, números e _.</span> :
-    `showo.vercel.app/u/${username || 'username'}`
+    `${window.location.origin}/u/${username || 'username'}`
 
   const themeBlock = (
     <div className="settings-theme-row">

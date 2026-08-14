@@ -1,6 +1,6 @@
 import { useState, useEffect, lazy, Suspense, Component } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
-import { AlertTriangle, X as XIcon, Frown, RefreshCw, ArrowLeft } from 'lucide-react'
+import { AlertTriangle, X as XIcon, Frown, RefreshCw, ArrowLeft, Phone } from 'lucide-react'
 import { HelmetProvider } from 'react-helmet-async'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
@@ -92,6 +92,101 @@ function AuthGate({ children }) {
   const { loading } = useAuth()
   if (loading) return <PageLoader />
   return children
+}
+
+const PUBLIC_PATHS = new Set(['/', '/home', '/login', '/register', '/recuperar-password', '/explorar', '/explore', '/privacidade', '/termos', '/pricing', '/welcome'])
+const PUBLIC_PREFIXES = ['/u/', '/projeto/', '/certificado/', '/empresa/', '/oauth/']
+
+function PhoneGate({ children }) {
+  const { user, profile, refreshProfile } = useAuth()
+  const location = useLocation()
+  const [phone, setPhone] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+
+  const isPublic = PUBLIC_PATHS.has(location.pathname) || PUBLIC_PREFIXES.some(p => location.pathname.startsWith(p))
+  const needsPhone = !isPublic && user && profile && !profile.phone
+
+  async function handleSubmit(e) {
+    e.preventDefault()
+    if (!phone.trim()) { setError('Introduz o teu número de telemóvel.'); return }
+    setSaving(true)
+    const { error: err } = await supabase.from('profiles').update({ phone: phone.trim() }).eq('id', user.id)
+    if (err) { setError('Erro ao guardar. Tenta novamente.'); setSaving(false); return }
+    await refreshProfile()
+    setSaving(false)
+  }
+
+  if (!needsPhone) return children
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 99998,
+      background: 'var(--color-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+      fontFamily: 'var(--font-body)', padding: 24,
+    }}>
+      <div style={{ width: '100%', maxWidth: 400, display: 'flex', flexDirection: 'column', gap: 28 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <div style={{
+            width: 48, height: 48, borderRadius: 14,
+            background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 8,
+          }}>
+            <Phone size={22} color="var(--color-primary)" />
+          </div>
+          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, fontFamily: 'var(--font-heading)', letterSpacing: '-0.4px', color: 'var(--color-text)' }}>
+            Só mais um passo
+          </h1>
+          <p style={{ margin: 0, fontSize: 14, color: 'var(--color-text-secondary)', lineHeight: 1.6 }}>
+            Para teres acesso ao plano free, precisamos do teu número de telemóvel. Usamo-lo para te contactar sobre o teu portfólio e oportunidades — nunca partilhado publicamente.
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <label style={{ fontSize: 13, fontWeight: 500, color: 'var(--color-text-secondary)' }}>Telemóvel</label>
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 10,
+              borderBottom: '1.5px solid var(--color-border)',
+              paddingBottom: 2,
+            }}>
+              <span style={{ fontSize: 14, color: 'var(--color-text-secondary)', flexShrink: 0 }}>+351</span>
+              <input
+                type="tel"
+                value={phone}
+                onChange={e => setPhone(e.target.value)}
+                placeholder="912 345 678"
+                autoFocus
+                style={{
+                  flex: 1, background: 'transparent', border: 'none', outline: 'none',
+                  fontSize: 16, color: 'var(--color-text)', fontFamily: 'inherit', padding: '8px 0',
+                }}
+              />
+            </div>
+          </div>
+
+          {error && (
+            <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 10, padding: '10px 14px', color: 'var(--color-error)', fontSize: 13 }}>
+              {error}
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={saving}
+            style={{
+              background: saving ? 'var(--color-border)' : 'var(--color-primary)',
+              color: '#fff', border: 'none', borderRadius: 10, padding: '13px 0',
+              fontSize: 15, fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer',
+              fontFamily: 'inherit', marginTop: 4,
+            }}
+          >
+            {saving ? 'A guardar…' : 'Confirmar e entrar'}
+          </button>
+        </form>
+      </div>
+    </div>
+  )
 }
 
 // ── Error Boundary ────────────────────────────────────────────────────────────
@@ -352,6 +447,7 @@ export default function App() {
             <ErrorBoundary>
             <RecoveryGate pwRecovery={pwRecovery}>
             <AuthGate>
+            <PhoneGate>
             <Suspense fallback={<PageLoader />}>
             <Routes>
               <Route path="/"              element={<HomeRoute />}   />
@@ -390,6 +486,7 @@ export default function App() {
               <Route path="*"                   element={<NotFound />}      />
             </Routes>
             </Suspense>
+            </PhoneGate>
             </AuthGate>
             </RecoveryGate>
             </ErrorBoundary>

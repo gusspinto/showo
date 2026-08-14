@@ -33,7 +33,7 @@ export function AuthProvider({ children }) {
   const fetchProfile = useCallback(async (uid) => {
     if (!uid) { setProfile(null); setAiUsage({}); resetAnalytics(); return }
     const [profileRes, userRes] = await Promise.all([
-      supabase.from('profiles').select('id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, linkedin_url, skills, monthly_report_opt_in, area, plan').eq('id', uid).single(),
+      supabase.from('profiles').select('id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, linkedin_url, skills, monthly_report_opt_in, area, plan, phone').eq('id', uid).single(),
       supabase.auth.getUser(),
     ])
     const meta = userRes.data?.user?.user_metadata ?? {}
