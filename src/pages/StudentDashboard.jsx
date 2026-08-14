@@ -77,137 +77,6 @@ function pickFocusProject(projects) {
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
-   Modais herdados (onboarding) — inalterados na lógica
-   ══════════════════════════════════════════════════════════════════════════ */
-
-function OnboardingAlunoModal({ user, profile, onDismiss, claimedSlug }) {
-  const navigate = useNavigate()
-  const [step, setStep] = useState(claimedSlug ? -1 : 0)
-  const [username, setUsername] = useState(profile?.username ?? '')
-  const [bio, setBio] = useState(profile?.bio ?? '')
-  const [area, setArea] = useState(profile?.area ?? '')
-  const [skills, setSkills] = useState(profile?.skills ?? [])
-  const [phone, setPhone] = useState('')
-  const [saving, setSaving] = useState(false)
-  const [saveErr, setSaveErr] = useState(null)
-  const [copied, setCopied] = useState(false)
-  const resolvedUsername = username.trim() || profile?.username || user?.id
-  const profileUrl = `${window.location.origin}/u/${resolvedUsername}`
-  const TOTAL = 3
-  const AREAS = ['Programação e Informática','Design e Multimédia','Marketing e Comunicação','Gestão e Administração','Eletrónica e Automação','Audiovisual e Cinema','Turismo e Hotelaria','Saúde','Desporto','Artes e Espetáculo','Construção e Engenharia','Outra']
-
-  async function saveProfile() {
-    setSaving(true); setSaveErr(null)
-    const { error } = await supabase.rpc('upsert_own_profile', {
-      p_username: username.trim() || null,
-      p_bio: bio.trim() || null,
-      p_area: area || null,
-      p_skills: skills,
-      p_phone: phone.trim() || null,
-    })
-    setSaving(false)
-    if (error) { console.error('[StudentDashboard] saveProfile error:', error); setSaveErr(error.code === '23505' ? 'Este username já está a ser usado.' : `Erro ao guardar. (${error.message})`); return }
-    setStep(1)
-  }
-
-  return (
-    <div className="dash-modal-overlay dash-modal-overlay-dark">
-      <div className="dash-modal-card dash-modal-card-lg" style={{ position: 'relative' }}>
-        <button onClick={onDismiss} style={{ position: 'absolute', top: 14, right: 14, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-secondary)', padding: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 6, zIndex: 1 }} aria-label="Fechar"><X size={18} /></button>
-        {step === -1 && claimedSlug && (
-          <div className="dash-modal-section dash-center">
-            <div className="dash-icon-round dash-icon-round-success"><Check size={26} color="var(--color-success)" /></div>
-            <h2 className="dash-onb-title">Olá{profile?.full_name ? ` ${profile.full_name.split(' ')[0]}` : ''}! O teu projeto está guardado.</h2>
-            <p className="dash-onb-subtitle" style={{ marginBottom: 24 }}>O projeto que criaste sem conta foi guardado na tua conta.</p>
-            <div className="dash-col-2">
-              <Button fullWidth iconRight={<ArrowRight size={15} />} onClick={() => { onDismiss(); navigate(`/projeto/${claimedSlug}`) }}>Ir para o projeto</Button>
-              <Button variant="secondary" fullWidth onClick={() => setStep(0)}>Saltar por agora</Button>
-            </div>
-          </div>
-        )}
-        {step === 0 && (
-          <div className="dash-modal-section">
-            <div className="dash-center-mb-sm">
-              <div className="dash-icon-round dash-icon-round-primary"><User size={24} color="var(--color-primary)" /></div>
-              <h2 className="dash-onb-title" style={{ marginBottom: 6 }}>Completa o teu perfil</h2>
-              <p className="dash-onb-subtitle">O teu perfil é o teu cartão de visita.</p>
-            </div>
-            <div className="dash-col-3 dash-mb-5">
-              <div>
-                <SectionLabel>Username</SectionLabel>
-                <div style={{ position: 'relative' }}>
-                  <span className="dash-input-prefix">@</span>
-                  <input type="text" value={username} onChange={e => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))} placeholder="o_teu_username" maxLength={30} className="dash-input-onb" style={{ paddingLeft: 30 }} />
-                </div>
-              </div>
-              <div>
-                <SectionLabel>Bio (opcional)</SectionLabel>
-                <textarea value={bio} onChange={e => setBio(e.target.value)} placeholder="Estudante de Informática…" rows={3} maxLength={200} className="dash-input-onb" style={{ resize: 'none', lineHeight: 1.6 }} />
-              </div>
-              <div>
-                <SectionLabel>Área (opcional)</SectionLabel>
-                <Select value={area} onChange={setArea} placeholder="Seleciona a tua área" options={AREAS} inputStyle={{ background: 'var(--color-primary-subtle)', border: '1.5px solid var(--color-primary-muted)' }} />
-              </div>
-              <div><SkillsPicker label="Competências (opcional)" value={skills} onChange={setSkills} max={8} /></div>
-              <div>
-                <SectionLabel>Telemóvel (opcional)</SectionLabel>
-                <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="912 345 678" className="dash-input-onb" />
-                <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 4 }}>Para te contactarmos sobre o teu portfolio e oportunidades. Nunca partilhado publicamente.</p>
-              </div>
-            </div>
-            {saveErr && <div className="dash-error-box">{saveErr}</div>}
-            <Button onClick={saveProfile} disabled={saving} loading={saving} fullWidth iconRight={<ArrowRight size={15} />}>Guardar perfil</Button>
-            <button onClick={() => setStep(s => s + 1)} className="dash-skip-btn">Saltar por agora</button>
-          </div>
-        )}
-        {step === 1 && (
-          <div className="dash-modal-section dash-center">
-            <div className="dash-icon-round dash-icon-round-primary"><Rocket size={24} color="var(--color-primary)" /></div>
-            <h2 className="dash-onb-title" style={{ marginBottom: 10 }}>Cria o teu primeiro projeto</h2>
-            <p className="dash-onb-subtitle-wide">Conta-nos o que fizeste, em poucas frases. Tratamos do resto.</p>
-            <Card padding="md" style={{ textAlign: 'left' }} className="dash-mb-4">
-              {[
-                { icon: <Pencil size={15} color="var(--color-primary)" />, text: 'Formulário guiado passo a passo' },
-                { icon: <Sparkles size={15} color="var(--color-primary)" />, text: 'IA analisa e melhora cada resposta' },
-                { icon: <Globe size={15} color="var(--color-primary)" />, text: 'Página pública partilhável em segundos' },
-              ].map((item, i) => (
-                <div key={i} className="dash-onb-feature"><span className="dash-no-shrink">{item.icon}</span>{item.text}</div>
-              ))}
-            </Card>
-            <Button fullWidth iconRight={<ArrowRight size={15} />} onClick={() => { onDismiss(); navigate('/novo') }}>Criar projeto</Button>
-            <Button variant="secondary" fullWidth onClick={() => setStep(2)} className="dash-mt-2">Já tenho projeto, avançar</Button>
-            <button onClick={onDismiss} className="dash-skip-btn-dim">Saltar</button>
-          </div>
-        )}
-        {step === 2 && (
-          <div className="dash-modal-section dash-center">
-            <div className="dash-icon-round dash-icon-round-success"><Share2 size={24} color="var(--color-success)" /></div>
-            <h2 className="dash-onb-title" style={{ marginBottom: 10 }}>Partilha a tua página</h2>
-            <p className="dash-onb-subtitle-wide">A tua página de perfil está pronta. Envia-a a quem quiseres.</p>
-            <Card padding="sm" className="dash-mb-5" style={{ display: 'flex', alignItems: 'center', gap: 8, textAlign: 'left' }}>
-              <Link size={14} color="var(--color-text-secondary)" className="dash-no-shrink" />
-              <span className="dash-profile-url">{profileUrl}</span>
-              <Button size="sm" variant={copied ? 'ghost' : 'secondary'} icon={copied ? <Check size={12} /> : <Copy size={12} />}
-                onClick={() => { navigator.clipboard.writeText(profileUrl).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2500) }) }}
-                style={copied ? { color: 'var(--color-success)' } : undefined}>
-                {copied ? 'Copiado!' : 'Copiar'}
-              </Button>
-            </Card>
-            <Button fullWidth iconRight={<ArrowRight size={15} />} onClick={() => { onDismiss(); navigate(`/u/${resolvedUsername}`) }}>Ver a minha página</Button>
-            <Button variant="secondary" fullWidth onClick={onDismiss} className="dash-mt-2">Ir para o dashboard</Button>
-          </div>
-        )}
-        <div className="dash-step-dots">
-          {Array.from({ length: TOTAL }).map((_, i) => (
-            <div key={i} className={`dash-step-dot${i === step ? ' active' : ''}`} />
-          ))}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-/* ══════════════════════════════════════════════════════════════════════════
    StudentDashboard
    ══════════════════════════════════════════════════════════════════════════ */
 
@@ -215,8 +84,6 @@ export default function StudentDashboard({ user, profile }) {
   const navigate = useNavigate()
   const location = useLocation()
   const { checkGate } = useAuth()
-  const [claimedSlug] = useState(() => location.state?.claimedSlug ?? null)
-
   /* ── Dados ── */
   const [projects, setProjects] = useState([])
   const [loadingProjects, setLoadingProjects] = useState(true)
@@ -234,7 +101,6 @@ export default function StudentDashboard({ user, profile }) {
   const [googleConnected, setGoogleConnected] = useState(null)
 
   /* ── UI ── */
-  const [showOnboarding, setShowOnboarding] = useState(false)
   const [tutorialPotentialSeen, setTutorialPotentialSeen] = useState(() => !!localStorage.getItem(`showo_tut_potential_${user.id}`))
   const [composerKind, setComposerKind] = useState(null)
   const [showJournal, setShowJournal] = useState(false)
@@ -271,16 +137,6 @@ export default function StudentDashboard({ user, profile }) {
           .then(({ data: profile }) => setProjectOfMonth({ ...data, profile: profile || null }))
       })
   }, [])
-
-  /* ── Onboarding ── */
-  useEffect(() => {
-    if (!localStorage.getItem(`showo_onb_v2_${user.id}`)) setShowOnboarding(true)
-  }, [user.id])
-
-  function dismissOnboarding() {
-    localStorage.setItem(`showo_onb_v2_${user.id}`, '1')
-    setShowOnboarding(false)
-  }
 
   function dismissPotentialTutorial() {
     localStorage.setItem(`showo_tut_potential_${user.id}`, '1')
@@ -665,10 +521,7 @@ export default function StudentDashboard({ user, profile }) {
     <div className="sdb-root">
       <Navbar />
 
-      {showOnboarding && (
-        <OnboardingAlunoModal user={user} profile={profile} onDismiss={dismissOnboarding} claimedSlug={claimedSlug} />
-      )}
-      <div className={`dash-toast${toast ? ' visible' : ''}`}>{toast}</div>
+<div className={`dash-toast${toast ? ' visible' : ''}`}>{toast}</div>
 
       {composerKind && focusFull && (
         <JournalComposer
