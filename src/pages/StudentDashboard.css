@@ -1504,7 +1504,20 @@
 @media (max-width: 900px) {
   .sdb-page { padding: var(--sp-5) var(--sp-4) var(--sp-16); }
 
-  .sdb-hero { grid-template-columns: 1fr; gap: var(--sp-4); align-items: start; }
+  /* Empilhado, o divisor passa do hero inteiro para a saudação: a linha cai
+     logo a seguir ao greeting, e o hero-side fica visualmente fora do hero em
+     vez de se ler como uma segunda linha da saudação. */
+  .sdb-hero {
+    grid-template-columns: 1fr;
+    gap: var(--sp-5);
+    align-items: start;
+    padding-bottom: 0;
+    border-bottom: none;
+  }
+  .sdb-hero-main {
+    padding-bottom: var(--sp-5);
+    border-bottom: 1px solid var(--color-border);
+  }
   .sdb-hero-side { min-width: 0; }
 
   .sdb-grid { grid-template-columns: 1fr; }
@@ -1689,18 +1702,10 @@
 @media (max-width: 600px) {
   .sdb-page { padding: var(--sp-4) var(--sp-4) var(--sp-12); }
   .sdb-duo  { grid-auto-flow: row; grid-auto-columns: auto; }
-  .sdb-hero { padding-bottom: var(--sp-4); margin-bottom: var(--sp-4); }
+  .sdb-hero { margin-bottom: var(--sp-4); }
+  .sdb-hero-main { padding-bottom: var(--sp-4); }
   .sdb-hero-context { font-size: var(--text-base); margin-bottom: var(--sp-4); }
   .sdb-hero-actions .sdb-btn { flex: 1; }
-  /* Hero side sem capa de card no mobile — visual limpo, sem competir com o greeting */
-  .sdb-hero-side {
-    background: transparent !important;
-    border: none !important;
-    border-radius: 0 !important;
-    padding: 0 !important;
-    min-width: 0 !important;
-  }
-
 
 
   .sdb-pulse { padding: var(--sp-5) var(--sp-4); }
