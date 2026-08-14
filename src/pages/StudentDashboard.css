@@ -482,6 +482,12 @@
    por isso alinha ao topo para não criar espaço vazio abaixo do calendário. */
 .sdb-grid--empty .sdb-col:last-child { align-self: start; }
 
+/* Wrappers que não renderizam nada (o .sdb-o-pulse sem projetos, por exemplo)
+   continuam a contar como filho e a consumir um gap inteiro, o que abre um
+   espaço fantasma entre os cards vizinhos. */
+.sdb-grid > *:empty,
+.sdb-col  > *:empty { display: none; }
+
 /* Colunas automáticas: com dois painéis ficam meio a meio, com um só ocupa a
    largura toda — sem precisar de uma classe extra para cada caso. */
 .sdb-duo {
@@ -1512,6 +1518,7 @@
     gap: var(--sp-5);
     align-items: start;
     padding-bottom: 0;
+    margin-bottom: var(--sp-5);   /* igual ao gap da grelha, para um ritmo único */
     border-bottom: none;
   }
   .sdb-hero-main {
@@ -1702,7 +1709,6 @@
 @media (max-width: 600px) {
   .sdb-page { padding: var(--sp-4) var(--sp-4) var(--sp-12); }
   .sdb-duo  { grid-auto-flow: row; grid-auto-columns: auto; }
-  .sdb-hero { margin-bottom: var(--sp-4); }
   .sdb-hero-main { padding-bottom: var(--sp-4); }
   .sdb-hero-context { font-size: var(--text-base); margin-bottom: var(--sp-4); }
   .sdb-hero-actions .sdb-btn { flex: 1; }
@@ -2537,7 +2543,7 @@
 .sdb-first-project {
   position: relative;
   overflow: hidden;
-  margin: 0 0 20px;
+  margin: 0;
   padding: 56px 24px;
   border-radius: 16px;
   cursor: pointer;
