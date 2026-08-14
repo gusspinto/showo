@@ -768,22 +768,6 @@ export default function StudentDashboard({ user, profile }) {
             </div>
 
             {isEmptyState && (
-              <section
-                className="sdb-panel"
-                onClick={() => navigate('/aprende')}
-                style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: '18px 20px' }}
-              >
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-text)' }}>Novo por aqui?</span>
-                  <span style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>Aprende a tirar o máximo partido do Showo em menos de 5 minutos.</span>
-                </div>
-                <Button size="sm" variant="secondary" iconRight={<ArrowRight size={13} />} onClick={e => { e.stopPropagation(); navigate('/aprende') }} style={{ flexShrink: 0 }}>
-                  Ver guia
-                </Button>
-              </section>
-            )}
-
-            {isEmptyState && (
               <section className="sdb-first-project" onClick={() => navigate('/novo')}>
                 <h2 className="sdb-first-project-title">Cria o teu primeiro projeto</h2>
                 <Button
@@ -792,6 +776,35 @@ export default function StudentDashboard({ user, profile }) {
                 >
                   Começar
                 </Button>
+              </section>
+            )}
+
+            {isEmptyState && (
+              <section
+                onClick={() => navigate('/aprende')}
+                style={{
+                  cursor: 'pointer',
+                  background: 'var(--color-surface)',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: 16,
+                  padding: '24px 24px 20px',
+                  display: 'flex', flexDirection: 'column', gap: 12,
+                  transition: 'border-color 0.15s',
+                }}
+                onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--color-primary)'}
+                onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--color-border)'}
+              >
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <span style={{ fontSize: 18, fontWeight: 800, fontFamily: 'var(--font-heading)', letterSpacing: '-0.3px', color: 'var(--color-text)' }}>
+                    Novo por aqui? 👋
+                  </span>
+                  <span style={{ fontSize: 13, color: 'var(--color-text-secondary)', lineHeight: 1.6 }}>
+                    Em menos de 5 minutos aprendes tudo o que precisas para tirar o máximo partido do Showo.
+                  </span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--color-primary)', fontSize: 13, fontWeight: 600 }}>
+                  Ver guia <ArrowRight size={13} />
+                </div>
               </section>
             )}
 
