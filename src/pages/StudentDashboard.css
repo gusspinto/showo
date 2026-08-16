@@ -10,6 +10,8 @@
   min-height: 100vh;
   background: var(--color-bg);
   font-family: var(--font-body);
+  --radius-lg: 16px;
+  --radius-xl: 20px;
 }
 
 .sdb-page {
@@ -63,7 +65,7 @@
   border-color: var(--color-primary-muted);
 }
 
-.sdb-panel--flush { padding: 0; }
+.sdb-panel--flush { padding: 0; overflow: hidden; }
 
 .sdb-panel-head {
   display: flex;
@@ -471,6 +473,23 @@
   grid-template-columns: minmax(0, 1fr) 320px;
   gap: var(--sp-5);
   align-items: start;
+}
+
+/* ── Stat tiles (bento mobile) — hidden on desktop ── */
+.sdb-mobile-stats { display: none; }
+.sdb-stat-tile-num {
+  font-family: var(--font-heading);
+  font-size: 40px;
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--color-text);
+  margin: 4px 0 2px;
+}
+.sdb-stat-tile-label {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text-secondary);
 }
 .sdb-col {
   display: flex;
@@ -1510,6 +1529,11 @@
 @media (max-width: 900px) {
   .sdb-page { padding: var(--sp-5) var(--sp-4) var(--sp-16); }
 
+  /* Em mobile, a elevação superfície/fundo já separa os cards sem bordas.
+     Tirar a borda dá um look mais nativo (iOS/Android) e menos "painel web". */
+  .sdb-panel { border-color: transparent; }
+  .sdb-panel--tint { border-color: transparent; }
+
   /* Empilhado, o divisor passa do hero inteiro para a saudação: a linha cai
      logo a seguir ao greeting, e o hero-side fica visualmente fora do hero em
      vez de se ler como uma segunda linha da saudação. */
@@ -1525,25 +1549,41 @@
     padding-bottom: var(--sp-5);
     border-bottom: 1px solid var(--color-border);
   }
-  .sdb-hero-side { min-width: 0; }
+  /* Hero: apertar o ritmo vertical */
+  .sdb-hero { gap: var(--sp-3); margin-bottom: var(--sp-4); }
+  .sdb-hero-main { padding-bottom: var(--sp-3); }
+
+  /* Hero-side (Próximos passos) escondido em mobile — info redundante no ecrã pequeno */
+  .sdb-hero-side { display: none; }
 
   .sdb-grid { grid-template-columns: 1fr; }
   /* Os wrappers desaparecem da caixa para que a ordem seja definida item a
      item, em vez de "toda a coluna esquerda e depois toda a direita". */
   .sdb-col { display: contents; }
 
-  /* Ordem mobile: projeto em foco → oportunidade (se existir) → ação imediata
+  /* Ordem mobile: projeto em foco → tiles stat → oportunidade → ação imediata
      (tarefas + agenda) → tips → progresso → contexto → portfólio */
   .sdb-o-pulse     { order: 1; }
-  .sdb-o-recruiter { order: 2; }
-  .sdb-o-tasks     { order: 3; }
-  .sdb-o-agenda    { order: 4; }
-  .sdb-o-tips      { order: 5; }
-  .sdb-o-rhythm    { order: 6; }
-  .sdb-o-turma     { order: 7; }
-  .sdb-o-potential { order: 8; }
-  .sdb-o-pinned    { order: 8; }
-  .sdb-o-portfolio { order: 9; }
+  .sdb-mobile-stats { order: 2; display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-4); }
+  .sdb-o-portfolio { order: 3; }
+  .sdb-o-recruiter { order: 4; }
+  .sdb-o-tasks     { order: 5; }
+  .sdb-o-agenda    { order: 6; }
+  .sdb-o-tips      { order: 7; }
+  .sdb-o-rhythm    { order: 8; }
+  .sdb-o-turma     { order: 9; }
+  .sdb-o-potential { order: 10; display: none; } /* substituído pelos tiles */
+  .sdb-o-pinned    { order: 10; }
+
+  .sdb-stat-tile {
+    background: var(--color-surface);
+    border-radius: var(--radius-xl);
+    padding: var(--sp-4);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-height: 112px;
+  }
 }
 
 /* ── Dashboard pinned cards ──────────────────────────────────────────────── */
@@ -1553,7 +1593,7 @@
   gap: 10px;
 }
 .sdb-pinned-card {
-  border-radius: 16px;
+  border-radius: var(--radius-xl);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -1564,7 +1604,7 @@
   overflow: hidden;
   border: 1px solid var(--color-glass-border);
   border-bottom: none;
-  border-radius: 16px 16px 0 0;
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
   padding: 12px 16px;
   display: flex;
   align-items: center;
@@ -1640,7 +1680,7 @@
   background: var(--color-glass);
   border: 1px solid var(--color-glass-border);
   border-top: none;
-  border-radius: 0 0 16px 16px;
+  border-radius: 0 0 var(--radius-xl) var(--radius-xl);
   padding: 18px 20px 20px;
   display: flex;
   flex-direction: column;

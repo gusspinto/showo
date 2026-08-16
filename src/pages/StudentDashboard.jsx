@@ -7,7 +7,7 @@ import { calculatePotential, calculateScore } from '../lib/score'
 import {
   Rocket, Plus, User, Globe, MessageSquare, Star,
   Check, ArrowRight, Sparkles, Pencil, ExternalLink, Copy, Share2, Link,
-  Trash2, Flame, ArrowUpRight, Trophy, Pin, BookOpen, X,
+  Trash2, Flame, ArrowUpRight, Trophy, Pin, BookOpen, X, Layers,
 } from 'lucide-react'
 import { Button, Card, SectionLabel, Modal, Select } from '../components/ui'
 import { useAuth } from '../context/AuthContext'
@@ -767,6 +767,47 @@ export default function StudentDashboard({ user, profile }) {
               })()}
             </div>
 
+            {!isEmptyState && (
+              <div className="sdb-mobile-stats">
+                {checkGate('weeklyRecap').allowed ? (
+                  <div className="sdb-stat-tile">
+                    <span className="sdb-eyebrow" style={{ color: 'var(--color-warning)' }}>Atividade</span>
+                    <div className="sdb-stat-tile-num" style={{ color: 'var(--color-warning)' }}>{streak}</div>
+                    <span className="sdb-stat-tile-label">{streak === 1 ? 'semana' : 'semanas'} seguidas</span>
+                    <div className="sdb-daydots" style={{ marginTop: 'auto', paddingTop: 10 }}>
+                      {last7.map(d => (
+                        <span key={d.iso} className={`sdb-daydot${d.active ? ' is-active' : ''}`} />
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="sdb-stat-tile">
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', minHeight: 26 }}>
+                      <span className="sdb-eyebrow">Projetos</span>
+                      <Layers size={13} color="var(--color-text-tertiary)" />
+                    </div>
+                    <div className="sdb-stat-tile-num">{projects.length}</div>
+                    <span className="sdb-stat-tile-label">{projects.length === 1 ? 'projeto criado' : 'projetos criados'}</span>
+                  </div>
+                )}
+                <div className="sdb-stat-tile">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', minHeight: 26 }}>
+                    <span className="sdb-eyebrow sdb-eyebrow--brand">Potencial</span>
+                    <svg width={26} height={26} style={{ flexShrink: 0, transform: 'rotate(-90deg)' }}>
+                      <circle cx={13} cy={13} r={9} fill="none" stroke="var(--color-border)" strokeWidth={2.5} />
+                      <circle cx={13} cy={13} r={9} fill="none"
+                        stroke={getScoreColor(potential)} strokeWidth={2.5}
+                        strokeDasharray={`${(potential / 100) * 2 * Math.PI * 9} ${2 * Math.PI * 9}`}
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                  </div>
+                  <div className="sdb-stat-tile-num" style={{ color: getScoreColor(potential) }}>{potential}</div>
+                  <span className="sdb-stat-tile-label">/100</span>
+                </div>
+              </div>
+            )}
+
             {isEmptyState && (
               <section className="sdb-first-project" onClick={() => navigate('/novo')}>
                 <h2 className="sdb-first-project-title">Cria o teu primeiro projeto</h2>
@@ -786,7 +827,7 @@ export default function StudentDashboard({ user, profile }) {
                   cursor: 'pointer',
                   background: 'var(--color-surface)',
                   border: '1px solid var(--color-border)',
-                  borderRadius: 16,
+                  borderRadius: 20,
                   padding: '24px 24px 20px',
                   display: 'flex', flexDirection: 'column', gap: 12,
                   transition: 'border-color 0.15s',

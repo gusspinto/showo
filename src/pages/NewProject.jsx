@@ -15,12 +15,14 @@ const PROJECT_TYPES = [
 ]
 
 const REVIEW_FIELDS = [
-  { key: 'name',     label: 'Nome do projeto',      multiline: false, required: true },
-  { key: 'area',     label: 'Área',                 multiline: false, required: true },
-  { key: 'goal',     label: 'Objetivo',             multiline: true,  required: true },
-  { key: 'problem',  label: 'Problema que resolve', multiline: true,  required: true },
-  { key: 'solution', label: 'Como resolve',         multiline: true,  required: true },
-  { key: 'features', label: 'Funcionalidades',      multiline: true,  required: false },
+  { key: 'name',            label: 'Nome do projeto',      multiline: false, required: true,  minLen: 3  },
+  { key: 'area',            label: 'Área',                 multiline: false, required: true,  minLen: 3  },
+  { key: 'goal',            label: 'Objetivo',             multiline: true,  required: true,  minLen: 30 },
+  { key: 'problem',         label: 'Problema que resolve', multiline: true,  required: true,  minLen: 40 },
+  { key: 'solution',        label: 'Como resolve',         multiline: true,  required: true,  minLen: 40 },
+  { key: 'features',        label: 'Funcionalidades',      multiline: true,  required: false, minLen: 20 },
+  { key: 'target_audience', label: 'Público-alvo',         multiline: true,  required: false, minLen: 20 },
+  { key: 'technologies',    label: 'Tecnologias',          multiline: false, required: false, minLen: 5, skippable: true },
 ]
 
 export default function NewProject() {
@@ -35,11 +37,21 @@ export default function NewProject() {
   const [form, setForm] = useState({})
   const [editingField, setEditingField] = useState(null)
   const [editValue, setEditValue] = useState('')
+  const [skippedFields, setSkippedFields] = useState(new Set())
   const [error, setError] = useState(null)
   const [interviewData, setInterviewData] = useState(null)
   const [gateMsg, setGateMsg] = useState(null)
 
   function set(key, val) { setForm(p => ({ ...p, [key]: val })) }
+
+  function toggleSkip(key) {
+    setSkippedFields(prev => {
+      const next = new Set(prev)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      return next
+    })
+  }
 
   useEffect(() => {
     const state = location.state?.prefill
@@ -137,7 +149,7 @@ export default function NewProject() {
   }
 
   const canSubmit = REVIEW_FIELDS.filter(f => f.required)
-    .every(f => (form[f.key] ?? '').trim().length > 0)
+    .every(f => (form[f.key] ?? '').trim().length >= (f.minLen ?? 1))
 
   /* ──────────────────────────────────────────────────────────────────────────
      STEP: describe
@@ -281,6 +293,8 @@ export default function NewProject() {
               onEdit={() => startEdit(field)}
               onEditValueChange={setEditValue}
               onCommit={commitEdit}
+              isSkipped={skippedFields.has(field.key)}
+              onToggleSkip={() => toggleSkip(field.key)}
             />
           ))}
         </div>
@@ -361,7 +375,7 @@ function TypeChip({ label, active, onClick }) {
   )
 }
 
-function ReviewField({ field, value, isEditing, editValue, onEdit, onEditValueChange, onCommit }) {
+function ReviewField({ field, value, isEditing, editValue, onEdit, onEditValueChange, onCommit, isSkipped, onToggleSkip }) {
   const ref = useRef(null)
 
   useEffect(() => {
@@ -372,9 +386,15 @@ function ReviewField({ field, value, isEditing, editValue, onEdit, onEditValueCh
     }
   }, [isEditing])
 
+  function handleContainerClick() {
+    if (isEditing) return
+    if (isSkipped) { onToggleSkip(); onEdit() }
+    else onEdit()
+  }
+
   return (
     <div
-      onClick={() => { if (!isEditing) onEdit() }}
+      onClick={handleContainerClick}
       style={{
         padding: '16px 18px',
         background: 'var(--color-surface)',
@@ -392,38 +412,54 @@ function ReviewField({ field, value, isEditing, editValue, onEdit, onEditValueCh
           {field.label}
           {field.required && <span style={{ color: 'var(--color-error)', marginLeft: 3 }}>*</span>}
         </span>
-        {isEditing ? (
-          <button
-            type="button"
-            onClick={e => { e.stopPropagation(); onCommit() }}
-            style={{ background: 'var(--color-primary)', border: 'none', borderRadius: 6, padding: '4px 10px', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 4 }}
-          >
-            <Check size={11} /> Guardar
-          </button>
-        ) : (
+        {!isEditing && !isSkipped && (
           <Pencil size={12} color="var(--color-text-tertiary)" style={{ flexShrink: 0 }} />
         )}
       </div>
+
       {isEditing ? (
-        field.multiline ? (
-          <textarea
-            ref={ref}
-            value={editValue}
-            onChange={e => onEditValueChange(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Escape') onCommit() }}
-            rows={4}
-            style={{ width: '100%', boxSizing: 'border-box', background: 'transparent', border: 'none', outline: 'none', color: 'var(--color-text)', fontSize: 14, fontFamily: 'inherit', lineHeight: 1.65, resize: 'vertical', padding: 0 }}
-          />
-        ) : (
-          <input
-            ref={ref}
-            type="text"
-            value={editValue}
-            onChange={e => onEditValueChange(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter' || e.key === 'Escape') { e.preventDefault(); onCommit() } }}
-            style={{ width: '100%', boxSizing: 'border-box', background: 'transparent', border: 'none', outline: 'none', color: 'var(--color-text)', fontSize: 14, fontFamily: 'inherit', padding: 0 }}
-          />
-        )
+        <>
+          {field.multiline ? (
+            <textarea
+              ref={ref}
+              value={editValue}
+              onChange={e => onEditValueChange(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Escape') onCommit() }}
+              onBlur={onCommit}
+              rows={4}
+              style={{ width: '100%', boxSizing: 'border-box', background: 'transparent', border: 'none', outline: 'none', color: 'var(--color-text)', fontSize: 14, fontFamily: 'inherit', lineHeight: 1.65, resize: 'vertical', padding: 0 }}
+            />
+          ) : (
+            <input
+              ref={ref}
+              type="text"
+              value={editValue}
+              onChange={e => onEditValueChange(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter' || e.key === 'Escape') { e.preventDefault(); onCommit() } }}
+              onBlur={onCommit}
+              style={{ width: '100%', boxSizing: 'border-box', background: 'transparent', border: 'none', outline: 'none', color: 'var(--color-text)', fontSize: 14, fontFamily: 'inherit', padding: 0 }}
+            />
+          )}
+          {field.minLen && editValue.trim().length < field.minLen && (
+            <p style={{ margin: '6px 0 0', fontSize: 11, color: 'var(--color-text-tertiary)' }}>
+              Mínimo {field.minLen} caracteres · {editValue.trim().length}/{field.minLen}
+            </p>
+          )}
+          {field.skippable && (
+            <button
+              type="button"
+              onMouseDown={e => e.preventDefault()}
+              onClick={e => { e.stopPropagation(); onCommit(); onToggleSkip() }}
+              style={{ marginTop: 10, padding: '4px 10px', borderRadius: 8, border: '1px solid var(--color-border)', background: 'transparent', color: 'var(--color-text-tertiary)', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}
+            >
+              Não se aplica
+            </button>
+          )}
+        </>
+      ) : isSkipped ? (
+        <p style={{ margin: 0, fontSize: 14, lineHeight: 1.65, color: 'var(--color-text-tertiary)', fontStyle: 'italic' }}>
+          Não se aplica · <span style={{ textDecoration: 'underline' }}>alterar</span>
+        </p>
       ) : (
         <p style={{ margin: 0, fontSize: 14, lineHeight: 1.65, color: value ? 'var(--color-text)' : 'var(--color-text-tertiary)', whiteSpace: 'pre-wrap' }}>
           {value || 'Clica para adicionar…'}
