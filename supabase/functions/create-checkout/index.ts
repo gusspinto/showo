@@ -36,7 +36,7 @@ Deno.serve(async (req) => {
     // Get or create Stripe customer
     const { data: profile } = await supabase
       .from('profiles')
-      .select('stripe_customer_id, referred_by')
+      .select('stripe_customer_id')
       .eq('id', user.id)
       .single()
 
@@ -54,25 +54,17 @@ Deno.serve(async (req) => {
         .eq('id', user.id)
     }
 
-    const couponId = Deno.env.get('STRIPE_REFERRAL_COUPON_ID')
-    const isReferred = !!profile?.referred_by && !!couponId
-
-    const sessionParams: Stripe.Checkout.SessionCreateParams = {
+    const session = await stripe.checkout.sessions.create({
       customer: customerId,
       mode: 'subscription',
+      allow_promotion_codes: true,
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: 'https://showo.pt/settings?tab=plano&stripe=success',
       cancel_url: 'https://showo.pt/pricing',
       subscription_data: {
         metadata: { supabase_uid: user.id, plan },
       },
-    }
-
-    if (isReferred) {
-      sessionParams.discounts = [{ coupon: couponId }]
-    }
-
-    const session = await stripe.checkout.sessions.create(sessionParams)
+    })
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...cors, 'Content-Type': 'application/json' },
