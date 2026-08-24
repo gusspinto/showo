@@ -111,19 +111,6 @@ Deno.serve(async (req) => {
         total_commission_earned: referral.total_commission_earned + commission / 100,
       }).eq('id', referral.id)
 
-      // Auto-transfer if Stripe Connect is onboarded
-      if (ambassador.stripe_connect_onboarded && ambassador.stripe_connect_account_id) {
-        try {
-          await stripe.transfers.create({
-            amount: commission,
-            currency: invoice.currency || 'eur',
-            destination: ambassador.stripe_connect_account_id,
-            transfer_group: `referral_${referral.id}`,
-          })
-        } catch (err) {
-          console.error('[stripe-webhook] Transfer failed:', err.message)
-        }
-      }
       break
     }
 
