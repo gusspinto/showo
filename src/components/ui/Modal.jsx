@@ -66,7 +66,9 @@ export default function Modal({ children, onClose, title, subtitle, width = 440 
                 style={{
                   background: 'transparent', border: 'none',
                   color: 'var(--color-text-tertiary)',
-                  cursor: 'pointer', padding: 4, display: 'flex',
+                  cursor: 'pointer', padding: 0, display: 'flex',
+                  alignItems: 'center', justifyContent: 'center',
+                  width: 44, height: 44, flexShrink: 0,
                   borderRadius: 'var(--radius-sm)',
                   transition: 'color var(--duration-fast)',
                 }}

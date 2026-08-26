@@ -518,6 +518,7 @@ body.light .home-auth-input {
   font-family: inherit;
 }
 
+
 /* ══ RESPONSIVE ══ */
 @media (max-width: 860px) {
   .home-hero-grid {
@@ -541,22 +542,62 @@ body.light .home-auth-input {
 }
 
 @media (max-width: 600px) {
-  .home-hero { padding: 88px 20px 40px; }
-  .home-hero-grid { gap: 28px; }
-  .home-hero-copy { order: 1; }
-  .home-hero-auth { order: 2; }
+  /* Hero */
+  .home-hero { padding: 72px 20px 40px; }
+  .home-hero-grid { gap: 24px; }
+  .how-it-works-grid { grid-template-columns: 1fr; }
+  .home-hero-copy { order: 1; text-align: left; }
+  .home-hero-auth {
+    order: 2;
+    max-width: none;
+    margin: 0;
+  }
   .home-hero-h1 {
-    font-size: 32px;
+    font-size: 30px;
     letter-spacing: -0.8px;
-    margin-bottom: 16px;
+    margin-bottom: 12px;
   }
   .home-hero-sub {
     font-size: 15px;
     margin-bottom: 0;
+    margin-left: 0;
+    margin-right: 0;
+    max-width: none;
   }
   .home-hero-stats { display: none; }
-  .home-projects-grid { grid-template-columns: 1fr; }
-  .how-it-works-grid { grid-template-columns: 1fr; }
+  /* Hide redundant subtitle inside auth widget on mobile */
+  .home-auth-subtitle { display: none; }
+
+  /* Projects: horizontal scroll with snap */
+  .home-section { padding: 40px 0 32px; }
+  .home-section-inner { padding: 0 20px; }
+  .home-section-header { margin-bottom: 20px; }
+  .home-projects-grid {
+    display: flex;
+    grid-template-columns: unset;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    gap: 12px;
+    padding: 4px 20px 12px;
+    margin: 0 -20px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .home-projects-grid::-webkit-scrollbar { display: none; }
+  .home-projects-grid .home-project-card,
+  .home-projects-grid .skel.skel-card {
+    min-width: 72vw;
+    max-width: 280px;
+    scroll-snap-align: start;
+    flex-shrink: 0;
+  }
+
+  /* Hide "Como funciona" */
+  .home-how-section { display: none; }
+
+  /* CTA banner full-width button */
+  .home-cta-banner { margin: 16px 0 0; }
+  .home-cta-btn { width: 100%; justify-content: center; }
 }
 
 /* ══ PROJETO DO MÊS ══ */

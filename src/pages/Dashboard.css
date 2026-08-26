@@ -411,6 +411,10 @@
   max-width: 440px;
   padding: 36px 32px;
 }
+@media (max-width: 400px) {
+  .dash-modal-card-sm { padding: 24px 16px; }
+  .dash-modal-section { padding: 24px 16px 20px; }
+}
 .dash-modal-card-lg {
   max-width: 460px;
   max-height: 90vh;
@@ -655,7 +659,7 @@
 }
 .dash-chart-label {
   flex: 1;
-  font-size: 9px;
+  font-size: 10px;
   color: var(--color-text-tertiary);
   text-align: center;
 }
@@ -777,7 +781,7 @@
   font-weight: 600;
 }
 .dash-insights-dim-value {
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 700;
   color: var(--color-text-tertiary);
   width: 28px;

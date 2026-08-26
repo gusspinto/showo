@@ -1,8 +1,8 @@
 import { useState } from 'react'
 
 const sizes = {
-  sm: { padding: '6px 12px', fontSize: 'var(--text-sm)', gap: 4, minHeight: 32 },
-  md: { padding: '8px 16px', fontSize: 'var(--text-base)', gap: 6, minHeight: 38 },
+  sm: { padding: '6px 12px', fontSize: 'var(--text-sm)', gap: 4, minHeight: 44 },
+  md: { padding: '8px 16px', fontSize: 'var(--text-base)', gap: 6, minHeight: 44 },
   lg: { padding: '12px 24px', fontSize: 'var(--text-md)', gap: 8, minHeight: 44 },
 }
 

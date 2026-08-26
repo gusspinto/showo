@@ -350,7 +350,7 @@ function InviteInbox({ userId, sidebar = false, collapsed = false }) {
           position: 'relative',
           background: open ? 'rgba(27,120,247,0.13)' : 'transparent',
           border: 'none',
-          borderRadius: 8, width: 32, height: 32,
+          borderRadius: 8, width: 44, height: 44,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           cursor: 'pointer', color: open ? 'var(--color-primary)' : 'var(--color-text-secondary)',
           transition: 'background 0.13s, color 0.13s', flexShrink: 0,

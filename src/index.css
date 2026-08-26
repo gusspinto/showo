@@ -312,7 +312,7 @@ a { transition: color 0.15s, opacity 0.15s; }
   input, textarea, select { font-size: 16px !important; }
 
   /* ── Touch targets mínimos 44px ── */
-  button, [role="button"], a.btn { min-height: 36px; }
+  button, [role="button"], a.btn { min-height: 44px; }
 
   /* ── Scrollbar oculta em mobile ── */
   * { scrollbar-width: none; }
