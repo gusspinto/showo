@@ -329,7 +329,15 @@
 }
 
 @media (max-width: 600px) {
+  .up-header {
+    display: flex;
+    flex-direction: column;
+  }
+  .up-header-inner {
+    order: 1;
+  }
   .up-msg-wrap {
+    order: 2;
     position: static;
     margin-top: 16px;
   }

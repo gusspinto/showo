@@ -20,6 +20,7 @@
   margin: 0 auto;
   padding: var(--sp-10) var(--sp-8) var(--sp-20);
   animation: page-in 0.3s var(--ease-out) both;
+  overflow-x: clip;
 }
 
 /* ── Focus visível e consistente em toda a página ── */

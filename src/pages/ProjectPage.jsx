@@ -734,6 +734,7 @@ function useCanvasDrag(canvasRef, setPreviewBlocks) {
     offset.current = { x: e.clientX - rect.left - curX, y: e.clientY - rect.top - curY }
     window.addEventListener('pointermove', onPointerMove)
     window.addEventListener('pointerup', onPointerUp)
+    window.addEventListener('pointercancel', onPointerUp)
   }
 
   function onPointerMove(e) {
@@ -751,6 +752,7 @@ function useCanvasDrag(canvasRef, setPreviewBlocks) {
     draggingId.current = null
     window.removeEventListener('pointermove', onPointerMove)
     window.removeEventListener('pointerup', onPointerUp)
+    window.removeEventListener('pointercancel', onPointerUp)
   }
 
   return { onPointerDown }
@@ -851,6 +853,7 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
   const [previewTab, setPreviewTab] = useState('estilo')  // 'estilo' | 'blocos' | 'seccoes'
   const [previewSaved, setPreviewSaved] = useState(false)
   const [previewSaveError, setPreviewSaveError] = useState(false)
+  const swipeTouchRef = useRef({})
   const bannerRef = useRef(null)
   const [bannerH, setBannerH] = useState(44)
   // Two-column layout needs more room than the 600px shell breakpoint, so this
@@ -1051,24 +1054,21 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
           .pv-workspace { top: calc(62px + 44px) !important; }
         }
         .pv-workspace { animation: pv-slidein 0.2s cubic-bezier(0.22,1,0.36,1); }
-        /* Mobile: bottom sheet — anchored to the true bottom edge (bottom tab bar retired) */
+        /* Mobile: bottom panel editor */
         .pv-ws-sheet {
           position: fixed !important;
-          left: 0 !important; right: 0 !important;
-          bottom: 0 !important; top: auto !important;
+          left: 0 !important;
+          right: 0 !important;
+          bottom: calc(60px + env(safe-area-inset-bottom, 0px)) !important;
+          top: auto !important;
           width: 100% !important;
-          height: calc(52vh + env(safe-area-inset-bottom, 0px)) !important;
-          border-radius: 18px 18px 0 0 !important;
-          border-left: none !important;
+          height: 48vh !important;
+          border-radius: 16px 16px 0 0 !important;
+          border: none !important;
           border-top: 1px solid var(--color-border) !important;
-          box-shadow: none !important;
-          animation: pv-slidein-up 0.26s cubic-bezier(0.22,1,0.36,1) !important;
+          box-shadow: 0 -8px 32px rgba(0,0,0,0.3) !important;
+          animation: pv-slidein-up 0.28s cubic-bezier(0.22,1,0.36,1) !important;
           z-index: 510 !important;
-          transition: height 0.26s cubic-bezier(0.22,1,0.36,1) !important;
-          overflow: hidden !important;
-        }
-        .pv-ws-sheet.ws-collapsed {
-          height: 48px !important;
         }
         /* Overlay behind bottom sheet */
         .pv-ws-overlay {
@@ -1132,7 +1132,7 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
 
           <div style={{ flex: 1 }} />
 
-          {isOwner && (
+          {isOwner && isDesktop && (
             <button
               onClick={() => {
                 if (!previewEditing) { setPreviewEditing(true); setWsExpanded(true) }
@@ -1142,9 +1142,7 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
               style={{
                 background: previewEditing && wsExpanded ? 'var(--color-bg-alt)' : 'var(--color-primary)',
                 border: previewEditing && wsExpanded ? '1px solid var(--color-border)' : 'none',
-                borderRadius: 9,
-                width: isDesktop ? 'auto' : 36, height: 36,
-                padding: isDesktop ? '0 14px' : 0,
+                borderRadius: 9, height: 36, padding: '0 14px',
                 color: previewEditing && wsExpanded ? 'var(--color-text-secondary)' : '#fff',
                 fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, flexShrink: 0,
@@ -1153,7 +1151,7 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
               }}
             >
               <Paintbrush size={16} />
-              {isDesktop && <span>{wsExpanded ? 'Fechar editor' : 'Editar workspace'}</span>}
+              <span>{wsExpanded ? 'Fechar editor' : 'Editar workspace'}</span>
             </button>
           )}
           <button
@@ -1175,9 +1173,69 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
         </div>
       )}
 
-      {/* ── Overlay behind mobile bottom sheet (only when sheet is actually open) ── */}
-      {isOwner && previewEditing && !isDesktop && wsExpanded && (
-        <div className="pv-ws-overlay" onClick={() => setWsExpanded(false)} />
+
+      {/* ── Mobile: permanent bottom editing toolbar ── */}
+      {isOwner && !isDesktop && previewEditing && (
+        <div style={{
+          position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 520,
+          background: 'var(--color-surface)',
+          borderTop: '1px solid var(--color-border)',
+          display: 'flex', alignItems: 'center',
+          paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+          height: 'calc(60px + env(safe-area-inset-bottom, 0px))',
+        }}>
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', overflowX: 'auto', scrollbarWidth: 'none' }}>
+            {[
+              { id: 'estilo',    label: 'Estilo',    Icon: Palette        },
+              { id: 'blocos',    label: 'Blocos',    Icon: Layout         },
+              { id: 'seccoes',   label: 'Secções',   Icon: Eye            },
+              { id: 'templates', label: 'Templates', Icon: LayoutTemplate },
+            ].map(t => {
+              const active = wsExpanded && previewTab === t.id
+              return (
+                <button key={t.id} onClick={() => {
+                  if (wsExpanded && previewTab === t.id) setWsExpanded(false)
+                  else { setPreviewTab(t.id); setWsExpanded(true) }
+                }} style={{
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                  gap: 3, padding: '6px 14px', flexShrink: 0,
+                  background: 'transparent', border: 'none', cursor: 'pointer',
+                  color: active ? 'var(--color-primary)' : 'var(--color-text-tertiary)',
+                  WebkitTapHighlightColor: 'transparent',
+                }}>
+                  <div style={{
+                    width: 36, height: 26, borderRadius: 8,
+                    background: active ? 'var(--color-primary-subtle)' : 'transparent',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    transition: 'background 0.15s',
+                  }}>
+                    <t.Icon size={16} />
+                  </div>
+                  <span style={{ fontSize: 10, fontWeight: active ? 700 : 500, lineHeight: 1 }}>{t.label}</span>
+                </button>
+              )
+            })}
+          </div>
+          <button
+            onClick={async () => {
+              const { error } = await supabase.from('projects')
+                .update({ preview_blocks: previewBlocks, preview_style: previewStyle })
+                .eq('id', project.id)
+              if (!error) { setPreviewSaved(true); setTimeout(() => setPreviewSaved(false), 2000) }
+              else { setPreviewSaveError(true); setTimeout(() => setPreviewSaveError(false), 4000) }
+            }}
+            style={{
+              width: 44, height: 44, borderRadius: 12, border: 'none', cursor: 'pointer', flexShrink: 0,
+              margin: '0 10px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: previewSaveError ? 'var(--color-error-subtle)' : previewSaved ? 'var(--color-success-subtle)' : 'var(--color-primary-subtle)',
+              color: previewSaveError ? 'var(--color-error)' : previewSaved ? 'var(--color-success)' : 'var(--color-primary)',
+              transition: 'all 0.15s', WebkitTapHighlightColor: 'transparent',
+            }}
+          >
+            {previewSaveError ? <X size={16} strokeWidth={3} /> : previewSaved ? <Check size={16} strokeWidth={3} /> : <Save size={16} />}
+          </button>
+        </div>
       )}
 
       {/* ── Scrollable preview area — full height, background set here ── */}
@@ -1186,7 +1244,9 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
         background: resolvedBg,
         paddingRight: isOwner && previewEditing && isDesktop ? (wsExpanded ? 360 : 60) : 0,
         transition: 'padding-right 0.26s ease, padding-bottom 0.26s ease',
-        paddingBottom: wsExpanded && !isDesktop ? 'calc(48vh + 10px)' : undefined,
+        paddingBottom: !isDesktop && previewEditing
+          ? 'calc(60px + env(safe-area-inset-bottom, 0px))'
+          : undefined,
       }}>
 
       {/* ── Device frame + CSS scope (data-pv-cs, data-pv-theme) ── */}
@@ -1418,8 +1478,8 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
         </div>
       </div>
 
-      {/* ── Workspace panel — sidebar (desktop) or bottom sheet (mobile) ── */}
-      {isOwner && previewEditing && (
+      {/* ── Workspace panel — sidebar (desktop) or bottom sheet (mobile, only when expanded) ── */}
+      {isOwner && previewEditing && (isDesktop || wsExpanded) && (
         <div className={`pv-workspace${isDesktop ? '' : ` pv-ws-sheet${wsExpanded ? '' : ' ws-collapsed'}`}`} style={{
           position: 'fixed', right: isDesktop ? 8 : 0, top: isDesktop ? 8 : bannerH, bottom: isDesktop ? 8 : 0, zIndex: 200,
           width: isDesktop ? (wsExpanded ? 360 : 60) : 360,
@@ -1449,15 +1509,14 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
             position: 'absolute', inset: 0,
             background: 'var(--color-surface)',
             border: '1px solid var(--color-border)',
-            borderRadius: isDesktop ? 16 : 0,
+            borderRadius: isDesktop ? 16 : '16px 16px 0 0',
             overflow: 'hidden',
             display: 'flex', flexDirection: 'column',
           }}>
-          {/* Drag handle — mobile only, taps to close workspace */}
+          {/* Mobile panel handle */}
           {!isDesktop && (
-            <div style={{ padding: '12px 0 8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-              onClick={() => setWsExpanded(e => !e)}>
-              <div className="pv-ws-drag-handle" style={{ pointerEvents: 'none' }} />
+            <div style={{ display: 'flex', justifyContent: 'center', padding: '8px 0 4px', flexShrink: 0 }}>
+              <div style={{ width: 36, height: 4, borderRadius: 99, background: 'var(--color-border-hover)' }} />
             </div>
           )}
 
@@ -1486,8 +1545,8 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
             </div>
           )}
 
-          {/* ── Panel header: tabs + save + close ── */}
-          {(!isDesktop || wsExpanded) && <div style={{
+          {/* ── Panel header: tabs + save — desktop only; mobile uses bottom icon nav ── */}
+          {(isDesktop && wsExpanded) && <div style={{
             padding: '8px 10px 0',
             borderBottom: '1px solid var(--color-border)',
             flexShrink: 0,
@@ -1564,10 +1623,23 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
             </div>
           </div>}
 
-          {(!isDesktop || wsExpanded) && <>
+          {(!isDesktop || wsExpanded) && <div
+            style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
+            onTouchStart={!isDesktop ? (e => { swipeTouchRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY } }) : undefined}
+            onTouchEnd={!isDesktop ? (e => {
+              const dx = e.changedTouches[0].clientX - (swipeTouchRef.current.x ?? 0)
+              const dy = e.changedTouches[0].clientY - (swipeTouchRef.current.y ?? 0)
+              if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 48) {
+                const tabs = ['estilo', 'blocos', 'seccoes', 'templates']
+                const cur = tabs.indexOf(previewTab)
+                if (dx < 0 && cur < tabs.length - 1) setPreviewTab(tabs[cur + 1])
+                if (dx > 0 && cur > 0) setPreviewTab(tabs[cur - 1])
+              }
+            }) : undefined}
+          >
           {/* ── TAB: ESTILO ── */}
           {previewTab === 'estilo' && (
-            <div style={{ flex: 1, overflowY: 'auto', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ flex: 1, overflowY: 'scroll', overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
 
               {/* Group: Identidade visual */}
               <div style={wsGroup}>
@@ -1968,7 +2040,7 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
               </div>
 
               {/* Existing blocks list */}
-              <div style={{ flex: 1, overflowY: 'auto', padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 7 }}>
+              <div style={{ flex: 1, overflowY: 'scroll', overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch', touchAction: 'pan-y', padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 7 }}>
                 {previewBlocks.length === 0 ? (
                   <div style={{ textAlign: 'center', padding: '40px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
                     <div style={{ width: 48, height: 48, borderRadius: 14, background: 'var(--color-bg-alt)', border: '1.5px dashed var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -1996,6 +2068,7 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                         borderRadius: 9, padding: '9px 10px',
                         cursor: 'grab', transition: 'all 0.1s',
                         transform: isDragTarget ? 'scale(1.01)' : 'none',
+                        touchAction: 'pan-y',
                       }}
                     >
                       {/* Block header */}
@@ -2198,7 +2271,7 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
             }
 
             return (
-              <div style={{ flex: 1, overflowY: 'auto', padding: '12px 14px' }}>
+              <div style={{ flex: 1, overflowY: 'scroll', overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch', padding: '12px 14px' }}>
                 <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>Ordem da página</div>
                 <p style={{ margin: '0 0 12px', fontSize: 11, color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
                   Arrasta para reordenar. Podes intercalar blocos com secções livremente. Toca em <Eye size={10} style={{ verticalAlign: 'middle' }} /> para ocultar uma secção.
@@ -2472,7 +2545,7 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
             const pendingTpl = VISUAL_TEMPLATES.find(t => t.id === templateConfirm)
 
             return (
-              <div style={{ flex: 1, overflowY: 'auto', padding: '12px 10px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ flex: 1, overflowY: 'scroll', overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch', padding: '12px 10px', display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 2, padding: '0 4px' }}>Templates completos</div>
 
                 {templateApplied && (
@@ -2558,7 +2631,8 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
             )
           })()}
 
-          </>}
+          </div>}
+
           </div>{/* end panel skin */}
         </div>
       )}
