@@ -4837,9 +4837,6 @@ export default function ProjectPage() {
 
   function handleAIClick() {
     setAiModalOpen(true)
-    if (!aiFeedback && !analyzingAI) {
-      handleAnalyzeAI()
-    }
   }
 
   function handleInviteSearchInput(e) {
@@ -5880,10 +5877,20 @@ export default function ProjectPage() {
             )}
 
             {!aiFeedback && !analyzingAI && (
-              <div style={{ textAlign: 'center', padding: '32px 0', color: colors.muted, fontSize: 14 }}>
-                {isOwner
-                  ? 'Clica em "Analisar" para receberes feedback personalizado do teu projeto.'
-                  : 'O dono do projeto ainda não gerou uma análise.'}
+              <div style={{ textAlign: 'center', padding: '32px 0' }}>
+                <p style={{ color: colors.muted, fontSize: 14, margin: '0 0 16px' }}>
+                  {isOwner
+                    ? 'A IA vai analisar cada secção do teu projeto e dar-te feedback personalizado.'
+                    : 'O dono do projeto ainda não gerou uma análise.'}
+                </p>
+                {isOwner && (
+                  <button
+                    onClick={handleAnalyzeAI}
+                    style={{ background: colors.blue, color: '#fff', border: 'none', borderRadius: 8, padding: '10px 22px', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+                  >
+                    Analisar projeto
+                  </button>
+                )}
               </div>
             )}
           </div>
