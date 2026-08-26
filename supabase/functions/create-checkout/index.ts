@@ -2,11 +2,6 @@ import Stripe from 'npm:stripe@17.7.0'
 import { getAuthUser, getCorsHeaders } from '../_shared/rateLimit.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-const PRICE_IDS: Record<string, string> = {
-  build: Deno.env.get('STRIPE_PRICE_BUILD')!,
-  launch: Deno.env.get('STRIPE_PRICE_LAUNCH')!,
-}
-
 Deno.serve(async (req) => {
   const cors = getCorsHeaders(req)
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
@@ -20,6 +15,12 @@ Deno.serve(async (req) => {
 
   try {
     const { plan } = await req.json()
+
+    const PRICE_IDS: Record<string, string> = {
+      build: Deno.env.get('STRIPE_PRICE_BUILD')!,
+      launch: Deno.env.get('STRIPE_PRICE_LAUNCH')!,
+    }
+
     const priceId = PRICE_IDS[plan]
     if (!priceId) {
       return new Response(JSON.stringify({ error: 'Plano inválido.' }), {
@@ -33,7 +34,6 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
     )
 
-    // Get or create Stripe customer
     const { data: profile } = await supabase
       .from('profiles')
       .select('stripe_customer_id')
@@ -70,7 +70,7 @@ Deno.serve(async (req) => {
       headers: { ...cors, 'Content-Type': 'application/json' },
     })
   } catch (err) {
-    console.error(err)
+    console.error('create-checkout error:', err)
     return new Response(JSON.stringify({ error: 'Erro ao criar sessão de pagamento.' }), {
       status: 500, headers: { ...cors, 'Content-Type': 'application/json' },
     })
