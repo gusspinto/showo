@@ -108,6 +108,7 @@ export default function Register() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [acceptedTerms, setAcceptedTerms] = useState(false)
+  const [detectedOrg, setDetectedOrg] = useState(null) // { id, name, plan } | null
 
   // ── Partner-company invite (?empresa_convite=<token>) — a professor added
   // this company in Parceiros.jsx and emailed this link. It unlocks the
@@ -135,6 +136,14 @@ export default function Register() {
       }
     })
   }, [partnerToken])
+
+  async function checkEmailDomain(emailValue) {
+    const domain = emailValue.split('@')[1]?.trim().toLowerCase()
+    if (!domain || !domain.includes('.')) { setDetectedOrg(null); return }
+    const { data } = await supabase.rpc('get_organization_by_domain', { p_domain: domain })
+    const row = Array.isArray(data) ? data[0] : data
+    setDetectedOrg(row ?? null)
+  }
 
   const needsCompany = role === 'recrutador' || role === 'empresa'
   const needsSchool = role === 'professor'
@@ -245,6 +254,11 @@ export default function Register() {
         return
       }
       await refreshProfile()
+    }
+
+    // Associate school organization if the email domain matches
+    if (detectedOrg) {
+      await supabase.rpc('associate_organization_by_email').catch(() => {})
     }
 
     // Store geolocation, referrer and phone on the new profile
@@ -502,7 +516,23 @@ export default function Register() {
                       </Field>
                     )}
                     <Field label="Email">
-                      <Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="tu@email.com" required />
+                      <Input
+                        type="email"
+                        value={email}
+                        onChange={e => { setEmail(e.target.value); checkEmailDomain(e.target.value) }}
+                        placeholder="tu@email.com"
+                        required
+                      />
+                      {detectedOrg && (
+                        <div style={{
+                          marginTop: 8, display: 'flex', alignItems: 'center', gap: 8,
+                          background: 'rgba(43,126,245,0.08)', border: '1px solid rgba(43,126,245,0.25)',
+                          borderRadius: 8, padding: '8px 12px', fontSize: 13, color: 'var(--color-primary)',
+                        }}>
+                          <GraduationCap size={14} />
+                          <span>Conta escolar — <strong>{detectedOrg.name}</strong></span>
+                        </div>
+                      )}
                     </Field>
                     <Field label="Palavra-passe">
                       <Input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Mínimo 6 caracteres" required />

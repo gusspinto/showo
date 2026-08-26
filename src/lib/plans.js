@@ -1,4 +1,24 @@
 export const PLANS = {
+  // school plan = build features, assigned automatically to org accounts
+  school: {
+    id: 'school',
+    name: 'Escola',
+    maxProjects: 10,
+    ai: {
+      createProject: Infinity,
+      interviewProject: Infinity,
+      coach: Infinity,
+      defense: Infinity,
+      diaryReport: Infinity,
+      narrative: Infinity,
+      analyzeProject: Infinity,
+      coverLetter: 0,
+    },
+    career: {
+      internshipPage: false,
+      weeklyRecap: true,
+    },
+  },
   free: {
     id: 'free',
     name: 'Grátis',
@@ -96,7 +116,9 @@ export const AI_FEATURE_LABELS = {
 export const PLAN_GATE_MESSAGES = {
   maxProjects: (plan) => ({
     title: 'Limite de projetos atingido',
-    body: `O plano ${getPlan(plan).name} permite até ${getPlan(plan).maxProjects} projetos. Com o Build tens até 10 — e no Launch são ilimitados.`,
+    body: plan === 'school'
+      ? `A conta escolar permite até ${getPlan(plan).maxProjects} projetos. Para projetos ilimitados, cria uma conta pessoal Launch.`
+      : `O plano ${getPlan(plan).name} permite até ${getPlan(plan).maxProjects} projetos. Com o Build tens até 10 — e no Launch são ilimitados.`,
   }),
   createProject: (plan) => ({
     title: 'Limite mensal atingido',

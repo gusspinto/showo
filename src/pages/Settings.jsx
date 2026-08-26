@@ -9,6 +9,7 @@ import { CropModal } from '../components/CropModal'
 import { containsProfanity } from '../lib/profanity'
 import SkillsPicker from '../components/SkillsPicker'
 import { Select } from '../components/ui'
+import ExportProjectsModal from '../components/ExportProjectsModal'
 import './Settings.css'
 
 function Input({ label, value, onChange, placeholder, hint, type = 'text', prefix }) {
@@ -46,6 +47,7 @@ const PLAN_META = {
   free:   { name: 'Grátis',  color: 'var(--color-text-tertiary)', desc: 'O plano base, sem custos.' },
   build:  { name: 'Build',   color: '#2B7EF5', desc: 'IA sem limites em cada projeto.' },
   launch: { name: 'Launch',  color: '#C49A20', desc: 'Do projeto à oportunidade de carreira.' },
+  school: { name: 'Escola',  color: '#2B7EF5', desc: 'Plano Build incluído pela tua instituição.' },
 }
 
 function PlanSection({ planId, navigate }) {
@@ -89,7 +91,7 @@ function PlanSection({ planId, navigate }) {
           <span className="settings-hint" style={{ margin: 0 }}>{meta.desc}</span>
         </div>
 
-        {planId !== 'launch' && (
+        {planId !== 'launch' && planId !== 'school' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             <button className="settings-save-btn" onClick={() => navigate('/pricing')}>
               {planId === 'free' ? 'Fazer upgrade' : 'Upgrade para Launch'}
@@ -97,7 +99,11 @@ function PlanSection({ planId, navigate }) {
           </div>
         )}
 
-        {planId !== 'free' && (
+        {planId === 'school' && (
+          <p className="settings-hint">O plano é gerido pela tua escola — não precisas de subscrever individualmente.</p>
+        )}
+
+        {planId !== 'free' && planId !== 'school' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             <button
               className="settings-save-btn"
@@ -150,7 +156,7 @@ function SettingsSkeleton() {
 }
 
 export default function Settings() {
-  const { user, profile, loading: authLoading, refreshProfile, planId } = useAuth()
+  const { user, profile, loading: authLoading, refreshProfile, planId, isSchoolAccount } = useAuth()
   const { theme, toggleTheme } = useTheme()
   const navigate = useNavigate()
 
@@ -201,6 +207,7 @@ export default function Settings() {
   const [deleteError, setDeleteError] = useState(null)
   const [ambassadorStats, setAmbassadorStats] = useState(null)
   const [connectLoading, setConnectLoading] = useState(false)
+  const [showExportModal, setShowExportModal] = useState(false)
 
   useEffect(() => {
     if (!authLoading && !user) navigate('/login')
@@ -792,6 +799,32 @@ export default function Settings() {
                   <p className="text-base text-muted mb-3" style={{ lineHeight: 1.65 }}>Terminar sessão em todos os dispositivos.</p>
                   <button onClick={async () => { await supabase.auth.signOut(); navigate('/') }} className="settings-danger-btn">Terminar sessão</button>
                 </SectionCard>
+                {isSchoolAccount && (
+                  <SectionCard title="Conta escolar">
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                      <div style={{
+                        display: 'flex', alignItems: 'center', gap: 10,
+                        background: 'rgba(43,126,245,0.07)', border: '1px solid rgba(43,126,245,0.25)',
+                        borderRadius: 10, padding: '12px 14px',
+                        fontSize: 13, color: 'var(--color-primary)', fontWeight: 600,
+                      }}>
+                        <GraduationCap size={16} />
+                        Esta é uma conta escolar. O teu plano é gerido pela instituição.
+                      </div>
+                      <p className="text-base text-muted" style={{ lineHeight: 1.65, margin: 0 }}>
+                        Podes copiar os teus projetos escolares para uma conta pessoal Showo — os originais ficam intactos nesta conta.
+                      </p>
+                      <button
+                        onClick={() => setShowExportModal(true)}
+                        className="settings-save-btn"
+                        style={{ alignSelf: 'flex-start' }}
+                      >
+                        Exportar projetos para conta pessoal
+                      </button>
+                    </div>
+                    {showExportModal && <ExportProjectsModal onClose={() => setShowExportModal(false)} />}
+                  </SectionCard>
+                )}
                 <SectionCard title="Zona de perigo">{dangerZone}</SectionCard>
               </>
             )}
