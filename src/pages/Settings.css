@@ -247,23 +247,6 @@
   color: #fff;
   border: 2px solid var(--color-border);
 }
-.settings-avatar-edit {
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  border: 2px solid var(--color-input-bg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-.settings-avatar-edit:disabled {
-  opacity: 0.6;
-  cursor: default;
-}
 .settings-avatar-change {
   display: block;
   background: transparent;
@@ -650,6 +633,9 @@
   margin: 0 0 20px;
 }
 
+/* ── Floating save bar (mobile only) ── */
+.settings-mobile-save-bar { display: none; }
+
 /* ══ RESPONSIVE ══ */
 @media (max-width: 600px) {
   .settings-2col { grid-template-columns: 1fr; }
@@ -658,6 +644,39 @@
     min-width: 0;
     padding: 9px 10px;
     font-size: 12px;
+  }
+
+  /* hide inline save, use the floating bar instead */
+  .settings-save-inline { display: none; }
+
+  /* add bottom padding so content doesn't hide behind the bar */
+  .settings-main { padding-bottom: 80px; }
+
+  .settings-mobile-save-bar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    z-index: 300;
+    padding: 11px 16px calc(11px + env(safe-area-inset-bottom, 0px));
+    background: var(--color-bg-overlay);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border-top: 1px solid var(--color-border);
+  }
+  .settings-mobile-save-msg {
+    flex: 1;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .settings-mobile-save-msg.ok { color: var(--color-success); }
+  .settings-mobile-save-msg.error { color: var(--color-error); }
+  .settings-mobile-save-btn {
+    flex-shrink: 0;
+    padding: 12px 28px;
+    font-size: 15px;
   }
 }
 @media (max-width: 500px) {

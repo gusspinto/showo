@@ -247,9 +247,8 @@ export default function Turmas() {
 
   useEffect(() => {
     if (!user) { navigate('/login'); return }
-    // Turmas are a school feature — only accounts connected to a school
-    // (professors, verified via invite code) can access them for now.
-    if (profile && !isTeacher) { navigate('/dashboard'); return }
+    // Teachers and school-account students can access this page.
+    if (profile && !isTeacher && !profile?.organization_id) { navigate('/dashboard'); return }
 
     async function load() {
       if (isTeacher) {
@@ -293,7 +292,7 @@ export default function Turmas() {
     setShowJoin(false)
   }
 
-  if (!user || (profile && !isTeacher)) return null
+  if (!user || (profile && !isTeacher && !profile?.organization_id)) return null
 
   return (
     <div style={{ minHeight: '100vh', background: C.bg }}>
