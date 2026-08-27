@@ -1298,11 +1298,6 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   <LayoutDashboard size={16} />{!collapsed && showLabels && <span>Dashboard</span>}
                 </button>
               )}
-              {isSchoolAccount && (
-                <button className={`sb-item${isActive('/turmas') ? ' active' : ''}`} onClick={() => navigate('/turmas')}>
-                  <Users2 size={16} />{!collapsed && showLabels && <span>Turmas</span>}
-                </button>
-              )}
               <button className={`sb-item${isActive('/explorar') ? ' active' : ''}`} onClick={() => navigate('/explorar')}>
                 <Compass size={16} />{!collapsed && showLabels && <span>Explorar</span>}
               </button>
