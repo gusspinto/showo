@@ -12,9 +12,7 @@
   font-family: var(--font-body);
   --radius-lg: 16px;
   --radius-xl: 20px;
-  overflow-x: hidden;
-  max-width: 100%;
-  clip-path: inset(0);
+  overflow-x: clip;
 }
 
 .sdb-page {
