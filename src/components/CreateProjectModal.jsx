@@ -11,7 +11,7 @@ export default function CreateProjectModal({ onClose }) {
   }
 
   return (
-    <Modal onClose={onClose} title="Criar projeto" subtitle="Mostra o que fizeste — preenche os campos ao teu ritmo">
+    <Modal onClose={onClose} title="Criar projeto" subtitle="Mostra o que fizeste. Preenche os campos ao teu ritmo.">
       <button
         onClick={() => go('/novo')}
         style={{

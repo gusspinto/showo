@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Bell, Check, ArrowRight, Sparkles } from 'lucide-react'
+import { Bell, Check, ArrowRight } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { getGeoInfo } from '../lib/geolocation'
 
@@ -188,7 +188,6 @@ export default function ComingSoon() {
           padding: '6px 14px', borderRadius: 999,
           background: 'rgba(27,120,247,0.08)', border: '1px solid rgba(27,120,247,0.15)',
         }}>
-          <Sparkles size={12} color="rgba(127,180,255,0.7)" />
           <span style={{
             fontFamily: 'var(--font-body)', fontWeight: 600, fontSize: 11,
             letterSpacing: '0.08em', color: 'rgba(127,180,255,0.7)', textTransform: 'uppercase',

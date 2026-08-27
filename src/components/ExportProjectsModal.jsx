@@ -127,7 +127,7 @@ export default function ExportProjectsModal({ onClose }) {
             <p style={C.sub}>
               {step === 'select' && 'Escolhe os projetos desta conta escolar que queres copiar para a tua conta pessoal.'}
               {step === 'auth'   && 'Entra com as credenciais da tua conta pessoal para confirmar o destino.'}
-              {step === 'confirm' && 'Confirma a exportação. Os projetos serão copiados — a conta escolar não perde nada.'}
+              {step === 'confirm' && 'Confirma a exportação. Os projetos serão copiados; a conta escolar não perde nada.'}
               {step === 'done'   && 'Exportação concluída.'}
             </p>
           </div>
@@ -245,7 +245,7 @@ export default function ExportProjectsModal({ onClose }) {
                 Projetos a copiar: <strong style={{ color: 'var(--color-text)' }}>{selected.length}</strong>
               </div>
               <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', lineHeight: 1.5, marginTop: 4 }}>
-                Os projetos são copiados — a conta escolar mantém os originais. Limites de plano da conta pessoal são respeitados.
+                Os projetos são copiados; a conta escolar mantém os originais. Limites de plano da conta pessoal são respeitados.
               </div>
             </div>
 
@@ -279,7 +279,7 @@ export default function ExportProjectsModal({ onClose }) {
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: 10, padding: '12px 14px', fontSize: 13, lineHeight: 1.5, color: 'var(--color-text)' }}>
                   <AlertTriangle size={16} style={{ flexShrink: 0, marginTop: 1, color: 'var(--color-warning)' }} />
                   <span>
-                    {skippedCount === 1 ? '1 projeto não foi copiado' : `${skippedCount} projetos não foram copiados`} — a conta pessoal atingiu o limite do plano {exportResult?.dest_plan === 'free' ? 'Grátis (3 projetos)' : 'Build (10 projetos)'}. Faz upgrade para continuar.
+                    {skippedCount === 1 ? '1 projeto não foi copiado' : `${skippedCount} projetos não foram copiados`}: a conta pessoal atingiu o limite do plano {exportResult?.dest_plan === 'free' ? 'Grátis (3 projetos)' : 'Build (10 projetos)'}. Faz upgrade para continuar.
                   </span>
                 </div>
               )}

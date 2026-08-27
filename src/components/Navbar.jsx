@@ -686,7 +686,7 @@ const dropItemStyle = {
 export function Navbar({ children, showLinks = true, showCreateProject = false, previewEditingMobile = false, onWorkspaceToggle, hideSidebar = false, mobileLeft = null }) {
   const navigate = useNavigate()
   const location = useLocation()
-  const { user, profile, signOut, isAdmin } = useAuth()
+  const { user, profile, signOut, isAdmin, isSchoolAccount } = useAuth()
   const { theme, toggleTheme } = useTheme()
   const { extras } = useSidebar()
   const [open, setOpen] = useState(false)
@@ -1225,6 +1225,13 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
             </button>
           </div>
         )}
+        {isSchoolAccount && showLabels && (
+          <div style={{ padding: '0 16px 8px' }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 600, color: 'var(--color-primary)', background: 'color-mix(in srgb, var(--color-primary) 12%, transparent)', borderRadius: 6, padding: '3px 8px', letterSpacing: '0.02em' }}>
+              <GraduationCap size={12} strokeWidth={2.5} /> Modo Escola
+            </span>
+          </div>
+        )}
         <div className="sb-logo-divider" />
 
         {/* Main nav + project controls in one scrollable section */}
@@ -1289,6 +1296,11 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               {user && (
                 <button className={`sb-item${isActive('/dashboard') ? ' active' : ''}`} onClick={() => navigate('/dashboard')}>
                   <LayoutDashboard size={16} />{!collapsed && showLabels && <span>Dashboard</span>}
+                </button>
+              )}
+              {isSchoolAccount && (
+                <button className={`sb-item${isActive('/turmas') ? ' active' : ''}`} onClick={() => navigate('/turmas')}>
+                  <Users2 size={16} />{!collapsed && showLabels && <span>Turmas</span>}
                 </button>
               )}
               <button className={`sb-item${isActive('/explorar') ? ' active' : ''}`} onClick={() => navigate('/explorar')}>

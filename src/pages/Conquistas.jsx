@@ -347,7 +347,7 @@ export default function Conquistas() {
             <div>
               <div style={{ fontSize: 13, color: C.muted, marginBottom: 4, fontWeight: 600 }}>Desbloqueadas</div>
               <div style={{ fontSize: 28, fontWeight: 900, color: C.yellow, letterSpacing: '-1px' }}>
-                {loading ? '—' : totalUnlocked}
+                {loading ? '--' : totalUnlocked}
                 <span style={{ fontSize: 14, color: C.subtle, fontWeight: 500 }}>/{achievements.length}</span>
               </div>
             </div>
@@ -360,7 +360,7 @@ export default function Conquistas() {
                   <div key={tier} style={{ textAlign: 'center' }}>
                     <div style={{ fontSize: 11, color: TIER_COLORS[tier], fontWeight: 700, marginBottom: 2 }}>{tier}</div>
                     <div style={{ fontSize: 14, fontWeight: 800, color: count > 0 ? TIER_COLORS[tier] : C.subtle }}>
-                      {loading ? '—' : `${count}/${total}`}
+                      {loading ? '...' : `${count}/${total}`}
                     </div>
                   </div>
                 )

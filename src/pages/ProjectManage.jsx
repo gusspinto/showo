@@ -104,7 +104,7 @@ function ScoreRing({ score }) {
       </svg>
       <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
         fontSize: 14, fontWeight: 900, color, letterSpacing: '-0.5px' }}>
-        {score ?? '—'}
+        {score ?? '--'}
       </div>
     </div>
   )
@@ -382,7 +382,7 @@ function PreviewSection({ project }) {
         <Card>
           <CardTitle color="var(--color-accent)"><Eye size={13} /> Personalização da página pública</CardTitle>
           <p style={{ margin: '0 0 20px', fontSize: 14, color: C.muted, lineHeight: 1.65 }}>
-            O editor de preview permite personalizar a aparência da tua página pública — blocos de conteúdo, cores, tipografia e rodapé.
+            O editor de preview permite personalizar a aparência da tua página pública: blocos de conteúdo, cores, tipografia e rodapé.
           </p>
 
           <div style={{ position: 'relative', marginBottom: 20, borderRadius: 12, overflow: 'hidden', border: `1px solid ${C.border}` }}>
@@ -408,20 +408,20 @@ function PreviewSection({ project }) {
 
           {/* Feature list */}
           {[
-            { icon: <BarChart2 size={14} />, label: 'Blocos de conteúdo — reorganiza e activa/desactiva secções' },
+            { icon: <BarChart2 size={14} />, label: 'Blocos de conteúdo: reorganiza e activa/desactiva secções' },
             { icon: <Zap size={14} />, label: 'Paleta de cores de destaque e fundo personalizável' },
-            { icon: <Star size={14} />, label: 'Tipografia — choose entre vários estilos de letra' },
+            { icon: <Star size={14} />, label: 'Tipografia: escolhe entre vários estilos de letra' },
             { icon: <Globe size={14} />, label: 'Botão CTA e rodapé personalizados' },
           ].map((item, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 0', borderBottom: i < 3 ? `1px solid ${C.border}` : 'none' }}>
-              <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(168,85,247,0.1)', border: '1px solid rgba(168,85,247,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-accent)', flexShrink: 0 }}>
+              <div style={{ width: 28, height: 28, borderRadius: 8, background: 'var(--color-accent-subtle)', border: '1px solid var(--color-accent-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-accent)', flexShrink: 0 }}>
                 {item.icon}
               </div>
               <span style={{ fontSize: 13, color: C.muted }}>{item.label}</span>
             </div>
           ))}
 
-          <a href={`/projeto/${project?.slug}`} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 20, padding: '13px 0', background: 'var(--color-accent)', border: 'none', borderRadius: 10, color: '#fff', fontSize: 15, fontWeight: 700, textDecoration: 'none', boxShadow: '0 2px 8px rgba(168,85,247,0.2)' }}>
+          <a href={`/projeto/${project?.slug}`} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 20, padding: '13px 0', background: 'var(--color-accent)', border: 'none', borderRadius: 10, color: '#fff', fontSize: 15, fontWeight: 700, textDecoration: 'none', boxShadow: 'var(--shadow-md)' }}>
             <Eye size={16} /> Abrir editor de preview
           </a>
           <p style={{ margin: '10px 0 0', fontSize: 12, color: C.subtle, textAlign: 'center' }}>

@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
 
 const MIN_SIZE = 40
@@ -19,10 +20,32 @@ export function CropModal({ file, imageUrl, aspectRatio, circular = false, onCon
   const imgRef       = useRef(null)
   const dragStart    = useRef(null)
 
+  const [mounted,   setMounted]   = useState(false)
   const [imgSrc,    setImgSrc]    = useState(null)
   const [imgLoaded, setImgLoaded] = useState(false)
   const [crop,      setCrop]      = useState({ x: 0, y: 0, w: 0, h: 0 })
   const [dragging,  setDragging]  = useState(null) // 'move' | 'nw' | 'ne' | 'sw' | 'se'
+
+  useEffect(() => { setMounted(true) }, [])
+
+  // Lock scroll while modal is open (works for both mouse and touch)
+  useEffect(() => {
+    const prevent = (e) => { if (e.cancelable) e.preventDefault() }
+    document.addEventListener('touchmove', prevent, { passive: false })
+    const scrollY = window.scrollY
+    document.body.style.position = 'fixed'
+    document.body.style.top = `-${scrollY}px`
+    document.body.style.width = '100%'
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('touchmove', prevent)
+      document.body.style.position = ''
+      document.body.style.top = ''
+      document.body.style.width = ''
+      document.body.style.overflow = ''
+      window.scrollTo(0, scrollY)
+    }
+  }, [])
 
   // Build object-URL from file, or use imageUrl
   useEffect(() => {
@@ -54,6 +77,7 @@ export function CropModal({ file, imageUrl, aspectRatio, circular = false, onCon
     if (!dragging) return
 
     const onMove = (e) => {
+      if (e.cancelable) e.preventDefault()
       const clientX = e.touches ? e.touches[0].clientX : e.clientX
       const clientY = e.touches ? e.touches[0].clientY : e.clientY
       const dx = clientX - dragStart.current.mx
@@ -115,7 +139,6 @@ export function CropModal({ file, imageUrl, aspectRatio, circular = false, onCon
   }, [dragging, aspectRatio, circular])
 
   const startDrag = useCallback((e, type) => {
-    e.preventDefault()
     const clientX = e.touches ? e.touches[0].clientX : e.clientX
     const clientY = e.touches ? e.touches[0].clientY : e.clientY
     setDragging(type)
@@ -185,11 +208,12 @@ export function CropModal({ file, imageUrl, aspectRatio, circular = false, onCon
     { dir: 'se', bottom: -7, right: -7, cursor: 'nwse-resize' },
   ]
 
-  return (
+  if (!mounted) return null
+  return createPortal(
     <div
       style={{ position: 'fixed', inset: 0, zIndex: 9950, background: 'rgba(0,0,0,0.88)',
                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-               padding: 20 }}
+               padding: 20, touchAction: 'none', overflowY: 'hidden' }}
       onClick={onCancel}
     >
       <div
@@ -214,7 +238,7 @@ export function CropModal({ file, imageUrl, aspectRatio, circular = false, onCon
         <div
           ref={containerRef}
           style={{ position: 'relative', height: 360, background: '#000',
-                   overflow: 'hidden', userSelect: 'none' }}
+                   overflow: 'hidden', userSelect: 'none', touchAction: 'none' }}
         >
           {imgSrc && (
             <img
@@ -296,6 +320,7 @@ export function CropModal({ file, imageUrl, aspectRatio, circular = false, onCon
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

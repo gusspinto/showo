@@ -176,15 +176,15 @@ function getScoreTips(project) {
   const v = (k) => String(project[k] || '').trim()
   const n = (k) => v(k).length
   const tips = []
-  if (n('problem') < 100)        tips.push({ gain: 15, text: `Problema — ${n('problem')}/100 car.` })
-  if (n('solution') < 100)       tips.push({ gain: 15, text: `Solução — ${n('solution')}/100 car.` })
-  if (n('results') < 80)         tips.push({ gain: 12, text: `Resultados — ${n('results')}/80 car.` })
-  if (n('learnings') < 80)       tips.push({ gain: 12, text: `Aprendizagens — ${n('learnings')}/80 car.` })
+  if (n('problem') < 100)        tips.push({ gain: 15, text: `Problema: ${n('problem')}/100 car.` })
+  if (n('solution') < 100)       tips.push({ gain: 15, text: `Solução: ${n('solution')}/100 car.` })
+  if (n('results') < 80)         tips.push({ gain: 12, text: `Resultados: ${n('results')}/80 car.` })
+  if (n('learnings') < 80)       tips.push({ gain: 12, text: `Aprendizagens: ${n('learnings')}/80 car.` })
   if (!v('cover_url'))            tips.push({ gain: 10, text: 'Adiciona uma capa ao projeto' })
-  if (n('target_audience') < 50) tips.push({ gain: 10, text: `Público-alvo — ${n('target_audience')}/50 car.` })
-  if (n('features') < 100)       tips.push({ gain: 10, text: `Funcionalidades — ${n('features')}/100 car.` })
+  if (n('target_audience') < 50) tips.push({ gain: 10, text: `Público-alvo: ${n('target_audience')}/50 car.` })
+  if (n('features') < 100)       tips.push({ gain: 10, text: `Funcionalidades: ${n('features')}/100 car.` })
   if (!v('technologies'))         tips.push({ gain: 8,  text: 'Indica as tecnologias usadas' })
-  if (n('challenges') < 50)      tips.push({ gain: 8,  text: `Desafios — ${n('challenges')}/50 car.` })
+  if (n('challenges') < 50)      tips.push({ gain: 8,  text: `Desafios: ${n('challenges')}/50 car.` })
   if (!v('area'))                 tips.push({ gain: 5,  text: 'Define a área do projeto' })
   return tips.sort((a, b) => b.gain - a.gain).slice(0, 3)
 }
@@ -2484,7 +2484,7 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                 tags: ['destaque', 'nota', 'botão'],
                 style: { bg: 'warm', accent: 'amber', titleFont: 'fredoka', font: 'fredoka', cardStyle: 'flat', titleStyle: 'normal', heroSize: 'default', titleAlign: 'left', coverAsHero: false },
                 blocks: [
-                  { type: 'callout', content: '✨ Destaque do projeto: escreve aqui o momento que mais te orgulha', color: '#d97706', align: 'left', width: 'full' },
+                  { type: 'callout', content: 'Destaque do projeto: escreve aqui o momento que mais te orgulha', color: '#d97706', align: 'left', width: 'full' },
                   { type: 'note', content: 'Uma nota pessoal para quem visita o teu projeto.', align: 'left', width: 'full' },
                   { type: 'cta', content: 'Ver o projeto', url: '', align: 'left', width: 'full' },
                 ],
@@ -2510,7 +2510,7 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                 tags: ['hero', 'destaque', 'métrica', 'botão'],
                 style: { bg: 'navy', accent: 'crimson', titleFont: 'syne', font: 'inter', cardStyle: 'flat', titleStyle: 'caps', heroSize: 'full', titleAlign: 'left', coverAsHero: true },
                 blocks: [
-                  { type: 'callout', content: '🔥 Este projeto existe porque —', color: '#dc2626', align: 'left', width: 'full' },
+                  { type: 'callout', content: 'Este projeto existe porque:', color: '#dc2626', align: 'left', width: 'full' },
                   { type: 'stats', stat1Value: '—', stat1Label: 'Resultado 1', stat2Value: '—', stat2Label: 'Resultado 2', stat3Value: '—', stat3Label: 'Resultado 3', width: 'full' },
                   { type: 'cta', content: 'Ver demonstração', url: '', align: 'left', width: 'full' },
                 ],
@@ -2536,7 +2536,7 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                 style: { bg: 'chalk', accent: 'default', titleFont: 'croogla', font: 'default', cardStyle: 'border', titleStyle: 'normal', heroSize: 'default', titleAlign: 'left', coverAsHero: false },
                 blocks: [
                   { type: 'note', content: 'Escreve aqui uma apresentação do teu projeto para quem visita.', align: 'left', width: 'full' },
-                  { type: 'callout', content: '💡 Ideia principal do projeto', color: 'var(--color-primary)', align: 'left', width: 'full' },
+                  { type: 'callout', content: 'Ideia principal do projeto', color: 'var(--color-primary)', align: 'left', width: 'full' },
                 ],
                 preview: { bg: '#eff0f2', accent: '#1b78f7', title: 'Croogla', body: 'Montserrat', isLight: true, align: 'left', hero: false },
               },
@@ -3790,7 +3790,7 @@ const TOUR_STEPS_PAP = [
     visual: <TourVisualScore />,
     bullets: [
       'Gerado pela IA com base no que preencheste',
-      'Serve para te orientar — não é uma nota',
+      'Serve para te orientar, não é uma nota',
     ],
   },
   {
@@ -3871,7 +3871,7 @@ const TOUR_STEPS_MOBILE_PAP = [
     title: 'O teu Score',
     bullets: [
       'Gerado pela IA com base no que preencheste',
-      'Serve para te orientar — não é uma nota',
+      'Serve para te orientar, não é uma nota',
     ],
   },
   {

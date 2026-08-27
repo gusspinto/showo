@@ -74,7 +74,7 @@ function Badge({ children, color = C.blue }) {
   )
 }
 
-function Avatar({ name, color = 'linear-gradient(135deg,var(--color-primary),#4f46e5)', size = 32 }) {
+function Avatar({ name, color = 'var(--color-primary)', size = 32 }) {
   return (
     <div style={{
       width: size, height: size, borderRadius: '50%', flexShrink: 0,
@@ -622,7 +622,7 @@ function OverviewTab({ users, projects, activityLog }) {
                   borderRadius: 8,
                 }}>
                   <div style={{ position: 'relative', alignSelf: 'center' }}>
-                    <Avatar name={u.full_name || u.username} color={u.is_admin ? 'linear-gradient(135deg,var(--color-accent),#7c3aed)' : 'linear-gradient(135deg,var(--color-primary),#4f46e5)'} size={36} />
+                    <Avatar name={u.full_name || u.username} color={u.is_admin ? 'var(--color-accent)' : 'var(--color-primary)'} size={36} />
                     {isOnline && <div style={{ position: 'absolute', bottom: 0, right: 0, width: 10, height: 10, borderRadius: '50%', background: C.green, border: '2px solid var(--color-surface)' }} />}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
@@ -746,7 +746,7 @@ function UsersTab({ users, projects, onToggleAdmin, onDeleteUser, onChangeRole, 
             }}>
               <Avatar
                 name={name}
-                color={u.is_admin ? 'linear-gradient(135deg,var(--color-accent),#7c3aed)' : 'linear-gradient(135deg,var(--color-primary),#4f46e5)'}
+                color={u.is_admin ? 'var(--color-accent)' : 'var(--color-primary)'}
                 size={38}
               />
               <div style={{ flex: 1, minWidth: 180 }}>

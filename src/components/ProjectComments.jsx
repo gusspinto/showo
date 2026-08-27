@@ -225,7 +225,7 @@ export default function ProjectComments({ projectId, projectAuthorId }) {
                   ) : (
                     <div style={{
                       width: 34, height: 34, borderRadius: '50%',
-                      background: 'linear-gradient(135deg,var(--color-primary),#4f46e5)',
+                      background: 'var(--color-primary)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       fontSize: 12, fontWeight: 700, color: '#fff',
                     }}>
@@ -333,7 +333,7 @@ export default function ProjectComments({ projectId, projectAuthorId }) {
                           <button
                             onClick={() => saveEdit(c.id)}
                             style={{
-                              background: 'linear-gradient(135deg,var(--color-primary),#4f46e5)',
+                              background: 'var(--color-primary)',
                               border: 'none', borderRadius: 8, padding: '5px 12px',
                               fontSize: 12, color: '#fff', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600,
                             }}
@@ -361,7 +361,7 @@ export default function ProjectComments({ projectId, projectAuthorId }) {
           ) : (
             <div style={{
               width: 34, height: 34, borderRadius: '50%', flexShrink: 0,
-              background: 'linear-gradient(135deg,var(--color-primary),#4f46e5)',
+              background: 'var(--color-primary)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: 12, fontWeight: 700, color: '#fff',
             }}>

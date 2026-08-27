@@ -417,14 +417,10 @@ export default function Settings() {
         {avatarUrl ? (
           <img src={avatarUrl} alt="Avatar" className="settings-avatar-img" />
         ) : (
-          <div className="settings-avatar-fallback" style={{ background: `linear-gradient(135deg,${accentColor},#4f46e5)` }}>
+          <div className="settings-avatar-fallback" style={{ background: accentColor }}>
             {fullName?.[0]?.toUpperCase() ?? user?.email?.[0]?.toUpperCase() ?? '?'}
           </div>
         )}
-        <button type="button" onClick={() => avatarInputRef.current?.click()} disabled={avatarUploading}
-          className="settings-avatar-edit" style={{ background: accentColor }}>
-          <Camera size={13} color="#fff" />
-        </button>
         <input ref={avatarInputRef} type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }} onChange={handleAvatarChange} />
         {avatarCropFile && <CropModal file={avatarCropFile} circular={true} onConfirm={handleAvatarCropConfirm} onCancel={() => setAvatarCropFile(null)} />}
       </div>
@@ -439,13 +435,16 @@ export default function Settings() {
   )
 
   const saveBlock = (
-    <>
+    <div className="settings-save-inline">
       {saveMsg && <div className={`settings-msg ${saveMsg.type}`}>{saveMsg.text}</div>}
       <button onClick={handleSaveProfile} disabled={saving} className="settings-save-btn">
         {saving ? 'A guardar...' : 'Guardar'}
       </button>
-    </>
+    </div>
   )
+
+  const tabsWithSave = ['perfil', 'empresa', 'recrutamento', 'notificacoes', 'privacidade']
+  const showMobileSave = tabsWithSave.includes(activeTab)
 
   const ROLE_INFO = {
     aluno:      { icon: <GraduationCap size={18} />, label: 'Aluno',      color: 'var(--color-primary)' },
@@ -831,6 +830,15 @@ export default function Settings() {
           </div>
         </div>
       </div>
+
+      {showMobileSave && (
+        <div className="settings-mobile-save-bar">
+          {saveMsg && <span className={`settings-mobile-save-msg ${saveMsg.type}`}>{saveMsg.text}</span>}
+          <button onClick={handleSaveProfile} disabled={saving} className="settings-save-btn settings-mobile-save-btn">
+            {saving ? 'A guardar...' : 'Guardar'}
+          </button>
+        </div>
+      )}
     </div>
   )
 }

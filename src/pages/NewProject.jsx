@@ -169,7 +169,7 @@ export default function NewProject() {
 
             <h1 style={S.headline}>Conta-nos sobre o teu projeto.</h1>
             <p style={S.sub}>
-              Descreve em 2–3 frases. A IA estrutura o conteúdo — tu revês e ajustas.
+              Descreve em 2–3 frases. A IA estrutura o conteúdo; tu revês e ajustas.
             </p>
 
             <DescribeTextarea
@@ -250,7 +250,7 @@ export default function NewProject() {
           <div style={S.reviewWrap}>
             <div style={{ marginBottom: 24 }}>
               <h2 style={S.reviewHead}>Vamos construir o teu projeto juntos.</h2>
-              <p style={S.reviewSub}>Responde a cada pergunta — a IA usa as tuas respostas para criar o projeto.</p>
+              <p style={S.reviewSub}>Responde a cada pergunta. A IA usa as tuas respostas para criar o projeto.</p>
             </div>
             <InterviewPanel
               data={interviewData}
