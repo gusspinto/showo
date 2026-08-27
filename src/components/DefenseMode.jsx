@@ -113,7 +113,17 @@ function NotesPanel({ aiData, loadingAI, aiError, onRetry }) {
     </div>
   )
 
-  if (!aiData) return null
+  if (!aiData) return (
+    <div style={{ background: 'var(--color-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 14, padding: '32px 28px', textAlign: 'center' }}>
+      <p style={{ color: C.text, fontSize: 15, margin: '0 0 8px', fontWeight: 600 }}>Notas da defesa</p>
+      <p style={{ color: C.muted, fontSize: 13, margin: '0 0 20px', lineHeight: 1.6 }}>
+        A IA vai gerar notas personalizadas para cada secção da tua apresentação com base no conteúdo do projeto.
+      </p>
+      <button onClick={onRetry} style={{ background: C.blue, color: '#fff', border: 'none', borderRadius: 8, padding: '10px 22px', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+        Gerar notas
+      </button>
+    </div>
+  )
 
   const tip = aiData.tip
   const notes = aiData.slide_notes ?? {}
@@ -170,7 +180,17 @@ function JuryPanel({ aiData, loadingAI, aiError, onRetry }) {
     </div>
   )
 
-  if (!aiData) return null
+  if (!aiData) return (
+    <div style={{ background: 'var(--color-bg-alt)', border: `1px solid ${C.border}`, borderRadius: 14, padding: '32px 28px', textAlign: 'center' }}>
+      <p style={{ color: C.text, fontSize: 15, margin: '0 0 8px', fontWeight: 600 }}>Perguntas do júri</p>
+      <p style={{ color: C.muted, fontSize: 13, margin: '0 0 20px', lineHeight: 1.6 }}>
+        A IA vai simular as perguntas que um júri faria sobre o teu projeto, com respostas sugeridas.
+      </p>
+      <button onClick={onRetry} style={{ background: C.blue, color: '#fff', border: 'none', borderRadius: 8, padding: '10px 22px', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+        Gerar perguntas
+      </button>
+    </div>
+  )
 
   const questions = aiData.jury_questions ?? []
   const practicedCount = Object.values(practiced).filter(Boolean).length
@@ -1271,10 +1291,6 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
     await supabase.from('projects').update({ guide_config: next }).eq('id', project.id)
   }
 
-  useEffect(() => {
-    if (!canSeeFullPrep) return
-    tryLoadAI()
-  }, [])
 
   useEffect(() => {
     function onKey(e) { if (e.key === 'Escape' && !guideMode) onClose() }

@@ -2,11 +2,6 @@ import Stripe from 'npm:stripe@17.7.0'
 import { getAuthUser, getCorsHeaders } from '../_shared/rateLimit.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-const PRICE_IDS: Record<string, string> = {
-  build: Deno.env.get('STRIPE_PRICE_BUILD')!,
-  launch: Deno.env.get('STRIPE_PRICE_LAUNCH')!,
-}
-
 Deno.serve(async (req) => {
   const cors = getCorsHeaders(req)
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
@@ -20,6 +15,12 @@ Deno.serve(async (req) => {
 
   try {
     const { plan } = await req.json()
+
+    const PRICE_IDS: Record<string, string> = {
+      build: Deno.env.get('STRIPE_PRICE_BUILD')!,
+      launch: Deno.env.get('STRIPE_PRICE_LAUNCH')!,
+    }
+
     const priceId = PRICE_IDS[plan]
     if (!priceId) {
       return new Response(JSON.stringify({ error: 'Plano inválido.' }), {
@@ -33,10 +34,9 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
     )
 
-    // Get or create Stripe customer
     const { data: profile } = await supabase
       .from('profiles')
-      .select('stripe_customer_id, referred_by')
+      .select('stripe_customer_id')
       .eq('id', user.id)
       .single()
 
@@ -54,31 +54,23 @@ Deno.serve(async (req) => {
         .eq('id', user.id)
     }
 
-    const couponId = Deno.env.get('STRIPE_REFERRAL_COUPON_ID')
-    const isReferred = !!profile?.referred_by && !!couponId
-
-    const sessionParams: Stripe.Checkout.SessionCreateParams = {
+    const session = await stripe.checkout.sessions.create({
       customer: customerId,
       mode: 'subscription',
+      allow_promotion_codes: true,
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: 'https://showo.pt/settings?tab=plano&stripe=success',
       cancel_url: 'https://showo.pt/pricing',
       subscription_data: {
         metadata: { supabase_uid: user.id, plan },
       },
-    }
-
-    if (isReferred) {
-      sessionParams.discounts = [{ coupon: couponId }]
-    }
-
-    const session = await stripe.checkout.sessions.create(sessionParams)
+    })
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...cors, 'Content-Type': 'application/json' },
     })
   } catch (err) {
-    console.error(err)
+    console.error('create-checkout error:', err)
     return new Response(JSON.stringify({ error: 'Erro ao criar sessão de pagamento.' }), {
       status: 500, headers: { ...cors, 'Content-Type': 'application/json' },
     })
