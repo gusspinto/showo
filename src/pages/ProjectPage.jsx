@@ -5427,13 +5427,7 @@ export default function ProjectPage() {
         @media (max-width: 600px) {
           .proj-coach-fab { display: none !important; }
           .proj-coach-panel { display: none !important; }
-          .proj-ia-mobile-fab {
-            display: flex !important;
-            bottom: calc(18px + var(--tabbar-height) + env(safe-area-inset-bottom, 0px)) !important;
-          }
-          body:not(.has-tabbar) .proj-ia-mobile-fab {
-            bottom: calc(18px + env(safe-area-inset-bottom, 0px)) !important;
-          }
+          .proj-ia-mobile-fab { display: flex !important; }
         }
         @media (min-width: 601px) {
           .proj-ia-mobile-fab { display: none !important; }

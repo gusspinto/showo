@@ -175,14 +175,17 @@ export default function Pricing() {
                   <p className="pricing-positioning">{plan.positioning}</p>
                 </div>
 
-                <button
-                  className={`pricing-cta pricing-cta--${plan.ctaVariant}`}
-                  onClick={() => handleCta(plan)}
-                  disabled={loading === plan.id || isCurrent}
-                >
-                  {loading === plan.id ? 'A redirecionar…' : isCurrent ? 'Plano atual' : plan.cta}
-                  {!isCurrent && loading !== plan.id && <ArrowRight size={15} />}
-                </button>
+                {isCurrent ? (
+                  <div className="pricing-current"><Check size={15} /> Plano atual</div>
+                ) : (
+                  <button
+                    className={`pricing-cta pricing-cta--${plan.ctaVariant}`}
+                    onClick={() => handleCta(plan)}
+                    disabled={loading === plan.id}
+                  >
+                    {loading === plan.id ? 'A redirecionar…' : <>{plan.cta} <ArrowRight size={15} /></>}
+                  </button>
+                )}
 
                 {/* "Tudo do X, mais…" em vez de repetir a mesma lista três
                     vezes: o que interessa é a diferença, não o inventário. */}

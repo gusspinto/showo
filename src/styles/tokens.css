@@ -68,13 +68,6 @@
   --duration-normal: 0.2s;
   --duration-slow: 0.35s;
 
-  /* ── Mobile shell ──
-     The bottom tab bar is the primary navigation on phones. Every scrollable
-     page reserves --tabbar-clear at the bottom so content is never hidden
-     behind it, home-indicator included. */
-  --tabbar-height: 58px;
-  --tabbar-clear: calc(var(--tabbar-height) + env(safe-area-inset-bottom, 0px) + 16px);
-
   /* ── Layout ── */
   --page-max: 920px;
   --page-wide: 1080px;
@@ -122,6 +115,7 @@
   --color-success:       #2a9d6a;
   --color-success-subtle:rgba(42,157,106,0.10);
   --color-warning:       #C49A20;
+  --color-warning-hover: #a8831a;
   --color-warning-subtle:rgba(196,154,32,0.12);
   --color-error:         #E04848;
   --color-error-subtle:  rgba(224,72,72,0.10);
@@ -186,6 +180,7 @@ body.light {
   --color-success:       #1e8a56;
   --color-success-subtle:rgba(30,138,86,0.08);
   --color-warning:       #a07010;
+  --color-warning-hover: #855c0c;
   --color-warning-subtle:rgba(160,112,16,0.08);
   --color-error:         #c03030;
   --color-error-subtle:  rgba(192,48,48,0.08);

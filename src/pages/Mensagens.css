@@ -948,16 +948,3 @@
   }
 }
 
-/* ══════════════════════════════════════════════════════════════════════════
-   Barra de navegação inferior
-   A lista de conversas ocupa a altura toda (100dvh); com a barra presente
-   tem de ceder exatamente o que ela ocupa, ou a última conversa fica por
-   baixo dela. A folga que o body reserva não serve aqui — esta página não
-   faz scroll, mede-se.
-   ══════════════════════════════════════════════════════════════════════════ */
-@media (max-width: 600px) {
-  body.page-mensagens.has-tabbar { padding-bottom: 0 !important; }
-  body.has-tabbar .msg-outer-wrap {
-    height: calc(100dvh - 62px - var(--tabbar-height) - env(safe-area-inset-bottom, 0px)) !important;
-  }
-}
