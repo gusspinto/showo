@@ -376,10 +376,8 @@ export default function TurmaPage() {
     setTimeout(() => setToast(''), 3500)
   }
 
-  // Turmas are a school feature — only accounts connected to a school
-  // (professors, verified via invite code) can access them for now.
   useEffect(() => {
-    if (profile && profile.role !== 'professor') navigate('/dashboard')
+    if (profile && (profile.role === 'recrutador' || profile.role === 'empresa')) navigate('/dashboard')
   }, [profile, navigate])
 
   useEffect(() => {
@@ -810,7 +808,7 @@ export default function TurmaPage() {
     return 0
   })
 
-  if (profile && profile.role !== 'professor') return null
+  if (profile && (profile.role === 'recrutador' || profile.role === 'empresa')) return null
 
   if (loading) {
     return (

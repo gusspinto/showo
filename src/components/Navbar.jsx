@@ -851,11 +851,9 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               ) : (
                 <>
                   <span className="mob-drawer-label">Comunidade</span>
-                  {isTeacher && (
-                    <button className="mobile-drawer-btn" onClick={() => { navigate('/turmas'); setOpen(false) }}>
-                      <Users2 size={16} /> Turmas
-                    </button>
-                  )}
+                  <button className="mobile-drawer-btn" onClick={() => { navigate('/turmas'); setOpen(false) }}>
+                    <Users2 size={16} /> Turmas
+                  </button>
                   <button className="mobile-drawer-btn" onClick={() => { navigate('/mensagens'); setOpen(false) }}>
                     <MessageSquare size={16} /> Mensagens
                     {unreadMsgs > 0 && <span style={{ marginLeft: 'auto', background: 'var(--color-primary)', color: '#fff', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{unreadMsgs > 9 ? '9+' : unreadMsgs}</span>}
@@ -1294,6 +1292,11 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               <button className={`sb-item${isActive('/explorar') ? ' active' : ''}`} onClick={() => navigate('/explorar')}>
                 <Compass size={16} />{!collapsed && showLabels && <span>Explorar</span>}
               </button>
+              {user && (
+                <button className={`sb-item${isActive('/turmas') ? ' active' : ''}`} onClick={() => navigate('/turmas')}>
+                  <Users2 size={16} />{!collapsed && showLabels && <span>Turmas</span>}
+                </button>
+              )}
 
               {user && (
                 <>

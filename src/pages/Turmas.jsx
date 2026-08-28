@@ -247,13 +247,9 @@ export default function Turmas() {
 
   useEffect(() => {
     if (!user) { navigate('/login'); return }
-    // Turmas are a school feature — only accounts connected to a school
-    // (professors, verified via invite code) can access them for now.
-    if (profile && !isTeacher) { navigate('/dashboard'); return }
 
     async function load() {
       if (isTeacher) {
-        // Teachers see classes they created
         const { data } = await supabase
           .from('classes')
           .select('id, name, code, teacher_name, academic_year, created_at')
@@ -261,20 +257,25 @@ export default function Turmas() {
           .order('created_at', { ascending: false })
         setTurmas(data || [])
       } else {
-        // Students: localStorage + DB via project linkage
         const lsKey = `showo_turmas_${user.id}`
         let cached = []
         try { cached = JSON.parse(localStorage.getItem(lsKey) || '[]') } catch {}
 
+        const classIdSet = new Set()
+
+        const { data: memberships } = await supabase.from('class_members').select('class_id').eq('user_id', user.id)
+        if (memberships?.length) memberships.forEach(m => classIdSet.add(m.class_id))
+
         const { data: myProjs } = await supabase.from('projects').select('id').eq('user_id', user.id)
-        let dbTurmas = []
         if (myProjs?.length) {
           const { data: cp } = await supabase.from('class_projects').select('class_id').in('project_id', myProjs.map(p => p.id))
-          if (cp?.length) {
-            const classIds = [...new Set(cp.map(r => r.class_id))]
-            const { data: classes } = await supabase.from('classes').select('id, name, code, teacher_name, academic_year').in('id', classIds)
-            dbTurmas = classes || []
-          }
+          if (cp?.length) cp.forEach(r => classIdSet.add(r.class_id))
+        }
+
+        let dbTurmas = []
+        if (classIdSet.size > 0) {
+          const { data: classes } = await supabase.from('classes').select('id, name, code, teacher_name, academic_year').in('id', [...classIdSet])
+          dbTurmas = classes || []
         }
         const dbIds = new Set(dbTurmas.map(t => t.id))
         setTurmas([...dbTurmas, ...cached.filter(t => !dbIds.has(t.id))])
@@ -293,7 +294,7 @@ export default function Turmas() {
     setShowJoin(false)
   }
 
-  if (!user || (profile && !isTeacher)) return null
+  if (!user) return null
 
   return (
     <div style={{ minHeight: '100vh', background: C.bg }}>
