@@ -12,6 +12,8 @@ import {
 } from 'lucide-react'
 import { Button, Card, SectionLabel, Modal, Select } from '../components/ui'
 import { useAuth } from '../context/AuthContext'
+import { useSchoolMode } from '../context/SchoolModeContext'
+import ContextSwitcher from '../components/ContextSwitcher'
 import ExportProjectsModal from '../components/ExportProjectsModal'
 
 // ProjectPulse removed — focus project now shown as auto-pinned card
@@ -123,6 +125,7 @@ export default function StudentDashboard({ user, profile }) {
   const navigate = useNavigate()
   const location = useLocation()
   const { checkGate, isSchoolAccount } = useAuth()
+  const { hasSchool, isSchoolMode, setMode } = useSchoolMode()
   /* ── Dados ── */
   const [projects, setProjects] = useState([])
   const [loadingProjects, setLoadingProjects] = useState(true)
@@ -705,15 +708,36 @@ export default function StudentDashboard({ user, profile }) {
           </aside>
         </header>
 
-        {/* ══════════════ BANNER ESCOLA ══════════════ */}
-        {isSchoolAccount && (
-          <div className="sdb-school-bar">
-            <button className="sdb-school-action-btn" onClick={() => setShowJoinTurma(true)}>
-              <GraduationCap size={14} /> Entrar numa turma
-            </button>
-            <button className="sdb-school-action-btn" onClick={() => setShowExportModal(true)}>
-              <Upload size={14} /> Exportar projetos
-            </button>
+        {/* ══════════════ CONTEXTO ══════════════ */}
+        {hasSchool && (
+          <div className="sdb-context">
+            <ContextSwitcher />
+            {/* Ações da escola — só dentro do contexto escolar. */}
+            {isSchoolMode && isSchoolAccount && (
+              <div className="sdb-school-bar">
+                <button className="sdb-school-action-btn" onClick={() => setShowJoinTurma(true)}>
+                  <GraduationCap size={14} /> Entrar numa turma
+                </button>
+                <button className="sdb-school-action-btn" onClick={() => setShowExportModal(true)}>
+                  <Upload size={14} /> Exportar projetos
+                </button>
+              </div>
+            )}
+            {/* Em contexto pessoal a escola não desaparece — encolhe para uma
+                linha, que é tudo o que é preciso para ele saber que há coisas
+                à espera do outro lado. */}
+            {!isSchoolMode && (pendingTasks.length > 0 || profNotifs.length > 0) && (
+              <button className="sdb-school-peek" onClick={() => setMode('escola')}>
+                <GraduationCap size={14} />
+                <span>
+                  {[
+                    pendingTasks.length > 0 && `${pendingTasks.length} ${pendingTasks.length === 1 ? 'tarefa' : 'tarefas'}`,
+                    profNotifs.length > 0 && `${profNotifs.length} ${profNotifs.length === 1 ? 'feedback' : 'feedbacks'}`,
+                  ].filter(Boolean).join(' e ')} à tua espera na escola
+                </span>
+                <ArrowRight size={13} />
+              </button>
+            )}
           </div>
         )}
 
@@ -774,8 +798,8 @@ export default function StudentDashboard({ user, profile }) {
           {/* ── Coluna principal ── */}
           <div className="sdb-col">
 
-            {/* ── Painel escola ── */}
-            {isSchoolAccount && (schoolClasses.length > 0 || profNotifs.length > 0 || pendingTasks.length > 0) && (
+            {/* ── Painel escola — só no contexto escolar ── */}
+            {isSchoolMode && (schoolClasses.length > 0 || profNotifs.length > 0 || pendingTasks.length > 0) && (
               <section className="sdb-panel sdb-school-panel sdb-o-school">
 
                 <header className="sdb-panel-head">

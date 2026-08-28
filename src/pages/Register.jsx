@@ -85,6 +85,13 @@ function Input({ type = 'text', value, onChange, placeholder, required }) {
 export default function Register() {
   const navigate = useNavigate()
   const location = useLocation()
+  /* Depois de criar conta, voltar ao sítio de onde vieram. Sem isto, quem
+     começava a criar um projeto e era mandado registar-se acabava na
+     dashboard, sem nada que ligasse ao que estava a fazer — e a intenção
+     perdia-se ali. Só aceitamos caminhos internos, para o ?next não poder
+     ser usado como redirect aberto. */
+  const rawNext = new URLSearchParams(location.search).get('next')
+  const nextPath = rawNext && rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : null
   const claimSlug = location.state?.claimSlug ?? null
   const { theme } = useTheme()
   const { refreshProfile } = useAuth()
@@ -297,7 +304,7 @@ export default function Register() {
 
     setLoading(false)
     const primaryClaimed = claimSlug || claimedSlugs[0]
-    navigate('/dashboard', primaryClaimed ? { state: { claimedSlug: primaryClaimed } } : undefined)
+    navigate(nextPath ?? '/dashboard', primaryClaimed ? { state: { claimedSlug: primaryClaimed } } : undefined)
   }
 
   const selectedRole = ROLES.find(r => r.id === role)

@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
 import { useSidebar } from '../context/SidebarContext'
+import { useSchoolMode } from '../context/SchoolModeContext'
 import { supabase } from '../lib/supabase'
 import { Check, X, FolderOpen, User, Settings as SettingsIcon, Shield, Globe, Trophy, LogOut, ArrowRightToLine, Bell, Eye, Target, TrendingUp, GraduationCap, UserPlus, LayoutDashboard, Plus, Compass, Sun, Moon, Sparkles, Pencil, ArrowLeft, Briefcase, Users2, Building2, Search, Star, MessageSquare, Kanban, Heart, CheckCircle, XCircle, AlignJustify, Paintbrush, Mail, ChevronRight, Monitor, Tablet, Smartphone, ListChecks, CheckCircle2, BookMarked, BookOpen } from 'lucide-react'
 
@@ -12,6 +13,8 @@ function stripEmoji(str) {
   return str.replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27FF}\u{2900}-\u{297F}\u{1F300}-\u{1F9FF}\u{FE00}-\u{FEFF}]/gu, '').replace(/\s{2,}/g, ' ').trim()
 }
 import FeedbackButton from './FeedbackButton'
+import MobileTabBar from './MobileTabBar'
+import ContextSwitcher from './ContextSwitcher'
 import './Navbar.css'
 
 const C = {
@@ -683,12 +686,13 @@ const dropItemStyle = {
   transition: 'background 0.12s',
 }
 
-export function Navbar({ children, showLinks = true, showCreateProject = false, previewEditingMobile = false, onWorkspaceToggle, hideSidebar = false, mobileLeft = null }) {
+export function Navbar({ children, showLinks = true, showCreateProject = false, previewEditingMobile = false, onWorkspaceToggle, hideSidebar = false, mobileLeft = null, hideTabBar = false }) {
   const navigate = useNavigate()
   const location = useLocation()
   const { user, profile, signOut, isAdmin, isSchoolAccount } = useAuth()
   const { theme, toggleTheme } = useTheme()
   const { extras } = useSidebar()
+  const { hasSchool, isSchoolMode, classes: schoolClasses, toggleMode: toggleSchoolMode } = useSchoolMode()
   const [open, setOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   // Keeps the mobile menu sheet mounted for one extra animation cycle after
@@ -960,6 +964,19 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
       >
         {/* Mobile drawer trigger — leftmost, sidebar-panel icon. Yields to a
             page-provided back button (mobileLeft), e.g. inside a message thread. */}
+        {showLinks && !mobileLeft && (
+          <button
+            className="nav-mob-logo"
+            onClick={() => navigate(user ? '/dashboard' : '/')}
+            aria-label="Showo"
+          >
+            <img
+              src={theme === 'light' ? '/lightmode_icon_logo.png' : '/darkmode_icon_logo.png'}
+              alt="" draggable={false}
+              style={{ height: 24, width: 'auto', display: 'block' }}
+            />
+          </button>
+        )}
         {showLinks && !mobileLeft && (
           <button
             className="mob-drawer-trigger"
@@ -1324,6 +1341,40 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                 </>
               )}
 
+              {user && hasSchool && (
+                <>
+                  <div className="sb-divider" style={{ margin: '8px 0 4px' }} />
+                  {!collapsed && showLabels && <span className="sb-label">Contexto</span>}
+                  {!collapsed && showLabels
+                    ? <div style={{ padding: '2px 0 6px' }}><ContextSwitcher compact /></div>
+                    : (
+                      <button className={`sb-item${isSchoolMode ? ' active' : ''}`} onClick={toggleSchoolMode}
+                        title={isSchoolMode ? 'Contexto: Escola' : 'Contexto: Pessoal'}>
+                        <GraduationCap size={16} />
+                      </button>
+                    )}
+                  {isSchoolMode && schoolClasses.slice(0, 4).map(cls => (
+                    <button key={cls.id} className="sb-item" onClick={() => navigate(`/turma/${cls.code}`)} title={cls.name}>
+                      <Users2 size={16} />{!collapsed && showLabels && <span>{cls.name}</span>}
+                    </button>
+                  ))}
+                </>
+              )}
+
+              {user && (
+                <>
+                  <div className="sb-divider" style={{ margin: '8px 0 4px' }} />
+                  {!collapsed && showLabels && <span className="sb-label">Carreira</span>}
+                  <button className={`sb-item${isActive('/estagio') ? ' active' : ''}`} onClick={() => navigate('/estagio')} title="Estágio">
+                    <Briefcase size={16} />{!collapsed && showLabels && <><span>Estágio</span><span className="sb-soon">Em breve</span></>}
+                  </button>
+                  <button className={`sb-item${isActive('/pricing') ? ' active' : ''}`} onClick={() => navigate('/pricing')} title="Planos">
+                    <Sparkles size={16} />{!collapsed && showLabels && <span>Planos</span>}
+                  </button>
+                </>
+              )}
+
+              <div className="sb-divider" style={{ margin: '8px 0 4px' }} />
               <button className={`sb-item${isActive('/aprende') ? ' active' : ''}`} onClick={() => navigate('/aprende')} title="Aprende a usar">
                 <BookMarked size={16} />{!collapsed && showLabels && <span>Aprende a usar</span>}
               </button>
@@ -1582,60 +1633,76 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                 </>
               )}
 
-              {/* Role-based nav sections */}
-              {isRecruiter ? (
+              {/* ── Contexto ──
+                  Modo Escola vive aqui e na dashboard, nos mesmos termos.
+                  Quem não tem turmas nem conta de organização nunca o vê. */}
+              {user && hasSchool && (
                 <>
-                  <button className={`mob-nav-btn${isActive('/dashboard') ? ' active' : ''}`} onClick={() => { navigate('/dashboard'); setMenuOpen(false) }}>
-                    <LayoutDashboard size={20} /> Dashboard
-                  </button>
-                  <button className={`mob-nav-btn${isActive('/explorar') ? ' active' : ''}`} onClick={() => { navigate('/explorar'); setMenuOpen(false) }}>
-                    <Compass size={20} /> Explorar
-                  </button>
-                  <button className={`mob-nav-btn${isActive('/mensagens') ? ' active' : ''}`} onClick={() => { navigate('/mensagens'); setMenuOpen(false) }}>
-                    <MessageSquare size={20} /> Mensagens
-                    {unreadMsgs > 0 && <span style={{ marginLeft: 'auto', background: 'var(--color-primary)', color: '#fff', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{unreadMsgs > 9 ? '9+' : unreadMsgs}</span>}
-                  </button>
-                </>
-              ) : isTeacher ? (
-                <>
-                  {user && (
-                    <button className={`mob-nav-btn${isActive('/dashboard') ? ' active' : ''}`} onClick={() => { navigate('/dashboard'); setMenuOpen(false) }}>
-                      <LayoutDashboard size={20} /> Dashboard
-                    </button>
-                  )}
-                  <button className={`mob-nav-btn${isActive('/turmas') ? ' active' : ''}`} onClick={() => { navigate('/turmas'); setMenuOpen(false) }}>
-                    <Users2 size={20} /> Turmas
-                  </button>
-                  <button className={`mob-nav-btn${isActive('/mensagens') ? ' active' : ''}`} onClick={() => { navigate('/mensagens'); setMenuOpen(false) }}>
-                    <MessageSquare size={20} /> Mensagens
-                    {unreadMsgs > 0 && <span style={{ marginLeft: 'auto', background: 'var(--color-primary)', color: '#fff', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{unreadMsgs > 9 ? '9+' : unreadMsgs}</span>}
-                  </button>
-                  <button className={`mob-nav-btn${isActive('/explorar') ? ' active' : ''}`} onClick={() => { navigate('/explorar'); setMenuOpen(false) }}>
-                    <Compass size={20} /> Explorar
-                  </button>
-                </>
-              ) : (
-                <>
-                  {user && (
-                    <button className={`mob-nav-btn${isActive('/dashboard') ? ' active' : ''}`} onClick={() => { navigate('/dashboard'); setMenuOpen(false) }}>
-                      <LayoutDashboard size={20} /> Dashboard
-                    </button>
-                  )}
-                  <button className={`mob-nav-btn${isActive('/explorar') ? ' active' : ''}`} onClick={() => { navigate('/explorar'); setMenuOpen(false) }}>
-                    <Compass size={20} /> Explorar
-                  </button>
-                  {user && (
+                  <span className="mob-nav-section-label">Contexto</span>
+                  <div style={{ padding: '0 4px 8px' }}><ContextSwitcher compact /></div>
+                  {isSchoolMode && schoolClasses.length > 0 && (
                     <>
-                      <span className="mob-nav-section-label">Comunidade</span>
-                      <button className={`mob-nav-btn${isActive('/mensagens') ? ' active' : ''}`} onClick={() => { navigate('/mensagens'); setMenuOpen(false) }}>
-                        <MessageSquare size={20} /> Mensagens
-                        {unreadMsgs > 0 && <span style={{ marginLeft: 'auto', background: 'var(--color-primary)', color: '#fff', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{unreadMsgs > 9 ? '9+' : unreadMsgs}</span>}
-                      </button>
-                      <button className={`mob-nav-btn${isActive('/aprende') ? ' active' : ''}`} onClick={() => { navigate('/aprende'); setMenuOpen(false) }}>
-                        <BookMarked size={20} /> Aprende a usar
-                      </button>
+                      {schoolClasses.slice(0, 4).map(cls => (
+                        <button key={cls.id} className="mob-nav-btn"
+                          onClick={() => { navigate(`/turma/${cls.code}`); setMenuOpen(false) }}>
+                          <Users2 size={20} /> {cls.name}
+                        </button>
+                      ))}
                     </>
                   )}
+                  <div className="mob-nav-divider" />
+                </>
+              )}
+
+              {/* ── Carreira ──
+                  Estágio e planos deixam de estar espalhados: são a mesma
+                  pergunta ("e depois da escola?") e ficam juntos. Só para
+                  alunos — professores e recrutadores não compram Launch. */}
+              {user && !isTeacher && !isRecruiter && (
+                <>
+                  <span className="mob-nav-section-label">Carreira</span>
+                  <button className={`mob-nav-btn${isActive('/estagio') ? ' active' : ''}`}
+                    onClick={() => { navigate('/estagio'); setMenuOpen(false) }}>
+                    <Briefcase size={20} /> Estágio
+                    <span className="mob-nav-soon">Em breve</span>
+                  </button>
+                  <button className={`mob-nav-btn${isActive('/pricing') ? ' active' : ''}`}
+                    onClick={() => { navigate('/pricing'); setMenuOpen(false) }}>
+                    <Sparkles size={20} /> Planos
+                  </button>
+                  <div className="mob-nav-divider" />
+                </>
+              )}
+
+              {/* ── Conta ── */}
+              {user && (
+                <>
+                  <span className="mob-nav-section-label">Conta</span>
+                  {profileUrl && (
+                    <button className={`mob-nav-btn${isActive('profile') ? ' active' : ''}`}
+                      onClick={() => { navigate(profileUrl); setMenuOpen(false) }}>
+                      <User size={20} /> O meu perfil
+                    </button>
+                  )}
+                  {!isTeacher && !isRecruiter && (
+                    <button className={`mob-nav-btn${isActive('/aprende') ? ' active' : ''}`}
+                      onClick={() => { navigate('/aprende'); setMenuOpen(false) }}>
+                      <BookMarked size={20} /> Aprende a usar
+                    </button>
+                  )}
+                </>
+              )}
+
+              {!user && (
+                <>
+                  <button className={`mob-nav-btn${isActive('/explorar') ? ' active' : ''}`}
+                    onClick={() => { navigate('/explorar'); setMenuOpen(false) }}>
+                    <Compass size={20} /> Explorar projetos
+                  </button>
+                  <button className={`mob-nav-btn${isActive('/pricing') ? ' active' : ''}`}
+                    onClick={() => { navigate('/pricing'); setMenuOpen(false) }}>
+                    <Sparkles size={20} /> Planos
+                  </button>
                 </>
               )}
 
@@ -1688,6 +1755,16 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
           </div>
         </>
       )}
+
+      {/* Navegação primária no telemóvel. Escondida durante o editor de
+          preview do projeto (que tem a sua própria barra inferior) e nos
+          fluxos focados que passam showLinks={false} — criar projeto, por
+          exemplo, onde sair a meio é a única coisa que não queremos facilitar. */}
+      <MobileTabBar
+        hidden={!showLinks || previewEditingMobile || hideTabBar}
+        unreadMsgs={unreadMsgs}
+        onOpenMenu={() => setMenuOpen(o => !o)}
+      />
 
       <FeedbackButton />
     </>

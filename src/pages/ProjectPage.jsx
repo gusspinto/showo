@@ -4219,7 +4219,22 @@ export default function ProjectPage() {
   const [registerPopupConfirm, setRegisterPopupConfirm] = useState(false)
   const [isAnonCreator, setIsAnonCreator] = useState(false)
   const [anonEditCount, setAnonEditCount] = useState(0)
-  const [mobileTab, setMobileTab] = useState('overview')
+  /* ── Separadores mobile ──
+     Eram cinco: Projeto, Melhorar, História, Explorar, Missões. Três deles
+     queriam dizer a mesma coisa ("lê o conteúdo do projeto") e um aluno tinha
+     de conhecer a nossa arquitetura de informação para adivinhar onde estava
+     o que procurava. Passam a três grupos com uma pergunta cada:
+        projeto  → o que este projeto é
+        melhorar → o que falta fazer (score, missões, IA)
+        partilha → mostrar a alguém (link, QR, autor, nota do professor)
+     Os blocos ficaram exatamente onde estavam; só mudou quem os agrupa. */
+  const [mobileTab, setMobileTab] = useState('projeto')
+  const MOBILE_TAB_GROUP = {
+    historia: 'projeto', explorar: 'projeto',
+    melhorar: 'melhorar', missoes: 'melhorar',
+    overview: 'partilha',
+  }
+  const tabActive = (id) => MOBILE_TAB_GROUP[id] === mobileTab
   const [coachMessages, setCoachMessages] = useState([])
   const [coachInput, setCoachInput] = useState('')
   const [coachLoading, setCoachLoading] = useState(false)
@@ -5305,9 +5320,22 @@ export default function ProjectPage() {
           .proj-dashboard    { display: flex !important; }
           .proj-tagline      { font-size: 14px !important; margin-bottom: 12px !important; }
           .proj-card-pad, .proj-card { padding: 14px 16px !important; border-radius: 12px !important; }
-          /* Hide hero clutter on mobile — type badges, identity row */
+          /* Tipo de projeto e tags saem do herói no telemóvel: são metadados,
+             e estavam a empurrar o título para baixo da dobra.
+             A linha de identidade FICA — escondê-la tirava a um visitante que
+             chega de um link partilhado a única resposta a "quem fez isto?".
+             Fica compacta, numa linha, sem quebrar. */
           .proj-badges       { display: none !important; }
-          .proj-identity-row { display: none !important; }
+          .proj-identity-row {
+            gap: 6px !important;
+            margin-bottom: 14px !important;
+            font-size: 12px;
+            overflow-x: auto;
+            flex-wrap: nowrap !important;
+            scrollbar-width: none;
+          }
+          .proj-identity-row::-webkit-scrollbar { display: none; }
+          .proj-identity-row > span { white-space: nowrap; flex-shrink: 0; }
           /* Tighter hero on mobile */
           .proj-hero { padding: 10px 0 6px !important; }
           /* Highlights: stack on mobile */
@@ -5382,6 +5410,12 @@ export default function ProjectPage() {
           /* Tab content sections */
           .proj-mobile-section { display: none !important; }
           .proj-mobile-active  { display: flex !important; flex-direction: column; gap: 10px; }
+          /* Sem barra de separadores (visitante): tudo num scroll só. */
+          .proj-body--flat .proj-mobile-section { display: flex !important; flex-direction: column; gap: 10px; }
+          .proj-body--flat .proj-sections-toggle { display: none !important; }
+          .proj-body--flat .proj-sections-body.collapsed { display: flex !important; flex-direction: column; gap: 12px; }
+          /* A barra vive por cima do conteúdo e por baixo da nav do topo. */
+          .proj-mobile-tabs { top: 62px; }
           /* Mobile-only items hidden on desktop — shown inside active tabs on mobile */
           .proj-mobile-only { display: block; }
         }
@@ -5393,7 +5427,13 @@ export default function ProjectPage() {
         @media (max-width: 600px) {
           .proj-coach-fab { display: none !important; }
           .proj-coach-panel { display: none !important; }
-          .proj-ia-mobile-fab { display: flex !important; }
+          .proj-ia-mobile-fab {
+            display: flex !important;
+            bottom: calc(18px + var(--tabbar-height) + env(safe-area-inset-bottom, 0px)) !important;
+          }
+          body:not(.has-tabbar) .proj-ia-mobile-fab {
+            bottom: calc(18px + env(safe-area-inset-bottom, 0px)) !important;
+          }
         }
         @media (min-width: 601px) {
           .proj-ia-mobile-fab { display: none !important; }
@@ -5593,8 +5633,8 @@ export default function ProjectPage() {
           onClose={() => setShowTour(false)}
           onStep={target => {
             if (window.innerWidth < 640) {
-              if (target === 'missions') setMobileTab('missoes')
-              else setMobileTab('overview')
+              if (target === 'missions') setMobileTab('melhorar')
+              else setMobileTab('projeto')
             }
           }}
         />
@@ -6474,11 +6514,16 @@ export default function ProjectPage() {
           {/* Mobile status card — unifies the score ring, both scores, review state,
               missions progress and the primary "improve" action into one block so
               the owner sees health + next step at a glance (hidden on desktop). */}
+          {/* Cartão de estado (mobile). O gradiente azul-para-índigo que aqui
+              estava era decoração: não distinguia estados nem hierarquizava
+              nada, só dizia "isto é um cartão". Superfície lisa, uma borda, e
+              a cor reservada para o que significa alguma coisa — o score, o
+              estado da revisão, a ação principal. */}
           <div className="proj-dashboard" data-tour="score" style={{
             display: 'none', flexDirection: 'column', gap: 13, marginBottom: 18,
-            background: 'linear-gradient(160deg, var(--color-primary-subtle), rgba(79,70,229,0.045))',
-            border: '1px solid var(--color-primary-subtle)',
-            borderRadius: 16, padding: 16,
+            background: 'var(--color-surface)',
+            border: '1px solid var(--color-border)',
+            borderRadius: 'var(--radius-lg)', padding: 16,
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
               <ScoreRing score={displayScore} size={76} />
@@ -6573,36 +6618,34 @@ export default function ProjectPage() {
         </div>{/* end proj-hero */}
 
         {/* proj-body: everything after hero — ordered after sidebar on tablet/mobile */}
-        <div className="proj-body">
+        <div className={`proj-body${isOwner ? '' : ' proj-body--flat'}`}>
 
-        {/* ── Mobile tab bar (hidden on desktop via CSS) ── */}
+        {/* ── Separadores mobile — só para o dono ──
+            Quem chega de um link partilhado não quer navegar num produto:
+            quer ler um projeto. Para visitantes, a página é um scroll só
+            (a CSS trata de mostrar todas as secções quando não há barra). */}
+        {isOwner && (
         <div className="proj-mobile-tabs" style={{ display: 'none' }}>
-          {(isOwner ? [
-            { id: 'overview', label: 'Projeto' },
-            { id: 'melhorar', label: 'Melhorar' },
-            { id: 'historia', label: 'História' },
-            { id: 'explorar', label: 'Explorar' },
-            { id: 'missoes', label: 'Missões', dataTour: 'missions' },
-          ] : [
-            { id: 'overview', label: 'Projeto' },
-            { id: 'historia', label: 'História' },
-            { id: 'explorar', label: 'Explorar' },
-          ]).map(({ id, label, dataTour }) => (
+          {[
+            { id: 'projeto',  label: 'Projeto' },
+            { id: 'melhorar', label: 'Melhorar', dataTour: 'missions' },
+            { id: 'partilha', label: 'Partilha' },
+          ].map(({ id, label, dataTour }) => (
             <button
               key={id}
               data-tour={dataTour || undefined}
               onClick={() => {
-                if (id === 'diario') { navigate(`/projeto/${project.slug}/diario`); return }
                 setMobileTab(id)
-                if (id === 'explorar') setSectionsOpen(true)
+                if (id === 'projeto') setSectionsOpen(true)
               }}
               className={`proj-mobile-tab-btn${mobileTab === id ? ' proj-mobile-tab-active' : ''}`}
             >{label}</button>
           ))}
         </div>
+        )}
 
         {/* ── TAB: melhorar — mini-dashboard + completude + tips ── */}
-        <div className={`proj-mobile-section${mobileTab === 'melhorar' ? ' proj-mobile-active' : ''}`}>
+        <div className={`proj-mobile-section${tabActive('melhorar') ? ' proj-mobile-active' : ''}`}>
 
         {/* ── Owner mini-dashboard: defense / AI analysis / report ── */}
         {isOwner && (() => {
@@ -6818,7 +6861,7 @@ export default function ProjectPage() {
         </div>{/* end melhorar tab section */}
 
         {/* ── TAB: historia — AI narrative + highlights + PAP ── */}
-        <div className={`proj-mobile-section${mobileTab === 'historia' ? ' proj-mobile-active' : ''}`}>
+        <div className={`proj-mobile-section${tabActive('historia') ? ' proj-mobile-active' : ''}`}>
 
         {/* A tua história — AI narrative with blue gradient */}
         {project.ai_description && (
@@ -6878,7 +6921,7 @@ export default function ProjectPage() {
         </div>{/* end historia tab section */}
 
         {/* ── TAB: explorar — sections accordion ── */}
-        <div className={`proj-mobile-section${mobileTab === 'explorar' ? ' proj-mobile-active' : ''}`}>
+        <div className={`proj-mobile-section${tabActive('explorar') ? ' proj-mobile-active' : ''}`}>
 
         {/* Project sections — accordion on mobile/tablet, always visible on desktop */}
         <button
@@ -6904,7 +6947,7 @@ export default function ProjectPage() {
         </div>{/* end explorar tab section */}
 
         {/* ── TAB: missoes — missions ── */}
-        <div className={`proj-mobile-section${mobileTab === 'missoes' ? ' proj-mobile-active' : ''}`}>
+        <div className={`proj-mobile-section${tabActive('missoes') ? ' proj-mobile-active' : ''}`}>
 
         {/* Missions — owner only */}
         {(isOwner || collaboratorSections !== null) && <div id="missions-section" data-tour="missions" className="proj-card" style={{ scrollMarginTop: 88 }}>
@@ -6951,7 +6994,7 @@ export default function ProjectPage() {
           <div style={{ position: 'fixed', inset: 0, zIndex: 400, background: 'var(--color-bg)', display: 'flex', flexDirection: 'column' }}>
             {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '11px 12px', borderBottom: `1px solid ${colors.border}`, flexShrink: 0 }}>
-              <button onClick={() => setMobileTab('overview')} aria-label="Voltar ao projeto" style={{ background: 'none', border: 'none', color: colors.muted, cursor: 'pointer', width: 36, height: 36, borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, WebkitTapHighlightColor: 'transparent' }}>
+              <button onClick={() => setMobileTab('projeto')} aria-label="Voltar ao projeto" style={{ background: 'none', border: 'none', color: colors.muted, cursor: 'pointer', width: 36, height: 36, borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, WebkitTapHighlightColor: 'transparent' }}>
                 <ChevronLeft size={22} />
               </button>
               <div style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--color-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -7040,7 +7083,7 @@ export default function ProjectPage() {
         )}
 
         {/* ── TAB: overview — nota professor + share + author ── */}
-        <div className={`proj-mobile-section${mobileTab === 'overview' ? ' proj-mobile-active' : ''}`}>
+        <div className={`proj-mobile-section${tabActive('overview') ? ' proj-mobile-active' : ''}`}>
 
         {/* Mobile-only: identity meta (hidden from hero on mobile) */}
         <div className="proj-mobile-only proj-card" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>

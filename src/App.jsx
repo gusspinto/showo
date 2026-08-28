@@ -5,6 +5,7 @@ import { HelmetProvider } from 'react-helmet-async'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { SidebarProvider } from './context/SidebarContext'
+import { SchoolModeProvider } from './context/SchoolModeContext'
 import RestReminder from './components/RestReminder'
 import CookieConsent from './components/CookieConsent'
 import SplashScreen from './components/SplashScreen'
@@ -436,6 +437,7 @@ export default function App() {
       <ThemeProvider>
         <SidebarProvider>
         <AuthProvider>
+          <SchoolModeProvider>
           <AuthErrorBanner />
           {splashMounted && <SplashScreen visible={splashVisible} />}
           <RestReminder />
@@ -470,6 +472,7 @@ export default function App() {
               <Route path="/certificado/:slug"  element={<Certificate />}  />
               <Route path="/vagas"              element={<Vagas />}        />
               <Route path="/estagio"            element={<Estagio />}      />
+              <Route path="/carreira"           element={<Navigate to="/estagio" replace />} />
               <Route path="/mensagens"          element={<Mensagens />}    />
               <Route path="/candidatos"         element={<Candidatos />}   />
               <Route path="/pipeline"           element={<Pipeline />}     />
@@ -490,6 +493,7 @@ export default function App() {
             </RecoveryGate>
             </ErrorBoundary>
           </BrowserRouter>
+          </SchoolModeProvider>
         </AuthProvider>
         </SidebarProvider>
       </ThemeProvider>

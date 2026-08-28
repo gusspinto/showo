@@ -156,7 +156,7 @@ function SettingsSkeleton() {
 }
 
 export default function Settings() {
-  const { user, profile, loading: authLoading, refreshProfile, planId, isSchoolAccount } = useAuth()
+  const { user, profile, loading: authLoading, refreshProfile, planId, isSchoolAccount, checkGate } = useAuth()
   const { theme, toggleTheme } = useTheme()
   const navigate = useNavigate()
 
@@ -179,6 +179,9 @@ export default function Settings() {
   const avatarInputRef = useRef(null)
   const [availableForWork, setAvailableForWork] = useState(false)
   const [monthlyReportOptIn, setMonthlyReportOptIn] = useState(false)
+  // Guardado no momento em que se toca, e não no botão "Guardar" lá em baixo:
+  // é um interruptor de um email, não parte do perfil que se edita em bloco.
+  const [weeklyRecapEmail, setWeeklyRecapEmail] = useState(true)
   const [company, setCompany] = useState('')
   const [companyRole, setCompanyRole] = useState('')
   const [companyWebsite, setCompanyWebsite] = useState('')
@@ -216,7 +219,7 @@ export default function Settings() {
   useEffect(() => {
     if (!user) return
     setFullName(user.user_metadata?.full_name ?? '')
-    supabase.from('profiles').select('username, bio, role, avatar_url, available_for_work, monthly_report_opt_in, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size, skills, area, phone, notify_newsletter, notify_marketing, notify_product_updates, notify_project_activity, profile_visibility, show_email_publicly').eq('id', user.id).single().then(({ data }) => {
+    supabase.from('profiles').select('username, bio, role, avatar_url, available_for_work, monthly_report_opt_in, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size, skills, area, phone, notify_newsletter, notify_marketing, notify_product_updates, notify_project_activity, profile_visibility, show_email_publicly, weekly_recap_email_opt_in').eq('id', user.id).single().then(({ data }) => {
       if (data) {
         setUsername(data.username ?? '')
         setOriginalUsername(data.username ?? '')
@@ -225,6 +228,7 @@ export default function Settings() {
         setAvatarUrl(data.avatar_url ?? '')
         setAvailableForWork(data.available_for_work ?? false)
         setMonthlyReportOptIn(data.monthly_report_opt_in ?? false)
+        setWeeklyRecapEmail(data.weekly_recap_email_opt_in ?? true)
         setCompany(data.company ?? '')
         setCompanyRole(data.company_role ?? '')
         setCompanyWebsite(data.company_website ?? '')
@@ -291,6 +295,20 @@ export default function Settings() {
     await supabase.from('profiles').update({ avatar_url: null }).eq('id', user.id)
     setAvatarUrl(''); refreshProfile()
     setSaveMsg({ type: 'ok', text: 'Foto removida.' }); setAvatarUploading(false)
+  }
+
+  /* Escrita direta: a coluna tem grant de update e a política "Own profile
+     update" já cobre o próprio utilizador, por isso não é preciso mexer no
+     RPC upsert_own_profile só para um interruptor. Optimista, com reversão
+     se o servidor recusar. */
+  async function toggleWeeklyRecapEmail() {
+    const next = !weeklyRecapEmail
+    setWeeklyRecapEmail(next)
+    const { error } = await supabase
+      .from('profiles')
+      .update({ weekly_recap_email_opt_in: next })
+      .eq('id', user.id)
+    if (error) setWeeklyRecapEmail(!next)
   }
 
   async function handleSaveProfile() {
@@ -577,6 +595,29 @@ export default function Settings() {
                           </div>
                           <div className="settings-toggle-desc">
                             {availableForWork ? 'O teu perfil aparece nos resultados de recrutadores e empresas.' : 'Ativa para aparecer em pesquisas de recrutadores.'}
+                          </div>
+                        </div>
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Recap semanal — só quem tem carreira no plano (Launch ou
+                      conta de escola). Quem não tem não vê um interruptor
+                      morto: vê a funcionalidade na página de planos. */}
+                  {role !== 'professor' && checkGate('weeklyRecap').allowed && (
+                    <div className="settings-field">
+                      <label className="settings-label">Recap semanal</label>
+                      <button type="button" onClick={toggleWeeklyRecapEmail} className={`settings-toggle${weeklyRecapEmail ? ' active' : ''}`}>
+                        <div className={`settings-toggle-track ${weeklyRecapEmail ? 'on' : 'off'}`}>
+                          <div className={`settings-toggle-knob ${weeklyRecapEmail ? 'on' : 'off'}`} />
+                        </div>
+                        <div>
+                          <div className="settings-toggle-title" style={{ color: weeklyRecapEmail ? 'var(--color-success)' : undefined }}>
+                            <Mail size={14} className="flex-shrink-0" />
+                            {weeklyRecapEmail ? 'Email semanal ativo' : 'Email semanal desativado'}
+                          </div>
+                          <div className="settings-toggle-desc">
+                            Todas as segundas, um email com o que registaste na semana anterior, a tua sequência de semanas e o que falta entregar. O recap continua visível na dashboard mesmo com isto desligado.
                           </div>
                         </div>
                       </button>

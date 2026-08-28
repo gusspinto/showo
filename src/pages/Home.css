@@ -541,9 +541,60 @@ body.light .home-auth-input {
   .how-it-works-grid  { grid-template-columns: repeat(2, 1fr); }
 }
 
+/* ══ Entrada mobile ══
+   Escondida no desktop, onde o widget de auth à direita continua a fazer
+   sentido: há espaço para as duas coisas ao lado uma da outra. */
+.home-hero-mobile-cta { display: none; }
+
 @media (max-width: 600px) {
   /* Hero */
-  .home-hero { padding: 72px 20px 40px; }
+  .home-hero { padding: 64px 20px 36px; }
+
+  /* O formulário de login sai do primeiro ecrã. */
+  .home-hero-auth { display: none !important; }
+
+  .home-hero-mobile-cta {
+    display: flex; flex-direction: column; gap: 10px;
+    margin-top: 22px;
+  }
+  .home-mcta-primary {
+    display: flex; align-items: center; justify-content: center; gap: 9px;
+    width: 100%; padding: 16px 20px;
+    background: var(--color-primary); border: none;
+    border-radius: var(--radius-lg);
+    color: #fff; font-size: 16px; font-weight: 700;
+    font-family: inherit; cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.14s var(--ease-out);
+  }
+  .home-mcta-primary:active { transform: scale(0.98); }
+
+  .home-mcta-secondary {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; padding: 14px 20px;
+    background: transparent;
+    border: 1px solid var(--color-border-hover);
+    border-radius: var(--radius-lg);
+    color: var(--color-text); font-size: 14px; font-weight: 600;
+    font-family: inherit; cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .home-mcta-secondary:active { background: var(--color-surface-hover); }
+
+  /* Prova social em texto, à altura dos olhos e sem ocupar um card. */
+  .home-mcta-proof {
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; color: var(--color-text-tertiary);
+    padding-top: 2px;
+  }
+
+  .home-mcta-login {
+    background: none; border: none;
+    color: var(--color-text-secondary);
+    font-size: 13px; font-weight: 600; font-family: inherit;
+    padding: 8px 0; cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
   .home-hero-grid { gap: 24px; }
   .how-it-works-grid { grid-template-columns: 1fr; }
   .home-hero-copy { order: 1; text-align: left; }

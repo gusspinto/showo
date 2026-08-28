@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { ArrowRight, FileText, Trophy, Share2, Eye, Mail } from 'lucide-react'
+import { ArrowRight, FileText, Trophy, Share2, Eye, Mail, Upload, Sparkles } from 'lucide-react'
 import { Navbar } from '../components/Navbar'
 import { supabase } from '../lib/supabase'
 import { claimAnonymousProjects } from '../lib/claimAnonymousProjects'
@@ -204,6 +204,30 @@ export default function Home() {
               <span className="home-hero-stats-label">
                 projetos criados<br />por estudantes portugueses
               </span>
+            </div>
+
+            {/* ── Entrada mobile ──
+                No telemóvel, a primeira coisa a seguir ao título era um
+                formulário de login. Quem chega de um vídeo não tem conta: era
+                pedir a palavra-passe a alguém que ainda não sabe o que isto é.
+                Aqui a ação principal é começar; o login é a alternativa, e
+                vive na sua própria página. */}
+            <div className="home-hero-mobile-cta">
+              <button className="home-mcta-primary" onClick={() => navigate('/novo')}>
+                <Sparkles size={17} />
+                Criar o meu projeto
+                <ArrowRight size={16} />
+              </button>
+              <button className="home-mcta-secondary" onClick={() => navigate('/novo?import=1')}>
+                <Upload size={15} />
+                Já tenho o trabalho feito
+              </button>
+              <div className="home-mcta-proof">
+                <span>{projectCount == null ? '—' : animatedCount} projetos de estudantes portugueses</span>
+              </div>
+              <button className="home-mcta-login" onClick={() => navigate('/login')}>
+                Já tenho conta · Entrar
+              </button>
             </div>
           </div>
 

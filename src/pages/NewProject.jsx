@@ -1,12 +1,16 @@
 import { useState, useRef, useEffect } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { saveProject } from '../lib/saveProject'
-import { Sparkles, ArrowRight, Pencil, Check, ChevronRight } from 'lucide-react'
+import {
+  Sparkles, ArrowRight, ArrowLeft, Pencil, Check, ChevronRight,
+  Upload, FileText, X, PenLine, AlertTriangle,
+} from 'lucide-react'
 import { Navbar } from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
 import { Toast, useToast } from '../components/Toast'
 import { PlanGateModal, AiUsageBadge } from '../components/PlanGate'
+import './NewProject.css'
 
 const PROJECT_TYPES = [
   { id: 'school',   label: 'Projeto de escola' },
@@ -25,13 +29,50 @@ const REVIEW_FIELDS = [
   { key: 'technologies',    label: 'Tecnologias',          multiline: false, required: false, minLen: 5, skippable: true },
 ]
 
+/* Aceitamos o que um aluno português tem mesmo na mão. O .doc/.ppt antigos
+   ficam de fora de propósito: são formatos binários que não conseguimos ler
+   de forma fiável, e é melhor dizê-lo à entrada do que falhar na análise. */
+const ACCEPT = '.pdf,.docx,.pptx,.txt,.md,image/png,image/jpeg,image/webp'
+const MAX_FILES = 5
+const MAX_TOTAL_MB = 12
+
+const ANALYSIS_BEATS = [
+  'A abrir o teu trabalho…',
+  'A identificar as secções…',
+  'A recolher objetivos e resultados…',
+  'A preparar a ficha do projeto…',
+]
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(String(reader.result).split(',')[1] ?? '')
+    reader.onerror = reject
+    reader.readAsDataURL(file)
+  })
+}
+
+function prettySize(bytes) {
+  if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
+
 export default function NewProject() {
   const navigate = useNavigate()
   const location = useLocation()
+  const [searchParams] = useSearchParams()
   const { user, checkGate, consumeAI } = useAuth()
   const { toast, show: showToast } = useToast()
 
-  const [step, setStep] = useState('describe')
+  /* Passos: choose → describe | import → loading → found → review → submitting */
+  const [step, setStep] = useState(() => (searchParams.get('import') === '1' ? 'import' : 'choose'))
+
+  /* As edge functions de IA exigem sessão. Sem conta, o fluxo dava erro
+     genérico já dentro do passo de análise — depois de o aluno escrever a
+     descrição ou escolher os ficheiros. Pedimos a conta à entrada e
+     devolvemo-lo exatamente a este passo. */
+  const authNext = path => `/register?next=${encodeURIComponent(path)}`
+  const requireAccount = path => { if (!user) { navigate(authNext(path)); return true } return false }
   const [description, setDescription] = useState('')
   const [projectType, setProjectType] = useState('school')
   const [form, setForm] = useState({})
@@ -41,6 +82,12 @@ export default function NewProject() {
   const [error, setError] = useState(null)
   const [interviewData, setInterviewData] = useState(null)
   const [gateMsg, setGateMsg] = useState(null)
+
+  /* Importação */
+  const [files, setFiles] = useState([])
+  const [importNotes, setImportNotes] = useState('')
+  const [found, setFound] = useState(null)   // { summary, confidence, missing, read }
+  const [beat, setBeat] = useState(0)
 
   function set(key, val) { setForm(p => ({ ...p, [key]: val })) }
 
@@ -62,16 +109,27 @@ export default function NewProject() {
     }
   }, []) // eslint-disable-line
 
-  /* ── Generate (prefill) ── */
+  /* A análise demora — em vez de um spinner mudo, dizemos em que passo vamos.
+     É a diferença entre "está pendurado" e "está a trabalhar comigo". */
+  useEffect(() => {
+    if (step !== 'loading') { setBeat(0); return }
+    const id = setInterval(() => setBeat(b => Math.min(b + 1, ANALYSIS_BEATS.length - 1)), 2600)
+    return () => clearInterval(id)
+  }, [step])
+
+  async function guardProjectCount() {
+    if (!user?.id) return true
+    const { count } = await supabase.from('projects').select('id', { count: 'exact', head: true }).eq('user_id', user.id)
+    const maxGate = checkGate('maxProjects', count ?? 0)
+    if (!maxGate.allowed) { setGateMsg(maxGate.message); return false }
+    return true
+  }
+
+  /* ── Gerar a partir de uma descrição ── */
   async function handleGenerate() {
     if (!description.trim()) return
-    // Check max projects
-    if (user?.id) {
-      const { count } = await supabase.from('projects').select('id', { count: 'exact', head: true }).eq('user_id', user.id)
-      const maxGate = checkGate('maxProjects', count ?? 0)
-      if (!maxGate.allowed) { setGateMsg(maxGate.message); return }
-    }
-    // Check AI create limit
+    if (requireAccount('/novo')) return
+    if (!(await guardProjectCount())) return
     const aiGate = checkGate('createProject')
     if (!aiGate.allowed) { setGateMsg(aiGate.message); return }
 
@@ -91,9 +149,10 @@ export default function NewProject() {
     }
   }
 
-  /* ── Interview (guided questions) ── */
+  /* ── Entrevista guiada ── */
   async function handleInterview() {
     if (!description.trim()) return
+    if (requireAccount('/novo')) return
     const gate = checkGate('interviewProject')
     if (!gate.allowed) { setGateMsg(gate.message); return }
 
@@ -113,7 +172,65 @@ export default function NewProject() {
     }
   }
 
-  /* ── Inline editing ── */
+  /* ── Importar de um trabalho existente ── */
+  function addFiles(list) {
+    setError(null)
+    const incoming = Array.from(list || [])
+    if (!incoming.length) return
+    setFiles(prev => {
+      const merged = [...prev]
+      for (const f of incoming) {
+        if (merged.length >= MAX_FILES) break
+        if (merged.some(m => m.name === f.name && m.size === f.size)) continue
+        merged.push(f)
+      }
+      const totalMb = merged.reduce((s, f) => s + f.size, 0) / (1024 * 1024)
+      if (totalMb > MAX_TOTAL_MB) {
+        setError(`No total, os ficheiros não podem passar de ${MAX_TOTAL_MB} MB.`)
+        return prev
+      }
+      return merged
+    })
+  }
+
+  async function handleImport() {
+    if (!files.length) return
+    // Também aqui: /novo?import=1 é um link partilhável e entra direto neste
+    // passo, sem passar pelo ecrã de escolha.
+    if (requireAccount('/novo?import=1')) return
+    if (!(await guardProjectCount())) return
+    const aiGate = checkGate('createProject')
+    if (!aiGate.allowed) { setGateMsg(aiGate.message); return }
+
+    setStep('loading')
+    setError(null)
+    try {
+      const payload = await Promise.all(files.map(async f => ({
+        name: f.name,
+        type: f.type,
+        data: await fileToBase64(f),
+      })))
+      const { data, error: fnErr } = await supabase.functions.invoke('import-project', {
+        body: { files: payload, projectType, notes: importNotes },
+      })
+      if (fnErr || !data || data.error) throw new Error(data?.error || '')
+      consumeAI('createProject')
+      setForm({ ...(data.prefill ?? {}), project_type: projectType })
+      setFound({
+        summary: data.summary ?? '',
+        confidence: data.confidence ?? {},
+        missing: data.missing ?? [],
+        read: data.read ?? [],
+        skipped: data.skipped ?? [],
+      })
+      setStep('found')
+    } catch (err) {
+      setError(err?.message || 'Não conseguimos ler estes ficheiros. Exporta o trabalho como PDF e tenta outra vez.')
+      setStep('import')
+    }
+  }
+
+  /* ── Edição inline ── */
   function startEdit(field) {
     setEditingField(field.key)
     setEditValue(form[field.key] ?? '')
@@ -126,7 +243,7 @@ export default function NewProject() {
     }
   }
 
-  /* ── Submit ── */
+  /* ── Criar ── */
   async function handleSubmit() {
     setStep('submitting')
     setError(null)
@@ -134,7 +251,7 @@ export default function NewProject() {
     try {
       const { data } = await supabase.functions.invoke('generate-project', { body: { data: form } })
       if (data?.tagline) aiResult = data
-    } catch { /* non-critical */ }
+    } catch { /* não é crítico */ }
     try {
       const project = await saveProject(form, aiResult, user?.id ?? null)
       if (user?.id) localStorage.setItem(`edit_token_${project.slug}`, project.edit_token)
@@ -151,65 +268,100 @@ export default function NewProject() {
   const canSubmit = REVIEW_FIELDS.filter(f => f.required)
     .every(f => (form[f.key] ?? '').trim().length >= (f.minLen ?? 1))
 
+  const filledCount = REVIEW_FIELDS.filter(f => (form[f.key] ?? '').trim().length > 0).length
+
   /* ──────────────────────────────────────────────────────────────────────────
-     STEP: describe
+     PASSO: choose — a pergunta que faltava
+     Antes, a única porta de entrada era "descreve o teu projeto". Quem já
+     tinha o relatório feito lia isso como "escreve tudo outra vez" e fechava.
   ────────────────────────────────────────────────────────────────────────── */
-  if (step === 'describe') {
+  if (step === 'choose') {
+    return (
+      <NpShell>
+        <Toast {...toast} />
+        <Navbar showLinks={false} mobileLeft={<BackButton onClick={() => navigate(-1)} />} />
+        <div className="np-center">
+          <div className="np-wrap">
+            <StepBar current={1} total={3} label="Como queres começar" />
+            <h1 className="np-headline">Vamos pôr o teu projeto na Showo.</h1>
+            <p className="np-sub">Escolhe o caminho mais curto para ti.</p>
+
+            <div className="np-choices">
+              <button className="np-choice" onClick={() => { if (!requireAccount('/novo?import=1')) setStep('import') }}>
+                <span className="np-choice-icon"><Upload size={19} /></span>
+                <span className="np-choice-body">
+                  <span className="np-choice-title">Já tenho o trabalho feito</span>
+                  <span className="np-choice-desc">
+                    Envia o relatório, os slides ou as imagens. Lemos o ficheiro e preenchemos a ficha por ti; tu só confirmas.
+                  </span>
+                  <span className="np-choice-meta">PDF · Word · PowerPoint · Imagens</span>
+                </span>
+                <ChevronRight size={17} className="np-choice-arrow" />
+              </button>
+
+              <button className="np-choice" onClick={() => { if (!requireAccount('/novo')) setStep('describe') }}>
+                <span className="np-choice-icon"><PenLine size={19} /></span>
+                <span className="np-choice-body">
+                  <span className="np-choice-title">Descrever em duas frases</span>
+                  <span className="np-choice-desc">
+                    Conta o que fizeste e a IA estrutura o resto. Ideal para começar do zero.
+                  </span>
+                </span>
+                <ChevronRight size={17} className="np-choice-arrow" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </NpShell>
+    )
+  }
+
+  /* ──────────────────────────────────────────────────────────────────────────
+     PASSO: import
+  ────────────────────────────────────────────────────────────────────────── */
+  if (step === 'import') {
+    const totalBytes = files.reduce((s, f) => s + f.size, 0)
     return (
       <NpShell>
         {gateMsg && <PlanGateModal message={gateMsg} onClose={() => setGateMsg(null)} />}
         <Toast {...toast} />
-        <Navbar showLinks={false} />
-        <div style={S.center}>
-          <div style={S.describeWrap}>
-            <div style={S.eyebrowRow}>
-              <Sparkles size={15} color="var(--color-primary)" />
-              <span style={S.eyebrow}>Novo projeto</span>
-            </div>
-
-            <h1 style={S.headline}>Conta-nos sobre o teu projeto.</h1>
-            <p style={S.sub}>
-              Descreve em 2–3 frases. A IA estrutura o conteúdo; tu revês e ajustas.
+        <Navbar showLinks={false} mobileLeft={<BackButton onClick={() => setStep('choose')} />} />
+        <div className="np-center">
+          <div className="np-wrap">
+            <StepBar current={2} total={3} label="O teu trabalho" />
+            <h1 className="np-headline">Envia o que já fizeste.</h1>
+            <p className="np-sub">
+              O relatório da PAP, a apresentação, fotos do protótipo. Lemos tudo e mostramos-te o que encontrámos antes de criar seja o que for.
             </p>
 
-            <DescribeTextarea
-              value={description}
-              onChange={setDescription}
-              onSubmit={handleGenerate}
-            />
+            <FilePicker files={files} onAdd={addFiles} onRemove={i => setFiles(f => f.filter((_, k) => k !== i))} />
 
-            <div style={S.typeRow}>
-              {PROJECT_TYPES.map(t => (
-                <TypeChip
-                  key={t.id}
-                  label={t.label}
-                  active={projectType === t.id}
-                  onClick={() => setProjectType(t.id)}
+            {files.length > 0 && (
+              <>
+                <div className="np-filemeta">
+                  {files.length} {files.length === 1 ? 'ficheiro' : 'ficheiros'} · {prettySize(totalBytes)}
+                </div>
+                <label className="np-notes-label" htmlFor="np-notes">Queres acrescentar alguma coisa? (opcional)</label>
+                <textarea
+                  id="np-notes"
+                  className="np-notes"
+                  rows={2}
+                  value={importNotes}
+                  onChange={e => setImportNotes(e.target.value)}
+                  placeholder="Ex: o relatório está incompleto, os resultados estão só nos slides."
                 />
-              ))}
-            </div>
+              </>
+            )}
 
-            {error && <p style={S.err}>{error}</p>}
+            <TypeRow value={projectType} onChange={setProjectType} />
 
-            <button
-              type="button"
-              onClick={handleGenerate}
-              disabled={!description.trim()}
-              style={btnStyle(description.trim())}
-            >
-              <Sparkles size={15} />
-              Criar com IA
-              <ArrowRight size={15} />
+            {error && <p className="np-err"><AlertTriangle size={13} /> {error}</p>}
+
+            <button className="np-btn-primary" onClick={handleImport} disabled={!files.length}>
+              <Sparkles size={15} /> Analisar o meu trabalho <ArrowRight size={15} />
             </button>
-
-            <button
-              type="button"
-              onClick={handleInterview}
-              disabled={!description.trim()}
-              style={secondaryBtnStyle(description.trim())}
-            >
-              <ChevronRight size={14} />
-              Prefiro responder a perguntas
+            <button className="np-btn-quiet" onClick={() => setStep('describe')}>
+              Prefiro escrever de raiz
             </button>
             <AiUsageBadge feature="createProject" style={{ marginTop: 8 }} />
           </div>
@@ -219,18 +371,57 @@ export default function NewProject() {
   }
 
   /* ──────────────────────────────────────────────────────────────────────────
-     STEP: loading / submitting
+     PASSO: describe
   ────────────────────────────────────────────────────────────────────────── */
-  if (step === 'loading' || step === 'submitting') {
+  if (step === 'describe') {
     return (
       <NpShell>
-        <div style={S.loadingCenter}>
+        {gateMsg && <PlanGateModal message={gateMsg} onClose={() => setGateMsg(null)} />}
+        <Toast {...toast} />
+        <Navbar showLinks={false} mobileLeft={<BackButton onClick={() => setStep('choose')} />} />
+        <div className="np-center">
+          <div className="np-wrap">
+            <StepBar current={2} total={3} label="O teu projeto" />
+            <h1 className="np-headline">Conta-nos sobre o teu projeto.</h1>
+            <p className="np-sub">Descreve em 2–3 frases. A IA estrutura o conteúdo; tu revês e ajustas.</p>
+
+            <DescribeTextarea value={description} onChange={setDescription} onSubmit={handleGenerate} />
+
+            <TypeRow value={projectType} onChange={setProjectType} />
+
+            {error && <p className="np-err"><AlertTriangle size={13} /> {error}</p>}
+
+            <button className="np-btn-primary" onClick={handleGenerate} disabled={!description.trim()}>
+              <Sparkles size={15} /> Criar com IA <ArrowRight size={15} />
+            </button>
+            <button className="np-btn-quiet" onClick={handleInterview} disabled={!description.trim()}>
+              <ChevronRight size={14} /> Prefiro responder a perguntas
+            </button>
+            <AiUsageBadge feature="createProject" style={{ marginTop: 8 }} />
+          </div>
+        </div>
+      </NpShell>
+    )
+  }
+
+  /* ──────────────────────────────────────────────────────────────────────────
+     PASSO: loading / submitting
+  ────────────────────────────────────────────────────────────────────────── */
+  if (step === 'loading' || step === 'submitting') {
+    const title = step === 'submitting'
+      ? 'A guardar o teu projeto…'
+      : found === null && files.length ? ANALYSIS_BEATS[beat] : 'A estruturar o teu projeto…'
+    return (
+      <NpShell>
+        <div className="np-loading">
           <style>{`@keyframes np-sh{0%{background-position:-400px 0}100%{background-position:400px 0}} @keyframes np-in{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}`}</style>
-          <p style={S.loadingTitle}>{step === 'submitting' ? 'A guardar o teu projeto…' : 'A estruturar o teu projeto…'}</p>
-          <p style={S.loadingSub}>{step === 'submitting' ? 'Quase pronto.' : 'A IA está a organizar o que descreveste.'}</p>
-          <div style={{ width: '100%', maxWidth: 380, display: 'flex', flexDirection: 'column', gap: 10, marginTop: 8 }}>
-            {[['55%',100],['80%',60],['70%',80],['45%',90]].map(([w, delay], i) => (
-              <div key={i} style={{ height: i === 0 ? 12 : 9, width: w, borderRadius: 5, background: 'linear-gradient(90deg,var(--color-bg-alt) 25%,var(--color-surface-hover) 50%,var(--color-bg-alt) 75%)', backgroundSize: '400px 100%', animation: `np-sh 1.5s ease-in-out infinite ${delay}ms, np-in 0.3s ease-out ${i*80}ms both` }} />
+          <p className="np-loading-title">{title}</p>
+          <p className="np-loading-sub">
+            {step === 'submitting' ? 'Quase pronto.' : 'Não feches esta página.'}
+          </p>
+          <div className="np-loading-lines">
+            {[['55%', 100], ['80%', 60], ['70%', 80], ['45%', 90]].map(([w, delay], i) => (
+              <div key={i} className="np-loading-line" style={{ height: i === 0 ? 12 : 9, width: w, animation: `np-sh 1.5s ease-in-out infinite ${delay}ms, np-in 0.3s ease-out ${i * 80}ms both` }} />
             ))}
           </div>
         </div>
@@ -239,19 +430,73 @@ export default function NewProject() {
   }
 
   /* ──────────────────────────────────────────────────────────────────────────
-     STEP: interview (guided questions)
+     PASSO: found — o que a IA encontrou, antes de tocar em nada
+  ────────────────────────────────────────────────────────────────────────── */
+  if (step === 'found' && found) {
+    return (
+      <NpShell>
+        <Toast {...toast} />
+        <Navbar showLinks={false} mobileLeft={<BackButton onClick={() => setStep('import')} />} />
+        <div className="np-center">
+          <div className="np-wrap">
+            <StepBar current={3} total={3} label="O que encontrámos" />
+            <h1 className="np-headline">Encontrámos isto no teu trabalho.</h1>
+            {found.summary && <p className="np-sub">{found.summary}</p>}
+
+            <div className="np-found-list">
+              {REVIEW_FIELDS.map(f => {
+                const value = (form[f.key] ?? '').trim()
+                const conf = found.confidence?.[f.key]
+                return (
+                  <div key={f.key} className={`np-found-row${value ? '' : ' is-empty'}`}>
+                    <span className="np-found-check">
+                      {value ? <Check size={13} /> : <span className="np-found-dot" />}
+                    </span>
+                    <span className="np-found-body">
+                      <span className="np-found-label">
+                        {f.label}
+                        {value && conf === 'media' && <span className="np-found-tag">a confirmar</span>}
+                      </span>
+                      <span className="np-found-value">
+                        {value || 'Não estava no ficheiro. Preenches a seguir.'}
+                      </span>
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+
+            {found.skipped?.length > 0 && (
+              <p className="np-found-note">
+                Não conseguimos ler: {found.skipped.map(s => s.name).join(', ')}.
+              </p>
+            )}
+
+            <button className="np-btn-primary" onClick={() => setStep('review')}>
+              Rever e ajustar <ArrowRight size={15} />
+            </button>
+            <button className="np-btn-quiet" onClick={() => { setFound(null); setStep('import') }}>
+              Enviar outro ficheiro
+            </button>
+          </div>
+        </div>
+      </NpShell>
+    )
+  }
+
+  /* ──────────────────────────────────────────────────────────────────────────
+     PASSO: interview
   ────────────────────────────────────────────────────────────────────────── */
   if (step === 'interview' && interviewData) {
     return (
       <NpShell>
         <Toast {...toast} />
-        <Navbar showLinks={false} />
-        <div style={S.center}>
-          <div style={S.reviewWrap}>
-            <div style={{ marginBottom: 24 }}>
-              <h2 style={S.reviewHead}>Vamos construir o teu projeto juntos.</h2>
-              <p style={S.reviewSub}>Responde a cada pergunta. A IA usa as tuas respostas para criar o projeto.</p>
-            </div>
+        <Navbar showLinks={false} mobileLeft={<BackButton onClick={() => setStep('describe')} />} />
+        <div className="np-center">
+          <div className="np-wrap">
+            <StepBar current={2} total={3} label="Perguntas" />
+            <h2 className="np-headline np-headline--sm">Vamos construir o teu projeto juntos.</h2>
+            <p className="np-sub">Responde a cada pergunta. A IA usa as tuas respostas para criar o projeto.</p>
             <InterviewPanel
               data={interviewData}
               onComplete={answers => {
@@ -267,68 +512,140 @@ export default function NewProject() {
   }
 
   /* ──────────────────────────────────────────────────────────────────────────
-     STEP: review
+     PASSO: review
   ────────────────────────────────────────────────────────────────────────── */
   return (
     <NpShell>
       <Toast {...toast} />
-      <Navbar showLinks={false} />
-      <div style={{ maxWidth: 640, margin: '0 auto', padding: '40px 20px 80px' }}>
-
-        <div style={{ marginBottom: 28 }}>
-          <h2 style={S.reviewHead}>Parece bem?</h2>
-          <p style={S.reviewSub}>
-            A IA estruturou o teu projeto. Clica em qualquer campo para editar antes de criar.
+      <Navbar showLinks={false} mobileLeft={<BackButton onClick={() => setStep(found ? 'found' : 'describe')} />} />
+      <div className="np-center np-center--review">
+        <div className="np-wrap np-wrap--review">
+          <StepBar current={3} total={3} label="Rever" />
+          <h2 className="np-headline np-headline--sm">Parece bem?</h2>
+          <p className="np-sub">
+            {filledCount} de {REVIEW_FIELDS.length} campos preenchidos. Toca em qualquer um para editar antes de criar.
           </p>
-        </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {REVIEW_FIELDS.map(field => (
-            <ReviewField
-              key={field.key}
-              field={field}
-              value={form[field.key] ?? ''}
-              isEditing={editingField === field.key}
-              editValue={editValue}
-              onEdit={() => startEdit(field)}
-              onEditValueChange={setEditValue}
-              onCommit={commitEdit}
-              isSkipped={skippedFields.has(field.key)}
-              onToggleSkip={() => toggleSkip(field.key)}
-            />
-          ))}
-        </div>
+          <div className="np-fields">
+            {REVIEW_FIELDS.map(field => (
+              <ReviewField
+                key={field.key}
+                field={field}
+                value={form[field.key] ?? ''}
+                isEditing={editingField === field.key}
+                editValue={editValue}
+                onEdit={() => startEdit(field)}
+                onEditValueChange={setEditValue}
+                onCommit={commitEdit}
+                isSkipped={skippedFields.has(field.key)}
+                onToggleSkip={() => toggleSkip(field.key)}
+              />
+            ))}
+          </div>
 
-        {error && <p style={S.err}>{error}</p>}
-
-        <div style={{ marginTop: 32, display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={!canSubmit}
-            style={btnStyle(canSubmit)}
-          >
-            Criar projeto <ArrowRight size={15} />
-          </button>
-          <button
-            type="button"
-            onClick={() => setStep('describe')}
-            style={secondaryBtnStyle(true)}
-          >
-            ← Voltar e descrever novamente
-          </button>
+          {error && <p className="np-err"><AlertTriangle size={13} /> {error}</p>}
         </div>
+      </div>
+
+      {/* Ação principal fixa ao fundo: numa lista longa de campos, o botão de
+          criar não pode estar a 3 scrolls de distância no telemóvel. */}
+      <div className="np-sticky-action">
+        <button className="np-btn-primary" onClick={handleSubmit} disabled={!canSubmit}>
+          Criar projeto <ArrowRight size={15} />
+        </button>
+        {!canSubmit && (
+          <span className="np-sticky-hint">Faltam campos obrigatórios (marcados com *)</span>
+        )}
       </div>
     </NpShell>
   )
 }
 
-/* ── Sub-components ──────────────────────────────────────────────────────── */
+/* ── Sub-componentes ─────────────────────────────────────────────────────── */
 
 function NpShell({ children }) {
+  return <div className="np-shell">{children}</div>
+}
+
+function BackButton({ onClick }) {
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--color-bg)', color: 'var(--color-text)', display: 'flex', flexDirection: 'column' }}>
-      {children}
+    <button className="np-back" onClick={onClick} aria-label="Voltar">
+      <ArrowLeft size={19} />
+    </button>
+  )
+}
+
+function StepBar({ current, total, label }) {
+  return (
+    <div className="np-stepbar">
+      <div className="np-stepbar-dots">
+        {Array.from({ length: total }, (_, i) => (
+          <span key={i} className={`np-stepdot${i < current ? ' is-done' : ''}`} />
+        ))}
+      </div>
+      <span className="np-stepbar-label">{label}</span>
+    </div>
+  )
+}
+
+function TypeRow({ value, onChange }) {
+  return (
+    <div className="np-types">
+      {PROJECT_TYPES.map(t => (
+        <button
+          key={t.id}
+          type="button"
+          className={`np-type${value === t.id ? ' is-active' : ''}`}
+          onClick={() => onChange(t.id)}
+        >{t.label}</button>
+      ))}
+    </div>
+  )
+}
+
+function FilePicker({ files, onAdd, onRemove }) {
+  const inputRef = useRef(null)
+  const [dragging, setDragging] = useState(false)
+
+  return (
+    <div>
+      <div
+        className={`np-drop${dragging ? ' is-dragging' : ''}`}
+        onClick={() => inputRef.current?.click()}
+        onDragOver={e => { e.preventDefault(); setDragging(true) }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={e => { e.preventDefault(); setDragging(false); onAdd(e.dataTransfer.files) }}
+        role="button"
+        tabIndex={0}
+        onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') inputRef.current?.click() }}
+      >
+        <span className="np-drop-icon"><Upload size={22} /></span>
+        <span className="np-drop-title">Escolher ficheiros</span>
+        <span className="np-drop-sub">PDF, Word, PowerPoint ou imagens · até {MAX_FILES} ficheiros</span>
+        <input
+          ref={inputRef}
+          type="file"
+          multiple
+          accept={ACCEPT}
+          hidden
+          onChange={e => { onAdd(e.target.files); e.target.value = '' }}
+        />
+      </div>
+
+      {files.length > 0 && (
+        <ul className="np-files">
+          {files.map((f, i) => (
+            <li key={`${f.name}-${i}`} className="np-file">
+              <FileText size={15} className="np-file-icon" />
+              <span className="np-file-name">{f.name}</span>
+              <span className="np-file-size">{prettySize(f.size)}</span>
+              <button className="np-file-remove" onClick={() => onRemove(i)} aria-label={`Remover ${f.name}`}>
+                <X size={14} />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   )
 }
@@ -337,41 +654,13 @@ function DescribeTextarea({ value, onChange, onSubmit }) {
   return (
     <textarea
       autoFocus
+      className="np-describe"
       value={value}
       onChange={e => onChange(e.target.value)}
       placeholder="Ex: Desenvolvi uma app mobile em Flutter para ajudar estudantes do secundário a gerir as suas tarefas e receber lembretes personalizados."
       rows={5}
-      style={{
-        width: '100%', boxSizing: 'border-box',
-        background: 'var(--color-surface)',
-        border: '1.5px solid var(--color-border)',
-        borderRadius: 14, color: 'var(--color-text)',
-        fontSize: 15, padding: '16px 18px',
-        outline: 'none', fontFamily: 'inherit',
-        resize: 'none', lineHeight: 1.65,
-        transition: 'border-color 0.2s, box-shadow 0.2s',
-      }}
-      onFocus={e => { e.currentTarget.style.borderColor = 'var(--color-primary)'; e.currentTarget.style.boxShadow = '0 0 0 3px var(--color-primary-subtle)' }}
-      onBlur={e => { e.currentTarget.style.borderColor = 'var(--color-border)'; e.currentTarget.style.boxShadow = 'none' }}
       onKeyDown={e => { if (e.key === 'Enter' && e.metaKey && value.trim()) { e.preventDefault(); onSubmit() } }}
     />
-  )
-}
-
-function TypeChip({ label, active, onClick }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      style={{
-        padding: '6px 14px', borderRadius: 20,
-        border: `1.5px solid ${active ? 'var(--color-primary)' : 'var(--color-border)'}`,
-        background: active ? 'var(--color-primary-subtle)' : 'transparent',
-        color: active ? 'var(--color-primary)' : 'var(--color-text-secondary)',
-        fontSize: 13, fontWeight: active ? 700 : 500,
-        cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s',
-      }}
-    >{label}</button>
   )
 }
 
@@ -393,28 +682,13 @@ function ReviewField({ field, value, isEditing, editValue, onEdit, onEditValueCh
   }
 
   return (
-    <div
-      onClick={handleContainerClick}
-      style={{
-        padding: '16px 18px',
-        background: 'var(--color-surface)',
-        border: `1.5px solid ${isEditing ? 'var(--color-primary)' : 'var(--color-border)'}`,
-        borderRadius: 12,
-        cursor: isEditing ? 'default' : 'pointer',
-        transition: 'border-color 0.15s',
-        boxShadow: isEditing ? '0 0 0 3px var(--color-primary-subtle)' : 'none',
-      }}
-      onMouseEnter={e => { if (!isEditing) e.currentTarget.style.borderColor = 'var(--color-primary)' }}
-      onMouseLeave={e => { if (!isEditing) e.currentTarget.style.borderColor = 'var(--color-border)' }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-        <span style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.8, color: 'var(--color-text-tertiary)' }}>
+    <div className={`np-field${isEditing ? ' is-editing' : ''}`} onClick={handleContainerClick}>
+      <div className="np-field-head">
+        <span className="np-field-label">
           {field.label}
-          {field.required && <span style={{ color: 'var(--color-error)', marginLeft: 3 }}>*</span>}
+          {field.required && <span className="np-field-req">*</span>}
         </span>
-        {!isEditing && !isSkipped && (
-          <Pencil size={12} color="var(--color-text-tertiary)" style={{ flexShrink: 0 }} />
-        )}
+        {!isEditing && !isSkipped && <Pencil size={12} className="np-field-pencil" />}
       </div>
 
       {isEditing ? (
@@ -422,47 +696,43 @@ function ReviewField({ field, value, isEditing, editValue, onEdit, onEditValueCh
           {field.multiline ? (
             <textarea
               ref={ref}
+              className="np-field-input"
               value={editValue}
               onChange={e => onEditValueChange(e.target.value)}
               onKeyDown={e => { if (e.key === 'Escape') onCommit() }}
               onBlur={onCommit}
               rows={4}
-              style={{ width: '100%', boxSizing: 'border-box', background: 'transparent', border: 'none', outline: 'none', color: 'var(--color-text)', fontSize: 14, fontFamily: 'inherit', lineHeight: 1.65, resize: 'vertical', padding: 0 }}
             />
           ) : (
             <input
               ref={ref}
               type="text"
+              className="np-field-input"
               value={editValue}
               onChange={e => onEditValueChange(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter' || e.key === 'Escape') { e.preventDefault(); onCommit() } }}
               onBlur={onCommit}
-              style={{ width: '100%', boxSizing: 'border-box', background: 'transparent', border: 'none', outline: 'none', color: 'var(--color-text)', fontSize: 14, fontFamily: 'inherit', padding: 0 }}
             />
           )}
           {field.minLen && editValue.trim().length < field.minLen && (
-            <p style={{ margin: '6px 0 0', fontSize: 11, color: 'var(--color-text-tertiary)' }}>
-              Mínimo {field.minLen} caracteres · {editValue.trim().length}/{field.minLen}
-            </p>
+            <p className="np-field-hint">Mínimo {field.minLen} caracteres · {editValue.trim().length}/{field.minLen}</p>
           )}
           {field.skippable && (
             <button
               type="button"
+              className="np-field-skip"
               onMouseDown={e => e.preventDefault()}
               onClick={e => { e.stopPropagation(); onCommit(); onToggleSkip() }}
-              style={{ marginTop: 10, padding: '4px 10px', borderRadius: 8, border: '1px solid var(--color-border)', background: 'transparent', color: 'var(--color-text-tertiary)', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}
             >
               Não se aplica
             </button>
           )}
         </>
       ) : isSkipped ? (
-        <p style={{ margin: 0, fontSize: 14, lineHeight: 1.65, color: 'var(--color-text-tertiary)', fontStyle: 'italic' }}>
-          Não se aplica · <span style={{ textDecoration: 'underline' }}>alterar</span>
-        </p>
+        <p className="np-field-value is-skipped">Não se aplica · <span>alterar</span></p>
       ) : (
-        <p style={{ margin: 0, fontSize: 14, lineHeight: 1.65, color: value ? 'var(--color-text)' : 'var(--color-text-tertiary)', whiteSpace: 'pre-wrap' }}>
-          {value || 'Clica para adicionar…'}
+        <p className={`np-field-value${value ? '' : ' is-placeholder'}`}>
+          {value || 'Toca para adicionar…'}
         </p>
       )}
     </div>
@@ -479,11 +749,8 @@ function InterviewPanel({ data, onComplete, onBack }) {
     const next = { ...answers, [q.field]: val }
     setAnswers(next)
     setCurrentAnswer('')
-    if (currentQ + 1 >= data.questions.length) {
-      onComplete(next)
-    } else {
-      setCurrentQ(i => i + 1)
-    }
+    if (currentQ + 1 >= data.questions.length) onComplete(next)
+    else setCurrentQ(i => i + 1)
   }
 
   const q = data.questions[currentQ]
@@ -492,107 +759,47 @@ function InterviewPanel({ data, onComplete, onBack }) {
   const isLast = currentQ + 1 >= total
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <div className="np-interview">
       {currentQ === 0 && data.understanding && (
-        <div style={{ padding: '12px 14px', background: 'var(--color-primary-subtle)', border: '1px solid rgba(27,120,247,0.18)', borderLeft: '3px solid var(--color-primary)', borderRadius: 10, fontSize: 13, lineHeight: 1.65, color: 'var(--color-text)' }}>
-          {data.understanding}
-        </div>
+        <div className="np-interview-intro">{data.understanding}</div>
       )}
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-text-tertiary)', letterSpacing: 0.5, whiteSpace: 'nowrap' }}>
-          {currentQ + 1}/{total}
-        </span>
-        <div style={{ flex: 1, height: 3, background: 'var(--color-border)', borderRadius: 2 }}>
-          <div style={{ height: '100%', width: `${pct}%`, background: 'var(--color-primary)', borderRadius: 2, transition: 'width 0.35s cubic-bezier(0.4,0,0.2,1)' }} />
+      <div className="np-interview-progress">
+        <span className="np-interview-count">{currentQ + 1}/{total}</span>
+        <div className="np-interview-track">
+          <div className="np-interview-fill" style={{ width: `${pct}%` }} />
         </div>
       </div>
 
       <div>
-        <p style={{ margin: '0 0 10px', fontSize: 15, fontWeight: 600, color: 'var(--color-text)', lineHeight: 1.5 }}>{q.question}</p>
+        <p className="np-interview-q">{q.question}</p>
         {q.suggestions?.length > 0 && (
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
+          <div className="np-interview-chips">
             {q.suggestions.map((s, i) => (
-              <button key={i} type="button"
-                onClick={() => setCurrentAnswer(a => a ? `${a}, ${s}` : s)}
-                style={{ padding: '4px 10px', borderRadius: 20, border: '1px solid var(--color-border)', background: 'var(--color-surface)', color: 'var(--color-text-secondary)', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}
-              >{s}</button>
+              <button key={i} type="button" className="np-interview-chip"
+                onClick={() => setCurrentAnswer(a => a ? `${a}, ${s}` : s)}>{s}</button>
             ))}
           </div>
         )}
         <textarea
           autoFocus
+          className="np-interview-input"
           value={currentAnswer}
           onChange={e => setCurrentAnswer(e.target.value)}
           placeholder={q.placeholder || ''}
           rows={3}
-          style={{ width: '100%', boxSizing: 'border-box', background: 'var(--color-surface)', border: '1.5px solid var(--color-border)', borderRadius: 10, color: 'var(--color-text)', fontSize: 14, padding: '12px 14px', outline: 'none', fontFamily: 'inherit', resize: 'vertical', lineHeight: 1.6, transition: 'border-color 0.15s' }}
-          onFocus={e => { e.currentTarget.style.borderColor = 'var(--color-primary)'; e.currentTarget.style.boxShadow = '0 0 0 3px var(--color-primary-subtle)' }}
-          onBlur={e => { e.currentTarget.style.borderColor = 'var(--color-border)'; e.currentTarget.style.boxShadow = 'none' }}
           onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey && currentAnswer.trim()) { e.preventDefault(); advance() } }}
         />
       </div>
 
-      <div style={{ display: 'flex', gap: 8 }}>
-        <button type="button" onClick={() => advance()} disabled={!currentAnswer.trim()}
-          style={btnStyle(!!currentAnswer.trim())}
-        >
+      <div className="np-interview-actions">
+        <button type="button" className="np-btn-primary" onClick={() => advance()} disabled={!currentAnswer.trim()}>
           {isLast ? <><Sparkles size={14} /> Concluir</> : <>Próxima <ChevronRight size={14} /></>}
         </button>
-        <button type="button" onClick={() => advance('')}
-          style={{ padding: '11px 16px', background: 'transparent', border: '1px solid var(--color-border)', borderRadius: 10, color: 'var(--color-text-tertiary)', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}
-        >Saltar</button>
+        <button type="button" className="np-interview-skip" onClick={() => advance('')}>Saltar</button>
       </div>
 
-      <button type="button" onClick={onBack}
-        style={{ background: 'none', border: 'none', color: 'var(--color-text-tertiary)', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', padding: '4px 0', textAlign: 'left' }}
-      >← Voltar</button>
+      <button type="button" className="np-btn-quiet" onClick={onBack}>← Voltar</button>
     </div>
   )
-}
-
-/* ── Styles ──────────────────────────────────────────────────────────────── */
-
-const S = {
-  center: {
-    flex: 1, display: 'flex', flexDirection: 'column',
-    alignItems: 'center', justifyContent: 'center',
-    padding: '40px 20px',
-  },
-  describeWrap: { width: '100%', maxWidth: 560 },
-  reviewWrap: { width: '100%', maxWidth: 560 },
-  eyebrowRow: { display: 'flex', alignItems: 'center', gap: 7, marginBottom: 24 },
-  eyebrow: { fontSize: 12, fontWeight: 700, color: 'var(--color-primary)', letterSpacing: 0.8, textTransform: 'uppercase' },
-  headline: { fontSize: 'clamp(26px, 5vw, 36px)', fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 10px', letterSpacing: '-0.5px', lineHeight: 1.25 },
-  sub: { color: 'var(--color-text-secondary)', fontSize: 15, margin: '0 0 24px', lineHeight: 1.6 },
-  typeRow: { display: 'flex', gap: 6, flexWrap: 'wrap', margin: '14px 0 28px' },
-  err: { color: 'var(--color-error)', fontSize: 13, margin: '0 0 14px' },
-  loadingCenter: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 18 },
-loadingTitle: { fontSize: 17, fontWeight: 600, margin: 0, color: 'var(--color-text)' },
-  loadingSub: { fontSize: 13, color: 'var(--color-text-secondary)', margin: 0 },
-  reviewHead: { fontSize: 22, fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 6px', letterSpacing: '-0.3px' },
-  reviewSub: { color: 'var(--color-text-secondary)', fontSize: 14, margin: 0, lineHeight: 1.6 },
-}
-
-function btnStyle(active) {
-  return {
-    width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-    background: active ? 'var(--color-primary)' : 'var(--color-border)',
-    color: '#fff', border: 'none', borderRadius: 12, padding: '14px 0',
-    fontSize: 15, fontWeight: 700,
-    cursor: active ? 'pointer' : 'not-allowed',
-    fontFamily: 'inherit', transition: 'background 0.2s, box-shadow 0.2s',
-    boxShadow: active ? '0 2px 12px rgba(27,120,247,0.25)' : 'none',
-    marginBottom: 0,
-  }
-}
-
-function secondaryBtnStyle(active) {
-  return {
-    width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-    background: 'transparent', border: 'none',
-    color: active ? 'var(--color-text-secondary)' : 'var(--color-text-tertiary)',
-    fontSize: 13, cursor: active ? 'pointer' : 'not-allowed',
-    fontFamily: 'inherit', padding: '10px 0', marginTop: 4,
-  }
 }

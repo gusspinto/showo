@@ -418,6 +418,11 @@ export default function Mensagens() {
     <>
     <div className="min-h-screen bg-page">
       <Navbar
+        /* Dentro de uma conversa a barra sai: o ecrã passa a ser a conversa,
+           com a caixa de escrita colada ao fundo. É o padrão que toda a gente
+           já conhece de qualquer app de mensagens, e evita ter duas barras
+           inferiores a disputar o mesmo espaço. */
+        hideTabBar={mobileView === 'thread'}
         mobileLeft={mobileView === 'thread' ? (
           <button onClick={() => { setMobileView('list'); setActiveId(null) }}
             className="flex items-center gap-1" style={{ background: 'none', border: 'none', color: 'var(--color-primary)', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13, fontWeight: 600, padding: '6px 4px' }}>

@@ -3310,5 +3310,50 @@
   .sdb-projrow-actions a.sdb-icon-btn,
   .sdb-projrow-actions button:not(.sdb-icon-btn--pin):not(.sdb-icon-btn--danger):not(.sdb-projrow-danger):not(.sdb-linkbtn) {
     display: none;
-  }
+  }}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   CONTEXTO (Pessoal ↔ Escola)
+   O switcher fica logo abaixo do cabeçalho do dia: é a primeira coisa que
+   responde a "onde é que eu estou".
+   ══════════════════════════════════════════════════════════════════════════ */
+.sdb-context {
+  display: flex; flex-direction: column; gap: 10px;
+  margin-bottom: 18px;
+}
+
+/* Espreitadela para o outro contexto — uma linha, não um painel. */
+.sdb-school-peek {
+  display: flex; align-items: center; gap: 9px;
+  width: 100%; padding: 11px 14px;
+  background: var(--color-primary-subtle);
+  border: 1px solid var(--color-primary-muted);
+  border-radius: var(--radius-md);
+  color: var(--color-primary);
+  font-family: inherit; font-size: var(--text-base); font-weight: 600;
+  cursor: pointer; text-align: left;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s;
+}
+.sdb-school-peek span { flex: 1; min-width: 0; }
+.sdb-school-peek:active { background: var(--color-primary-muted); }
+
+@media (max-width: 600px) {
+  .sdb-context { gap: 8px; margin-bottom: 14px; }
+  .sdb-school-peek { font-size: var(--text-sm); padding: 10px 12px; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Ordem no telemóvel: primeiro o teu trabalho, depois o dos outros
+   O "Projeto do mês" é conteúdo da comunidade e estava por cima do projeto
+   em foco do próprio aluno — a primeira coisa que ele via ao abrir a app era
+   o trabalho de outra pessoa. Continua na dashboard, mas a seguir ao que é
+   dele. No desktop não é preciso: cabem os dois no primeiro ecrã.
+   ══════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 600px) {
+  .sdb-page { display: flex; flex-direction: column; }
+  .sdb-hero    { order: 1; }
+  .sdb-context { order: 2; }
+  .sdb-grid    { order: 3; }
+  .sdb-pom     { order: 4; margin-top: var(--sp-6); }
 }
