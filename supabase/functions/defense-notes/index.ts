@@ -1,4 +1,5 @@
 import Anthropic from 'npm:@anthropic-ai/sdk@0.36.3'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { checkRateLimit, getAuthUser, getCorsHeaders, checkPlanLimit } from '../_shared/rateLimit.ts'
 
 Deno.serve(async (req) => {
@@ -32,6 +33,40 @@ Deno.serve(async (req) => {
     const { project } = await req.json()
     const client = new Anthropic({ apiKey: Deno.env.get('ANTHROPIC_API_KEY') ?? '' })
 
+    // Fetch diary entries for richer context
+    let diaryBlock = ''
+    if (project?.id) {
+      const sb = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
+      const { data: entries } = await sb
+        .from('project_journal_entries')
+        .select('kind, content, created_at')
+        .eq('project_id', project.id)
+        .order('created_at', { ascending: false })
+        .limit(30)
+      if (entries?.length) {
+        const lines = entries.reverse().map((e: { kind: string; content: string; created_at: string }) =>
+          `[${e.created_at?.slice(0, 10)}] (${e.kind}) ${e.content.slice(0, 500)}`
+        ).join('\n')
+        diaryBlock = `\n\nDIÁRIO DO PROJETO (entradas recentes do estudante, por ordem cronológica):\n━━━━━━━━━━━━━━━━━\n${lines}\n━━━━━━━━━━━━━━━━━\nUsa o diário para entender a evolução real do projeto: decisões tomadas, dificuldades encontradas, progresso feito. Incorpora esta informação nas notas de orador e nas respostas às perguntas do júri.`
+      }
+    }
+
+    // Fetch teacher feedback
+    let feedbackBlock = ''
+    if (project?.id) {
+      const sb2 = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
+      const { data: fb } = await sb2
+        .from('teacher_feedback')
+        .select('field_key, comment, status')
+        .eq('project_id', project.id)
+      if (fb?.length) {
+        const lines = fb.map((f: { field_key: string; comment: string; status: string }) =>
+          `- [${f.field_key}] ${f.status === 'resolved' ? '(resolvido)' : '(pendente)'}: ${(f.comment || '').slice(0, 300)}`
+        ).join('\n')
+        feedbackBlock = `\n\nFEEDBACK DO PROFESSOR:\n━━━━━━━━━━━━━━━━━\n${lines}\n━━━━━━━━━━━━━━━━━\nO professor já identificou pontos fracos. Prepara o estudante para defender ou reconhecer estes pontos perante o júri.`
+      }
+    }
+
     const f = (v: string | undefined | null) => (v?.trim() || '').slice(0, 2000)
 
     const prompt = `És um coach de apresentações experiente que prepara estudantes portugueses para defesas de PAP e projetos escolares perante júri. Conheces bem o contexto: júris de cursos profissionais e universitários em Portugal, professores que avaliam pela lógica do projeto, pelos fundamentos técnicos e pela capacidade de o estudante defender as suas escolhas.
@@ -48,7 +83,7 @@ Público-alvo: ${f(project.target_audience) || '(não preenchido)'}
 Desafios: ${f(project.challenges) || '(não preenchido)'}
 Resultados: ${f(project.results) || '(não preenchido)'}
 Aprendizagens: ${f(project.learnings) || '(não preenchido)'}
-━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━${diaryBlock}${feedbackBlock}
 
 REGRAS CRÍTICAS — lê antes de gerar qualquer conteúdo:
 

@@ -66,6 +66,27 @@ Deno.serve(async (req) => {
   try {
     const { project, messages = [], message } = await req.json()
 
+    // Use diary entries sent from frontend (avoids a DB query per message)
+    let diaryBlock = ''
+    const entries = Array.isArray(project?.journal) ? project.journal.filter((e: { content?: string }) => e.content) : []
+    if (entries.length) {
+      const sorted = entries.sort((a: { created_at: string }, b: { created_at: string }) => a.created_at < b.created_at ? -1 : 1).slice(-30)
+      const lines = sorted.map((e: { kind: string; content: string; created_at: string }) =>
+        `[${e.created_at?.slice(0, 10)}] (${e.kind}) ${(e.content || '').slice(0, 500)}`
+      ).join('\n')
+      diaryBlock = `\n\nDIÁRIO DO PROJETO (entradas recentes, por ordem cronológica):\n━━━━━━━━━━━━━━━━━━━━\n${lines}\n━━━━━━━━━━━━━━━━━━━━\nUsa o diário para entender a evolução real do projeto: decisões tomadas, dificuldades encontradas, progresso feito. Isto dá-te contexto que os campos acima não captam.`
+    }
+
+    // Use teacher feedback sent from frontend
+    let feedbackBlock = ''
+    const fb = Array.isArray(project?.teacher_feedback) ? project.teacher_feedback.filter((f: { comment?: string }) => f.comment) : []
+    if (fb.length) {
+      const lines = fb.map((f: { field_key: string; comment: string; status: string }) =>
+        `- [${f.field_key}] ${f.status === 'resolved' ? '(resolvido)' : '(pendente)'}: ${(f.comment || '').slice(0, 300)}`
+      ).join('\n')
+      feedbackBlock = `\n\nFEEDBACK DO PROFESSOR:\n━━━━━━━━━━━━━━━━━━━━\n${lines}\n━━━━━━━━━━━━━━━━━━━━\nO professor já deu feedback sobre secções específicas. Ajuda o estudante a resolver os pontos pendentes. Não repitas o mesmo feedback que o professor já deu.`
+    }
+
     if (!message?.trim()) {
       return new Response(JSON.stringify({ error: 'Mensagem vazia.' }), {
         status: 400,
@@ -82,7 +103,7 @@ Deno.serve(async (req) => {
     const response = await client.messages.create({
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 900,
-      system: SYSTEM(project ?? {}),
+      system: SYSTEM(project ?? {}) + diaryBlock + feedbackBlock,
       messages: [...history, { role: 'user', content: message.trim() }],
     })
 

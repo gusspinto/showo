@@ -1,4 +1,5 @@
 import Anthropic from 'npm:@anthropic-ai/sdk@0.36.3'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { checkRateLimit, getAuthUser, getCorsHeaders, checkPlanLimit } from '../_shared/rateLimit.ts'
 
 Deno.serve(async (req) => {
@@ -34,6 +35,40 @@ Deno.serve(async (req) => {
     const { data: project } = await req.json()
     const client = new Anthropic({ apiKey: Deno.env.get('ANTHROPIC_API_KEY') ?? '' })
 
+    // Fetch diary entries for richer context
+    let diaryBlock = ''
+    if (project?.id) {
+      const sb = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
+      const { data: entries } = await sb
+        .from('project_journal_entries')
+        .select('kind, content, created_at')
+        .eq('project_id', project.id)
+        .order('created_at', { ascending: false })
+        .limit(30)
+      if (entries?.length) {
+        const lines = entries.reverse().map((e: { kind: string; content: string; created_at: string }) =>
+          `[${e.created_at?.slice(0, 10)}] (${e.kind}) ${e.content.slice(0, 500)}`
+        ).join('\n')
+        diaryBlock = `\n\nDIÁRIO DO PROJETO (entradas recentes do estudante, por ordem cronológica):\n━━━━━━━━━━━━━━━━━━━━━━\n${lines}\n━━━━━━━━━━━━━━━━━━━━━━\nUsa o diário para contexto adicional na avaliação: o estudante pode ter feito trabalho real que ainda não está refletido nos campos acima. Considera o diário ao avaliar a profundidade do projeto.`
+      }
+    }
+
+    // Fetch teacher feedback
+    let feedbackBlock = ''
+    if (project?.id) {
+      const sb2 = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
+      const { data: fb } = await sb2
+        .from('teacher_feedback')
+        .select('field_key, comment, status')
+        .eq('project_id', project.id)
+      if (fb?.length) {
+        const lines = fb.map((f: { field_key: string; comment: string; status: string }) =>
+          `- [${f.field_key}] ${f.status === 'resolved' ? '(resolvido)' : '(pendente)'}: ${(f.comment || '').slice(0, 300)}`
+        ).join('\n')
+        feedbackBlock = `\n\nFEEDBACK DO PROFESSOR:\n━━━━━━━━━━━━━━━━━━━━━━\n${lines}\n━━━━━━━━━━━━━━━━━━━━━━\nO professor já deu feedback. Tem isto em conta na avaliação: secções com feedback pendente devem ser avaliadas considerando o que o professor apontou.`
+      }
+    }
+
     const f = (v: string | undefined | null) => (v?.trim() || '').slice(0, 3000)
     const hasContent = (v: string | undefined | null) => (v?.trim()?.length ?? 0) > 10
 
@@ -66,7 +101,7 @@ DESAFIOS: ${f(project.challenges) || '(vazio)'}
 RESULTADOS: ${f(project.results) || '(vazio)'}
 
 APRENDIZAGENS: ${f(project.learnings) || '(vazio)'}
-━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━${diaryBlock}${feedbackBlock}
 
 CRITÉRIOS DE AVALIAÇÃO:
 - "forte": conteúdo específico, claro, com exemplos ou números concretos. Impressiona um júri.
