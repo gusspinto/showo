@@ -217,6 +217,22 @@ export default function Register() {
     if (password.length < 6) { setError('A palavra-passe tem de ter pelo menos 6 caracteres.'); return }
     if (!phone.trim()) { setError('Introduz o teu número de telemóvel.'); return }
 
+    // Validate email domain against class's school before creating account
+    if (needsClassCode) {
+      setLoading(true)
+      const { data: validation } = await supabase.rpc('validate_class_email', { p_code: classCode.trim(), p_email: email.trim() })
+      if (!validation?.valid) {
+        setLoading(false)
+        if (validation?.reason === 'class_not_found') {
+          setError('Código de turma inválido. Verifica com o teu professor.')
+        } else if (validation?.reason === 'domain_mismatch') {
+          setError(`O teu email tem de ser @${validation.expected_domain} para entrar na turma de ${validation.school_name}.`)
+        } else {
+          setError('Código de turma inválido.')
+        }
+        return
+      }
+    }
 
     setLoading(true)
     const { data, error: err } = await supabase.auth.signUp({
