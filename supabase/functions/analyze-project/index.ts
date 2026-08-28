@@ -69,6 +69,18 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Fetch defense AI data for cross-context
+    let defenseBlock = ''
+    if (project?.id) {
+      const sb3 = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
+      const { data: proj } = await sb3.from('projects').select('defense_ai_data').eq('id', project.id).single()
+      if (proj?.defense_ai_data?.tip) {
+        const d = proj.defense_ai_data
+        const qs = (d.jury_questions || []).map((q: { q: string }) => q.q).filter(Boolean).join('; ')
+        defenseBlock = `\n\nDEFESA IA (gerada anteriormente):\n━━━━━━━━━━━━━━━━━━━━━━\nConselho: ${d.tip}\nPerguntas do júri previstas: ${qs.slice(0, 800)}\n━━━━━━━━━━━━━━━━━━━━━━\nConsidera o que a preparação da defesa identificou ao avaliar o projeto.`
+      }
+    }
+
     const f = (v: string | undefined | null) => (v?.trim() || '').slice(0, 3000)
     const hasContent = (v: string | undefined | null) => (v?.trim()?.length ?? 0) > 10
 
@@ -101,7 +113,7 @@ DESAFIOS: ${f(project.challenges) || '(vazio)'}
 RESULTADOS: ${f(project.results) || '(vazio)'}
 
 APRENDIZAGENS: ${f(project.learnings) || '(vazio)'}
-━━━━━━━━━━━━━━━━━━━━━━${diaryBlock}${feedbackBlock}
+━━━━━━━━━━━━━━━━━━━━━━${diaryBlock}${feedbackBlock}${defenseBlock}
 
 CRITÉRIOS DE AVALIAÇÃO:
 - "forte": conteúdo específico, claro, com exemplos ou números concretos. Impressiona um júri.

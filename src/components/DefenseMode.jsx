@@ -1277,7 +1277,7 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
   const canSeeFullPrep = isOwner || isCollaborator
 
   const [tab, setTab]             = useState('notes')   // 'notes' | 'jury' | 'guide' | 'grupo'
-  const [aiData, setAiData]       = useState(null)
+  const [aiData, setAiData]       = useState(project.defense_ai_data || null)
   const [loadingAI, setLoadingAI] = useState(false)
   const [aiError, setAiError]     = useState(false)
   const [guideMode, setGuideMode] = useState(false)
@@ -1320,6 +1320,7 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
         if (!hasNotes && !hasQuestions) { setAiError(true); return }
         consumeAI('defense')
         setAiData(data)
+        if (project?.id) supabase.from('projects').update({ defense_ai_data: data }).eq('id', project.id)
       })
       .catch(() => setAiError(true))
       .finally(() => setLoadingAI(false))

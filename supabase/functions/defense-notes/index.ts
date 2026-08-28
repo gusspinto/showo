@@ -67,6 +67,18 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Fetch previous AI analysis for cross-context
+    let analysisBlock = ''
+    if (project?.id) {
+      const sb3 = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
+      const { data: proj } = await sb3.from('projects').select('ai_feedback').eq('id', project.id).single()
+      if (proj?.ai_feedback?.overall) {
+        const a = proj.ai_feedback
+        const weakSections = Object.entries(a.sections || {}).filter(([, s]: [string, any]) => s.rating === 'fraco').map(([k]) => k)
+        analysisBlock = `\n\nANÁLISE IA (gerada anteriormente):\n━━━━━━━━━━━━━━━━━\nResumo: ${(a.overall || '').slice(0, 400)}\nSecções fracas: ${weakSections.join(', ') || 'nenhuma'}\n━━━━━━━━━━━━━━━━━\nPrepara o estudante especialmente para defender as secções fracas perante o júri.`
+      }
+    }
+
     const f = (v: string | undefined | null) => (v?.trim() || '').slice(0, 2000)
 
     const prompt = `És um coach de apresentações experiente que prepara estudantes portugueses para defesas de PAP e projetos escolares perante júri. Conheces bem o contexto: júris de cursos profissionais e universitários em Portugal, professores que avaliam pela lógica do projeto, pelos fundamentos técnicos e pela capacidade de o estudante defender as suas escolhas.
@@ -83,7 +95,7 @@ Público-alvo: ${f(project.target_audience) || '(não preenchido)'}
 Desafios: ${f(project.challenges) || '(não preenchido)'}
 Resultados: ${f(project.results) || '(não preenchido)'}
 Aprendizagens: ${f(project.learnings) || '(não preenchido)'}
-━━━━━━━━━━━━━━━━━${diaryBlock}${feedbackBlock}
+━━━━━━━━━━━━━━━━━${diaryBlock}${feedbackBlock}${analysisBlock}
 
 REGRAS CRÍTICAS — lê antes de gerar qualquer conteúdo:
 

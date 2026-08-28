@@ -87,6 +87,14 @@ Deno.serve(async (req) => {
       feedbackBlock = `\n\nFEEDBACK DO PROFESSOR:\n━━━━━━━━━━━━━━━━━━━━\n${lines}\n━━━━━━━━━━━━━━━━━━━━\nO professor já deu feedback sobre secções específicas. Ajuda o estudante a resolver os pontos pendentes. Não repitas o mesmo feedback que o professor já deu.`
     }
 
+    // Use previous defense AI data if available
+    let defenseBlock = ''
+    if (project?.defense_ai_data?.tip) {
+      const d = project.defense_ai_data
+      const tips = [d.tip, ...(d.jury_questions || []).map((q: { q: string }) => q.q)].filter(Boolean).join('; ')
+      defenseBlock = `\n\nDEFESA IA (gerada anteriormente):\n━━━━━━━━━━━━━━━━━━━━\nConselho: ${d.tip}\nPerguntas do júri previstas: ${tips.slice(0, 800)}\n━━━━━━━━━━━━━━━━━━━━\nTem em conta o que a preparação da defesa já identificou.`
+    }
+
     if (!message?.trim()) {
       return new Response(JSON.stringify({ error: 'Mensagem vazia.' }), {
         status: 400,
@@ -103,7 +111,7 @@ Deno.serve(async (req) => {
     const response = await client.messages.create({
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 900,
-      system: SYSTEM(project ?? {}) + diaryBlock + feedbackBlock,
+      system: SYSTEM(project ?? {}) + diaryBlock + feedbackBlock + defenseBlock,
       messages: [...history, { role: 'user', content: message.trim() }],
     })
 
