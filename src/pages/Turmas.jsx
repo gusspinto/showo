@@ -245,8 +245,11 @@ export default function Turmas() {
   const [yearFilter, setYearFilter] = useState('all')
   const isTeacher = profile?.role === 'professor'
 
+  const isSchoolStudent = profile?.role === 'aluno' && profile?.account_type === 'school'
+
   useEffect(() => {
     if (!user) { navigate('/login'); return }
+    if (profile && !isTeacher && !isSchoolStudent) { navigate('/dashboard'); return }
 
     async function load() {
       if (isTeacher) {
@@ -294,7 +297,7 @@ export default function Turmas() {
     setShowJoin(false)
   }
 
-  if (!user) return null
+  if (!user || (profile && !isTeacher && !isSchoolStudent)) return null
 
   return (
     <div style={{ minHeight: '100vh', background: C.bg }}>

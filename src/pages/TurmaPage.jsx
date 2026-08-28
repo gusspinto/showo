@@ -377,7 +377,7 @@ export default function TurmaPage() {
   }
 
   useEffect(() => {
-    if (profile && (profile.role === 'recrutador' || profile.role === 'empresa')) navigate('/dashboard')
+    if (profile && profile.role !== 'professor' && profile.account_type !== 'school') navigate('/dashboard')
   }, [profile, navigate])
 
   useEffect(() => {
@@ -808,7 +808,7 @@ export default function TurmaPage() {
     return 0
   })
 
-  if (profile && (profile.role === 'recrutador' || profile.role === 'empresa')) return null
+  if (profile && profile.role !== 'professor' && profile.account_type !== 'school') return null
 
   if (loading) {
     return (

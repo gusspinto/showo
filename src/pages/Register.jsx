@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { claimAnonymousProjects } from '../lib/claimAnonymousProjects'
-import { GraduationCap, BookOpen, Search, Building2, ArrowLeft } from 'lucide-react'
+import { GraduationCap, BookOpen, Search, Building2, ArrowLeft, Users2 } from 'lucide-react'
 import AuthSidePanel from '../components/AuthSidePanel'
 import GoogleButton from '../components/GoogleButton'
 import { useTheme } from '../context/ThemeContext'
@@ -25,10 +25,11 @@ const REGISTER_PHRASES = [
 ]
 
 const ROLES = [
-  { id: 'aluno',      icon: <GraduationCap size={22} />, label: 'Aluno',      color: 'var(--color-primary)' },
-  { id: 'professor',  icon: <BookOpen size={22} />,      label: 'Professor',  color: 'var(--color-success)' },
-  { id: 'recrutador', icon: <Search size={22} />,        label: 'Recrutador', color: 'var(--color-accent)', disabled: true },
-  { id: 'empresa',    icon: <Building2 size={22} />,     label: 'Empresa',    color: 'var(--color-warning)', disabled: true },
+  { id: 'aluno',               icon: <GraduationCap size={22} />, label: 'Aluno',               sub: 'Conta pessoal',             color: 'var(--color-primary)' },
+  { id: 'aluno_institucional', icon: <Users2 size={22} />,        label: 'Aluno Institucional',  sub: 'Tenho código de turma',     color: 'var(--color-info)' },
+  { id: 'professor',           icon: <BookOpen size={22} />,      label: 'Professor',            sub: 'Gerir turmas e alunos',     color: 'var(--color-success)' },
+  { id: 'recrutador',          icon: <Search size={22} />,        label: 'Recrutador',           color: 'var(--color-accent)', disabled: true },
+  { id: 'empresa',             icon: <Building2 size={22} />,     label: 'Empresa',              color: 'var(--color-warning)', disabled: true },
 ]
 
 function EyeIcon({ visible }) {
@@ -136,9 +137,12 @@ export default function Register() {
     })
   }, [partnerToken])
 
+  const [classCode, setClassCode] = useState('')
   const needsCompany = role === 'recrutador' || role === 'empresa'
   const needsSchool = role === 'professor'
   const needsInviteCode = role === 'professor'
+  const needsClassCode = role === 'aluno_institucional'
+  const effectiveRole = role === 'aluno_institucional' ? 'aluno' : role
 
   async function redeemInviteCode() {
     const { error: codeErr } = await supabase.rpc('redeem_professor_invite_code', {
@@ -159,8 +163,7 @@ export default function Register() {
     setError('')
 
     // Account already exists (signUp succeeded on a previous attempt) — this
-    // submit is just retrying the invite code / partner claim, nothing else
-    // to validate.
+    // submit is just retrying the invite code / partner claim / class join.
     if (accountCreated) {
       if (isPartnerFlow) {
         setLoading(true)
@@ -170,6 +173,22 @@ export default function Register() {
           setError('Não foi possível ligar a tua conta a esta empresa. O convite pode já ter sido usado.')
           return
         }
+        await refreshProfile()
+        setLoading(false)
+        navigate('/dashboard')
+        return
+      }
+      if (needsClassCode) {
+        if (!classCode.trim()) { setError('Introduz o código da turma.'); return }
+        setLoading(true)
+        const { data: joinResult, error: joinErr } = await supabase.rpc('join_class', { p_code: classCode.trim().toUpperCase() })
+        if (joinErr || !joinResult?.[0]) {
+          setLoading(false)
+          setError('Código de turma inválido. Verifica com o teu professor.')
+          return
+        }
+        const { data: { user: u } } = await supabase.auth.getUser()
+        if (u) await supabase.from('profiles').update({ account_type: 'school' }).eq('id', u.id)
         await refreshProfile()
         setLoading(false)
         navigate('/dashboard')
@@ -194,6 +213,7 @@ export default function Register() {
     if (needsCompany && !company.trim()) { setError('Introduz o nome da empresa.'); return }
     if (needsSchool && !school.trim()) { setError('Introduz o nome da escola.'); return }
     if (needsInviteCode && !inviteCode.trim()) { setError('Introduz o código de acesso enviado pela Showo.'); return }
+    if (needsClassCode && !classCode.trim()) { setError('Introduz o código da turma fornecido pelo professor.'); return }
     if (password.length < 6) { setError('A palavra-passe tem de ter pelo menos 6 caracteres.'); return }
     if (!phone.trim()) { setError('Introduz o teu número de telemóvel.'); return }
 
@@ -206,6 +226,7 @@ export default function Register() {
         full_name: name.trim(),
         company: needsCompany ? company.trim() : null,
         school: needsSchool ? school.trim() : null,
+        account_type: needsClassCode ? 'school' : 'individual',
       } },
     })
     if (err) {
@@ -244,6 +265,19 @@ export default function Register() {
         setError('A tua conta foi criada, mas não foi possível ligá-la a esta empresa. O convite pode já ter sido usado.')
         return
       }
+      await refreshProfile()
+    }
+
+    // Institutional student: join class + mark account as school
+    if (needsClassCode) {
+      const { data: joinResult, error: joinErr } = await supabase.rpc('join_class', { p_code: classCode.trim().toUpperCase() })
+      if (joinErr || !joinResult?.[0]) {
+        setLoading(false)
+        setAccountCreated(true)
+        setError('A tua conta foi criada, mas o código de turma é inválido. Verifica o código com o teu professor e tenta novamente.')
+        return
+      }
+      await supabase.from('profiles').update({ account_type: 'school' }).eq('id', (await supabase.auth.getUser()).data.user.id)
       await refreshProfile()
     }
 
@@ -405,8 +439,11 @@ export default function Register() {
                       }}
                     >
                       <span style={{ color: r.color, display: 'flex', alignItems: 'center' }}>{r.icon}</span>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: selected ? r.color : C.text }}>
-                        {r.label}
+                      <div>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: selected ? r.color : C.text }}>
+                          {r.label}
+                        </div>
+                        {r.sub && <div style={{ fontSize: 11, color: C.muted, fontWeight: 400, marginTop: 2 }}>{r.sub}</div>}
                       </div>
                     </div>
                   )
@@ -476,6 +513,10 @@ export default function Register() {
                     <p style={{ color: C.muted, fontSize: 14, margin: 0 }}>
                       A tua conta foi criada. Carrega no botão abaixo para tentar ligar-te a <strong style={{ color: C.text }}>{partnerInvite.name}</strong> novamente.
                     </p>
+                  ) : needsClassCode ? (
+                    <Field label="Código da turma">
+                      <Input value={classCode} onChange={e => setClassCode(e.target.value.toUpperCase())} placeholder="Ex: ABC123" required />
+                    </Field>
                   ) : (
                     <Field label="Código de acesso">
                       <Input value={inviteCode} onChange={e => setInviteCode(e.target.value)} placeholder="Código enviado pela Showo" required />
@@ -499,6 +540,11 @@ export default function Register() {
                     {needsInviteCode && (
                       <Field label="Código de acesso">
                         <Input value={inviteCode} onChange={e => setInviteCode(e.target.value)} placeholder="Código enviado pela Showo" required />
+                      </Field>
+                    )}
+                    {needsClassCode && (
+                      <Field label="Código da turma">
+                        <Input value={classCode} onChange={e => setClassCode(e.target.value.toUpperCase())} placeholder="Ex: ABC123" required />
                       </Field>
                     )}
                     <Field label="Email">
