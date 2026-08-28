@@ -181,14 +181,16 @@ export default function Register() {
       if (needsClassCode) {
         if (!classCode.trim()) { setError('Introduz o código da turma.'); return }
         setLoading(true)
-        const { data: joinResult, error: joinErr } = await supabase.rpc('join_class', { p_code: classCode.trim().toUpperCase() })
-        if (joinErr || !joinResult?.[0]) {
+        const { data: regResult } = await supabase.rpc('register_institutional_student', { p_class_code: classCode.trim(), p_email: email.trim() })
+        if (!regResult?.ok) {
           setLoading(false)
-          setError('Código de turma inválido. Verifica com o teu professor.')
+          if (regResult?.reason === 'domain_mismatch') {
+            setError(`O teu email tem de ser @${regResult.expected_domain} para entrar na turma de ${regResult.school_name}.`)
+          } else {
+            setError('Código de turma inválido. Verifica com o teu professor.')
+          }
           return
         }
-        const { data: { user: u } } = await supabase.auth.getUser()
-        if (u) await supabase.from('profiles').update({ account_type: 'school' }).eq('id', u.id)
         await refreshProfile()
         setLoading(false)
         navigate('/dashboard')
@@ -284,16 +286,21 @@ export default function Register() {
       await refreshProfile()
     }
 
-    // Institutional student: join class + mark account as school
+    // Institutional student: validate email domain + join class + set account_type (all server-side)
     if (needsClassCode) {
-      const { data: joinResult, error: joinErr } = await supabase.rpc('join_class', { p_code: classCode.trim().toUpperCase() })
-      if (joinErr || !joinResult?.[0]) {
+      const { data: regResult } = await supabase.rpc('register_institutional_student', { p_class_code: classCode.trim(), p_email: email.trim() })
+      if (!regResult?.ok) {
         setLoading(false)
         setAccountCreated(true)
-        setError('A tua conta foi criada, mas o código de turma é inválido. Verifica o código com o teu professor e tenta novamente.')
+        if (regResult?.reason === 'class_not_found') {
+          setError('A tua conta foi criada, mas o código de turma é inválido. Verifica com o teu professor.')
+        } else if (regResult?.reason === 'domain_mismatch') {
+          setError(`A tua conta foi criada, mas o teu email tem de ser @${regResult.expected_domain} para entrar na turma de ${regResult.school_name}.`)
+        } else {
+          setError('A tua conta foi criada, mas houve um erro ao entrar na turma. Tenta novamente.')
+        }
         return
       }
-      await supabase.from('profiles').update({ account_type: 'school' }).eq('id', (await supabase.auth.getUser()).data.user.id)
       await refreshProfile()
     }
 
