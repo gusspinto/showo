@@ -3,11 +3,16 @@ import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { claimAnonymousProjects } from '../lib/claimAnonymousProjects'
 import { ArrowLeft, Envelope as Mail, Check } from '@phosphor-icons/react'
-// Teste isolado a este ecrã — depois do Phosphor "light"/"bold" ainda
-// ficarem esmaecidos nestes cartões, a experimentar um estilo bem sólido
-// (Font Awesome 6, via react-icons) só aqui, antes de decidir se troca o
-// resto da app outra vez.
-import { FaGraduationCap, FaUsers, FaBookOpen, FaMagnifyingGlass, FaBuilding } from 'react-icons/fa6'
+// Teste isolado a este ecrã — depois do Phosphor "light"/"bold" ficarem
+// esmaecidos, e do Font Awesome sólido ficar genérico demais, a experimentar
+// Solar Icons (bold): traço grosso arredondado, com mais carácter que o
+// Font Awesome. Cada ícone é o seu próprio módulo neste pacote, daí um
+// import por ícone em vez de um só de conjunto.
+import { DiplomaIcon } from '@solar-icons/react/bold/diploma'
+import { UsersGroupRoundedIcon } from '@solar-icons/react/bold/users-group-rounded'
+import { Book2Icon } from '@solar-icons/react/bold/book-2'
+import { MagnifierIcon } from '@solar-icons/react/bold/magnifier'
+import { Buildings2Icon } from '@solar-icons/react/bold/buildings-2'
 import AuthSidePanel from '../components/AuthSidePanel'
 import GoogleButton from '../components/GoogleButton'
 import { useTheme } from '../context/ThemeContext'
@@ -30,11 +35,11 @@ const REGISTER_PHRASES = [
 ]
 
 const ROLES = [
-  { id: 'aluno',               icon: <FaGraduationCap size={22} />,  label: 'Aluno',               sub: 'Conta pessoal',             color: 'var(--color-primary)' },
-  { id: 'aluno_institucional', icon: <FaUsers size={20} />,          label: 'Aluno Institucional',  sub: 'Tenho código de turma',     color: 'var(--color-info)' },
-  { id: 'professor',           icon: <FaBookOpen size={20} />,       label: 'Professor',            sub: 'Gerir turmas e alunos',     color: 'var(--color-success)' },
-  { id: 'recrutador',          icon: <FaMagnifyingGlass size={19} />, label: 'Recrutador',           color: 'var(--color-accent)', disabled: true },
-  { id: 'empresa',             icon: <FaBuilding size={20} />,       label: 'Empresa',              color: 'var(--color-warning)', disabled: true },
+  { id: 'aluno',               icon: <DiplomaIcon size={23} />,           label: 'Aluno',               sub: 'Conta pessoal',             color: 'var(--color-primary)' },
+  { id: 'aluno_institucional', icon: <UsersGroupRoundedIcon size={23} />, label: 'Aluno Institucional',  sub: 'Tenho código de turma',     color: 'var(--color-info)' },
+  { id: 'professor',           icon: <Book2Icon size={23} />,             label: 'Professor',            sub: 'Gerir turmas e alunos',     color: 'var(--color-success)' },
+  { id: 'recrutador',          icon: <MagnifierIcon size={21} />,         label: 'Recrutador',           color: 'var(--color-accent)', disabled: true },
+  { id: 'empresa',             icon: <Buildings2Icon size={23} />,        label: 'Empresa',              color: 'var(--color-warning)', disabled: true },
 ]
 
 function EyeIcon({ visible }) {
