@@ -221,7 +221,7 @@ export default function Login() {
 
       <div className="auth-main">
         <div className="auth-card">
-          <div className="auth-main-logo" style={{ marginBottom: 36 }}>
+          <div className="auth-main-logo" style={{ marginBottom: 36, display: 'flex', justifyContent: 'center' }}>
             <img
               src={theme === 'light' ? '/lightmode_icon_logo.png' : '/darkmode_icon_logo.png'}
               alt="Showo"
@@ -232,8 +232,8 @@ export default function Login() {
 
           {mode === 'forgot' ? (
             <>
-              <h1 style={{ color: C.text, fontSize: 26, fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 8px', letterSpacing: '-0.5px' }}>Recuperar acesso</h1>
-              <p style={{ color: C.muted, fontSize: 14, margin: '0 0 32px' }}>Enviamos-te um link para definires uma nova palavra-passe</p>
+              <h1 style={{ color: C.text, fontSize: 26, fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 8px', letterSpacing: '-0.5px', textAlign: 'center' }}>Recuperar acesso</h1>
+              <p style={{ color: C.muted, fontSize: 14, margin: '0 0 32px', textAlign: 'center' }}>Enviamos-te um link para definires uma nova palavra-passe</p>
 
               {forgotSent ? (
                 <div style={{ background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.25)', borderRadius: 10, padding: '16px 18px' }}>
@@ -282,8 +282,10 @@ export default function Login() {
             </>
           ) : (
           <>
-          <h1 style={{ color: C.text, fontSize: 26, fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 8px', letterSpacing: '-0.5px' }}>Entrar</h1>
-          <p style={{ color: C.muted, fontSize: 14, margin: '0 0 28px' }}>Acede ao teu painel de projetos</p>
+          {/* "Entrar" como título repetia o botão logo a seguir — a mesma
+              palavra duas vezes na mesma página. Fica só o subtítulo, que
+              diz o que o botão não diz (o destino, não a ação). */}
+          <p style={{ color: C.muted, fontSize: 15, margin: '0 0 28px', textAlign: 'center' }}>Acede ao teu painel de projetos</p>
 
           <GoogleButton />
 

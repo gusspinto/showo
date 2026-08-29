@@ -2,7 +2,12 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { claimAnonymousProjects } from '../lib/claimAnonymousProjects'
-import { GraduationCap, BookOpen, Search, Building2, ArrowLeft, Users2, Mail, Check } from 'lucide-react'
+import { ArrowLeft, Mail, Check } from 'lucide-react'
+// Teste isolado a este ecrã — ícones de outra biblioteca (traço mais fino,
+// menos batido que o Lucide) só nos três cartões de papel, para ver se vale
+// a pena antes de decidir trocar o resto da app. Nomeados com prefixo Ph
+// para não colidir com os equivalentes Lucide que o resto do ficheiro usa.
+import { GraduationCap as PhGraduationCap, Users as PhUsers, BookOpen as PhBookOpen, MagnifyingGlass as PhSearch, Buildings as PhBuildings } from '@phosphor-icons/react'
 import AuthSidePanel from '../components/AuthSidePanel'
 import GoogleButton from '../components/GoogleButton'
 import { useTheme } from '../context/ThemeContext'
@@ -25,11 +30,11 @@ const REGISTER_PHRASES = [
 ]
 
 const ROLES = [
-  { id: 'aluno',               icon: <GraduationCap size={22} />, label: 'Aluno',               sub: 'Conta pessoal',             color: 'var(--color-primary)' },
-  { id: 'aluno_institucional', icon: <Users2 size={22} />,        label: 'Aluno Institucional',  sub: 'Tenho código de turma',     color: 'var(--color-info)' },
-  { id: 'professor',           icon: <BookOpen size={22} />,      label: 'Professor',            sub: 'Gerir turmas e alunos',     color: 'var(--color-success)' },
-  { id: 'recrutador',          icon: <Search size={22} />,        label: 'Recrutador',           color: 'var(--color-accent)', disabled: true },
-  { id: 'empresa',             icon: <Building2 size={22} />,     label: 'Empresa',              color: 'var(--color-warning)', disabled: true },
+  { id: 'aluno',               icon: <PhGraduationCap size={24} weight="light" />, label: 'Aluno',               sub: 'Conta pessoal',             color: 'var(--color-primary)' },
+  { id: 'aluno_institucional', icon: <PhUsers size={24} weight="light" />,         label: 'Aluno Institucional',  sub: 'Tenho código de turma',     color: 'var(--color-info)' },
+  { id: 'professor',           icon: <PhBookOpen size={24} weight="light" />,      label: 'Professor',            sub: 'Gerir turmas e alunos',     color: 'var(--color-success)' },
+  { id: 'recrutador',          icon: <PhSearch size={24} weight="light" />,        label: 'Recrutador',           color: 'var(--color-accent)', disabled: true },
+  { id: 'empresa',             icon: <PhBuildings size={24} weight="light" />,     label: 'Empresa',              color: 'var(--color-warning)', disabled: true },
 ]
 
 function EyeIcon({ visible }) {
@@ -432,11 +437,7 @@ export default function Register() {
         <div className="auth-card">
           <div
             className="auth-main-logo"
-            style={{
-              marginBottom: 36,
-              display: 'flex',
-              justifyContent: step === 'role' ? 'center' : 'flex-start',
-            }}
+            style={{ marginBottom: 36, display: 'flex', justifyContent: 'center' }}
           >
             <img
               src={theme === 'light' ? '/lightmode_icon_logo.png' : '/darkmode_icon_logo.png'}
@@ -525,18 +526,21 @@ export default function Register() {
                       onClick={() => setRole(r.id)}
                       style={{
                         border: `1px solid ${selected ? C.text : C.border}`,
-                        borderRadius: 8, padding: '16px 14px',
-                        display: 'flex', alignItems: 'center', gap: 10,
-                        cursor: 'pointer',
+                        borderRadius: 8, padding: '14px',
+                        display: 'flex', flexDirection: 'column', alignItems: 'center',
+                        gap: 3, textAlign: 'center', cursor: 'pointer',
                       }}
                     >
-                      <span style={{ color: selected ? C.text : C.muted, display: 'flex', alignItems: 'center' }}>{r.icon}</span>
-                      <div>
-                        <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>
-                          {r.label}
-                        </div>
-                        {r.sub && <div style={{ fontSize: 11, color: C.muted, fontWeight: 400, marginTop: 2 }}>{r.sub}</div>}
+                      {/* Ícone ao lado do nome, não por cima — três linhas
+                          por cartão (ícone sozinho, nome, subtítulo) fazia
+                          cada cartão mais alto do que precisava. O bloco
+                          continua centrado no cartão, só a organização
+                          interna muda de vertical para uma linha + legenda. */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span style={{ color: selected ? C.text : C.muted, display: 'flex', alignItems: 'center' }}>{r.icon}</span>
+                        <span style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{r.label}</span>
                       </div>
+                      {r.sub && <div style={{ fontSize: 11, color: C.muted, fontWeight: 400 }}>{r.sub}</div>}
                     </div>
                   )
                 })}
