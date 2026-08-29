@@ -32,7 +32,9 @@
   border-radius: 14px;
   padding: 32px 26px 28px;
   margin-bottom: 20px;
-  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .up-identity {
@@ -45,11 +47,11 @@
 /* ── Avatar ── */
 .up-avatar,
 .up-avatar-placeholder {
-  width: 84px;
-  height: 84px;
+  width: 128px;
+  height: 128px;
   border-radius: 50%;
   flex-shrink: 0;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
 }
 
 .up-avatar {
@@ -63,7 +65,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 30px;
+  font-size: 46px;
   font-weight: 400;
   font-family: var(--font-heading);
   color: var(--color-text-tertiary);
@@ -187,12 +189,12 @@
 
 /* ── Action buttons ── */
 .up-header-actions {
-  position: absolute;
-  top: 18px;
-  right: 20px;
   display: flex;
   align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
   gap: 8px;
+  margin-top: 20px;
 }
 
 .up-action-btn {
@@ -263,12 +265,6 @@
 }
 
 @media (max-width: 600px) {
-  .up-header-actions {
-    position: static;
-    justify-content: center;
-    flex-wrap: wrap;
-    margin-bottom: 16px;
-  }
   .up-header-actions .up-action-btn.primary {
     flex: 1;
     justify-content: center;
@@ -680,9 +676,9 @@
 
   .up-avatar,
   .up-avatar-placeholder {
-    width: 60px;
-    height: 60px;
-    font-size: 22px;
+    width: 100px;
+    height: 100px;
+    font-size: 36px;
   }
 
   .up-name {

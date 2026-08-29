@@ -261,6 +261,34 @@ export default function UserProfile() {
 
         {/* ── Profile header card: centrado ── */}
         <div className="up-header">
+          <div className="up-identity">
+            {profile.avatar_url
+              ? <img src={profile.avatar_url} alt={displayName} className="up-avatar" />
+              : <div className="up-avatar-placeholder">{displayName[0].toUpperCase()}</div>
+            }
+
+            <div className="up-name-row">
+              <h1 className="up-name">{displayName}</h1>
+              {isOwnProfile && <PlanBadge />}
+              {projects.some(p => (p.score || 0) >= 100) && (
+                <span className="up-perfect-badge" title="Tem um projeto com score perfeito">
+                  <GraduationCap size={13} />
+                </span>
+              )}
+            </div>
+
+            <div className="up-meta-row">
+              {profile.username && <span>@{profile.username}</span>}
+              {(profile.area || profile.course) && <><span className="up-meta-sep">·</span><span>{profile.area || profile.course}</span></>}
+              {profile.school && <><span className="up-meta-sep">·</span><span>{profile.school}</span></>}
+              {profile.role === 'professor' && <><span className="up-meta-sep">·</span><span>Professor</span></>}
+            </div>
+
+            {isOwnProfile && profile.role === 'aluno' && (
+              <p className="up-hint">Brevemente: partilha o teu portfólio com empresas</p>
+            )}
+          </div>
+
           <div className="up-header-actions">
             <button onClick={() => setShowQR(true)} className="up-icon-btn" title="QR Code" aria-label="QR Code">
               <QrCode size={15} />
@@ -287,34 +315,6 @@ export default function UserProfile() {
                   <Send size={13} /> Convidar
                 </button>
               </>
-            )}
-          </div>
-
-          <div className="up-identity">
-            {profile.avatar_url
-              ? <img src={profile.avatar_url} alt={displayName} className="up-avatar" />
-              : <div className="up-avatar-placeholder">{displayName[0].toUpperCase()}</div>
-            }
-
-            <div className="up-name-row">
-              <h1 className="up-name">{displayName}</h1>
-              {isOwnProfile && <PlanBadge />}
-              {projects.some(p => (p.score || 0) >= 100) && (
-                <span className="up-perfect-badge" title="Tem um projeto com score perfeito">
-                  <GraduationCap size={13} />
-                </span>
-              )}
-            </div>
-
-            <div className="up-meta-row">
-              {profile.username && <span>@{profile.username}</span>}
-              {(profile.area || profile.course) && <><span className="up-meta-sep">·</span><span>{profile.area || profile.course}</span></>}
-              {profile.school && <><span className="up-meta-sep">·</span><span>{profile.school}</span></>}
-              {profile.role === 'professor' && <><span className="up-meta-sep">·</span><span>Professor</span></>}
-            </div>
-
-            {isOwnProfile && profile.role === 'aluno' && (
-              <p className="up-hint">Brevemente: partilha o teu portfólio com empresas</p>
             )}
           </div>
         </div>
