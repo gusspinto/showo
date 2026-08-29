@@ -21,6 +21,7 @@ import ReportPanel from '../components/dashboard/ReportPanel'
 import AgendaPanel from '../components/dashboard/AgendaPanel'
 import { ActivityPanel } from '../components/dashboard/RhythmPanel'
 import WeeklyRecap, { shouldShowRecap, RecapsPanel } from '../components/dashboard/WeeklyRecap'
+import WeeklyCheckin, { shouldShowCheckin } from '../components/dashboard/WeeklyCheckin'
 import AddReminderModal from '../components/dashboard/AddReminderModal'
 import CalendarSyncModal from '../components/dashboard/CalendarSyncModal'
 import '../components/dashboard/MonthCalendar.css'
@@ -154,6 +155,7 @@ export default function StudentDashboard({ user, profile }) {
   const [showAddReminder, setShowAddReminder] = useState(null)
   const [showCalendarSync, setShowCalendarSync] = useState(false)
   const [showRecap, setShowRecap] = useState(false)
+  const [showCheckin, setShowCheckin] = useState(false)
   const [recaps, setRecaps] = useState([])
   const [toast, setToast] = useState('')
   const [copiedSlug, setCopiedSlug] = useState(null)
@@ -245,6 +247,7 @@ export default function StudentDashboard({ user, profile }) {
       // Use oldest project's created_at to guard recap from appearing on day 1
       const oldestProjectDate = projects.length ? projects[projects.length - 1].created_at : null
       if (checkGate('weeklyRecap').allowed && shouldShowRecap(user.id, oldestProjectDate)) setShowRecap(true)
+      if (shouldShowCheckin(user.id)) setShowCheckin(true)
     }
     load()
     return () => { cancelled = true }
@@ -665,6 +668,26 @@ export default function StudentDashboard({ user, profile }) {
               const without = prev.filter(r => r.week_start !== recap.week_start)
               return [{ ...recap, id: recap.id ?? `local-${Date.now()}` }, ...without].slice(0, 6)
             })
+          }}
+        />
+      )}
+
+      {showCheckin && focusProject && (
+        <WeeklyCheckin
+          userId={user.id}
+          project={focusFull || focusProject}
+          streak={streak}
+          onClose={() => setShowCheckin(false)}
+          onSaved={checkin => {
+            showToast('Check-in da semana guardado.')
+            // Refresh entries if journal entries were created
+            if (focusFull) {
+              supabase.from('project_journal_entries')
+                .select('id, kind, content, created_at')
+                .eq('project_id', focusFull.id)
+                .order('created_at', { ascending: false })
+                .then(({ data }) => { if (data) setEntries(data) })
+            }
           }}
         />
       )}

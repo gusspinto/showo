@@ -370,16 +370,17 @@ export default function TurmaPage() {
   const [editingCrit, setEditingCrit] = useState(null) // { id, name, weight }
   const [critSaving, setCritSaving] = useState(false)
   const [criterionScoresMap, setCriterionScoresMap] = useState({}) // { projectId: { criterionId: score } }
+  const [weeklyCheckins, setWeeklyCheckins] = useState([]) // teacher: this week's student check-ins
+  const [checkinReply, setCheckinReply] = useState({}) // { [user_id]: replyText }
+  const [checkinReplySaving, setCheckinReplySaving] = useState(null) // user_id being saved
 
   function showToast(msg) {
     setToast(msg)
     setTimeout(() => setToast(''), 3500)
   }
 
-  // Turmas are a school feature — only accounts connected to a school
-  // (professors, verified via invite code) can access them for now.
   useEffect(() => {
-    if (profile && profile.role !== 'professor') navigate('/dashboard')
+    if (profile && profile.role !== 'professor' && profile.account_type !== 'school') navigate('/dashboard')
   }, [profile, navigate])
 
   useEffect(() => {
@@ -533,6 +534,24 @@ export default function TurmaPage() {
     }
     loadTasks()
   }, [turma?.id, user, isTeacher])
+
+  // Load this week's check-ins for teacher view
+  useEffect(() => {
+    if (!turma?.id || !isTeacher) return
+    const studentIds = members.filter(m => m.role !== 'professor').map(m => m.user_id)
+    if (!studentIds.length) return
+    const today = new Date()
+    const offset = (today.getDay() + 6) % 7
+    const monday = new Date(today)
+    monday.setDate(monday.getDate() - offset)
+    monday.setHours(0, 0, 0, 0)
+    const weekStart = monday.toISOString().slice(0, 10)
+    supabase.from('weekly_checkins')
+      .select('user_id, week_start, progress, blockers, question_for_prof, prof_reply, prof_reply_at, created_at')
+      .in('user_id', studentIds)
+      .eq('week_start', weekStart)
+      .then(({ data }) => { if (data) setWeeklyCheckins(data) })
+  }, [turma?.id, isTeacher, members])
 
   async function handleCreateTask(title, description, dueDate) {
     const { data, error } = await supabase
@@ -810,7 +829,7 @@ export default function TurmaPage() {
     return 0
   })
 
-  if (profile && profile.role !== 'professor') return null
+  if (profile && profile.role !== 'professor' && profile.account_type !== 'school') return null
 
   if (loading) {
     return (
@@ -1141,6 +1160,101 @@ export default function TurmaPage() {
                   )}
                 </div>
               )}
+
+              {/* Weekly check-in summary */}
+              {weeklyCheckins.length > 0 && (() => {
+                const withBlockers = weeklyCheckins.filter(c => c.blockers)
+                const withQuestions = weeklyCheckins.filter(c => c.question_for_prof)
+                const studentMap = {}
+                members.forEach(m => { studentMap[m.user_id] = m })
+                const studentCount = members.filter(m => m.role !== 'professor').length
+                return (
+                  <div style={{ marginTop: 16 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: C.text, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Check-ins da semana</span>
+                      <span style={{ fontSize: 11, color: C.muted, fontWeight: 600 }}>{weeklyCheckins.length}/{studentCount} responderam</span>
+                    </div>
+
+                    {withQuestions.length > 0 && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: withBlockers.length > 0 ? 10 : 0 }}>
+                        {withQuestions.map(c => {
+                          const s = studentMap[c.user_id]
+                          const replyText = checkinReply[c.user_id] ?? ''
+                          const isSaving = checkinReplySaving === c.user_id
+                          return (
+                            <div key={c.user_id + '-q'} style={{ padding: '9px 14px', borderRadius: 8, background: 'var(--color-primary-subtle)', border: '1px solid rgba(74,147,249,0.2)' }}>
+                              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                                <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--color-primary)', flexShrink: 0, marginTop: 5 }} />
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-primary)' }}>{s?.full_name || 'Aluno'} perguntou:</span>
+                                  <p style={{ margin: '2px 0 0', fontSize: 13, color: C.text, lineHeight: 1.5 }}>{c.question_for_prof}</p>
+                                </div>
+                              </div>
+                              {c.prof_reply ? (
+                                <div style={{ marginTop: 8, paddingLeft: 16, borderLeft: '2px solid var(--color-primary)', marginLeft: 8 }}>
+                                  <span style={{ fontSize: 11, fontWeight: 600, color: C.muted }}>A sua resposta:</span>
+                                  <p style={{ margin: '2px 0 0', fontSize: 13, color: C.text }}>{c.prof_reply}</p>
+                                </div>
+                              ) : (
+                                <div style={{ display: 'flex', gap: 6, marginTop: 8, marginLeft: 16 }}>
+                                  <input
+                                    type="text"
+                                    placeholder="Responder..."
+                                    value={replyText}
+                                    onChange={e => setCheckinReply(prev => ({ ...prev, [c.user_id]: e.target.value }))}
+                                    style={{ flex: 1, fontSize: 13, padding: '6px 10px', borderRadius: 6, border: '1px solid var(--color-border)', background: 'var(--color-bg-secondary)', color: C.text, fontFamily: 'inherit' }}
+                                  />
+                                  <button
+                                    disabled={!replyText.trim() || isSaving}
+                                    onClick={async () => {
+                                      if (!replyText.trim()) return
+                                      setCheckinReplySaving(c.user_id)
+                                      await supabase.from('weekly_checkins')
+                                        .update({ prof_reply: replyText.trim(), prof_reply_at: new Date().toISOString() })
+                                        .eq('user_id', c.user_id).eq('week_start', c.week_start)
+                                      await supabase.rpc('create_notification', {
+                                        p_user_id: c.user_id,
+                                        p_type: 'CHECKIN_REPLY',
+                                        p_message: `O professor respondeu à tua pergunta no check-in semanal.`,
+                                      })
+                                      setWeeklyCheckins(prev => prev.map(ch =>
+                                        ch.user_id === c.user_id ? { ...ch, prof_reply: replyText.trim(), prof_reply_at: new Date().toISOString() } : ch
+                                      ))
+                                      setCheckinReply(prev => { const n = { ...prev }; delete n[c.user_id]; return n })
+                                      setCheckinReplySaving(null)
+                                      showToast('Resposta enviada.')
+                                    }}
+                                    style={{ padding: '6px 12px', borderRadius: 6, border: 'none', background: 'var(--color-primary)', color: '#fff', fontSize: 12, fontWeight: 700, cursor: replyText.trim() ? 'pointer' : 'not-allowed', opacity: replyText.trim() ? 1 : 0.4, fontFamily: 'inherit' }}
+                                  >
+                                    {isSaving ? '...' : 'Enviar'}
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
+
+                    {withBlockers.length > 0 && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        {withBlockers.map(c => {
+                          const s = studentMap[c.user_id]
+                          return (
+                            <div key={c.user_id + '-b'} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '9px 14px', borderRadius: 8, background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.18)' }}>
+                              <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--color-warning)', flexShrink: 0, marginTop: 5 }} />
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-warning)' }}>{s?.full_name || 'Aluno'} bloqueado:</span>
+                                <p style={{ margin: '2px 0 0', fontSize: 13, color: C.text, lineHeight: 1.5 }}>{c.blockers}</p>
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )
+              })()}
             </div>
           )
         })()}

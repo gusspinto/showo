@@ -33,7 +33,7 @@ export function AuthProvider({ children }) {
   const fetchProfile = useCallback(async (uid) => {
     if (!uid) { setProfile(null); setAiUsage({}); resetAnalytics(); return }
     const [profileRes, userRes] = await Promise.all([
-      supabase.from('profiles').select('id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, linkedin_url, skills, monthly_report_opt_in, area, plan, phone, organization_id').eq('id', uid).single(),
+      supabase.from('profiles').select('id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, linkedin_url, skills, monthly_report_opt_in, area, plan, phone, organization_id, account_type').eq('id', uid).single(),
       supabase.auth.getUser(),
     ])
     const meta = userRes.data?.user?.user_metadata ?? {}
@@ -57,6 +57,41 @@ export function AuthProvider({ children }) {
         .single()
       data = created
       if (data) localStorage.setItem(`showo_needs_role_${uid}`, '1')
+    }
+
+    // Process pending signup actions stored in user metadata
+    if (data && meta) {
+      if (meta.pending_class_code) {
+        const { data: regResult } = await supabase.rpc('register_institutional_student', {
+          p_class_code: meta.pending_class_code,
+          p_email: userRes.data?.user?.email,
+        })
+        if (regResult?.ok) {
+          const { data: refreshed } = await supabase.from('profiles').select('id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, linkedin_url, skills, monthly_report_opt_in, area, plan, phone, account_type').eq('id', uid).single()
+          if (refreshed) data = refreshed
+        }
+        await supabase.auth.updateUser({ data: { pending_class_code: null } })
+      }
+      if (meta.pending_invite_code) {
+        await supabase.rpc('redeem_professor_invite_code', {
+          p_code: meta.pending_invite_code,
+          p_full_name: meta.full_name ?? '',
+          p_school: meta.pending_school ?? '',
+        })
+        const { data: refreshed } = await supabase.from('profiles').select('id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, linkedin_url, skills, monthly_report_opt_in, area, plan, phone, account_type').eq('id', uid).single()
+        if (refreshed) data = refreshed
+        await supabase.auth.updateUser({ data: { pending_invite_code: null, pending_school: null } })
+      }
+      if (meta.pending_partner_token) {
+        await supabase.rpc('claim_partner_company_invite', { p_token: meta.pending_partner_token })
+        const { data: refreshed } = await supabase.from('profiles').select('id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, linkedin_url, skills, monthly_report_opt_in, area, plan, phone, account_type').eq('id', uid).single()
+        if (refreshed) data = refreshed
+        await supabase.auth.updateUser({ data: { pending_partner_token: null } })
+      }
+      if (meta.pending_phone) {
+        await supabase.from('profiles').update({ phone: meta.pending_phone }).eq('id', uid)
+        await supabase.auth.updateUser({ data: { pending_phone: null } })
+      }
     }
 
     setProfile(data ?? null)

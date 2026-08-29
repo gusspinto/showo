@@ -11,50 +11,18 @@ const SUBJECT = 'Bem-vindo ao Showo 🎓'
 function buildHtml(name: string) {
   const displayName = name || 'futuro profissional'
   return `
-  <div style="background:#03060d;padding:48px 24px;font-family:-apple-system,Helvetica,Arial,sans-serif;">
-    <div style="max-width:480px;margin:0 auto;">
-      <p style="margin:0 0 32px;color:#1b78f7;font-weight:700;font-size:20px;letter-spacing:-0.01em;text-align:center;">showo</p>
-
-      <h1 style="margin:0 0 8px;color:#eef2f8;font-size:24px;line-height:1.3;">
-        Olá, ${displayName} 👋
-      </h1>
-      <p style="margin:0 0 24px;color:#9fb0c8;font-size:15px;line-height:1.7;">
-        A tua conta no Showo está criada. A partir de agora, tens um companheiro para te ajudar a desenvolver e apresentar o teu projeto final.
-      </p>
-
-      <div style="background:rgba(27,120,247,0.06);border:1px solid rgba(27,120,247,0.12);border-radius:12px;padding:20px 24px;margin:0 0 28px;">
-        <p style="margin:0 0 12px;color:#eef2f8;font-size:14px;font-weight:600;">O que podes fazer agora:</p>
-        <table cellpadding="0" cellspacing="0" border="0" style="width:100%;">
-          <tr>
-            <td style="padding:6px 0;color:#9fb0c8;font-size:14px;line-height:1.5;">
-              <span style="color:#1b78f7;margin-right:8px;">→</span> Criar o teu projeto e organizar o progresso
-            </td>
-          </tr>
-          <tr>
-            <td style="padding:6px 0;color:#9fb0c8;font-size:14px;line-height:1.5;">
-              <span style="color:#1b78f7;margin-right:8px;">→</span> Usar a IA para melhorar a comunicação do teu trabalho
-            </td>
-          </tr>
-          <tr>
-            <td style="padding:6px 0;color:#9fb0c8;font-size:14px;line-height:1.5;">
-              <span style="color:#1b78f7;margin-right:8px;">→</span> Gerar um portefólio profissional com um link partilhável
-            </td>
-          </tr>
-        </table>
-      </div>
-
-      <div style="text-align:center;margin:0 0 32px;">
-        <a href="https://showo.pt" style="display:inline-block;background:#1b78f7;color:#fff;
-          text-decoration:none;font-weight:600;font-size:15px;padding:14px 36px;border-radius:10px;">
-          Abrir o Showo
-        </a>
-      </div>
-
-      <p style="margin:0;color:#5b6473;font-size:13px;text-align:center;">
-        Precisas de ajuda? Responde a este email.
-      </p>
-      <p style="margin:16px 0 0;color:#3a4250;font-size:12px;text-align:center;">showo.pt</p>
-    </div>
+  <div style="font-family:Arial,sans-serif;max-width:460px;margin:0 auto;padding:40px 20px;">
+    <img src="https://showo.pt/icon.png" alt="Showo" width="100" style="display:block;margin:0 auto 32px;" />
+    <h2 style="text-align:center;font-size:18px;font-weight:600;color:#1a1a1a;margin:0 0 8px;">Ola, ${displayName}!</h2>
+    <p style="text-align:center;font-size:14px;color:#666;line-height:1.6;margin:0 0 28px;">A tua conta no Showo esta criada. Comeca a organizar o teu projeto e a mostrar o teu trabalho.</p>
+    <table border="0" cellspacing="0" cellpadding="0" align="center" style="margin:0 auto 28px;">
+      <tr>
+        <td align="center" style="background:#4a93f9;border-radius:8px;">
+          <a href="https://showo.pt/dashboard" target="_blank" style="display:inline-block;padding:12px 36px;font-family:Arial,sans-serif;font-size:14px;font-weight:700;color:#ffffff;text-decoration:none;">Abrir o Showo</a>
+        </td>
+      </tr>
+    </table>
+    <p style="text-align:center;font-size:11px;color:#aaa;margin:0;">Precisas de ajuda? Responde a este email.</p>
   </div>`
 }
 

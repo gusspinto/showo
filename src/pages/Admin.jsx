@@ -6,7 +6,7 @@ import { Navbar } from '../components/Navbar'
 import {
   AlertTriangle, HelpCircle, User, Folder, Star,
   Shield, BarChart2, MapPin, Calendar, Check, X, Search,
-  KeyRound, Plus, Copy, Megaphone,
+  KeyRound, Plus, Copy, Megaphone, School, Trash2,
 } from 'lucide-react'
 import { Select } from '../components/ui'
 
@@ -1275,6 +1275,13 @@ export default function Admin() {
   const [newAmbUser, setNewAmbUser] = useState('')
   const [newAmbRate, setNewAmbRate] = useState('0.20')
   const [creatingAmb, setCreatingAmb] = useState(false)
+  const [schoolDomains, setSchoolDomains] = useState([])
+  const [schoolDomainsLoaded, setSchoolDomainsLoaded] = useState(false)
+  const [newSchoolName, setNewSchoolName] = useState('')
+  const [newSchoolDomain, setNewSchoolDomain] = useState('')
+  const [addingSchool, setAddingSchool] = useState(false)
+  const [linkClassCode, setLinkClassCode] = useState('')
+  const [linkingSchoolId, setLinkingSchoolId] = useState(null)
 
   // Guard
   useEffect(() => {
@@ -1479,13 +1486,60 @@ export default function Admin() {
 
   if (authLoading || (!isAdmin && !authLoading)) return null
 
+  const loadSchoolDomains = async () => {
+    const { data } = await supabase.from('school_domains').select('*').order('created_at', { ascending: false })
+    setSchoolDomains(data || [])
+    setSchoolDomainsLoaded(true)
+  }
+
+  const handleAddSchool = async () => {
+    if (!newSchoolName.trim() || !newSchoolDomain.trim()) { showToast('Preenche o nome e domínio'); return }
+    setAddingSchool(true)
+    const domain = newSchoolDomain.trim().toLowerCase().replace(/^@/, '')
+    const { error } = await supabase.from('school_domains').insert({ name: newSchoolName.trim(), domain })
+    setAddingSchool(false)
+    if (error) {
+      showToast(error.message.includes('duplicate') ? 'Este domínio já existe' : 'Erro: ' + error.message)
+      return
+    }
+    setNewSchoolName('')
+    setNewSchoolDomain('')
+    showToast('Escola adicionada')
+    loadSchoolDomains()
+  }
+
+  const handleDeleteSchool = async (id) => {
+    const { error } = await supabase.from('school_domains').delete().eq('id', id)
+    if (error) { showToast('Erro: ' + error.message); return }
+    showToast('Escola removida')
+    setSchoolDomains(prev => prev.filter(s => s.id !== id))
+  }
+
+  const handleLinkClass = async (schoolId) => {
+    if (!linkClassCode.trim()) return
+    const code = linkClassCode.trim().toUpperCase()
+    const { error } = await supabase.from('classes').update({ school_domain_id: schoolId }).eq('code', code)
+    if (error) { showToast('Erro: ' + error.message); return }
+    showToast(`Turma ${code} associada à escola`)
+    setLinkClassCode('')
+    setLinkingSchoolId(null)
+  }
+
+  if (tab === 'schools' && !schoolDomainsLoaded) loadSchoolDomains()
+
   const tabs = [
     { id: 'overview', label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><BarChart2 size={14} /> Visão geral</span> },
     { id: 'users',    label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><User size={14} /> Utilizadores ({users.length})</span> },
     { id: 'projects', label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Folder size={14} /> Projetos ({projects.length})</span> },
     { id: 'signups',  label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Star size={14} /> Signups ({signups.length})</span> },
     { id: 'invites',  label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><KeyRound size={14} /> Convites Professor</span> },
-    { id: 'orgs',     label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Shield size={14} /> Escolas</span> },
+    {/* Duas coisas diferentes que calhavam com o mesmo nome ("Escolas") em
+        cada lado do merge — não é o mesmo separador reescrito duas vezes, é
+        "orgs" (organizações com plano, já existia) e "schools" (domínios de
+        email para validar registo institucional, novo no main). Ficam os
+        dois, com nomes que dizem o que cada um faz. */}
+    { id: 'orgs',     label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Shield size={14} /> Organizações</span> },
+    { id: 'schools',  label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><School size={14} /> Domínios de Escola</span> },
     { id: 'ambassadors', label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Megaphone size={14} /> Embaixadores</span> },
   ]
 
@@ -1587,6 +1641,65 @@ export default function Admin() {
                 onGenerate={handleGenerateCode}
                 onToggleActive={handleToggleCodeActive}
               />
+            )}
+            {tab === 'schools' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                <div style={{ background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)', borderRadius: 12, padding: 20 }}>
+                  <h3 style={{ margin: '0 0 6px', fontSize: 15, fontWeight: 700 }}>Adicionar escola</h3>
+                  <p style={{ margin: '0 0 16px', fontSize: 13, color: 'var(--color-text-secondary)' }}>
+                    O domínio é usado para validar o email dos alunos no registo institucional.
+                  </p>
+                  <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+                    <div>
+                      <label style={{ fontSize: 12, color: 'var(--color-text-secondary)', display: 'block', marginBottom: 4 }}>Nome da escola</label>
+                      <input value={newSchoolName} onChange={e => setNewSchoolName(e.target.value)} placeholder="Escola Secundária de..." style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid var(--color-border)', background: 'var(--color-bg)', color: 'var(--color-text)', fontSize: 14, width: 220, fontFamily: 'inherit' }} />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: 12, color: 'var(--color-text-secondary)', display: 'block', marginBottom: 4 }}>Domínio de email</label>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
+                        <span style={{ fontSize: 14, color: 'var(--color-text-secondary)', padding: '8px 2px 8px 12px', background: 'var(--color-bg)', border: '1px solid var(--color-border)', borderRight: 'none', borderRadius: '8px 0 0 8px' }}>@</span>
+                        <input value={newSchoolDomain} onChange={e => setNewSchoolDomain(e.target.value.toLowerCase().replace(/[^a-z0-9.-]/g, ''))} placeholder="escola.pt" style={{ padding: '8px 12px', borderRadius: '0 8px 8px 0', border: '1px solid var(--color-border)', background: 'var(--color-bg)', color: 'var(--color-text)', fontSize: 14, width: 160, fontFamily: 'inherit' }} />
+                      </div>
+                    </div>
+                    <button disabled={addingSchool} onClick={handleAddSchool} style={{ padding: '8px 18px', borderRadius: 8, background: 'var(--color-primary)', color: '#fff', border: 'none', fontSize: 14, fontWeight: 600, cursor: 'pointer', opacity: addingSchool ? 0.6 : 1, fontFamily: 'inherit' }}>
+                      {addingSchool ? '...' : 'Adicionar'}
+                    </button>
+                  </div>
+                </div>
+
+                {schoolDomains.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--color-text-secondary)', fontSize: 14 }}>
+                    Nenhuma escola registada.
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {schoolDomains.map(s => (
+                      <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 14, background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)', borderRadius: 10, padding: '14px 18px' }}>
+                        <School size={18} color="var(--color-primary)" style={{ flexShrink: 0 }} />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text)' }}>{s.name}</div>
+                          <div style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>@{s.domain}</div>
+                        </div>
+                        <div style={{ fontSize: 11, color: 'var(--color-text-tertiary)', flexShrink: 0 }}>
+                          {new Date(s.created_at).toLocaleDateString('pt-PT')}
+                        </div>
+                        {linkingSchoolId === s.id ? (
+                          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                            <input value={linkClassCode} onChange={e => setLinkClassCode(e.target.value.toUpperCase())} placeholder="Código" maxLength={8} style={{ padding: '6px 8px', borderRadius: 6, border: '1px solid var(--color-border)', background: 'var(--color-bg)', color: 'var(--color-text)', fontSize: 12, width: 80, fontFamily: 'inherit', fontWeight: 700, letterSpacing: '0.05em' }} onKeyDown={e => e.key === 'Enter' && handleLinkClass(s.id)} />
+                            <button onClick={() => handleLinkClass(s.id)} style={{ background: 'var(--color-primary)', border: 'none', borderRadius: 6, padding: '5px 10px', color: '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>OK</button>
+                            <button onClick={() => { setLinkingSchoolId(null); setLinkClassCode('') }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-secondary)', padding: 2, display: 'flex' }}><X size={14} /></button>
+                          </div>
+                        ) : (
+                          <button onClick={() => setLinkingSchoolId(s.id)} title="Associar turma" style={{ background: 'none', border: '1px solid var(--color-border)', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', color: 'var(--color-text-secondary)', fontSize: 11, fontWeight: 600, fontFamily: 'inherit' }}>+ Turma</button>
+                        )}
+                        <button onClick={() => handleDeleteSchool(s.id)} title="Remover escola" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-error)', padding: 4, display: 'flex' }}>
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             )}
             {tab === 'ambassadors' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>

@@ -767,6 +767,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
 
   const isRecruiter = profile?.role === 'recrutador' || profile?.role === 'empresa'
   const isTeacher = profile?.role === 'professor'
+  const isSchoolStudent = profile?.role === 'aluno' && profile?.account_type === 'school'
   const recruiterAccent = 'var(--color-accent)'
 
   const [unreadMsgs, setUnreadMsgs] = useState(0)
@@ -854,7 +855,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               ) : (
                 <>
                   <span className="mob-drawer-label">Comunidade</span>
-                  {isTeacher && (
+                  {(isTeacher || isSchoolStudent) && (
                     <button className="mobile-drawer-btn" onClick={() => { navigate('/turmas'); setOpen(false) }}>
                       <Users2 size={16} /> Turmas
                     </button>
@@ -1320,6 +1321,11 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               <button className={`sb-item${isActive('/explorar') ? ' active' : ''}`} onClick={() => navigate('/explorar')}>
                 <Compass size={16} />{!collapsed && showLabels && <span>Explorar</span>}
               </button>
+              {user && isSchoolStudent && (
+                <button className={`sb-item${isActive('/turmas') ? ' active' : ''}`} onClick={() => navigate('/turmas')}>
+                  <Users2 size={16} />{!collapsed && showLabels && <span>Turmas</span>}
+                </button>
+              )}
 
               {user && (
                 <>

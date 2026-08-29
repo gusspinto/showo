@@ -4384,7 +4384,7 @@ export default function ProjectPage() {
     setCoachInput('')
     setCoachLoading(true)
     try {
-      const reply = await chatProjectCoach({ project, messages: coachMessages, message: msg })
+      const reply = await chatProjectCoach({ project: { ...project, journal: projectJournalEntries, teacher_feedback: teacherFeedback }, messages: coachMessages, message: msg })
       consumeAI('coach')
       setCoachMessages(prev => [...prev, { role: 'assistant', content: reply }])
       setTimeout(() => coachBottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
@@ -4561,7 +4561,7 @@ export default function ProjectPage() {
       // Fetch diary entries to include in score calculation
       const { data: journalEntries } = await supabase
         .from('project_journal_entries')
-        .select('created_at, kind')
+        .select('created_at, kind, content')
         .eq('project_id', data.id)
 
       const entries = journalEntries || []

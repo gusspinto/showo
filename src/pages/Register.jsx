@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { claimAnonymousProjects } from '../lib/claimAnonymousProjects'
-import { GraduationCap, BookOpen, Search, Building2, ArrowLeft } from 'lucide-react'
+import { GraduationCap, BookOpen, Search, Building2, ArrowLeft, Users2, Mail, Check } from 'lucide-react'
 import AuthSidePanel from '../components/AuthSidePanel'
 import GoogleButton from '../components/GoogleButton'
 import { useTheme } from '../context/ThemeContext'
@@ -25,10 +25,11 @@ const REGISTER_PHRASES = [
 ]
 
 const ROLES = [
-  { id: 'aluno',      icon: <GraduationCap size={22} />, label: 'Aluno',      color: 'var(--color-primary)' },
-  { id: 'professor',  icon: <BookOpen size={22} />,      label: 'Professor',  color: 'var(--color-success)' },
-  { id: 'recrutador', icon: <Search size={22} />,        label: 'Recrutador', color: 'var(--color-accent)', disabled: true },
-  { id: 'empresa',    icon: <Building2 size={22} />,     label: 'Empresa',    color: 'var(--color-warning)', disabled: true },
+  { id: 'aluno',               icon: <GraduationCap size={22} />, label: 'Aluno',               sub: 'Conta pessoal',             color: 'var(--color-primary)' },
+  { id: 'aluno_institucional', icon: <Users2 size={22} />,        label: 'Aluno Institucional',  sub: 'Tenho código de turma',     color: 'var(--color-info)' },
+  { id: 'professor',           icon: <BookOpen size={22} />,      label: 'Professor',            sub: 'Gerir turmas e alunos',     color: 'var(--color-success)' },
+  { id: 'recrutador',          icon: <Search size={22} />,        label: 'Recrutador',           color: 'var(--color-accent)', disabled: true },
+  { id: 'empresa',             icon: <Building2 size={22} />,     label: 'Empresa',              color: 'var(--color-warning)', disabled: true },
 ]
 
 function EyeIcon({ visible }) {
@@ -85,13 +86,6 @@ function Input({ type = 'text', value, onChange, placeholder, required }) {
 export default function Register() {
   const navigate = useNavigate()
   const location = useLocation()
-  /* Depois de criar conta, voltar ao sítio de onde vieram. Sem isto, quem
-     começava a criar um projeto e era mandado registar-se acabava na
-     dashboard, sem nada que ligasse ao que estava a fazer — e a intenção
-     perdia-se ali. Só aceitamos caminhos internos, para o ?next não poder
-     ser usado como redirect aberto. */
-  const rawNext = new URLSearchParams(location.search).get('next')
-  const nextPath = rawNext && rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : null
   const claimSlug = location.state?.claimSlug ?? null
   const { theme } = useTheme()
   const { refreshProfile } = useAuth()
@@ -117,7 +111,8 @@ export default function Register() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [acceptedTerms, setAcceptedTerms] = useState(false)
-  const [detectedOrg, setDetectedOrg] = useState(null) // { id, name, plan } | null
+  const [confirmationPending, setConfirmationPending] = useState(false)
+  const [resendState, setResendState] = useState('idle')
 
   // ── Partner-company invite (?empresa_convite=<token>) — a professor added
   // this company in Parceiros.jsx and emailed this link. It unlocks the
@@ -146,17 +141,12 @@ export default function Register() {
     })
   }, [partnerToken])
 
-  async function checkEmailDomain(emailValue) {
-    const domain = emailValue.split('@')[1]?.trim().toLowerCase()
-    if (!domain || !domain.includes('.')) { setDetectedOrg(null); return }
-    const { data } = await supabase.rpc('get_organization_by_domain', { p_domain: domain })
-    const row = Array.isArray(data) ? data[0] : data
-    setDetectedOrg(row ?? null)
-  }
-
+  const [classCode, setClassCode] = useState('')
   const needsCompany = role === 'recrutador' || role === 'empresa'
   const needsSchool = role === 'professor'
   const needsInviteCode = role === 'professor'
+  const needsClassCode = role === 'aluno_institucional'
+  const effectiveRole = role === 'aluno_institucional' ? 'aluno' : role
 
   async function redeemInviteCode() {
     const { error: codeErr } = await supabase.rpc('redeem_professor_invite_code', {
@@ -177,8 +167,7 @@ export default function Register() {
     setError('')
 
     // Account already exists (signUp succeeded on a previous attempt) — this
-    // submit is just retrying the invite code / partner claim, nothing else
-    // to validate.
+    // submit is just retrying the invite code / partner claim / class join.
     if (accountCreated) {
       if (isPartnerFlow) {
         setLoading(true)
@@ -186,6 +175,24 @@ export default function Register() {
         if (!ok) {
           setLoading(false)
           setError('Não foi possível ligar a tua conta a esta empresa. O convite pode já ter sido usado.')
+          return
+        }
+        await refreshProfile()
+        setLoading(false)
+        navigate('/dashboard')
+        return
+      }
+      if (needsClassCode) {
+        if (!classCode.trim()) { setError('Introduz o código da turma.'); return }
+        setLoading(true)
+        const { data: regResult } = await supabase.rpc('register_institutional_student', { p_class_code: classCode.trim(), p_email: email.trim() })
+        if (!regResult?.ok) {
+          setLoading(false)
+          if (regResult?.reason === 'domain_mismatch') {
+            setError(`O teu email tem de ser @${regResult.expected_domain} para entrar na turma de ${regResult.school_name}.`)
+          } else {
+            setError('Código de turma inválido. Verifica com o teu professor.')
+          }
           return
         }
         await refreshProfile()
@@ -212,9 +219,26 @@ export default function Register() {
     if (needsCompany && !company.trim()) { setError('Introduz o nome da empresa.'); return }
     if (needsSchool && !school.trim()) { setError('Introduz o nome da escola.'); return }
     if (needsInviteCode && !inviteCode.trim()) { setError('Introduz o código de acesso enviado pela Showo.'); return }
+    if (needsClassCode && !classCode.trim()) { setError('Introduz o código da turma fornecido pelo professor.'); return }
     if (password.length < 6) { setError('A palavra-passe tem de ter pelo menos 6 caracteres.'); return }
     if (!phone.trim()) { setError('Introduz o teu número de telemóvel.'); return }
 
+    // Validate email domain against class's school before creating account
+    if (needsClassCode) {
+      setLoading(true)
+      const { data: validation } = await supabase.rpc('validate_class_email', { p_code: classCode.trim(), p_email: email.trim() })
+      if (!validation?.valid) {
+        setLoading(false)
+        if (validation?.reason === 'class_not_found') {
+          setError('Código de turma inválido. Verifica com o teu professor.')
+        } else if (validation?.reason === 'domain_mismatch') {
+          setError(`O teu email tem de ser @${validation.expected_domain} para entrar na turma de ${validation.school_name}.`)
+        } else {
+          setError('Código de turma inválido.')
+        }
+        return
+      }
+    }
 
     setLoading(true)
     const { data, error: err } = await supabase.auth.signUp({
@@ -224,6 +248,12 @@ export default function Register() {
         full_name: name.trim(),
         company: needsCompany ? company.trim() : null,
         school: needsSchool ? school.trim() : null,
+        account_type: needsClassCode ? 'school' : 'individual',
+        pending_class_code: needsClassCode ? classCode.trim() : null,
+        pending_invite_code: needsInviteCode ? inviteCode.trim() : null,
+        pending_school: needsSchool ? school.trim() : null,
+        pending_partner_token: isPartnerFlow ? partnerToken : null,
+        pending_phone: phone.trim() || null,
       } },
     })
     if (err) {
@@ -233,14 +263,15 @@ export default function Register() {
         : 'Algo correu mal. Tenta novamente.')
       return
     }
-    // No email confirmation step — if signUp didn't already return a session
-    // (confirmations enabled on the project), sign in straight away.
+
+    // Email confirmation required — show "check your email" screen
     if (!data?.session) {
-      await supabase.auth.signInWithPassword({ email, password })
+      setLoading(false)
+      setConfirmationPending(true)
+      return
     }
 
-    // Professor role only takes effect once the invite code is redeemed —
-    // the account itself was just created as a plain 'aluno'.
+    // Session exists (e.g. autoconfirm on or OAuth) — process immediately
     if (needsInviteCode) {
       const ok = await redeemInviteCode()
       if (!ok) {
@@ -252,8 +283,6 @@ export default function Register() {
       await refreshProfile()
     }
 
-    // Same idea for the partner-company flow — 'empresa' only takes effect
-    // once the invite token is claimed.
     if (isPartnerFlow) {
       const ok = await claimPartnerInvite()
       if (!ok) {
@@ -265,9 +294,21 @@ export default function Register() {
       await refreshProfile()
     }
 
-    // Associate school organization if the email domain matches
-    if (detectedOrg) {
-      await supabase.rpc('associate_organization_by_email').catch(() => {})
+    if (needsClassCode) {
+      const { data: regResult } = await supabase.rpc('register_institutional_student', { p_class_code: classCode.trim(), p_email: email.trim() })
+      if (!regResult?.ok) {
+        setLoading(false)
+        setAccountCreated(true)
+        if (regResult?.reason === 'class_not_found') {
+          setError('A tua conta foi criada, mas o código de turma é inválido. Verifica com o teu professor.')
+        } else if (regResult?.reason === 'domain_mismatch') {
+          setError(`A tua conta foi criada, mas o teu email tem de ser @${regResult.expected_domain} para entrar na turma de ${regResult.school_name}.`)
+        } else {
+          setError('A tua conta foi criada, mas houve um erro ao entrar na turma. Tenta novamente.')
+        }
+        return
+      }
+      await refreshProfile()
     }
 
     // Store geolocation, referrer and phone on the new profile
@@ -306,7 +347,7 @@ export default function Register() {
 
     setLoading(false)
     const primaryClaimed = claimSlug || claimedSlugs[0]
-    navigate(nextPath ?? '/dashboard', primaryClaimed ? { state: { claimedSlug: primaryClaimed } } : undefined)
+    navigate('/dashboard', primaryClaimed ? { state: { claimedSlug: primaryClaimed } } : undefined)
   }
 
   const selectedRole = ROLES.find(r => r.id === role)
@@ -395,7 +436,48 @@ export default function Register() {
             />
           </div>
 
-          {step === 'role' ? (
+          {confirmationPending ? (
+            /* ── EMAIL CONFIRMATION PENDING ── */
+            <div style={{ textAlign: 'center', padding: '20px 0' }}>
+              <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(59,130,246,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+                <Mail size={26} style={{ color: C.blue }} />
+              </div>
+              <h1 style={{ color: C.text, fontSize: 22, fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 10px', letterSpacing: '-0.5px' }}>
+                Verifica o teu email
+              </h1>
+              <p style={{ color: C.muted, fontSize: 14, lineHeight: 1.6, margin: '0 0 24px' }}>
+                Enviámos um link de confirmação para<br />
+                <strong style={{ color: C.text }}>{email}</strong>.<br />
+                Clica no link para ativar a tua conta.
+              </p>
+              {resendState === 'sent' ? (
+                <p style={{ color: 'var(--color-success)', fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                  <Check size={14} /> Novo email enviado!
+                </p>
+              ) : (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    setResendState('sending')
+                    await supabase.auth.resend({ type: 'signup', email })
+                    setResendState('sent')
+                  }}
+                  disabled={resendState === 'sending'}
+                  style={{
+                    background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.25)',
+                    borderRadius: 8, padding: '10px 20px',
+                    color: C.blue, fontSize: 13, fontWeight: 600,
+                    cursor: 'pointer', fontFamily: 'inherit',
+                  }}
+                >
+                  {resendState === 'sending' ? 'A enviar...' : 'Reenviar email de confirmação'}
+                </button>
+              )}
+              <p style={{ color: C.muted, fontSize: 13, marginTop: 16 }}>
+                Não recebes nada? Verifica a pasta de spam.
+              </p>
+            </div>
+          ) : step === 'role' ? (
             /* ── STEP 1: escolha de tipo de conta ── */
             <>
               <h1 style={{ color: C.text, fontSize: 26, fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 6px', letterSpacing: '-0.5px' }}>Criar conta</h1>
@@ -428,8 +510,11 @@ export default function Register() {
                       }}
                     >
                       <span style={{ color: r.color, display: 'flex', alignItems: 'center' }}>{r.icon}</span>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: selected ? r.color : C.text }}>
-                        {r.label}
+                      <div>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: selected ? r.color : C.text }}>
+                          {r.label}
+                        </div>
+                        {r.sub && <div style={{ fontSize: 11, color: C.muted, fontWeight: 400, marginTop: 2 }}>{r.sub}</div>}
                       </div>
                     </div>
                   )
@@ -499,6 +584,10 @@ export default function Register() {
                     <p style={{ color: C.muted, fontSize: 14, margin: 0 }}>
                       A tua conta foi criada. Carrega no botão abaixo para tentar ligar-te a <strong style={{ color: C.text }}>{partnerInvite.name}</strong> novamente.
                     </p>
+                  ) : needsClassCode ? (
+                    <Field label="Código da turma">
+                      <Input value={classCode} onChange={e => setClassCode(e.target.value.toUpperCase())} placeholder="Ex: ABC123" required />
+                    </Field>
                   ) : (
                     <Field label="Código de acesso">
                       <Input value={inviteCode} onChange={e => setInviteCode(e.target.value)} placeholder="Código enviado pela Showo" required />
@@ -524,24 +613,13 @@ export default function Register() {
                         <Input value={inviteCode} onChange={e => setInviteCode(e.target.value)} placeholder="Código enviado pela Showo" required />
                       </Field>
                     )}
+                    {needsClassCode && (
+                      <Field label="Código da turma">
+                        <Input value={classCode} onChange={e => setClassCode(e.target.value.toUpperCase())} placeholder="Ex: ABC123" required />
+                      </Field>
+                    )}
                     <Field label="Email">
-                      <Input
-                        type="email"
-                        value={email}
-                        onChange={e => { setEmail(e.target.value); checkEmailDomain(e.target.value) }}
-                        placeholder="tu@email.com"
-                        required
-                      />
-                      {detectedOrg && (
-                        <div style={{
-                          marginTop: 8, display: 'flex', alignItems: 'center', gap: 8,
-                          background: 'rgba(43,126,245,0.08)', border: '1px solid rgba(43,126,245,0.25)',
-                          borderRadius: 8, padding: '8px 12px', fontSize: 13, color: 'var(--color-primary)',
-                        }}>
-                          <GraduationCap size={14} />
-                          <span>Conta escolar — <strong>{detectedOrg.name}</strong></span>
-                        </div>
-                      )}
+                      <Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="tu@email.com" required />
                     </Field>
                     <Field label="Palavra-passe">
                       <Input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Mínimo 6 caracteres" required />
