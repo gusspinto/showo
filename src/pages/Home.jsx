@@ -185,7 +185,14 @@ export default function Home() {
     setAuthLoading(true)
     const { data: exists, error: checkErr } = await supabase.rpc('check_email_exists', { p_email: email.trim() })
     setAuthLoading(false)
-    if (checkErr) { setAuthError('Erro de ligação. Tenta novamente.'); return }
+    if (checkErr) {
+      // check_email_exists (024) limita a 5 pedidos por IP por hora — de
+      // propósito, para não virar um oráculo de "que emails existem". Um
+      // "erro de ligação" para isto era enganador: não é a rede, é o
+      // limite. Mesmo texto que o Login.jsx já usa para o mesmo caso.
+      setAuthError('Demasiadas tentativas. Aguarda um pouco e tenta novamente.')
+      return
+    }
     if (exists) {
       setHeroAuthStep('password')
     } else {

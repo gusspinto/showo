@@ -394,6 +394,9 @@ export default function Register() {
           to   { opacity: 1; transform: translateY(0); }
         }
         .auth-main { flex: 1; display: flex; align-items: center; justify-content: center; padding: 24px 16px; }
+        @media (max-width: 600px) {
+          .auth-main--top { align-items: flex-start; padding-top: 40px; }
+        }
         .auth-card { width: 100%; max-width: 420px; }
         .auth-input,
         body.light .auth-input {
@@ -420,14 +423,29 @@ export default function Register() {
         @media (max-width: 860px) {
           .auth-side { display: none; }
         }
-        @media (max-width: 350px) { .register-role-grid { grid-template-columns: 1fr !important; } }
+        /* Em pilar no telemóvel — duas colunas apertava demais os subtítulos
+           ("Tenho código de turma", "Gerir turmas e alunos") em ecrãs
+           normais, não só nos muito estreitos que o 350px cobria. */
+        @media (max-width: 600px) { .register-role-grid { grid-template-columns: 1fr !important; } }
       `}</style>
 
       <AuthSidePanel phrases={REGISTER_PHRASES} />
 
-      <div className="auth-main">
+      {/* No passo de escolha do papel, o ecrã não centra na vertical — a
+          logo sobe para junto do topo, como o resto da app já faz no
+          telemóvel, em vez de flutuar a meio de um ecrã com muito vazio à
+          volta. Os outros passos (formulário, confirmação) mantêm-se
+          centrados, que é onde fazem sentido. */}
+      <div className={`auth-main${step === 'role' && !confirmationPending ? ' auth-main--top' : ''}`}>
         <div className="auth-card">
-          <div className="auth-main-logo" style={{ marginBottom: 36 }}>
+          <div
+            className="auth-main-logo"
+            style={{
+              marginBottom: 36,
+              display: 'flex',
+              justifyContent: step === 'role' ? 'center' : 'flex-start',
+            }}
+          >
             <img
               src={theme === 'light' ? '/lightmode_icon_logo.png' : '/darkmode_icon_logo.png'}
               alt="Showo"
@@ -480,8 +498,12 @@ export default function Register() {
           ) : step === 'role' ? (
             /* ── STEP 1: escolha de tipo de conta ── */
             <>
-              <h1 style={{ color: C.text, fontSize: 26, fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 6px', letterSpacing: '-0.5px' }}>Criar conta</h1>
-              <p style={{ color: C.muted, fontSize: 14, margin: '0 0 28px' }}>Como vais usar o Showo?</p>
+              {/* "Criar conta" saiu — dizia o óbvio (a pessoa já sabe que
+                  está a criar conta) e duplicava o que a pergunta a seguir
+                  já diz. Fica só a pergunta, centrada. */}
+              <h1 style={{ color: C.text, fontSize: 22, fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 28px', letterSpacing: '-0.4px', textAlign: 'center' }}>
+                Como vais usar o Showo?
+              </h1>
 
               {partnerToken && partnerInvite === 'invalid' && (
                 <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 8, padding: '10px 14px', marginBottom: 20, color: C.error, fontSize: 13 }}>
@@ -576,7 +598,7 @@ export default function Register() {
 
               {!accountCreated && (
                 <>
-                  <GoogleButton label="Continuar com Google" variant="subtle" />
+                  <GoogleButton label="Continuar com Google" />
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '18px 0' }}>
                     <div style={{ flex: 1, height: 1, background: C.border }} />
                     <span style={{ fontSize: 12, color: 'var(--color-text-tertiary)', fontWeight: 600 }}>ou</span>
@@ -661,8 +683,8 @@ export default function Register() {
                   type="submit" disabled={loading}
                   className="auth-submit"
                   style={{
-                    background: loading ? 'var(--color-border)' : 'var(--color-primary)',
-                    color: '#fff', border: 'none',
+                    background: loading ? 'var(--color-border)' : C.text,
+                    color: loading ? C.muted : C.bg, border: 'none',
                     borderRadius: 10, padding: '12px 0', fontSize: 15, fontWeight: 700,
                     cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit', marginTop: 4,
                   }}

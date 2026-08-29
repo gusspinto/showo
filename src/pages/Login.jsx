@@ -259,8 +259,8 @@ export default function Login() {
                     type="submit" disabled={forgotLoading}
                     className="auth-submit"
                     style={{
-                      background: forgotLoading ? 'var(--color-border)' : 'var(--color-primary)',
-                      color: '#fff', border: 'none',
+                      background: forgotLoading ? 'var(--color-border)' : C.text,
+                      color: forgotLoading ? C.muted : C.bg, border: 'none',
                       borderRadius: 10, padding: '12px 0', fontSize: 15, fontWeight: 700,
                       cursor: forgotLoading ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
                     }}
@@ -285,7 +285,7 @@ export default function Login() {
           <h1 style={{ color: C.text, fontSize: 26, fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 8px', letterSpacing: '-0.5px' }}>Entrar</h1>
           <p style={{ color: C.muted, fontSize: 14, margin: '0 0 28px' }}>Acede ao teu painel de projetos</p>
 
-          <GoogleButton variant="subtle" />
+          <GoogleButton />
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '18px 0' }}>
             <div style={{ flex: 1, height: 1, background: C.border }} />
@@ -356,12 +356,16 @@ export default function Login() {
               </div>
             )}
 
+            {/* Invertido em vez de azul — o mesmo tom que o herói da home já
+                usa nos botões Google/email: var(--color-text) sobre
+                var(--color-bg), não #fff, porque esta página segue o tema
+                (o herói não, é sempre escuro). */}
             <button
               type="submit" disabled={loading}
               className="auth-submit"
               style={{
-                background: loading ? 'var(--color-border)' : 'var(--color-primary)',
-                color: '#fff', border: 'none',
+                background: loading ? 'var(--color-border)' : C.text,
+                color: loading ? C.muted : C.bg, border: 'none',
                 borderRadius: 10, padding: '12px 0', fontSize: 15, fontWeight: 700,
                 cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
                 marginTop: 4,
