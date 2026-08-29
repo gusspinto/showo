@@ -165,6 +165,90 @@ export default function Register() {
     return !claimErr
   }
 
+  // Tudo o que falta depois de existir uma sessão válida — resgatar convite/
+  // turma/parceiro, guardar geo/telefone, referral, welcome email, reclamar
+  // projetos anónimos, e ir para a dashboard. Corre tanto logo a seguir ao
+  // signUp (quando não precisa de confirmação de email) como mais tarde,
+  // quando a confirmação chega por outro dispositivo (ver autoLoginAfterConfirm).
+  async function finishAccountSetup() {
+    if (needsInviteCode) {
+      const ok = await redeemInviteCode()
+      if (!ok) {
+        setLoading(false)
+        setAccountCreated(true)
+        setError('A tua conta foi criada, mas o código de acesso é inválido ou já foi utilizado. Verifica o código e tenta novamente.')
+        return
+      }
+      await refreshProfile()
+    }
+
+    if (isPartnerFlow) {
+      const ok = await claimPartnerInvite()
+      if (!ok) {
+        setLoading(false)
+        setAccountCreated(true)
+        setError('A tua conta foi criada, mas não foi possível ligá-la a esta empresa. O convite pode já ter sido usado.')
+        return
+      }
+      await refreshProfile()
+    }
+
+    if (needsClassCode) {
+      const { data: regResult } = await supabase.rpc('register_institutional_student', { p_class_code: classCode.trim(), p_email: email.trim() })
+      if (!regResult?.ok) {
+        setLoading(false)
+        setAccountCreated(true)
+        if (regResult?.reason === 'class_not_found') {
+          setError('A tua conta foi criada, mas o código de turma é inválido. Verifica com o teu professor.')
+        } else if (regResult?.reason === 'domain_mismatch') {
+          setError(`A tua conta foi criada, mas o teu email tem de ser @${regResult.expected_domain} para entrar na turma de ${regResult.school_name}.`)
+        } else {
+          setError('A tua conta foi criada, mas houve um erro ao entrar na turma. Tenta novamente.')
+        }
+        return
+      }
+      await refreshProfile()
+    }
+
+    // Store geolocation, referrer and phone on the new profile
+    const params = new URLSearchParams(window.location.search)
+    const geo = await getGeoInfo()
+    const { data: { user: newUser } } = await supabase.auth.getUser()
+    if (newUser) {
+      await supabase.from('profiles').update({
+        signup_country: geo?.country || null,
+        signup_city: geo?.city || null,
+        signup_referrer: document.referrer || null,
+        signup_utm_source: params.get('utm_source') || null,
+        phone: phone.trim() || null,
+      }).eq('id', newUser.id)
+    }
+
+    // Claim referral code (ambassador system)
+    if (newUser) {
+      const storedRef = localStorage.getItem('showo_ref')
+      if (storedRef) {
+        await supabase.rpc('claim_referral', { code: storedRef }).catch(() => {})
+        localStorage.removeItem('showo_ref')
+      }
+    }
+
+    // Send welcome email (fire-and-forget)
+    if (newUser) {
+      supabase.functions.invoke('send-welcome-email').catch(() => {})
+    }
+
+    // Claim all anonymously-created projects from this browser (edit_token_* in localStorage)
+    let claimedSlugs = []
+    if (newUser) {
+      claimedSlugs = await claimAnonymousProjects(newUser.id)
+    }
+
+    setLoading(false)
+    const primaryClaimed = claimSlug || claimedSlugs[0]
+    navigate('/dashboard', primaryClaimed ? { state: { claimedSlug: primaryClaimed } } : undefined)
+  }
+
   async function handleSubmit(e) {
     e.preventDefault()
     setError('')
@@ -275,83 +359,39 @@ export default function Register() {
     }
 
     // Session exists (e.g. autoconfirm on or OAuth) — process immediately
-    if (needsInviteCode) {
-      const ok = await redeemInviteCode()
-      if (!ok) {
-        setLoading(false)
-        setAccountCreated(true)
-        setError('A tua conta foi criada, mas o código de acesso é inválido ou já foi utilizado. Verifica o código e tenta novamente.')
-        return
-      }
-      await refreshProfile()
-    }
-
-    if (isPartnerFlow) {
-      const ok = await claimPartnerInvite()
-      if (!ok) {
-        setLoading(false)
-        setAccountCreated(true)
-        setError('A tua conta foi criada, mas não foi possível ligá-la a esta empresa. O convite pode já ter sido usado.')
-        return
-      }
-      await refreshProfile()
-    }
-
-    if (needsClassCode) {
-      const { data: regResult } = await supabase.rpc('register_institutional_student', { p_class_code: classCode.trim(), p_email: email.trim() })
-      if (!regResult?.ok) {
-        setLoading(false)
-        setAccountCreated(true)
-        if (regResult?.reason === 'class_not_found') {
-          setError('A tua conta foi criada, mas o código de turma é inválido. Verifica com o teu professor.')
-        } else if (regResult?.reason === 'domain_mismatch') {
-          setError(`A tua conta foi criada, mas o teu email tem de ser @${regResult.expected_domain} para entrar na turma de ${regResult.school_name}.`)
-        } else {
-          setError('A tua conta foi criada, mas houve um erro ao entrar na turma. Tenta novamente.')
-        }
-        return
-      }
-      await refreshProfile()
-    }
-
-    // Store geolocation, referrer and phone on the new profile
-    const params = new URLSearchParams(window.location.search)
-    const geo = await getGeoInfo()
-    const { data: { user: newUser } } = await supabase.auth.getUser()
-    if (newUser) {
-      await supabase.from('profiles').update({
-        signup_country: geo?.country || null,
-        signup_city: geo?.city || null,
-        signup_referrer: document.referrer || null,
-        signup_utm_source: params.get('utm_source') || null,
-        phone: phone.trim() || null,
-      }).eq('id', newUser.id)
-    }
-
-    // Claim referral code (ambassador system)
-    if (newUser) {
-      const storedRef = localStorage.getItem('showo_ref')
-      if (storedRef) {
-        await supabase.rpc('claim_referral', { code: storedRef }).catch(() => {})
-        localStorage.removeItem('showo_ref')
-      }
-    }
-
-    // Send welcome email (fire-and-forget)
-    if (newUser) {
-      supabase.functions.invoke('send-welcome-email').catch(() => {})
-    }
-
-    // Claim all anonymously-created projects from this browser (edit_token_* in localStorage)
-    let claimedSlugs = []
-    if (newUser) {
-      claimedSlugs = await claimAnonymousProjects(newUser.id)
-    }
-
-    setLoading(false)
-    const primaryClaimed = claimSlug || claimedSlugs[0]
-    navigate('/dashboard', primaryClaimed ? { state: { claimedSlug: primaryClaimed } } : undefined)
+    await finishAccountSetup()
   }
+
+  // ── Auto-login quando a confirmação chega por outro dispositivo ──
+  // O PC fica no ecrã "Verifica o teu email" sem sessão própria. Se a
+  // pessoa confirma pelo telemóvel, esse dispositivo é que fica autenticado
+  // — este separador não sabe, a não ser que pergunte. Enquanto o ecrã
+  // estiver visível, pergunta de vez em quando (função pública com
+  // rate-limit, só devolve um boolean) e, assim que vier confirmado, entra
+  // sozinho com o email/password que já tem em memória desde o submit.
+  useEffect(() => {
+    if (!confirmationPending) return
+
+    let cancelled = false
+    let attempts = 0
+    const MAX_ATTEMPTS = 75 // ~5 minutos a cada 4s
+
+    const interval = setInterval(async () => {
+      attempts++
+      if (attempts > MAX_ATTEMPTS) { clearInterval(interval); return }
+
+      const { data: confirmed } = await supabase.rpc('check_email_confirmed', { p_email: email })
+      if (!confirmed || cancelled) return
+
+      clearInterval(interval)
+      const { data: signInData, error: signInErr } = await supabase.auth.signInWithPassword({ email, password })
+      if (signInErr || cancelled) return
+      await finishAccountSetup()
+    }, 4000)
+
+    return () => { cancelled = true; clearInterval(interval) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [confirmationPending])
 
   const selectedRole = ROLES.find(r => r.id === role)
 
