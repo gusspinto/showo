@@ -106,7 +106,9 @@ export default function Register() {
   const [name, setName] = useState('')
   const [company, setCompany] = useState('')
   const [school, setSchool] = useState('')
-  const [email, setEmail] = useState('')
+  // Pré-preenchido quando se vem do passo "Continuar com email" da home
+  // mobile — a pessoa já escreveu o email lá, não devia ter de o repetir.
+  const [email, setEmail] = useState(() => params.get('email') || '')
   const [password, setPassword] = useState('')
   const [phone, setPhone] = useState('')
 

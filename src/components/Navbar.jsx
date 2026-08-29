@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
 import { useSidebar } from '../context/SidebarContext'
 import { supabase } from '../lib/supabase'
-import { Check, X, FolderOpen, User, Settings as SettingsIcon, Shield, Globe, Trophy, LogOut, ArrowRightToLine, Bell, Eye, Target, TrendingUp, GraduationCap, UserPlus, LayoutDashboard, Plus, Compass, Sun, Moon, Sparkles, Pencil, ArrowLeft, Briefcase, Users2, Building2, Search, Star, MessageSquare, Kanban, Heart, CheckCircle, XCircle, AlignJustify, Paintbrush, Mail, ChevronRight, Monitor, Tablet, Smartphone, ListChecks, CheckCircle2, BookMarked, BookOpen } from 'lucide-react'
+import { Check, X, FolderOpen, User, Settings as SettingsIcon, Shield, Globe, Trophy, LogOut, ArrowRightToLine, Bell, Eye, Target, TrendingUp, GraduationCap, UserPlus, LayoutDashboard, Plus, Compass, Sun, Moon, Sparkles, Pencil, ArrowLeft, Briefcase, Users2, Building2, Search, Star, MessageSquare, Kanban, Heart, CheckCircle, XCircle, AlignJustify, Paintbrush, Mail, ChevronRight, Monitor, Tablet, Smartphone, ListChecks, CheckCircle2, BookMarked, BookOpen, Bug } from 'lucide-react'
 
 // Strip emoji characters from notification messages coming from the DB
 function stripEmoji(str) {
@@ -691,6 +691,9 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
   const { extras } = useSidebar()
   const [open, setOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+  // Feedback anónimo — já não tem botão flutuante próprio, abre a partir de
+  // uma entrada normal na sidebar (desktop) e no drawer (mobile).
+  const [feedbackOpen, setFeedbackOpen] = useState(false)
   // Keeps the mobile menu sheet mounted for one extra animation cycle after
   // menuOpen flips to false, so the closing slide-down/fade can actually play
   // instead of the sheet just vanishing — every existing setMenuOpen(false)
@@ -974,6 +977,20 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
           </button>
         )}
 
+        {/* Marca, mobile — logo a seguir ao hambúrguer, como o Canva faz. No
+            telemóvel o centro do topo estava vazio (.nav-mid só existe no
+            desktop); sem isto não havia nenhuma marca visível na página até
+            se abrir o menu, e quem chega de um link partilhado não tinha
+            como saber, olhando para o topo, que app é esta. */}
+        {showLinks && !mobileLeft && (
+          <button className="nav-mob-logo" onClick={() => navigate(user ? '/dashboard' : '/')} aria-label="Showo">
+            <img
+              src={theme === 'light' ? '/lightmode_icon_logo.png' : '/darkmode_icon_logo.png'}
+              alt="" draggable={false}
+            />
+          </button>
+        )}
+
         {/* Mobile-only left slot */}
         {mobileLeft && <div className="nav-mob-left">{mobileLeft}</div>}
 
@@ -1010,17 +1027,14 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
           {/* Notification bell — always visible when logged in (including mobile) */}
           {user && <InviteInbox userId={user.id} />}
 
-          {/* Mobile action cluster (≤600px), right side. Logged out → Entrar/Criar conta
-              shown up-front (not buried in the drawer). Logged in → quick-create or the
-              preview workspace toggle. The drawer trigger itself lives on the LEFT. */}
+          {/* Mobile action cluster (≤600px), right side. Logged in → quick-create
+              or the preview workspace toggle. Logged out → nada aqui: com a
+              logo agora centrada, um botão "Entrar" a solo do lado direito
+              desequilibrava a barra sem servir nada que o herói e o drawer já
+              não ofereçam. Entrar continua acessível pelos dois. */}
           {showLinks && (
             <div className="mob-nav-actions">
-              {!user ? (
-                <>
-                  <button className="mob-nav-auth-btn ghost" onClick={() => navigate('/login')}>Entrar</button>
-                  <button className="mob-nav-auth-btn primary" onClick={() => navigate('/register')}>Criar conta</button>
-                </>
-              ) : previewEditingMobile ? (
+              {!user ? null : previewEditingMobile ? (
                 <button className="mob-nav-icon-btn primary" onClick={onWorkspaceToggle} aria-label="Editar preview">
                   <Paintbrush size={18} strokeWidth={2} />
                 </button>
@@ -1352,6 +1366,19 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
 
         <div className="sb-divider" />
 
+        {/* Feedback — já não é um botão flutuante por cima do conteúdo em
+            todos os ecrãs; passou a um ícone pequeno aqui, disponível a
+            qualquer papel e mesmo sem conta (não exige login). Só o ícone,
+            nunca com texto ao lado — o mesmo botão pequeno que Definições/
+            Tema já usam, não uma linha da lista. */}
+        <div style={{ padding: '2px 10px 4px', display: 'flex', justifyContent: collapsed ? 'center' : 'flex-start' }}>
+          <button className="sb-action-btn" onClick={() => setFeedbackOpen(true)} title="Reportar um problema" aria-label="Reportar um problema">
+            <Bug size={16} />
+          </button>
+        </div>
+
+        <div className="sb-divider" />
+
         {/* Bottom — user section */}
         <div className="sb-bottom">
           {user ? (
@@ -1550,12 +1577,10 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
         <>
           <div className={`mob-menu-overlay${menuOpen ? '' : ' closing'}`} onClick={() => setMenuOpen(false)} />
           <div className={`mob-menu-sheet${menuOpen ? '' : ' closing'}`}>
+            {/* A marca já vive na barra do topo (ao lado do hambúrguer, sempre
+                visível), por isso deixou de precisar de se repetir aqui —
+                repetir era a mesma marca duas vezes na mesma tela. */}
             <div className="mob-drawer-head">
-              <img
-                src={theme === 'light' ? '/lightmode_icon_logo.png' : '/darkmode_icon_logo.png'} alt="Showo" draggable={false}
-                onClick={() => { navigate(user ? '/dashboard' : '/'); setMenuOpen(false) }}
-                style={{ height: 26, width: 'auto', objectFit: 'contain', cursor: 'pointer', userSelect: 'none' }}
-              />
               <button className="mob-drawer-close" onClick={() => setMenuOpen(false)} aria-label="Fechar menu">
                 <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <rect x="3" y="3" width="18" height="18" rx="2" />
@@ -1571,7 +1596,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                 <>
                   <span className="mob-nav-section-label">Ações</span>
                   <button className="mob-nav-btn" onClick={() => { setMenuOpen(false); navigate('/novo') }}>
-                    <Plus size={20} /> Criar projeto
+                    Criar projeto
                   </button>
                   <div className="mob-nav-divider" />
                 </>
@@ -1584,7 +1609,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                 <>
                   <button className={`mob-nav-btn${isActive('/admin') ? ' active' : ''}`} style={{ color: 'var(--color-accent)' }}
                     onClick={() => { navigate('/admin'); setMenuOpen(false) }}>
-                    <Shield size={20} /> Painel de Admin
+                    Painel de Admin
                   </button>
                   <div className="mob-nav-divider" />
                 </>
@@ -1594,13 +1619,13 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               {isRecruiter ? (
                 <>
                   <button className={`mob-nav-btn${isActive('/dashboard') ? ' active' : ''}`} onClick={() => { navigate('/dashboard'); setMenuOpen(false) }}>
-                    <LayoutDashboard size={20} /> Dashboard
+                    Dashboard
                   </button>
                   <button className={`mob-nav-btn${isActive('/explorar') ? ' active' : ''}`} onClick={() => { navigate('/explorar'); setMenuOpen(false) }}>
-                    <Compass size={20} /> Explorar
+                    Explorar
                   </button>
                   <button className={`mob-nav-btn${isActive('/mensagens') ? ' active' : ''}`} onClick={() => { navigate('/mensagens'); setMenuOpen(false) }}>
-                    <MessageSquare size={20} /> Mensagens
+                    Mensagens
                     {unreadMsgs > 0 && <span style={{ marginLeft: 'auto', background: 'var(--color-primary)', color: '#fff', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{unreadMsgs > 9 ? '9+' : unreadMsgs}</span>}
                   </button>
                 </>
@@ -1608,46 +1633,64 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                 <>
                   {user && (
                     <button className={`mob-nav-btn${isActive('/dashboard') ? ' active' : ''}`} onClick={() => { navigate('/dashboard'); setMenuOpen(false) }}>
-                      <LayoutDashboard size={20} /> Dashboard
+                      Dashboard
                     </button>
                   )}
                   <button className={`mob-nav-btn${isActive('/turmas') ? ' active' : ''}`} onClick={() => { navigate('/turmas'); setMenuOpen(false) }}>
-                    <Users2 size={20} /> Turmas
+                    Turmas
                   </button>
                   <button className={`mob-nav-btn${isActive('/mensagens') ? ' active' : ''}`} onClick={() => { navigate('/mensagens'); setMenuOpen(false) }}>
-                    <MessageSquare size={20} /> Mensagens
+                    Mensagens
                     {unreadMsgs > 0 && <span style={{ marginLeft: 'auto', background: 'var(--color-primary)', color: '#fff', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{unreadMsgs > 9 ? '9+' : unreadMsgs}</span>}
                   </button>
                   <button className={`mob-nav-btn${isActive('/explorar') ? ' active' : ''}`} onClick={() => { navigate('/explorar'); setMenuOpen(false) }}>
-                    <Compass size={20} /> Explorar
+                    Explorar
                   </button>
                 </>
               ) : (
                 <>
                   {user && (
                     <button className={`mob-nav-btn${isActive('/dashboard') ? ' active' : ''}`} onClick={() => { navigate('/dashboard'); setMenuOpen(false) }}>
-                      <LayoutDashboard size={20} /> Dashboard
+                      Dashboard
+                    </button>
+                  )}
+                  {/* Visitante sem conta: o menu é o mapa do site — a explicação
+                      que não cabe no herói fica a um toque, não escondida. Sem
+                      Estágio aqui: é uma funcionalidade da conta de escola, não
+                      algo para vender a quem ainda nem entrou. */}
+                  {/* Aponta para o guia a sério (/aprende, já público), não
+                      para um scroll dentro da própria home — a explicação
+                      curta já está lá, quem abre o menu quer mais do que
+                      isso. */}
+                  {!user && (
+                    <button className={`mob-nav-btn${isActive('/aprende') ? ' active' : ''}`} onClick={() => { navigate('/aprende'); setMenuOpen(false) }}>
+                      Aprende a usar
                     </button>
                   )}
                   <button className={`mob-nav-btn${isActive('/explorar') ? ' active' : ''}`} onClick={() => { navigate('/explorar'); setMenuOpen(false) }}>
-                    <Compass size={20} /> Explorar
+                    Explorar
                   </button>
+                  {!user && (
+                    <button className={`mob-nav-btn${isActive('/pricing') ? ' active' : ''}`} onClick={() => { navigate('/pricing'); setMenuOpen(false) }}>
+                      Planos
+                    </button>
+                  )}
                   {user && (
                     <>
                       <span className="mob-nav-section-label">Comunidade</span>
                       <button className={`mob-nav-btn${isActive('/mensagens') ? ' active' : ''}`} onClick={() => { navigate('/mensagens'); setMenuOpen(false) }}>
-                        <MessageSquare size={20} /> Mensagens
+                        Mensagens
                         {unreadMsgs > 0 && <span style={{ marginLeft: 'auto', background: 'var(--color-primary)', color: '#fff', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{unreadMsgs > 9 ? '9+' : unreadMsgs}</span>}
                       </button>
                       <button className={`mob-nav-btn${isActive('/estagio') ? ' active' : ''}`} onClick={() => { navigate('/estagio'); setMenuOpen(false) }}>
-                        <Briefcase size={20} /> Estágio
+                        Estágio
                         <span className="mob-nav-soon">Em breve</span>
                       </button>
                       <button className={`mob-nav-btn${isActive('/pricing') ? ' active' : ''}`} onClick={() => { navigate('/pricing'); setMenuOpen(false) }}>
-                        <Sparkles size={20} /> Planos
+                        Planos
                       </button>
                       <button className={`mob-nav-btn${isActive('/aprende') ? ' active' : ''}`} onClick={() => { navigate('/aprende'); setMenuOpen(false) }}>
-                        <BookMarked size={20} /> Aprende a usar
+                        Aprende a usar
                       </button>
                     </>
                   )}
@@ -1661,14 +1704,14 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                 <>
                   {isAdmin && (
                     <button className="mob-nav-btn" onClick={() => { navigate('/admin'); setMenuOpen(false) }} style={{ color: 'var(--color-accent)' }}>
-                      <Shield size={20} /> Administração
+                      Administração
                     </button>
                   )}
                   <button className={`mob-nav-btn${isActive('/settings') ? ' active' : ''}`} onClick={() => { navigate('/settings'); setMenuOpen(false) }}>
-                    <SettingsIcon size={20} /> Definições
+                    Definições
                   </button>
                   <button className="mob-nav-btn danger" onClick={() => { handleSignOut(); setMenuOpen(false) }}>
-                    <LogOut size={20} /> Sair
+                    Sair
                   </button>
                 </>
               )}
@@ -1685,6 +1728,9 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                         <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email}</div>
                       </div>
                     </button>
+                    <button className="mob-foot-theme" onClick={() => { setFeedbackOpen(true); setMenuOpen(false) }} aria-label="Reportar um problema" title="Feedback">
+                      <Bug size={18} />
+                    </button>
                     <button className="mob-foot-theme" onClick={toggleTheme} aria-label="Alternar tema">
                       {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
                     </button>
@@ -1692,9 +1738,14 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                 ) : (
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '2px 8px' }}>
                     <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text-secondary)' }}>Aspeto</span>
-                    <button className="mob-foot-theme" onClick={toggleTheme} aria-label="Alternar tema">
-                      {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
-                    </button>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <button className="mob-foot-theme" onClick={() => { setFeedbackOpen(true); setMenuOpen(false) }} aria-label="Reportar um problema" title="Feedback">
+                        <Bug size={18} />
+                      </button>
+                      <button className="mob-foot-theme" onClick={toggleTheme} aria-label="Alternar tema">
+                        {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
@@ -1704,7 +1755,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
         </>
       )}
 
-      <FeedbackButton />
+      <FeedbackButton open={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
     </>
   )
 }
