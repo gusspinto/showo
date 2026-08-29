@@ -494,6 +494,13 @@ export default function Register() {
                 </div>
               )}
 
+              {/* Cada papel tinha a sua cor (azul, verde, info) — bonito
+                  isoladamente, mas ao lado do herói novo (Google/email a
+                  branco, sem cor nenhuma a mais) lia-se como duas linguagens
+                  visuais diferentes na mesma jornada. Um estado só —
+                  selecionado ou não — como o resto do fluxo de auth agora
+                  usa: neutro, com o branco (var(--color-text)) a marcar a
+                  escolha, não uma cor por papel. */}
               <div className="register-role-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 28 }}>
                 {ROLES.filter(r => !r.disabled).map(r => {
                   const selected = role === r.id
@@ -503,15 +510,15 @@ export default function Register() {
                       className="role-card"
                       onClick={() => setRole(r.id)}
                       style={{
-                        border: `1px solid ${selected ? r.color : C.border}`,
+                        border: `1px solid ${selected ? C.text : C.border}`,
                         borderRadius: 8, padding: '16px 14px',
                         display: 'flex', alignItems: 'center', gap: 10,
                         cursor: 'pointer',
                       }}
                     >
-                      <span style={{ color: r.color, display: 'flex', alignItems: 'center' }}>{r.icon}</span>
+                      <span style={{ color: selected ? C.text : C.muted, display: 'flex', alignItems: 'center' }}>{r.icon}</span>
                       <div>
-                        <div style={{ fontSize: 14, fontWeight: 700, color: selected ? r.color : C.text }}>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>
                           {r.label}
                         </div>
                         {r.sub && <div style={{ fontSize: 11, color: C.muted, fontWeight: 400, marginTop: 2 }}>{r.sub}</div>}
@@ -527,8 +534,8 @@ export default function Register() {
                 className="auth-submit"
                 style={{
                   width: '100%',
-                  background: role ? (selectedRole?.color ?? C.blue) : 'var(--color-border)',
-                  color: '#fff', border: 'none', borderRadius: 10, padding: '12px 0',
+                  background: role ? C.text : 'var(--color-border)',
+                  color: role ? C.bg : C.muted, border: 'none', borderRadius: 10, padding: '12px 0',
                   fontSize: 15, fontWeight: 700, cursor: role ? 'pointer' : 'not-allowed',
                   fontFamily: 'inherit',
                 }}
@@ -542,8 +549,8 @@ export default function Register() {
             <>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ color: selectedRole?.color, display: 'flex', alignItems: 'center', transform: 'scale(0.85)' }}>{selectedRole?.icon}</span>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: selectedRole?.color }}>
+                  <span style={{ color: C.text, display: 'flex', alignItems: 'center', transform: 'scale(0.85)' }}>{selectedRole?.icon}</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: C.text }}>
                     {selectedRole?.label}
                   </span>
                 </div>

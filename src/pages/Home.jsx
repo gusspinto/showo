@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
-import { ArrowRight, FileText, Trophy, Share2, Eye, Mail } from 'lucide-react'
+import { ArrowRight, FileText, Trophy, Share2, Eye, Mail, RefreshCw } from 'lucide-react'
 import { Navbar } from '../components/Navbar'
 import { supabase } from '../lib/supabase'
 import { claimAnonymousProjects } from '../lib/claimAnonymousProjects'
@@ -92,6 +92,11 @@ export default function Home() {
   const [showPassword, setShowPassword] = useState(false)
   const [authLoading, setAuthLoading] = useState(false)
   const [authError, setAuthError] = useState('')
+  // "Email não confirmado" precisa de mais do que uma frase — precisa de um
+  // botão para reenviar, senão quem clicou num link expirado fica preso sem
+  // saída nenhuma. Mesmo padrão já usado em Login.jsx e Register.jsx.
+  const [notConfirmed, setNotConfirmed] = useState(false)
+  const [resendState, setResendState] = useState('idle') // idle | sending | sent
   const [projects, setProjects] = useState([])
   const [projectsLoading, setProjectsLoading] = useState(true)
   const [projectCount, setProjectCount] = useState(null)
@@ -191,6 +196,7 @@ export default function Home() {
   async function handleLogin(e) {
     e.preventDefault()
     setAuthError('')
+    setNotConfirmed(false)
     setAuthLoading(true)
 
     const emailExistsPromise = supabase.rpc('check_email_exists', { p_email: email.trim() })
@@ -205,7 +211,7 @@ export default function Home() {
     }
 
     if (err.message?.toLowerCase().includes('email not confirmed')) {
-      setAuthError('Email não confirmado. Verifica a tua caixa de entrada.')
+      setNotConfirmed(true)
       return
     }
 
@@ -215,6 +221,12 @@ export default function Home() {
     } else {
       setAuthError('Palavra-passe incorreta.')
     }
+  }
+
+  async function resendConfirmation() {
+    setResendState('sending')
+    await supabase.auth.resend({ type: 'signup', email: email.trim() })
+    setResendState('sent')
   }
 
   return (
@@ -303,10 +315,24 @@ export default function Home() {
                     autoComplete="current-password"
                   />
                   {authError && <p className="home-start-error">{authError}</p>}
+                  {notConfirmed && (
+                    <div className="home-start-confirm">
+                      <p className="home-start-error">Email não confirmado. Verifica a tua caixa de entrada.</p>
+                      <button
+                        type="button"
+                        className="home-start-retry"
+                        onClick={resendConfirmation}
+                        disabled={resendState === 'sending'}
+                      >
+                        <RefreshCw size={13} className={resendState === 'sending' ? 'home-start-retry-spin' : ''} />
+                        {resendState === 'sent' ? 'Reenviado' : 'Tentar outra vez'}
+                      </button>
+                    </div>
+                  )}
                   <button type="submit" className="home-start-email-btn" disabled={authLoading}>
                     {authLoading ? 'A entrar…' : 'Entrar'}
                   </button>
-                  <button type="button" className="home-start-back" onClick={() => { setHeroAuthStep('email'); setAuthError('') }}>
+                  <button type="button" className="home-start-back" onClick={() => { setHeroAuthStep('email'); setAuthError(''); setNotConfirmed(false) }}>
                     Usar outro email
                   </button>
                 </form>
@@ -357,6 +383,20 @@ export default function Home() {
               </div>
 
               {authError && <p className="home-auth-error">{authError}</p>}
+              {notConfirmed && (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, textAlign: 'center' }}>
+                  <p className="home-auth-error">Email não confirmado. Verifica a tua caixa de entrada.</p>
+                  <button
+                    type="button"
+                    onClick={resendConfirmation}
+                    disabled={resendState === 'sending'}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', padding: 2, fontSize: 12.5, fontWeight: 600, color: 'rgba(255,255,255,0.6)', cursor: 'pointer', fontFamily: 'inherit' }}
+                  >
+                    <RefreshCw size={13} style={resendState === 'sending' ? { animation: 'home-start-spin 0.8s linear infinite' } : undefined} />
+                    {resendState === 'sent' ? 'Reenviado' : 'Tentar outra vez'}
+                  </button>
+                </div>
+              )}
 
               <button type="submit" className="home-auth-submit" disabled={authLoading}>
                 {authLoading ? 'A entrar...' : 'Entrar'}
