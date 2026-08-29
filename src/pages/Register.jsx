@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { claimAnonymousProjects } from '../lib/claimAnonymousProjects'
@@ -98,7 +98,20 @@ export default function Register() {
   const location = useLocation()
   const claimSlug = location.state?.claimSlug ?? null
   const { theme } = useTheme()
-  const { refreshProfile } = useAuth()
+  const { user, refreshProfile } = useAuth()
+
+  // Uma sessão já existente ao ENTRAR nesta página (ex: mudar o URL para
+  // /register à mão enquanto autenticado) redireciona logo para a
+  // dashboard — não faz sentido dar acesso ao ecrã de criar conta a quem
+  // já tem uma. Mas a sessão criada PELO PRÓPRIO fluxo de registo (signUp
+  // com autoconfirm, ou o auto-login depois de confirmar por outro
+  // dispositivo) não deve disparar isto — por isso o `hasStartedSignup` fica
+  // true assim que o registo começa, e o guard ignora o user a partir daí.
+  const hasStartedSignup = useRef(false)
+  useEffect(() => {
+    if (user && !hasStartedSignup.current) navigate('/dashboard', { replace: true })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user])
 
   // Detect context to skip role selection
   const params = new URLSearchParams(location.search)
@@ -259,6 +272,7 @@ export default function Register() {
   async function handleSubmit(e) {
     e.preventDefault()
     setError('')
+    hasStartedSignup.current = true
 
     // Account already exists (signUp succeeded on a previous attempt) — this
     // submit is just retrying the invite code / partner claim / class join.

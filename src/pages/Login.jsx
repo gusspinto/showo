@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { claimAnonymousProjects } from '../lib/claimAnonymousProjects'
@@ -6,6 +6,7 @@ import { Envelope as Mail, Check } from '@phosphor-icons/react'
 import AuthSidePanel from '../components/AuthSidePanel'
 import GoogleButton from '../components/GoogleButton'
 import { useTheme } from '../context/ThemeContext'
+import { useAuth } from '../context/AuthContext'
 
 const C = {
   bg:          'var(--color-bg)',
@@ -67,6 +68,15 @@ export default function Login() {
   const navigate = useNavigate()
   const location = useLocation()
   const { theme } = useTheme()
+  const { user } = useAuth()
+
+  // Já tens sessão? Não faz sentido ver o ecrã de login — troca direto para
+  // a dashboard. Sem isto, mudar o URL para /login à mão dava acesso ao
+  // formulário mesmo estando autenticado.
+  useEffect(() => {
+    if (user) navigate('/dashboard', { replace: true })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user])
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
