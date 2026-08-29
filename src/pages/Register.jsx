@@ -2,10 +2,12 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { claimAnonymousProjects } from '../lib/claimAnonymousProjects'
-import {
-  ArrowLeft, Envelope as Mail, Check,
-  GraduationCap as PhGraduationCap, Users as PhUsers, BookOpen as PhBookOpen, MagnifyingGlass as PhSearch, Buildings as PhBuildings,
-} from '@phosphor-icons/react'
+import { ArrowLeft, Envelope as Mail, Check } from '@phosphor-icons/react'
+// Teste isolado a este ecrã — depois do Phosphor "light"/"bold" ainda
+// ficarem esmaecidos nestes cartões, a experimentar um estilo bem sólido
+// (Font Awesome 6, via react-icons) só aqui, antes de decidir se troca o
+// resto da app outra vez.
+import { FaGraduationCap, FaUsers, FaBookOpen, FaMagnifyingGlass, FaBuilding } from 'react-icons/fa6'
 import AuthSidePanel from '../components/AuthSidePanel'
 import GoogleButton from '../components/GoogleButton'
 import { useTheme } from '../context/ThemeContext'
@@ -28,11 +30,11 @@ const REGISTER_PHRASES = [
 ]
 
 const ROLES = [
-  { id: 'aluno',               icon: <PhGraduationCap size={24} weight="light" />, label: 'Aluno',               sub: 'Conta pessoal',             color: 'var(--color-primary)' },
-  { id: 'aluno_institucional', icon: <PhUsers size={24} weight="light" />,         label: 'Aluno Institucional',  sub: 'Tenho código de turma',     color: 'var(--color-info)' },
-  { id: 'professor',           icon: <PhBookOpen size={24} weight="light" />,      label: 'Professor',            sub: 'Gerir turmas e alunos',     color: 'var(--color-success)' },
-  { id: 'recrutador',          icon: <PhSearch size={24} weight="light" />,        label: 'Recrutador',           color: 'var(--color-accent)', disabled: true },
-  { id: 'empresa',             icon: <PhBuildings size={24} weight="light" />,     label: 'Empresa',              color: 'var(--color-warning)', disabled: true },
+  { id: 'aluno',               icon: <FaGraduationCap size={22} />,  label: 'Aluno',               sub: 'Conta pessoal',             color: 'var(--color-primary)' },
+  { id: 'aluno_institucional', icon: <FaUsers size={20} />,          label: 'Aluno Institucional',  sub: 'Tenho código de turma',     color: 'var(--color-info)' },
+  { id: 'professor',           icon: <FaBookOpen size={20} />,       label: 'Professor',            sub: 'Gerir turmas e alunos',     color: 'var(--color-success)' },
+  { id: 'recrutador',          icon: <FaMagnifyingGlass size={19} />, label: 'Recrutador',           color: 'var(--color-accent)', disabled: true },
+  { id: 'empresa',             icon: <FaBuilding size={20} />,       label: 'Empresa',              color: 'var(--color-warning)', disabled: true },
 ]
 
 function EyeIcon({ visible }) {
