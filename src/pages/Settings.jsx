@@ -419,7 +419,7 @@ export default function Settings() {
     { id: 'conta', label: 'Conta', icon: <Lock size={16} /> },
   ] : [
     { id: 'perfil', label: 'Perfil', icon: <Camera size={16} /> },
-    { id: 'plano', label: 'Plano', icon: <CreditCard size={16} /> },
+    ...(role !== 'professor' ? [{ id: 'plano', label: 'Plano', icon: <CreditCard size={16} /> }] : []),
     { id: 'notificacoes', label: 'Notificações', icon: <Bell size={16} /> },
     { id: 'privacidade', label: 'Privacidade', icon: <Shield size={16} /> },
     { id: 'aparencia', label: 'Aparência', icon: theme === 'dark' ? <Moon size={16} /> : <Sun size={16} /> },
@@ -763,7 +763,7 @@ export default function Settings() {
               </SectionCard>
             )}
 
-            {activeTab === 'plano' && (
+            {activeTab === 'plano' && role !== 'professor' && (
               <PlanSection planId={planId} navigate={navigate} />
             )}
 

@@ -145,8 +145,9 @@ export function AuthProvider({ children }) {
 
   const isAdmin         = profile?.is_admin === true
   const isSchoolAccount = !!profile?.organization_id
-  // Org accounts always get the 'school' plan regardless of profiles.plan
-  const planId          = isSchoolAccount ? 'school' : (profile?.plan ?? 'free')
+  const planId          = profile?.role === 'professor' ? 'launch'
+                        : isSchoolAccount ? 'school'
+                        : (profile?.plan ?? 'free')
   const plan            = getPlan(planId)
 
   function checkGate(feature, projectCount) {
