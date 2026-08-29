@@ -394,9 +394,6 @@ export default function Register() {
           to   { opacity: 1; transform: translateY(0); }
         }
         .auth-main { flex: 1; display: flex; align-items: center; justify-content: center; padding: 24px 16px; }
-        @media (max-width: 600px) {
-          .auth-main--top { align-items: flex-start; padding-top: 40px; }
-        }
         .auth-card { width: 100%; max-width: 420px; }
         .auth-input,
         body.light .auth-input {
@@ -431,12 +428,7 @@ export default function Register() {
 
       <AuthSidePanel phrases={REGISTER_PHRASES} />
 
-      {/* No passo de escolha do papel, o ecrã não centra na vertical — a
-          logo sobe para junto do topo, como o resto da app já faz no
-          telemóvel, em vez de flutuar a meio de um ecrã com muito vazio à
-          volta. Os outros passos (formulário, confirmação) mantêm-se
-          centrados, que é onde fazem sentido. */}
-      <div className={`auth-main${step === 'role' && !confirmationPending ? ' auth-main--top' : ''}`}>
+      <div className="auth-main">
         <div className="auth-card">
           <div
             className="auth-main-logo"
