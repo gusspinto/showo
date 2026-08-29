@@ -1533,11 +1533,11 @@ export default function Admin() {
     { id: 'projects', label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Folder size={14} /> Projetos ({projects.length})</span> },
     { id: 'signups',  label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Star size={14} /> Signups ({signups.length})</span> },
     { id: 'invites',  label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><KeyRound size={14} /> Convites Professor</span> },
-    {/* Duas coisas diferentes que calhavam com o mesmo nome ("Escolas") em
-        cada lado do merge — não é o mesmo separador reescrito duas vezes, é
-        "orgs" (organizações com plano, já existia) e "schools" (domínios de
-        email para validar registo institucional, novo no main). Ficam os
-        dois, com nomes que dizem o que cada um faz. */}
+    /* Duas coisas diferentes que calhavam com o mesmo nome ("Escolas") em
+       cada lado do merge — não é o mesmo separador reescrito duas vezes, é
+       "orgs" (organizações com plano, já existia) e "schools" (domínios de
+       email para validar registo institucional, novo no main). Ficam os
+       dois, com nomes que dizem o que cada um faz. */
     { id: 'orgs',     label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Shield size={14} /> Organizações</span> },
     { id: 'schools',  label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><School size={14} /> Domínios de Escola</span> },
     { id: 'ambassadors', label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Megaphone size={14} /> Embaixadores</span> },
