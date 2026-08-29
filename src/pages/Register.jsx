@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { claimAnonymousProjects } from '../lib/claimAnonymousProjects'
-import { GraduationCap, BookOpen, Search, Building2, ArrowLeft, Users2 } from 'lucide-react'
+import { GraduationCap, BookOpen, Search, Building2, ArrowLeft, Users2, Mail, Check } from 'lucide-react'
 import AuthSidePanel from '../components/AuthSidePanel'
 import GoogleButton from '../components/GoogleButton'
 import { useTheme } from '../context/ThemeContext'
@@ -109,6 +109,8 @@ export default function Register() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [acceptedTerms, setAcceptedTerms] = useState(false)
+  const [confirmationPending, setConfirmationPending] = useState(false)
+  const [resendState, setResendState] = useState('idle')
 
   // ── Partner-company invite (?empresa_convite=<token>) — a professor added
   // this company in Parceiros.jsx and emailed this link. It unlocks the
@@ -245,6 +247,11 @@ export default function Register() {
         company: needsCompany ? company.trim() : null,
         school: needsSchool ? school.trim() : null,
         account_type: needsClassCode ? 'school' : 'individual',
+        pending_class_code: needsClassCode ? classCode.trim() : null,
+        pending_invite_code: needsInviteCode ? inviteCode.trim() : null,
+        pending_school: needsSchool ? school.trim() : null,
+        pending_partner_token: isPartnerFlow ? partnerToken : null,
+        pending_phone: phone.trim() || null,
       } },
     })
     if (err) {
@@ -254,14 +261,15 @@ export default function Register() {
         : 'Algo correu mal. Tenta novamente.')
       return
     }
-    // No email confirmation step — if signUp didn't already return a session
-    // (confirmations enabled on the project), sign in straight away.
+
+    // Email confirmation required — show "check your email" screen
     if (!data?.session) {
-      await supabase.auth.signInWithPassword({ email, password })
+      setLoading(false)
+      setConfirmationPending(true)
+      return
     }
 
-    // Professor role only takes effect once the invite code is redeemed —
-    // the account itself was just created as a plain 'aluno'.
+    // Session exists (e.g. autoconfirm on or OAuth) — process immediately
     if (needsInviteCode) {
       const ok = await redeemInviteCode()
       if (!ok) {
@@ -273,8 +281,6 @@ export default function Register() {
       await refreshProfile()
     }
 
-    // Same idea for the partner-company flow — 'empresa' only takes effect
-    // once the invite token is claimed.
     if (isPartnerFlow) {
       const ok = await claimPartnerInvite()
       if (!ok) {
@@ -286,7 +292,6 @@ export default function Register() {
       await refreshProfile()
     }
 
-    // Institutional student: validate email domain + join class + set account_type (all server-side)
     if (needsClassCode) {
       const { data: regResult } = await supabase.rpc('register_institutional_student', { p_class_code: classCode.trim(), p_email: email.trim() })
       if (!regResult?.ok) {
@@ -429,7 +434,48 @@ export default function Register() {
             />
           </div>
 
-          {step === 'role' ? (
+          {confirmationPending ? (
+            /* ── EMAIL CONFIRMATION PENDING ── */
+            <div style={{ textAlign: 'center', padding: '20px 0' }}>
+              <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(59,130,246,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+                <Mail size={26} style={{ color: C.blue }} />
+              </div>
+              <h1 style={{ color: C.text, fontSize: 22, fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 10px', letterSpacing: '-0.5px' }}>
+                Verifica o teu email
+              </h1>
+              <p style={{ color: C.muted, fontSize: 14, lineHeight: 1.6, margin: '0 0 24px' }}>
+                Enviámos um link de confirmação para<br />
+                <strong style={{ color: C.text }}>{email}</strong>.<br />
+                Clica no link para ativar a tua conta.
+              </p>
+              {resendState === 'sent' ? (
+                <p style={{ color: 'var(--color-success)', fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                  <Check size={14} /> Novo email enviado!
+                </p>
+              ) : (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    setResendState('sending')
+                    await supabase.auth.resend({ type: 'signup', email })
+                    setResendState('sent')
+                  }}
+                  disabled={resendState === 'sending'}
+                  style={{
+                    background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.25)',
+                    borderRadius: 8, padding: '10px 20px',
+                    color: C.blue, fontSize: 13, fontWeight: 600,
+                    cursor: 'pointer', fontFamily: 'inherit',
+                  }}
+                >
+                  {resendState === 'sending' ? 'A enviar...' : 'Reenviar email de confirmação'}
+                </button>
+              )}
+              <p style={{ color: C.muted, fontSize: 13, marginTop: 16 }}>
+                Não recebes nada? Verifica a pasta de spam.
+              </p>
+            </div>
+          ) : step === 'role' ? (
             /* ── STEP 1: escolha de tipo de conta ── */
             <>
               <h1 style={{ color: C.text, fontSize: 26, fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 6px', letterSpacing: '-0.5px' }}>Criar conta</h1>
