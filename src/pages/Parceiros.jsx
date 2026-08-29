@@ -3,10 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
-import {
-  Building2, Plus, X, ChevronDown, ChevronRight, Mail, Phone, Globe2,
-  UserPlus, Trash2, Pencil, ExternalLink, Send, CheckCircle2,
-} from 'lucide-react'
+import { Buildings as Building2, Plus, X, CaretDown as ChevronDown, CaretRight as ChevronRight, Envelope as Mail, Phone, GlobeHemisphereWest as Globe2, UserPlus, Trash as Trash2, PencilSimple as Pencil, ArrowSquareOut as ExternalLink, PaperPlaneTilt as Send, CheckCircle as CheckCircle2 } from '@phosphor-icons/react'
 import { Select } from '../components/ui'
 
 const C = {

@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { X, CheckCircle, Flame, Sparkles, BookOpen, ChevronLeft, ChevronRight } from 'lucide-react'
+import { X, CheckCircle, Flame, Sparkle as Sparkles, BookOpen, CaretLeft as ChevronLeft, CaretRight as ChevronRight } from '@phosphor-icons/react'
 import { supabase } from '../../lib/supabase'
 import { KIND_BY_ID, computeEngagementSignal, weekStartISO } from '../../lib/journal'
 

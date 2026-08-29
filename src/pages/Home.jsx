@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
-import { ArrowRight, FileText, Trophy, Share2, Eye, Mail, RefreshCw } from 'lucide-react'
+import { ArrowRight, FileText, Trophy, ShareNetwork as Share2, Eye, Envelope as Mail, ArrowsClockwise as RefreshCw } from '@phosphor-icons/react'
 import { Navbar } from '../components/Navbar'
 import { supabase } from '../lib/supabase'
 import { claimAnonymousProjects } from '../lib/claimAnonymousProjects'

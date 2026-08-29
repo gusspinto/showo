@@ -5,7 +5,7 @@ import { QRCodeSVG } from 'qrcode.react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
-import { Search, FolderOpen, X, Download, Rocket, QrCode, Pencil, ExternalLink, ArrowRight, Star, MessageSquare, GraduationCap, Send } from 'lucide-react'
+import { MagnifyingGlass as Search, FolderOpen, X, DownloadSimple as Download, Rocket, QrCode, PencilSimple as Pencil, ArrowSquareOut as ExternalLink, ArrowRight, Star, ChatText as MessageSquare, GraduationCap, PaperPlaneTilt as Send } from '@phosphor-icons/react'
 import ConvidarVagaModal from '../components/ConvidarVagaModal'
 import { PlanBadge } from '../components/PlanGate'
 import './UserProfile.css'
@@ -308,7 +308,7 @@ export default function UserProfile() {
                 <button onClick={toggleSave} disabled={savingCandidate}
                   className={`up-action-btn${saved ? ' saved' : ''}`}
                   title={saved ? 'Remover dos guardados' : 'Guardar candidato'}>
-                  <Star size={13} fill={saved ? 'var(--color-warning)' : 'none'} />
+                  <Star size={13} weight={saved ? 'fill' : 'regular'} color={saved ? 'var(--color-warning)' : undefined} />
                   {saved ? 'Guardado' : 'Guardar'}
                 </button>
                 <button onClick={() => setShowInvite(true)} className="up-action-btn primary">
@@ -355,7 +355,7 @@ export default function UserProfile() {
             return (
               <div className="up-featured-section">
                 <p className="up-featured-label">
-                  <Star size={12} fill="currentColor" /> Em destaque
+                  <Star size={12} weight="fill" /> Em destaque
                 </p>
                 <div className="up-featured-grid">
                   {featured.map(project => (

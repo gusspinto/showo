@@ -1,6 +1,4 @@
-import {
-  TrendingUp, AlertTriangle, GitBranch, Search, Lightbulb, CheckCircle2, StickyNote,
-} from 'lucide-react'
+import { TrendUp as TrendingUp, Warning as AlertTriangle, GitBranch, MagnifyingGlass as Search, Lightbulb, CheckCircle as CheckCircle2, NotePencil as StickyNote } from '@phosphor-icons/react'
 
 /* ══════════════════════════════════════════════════════════════════════════
    DIÁRIO DO PROJETO

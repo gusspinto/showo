@@ -4,12 +4,7 @@ import { supabase } from '../lib/supabase'
 import { Navbar } from '../components/Navbar'
 import SkillsPicker from '../components/SkillsPicker'
 import { calculatePotential, calculateScore } from '../lib/score'
-import {
-  Rocket, Plus, User, Globe, MessageSquare, Star,
-  Check, ArrowRight, Sparkles, Pencil, ExternalLink, Copy, Share2, Link,
-  Trash2, Flame, ArrowUpRight, Trophy, Pin, BookOpen, X, Layers,
-  GraduationCap, Upload, ClipboardCheck, BookMarked,
-} from 'lucide-react'
+import { Rocket, Plus, User, Globe, ChatText as MessageSquare, Star, Check, ArrowRight, Sparkle as Sparkles, PencilSimple as Pencil, ArrowSquareOut as ExternalLink, Copy, ShareNetwork as Share2, LinkSimple as Link, Trash as Trash2, Flame, ArrowUpRight, Trophy, PushPin as Pin, BookOpen, X, Stack as Layers, GraduationCap, UploadSimple as Upload, ClipboardText as ClipboardCheck, BookBookmark as BookMarked } from '@phosphor-icons/react'
 import { Button, Card, SectionLabel, Modal, Select } from '../components/ui'
 import { useAuth } from '../context/AuthContext'
 import ExportProjectsModal from '../components/ExportProjectsModal'
@@ -1257,7 +1252,7 @@ function ProjectRow({ project, shared, onOpen, onEdit, onCopy, copied, onDelete,
                 title={project.dashboard_pinned ? 'Remover da dashboard' : 'Fixar na dashboard'}
                 aria-label="Fixar na dashboard"
               >
-                <Pin size={13} fill={project.dashboard_pinned ? 'currentColor' : 'none'} />
+                <Pin size={13} weight={project.dashboard_pinned ? 'fill' : 'regular'} />
               </button>
             )}
             {onToggleFeatured && !shared && (
@@ -1268,7 +1263,7 @@ function ProjectRow({ project, shared, onOpen, onEdit, onCopy, copied, onDelete,
                 aria-label="Destacar no perfil"
                 disabled={!project.featured && !canFeature}
               >
-                <Star size={13} fill={project.featured ? 'currentColor' : 'none'} />
+                <Star size={13} weight={project.featured ? 'fill' : 'regular'} />
               </button>
             )}
             <button className="sdb-icon-btn sdb-icon-btn--quiet" onClick={onEdit} title="Editar" aria-label="Editar projeto">
@@ -1313,7 +1308,7 @@ function PinnedProjectCard({ project, auto, coverage, onOpenReport, onUnpin, onE
             <>
               {!auto && (
                 <button className="sdb-icon-btn sdb-icon-btn--pin is-pinned" onClick={onUnpin} title="Retirar da dashboard">
-                  <Pin size={14} fill="currentColor" />
+                  <Pin size={14} weight="fill" />
                 </button>
               )}
               <button className="sdb-icon-btn" onClick={onEdit} title="Editar projeto">

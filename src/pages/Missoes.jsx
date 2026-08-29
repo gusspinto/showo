@@ -3,11 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
-import {
-  Swords, Lock, CheckCircle2, Circle, ChevronRight,
-  Zap, Star, Target, BookOpen, Users, Globe, TrendingUp,
-  Folder, Award, Lightbulb, ArrowRight, Medal, Send, Eye,
-} from 'lucide-react'
+import { Sword as Swords, Lock, CheckCircle as CheckCircle2, Circle, CaretRight as ChevronRight, Lightning as Zap, Star, Target, BookOpen, Users, Globe, TrendUp as TrendingUp, Folder, Medal as Award, Lightbulb, ArrowRight, Medal, PaperPlaneTilt as Send, Eye } from '@phosphor-icons/react'
 
 const C = {
   bg: 'var(--color-bg)',

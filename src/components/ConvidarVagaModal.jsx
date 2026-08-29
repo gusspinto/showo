@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
-import { X, Briefcase, Send, Check } from 'lucide-react'
+import { X, Briefcase, PaperPlaneTilt as Send, Check } from '@phosphor-icons/react'
 
 const C = {
   bg:           'var(--color-bg)',

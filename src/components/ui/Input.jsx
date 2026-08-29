@@ -1,5 +1,5 @@
 import { useState, useId, useRef, useEffect } from 'react'
-import { ChevronDown } from 'lucide-react'
+import { CaretDown as ChevronDown } from '@phosphor-icons/react'
 
 export default function Input({
   label, type = 'text', value, onChange, placeholder,

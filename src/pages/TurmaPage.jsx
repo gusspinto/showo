@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
-import { Folder, Check, Search, User, Copy, Inbox, Download, MessageSquare, X, ChevronUp, ChevronDown, ChevronRight, ArrowRight, Pencil, UserMinus, GraduationCap, CheckCircle, AlertTriangle, ListChecks, Circle, Trash2, Plus, Calendar, ClipboardList, Scale, Trophy } from 'lucide-react'
+import { Folder, Check, MagnifyingGlass as Search, User, Copy, Tray as Inbox, DownloadSimple as Download, ChatText as MessageSquare, X, CaretUp as ChevronUp, CaretDown as ChevronDown, CaretRight as ChevronRight, ArrowRight, PencilSimple as Pencil, UserMinus, GraduationCap, CheckCircle, Warning as AlertTriangle, ListChecks, Circle, Trash as Trash2, Plus, Calendar, ClipboardText as ClipboardList, Scales as Scale, Trophy } from '@phosphor-icons/react'
 import { Button, Modal, ModalActions, Select } from '../components/ui'
 import { getCurrentAcademicYear, academicYearOptions } from '../lib/academicYear'
 

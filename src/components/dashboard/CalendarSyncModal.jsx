@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Copy, Check, ExternalLink, Link as LinkIcon, RefreshCw } from 'lucide-react'
+import { Copy, Check, ArrowSquareOut as ExternalLink, LinkSimple as LinkIcon, ArrowsClockwise as RefreshCw } from '@phosphor-icons/react'
 import { supabase } from '../../lib/supabase'
 import { Modal, Button } from '../ui'
 

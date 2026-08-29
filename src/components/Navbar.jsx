@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
 import { useSidebar } from '../context/SidebarContext'
 import { supabase } from '../lib/supabase'
-import { Check, X, FolderOpen, User, Settings as SettingsIcon, Shield, Globe, Trophy, LogOut, ArrowRightToLine, Bell, Eye, Target, TrendingUp, GraduationCap, UserPlus, LayoutDashboard, Plus, Compass, Sun, Moon, Sparkles, Pencil, ArrowLeft, Briefcase, Users2, Building2, Search, Star, MessageSquare, Kanban, Heart, CheckCircle, XCircle, AlignJustify, Paintbrush, Mail, ChevronRight, Monitor, Tablet, Smartphone, ListChecks, CheckCircle2, BookMarked, BookOpen, Bug } from 'lucide-react'
+import { Check, X, FolderOpen, User, Gear as SettingsIcon, Shield, Globe, Trophy, SignOut as LogOut, ArrowLineRight as ArrowRightToLine, Bell, Eye, Target, TrendUp as TrendingUp, GraduationCap, UserPlus, SquaresFour as LayoutDashboard, Plus, Compass, Sun, Moon, Sparkle as Sparkles, PencilSimple as Pencil, ArrowLeft, Briefcase, UsersThree as Users2, Buildings as Building2, MagnifyingGlass as Search, Star, ChatText as MessageSquare, Kanban, Heart, CheckCircle, XCircle, TextAlignJustify as AlignJustify, PaintBrush as Paintbrush, Envelope as Mail, CaretRight as ChevronRight, Monitor, DeviceTablet as Tablet, DeviceMobile as Smartphone, ListChecks, CheckCircle as CheckCircle2, BookBookmark as BookMarked, BookOpen, Bug } from '@phosphor-icons/react'
 
 // Strip emoji characters from notification messages coming from the DB
 function stripEmoji(str) {

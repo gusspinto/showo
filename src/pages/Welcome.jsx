@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
-import { GraduationCap, BookOpen, Building2, Search, Mail, ArrowRight, CheckCircle } from 'lucide-react'
+import { GraduationCap, BookOpen, Buildings as Building2, MagnifyingGlass as Search, Envelope as Mail, ArrowRight, CheckCircle } from '@phosphor-icons/react'
 
 const ROLES = [
   { id: 'aluno',      icon: <GraduationCap size={22} />, label: 'Aluno',      color: 'var(--color-primary)',  direct: true },

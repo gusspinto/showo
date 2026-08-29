@@ -17,7 +17,7 @@ import { useTheme } from '../context/ThemeContext'
 import DefenseMode from '../components/DefenseMode'
 import ProjectComments from '../components/ProjectComments'
 import { analyzeProject } from '../lib/analyzeProject'
-import { Check, X, Loader, GraduationCap, Save, Sparkles, Bot, Lightbulb, Pencil, Search, Target, Wrench, Zap, TrendingUp, Briefcase, Users, Rocket, Trophy, BarChart2, CheckCircle, BookOpen, ChevronDown, Eye, EyeOff, UserPlus, Calendar, Mail, ArrowRight, ChevronRight, ChevronLeft, Globe, Image, MessageSquare, Quote, Layout, Type, Link, GripVertical, Plus, AlignLeft, Star, Camera, FileText, ClipboardList, Copy, Monitor, Tablet, Smartphone, Minus, Video, AlignCenter, AlignRight, Palette, AlertTriangle, User, Settings, Bell, Swords, Paintbrush, LayoutTemplate } from 'lucide-react'
+import { Check, X, CircleNotch as Loader, GraduationCap, FloppyDisk as Save, Sparkle as Sparkles, Robot as Bot, Lightbulb, PencilSimple as Pencil, MagnifyingGlass as Search, Target, Wrench, Lightning as Zap, TrendUp as TrendingUp, Briefcase, Users, Rocket, Trophy, ChartBar as BarChart2, CheckCircle, BookOpen, CaretDown as ChevronDown, Eye, EyeSlash as EyeOff, UserPlus, Calendar, Envelope as Mail, ArrowRight, CaretRight as ChevronRight, CaretLeft as ChevronLeft, Globe, Image, ChatText as MessageSquare, Quotes as Quote, Layout, TextAa as Type, LinkSimple as Link, DotsSixVertical as GripVertical, Plus, TextAlignLeft as AlignLeft, Star, Camera, FileText, ClipboardText as ClipboardList, Copy, Monitor, DeviceTablet as Tablet, DeviceMobile as Smartphone, Minus, VideoCamera as Video, TextAlignCenter as AlignCenter, TextAlignRight as AlignRight, Palette, Warning as AlertTriangle, User, Gear as Settings, Bell, Sword as Swords, PaintBrush as Paintbrush, Browsers as LayoutTemplate } from '@phosphor-icons/react'
 
 const colors = {
   bg: 'var(--color-bg)',
@@ -3088,7 +3088,7 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
               flexWrap: 'wrap', gap: 12,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Star size={18} fill="var(--color-warning)" color="var(--color-warning)" />
+                <Star size={18} weight="fill" color="var(--color-warning)" />
                 <div>
                   <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--color-warning)' }}>Interesse guardado!</div>
                   <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 1 }}>
@@ -8037,7 +8037,7 @@ export default function ProjectPage() {
                 onMouseEnter={e => { e.currentTarget.style.background = 'var(--color-warning-subtle)' }}
                 onMouseLeave={e => { e.currentTarget.style.background = 'var(--color-warning-subtle)' }}
               >
-                <Star size={14} fill="var(--color-warning)" />
+                <Star size={14} weight="fill" color="var(--color-warning)" />
                 {interestCount} recrutador{interestCount !== 1 ? 'es' : ''} com interesse
               </button>
             )}
@@ -8057,7 +8057,7 @@ export default function ProjectPage() {
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <Star size={18} fill="var(--color-warning)" color="var(--color-warning)" />
+                    <Star size={18} weight="fill" color="var(--color-warning)" />
                     <span style={{ fontWeight: 700, fontSize: 16 }}>Recrutadores interessados</span>
                   </div>
                   <button onClick={() => setShowInterestors(false)} className="icon-btn-ghost">

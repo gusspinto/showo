@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
-import { MessageSquare, Send, Pencil, Trash2, X, Check, AlertTriangle } from 'lucide-react'
+import { ChatText as MessageSquare, PaperPlaneTilt as Send, PencilSimple as Pencil, Trash as Trash2, X, Check, Warning as AlertTriangle } from '@phosphor-icons/react'
 import { containsProfanity } from '../lib/profanity'
 import { looksLikeSpam } from '../lib/score'
 

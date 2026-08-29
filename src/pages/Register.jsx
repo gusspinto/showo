@@ -2,12 +2,10 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { claimAnonymousProjects } from '../lib/claimAnonymousProjects'
-import { ArrowLeft, Mail, Check } from 'lucide-react'
-// Teste isolado a este ecrã — ícones de outra biblioteca (traço mais fino,
-// menos batido que o Lucide) só nos três cartões de papel, para ver se vale
-// a pena antes de decidir trocar o resto da app. Nomeados com prefixo Ph
-// para não colidir com os equivalentes Lucide que o resto do ficheiro usa.
-import { GraduationCap as PhGraduationCap, Users as PhUsers, BookOpen as PhBookOpen, MagnifyingGlass as PhSearch, Buildings as PhBuildings } from '@phosphor-icons/react'
+import {
+  ArrowLeft, Envelope as Mail, Check,
+  GraduationCap as PhGraduationCap, Users as PhUsers, BookOpen as PhBookOpen, MagnifyingGlass as PhSearch, Buildings as PhBuildings,
+} from '@phosphor-icons/react'
 import AuthSidePanel from '../components/AuthSidePanel'
 import GoogleButton from '../components/GoogleButton'
 import { useTheme } from '../context/ThemeContext'

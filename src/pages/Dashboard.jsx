@@ -8,13 +8,7 @@ import ConvidarVagaModal from '../components/ConvidarVagaModal'
 import { getCurrentAcademicYear, academicYearOptions } from '../lib/academicYear'
 import { calculatePotential } from '../lib/score'
 import SkillsPicker from '../components/SkillsPicker'
-import {
-  Folder, Trophy, BarChart2, Rocket, Eye, GraduationCap, Plus, X, Users, Users2,
-  ChevronRight, ChevronDown, User, Globe, TrendingUp, MessageSquare, Star, Mail,
-  Search, Trash2, Check, Calendar, ArrowRight, Target, Zap, Sparkles, Building2,
-  Send, Copy, Share2, Link, HelpCircle, AlertTriangle, ListChecks, Circle,
-  Pencil, ExternalLink, Compass, Medal, BookOpen, Briefcase, Settings, LogOut,
-} from 'lucide-react'
+import { Folder, Trophy, ChartBar as BarChart2, Rocket, Eye, GraduationCap, Plus, X, Users, UsersThree as Users2, CaretRight as ChevronRight, CaretDown as ChevronDown, User, Globe, TrendUp as TrendingUp, ChatText as MessageSquare, Star, Envelope as Mail, MagnifyingGlass as Search, Trash as Trash2, Check, Calendar, ArrowRight, Target, Lightning as Zap, Sparkle as Sparkles, Buildings as Building2, PaperPlaneTilt as Send, Copy, ShareNetwork as Share2, LinkSimple as Link, Question as HelpCircle, Warning as AlertTriangle, ListChecks, Circle, PencilSimple as Pencil, ArrowSquareOut as ExternalLink, Compass, Medal, BookOpen, Briefcase, Gear as Settings, SignOut as LogOut } from '@phosphor-icons/react'
 import {
   Button, Card, CardHeader, CardTitle, SectionLabel, Badge, Modal, ModalActions,
   EmptyState, PageLayout, PageHeader, ProgressBar, ProgressRing, Select,

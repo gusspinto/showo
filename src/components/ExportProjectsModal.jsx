@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { verifyPersonalAccount, exportSchoolProjects } from '../lib/exportProjects'
 import { useAuth } from '../context/AuthContext'
-import { X, GraduationCap, CheckSquare, Square, ArrowRight, Check, AlertTriangle } from 'lucide-react'
+import { X, GraduationCap, CheckSquare, Square, ArrowRight, Check, Warning as AlertTriangle } from '@phosphor-icons/react'
 
 const C = {
   overlay: {

@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
-import { MapPin, Globe, Users, Briefcase, MessageSquare, ExternalLink, Building2, Link, ArrowLeft, Settings } from 'lucide-react'
+import { MapPin, Globe, Users, Briefcase, ChatText as MessageSquare, ArrowSquareOut as ExternalLink, Buildings as Building2, LinkSimple as Link, ArrowLeft, Gear as Settings } from '@phosphor-icons/react'
 
 const C = {
   bg:     'var(--color-bg)',

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Plus, Trash2 } from 'lucide-react'
+import { Plus, Trash as Trash2 } from '@phosphor-icons/react'
 import { supabase } from '../../lib/supabase'
 import { Modal, Button } from '../ui'
 import { KIND_BY_ID, timeAgoLabel } from '../../lib/journal'

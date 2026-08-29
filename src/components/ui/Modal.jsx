@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { X } from 'lucide-react'
+import { X } from '@phosphor-icons/react'
 
 export default function Modal({ children, onClose, title, subtitle, width = 440 }) {
   useEffect(() => {

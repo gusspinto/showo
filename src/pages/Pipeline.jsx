@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
-import { MessageSquare, User, X, ChevronRight, Briefcase } from 'lucide-react'
+import { ChatText as MessageSquare, User, X, CaretRight as ChevronRight, Briefcase } from '@phosphor-icons/react'
 import { Select } from '../components/ui'
 
 const C = {

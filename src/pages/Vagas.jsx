@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
-import { Briefcase, MapPin, Globe, Plus, X, Check, Clock, Building2, ChevronRight, Pencil, Trash2, ExternalLink, Send, Users, ChevronDown, ChevronUp, Zap } from 'lucide-react'
+import { Briefcase, MapPin, Globe, Plus, X, Check, Clock, Buildings as Building2, CaretRight as ChevronRight, PencilSimple as Pencil, Trash as Trash2, ArrowSquareOut as ExternalLink, PaperPlaneTilt as Send, Users, CaretDown as ChevronDown, CaretUp as ChevronUp, Lightning as Zap } from '@phosphor-icons/react'
 import SkillsPicker from '../components/SkillsPicker'
 import { Select } from '../components/ui'
 

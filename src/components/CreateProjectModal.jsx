@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { PenLine } from 'lucide-react'
+import { PencilLine as PenLine } from '@phosphor-icons/react'
 import Modal from './ui/Modal'
 
 export default function CreateProjectModal({ onClose }) {

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { TrendingUp, Zap, Info, X } from 'lucide-react'
+import { TrendUp as TrendingUp, Lightning as Zap, Info, X } from '@phosphor-icons/react'
 import { calculatePotential } from '../../lib/score'
 
 const DIMS = [

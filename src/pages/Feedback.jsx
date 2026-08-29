@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { X, Send, Image, Loader2, Check } from 'lucide-react'
+import { X, PaperPlaneTilt as Send, Image, CircleNotch as Loader2, Check } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'

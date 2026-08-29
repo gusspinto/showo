@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { X, Plus } from 'lucide-react'
+import { X, Plus } from '@phosphor-icons/react'
 
 const POPULAR_SKILLS = [
   // Tecnologia / Informática

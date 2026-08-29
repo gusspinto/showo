@@ -1,4 +1,4 @@
-import { ArrowUpRight, Plus, CalendarClock, Pencil, Trash2, BookOpen } from 'lucide-react'
+import { ArrowUpRight, Plus, CalendarCheck as CalendarClock, PencilSimple as Pencil, Trash as Trash2, BookOpen } from '@phosphor-icons/react'
 import { useState } from 'react'
 import { KIND_BY_ID, JOURNAL_KINDS, timeAgoLabel, suggestNextKind } from '../../lib/journal'
 

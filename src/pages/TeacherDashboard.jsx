@@ -2,11 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { Navbar } from '../components/Navbar'
-import {
-  Folder, Users, Users2, Plus, ChevronRight, BarChart2,
-  MessageSquare, Check, Calendar, ArrowRight, Rocket,
-  TrendingUp, AlertTriangle, GraduationCap, Settings,
-} from 'lucide-react'
+import { Folder, Users, UsersThree as Users2, Plus, CaretRight as ChevronRight, ChartBar as BarChart2, ChatText as MessageSquare, Check, Calendar, ArrowRight, Rocket, TrendUp as TrendingUp, Warning as AlertTriangle, GraduationCap, Gear as Settings } from '@phosphor-icons/react'
 import { academicYearOptions } from '../lib/academicYear'
 import {
   Button, Card, SectionLabel, Badge, Modal, ModalActions,

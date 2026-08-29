@@ -5,7 +5,7 @@ import { QRCodeSVG } from 'qrcode.react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
-import { Check, Download, Mail, Bell, Link2, Lock, ArrowRight } from 'lucide-react'
+import { Check, DownloadSimple as Download, Envelope as Mail, Bell, LinkSimple as Link2, Lock, ArrowRight } from '@phosphor-icons/react'
 import './Estagio.css'
 
 /* ══════════════════════════════════════════════════════════════════════════

@@ -2,10 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { saveProject } from '../lib/saveProject'
-import {
-  Sparkles, ArrowRight, ArrowLeft, Pencil, Check, ChevronRight,
-  Upload, FileText, X, PenLine, AlertTriangle,
-} from 'lucide-react'
+import { Sparkle as Sparkles, ArrowRight, ArrowLeft, PencilSimple as Pencil, Check, CaretRight as ChevronRight, UploadSimple as Upload, FileText, X, PencilLine as PenLine, Warning as AlertTriangle } from '@phosphor-icons/react'
 import { Navbar } from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
 import { Toast, useToast } from '../components/Toast'

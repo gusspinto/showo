@@ -1,9 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import {
-  ArrowLeft, StickyNote, Lightbulb, Star, Trash2,
-  ZoomIn, ZoomOut, RotateCcw, Plus, Undo2, Redo2, Save, Check,
-} from 'lucide-react'
+import { ArrowLeft, NotePencil as StickyNote, Lightbulb, Star, Trash as Trash2, MagnifyingGlassPlus as ZoomIn, MagnifyingGlassMinus as ZoomOut, ArrowCounterClockwise as RotateCcw, Plus, ArrowUUpLeft as Undo2, ArrowClockwise as Redo2, FloppyDisk as Save, Check } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import './DiaryCanvas.css'

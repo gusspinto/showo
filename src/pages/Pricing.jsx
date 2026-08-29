@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Check, ArrowRight, Briefcase, Mail, FileText, Sparkles } from 'lucide-react'
+import { Check, ArrowRight, Briefcase, Envelope as Mail, FileText, Sparkle as Sparkles } from '@phosphor-icons/react'
 import { Navbar } from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'

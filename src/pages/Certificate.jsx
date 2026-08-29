@@ -5,7 +5,7 @@ import { useSidebar } from '../context/SidebarContext'
 import { Helmet } from 'react-helmet-async'
 import { QRCodeSVG } from 'qrcode.react'
 import { supabase } from '../lib/supabase'
-import { Link2, Check, Sparkles, Download, ArrowLeft } from 'lucide-react'
+import { LinkSimple as Link2, Check, Sparkle as Sparkles, DownloadSimple as Download, ArrowLeft } from '@phosphor-icons/react'
 
 const C = {
   bg: 'var(--color-bg)',

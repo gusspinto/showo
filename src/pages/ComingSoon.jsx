@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Bell, Check, ArrowRight } from 'lucide-react'
+import { Bell, Check, ArrowRight } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase'
 import { getGeoInfo } from '../lib/geolocation'
 

@@ -6,7 +6,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
-import { Folder, ChevronLeft, ChevronRight, ExternalLink, CheckCircle, Circle, AlertTriangle, Check, Calendar, ListChecks, MessageSquare, BookOpen, TrendingUp, Clock, Cpu } from 'lucide-react'
+import { Folder, CaretLeft as ChevronLeft, CaretRight as ChevronRight, ArrowSquareOut as ExternalLink, CheckCircle, Circle, Warning as AlertTriangle, Check, Calendar, ListChecks, ChatText as MessageSquare, BookOpen, TrendUp as TrendingUp, Clock, Cpu } from '@phosphor-icons/react'
 
 const C = {
   bg: 'var(--color-bg)', bgAlt: 'var(--color-bg-alt)', card: 'var(--color-surface)', cardHover: 'var(--color-surface-hover)',

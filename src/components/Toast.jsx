@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { Check, X, Info } from 'lucide-react'
+import { Check, X, Info } from '@phosphor-icons/react'
 
 const BORDER = {
   error: '#f43f5e',

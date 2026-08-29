@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Check, Circle, Copy, RefreshCw, FileText } from 'lucide-react'
+import { Check, Circle, Copy, ArrowsClockwise as RefreshCw, FileText } from '@phosphor-icons/react'
 import { supabase } from '../../lib/supabase'
 import { Modal, Button } from '../ui'
 import { REPORT_SECTIONS, timeAgoLabel } from '../../lib/journal'

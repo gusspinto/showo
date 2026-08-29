@@ -2,11 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Navbar } from '../components/Navbar'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
-import {
-  Pin, Pencil, Trash2, ArrowUpRight, ArrowLeft,
-  TrendingUp, AlertTriangle, GitBranch, Search, Lightbulb, CheckCircle2, StickyNote,
-  ZoomIn, ZoomOut, RotateCcw, Quote, Send, Check, Loader2,
-} from 'lucide-react'
+import { PushPin as Pin, PencilSimple as Pencil, Trash as Trash2, ArrowUpRight, ArrowLeft, TrendUp as TrendingUp, Warning as AlertTriangle, GitBranch, MagnifyingGlass as Search, Lightbulb, CheckCircle as CheckCircle2, NotePencil as StickyNote, MagnifyingGlassPlus as ZoomIn, MagnifyingGlassMinus as ZoomOut, ArrowCounterClockwise as RotateCcw, Quotes as Quote, PaperPlaneTilt as Send, Check, CircleNotch as Loader2 } from '@phosphor-icons/react'
 import './AprendeAUsar.css'
 
 const SECTIONS = [
@@ -53,7 +49,7 @@ function MkDashboard() {
             <div style={{ height: 22, background: 'linear-gradient(90deg, rgba(27,120,247,0.28), rgba(27,120,247,0.06))', display: 'flex', alignItems: 'center', padding: '0 8px', gap: 4 }}>
               <div style={{ fontSize: 6, fontWeight: 700, color: 'rgba(255,255,255,0.85)', background: 'rgba(255,255,255,0.1)', borderRadius: 3, padding: '1px 4px' }}>Pessoal</div>
               <div style={{ marginLeft: 'auto', display: 'flex', gap: 3 }}>
-                <Pin size={7} color="rgba(255,255,255,0.7)" fill="rgba(255,255,255,0.7)" />
+                <Pin size={7} color="rgba(255,255,255,0.7)" weight="fill" />
                 <Pencil size={7} color="rgba(255,255,255,0.5)" />
                 <Trash2 size={7} color="rgba(255,255,255,0.4)" />
               </div>
@@ -87,7 +83,7 @@ function MkProjectList() {
         ].map((p, i) => (
           <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 9px', borderRadius: 7, background: 'var(--color-glass)', border: '1px solid var(--color-glass-border)' }}>
             <div style={{ flex: 1, fontSize: 8, fontWeight: 600, color: 'var(--color-text)' }}>{p.name}</div>
-            <Pin size={8} color={p.pinned ? 'var(--color-primary)' : 'var(--color-text-tertiary)'} fill={p.pinned ? 'var(--color-primary)' : 'none'} />
+            <Pin size={8} color={p.pinned ? 'var(--color-primary)' : 'var(--color-text-tertiary)'} weight={p.pinned ? 'fill' : 'regular'} />
             <div style={{ fontSize: 8, color: p.star ? '#f59e0b' : 'var(--color-text-tertiary)' }}>★</div>
             <div style={{ fontSize: 9, fontWeight: 900, color: 'var(--color-primary)', minWidth: 20, textAlign: 'right' }}>{p.score}</div>
           </div>

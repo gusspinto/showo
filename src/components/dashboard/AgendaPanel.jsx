@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Plus, CalendarSync, CalendarDays, ChevronDown } from 'lucide-react'
+import { Plus, ArrowsClockwise as CalendarSync, CalendarBlank as CalendarDays, CaretDown as ChevronDown } from '@phosphor-icons/react'
 import MonthCalendar from './MonthCalendar'
 
 const DOW = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D']

@@ -1,6 +1,6 @@
 import { useState, useEffect, lazy, Suspense, Component } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
-import { AlertTriangle, X as XIcon, Frown, RefreshCw, ArrowLeft, Phone } from 'lucide-react'
+import { Warning as AlertTriangle, X as XIcon, SmileySad as Frown, ArrowsClockwise as RefreshCw, ArrowLeft, Phone } from '@phosphor-icons/react'
 import { HelmetProvider } from 'react-helmet-async'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'

@@ -1,4 +1,4 @@
-import { Target, Lightbulb, Users, Settings, Wrench, Mountain, TrendingUp, Brain } from 'lucide-react'
+import { Target, Lightbulb, Users, Gear as Settings, Wrench, Mountains as Mountain, TrendUp as TrendingUp, Brain } from '@phosphor-icons/react'
 
 // scoreGain = pontos máximos de score que esta missão desbloqueia (ao atingir o threshold)
 export const CHALLENGES = [

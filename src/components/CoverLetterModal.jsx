@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { PlanGateModal } from './PlanGate'
-import { Check, X, GraduationCap, Briefcase, Sparkles, Lightbulb, ArrowLeft } from 'lucide-react'
+import { Check, X, GraduationCap, Briefcase, Sparkle as Sparkles, Lightbulb, ArrowLeft } from '@phosphor-icons/react'
 
 const C = {
   bg: 'var(--color-bg)',

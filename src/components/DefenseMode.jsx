@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { AiUsageBadge, ConfirmUseModal } from './PlanGate'
-import { Hand, Search, Lightbulb, Settings, Wrench, Trophy, BookOpen, Mic, GraduationCap, Check, X, Smartphone, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, ArrowRight, Eye, EyeOff, SlidersHorizontal, AlignLeft, Play, Pause } from 'lucide-react'
+import { Hand, MagnifyingGlass as Search, Lightbulb, Gear as Settings, Wrench, Trophy, BookOpen, Microphone as Mic, GraduationCap, Check, X, DeviceMobile as Smartphone, CaretUp as ChevronUp, CaretDown as ChevronDown, CaretLeft as ChevronLeft, CaretRight as ChevronRight, ArrowRight, Eye, EyeSlash as EyeOff, SlidersHorizontal, TextAlignLeft as AlignLeft, Play, Pause } from '@phosphor-icons/react'
 
 const C = {
   bg: 'var(--color-bg)',

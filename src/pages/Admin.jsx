@@ -3,11 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
-import {
-  AlertTriangle, HelpCircle, User, Folder, Star,
-  Shield, BarChart2, MapPin, Calendar, Check, X, Search,
-  KeyRound, Plus, Copy, Megaphone, School, Trash2,
-} from 'lucide-react'
+import { Warning as AlertTriangle, Question as HelpCircle, User, Folder, Star, Shield, ChartBar as BarChart2, MapPin, Calendar, Check, X, MagnifyingGlass as Search, Key as KeyRound, Plus, Copy, Megaphone, ChalkboardTeacher as School, Trash as Trash2 } from '@phosphor-icons/react'
 import { Select } from '../components/ui'
 
 const C = {

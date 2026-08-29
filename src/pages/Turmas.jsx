@@ -3,10 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
-import {
-  Users2, Plus, ChevronRight, Search, Copy, Check,
-  BookOpen, Folder, ArrowRight, X,
-} from 'lucide-react'
+import { UsersThree as Users2, Plus, CaretRight as ChevronRight, MagnifyingGlass as Search, Copy, Check, BookOpen, Folder, ArrowRight, X } from '@phosphor-icons/react'
 
 const C = {
   bg: 'var(--color-bg)',

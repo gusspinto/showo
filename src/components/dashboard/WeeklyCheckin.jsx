@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { X, Send, MessageCircle, AlertTriangle, Flame, Reply } from 'lucide-react'
+import { X, PaperPlaneTilt as Send, ChatCircle as MessageCircle, Warning as AlertTriangle, Flame, ArrowBendUpLeft as Reply } from '@phosphor-icons/react'
 import { supabase } from '../../lib/supabase'
 import { weekStartISO } from '../../lib/journal'
 

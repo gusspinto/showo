@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { Navbar } from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
-import { Trophy, ChevronRight, TrendingUp, TrendingDown, Minus, SlidersHorizontal, X } from 'lucide-react'
+import { Trophy, CaretRight as ChevronRight, TrendUp as TrendingUp, TrendDown as TrendingDown, Minus, SlidersHorizontal, X } from '@phosphor-icons/react'
 import { Select } from '../components/ui'
 
 const RANK_STORAGE_KEY = 'showo_ranking_positions'

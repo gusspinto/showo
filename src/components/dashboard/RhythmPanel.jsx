@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { ArrowUpRight } from 'lucide-react'
+import { ArrowUpRight } from '@phosphor-icons/react'
 
 /* ── Atividade ─────────────────────────────────────────────────────────────
    Responde a "tenho estado a trabalhar nisto?". Duas séries reais: entradas

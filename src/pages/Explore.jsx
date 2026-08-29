@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { Navbar } from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
-import { Search, Building2, Eye, Briefcase, Users, GraduationCap, BookOpen, SlidersHorizontal, X } from 'lucide-react'
+import { MagnifyingGlass as Search, Buildings as Building2, Eye, Briefcase, Users, GraduationCap, BookOpen, SlidersHorizontal, X } from '@phosphor-icons/react'
 import { Select } from '../components/ui'
 import './Explore.css'
 

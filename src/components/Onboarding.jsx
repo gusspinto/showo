@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useLayoutEffect } from 'react'
-import { X, MousePointer, Plus, Check } from 'lucide-react'
+import { X, CursorClick as MousePointer, Plus, Check } from '@phosphor-icons/react'
 import './Onboarding.css'
 
 const BEATS = [
@@ -55,7 +55,7 @@ function ClickBeat({ active }) {
         top: phase === 'in' ? '-8%' : target.y,
         transform: clicked ? 'scale(0.8)' : 'scale(1)',
       }}>
-        <MousePointer size={26} color="#fff" fill="#111" strokeWidth={1.5} style={{ filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.5))' }} />
+        <MousePointer size={26} color="#fff" weight="fill" style={{ filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.5))' }} />
         {clicked && <span className="onb-ring" />}
       </div>
     </div>

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Sparkles, Wand2, X, ChevronRight } from 'lucide-react'
+import { Sparkle as Sparkles, MagicWand as Wand2, X, CaretRight as ChevronRight } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase'
 
 const PROJECT_TYPES = [

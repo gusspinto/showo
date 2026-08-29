@@ -8,12 +8,7 @@ import { calculateScore, looksLikeSpam } from '../lib/score'
 import { containsProfanity } from '../lib/profanity'
 import SkillsPicker from '../components/SkillsPicker'
 import { Select } from '../components/ui'
-import {
-  Eye, Users, Sparkles, Settings, ArrowLeft, ExternalLink,
-  Check, Lock, Image, X, Trash2, Copy, Link2, AlertTriangle,
-  UserPlus, Send, Monitor, Search, ChevronRight, Globe,
-  TrendingUp, Star, Zap, BarChart2, RefreshCw, GraduationCap,
-} from 'lucide-react'
+import { Eye, Users, Sparkle as Sparkles, Gear as Settings, ArrowLeft, ArrowSquareOut as ExternalLink, Check, Lock, Image, X, Trash as Trash2, Copy, LinkSimple as Link2, Warning as AlertTriangle, UserPlus, PaperPlaneTilt as Send, Monitor, MagnifyingGlass as Search, CaretRight as ChevronRight, Globe, TrendUp as TrendingUp, Star, Lightning as Zap, ChartBar as BarChart2, ArrowsClockwise as RefreshCw, GraduationCap } from '@phosphor-icons/react'
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const C = {
