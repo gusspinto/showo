@@ -14,6 +14,8 @@
   transform: translateY(0);
 }
 
+.home-hero-start { display: none; }
+
 /* ══ HERO ══ */
 .home-hero {
   position: relative;
@@ -508,6 +510,9 @@ body.light .home-auth-input {
   border-top: 1px solid var(--color-border);
   margin-top: 64px;
 }
+@media (max-width: 600px) {
+  .home-footer { padding: 28px 20px; margin-top: 8px; }
+}
 .home-footer button {
   background: none;
   border: none;
@@ -542,8 +547,67 @@ body.light .home-auth-input {
 }
 
 @media (max-width: 600px) {
-  /* Hero */
-  .home-hero { padding: 72px 20px 40px; }
+  /* ── Herói ──
+     Era a grelha do desktop reduzida: 72px de vazio no topo, uma coluna
+     estreita ao meio e um cartão de login no fim. Aqui o conteúdo começa
+     alto, ocupa a largura toda e acaba numa ação. */
+  .home-hero { padding: 40px 20px 36px; }
+
+  /* A aurora são três radial-gradients por cima do gradiente do herói. Num
+     ecrã de cinco polegadas não se distingue nenhum deles: é só peso. */
+  .home-hero-aurora { display: none; }
+
+  /* O formulário de login sai do primeiro ecrã. Continua a uma tacada de
+     distância, no fim do bloco. */
+  .home-hero-auth { display: none !important; }
+
+  .home-hero-start {
+    display: flex;
+    flex-direction: column;
+    margin-top: 24px;
+  }
+
+  .home-start-btn {
+    display: flex; align-items: center; justify-content: center; gap: 9px;
+    width: 100%;
+    min-height: 54px;
+    padding: 0 20px;
+    background: var(--color-primary);
+    border: none;
+    border-radius: var(--radius-lg);
+    color: #fff;
+    font-family: inherit;
+    font-size: 16px; font-weight: 700;
+    letter-spacing: -0.2px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.15s, transform 0.1s var(--ease-out);
+  }
+  .home-start-btn:active { transform: scale(0.98); }
+
+  /* A prova social é uma frase, não um contador gigante a competir com o
+     título. O número continua a animar, dentro do texto. */
+  .home-start-proof {
+    margin: 12px 2px 0;
+    font-size: 13px;
+    line-height: 1.55;
+    color: rgba(255,255,255,0.55);
+  }
+
+  .home-start-login {
+    margin: 18px 0 0;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255,255,255,0.12);
+    font-size: 14px;
+    color: rgba(255,255,255,0.55);
+  }
+  .home-start-login button {
+    background: none; border: none; padding: 0;
+    font-family: inherit; font-size: 14px; font-weight: 700;
+    color: #fff; cursor: pointer;
+    text-decoration: underline; text-underline-offset: 3px;
+    -webkit-tap-highlight-color: transparent;
+  }
   .home-hero-grid { gap: 24px; }
   .how-it-works-grid { grid-template-columns: 1fr; }
   .home-hero-copy { order: 1; text-align: left; }
@@ -553,9 +617,10 @@ body.light .home-auth-input {
     margin: 0;
   }
   .home-hero-h1 {
-    font-size: 30px;
-    letter-spacing: -0.8px;
-    margin-bottom: 12px;
+    font-size: clamp(32px, 9vw, 40px);
+    letter-spacing: -1.2px;
+    line-height: 1.05;
+    margin-bottom: 14px;
   }
   .home-hero-sub {
     font-size: 15px;
@@ -572,6 +637,7 @@ body.light .home-auth-input {
   .home-section { padding: 40px 0 32px; }
   .home-section-inner { padding: 0 20px; }
   .home-section-header { margin-bottom: 20px; }
+  .home-section-title { font-size: 21px; letter-spacing: -0.6px; }
   .home-projects-grid {
     display: flex;
     grid-template-columns: unset;
@@ -592,8 +658,10 @@ body.light .home-auth-input {
     flex-shrink: 0;
   }
 
-  /* Hide "Como funciona" */
-  .home-how-section { display: none; }
+  .home-how-section { padding: 36px 20px 8px; }
+  .home-how-title { font-size: 21px; letter-spacing: -0.6px; margin-bottom: 8px; }
+  .home-how-subtitle { font-size: 14px; margin-bottom: 24px; }
+  .home-how-card { padding: 18px 16px; }
 
   /* CTA banner full-width button */
   .home-cta-banner { margin: 16px 0 0; }
