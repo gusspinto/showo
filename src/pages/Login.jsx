@@ -327,16 +327,16 @@ export default function Login() {
             )}
 
             {notConfirmed && (
-              <div style={{ background: 'rgba(251,191,36,0.07)', border: '1px solid rgba(251,191,36,0.25)', borderRadius: 10, padding: '14px 16px' }}>
-                <p style={{ margin: '0 0 10px', color: 'var(--color-warning)', fontSize: 14, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <Mail size={14} style={{ display: 'inline-block', verticalAlign: 'middle', flexShrink: 0 }} /> Email ainda não confirmado
+              <div style={{ background: 'var(--color-bg-secondary, rgba(0,0,0,0.03))', border: '1px solid var(--color-border)', borderRadius: 10, padding: '14px 16px' }}>
+                <p style={{ margin: '0 0 6px', color: C.text, fontSize: 14, fontWeight: 600 }}>
+                  Confirma o teu email
                 </p>
-                <p style={{ margin: '0 0 12px', color: 'var(--color-text-secondary)', fontSize: 13, lineHeight: 1.5 }}>
-                  Confirma o teu email antes de entrar. Se o link expirou, envia um novo.
+                <p style={{ margin: '0 0 12px', color: C.muted, fontSize: 13, lineHeight: 1.5 }}>
+                  Enviámos um link de confirmação. Verifica a tua caixa de entrada (e o spam).
                 </p>
                 {resendState === 'sent' ? (
-                  <p style={{ margin: 0, color: 'var(--color-success)', fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <Check size={14} style={{ display: 'inline-block', verticalAlign: 'middle', flexShrink: 0 }} /> Novo email enviado! Verifica a tua caixa de entrada.
+                  <p style={{ margin: 0, color: 'var(--color-success)', fontSize: 13, fontWeight: 500 }}>
+                    Email reenviado.
                   </p>
                 ) : (
                   <button
@@ -344,13 +344,13 @@ export default function Login() {
                     onClick={resendConfirmation}
                     disabled={resendState === 'sending' || !email}
                     style={{
-                      background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.3)',
-                      borderRadius: 7, padding: '8px 16px',
-                      color: 'var(--color-warning)', fontSize: 13, fontWeight: 600,
+                      background: 'transparent', border: 'none',
+                      padding: 0, color: C.blue, fontSize: 13, fontWeight: 600,
                       cursor: email ? 'pointer' : 'default', fontFamily: 'inherit',
+                      textDecoration: 'underline',
                     }}
                   >
-                    {resendState === 'sending' ? 'A enviar...' : 'Reenviar email de confirmação'}
+                    {resendState === 'sending' ? 'A enviar...' : 'Reenviar email'}
                   </button>
                 )}
               </div>
