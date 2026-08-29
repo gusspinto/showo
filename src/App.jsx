@@ -439,10 +439,12 @@ export default function App() {
         <AuthProvider>
           <AuthErrorBanner />
           {splashMounted && <SplashScreen visible={splashVisible} />}
-          <RestReminder />
           <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
             <Analytics />
             <CookieConsent />
+            {/* Precisa de useLocation (para não aparecer em /login, /register,
+                etc.) — por isso mora dentro do Router, não fora. */}
+            <RestReminder />
             <PageViewTracker />
             <ErrorBoundary>
             <RecoveryGate pwRecovery={pwRecovery}>

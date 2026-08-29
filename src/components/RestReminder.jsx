@@ -1,10 +1,17 @@
 import { useState, useEffect, useRef } from 'react'
+import { useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
 const DISMISSED_KEY = 'showo_rest_dismissed'
 const SNOOZE_KEY    = 'showo_rest_snooze_until'
 const SNOOZE_MINS_KEY = 'showo_rest_snooze_mins'
 const STANDBY_KEY   = 'showo_rest_standby'
+
+// Ecrãs de autenticação/entrada — mesmo com sessão ativa (ex: separador
+// aberto no /register a seguir a um login noutro separador), não faz
+// sentido interromper aqui com "vai dormir": a pessoa ainda não está a
+// usar a app, está a entrar/sair dela.
+const AUTH_PATHS = new Set(['/login', '/register', '/recuperar-password', '/welcome'])
 
 const C = {
   bg:     'rgba(6,12,24,0.95)',
@@ -17,6 +24,8 @@ const C = {
 
 export default function RestReminder() {
   const { user, profile } = useAuth()
+  const location = useLocation()
+  const isAuthPath = AUTH_PATHS.has(location.pathname)
   const [phase, setPhase] = useState(null)   // null | 'first' | 'second'
   const [visible, setVisible] = useState(false)
   const [standby, setStandby] = useState(false)
@@ -28,6 +37,7 @@ export default function RestReminder() {
 
   useEffect(() => {
     if (!user) return
+    if (isAuthPath) return
     // Skip for teachers
     if (profile?.role === 'professor') return
 
@@ -88,6 +98,8 @@ export default function RestReminder() {
     localStorage.removeItem(STANDBY_KEY)
     setStandby(false)
   }
+
+  if (isAuthPath) return null
 
   // Standby screen
   if (standby) {
