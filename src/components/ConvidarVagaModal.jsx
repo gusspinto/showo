@@ -1,7 +1,10 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
-import { X, Briefcase, PaperPlaneTilt as Send, Check } from '@phosphor-icons/react'
+import { CloseIcon as X } from '@solar-icons/react/bold/close'
+import { CaseIcon as Briefcase } from '@solar-icons/react/bold/case'
+import { PlaneIcon as Send } from '@solar-icons/react/bold/plane'
+import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
 
 const C = {
   bg:           'var(--color-bg)',

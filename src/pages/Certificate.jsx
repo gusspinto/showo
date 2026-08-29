@@ -5,7 +5,11 @@ import { useSidebar } from '../context/SidebarContext'
 import { Helmet } from 'react-helmet-async'
 import { QRCodeSVG } from 'qrcode.react'
 import { supabase } from '../lib/supabase'
-import { LinkSimple as Link2, Check, Sparkle as Sparkles, DownloadSimple as Download, ArrowLeft } from '@phosphor-icons/react'
+import { LinkIcon as Link2 } from '@solar-icons/react/bold/link'
+import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
+import { StarsIcon as Sparkles } from '@solar-icons/react/bold/stars'
+import { DownloadIcon as Download } from '@solar-icons/react/bold/download'
+import { ArrowLeftIcon as ArrowLeft } from '@solar-icons/react/bold/arrow-left'
 
 const C = {
   bg: 'var(--color-bg)',

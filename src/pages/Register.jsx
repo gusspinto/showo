@@ -2,12 +2,11 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { claimAnonymousProjects } from '../lib/claimAnonymousProjects'
-import { ArrowLeft, Envelope as Mail, Check } from '@phosphor-icons/react'
-// Teste isolado a este ecrã — depois do Phosphor "light"/"bold" ficarem
-// esmaecidos, e do Font Awesome sólido ficar genérico demais, a experimentar
-// Solar Icons (bold): traço grosso arredondado, com mais carácter que o
-// Font Awesome. Cada ícone é o seu próprio módulo neste pacote, daí um
-// import por ícone em vez de um só de conjunto.
+import { ArrowLeftIcon as ArrowLeft } from '@solar-icons/react/bold/arrow-left'
+import { LetterIcon as Mail } from '@solar-icons/react/bold/letter'
+import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
+// Ícones dos cartões de papel do registo — escolhidos um a um, ao contrário
+// do mapeamento automático aplicado ao resto da app.
 import { DiplomaIcon } from '@solar-icons/react/bold/diploma'
 import { UsersGroupRoundedIcon } from '@solar-icons/react/bold/users-group-rounded'
 import { Book2Icon } from '@solar-icons/react/bold/book-2'

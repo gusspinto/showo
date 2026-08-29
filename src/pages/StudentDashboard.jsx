@@ -4,7 +4,32 @@ import { supabase } from '../lib/supabase'
 import { Navbar } from '../components/Navbar'
 import SkillsPicker from '../components/SkillsPicker'
 import { calculatePotential, calculateScore } from '../lib/score'
-import { Rocket, Plus, User, Globe, ChatText as MessageSquare, Star, Check, ArrowRight, Sparkle as Sparkles, PencilSimple as Pencil, ArrowSquareOut as ExternalLink, Copy, ShareNetwork as Share2, LinkSimple as Link, Trash as Trash2, Flame, ArrowUpRight, Trophy, PushPin as Pin, BookOpen, X, Stack as Layers, GraduationCap, UploadSimple as Upload, ClipboardText as ClipboardCheck, BookBookmark as BookMarked } from '@phosphor-icons/react'
+import { RocketIcon as Rocket } from '@solar-icons/react/bold/rocket'
+import { AddCircleIcon as Plus } from '@solar-icons/react/bold/add-circle'
+import { UserIcon as User } from '@solar-icons/react/bold/user'
+import { GlobeIcon as Globe } from '@solar-icons/react/bold/globe'
+import { ChatRoundLineIcon as MessageSquare } from '@solar-icons/react/bold/chat-round-line'
+import { StarIcon as Star } from '@solar-icons/react/bold/star'
+import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
+import { ArrowRightIcon as ArrowRight } from '@solar-icons/react/bold/arrow-right'
+import { StarsIcon as Sparkles } from '@solar-icons/react/bold/stars'
+import { Pen2Icon as Pencil } from '@solar-icons/react/bold/pen-2'
+import { SquareArrowRightUpIcon as ExternalLink } from '@solar-icons/react/bold/square-arrow-right-up'
+import { CopyIcon as Copy } from '@solar-icons/react/bold/copy'
+import { ShareIcon as Share2 } from '@solar-icons/react/bold/share'
+import { LinkIcon as Link } from '@solar-icons/react/bold/link'
+import { TrashBinMinimalisticIcon as Trash2 } from '@solar-icons/react/bold/trash-bin-minimalistic'
+import { FlameIcon as Flame } from '@solar-icons/react/bold/flame'
+import { ArrowRightUpIcon as ArrowUpRight } from '@solar-icons/react/bold/arrow-right-up'
+import { CupStarIcon as Trophy } from '@solar-icons/react/bold/cup-star'
+import { PinIcon as Pin } from '@solar-icons/react/bold/pin'
+import { Book2Icon as BookOpen } from '@solar-icons/react/bold/book-2'
+import { CloseIcon as X } from '@solar-icons/react/bold/close'
+import { LayersIcon as Layers } from '@solar-icons/react/bold/layers'
+import { SquareAcademicCapIcon as GraduationCap } from '@solar-icons/react/bold/square-academic-cap'
+import { UploadIcon as Upload } from '@solar-icons/react/bold/upload'
+import { ClipboardTextIcon as ClipboardCheck } from '@solar-icons/react/bold/clipboard-text'
+import { BookBookmarkIcon as BookMarked } from '@solar-icons/react/bold/book-bookmark'
 import { Button, Card, SectionLabel, Modal, Select } from '../components/ui'
 import { useAuth } from '../context/AuthContext'
 import ExportProjectsModal from '../components/ExportProjectsModal'
@@ -1252,7 +1277,7 @@ function ProjectRow({ project, shared, onOpen, onEdit, onCopy, copied, onDelete,
                 title={project.dashboard_pinned ? 'Remover da dashboard' : 'Fixar na dashboard'}
                 aria-label="Fixar na dashboard"
               >
-                <Pin size={13} weight={project.dashboard_pinned ? 'fill' : 'regular'} />
+                <Pin size={13} />
               </button>
             )}
             {onToggleFeatured && !shared && (
@@ -1263,7 +1288,7 @@ function ProjectRow({ project, shared, onOpen, onEdit, onCopy, copied, onDelete,
                 aria-label="Destacar no perfil"
                 disabled={!project.featured && !canFeature}
               >
-                <Star size={13} weight={project.featured ? 'fill' : 'regular'} />
+                <Star size={13} />
               </button>
             )}
             <button className="sdb-icon-btn sdb-icon-btn--quiet" onClick={onEdit} title="Editar" aria-label="Editar projeto">
@@ -1308,7 +1333,7 @@ function PinnedProjectCard({ project, auto, coverage, onOpenReport, onUnpin, onE
             <>
               {!auto && (
                 <button className="sdb-icon-btn sdb-icon-btn--pin is-pinned" onClick={onUnpin} title="Retirar da dashboard">
-                  <Pin size={14} weight="fill" />
+                  <Pin size={14} />
                 </button>
               )}
               <button className="sdb-icon-btn" onClick={onEdit} title="Editar projeto">

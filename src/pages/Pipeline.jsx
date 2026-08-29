@@ -3,7 +3,11 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
-import { ChatText as MessageSquare, User, X, CaretRight as ChevronRight, Briefcase } from '@phosphor-icons/react'
+import { ChatRoundLineIcon as MessageSquare } from '@solar-icons/react/bold/chat-round-line'
+import { UserIcon as User } from '@solar-icons/react/bold/user'
+import { CloseIcon as X } from '@solar-icons/react/bold/close'
+import { AltArrowRightIcon as ChevronRight } from '@solar-icons/react/bold/alt-arrow-right'
+import { CaseIcon as Briefcase } from '@solar-icons/react/bold/case'
 import { Select } from '../components/ui'
 
 const C = {

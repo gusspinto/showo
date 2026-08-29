@@ -1,5 +1,7 @@
 import { useRef, useState } from 'react'
-import { Check, X, Info } from '@phosphor-icons/react'
+import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
+import { CloseIcon as X } from '@solar-icons/react/bold/close'
+import { InfoCircleIcon as Info } from '@solar-icons/react/bold/info-circle'
 
 const BORDER = {
   error: '#f43f5e',

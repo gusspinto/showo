@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { Check } from '@phosphor-icons/react'
+import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
 import AuthSidePanel from '../components/AuthSidePanel'
 import { useTheme } from '../context/ThemeContext'
 

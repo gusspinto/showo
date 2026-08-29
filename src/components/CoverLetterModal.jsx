@@ -2,7 +2,13 @@ import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { PlanGateModal } from './PlanGate'
-import { Check, X, GraduationCap, Briefcase, Sparkle as Sparkles, Lightbulb, ArrowLeft } from '@phosphor-icons/react'
+import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
+import { CloseIcon as X } from '@solar-icons/react/bold/close'
+import { SquareAcademicCapIcon as GraduationCap } from '@solar-icons/react/bold/square-academic-cap'
+import { CaseIcon as Briefcase } from '@solar-icons/react/bold/case'
+import { StarsIcon as Sparkles } from '@solar-icons/react/bold/stars'
+import { LightbulbIcon as Lightbulb } from '@solar-icons/react/bold/lightbulb'
+import { ArrowLeftIcon as ArrowLeft } from '@solar-icons/react/bold/arrow-left'
 
 const C = {
   bg: 'var(--color-bg)',

@@ -1,4 +1,11 @@
-import { Target, Lightbulb, Users, Gear as Settings, Wrench, Mountains as Mountain, TrendUp as TrendingUp, Brain } from '@phosphor-icons/react'
+import { TargetIcon as Target } from '@solar-icons/react/bold/target'
+import { LightbulbIcon as Lightbulb } from '@solar-icons/react/bold/lightbulb'
+import { UsersGroupRoundedIcon as Users } from '@solar-icons/react/bold/users-group-rounded'
+import { SettingsIcon as Settings } from '@solar-icons/react/bold/settings'
+import { SettingsMinimalisticIcon as Wrench } from '@solar-icons/react/bold/settings-minimalistic'
+import { PanoramaIcon as Mountain } from '@solar-icons/react/bold/panorama'
+import { GraphNewUpIcon as TrendingUp } from '@solar-icons/react/bold/graph-new-up'
+import { BrainIcon as Brain } from '@solar-icons/react/bold/brain'
 
 // scoreGain = pontos máximos de score que esta missão desbloqueia (ao atingir o threshold)
 export const CHALLENGES = [

@@ -1,5 +1,5 @@
 import { useState, useId, useRef, useEffect } from 'react'
-import { CaretDown as ChevronDown } from '@phosphor-icons/react'
+import { AltArrowDownIcon as ChevronDown } from '@solar-icons/react/bold/alt-arrow-down'
 
 export default function Input({
   label, type = 'text', value, onChange, placeholder,

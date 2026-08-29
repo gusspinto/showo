@@ -1,4 +1,10 @@
-import { TrendUp as TrendingUp, Warning as AlertTriangle, GitBranch, MagnifyingGlass as Search, Lightbulb, CheckCircle as CheckCircle2, NotePencil as StickyNote } from '@phosphor-icons/react'
+import { GraphNewUpIcon as TrendingUp } from '@solar-icons/react/bold/graph-new-up'
+import { DangerTriangleIcon as AlertTriangle } from '@solar-icons/react/bold/danger-triangle'
+import { BranchingPathsDownIcon as GitBranch } from '@solar-icons/react/bold/branching-paths-down'
+import { MagnifierIcon as Search } from '@solar-icons/react/bold/magnifier'
+import { LightbulbIcon as Lightbulb } from '@solar-icons/react/bold/lightbulb'
+import { CheckCircleIcon as CheckCircle2 } from '@solar-icons/react/bold/check-circle'
+import { NotebookMinimalisticIcon as StickyNote } from '@solar-icons/react/bold/notebook-minimalistic'
 
 /* ══════════════════════════════════════════════════════════════════════════
    DIÁRIO DO PROJETO

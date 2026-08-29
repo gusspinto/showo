@@ -5,7 +5,19 @@ import { QRCodeSVG } from 'qrcode.react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
-import { MagnifyingGlass as Search, FolderOpen, X, DownloadSimple as Download, Rocket, QrCode, PencilSimple as Pencil, ArrowSquareOut as ExternalLink, ArrowRight, Star, ChatText as MessageSquare, GraduationCap, PaperPlaneTilt as Send } from '@phosphor-icons/react'
+import { MagnifierIcon as Search } from '@solar-icons/react/bold/magnifier'
+import { Folder2Icon as FolderOpen } from '@solar-icons/react/bold/folder-2'
+import { CloseIcon as X } from '@solar-icons/react/bold/close'
+import { DownloadIcon as Download } from '@solar-icons/react/bold/download'
+import { RocketIcon as Rocket } from '@solar-icons/react/bold/rocket'
+import { QrCodeIcon as QrCode } from '@solar-icons/react/bold/qr-code'
+import { Pen2Icon as Pencil } from '@solar-icons/react/bold/pen-2'
+import { SquareArrowRightUpIcon as ExternalLink } from '@solar-icons/react/bold/square-arrow-right-up'
+import { ArrowRightIcon as ArrowRight } from '@solar-icons/react/bold/arrow-right'
+import { StarIcon as Star } from '@solar-icons/react/bold/star'
+import { ChatRoundLineIcon as MessageSquare } from '@solar-icons/react/bold/chat-round-line'
+import { SquareAcademicCapIcon as GraduationCap } from '@solar-icons/react/bold/square-academic-cap'
+import { PlaneIcon as Send } from '@solar-icons/react/bold/plane'
 import ConvidarVagaModal from '../components/ConvidarVagaModal'
 import { PlanBadge } from '../components/PlanGate'
 import './UserProfile.css'
@@ -308,7 +320,7 @@ export default function UserProfile() {
                 <button onClick={toggleSave} disabled={savingCandidate}
                   className={`up-action-btn${saved ? ' saved' : ''}`}
                   title={saved ? 'Remover dos guardados' : 'Guardar candidato'}>
-                  <Star size={13} weight={saved ? 'fill' : 'regular'} color={saved ? 'var(--color-warning)' : undefined} />
+                  <Star size={13} color={saved ? 'var(--color-warning)' : undefined} />
                   {saved ? 'Guardado' : 'Guardar'}
                 </button>
                 <button onClick={() => setShowInvite(true)} className="up-action-btn primary">
@@ -355,7 +367,7 @@ export default function UserProfile() {
             return (
               <div className="up-featured-section">
                 <p className="up-featured-label">
-                  <Star size={12} weight="fill" /> Em destaque
+                  <Star size={12} /> Em destaque
                 </p>
                 <div className="up-featured-grid">
                   {featured.map(project => (

@@ -1,5 +1,8 @@
 import { useState, useEffect, useRef, useLayoutEffect } from 'react'
-import { X, CursorClick as MousePointer, Plus, Check } from '@phosphor-icons/react'
+import { CloseIcon as X } from '@solar-icons/react/bold/close'
+import { CursorIcon as MousePointer } from '@solar-icons/react/bold/cursor'
+import { AddCircleIcon as Plus } from '@solar-icons/react/bold/add-circle'
+import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
 import './Onboarding.css'
 
 const BEATS = [
@@ -55,7 +58,7 @@ function ClickBeat({ active }) {
         top: phase === 'in' ? '-8%' : target.y,
         transform: clicked ? 'scale(0.8)' : 'scale(1)',
       }}>
-        <MousePointer size={26} color="#fff" weight="fill" style={{ filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.5))' }} />
+        <MousePointer size={26} color="#fff" style={{ filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.5))' }} />
         {clicked && <span className="onb-ring" />}
       </div>
     </div>

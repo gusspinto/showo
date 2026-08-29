@@ -3,7 +3,16 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
-import { UsersThree as Users2, Plus, CaretRight as ChevronRight, MagnifyingGlass as Search, Copy, Check, BookOpen, Folder, ArrowRight, X } from '@phosphor-icons/react'
+import { UsersGroupTwoRoundedIcon as Users2 } from '@solar-icons/react/bold/users-group-two-rounded'
+import { AddCircleIcon as Plus } from '@solar-icons/react/bold/add-circle'
+import { AltArrowRightIcon as ChevronRight } from '@solar-icons/react/bold/alt-arrow-right'
+import { MagnifierIcon as Search } from '@solar-icons/react/bold/magnifier'
+import { CopyIcon as Copy } from '@solar-icons/react/bold/copy'
+import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
+import { Book2Icon as BookOpen } from '@solar-icons/react/bold/book-2'
+import { FolderIcon as Folder } from '@solar-icons/react/bold/folder'
+import { ArrowRightIcon as ArrowRight } from '@solar-icons/react/bold/arrow-right'
+import { CloseIcon as X } from '@solar-icons/react/bold/close'
 
 const C = {
   bg: 'var(--color-bg)',

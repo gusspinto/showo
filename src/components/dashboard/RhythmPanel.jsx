@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { ArrowUpRight } from '@phosphor-icons/react'
+import { ArrowRightUpIcon as ArrowUpRight } from '@solar-icons/react/bold/arrow-right-up'
 
 /* ── Atividade ─────────────────────────────────────────────────────────────
    Responde a "tenho estado a trabalhar nisto?". Duas séries reais: entradas

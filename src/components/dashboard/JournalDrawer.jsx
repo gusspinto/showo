@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
-import { Plus, Trash as Trash2 } from '@phosphor-icons/react'
+import { AddCircleIcon as Plus } from '@solar-icons/react/bold/add-circle'
+import { TrashBinMinimalisticIcon as Trash2 } from '@solar-icons/react/bold/trash-bin-minimalistic'
 import { supabase } from '../../lib/supabase'
 import { Modal, Button } from '../ui'
 import { KIND_BY_ID, timeAgoLabel } from '../../lib/journal'

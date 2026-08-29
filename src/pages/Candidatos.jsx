@@ -3,7 +3,12 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
-import { Star, Users, ChatText as MessageSquare, Trash as Trash2, MagnifyingGlass as Search, Briefcase } from '@phosphor-icons/react'
+import { StarIcon as Star } from '@solar-icons/react/bold/star'
+import { UsersGroupRoundedIcon as Users } from '@solar-icons/react/bold/users-group-rounded'
+import { ChatRoundLineIcon as MessageSquare } from '@solar-icons/react/bold/chat-round-line'
+import { TrashBinMinimalisticIcon as Trash2 } from '@solar-icons/react/bold/trash-bin-minimalistic'
+import { MagnifierIcon as Search } from '@solar-icons/react/bold/magnifier'
+import { CaseIcon as Briefcase } from '@solar-icons/react/bold/case'
 
 const C = {
   bg:     'var(--color-bg)',
@@ -170,7 +175,7 @@ export default function Candidatos() {
                     <button onClick={() => remove(s.id, p.id)} disabled={removing === p.id}
                       style={{ background: 'var(--color-warning-subtle)', border: '1px solid var(--color-warning-subtle)', borderRadius: 7, padding: '5px 7px', cursor: 'pointer', color: C.amber, display: 'flex', flexShrink: 0 }}
                       title="Remover dos guardados">
-                      <Star size={14} weight="fill" color={C.amber} />
+                      <Star size={14} color={C.amber} />
                     </button>
                   </div>
 

@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react'
-import { X, Plus } from '@phosphor-icons/react'
+import { CloseIcon as X } from '@solar-icons/react/bold/close'
+import { AddCircleIcon as Plus } from '@solar-icons/react/bold/add-circle'
 
 const POPULAR_SKILLS = [
   // Tecnologia / Informática

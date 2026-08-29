@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
-import { Bell, Check, ArrowRight } from '@phosphor-icons/react'
+import { BellIcon as Bell } from '@solar-icons/react/bold/bell'
+import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
+import { ArrowRightIcon as ArrowRight } from '@solar-icons/react/bold/arrow-right'
 import { supabase } from '../lib/supabase'
 import { getGeoInfo } from '../lib/geolocation'
 

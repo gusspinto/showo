@@ -2,7 +2,25 @@ import { useState, useEffect, useRef } from 'react'
 import { Navbar } from '../components/Navbar'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
-import { PushPin as Pin, PencilSimple as Pencil, Trash as Trash2, ArrowUpRight, ArrowLeft, TrendUp as TrendingUp, Warning as AlertTriangle, GitBranch, MagnifyingGlass as Search, Lightbulb, CheckCircle as CheckCircle2, NotePencil as StickyNote, MagnifyingGlassPlus as ZoomIn, MagnifyingGlassMinus as ZoomOut, ArrowCounterClockwise as RotateCcw, Quotes as Quote, PaperPlaneTilt as Send, Check, CircleNotch as Loader2 } from '@phosphor-icons/react'
+import { PinIcon as Pin } from '@solar-icons/react/bold/pin'
+import { Pen2Icon as Pencil } from '@solar-icons/react/bold/pen-2'
+import { TrashBinMinimalisticIcon as Trash2 } from '@solar-icons/react/bold/trash-bin-minimalistic'
+import { ArrowRightUpIcon as ArrowUpRight } from '@solar-icons/react/bold/arrow-right-up'
+import { ArrowLeftIcon as ArrowLeft } from '@solar-icons/react/bold/arrow-left'
+import { GraphNewUpIcon as TrendingUp } from '@solar-icons/react/bold/graph-new-up'
+import { DangerTriangleIcon as AlertTriangle } from '@solar-icons/react/bold/danger-triangle'
+import { BranchingPathsDownIcon as GitBranch } from '@solar-icons/react/bold/branching-paths-down'
+import { MagnifierIcon as Search } from '@solar-icons/react/bold/magnifier'
+import { LightbulbIcon as Lightbulb } from '@solar-icons/react/bold/lightbulb'
+import { CheckCircleIcon as CheckCircle2 } from '@solar-icons/react/bold/check-circle'
+import { NotebookMinimalisticIcon as StickyNote } from '@solar-icons/react/bold/notebook-minimalistic'
+import { MagnifierZoomInIcon as ZoomIn } from '@solar-icons/react/bold/magnifier-zoom-in'
+import { MagnifierZoomOutIcon as ZoomOut } from '@solar-icons/react/bold/magnifier-zoom-out'
+import { RestartIcon as RotateCcw } from '@solar-icons/react/bold/restart'
+import { ChatRoundLineIcon as Quote } from '@solar-icons/react/bold/chat-round-line'
+import { PlaneIcon as Send } from '@solar-icons/react/bold/plane'
+import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
+import { RefreshCircleIcon as Loader2 } from '@solar-icons/react/bold/refresh-circle'
 import './AprendeAUsar.css'
 
 const SECTIONS = [
@@ -49,7 +67,7 @@ function MkDashboard() {
             <div style={{ height: 22, background: 'linear-gradient(90deg, rgba(27,120,247,0.28), rgba(27,120,247,0.06))', display: 'flex', alignItems: 'center', padding: '0 8px', gap: 4 }}>
               <div style={{ fontSize: 6, fontWeight: 700, color: 'rgba(255,255,255,0.85)', background: 'rgba(255,255,255,0.1)', borderRadius: 3, padding: '1px 4px' }}>Pessoal</div>
               <div style={{ marginLeft: 'auto', display: 'flex', gap: 3 }}>
-                <Pin size={7} color="rgba(255,255,255,0.7)" weight="fill" />
+                <Pin size={7} color="rgba(255,255,255,0.7)" />
                 <Pencil size={7} color="rgba(255,255,255,0.5)" />
                 <Trash2 size={7} color="rgba(255,255,255,0.4)" />
               </div>
@@ -83,7 +101,7 @@ function MkProjectList() {
         ].map((p, i) => (
           <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 9px', borderRadius: 7, background: 'var(--color-glass)', border: '1px solid var(--color-glass-border)' }}>
             <div style={{ flex: 1, fontSize: 8, fontWeight: 600, color: 'var(--color-text)' }}>{p.name}</div>
-            <Pin size={8} color={p.pinned ? 'var(--color-primary)' : 'var(--color-text-tertiary)'} weight={p.pinned ? 'fill' : 'regular'} />
+            <Pin size={8} color={p.pinned ? 'var(--color-primary)' : 'var(--color-text-tertiary)'} />
             <div style={{ fontSize: 8, color: p.star ? '#f59e0b' : 'var(--color-text-tertiary)' }}>★</div>
             <div style={{ fontSize: 9, fontWeight: 900, color: 'var(--color-primary)', minWidth: 20, textAlign: 'right' }}>{p.score}</div>
           </div>

@@ -1,5 +1,8 @@
 import { useState } from 'react'
-import { TrendUp as TrendingUp, Lightning as Zap, Info, X } from '@phosphor-icons/react'
+import { GraphNewUpIcon as TrendingUp } from '@solar-icons/react/bold/graph-new-up'
+import { LightningIcon as Zap } from '@solar-icons/react/bold/lightning'
+import { InfoCircleIcon as Info } from '@solar-icons/react/bold/info-circle'
+import { CloseIcon as X } from '@solar-icons/react/bold/close'
 import { calculatePotential } from '../../lib/score'
 
 const DIMS = [

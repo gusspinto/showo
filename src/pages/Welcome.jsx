@@ -2,7 +2,13 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
-import { GraduationCap, BookOpen, Buildings as Building2, MagnifyingGlass as Search, Envelope as Mail, ArrowRight, CheckCircle } from '@phosphor-icons/react'
+import { SquareAcademicCapIcon as GraduationCap } from '@solar-icons/react/bold/square-academic-cap'
+import { Book2Icon as BookOpen } from '@solar-icons/react/bold/book-2'
+import { Buildings2Icon as Building2 } from '@solar-icons/react/bold/buildings-2'
+import { MagnifierIcon as Search } from '@solar-icons/react/bold/magnifier'
+import { LetterIcon as Mail } from '@solar-icons/react/bold/letter'
+import { ArrowRightIcon as ArrowRight } from '@solar-icons/react/bold/arrow-right'
+import { CheckCircleIcon as CheckCircle } from '@solar-icons/react/bold/check-circle'
 
 const ROLES = [
   { id: 'aluno',      icon: <GraduationCap size={22} />, label: 'Aluno',      color: 'var(--color-primary)',  direct: true },

@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
-import { X } from '@phosphor-icons/react'
+import { CloseIcon as X } from '@solar-icons/react/bold/close'
 
 const MIN_SIZE = 40
 

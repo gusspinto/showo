@@ -2,7 +2,13 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { verifyPersonalAccount, exportSchoolProjects } from '../lib/exportProjects'
 import { useAuth } from '../context/AuthContext'
-import { X, GraduationCap, CheckSquare, Square, ArrowRight, Check, Warning as AlertTriangle } from '@phosphor-icons/react'
+import { CloseIcon as X } from '@solar-icons/react/bold/close'
+import { SquareAcademicCapIcon as GraduationCap } from '@solar-icons/react/bold/square-academic-cap'
+import { CheckSquareIcon as CheckSquare } from '@solar-icons/react/bold/check-square'
+import { StopIcon as Square } from '@solar-icons/react/bold/stop'
+import { ArrowRightIcon as ArrowRight } from '@solar-icons/react/bold/arrow-right'
+import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
+import { DangerTriangleIcon as AlertTriangle } from '@solar-icons/react/bold/danger-triangle'
 
 const C = {
   overlay: {

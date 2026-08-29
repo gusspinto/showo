@@ -1,5 +1,8 @@
 import { useState } from 'react'
-import { Sparkle as Sparkles, MagicWand as Wand2, X, CaretRight as ChevronRight } from '@phosphor-icons/react'
+import { StarsIcon as Sparkles } from '@solar-icons/react/bold/stars'
+import { MagicWandIcon as Wand2 } from '@solar-icons/react/bold/magic-wand'
+import { CloseIcon as X } from '@solar-icons/react/bold/close'
+import { AltArrowRightIcon as ChevronRight } from '@solar-icons/react/bold/alt-arrow-right'
 import { supabase } from '../lib/supabase'
 
 const PROJECT_TYPES = [

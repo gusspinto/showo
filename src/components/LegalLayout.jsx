@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom'
-import { ArrowLeft } from '@phosphor-icons/react'
+import { ArrowLeftIcon as ArrowLeft } from '@solar-icons/react/bold/arrow-left'
 
 // Shared shell for the Privacy Policy and Terms pages: readable single column,
 // app theme, accessible without login.
