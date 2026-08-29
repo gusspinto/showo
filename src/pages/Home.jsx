@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { ArrowRight, FileText, Trophy, Share2, Eye, Mail } from 'lucide-react'
 import { Navbar } from '../components/Navbar'
 import { supabase } from '../lib/supabase'
@@ -32,7 +32,7 @@ const AREA_COLORS = {
   'Engenharia':                'var(--color-info)',
 }
 
-function Reveal({ children, className }) {
+function Reveal({ children, className, id }) {
   const ref = useRef(null)
   const [visible, setVisible] = useState(false)
   useEffect(() => {
@@ -46,7 +46,7 @@ function Reveal({ children, className }) {
     return () => obs.disconnect()
   }, [])
   return (
-    <div ref={ref} className={`reveal-on-scroll${visible ? ' is-visible' : ''}${className ? ` ${className}` : ''}`}>
+    <div ref={ref} id={id} className={`reveal-on-scroll${visible ? ' is-visible' : ''}${className ? ` ${className}` : ''}`}>
       {children}
     </div>
   )
@@ -85,6 +85,7 @@ function ProjectSkeleton() {
 
 export default function Home() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { user } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -97,6 +98,10 @@ export default function Home() {
   const [animatedCount, setAnimatedCount] = useState(0)
   const [emailFocused, setEmailFocused] = useState(false)
   const [passFocused, setPassFocused] = useState(false)
+  // Herói mobile: email primeiro, como o Claude — só pede a password depois
+  // de sabermos que a conta já existe. Partilha email/password/authError com
+  // o formulário de desktop; só este passo é exclusivo do telemóvel.
+  const [heroAuthStep, setHeroAuthStep] = useState('email')
   const [projectOfMonth, setProjectOfMonth] = useState(null)
 
   useEffect(() => {
@@ -151,6 +156,38 @@ export default function Home() {
     return () => cancelAnimationFrame(raf)
   }, [projectCount])
 
+  /* Suporte genérico para /#id — o hambúrguer já não aponta para cá (passou
+     a linkar /aprende, a página a sério, não este scroll), mas a secção
+     "Como funciona" mantém o id, e qualquer link futuro que aponte para
+     /#como-funciona continua a funcionar sem precisar de mexer aqui outra
+     vez. Depende de location.hash, não só do mount, porque quem já está na
+     home não remonta a página — só muda o hash. */
+  useEffect(() => {
+    if (!location.hash) return
+    const el = document.getElementById(location.hash.slice(1))
+    if (el) requestAnimationFrame(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }))
+  }, [location.hash])
+
+  /* Passo 1 do herói mobile: só o email. Verificamos se a conta já existe
+     para decidir o resto — se sim, pedimos a password aqui mesmo (sem sair
+     da página); se não, o registo em si precisa de mais do que um email
+     (nome, papel, termos), por isso segue para /register já com o email
+     preenchido, em vez de fingir que dava para fazer tudo num campo só. */
+  async function handleContinueWithEmail(e) {
+    e.preventDefault()
+    if (!email.trim() || authLoading) return
+    setAuthError('')
+    setAuthLoading(true)
+    const { data: exists, error: checkErr } = await supabase.rpc('check_email_exists', { p_email: email.trim() })
+    setAuthLoading(false)
+    if (checkErr) { setAuthError('Erro de ligação. Tenta novamente.'); return }
+    if (exists) {
+      setHeroAuthStep('password')
+    } else {
+      navigate(`/register?email=${encodeURIComponent(email.trim())}`)
+    }
+  }
+
   async function handleLogin(e) {
     e.preventDefault()
     setAuthError('')
@@ -184,6 +221,13 @@ export default function Home() {
     <div className="min-h-screen bg-page font-body">
       <Navbar hideSidebar />
 
+      {/* ── home-content: envolve tudo o que não é a barra de navegação.
+          No telemóvel vira flex-column com order, e a ordem visual deixa de
+          ser a ordem do DOM: "o que é" → "como funciona" → prova → última
+          ação. No desktop fica igual a hoje — nenhuma order é aplicada fora
+          da media query de mobile. ── */}
+      <div className="home-content">
+
       {/* ══ Hero ══ */}
       <div className="home-hero">
         <div className="home-hero-aurora" aria-hidden="true" />
@@ -191,12 +235,24 @@ export default function Home() {
         <div className="home-hero-grid">
           {/* Left — copy */}
           <div className="home-hero-copy">
-            <h1 className="home-hero-h1">
+            {/* Desktop mantém o azul/itálico/ponto final, como sempre.
+                No telemóvel a frase quebra em duas linhas simples, sem cor
+                nem pontuação a fechar — o pedido foi tirar o "." e o azul e
+                dar-lhe mais presença como bloco de texto, não como frase. */}
+            <h1 className="home-hero-h1 h1-desktop">
               Mostra o que <em>construíste.</em>
             </h1>
+            <h1 className="home-hero-h1 h1-mobile">
+              Mostra o que<br />construíste
+            </h1>
+            {/* No telemóvel este parágrafo desaparece por completo — a
+                explicação já está no "Como funciona", logo a seguir ao
+                herói. Dizer a mesma coisa duas vezes era o que estava a
+                engordar o ecrã inicial. No desktop fica como sempre. */}
             <p className="home-hero-sub">
               Transforma projetos escolares em páginas profissionais com score automático e análise por IA.
             </p>
+
             <div className="home-hero-stats">
               <span className="home-hero-stats-number">
                 {projectCount == null ? '—' : animatedCount}
@@ -204,6 +260,66 @@ export default function Home() {
               <span className="home-hero-stats-label">
                 projetos criados<br />por estudantes portugueses
               </span>
+            </div>
+
+            {/* ── Arranque, telemóvel ──
+                Auth em primeiro plano, como o Claude — mas com uma saída que
+                o Claude não tem: "Continuar a explorar" fica sempre visível
+                para quem não quer entrar já. Email primeiro, password só
+                depois de sabermos que a conta existe (handleContinueWithEmail);
+                sem conta, segue para /register com o email já preenchido. */}
+            <div className="home-hero-start">
+              <GoogleButton />
+
+              <div className="home-start-divider"><span>ou</span></div>
+
+              {heroAuthStep === 'email' ? (
+                <form onSubmit={handleContinueWithEmail} className="home-start-form">
+                  <input
+                    type="email"
+                    className="home-start-input"
+                    placeholder="O teu email"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    required
+                    autoComplete="email"
+                  />
+                  {authError && <p className="home-start-error">{authError}</p>}
+                  <button type="submit" className="home-start-email-btn" disabled={authLoading}>
+                    {authLoading ? 'A verificar…' : 'Continuar com email'}
+                  </button>
+                </form>
+              ) : (
+                <form onSubmit={handleLogin} className="home-start-form">
+                  <p className="home-start-email-echo">{email}</p>
+                  <input
+                    type="password"
+                    className="home-start-input"
+                    placeholder="Palavra-passe"
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    required
+                    autoFocus
+                    autoComplete="current-password"
+                  />
+                  {authError && <p className="home-start-error">{authError}</p>}
+                  <button type="submit" className="home-start-email-btn" disabled={authLoading}>
+                    {authLoading ? 'A entrar…' : 'Entrar'}
+                  </button>
+                  <button type="button" className="home-start-back" onClick={() => { setHeroAuthStep('email'); setAuthError('') }}>
+                    Usar outro email
+                  </button>
+                </form>
+              )}
+
+              <p className="home-start-privacy">
+                Ao continuares, aceitas a{' '}
+                <button type="button" onClick={() => navigate('/privacidade')}>Política de Privacidade</button>.
+              </p>
+
+              <button className="home-start-explore" onClick={() => navigate('/explorar')}>
+                Continuar a explorar
+              </button>
             </div>
           </div>
 
@@ -383,21 +499,19 @@ export default function Home() {
             ))}
           </div>
 
+          {/* Sem cartão — só o botão, direto a seguir aos projetos. Nenhuma
+              frase a introduzi-lo; o herói já não usa nenhuma, esta é a
+              mesma lógica. */}
           {!user && (
-            <div className="home-cta-banner">
-              <div className="home-cta-text">
-                <span className="home-cta-label">O teu projeto também merece uma página assim.</span>
-              </div>
-              <button className="home-cta-btn" onClick={() => navigate('/novo')}>
-                Cria o teu <ArrowRight size={15} />
-              </button>
-            </div>
+            <button className="home-cta-btn" onClick={() => navigate('/novo')}>
+              Começa a criar <ArrowRight size={15} />
+            </button>
           )}
         </div>
       </Reveal>
 
       {/* ══ Como funciona ══ */}
-      <Reveal className="home-how-section">
+      <Reveal className="home-how-section" id="como-funciona">
         <div className="home-how-inner">
           <h2 className="home-how-title">Como funciona a Showo</h2>
           <p className="home-how-subtitle">
@@ -422,6 +536,7 @@ export default function Home() {
       <div className="home-footer">
         <button onClick={() => navigate('/termos')}>Termos de utilização</button>
         <button onClick={() => navigate('/privacidade')}>Política de privacidade</button>
+      </div>
       </div>
     </div>
   )

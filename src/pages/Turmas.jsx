@@ -249,7 +249,7 @@ export default function Turmas() {
 
   useEffect(() => {
     if (!user) { navigate('/login'); return }
-    if (profile && !isTeacher && !isSchoolStudent) { navigate('/dashboard'); return }
+    if (profile && !isTeacher && !isSchoolStudent && !profile?.organization_id) { navigate('/dashboard'); return }
 
     async function load() {
       if (isTeacher) {
@@ -297,7 +297,7 @@ export default function Turmas() {
     setShowJoin(false)
   }
 
-  if (!user || (profile && !isTeacher && !isSchoolStudent)) return null
+  if (!user || (profile && !isTeacher && !isSchoolStudent && !profile?.organization_id)) return null
 
   return (
     <div style={{ minHeight: '100vh', background: C.bg }}>

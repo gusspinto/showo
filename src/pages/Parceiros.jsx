@@ -133,7 +133,7 @@ function LeadModal({ students, onClose, onSave }) {
           <div>
             <label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>Aluno</label>
             <Select value={studentId} onChange={setStudentId} placeholder="Seleciona um aluno…"
-              options={students.map(s => ({ value: s.id, label: `${s.full_name}${s.turmaName ? ` — ${s.turmaName}` : ''}` }))}
+              options={students.map(s => ({ value: s.id, label: `${s.full_name}${s.turmaName ? ` (${s.turmaName})` : ''}` }))}
               inputStyle={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 14 }} />
           </div>
           <div>

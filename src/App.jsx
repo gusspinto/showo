@@ -470,6 +470,7 @@ export default function App() {
               <Route path="/certificado/:slug"  element={<Certificate />}  />
               <Route path="/vagas"              element={<Vagas />}        />
               <Route path="/estagio"            element={<Estagio />}      />
+              <Route path="/carreira"           element={<Navigate to="/estagio" replace />} />
               <Route path="/mensagens"          element={<Mensagens />}    />
               <Route path="/candidatos"         element={<Candidatos />}   />
               <Route path="/pipeline"           element={<Pipeline />}     />

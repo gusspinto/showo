@@ -1,4 +1,24 @@
 export const PLANS = {
+  // school plan = build features, assigned automatically to org accounts
+  school: {
+    id: 'school',
+    name: 'Escola',
+    maxProjects: 10,
+    ai: {
+      createProject: Infinity,
+      interviewProject: Infinity,
+      coach: Infinity,
+      defense: Infinity,
+      diaryReport: Infinity,
+      narrative: Infinity,
+      analyzeProject: Infinity,
+      coverLetter: 0,
+    },
+    career: {
+      internshipPage: false,
+      weeklyRecap: true,
+    },
+  },
   free: {
     id: 'free',
     name: 'Grátis',
@@ -32,9 +52,12 @@ export const PLANS = {
       analyzeProject: Infinity,
       coverLetter: 0,
     },
+    // Sem carreira, de propósito: o Build é para construir e organizar o
+    // percurso escolar. Tudo o que aponta ao mercado de trabalho — recap
+    // semanal, página de estágio, carta de apresentação — é o Launch.
     career: {
       internshipPage: false,
-      weeklyRecap: true,
+      weeklyRecap: false,
     },
   },
   launch: {
@@ -96,7 +119,9 @@ export const AI_FEATURE_LABELS = {
 export const PLAN_GATE_MESSAGES = {
   maxProjects: (plan) => ({
     title: 'Limite de projetos atingido',
-    body: `O plano ${getPlan(plan).name} permite até ${getPlan(plan).maxProjects} projetos. Com o Build tens até 10 — e no Launch são ilimitados.`,
+    body: plan === 'school'
+      ? `A conta escolar permite até ${getPlan(plan).maxProjects} projetos. Para projetos ilimitados, cria uma conta pessoal Launch.`
+      : `O plano ${getPlan(plan).name} permite até ${getPlan(plan).maxProjects} projetos. Com o Build tens até 10 — e no Launch são ilimitados.`,
   }),
   createProject: (plan) => ({
     title: 'Limite mensal atingido',
@@ -129,6 +154,12 @@ export const PLAN_GATE_MESSAGES = {
   coverLetter: () => ({
     title: 'Carta de apresentação IA',
     body: 'A IA escreve uma carta de apresentação personalizada para cada vaga, usando os teus projetos reais como base. Disponível no Launch.',
+  }),
+  // checkGate('weeklyRecap') devolvia sempre message: undefined — a única
+  // funcionalidade de carreira sem explicação nenhuma quando era bloqueada.
+  weeklyRecap: () => ({
+    title: 'Recap semanal',
+    body: 'Todas as segundas recebes um resumo do que fizeste na semana anterior: o que avançou, o que ficou parado e o próximo passo. Chega por email e fica na app. Disponível no Launch.',
   }),
   internshipPage: () => ({
     title: 'Página de estágio',

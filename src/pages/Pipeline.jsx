@@ -299,7 +299,7 @@ export default function Pipeline() {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                     {grouped[stage.id].length === 0 && (
                       <div style={{ padding: '18px 12px', textAlign: 'center', border: `1.5px dashed ${C.border}`, borderRadius: 10, color: C.subtle, fontSize: 12 }}>
-                        —
+                        Sem candidatos
                       </div>
                     )}
                     {grouped[stage.id].map(c => {

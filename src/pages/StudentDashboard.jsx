@@ -8,9 +8,11 @@ import {
   Rocket, Plus, User, Globe, MessageSquare, Star,
   Check, ArrowRight, Sparkles, Pencil, ExternalLink, Copy, Share2, Link,
   Trash2, Flame, ArrowUpRight, Trophy, Pin, BookOpen, X, Layers,
+  GraduationCap, Upload, ClipboardCheck, BookMarked,
 } from 'lucide-react'
 import { Button, Card, SectionLabel, Modal, Select } from '../components/ui'
 import { useAuth } from '../context/AuthContext'
+import ExportProjectsModal from '../components/ExportProjectsModal'
 
 // ProjectPulse removed — focus project now shown as auto-pinned card
 import JournalComposer from '../components/dashboard/JournalComposer'
@@ -77,6 +79,43 @@ function pickFocusProject(projects) {
   })[0]
 }
 
+/* ── JoinTurmaStudentModal ─────────────────────────────────────────────── */
+function JoinTurmaStudentModal({ onClose, onJoined }) {
+  const [code, setCode] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  async function handleJoin() {
+    const trimmed = code.trim().toUpperCase()
+    if (!trimmed) return
+    setLoading(true)
+    setError('')
+    const { data, error: sbErr } = await supabase.rpc('join_class', { p_code: trimmed })
+    setLoading(false)
+    if (sbErr || !data) {
+      setError('Código inválido. Verifica com o teu professor.')
+      return
+    }
+    onJoined(data)
+  }
+
+  return (
+    <Modal onClose={onClose} title="Entrar numa turma" subtitle="Pede o código de 6 letras ao teu professor">
+      <input
+        value={code}
+        onChange={e => setCode(e.target.value.toUpperCase())}
+        placeholder="Ex: ABC123"
+        maxLength={6}
+        style={{ width: '100%', fontSize: 22, letterSpacing: 6, textAlign: 'center', padding: '10px 0', background: 'transparent', border: 'none', borderBottom: '2px solid var(--color-border)', color: 'var(--color-text)', outline: 'none', fontFamily: 'monospace', boxSizing: 'border-box' }}
+        onKeyDown={e => e.key === 'Enter' && handleJoin()}
+        autoFocus
+      />
+      {error && <p style={{ color: 'var(--color-error)', fontSize: 13, marginTop: 8 }}>{error}</p>}
+      <Button fullWidth onClick={handleJoin} loading={loading} style={{ marginTop: 16 }}>Entrar</Button>
+    </Modal>
+  )
+}
+
 /* ══════════════════════════════════════════════════════════════════════════
    StudentDashboard
    ══════════════════════════════════════════════════════════════════════════ */
@@ -84,7 +123,7 @@ function pickFocusProject(projects) {
 export default function StudentDashboard({ user, profile }) {
   const navigate = useNavigate()
   const location = useLocation()
-  const { checkGate } = useAuth()
+  const { checkGate, isSchoolAccount } = useAuth()
   /* ── Dados ── */
   const [projects, setProjects] = useState([])
   const [loadingProjects, setLoadingProjects] = useState(true)
@@ -100,11 +139,18 @@ export default function StudentDashboard({ user, profile }) {
   const [myInterests, setMyInterests] = useState([])
   const [icsToken, setIcsToken] = useState(null)
   const [googleConnected, setGoogleConnected] = useState(null)
+  const [orgName, setOrgName] = useState(null)
+  const [schoolClasses, setSchoolClasses] = useState([])
+  const [showExportModal, setShowExportModal] = useState(false)
 
   /* ── UI ── */
   const [tutorialPotentialSeen, setTutorialPotentialSeen] = useState(() => !!localStorage.getItem(`showo_tut_potential_${user.id}`))
   const [composerKind, setComposerKind] = useState(null)
   const [showJournal, setShowJournal] = useState(false)
+  const [showJoinTurma, setShowJoinTurma] = useState(false)
+  const [diaryReminderDismissed, setDiaryReminderDismissed] = useState(
+    () => localStorage.getItem(`showo_diary_remind_${new Date().toISOString().slice(0,10)}`) === '1'
+  )
   const [showReport, setShowReport] = useState(false)
   const [showAddReminder, setShowAddReminder] = useState(null)
   const [showCalendarSync, setShowCalendarSync] = useState(false)
@@ -145,12 +191,19 @@ export default function StudentDashboard({ user, profile }) {
     setTutorialPotentialSeen(true)
   }
 
+  /* ── Escola: nome da organização ── */
+  useEffect(() => {
+    if (!isSchoolAccount || !profile?.organization_id) return
+    supabase.from('organizations').select('name').eq('id', profile.organization_id).maybeSingle()
+      .then(({ data }) => { if (data?.name) setOrgName(data.name) })
+  }, [isSchoolAccount, profile?.organization_id])
+
   /* ── Projetos ── */
   useEffect(() => {
     async function load() {
       let { data, error } = await supabase
         .from('projects')
-        .select('id, name, slug, score, area, created_at, ai_tagline, views, defense_date, cover_url, teacher_score, project_type, is_pap, featured, featured_order, dashboard_pinned, class_projects(class_id), collaborator_count:project_collaborators(count)')
+        .select('id, name, slug, score, area, created_at, ai_tagline, views, defense_date, cover_url, teacher_score, review_status, project_type, is_pap, featured, featured_order, dashboard_pinned, class_projects(class_id), collaborator_count:project_collaborators(count)')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
       if (error) {
@@ -216,9 +269,13 @@ export default function StudentDashboard({ user, profile }) {
   useEffect(() => {
     async function load() {
       const { data: memberships } = await supabase.from('class_members').select('class_id').eq('user_id', user.id)
-      if (!memberships?.length) { setPendingTasks([]); setCompletions([]); return }
+      if (!memberships?.length) { setPendingTasks([]); setCompletions([]); setSchoolClasses([]); return }
       const classIds = [...new Set(memberships.map(m => m.class_id))]
-      const { data: taskRows } = await supabase.from('class_tasks').select('id, title, due_date, class_id, classes(name, teacher_id)').in('class_id', classIds)
+      const [{ data: taskRows }, { data: classRows }] = await Promise.all([
+        supabase.from('class_tasks').select('id, title, due_date, class_id, classes(name, teacher_id)').in('class_id', classIds),
+        supabase.from('classes').select('id, name, subject, code, teacher_name').in('id', classIds),
+      ])
+      setSchoolClasses(classRows ?? [])
       if (!taskRows?.length) { setPendingTasks([]); setCompletions([]); return }
       const { data: myCompletions } = await supabase.from('class_task_completions')
         .select('task_id, completed_at').eq('user_id', user.id).in('task_id', taskRows.map(t => t.id))
@@ -580,8 +637,22 @@ export default function StudentDashboard({ user, profile }) {
           onTokenRotated={t => setIcsToken(t)}
         />
       )}
+      {showJoinTurma && (
+        <JoinTurmaStudentModal
+          onClose={() => setShowJoinTurma(false)}
+          onJoined={cls => {
+            setSchoolClasses(prev => prev.find(c => c.id === cls.id) ? prev : [...prev, cls])
+            setShowJoinTurma(false)
+            showToast(`Entraste na turma ${cls.name}!`)
+          }}
+        />
+      )}
       {showPotentialTutorial && (
         <PotentialTutorial potential={potential} onDismiss={dismissPotentialTutorial} />
+      )}
+
+      {showExportModal && (
+        <ExportProjectsModal onClose={() => setShowExportModal(false)} />
       )}
 
       {showRecap && (
@@ -657,6 +728,18 @@ export default function StudentDashboard({ user, profile }) {
           </aside>
         </header>
 
+        {/* ══════════════ BANNER ESCOLA ══════════════ */}
+        {isSchoolAccount && (
+          <div className="sdb-school-bar">
+            <button className="sdb-school-action-btn" onClick={() => setShowJoinTurma(true)}>
+              <GraduationCap size={14} /> Entrar numa turma
+            </button>
+            <button className="sdb-school-action-btn" onClick={() => setShowExportModal(true)}>
+              <Upload size={14} /> Exportar projetos
+            </button>
+          </div>
+        )}
+
         {/* ══════════════ PROJETO DO MÊS ══════════════ */}
         {projectOfMonth && (() => {
           const p = projectOfMonth.project
@@ -714,6 +797,82 @@ export default function StudentDashboard({ user, profile }) {
           {/* ── Coluna principal ── */}
           <div className="sdb-col">
 
+            {/* ── Painel escola ── */}
+            {isSchoolAccount && (schoolClasses.length > 0 || profNotifs.length > 0 || pendingTasks.length > 0) && (
+              <section className="sdb-panel sdb-school-panel sdb-o-school">
+
+                <header className="sdb-panel-head">
+                  <span className="sdb-eyebrow"><GraduationCap size={11} /> Turmas</span>
+                  <button className="sdb-linkbtn" style={{ fontSize: 11 }} onClick={() => setShowJoinTurma(true)}>
+                    <Plus size={11} /> Entrar noutra
+                  </button>
+                </header>
+
+                <div className="sdb-turma-list">
+                  {schoolClasses.map(cls => (
+                    <button key={cls.id} className="sdb-turma-card" onClick={() => navigate(`/turma/${cls.code}`)}>
+                      <div className="sdb-turma-card-left">
+                        <span className="sdb-turma-name">{cls.name}</span>
+                        {cls.subject && <span className="sdb-turma-sub">{cls.subject}</span>}
+                      </div>
+                      {cls.teacher_name && <span className="sdb-turma-teacher">{cls.teacher_name}</span>}
+                    </button>
+                  ))}
+                </div>
+
+                {profNotifs.length > 0 && (
+                  <div className={`sdb-school-section${schoolClasses.length > 0 ? ' sdb-school-section--sep' : ''}`}>
+                    <span className="sdb-eyebrow">Feedback do professor</span>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
+                      {profNotifs.map(n => (
+                        <button key={n.id} className="sdb-feedback-row" onClick={() => openFeedback(n)}>
+                          <span className="sdb-feedback-msg">{n.message}</span>
+                          <ArrowRight size={13} style={{ flexShrink: 0, color: 'var(--color-text-tertiary)' }} />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {pendingTasks.length > 0 && (
+                  <div className={`sdb-school-section${(schoolClasses.length > 0 || profNotifs.length > 0) ? ' sdb-school-section--sep' : ''}`}>
+                    <header className="sdb-panel-head" style={{ marginBottom: 8 }}>
+                      <span className="sdb-eyebrow">
+                        <ClipboardCheck size={11} /> Tarefas <span className="sdb-count">{pendingTasks.length}</span>
+                      </span>
+                    </header>
+                    <div className="sdb-task-list">
+                      {pendingTasks.slice(0, 4).map(t => {
+                        const isOverdue = t.due_date && new Date(t.due_date + 'T23:59:59') < new Date()
+                        const isDone = justDone === t.id
+                        return (
+                          <div key={t.id} className={`sdb-task-row${isDone ? ' is-done' : ''}`}>
+                            <button className="sdb-task-check" onClick={() => completeTask(t.id)} aria-label="Marcar como feita">
+                              {isDone ? <Check size={12} color="var(--color-success)" /> : <span className="sdb-task-check-circle" />}
+                            </button>
+                            <div className="sdb-task-body">
+                              <span className="sdb-task-title">{t.title}</span>
+                              {t.classes?.name && <span className="sdb-task-class">{t.classes.name}</span>}
+                            </div>
+                            {t.due_date && (
+                              <span className={`sdb-task-due${isOverdue ? ' is-late' : ''}`}>
+                                {isOverdue ? 'Atrasada' : new Date(t.due_date + 'T00:00:00').toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' })}
+                              </span>
+                            )}
+                          </div>
+                        )
+                      })}
+                      {pendingTasks.length > 4 && (
+                        <span className="sdb-task-more">+{pendingTasks.length - 4} mais</span>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+              </section>
+            )}
+
+
             {myInterests.length > 0 && (
               <section className="sdb-panel sdb-panel--tint sdb-o-recruiter sdb-opportunity">
                 <header className="sdb-panel-head">
@@ -752,7 +911,7 @@ export default function StudentDashboard({ user, profile }) {
                   <>
                     {showAutoFocus && (
                       <PinnedProjectCard
-                        project={focusFull}
+                        project={{ ...focusFull, review_status: focusProject?.review_status, teacher_score: focusFull?.teacher_score ?? focusProject?.teacher_score }}
                         auto
                         coverage={focusIsPap ? coverage : null}
                         onOpenReport={focusIsPap ? () => setShowReport(true) : null}
@@ -766,6 +925,7 @@ export default function StudentDashboard({ user, profile }) {
                         onOpen={() => navigate(`/projeto/${focusFull.slug}`)}
                         onOpenDiary={() => navigate(`/projeto/${focusFull.slug}/diario`)}
                         onLog={kind => setComposerKind(kind)}
+                        writtenToday={entries.some(e => e.created_at?.slice(0,10) === new Date().toISOString().slice(0,10))}
                       />
                     )}
                     {manuallyPinned.map(pinned => {
@@ -776,12 +936,18 @@ export default function StudentDashboard({ user, profile }) {
                           project={pinned}
                           coverage={pinnedIsPap ? coverage : null}
                           onOpenReport={pinnedIsPap ? () => setShowReport(true) : null}
-                          onUnpin={() => toggleDashboardPinned(pinned.id)}
+                          onUnpin={() => {
+                            toggleDashboardPinned(pinned.id)
+                            if (focusFull?.id === pinned.id) {
+                              setFocusFull(p => p ? { ...p, dashboard_pinned: false } : p)
+                            }
+                          }}
                           onEdit={() => navigate(`/editar/${pinned.slug}`)}
                           onDelete={() => deleteProject(pinned.id)}
                           onOpen={() => navigate(`/projeto/${pinned.slug}`)}
                           onOpenDiary={() => navigate(`/projeto/${pinned.slug}/diario`)}
                           onLog={kind => setComposerKind(kind)}
+                          writtenToday={entries.some(e => e.created_at?.slice(0,10) === new Date().toISOString().slice(0,10))}
                         />
                       )
                     })}
@@ -1128,16 +1294,18 @@ function ProjectRow({ project, shared, onOpen, onEdit, onCopy, copied, onDelete,
 /* ── Card de projecto fixado na dashboard ─────────────────────────────────── */
 const TYPE_MAP = { pap: 'PAP', internship: 'Estágio', group: 'Trabalho de grupo', personal: 'Projeto pessoal', competition: 'Competição', presentation: 'Apresentação' }
 
-function PinnedProjectCard({ project, auto, coverage, onOpenReport, onUnpin, onEdit, onDelete, onOpen, onOpenDiary, onLog }) {
+function PinnedProjectCard({ project, auto, coverage, onOpenReport, onUnpin, onEdit, onDelete, onOpen, onOpenDiary, onLog, writtenToday }) {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const typeLabel = auto ? 'Em foco' : (project.is_pap ? 'PAP' : (TYPE_MAP[project.project_type] || 'Projeto'))
 
   return (
-    <section className="sdb-pinned-card">
+    <section
+      className="sdb-pinned-card"
+      style={project.cover_url ? { '--cover-bg': `url(${project.cover_url})` } : {}}
+      data-has-cover={!!project.cover_url}
+    >
       <div
         className="sdb-pinned-head"
-        style={project.cover_url ? { '--cover-bg': `url(${project.cover_url})` } : {}}
-        data-has-cover={!!project.cover_url}
       >
         <div className="sdb-pinned-head-left">
           <span className="sdb-pinned-type">{typeLabel}</span>
@@ -1185,6 +1353,15 @@ function PinnedProjectCard({ project, auto, coverage, onOpenReport, onUnpin, onE
         <div className="sdb-pinned-meta">
           {project.area && <span>{project.area}</span>}
           {project.ai_tagline && <span className="sdb-pinned-tagline">"{project.ai_tagline}"</span>}
+          {project.review_status === 'ready_for_defense' && (
+            <span className="sdb-review-badge sdb-review-badge--ok">Pronto para defesa</span>
+          )}
+          {project.review_status === 'needs_revision' && (
+            <span className="sdb-review-badge sdb-review-badge--warn">A rever</span>
+          )}
+          {project.teacher_score != null && (
+            <span className="sdb-review-badge sdb-review-badge--score">Nota prof.: {project.teacher_score}</span>
+          )}
           {project.defense_date && (() => {
             const today = new Date(); today.setHours(0,0,0,0)
             const target = new Date(project.defense_date + 'T00:00:00')
@@ -1215,6 +1392,14 @@ function PinnedProjectCard({ project, auto, coverage, onOpenReport, onUnpin, onE
           </div>
         )}
 
+        {!writtenToday && (
+          <button className="sdb-diary-nudge" onClick={() => onLog?.('update')}>
+            <Sparkles size={11} />
+            {project.is_pap || project.project_type === 'pap'
+              ? 'Alimenta a IA — escreve no diário hoje'
+              : 'Ainda não escreveste hoje — regista o teu progresso'}
+          </button>
+        )}
         <div className="sdb-pinned-foot">
           <button className="sdb-btn sdb-btn--solid sdb-btn--sm" onClick={() => onLog?.('progresso')}>
             <Plus size={13} /> Registar

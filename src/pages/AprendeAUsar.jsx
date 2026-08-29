@@ -40,7 +40,7 @@ function Mockup({ label, children, dark }) {
 // ── Mockups ───────────────────────────────────────────────────────────────────
 function MkDashboard() {
   return (
-    <Mockup label="showo — Dashboard">
+    <Mockup label="showo: Dashboard">
       <div style={{ display: 'flex', gap: 8 }}>
         <div style={{ width: 38, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 3 }}>
           {[1,2,3,4].map(i => (
@@ -78,11 +78,11 @@ function MkDashboard() {
 
 function MkProjectList() {
   return (
-    <Mockup label="showo — Os meus projetos">
+    <Mockup label="showo:Os meus projetos">
       <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
         {[
           { name: 'App de Gestão de Stock', score: 82, pinned: true, star: true },
-          { name: 'Site Institucional — Grupo', score: 61, pinned: false, star: false },
+          { name: 'Site Institucional (Grupo)', score: 61, pinned: false, star: false },
           { name: 'Jogo Educativo Unity', score: 44, pinned: true, star: false },
         ].map((p, i) => (
           <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 9px', borderRadius: 7, background: 'var(--color-glass)', border: '1px solid var(--color-glass-border)' }}>
@@ -149,7 +149,7 @@ function MkDiaryCanvas() {
   const textColors = { note: '#94a3b8', idea: '#93c5fd', highlight: '#fbbf24' }
 
   return (
-    <Mockup label="showo — Diário" dark>
+    <Mockup label="showo:Diário" dark>
       {/* Toolbar */}
       <div style={{ height: 30, display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8, paddingBottom: 8, borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
         <div style={{ width: 22, height: 22, borderRadius: 6, background: 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -191,7 +191,7 @@ function MkDiaryCanvas() {
 
 function MkPreviewEditor() {
   return (
-    <Mockup label="showo — Editor de apresentação">
+    <Mockup label="showo:Editor de apresentação">
       <div style={{ display: 'flex', gap: 8, height: 108 }}>
         {/* Tab sidebar */}
         <div style={{ width: 62, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 3 }}>
@@ -252,7 +252,7 @@ function MkBlocks() {
 
 function MkProfile() {
   return (
-    <Mockup label="showo — /u/username">
+    <Mockup label="showo:/u/username">
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
           <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'var(--color-primary-subtle)', border: '2px solid var(--color-primary-muted)', flexShrink: 0 }} />
@@ -285,13 +285,13 @@ function MkProfile() {
 
 function MkExplore() {
   return (
-    <Mockup label="showo — Explorar">
+    <Mockup label="showo:Explorar">
       <div style={{ marginBottom: 8, display: 'flex', gap: 5 }}>
         <div style={{ flex: 1, height: 22, borderRadius: 6, background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)' }} />
         <div style={{ height: 22, width: 22, borderRadius: 6, background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)' }} />
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
-        {['App IoT para Estufas', 'Plataforma de Tutoria', 'Jogo Unity 2D', 'API REST — Gestão'].map((name, i) => (
+        {['App IoT para Estufas', 'Plataforma de Tutoria', 'Jogo Unity 2D', 'API REST: Gestão'].map((name, i) => (
           <div key={name} style={{ borderRadius: 7, overflow: 'hidden', border: '1px solid var(--color-border)' }}>
             <div style={{ height: 30, background: 'var(--color-bg-alt)' }} />
             <div style={{ padding: '5px 7px' }}>
@@ -310,7 +310,7 @@ function MkExplore() {
 
 function MkTurma() {
   return (
-    <Mockup label="showo — Turma 12º CT">
+    <Mockup label="showo:Turma 12º CT">
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: 7, borderBottom: '1px solid var(--color-border)' }}>
           <div style={{ height: 5, width: 90, borderRadius: 2, background: 'var(--color-text)', opacity: 0.6 }} />
@@ -334,7 +334,7 @@ function MkTurma() {
 
 function MkMessages() {
   return (
-    <Mockup label="showo — Mensagens">
+    <Mockup label="showo:Mensagens">
       <div style={{ display: 'flex', gap: 8, height: 100 }}>
         <div style={{ width: 56, display: 'flex', flexDirection: 'column', gap: 3, borderRight: '1px solid var(--color-border)', paddingRight: 7 }}>
           {[{ n: 'João S.', unread: true }, { n: 'Prof. Mota', unread: false }, { n: 'Maria C.', unread: false }].map(c => (
@@ -356,7 +356,7 @@ function MkMessages() {
 
 function MkMissions() {
   return (
-    <Mockup label="showo — Missões">
+    <Mockup label="showo:Missões">
       <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
         {[
           { label: 'Primeiro projeto', xp: 20, done: true },
@@ -387,7 +387,7 @@ function MkScore() {
     { label: 'Validação', pct: 40, weight: '10%' },
   ]
   return (
-    <Mockup label="Score — decomposição">
+    <Mockup label="Score: decomposição">
       <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
         {bars.map(b => (
           <div key={b.label} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -618,7 +618,7 @@ export default function AprendeAUsar() {
             <Lead>A preview é o que qualquer pessoa vê quando visita o link do teu projeto. Podes personalizar completamente a aparência e adicionar blocos de conteúdo extra.</Lead>
 
             <H3>Abrir o editor</H3>
-            <Body>Na página do projeto, clica no ícone de pincel no canto superior direito para entrar em modo de preview. No desktop, o painel de edição abre à direita. No mobile, aparece uma sheet em baixo — toca no pincel para expandir ou fechar o painel.</Body>
+            <Body>Na página do projeto, clica no ícone de pincel no canto superior direito para entrar em modo de preview. No desktop, o painel de edição abre à direita. No mobile, aparece uma sheet em baixo. Toca no pincel para expandir ou fechar o painel.</Body>
 
             <DefList items={[
               { term: 'Estilo', def: 'Cor de destaque, fundo, tipografia, alinhamento do título, tamanho do hero e modo claro ou escuro.' },

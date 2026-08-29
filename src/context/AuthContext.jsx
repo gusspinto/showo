@@ -33,15 +33,20 @@ export function AuthProvider({ children }) {
   const fetchProfile = useCallback(async (uid) => {
     if (!uid) { setProfile(null); setAiUsage({}); resetAnalytics(); return }
     const [profileRes, userRes] = await Promise.all([
-      supabase.from('profiles').select('id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, linkedin_url, skills, monthly_report_opt_in, area, plan, phone, account_type').eq('id', uid).single(),
+      supabase.from('profiles').select('id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, linkedin_url, skills, monthly_report_opt_in, area, plan, phone, account_type, organization_id').eq('id', uid).single(),
       supabase.auth.getUser(),
     ])
     const meta = userRes.data?.user?.user_metadata ?? {}
     let data = profileRes.data
 
     if (!data && profileRes.error && profileRes.error.code !== 'PGRST116') {
-      setProfile(null)
-      return
+      // Fallback sem organization_id — migration 056 pode ainda não estar aplicada
+      const { data: fallbackData, error: fallbackErr } = await supabase
+        .from('profiles')
+        .select('id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, linkedin_url, skills, monthly_report_opt_in, area, plan, phone')
+        .eq('id', uid).single()
+      if (fallbackErr && fallbackErr.code !== 'PGRST116') { setProfile(null); return }
+      data = fallbackData ?? null
     }
 
     if (!data) {
@@ -62,7 +67,7 @@ export function AuthProvider({ children }) {
           p_email: userRes.data?.user?.email,
         })
         if (regResult?.ok) {
-          const { data: refreshed } = await supabase.from('profiles').select('id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, linkedin_url, skills, monthly_report_opt_in, area, plan, phone, account_type').eq('id', uid).single()
+          const { data: refreshed } = await supabase.from('profiles').select('id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, linkedin_url, skills, monthly_report_opt_in, area, plan, phone, account_type, organization_id').eq('id', uid).single()
           if (refreshed) data = refreshed
         }
         await supabase.auth.updateUser({ data: { pending_class_code: null } })
@@ -73,13 +78,13 @@ export function AuthProvider({ children }) {
           p_full_name: meta.full_name ?? '',
           p_school: meta.pending_school ?? '',
         })
-        const { data: refreshed } = await supabase.from('profiles').select('id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, linkedin_url, skills, monthly_report_opt_in, area, plan, phone, account_type').eq('id', uid).single()
+        const { data: refreshed } = await supabase.from('profiles').select('id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, linkedin_url, skills, monthly_report_opt_in, area, plan, phone, account_type, organization_id').eq('id', uid).single()
         if (refreshed) data = refreshed
         await supabase.auth.updateUser({ data: { pending_invite_code: null, pending_school: null } })
       }
       if (meta.pending_partner_token) {
         await supabase.rpc('claim_partner_company_invite', { p_token: meta.pending_partner_token })
-        const { data: refreshed } = await supabase.from('profiles').select('id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, linkedin_url, skills, monthly_report_opt_in, area, plan, phone, account_type').eq('id', uid).single()
+        const { data: refreshed } = await supabase.from('profiles').select('id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, linkedin_url, skills, monthly_report_opt_in, area, plan, phone, account_type, organization_id').eq('id', uid).single()
         if (refreshed) data = refreshed
         await supabase.auth.updateUser({ data: { pending_partner_token: null } })
       }
@@ -138,9 +143,11 @@ export function AuthProvider({ children }) {
     if (current) return fetchProfile(current.id)
   }
 
-  const isAdmin = profile?.is_admin === true
-  const planId  = profile?.plan ?? 'free'
-  const plan    = getPlan(planId)
+  const isAdmin         = profile?.is_admin === true
+  const isSchoolAccount = !!profile?.organization_id
+  // Org accounts always get the 'school' plan regardless of profiles.plan
+  const planId          = isSchoolAccount ? 'school' : (profile?.plan ?? 'free')
+  const plan            = getPlan(planId)
 
   function checkGate(feature, projectCount) {
     if (feature === 'maxProjects') {
@@ -163,7 +170,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, signOut, refreshProfile, isAdmin, plan, planId, checkGate, consumeAI, aiUsage, refreshAiUsage: fetchAiUsage }}>
+    <AuthContext.Provider value={{ user, profile, loading, signOut, refreshProfile, isAdmin, plan, planId, isSchoolAccount, checkGate, consumeAI, aiUsage, refreshAiUsage: fetchAiUsage }}>
       {children}
     </AuthContext.Provider>
   )

@@ -320,7 +320,7 @@ export default function EditProject() {
         @media(max-width:600px){.ep-2col{grid-template-columns:1fr!important;}}
         .ep-progress { display: flex; align-items: center; gap: 12px; margin-top: 18px; }
         .ep-progress-track { flex: 1; height: 8px; border-radius: 99px; background: var(--color-bg-alt); overflow: hidden; }
-        .ep-progress-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--color-primary), #4f46e5); transition: width 0.4s cubic-bezier(0.22,1,0.36,1); }
+        .ep-progress-fill { height: 100%; border-radius: 99px; background: var(--color-primary); transition: width 0.4s cubic-bezier(0.22,1,0.36,1); }
         .ep-progress-label { font-size: 12px; font-weight: 800; color: var(--color-text-secondary); flex-shrink: 0; font-variant-numeric: tabular-nums; }
         .ep-layout { display: flex; gap: 20px; align-items: flex-start; }
         .ep-tabs { width: 164px; flex-shrink: 0; display: flex; flex-direction: column; gap: 3px; position: sticky; top: 20px; }

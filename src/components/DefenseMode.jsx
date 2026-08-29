@@ -680,7 +680,7 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
             {[
               { n: sections.length, label: 'secções' },
               { n: `~${totalMins}m`, label: 'duração' },
-              { n: juryCount || '—', label: 'perguntas' },
+              { n: juryCount || '?', label: 'perguntas' },
             ].map(({ n, label }) => (
               <div key={label} style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 12, padding: '14px 8px' }}>
                 <div style={{ fontSize: 22, fontWeight: 800, color: C.text }}>{n}</div>
@@ -1210,7 +1210,7 @@ function GrupoPanel({ project }) {
                 {/* Status badge */}
                 <div style={{ marginBottom: isPending || isDeclined ? 0 : 12 }}>
                   <span style={{ fontSize: 12, color: statusColor, fontWeight: 600 }}>{statusLabel}</span>
-                  {isPending && <span style={{ fontSize: 12, color: C.subtle, marginLeft: 8 }}>— a aguardar que o colega aceite</span>}
+                  {isPending && <span style={{ fontSize: 12, color: C.subtle, marginLeft: 8 }}>a aguardar que o colega aceite</span>}
                 </div>
 
                 {/* Section assignment — only if accepted */}

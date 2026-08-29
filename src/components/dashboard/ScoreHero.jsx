@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { TrendingUp, Sparkles, Info, X } from 'lucide-react'
+import { TrendingUp, Zap, Info, X } from 'lucide-react'
 import { calculatePotential } from '../../lib/score'
 
 const DIMS = [
@@ -34,7 +34,7 @@ export default function ScoreHero({ projects, profile }) {
           </button>
           <p className="score-hero-tooltip-title">O que é o score?</p>
           <p className="score-hero-tooltip-body">
-            O score é gerado pela IA com base no conteúdo do teu projeto —
+            O score é gerado pela IA com base no conteúdo do teu projeto:
             completude, profundidade e validação. É <strong>privado</strong> e
             não substitui a nota do professor. Serve para te mostrar onde podes melhorar.
           </p>
@@ -85,11 +85,11 @@ export default function ScoreHero({ projects, profile }) {
           <div className="score-hero-topline">
             <div className="score-hero-metric">
               <span className="score-hero-metric-icon"><TrendingUp size={12} /></span>
-              <span className="score-hero-metric-val">{avg || '—'}</span>
+              <span className="score-hero-metric-val">{avg || '--'}</span>
               <span className="score-hero-metric-label">Média</span>
             </div>
             <div className="score-hero-metric">
-              <span className="score-hero-metric-icon"><Sparkles size={12} /></span>
+              <span className="score-hero-metric-icon"><Zap size={12} /></span>
               <span className="score-hero-metric-val">{potential}</span>
               <span className="score-hero-metric-label">Potencial</span>
             </div>

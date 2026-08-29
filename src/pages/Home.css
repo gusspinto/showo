@@ -14,6 +14,10 @@
   transform: translateY(0);
 }
 
+.home-hero-start { display: none; }
+
+.home-content { display: flex; flex-direction: column; }
+
 /* ══ HERO ══ */
 .home-hero {
   position: relative;
@@ -65,6 +69,7 @@
   color: var(--color-primary);
 }
 
+.h1-mobile { display: none; }
 .home-hero-sub {
   font-size: 16px;
   color: rgba(255,255,255,0.6);
@@ -383,48 +388,37 @@ body.light .home-auth-input {
   color: var(--color-text-tertiary);
 }
 
-/* ── CTA Banner ── */
-.home-cta-banner {
-  margin-top: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-  background: var(--color-primary-subtle);
-  border: 1px solid var(--color-primary-border, rgba(27,120,247,0.2));
-  border-radius: 14px;
-  padding: 20px 24px;
-}
-.home-cta-label {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--color-text);
-}
+/* ── CTA, sem cartão ──
+   Era um banner com fundo e texto de apresentação — a seguir a uma grelha
+   de projetos que já mostra o que a Showo faz, mais uma frase a explicar
+   era redundante. Fica só o botão, como o herói: uma ação, sem moldura.
+   Invertido em vez de azul, pela mesma lógica dos botões "Continuar com
+   Google/email": var(--color-text) sobre var(--color-bg) — em claro dá um
+   botão escuro sobre fundo claro, o equivalente correto de "branco" nesse
+   tema (aqui a secção segue o tema; o herói não, é sempre escuro). */
 .home-cta-btn {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 7px;
-  background: var(--color-primary);
-  color: #fff;
+  margin: 28px auto 0;
+  width: fit-content;
+  background: var(--color-text);
+  color: var(--color-bg);
   border: none;
   border-radius: 10px;
-  padding: 11px 20px;
+  padding: 13px 26px;
   font-size: 14px;
   font-weight: 700;
   font-family: inherit;
   cursor: pointer;
   white-space: nowrap;
-  flex-shrink: 0;
   transition: opacity 0.15s;
 }
-.home-cta-btn:hover { opacity: 0.88; }
+.home-cta-btn:hover { opacity: 0.85; }
 
 @media (max-width: 600px) {
-  .home-cta-banner {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 14px;
-  }
+  .home-cta-btn { width: 100%; margin-top: 20px; }
 }
 
 /* ══ HOW IT WORKS ══ */
@@ -508,6 +502,9 @@ body.light .home-auth-input {
   border-top: 1px solid var(--color-border);
   margin-top: 64px;
 }
+@media (max-width: 600px) {
+  .home-footer { padding: 28px 20px; margin-top: 8px; }
+}
 .home-footer button {
   background: none;
   border: none;
@@ -542,28 +539,172 @@ body.light .home-auth-input {
 }
 
 @media (max-width: 600px) {
-  /* Hero */
-  .home-hero { padding: 72px 20px 40px; }
-  .home-hero-grid { gap: 24px; }
+  /* ── Herói ──
+     A gradiente de sempre (preto → azul-marinho às três camadas) não é a
+     paleta da Showo — é uma cor bonita inventada só para aqui, sem ligação
+     nenhuma ao resto da app, que é quase-preto (#080808) com azul de marca.
+     Fica plana, no preto real da app, escrito à mão como o resto do herói
+     já faz (o herói é sempre escuro, mesmo em modo claro — nunca usa os
+     tokens de tema, por isso as cores aqui são sempre literais, não var()). */
+  /* Fora a mancha azul — criava um salto visível exatamente onde a barra
+     do topo encontra o herói. A barra usa var(--color-sidebar-bg), que no
+     tema escuro é #000000 — preto puro, mais escuro que o #080808 do resto
+     da app. É essa cor que o herói passa a usar, para a transição entre os
+     dois ser zero, não quase-zero. */
+  .home-hero {
+    background: #000000;
+    border-bottom-color: rgba(255,255,255,0.08);
+    min-height: calc(100dvh - 62px);
+    display: flex;
+    align-items: center;
+    padding: 24px 24px 48px;
+  }
+
+  /* A aurora eram três radial-gradients por cima da gradiente. Sem gradiente
+     por baixo, fazia ainda menos sentido continuar lá. */
+  .home-hero-aurora { display: none; }
+
+  /* O formulário de login sai do primeiro ecrã. Continua a uma tacada de
+     distância, no fim do bloco. */
+  .home-hero-auth { display: none !important; }
+
+  .home-hero-start {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 340px;
+    margin: 32px auto 0;
+  }
+
+  /* ── Divisor "ou" ── */
+  .home-start-divider {
+    display: flex; align-items: center; gap: 12px;
+    margin: 16px 0;
+  }
+  .home-start-divider::before, .home-start-divider::after {
+    content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.12);
+  }
+  .home-start-divider span { font-size: 12px; color: rgba(255,255,255,0.35); font-weight: 500; }
+
+  /* ── Formulário ── */
+  .home-start-form { display: flex; flex-direction: column; gap: 10px; }
+  .home-start-input {
+    width: 100%; box-sizing: border-box;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.14);
+    border-radius: var(--radius-md);
+    padding: 14px 16px;
+    color: #fff;
+    font-family: inherit; font-size: 16px;
+    outline: none;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .home-start-input::placeholder { color: rgba(255,255,255,0.4); }
+  .home-start-input:focus { border-color: rgba(255,255,255,0.35); background: rgba(255,255,255,0.09); }
+
+  .home-start-error { margin: 0; font-size: 13px; color: #ff8a8a; }
+
+  /* Email confirmado no passo da password — não desaparece, fica visível
+     para quem está a escrever perceber a que conta se refere. */
+  .home-start-email-echo {
+    margin: 0 0 2px; font-size: 13px; color: rgba(255,255,255,0.55);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+
+  /* Botão branco cheio — a mesma família visual do Google, para os dois se
+     lerem como opções do mesmo peso, não uma principal e uma secundária. */
+  .home-start-email-btn {
+    width: 100%; min-height: 50px;
+    background: #fff; border: none;
+    border-radius: var(--radius-md);
+    color: #171717;
+    font-family: inherit; font-size: 15px; font-weight: 700;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.15s, transform 0.1s var(--ease-out);
+  }
+  .home-start-email-btn:active { transform: scale(0.98); }
+  .home-start-email-btn:disabled { opacity: 0.6; cursor: default; }
+  @media (hover: hover) {
+    .home-start-email-btn:hover:not(:disabled) { background: #eee; }
+  }
+
+  .home-start-back {
+    align-self: center; margin-top: 2px;
+    background: none; border: none; padding: 6px;
+    font-family: inherit; font-size: 13px; font-weight: 600;
+    color: rgba(255,255,255,0.55);
+    text-decoration: underline; text-underline-offset: 3px;
+    cursor: pointer;
+  }
+
+  /* ── Rodapé do bloco ── */
+  .home-start-privacy {
+    margin: 16px 2px 0;
+    font-size: 12px; line-height: 1.5;
+    color: rgba(255,255,255,0.4);
+    text-align: center;
+  }
+  .home-start-privacy button {
+    background: none; border: none; padding: 0;
+    font-family: inherit; font-size: 12px;
+    color: rgba(255,255,255,0.65);
+    text-decoration: underline; text-underline-offset: 2px;
+    cursor: pointer;
+  }
+
+  /* "Continuar a explorar" — a saída que o Claude não dá. Vidro escuro,
+     como o cartão de auth do desktop, para não competir com o branco do
+     botão de email logo acima. */
+  .home-start-explore {
+    width: 100%; min-height: 48px; margin-top: 14px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.14);
+    border-radius: var(--radius-md);
+    color: #fff;
+    font-family: inherit; font-size: 14px; font-weight: 600;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.15s;
+  }
+  .home-start-explore:active { background: rgba(255,255,255,0.1); }
+  @media (hover: hover) {
+    .home-start-explore:hover { background: rgba(255,255,255,0.09); }
+  }
+
+  .home-hero-grid { gap: 24px; width: 100%; }
   .how-it-works-grid { grid-template-columns: 1fr; }
-  .home-hero-copy { order: 1; text-align: left; }
+
+  /* O herói vira uma peça de anúncio, não um parágrafo: título e texto
+     centrados, a lê-los como se estivesse a apresentar-se, não a explicar-se
+     a partir de uma margem esquerda arbitrária. */
+  .home-hero-copy {
+    order: 1;
+    text-align: center;
+    align-items: center;
+  }
   .home-hero-auth {
     order: 2;
     max-width: none;
     margin: 0;
   }
+  /* Desktop mantém a cor e o ponto final. No telemóvel troca para a versão
+     sem cor nem pontuação, em duas linhas — pediste mais presença como
+     bloco de texto, não como frase a fechar. */
+  .h1-desktop { display: none; }
+  .h1-mobile  { display: block; }
   .home-hero-h1 {
-    font-size: 30px;
-    letter-spacing: -0.8px;
-    margin-bottom: 12px;
+    font-size: clamp(38px, 12vw, 52px);
+    letter-spacing: -1.3px;
+    line-height: 1.06;
+    margin-bottom: 14px;
   }
   .home-hero-sub {
     font-size: 15px;
-    margin-bottom: 0;
-    margin-left: 0;
-    margin-right: 0;
-    max-width: none;
+    line-height: 1.6;
+    margin: 0;
   }
+  .home-hero-sub { display: none; }
   .home-hero-stats { display: none; }
   /* Hide redundant subtitle inside auth widget on mobile */
   .home-auth-subtitle { display: none; }
@@ -572,6 +713,7 @@ body.light .home-auth-input {
   .home-section { padding: 40px 0 32px; }
   .home-section-inner { padding: 0 20px; }
   .home-section-header { margin-bottom: 20px; }
+  .home-section-title { font-size: 21px; letter-spacing: -0.6px; }
   .home-projects-grid {
     display: flex;
     grid-template-columns: unset;
@@ -592,12 +734,20 @@ body.light .home-auth-input {
     flex-shrink: 0;
   }
 
-  /* Hide "Como funciona" */
-  .home-how-section { display: none; }
+  /* "Como funciona" volta a ficar fora do telemóvel. Fez sentido tentar —
+     era o que faltava para o scroll não parecer cortado a meio — mas na
+     prática ficava a ocupar uma tela inteira de conteúdo que a maioria já
+     percebe só pelo herói, entre dois blocos (herói e projetos) que são o
+     que interessa mesmo ver primeiro. Volta a ser desktop-only. */
+  .home-how-section { display: none !important; }
 
-  /* CTA banner full-width button */
-  .home-cta-banner { margin: 16px 0 0; }
-  .home-cta-btn { width: 100%; justify-content: center; }
+  /* Projeto do mês → Projetos em destaque, direto a seguir ao herói: prova
+     em vez de explicação. O "Começa a criar" já vive dentro da secção de
+     projetos (home-section), por isso não precisa de ordem própria. */
+  .home-hero    { order: 1; }
+  .home-pom-wrap { order: 2; }
+  .home-section  { order: 3; }
+  .home-footer   { order: 4; }
 }
 
 /* ══ PROJETO DO MÊS ══ */

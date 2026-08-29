@@ -74,7 +74,7 @@ function Badge({ children, color = C.blue }) {
   )
 }
 
-function Avatar({ name, color = 'linear-gradient(135deg,var(--color-primary),#4f46e5)', size = 32 }) {
+function Avatar({ name, color = 'var(--color-primary)', size = 32 }) {
   return (
     <div style={{
       width: size, height: size, borderRadius: '50%', flexShrink: 0,
@@ -622,7 +622,7 @@ function OverviewTab({ users, projects, activityLog }) {
                   borderRadius: 8,
                 }}>
                   <div style={{ position: 'relative', alignSelf: 'center' }}>
-                    <Avatar name={u.full_name || u.username} color={u.is_admin ? 'linear-gradient(135deg,var(--color-accent),#7c3aed)' : 'linear-gradient(135deg,var(--color-primary),#4f46e5)'} size={36} />
+                    <Avatar name={u.full_name || u.username} color={u.is_admin ? 'var(--color-accent)' : 'var(--color-primary)'} size={36} />
                     {isOnline && <div style={{ position: 'absolute', bottom: 0, right: 0, width: 10, height: 10, borderRadius: '50%', background: C.green, border: '2px solid var(--color-surface)' }} />}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
@@ -746,7 +746,7 @@ function UsersTab({ users, projects, onToggleAdmin, onDeleteUser, onChangeRole, 
             }}>
               <Avatar
                 name={name}
-                color={u.is_admin ? 'linear-gradient(135deg,var(--color-accent),#7c3aed)' : 'linear-gradient(135deg,var(--color-primary),#4f46e5)'}
+                color={u.is_admin ? 'var(--color-accent)' : 'var(--color-primary)'}
                 size={38}
               />
               <div style={{ flex: 1, minWidth: 180 }}>
@@ -1005,6 +1005,122 @@ function SignupsTab({ signups, users }) {
             </div>
           )
         })}
+      </div>
+    </div>
+  )
+}
+
+// ─── ORGS TAB (school organizations) ────────────────────
+function OrgsTab() {
+  const [orgs, setOrgs] = useState([])
+  const [loadingOrgs, setLoadingOrgs] = useState(true)
+  const [name, setName] = useState('')
+  const [domain, setDomain] = useState('')
+  const [plan, setPlan] = useState('build')
+  const [creating, setCreating] = useState(false)
+  const [createMsg, setCreateMsg] = useState(null)
+
+  const fieldStyle = {
+    background: 'var(--color-bg)', border: '1px solid var(--color-border)',
+    borderRadius: 8, padding: '9px 12px', fontSize: 13, color: 'var(--color-text)',
+    outline: 'none', fontFamily: 'inherit', width: '100%', boxSizing: 'border-box',
+  }
+
+  useEffect(() => {
+    supabase.from('organizations').select('*').order('created_at', { ascending: false }).then(({ data }) => {
+      setOrgs(data ?? [])
+      setLoadingOrgs(false)
+    })
+  }, [])
+
+  async function handleCreate(e) {
+    e.preventDefault()
+    setCreateMsg(null)
+    if (!name.trim() || !domain.trim()) { setCreateMsg({ ok: false, text: 'Preenche nome e domínio.' }); return }
+    setCreating(true)
+    const { data, error } = await supabase.rpc('admin_create_organization', {
+      p_name: name.trim(),
+      p_email_domain: domain.trim().toLowerCase().replace(/^@/, ''),
+      p_plan: plan,
+    })
+    setCreating(false)
+    if (error) { setCreateMsg({ ok: false, text: error.message }); return }
+    setCreateMsg({ ok: true, text: `Escola criada com ID ${data}` })
+    setName(''); setDomain('')
+    const { data: fresh } = await supabase.from('organizations').select('*').order('created_at', { ascending: false })
+    if (fresh) setOrgs(fresh)
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+      <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '20px 22px' }}>
+        <h3 style={{ margin: '0 0 4px', fontSize: 15, fontWeight: 700, color: C.text }}>Registar escola</h3>
+        <p style={{ margin: '0 0 16px', fontSize: 13, color: C.muted }}>
+          Alunos que se registem com um email desse domínio recebem automaticamente a conta escolar com plano Build.
+        </p>
+        <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: 'block', marginBottom: 5 }}>Nome da escola</label>
+              <input value={name} onChange={e => setName(e.target.value)} placeholder="Ex: ESMAD" style={fieldStyle} />
+            </div>
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: 'block', marginBottom: 5 }}>Domínio de email</label>
+              <input value={domain} onChange={e => setDomain(e.target.value)} placeholder="Ex: esmad.ipp.pt" style={fieldStyle} />
+            </div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: 'block', marginBottom: 5 }}>Plano</label>
+              <select value={plan} onChange={e => setPlan(e.target.value)} style={{ ...fieldStyle, width: 'auto', paddingRight: 28 }}>
+                <option value="build">Build</option>
+                <option value="launch">Launch</option>
+              </select>
+            </div>
+            <button type="submit" disabled={creating} style={{
+              background: creating ? C.border : C.blue, color: '#fff', border: 'none',
+              borderRadius: 8, padding: '9px 18px', fontSize: 13, fontWeight: 600,
+              cursor: creating ? 'not-allowed' : 'pointer', fontFamily: 'inherit', alignSelf: 'flex-end',
+            }}>{creating ? 'A criar…' : 'Criar escola'}</button>
+          </div>
+          {createMsg && (
+            <div style={{ fontSize: 13, padding: '8px 12px', borderRadius: 8, fontWeight: 600,
+              background: createMsg.ok ? 'rgba(34,197,94,0.08)' : 'rgba(239,68,68,0.08)',
+              color: createMsg.ok ? C.green : C.red,
+              border: `1px solid ${createMsg.ok ? 'rgba(34,197,94,0.25)' : 'rgba(239,68,68,0.25)'}`,
+            }}>{createMsg.text}</div>
+          )}
+        </form>
+      </div>
+
+      <div>
+        <h3 style={{ margin: '0 0 12px', fontSize: 14, fontWeight: 700, color: C.muted }}>
+          Escolas registadas ({orgs.length})
+        </h3>
+        {loadingOrgs ? (
+          <p style={{ fontSize: 13, color: C.muted }}>A carregar…</p>
+        ) : orgs.length === 0 ? (
+          <p style={{ fontSize: 13, color: C.muted }}>Nenhuma escola registada ainda.</p>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {orgs.map(o => (
+              <div key={o.id} style={{
+                background: C.card, border: `1px solid ${C.border}`, borderRadius: 10,
+                padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              }}>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{o.name}</div>
+                  <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>@{o.email_domain}</div>
+                </div>
+                <span style={{
+                  padding: '3px 10px', borderRadius: 99, fontSize: 12, fontWeight: 700,
+                  background: PLAN_COLORS[o.plan] + '22', color: PLAN_COLORS[o.plan],
+                  border: `1px solid ${PLAN_COLORS[o.plan]}44`,
+                }}>{PLAN_LABELS[o.plan] ?? o.plan}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )
@@ -1417,6 +1533,7 @@ export default function Admin() {
     { id: 'projects', label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Folder size={14} /> Projetos ({projects.length})</span> },
     { id: 'signups',  label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Star size={14} /> Signups ({signups.length})</span> },
     { id: 'invites',  label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><KeyRound size={14} /> Convites Professor</span> },
+    { id: 'orgs',     label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Shield size={14} /> Organizações</span> },
     { id: 'schools',  label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><School size={14} /> Escolas</span> },
     { id: 'ambassadors', label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Megaphone size={14} /> Embaixadores</span> },
   ]
@@ -1510,6 +1627,7 @@ export default function Admin() {
               />
             )}
             {tab === 'signups' && <SignupsTab signups={signups} users={users} />}
+            {tab === 'orgs' && <OrgsTab />}
             {tab === 'invites' && (
               <InvitesTab
                 codes={codes}

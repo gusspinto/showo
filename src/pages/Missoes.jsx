@@ -504,14 +504,14 @@ export default function Missoes() {
             <div>
               <div style={{ fontSize: 13, color: C.muted, marginBottom: 4, fontWeight: 600 }}>XP Total</div>
               <div style={{ fontSize: 28, fontWeight: 900, color: C.blue, letterSpacing: '-1px' }}>
-                {loading ? '—' : earnedXP}
+                {loading ? '--' : earnedXP}
                 <span style={{ fontSize: 14, color: C.subtle, fontWeight: 500 }}>/{totalXP} XP</span>
               </div>
             </div>
             <div style={{ textAlign: 'right' }}>
               <div style={{ fontSize: 13, color: C.muted, marginBottom: 4, fontWeight: 600 }}>Completas</div>
               <div style={{ fontSize: 28, fontWeight: 900, color: C.green, letterSpacing: '-1px' }}>
-                {loading ? '—' : doneMissions.length}
+                {loading ? '--' : doneMissions.length}
                 <span style={{ fontSize: 14, color: C.subtle, fontWeight: 500 }}>/{missions.length}</span>
               </div>
             </div>

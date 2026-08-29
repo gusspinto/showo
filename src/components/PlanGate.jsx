@@ -111,17 +111,19 @@ export function ConfirmUseModal({ feature, remaining, limit, onConfirm, onCancel
 export function PlanBadge({ style }) {
   const { planId } = useAuth()
   if (!planId || planId === 'free') return null
-  const colors = { build: '#2B7EF5', launch: '#C49A20' }
+  const colors  = { build: '#2B7EF5', launch: '#C49A20', school: '#2B7EF5' }
+  const labels  = { build: 'Build', launch: 'Launch', school: 'Escola' }
+  const color   = colors[planId] ?? '#2B7EF5'
   return (
     <span style={{
       display: 'inline-flex', alignItems: 'center',
       padding: '2px 10px', borderRadius: '100px',
       fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.04em',
-      background: colors[planId] + '22', color: colors[planId],
-      border: `1px solid ${colors[planId]}44`,
+      background: color + '22', color,
+      border: `1px solid ${color}44`,
       ...style,
     }}>
-      {planId === 'build' ? 'Build' : 'Launch'}
+      {labels[planId] ?? planId}
     </span>
   )
 }

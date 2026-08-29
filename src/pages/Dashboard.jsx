@@ -141,7 +141,7 @@ function CreateTurmaModal({ onClose, onCreated }) {
       <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
         <div>
           <SectionLabel>Nome da turma *</SectionLabel>
-          <input value={name} onChange={e => setName(e.target.value)} required placeholder="ex: Turma A — 11º ano"
+          <input value={name} onChange={e => setName(e.target.value)} required placeholder="ex: Turma A, 11º ano"
             style={{ width: '100%', background: 'var(--color-input-bg)', border: '1px solid var(--color-input-border)', borderRadius: 'var(--radius-md)', padding: '10px 12px', color: 'var(--color-text)', fontSize: 'var(--text-base)', fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none' }} />
         </div>
         <div>
@@ -202,7 +202,7 @@ function JoinTurmaModal({ onClose, navigate, onJoined }) {
             {verified ? 'Entraste na turma!' : 'Turma encontrada'}
           </h3>
           <p style={{ color: 'var(--color-text-secondary)', margin: '0 0 var(--sp-5)', fontSize: 'var(--text-base)', lineHeight: 1.5 }}>
-            {verified ? joined.name : `${joined.name} — não consegui confirmar o teu registo. Verifica na turma.`}
+            {verified ? joined.name : `${joined.name}: não consegui confirmar o teu registo. Verifica na turma.`}
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
             <Button fullWidth icon={<ArrowRight size={15} />} onClick={() => { navigate(`/turma/${joined.code}`); onClose() }}>
@@ -676,7 +676,7 @@ function FeaturedProjectCard({ project, navigate, myInterests }) {
                 {project.ai_tagline && <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', margin: 0, lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{project.ai_tagline}</p>}
               </div>
               <ProgressRing value={project.score ?? 0} size={44} strokeWidth={3.5} color={scoreColor}>
-                <span style={{ fontSize: 10, fontWeight: 800, color: scoreColor }}>{project.score ?? '—'}</span>
+                <span style={{ fontSize: 10, fontWeight: 800, color: scoreColor }}>{project.score ?? '--'}</span>
               </ProgressRing>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginTop: 6 }}>

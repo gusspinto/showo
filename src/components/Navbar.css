@@ -27,6 +27,22 @@
 }
 .mob-drawer-trigger:active { background: var(--color-surface-hover); color: var(--color-text); }
 
+/* Marca ao lado do hambúrguer, telemóvel — escondida no desktop, onde o
+   logótipo centrado (.nav-mid) já faz esse trabalho. */
+/* Absoluta, não flex — o hambúrguer à esquerda e os ícones à direita não têm
+   o mesmo peso, por isso centrar por distribuição de flex (flex:1 dos dois
+   lados) desequilibra-se sempre que um dos lados muda. Isto centra a
+   qualquer largura, independentemente do que estiver de cada lado. .top-nav
+   já é position:sticky, que serve de contexto de posicionamento na mesma. */
+.nav-mob-logo {
+  display: none; position: absolute; left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  align-items: center; padding: 0;
+  background: none; border: none; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.nav-mob-logo img { height: 22px; width: auto; display: block; }
+
 /* Mobile-only action cluster */
 .mob-nav-actions { display: none; align-items: center; gap: 8px; }
 .mob-nav-auth-btn {
@@ -284,6 +300,7 @@ body.sidebar-collapsed .proj-manage-float { left: 84px; }
   .nav-children-wrap { display: none !important; }
   .ham-btn       { display: none !important; }
   .mob-drawer-trigger { display: flex !important; }
+  .nav-mob-logo { display: flex !important; }
   .mob-nav-actions { display: flex !important; }
   body           { padding-bottom: env(safe-area-inset-bottom, 0px); }
 
@@ -353,7 +370,7 @@ body.sidebar-collapsed .proj-manage-float { left: 84px; }
 @keyframes mob-overlay-fade-out { from { opacity: 1; } to { opacity: 0; } }
 .mob-menu-sheet {
   position: fixed; left: 0; top: 0; bottom: 0; z-index: 400;
-  width: min(86vw, 328px);
+  width: min(90vw, 380px);
   height: 100dvh;
   background: var(--color-surface);
   border-right: 1px solid var(--color-border);
@@ -363,6 +380,33 @@ body.sidebar-collapsed .proj-manage-float { left: 84px; }
   box-shadow: 8px 0 48px rgba(0,0,0,0.5);
 }
 .mob-menu-sheet.closing { animation: mob-drawer-out 0.22s cubic-bezier(0.4,0,1,1) both; }
+
+/* A primeira tentativa usava translateX(-8px) a começar em 0.03s — mas a
+   folha inteira já está a deslizar 100% da largura ao mesmo tempo (0.3s),
+   por isso um desvio horizontal de 8px fica completamente invisível por
+   baixo desse movimento, muito maior, na mesma direção. Corrigido: os itens
+   só começam a entrar depois da folha ter quase chegado (atraso base mais
+   alto), e o movimento é vertical — independente do deslizar horizontal do
+   pai, por isso lê-se mesmo como "o conteúdo a chegar", não se perde nele. */
+@keyframes mob-item-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.mob-menu-sheet:not(.closing) .mob-sheet-scroll > * {
+  animation: mob-item-in 0.32s cubic-bezier(0.22,1,0.36,1) both;
+}
+.mob-menu-sheet:not(.closing) .mob-sheet-scroll > *:nth-child(n+9) { animation-delay: 0.38s; }
+.mob-menu-sheet:not(.closing) .mob-sheet-scroll > *:nth-child(1)  { animation-delay: 0.20s; }
+.mob-menu-sheet:not(.closing) .mob-sheet-scroll > *:nth-child(2)  { animation-delay: 0.23s; }
+.mob-menu-sheet:not(.closing) .mob-sheet-scroll > *:nth-child(3)  { animation-delay: 0.26s; }
+.mob-menu-sheet:not(.closing) .mob-sheet-scroll > *:nth-child(4)  { animation-delay: 0.29s; }
+.mob-menu-sheet:not(.closing) .mob-sheet-scroll > *:nth-child(5)  { animation-delay: 0.32s; }
+.mob-menu-sheet:not(.closing) .mob-sheet-scroll > *:nth-child(6)  { animation-delay: 0.35s; }
+.mob-menu-sheet:not(.closing) .mob-sheet-scroll > *:nth-child(7)  { animation-delay: 0.37s; }
+.mob-menu-sheet:not(.closing) .mob-sheet-scroll > *:nth-child(8)  { animation-delay: 0.39s; }
+@media (prefers-reduced-motion: reduce) {
+  .mob-menu-sheet:not(.closing) .mob-sheet-scroll > * { animation: none; }
+}
 @keyframes mob-drawer-in {
   from { transform: translateX(-100%); }
   to   { transform: translateX(0); }
@@ -372,7 +416,7 @@ body.sidebar-collapsed .proj-manage-float { left: 84px; }
   to   { transform: translateX(-100%); }
 }
 .mob-drawer-head {
-  display: flex; align-items: center; justify-content: space-between;
+  display: flex; align-items: center; justify-content: flex-end;
   padding: 14px 14px 10px; flex-shrink: 0;
   border-bottom: 1px solid var(--color-border);
 }
@@ -418,10 +462,10 @@ body.sidebar-collapsed .proj-manage-float { left: 84px; }
 }
 .mob-nav-btn {
   display: flex; align-items: center; gap: 13px;
-  width: 100%; padding: 12px 12px;
+  width: 100%; padding: 14px 14px;
   border-radius: 10px; border: none;
   background: transparent; color: var(--color-text-secondary);
-  font-size: 15px; font-weight: 500;
+  font-size: 15.5px; font-weight: 600;
   cursor: pointer; font-family: inherit;
   text-align: left; transition: background 0.12s, color 0.12s;
   -webkit-tap-highlight-color: transparent;

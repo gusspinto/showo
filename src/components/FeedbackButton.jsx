@@ -1,11 +1,16 @@
-import { useState, useRef } from 'react'
-import { VenetianMask, X, Send, Image, Loader2, Check } from 'lucide-react'
+import { useState, useRef, useEffect } from 'react'
+import { X, Send, Image, Loader2, Check } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 
-export default function FeedbackButton() {
+/* ══════════════════════════════════════════════════════════════════════════
+   Já não tem botão flutuante próprio — vivia por cima do conteúdo em todos
+   os ecrãs, e passou a ser uma entrada normal na sidebar/drawer (ícone de
+   bug), como o resto da navegação. Este componente é agora só a folha/modal,
+   controlada de fora: quem o monta decide quando abre e fecha.
+   ══════════════════════════════════════════════════════════════════════════ */
+export default function FeedbackButton({ open, onClose }) {
   const { user } = useAuth()
-  const [open, setOpen] = useState(false)
   const [message, setMessage] = useState('')
   const [imageFile, setImageFile] = useState(null)
   const [imagePreview, setImagePreview] = useState(null)
@@ -25,12 +30,14 @@ export default function FeedbackButton() {
     if (fileRef.current) fileRef.current.value = ''
   }
 
-  function handleOpen() {
-    setOpen(true)
+  // Limpa o formulário sempre que a folha abre, para não mostrar o rascunho
+  // ou o "Obrigado!" da vez anterior.
+  useEffect(() => {
+    if (!open) return
     setStatus('idle')
     setMessage('')
     removeImage()
-  }
+  }, [open]) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -61,7 +68,7 @@ export default function FeedbackButton() {
 
       if (error) throw error
       setStatus('done')
-      setTimeout(() => setOpen(false), 1800)
+      setTimeout(() => onClose(), 1800)
     } catch {
       setStatus('error')
     }
@@ -70,46 +77,6 @@ export default function FeedbackButton() {
   return (
     <>
       <style>{`
-        .fb-fab {
-          position: fixed;
-          right: 20px;
-          bottom: 24px;
-          z-index: 490;
-          width: 46px; height: 46px;
-          background: var(--color-surface);
-          border: 1px solid var(--color-border);
-          border-radius: 23px;
-          padding: 0;
-          display: flex; align-items: center;
-          overflow: hidden;
-          color: var(--color-text-secondary); font-size: 13px; font-weight: 700;
-          font-family: inherit; cursor: pointer;
-          opacity: 0.62;
-          box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-          transition: width 0.25s cubic-bezier(0.22,1,0.36,1), opacity 0.2s ease,
-                      border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
-          -webkit-tap-highlight-color: transparent;
-        }
-        .fb-fab:hover {
-          width: 186px;
-          opacity: 1;
-          border-color: var(--color-primary-subtle);
-          color: var(--color-primary);
-          box-shadow: 0 4px 18px var(--color-primary-subtle);
-          transform: scale(1.03);
-        }
-        .fb-fab:active { transform: scale(0.96); }
-        .fb-fab svg { flex-shrink: 0; margin-left: 13px; transition: transform 0.3s ease; }
-        .fb-fab:hover svg { transform: rotate(-8deg); }
-        .fb-fab-label {
-          white-space: nowrap; margin-left: 8px; margin-right: 16px;
-          opacity: 0;
-          transition: opacity 0.15s ease;
-        }
-        .fb-fab:hover .fb-fab-label { opacity: 1; transition-delay: 0.08s; }
-        /* hide on project workspace/preview page so it doesn't overlap the editor */
-        body.pv-active .fb-fab { display: none !important; }
-
         .fb-overlay {
           position: fixed; inset: 0; z-index: 491;
           background: rgba(0,0,0,0.45);
@@ -150,15 +117,8 @@ export default function FeedbackButton() {
           }
         }
 
-        /* Mobile: bottom tab bar retired, so the FAB drops to the true bottom edge
-           (just clears the home-indicator safe area); sheet anchors to the bottom */
         @media (max-width: 600px) {
-          .fb-fab { bottom: calc(18px + env(safe-area-inset-bottom, 0px)); }
-          .fb-fab:hover { width: 46px; transform: none; }
-          .fb-fab-label { display: none; }
           .fb-sheet { bottom: 0; border-radius: 22px 22px 0 0; }
-          /* Hide FAB on messages page (mobile only) */
-          body.page-mensagens .fb-fab { display: none !important; }
         }
 
         .fb-textarea {
@@ -206,18 +166,10 @@ export default function FeedbackButton() {
         .fb-add-img svg { flex-shrink: 0; }
       `}</style>
 
-      {/* FAB */}
-      {!open && (
-        <button className="fb-fab" onClick={handleOpen} aria-label="Deixar feedback anónimo">
-          <VenetianMask size={18} />
-          <span className="fb-fab-label">Feedback anónimo</span>
-        </button>
-      )}
-
       {/* Modal / Sheet */}
       {open && (
         <>
-          <div className="fb-overlay" onClick={() => setOpen(false)} />
+          <div className="fb-overlay" onClick={onClose} />
           <div className="fb-sheet">
             {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
@@ -230,7 +182,7 @@ export default function FeedbackButton() {
                 </div>
               </div>
               <button
-                onClick={() => setOpen(false)}
+                onClick={onClose}
                 className="icon-btn-ghost"
               >
                 <X size={18} />

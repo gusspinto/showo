@@ -21,7 +21,7 @@
 
 /* ── Create project button ── */
 .explore-create-btn {
-  background: linear-gradient(135deg, var(--color-primary), #4f46e5);
+  background: var(--color-primary);
   color: #fff;
   border: none;
   border-radius: 8px;

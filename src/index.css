@@ -84,8 +84,11 @@ textarea:-webkit-autofill:focus {
 }
 
 :root {
-  --font-heading: 'Geist', 'Helvetica World', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  --font-body: 'Montserrat', 'Inter', system-ui, -apple-system, sans-serif;
+  /* Fonts, the type scale and the radius ladder live in tokens.css. They used
+     to be duplicated here with different values and, because this file loads
+     last, the duplicates silently won — two sources of truth that disagreed.
+     Only the legacy --c-* colour aliases remain, until the last var(--c-*)
+     call site is migrated. */
 
   /* ── Legacy aliases — all values come from tokens.css now ── */
   --c-warn:         var(--color-warning);
@@ -107,21 +110,6 @@ textarea:-webkit-autofill:focus {
   --c-glass-hover:    var(--color-glass-hover);
   --c-glass-border:   var(--color-glass-border);
   --c-glass-border-bright: var(--color-glass-border-bright);
-
-  /* ── Typography scale ── */
-  --text-xs:   11px;   /* captions, badges, tiny labels */
-  --text-sm:   12px;   /* section labels, secondary meta */
-  --text-base: 14px;   /* body text, list items */
-  --text-md:   16px;   /* subheadings, card titles */
-  --text-lg:   20px;   /* section headings */
-  --text-xl:   24px;   /* page subheadings */
-  --text-2xl:  30px;   /* page headings / greeting */
-
-  /* ── Border-radius scale ── */
-  --radius-sm:  6px;   /* chips, badges, small buttons */
-  --radius-md: 10px;   /* inputs, small cards */
-  --radius-lg: 14px;   /* cards, panels */
-  --radius-xl: 20px;   /* modals, sheets, large cards */
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;

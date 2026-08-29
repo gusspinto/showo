@@ -112,7 +112,7 @@ export default function Certificate() {
     <div style={{ minHeight: '100vh', background: C.bg, color: C.text, fontFamily: 'var(--font-body)', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '40px 24px 80px' }}>
       {noSidebarStyle}
       <Helmet>
-        <title>Certificado — {project.name}</title>
+        <title>Certificado: {project.name}</title>
       </Helmet>
       <style>{`
         @keyframes shimmer-cert {
@@ -154,7 +154,7 @@ export default function Certificate() {
         <div style={{ position: 'absolute', bottom: -60, left: -60, width: 240, height: 240, borderRadius: '50%', background: 'radial-gradient(circle, rgba(79,70,229,0.06) 0%, transparent 65%)', pointerEvents: 'none' }} />
 
         {/* Top line */}
-        <div style={{ width: '100%', height: 2, background: 'linear-gradient(90deg, transparent, var(--color-primary), #818cf8, transparent)', marginBottom: 40, borderRadius: 1 }} />
+        <div style={{ width: '100%', height: 1, background: 'linear-gradient(90deg, transparent, var(--color-primary), transparent)', marginBottom: 40, borderRadius: 1, opacity: 0.6 }} />
 
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 40 }}>
@@ -212,7 +212,7 @@ export default function Certificate() {
         </div>
 
         {/* Bottom line */}
-        <div style={{ width: '100%', height: 2, background: 'linear-gradient(90deg, transparent, #4f46e5, var(--color-primary), transparent)', marginTop: 40, borderRadius: 1 }} />
+        <div style={{ width: '100%', height: 1, background: 'linear-gradient(90deg, transparent, var(--color-primary), transparent)', marginTop: 40, borderRadius: 1, opacity: 0.6 }} />
       </div>
 
       {/* Actions */}

@@ -86,6 +86,13 @@ function Input({ type = 'text', value, onChange, placeholder, required }) {
 export default function Register() {
   const navigate = useNavigate()
   const location = useLocation()
+  /* Depois de criar conta, voltar ao sítio de onde vieram. Sem isto, quem
+     começava a criar um projeto e era mandado registar-se acabava na
+     dashboard, sem nada que ligasse ao que estava a fazer — e a intenção
+     perdia-se ali. Só aceitamos caminhos internos, para o ?next não poder
+     ser usado como redirect aberto. */
+  const rawNext = new URLSearchParams(location.search).get('next')
+  const nextPath = rawNext && rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : null
   const claimSlug = location.state?.claimSlug ?? null
   const { theme } = useTheme()
   const { refreshProfile } = useAuth()
@@ -100,7 +107,9 @@ export default function Register() {
   const [name, setName] = useState('')
   const [company, setCompany] = useState('')
   const [school, setSchool] = useState('')
-  const [email, setEmail] = useState('')
+  // Pré-preenchido quando se vem do passo "Continuar com email" da home
+  // mobile — a pessoa já escreveu o email lá, não devia ter de o repetir.
+  const [email, setEmail] = useState(() => params.get('email') || '')
   const [password, setPassword] = useState('')
   const [phone, setPhone] = useState('')
 
@@ -111,6 +120,7 @@ export default function Register() {
   const [acceptedTerms, setAcceptedTerms] = useState(false)
   const [confirmationPending, setConfirmationPending] = useState(false)
   const [resendState, setResendState] = useState('idle')
+  const [detectedOrg, setDetectedOrg] = useState(null) // { id, name, plan } | null
 
   // ── Partner-company invite (?empresa_convite=<token>) — a professor added
   // this company in Parceiros.jsx and emailed this link. It unlocks the
@@ -140,6 +150,15 @@ export default function Register() {
   }, [partnerToken])
 
   const [classCode, setClassCode] = useState('')
+
+  async function checkEmailDomain(emailValue) {
+    const domain = emailValue.split('@')[1]?.trim().toLowerCase()
+    if (!domain || !domain.includes('.')) { setDetectedOrg(null); return }
+    const { data } = await supabase.rpc('get_organization_by_domain', { p_domain: domain })
+    const row = Array.isArray(data) ? data[0] : data
+    setDetectedOrg(row ?? null)
+  }
+
   const needsCompany = role === 'recrutador' || role === 'empresa'
   const needsSchool = role === 'professor'
   const needsInviteCode = role === 'professor'
@@ -309,6 +328,11 @@ export default function Register() {
       await refreshProfile()
     }
 
+    // Associate school organization if the email domain matches
+    if (detectedOrg) {
+      await supabase.rpc('associate_organization_by_email').catch(() => {})
+    }
+
     // Store geolocation, referrer and phone on the new profile
     const params = new URLSearchParams(window.location.search)
     const geo = await getGeoInfo()
@@ -345,7 +369,7 @@ export default function Register() {
 
     setLoading(false)
     const primaryClaimed = claimSlug || claimedSlugs[0]
-    navigate('/dashboard', primaryClaimed ? { state: { claimedSlug: primaryClaimed } } : undefined)
+    navigate(nextPath ?? '/dashboard', primaryClaimed ? { state: { claimedSlug: primaryClaimed } } : undefined)
   }
 
   const selectedRole = ROLES.find(r => r.id === role)
@@ -617,7 +641,23 @@ export default function Register() {
                       </Field>
                     )}
                     <Field label="Email">
-                      <Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="tu@email.com" required />
+                      <Input
+                        type="email"
+                        value={email}
+                        onChange={e => { setEmail(e.target.value); checkEmailDomain(e.target.value) }}
+                        placeholder="tu@email.com"
+                        required
+                      />
+                      {detectedOrg && (
+                        <div style={{
+                          marginTop: 8, display: 'flex', alignItems: 'center', gap: 8,
+                          background: 'rgba(43,126,245,0.08)', border: '1px solid rgba(43,126,245,0.25)',
+                          borderRadius: 8, padding: '8px 12px', fontSize: 13, color: 'var(--color-primary)',
+                        }}>
+                          <GraduationCap size={14} />
+                          <span>Conta escolar — <strong>{detectedOrg.name}</strong></span>
+                        </div>
+                      )}
                     </Field>
                     <Field label="Palavra-passe">
                       <Input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Mínimo 6 caracteres" required />

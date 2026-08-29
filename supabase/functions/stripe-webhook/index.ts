@@ -96,7 +96,7 @@ Deno.serve(async (req) => {
 
       const { data: ambassador } = await sb
         .from('ambassadors')
-        .select('commission_rate, stripe_connect_account_id, stripe_connect_onboarded')
+        .select('commission_rate')
         .eq('id', referral.ambassador_id)
         .single()
 

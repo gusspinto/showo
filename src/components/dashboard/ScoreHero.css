@@ -1,18 +1,18 @@
-/* Score hero — the anchor widget. Only blues, deep to light. */
+/* Score hero — the anchor widget. */
 .score-hero {
   position: relative;
   border-radius: 16px;
   overflow: hidden;
   color: #fff;
-  background: linear-gradient(135deg, #0c447c 0%, #1b78f7 55%, #378add 100%);
+  background: var(--color-primary);
   padding: 18px 20px;
   isolation: isolate;
 }
 .score-hero-bg {
   position: absolute; inset: 0;
   background:
-    radial-gradient(circle at 100% 0%, rgba(255,255,255,0.16) 0%, transparent 45%),
-    radial-gradient(circle at 0% 100%, rgba(12,68,124,0.55) 0%, transparent 55%);
+    radial-gradient(circle at 90% 10%, rgba(255,255,255,0.10) 0%, transparent 50%),
+    radial-gradient(circle at 10% 90%, rgba(0,0,0,0.20) 0%, transparent 50%);
   pointer-events: none; z-index: 0;
 }
 .score-hero-content {

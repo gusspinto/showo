@@ -1,34 +1,54 @@
-import { useNavigate } from 'react-router-dom'
-import { Navbar } from '../components/Navbar'
-import { Check } from 'lucide-react'
-import { useAuth } from '../context/AuthContext'
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { Check, ArrowRight, Briefcase, Mail, FileText, Sparkles } from 'lucide-react'
+import { Navbar } from '../components/Navbar'
+import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import './Pricing.css'
+
+/* ══════════════════════════════════════════════════════════════════════════
+   PLANOS
+   ──────────────────────────────────────────────────────────────────────────
+   A versão anterior listava as mesmas seis linhas de "Base" nos três planos e
+   punha carreira no Build. Resultado: três colunas quase idênticas, e nenhuma
+   razão legível para pagar mais nove euros em vez de cinco.
+
+   A distinção passa a ser uma frase, e a página inteira obedece-lhe:
+       Build  → construir e organizar o percurso escolar
+       Launch → preparar e lançar o aluno para a carreira
+   Por isso cada plano só mostra o que ACRESCENTA ao anterior, e a Carreira
+   tem um bloco próprio no Launch em vez de ser mais um visto numa lista.
+   ══════════════════════════════════════════════════════════════════════════ */
 
 const PLANS = [
   {
     id: 'free',
     name: 'Grátis',
     price: '€0',
-    tagline: 'Começa a construir.',
+    tagline: 'Vê como funciona.',
+    positioning: 'Para experimentar com um projeto real.',
     cta: 'Começar grátis',
     ctaVariant: 'ghost',
-    features: [
-      { label: 'Projetos', value: '3' },
-      { label: 'Editor completo', value: true },
-      { label: 'Diário, agenda e lembretes', value: true },
-      { label: 'Calendar sync', value: true },
-      { label: 'Candidatar-se a vagas', value: true },
-      { label: 'Certificado de projeto', value: true },
-    ],
-    ai: [
-      { label: 'Score IA', value: 'Sempre' },
-      { label: 'Criar projeto com IA', value: '2x/mês' },
-      { label: 'Coach IA', value: '10 msgs/mês' },
-      { label: 'Defesa com IA', value: '1x/mês' },
-      { label: 'Relatório IA do diário', value: '1x/mês' },
-      { label: 'Narrativa IA', value: '1x/mês' },
+    groups: [
+      {
+        label: 'Inclui',
+        items: [
+          { label: '3 projetos' },
+          { label: 'Editor completo e página pública' },
+          { label: 'Score IA sempre a acompanhar' },
+          { label: 'Diário, agenda e lembretes' },
+          { label: 'Certificado de projeto' },
+        ],
+      },
+      {
+        label: 'IA (limitada por mês)',
+        items: [
+          { label: 'Criar projeto com IA', value: '2x' },
+          { label: 'Coach IA', value: '10 msgs' },
+          { label: 'Defesa com IA', value: '1x' },
+          { label: 'Relatório do diário', value: '1x' },
+        ],
+      },
     ],
   },
   {
@@ -36,30 +56,23 @@ const PLANS = [
     name: 'Build',
     price: '€4,99',
     period: '/mês',
-    tagline: 'Cria sem limites.',
+    tagline: 'Constrói sem limites.',
+    positioning: 'Para quem está a fazer a PAP e os projetos da escola.',
     cta: 'Desbloquear a IA',
     ctaVariant: 'primary',
     popular: true,
-    features: [
-      { label: 'Projetos', value: '10' },
-      { label: 'Editor completo', value: true },
-      { label: 'Diário, agenda e lembretes', value: true },
-      { label: 'Calendar sync', value: true },
-      { label: 'Candidatar-se a vagas', value: true },
-      { label: 'Certificado de projeto', value: true },
-    ],
-    ai: [
-      { label: 'Score IA', value: 'Sempre' },
-      { label: 'Criar projeto com IA', value: 'Ilimitado' },
-      { label: 'Entrevista guiada IA', value: 'Ilimitado' },
-      { label: 'Coach IA', value: 'Ilimitado' },
-      { label: 'Defesa com IA', value: 'Ilimitado' },
-      { label: 'Relatório IA do diário', value: 'Ilimitado' },
-      { label: 'Narrativa IA', value: 'Ilimitado' },
-      { label: 'Análise completa de projeto', value: true },
-    ],
-    career: [
-      { label: 'Recap semanal', value: true },
+    inherits: 'Grátis',
+    groups: [
+      {
+        label: 'Mais',
+        items: [
+          { label: '10 projetos' },
+          { label: 'Toda a IA sem limites mensais' },
+          { label: 'Entrevista guiada IA' },
+          { label: 'Análise completa do projeto' },
+          { label: 'Defesa com IA sempre que precisares' },
+        ],
+      },
     ],
   },
   {
@@ -67,47 +80,43 @@ const PLANS = [
     name: 'Launch',
     price: '€9,99',
     period: '/mês',
-    tagline: 'Entra no mercado.',
-    cta: 'Preparar o meu futuro',
+    tagline: 'Prepara a saída.',
+    positioning: 'Para quem já está a pensar no estágio e no primeiro emprego.',
+    cta: 'Preparar a minha carreira',
     ctaVariant: 'primary',
-    features: [
-      { label: 'Projetos', value: 'Ilimitados' },
-      { label: 'Editor completo', value: true },
-      { label: 'Diário, agenda e lembretes', value: true },
-      { label: 'Calendar sync', value: true },
-      { label: 'Candidatar-se a vagas', value: true },
-      { label: 'Certificado de projeto', value: true },
-    ],
-    ai: [
-      { label: 'Score IA', value: 'Sempre' },
-      { label: 'Criar projeto com IA', value: 'Ilimitado' },
-      { label: 'Entrevista guiada IA', value: 'Ilimitado' },
-      { label: 'Coach IA', value: 'Ilimitado' },
-      { label: 'Defesa com IA', value: 'Ilimitado' },
-      { label: 'Relatório IA do diário', value: 'Ilimitado' },
-      { label: 'Narrativa IA', value: 'Ilimitado' },
-      { label: 'Análise completa de projeto', value: true },
-      { label: 'Carta de apresentação IA', value: true },
-    ],
-    career: [
-      { label: 'Página de estágio', value: true },
-      { label: 'Recap semanal', value: true },
-      { label: 'Suporte prioritário', value: true },
+    inherits: 'Build',
+    career: true,
+    groups: [
+      {
+        label: 'Mais',
+        items: [
+          { label: 'Projetos ilimitados' },
+          { label: 'Suporte prioritário' },
+        ],
+      },
     ],
   },
 ]
 
-function FeatureRow({ label, value }) {
-  return (
-    <li className="pricing-feature-item">
-      <span className="pricing-feature-label">{label}</span>
-      {value === true
-        ? <Check size={14} className="pricing-check" />
-        : <span className="pricing-value-text">{value}</span>
-      }
-    </li>
-  )
-}
+/* A Carreira é a razão de existir do Launch, por isso é explicada, não
+   listada. Cada linha diz o que a funcionalidade FAZ pelo aluno. */
+const CAREER_FEATURES = [
+  {
+    Icon: Briefcase,
+    title: 'Página de estágio',
+    desc: 'O teu portfólio reorganizado para quem contrata: projetos em destaque, competências e contacto num link só.',
+  },
+  {
+    Icon: Mail,
+    title: 'Recap semanal',
+    desc: 'Todas as segundas, um resumo do que avançou e do que ficou parado, na app e por email, para não perderes o ritmo entre entregas.',
+  },
+  {
+    Icon: FileText,
+    title: 'Carta de apresentação IA',
+    desc: 'Uma carta escrita para cada vaga a partir dos teus projetos reais, não de um modelo genérico.',
+  },
+]
 
 export default function Pricing() {
   const navigate = useNavigate()
@@ -138,64 +147,95 @@ export default function Pricing() {
     <div className="pricing-page">
       <Navbar />
       <div className="pricing-container">
-        {error && (
-          <div className="pricing-toast" style={{ background: 'var(--color-error)' }}>
-            {error}
-          </div>
-        )}
+        {error && <div className="pricing-toast">{error}</div>}
 
-        <div className="pricing-header">
-          <h1>Escolhe o teu plano</h1>
-          <p>Começa grátis. Muda quando precisares de mais.</p>
-        </div>
+        <header className="pricing-header">
+          <h1>Constrói agora. Lança quando estiveres pronto.</h1>
+          <p>
+            O <strong>Build</strong> é para pôr os teus projetos escolares de pé.
+            O <strong>Launch</strong> é para os transformar em estágio e primeiro emprego.
+          </p>
+        </header>
 
         <div className="pricing-grid">
-          {PLANS.map(plan => (
-            <div key={plan.id} className={`pricing-card${plan.popular ? ' pricing-card--popular' : ''}`}>
-              {plan.popular && <div className="pricing-badge">Mais popular</div>}
+          {PLANS.map(plan => {
+            const isCurrent = user && plan.id === planId
+            return (
+              <div key={plan.id} className={`pricing-card${plan.popular ? ' is-popular' : ''}${plan.career ? ' is-career' : ''}`}>
+                {plan.popular && <span className="pricing-flag">Mais escolhido</span>}
+                {plan.career && <span className="pricing-flag pricing-flag--career">Carreira</span>}
 
-              <div className="pricing-card-header">
-                <h2 className="pricing-plan-name">{plan.name}</h2>
-                <div className="pricing-price">
-                  <span className="pricing-amount">{plan.price}</span>
-                  {plan.period && <span className="pricing-period">{plan.period}</span>}
+                <div className="pricing-card-head">
+                  <h2 className="pricing-name">{plan.name}</h2>
+                  <div className="pricing-price">
+                    <span className="pricing-amount">{plan.price}</span>
+                    {plan.period && <span className="pricing-period">{plan.period}</span>}
+                  </div>
+                  <p className="pricing-tagline">{plan.tagline}</p>
+                  <p className="pricing-positioning">{plan.positioning}</p>
                 </div>
-                <p className="pricing-tagline">{plan.tagline}</p>
+
+                {isCurrent ? (
+                  <div className="pricing-current"><Check size={15} /> Plano atual</div>
+                ) : (
+                  <button
+                    className={`pricing-cta pricing-cta--${plan.ctaVariant}`}
+                    onClick={() => handleCta(plan)}
+                    disabled={loading === plan.id}
+                  >
+                    {loading === plan.id ? 'A redirecionar…' : <>{plan.cta} <ArrowRight size={15} /></>}
+                  </button>
+                )}
+
+                {/* "Tudo do X, mais…" em vez de repetir a mesma lista três
+                    vezes: o que interessa é a diferença, não o inventário. */}
+                {plan.inherits && (
+                  <p className="pricing-inherits">Tudo do <strong>{plan.inherits}</strong>, mais:</p>
+                )}
+
+                {plan.groups.map(group => (
+                  <div key={group.label} className="pricing-group">
+                    {!plan.inherits && <span className="pricing-group-label">{group.label}</span>}
+                    <ul className="pricing-list">
+                      {group.items.map(item => (
+                        <li key={item.label} className="pricing-item">
+                          <Check size={14} className="pricing-check" />
+                          <span className="pricing-item-label">{item.label}</span>
+                          {item.value && <span className="pricing-item-value">{item.value}</span>}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+
+                {/* O bloco que justifica o salto de preço. */}
+                {plan.career && (
+                  <div className="pricing-career">
+                    <div className="pricing-career-head">
+                      <Sparkles size={13} />
+                      <span>Carreira · só no Launch</span>
+                    </div>
+                    <ul className="pricing-career-list">
+                      {CAREER_FEATURES.map(({ Icon, title, desc }) => (
+                        <li key={title}>
+                          <span className="pricing-career-icon"><Icon size={15} /></span>
+                          <span>
+                            <strong>{title}</strong>
+                            <span className="pricing-career-desc">{desc}</span>
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
-
-              <button
-                className={`pricing-cta pricing-cta--${plan.ctaVariant}`}
-                onClick={() => handleCta(plan)}
-                disabled={loading === plan.id || (user && plan.id === planId)}
-              >
-                {loading === plan.id ? 'A redirecionar…' : user && plan.id === planId ? 'Plano atual' : plan.cta}
-              </button>
-
-              <div className="pricing-section">
-                <span className="pricing-section-label">Base</span>
-                <ul className="pricing-feature-list">
-                  {plan.features.map(f => <FeatureRow key={f.label} {...f} />)}
-                </ul>
-              </div>
-
-              <div className="pricing-section pricing-section--ai">
-                <span className="pricing-section-label">IA</span>
-                <ul className="pricing-feature-list">
-                  {plan.ai.map(f => <FeatureRow key={f.label} {...f} />)}
-                </ul>
-              </div>
-
-              {plan.career && (
-                <div className="pricing-section">
-                  <span className="pricing-section-label">Carreira</span>
-                  <ul className="pricing-feature-list">
-                    {plan.career.map(f => <FeatureRow key={f.label} {...f} />)}
-                  </ul>
-                </div>
-              )}
-            </div>
-          ))}
+            )
+          })}
         </div>
+
+        <p className="pricing-foot">
+          Muda ou cancela quando quiseres. Contas de escola têm o Build incluído para todos os alunos.
+        </p>
       </div>
     </div>
   )

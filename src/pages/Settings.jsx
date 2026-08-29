@@ -9,6 +9,7 @@ import { CropModal } from '../components/CropModal'
 import { containsProfanity } from '../lib/profanity'
 import SkillsPicker from '../components/SkillsPicker'
 import { Select } from '../components/ui'
+import ExportProjectsModal from '../components/ExportProjectsModal'
 import './Settings.css'
 
 function Input({ label, value, onChange, placeholder, hint, type = 'text', prefix }) {
@@ -46,6 +47,7 @@ const PLAN_META = {
   free:   { name: 'Grátis',  color: 'var(--color-text-tertiary)', desc: 'O plano base, sem custos.' },
   build:  { name: 'Build',   color: '#2B7EF5', desc: 'IA sem limites em cada projeto.' },
   launch: { name: 'Launch',  color: '#C49A20', desc: 'Do projeto à oportunidade de carreira.' },
+  school: { name: 'Escola',  color: '#2B7EF5', desc: 'Plano Build incluído pela tua instituição.' },
 }
 
 function PlanSection({ planId, navigate }) {
@@ -89,7 +91,7 @@ function PlanSection({ planId, navigate }) {
           <span className="settings-hint" style={{ margin: 0 }}>{meta.desc}</span>
         </div>
 
-        {planId !== 'launch' && (
+        {planId !== 'launch' && planId !== 'school' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             <button className="settings-save-btn" onClick={() => navigate('/pricing')}>
               {planId === 'free' ? 'Fazer upgrade' : 'Upgrade para Launch'}
@@ -97,7 +99,11 @@ function PlanSection({ planId, navigate }) {
           </div>
         )}
 
-        {planId !== 'free' && (
+        {planId === 'school' && (
+          <p className="settings-hint">O plano é gerido pela tua escola — não precisas de subscrever individualmente.</p>
+        )}
+
+        {planId !== 'free' && planId !== 'school' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             <button
               className="settings-save-btn"
@@ -150,7 +156,7 @@ function SettingsSkeleton() {
 }
 
 export default function Settings() {
-  const { user, profile, loading: authLoading, refreshProfile, planId } = useAuth()
+  const { user, profile, loading: authLoading, refreshProfile, planId, isSchoolAccount, checkGate } = useAuth()
   const { theme, toggleTheme } = useTheme()
   const navigate = useNavigate()
 
@@ -173,6 +179,9 @@ export default function Settings() {
   const avatarInputRef = useRef(null)
   const [availableForWork, setAvailableForWork] = useState(false)
   const [monthlyReportOptIn, setMonthlyReportOptIn] = useState(false)
+  // Guardado no momento em que se toca, e não no botão "Guardar" lá em baixo:
+  // é um interruptor de um email, não parte do perfil que se edita em bloco.
+  const [weeklyRecapEmail, setWeeklyRecapEmail] = useState(true)
   const [company, setCompany] = useState('')
   const [companyRole, setCompanyRole] = useState('')
   const [companyWebsite, setCompanyWebsite] = useState('')
@@ -201,6 +210,7 @@ export default function Settings() {
   const [deleteError, setDeleteError] = useState(null)
   const [ambassadorStats, setAmbassadorStats] = useState(null)
   const [connectLoading, setConnectLoading] = useState(false)
+  const [showExportModal, setShowExportModal] = useState(false)
 
   useEffect(() => {
     if (!authLoading && !user) navigate('/login')
@@ -209,7 +219,7 @@ export default function Settings() {
   useEffect(() => {
     if (!user) return
     setFullName(user.user_metadata?.full_name ?? '')
-    supabase.from('profiles').select('username, bio, role, avatar_url, available_for_work, monthly_report_opt_in, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size, skills, area, phone, notify_newsletter, notify_marketing, notify_product_updates, notify_project_activity, profile_visibility, show_email_publicly').eq('id', user.id).single().then(({ data }) => {
+    supabase.from('profiles').select('username, bio, role, avatar_url, available_for_work, monthly_report_opt_in, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size, skills, area, phone, notify_newsletter, notify_marketing, notify_product_updates, notify_project_activity, profile_visibility, show_email_publicly, weekly_recap_email_opt_in').eq('id', user.id).single().then(({ data }) => {
       if (data) {
         setUsername(data.username ?? '')
         setOriginalUsername(data.username ?? '')
@@ -218,6 +228,7 @@ export default function Settings() {
         setAvatarUrl(data.avatar_url ?? '')
         setAvailableForWork(data.available_for_work ?? false)
         setMonthlyReportOptIn(data.monthly_report_opt_in ?? false)
+        setWeeklyRecapEmail(data.weekly_recap_email_opt_in ?? true)
         setCompany(data.company ?? '')
         setCompanyRole(data.company_role ?? '')
         setCompanyWebsite(data.company_website ?? '')
@@ -284,6 +295,20 @@ export default function Settings() {
     await supabase.from('profiles').update({ avatar_url: null }).eq('id', user.id)
     setAvatarUrl(''); refreshProfile()
     setSaveMsg({ type: 'ok', text: 'Foto removida.' }); setAvatarUploading(false)
+  }
+
+  /* Escrita direta: a coluna tem grant de update e a política "Own profile
+     update" já cobre o próprio utilizador, por isso não é preciso mexer no
+     RPC upsert_own_profile só para um interruptor. Optimista, com reversão
+     se o servidor recusar. */
+  async function toggleWeeklyRecapEmail() {
+    const next = !weeklyRecapEmail
+    setWeeklyRecapEmail(next)
+    const { error } = await supabase
+      .from('profiles')
+      .update({ weekly_recap_email_opt_in: next })
+      .eq('id', user.id)
+    if (error) setWeeklyRecapEmail(!next)
   }
 
   async function handleSaveProfile() {
@@ -410,14 +435,10 @@ export default function Settings() {
         {avatarUrl ? (
           <img src={avatarUrl} alt="Avatar" className="settings-avatar-img" />
         ) : (
-          <div className="settings-avatar-fallback" style={{ background: `linear-gradient(135deg,${accentColor},#4f46e5)` }}>
+          <div className="settings-avatar-fallback" style={{ background: accentColor }}>
             {fullName?.[0]?.toUpperCase() ?? user?.email?.[0]?.toUpperCase() ?? '?'}
           </div>
         )}
-        <button type="button" onClick={() => avatarInputRef.current?.click()} disabled={avatarUploading}
-          className="settings-avatar-edit" style={{ background: accentColor }}>
-          <Camera size={13} color="#fff" />
-        </button>
         <input ref={avatarInputRef} type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }} onChange={handleAvatarChange} />
         {avatarCropFile && <CropModal file={avatarCropFile} circular={true} onConfirm={handleAvatarCropConfirm} onCancel={() => setAvatarCropFile(null)} />}
       </div>
@@ -432,13 +453,16 @@ export default function Settings() {
   )
 
   const saveBlock = (
-    <>
+    <div className="settings-save-inline">
       {saveMsg && <div className={`settings-msg ${saveMsg.type}`}>{saveMsg.text}</div>}
       <button onClick={handleSaveProfile} disabled={saving} className="settings-save-btn">
         {saving ? 'A guardar...' : 'Guardar'}
       </button>
-    </>
+    </div>
   )
+
+  const tabsWithSave = ['perfil', 'empresa', 'recrutamento', 'notificacoes', 'privacidade']
+  const showMobileSave = tabsWithSave.includes(activeTab)
 
   const ROLE_INFO = {
     aluno:      { icon: <GraduationCap size={18} />, label: 'Aluno',      color: 'var(--color-primary)' },
@@ -571,6 +595,29 @@ export default function Settings() {
                           </div>
                           <div className="settings-toggle-desc">
                             {availableForWork ? 'O teu perfil aparece nos resultados de recrutadores e empresas.' : 'Ativa para aparecer em pesquisas de recrutadores.'}
+                          </div>
+                        </div>
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Recap semanal — só quem tem carreira no plano (Launch ou
+                      conta de escola). Quem não tem não vê um interruptor
+                      morto: vê a funcionalidade na página de planos. */}
+                  {role !== 'professor' && checkGate('weeklyRecap').allowed && (
+                    <div className="settings-field">
+                      <label className="settings-label">Recap semanal</label>
+                      <button type="button" onClick={toggleWeeklyRecapEmail} className={`settings-toggle${weeklyRecapEmail ? ' active' : ''}`}>
+                        <div className={`settings-toggle-track ${weeklyRecapEmail ? 'on' : 'off'}`}>
+                          <div className={`settings-toggle-knob ${weeklyRecapEmail ? 'on' : 'off'}`} />
+                        </div>
+                        <div>
+                          <div className="settings-toggle-title" style={{ color: weeklyRecapEmail ? 'var(--color-success)' : undefined }}>
+                            <Mail size={14} className="flex-shrink-0" />
+                            {weeklyRecapEmail ? 'Email semanal ativo' : 'Email semanal desativado'}
+                          </div>
+                          <div className="settings-toggle-desc">
+                            Todas as segundas, um email com o que registaste na semana anterior, a tua sequência de semanas e o que falta entregar. O recap continua visível na dashboard mesmo com isto desligado.
                           </div>
                         </div>
                       </button>
@@ -792,12 +839,47 @@ export default function Settings() {
                   <p className="text-base text-muted mb-3" style={{ lineHeight: 1.65 }}>Terminar sessão em todos os dispositivos.</p>
                   <button onClick={async () => { await supabase.auth.signOut(); navigate('/') }} className="settings-danger-btn">Terminar sessão</button>
                 </SectionCard>
+                {isSchoolAccount && (
+                  <SectionCard title="Conta escolar">
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                      <div style={{
+                        display: 'flex', alignItems: 'center', gap: 10,
+                        background: 'rgba(43,126,245,0.07)', border: '1px solid rgba(43,126,245,0.25)',
+                        borderRadius: 10, padding: '12px 14px',
+                        fontSize: 13, color: 'var(--color-primary)', fontWeight: 600,
+                      }}>
+                        <GraduationCap size={16} />
+                        Esta é uma conta escolar. O teu plano é gerido pela instituição.
+                      </div>
+                      <p className="text-base text-muted" style={{ lineHeight: 1.65, margin: 0 }}>
+                        Podes copiar os teus projetos escolares para uma conta pessoal Showo — os originais ficam intactos nesta conta.
+                      </p>
+                      <button
+                        onClick={() => setShowExportModal(true)}
+                        className="settings-save-btn"
+                        style={{ alignSelf: 'flex-start' }}
+                      >
+                        Exportar projetos para conta pessoal
+                      </button>
+                    </div>
+                    {showExportModal && <ExportProjectsModal onClose={() => setShowExportModal(false)} />}
+                  </SectionCard>
+                )}
                 <SectionCard title="Zona de perigo">{dangerZone}</SectionCard>
               </>
             )}
           </div>
         </div>
       </div>
+
+      {showMobileSave && (
+        <div className="settings-mobile-save-bar">
+          {saveMsg && <span className={`settings-mobile-save-msg ${saveMsg.type}`}>{saveMsg.text}</span>}
+          <button onClick={handleSaveProfile} disabled={saving} className="settings-save-btn settings-mobile-save-btn">
+            {saving ? 'A guardar...' : 'Guardar'}
+          </button>
+        </div>
+      )}
     </div>
   )
 }
