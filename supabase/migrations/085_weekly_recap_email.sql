@@ -1,5 +1,5 @@
 -- ============================================================================
--- 081_weekly_recap_email.sql
+-- 085_weekly_recap_email.sql
 -- ============================================================================
 -- Email semanal do Recap, para quem tem plano Launch (pessoal) ou conta de
 -- escola. Segue o padrão do relatório mensal do professor (057/058): uma
