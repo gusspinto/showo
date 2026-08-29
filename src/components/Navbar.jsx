@@ -11,7 +11,6 @@ function stripEmoji(str) {
   if (!str) return str
   return str.replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27FF}\u{2900}-\u{297F}\u{1F300}-\u{1F9FF}\u{FE00}-\u{FEFF}]/gu, '').replace(/\s{2,}/g, ' ').trim()
 }
-import FeedbackButton from './FeedbackButton'
 import './Navbar.css'
 
 const C = {
@@ -691,9 +690,6 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
   const { extras } = useSidebar()
   const [open, setOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
-  // Feedback anónimo — já não tem botão flutuante próprio, abre a partir de
-  // uma entrada normal na sidebar (desktop) e no drawer (mobile).
-  const [feedbackOpen, setFeedbackOpen] = useState(false)
   // Keeps the mobile menu sheet mounted for one extra animation cycle after
   // menuOpen flips to false, so the closing slide-down/fade can actually play
   // instead of the sheet just vanishing — every existing setMenuOpen(false)
@@ -1378,7 +1374,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
             nunca com texto ao lado — o mesmo botão pequeno que Definições/
             Tema já usam, não uma linha da lista. */}
         <div style={{ padding: '2px 10px 4px', display: 'flex', justifyContent: collapsed ? 'center' : 'flex-start' }}>
-          <button className="sb-action-btn" onClick={() => setFeedbackOpen(true)} title="Reportar um problema" aria-label="Reportar um problema">
+          <button className="sb-action-btn" onClick={() => navigate(`/feedback?from=${encodeURIComponent(location.pathname)}`)} title="Reportar um problema" aria-label="Reportar um problema">
             <Bug size={16} />
           </button>
         </div>
@@ -1734,7 +1730,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                         <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email}</div>
                       </div>
                     </button>
-                    <button className="mob-foot-theme" onClick={() => { setFeedbackOpen(true); setMenuOpen(false) }} aria-label="Reportar um problema" title="Feedback">
+                    <button className="mob-foot-theme" onClick={() => { setMenuOpen(false); navigate(`/feedback?from=${encodeURIComponent(location.pathname)}`) }} aria-label="Reportar um problema" title="Feedback">
                       <Bug size={18} />
                     </button>
                     <button className="mob-foot-theme" onClick={toggleTheme} aria-label="Alternar tema">
@@ -1745,7 +1741,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '2px 8px' }}>
                     <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text-secondary)' }}>Aspeto</span>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                      <button className="mob-foot-theme" onClick={() => { setFeedbackOpen(true); setMenuOpen(false) }} aria-label="Reportar um problema" title="Feedback">
+                      <button className="mob-foot-theme" onClick={() => { setMenuOpen(false); navigate(`/feedback?from=${encodeURIComponent(location.pathname)}`) }} aria-label="Reportar um problema" title="Feedback">
                         <Bug size={18} />
                       </button>
                       <button className="mob-foot-theme" onClick={toggleTheme} aria-label="Alternar tema">
@@ -1760,8 +1756,6 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
           </div>
         </>
       )}
-
-      <FeedbackButton open={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
     </>
   )
 }

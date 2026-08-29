@@ -72,6 +72,7 @@ const DiaryCanvas  = lazy(() => import('./pages/DiaryCanvas'))
 const AprendeAUsar = lazy(() => import('./pages/AprendeAUsar'))
 const Pricing      = lazy(() => import('./pages/Pricing'))
 const Welcome      = lazy(() => import('./pages/Welcome'))
+const Feedback     = lazy(() => import('./pages/Feedback'))
 
 function PageLoader() {
   return (
@@ -483,6 +484,7 @@ export default function App() {
               <Route path="/aprende"            element={<AprendeAUsar />}  />
               <Route path="/pricing"            element={<Pricing />}       />
               <Route path="/welcome"            element={<Welcome />}       />
+              <Route path="/feedback"           element={<Feedback />}      />
               <Route path="*"                   element={<NotFound />}      />
             </Routes>
             </Suspense>
