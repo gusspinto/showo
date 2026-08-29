@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
 import { Navbar } from '../components/Navbar'
-import { Loader, Check, X, AlertTriangle, Camera, ArrowLeft, GraduationCap, BookOpen, Search, Building2, Lock, Briefcase, Sun, Moon, BarChart2, Bell, Mail, Megaphone, Rocket, FolderOpen, Eye, EyeOff, Globe, Shield, CreditCard } from 'lucide-react'
+import { Loader, Check, X, AlertTriangle, Camera, ArrowLeft, GraduationCap, BookOpen, Search, Building2, Lock, Sun, Moon, BarChart2, Bell, Mail, Megaphone, Rocket, FolderOpen, Eye, EyeOff, Globe, Shield, CreditCard } from 'lucide-react'
 import { CropModal } from '../components/CropModal'
 import { containsProfanity } from '../lib/profanity'
 import SkillsPicker from '../components/SkillsPicker'
@@ -177,7 +177,6 @@ export default function Settings() {
   const [avatarUploading, setAvatarUploading] = useState(false)
   const [avatarCropFile, setAvatarCropFile] = useState(null)
   const avatarInputRef = useRef(null)
-  const [availableForWork, setAvailableForWork] = useState(false)
   const [monthlyReportOptIn, setMonthlyReportOptIn] = useState(false)
   // Guardado no momento em que se toca, e não no botão "Guardar" lá em baixo:
   // é um interruptor de um email, não parte do perfil que se edita em bloco.
@@ -219,14 +218,13 @@ export default function Settings() {
   useEffect(() => {
     if (!user) return
     setFullName(user.user_metadata?.full_name ?? '')
-    supabase.from('profiles').select('username, bio, role, avatar_url, available_for_work, monthly_report_opt_in, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size, skills, area, phone, notify_newsletter, notify_marketing, notify_product_updates, notify_project_activity, profile_visibility, show_email_publicly, weekly_recap_email_opt_in').eq('id', user.id).single().then(({ data }) => {
+    supabase.from('profiles').select('username, bio, role, avatar_url, monthly_report_opt_in, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size, skills, area, phone, notify_newsletter, notify_marketing, notify_product_updates, notify_project_activity, profile_visibility, show_email_publicly, weekly_recap_email_opt_in').eq('id', user.id).single().then(({ data }) => {
       if (data) {
         setUsername(data.username ?? '')
         setOriginalUsername(data.username ?? '')
         setBio(data.bio ?? '')
         setRole(data.role ?? 'aluno')
         setAvatarUrl(data.avatar_url ?? '')
-        setAvailableForWork(data.available_for_work ?? false)
         setMonthlyReportOptIn(data.monthly_report_opt_in ?? false)
         setWeeklyRecapEmail(data.weekly_recap_email_opt_in ?? true)
         setCompany(data.company ?? '')
@@ -336,7 +334,7 @@ export default function Settings() {
         p_bio:                     bio.trim() || null,
         p_phone:                   phone.trim() || null,
         p_role:                    safeRole,
-        p_available_for_work:      availableForWork,
+        p_available_for_work:      false,
         p_skills:                  (role === 'aluno' || role === 'professor') ? skills : [],
         p_area:                    role === 'aluno' ? (area || null) : null,
         p_monthly_report_opt_in:   role === 'professor' ? monthlyReportOptIn : false,
@@ -578,26 +576,6 @@ export default function Settings() {
                       <Select value={area} onChange={setArea} placeholder="Seleciona a tua área"
                         options={['Programação e Informática','Design e Multimédia','Marketing e Comunicação','Gestão e Administração','Eletrónica e Automação','Audiovisual e Cinema','Turismo e Hotelaria','Saúde','Desporto','Artes e Espetáculo','Construção e Engenharia','Outra']} />
                       <p className="settings-hint">Permite que recrutadores filtrem por área.</p>
-                    </div>
-                  )}
-
-                  {role === 'aluno' && (
-                    <div className="settings-field">
-                      <label className="settings-label">Disponibilidade</label>
-                      <button type="button" onClick={() => setAvailableForWork(v => !v)} className={`settings-toggle${availableForWork ? ' active' : ''}`}>
-                        <div className={`settings-toggle-track ${availableForWork ? 'on' : 'off'}`}>
-                          <div className={`settings-toggle-knob ${availableForWork ? 'on' : 'off'}`} />
-                        </div>
-                        <div>
-                          <div className="settings-toggle-title" style={{ color: availableForWork ? 'var(--color-success)' : undefined }}>
-                            <Briefcase size={14} className="flex-shrink-0" />
-                            {availableForWork ? 'Disponível para estágio' : 'Não disponível para estágio'}
-                          </div>
-                          <div className="settings-toggle-desc">
-                            {availableForWork ? 'O teu perfil aparece nos resultados de recrutadores e empresas.' : 'Ativa para aparecer em pesquisas de recrutadores.'}
-                          </div>
-                        </div>
-                      </button>
                     </div>
                   )}
 
