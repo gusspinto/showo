@@ -446,22 +446,23 @@ export default function Register() {
           </div>
 
           {confirmationPending ? (
-            /* ── EMAIL CONFIRMATION PENDING ── */
-            <div style={{ textAlign: 'center', padding: '20px 0' }}>
-              <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(59,130,246,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
-                <Mail size={26} style={{ color: C.blue }} />
+            /* ── EMAIL CONFIRMATION PENDING ──
+               Reduzido ao essencial: ícone, título, para onde foi o email,
+               e a única ação que importa (reenviar). O resto (spam, texto
+               a repetir o que o título já diz) só acrescentava ruído. */
+            <div style={{ textAlign: 'center', padding: '16px 0' }}>
+              <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px' }}>
+                <Mail size={20} style={{ color: C.muted }} />
               </div>
-              <h1 style={{ color: C.text, fontSize: 22, fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 10px', letterSpacing: '-0.5px' }}>
+              <h1 style={{ color: C.text, fontSize: 21, fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 8px', letterSpacing: '-0.4px' }}>
                 Verifica o teu email
               </h1>
-              <p style={{ color: C.muted, fontSize: 14, lineHeight: 1.6, margin: '0 0 24px' }}>
-                Enviámos um link de confirmação para<br />
-                <strong style={{ color: C.text }}>{email}</strong>.<br />
-                Clica no link para ativar a tua conta.
+              <p style={{ color: C.muted, fontSize: 14, lineHeight: 1.6, margin: '0 0 22px' }}>
+                Enviámos um link para <strong style={{ color: C.text }}>{email}</strong>
               </p>
               {resendState === 'sent' ? (
                 <p style={{ color: 'var(--color-success)', fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-                  <Check size={14} /> Novo email enviado!
+                  <Check size={14} /> Novo email enviado
                 </p>
               ) : (
                 <button
@@ -473,18 +474,15 @@ export default function Register() {
                   }}
                   disabled={resendState === 'sending'}
                   style={{
-                    background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.25)',
-                    borderRadius: 8, padding: '10px 20px',
-                    color: C.blue, fontSize: 13, fontWeight: 600,
+                    background: 'transparent', border: '1px solid var(--color-border)',
+                    borderRadius: 9, padding: '10px 20px',
+                    color: C.text, fontSize: 13, fontWeight: 600,
                     cursor: 'pointer', fontFamily: 'inherit',
                   }}
                 >
-                  {resendState === 'sending' ? 'A enviar...' : 'Reenviar email de confirmação'}
+                  {resendState === 'sending' ? 'A enviar...' : 'Reenviar email'}
                 </button>
               )}
-              <p style={{ color: C.muted, fontSize: 13, marginTop: 16 }}>
-                Não recebes nada? Verifica a pasta de spam.
-              </p>
             </div>
           ) : step === 'role' ? (
             /* ── STEP 1: escolha de tipo de conta ── */
@@ -691,7 +689,7 @@ export default function Register() {
 
           <p style={{ textAlign: 'center', color: C.muted, fontSize: 14, marginTop: 24 }}>
             Já tens conta?{' '}
-            <Link to="/login" style={{ color: C.blue, textDecoration: 'none', fontWeight: 500 }}>Entrar</Link>
+            <Link to="/login" style={{ color: C.text, textDecoration: 'underline', fontWeight: 700 }}>Entrar</Link>
           </p>
         </div>
       </div>
