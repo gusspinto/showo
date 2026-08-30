@@ -93,7 +93,14 @@ function JoinTurmaStudentModal({ onClose, onJoined }) {
     const { data, error: sbErr } = await supabase.rpc('join_class', { p_code: trimmed })
     setLoading(false)
     if (sbErr || !data) {
-      setError('Código inválido. Verifica com o teu professor.')
+      const msg = sbErr?.message || ''
+      if (msg.includes('school_mismatch')) {
+        setError('Esta turma pertence a outra escola. Só podes entrar em turmas da tua escola.')
+      } else if (msg.includes('institutional_account_required')) {
+        setError('Precisas de uma conta institucional para entrar numa turma.')
+      } else {
+        setError('Código inválido. Verifica com o teu professor.')
+      }
       return
     }
     onJoined(data)
