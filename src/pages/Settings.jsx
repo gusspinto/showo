@@ -840,9 +840,9 @@ export default function Settings() {
                   <p className="text-base text-muted mb-3" style={{ lineHeight: 1.65 }}>Terminar sessão em todos os dispositivos.</p>
                   <button onClick={async () => { await supabase.auth.signOut(); navigate('/') }} className="settings-danger-btn">Terminar sessão</button>
                 </SectionCard>
-                {isSchoolAccount && (
-                  <SectionCard title="Conta escolar">
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <SectionCard title={isSchoolAccount ? 'Conta escolar' : 'Exportar projetos'}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                    {isSchoolAccount && (
                       <div style={{
                         display: 'flex', alignItems: 'center', gap: 10,
                         background: 'var(--color-surface-hover)', border: '1px solid var(--color-border)',
@@ -852,20 +852,22 @@ export default function Settings() {
                         <GraduationCap size={16} />
                         Esta é uma conta escolar. O teu plano é gerido pela instituição.
                       </div>
-                      <p className="text-base text-muted" style={{ lineHeight: 1.65, margin: 0 }}>
-                        Podes copiar os teus projetos escolares para uma conta pessoal Showo — os originais ficam intactos nesta conta.
-                      </p>
-                      <button
-                        onClick={() => setShowExportModal(true)}
-                        className="settings-save-btn"
-                        style={{ alignSelf: 'flex-start' }}
-                      >
-                        Exportar projetos para conta pessoal
-                      </button>
-                    </div>
-                    {showExportModal && <ExportProjectsModal onClose={() => setShowExportModal(false)} />}
-                  </SectionCard>
-                )}
+                    )}
+                    <p className="text-base text-muted" style={{ lineHeight: 1.65, margin: 0 }}>
+                      {isSchoolAccount
+                        ? 'Podes copiar os teus projetos desta conta escolar para uma conta pessoal Showo — os originais ficam intactos nesta conta.'
+                        : 'Podes copiar os teus projetos já feitos para uma conta escolar ou para qualquer outra conta Showo — os originais ficam intactos nesta conta.'}
+                    </p>
+                    <button
+                      onClick={() => setShowExportModal(true)}
+                      className="settings-save-btn"
+                      style={{ alignSelf: 'flex-start' }}
+                    >
+                      {isSchoolAccount ? 'Exportar projetos para conta pessoal' : 'Exportar projetos para outra conta'}
+                    </button>
+                  </div>
+                  {showExportModal && <ExportProjectsModal onClose={() => setShowExportModal(false)} />}
+                </SectionCard>
                 <SectionCard title="Zona de perigo">{dangerZone}</SectionCard>
               </>
             )}
