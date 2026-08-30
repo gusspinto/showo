@@ -177,14 +177,36 @@ body.light .sb-collapse-toggle:hover { border-color: rgba(0,0,0,0.75); }
 }
 .sb-item {
   display: flex; align-items: center; gap: 10px;
-  width: 100%; padding: 9px 10px;
-  border-radius: 6px; border: none;
+  width: 100%; padding: 9px 11px;
+  border-radius: 9px; border: none;
   background: transparent; color: var(--color-text-secondary);
   font-size: 13px; font-weight: 500;
   cursor: pointer; font-family: inherit;
   transition: color 0.15s, background 0.15s;
   text-align: left; white-space: nowrap;
   position: relative;
+}
+
+/* ── Entrada da sidebar, como a folha do telemóvel já tinha ──
+   Só corre uma vez, quando a sidebar monta (login/refresh) — não é um
+   drawer que abre e fecha como no telemóvel, por isso o desvio é menor
+   e mais rápido, só o suficiente para se notar sem parecer um efeito
+   à parte. */
+@keyframes sb-item-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.sb-section > * { animation: sb-item-in 0.26s cubic-bezier(0.22,1,0.36,1) both; }
+.sb-section > *:nth-child(1)  { animation-delay: 0.02s; }
+.sb-section > *:nth-child(2)  { animation-delay: 0.05s; }
+.sb-section > *:nth-child(3)  { animation-delay: 0.08s; }
+.sb-section > *:nth-child(4)  { animation-delay: 0.11s; }
+.sb-section > *:nth-child(5)  { animation-delay: 0.14s; }
+.sb-section > *:nth-child(6)  { animation-delay: 0.17s; }
+.sb-section > *:nth-child(7)  { animation-delay: 0.20s; }
+.sb-section > *:nth-child(n+8) { animation-delay: 0.22s; }
+@media (prefers-reduced-motion: reduce) {
+  .sb-section > * { animation: none; }
 }
 .sb-item:hover { background: var(--color-surface-hover); color: var(--color-text); }
 .sb-item.active { color: var(--color-text); font-weight: 600; }
@@ -202,7 +224,7 @@ body.light .sb-collapse-toggle:hover { border-color: rgba(0,0,0,0.75); }
   margin: 8px 0 4px;
   padding: 9px 13px;
   background: var(--color-text);
-  border: 1px solid var(--color-text); border-radius: 6px;
+  border: 1px solid var(--color-text); border-radius: 9px;
   color: var(--color-bg); font-size: 13px; font-weight: 700;
   cursor: pointer; font-family: inherit;
   transition: opacity 0.15s;

@@ -710,7 +710,7 @@ function UserChip({ user, profile, onClick, onProfile, onSettings, onSignOut, on
               onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.08)'}
               onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
             >
-              Sair
+              <LogOut size={18} /> Sair
             </button>
           </div>
         </>
@@ -1410,19 +1410,6 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
 
         <div className="sb-divider" />
 
-        {/* Feedback — já não é um botão flutuante por cima do conteúdo em
-            todos os ecrãs; passou a um ícone pequeno aqui, disponível a
-            qualquer papel e mesmo sem conta (não exige login). Só o ícone,
-            nunca com texto ao lado — o mesmo botão pequeno que Definições/
-            Tema já usam, não uma linha da lista. */}
-        <div style={{ padding: '2px 10px 4px', display: 'flex', justifyContent: collapsed ? 'center' : 'flex-start' }}>
-          <button className="sb-action-btn" onClick={() => navigate(`/feedback?from=${encodeURIComponent(location.pathname)}`)} title="Reportar um problema" aria-label="Reportar um problema">
-            <Bug size={16} />
-          </button>
-        </div>
-
-        <div className="sb-divider" />
-
         {/* Bottom — user section */}
         <div className="sb-bottom">
           {user ? (
@@ -1441,6 +1428,13 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                     {showLabels && <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{getDisplayName(user)}</span>}
                   </button>
                 )}
+
+                {/* Feedback — ao lado das notificações (não mais uma secção
+                    sozinha, à parte, com dois separadores a rodeá-la). Fica
+                    à esquerda do sino em qualquer estado da sidebar. */}
+                <button className="sb-action-btn" onClick={() => navigate(`/feedback?from=${encodeURIComponent(location.pathname)}`)} title="Reportar um problema" aria-label="Reportar um problema">
+                  <Bug size={16} />
+                </button>
 
                 {/* Notificações — stays visible when collapsed */}
                 <InviteInbox userId={user.id} sidebar={true} collapsed={collapsed} />
@@ -1640,7 +1634,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                 <>
                   <span className="mob-nav-section-label">Ações</span>
                   <button className="mob-nav-btn" onClick={() => { setMenuOpen(false); navigate('/novo') }}>
-                    Criar projeto
+                    <Plus size={18} /> Criar projeto
                   </button>
                   <div className="mob-nav-divider" />
                 </>
@@ -1653,7 +1647,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                 <>
                   <button className={`mob-nav-btn${isActive('/admin') ? ' active' : ''}`} style={{ color: 'var(--color-accent)' }}
                     onClick={() => { navigate('/admin'); setMenuOpen(false) }}>
-                    Painel de Admin
+                    <Shield size={18} /> Painel de Admin
                   </button>
                   <div className="mob-nav-divider" />
                 </>
@@ -1663,13 +1657,13 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               {isRecruiter ? (
                 <>
                   <button className={`mob-nav-btn${isActive('/dashboard') ? ' active' : ''}`} onClick={() => { navigate('/dashboard'); setMenuOpen(false) }}>
-                    Dashboard
+                    <LayoutDashboard size={18} /> Dashboard
                   </button>
                   <button className={`mob-nav-btn${isActive('/explorar') ? ' active' : ''}`} onClick={() => { navigate('/explorar'); setMenuOpen(false) }}>
-                    Explorar
+                    <Compass size={18} /> Explorar
                   </button>
                   <button className={`mob-nav-btn${isActive('/mensagens') ? ' active' : ''}`} onClick={() => { navigate('/mensagens'); setMenuOpen(false) }}>
-                    Mensagens
+                    <MessageSquare size={18} /> Mensagens
                     {unreadMsgs > 0 && <span style={{ marginLeft: 'auto', background: 'var(--color-text)', color: 'var(--color-bg)', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{unreadMsgs > 9 ? '9+' : unreadMsgs}</span>}
                   </button>
                 </>
@@ -1677,25 +1671,25 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                 <>
                   {user && (
                     <button className={`mob-nav-btn${isActive('/dashboard') ? ' active' : ''}`} onClick={() => { navigate('/dashboard'); setMenuOpen(false) }}>
-                      Dashboard
+                      <LayoutDashboard size={18} /> Dashboard
                     </button>
                   )}
                   <button className={`mob-nav-btn${isActive('/turmas') ? ' active' : ''}`} onClick={() => { navigate('/turmas'); setMenuOpen(false) }}>
-                    Turmas
+                    <Users2 size={18} /> Turmas
                   </button>
                   <button className={`mob-nav-btn${isActive('/mensagens') ? ' active' : ''}`} onClick={() => { navigate('/mensagens'); setMenuOpen(false) }}>
-                    Mensagens
+                    <MessageSquare size={18} /> Mensagens
                     {unreadMsgs > 0 && <span style={{ marginLeft: 'auto', background: 'var(--color-text)', color: 'var(--color-bg)', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{unreadMsgs > 9 ? '9+' : unreadMsgs}</span>}
                   </button>
                   <button className={`mob-nav-btn${isActive('/explorar') ? ' active' : ''}`} onClick={() => { navigate('/explorar'); setMenuOpen(false) }}>
-                    Explorar
+                    <Compass size={18} /> Explorar
                   </button>
                 </>
               ) : (
                 <>
                   {user && (
                     <button className={`mob-nav-btn${isActive('/dashboard') ? ' active' : ''}`} onClick={() => { navigate('/dashboard'); setMenuOpen(false) }}>
-                      Dashboard
+                      <LayoutDashboard size={18} /> Dashboard
                     </button>
                   )}
                   {/* Visitante sem conta: o menu é o mapa do site — a explicação
@@ -1708,29 +1702,29 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                       isso. */}
                   {!user && (
                     <button className={`mob-nav-btn${isActive('/aprende') ? ' active' : ''}`} onClick={() => { navigate('/aprende'); setMenuOpen(false) }}>
-                      Aprende a usar
+                      <BookOpen size={18} /> Aprende a usar
                     </button>
                   )}
                   <button className={`mob-nav-btn${isActive('/explorar') ? ' active' : ''}`} onClick={() => { navigate('/explorar'); setMenuOpen(false) }}>
-                    Explorar
+                    <Compass size={18} /> Explorar
                   </button>
                   {!user && (
                     <button className={`mob-nav-btn${isActive('/pricing') ? ' active' : ''}`} onClick={() => { navigate('/pricing'); setMenuOpen(false) }}>
-                      Planos
+                      <Sparkles size={18} /> Planos
                     </button>
                   )}
                   {user && (
                     <>
                       <span className="mob-nav-section-label">Comunidade</span>
                       <button className={`mob-nav-btn${isActive('/mensagens') ? ' active' : ''}`} onClick={() => { navigate('/mensagens'); setMenuOpen(false) }}>
-                        Mensagens
+                        <MessageSquare size={18} /> Mensagens
                         {unreadMsgs > 0 && <span style={{ marginLeft: 'auto', background: 'var(--color-text)', color: 'var(--color-bg)', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{unreadMsgs > 9 ? '9+' : unreadMsgs}</span>}
                       </button>
                       <button className={`mob-nav-btn${isActive('/pricing') ? ' active' : ''}`} onClick={() => { navigate('/pricing'); setMenuOpen(false) }}>
-                        Planos
+                        <Sparkles size={18} /> Planos
                       </button>
                       <button className={`mob-nav-btn${isActive('/aprende') ? ' active' : ''}`} onClick={() => { navigate('/aprende'); setMenuOpen(false) }}>
-                        Aprende a usar
+                        <BookOpen size={18} /> Aprende a usar
                       </button>
                     </>
                   )}
@@ -1744,14 +1738,14 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                 <>
                   {isAdmin && (
                     <button className="mob-nav-btn" onClick={() => { navigate('/admin'); setMenuOpen(false) }} style={{ color: 'var(--color-accent)' }}>
-                      Administração
+                      <Shield size={18} /> Administração
                     </button>
                   )}
                   <button className={`mob-nav-btn${isActive('/settings') ? ' active' : ''}`} onClick={() => { navigate('/settings'); setMenuOpen(false) }}>
-                    Definições
+                    <SettingsIcon size={18} /> Definições
                   </button>
                   <button className="mob-nav-btn danger" onClick={() => { handleSignOut(); setMenuOpen(false) }}>
-                    Sair
+                    <LogOut size={18} /> Sair
                   </button>
                 </>
               )}
