@@ -241,23 +241,16 @@ export default function Home() {
         <div className="home-hero-grid">
           {/* Left — copy */}
           <div className="home-hero-copy">
-            {/* Desktop mantém o azul/itálico/ponto final, como sempre.
-                No telemóvel a frase quebra em duas linhas simples, sem cor
-                nem pontuação a fechar — o pedido foi tirar o "." e o azul e
-                dar-lhe mais presença como bloco de texto, não como frase. */}
-            <h1 className="home-hero-h1 h1-desktop">
-              Mostra o que <em>construíste.</em>
-            </h1>
-            <h1 className="home-hero-h1 h1-mobile">
+            {/* Mesma frase em qualquer ecrã agora — sem cor nem pontuação a
+                fechar, em duas linhas simples. Era só assim no telemóvel;
+                o desktop mantinha o "." e o azul em itálico, tirados agora
+                por pedido, para bater com a simplicidade pretendida para
+                menus/ecrãs de entrada (preto e branco; cor fica para dentro
+                da app, sobretudo a dashboard). O subtítulo também saiu — a
+                explicação já está no "Como funciona", logo a seguir. */}
+            <h1 className="home-hero-h1">
               Mostra o que<br />construíste
             </h1>
-            {/* No telemóvel este parágrafo desaparece por completo — a
-                explicação já está no "Como funciona", logo a seguir ao
-                herói. Dizer a mesma coisa duas vezes era o que estava a
-                engordar o ecrã inicial. No desktop fica como sempre. */}
-            <p className="home-hero-sub">
-              Transforma projetos escolares em páginas profissionais com score automático e análise por IA.
-            </p>
 
             <div className="home-hero-stats">
               <span className="home-hero-stats-number">

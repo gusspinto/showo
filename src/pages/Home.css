@@ -52,42 +52,34 @@
   justify-content: center;
 }
 
+/* Mesma frase em qualquer ecrã — sem destaque de cor, sem itálico, sem
+   ponto final. Simplicidade a preto e branco nos menus/ecrãs de entrada;
+   a cor fica para dentro da app. */
 .home-hero-h1 {
-  font-size: clamp(32px, 4vw, 52px);
+  font-size: clamp(38px, 6vw, 52px);
   font-weight: 400;
-  line-height: 1.08;
+  line-height: 1.06;
   margin: 0 0 20px;
-  letter-spacing: -1.5px;
+  letter-spacing: -1.3px;
   font-family: var(--font-heading);
 }
-.home-hero-h1 em {
-  font-style: italic;
-  color: var(--color-primary);
-}
 
-.h1-mobile { display: none; }
-.home-hero-sub {
-  font-size: 16px;
-  color: rgba(255,255,255,0.6);
-  line-height: 1.6;
-  margin: 0 0 32px;
-  max-width: 340px;
-}
-
-/* ── Stats counter ── */
+/* ── Stats counter ──
+   Discreto — número e legenda no mesmo tom de cinza, sem o azul vibrante
+   que tinha antes; é um número de rodapé, não um segundo título. */
 .home-hero-stats {
   display: inline-flex;
   align-items: center;
   gap: 14px;
-  border-left: 2px solid rgba(27,120,247,0.5);
+  border-left: 2px solid rgba(255,255,255,0.16);
   padding-left: 16px;
 }
 .home-hero-stats-number {
   font-family: var(--font-heading);
   font-weight: 400;
-  font-size: clamp(28px, 3.5vw, 42px);
-  color: var(--color-primary);
-  letter-spacing: -1.5px;
+  font-size: clamp(20px, 2.4vw, 26px);
+  color: rgba(255,255,255,0.75);
+  letter-spacing: -0.8px;
   font-variant-numeric: tabular-nums;
   line-height: 1;
 }
@@ -525,7 +517,6 @@
   }
   .home-hero-copy { order: 1; }
   .home-hero-stats { justify-content: center; }
-  .home-hero-sub { margin-left: auto; margin-right: auto; }
 }
 
 @media (max-width: 860px) and (min-width: 601px) {
@@ -561,18 +552,10 @@
     max-width: none;
     margin: 0;
   }
-  /* Desktop mantém a cor e o ponto final. No telemóvel troca para a versão
-     sem cor nem pontuação, em duas linhas — pediste mais presença como
-     bloco de texto, não como frase a fechar. */
-  .h1-desktop { display: none; }
-  .h1-mobile  { display: block; }
   .home-hero-h1 {
     font-size: clamp(38px, 12vw, 52px);
-    letter-spacing: -1.3px;
-    line-height: 1.06;
     margin-bottom: 14px;
   }
-  .home-hero-sub { display: none; }
   .home-hero-stats { display: none; }
 
   /* Projects: horizontal scroll with snap */
