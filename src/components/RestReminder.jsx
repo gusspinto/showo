@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { CloseIcon as X } from '@solar-icons/react/bold/close'
 
 const DISMISSED_KEY = 'showo_rest_dismissed'
 const SNOOZE_KEY    = 'showo_rest_snooze_until'
@@ -147,34 +148,40 @@ export default function RestReminder() {
 
   const isFirst = phase === 'first'
 
+  // Já não é um modal a bloquear o ecrã todo — é um cartão discreto num
+  // canto, com um X para fechar. Continua a interromper (não desaparece
+  // sozinho), mas não impede de continuar a usar a app por baixo.
   return (
     <>
-      {/* Backdrop */}
-      <div style={{
-        position: 'fixed', inset: 0, zIndex: 9990,
-        background: 'rgba(0,0,0,0.6)',
-        backdropFilter: 'blur(4px)',
-        WebkitBackdropFilter: 'blur(4px)',
-        animation: 'fadeIn 0.2s ease',
-      }} />
-
-      {/* Card */}
-      <div style={{
+      <div className="rest-reminder-card" style={{
         position: 'fixed', zIndex: 9991,
-        top: '50%', left: '50%',
-        transform: 'translate(-50%, -50%)',
-        width: 'min(92vw, 420px)',
+        width: 'min(92vw, 340px)',
         background: C.card,
         border: `1px solid ${C.border}`,
-        borderRadius: 20,
-        padding: '36px 32px',
-        boxShadow: '0 24px 64px rgba(0,0,0,0.6)',
+        borderRadius: 16,
+        padding: '18px 18px 18px',
+        boxShadow: '0 12px 40px rgba(0,0,0,0.35)',
         fontFamily: 'inherit',
-        animation: 'slideUp 0.25s cubic-bezier(0.22,1,0.36,1)',
+        animation: 'restReminderIn 0.3s cubic-bezier(0.22,1,0.36,1)',
       }}>
+        <button
+          onClick={handleKeepWorking}
+          aria-label="Fechar"
+          style={{
+            position: 'absolute', top: 10, right: 10,
+            width: 26, height: 26, display: 'flex', alignItems: 'center', justifyContent: 'center',
+            background: 'transparent', border: 'none', borderRadius: 7,
+            color: C.muted, cursor: 'pointer', padding: 0,
+          }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'var(--color-surface-hover)'; e.currentTarget.style.color = C.text }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = C.muted }}
+        >
+          <X size={13} />
+        </button>
+
         <h2 style={{
-          color: C.text, fontSize: 20, fontWeight: 700,
-          margin: '0 0 12px', letterSpacing: '-0.3px',
+          color: C.text, fontSize: 16, fontWeight: 700,
+          margin: '0 24px 8px 0', letterSpacing: '-0.2px',
         }}>
           {isFirst
             ? 'Já passaram das 23h'
@@ -182,20 +189,20 @@ export default function RestReminder() {
         </h2>
 
         <p style={{
-          color: C.muted, fontSize: 15, lineHeight: 1.65,
-          margin: '0 0 28px',
+          color: C.muted, fontSize: 13.5, lineHeight: 1.55,
+          margin: '0 0 16px',
         }}>
           {isFirst
             ? 'Descansa a cabeça. O que estudaste hoje fixa-se melhor a dormir.'
             : 'Conseguiste acabar? Amanhã continuas com mais energia.'}
         </p>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ display: 'flex', gap: 8 }}>
           <button
             onClick={handleRest}
             style={{
-              background: C.blue, border: 'none', borderRadius: 10,
-              padding: '13px', color: 'var(--color-bg)', fontSize: 15, fontWeight: 600,
+              flex: 1, background: C.blue, border: 'none', borderRadius: 9,
+              padding: '10px', color: 'var(--color-bg)', fontSize: 13.5, fontWeight: 600,
               cursor: 'pointer', fontFamily: 'inherit', transition: 'opacity 0.15s',
             }}
             onMouseEnter={e => e.currentTarget.style.opacity = '0.88'}
@@ -208,24 +215,43 @@ export default function RestReminder() {
             <button
               onClick={handleKeepWorking}
               style={{
-                background: 'transparent',
+                flex: 1, background: 'transparent',
                 border: `1px solid ${C.border}`,
-                borderRadius: 10, padding: '13px',
-                color: C.muted, fontSize: 14, fontWeight: 500,
+                borderRadius: 9, padding: '10px',
+                color: C.muted, fontSize: 13, fontWeight: 500,
                 cursor: 'pointer', fontFamily: 'inherit', transition: 'color 0.15s, border-color 0.15s',
               }}
               onMouseEnter={e => { e.currentTarget.style.color = C.text; e.currentTarget.style.borderColor = 'var(--color-border-hover)' }}
               onMouseLeave={e => { e.currentTarget.style.color = C.muted; e.currentTarget.style.borderColor = C.border }}
             >
-              Preciso de mais um bocado
+              Mais um bocado
             </button>
           )}
         </div>
       </div>
 
       <style>{`
-        @keyframes fadeIn  { from { opacity: 0 } to { opacity: 1 } }
-        @keyframes slideUp { from { opacity: 0; transform: translate(-50%, calc(-50% + 16px)) } to { opacity: 1; transform: translate(-50%, -50%) } }
+        @keyframes restReminderIn {
+          from { opacity: 0; transform: translateY(-10px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .rest-reminder-card {
+          top: 20px;
+          right: 20px;
+        }
+        @media (max-width: 600px) {
+          .rest-reminder-card {
+            top: auto;
+            right: 12px;
+            left: 12px;
+            bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+            width: auto;
+          }
+          @keyframes restReminderIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to   { opacity: 1; transform: translateY(0); }
+          }
+        }
       `}</style>
     </>
   )
