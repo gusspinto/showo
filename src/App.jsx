@@ -60,14 +60,9 @@ const UserProfile  = lazy(() => import('./pages/UserProfile'))
 const Admin        = lazy(() => import('./pages/Admin'))
 const TurmaPage    = lazy(() => import('./pages/TurmaPage'))
 const TurmaAluno   = lazy(() => import('./pages/TurmaAluno'))
-const Parceiros    = lazy(() => import('./pages/Parceiros'))
 const Turmas       = lazy(() => import('./pages/Turmas'))
 const Certificate  = lazy(() => import('./pages/Certificate'))
-const Vagas        = lazy(() => import('./pages/Vagas'))
 const Mensagens    = lazy(() => import('./pages/Mensagens'))
-const Candidatos   = lazy(() => import('./pages/Candidatos'))
-const Pipeline     = lazy(() => import('./pages/Pipeline'))
-const EmpresaPage    = lazy(() => import('./pages/EmpresaPage'))
 const ProjectManage  = lazy(() => import('./pages/ProjectManage'))
 const Privacidade    = lazy(() => import('./pages/Privacidade'))
 const Termos         = lazy(() => import('./pages/Termos'))
@@ -473,13 +468,8 @@ export default function App() {
               <Route path="/turma/:code"   element={<TurmaPage />}   />
               <Route path="/turma/:code/aluno/:userId" element={<TurmaAluno />} />
               <Route path="/turmas"        element={<Turmas />}      />
-              <Route path="/parceiros"     element={<Parceiros />}   />
               <Route path="/certificado/:slug"  element={<Certificate />}  />
-              <Route path="/vagas"              element={<Vagas />}        />
               <Route path="/mensagens"          element={<Mensagens />}    />
-              <Route path="/candidatos"         element={<Candidatos />}   />
-              <Route path="/pipeline"           element={<Pipeline />}     />
-              <Route path="/empresa/:id"        element={<EmpresaPage />}   />
               <Route path="/projeto/:slug/gerir"  element={<ProjectManage />} />
               <Route path="/projeto/:slug/diario" element={<DiaryCanvas />}  />
               <Route path="/privacidade"        element={<Privacidade />}   />
