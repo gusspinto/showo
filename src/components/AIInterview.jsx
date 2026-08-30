@@ -98,9 +98,9 @@ export default function AIInterview({ onComplete, onDismiss }) {
         {currentQ === 0 && (
           <div style={{
             padding: '12px 14px',
-            background: 'var(--color-primary-subtle)',
-            border: '1px solid rgba(27,120,247,0.18)',
-            borderLeft: '3px solid var(--color-primary)',
+            background: 'var(--color-surface-hover)',
+            border: '1px solid color-mix(in srgb, var(--color-text) 18%, transparent)',
+            borderLeft: '3px solid var(--color-text)',
             borderRadius: 10, fontSize: 13, lineHeight: 1.65, color: 'var(--color-text)',
           }}>
             {interview.understanding}
@@ -114,7 +114,7 @@ export default function AIInterview({ onComplete, onDismiss }) {
           <div style={{ flex: 1, height: 3, background: 'var(--color-border)', borderRadius: 2 }}>
             <div style={{
               height: '100%', width: `${pct}%`,
-              background: 'var(--color-primary)', borderRadius: 2,
+              background: 'var(--color-text)', borderRadius: 2,
               transition: 'width 0.35s cubic-bezier(0.4,0,0.2,1)',
             }} />
           </div>
@@ -137,7 +137,7 @@ export default function AIInterview({ onComplete, onDismiss }) {
                     fontSize: 12, cursor: 'pointer', fontFamily: 'inherit',
                     transition: 'border-color 0.12s, color 0.12s',
                   }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--color-primary)'; e.currentTarget.style.color = 'var(--color-primary)' }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--color-text)'; e.currentTarget.style.color = 'var(--color-text)' }}
                   onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--color-border)'; e.currentTarget.style.color = 'var(--color-text-secondary)' }}
                 >
                   {s}
@@ -159,7 +159,7 @@ export default function AIInterview({ onComplete, onDismiss }) {
               outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box',
               resize: 'vertical', lineHeight: 1.6,
             }}
-            onFocus={e => { e.currentTarget.style.borderColor = 'var(--color-primary)'; e.currentTarget.style.boxShadow = '0 0 0 3px var(--color-primary-subtle)' }}
+            onFocus={e => { e.currentTarget.style.borderColor = 'var(--color-text)'; e.currentTarget.style.boxShadow = '0 0 0 3px var(--color-surface-hover)' }}
             onBlur={e => { e.currentTarget.style.borderColor = 'var(--color-input-border)'; e.currentTarget.style.boxShadow = 'none' }}
             onKeyDown={e => {
               if (e.key === 'Enter' && !e.shiftKey && currentAnswer.trim()) {
@@ -174,8 +174,8 @@ export default function AIInterview({ onComplete, onDismiss }) {
             disabled={!currentAnswer.trim()}
             style={{
               flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-              background: currentAnswer.trim() ? 'var(--color-primary)' : 'var(--color-border)',
-              color: '#fff', border: 'none', borderRadius: 8, padding: '11px 0',
+              background: currentAnswer.trim() ? 'var(--color-text)' : 'var(--color-border)',
+              color: 'var(--color-bg)', border: 'none', borderRadius: 8, padding: '11px 0',
               fontSize: 14, fontWeight: 700,
               cursor: currentAnswer.trim() ? 'pointer' : 'not-allowed',
               fontFamily: 'inherit', transition: 'background 0.15s',
@@ -223,7 +223,7 @@ export default function AIInterview({ onComplete, onDismiss }) {
           color: 'var(--color-text)', fontSize: 14, padding: '10px 12px',
           outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', resize: 'vertical',
         }}
-        onFocus={e => { e.currentTarget.style.borderColor = 'var(--color-primary)' }}
+        onFocus={e => { e.currentTarget.style.borderColor = 'var(--color-text)' }}
         onBlur={e => { e.currentTarget.style.borderColor = 'var(--color-input-border)' }}
       />
 
@@ -232,9 +232,9 @@ export default function AIInterview({ onComplete, onDismiss }) {
           <button key={t.id} type="button" onClick={() => setProjectType(t.id)}
             style={{
               padding: '5px 12px', borderRadius: 20,
-              border: `1.5px solid ${projectType === t.id ? 'var(--color-primary)' : 'var(--color-border)'}`,
-              background: projectType === t.id ? 'var(--color-primary-subtle)' : 'transparent',
-              color: projectType === t.id ? 'var(--color-primary)' : 'var(--color-text-secondary)',
+              border: `1.5px solid ${projectType === t.id ? 'var(--color-text)' : 'var(--color-border)'}`,
+              background: projectType === t.id ? 'var(--color-surface-hover)' : 'transparent',
+              color: projectType === t.id ? 'var(--color-text)' : 'var(--color-text-secondary)',
               fontSize: 12, fontWeight: projectType === t.id ? 700 : 500,
               cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s',
             }}
@@ -250,8 +250,8 @@ export default function AIInterview({ onComplete, onDismiss }) {
         <button type="button" onClick={startInterview} disabled={!description.trim()}
           style={{
             flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-            background: description.trim() ? 'var(--color-primary)' : 'var(--color-border)',
-            color: '#fff', border: 'none', borderRadius: 8, padding: '11px 14px',
+            background: description.trim() ? 'var(--color-text)' : 'var(--color-border)',
+            color: 'var(--color-bg)', border: 'none', borderRadius: 8, padding: '11px 14px',
             fontSize: 13, fontWeight: 700,
             cursor: description.trim() ? 'pointer' : 'not-allowed', fontFamily: 'inherit',
             transition: 'background 0.15s',
@@ -263,8 +263,8 @@ export default function AIInterview({ onComplete, onDismiss }) {
           style={{
             flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
             background: 'transparent',
-            border: `1.5px solid ${description.trim() ? 'var(--color-primary)' : 'var(--color-border)'}`,
-            color: description.trim() ? 'var(--color-primary)' : 'var(--color-text-tertiary)',
+            border: `1.5px solid ${description.trim() ? 'var(--color-text)' : 'var(--color-border)'}`,
+            color: description.trim() ? 'var(--color-text)' : 'var(--color-text-tertiary)',
             borderRadius: 8, padding: '10px 14px', fontSize: 13, fontWeight: 600,
             cursor: description.trim() ? 'pointer' : 'not-allowed', fontFamily: 'inherit',
             transition: 'all 0.15s',

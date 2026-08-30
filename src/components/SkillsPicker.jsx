@@ -94,8 +94,8 @@ export default function SkillsPicker({ value = [], onChange, max = 10, label = '
             key={skill}
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 4,
-              background: 'var(--color-primary-subtle)', color: 'var(--color-primary)',
-              border: '1px solid var(--color-primary-subtle)',
+              background: 'var(--color-surface-hover)', color: 'var(--color-text)',
+              border: '1px solid var(--color-surface-hover)',
               borderRadius: 20, padding: '3px 10px 3px 10px',
               fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap',
             }}
@@ -106,7 +106,7 @@ export default function SkillsPicker({ value = [], onChange, max = 10, label = '
               onClick={e => { e.stopPropagation(); remove(skill) }}
               style={{
                 background: 'none', border: 'none', padding: 0,
-                cursor: 'pointer', color: 'var(--color-primary)', display: 'flex',
+                cursor: 'pointer', color: 'var(--color-text)', display: 'flex',
                 alignItems: 'center', lineHeight: 1,
               }}
             >
@@ -150,8 +150,8 @@ export default function SkillsPicker({ value = [], onChange, max = 10, label = '
                 transition: 'all 0.15s',
               }}
               onMouseEnter={e => {
-                e.currentTarget.style.borderColor = 'var(--color-primary)'
-                e.currentTarget.style.color = 'var(--color-primary)'
+                e.currentTarget.style.borderColor = 'var(--color-text)'
+                e.currentTarget.style.color = 'var(--color-text)'
               }}
               onMouseLeave={e => {
                 e.currentTarget.style.borderColor = 'var(--color-border)'

@@ -16,21 +16,21 @@ export default function CreateProjectModal({ onClose }) {
         onClick={() => go('/novo')}
         style={{
           display: 'flex', alignItems: 'center', gap: 'var(--sp-4)',
-          background: 'var(--color-primary-subtle)',
-          border: '1px solid var(--color-primary-muted)',
+          background: 'var(--color-surface-hover)',
+          border: '1px solid var(--color-border-hover)',
           borderRadius: 'var(--radius-lg)', padding: 'var(--sp-4) var(--sp-5)',
           cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
           transition: 'all 0.15s', width: '100%',
         }}
-        onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--color-primary)' }}
-        onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--color-primary-muted)' }}
+        onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--color-text)' }}
+        onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--color-border-hover)' }}
       >
         <div style={{
           width: 44, height: 44, borderRadius: 'var(--radius-md)', flexShrink: 0,
-          background: 'var(--color-primary)',
+          background: 'var(--color-text)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
-          <PenLine size={20} color="#fff" />
+          <PenLine size={20} color="var(--color-bg)" />
         </div>
         <div>
           <div style={{ fontSize: 'var(--text-base)', fontWeight: 700, color: 'var(--color-text)', marginBottom: 3 }}>

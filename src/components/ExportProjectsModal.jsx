@@ -33,8 +33,8 @@ const C = {
   },
   btn: (primary, disabled) => ({
     padding: '10px 18px', borderRadius: 'var(--radius-md)', border: primary ? 'none' : '1px solid var(--color-border)',
-    background: disabled ? 'var(--color-border)' : primary ? 'var(--color-primary)' : 'transparent',
-    color: primary ? '#fff' : 'var(--color-text)',
+    background: disabled ? 'var(--color-border)' : primary ? 'var(--color-text)' : 'transparent',
+    color: primary ? 'var(--color-bg)' : 'var(--color-text)',
     fontWeight: 600, fontSize: '0.85rem', cursor: disabled ? 'not-allowed' : 'pointer',
     fontFamily: 'inherit',
   }),
@@ -127,7 +127,7 @@ export default function ExportProjectsModal({ onClose }) {
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <GraduationCap size={18} color="var(--color-primary)" />
+              <GraduationCap size={18} color="var(--color-text)" />
               <p style={C.title}>Exportar projetos</p>
             </div>
             <p style={C.sub}>
@@ -165,7 +165,7 @@ export default function ExportProjectsModal({ onClose }) {
                         textAlign: 'left', fontFamily: 'inherit', transition: 'all 0.12s',
                       }}
                     >
-                      <span style={{ color: isSelected ? 'var(--color-primary)' : 'var(--color-text-secondary)', flexShrink: 0 }}>
+                      <span style={{ color: isSelected ? 'var(--color-text)' : 'var(--color-text-secondary)', flexShrink: 0 }}>
                         {isSelected ? <CheckSquare size={16} /> : <Square size={16} />}
                       </span>
                       {p.cover_url && (

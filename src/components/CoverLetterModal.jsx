@@ -14,7 +14,7 @@ const C = {
   bg: 'var(--color-bg)',
   card: 'var(--color-surface)',
   border: 'var(--color-border)',
-  blue: 'var(--color-primary)',
+  blue: 'var(--color-text)',
   muted: 'var(--color-text-secondary)',
   text: 'var(--color-text)',
   subtle: 'var(--color-text-tertiary)',
@@ -28,13 +28,13 @@ function Btn({ children, onClick, primary, disabled, style = {} }) {
       onClick={onClick}
       disabled={disabled}
       style={{
-        background: disabled ? 'var(--color-border)' : primary ? 'var(--color-primary)' : 'transparent',
+        background: disabled ? 'var(--color-border)' : primary ? 'var(--color-text)' : 'transparent',
         border: primary ? 'none' : `1px solid ${C.border}`,
         borderRadius: 9, padding: '11px 20px',
-        color: disabled ? 'var(--color-text-tertiary)' : primary ? '#fff' : C.muted,
+        color: disabled ? 'var(--color-text-tertiary)' : primary ? 'var(--color-bg)' : C.muted,
         fontSize: 14, fontWeight: 600, cursor: disabled ? 'default' : 'pointer',
         fontFamily: 'inherit',
-        boxShadow: primary && !disabled ? '0 4px 16px var(--color-primary-subtle)' : 'none',
+        boxShadow: primary && !disabled ? '0 4px 16px var(--color-surface-hover)' : 'none',
         transition: 'opacity 0.15s',
         ...style,
       }}
@@ -60,8 +60,8 @@ function CopyField({ label, value }) {
         <button
           onClick={copy}
           style={{
-            background: copied ? 'var(--color-success-subtle)' : 'var(--color-primary-subtle)',
-            border: `1px solid ${copied ? 'var(--color-success-subtle)' : 'var(--color-primary-subtle)'}`,
+            background: copied ? 'var(--color-success-subtle)' : 'var(--color-surface-hover)',
+            border: `1px solid ${copied ? 'var(--color-success-subtle)' : 'var(--color-surface-hover)'}`,
             borderRadius: 6, padding: '3px 10px',
             color: copied ? C.green : C.blue,
             fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
@@ -152,8 +152,8 @@ export default function CoverLetterModal({ projects, studentName, onClose }) {
                     onClick={() => setType(val)}
                     style={{
                       flex: 1, padding: '10px 0',
-                      background: type === val ? 'var(--color-primary-subtle)' : 'transparent',
-                      border: `1.5px solid ${type === val ? 'var(--color-primary)' : C.border}`,
+                      background: type === val ? 'var(--color-surface-hover)' : 'transparent',
+                      border: `1.5px solid ${type === val ? 'var(--color-text)' : C.border}`,
                       borderRadius: 10, color: type === val ? C.blue : C.muted,
                       fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
                       transition: 'all 0.15s',
@@ -205,7 +205,7 @@ export default function CoverLetterModal({ projects, studentName, onClose }) {
               </div>
 
               {/* Projects used */}
-              <div style={{ background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 10, padding: '12px 14px', marginBottom: 20 }}>
+              <div style={{ background: 'var(--color-surface-hover)', border: '1px solid var(--color-surface-hover)', borderRadius: 10, padding: '12px 14px', marginBottom: 20 }}>
                 <p style={{ margin: '0 0 6px', fontSize: 12, fontWeight: 700, color: C.blue, textTransform: 'uppercase', letterSpacing: 0.8 }}>
                   Projetos incluídos
                 </p>

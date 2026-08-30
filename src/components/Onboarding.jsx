@@ -46,9 +46,9 @@ function ClickBeat({ active }) {
   return (
     <div ref={wrapRef} className="onb-click-wrap">
       <button ref={btnRef} className="onb-click-btn" style={{
-        background: clicked ? '#1660d1' : 'var(--color-primary)',
+        background: clicked ? 'color-mix(in srgb, var(--color-text) 85%, transparent)' : 'var(--color-text)',
         transform: clicked ? 'scale(0.94)' : 'scale(1)',
-        boxShadow: phase === 'move' ? '0 0 0 4px var(--color-primary-subtle)' : '0 4px 14px var(--color-primary-subtle)',
+        boxShadow: phase === 'move' ? '0 0 0 4px var(--color-surface-hover)' : '0 4px 14px var(--color-surface-hover)',
       }}>
         <Plus size={16} strokeWidth={2.5} /> Criar projeto
       </button>
@@ -106,15 +106,15 @@ function VisibilityBeat({ active }) {
         <div key={o.value} className="onb-vis-row" style={{
           display: 'flex', alignItems: 'center', gap: 10,
           padding: '10px 12px', borderRadius: 10,
-          border: `1.5px solid ${selected === o.value ? 'var(--color-primary)' : 'var(--color-border)'}`,
-          background: selected === o.value ? 'var(--color-primary-subtle)' : 'var(--color-bg-alt)',
+          border: `1.5px solid ${selected === o.value ? 'var(--color-text)' : 'var(--color-border)'}`,
+          background: selected === o.value ? 'var(--color-surface-hover)' : 'var(--color-bg-alt)',
           animation: `onb-fade 0.35s ${i * 0.12}s both`,
           transition: 'all 0.25s',
         }}>
           <div style={{
             width: 14, height: 14, borderRadius: '50%', flexShrink: 0,
-            border: `2px solid ${selected === o.value ? 'var(--color-primary)' : 'var(--color-border)'}`,
-            background: selected === o.value ? 'var(--color-primary)' : 'transparent',
+            border: `2px solid ${selected === o.value ? 'var(--color-text)' : 'var(--color-border)'}`,
+            background: selected === o.value ? 'var(--color-text)' : 'transparent',
             transition: 'all 0.25s',
           }} />
           <div>
@@ -220,7 +220,7 @@ export default function Onboarding({ onDone }) {
             {BEATS.map((b, i) => (
               <button key={b.key} onClick={() => { clearTimeout(timer.current); setBeat(i) }}
                 aria-label={b.step} className="onb-footer-dot"
-                style={{ background: i === beat ? 'var(--color-primary)' : 'var(--color-border)' }} />
+                style={{ background: i === beat ? 'var(--color-text)' : 'var(--color-border)' }} />
             ))}
           </div>
           <button onClick={close} className="onb-start-btn">Começar</button>
