@@ -18,8 +18,6 @@
   transform: translateY(0);
 }
 
-.home-hero-start { display: none; }
-
 .home-content { display: flex; flex-direction: column; }
 
 /* ══ HERO ══ */
@@ -107,145 +105,144 @@
   max-width: 120px;
 }
 
-/* ── Auth widget ── */
-.home-hero-auth {
-  background: rgba(255,255,255,0.06);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 16px;
-  padding: 32px 28px;
-}
-.home-auth-title {
-  font-size: 18px;
-  font-weight: 700;
-  margin-bottom: 6px;
-  color: #fff;
-}
-.home-auth-subtitle {
-  font-size: 13px;
-  color: rgba(255,255,255,0.55);
-  margin: 0 0 20px;
-}
-
-.home-auth-divider {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin: 18px 0;
-}
-.home-auth-divider::before,
-.home-auth-divider::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: rgba(255,255,255,0.12);
-}
-.home-auth-divider span {
-  font-size: 12px;
-  color: rgba(255,255,255,0.35);
-  font-weight: 500;
-}
-
-.home-auth-form {
+/* ── Arranque (Google + email/password progressivo) ──
+   Um só bloco, para qualquer ecrã — vivia só dentro de uma media query de
+   telemóvel; o desktop tinha um formulário à parte, mais genérico (sem
+   "Continuar a explorar", sem confirmação/reenvio de email). Deixou de
+   haver dois caminhos: isto é a coluna direita do grid em qualquer
+   largura. */
+.home-hero-start {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-}
-
-.home-auth-field {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  border-bottom: 1.5px solid rgba(255,255,255,0.15);
-  transition: border-color 0.15s;
-}
-.home-auth-field.focused {
-  border-bottom-color: var(--color-primary);
-}
-
-.home-auth-input,
-body.light .home-auth-input {
-  flex: 1;
   width: 100%;
-  background: transparent !important;
-  border: none;
-  color: #fff !important;
-  font-size: 15px;
-  outline: none;
-  font-family: inherit;
-  padding: 10px 0;
-  box-sizing: border-box;
-}
-.home-auth-input::placeholder {
-  color: rgba(255,255,255,0.35) !important;
-}
-.home-auth-input:-webkit-autofill,
-.home-auth-input:-webkit-autofill:hover,
-.home-auth-input:-webkit-autofill:focus {
-  -webkit-text-fill-color: #fff !important;
-  -webkit-box-shadow: 0 0 0 1000px transparent inset !important;
-  background-color: transparent !important;
-  transition: background-color 9999s ease-in-out 0s;
+  max-width: 340px;
+  margin: 0 auto;
 }
 
-.home-auth-eye {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: rgba(255,255,255,0.4);
-  padding: 0;
-  display: flex;
-  flex-shrink: 0;
-}
-.home-auth-eye.active {
-  color: var(--color-primary);
-}
-
-.home-auth-error {
-  color: var(--color-error);
-  font-size: 13px;
-  font-weight: 600;
-  margin: 0;
-}
-
-.home-auth-submit {
-  background: var(--color-primary);
-  color: #fff;
-  border: none;
-  border-radius: 10px;
-  padding: 12px 0;
-  font-size: 15px;
-  font-weight: 700;
-  cursor: pointer;
-  font-family: inherit;
-  margin-top: 4px;
-  transition: opacity 0.15s;
-}
-.home-auth-submit:hover {
-  opacity: 0.88;
-}
-.home-auth-submit:disabled {
-  opacity: 0.7;
-  cursor: default;
-}
-
-.home-auth-links {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 14px;
-}
-.home-auth-links a {
-  font-size: 13px;
-  color: rgba(255,255,255,0.5);
-  font-weight: 500;
-  text-decoration: none;
-}
-
-.home-hero-auth .google-btn {
+.home-hero-start .google-btn {
   background: rgba(255,255,255,0.1) !important;
   color: #fff !important;
   border-color: rgba(255,255,255,0.2) !important;
+}
+
+.home-start-divider {
+  display: flex; align-items: center; gap: 12px;
+  margin: 16px 0;
+}
+.home-start-divider::before, .home-start-divider::after {
+  content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.12);
+}
+.home-start-divider span { font-size: 12px; color: rgba(255,255,255,0.35); font-weight: 500; }
+
+.home-start-form { display: flex; flex-direction: column; gap: 10px; }
+.home-start-input {
+  width: 100%; box-sizing: border-box;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  color: #fff;
+  font-family: inherit; font-size: 16px;
+  outline: none;
+  transition: border-color 0.15s, background 0.15s;
+}
+.home-start-input::placeholder { color: rgba(255,255,255,0.4); }
+.home-start-input:focus { border-color: rgba(255,255,255,0.35); background: rgba(255,255,255,0.09); }
+.home-start-input:-webkit-autofill,
+.home-start-input:-webkit-autofill:hover,
+.home-start-input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #fff !important;
+  -webkit-box-shadow: 0 0 0 1000px rgba(255,255,255,0.06) inset !important;
+  transition: background-color 9999s ease-in-out 0s;
+}
+
+.home-start-error { margin: 0; font-size: 13px; color: #ff8a8a; }
+.home-start-confirm {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 6px; margin: 4px 0 2px; text-align: center;
+}
+.home-start-confirm .home-start-error { text-align: center; }
+
+/* Ícone + "tentar outra vez", não mais um botão de peso igual ao Entrar —
+   é uma ação de recurso, não a ação principal do ecrã. */
+.home-start-retry {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: none; border: none; padding: 2px;
+  font-family: inherit; font-size: 12.5px; font-weight: 600;
+  color: rgba(255,255,255,0.6);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.home-start-retry:disabled { opacity: 0.6; cursor: default; }
+.home-start-retry-spin { animation: home-start-spin 0.8s linear infinite; }
+
+/* Email confirmado no passo da password — não desaparece, fica visível
+   para quem está a escrever perceber a que conta se refere. */
+.home-start-email-echo {
+  margin: 0 0 2px; font-size: 13px; color: rgba(255,255,255,0.55);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* Botão branco cheio — a mesma família visual do Google, para os dois se
+   lerem como opções do mesmo peso, não uma principal e uma secundária. */
+.home-start-email-btn {
+  width: 100%; min-height: 50px;
+  background: #fff; border: none;
+  border-radius: var(--radius-md);
+  color: #171717;
+  font-family: inherit; font-size: 15px; font-weight: 700;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s, transform 0.1s var(--ease-out);
+}
+.home-start-email-btn:active { transform: scale(0.98); }
+.home-start-email-btn:disabled { opacity: 0.6; cursor: default; }
+@media (hover: hover) {
+  .home-start-email-btn:hover:not(:disabled) { background: #eee; }
+}
+
+.home-start-form-links {
+  display: flex; align-items: center; justify-content: center; gap: 14px;
+  margin-top: 2px;
+}
+.home-start-back {
+  background: none; border: none; padding: 6px;
+  font-family: inherit; font-size: 13px; font-weight: 600;
+  color: rgba(255,255,255,0.55);
+  text-decoration: underline; text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+/* ── Rodapé do bloco ── */
+.home-start-privacy {
+  margin: 16px 2px 0;
+  font-size: 12px; line-height: 1.5;
+  color: rgba(255,255,255,0.4);
+  text-align: center;
+}
+.home-start-privacy button {
+  background: none; border: none; padding: 0;
+  font-family: inherit; font-size: 12px;
+  color: rgba(255,255,255,0.65);
+  text-decoration: underline; text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+/* "Continuar a explorar" — a saída que o Claude não dá. */
+.home-start-explore {
+  width: 100%; min-height: 48px; margin-top: 14px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: var(--radius-md);
+  color: #fff;
+  font-family: inherit; font-size: 14px; font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s;
+}
+.home-start-explore:active { background: rgba(255,255,255,0.1); }
+@media (hover: hover) {
+  .home-start-explore:hover { background: rgba(255,255,255,0.09); }
 }
 
 /* ══ PROJECTS SECTION ══ */
@@ -527,7 +524,7 @@ body.light .home-auth-input {
     text-align: center;
     gap: 32px;
   }
-  .home-hero-auth {
+  .home-hero-start {
     max-width: 420px;
     margin: 0 auto;
     order: 2;
@@ -568,131 +565,7 @@ body.light .home-auth-input {
      por baixo, fazia ainda menos sentido continuar lá. */
   .home-hero-aurora { display: none; }
 
-  /* O formulário de login sai do primeiro ecrã. Continua a uma tacada de
-     distância, no fim do bloco. */
-  .home-hero-auth { display: none !important; }
-
-  .home-hero-start {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    max-width: 340px;
-    margin: 32px auto 0;
-  }
-
-  /* ── Divisor "ou" ── */
-  .home-start-divider {
-    display: flex; align-items: center; gap: 12px;
-    margin: 16px 0;
-  }
-  .home-start-divider::before, .home-start-divider::after {
-    content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.12);
-  }
-  .home-start-divider span { font-size: 12px; color: rgba(255,255,255,0.35); font-weight: 500; }
-
-  /* ── Formulário ── */
-  .home-start-form { display: flex; flex-direction: column; gap: 10px; }
-  .home-start-input {
-    width: 100%; box-sizing: border-box;
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.14);
-    border-radius: var(--radius-md);
-    padding: 14px 16px;
-    color: #fff;
-    font-family: inherit; font-size: 16px;
-    outline: none;
-    transition: border-color 0.15s, background 0.15s;
-  }
-  .home-start-input::placeholder { color: rgba(255,255,255,0.4); }
-  .home-start-input:focus { border-color: rgba(255,255,255,0.35); background: rgba(255,255,255,0.09); }
-
-  .home-start-error { margin: 0; font-size: 13px; color: #ff8a8a; }
-  .home-start-confirm {
-    display: flex; flex-direction: column; align-items: center;
-    gap: 6px; margin: 4px 0 2px; text-align: center;
-  }
-  .home-start-confirm .home-start-error { text-align: center; }
-
-  /* Ícone + "tentar outra vez", não mais um botão de peso igual ao Entrar —
-     é uma ação de recurso, não a ação principal do ecrã. */
-  .home-start-retry {
-    display: inline-flex; align-items: center; gap: 6px;
-    background: none; border: none; padding: 2px;
-    font-family: inherit; font-size: 12.5px; font-weight: 600;
-    color: rgba(255,255,255,0.6);
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .home-start-retry:disabled { opacity: 0.6; cursor: default; }
-  .home-start-retry-spin { animation: home-start-spin 0.8s linear infinite; }
-
-  /* Email confirmado no passo da password — não desaparece, fica visível
-     para quem está a escrever perceber a que conta se refere. */
-  .home-start-email-echo {
-    margin: 0 0 2px; font-size: 13px; color: rgba(255,255,255,0.55);
-    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  }
-
-  /* Botão branco cheio — a mesma família visual do Google, para os dois se
-     lerem como opções do mesmo peso, não uma principal e uma secundária. */
-  .home-start-email-btn {
-    width: 100%; min-height: 50px;
-    background: #fff; border: none;
-    border-radius: var(--radius-md);
-    color: #171717;
-    font-family: inherit; font-size: 15px; font-weight: 700;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-    transition: background 0.15s, transform 0.1s var(--ease-out);
-  }
-  .home-start-email-btn:active { transform: scale(0.98); }
-  .home-start-email-btn:disabled { opacity: 0.6; cursor: default; }
-  @media (hover: hover) {
-    .home-start-email-btn:hover:not(:disabled) { background: #eee; }
-  }
-
-  .home-start-back {
-    align-self: center; margin-top: 2px;
-    background: none; border: none; padding: 6px;
-    font-family: inherit; font-size: 13px; font-weight: 600;
-    color: rgba(255,255,255,0.55);
-    text-decoration: underline; text-underline-offset: 3px;
-    cursor: pointer;
-  }
-
-  /* ── Rodapé do bloco ── */
-  .home-start-privacy {
-    margin: 16px 2px 0;
-    font-size: 12px; line-height: 1.5;
-    color: rgba(255,255,255,0.4);
-    text-align: center;
-  }
-  .home-start-privacy button {
-    background: none; border: none; padding: 0;
-    font-family: inherit; font-size: 12px;
-    color: rgba(255,255,255,0.65);
-    text-decoration: underline; text-underline-offset: 2px;
-    cursor: pointer;
-  }
-
-  /* "Continuar a explorar" — a saída que o Claude não dá. Vidro escuro,
-     como o cartão de auth do desktop, para não competir com o branco do
-     botão de email logo acima. */
-  .home-start-explore {
-    width: 100%; min-height: 48px; margin-top: 14px;
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.14);
-    border-radius: var(--radius-md);
-    color: #fff;
-    font-family: inherit; font-size: 14px; font-weight: 600;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-    transition: background 0.15s;
-  }
-  .home-start-explore:active { background: rgba(255,255,255,0.1); }
-  @media (hover: hover) {
-    .home-start-explore:hover { background: rgba(255,255,255,0.09); }
-  }
+  .home-hero-start { margin: 32px auto 0; }
 
   .home-hero-grid { gap: 24px; width: 100%; }
   .how-it-works-grid { grid-template-columns: 1fr; }
@@ -705,7 +578,7 @@ body.light .home-auth-input {
     text-align: center;
     align-items: center;
   }
-  .home-hero-auth {
+  .home-hero-start {
     order: 2;
     max-width: none;
     margin: 0;
@@ -721,15 +594,8 @@ body.light .home-auth-input {
     line-height: 1.06;
     margin-bottom: 14px;
   }
-  .home-hero-sub {
-    font-size: 15px;
-    line-height: 1.6;
-    margin: 0;
-  }
   .home-hero-sub { display: none; }
   .home-hero-stats { display: none; }
-  /* Hide redundant subtitle inside auth widget on mobile */
-  .home-auth-subtitle { display: none; }
 
   /* Projects: horizontal scroll with snap */
   .home-section { padding: 40px 0 32px; }

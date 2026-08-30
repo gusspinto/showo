@@ -5,7 +5,6 @@ import { DocumentTextIcon as FileText } from '@solar-icons/react/bold/document-t
 import { CupStarIcon as Trophy } from '@solar-icons/react/bold/cup-star'
 import { ShareIcon as Share2 } from '@solar-icons/react/bold/share'
 import { EyeIcon as Eye } from '@solar-icons/react/bold/eye'
-import { LetterIcon as Mail } from '@solar-icons/react/bold/letter'
 import { RefreshCircleIcon as RefreshCw } from '@solar-icons/react/bold/refresh-circle'
 import { Navbar } from '../components/Navbar'
 import { supabase } from '../lib/supabase'
@@ -58,19 +57,6 @@ function Reveal({ children, className, id }) {
   )
 }
 
-function EyeIcon({ visible }) {
-  return visible ? (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
-    </svg>
-  ) : (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
-      <line x1="1" y1="1" x2="23" y2="23"/>
-    </svg>
-  )
-}
-
 function ProjectSkeleton() {
   return (
     <>
@@ -95,7 +81,6 @@ export default function Home() {
   const { user } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
   const [authLoading, setAuthLoading] = useState(false)
   const [authError, setAuthError] = useState('')
   // "Email não confirmado" precisa de mais do que uma frase — precisa de um
@@ -107,11 +92,8 @@ export default function Home() {
   const [projectsLoading, setProjectsLoading] = useState(true)
   const [projectCount, setProjectCount] = useState(null)
   const [animatedCount, setAnimatedCount] = useState(0)
-  const [emailFocused, setEmailFocused] = useState(false)
-  const [passFocused, setPassFocused] = useState(false)
-  // Herói mobile: email primeiro, como o Claude — só pede a password depois
-  // de sabermos que a conta já existe. Partilha email/password/authError com
-  // o formulário de desktop; só este passo é exclusivo do telemóvel.
+  // Email primeiro, como o Claude — só pede a password depois de sabermos
+  // que a conta já existe (handleContinueWithEmail).
   const [heroAuthStep, setHeroAuthStep] = useState('email')
   const [projectOfMonth, setProjectOfMonth] = useState(null)
 
@@ -286,140 +268,85 @@ export default function Home() {
                 projetos criados<br />por estudantes portugueses
               </span>
             </div>
+          </div>
 
-            {/* ── Arranque, telemóvel ──
-                Auth em primeiro plano, como o Claude — mas com uma saída que
-                o Claude não tem: "Continuar a explorar" fica sempre visível
-                para quem não quer entrar já. Email primeiro, password só
-                depois de sabermos que a conta existe (handleContinueWithEmail);
-                sem conta, segue para /register com o email já preenchido. */}
-            <div className="home-hero-start">
-              <GoogleButton />
+          {/* ── Arranque ── Mesmo bloco em qualquer ecrã, já não só no
+              telemóvel: auth em primeiro plano, como o Claude — mas com uma
+              saída que o Claude não tem, "Continuar a explorar", sempre
+              visível para quem não quer entrar já. Email primeiro, password
+              só depois de sabermos que a conta existe
+              (handleContinueWithEmail); sem conta, segue para /register com
+              o email já preenchido. Ocupa a coluna direita do grid onde
+              antes vivia um formulário à parte, só para desktop. */}
+          <div className="home-hero-start">
+            <GoogleButton />
 
-              <div className="home-start-divider"><span>ou</span></div>
+            <div className="home-start-divider"><span>ou</span></div>
 
-              {heroAuthStep === 'email' ? (
-                <form onSubmit={handleContinueWithEmail} className="home-start-form">
-                  <input
-                    type="email"
-                    className="home-start-input"
-                    placeholder="O teu email"
-                    value={email}
-                    onChange={e => setEmail(e.target.value)}
-                    required
-                    autoComplete="email"
-                  />
-                  {authError && <p className="home-start-error">{authError}</p>}
-                  <button type="submit" className="home-start-email-btn" disabled={authLoading}>
-                    {authLoading ? 'A verificar…' : 'Continuar com email'}
-                  </button>
-                </form>
-              ) : (
-                <form onSubmit={handleLogin} className="home-start-form">
-                  <p className="home-start-email-echo">{email}</p>
-                  <input
-                    type="password"
-                    className="home-start-input"
-                    placeholder="Palavra-passe"
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}
-                    required
-                    autoFocus
-                    autoComplete="current-password"
-                  />
-                  {authError && <p className="home-start-error">{authError}</p>}
-                  {notConfirmed && (
-                    <div className="home-start-confirm">
-                      <p className="home-start-error">Email não confirmado. Verifica a tua caixa de entrada.</p>
-                      <button
-                        type="button"
-                        className="home-start-retry"
-                        onClick={resendConfirmation}
-                        disabled={resendState === 'sending'}
-                      >
-                        <RefreshCw size={13} className={resendState === 'sending' ? 'home-start-retry-spin' : ''} />
-                        {resendState === 'sent' ? 'Reenviado' : 'Tentar outra vez'}
-                      </button>
-                    </div>
-                  )}
-                  <button type="submit" className="home-start-email-btn" disabled={authLoading}>
-                    {authLoading ? 'A entrar…' : 'Entrar'}
-                  </button>
+            {heroAuthStep === 'email' ? (
+              <form onSubmit={handleContinueWithEmail} className="home-start-form">
+                <input
+                  type="email"
+                  className="home-start-input"
+                  placeholder="O teu email"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  required
+                  autoComplete="email"
+                />
+                {authError && <p className="home-start-error">{authError}</p>}
+                <button type="submit" className="home-start-email-btn" disabled={authLoading}>
+                  {authLoading ? 'A verificar…' : 'Continuar com email'}
+                </button>
+              </form>
+            ) : (
+              <form onSubmit={handleLogin} className="home-start-form">
+                <p className="home-start-email-echo">{email}</p>
+                <input
+                  type="password"
+                  className="home-start-input"
+                  placeholder="Palavra-passe"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  required
+                  autoFocus
+                  autoComplete="current-password"
+                />
+                {authError && <p className="home-start-error">{authError}</p>}
+                {notConfirmed && (
+                  <div className="home-start-confirm">
+                    <p className="home-start-error">Email não confirmado. Verifica a tua caixa de entrada.</p>
+                    <button
+                      type="button"
+                      className="home-start-retry"
+                      onClick={resendConfirmation}
+                      disabled={resendState === 'sending'}
+                    >
+                      <RefreshCw size={13} className={resendState === 'sending' ? 'home-start-retry-spin' : ''} />
+                      {resendState === 'sent' ? 'Reenviado' : 'Tentar outra vez'}
+                    </button>
+                  </div>
+                )}
+                <button type="submit" className="home-start-email-btn" disabled={authLoading}>
+                  {authLoading ? 'A entrar…' : 'Entrar'}
+                </button>
+                <div className="home-start-form-links">
                   <button type="button" className="home-start-back" onClick={() => { setHeroAuthStep('email'); setAuthError(''); setNotConfirmed(false) }}>
                     Usar outro email
                   </button>
-                </form>
-              )}
-
-              <p className="home-start-privacy">
-                Ao continuares, aceitas a{' '}
-                <button type="button" onClick={() => navigate('/privacidade')}>Política de Privacidade</button>.
-              </p>
-
-              <button className="home-start-explore" onClick={() => navigate('/explorar')}>
-                Continuar a explorar
-              </button>
-            </div>
-          </div>
-
-          {/* Right — auth widget */}
-          <div className="home-hero-auth">
-            <div className="home-auth-title">Entra na Showo</div>
-            <p className="home-auth-subtitle">Cria a tua conta ou faz login para começar.</p>
-
-            <GoogleButton />
-
-            <div className="home-auth-divider"><span>ou</span></div>
-
-            <form onSubmit={handleLogin} className="home-auth-form">
-              <div className={`home-auth-field${emailFocused ? ' focused' : ''}`}>
-                <Mail size={16} color="rgba(255,255,255,0.35)" />
-                <input
-                  type="email" className="home-auth-input" placeholder="Email"
-                  value={email} onChange={e => setEmail(e.target.value)} required
-                  onFocus={() => setEmailFocused(true)} onBlur={() => setEmailFocused(false)}
-                />
-              </div>
-              <div className={`home-auth-field${passFocused ? ' focused' : ''}`}>
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  className="home-auth-input" placeholder="Palavra-passe"
-                  value={password} onChange={e => setPassword(e.target.value)} required
-                  onFocus={() => setPassFocused(true)} onBlur={() => setPassFocused(false)}
-                />
-                <button
-                  type="button" onClick={() => setShowPassword(s => !s)} tabIndex={-1}
-                  className={`home-auth-eye${showPassword ? ' active' : ''}`}
-                >
-                  <EyeIcon visible={showPassword} />
-                </button>
-              </div>
-
-              {authError && <p className="home-auth-error">{authError}</p>}
-              {notConfirmed && (
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, textAlign: 'center' }}>
-                  <p className="home-auth-error">Email não confirmado. Verifica a tua caixa de entrada.</p>
-                  <button
-                    type="button"
-                    onClick={resendConfirmation}
-                    disabled={resendState === 'sending'}
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', padding: 2, fontSize: 12.5, fontWeight: 600, color: 'rgba(255,255,255,0.6)', cursor: 'pointer', fontFamily: 'inherit' }}
-                  >
-                    <RefreshCw size={13} style={resendState === 'sending' ? { animation: 'home-start-spin 0.8s linear infinite' } : undefined} />
-                    {resendState === 'sent' ? 'Reenviado' : 'Tentar outra vez'}
-                  </button>
+                  <Link to="/recuperar-password" className="home-start-back">Esqueceste a password?</Link>
                 </div>
-              )}
+              </form>
+            )}
 
-              <button type="submit" className="home-auth-submit" disabled={authLoading}>
-                {authLoading ? 'A entrar...' : 'Entrar'}
-              </button>
-            </form>
+            <p className="home-start-privacy">
+              Ao continuares, aceitas a{' '}
+              <button type="button" onClick={() => navigate('/privacidade')}>Política de Privacidade</button>.
+            </p>
 
-            <div className="home-auth-links">
-              <Link to="/novo">Criar conta</Link>
-              <Link to="/recuperar-password">Esqueceste a password?</Link>
-            </div>
+            <button className="home-start-explore" onClick={() => navigate('/explorar')}>
+              Continuar a explorar
+            </button>
           </div>
         </div>
       </div>
