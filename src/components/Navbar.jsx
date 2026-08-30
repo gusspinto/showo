@@ -61,7 +61,7 @@ import './Navbar.css'
 const C = {
   bg: 'var(--color-sidebar-bg)',
   border: 'var(--color-border)',
-  blue: 'var(--color-primary)',
+  blue: 'var(--color-text)',
   muted: 'var(--color-text-secondary)',
   text: 'var(--color-text)',
 }
@@ -129,7 +129,7 @@ function getNotifColor(type) {
     case 'NEW_CANDIDATURA':
     case 'TASK_COMPLETED':
     case 'PROJECT_RESUBMITTED':
-      return 'var(--color-primary)'
+      return 'var(--color-text)'
     case 'TEACHER_FEEDBACK':
     case 'TASK_ASSIGNED':
       return 'var(--color-success)'
@@ -392,11 +392,11 @@ function InviteInbox({ userId, sidebar = false, collapsed = false }) {
         onClick={() => setOpen(o => !o)}
         style={{
           position: 'relative',
-          background: open ? 'rgba(27,120,247,0.13)' : 'transparent',
+          background: open ? 'color-mix(in srgb, var(--color-text) 13%, transparent)' : 'transparent',
           border: 'none',
           borderRadius: 8, width: 44, height: 44,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          cursor: 'pointer', color: open ? 'var(--color-primary)' : 'var(--color-text-secondary)',
+          cursor: 'pointer', color: open ? 'var(--color-text)' : 'var(--color-text-secondary)',
           transition: 'background 0.13s, color 0.13s', flexShrink: 0,
         }}
         onMouseEnter={e => { if (!open) { e.currentTarget.style.background = 'var(--color-surface-hover)'; e.currentTarget.style.color = 'var(--color-text)' } }}
@@ -446,7 +446,7 @@ function InviteInbox({ userId, sidebar = false, collapsed = false }) {
                   const isActing = !!acting[invite.id]
                   return (
                     <div key={invite.id} style={{
-                      background: 'rgba(27,120,247,0.05)', border: '1px solid rgba(27,120,247,0.15)',
+                      background: 'color-mix(in srgb, var(--color-text) 5%, transparent)', border: '1px solid color-mix(in srgb, var(--color-text) 15%, transparent)',
                       borderRadius: 10, padding: '12px 14px', marginBottom: 6,
                     }}>
                       <p style={{ margin: '0 0 2px', fontSize: 14, fontWeight: 700, color: C.text }}>{invite.projectName}</p>
@@ -454,7 +454,7 @@ function InviteInbox({ userId, sidebar = false, collapsed = false }) {
                       <div style={{ display: 'flex', gap: 6 }}>
                         <button
                           onClick={() => respond(invite, 'accepted')} disabled={isActing}
-                          style={{ flex: 1, padding: '7px 0', background: 'var(--color-primary)', border: 'none', borderRadius: 7, color: '#fff', fontSize: 12, fontWeight: 700, cursor: isActing ? 'default' : 'pointer', fontFamily: 'inherit' }}
+                          style={{ flex: 1, padding: '7px 0', background: 'var(--color-text)', border: 'none', borderRadius: 7, color: '#fff', fontSize: 12, fontWeight: 700, cursor: isActing ? 'default' : 'pointer', fontFamily: 'inherit' }}
                         >{acting[invite.id] === 'accepted' ? '...' : <><Check size={12} style={{ verticalAlign: 'middle', marginRight: 3 }} />Aceitar</>}</button>
                         <button
                           onClick={() => respond(invite, 'declined')} disabled={isActing}
@@ -546,9 +546,9 @@ function InviteInbox({ userId, sidebar = false, collapsed = false }) {
                     }}
                     style={{
                       borderRadius: 10, padding: '10px 12px', marginBottom: 4,
-                      background: n.anyUnread ? (roleColor ? `${roleColor}0d` : 'rgba(27,120,247,0.05)') : 'transparent',
-                      border: `1px solid ${n.anyUnread ? (roleColor ? `${roleColor}20` : 'rgba(27,120,247,0.12)') : 'transparent'}`,
-                      borderLeft: n.anyUnread ? `3px solid ${roleColor || 'rgba(27,120,247,0.5)'}` : '3px solid transparent',
+                      background: n.anyUnread ? (roleColor ? `${roleColor}0d` : 'color-mix(in srgb, var(--color-text) 5%, transparent)') : 'transparent',
+                      border: `1px solid ${n.anyUnread ? (roleColor ? `${roleColor}20` : 'color-mix(in srgb, var(--color-text) 12%, transparent)') : 'transparent'}`,
+                      borderLeft: n.anyUnread ? `3px solid ${roleColor || 'color-mix(in srgb, var(--color-text) 50%, transparent)'}` : '3px solid transparent',
                       cursor: n.project_slug ? 'pointer' : 'default',
                       display: 'flex', alignItems: 'flex-start', gap: 10,
                       transition: 'background 0.12s',
@@ -610,7 +610,7 @@ function AvatarCircle({ avatarUrl, initial, size = 28, fontSize = 13 }) {
   ) : (
     <div style={{
       width: size, height: size, borderRadius: '50%',
-      background: 'var(--color-primary)',
+      background: 'var(--color-text)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       fontSize, fontWeight: 700, color: '#fff', flexShrink: 0,
       userSelect: 'none',
@@ -666,7 +666,7 @@ function UserChip({ user, profile, onClick, onProfile, onSettings, onSignOut, on
                 <button
                   onClick={() => { onCreateProject(); setOpen(false) }}
                   style={{ ...dropItemStyle, color: C.blue }}
-                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(27,120,247,0.08)'}
+                  onMouseEnter={e => e.currentTarget.style.background = 'color-mix(in srgb, var(--color-text) 8%, transparent)'}
                   onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                 >
                   <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -890,7 +890,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   </button>
                   <button className="mobile-drawer-btn" onClick={() => { navigate('/mensagens'); setOpen(false) }}>
                     <MessageSquare size={16} /> Mensagens
-                    {unreadMsgs > 0 && <span style={{ marginLeft: 'auto', background: 'var(--color-primary)', color: '#fff', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{unreadMsgs > 9 ? '9+' : unreadMsgs}</span>}
+                    {unreadMsgs > 0 && <span style={{ marginLeft: 'auto', background: 'var(--color-text)', color: 'var(--color-bg)', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{unreadMsgs > 9 ? '9+' : unreadMsgs}</span>}
                   </button>
                 </>
               ) : (
@@ -903,7 +903,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   )}
                   <button className="mobile-drawer-btn" onClick={() => { navigate('/mensagens'); setOpen(false) }}>
                     <MessageSquare size={16} /> Mensagens
-                    {unreadMsgs > 0 && <span style={{ marginLeft: 'auto', background: 'var(--color-primary)', color: '#fff', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{unreadMsgs > 9 ? '9+' : unreadMsgs}</span>}
+                    {unreadMsgs > 0 && <span style={{ marginLeft: 'auto', background: 'var(--color-text)', color: 'var(--color-bg)', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{unreadMsgs > 9 ? '9+' : unreadMsgs}</span>}
                   </button>
                 </>
               )}
@@ -914,7 +914,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               {/* Project management extras */}
               {extras?.type === 'project' && (
                 <>
-                  <span className="mob-drawer-label" style={{ color: 'var(--color-primary)' }}>Gerir projeto</span>
+                  <span className="mob-drawer-label" style={{ color: 'var(--color-text)' }}>Gerir projeto</span>
                   {extras.showBack && (
                     <button className="mobile-drawer-btn" onClick={() => { navigate(`/projeto/${extras.slug}`); setOpen(false) }}>
                       <ArrowLeft size={16} /> Ver projeto
@@ -946,7 +946,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                     </button>
                   )}
                   {extras.onTogglePublicView && (
-                    <button className="mobile-drawer-btn" style={{ color: extras.viewAsPublic ? 'var(--color-primary)' : undefined }}
+                    <button className="mobile-drawer-btn" style={{ color: extras.viewAsPublic ? 'var(--color-text)' : undefined }}
                       onClick={() => { extras.onTogglePublicView(); setOpen(false) }}>
                       <Globe size={16} /> {extras.viewAsPublic ? 'Sair da preview' : 'Preview visitante'}
                     </button>
@@ -983,7 +983,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               >Entrar</button>
               <button
                 onClick={() => { navigate('/register'); setOpen(false) }}
-                style={{ flex: 1, padding: '12px 0', background: 'var(--color-primary)', border: 'none', borderRadius: 10, color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 16px rgba(27,120,247,0.3)' }}
+                style={{ flex: 1, padding: '12px 0', background: 'var(--color-text)', border: 'none', borderRadius: 10, color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 16px color-mix(in srgb, var(--color-text) 30%, transparent)' }}
               >Criar conta</button>
             </div>
           )}
@@ -1010,7 +1010,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
             className="mob-drawer-trigger"
             onClick={() => setMenuOpen(o => !o)}
             aria-label="Abrir menu"
-            style={{ color: menuOpen ? 'var(--color-primary)' : undefined, borderColor: menuOpen ? 'var(--color-primary)' : undefined }}
+            style={{ color: menuOpen ? 'var(--color-text)' : undefined, borderColor: menuOpen ? 'var(--color-text)' : undefined }}
           >
             <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <rect x="3" y="3" width="18" height="18" rx="2" />
@@ -1086,7 +1086,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   data-tour="preview"
                   onClick={() => setProjMenuOpen(o => !o)}
                   aria-label="Gerir projeto"
-                  style={{ background: projMenuOpen ? '#1564d4' : undefined }}
+                  style={{ background: projMenuOpen ? 'color-mix(in srgb, var(--color-text) 85%, transparent)' : undefined }}
                 >
                   <Paintbrush size={18} strokeWidth={2} />
                 </button>
@@ -1146,7 +1146,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                     padding: '8px 16px', color: '#fff', fontSize: 14, fontWeight: 600,
                     cursor: 'pointer', fontFamily: 'inherit', transition: 'background 0.15s', whiteSpace: 'nowrap',
                   }}
-                  onMouseEnter={e => e.target.style.background = '#1564d4'}
+                  onMouseEnter={e => e.target.style.background = 'color-mix(in srgb, var(--color-text) 85%, transparent)'}
                   onMouseLeave={e => e.target.style.background = C.blue}
                 >
                   Criar conta
@@ -1162,12 +1162,12 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               onClick={() => navigate('/novo')}
               aria-label="Criar projeto"
               style={{
-                background: 'var(--color-primary)',
+                background: 'var(--color-text)',
                 border: 'none',
                 borderRadius: 8, width: 38, height: 38,
                 flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                 cursor: 'pointer', padding: 0, flexShrink: 0,
-                boxShadow: '0 4px 12px rgba(27,120,247,0.35)',
+                boxShadow: '0 4px 12px color-mix(in srgb, var(--color-text) 35%, transparent)',
               }}
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -1182,7 +1182,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               className="ham-btn" onClick={() => setOpen(o => !o)} aria-label="Menu"
               style={{
                 background: 'transparent',
-                border: `1px solid ${open ? 'var(--color-primary)' : C.border}`,
+                border: `1px solid ${open ? 'var(--color-text)' : C.border}`,
                 borderRadius: 8, width: 38, height: 38,
                 flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                 gap: 5, cursor: 'pointer', padding: 0, transition: 'border-color 0.2s', flexShrink: 0,
@@ -1247,7 +1247,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               </button>
             )}
             {extras.onTogglePublicView && (
-              <button className="mob-nav-btn" style={{ color: extras.viewAsPublic ? 'var(--color-primary)' : undefined }}
+              <button className="mob-nav-btn" style={{ color: extras.viewAsPublic ? 'var(--color-text)' : undefined }}
                 onClick={() => { extras.onTogglePublicView(); setProjMenuOpen(false) }}>
                 <Globe size={18} /> {extras.viewAsPublic ? 'Sair da preview' : 'Preview visitante'}
               </button>
@@ -1283,7 +1283,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
         )}
         {isSchoolAccount && showLabels && (
           <div style={{ padding: '0 16px 8px' }}>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 600, color: 'var(--color-primary)', background: 'color-mix(in srgb, var(--color-primary) 12%, transparent)', borderRadius: 6, padding: '3px 8px', letterSpacing: '0.02em' }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 600, color: 'var(--color-text)', background: 'color-mix(in srgb, var(--color-text) 12%, transparent)', borderRadius: 6, padding: '3px 8px', letterSpacing: '0.02em' }}>
               <GraduationCap size={12} strokeWidth={2.5} /> Modo Escola
             </span>
           </div>
@@ -1316,7 +1316,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                 style={{ position: 'relative' }}>
                 <MessageSquare size={16} />{!collapsed && showLabels && <span>Mensagens</span>}
                 {!collapsed && showLabels && unreadMsgs > 0 && (
-                  <span style={{ marginLeft: 'auto', background: 'var(--color-primary)', color: '#fff', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>
+                  <span style={{ marginLeft: 'auto', background: 'var(--color-text)', color: 'var(--color-bg)', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>
                     {unreadMsgs > 9 ? '9+' : unreadMsgs}
                   </span>
                 )}
@@ -1337,7 +1337,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                 style={{ position: 'relative' }}>
                 <MessageSquare size={16} />{!collapsed && showLabels && <span>Mensagens</span>}
                 {!collapsed && showLabels && unreadMsgs > 0 && (
-                  <span style={{ marginLeft: 'auto', background: 'var(--color-primary)', color: '#fff', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>
+                  <span style={{ marginLeft: 'auto', background: 'var(--color-text)', color: 'var(--color-bg)', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>
                     {unreadMsgs > 9 ? '9+' : unreadMsgs}
                   </span>
                 )}
@@ -1377,7 +1377,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                     style={{ position: 'relative' }}>
                     <MessageSquare size={16} />{!collapsed && showLabels && <span>Mensagens</span>}
                     {!collapsed && showLabels && unreadMsgs > 0 && (
-                      <span style={{ marginLeft: 'auto', background: 'var(--color-primary)', color: '#fff', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>
+                      <span style={{ marginLeft: 'auto', background: 'var(--color-text)', color: 'var(--color-bg)', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>
                         {unreadMsgs > 9 ? '9+' : unreadMsgs}
                       </span>
                     )}
@@ -1670,7 +1670,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   </button>
                   <button className={`mob-nav-btn${isActive('/mensagens') ? ' active' : ''}`} onClick={() => { navigate('/mensagens'); setMenuOpen(false) }}>
                     Mensagens
-                    {unreadMsgs > 0 && <span style={{ marginLeft: 'auto', background: 'var(--color-primary)', color: '#fff', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{unreadMsgs > 9 ? '9+' : unreadMsgs}</span>}
+                    {unreadMsgs > 0 && <span style={{ marginLeft: 'auto', background: 'var(--color-text)', color: 'var(--color-bg)', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{unreadMsgs > 9 ? '9+' : unreadMsgs}</span>}
                   </button>
                 </>
               ) : isTeacher ? (
@@ -1685,7 +1685,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   </button>
                   <button className={`mob-nav-btn${isActive('/mensagens') ? ' active' : ''}`} onClick={() => { navigate('/mensagens'); setMenuOpen(false) }}>
                     Mensagens
-                    {unreadMsgs > 0 && <span style={{ marginLeft: 'auto', background: 'var(--color-primary)', color: '#fff', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{unreadMsgs > 9 ? '9+' : unreadMsgs}</span>}
+                    {unreadMsgs > 0 && <span style={{ marginLeft: 'auto', background: 'var(--color-text)', color: 'var(--color-bg)', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{unreadMsgs > 9 ? '9+' : unreadMsgs}</span>}
                   </button>
                   <button className={`mob-nav-btn${isActive('/explorar') ? ' active' : ''}`} onClick={() => { navigate('/explorar'); setMenuOpen(false) }}>
                     Explorar
@@ -1724,7 +1724,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                       <span className="mob-nav-section-label">Comunidade</span>
                       <button className={`mob-nav-btn${isActive('/mensagens') ? ' active' : ''}`} onClick={() => { navigate('/mensagens'); setMenuOpen(false) }}>
                         Mensagens
-                        {unreadMsgs > 0 && <span style={{ marginLeft: 'auto', background: 'var(--color-primary)', color: '#fff', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{unreadMsgs > 9 ? '9+' : unreadMsgs}</span>}
+                        {unreadMsgs > 0 && <span style={{ marginLeft: 'auto', background: 'var(--color-text)', color: 'var(--color-bg)', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{unreadMsgs > 9 ? '9+' : unreadMsgs}</span>}
                       </button>
                       <button className={`mob-nav-btn${isActive('/pricing') ? ' active' : ''}`} onClick={() => { navigate('/pricing'); setMenuOpen(false) }}>
                         Planos

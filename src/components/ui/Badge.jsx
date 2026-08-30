@@ -1,6 +1,6 @@
 const presets = {
   default:  { bg: 'var(--color-badge-bg)', color: 'var(--color-badge-text)' },
-  primary:  { bg: 'var(--color-primary-subtle)', color: 'var(--color-primary)' },
+  primary:  { bg: 'var(--color-surface-hover)', color: 'var(--color-text)' },
   success:  { bg: 'var(--color-success-subtle)', color: 'var(--color-success)' },
   warning:  { bg: 'var(--color-warning-subtle)', color: 'var(--color-warning)' },
   error:    { bg: 'var(--color-error-subtle)', color: 'var(--color-error)' },

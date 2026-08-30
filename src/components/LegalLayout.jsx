@@ -48,7 +48,7 @@ export default function LegalLayout({ title, updated, intro, children }) {
         .legal-body ul { margin: 0 0 14px; padding-left: 20px; display: flex; flex-direction: column; gap: 7px; }
         .legal-body li { font-size: 15px; line-height: 1.6; color: var(--color-text-secondary); }
         .legal-body li strong, .legal-body p strong { color: var(--color-text); font-weight: 600; }
-        .legal-body a { color: var(--color-primary); }
+        .legal-body a { color: var(--color-text); text-decoration: underline; text-underline-offset: 2px; }
       `}</style>
     </div>
   )

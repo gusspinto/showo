@@ -5,7 +5,7 @@ import { InfoCircleIcon as Info } from '@solar-icons/react/bold/info-circle'
 
 const BORDER = {
   error: '#f43f5e',
-  info: 'var(--color-primary)',
+  info: 'var(--color-text)',
   success: 'var(--color-success)',
 }
 
@@ -18,7 +18,7 @@ function ToastIcon({ type, color }) {
 
 const ICON_BG = {
   error: 'rgba(244,63,94,0.15)',
-  info: 'var(--color-primary-subtle)',
+  info: 'var(--color-surface-hover)',
   success: 'var(--color-success-subtle)',
 }
 

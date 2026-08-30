@@ -17,7 +17,7 @@ const C = {
   bg:     'rgba(6,12,24,0.95)',
   card:   'var(--color-surface)',
   border: 'var(--color-border)',
-  blue:   'var(--color-primary)',
+  blue:   'var(--color-text)',
   muted:  'var(--color-text-secondary)',
   text:   'var(--color-text)',
 }
@@ -195,7 +195,7 @@ export default function RestReminder() {
             onClick={handleRest}
             style={{
               background: C.blue, border: 'none', borderRadius: 10,
-              padding: '13px', color: '#fff', fontSize: 15, fontWeight: 600,
+              padding: '13px', color: 'var(--color-bg)', fontSize: 15, fontWeight: 600,
               cursor: 'pointer', fontFamily: 'inherit', transition: 'opacity 0.15s',
             }}
             onMouseEnter={e => e.currentTarget.style.opacity = '0.88'}
@@ -214,7 +214,7 @@ export default function RestReminder() {
                 color: C.muted, fontSize: 14, fontWeight: 500,
                 cursor: 'pointer', fontFamily: 'inherit', transition: 'color 0.15s, border-color 0.15s',
               }}
-              onMouseEnter={e => { e.currentTarget.style.color = C.text; e.currentTarget.style.borderColor = '#2a4070' }}
+              onMouseEnter={e => { e.currentTarget.style.color = C.text; e.currentTarget.style.borderColor = 'var(--color-border-hover)' }}
               onMouseLeave={e => { e.currentTarget.style.color = C.muted; e.currentTarget.style.borderColor = C.border }}
             >
               Preciso de mais um bocado
