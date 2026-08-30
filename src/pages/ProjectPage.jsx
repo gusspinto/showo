@@ -78,6 +78,20 @@ import { FlagIcon as Swords } from '@solar-icons/react/bold/flag'
 import { PaintRollerIcon as Paintbrush } from '@solar-icons/react/bold/paint-roller'
 import { WindowFrameIcon as LayoutTemplate } from '@solar-icons/react/bold/window-frame'
 
+// Colunas que quem não tem sessão tem grant para ler (065_security_hardening
+// + 089_anon_project_select_columns) — sem notas do professor. Autenticado
+// continua a usar select('*'), este só entra em jogo para visitantes.
+const ANON_PROJECT_COLUMNS = [
+  'id', 'created_at', 'user_id', 'name', 'area', 'goal', 'problem', 'solution',
+  'target_audience', 'features', 'technologies', 'challenges', 'results', 'learnings',
+  'cover_url', 'slug', 'ai_tagline', 'ai_description', 'ai_highlights',
+  'school_year', 'course', 'school', 'creator_name', 'is_pap', 'pap_supervisor', 'pap_date',
+  'project_type', 'score', 'linkedin_url', 'github_url', 'portfolio_url',
+  'views', 'defense_date', 'preview_style', 'tags', 'guide_config', 'preview_blocks',
+  'likes_count', 'interest_count', 'review_status', 'review_status_updated_at',
+  'visibility', 'edit_token', 'notified_milestones',
+].join(', ')
+
 const colors = {
   bg: 'var(--color-bg)',
   bgAlt: 'var(--color-bg-alt)',
@@ -4595,9 +4609,15 @@ export default function ProjectPage() {
   // Effect 1: fetch project + public data — runs only when slug changes (never re-runs due to auth)
   useEffect(() => {
     async function fetchProject() {
+      // `select('*')` exige grant em TODAS as colunas da tabela — quem não
+      // tem sessão só tem grant numa lista explícita (065_security_hardening,
+      // esconde notas do professor), por isso `*` falha por inteiro para
+      // anon. Usa a lista explícita só quando não há sessão; autenticado
+      // mantém `*` como sempre, sem mudar nada do que já funcionava.
+      const { data: { user: currentUser } } = await supabase.auth.getUser()
       const { data, error } = await supabase
         .from('projects')
-        .select('*')
+        .select(currentUser ? '*' : ANON_PROJECT_COLUMNS)
         .eq('slug', slug)
         .single()
 
@@ -4608,7 +4628,6 @@ export default function ProjectPage() {
 
       // Visibility gate: private projects are owner-only
       if (data.visibility === 'private') {
-        const { data: { user: currentUser } } = await supabase.auth.getUser()
         const isOwner = currentUser?.id === data.user_id
         const hasToken = data.edit_token && localStorage.getItem(`edit_token_${data.slug}`) === data.edit_token
         if (!isOwner && !hasToken) {
