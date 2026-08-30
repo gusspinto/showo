@@ -237,7 +237,6 @@ export default function Home() {
 
       {/* ══ Hero ══ */}
       <div className="home-hero">
-        <div className="home-hero-aurora" aria-hidden="true" />
 
         <div className="home-hero-grid">
           {/* Left — copy */}

@@ -20,25 +20,19 @@
 
 .home-content { display: flex; flex-direction: column; }
 
-/* ══ HERO ══ */
+/* ══ HERO ══
+   Plano, no preto real da app (#000000, o mesmo de var(--color-sidebar-bg)
+   em tema escuro) — como já era só no telemóvel. A gradiente azul e o brilho
+   por baixo (aurora) eram uma cor bonita inventada só para aqui, sem ligação
+   ao resto da app; o herói é sempre escuro, mesmo em modo claro, mas passa a
+   usar o preto de sempre em vez de uma paleta à parte. */
 .home-hero {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(115deg, #000 0%, #050b1c 40%, #0e2249 85%, #143169 100%);
-  border-bottom: 1px solid #1e3050;
+  background: #000000;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
   padding: 120px 40px 80px;
   color: #fff;
-}
-
-.home-hero-aurora {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background:
-    radial-gradient(46% 42% at 14% 10%, rgba(27,120,247,0.30) 0%, transparent 70%),
-    radial-gradient(42% 38% at 88% 28%, rgba(13,58,150,0.22) 0%, transparent 70%),
-    radial-gradient(38% 36% at 46% 92%, rgba(94,147,255,0.16) 0%, transparent 70%);
 }
 
 .home-hero-grid {
@@ -540,30 +534,14 @@
 }
 
 @media (max-width: 600px) {
-  /* ── Herói ──
-     A gradiente de sempre (preto → azul-marinho às três camadas) não é a
-     paleta da Showo — é uma cor bonita inventada só para aqui, sem ligação
-     nenhuma ao resto da app, que é quase-preto (#080808) com azul de marca.
-     Fica plana, no preto real da app, escrito à mão como o resto do herói
-     já faz (o herói é sempre escuro, mesmo em modo claro — nunca usa os
-     tokens de tema, por isso as cores aqui são sempre literais, não var()). */
-  /* Fora a mancha azul — criava um salto visível exatamente onde a barra
-     do topo encontra o herói. A barra usa var(--color-sidebar-bg), que no
-     tema escuro é #000000 — preto puro, mais escuro que o #080808 do resto
-     da app. É essa cor que o herói passa a usar, para a transição entre os
-     dois ser zero, não quase-zero. */
+  /* Herói ocupa o ecrã todo aqui — no desktop já não precisa disto,
+     background/border já são os mesmos em qualquer largura. */
   .home-hero {
-    background: #000000;
-    border-bottom-color: rgba(255,255,255,0.08);
     min-height: calc(100dvh - 62px);
     display: flex;
     align-items: center;
     padding: 24px 24px 48px;
   }
-
-  /* A aurora eram três radial-gradients por cima da gradiente. Sem gradiente
-     por baixo, fazia ainda menos sentido continuar lá. */
-  .home-hero-aurora { display: none; }
 
   .home-hero-start { margin: 32px auto 0; }
 

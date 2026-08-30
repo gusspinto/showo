@@ -155,7 +155,7 @@ export default function Login() {
         .auth-side {
           position: relative; overflow: hidden;
           flex: 0 0 42%; display: flex; align-items: center; justify-content: flex-start;
-          padding: 0 0 0 64px; background: linear-gradient(115deg, #000 0%, #050b1c 40%, #0e2249 85%, #143169 100%);
+          padding: 0 0 0 64px; background: #000000;
           border-right: 1px solid var(--color-border);
         }
         .auth-side-content {
