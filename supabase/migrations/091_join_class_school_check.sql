@@ -1,4 +1,4 @@
--- Restrict join_class so students can only join classes from their own school
+-- 091 — Restrict join_class so students can only join classes from their own school
 DROP FUNCTION IF EXISTS public.join_class(text);
 
 CREATE FUNCTION public.join_class(p_code text)
