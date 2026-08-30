@@ -845,9 +845,9 @@ export default function Settings() {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                       <div style={{
                         display: 'flex', alignItems: 'center', gap: 10,
-                        background: 'rgba(43,126,245,0.07)', border: '1px solid rgba(43,126,245,0.25)',
+                        background: 'var(--color-surface-hover)', border: '1px solid var(--color-border)',
                         borderRadius: 10, padding: '12px 14px',
-                        fontSize: 13, color: 'var(--color-primary)', fontWeight: 600,
+                        fontSize: 13, color: 'var(--color-text)', fontWeight: 600,
                       }}>
                         <GraduationCap size={16} />
                         Esta é uma conta escolar. O teu plano é gerido pela instituição.
