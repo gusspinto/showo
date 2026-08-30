@@ -738,7 +738,7 @@ export default function Settings() {
                     ].map(v => (
                       <button key={v.value} type="button" onClick={() => setProfileVisibility(v.value)}
                         className={`settings-visibility-option${profileVisibility === v.value ? ' active' : ''}`}>
-                        <div className="settings-visibility-icon" style={{ color: profileVisibility === v.value ? 'var(--color-accent)' : undefined }}>{v.icon}</div>
+                        <div className="settings-visibility-icon" style={{ color: profileVisibility === v.value ? 'var(--color-text)' : undefined }}>{v.icon}</div>
                         <div>
                           <div className="text-base font-semibold">{v.label}</div>
                           <div className="text-sm text-muted">{v.desc}</div>

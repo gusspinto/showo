@@ -41,8 +41,8 @@
   color: var(--color-text);
 }
 .settings-sidebar-item.active {
-  background: var(--color-accent);
-  color: #fff;
+  background: var(--color-text);
+  color: var(--color-bg);
   font-weight: 600;
 }
 .settings-main {
@@ -361,9 +361,9 @@
   transition: all 0.15s;
 }
 .settings-size-chip.active {
-  border-color: var(--color-accent);
-  background: rgba(26,138,122,0.08);
-  color: var(--color-accent);
+  border-color: var(--color-text);
+  background: color-mix(in srgb, var(--color-text) 8%, transparent);
+  color: var(--color-text);
 }
 
 /* ── Toggle switch ── */
@@ -710,13 +710,13 @@
   transition: border-color 0.2s, background 0.2s;
 }
 .settings-visibility-option:hover {
-  border-color: var(--color-accent);
+  border-color: var(--color-border-hover);
   background: var(--color-hover);
 }
 .settings-visibility-option.active {
-  border-color: var(--color-accent);
-  background: rgba(99,102,241,0.12);
-  box-shadow: 0 0 0 1px var(--color-accent);
+  border-color: var(--color-text);
+  background: color-mix(in srgb, var(--color-text) 6%, transparent);
+  box-shadow: 0 0 0 1px var(--color-text);
 }
 .settings-visibility-icon {
   margin-top: 2px;

@@ -129,7 +129,7 @@ function getNotifColor(type) {
     case 'NEW_CANDIDATURA':
     case 'TASK_COMPLETED':
     case 'PROJECT_RESUBMITTED':
-      return 'var(--color-text)'
+      return 'var(--color-primary)'
     case 'TEACHER_FEEDBACK':
     case 'TASK_ASSIGNED':
       return 'var(--color-success)'
@@ -546,8 +546,8 @@ function InviteInbox({ userId, sidebar = false, collapsed = false }) {
                     }}
                     style={{
                       borderRadius: 10, padding: '10px 12px', marginBottom: 4,
-                      background: n.anyUnread ? (roleColor ? `${roleColor}0d` : 'color-mix(in srgb, var(--color-text) 5%, transparent)') : 'transparent',
-                      border: `1px solid ${n.anyUnread ? (roleColor ? `${roleColor}20` : 'color-mix(in srgb, var(--color-text) 12%, transparent)') : 'transparent'}`,
+                      background: n.anyUnread ? `color-mix(in srgb, ${roleColor || 'var(--color-text)'} 5%, transparent)` : 'transparent',
+                      border: `1px solid ${n.anyUnread ? `color-mix(in srgb, ${roleColor || 'var(--color-text)'} 12%, transparent)` : 'transparent'}`,
                       borderLeft: n.anyUnread ? `3px solid ${roleColor || 'color-mix(in srgb, var(--color-text) 50%, transparent)'}` : '3px solid transparent',
                       cursor: n.project_slug ? 'pointer' : 'default',
                       display: 'flex', alignItems: 'flex-start', gap: 10,
