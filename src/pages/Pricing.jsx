@@ -125,9 +125,14 @@ const CAREER_FEATURES = [
 
 export default function Pricing() {
   const navigate = useNavigate()
-  const { user, planId } = useAuth()
+  const { user, planId, profile } = useAuth()
   const [loading, setLoading] = useState(null)
   const [error, setError] = useState('')
+
+  if (user && profile?.role === 'professor') {
+    navigate('/dashboard', { replace: true })
+    return null
+  }
 
   async function handleCta(plan) {
     if (!user) { navigate('/register'); return }

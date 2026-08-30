@@ -64,7 +64,6 @@ const Parceiros    = lazy(() => import('./pages/Parceiros'))
 const Turmas       = lazy(() => import('./pages/Turmas'))
 const Certificate  = lazy(() => import('./pages/Certificate'))
 const Vagas        = lazy(() => import('./pages/Vagas'))
-const Estagio       = lazy(() => import('./pages/Estagio'))
 const Mensagens    = lazy(() => import('./pages/Mensagens'))
 const Candidatos   = lazy(() => import('./pages/Candidatos'))
 const Pipeline     = lazy(() => import('./pages/Pipeline'))
@@ -477,8 +476,6 @@ export default function App() {
               <Route path="/parceiros"     element={<Parceiros />}   />
               <Route path="/certificado/:slug"  element={<Certificate />}  />
               <Route path="/vagas"              element={<Vagas />}        />
-              <Route path="/estagio"            element={<Estagio />}      />
-              <Route path="/carreira"           element={<Navigate to="/estagio" replace />} />
               <Route path="/mensagens"          element={<Mensagens />}    />
               <Route path="/candidatos"         element={<Candidatos />}   />
               <Route path="/pipeline"           element={<Pipeline />}     />

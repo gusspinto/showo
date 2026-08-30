@@ -1385,9 +1385,6 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                 </>
               )}
 
-              <button className={`sb-item${isActive('/estagio') ? ' active' : ''}`} onClick={() => navigate('/estagio')} title="Estágio">
-                <Briefcase size={16} />{!collapsed && showLabels && <><span>Estágio</span><span className="sb-soon">Em breve</span></>}
-              </button>
 
               <button className={`sb-item${isActive('/pricing') ? ' active' : ''}`} onClick={() => navigate('/pricing')} title="Planos">
                 <Sparkles size={16} />{!collapsed && showLabels && <span>Planos</span>}
@@ -1728,10 +1725,6 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                       <button className={`mob-nav-btn${isActive('/mensagens') ? ' active' : ''}`} onClick={() => { navigate('/mensagens'); setMenuOpen(false) }}>
                         Mensagens
                         {unreadMsgs > 0 && <span style={{ marginLeft: 'auto', background: 'var(--color-primary)', color: '#fff', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{unreadMsgs > 9 ? '9+' : unreadMsgs}</span>}
-                      </button>
-                      <button className={`mob-nav-btn${isActive('/estagio') ? ' active' : ''}`} onClick={() => { navigate('/estagio'); setMenuOpen(false) }}>
-                        Estágio
-                        <span className="mob-nav-soon">Em breve</span>
                       </button>
                       <button className={`mob-nav-btn${isActive('/pricing') ? ' active' : ''}`} onClick={() => { navigate('/pricing'); setMenuOpen(false) }}>
                         Planos

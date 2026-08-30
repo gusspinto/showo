@@ -149,16 +149,25 @@ Devolve APENAS este JSON (sem markdown):
   "tip": "<um conselho de apresentação ESPECÍFICO para este projeto — algo que este estudante deve fazer ou evitar dado o conteúdo concreto do projeto>"
 }`
 
-    const message = await client.messages.create({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 2800,
-      messages: [{ role: 'user', content: prompt }],
-    })
+    let notes: Record<string, unknown> | null = null
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const message = await client.messages.create({
+          model: 'claude-sonnet-4-6',
+          max_tokens: 2800,
+          messages: [{ role: 'user', content: prompt }],
+        })
 
-    const raw = (message.content[0] as { type: string; text: string }).text.trim()
-    const jsonMatch = raw.match(/\{[\s\S]*\}/)
-    if (!jsonMatch) throw new Error('Resposta inválida')
-    const notes = JSON.parse(jsonMatch[0])
+        const raw = (message.content[0] as { type: string; text: string }).text.trim()
+        const jsonMatch = raw.match(/\{[\s\S]*\}/)
+        if (!jsonMatch) throw new Error('Resposta inválida')
+        notes = JSON.parse(jsonMatch[0])
+        break
+      } catch (retryErr) {
+        console.warn(`[defense-notes] attempt ${attempt + 1} failed:`, retryErr.message)
+        if (attempt === 1) throw retryErr
+      }
+    }
 
     return new Response(JSON.stringify(notes), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

@@ -266,8 +266,8 @@ export default function StudentDashboard({ user, profile }) {
       setLoadingEntries(false)
       // Use oldest project's created_at to guard recap from appearing on day 1
       const oldestProjectDate = projects.length ? projects[projects.length - 1].created_at : null
-      if (checkGate('weeklyRecap').allowed && shouldShowRecap(user.id, oldestProjectDate)) setShowRecap(true)
-      if (shouldShowCheckin(user.id)) setShowCheckin(true)
+      if (isSchoolAccount && checkGate('weeklyRecap').allowed && shouldShowRecap(user.id, oldestProjectDate)) setShowRecap(true)
+      if (isSchoolAccount && shouldShowCheckin(user.id)) setShowCheckin(true)
     }
     load()
     return () => { cancelled = true }
@@ -978,7 +978,7 @@ export default function StudentDashboard({ user, profile }) {
 
             {!isEmptyState && (
               <div className="sdb-mobile-stats">
-                {checkGate('weeklyRecap').allowed ? (
+                {isSchoolAccount && checkGate('weeklyRecap').allowed ? (
                   <div className="sdb-stat-tile">
                     <span className="sdb-eyebrow" style={{ color: 'var(--color-warning)' }}>Atividade</span>
                     <div className="sdb-stat-tile-num" style={{ color: 'var(--color-warning)' }}>{streak}</div>
@@ -1061,7 +1061,7 @@ export default function StudentDashboard({ user, profile }) {
             {focusProject && (
               <div className="sdb-duo sdb-o-rhythm">
                 <ActivityPanel buckets={activityBuckets} />
-                {checkGate('weeklyRecap').allowed && <RecapsPanel recaps={recaps} />}
+                {isSchoolAccount && checkGate('weeklyRecap').allowed && <RecapsPanel recaps={recaps} />}
               </div>
             )}
 

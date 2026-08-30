@@ -67,7 +67,7 @@ export function AuthProvider({ children }) {
           p_email: userRes.data?.user?.email,
         })
         if (regResult?.ok) {
-          const { data: refreshed } = await supabase.from('profiles').select('id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, linkedin_url, skills, monthly_report_opt_in, area, plan, phone, account_type').eq('id', uid).single()
+          const { data: refreshed } = await supabase.from('profiles').select('id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, linkedin_url, skills, monthly_report_opt_in, area, plan, phone, account_type, organization_id').eq('id', uid).single()
           if (refreshed) data = refreshed
         }
         await supabase.auth.updateUser({ data: { pending_class_code: null } })
@@ -78,13 +78,13 @@ export function AuthProvider({ children }) {
           p_full_name: meta.full_name ?? '',
           p_school: meta.pending_school ?? '',
         })
-        const { data: refreshed } = await supabase.from('profiles').select('id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, linkedin_url, skills, monthly_report_opt_in, area, plan, phone, account_type').eq('id', uid).single()
+        const { data: refreshed } = await supabase.from('profiles').select('id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, linkedin_url, skills, monthly_report_opt_in, area, plan, phone, account_type, organization_id').eq('id', uid).single()
         if (refreshed) data = refreshed
         await supabase.auth.updateUser({ data: { pending_invite_code: null, pending_school: null } })
       }
       if (meta.pending_partner_token) {
         await supabase.rpc('claim_partner_company_invite', { p_token: meta.pending_partner_token })
-        const { data: refreshed } = await supabase.from('profiles').select('id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, linkedin_url, skills, monthly_report_opt_in, area, plan, phone, account_type').eq('id', uid).single()
+        const { data: refreshed } = await supabase.from('profiles').select('id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, linkedin_url, skills, monthly_report_opt_in, area, plan, phone, account_type, organization_id').eq('id', uid).single()
         if (refreshed) data = refreshed
         await supabase.auth.updateUser({ data: { pending_partner_token: null } })
       }
@@ -145,8 +145,9 @@ export function AuthProvider({ children }) {
 
   const isAdmin         = profile?.is_admin === true
   const isSchoolAccount = !!profile?.organization_id
-  // Org accounts always get the 'school' plan regardless of profiles.plan
-  const planId          = isSchoolAccount ? 'school' : (profile?.plan ?? 'free')
+  const planId          = profile?.role === 'professor' ? 'launch'
+                        : isSchoolAccount ? 'school'
+                        : (profile?.plan ?? 'free')
   const plan            = getPlan(planId)
 
   function checkGate(feature, projectCount) {

@@ -2648,6 +2648,133 @@
   .sdb-first-project-title { font-size: 22px; }
 }
 
+/* ── Weekly Check-in modal ── */
+.checkin-backdrop {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+  padding: var(--sp-5);
+  animation: fade-in 0.2s var(--ease-out) both;
+}
+.checkin-modal {
+  position: relative; width: 100%; max-width: 480px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--sp-6) var(--sp-6) var(--sp-5);
+  box-shadow: var(--shadow-xl);
+  animation: modal-up 0.22s var(--ease-out) both;
+  overflow: hidden;
+}
+.checkin-modal::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
+}
+.checkin-close {
+  position: absolute; top: var(--sp-4); right: var(--sp-4);
+  display: flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border: none; border-radius: var(--radius-sm);
+  background: transparent; color: var(--color-text-tertiary); cursor: pointer;
+  transition: background var(--duration-fast), color var(--duration-fast);
+}
+.checkin-close:hover { background: var(--color-surface-hover); color: var(--color-text); }
+.checkin-header { margin-bottom: var(--sp-4); }
+.checkin-pill {
+  display: inline-block; font-size: 11px; font-weight: 700;
+  color: var(--color-primary); letter-spacing: 0.4px; text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.checkin-title {
+  font-family: var(--font-heading); font-size: 19px; font-weight: 800;
+  letter-spacing: -0.3px; margin: 0 0 2px; color: var(--color-text);
+}
+.checkin-subtitle {
+  font-size: 13px; color: var(--color-text-secondary); margin: 0;
+}
+.checkin-questions { display: flex; flex-direction: column; gap: 16px; }
+.checkin-q { display: flex; flex-direction: column; gap: 6px; }
+.checkin-label {
+  font-size: 13px; font-weight: 600; color: var(--color-text);
+  display: flex; align-items: center; gap: 5px;
+}
+.checkin-required { color: var(--color-error); font-size: 11px; }
+.checkin-input {
+  width: 100%; resize: vertical;
+  font-family: inherit; font-size: 13px; line-height: 1.5;
+  padding: 10px 12px; border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-secondary);
+  color: var(--color-text);
+  transition: border-color var(--duration-fast);
+}
+.checkin-input:focus { outline: none; border-color: var(--color-primary); }
+.checkin-input::placeholder { color: var(--color-text-tertiary); }
+.checkin-hint {
+  font-size: 11px; color: var(--color-primary); font-weight: 500;
+}
+.checkin-actions {
+  display: flex; gap: 10px; margin-top: var(--sp-4);
+}
+.checkin-btn {
+  flex: 1; border: none; border-radius: var(--radius-md);
+  font-family: inherit; font-size: 13px; font-weight: 700;
+  padding: 11px 0; cursor: pointer; transition: opacity var(--duration-fast);
+}
+.checkin-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.checkin-btn--primary {
+  background: var(--color-primary); color: #fff;
+}
+.checkin-btn--primary:not(:disabled):hover { opacity: 0.9; }
+.checkin-btn--quiet {
+  background: transparent; color: var(--color-text-tertiary);
+}
+.checkin-btn--quiet:hover { color: var(--color-text); }
+
+/* Done state */
+.checkin-modal--done { text-align: center; }
+.checkin-done-icon {
+  width: 48px; height: 48px; margin: 0 auto 12px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%; background: rgba(74,147,249,0.12);
+  color: var(--color-primary);
+}
+.checkin-done-title {
+  font-family: var(--font-heading); font-size: 18px; font-weight: 800;
+  margin: 0 0 4px; color: var(--color-text);
+}
+.checkin-done-sub {
+  font-size: 12px; color: var(--color-text-tertiary); margin: 0 0 12px;
+}
+.checkin-done-note {
+  font-size: 12px; color: var(--color-primary); margin: 0 0 8px; font-weight: 500;
+}
+.checkin-done-streak {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 13px; font-weight: 700; color: var(--color-warning);
+}
+
+/* Professor reply shown in student check-in */
+.checkin-prof-reply {
+  margin-bottom: 16px; padding: 12px 14px;
+  border-radius: var(--radius-md);
+  background: var(--color-primary-subtle);
+  border: 1px solid rgba(74,147,249,0.15);
+}
+.checkin-prof-reply-header {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 11px; font-weight: 700; color: var(--color-primary);
+  text-transform: uppercase; letter-spacing: 0.3px;
+  margin-bottom: 6px;
+}
+.checkin-prof-reply-q {
+  font-size: 12px; color: var(--color-text-tertiary);
+  margin: 0 0 4px; font-style: italic;
+}
+.checkin-prof-reply-text {
+  font-size: 13px; color: var(--color-text); margin: 0; line-height: 1.5;
+}
+
 /* ══════════════════════════════════════════════════════════════════════════
    ESCOLA — componentes específicos de contas escolares
    ══════════════════════════════════════════════════════════════════════════ */
@@ -3323,131 +3450,5 @@
   .sdb-page { display: flex; flex-direction: column; }
   .sdb-hero    { order: 1; }
   .sdb-grid    { order: 3; }
-  .sdb-pom     { order: 4; margin-top: var(--sp-6); }}
-
-/* ── Weekly Check-in modal ── */
-.checkin-backdrop {
-  position: fixed; inset: 0; z-index: 200;
-  background: rgba(0,0,0,0.55);
-  backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
-  display: flex; align-items: center; justify-content: center;
-  padding: var(--sp-5);
-  animation: fade-in 0.2s var(--ease-out) both;
-}
-.checkin-modal {
-  position: relative; width: 100%; max-width: 480px;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
-  padding: var(--sp-6) var(--sp-6) var(--sp-5);
-  box-shadow: var(--shadow-xl);
-  animation: modal-up 0.22s var(--ease-out) both;
-  overflow: hidden;
-}
-.checkin-modal::before {
-  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
-  background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
-}
-.checkin-close {
-  position: absolute; top: var(--sp-4); right: var(--sp-4);
-  display: flex; align-items: center; justify-content: center;
-  width: 28px; height: 28px; border: none; border-radius: var(--radius-sm);
-  background: transparent; color: var(--color-text-tertiary); cursor: pointer;
-  transition: background var(--duration-fast), color var(--duration-fast);
-}
-.checkin-close:hover { background: var(--color-surface-hover); color: var(--color-text); }
-.checkin-header { margin-bottom: var(--sp-4); }
-.checkin-pill {
-  display: inline-block; font-size: 11px; font-weight: 700;
-  color: var(--color-primary); letter-spacing: 0.4px; text-transform: uppercase;
-  margin-bottom: 6px;
-}
-.checkin-title {
-  font-family: var(--font-heading); font-size: 19px; font-weight: 800;
-  letter-spacing: -0.3px; margin: 0 0 2px; color: var(--color-text);
-}
-.checkin-subtitle {
-  font-size: 13px; color: var(--color-text-secondary); margin: 0;
-}
-.checkin-questions { display: flex; flex-direction: column; gap: 16px; }
-.checkin-q { display: flex; flex-direction: column; gap: 6px; }
-.checkin-label {
-  font-size: 13px; font-weight: 600; color: var(--color-text);
-  display: flex; align-items: center; gap: 5px;
-}
-.checkin-required { color: var(--color-error); font-size: 11px; }
-.checkin-input {
-  width: 100%; resize: vertical;
-  font-family: inherit; font-size: 13px; line-height: 1.5;
-  padding: 10px 12px; border-radius: var(--radius-md);
-  border: 1px solid var(--color-border);
-  background: var(--color-bg-secondary);
-  color: var(--color-text);
-  transition: border-color var(--duration-fast);
-}
-.checkin-input:focus { outline: none; border-color: var(--color-primary); }
-.checkin-input::placeholder { color: var(--color-text-tertiary); }
-.checkin-hint {
-  font-size: 11px; color: var(--color-primary); font-weight: 500;
-}
-.checkin-actions {
-  display: flex; gap: 10px; margin-top: var(--sp-4);
-}
-.checkin-btn {
-  flex: 1; border: none; border-radius: var(--radius-md);
-  font-family: inherit; font-size: 13px; font-weight: 700;
-  padding: 11px 0; cursor: pointer; transition: opacity var(--duration-fast);
-}
-.checkin-btn:disabled { opacity: 0.45; cursor: not-allowed; }
-.checkin-btn--primary {
-  background: var(--color-primary); color: #fff;
-}
-.checkin-btn--primary:not(:disabled):hover { opacity: 0.9; }
-.checkin-btn--quiet {
-  background: transparent; color: var(--color-text-tertiary);
-}
-.checkin-btn--quiet:hover { color: var(--color-text); }
-
-/* Done state */
-.checkin-modal--done { text-align: center; }
-.checkin-done-icon {
-  width: 48px; height: 48px; margin: 0 auto 12px;
-  display: flex; align-items: center; justify-content: center;
-  border-radius: 50%; background: rgba(74,147,249,0.12);
-  color: var(--color-primary);
-}
-.checkin-done-title {
-  font-family: var(--font-heading); font-size: 18px; font-weight: 800;
-  margin: 0 0 4px; color: var(--color-text);
-}
-.checkin-done-sub {
-  font-size: 12px; color: var(--color-text-tertiary); margin: 0 0 12px;
-}
-.checkin-done-note {
-  font-size: 12px; color: var(--color-primary); margin: 0 0 8px; font-weight: 500;
-}
-.checkin-done-streak {
-  display: inline-flex; align-items: center; gap: 4px;
-  font-size: 13px; font-weight: 700; color: var(--color-warning);
-}
-
-/* Professor reply shown in student check-in */
-.checkin-prof-reply {
-  margin-bottom: 16px; padding: 12px 14px;
-  border-radius: var(--radius-md);
-  background: var(--color-primary-subtle);
-  border: 1px solid rgba(74,147,249,0.15);
-}
-.checkin-prof-reply-header {
-  display: flex; align-items: center; gap: 5px;
-  font-size: 11px; font-weight: 700; color: var(--color-primary);
-  text-transform: uppercase; letter-spacing: 0.3px;
-  margin-bottom: 6px;
-}
-.checkin-prof-reply-q {
-  font-size: 12px; color: var(--color-text-tertiary);
-  margin: 0 0 4px; font-style: italic;
-}
-.checkin-prof-reply-text {
-  font-size: 13px; color: var(--color-text); margin: 0; line-height: 1.5;
+  .sdb-pom     { order: 4; margin-top: var(--sp-6); }
 }
