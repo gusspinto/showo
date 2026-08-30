@@ -290,6 +290,9 @@ export default function Home() {
                 <button type="submit" className="home-start-email-btn" disabled={authLoading}>
                   {authLoading ? 'A verificar…' : 'Continuar com email'}
                 </button>
+                <button type="button" className="home-start-explore" onClick={() => navigate('/explorar')}>
+                  Continuar a explorar
+                </button>
               </form>
             ) : (
               <form onSubmit={handleLogin} className="home-start-form">
@@ -335,10 +338,6 @@ export default function Home() {
               Ao continuares, aceitas a{' '}
               <button type="button" onClick={() => navigate('/privacidade')}>Política de Privacidade</button>.
             </p>
-
-            <button className="home-start-explore" onClick={() => navigate('/explorar')}>
-              Continuar a explorar
-            </button>
           </div>
         </div>
       </div>
