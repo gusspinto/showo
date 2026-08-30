@@ -466,7 +466,7 @@ export default function Register() {
           to   { opacity: 1; transform: translateY(0); }
         }
         .auth-side-highlight {
-          background: var(--color-primary); color: #fff;
+          background: var(--color-text); color: var(--color-bg);
           padding: 2px 10px 9px; border-radius: 0 0 14px 14px;
           display: inline-block;
         }

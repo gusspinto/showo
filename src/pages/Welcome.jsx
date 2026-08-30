@@ -56,7 +56,7 @@ export default function Welcome() {
   if (loading || !user || !needsRoleSelect) return null
 
   const C = {
-    blue:   'var(--color-primary)',
+    blue:   'var(--color-text)',
     muted:  'var(--color-text-secondary)',
     text:   'var(--color-text)',
     border: 'var(--color-border)',
@@ -123,7 +123,7 @@ export default function Welcome() {
               style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                 width: '100%', boxSizing: 'border-box',
-                background: 'var(--color-primary)', color: '#fff',
+                background: 'var(--color-text)', color: 'var(--color-bg)',
                 borderRadius: 10, padding: '13px 0',
                 fontSize: 15, fontWeight: 700, textDecoration: 'none',
                 marginBottom: 12,
@@ -160,8 +160,8 @@ export default function Welcome() {
               onClick={finishAsAluno}
               style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                width: '100%', background: 'var(--color-primary)',
-                color: '#fff', border: 'none', borderRadius: 10,
+                width: '100%', background: 'var(--color-text)',
+                color: 'var(--color-bg)', border: 'none', borderRadius: 10,
                 padding: '13px 0', fontSize: 15, fontWeight: 700,
                 cursor: 'pointer', fontFamily: 'inherit',
               }}
