@@ -7,8 +7,9 @@ import { PlusIcon as Plus } from '../components/icons/PlusIcon'
 import { DocumentTextIcon as FileText } from '@solar-icons/react/bold/document-text'
 import { GalleryIcon as ImageIcon } from '@solar-icons/react/bold/gallery'
 import { TrashBinTrashIcon as Trash } from '@solar-icons/react/bold/trash-bin-trash'
-import { DownloadIcon as Download } from '@solar-icons/react/bold/download'
 import { LibraryIcon } from '@solar-icons/react/bold/library'
+import { CloseIcon as X } from '@solar-icons/react/bold/close'
+import { ArrowRightUpIcon as ExternalLink } from '@solar-icons/react/bold/arrow-right-up'
 import './Biblioteca.css'
 
 /* Biblioteca — onde vivem os projetos "adicionados" (upload direto, sem
@@ -19,6 +20,16 @@ import './Biblioteca.css'
 function fileIconFor(type) {
   if (type?.startsWith('image/')) return ImageIcon
   return FileText
+}
+
+/* Ficheiros que o próprio browser sabe mostrar num <iframe>/<img> direto.
+   Word/PowerPoint não — passam pelo Google Docs Viewer, que só precisa
+   de um URL público (o bucket já é público). */
+function previewUrlFor(item) {
+  const { library_file_url: url, library_file_type: type } = item
+  if (!url) return null
+  if (type?.startsWith('image/') || type === 'application/pdf') return url
+  return `https://docs.google.com/gview?url=${encodeURIComponent(url)}&embedded=true`
 }
 
 function prettyDate(iso) {
@@ -32,6 +43,14 @@ export default function Biblioteca() {
   const { user } = useAuth()
   const [items, setItems] = useState(null)
   const [removing, setRemoving] = useState(null)
+  const [viewing, setViewing] = useState(null)
+
+  useEffect(() => {
+    if (!viewing) return
+    const onKey = e => { if (e.key === 'Escape') setViewing(null) }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [viewing])
 
   useEffect(() => {
     if (!user) return
@@ -82,16 +101,17 @@ export default function Biblioteca() {
           <div className="lib-grid">
             {items.map(item => {
               const Icon = fileIconFor(item.library_file_type)
+              const isImage = item.library_file_type?.startsWith('image/')
               return (
-                <a
+                <button
                   key={item.id}
+                  type="button"
                   className={`lib-card${item.library_file_url ? ' is-clickable' : ''}`}
-                  href={item.library_file_url || undefined}
-                  target={item.library_file_url ? '_blank' : undefined}
-                  rel={item.library_file_url ? 'noopener noreferrer' : undefined}
-                  onClick={e => { if (!item.library_file_url) e.preventDefault() }}
+                  onClick={() => item.library_file_url && setViewing(item)}
                 >
-                  <span className="lib-card-icon"><Icon size={20} /></span>
+                  <span className={`lib-card-icon${isImage ? ' has-thumb' : ''}`}>
+                    {isImage ? <img src={item.library_file_url} alt="" loading="lazy" /> : <Icon size={20} />}
+                  </span>
                   <div className="lib-card-body">
                     <span className="lib-card-name">{item.name}</span>
                     {item.library_description && (
@@ -101,23 +121,51 @@ export default function Biblioteca() {
                   </div>
                   <div className="lib-card-actions">
                     {item.library_file_url && (
-                      <span className="lib-card-hint" aria-hidden="true"><Download size={15} /></span>
+                      <span className="lib-card-hint" aria-hidden="true"><ExternalLink size={15} /></span>
                     )}
-                    <button
+                    <span
+                      role="button"
+                      tabIndex={0}
                       className="lib-card-btn danger"
-                      onClick={e => { e.preventDefault(); e.stopPropagation(); handleDelete(item.id) }}
-                      disabled={removing === item.id}
+                      onClick={e => { e.stopPropagation(); if (removing !== item.id) handleDelete(item.id) }}
+                      onKeyDown={e => { if ((e.key === 'Enter' || e.key === ' ') && removing !== item.id) { e.stopPropagation(); handleDelete(item.id) } }}
                       aria-label="Remover"
+                      aria-disabled={removing === item.id}
                     >
                       <Trash size={15} />
-                    </button>
+                    </span>
                   </div>
-                </a>
+                </button>
               )
             })}
           </div>
         )}
       </div>
+
+      {viewing && (
+        <div className="lib-viewer-backdrop" onClick={() => setViewing(null)}>
+          <div className="lib-viewer" onClick={e => e.stopPropagation()}>
+            <div className="lib-viewer-head">
+              <span className="lib-viewer-title">{viewing.name}</span>
+              <div className="lib-viewer-actions">
+                <a className="lib-card-btn" href={viewing.library_file_url} target="_blank" rel="noopener noreferrer" aria-label="Abrir noutra aba">
+                  <ExternalLink size={16} />
+                </a>
+                <button className="lib-card-btn" onClick={() => setViewing(null)} aria-label="Fechar">
+                  <X size={17} />
+                </button>
+              </div>
+            </div>
+            <div className="lib-viewer-body">
+              {viewing.library_file_type?.startsWith('image/') ? (
+                <img src={viewing.library_file_url} alt={viewing.name} className="lib-viewer-img" />
+              ) : (
+                <iframe title={viewing.name} src={previewUrlFor(viewing)} className="lib-viewer-frame" />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
