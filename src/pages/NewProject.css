@@ -290,30 +290,27 @@
 
 /* "Criar com IA" — mesmo botão preto/branco, só que ao passar o rato
    ganha um brilho de gradiente (as três cores da marca, bem suaves)
-   a correr por baixo, como o botão de criar da sidebar, mas sem sair
-   do branco/preto de base — é só um verniz, não pinta o botão. */
-.np-btn-ai { position: relative; overflow: hidden; }
+   a pintar o botão de vez, tipo um "paint job" — diferenciador a
+   sério, não só um verniz por cima. */
+.np-btn-ai { position: relative; overflow: hidden; z-index: 0; }
 .np-btn-ai::before {
   content: '';
-  position: absolute; inset: -20% -60%;
-  background: linear-gradient(115deg,
-    color-mix(in srgb, #2478f0 55%, transparent) 0%,
-    color-mix(in srgb, #db4a3d 55%, transparent) 50%,
-    color-mix(in srgb, #cc9a1e 55%, transparent) 100%);
-  mix-blend-mode: overlay;
+  position: absolute; inset: 0; z-index: -1;
+  background-image: linear-gradient(115deg, #2478f0 0%, #db4a3d 50%, #cc9a1e 100%);
+  background-size: 220% 220%;
+  background-position: 0% 50%;
   opacity: 0;
-  transform: translateX(-25%);
-  transition: opacity 0.25s ease;
+  transition: opacity 0.2s ease;
   pointer-events: none;
 }
-.np-btn-ai > * { position: relative; z-index: 1; }
+.np-btn-ai:hover:not(:disabled) { color: #fff; }
 .np-btn-ai:hover:not(:disabled)::before {
   opacity: 1;
-  animation: np-ai-sheen 2.2s ease infinite;
+  animation: np-ai-paint 2.4s ease infinite;
 }
-@keyframes np-ai-sheen {
-  0%, 100% { transform: translateX(-25%); }
-  50%      { transform: translateX(15%); }
+@keyframes np-ai-paint {
+  0%, 100% { background-position: 0% 50%; }
+  50%      { background-position: 100% 50%; }
 }
 @media (prefers-reduced-motion: reduce) {
   .np-btn-ai:hover:not(:disabled)::before { animation: none; }
