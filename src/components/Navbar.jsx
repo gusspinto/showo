@@ -827,7 +827,6 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
 
   const isRecruiter = profile?.role === 'recrutador' || profile?.role === 'empresa'
   const isTeacher = profile?.role === 'professor'
-  const isSchoolStudent = profile?.role === 'aluno' && profile?.account_type === 'school'
   const recruiterAccent = 'var(--color-accent)'
 
   const [unreadMsgs, setUnreadMsgs] = useState(0)
@@ -914,8 +913,13 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                 </>
               ) : (
                 <>
+                  {!isTeacher && (
+                    <button className="mobile-drawer-btn" onClick={() => { navigate('/biblioteca'); setOpen(false) }}>
+                      <LibraryIcon size={16} /> Biblioteca
+                    </button>
+                  )}
                   <span className="mob-drawer-label">Comunidade</span>
-                  {(isTeacher || isSchoolStudent) && (
+                  {(isTeacher || isSchoolAccount) && (
                     <button className="mobile-drawer-btn" onClick={() => { navigate('/turmas'); setOpen(false) }}>
                       <Users2 size={16} /> Turmas
                     </button>
@@ -929,6 +933,11 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               <button className="mobile-drawer-btn" onClick={() => { navigate('/aprende'); setOpen(false) }}>
                 <BookMarked size={16} /> Aprende a usar
               </button>
+              {!isSchoolAccount && !isTeacher && (
+                <button className="mobile-drawer-btn" onClick={() => { navigate('/pricing'); setOpen(false) }}>
+                  <Sparkles size={16} /> Planos
+                </button>
+              )}
 
               {/* Project management extras */}
               {extras?.type === 'project' && (
@@ -1405,9 +1414,11 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               )}
 
 
-              <button className={`sb-item${isActive('/pricing') ? ' active' : ''}`} onClick={() => navigate('/pricing')} title="Planos">
-                <Sparkles size={16} />{!collapsed && showLabels && <span>Planos</span>}
-              </button>
+              {!isSchoolAccount && (
+                <button className={`sb-item${isActive('/pricing') ? ' active' : ''}`} onClick={() => navigate('/pricing')} title="Planos">
+                  <Sparkles size={16} />{!collapsed && showLabels && <span>Planos</span>}
+                </button>
+              )}
 
               <button className={`sb-item${isActive('/aprende') ? ' active' : ''}`} onClick={() => navigate('/aprende')} title="Aprende a usar">
                 <BookMarked size={16} />{!collapsed && showLabels && <span>Aprende a usar</span>}

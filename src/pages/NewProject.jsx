@@ -106,8 +106,7 @@ async function generateLibraryThumbnail(projectId, file) {
     const thumbPath = `${user.id}/thumbs/${Date.now()}-${safePathSegment(file.name).replace(/\.[^.]+$/, '')}.jpg`
     const { error: thumbErr } = await supabase.storage.from('library-files').upload(thumbPath, thumbBlob, { contentType: 'image/jpeg' })
     if (thumbErr) throw thumbErr
-    const { data: { publicUrl } } = supabase.storage.from('library-files').getPublicUrl(thumbPath)
-    await supabase.from('projects').update({ library_thumb_url: publicUrl }).eq('id', projectId)
+    await supabase.from('projects').update({ library_thumb_url: thumbPath }).eq('id', projectId)
   } catch (err) {
     console.error('Preview do ficheiro falhou (não crítico):', err)
   }
@@ -301,20 +300,15 @@ export default function NewProject() {
         const path = `${user.id}/${Date.now()}-${safePathSegment(file.name)}`
         const { error: upErr } = await supabase.storage.from('library-files').upload(path, file, { contentType: file.type })
         if (upErr) throw upErr
-        const { data: { publicUrl } } = supabase.storage.from('library-files').getPublicUrl(path)
 
         const { data: inserted, error: insErr } = await supabase.from('projects').insert({
           user_id: user.id,
           name: file.name.replace(/\.[^.]+$/, ''),
           slug: crypto.randomUUID(),
           entry_kind: 'library',
-          // 'projects' vem 'public' por omissão (é isso que faz sentido para
-          // a ficha completa de sempre) — um item da Biblioteca é um ficheiro
-          // pessoal, não algo para aparecer no Explorar ou ser encontrado por
-          // quem não é o dono. Privado sempre.
           visibility: 'private',
           library_description: importNotes.trim() || null,
-          library_file_url: publicUrl,
+          library_file_url: path,
           library_file_name: file.name,
           library_file_type: file.type,
         }).select('id').single()

@@ -53,7 +53,7 @@ const C = {
 // authenticated only has column-level SELECT grant on these (no email — that
 // comes from admin_get_users() instead) since migration 033; select('*')
 // fails outright and silently returns no rows.
-const PROFILE_COLUMNS = 'id, username, total_xp, created_at, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size, skills, school, project_draft, signup_country, signup_city, signup_referrer, signup_utm_source, last_active_at, last_action, plan'
+const PROFILE_COLUMNS = 'id, username, total_xp, created_at, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size, skills, school, project_draft, signup_country, signup_city, signup_referrer, signup_utm_source, last_active_at, last_action, plan, account_type, organization_id'
 
 const PLAN_COLORS = { free: '#6b7280', build: '#2B7EF5', launch: '#C49A20' }
 const PLAN_LABELS = { free: 'Free', build: 'Build', launch: 'Launch' }
@@ -644,6 +644,7 @@ function OverviewTab({ users, projects, activityLog }) {
                       {u.role && u.role !== 'aluno' && (
                         <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 5px', borderRadius: 4, background: u.role === 'professor' ? C.greenSoft : C.purpleSoft, color: u.role === 'professor' ? C.green : C.purple }}>{u.role}</span>
                       )}
+                      {u.account_type === 'school' && <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 5px', borderRadius: 4, background: C.greenSoft, color: C.green }}>{u._orgName || 'escola'}</span>}
                       {diffH < 48 && <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 5px', borderRadius: 4, background: C.blueSoft, color: C.blue }}>novo</span>}
                       {u._orphan && <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 5px', borderRadius: 4, background: C.yellowSoft, color: C.yellow }}>sem perfil</span>}
                       {!u._orphan && pc === 0 && diffH > 48 && <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 5px', borderRadius: 4, background: C.redSoft, color: C.red }}>sem projeto</span>}
@@ -1353,7 +1354,16 @@ export default function Admin() {
           _orphan: true,
         }))
 
-      setUsers([...enrichedProfiles, ...orphanUsers])
+      // Map org names to users
+      const orgIds = [...new Set(enrichedProfiles.map(p => p.organization_id).filter(Boolean))]
+      let orgMap = {}
+      if (orgIds.length) {
+        const { data: orgs } = await supabase.from('organizations').select('id, name').in('id', orgIds)
+        if (orgs) orgs.forEach(o => { orgMap[o.id] = o.name })
+      }
+      const withOrg = enrichedProfiles.map(p => ({ ...p, _orgName: orgMap[p.organization_id] || null }))
+
+      setUsers([...withOrg, ...orphanUsers])
       setProjects(projectsRes.data || [])
       setSignups(signupsRes.data || [])
       setActivityLog(activityRes.data || [])
