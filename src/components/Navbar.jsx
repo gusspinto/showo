@@ -1110,7 +1110,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                 </button>
               ) : !isTeacher && !isAdmin ? (
                 <button className="mob-nav-icon-btn primary gradient-cta" onMouseMove={handleGradientMove} onMouseLeave={handleGradientLeave} onClick={() => navigate('/novo')} aria-label="Criar projeto">
-                  <Plus size={20} strokeWidth={2.5} />
+                  <Plus size={15} />
                 </button>
               ) : null}
             </div>
