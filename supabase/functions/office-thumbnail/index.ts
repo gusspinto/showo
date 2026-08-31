@@ -58,9 +58,13 @@ Deno.serve(async (req) => {
 
     // Nota: Render (tier grátis) "adormece" ao fim de inatividade — a
     // primeira conversão depois disso pode demorar 30-60s a arrancar.
+    // Timeout de 45s: se o Gotenberg estiver em baixo (ex.: matado por
+    // falta de memória, já aconteceu no tier grátis), falha depressa em
+    // vez de segurar o pedido até ao limite da própria edge function.
     const resp = await fetch(`${GOTENBERG_URL}/forms/libreoffice/convert`, {
       method: 'POST',
       body: form,
+      signal: AbortSignal.timeout(45_000),
     })
     if (!resp.ok) throw new Error(`Gotenberg respondeu ${resp.status}`)
 

@@ -56,6 +56,20 @@ function prettySize(bytes) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
+/* Nomes de ficheiro reais têm acentos, parênteses, espaços — tudo o que
+   dá dor de cabeça num caminho de storage. O nome original fica sempre
+   guardado (library_file_name), isto é só para o caminho em si. */
+function safePathSegment(name) {
+  const dot = name.lastIndexOf('.')
+  const base = dot > 0 ? name.slice(0, dot) : name
+  const ext = dot > 0 ? name.slice(dot) : ''
+  const cleanBase = base
+    .normalize('NFD').replace(/[̀-ͯ]/g, '') // tira acentos
+    .replace(/[^a-zA-Z0-9-_]+/g, '-')
+    .replace(/-+/g, '-').replace(/(^-|-$)/g, '')
+  return `${cleanBase || 'ficheiro'}${ext.replace(/[^a-zA-Z0-9.]/g, '')}`
+}
+
 /* Só para mandar um .docx/.pptx à edge function office-thumbnail converter
    — não tem mais nenhum uso (o upload em si vai direto, sem passar por
    base64). */
@@ -236,7 +250,7 @@ export default function NewProject() {
       // Cada ficheiro vira o seu próprio item — se vieram vários de uma
       // vez, sobem todos, um a um.
       for (const file of files) {
-        const path = `${user.id}/${Date.now()}-${file.name}`
+        const path = `${user.id}/${Date.now()}-${safePathSegment(file.name)}`
         const { error: upErr } = await supabase.storage.from('library-files').upload(path, file, { contentType: file.type })
         if (upErr) throw upErr
         const { data: { publicUrl } } = supabase.storage.from('library-files').getPublicUrl(path)
@@ -263,7 +277,7 @@ export default function NewProject() {
               pdfSource = new Blob([b64ToBytes(convData.pdf)], { type: 'application/pdf' })
             }
             const thumbBlob = await renderPdfThumbnail(pdfSource)
-            const thumbPath = `${user.id}/thumbs/${Date.now()}-${file.name.replace(/\.[^.]+$/, '')}.jpg`
+            const thumbPath = `${user.id}/thumbs/${Date.now()}-${safePathSegment(file.name).replace(/\.[^.]+$/, '')}.jpg`
             const { error: thumbErr } = await supabase.storage.from('library-files').upload(thumbPath, thumbBlob, { contentType: 'image/jpeg' })
             if (!thumbErr) {
               thumbUrl = supabase.storage.from('library-files').getPublicUrl(thumbPath).data.publicUrl
