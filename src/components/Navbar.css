@@ -238,10 +238,17 @@ body.light .sb-collapse-toggle:hover { border-color: rgba(0,0,0,0.75); }
    reparar no movimento); estático em tablet/mobile — mesma cor, sem
    distração enquanto se navega ao toque. */
 .gradient-cta {
-  background-image: linear-gradient(115deg, #2f6bff 0%, #ff3b5c 52%, #ffb400 100%) !important;
+  --mx: 50%; --my: 50%;
+  /* Camada de brilho que segue o rato (JS escreve --mx/--my em cada
+     mousemove) por cima do gradiente das três cores, sempre visível
+     inteiro — nunca "corta" nenhuma cor, parado ou em movimento. */
+  background-image:
+    radial-gradient(circle 130px at var(--mx) var(--my), rgba(255,255,255,0.55), transparent 70%),
+    linear-gradient(115deg, #2f6bff 0%, #ff3b5c 52%, #ffb400 100%);
+  background-blend-mode: soft-light, normal;
   background-color: transparent !important;
-  background-size: 260% 260% !important;
-  background-position: 0% 50%; /* SEM !important — a animação do hover precisa de sobrepor isto */
+  background-size: 100% 100% !important;
+  background-position: center !important;
   background-repeat: no-repeat !important;
   border: none !important;
   outline: none !important;
@@ -250,20 +257,6 @@ body.light .sb-collapse-toggle:hover { border-color: rgba(0,0,0,0.75); }
   transition: filter 0.2s ease;
 }
 .gradient-cta:hover { opacity: 1 !important; filter: brightness(1.05); }
-@keyframes gradient-cta-shift {
-  0%   { background-position: 0% 50%; }
-  50%  { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-/* Parado em repouso; ao pairar o rato (só faz sentido no desktop, onde
-   há rato) as cores do gradiente começam a mexer-se — é essa a
-   "animação profissional", não o botão a levantar-se. */
-@media (min-width: 901px) {
-  .gradient-cta:hover { animation: gradient-cta-shift 2.4s ease infinite !important; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .gradient-cta:hover { animation: none !important; }
-}
 
 /* Botões-ícone (topbar mobile) — força quadrado perfeito; sem isto o
    flex do cluster pode esticar a caixa e o gradiente lê-se como pílula

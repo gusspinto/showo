@@ -753,6 +753,20 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
     document.body.classList.add('drawer-open')
     return () => document.body.classList.remove('drawer-open')
   }, [menuOpen])
+  // Botão "Criar projeto" com gradiente — no desktop (rato de verdade), o
+  // brilho segue o cursor dentro do botão via custom properties, sem tocar
+  // em React state (mousemove é demasiado frequente para re-render).
+  // Em touch simplesmente nunca dispara, o botão fica só com o gradiente
+  // estático das três cores.
+  const handleGradientMove = (e) => {
+    if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return
+    const rect = e.currentTarget.getBoundingClientRect()
+    const x = ((e.clientX - rect.left) / rect.width) * 100
+    const y = ((e.clientY - rect.top) / rect.height) * 100
+    e.currentTarget.style.setProperty('--mx', `${x}%`)
+    e.currentTarget.style.setProperty('--my', `${y}%`)
+  }
+
   // Mobile "Gerir projeto" popup — opened from the paintbrush that replaces the
   // "+" while viewing your own project (keeps those actions out of the drawer).
   const [projMenuOpen, setProjMenuOpen] = useState(false)
@@ -1091,7 +1105,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   <Paintbrush size={18} strokeWidth={2} />
                 </button>
               ) : !isTeacher && !isAdmin ? (
-                <button className="mob-nav-icon-btn primary gradient-cta" onClick={() => navigate('/novo')} aria-label="Criar projeto">
+                <button className="mob-nav-icon-btn primary gradient-cta" onMouseMove={handleGradientMove} onClick={() => navigate('/novo')} aria-label="Criar projeto">
                   <Plus size={20} strokeWidth={2.5} />
                 </button>
               ) : null}
@@ -1160,6 +1174,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
             <button
               className="ham-btn mob-only-create gradient-cta"
               onClick={() => navigate('/novo')}
+              onMouseMove={handleGradientMove}
               aria-label="Criar projeto"
               style={{
                 border: 'none',
@@ -1390,7 +1405,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               {user && !isTeacher && !isAdmin && (
                 <div className={`sb-create-wrap ${extras ? 'hidden' : 'visible'}`}>
                   <div className="sb-create-inner">
-                    <button className="sb-create gradient-cta" onClick={() => navigate('/novo')}>
+                    <button className="sb-create gradient-cta" onMouseMove={handleGradientMove} onClick={() => navigate('/novo')}>
                       <Plus size={14} />{!collapsed && showLabels && <span>Criar projeto</span>}
                     </button>
                   </div>
