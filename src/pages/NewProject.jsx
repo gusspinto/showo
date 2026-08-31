@@ -6,7 +6,6 @@ import { StarsIcon as Sparkles } from '@solar-icons/react/bold/stars'
 import { ArrowRightIcon as ArrowRight } from '@solar-icons/react/bold/arrow-right'
 import { ArrowLeftIcon as ArrowLeft } from '@solar-icons/react/bold/arrow-left'
 import { Pen2Icon as Pencil } from '@solar-icons/react/bold/pen-2'
-import { AltArrowRightIcon as ChevronRight } from '@solar-icons/react/bold/alt-arrow-right'
 import { UploadIcon as Upload } from '@solar-icons/react/bold/upload'
 import { DocumentTextIcon as FileText } from '@solar-icons/react/bold/document-text'
 import { CloseIcon as X } from '@solar-icons/react/bold/close'
@@ -506,7 +505,6 @@ export default function NewProject() {
                 setForm({ ...Object.fromEntries(Object.entries(answers).filter(([, v]) => v)), project_type: interviewData.projectType })
                 setStep('review')
               }}
-              onBack={() => setStep('describe')}
             />
           </div>
         </div>
@@ -843,7 +841,7 @@ function ReviewField({ field, value, isEditing, editValue, onEdit, onEditValueCh
   )
 }
 
-function InterviewPanel({ data, onComplete, onBack }) {
+function InterviewPanel({ data, onComplete }) {
   const [currentQ, setCurrentQ] = useState(0)
   const [currentAnswer, setCurrentAnswer] = useState('')
   const [answers, setAnswers] = useState({})
@@ -898,12 +896,10 @@ function InterviewPanel({ data, onComplete, onBack }) {
 
       <div className="np-interview-actions">
         <button type="button" className="np-btn-primary" onClick={() => advance()} disabled={!currentAnswer.trim()}>
-          {isLast ? <><Sparkles size={14} /> Concluir</> : <>Próxima <ChevronRight size={14} /></>}
+          {isLast ? <><Sparkles size={14} /> Concluir</> : 'Próxima'}
         </button>
         <button type="button" className="np-interview-skip" onClick={() => advance('')}>Saltar</button>
       </div>
-
-      <button type="button" className="np-btn-quiet" onClick={onBack}>← Voltar</button>
     </div>
   )
 }
