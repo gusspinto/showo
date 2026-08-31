@@ -68,53 +68,35 @@ function CheckIcon({ on }) {
     </svg>
   )
 }
-function GripIcon() {
+/* Controlo de edição partilhado por tiles e linhas: liga/desliga "no perfil"
+   e, quando ligado, escolhe o layout (Capa | Linha). */
+function ProfileControls({ item, onTogglePin, onSetLayout }) {
+  const on = item.profile_featured
   return (
-    <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
-      <circle cx="5.5" cy="3.5" r="1.4" /><circle cx="10.5" cy="3.5" r="1.4" />
-      <circle cx="5.5" cy="8" r="1.4" /><circle cx="10.5" cy="8" r="1.4" />
-      <circle cx="5.5" cy="12.5" r="1.4" /><circle cx="10.5" cy="12.5" r="1.4" />
-    </svg>
-  )
-}
-
-/* Linha reordenável do painel "No teu perfil". A ordem e o layout de cada
-   item definem-se aqui; o interruptor liga/desliga está no próprio card. */
-function ProfileRow({ item, onDragStart, onDragOver, onDrop, onDragEnd, dragging, onSetLayout, onRemove }) {
-  const thumb =
-    item.cover_url ||
-    item.library_thumb_url ||
-    (item.library_file_type?.startsWith('image/') ? item.library_file_url : null)
-  return (
-    <li
-      className={`lib-pf-item${dragging ? ' is-dragging' : ''}`}
-      draggable
-      onDragStart={e => onDragStart(e, item.id)}
-      onDragOver={e => onDragOver(e, item.id)}
-      onDrop={e => onDrop(e, item.id)}
-      onDragEnd={onDragEnd}
-    >
-      <span className="lib-pf-grip" aria-hidden="true"><GripIcon /></span>
-      <span className={`lib-pf-thumb${thumb ? ' has-img' : ''}`}>
-        {thumb ? <img src={thumb} alt="" loading="lazy" /> : <span>{(item.name || '?')[0].toUpperCase()}</span>}
-      </span>
-      <span className="lib-pf-name">{item.name}</span>
-      <span className="lib-seg" role="group" aria-label="Layout no perfil">
-        <button
-          type="button"
-          className={`lib-seg-btn${(item.profile_layout || 'tile') === 'tile' ? ' is-on' : ''}`}
-          onClick={() => onSetLayout(item, 'tile')}
-        >Capa</button>
-        <button
-          type="button"
-          className={`lib-seg-btn${item.profile_layout === 'row' ? ' is-on' : ''}`}
-          onClick={() => onSetLayout(item, 'row')}
-        >Linha</button>
-      </span>
-      <button type="button" className="lib-pf-remove" onClick={() => onRemove(item)} aria-label="Tirar do perfil">
-        <X size={14} />
+    <div className="lib-edit-bar" onClick={e => e.stopPropagation()}>
+      <button
+        type="button"
+        className={`lib-check${on ? ' is-on' : ''}`}
+        onClick={() => onTogglePin(item)}
+      >
+        <CheckIcon on={on} />
+        {on ? 'No perfil' : 'Mostrar no perfil'}
       </button>
-    </li>
+      {on && (
+        <span className="lib-seg" role="group" aria-label="Layout no perfil">
+          <button
+            type="button"
+            className={`lib-seg-btn${(item.profile_layout || 'tile') === 'tile' ? ' is-on' : ''}`}
+            onClick={() => onSetLayout(item, 'tile')}
+          >Capa</button>
+          <button
+            type="button"
+            className={`lib-seg-btn${item.profile_layout === 'row' ? ' is-on' : ''}`}
+            onClick={() => onSetLayout(item, 'row')}
+          >Linha</button>
+        </span>
+      )}
+    </div>
   )
 }
 
@@ -122,23 +104,13 @@ function ProfileRow({ item, onDragStart, onDragOver, onDrop, onDragEnd, dragging
    se quer mostrar. Tile com preview de verdade quando é imagem; para o
    resto (PDF/Word/PowerPoint), um cartão colorido por tipo à Drive —
    ainda mais reconhecível que um ícone cinzento genérico. */
-function LibAddedTile({ item, onOpen, onDelete, removing, editing, onTogglePin }) {
+function LibAddedTile({ item, onOpen, onDelete, removing, editing, onTogglePin, onSetLayout }) {
   const isImage = item.library_file_type?.startsWith('image/')
   const previewSrc = isImage ? item.library_file_url : item.library_thumb_url
   const ft = fileTypeStyle(item.library_file_type)
 
   return (
-    <div className={`lib-tile${editing ? ' is-editing' : ''}`}>
-      {editing && (
-        <button
-          type="button"
-          className={`lib-pin${item.profile_featured ? ' is-on' : ''}`}
-          onClick={() => onTogglePin(item)}
-        >
-          <CheckIcon on={item.profile_featured} />
-          {item.profile_featured ? 'No perfil' : 'Mostrar no perfil'}
-        </button>
-      )}
+    <div className={`lib-tile${editing ? ' is-editing' : ''}${editing && item.profile_featured ? ' is-on' : ''}`}>
       <button type="button" className="lib-tile-main" onClick={() => onOpen(item)}>
         <span
           className="lib-tile-cover"
@@ -160,6 +132,7 @@ function LibAddedTile({ item, onOpen, onDelete, removing, editing, onTogglePin }
           </span>
         </span>
       </button>
+      {editing && <ProfileControls item={item} onTogglePin={onTogglePin} onSetLayout={onSetLayout} />}
       <span
         role="button"
         tabIndex={0}
@@ -177,42 +150,33 @@ function LibAddedTile({ item, onOpen, onDelete, removing, editing, onTogglePin }
 
 /* Projeto "criado" (entry_kind='full') — ainda em construção, por isso
    sem o destaque todo: linha compacta, não tile. */
-function LibBuildingRow({ item, onOpen, onDelete, removing, editing, onTogglePin }) {
+function LibBuildingRow({ item, onOpen, onDelete, removing, editing, onTogglePin, onSetLayout }) {
   return (
-    <button type="button" className="lib-row is-clickable" onClick={() => onOpen(item)}>
-      {editing && (
+    <div className={`lib-row-wrap${editing && item.profile_featured ? ' is-on' : ''}`}>
+      <button type="button" className="lib-row is-clickable" onClick={() => onOpen(item)}>
+        <span className={`lib-row-icon${item.cover_url ? ' has-thumb' : ''}`}>
+          {item.cover_url ? <img src={item.cover_url} alt="" loading="lazy" /> : <Folder size={16} />}
+        </span>
+        <div className="lib-row-body">
+          <span className="lib-row-name">{item.name}</span>
+          {item.area && <span className="lib-row-desc">{item.area}</span>}
+        </div>
+        {item.score > 0 && <span className="lib-row-date">{item.score}</span>}
+        <span className="lib-row-hint" aria-hidden="true"><ExternalLink size={14} /></span>
         <span
           role="button"
           tabIndex={0}
-          className={`lib-pin lib-pin--inline${item.profile_featured ? ' is-on' : ''}`}
-          onClick={e => { e.stopPropagation(); onTogglePin(item) }}
-          onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); onTogglePin(item) } }}
+          className="lib-row-delete"
+          onClick={e => { e.stopPropagation(); if (removing !== item.id) onDelete(item.id) }}
+          onKeyDown={e => { if ((e.key === 'Enter' || e.key === ' ') && removing !== item.id) { e.stopPropagation(); onDelete(item.id) } }}
+          aria-label="Remover"
+          aria-disabled={removing === item.id}
         >
-          <CheckIcon on={item.profile_featured} />
-          {item.profile_featured ? 'No perfil' : 'Mostrar no perfil'}
+          <Trash size={14} />
         </span>
-      )}
-      <span className={`lib-row-icon${item.cover_url ? ' has-thumb' : ''}`}>
-        {item.cover_url ? <img src={item.cover_url} alt="" loading="lazy" /> : <Folder size={16} />}
-      </span>
-      <div className="lib-row-body">
-        <span className="lib-row-name">{item.name}</span>
-        {item.area && <span className="lib-row-desc">{item.area}</span>}
-      </div>
-      {item.score > 0 && <span className="lib-row-date">{item.score}</span>}
-      <span className="lib-row-hint" aria-hidden="true"><ExternalLink size={14} /></span>
-      <span
-        role="button"
-        tabIndex={0}
-        className="lib-row-delete"
-        onClick={e => { e.stopPropagation(); if (removing !== item.id) onDelete(item.id) }}
-        onKeyDown={e => { if ((e.key === 'Enter' || e.key === ' ') && removing !== item.id) { e.stopPropagation(); onDelete(item.id) } }}
-        aria-label="Remover"
-        aria-disabled={removing === item.id}
-      >
-        <Trash size={14} />
-      </span>
-    </button>
+      </button>
+      {editing && <ProfileControls item={item} onTogglePin={onTogglePin} onSetLayout={onSetLayout} />}
+    </div>
   )
 }
 
@@ -224,7 +188,6 @@ export default function Biblioteca() {
   const [viewing, setViewing] = useState(null)
   const [confirmingDelete, setConfirmingDelete] = useState(null)
   const [editing, setEditing] = useState(false)
-  const [dragId, setDragId] = useState(null)
 
   useEffect(() => {
     if (!viewing && !confirmingDelete) return
@@ -301,28 +264,9 @@ export default function Biblioteca() {
     patchItem(item.id, { profile_layout: layout })
   }
 
-  async function reorderProfile(fromId, toId) {
-    if (fromId === toId) return
-    const ordered = [...featured]
-    const from = ordered.findIndex(i => i.id === fromId)
-    const to = ordered.findIndex(i => i.id === toId)
-    if (from < 0 || to < 0) return
-    const [moved] = ordered.splice(from, 1)
-    ordered.splice(to, 0, moved)
-    const orderById = new Map(ordered.map((o, idx) => [o.id, idx + 1]))
-    setItems(prev => prev.map(i => (orderById.has(i.id) ? { ...i, profile_featured_order: orderById.get(i.id) } : i)))
-    await Promise.all(
-      ordered.map((o, idx) =>
-        supabase.from('projects').update({ profile_featured_order: idx + 1 }).eq('id', o.id).eq('user_id', user.id),
-      ),
-    )
-  }
-
   const added = items?.filter(i => i.entry_kind === 'library') ?? []
   const building = items?.filter(i => i.entry_kind === 'full') ?? []
-  const featured = (items ?? [])
-    .filter(i => i.profile_featured)
-    .sort((a, b) => (a.profile_featured_order ?? 99) - (b.profile_featured_order ?? 99))
+  const featuredCount = (items ?? []).filter(i => i.profile_featured).length
 
   return (
     <div className="min-h-screen bg-page font-body">
@@ -334,7 +278,7 @@ export default function Biblioteca() {
             {items?.length > 0 && (
               <button
                 className={`lib-edit-btn${editing ? ' is-on' : ''}`}
-                onClick={() => { setEditing(e => !e); setDragId(null) }}
+                onClick={() => setEditing(e => !e)}
               >
                 {editing ? 'Concluir' : 'Organizar'}
               </button>
@@ -346,33 +290,11 @@ export default function Biblioteca() {
         </div>
 
         {editing && (
-          <div className="lib-profile-panel">
-            <div className="lib-profile-panel-head">
-              <h2 className="lib-section-title" style={{ margin: 0 }}>No teu perfil</h2>
-              <span className="lib-profile-panel-hint">
-                Liga <strong>Mostrar no perfil</strong> num item para o pôr aqui. Arrasta para ordenar; escolhe o layout de cada um.
-              </span>
-            </div>
-            {featured.length === 0 ? (
-              <p className="lib-pf-empty">Ainda não escolheste nada para mostrar no perfil.</p>
-            ) : (
-              <ul className="lib-pf-list">
-                {featured.map(item => (
-                  <ProfileRow
-                    key={item.id}
-                    item={item}
-                    dragging={dragId === item.id}
-                    onDragStart={(e, id) => { setDragId(id); e.dataTransfer.effectAllowed = 'move' }}
-                    onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move' }}
-                    onDrop={(e, id) => { e.preventDefault(); if (dragId) reorderProfile(dragId, id); setDragId(null) }}
-                    onDragEnd={() => setDragId(null)}
-                    onSetLayout={setLayout}
-                    onRemove={togglePin}
-                  />
-                ))}
-              </ul>
-            )}
-          </div>
+          <p className="lib-edit-hint">
+            Liga <strong>Mostrar no perfil</strong> nos itens que queres no teu perfil público
+            {featuredCount > 0 && <> — <strong>{featuredCount}</strong> {featuredCount === 1 ? 'ativo' : 'ativos'}</>}.
+            Escolhe <strong>Capa</strong> ou <strong>Linha</strong> para o formato de cada um.
+          </p>
         )}
 
         {items === null ? (
@@ -398,7 +320,7 @@ export default function Biblioteca() {
                 <div className="lib-tile-grid">
                   {added.map(item => (
                     <LibAddedTile key={item.id} item={item} removing={removing} onDelete={handleDelete}
-                      editing={editing} onTogglePin={togglePin}
+                      editing={editing} onTogglePin={togglePin} onSetLayout={setLayout}
                       onOpen={it => it.library_file_url && setViewing(it)} />
                   ))}
                 </div>
@@ -413,7 +335,7 @@ export default function Biblioteca() {
                 <div className="lib-added-list">
                   {building.map(item => (
                     <LibBuildingRow key={item.id} item={item} removing={removing} onDelete={handleDelete}
-                      editing={editing} onTogglePin={togglePin}
+                      editing={editing} onTogglePin={togglePin} onSetLayout={setLayout}
                       onOpen={it => navigate(`/projeto/${it.slug}`)} />
                   ))}
                 </div>
