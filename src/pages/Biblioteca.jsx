@@ -64,6 +64,7 @@ function prettyDate(iso) {
    ainda mais reconhecível que um ícone cinzento genérico. */
 function LibAddedTile({ item, onOpen, onDelete, removing }) {
   const isImage = item.library_file_type?.startsWith('image/')
+  const previewSrc = isImage ? item.library_file_url : item.library_thumb_url
   const ft = fileTypeStyle(item.library_file_type)
 
   return (
@@ -71,10 +72,10 @@ function LibAddedTile({ item, onOpen, onDelete, removing }) {
       <button type="button" className="lib-tile-main" onClick={() => onOpen(item)}>
         <span
           className="lib-tile-cover"
-          style={!isImage ? { background: `color-mix(in srgb, ${ft.color} 16%, var(--color-bg-alt))` } : undefined}
+          style={!previewSrc ? { background: `color-mix(in srgb, ${ft.color} 16%, var(--color-bg-alt))` } : undefined}
         >
-          {isImage ? (
-            <img src={item.library_file_url} alt="" loading="lazy" />
+          {previewSrc ? (
+            <img src={previewSrc} alt="" loading="lazy" />
           ) : (
             <span className="lib-tile-filetype" style={{ color: ft.color }}>
               <FileText size={30} />
@@ -152,7 +153,7 @@ export default function Biblioteca() {
     let cancelled = false
     supabase
       .from('projects')
-      .select('id, name, slug, entry_kind, area, score, ai_tagline, cover_url, library_description, library_file_url, library_file_name, library_file_type, created_at')
+      .select('id, name, slug, entry_kind, area, score, ai_tagline, cover_url, library_description, library_file_url, library_file_name, library_file_type, library_thumb_url, created_at')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .then(({ data }) => { if (!cancelled) setItems(data ?? []) })

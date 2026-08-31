@@ -215,6 +215,25 @@ export default function NewProject() {
         if (upErr) throw upErr
         const { data: { publicUrl } } = supabase.storage.from('library-files').getPublicUrl(path)
 
+        // Preview real da 1ª página, tipo Drive — só para PDF (é o único
+        // tipo que dá para renderizar no browser sem mandar para um
+        // serviço externo). Nunca bloqueia o upload: falha em silêncio,
+        // fica só o cartão colorido por tipo de ficheiro na Biblioteca.
+        let thumbUrl = null
+        if (file.type === 'application/pdf') {
+          try {
+            const { renderPdfThumbnail } = await import('../lib/pdfThumbnail')
+            const thumbBlob = await renderPdfThumbnail(file)
+            const thumbPath = `${user.id}/thumbs/${Date.now()}-${file.name.replace(/\.[^.]+$/, '')}.jpg`
+            const { error: thumbErr } = await supabase.storage.from('library-files').upload(thumbPath, thumbBlob, { contentType: 'image/jpeg' })
+            if (!thumbErr) {
+              thumbUrl = supabase.storage.from('library-files').getPublicUrl(thumbPath).data.publicUrl
+            }
+          } catch (thumbErr) {
+            console.error('Preview do PDF falhou (não crítico):', thumbErr)
+          }
+        }
+
         const { error: insErr } = await supabase.from('projects').insert({
           user_id: user.id,
           name: file.name.replace(/\.[^.]+$/, ''),
@@ -229,6 +248,7 @@ export default function NewProject() {
           library_file_url: publicUrl,
           library_file_name: file.name,
           library_file_type: file.type,
+          library_thumb_url: thumbUrl,
         })
         if (insErr) throw insErr
       }
