@@ -479,4 +479,7 @@
 @media (max-width: 560px) {
   .np-tiles { grid-template-columns: 1fr; }
   .np-tile { padding: 22px 18px 48px; }
+  /* clamp(26px,5vw,34px) fica preso no mínimo em ecrãs estreitos — aqui
+     é o título principal do ecrã, não pode ler-se pequeno. */
+  .np-headline-anim { font-size: 32px; }
 }
