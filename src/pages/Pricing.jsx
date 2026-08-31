@@ -125,8 +125,14 @@ const CAREER_FEATURES = [
 
 export default function Pricing() {
   const navigate = useNavigate()
-  const { user, planId, profile } = useAuth()
+  const { user, planId, profile, isSchoolAccount } = useAuth()
   const [loading, setLoading] = useState(null)
+
+  const isTeacher = profile?.role === 'professor'
+  if (user && (isTeacher || isSchoolAccount)) {
+    navigate('/dashboard', { replace: true })
+    return null
+  }
   const [error, setError] = useState('')
 
   if (user && profile?.role === 'professor') {
