@@ -473,16 +473,11 @@ export default function NewProject() {
     return (
       <NpShell>
         <div className="np-loading">
-          <style>{`@keyframes np-sh{0%{background-position:-400px 0}100%{background-position:400px 0}} @keyframes np-in{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}`}</style>
+          <div className="np-loading-spinner" aria-hidden="true" />
           <p className="np-loading-title">{title}</p>
           <p className="np-loading-sub">
             {step === 'submitting' ? 'Quase pronto.' : 'Não feches esta página.'}
           </p>
-          <div className="np-loading-lines">
-            {[['55%', 100], ['80%', 60], ['70%', 80], ['45%', 90]].map(([w, delay], i) => (
-              <div key={i} className="np-loading-line" style={{ height: i === 0 ? 12 : 9, width: w, animation: `np-sh 1.5s ease-in-out infinite ${delay}ms, np-in 0.3s ease-out ${i * 80}ms both` }} />
-            ))}
-          </div>
         </div>
       </NpShell>
     )
