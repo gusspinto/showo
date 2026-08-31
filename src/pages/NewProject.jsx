@@ -6,7 +6,6 @@ import { StarsIcon as Sparkles } from '@solar-icons/react/bold/stars'
 import { ArrowRightIcon as ArrowRight } from '@solar-icons/react/bold/arrow-right'
 import { ArrowLeftIcon as ArrowLeft } from '@solar-icons/react/bold/arrow-left'
 import { Pen2Icon as Pencil } from '@solar-icons/react/bold/pen-2'
-import { AltArrowRightIcon as ChevronRight } from '@solar-icons/react/bold/alt-arrow-right'
 import { UploadIcon as Upload } from '@solar-icons/react/bold/upload'
 import { DocumentTextIcon as FileText } from '@solar-icons/react/bold/document-text'
 import { CloseIcon as X } from '@solar-icons/react/bold/close'
@@ -18,10 +17,16 @@ import { Toast, useToast } from '../components/Toast'
 import { PlanGateModal, AiUsageBadge } from '../components/PlanGate'
 import './NewProject.css'
 
+/* "Pessoal" vem primeiro e sozinho — é o caminho de quem usa a conta
+   individual, sem ligação nenhuma a escola. "De escola"/PAP continuam
+   cá (há quem os use mesmo numa conta pessoal), mas agrupados à parte,
+   como o conjunto secundário — ainda não temos escolas a usar a app
+   para justificar um modo à parte a sério; isto é só o primeiro passo
+   dessa separação. */
 const PROJECT_TYPES = [
-  { id: 'school',   label: 'Projeto de escola' },
-  { id: 'pap',      label: 'PAP' },
   { id: 'personal', label: 'Projeto pessoal' },
+  { id: 'school',   label: 'Projeto de escola', group: 'school' },
+  { id: 'pap',      label: 'PAP', group: 'school' },
 ]
 
 const REVIEW_FIELDS = [
@@ -44,11 +49,13 @@ const ACCEPT = '.pdf,.docx,.pptx,.txt,.md,image/png,image/jpeg,image/webp'
 const MAX_FILES = 5
 const MAX_TOTAL_MB = 12
 
+/* Usado tanto por "Criar com IA" como por "Responder a perguntas guiadas"
+   — nenhum dos dois lê um ficheiro (isso só acontece em "Adicionar", que
+   nem passa por este ecrã), por isso a linguagem tem de servir só texto. */
 const ANALYSIS_BEATS = [
-  'A abrir o teu trabalho…',
-  'A identificar as secções…',
-  'A recolher objetivos e resultados…',
-  'A preparar a ficha do projeto…',
+  'A ler a tua ideia…',
+  'A perceber o essencial…',
+  'A preparar o próximo passo…',
 ]
 
 function prettySize(bytes) {
@@ -142,7 +149,7 @@ export default function NewProject() {
   const authNext = path => `/register?next=${encodeURIComponent(path)}`
   const requireAccount = path => { if (!user) { navigate(authNext(path)); return true } return false }
   const [description, setDescription] = useState('')
-  const [projectType, setProjectType] = useState('school')
+  const [projectType, setProjectType] = useState('personal')
   const [form, setForm] = useState({})
   const [editingField, setEditingField] = useState(null)
   const [editValue, setEditValue] = useState('')
@@ -269,7 +276,8 @@ export default function NewProject() {
      solution/etc) — vira um item leve na Biblioteca: o ficheiro, o nome
      (do próprio ficheiro) e a descrição breve que a pessoa escrever. Sem
      IA nenhuma a analisar o conteúdo, por isso também não gasta o gate de
-     AI. "Criar do 0" continua a gerar a ficha completa como sempre. */
+     AI. "Descrever o que estou a fazer" continua a gerar a ficha completa
+     como sempre. */
   async function handleAddToLibrary() {
     if (!files.length) return
     if (requireAccount('/novo')) return
@@ -407,7 +415,7 @@ export default function NewProject() {
             <div className="np-or-divider">ou</div>
 
             <button className="np-alt-path" onClick={() => { if (!requireAccount('/novo')) setStep('describe') }}>
-              Criar do 0
+              Descrever o que estou a fazer
             </button>
           </div>
         </div>
@@ -428,7 +436,7 @@ export default function NewProject() {
           <div className="np-wrap">
             <StepBar current={2} total={3} label="O teu projeto" />
             <h1 className="np-headline">Conta-nos sobre o teu projeto.</h1>
-            <p className="np-sub">Descreve em 2–3 frases. A IA estrutura o conteúdo; tu revês e ajustas.</p>
+            <p className="np-sub">Descreve a tua ideia, a IA ajuda-te a desenvolvê-la.</p>
 
             <DescribeTextarea value={description} onChange={setDescription} onSubmit={handleGenerate} />
 
@@ -436,11 +444,14 @@ export default function NewProject() {
 
             {error && <p className="np-err"><AlertTriangle size={13} /> {error}</p>}
 
-            <button className="np-btn-primary" onClick={handleGenerate} disabled={!description.trim()}>
-              <Sparkles size={15} /> Criar com IA <ArrowRight size={15} />
+            <button className="np-btn-primary np-btn-ai" onClick={handleGenerate} disabled={!description.trim()}>
+              <Sparkles size={15} /> Criar com IA
             </button>
-            <button className="np-btn-quiet" onClick={handleInterview} disabled={!description.trim()}>
-              <ChevronRight size={14} /> Prefiro responder a perguntas
+
+            <div className="np-or-divider">ou</div>
+
+            <button className="np-alt-path" onClick={handleInterview} disabled={!description.trim()}>
+              Responder a perguntas guiadas
             </button>
             <AiUsageBadge feature="createProject" style={{ marginTop: 8 }} />
           </div>
@@ -457,16 +468,11 @@ export default function NewProject() {
     return (
       <NpShell>
         <div className="np-loading">
-          <style>{`@keyframes np-sh{0%{background-position:-400px 0}100%{background-position:400px 0}} @keyframes np-in{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}`}</style>
+          <div className="np-loading-spinner" aria-hidden="true" />
           <p className="np-loading-title">{title}</p>
           <p className="np-loading-sub">
             {step === 'submitting' ? 'Quase pronto.' : 'Não feches esta página.'}
           </p>
-          <div className="np-loading-lines">
-            {[['55%', 100], ['80%', 60], ['70%', 80], ['45%', 90]].map(([w, delay], i) => (
-              <div key={i} className="np-loading-line" style={{ height: i === 0 ? 12 : 9, width: w, animation: `np-sh 1.5s ease-in-out infinite ${delay}ms, np-in 0.3s ease-out ${i * 80}ms both` }} />
-            ))}
-          </div>
         </div>
       </NpShell>
     )
@@ -483,15 +489,12 @@ export default function NewProject() {
         <div className="np-center">
           <div className="np-wrap">
             <StepBar current={2} total={3} label="Perguntas" />
-            <h2 className="np-headline np-headline--sm">Vamos construir o teu projeto juntos.</h2>
-            <p className="np-sub">Responde a cada pergunta. A IA usa as tuas respostas para criar o projeto.</p>
             <InterviewPanel
               data={interviewData}
               onComplete={answers => {
                 setForm({ ...Object.fromEntries(Object.entries(answers).filter(([, v]) => v)), project_type: interviewData.projectType })
                 setStep('review')
               }}
-              onBack={() => setStep('describe')}
             />
           </div>
         </div>
@@ -654,16 +657,24 @@ function StepBar({ current, total, label }) {
 }
 
 function TypeRow({ value, onChange }) {
+  const personal = PROJECT_TYPES.filter(t => !t.group)
+  const school = PROJECT_TYPES.filter(t => t.group === 'school')
+  const renderType = t => (
+    <button
+      key={t.id}
+      type="button"
+      className={`np-type${value === t.id ? ' is-active' : ''}`}
+      onClick={() => onChange(t.id)}
+    >{t.label}</button>
+  )
+
   return (
     <div className="np-types">
-      {PROJECT_TYPES.map(t => (
-        <button
-          key={t.id}
-          type="button"
-          className={`np-type${value === t.id ? ' is-active' : ''}`}
-          onClick={() => onChange(t.id)}
-        >{t.label}</button>
-      ))}
+      {personal.map(renderType)}
+      {/* "De escola"/PAP ao lado de "Pessoal", só que dentro da sua
+          própria cápsula tracejada — dá para ver que são um grupo à
+          parte sem parecer uma secção inteira separada. */}
+      <div className="np-types-school-group">{school.map(renderType)}</div>
     </div>
   )
 }
@@ -820,7 +831,7 @@ function ReviewField({ field, value, isEditing, editValue, onEdit, onEditValueCh
   )
 }
 
-function InterviewPanel({ data, onComplete, onBack }) {
+function InterviewPanel({ data, onComplete }) {
   const [currentQ, setCurrentQ] = useState(0)
   const [currentAnswer, setCurrentAnswer] = useState('')
   const [answers, setAnswers] = useState({})
@@ -875,12 +886,10 @@ function InterviewPanel({ data, onComplete, onBack }) {
 
       <div className="np-interview-actions">
         <button type="button" className="np-btn-primary" onClick={() => advance()} disabled={!currentAnswer.trim()}>
-          {isLast ? <><Sparkles size={14} /> Concluir</> : <>Próxima <ChevronRight size={14} /></>}
+          {isLast ? <><Sparkles size={14} /> Concluir</> : 'Próxima'}
         </button>
         <button type="button" className="np-interview-skip" onClick={() => advance('')}>Saltar</button>
       </div>
-
-      <button type="button" className="np-btn-quiet" onClick={onBack}>← Voltar</button>
     </div>
   )
 }
