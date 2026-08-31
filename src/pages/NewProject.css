@@ -94,7 +94,7 @@
 }
 
 .np-tile {
-  position: relative; overflow: hidden;
+  position: relative; z-index: 0; overflow: hidden;
   display: flex; flex-direction: column; align-items: flex-start; gap: 10px;
   width: 100%; padding: 26px 22px 52px;
   background: var(--color-surface);
@@ -118,6 +118,22 @@
   .np-tile { animation: none; }
 }
 
+/* Lavagem de cor subtil + ícone gigante semi-transparente no canto —
+   dá carácter ao cartão sem acrescentar texto nenhum (tirámos o chip
+   de tempo e o traço a meio da frase, que não estavam a ajudar). */
+.np-tile.is-blue { background: radial-gradient(140% 130% at 100% 0%, color-mix(in srgb, #2478f0 10%, var(--color-surface)) 0%, var(--color-surface) 62%); }
+.np-tile.is-red  { background: radial-gradient(140% 130% at 100% 0%, color-mix(in srgb, #db4a3d 10%, var(--color-surface)) 0%, var(--color-surface) 62%); }
+
+.np-tile-watermark {
+  position: absolute; z-index: -1; right: -20px; bottom: -22px;
+  color: var(--color-text); opacity: 0.05;
+  transition: transform 0.35s var(--ease-out), opacity 0.35s;
+  pointer-events: none;
+}
+.np-tile.is-blue .np-tile-watermark { color: #2478f0; }
+.np-tile.is-red .np-tile-watermark { color: #db4a3d; }
+.np-tile:hover .np-tile-watermark { transform: scale(1.08) rotate(-4deg); opacity: 0.09; }
+
 .np-tile-icon {
   display: flex; align-items: center; justify-content: center;
   width: 48px; height: 48px; flex-shrink: 0;
@@ -127,15 +143,6 @@
 .np-tile.is-blue:hover { border-color: #2478f0; }
 .np-tile.is-red .np-tile-icon { background: linear-gradient(135deg, #db4a3d, #ef8177); }
 .np-tile.is-red:hover { border-color: #db4a3d; }
-
-.np-tile-time {
-  position: absolute; top: 18px; right: 18px;
-  font-size: 10.5px; font-weight: 700;
-  color: var(--color-text-tertiary);
-  background: var(--color-bg-alt);
-  border-radius: 99px; padding: 3px 9px;
-  letter-spacing: 0.02em;
-}
 
 .np-tile-title { font-size: 17px; font-weight: 800; letter-spacing: -0.2px; }
 .np-tile-desc { font-size: 13.5px; color: var(--color-text-secondary); line-height: 1.5; }
