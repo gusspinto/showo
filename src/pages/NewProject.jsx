@@ -18,10 +18,16 @@ import { Toast, useToast } from '../components/Toast'
 import { PlanGateModal, AiUsageBadge } from '../components/PlanGate'
 import './NewProject.css'
 
+/* "Pessoal" vem primeiro e sozinho — é o caminho de quem usa a conta
+   individual, sem ligação nenhuma a escola. "De escola"/PAP continuam
+   cá (há quem os use mesmo numa conta pessoal), mas agrupados à parte,
+   como o conjunto secundário — ainda não temos escolas a usar a app
+   para justificar um modo à parte a sério; isto é só o primeiro passo
+   dessa separação. */
 const PROJECT_TYPES = [
-  { id: 'school',   label: 'Projeto de escola' },
-  { id: 'pap',      label: 'PAP' },
   { id: 'personal', label: 'Projeto pessoal' },
+  { id: 'school',   label: 'Projeto de escola', group: 'school' },
+  { id: 'pap',      label: 'PAP', group: 'school' },
 ]
 
 const REVIEW_FIELDS = [
@@ -143,7 +149,7 @@ export default function NewProject() {
   const authNext = path => `/register?next=${encodeURIComponent(path)}`
   const requireAccount = path => { if (!user) { navigate(authNext(path)); return true } return false }
   const [description, setDescription] = useState('')
-  const [projectType, setProjectType] = useState('school')
+  const [projectType, setProjectType] = useState('personal')
   const [form, setForm] = useState({})
   const [editingField, setEditingField] = useState(null)
   const [editValue, setEditValue] = useState('')
@@ -434,7 +440,7 @@ export default function NewProject() {
           <div className="np-wrap">
             <StepBar current={2} total={3} label="O teu projeto" />
             <h1 className="np-headline">Conta-nos sobre o teu projeto.</h1>
-            <p className="np-sub">Descreve em 2–3 frases. A IA estrutura o conteúdo; tu revês e ajustas.</p>
+            <p className="np-sub">Descreve a ideia em 2–3 frases. A IA ajuda-te a desenvolvê-la.</p>
 
             <DescribeTextarea value={description} onChange={setDescription} onSubmit={handleGenerate} />
 
@@ -660,16 +666,24 @@ function StepBar({ current, total, label }) {
 }
 
 function TypeRow({ value, onChange }) {
+  const personal = PROJECT_TYPES.filter(t => !t.group)
+  const school = PROJECT_TYPES.filter(t => t.group === 'school')
+  const renderType = t => (
+    <button
+      key={t.id}
+      type="button"
+      className={`np-type${value === t.id ? ' is-active' : ''}`}
+      onClick={() => onChange(t.id)}
+    >{t.label}</button>
+  )
+
   return (
     <div className="np-types">
-      {PROJECT_TYPES.map(t => (
-        <button
-          key={t.id}
-          type="button"
-          className={`np-type${value === t.id ? ' is-active' : ''}`}
-          onClick={() => onChange(t.id)}
-        >{t.label}</button>
-      ))}
+      {personal.map(renderType)}
+      {/* "De escola"/PAP à parte — não é o caminho principal de quem usa
+          a conta individual, mas continua acessível para quem precisar. */}
+      <span className="np-types-divider" aria-hidden="true" />
+      {school.map(renderType)}
     </div>
   )
 }

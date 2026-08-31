@@ -219,8 +219,11 @@
 .np-notes:focus { border-color: var(--color-text); }
 
 
-/* ── Tipo de projeto ── */
-.np-types { display: flex; gap: 6px; flex-wrap: wrap; margin: 18px 0 24px; }
+/* ── Tipo de projeto — "Pessoal" é o caminho principal (conta
+   individual), "De escola"/PAP ficam à parte, separados por uma
+   réguazinha, como o conjunto secundário. ── */
+.np-types { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin: 18px 0 24px; }
+.np-types-divider { width: 1px; height: 16px; background: var(--color-border); margin: 0 2px; }
 .np-type {
   padding: 7px 14px; border-radius: var(--radius-full);
   border: 1.5px solid var(--color-border);
