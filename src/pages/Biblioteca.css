@@ -26,6 +26,91 @@
 }
 .lib-add-btn:hover { opacity: 0.88; }
 
+.lib-header-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+.lib-edit-btn {
+  padding: 10px 14px;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  font-size: 13px; font-weight: 700; cursor: pointer;
+  font-family: inherit; color: var(--color-text);
+  transition: background 0.15s, border-color 0.15s;
+}
+.lib-edit-btn:hover { background: var(--color-surface-hover); }
+.lib-edit-btn.is-on { background: var(--color-text); color: var(--color-bg); border-color: var(--color-text); }
+
+/* ── Painel "No teu perfil" — só visível em modo de edição. Reordenar
+   (arrastar) + escolher o layout de cada item. O interruptor liga/desliga
+   está no próprio card, lá em baixo. ── */
+.lib-profile-panel {
+  margin: 0 0 28px;
+  padding: 16px;
+  background: var(--color-bg-alt);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+}
+.lib-profile-panel-head { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
+.lib-profile-panel-hint { font-size: 12.5px; color: var(--color-text-secondary); line-height: 1.5; }
+.lib-pf-empty { font-size: 13px; color: var(--color-text-tertiary); margin: 4px 0 0; }
+
+.lib-pf-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.lib-pf-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+}
+.lib-pf-item.is-dragging { opacity: 0.4; }
+.lib-pf-grip { display: flex; color: var(--color-text-tertiary); cursor: grab; flex-shrink: 0; }
+.lib-pf-grip:active { cursor: grabbing; }
+.lib-pf-thumb {
+  display: flex; align-items: center; justify-content: center;
+  width: 34px; height: 34px; flex-shrink: 0;
+  border-radius: 7px; overflow: hidden;
+  background: var(--color-bg-alt); color: var(--color-text-tertiary);
+  font-size: 13px; font-weight: 800;
+}
+.lib-pf-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.lib-pf-name {
+  flex: 1; min-width: 0; font-size: 13px; font-weight: 600;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+.lib-seg { display: inline-flex; background: var(--color-bg-alt); border-radius: 8px; padding: 2px; flex-shrink: 0; }
+.lib-seg-btn {
+  padding: 5px 10px; border: none; background: transparent;
+  font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit;
+  color: var(--color-text-secondary); border-radius: 6px;
+  transition: background 0.14s, color 0.14s;
+}
+.lib-seg-btn.is-on { background: var(--color-surface); color: var(--color-text); box-shadow: 0 1px 2px rgba(0,0,0,0.08); }
+
+.lib-pf-remove {
+  display: flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px; flex-shrink: 0; border-radius: 7px;
+  border: none; background: transparent; cursor: pointer;
+  color: var(--color-text-tertiary);
+  transition: background 0.14s, color 0.14s;
+}
+.lib-pf-remove:hover { background: var(--color-error-subtle); color: var(--color-error); }
+
+/* ── Interruptor "Mostrar no perfil" nos cards (modo de edição) ── */
+.lib-pin {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 10px; border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface); color: var(--color-text-secondary);
+  font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit;
+  transition: background 0.14s, border-color 0.14s, color 0.14s;
+}
+.lib-pin:hover { border-color: var(--color-border-hover); }
+.lib-pin.is-on { background: var(--color-text); color: var(--color-bg); border-color: var(--color-text); }
+.lib-tile.is-editing { display: flex; flex-direction: column; gap: 8px; }
+.lib-tile.is-editing .lib-pin { align-self: flex-start; }
+.lib-pin--inline { margin-right: 4px; padding: 4px 8px; }
+
 .lib-section { margin-bottom: 32px; }
 .lib-section-title {
   font-size: 12px; font-weight: 700;

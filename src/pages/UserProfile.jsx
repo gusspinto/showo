@@ -30,15 +30,44 @@ function scoreColor(score) {
   return 'var(--color-error)'
 }
 
-function ProjectCard({ project, onClick, featured }) {
-  const color = scoreColor(project.score)
+/* Um item do perfil — projeto criado ou ficheiro da Biblioteca — no layout
+   que o dono escolheu: 'tile' (capa grande) ou 'row' (linha compacta). */
+function ProfileItem({ project, onOpen }) {
+  const isLibrary = project.entry_kind === 'library'
+  const cover =
+    project.cover_url ||
+    project.library_thumb_url ||
+    (project.library_file_type?.startsWith('image/') ? project.library_file_url : null)
+  const subtitle = project.ai_tagline || project.library_description || null
+
+  if (project.profile_layout === 'row') {
+    return (
+      <button type="button" className="up-pf-row" onClick={onOpen}>
+        <span className={`up-pf-row-thumb${cover ? ' has-img' : ''}`}>
+          {cover
+            ? <img src={cover} alt="" loading="lazy" />
+            : <span className="up-pf-row-letter">{(project.name || '?')[0].toUpperCase()}</span>}
+        </span>
+        <span className="up-pf-row-text">
+          <span className="up-pf-row-name">{project.name}</span>
+          {(subtitle || project.area) && (
+            <span className="up-pf-row-sub">{subtitle || project.area}</span>
+          )}
+        </span>
+        {!isLibrary && project.score != null && (
+          <span className="up-pf-row-score" style={{ color: scoreColor(project.score) }}>
+            {project.score}
+          </span>
+        )}
+        {isLibrary && <span className="up-pf-row-ext"><ExternalLink size={13} /></span>}
+      </button>
+    )
+  }
 
   return (
-    <div className={`up-project-card${featured ? ' up-project-card--featured' : ''}`} onClick={onClick}>
-      {project.cover_url ? (
-        <div className="up-card-cover-img">
-          <img src={project.cover_url} alt="" />
-        </div>
+    <div className="up-project-card" onClick={onOpen}>
+      {cover ? (
+        <div className="up-card-cover-img"><img src={cover} alt="" /></div>
       ) : (
         <div className="up-card-cover-fallback">
           <span className="up-card-cover-letter">
@@ -50,12 +79,12 @@ function ProjectCard({ project, onClick, featured }) {
       <div className="up-card-body">
         <div className="up-card-title-row">
           <span className="up-card-name">{project.name}</span>
-          {project.score != null && (
-            <span className="up-card-score" style={{ color }}>{project.score}</span>
+          {!isLibrary && project.score != null && (
+            <span className="up-card-score" style={{ color: scoreColor(project.score) }}>{project.score}</span>
           )}
         </div>
-        {project.ai_tagline && <p className="up-card-tagline">{project.ai_tagline}</p>}
-        {project.area && <span className="up-card-area">{project.area}</span>}
+        {subtitle && <p className="up-card-tagline">{subtitle}</p>}
+        {!isLibrary && project.area && <span className="up-card-area">{project.area}</span>}
       </div>
     </div>
   )
@@ -174,15 +203,16 @@ export default function UserProfile() {
       if (profileErr || !profileData) { setNotFound(true); setLoading(false); return }
       setProfile(profileData)
 
+      // A secção "Projetos" mostra só o que o dono escolheu na Biblioteca
+      // (profile_featured), pela ordem que definiu — projetos criados e
+      // ficheiros adicionados juntos. Deixou de listar tudo por score.
+      const PROJECT_COLS = 'id, name, slug, score, area, ai_tagline, cover_url, created_at, views, ai_feedback, entry_kind, profile_featured, profile_featured_order, profile_layout, library_description, library_file_url, library_file_name, library_file_type, library_thumb_url'
       const projectsPromise = supabase
         .from('projects')
-        .select('id, name, slug, score, area, ai_tagline, cover_url, created_at, views, ai_feedback, featured, featured_order, collaborator_count:project_collaborators(count)')
+        .select(`${PROJECT_COLS}, collaborator_count:project_collaborators(count)`)
         .eq('user_id', profileData.id)
-        // Itens da Biblioteca (entry_kind='library') não têm ficha nenhuma
-        // — ficheiro+nome+descrição, sempre privados. Nunca fazem sentido
-        // aqui, apareciam partidos (sem capa, score a 0).
-        .eq('entry_kind', 'full')
-        .order('score', { ascending: false })
+        .eq('profile_featured', true)
+        .order('profile_featured_order', { ascending: true })
 
       const isRecruiterVisitor = user && (myProfile?.role === 'recrutador' || myProfile?.role === 'empresa') && profileData.id !== user.id
       const savedPromise = isRecruiterVisitor
@@ -195,10 +225,10 @@ export default function UserProfile() {
       if (projErr || !projectsData) {
         const { data: fallback } = await supabase
           .from('projects')
-          .select('id, name, slug, score, area, ai_tagline, cover_url, created_at, views, ai_feedback, featured, featured_order')
+          .select(PROJECT_COLS)
           .eq('user_id', profileData.id)
-          .eq('entry_kind', 'full')
-          .order('score', { ascending: false })
+          .eq('profile_featured', true)
+          .order('profile_featured_order', { ascending: true })
         finalProjects = fallback
       }
 
@@ -363,26 +393,6 @@ export default function UserProfile() {
             {projects.length > 0 && <span className="up-section-count">({projects.length})</span>}
           </p>
 
-          {/* Featured projects */}
-          {(() => {
-            const featured = projects
-              .filter(p => p.featured)
-              .sort((a, b) => (a.featured_order ?? 99) - (b.featured_order ?? 99))
-            if (!featured.length) return null
-            return (
-              <div className="up-featured-section">
-                <p className="up-featured-label">
-                  <Star size={12} /> Em destaque
-                </p>
-                <div className="up-featured-grid">
-                  {featured.map(project => (
-                    <ProjectCard key={project.id} project={project} onClick={() => navigate(`/projeto/${project.slug}`)} featured />
-                  ))}
-                </div>
-              </div>
-            )
-          })()}
-
           {projects.length === 0 ? (
             isOwnProfile ? (
               <div className="up-empty">
@@ -393,10 +403,11 @@ export default function UserProfile() {
                 {myProfile?.role !== 'professor' && (
                   <>
                     <p className="up-empty-desc">
-                      Adiciona o teu primeiro projeto e constrói o teu portfólio profissional.
+                      Escolhe na Biblioteca o que mostrar aqui — liga "Mostrar no perfil"
+                      nos projetos e ficheiros que queres nesta página.
                     </p>
-                    <button onClick={() => navigate('/novo')} className="up-empty-cta">
-                      Criar projeto <ArrowRight size={14} />
+                    <button onClick={() => navigate('/biblioteca')} className="up-empty-cta">
+                      Ir para a Biblioteca <ArrowRight size={14} />
                     </button>
                   </>
                 )}
@@ -411,9 +422,19 @@ export default function UserProfile() {
               </div>
             )
           ) : (
-            <div className="up-projects-grid">
+            <div className="up-profile-items">
               {projects.map(project => (
-                <ProjectCard key={project.id} project={project} onClick={() => navigate(`/projeto/${project.slug}`)} />
+                <ProfileItem
+                  key={project.id}
+                  project={project}
+                  onOpen={() => {
+                    if (project.entry_kind === 'library') {
+                      if (project.library_file_url) window.open(project.library_file_url, '_blank', 'noopener')
+                    } else {
+                      navigate(`/projeto/${project.slug}`)
+                    }
+                  }}
+                />
               ))}
             </div>
           )}
