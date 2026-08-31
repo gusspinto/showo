@@ -42,14 +42,33 @@ function fileTypeStyle(type) {
   return FILE_TYPE_STYLE[type] || { color: '#8a8f98', label: 'FICHEIRO' }
 }
 
-/* Ficheiros que o próprio browser sabe mostrar num <iframe>/<img> direto.
-   Word/PowerPoint não — passam pelo Google Docs Viewer, que só precisa
-   de um URL público (o bucket já é público). */
 function previewUrlFor(item) {
-  const { library_file_url: url, library_file_type: type } = item
+  const url = item._signedFileUrl
+  const type = item.library_file_type
   if (!url) return null
   if (type?.startsWith('image/') || type === 'application/pdf') return url
-  return `https://docs.google.com/gview?url=${encodeURIComponent(url)}&embedded=true`
+  return null
+}
+
+async function signLibraryUrls(items) {
+  const toSign = []
+  for (const it of items) {
+    if (it.entry_kind !== 'library') continue
+    if (it.library_file_url && !it.library_file_url.startsWith('http')) toSign.push(it.library_file_url)
+    if (it.library_thumb_url && !it.library_thumb_url.startsWith('http')) toSign.push(it.library_thumb_url)
+  }
+  if (!toSign.length) return items
+  const { data: signed } = await supabase.storage.from('library-files').createSignedUrls(toSign, 900)
+  const urlMap = {}
+  if (signed) signed.forEach(s => { if (s.signedUrl) urlMap[s.path] = s.signedUrl })
+  return items.map(it => {
+    if (it.entry_kind !== 'library') return it
+    return {
+      ...it,
+      _signedFileUrl: urlMap[it.library_file_url] || it.library_file_url,
+      _signedThumbUrl: urlMap[it.library_thumb_url] || it.library_thumb_url,
+    }
+  })
 }
 
 function prettyDate(iso) {
@@ -64,7 +83,7 @@ function prettyDate(iso) {
    ainda mais reconhecível que um ícone cinzento genérico. */
 function LibAddedTile({ item, onOpen, onDelete, removing }) {
   const isImage = item.library_file_type?.startsWith('image/')
-  const previewSrc = isImage ? item.library_file_url : item.library_thumb_url
+  const previewSrc = isImage ? (item._signedFileUrl || item.library_file_url) : (item._signedThumbUrl || item.library_thumb_url)
   const ft = fileTypeStyle(item.library_file_type)
 
   return (
@@ -157,7 +176,11 @@ export default function Biblioteca() {
       .select('id, name, slug, entry_kind, area, score, ai_tagline, cover_url, library_description, library_file_url, library_file_name, library_file_type, library_thumb_url, created_at')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
-      .then(({ data }) => { if (!cancelled) setItems(data ?? []) })
+      .then(async ({ data }) => {
+        if (cancelled) return
+        const withUrls = await signLibraryUrls(data ?? [])
+        if (!cancelled) setItems(withUrls)
+      })
     return () => { cancelled = true }
   }, [user])
 
@@ -169,11 +192,13 @@ export default function Biblioteca() {
     if (!user) return
     const channel = supabase
       .channel(`biblioteca-${user.id}`)
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'projects', filter: `user_id=eq.${user.id}` }, payload => {
-        setItems(prev => prev?.map(i => (i.id === payload.new.id ? { ...i, ...payload.new } : i)) ?? prev)
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'projects', filter: `user_id=eq.${user.id}` }, async payload => {
+        const [signed] = await signLibraryUrls([payload.new])
+        setItems(prev => prev?.map(i => (i.id === signed.id ? { ...i, ...signed } : i)) ?? prev)
       })
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'projects', filter: `user_id=eq.${user.id}` }, payload => {
-        setItems(prev => (prev?.some(i => i.id === payload.new.id) ? prev : [payload.new, ...(prev ?? [])]))
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'projects', filter: `user_id=eq.${user.id}` }, async payload => {
+        const [signed] = await signLibraryUrls([payload.new])
+        setItems(prev => (prev?.some(i => i.id === signed.id) ? prev : [signed, ...(prev ?? [])]))
       })
       .subscribe()
     return () => { supabase.removeChannel(channel) }
@@ -258,7 +283,7 @@ export default function Biblioteca() {
             <div className="lib-viewer-head">
               <span className="lib-viewer-title">{viewing.name}</span>
               <div className="lib-viewer-actions">
-                <a className="lib-card-btn" href={viewing.library_file_url} target="_blank" rel="noopener noreferrer" aria-label="Abrir noutra aba">
+                <a className="lib-card-btn" href={viewing._signedFileUrl || viewing.library_file_url} target="_blank" rel="noopener noreferrer" aria-label="Abrir noutra aba">
                   <ExternalLink size={16} />
                 </a>
                 <button className="lib-card-btn" onClick={() => setViewing(null)} aria-label="Fechar">
@@ -268,7 +293,7 @@ export default function Biblioteca() {
             </div>
             <div className="lib-viewer-body">
               {viewing.library_file_type?.startsWith('image/') ? (
-                <img src={viewing.library_file_url} alt={viewing.name} className="lib-viewer-img" />
+                <img src={viewing._signedFileUrl || viewing.library_file_url} alt={viewing.name} className="lib-viewer-img" />
               ) : (
                 <iframe title={viewing.name} src={previewUrlFor(viewing)} className="lib-viewer-frame" />
               )}

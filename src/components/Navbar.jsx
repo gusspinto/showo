@@ -1405,9 +1405,11 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               )}
 
 
-              <button className={`sb-item${isActive('/pricing') ? ' active' : ''}`} onClick={() => navigate('/pricing')} title="Planos">
-                <Sparkles size={16} />{!collapsed && showLabels && <span>Planos</span>}
-              </button>
+              {!isSchoolAccount && (
+                <button className={`sb-item${isActive('/pricing') ? ' active' : ''}`} onClick={() => navigate('/pricing')} title="Planos">
+                  <Sparkles size={16} />{!collapsed && showLabels && <span>Planos</span>}
+                </button>
+              )}
 
               <button className={`sb-item${isActive('/aprende') ? ' active' : ''}`} onClick={() => navigate('/aprende')} title="Aprende a usar">
                 <BookMarked size={16} />{!collapsed && showLabels && <span>Aprende a usar</span>}
