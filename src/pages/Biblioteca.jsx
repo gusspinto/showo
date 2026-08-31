@@ -140,13 +140,14 @@ export default function Biblioteca() {
   const [items, setItems] = useState(null)
   const [removing, setRemoving] = useState(null)
   const [viewing, setViewing] = useState(null)
+  const [confirmingDelete, setConfirmingDelete] = useState(null)
 
   useEffect(() => {
-    if (!viewing) return
-    const onKey = e => { if (e.key === 'Escape') setViewing(null) }
+    if (!viewing && !confirmingDelete) return
+    const onKey = e => { if (e.key === 'Escape') { setViewing(null); setConfirmingDelete(null) } }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
-  }, [viewing])
+  }, [viewing, confirmingDelete])
 
   useEffect(() => {
     if (!user) return
@@ -160,8 +161,13 @@ export default function Biblioteca() {
     return () => { cancelled = true }
   }, [user])
 
-  async function handleDelete(id) {
-    if (!window.confirm('Remover este item da biblioteca? Não é possível desfazer.')) return
+  function handleDelete(id) {
+    setConfirmingDelete(id)
+  }
+
+  async function confirmDelete() {
+    const id = confirmingDelete
+    setConfirmingDelete(null)
     setRemoving(id)
     await supabase.from('projects').delete().eq('id', id).eq('user_id', user.id)
     setItems(prev => prev.filter(i => i.id !== id))
@@ -248,6 +254,18 @@ export default function Biblioteca() {
               ) : (
                 <iframe title={viewing.name} src={previewUrlFor(viewing)} className="lib-viewer-frame" />
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {confirmingDelete && (
+        <div className="lib-confirm-backdrop" onClick={() => setConfirmingDelete(null)}>
+          <div className="lib-confirm" onClick={e => e.stopPropagation()}>
+            <p className="lib-confirm-text">Remover este item da biblioteca? Não é possível desfazer.</p>
+            <div className="lib-confirm-actions">
+              <button className="lib-confirm-btn" onClick={() => setConfirmingDelete(null)}>Cancelar</button>
+              <button className="lib-confirm-btn danger" onClick={confirmDelete}>Remover</button>
             </div>
           </div>
         </div>
