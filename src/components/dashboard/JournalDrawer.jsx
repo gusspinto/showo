@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { AddCircleIcon as Plus } from '@solar-icons/react/bold/add-circle'
+import { PlusIcon as Plus } from '../icons/PlusIcon'
 import { TrashBinMinimalisticIcon as Trash2 } from '@solar-icons/react/bold/trash-bin-minimalistic'
 import { supabase } from '../../lib/supabase'
 import { Modal, Button } from '../ui'

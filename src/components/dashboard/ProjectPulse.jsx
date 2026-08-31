@@ -1,5 +1,5 @@
 import { ArrowRightUpIcon as ArrowUpRight } from '@solar-icons/react/bold/arrow-right-up'
-import { AddCircleIcon as Plus } from '@solar-icons/react/bold/add-circle'
+import { PlusIcon as Plus } from '../icons/PlusIcon'
 import { CalendarMarkIcon as CalendarClock } from '@solar-icons/react/bold/calendar-mark'
 import { Pen2Icon as Pencil } from '@solar-icons/react/bold/pen-2'
 import { TrashBinMinimalisticIcon as Trash2 } from '@solar-icons/react/bold/trash-bin-minimalistic'

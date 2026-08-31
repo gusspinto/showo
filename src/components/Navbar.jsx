@@ -21,8 +21,9 @@ import { GraphNewUpIcon as TrendingUp } from '@solar-icons/react/bold/graph-new-
 import { SquareAcademicCapIcon as GraduationCap } from '@solar-icons/react/bold/square-academic-cap'
 import { UserPlusRoundedIcon as UserPlus } from '@solar-icons/react/bold/user-plus-rounded'
 import { Widget4Icon as LayoutDashboard } from '@solar-icons/react/bold/widget-4'
-import { AddCircleIcon as Plus } from '@solar-icons/react/bold/add-circle'
+import { PlusIcon as Plus } from './icons/PlusIcon'
 import { CompassIcon as Compass } from '@solar-icons/react/bold/compass'
+import { LibraryIcon } from '@solar-icons/react/bold/library'
 import { Sun2Icon as Sun } from '@solar-icons/react/bold/sun-2'
 import { MoonIcon as Moon } from '@solar-icons/react/bold/moon'
 import { StarsIcon as Sparkles } from '@solar-icons/react/bold/stars'
@@ -394,7 +395,7 @@ function InviteInbox({ userId, sidebar = false, collapsed = false }) {
           position: 'relative',
           background: open ? 'color-mix(in srgb, var(--color-text) 13%, transparent)' : 'transparent',
           border: 'none',
-          borderRadius: 8, width: 44, height: 44,
+          borderRadius: sidebar ? 8 : 8, width: sidebar ? 32 : 44, height: sidebar ? 32 : 44,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           cursor: 'pointer', color: open ? 'var(--color-text)' : 'var(--color-text-secondary)',
           transition: 'background 0.13s, color 0.13s', flexShrink: 0,
@@ -403,7 +404,7 @@ function InviteInbox({ userId, sidebar = false, collapsed = false }) {
         onMouseLeave={e => { if (!open) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--color-text-secondary)' } }}
         title="Notificações"
       >
-        <Bell size={15} />
+        <Bell size={sidebar ? 16 : 15} />
         {count > 0 && (
           <span style={{
             position: 'absolute', top: -4, right: -4,
@@ -753,6 +754,24 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
     document.body.classList.add('drawer-open')
     return () => document.body.classList.remove('drawer-open')
   }, [menuOpen])
+  // Botão "Criar projeto" com gradiente — no desktop (rato de verdade), o
+  // brilho segue o cursor dentro do botão via custom properties, sem tocar
+  // em React state (mousemove é demasiado frequente para re-render).
+  // Em touch simplesmente nunca dispara, o botão fica só com o gradiente
+  // estático das três cores.
+  const handleGradientMove = (e) => {
+    if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return
+    const rect = e.currentTarget.getBoundingClientRect()
+    const x = ((e.clientX - rect.left) / rect.width) * 100
+    const y = ((e.clientY - rect.top) / rect.height) * 100
+    e.currentTarget.style.setProperty('--mx', `${x}%`)
+    e.currentTarget.style.setProperty('--my', `${y}%`)
+  }
+  const handleGradientLeave = (e) => {
+    e.currentTarget.style.removeProperty('--mx')
+    e.currentTarget.style.removeProperty('--my')
+  }
+
   // Mobile "Gerir projeto" popup — opened from the paintbrush that replaces the
   // "+" while viewing your own project (keeps those actions out of the drawer).
   const [projMenuOpen, setProjMenuOpen] = useState(false)
@@ -1091,8 +1110,8 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   <Paintbrush size={18} strokeWidth={2} />
                 </button>
               ) : !isTeacher && !isAdmin ? (
-                <button className="mob-nav-icon-btn primary" onClick={() => navigate('/novo')} aria-label="Criar projeto">
-                  <Plus size={20} strokeWidth={2.5} />
+                <button className="mob-nav-icon-btn primary gradient-cta" onMouseMove={handleGradientMove} onMouseLeave={handleGradientLeave} onClick={() => navigate('/novo')} aria-label="Criar projeto">
+                  <Plus size={15} />
                 </button>
               ) : null}
             </div>
@@ -1158,16 +1177,16 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
           {/* Mobile quick-create button — only on mobile (not tablet) */}
           {showLinks && !isTeacher && !isAdmin && (
             <button
-              className="ham-btn mob-only-create"
+              className="ham-btn mob-only-create gradient-cta"
               onClick={() => navigate('/novo')}
+              onMouseMove={handleGradientMove}
+              onMouseLeave={handleGradientLeave}
               aria-label="Criar projeto"
               style={{
-                background: 'var(--color-text)',
                 border: 'none',
                 borderRadius: 8, width: 38, height: 38,
                 flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                 cursor: 'pointer', padding: 0, flexShrink: 0,
-                boxShadow: '0 4px 12px color-mix(in srgb, var(--color-text) 35%, transparent)',
               }}
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -1354,6 +1373,11 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   <LayoutDashboard size={16} />{!collapsed && showLabels && <span>Dashboard</span>}
                 </button>
               )}
+              {user && (
+                <button className={`sb-item${isActive('/biblioteca') ? ' active' : ''}`} onClick={() => navigate('/biblioteca')}>
+                  <LibraryIcon size={16} />{!collapsed && showLabels && <span>Biblioteca</span>}
+                </button>
+              )}
               {isSchoolAccount && (
                 <button className={`sb-item${isActive('/turmas') ? ' active' : ''}`} onClick={() => navigate('/turmas')}>
                   <Users2 size={16} />{!collapsed && showLabels && <span>Turmas</span>}
@@ -1392,7 +1416,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               {user && !isTeacher && !isAdmin && (
                 <div className={`sb-create-wrap ${extras ? 'hidden' : 'visible'}`}>
                   <div className="sb-create-inner">
-                    <button className="sb-create" onClick={() => navigate('/novo')}>
+                    <button className="sb-create gradient-cta" onMouseMove={handleGradientMove} onMouseLeave={handleGradientLeave} onClick={() => navigate('/novo')}>
                       <Plus size={14} />{!collapsed && showLabels && <span>Criar projeto</span>}
                     </button>
                   </div>
@@ -1685,6 +1709,11 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   {user && (
                     <button className={`mob-nav-btn${isActive('/dashboard') ? ' active' : ''}`} onClick={() => { navigate('/dashboard'); setMenuOpen(false) }}>
                       <LayoutDashboard size={18} /> Dashboard
+                    </button>
+                  )}
+                  {user && (
+                    <button className={`mob-nav-btn${isActive('/biblioteca') ? ' active' : ''}`} onClick={() => { navigate('/biblioteca'); setMenuOpen(false) }}>
+                      <LibraryIcon size={18} /> Biblioteca
                     </button>
                   )}
                   {/* Visitante sem conta: o menu é o mapa do site — a explicação

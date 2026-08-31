@@ -167,10 +167,6 @@ export default function Pricing() {
 
         <header className="pricing-header">
           <h1>Constrói agora. Lança quando estiveres pronto.</h1>
-          <p>
-            O <strong>Build</strong> é para pôr os teus projetos escolares de pé.
-            O <strong>Launch</strong> é para os transformar em estágio e primeiro emprego.
-          </p>
         </header>
 
         <div className="pricing-grid">

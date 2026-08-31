@@ -152,6 +152,10 @@ export default function Explore() {
         .from('projects')
         .select('id,name,slug,area,creator_name,course,school_year,ai_tagline,project_type,is_pap,score,created_at,technologies,views,cover_url,user_id,tags,preview_style')
         .or('visibility.eq.public,visibility.is.null')
+        // Itens da Biblioteca (ficheiro + nome, sem ficha nenhuma) nunca
+        // aparecem aqui — já vêm 'private' desde a origem, isto é só
+        // defesa extra caso essa coluna mude de outra forma.
+        .neq('entry_kind', 'library')
         .order('score', { ascending: false })
         .limit(300)
 
@@ -282,7 +286,6 @@ export default function Explore() {
         {/* Header */}
         <div className="explore-header">
           <h1 className="explore-title">Explorar</h1>
-          <p className="explore-subtitle">Descobre projetos e pessoas da comunidade Showo</p>
         </div>
 
         {/* Search + Tab + Filter row */}

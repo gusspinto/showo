@@ -8,7 +8,7 @@ import { PlaneIcon as Send } from '@solar-icons/react/bold/plane'
 import { ArrowLeftIcon as ArrowLeft } from '@solar-icons/react/bold/arrow-left'
 import { ChatRoundLineIcon as MessageSquare } from '@solar-icons/react/bold/chat-round-line'
 import { MagnifierIcon as Search } from '@solar-icons/react/bold/magnifier'
-import { AddCircleIcon as Plus } from '@solar-icons/react/bold/add-circle'
+import { PlusIcon as Plus } from '../components/icons/PlusIcon'
 import { CloseIcon as X } from '@solar-icons/react/bold/close'
 import { Pen2Icon as Pencil } from '@solar-icons/react/bold/pen-2'
 import { TrashBinMinimalisticIcon as Trash2 } from '@solar-icons/react/bold/trash-bin-minimalistic'
@@ -443,7 +443,6 @@ export default function Mensagens() {
             <h1 className="msg-page-title">
               Mensagens {totalUnread > 0 && <span className="msg-unread-badge">{totalUnread}</span>}
             </h1>
-            <p className="msg-page-subtitle">Conversas com recrutadores e candidatos</p>
           </div>
 
           <div className="msg-outer-wrap">

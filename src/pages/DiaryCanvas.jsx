@@ -8,7 +8,7 @@ import { TrashBinMinimalisticIcon as Trash2 } from '@solar-icons/react/bold/tras
 import { MagnifierZoomInIcon as ZoomIn } from '@solar-icons/react/bold/magnifier-zoom-in'
 import { MagnifierZoomOutIcon as ZoomOut } from '@solar-icons/react/bold/magnifier-zoom-out'
 import { RestartIcon as RotateCcw } from '@solar-icons/react/bold/restart'
-import { AddCircleIcon as Plus } from '@solar-icons/react/bold/add-circle'
+import { PlusIcon as Plus } from '../components/icons/PlusIcon'
 import { UndoLeftIcon as Undo2 } from '@solar-icons/react/bold/undo-left'
 import { RefreshIcon as Redo2 } from '@solar-icons/react/bold/refresh'
 import { DisketteIcon as Save } from '@solar-icons/react/bold/diskette'

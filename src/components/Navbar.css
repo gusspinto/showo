@@ -231,6 +231,54 @@ body.light .sb-collapse-toggle:hover { border-color: rgba(0,0,0,0.75); }
   width: 100%;
 }
 .sb-create:hover { opacity: 0.88; }
+
+/* ── Botão de criar — gradiente de marca ─────────────────────────────
+   Único ponto de cor "quente" fora da dashboard: destaca a ação mais
+   importante da app. Exatamente as três cores do ícone da Showo, nada
+   a mais — sem camadas de brilho branco a desbotar a cor. Estático em
+   tablet/mobile; no desktop o gradiente desloca-se com o rato só
+   enquanto está em hover (ver .sb-create.gradient-cta:hover abaixo). */
+.gradient-cta {
+  background-image: linear-gradient(115deg, #2478f0 0%, #db4a3d 50%, #cc9a1e 100%) !important;
+  background-color: transparent !important;
+  background-size: 100% 100% !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  border: none !important;
+  outline: none !important;
+  color: #fff !important;
+  box-shadow: none !important;
+  transition: filter 0.2s ease;
+}
+.gradient-cta:hover { opacity: 1 !important; filter: brightness(1.05); }
+
+/* Sidebar desktop — só em :hover o fundo cresce (180%) e desloca-se
+   com --mx/--my (escrito pelo handleGradientMove no mousemove); em
+   repouso fica exatamente igual ao .gradient-cta base, 100% centrado,
+   as três cores completas. background-size/-position têm o mesmo
+   número de camadas (uma só) nos dois estados, por isso a transição
+   ao sair do hover é suave em vez de cortar de repente. */
+.sb-create.gradient-cta {
+  --mx: 50%; --my: 50%;
+  transition: filter 0.2s ease, background-size 0.5s ease, background-position 0.5s ease;
+}
+@media (min-width: 901px) {
+  .sb-create.gradient-cta:hover {
+    background-size: 180% 180% !important;
+    background-position: var(--mx) var(--my) !important;
+  }
+}
+
+/* Botões-ícone (topbar mobile) — quadrado, mas do tamanho do sino ao
+   lado (44px) para não desequilibrar a barra; sem o !important no
+   tamanho, o flex do cluster pode esticar a caixa. */
+.mob-nav-icon-btn.gradient-cta,
+.mob-only-create.gradient-cta {
+  width: 40px !important; height: 40px !important;
+  flex: 0 0 40px !important;
+  aspect-ratio: 1 / 1;
+  border-radius: 9px !important;
+}
 .sb-divider { height: 1px; background: var(--color-border); margin: 6px 0; opacity: 0.6; }
 .sb-bottom { padding: 0 10px 14px; }
 .sb-action-row {

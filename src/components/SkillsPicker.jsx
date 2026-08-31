@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
 import { CloseIcon as X } from '@solar-icons/react/bold/close'
-import { AddCircleIcon as Plus } from '@solar-icons/react/bold/add-circle'
+import { PlusIcon as Plus } from './icons/PlusIcon'
 
 const POPULAR_SKILLS = [
   // Tecnologia / Informática

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { AddCircleIcon as Plus } from '@solar-icons/react/bold/add-circle'
+import { PlusIcon as Plus } from '../icons/PlusIcon'
 import { RefreshCircleIcon as CalendarSync } from '@solar-icons/react/bold/refresh-circle'
 import { CalendarMinimalisticIcon as CalendarDays } from '@solar-icons/react/bold/calendar-minimalistic'
 import { AltArrowDownIcon as ChevronDown } from '@solar-icons/react/bold/alt-arrow-down'

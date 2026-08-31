@@ -178,6 +178,10 @@ export default function UserProfile() {
         .from('projects')
         .select('id, name, slug, score, area, ai_tagline, cover_url, created_at, views, ai_feedback, featured, featured_order, collaborator_count:project_collaborators(count)')
         .eq('user_id', profileData.id)
+        // Itens da Biblioteca (entry_kind='library') não têm ficha nenhuma
+        // — ficheiro+nome+descrição, sempre privados. Nunca fazem sentido
+        // aqui, apareciam partidos (sem capa, score a 0).
+        .eq('entry_kind', 'full')
         .order('score', { ascending: false })
 
       const isRecruiterVisitor = user && (myProfile?.role === 'recrutador' || myProfile?.role === 'empresa') && profileData.id !== user.id
@@ -193,6 +197,7 @@ export default function UserProfile() {
           .from('projects')
           .select('id, name, slug, score, area, ai_tagline, cover_url, created_at, views, ai_feedback, featured, featured_order')
           .eq('user_id', profileData.id)
+          .eq('entry_kind', 'full')
           .order('score', { ascending: false })
         finalProjects = fallback
       }

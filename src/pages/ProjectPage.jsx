@@ -55,7 +55,7 @@ import { Widget4Icon as Layout } from '@solar-icons/react/bold/widget-4'
 import { TextBoldIcon as Type } from '@solar-icons/react/bold/text-bold'
 import { LinkIcon as Link } from '@solar-icons/react/bold/link'
 import { SortVerticalIcon as GripVertical } from '@solar-icons/react/bold/sort-vertical'
-import { AddCircleIcon as Plus } from '@solar-icons/react/bold/add-circle'
+import { PlusIcon as Plus } from '../components/icons/PlusIcon'
 import { AlignLeftIcon as AlignLeft } from '@solar-icons/react/bold/align-left'
 import { StarIcon as Star } from '@solar-icons/react/bold/star'
 import { CameraIcon as Camera } from '@solar-icons/react/bold/camera'
@@ -4623,6 +4623,15 @@ export default function ProjectPage() {
 
       if (error || !data) {
         setLoading(false)
+        return
+      }
+
+      // Itens da Biblioteca (entry_kind='library') não têm ficha nenhuma —
+      // são só um ficheiro + nome + descrição breve. Nunca faz sentido esta
+      // página renderizar isso (ficaria tudo vazio); manda sempre para a
+      // Biblioteca, mesmo para o dono.
+      if (data.entry_kind === 'library') {
+        navigate('/biblioteca', { replace: true })
         return
       }
 
