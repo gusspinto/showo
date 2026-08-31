@@ -288,24 +288,32 @@
   cursor: not-allowed;
 }
 
-/* "Criar com IA" — o gradiente floresce a partir do sítio exato onde o
-   cursor entrou no botão (--mx/--my, escrito no onMouseEnter), não do
-   centro nem em fade uniforme: um círculo que cresce dali até cobrir
-   tudo, tipo tinta a espalhar-se. */
-.np-btn-ai { position: relative; overflow: hidden; z-index: 0; --mx: 50%; --my: 50%; }
+/* "Criar com IA" — o gradiente floresce a partir de onde o cursor entra
+   e recolhe para onde sai (--mx/--my, escrito em ambos os eventos).
+   Usa um mask radial com borda esbatida em vez de clip-path: um círculo
+   nítido lia-se a "uma bola" — isto lê-se como tinta a espalhar-se,
+   sem contorno definido nenhum. --bloom precisa do @property para
+   conseguir fazer transition (custom property não anima sozinha). */
+@property --bloom {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 0%;
+}
+.np-btn-ai { position: relative; overflow: hidden; z-index: 0; --mx: 50%; --my: 50%; --bloom: 0%; }
 .np-btn-ai::before {
   content: '';
   position: absolute; inset: 0; z-index: -1;
   background-image: linear-gradient(115deg, #2478f0 0%, #db4a3d 50%, #cc9a1e 100%);
   background-size: 220% 220%;
   background-position: 0% 50%;
-  clip-path: circle(0% at var(--mx) var(--my));
-  transition: clip-path 0.5s cubic-bezier(0.22,1,0.36,1);
+  -webkit-mask-image: radial-gradient(circle at var(--mx) var(--my), #000 0%, #000 var(--bloom), transparent calc(var(--bloom) + 32%));
+  mask-image: radial-gradient(circle at var(--mx) var(--my), #000 0%, #000 var(--bloom), transparent calc(var(--bloom) + 32%));
+  transition: --bloom 0.55s cubic-bezier(0.22,1,0.36,1);
   pointer-events: none;
 }
-.np-btn-ai:hover:not(:disabled) { color: #fff; transition: color 0.2s ease 0.15s; }
+.np-btn-ai:hover:not(:disabled) { color: #fff; transition: color 0.25s ease 0.2s; }
 .np-btn-ai:hover:not(:disabled)::before {
-  clip-path: circle(140% at var(--mx) var(--my));
+  --bloom: 90%;
   animation: np-ai-paint 2.4s ease infinite;
 }
 @keyframes np-ai-paint {
