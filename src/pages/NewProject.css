@@ -290,30 +290,26 @@
 
 /* "Criar com IA" — o gradiente floresce a partir de onde o cursor entra
    e recolhe para onde sai (--mx/--my, escrito em ambos os eventos).
-   Usa um mask radial com borda esbatida em vez de clip-path: um círculo
-   nítido lia-se a "uma bola" — isto lê-se como tinta a espalhar-se,
-   sem contorno definido nenhum. --bloom precisa do @property para
-   conseguir fazer transition (custom property não anima sozinha). */
-@property --bloom {
-  syntax: '<percentage>';
-  inherits: false;
-  initial-value: 0%;
-}
-.np-btn-ai { position: relative; overflow: hidden; z-index: 0; --mx: 50%; --my: 50%; --bloom: 0%; }
+   A tentativa com mask-image + @property partiu-se num browser real
+   (o custom property animado dentro do gradient stop não pegou —
+   ficava sempre visível, mesmo parado). clip-path é standard, anima
+   sozinho sem @property nenhum, e com blur() a amaciar o contorno já
+   não lê como "uma bola" — é o caminho robusto. */
+.np-btn-ai { position: relative; overflow: hidden; z-index: 0; --mx: 50%; --my: 50%; }
 .np-btn-ai::before {
   content: '';
   position: absolute; inset: 0; z-index: -1;
   background-image: linear-gradient(115deg, #2478f0 0%, #db4a3d 50%, #cc9a1e 100%);
   background-size: 220% 220%;
   background-position: 0% 50%;
-  -webkit-mask-image: radial-gradient(circle at var(--mx) var(--my), #000 0%, #000 var(--bloom), transparent calc(var(--bloom) + 32%));
-  mask-image: radial-gradient(circle at var(--mx) var(--my), #000 0%, #000 var(--bloom), transparent calc(var(--bloom) + 32%));
-  transition: --bloom 0.55s cubic-bezier(0.22,1,0.36,1);
+  clip-path: circle(0% at var(--mx) var(--my));
+  filter: blur(16px);
+  transition: clip-path 0.55s cubic-bezier(0.22,1,0.36,1);
   pointer-events: none;
 }
 .np-btn-ai:hover:not(:disabled) { color: #fff; transition: color 0.25s ease 0.2s; }
 .np-btn-ai:hover:not(:disabled)::before {
-  --bloom: 90%;
+  clip-path: circle(85% at var(--mx) var(--my));
   animation: np-ai-paint 2.4s ease infinite;
 }
 @keyframes np-ai-paint {
