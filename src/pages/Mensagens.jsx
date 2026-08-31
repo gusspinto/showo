@@ -443,7 +443,6 @@ export default function Mensagens() {
             <h1 className="msg-page-title">
               Mensagens {totalUnread > 0 && <span className="msg-unread-badge">{totalUnread}</span>}
             </h1>
-            <p className="msg-page-subtitle">Conversas com recrutadores e candidatos</p>
           </div>
 
           <div className="msg-outer-wrap">

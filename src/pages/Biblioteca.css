@@ -6,7 +6,13 @@
   display: flex; align-items: center; justify-content: space-between;
   gap: 16px; margin: 28px 0 24px;
 }
-.lib-title { font-size: 26px; font-weight: 800; letter-spacing: -0.4px; margin: 0; }
+.lib-title {
+  font-family: var(--font-heading);
+  font-size: clamp(26px, 4vw, 38px);
+  font-weight: 400;
+  letter-spacing: -0.5px;
+  margin: 0;
+}
 
 .lib-add-btn {
   display: flex; align-items: center; gap: 7px; flex-shrink: 0;

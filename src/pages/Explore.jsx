@@ -282,7 +282,6 @@ export default function Explore() {
         {/* Header */}
         <div className="explore-header">
           <h1 className="explore-title">Explorar</h1>
-          <p className="explore-subtitle">Descobre projetos e pessoas da comunidade Showo</p>
         </div>
 
         {/* Search + Tab + Filter row */}

@@ -25,20 +25,13 @@
 
 .pricing-header { text-align: center; max-width: 620px; margin: 0 auto 44px; }
 .pricing-header h1 {
-  margin: 0 0 12px;
+  margin: 0;
   font-family: var(--font-heading);
   font-size: clamp(26px, 4.6vw, 38px);
   font-weight: 400;
   letter-spacing: -0.6px;
   line-height: 1.2;
 }
-.pricing-header p {
-  margin: 0;
-  font-size: 15px;
-  line-height: 1.65;
-  color: var(--color-text-secondary);
-}
-.pricing-header strong { color: var(--color-text); font-weight: 700; }
 
 .pricing-grid {
   display: grid;
@@ -218,7 +211,6 @@
 @media (max-width: 600px) {
   .pricing-container { padding: 32px 16px 56px; }
   .pricing-header { margin-bottom: 32px; }
-  .pricing-header p { font-size: 14px; }
   .pricing-card { padding: 22px 18px 20px; }
   .pricing-amount { font-size: 30px; }
   /* No telemóvel a decisão faz-se de cima para baixo: o botão sobe para
