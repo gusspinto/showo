@@ -128,7 +128,11 @@
   font-family: inherit; -webkit-tap-highlight-color: transparent;
   transition: opacity 0.15s;
 }
-.np-alt-path:hover { opacity: 0.88; }
+.np-alt-path:hover:not(:disabled) { opacity: 0.88; }
+.np-alt-path:disabled {
+  background: var(--color-border); color: var(--color-text-tertiary);
+  cursor: not-allowed;
+}
 
 /* ── Upload ── */
 .np-drop {
@@ -220,24 +224,16 @@
 
 
 /* ── Tipo de projeto — "Pessoal" é o caminho principal (conta
-   individual), sozinho na primeira linha. "De escola"/PAP ficam
-   claramente à parte, numa secção própria com etiqueta e moldura —
-   um divisor fino não se notava o suficiente. ── */
-.np-types { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; margin: 18px 0 24px; }
-.np-types > .np-type { margin: 0; }
-.np-types-school {
-  display: flex; flex-direction: column; gap: 8px;
-  padding: 10px 12px 12px;
+   individual). "De escola"/PAP ficam ao lado, na mesma linha, mas
+   dentro da sua própria cápsula tracejada — dá para ver que são um
+   grupo à parte sem virar uma secção inteira separada por baixo. ── */
+.np-types { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 18px 0 24px; }
+.np-types-school-group {
+  display: flex; gap: 6px;
+  padding: 3px;
   border: 1px dashed var(--color-border);
-  border-radius: var(--radius-lg);
-  width: 100%; box-sizing: border-box;
+  border-radius: var(--radius-full);
 }
-.np-types-school-label {
-  font-size: 10.5px; font-weight: 700;
-  color: var(--color-text-tertiary);
-  text-transform: uppercase; letter-spacing: 0.08em;
-}
-.np-types-school-pills { display: flex; gap: 6px; flex-wrap: wrap; }
 .np-type {
   padding: 7px 14px; border-radius: var(--radius-full);
   border: 1.5px solid var(--color-border);
@@ -290,6 +286,37 @@
   background: var(--color-border);
   color: var(--color-text-tertiary);
   cursor: not-allowed;
+}
+
+/* "Criar com IA" — mesmo botão preto/branco, só que ao passar o rato
+   ganha um brilho de gradiente (as três cores da marca, bem suaves)
+   a correr por baixo, como o botão de criar da sidebar, mas sem sair
+   do branco/preto de base — é só um verniz, não pinta o botão. */
+.np-btn-ai { position: relative; overflow: hidden; }
+.np-btn-ai::before {
+  content: '';
+  position: absolute; inset: -20% -60%;
+  background: linear-gradient(115deg,
+    color-mix(in srgb, #2478f0 55%, transparent) 0%,
+    color-mix(in srgb, #db4a3d 55%, transparent) 50%,
+    color-mix(in srgb, #cc9a1e 55%, transparent) 100%);
+  mix-blend-mode: overlay;
+  opacity: 0;
+  transform: translateX(-25%);
+  transition: opacity 0.25s ease;
+  pointer-events: none;
+}
+.np-btn-ai > * { position: relative; z-index: 1; }
+.np-btn-ai:hover:not(:disabled)::before {
+  opacity: 1;
+  animation: np-ai-sheen 2.2s ease infinite;
+}
+@keyframes np-ai-sheen {
+  0%, 100% { transform: translateX(-25%); }
+  50%      { transform: translateX(15%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .np-btn-ai:hover:not(:disabled)::before { animation: none; }
 }
 
 .np-btn-quiet {

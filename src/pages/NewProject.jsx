@@ -448,11 +448,14 @@ export default function NewProject() {
 
             {error && <p className="np-err"><AlertTriangle size={13} /> {error}</p>}
 
-            <button className="np-btn-primary" onClick={handleGenerate} disabled={!description.trim()}>
-              <Sparkles size={15} /> Criar com IA <ArrowRight size={15} />
+            <button className="np-btn-primary np-btn-ai" onClick={handleGenerate} disabled={!description.trim()}>
+              <Sparkles size={15} /> Criar com IA
             </button>
-            <button className="np-btn-quiet" onClick={handleInterview} disabled={!description.trim()}>
-              <ChevronRight size={14} /> Prefiro responder a perguntas
+
+            <div className="np-or-divider">ou</div>
+
+            <button className="np-alt-path" onClick={handleInterview} disabled={!description.trim()}>
+              Responder a perguntas guiadas
             </button>
             <AiUsageBadge feature="createProject" style={{ marginTop: 8 }} />
           </div>
@@ -680,13 +683,10 @@ function TypeRow({ value, onChange }) {
   return (
     <div className="np-types">
       {personal.map(renderType)}
-      {/* "De escola"/PAP numa secção própria, visivelmente à parte — não
-          é o caminho principal de quem usa a conta individual, mas
-          continua acessível para quem precisar. */}
-      <div className="np-types-school">
-        <span className="np-types-school-label">Escola</span>
-        <div className="np-types-school-pills">{school.map(renderType)}</div>
-      </div>
+      {/* "De escola"/PAP ao lado de "Pessoal", só que dentro da sua
+          própria cápsula tracejada — dá para ver que são um grupo à
+          parte sem parecer uma secção inteira separada. */}
+      <div className="np-types-school-group">{school.map(renderType)}</div>
     </div>
   )
 }
