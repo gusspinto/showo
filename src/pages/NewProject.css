@@ -68,7 +68,7 @@
    Showo) como única pincelada de cor fora dos próprios cartões. ── */
 .np-wrap--choose { max-width: 660px; }
 
-.np-headline-anim { margin-bottom: 28px; }
+.np-headline-anim { margin-bottom: 28px; text-align: center; }
 
 /* Palavra alternativa a gradiente — letras a subir, staggered, como as
    frases do login/register. Só uma das duas palavras troca de cada vez. */

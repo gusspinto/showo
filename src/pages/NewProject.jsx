@@ -578,9 +578,14 @@ const NP_TITLE_FRAMES = [
   { word1: 'Cria',     alt1: false, word3: 'projeto',  alt3: false, hold: 1300 },
 ]
 
-function NpTitleWord({ text, gradient }) {
+function NpTitleWord({ text, gradient, animate }) {
+  const cls = `np-title-word${gradient ? ' is-gradient' : ''}`
+  // Na primeiríssima pintura da página não há "troca" nenhuma a assinalar
+  // — texto simples, visível de imediato. As letras só sobem quando a
+  // palavra realmente muda (a partir daí, key={text} força o remount).
+  if (!animate) return <span className={cls}>{text}</span>
   return (
-    <span key={text} className={`np-title-word${gradient ? ' is-gradient' : ''}`}>
+    <span key={text} className={cls}>
       {text.split('').map((ch, i) => (
         <span key={i} className="np-title-letter" style={{ animationDelay: `${i * 0.03}s` }}>{ch}</span>
       ))}
@@ -590,18 +595,22 @@ function NpTitleWord({ text, gradient }) {
 
 function NpAnimatedTitle() {
   const [frame, setFrame] = useState(0)
+  const animate = useRef(false)
   const reducedMotion = useRef(typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches)
 
   useEffect(() => {
     if (reducedMotion.current) return
-    const t = setTimeout(() => setFrame(f => (f + 1) % NP_TITLE_FRAMES.length), NP_TITLE_FRAMES[frame].hold)
+    const t = setTimeout(() => {
+      animate.current = true
+      setFrame(f => (f + 1) % NP_TITLE_FRAMES.length)
+    }, NP_TITLE_FRAMES[frame].hold)
     return () => clearTimeout(t)
   }, [frame])
 
   const f = NP_TITLE_FRAMES[reducedMotion.current ? 0 : frame]
   return (
     <h1 className="np-headline np-headline-anim">
-      <NpTitleWord text={f.word1} gradient={f.alt1} />{' o teu '}<NpTitleWord text={f.word3} gradient={f.alt3} />
+      <NpTitleWord text={f.word1} gradient={f.alt1} animate={animate.current} />{' o teu '}<NpTitleWord text={f.word3} gradient={f.alt3} animate={animate.current} />
     </h1>
   )
 }
