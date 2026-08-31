@@ -220,6 +220,11 @@ export default function NewProject() {
           name: file.name.replace(/\.[^.]+$/, ''),
           slug: crypto.randomUUID(),
           entry_kind: 'library',
+          // 'projects' vem 'public' por omissão (é isso que faz sentido para
+          // a ficha completa de sempre) — um item da Biblioteca é um ficheiro
+          // pessoal, não algo para aparecer no Explorar ou ser encontrado por
+          // quem não é o dono. Privado sempre.
+          visibility: 'private',
           library_description: importNotes.trim() || null,
           library_file_url: publicUrl,
           library_file_name: file.name,

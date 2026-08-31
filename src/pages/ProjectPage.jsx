@@ -4626,6 +4626,15 @@ export default function ProjectPage() {
         return
       }
 
+      // Itens da Biblioteca (entry_kind='library') não têm ficha nenhuma —
+      // são só um ficheiro + nome + descrição breve. Nunca faz sentido esta
+      // página renderizar isso (ficaria tudo vazio); manda sempre para a
+      // Biblioteca, mesmo para o dono.
+      if (data.entry_kind === 'library') {
+        navigate('/biblioteca', { replace: true })
+        return
+      }
+
       // Visibility gate: private projects are owner-only
       if (data.visibility === 'private') {
         const isOwner = currentUser?.id === data.user_id
