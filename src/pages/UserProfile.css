@@ -483,6 +483,19 @@
   margin-bottom: 16px;
 }
 
+.up-empty--slim {
+  padding: 26px 24px;
+}
+.up-empty-slim-text {
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  margin: 0 0 16px;
+}
+.up-empty--slim .up-empty-cta {
+  padding: 9px 18px;
+  font-size: 13px;
+}
+
 .up-empty-title {
   color: var(--color-text);
   font-size: 17px;

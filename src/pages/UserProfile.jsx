@@ -9,7 +9,6 @@ import { MagnifierIcon as Search } from '@solar-icons/react/bold/magnifier'
 import { Folder2Icon as FolderOpen } from '@solar-icons/react/bold/folder-2'
 import { CloseIcon as X } from '@solar-icons/react/bold/close'
 import { DownloadIcon as Download } from '@solar-icons/react/bold/download'
-import { RocketIcon as Rocket } from '@solar-icons/react/bold/rocket'
 import { QrCodeIcon as QrCode } from '@solar-icons/react/bold/qr-code'
 import { Pen2Icon as Pencil } from '@solar-icons/react/bold/pen-2'
 import { SquareArrowRightUpIcon as ExternalLink } from '@solar-icons/react/bold/square-arrow-right-up'
@@ -416,21 +415,16 @@ export default function UserProfile() {
 
           {projects.length === 0 ? (
             isOwnProfile ? (
-              <div className="up-empty">
-                <div className="up-empty-icon"><Rocket size={40} color="var(--color-primary)" /></div>
-                <p className="up-empty-title">
-                  {myProfile?.role === 'professor' ? 'Ainda não tens projetos' : 'O teu portfólio começa aqui'}
+              <div className="up-empty up-empty--slim">
+                <p className="up-empty-slim-text">
+                  {myProfile?.role === 'professor'
+                    ? 'Ainda não tens projetos.'
+                    : 'Escolhe na Biblioteca o que aparece aqui.'}
                 </p>
                 {myProfile?.role !== 'professor' && (
-                  <>
-                    <p className="up-empty-desc">
-                      Escolhe na Biblioteca o que mostrar aqui — liga "Mostrar no perfil"
-                      nos projetos e ficheiros que queres nesta página.
-                    </p>
-                    <button onClick={() => navigate('/biblioteca')} className="up-empty-cta">
-                      Ir para a Biblioteca <ArrowRight size={14} />
-                    </button>
-                  </>
+                  <button onClick={() => navigate('/biblioteca')} className="up-empty-cta">
+                    Ir para a Biblioteca <ArrowRight size={14} />
+                  </button>
                 )}
               </div>
             ) : (
