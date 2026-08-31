@@ -289,9 +289,7 @@ export default function NewProject() {
         <Navbar showLinks={false} mobileLeft={<BackButton onClick={() => navigate(-1)} />} />
         <div className="np-center np-center--choose">
           <div className="np-wrap np-wrap--choose">
-            <StepBar current={1} total={3} label="Como queres começar" />
-            <h1 className="np-headline">Cria o teu projeto</h1>
-            <div className="np-brand-rule" />
+            <NpAnimatedTitle />
 
             <div className="np-tiles">
               <button className="np-tile is-blue" onClick={() => { if (!requireAccount('/novo?import=1')) setStep('import') }}>
@@ -564,6 +562,48 @@ export default function NewProject() {
 
 function NpShell({ children }) {
   return <div className="np-shell">{children}</div>
+}
+
+/* Título animado do ecrã "como queres começar" — igual em espírito às
+   frases do login/register (letras a subir, staggered), mas aqui só
+   duas palavras trocam, nunca ao mesmo tempo: "Cria" ⇄ "Adiciona"
+   primeiro, volta a "Cria", só depois "projeto" ⇄ "trabalho". A
+   palavra alternativa fica a gradiente (as três cores do ícone da
+   Showo); "o teu" nunca muda. */
+const NP_TITLE_FRAMES = [
+  { word1: 'Cria',     alt1: false, word3: 'projeto',  alt3: false, hold: 2400 },
+  { word1: 'Adiciona', alt1: true,  word3: 'projeto',  alt3: false, hold: 2600 },
+  { word1: 'Cria',     alt1: false, word3: 'projeto',  alt3: false, hold: 1300 },
+  { word1: 'Cria',     alt1: false, word3: 'trabalho', alt3: true,  hold: 2600 },
+  { word1: 'Cria',     alt1: false, word3: 'projeto',  alt3: false, hold: 1300 },
+]
+
+function NpTitleWord({ text, gradient }) {
+  return (
+    <span key={text} className={`np-title-word${gradient ? ' is-gradient' : ''}`}>
+      {text.split('').map((ch, i) => (
+        <span key={i} className="np-title-letter" style={{ animationDelay: `${i * 0.03}s` }}>{ch}</span>
+      ))}
+    </span>
+  )
+}
+
+function NpAnimatedTitle() {
+  const [frame, setFrame] = useState(0)
+  const reducedMotion = useRef(typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches)
+
+  useEffect(() => {
+    if (reducedMotion.current) return
+    const t = setTimeout(() => setFrame(f => (f + 1) % NP_TITLE_FRAMES.length), NP_TITLE_FRAMES[frame].hold)
+    return () => clearTimeout(t)
+  }, [frame])
+
+  const f = NP_TITLE_FRAMES[reducedMotion.current ? 0 : frame]
+  return (
+    <h1 className="np-headline np-headline-anim">
+      <NpTitleWord text={f.word1} gradient={f.alt1} />{' o teu '}<NpTitleWord text={f.word3} gradient={f.alt3} />
+    </h1>
+  )
 }
 
 function BackButton({ onClick }) {
