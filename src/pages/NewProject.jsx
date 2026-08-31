@@ -584,6 +584,16 @@ function NpTitleWord({ text, gradient, animate }) {
   // — texto simples, visível de imediato. As letras só sobem quando a
   // palavra realmente muda (a partir daí, key={text} força o remount).
   if (!animate) return <span className={cls}>{text}</span>
+
+  // Palavra a gradiente: um único nó de texto, sem letras separadas em
+  // spans próprios. background-clip:text precisa do texto colado ao
+  // elemento que leva a classe — meter cada letra num inline-block por
+  // baixo (para o keyframe subir) parte esse recorte e a palavra fica
+  // invisível (era exatamente isto que estava a acontecer). A palavra
+  // branca não tem esse problema (não depende de clip), por isso essa
+  // continua a subir letra a letra.
+  if (gradient) return <span key={text} className={`${cls} np-title-rise`}>{text}</span>
+
   return (
     <span key={text} className={cls}>
       {text.split('').map((ch, i) => (
