@@ -277,7 +277,8 @@ export default function NewProject() {
      solution/etc) — vira um item leve na Biblioteca: o ficheiro, o nome
      (do próprio ficheiro) e a descrição breve que a pessoa escrever. Sem
      IA nenhuma a analisar o conteúdo, por isso também não gasta o gate de
-     AI. "Criar do 0" continua a gerar a ficha completa como sempre. */
+     AI. "Descrever o que estou a fazer" continua a gerar a ficha completa
+     como sempre. */
   async function handleAddToLibrary() {
     if (!files.length) return
     if (requireAccount('/novo')) return
@@ -420,7 +421,7 @@ export default function NewProject() {
             <div className="np-or-divider">ou</div>
 
             <button className="np-alt-path" onClick={() => { if (!requireAccount('/novo')) setStep('describe') }}>
-              Criar do 0
+              Descrever o que estou a fazer
             </button>
           </div>
         </div>
