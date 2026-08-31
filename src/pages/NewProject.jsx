@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { useNavigate, useLocation, useSearchParams } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { saveProject } from '../lib/saveProject'
 import { StarsIcon as Sparkles } from '@solar-icons/react/bold/stars'
@@ -66,12 +66,14 @@ function prettySize(bytes) {
 export default function NewProject() {
   const navigate = useNavigate()
   const location = useLocation()
-  const [searchParams] = useSearchParams()
   const { user, checkGate, consumeAI } = useAuth()
   const { toast, show: showToast } = useToast()
 
-  /* Passos: choose → describe | import → loading → found → review → submitting */
-  const [step, setStep] = useState(() => (searchParams.get('import') === '1' ? 'import' : 'choose'))
+  /* Passos: choose → describe | loading → found → review → submitting
+     "choose" já traz a caixa de enviar ficheiros consigo — deixou de haver
+     um ecrã "import" à parte, por isso ?import=1 (link partilhável antigo)
+     também aterra aqui; é ignorado de propósito, não precisa de fazer nada. */
+  const [step, setStep] = useState('choose')
 
   /* As edge functions de IA exigem sessão. Sem conta, o fluxo dava erro
      genérico já dentro do passo de análise — depois de o aluno escrever a
@@ -201,8 +203,6 @@ export default function NewProject() {
 
   async function handleImport() {
     if (!files.length) return
-    // Também aqui: /novo?import=1 é um link partilhável e entra direto neste
-    // passo, sem passar pelo ecrã de escolha.
     if (requireAccount('/novo?import=1')) return
     if (!(await guardProjectCount())) return
     const aiGate = checkGate('createProject')
@@ -232,7 +232,7 @@ export default function NewProject() {
       setStep('found')
     } catch (err) {
       setError(err?.message || 'Não conseguimos ler estes ficheiros. Exporta o trabalho como PDF e tenta outra vez.')
-      setStep('import')
+      setStep('choose')
     }
   }
 
@@ -282,82 +282,53 @@ export default function NewProject() {
      tinha o relatório feito lia isso como "escreve tudo outra vez" e fechava.
   ────────────────────────────────────────────────────────────────────────── */
   if (step === 'choose') {
+    const totalBytes = files.reduce((s, f) => s + f.size, 0)
     return (
       <NpShell>
+        {gateMsg && <PlanGateModal message={gateMsg} onClose={() => setGateMsg(null)} />}
         <Toast {...toast} />
         <Navbar showLinks={false} mobileLeft={<BackButton onClick={() => navigate(-1)} />} />
         <div className="np-center np-center--choose">
           <div className="np-wrap np-wrap--choose">
             <NpAnimatedTitle />
 
-            <div className="np-tiles">
-              <button className="np-tile is-blue" onClick={() => { if (!requireAccount('/novo?import=1')) setStep('import') }}>
-                <span className="np-tile-title">Adicionar</span>
-                <span className="np-tile-desc">Envia o relatório ou as imagens. Lemos tudo e preenchemos a ficha por ti.</span>
-                <span className="np-tile-meta">PDF · Word · PowerPoint · Imagens</span>
-                <span className="np-tile-go"><ChevronRight size={16} /></span>
-              </button>
+            {/* "Adicionar" é o go-to — a caixa de enviar ficheiros já vem
+                aberta aqui, sem página seguinte nenhuma para lá chegar. */}
+            <div className="np-add-card">
+              <FilePicker files={files} onAdd={addFiles} onRemove={i => setFiles(f => f.filter((_, k) => k !== i))} />
 
-              <button className="np-tile is-red" onClick={() => { if (!requireAccount('/novo')) setStep('describe') }}>
-                <span className="np-tile-title">Criar do 0</span>
-                <span className="np-tile-desc">Conta o que fizeste. A IA trata do resto.</span>
-                <span className="np-tile-go"><ChevronRight size={16} /></span>
+              {files.length > 0 && (
+                <>
+                  <div className="np-filemeta">
+                    {files.length} {files.length === 1 ? 'ficheiro' : 'ficheiros'} · {prettySize(totalBytes)}
+                  </div>
+                  <label className="np-notes-label" htmlFor="np-notes">Queres acrescentar alguma coisa? (opcional)</label>
+                  <textarea
+                    id="np-notes"
+                    className="np-notes"
+                    rows={2}
+                    value={importNotes}
+                    onChange={e => setImportNotes(e.target.value)}
+                    placeholder="Ex: o relatório está incompleto, os resultados estão só nos slides."
+                  />
+                </>
+              )}
+
+              <TypeRow value={projectType} onChange={setProjectType} />
+
+              {error && <p className="np-err"><AlertTriangle size={13} /> {error}</p>}
+
+              <button className="np-btn-primary" onClick={handleImport} disabled={!files.length}>
+                <Sparkles size={15} /> Analisar o meu trabalho <ArrowRight size={15} />
               </button>
+              <AiUsageBadge feature="createProject" style={{ marginTop: 8 }} />
             </div>
-          </div>
-        </div>
-      </NpShell>
-    )
-  }
 
-  /* ──────────────────────────────────────────────────────────────────────────
-     PASSO: import
-  ────────────────────────────────────────────────────────────────────────── */
-  if (step === 'import') {
-    const totalBytes = files.reduce((s, f) => s + f.size, 0)
-    return (
-      <NpShell>
-        {gateMsg && <PlanGateModal message={gateMsg} onClose={() => setGateMsg(null)} />}
-        <Toast {...toast} />
-        <Navbar showLinks={false} mobileLeft={<BackButton onClick={() => setStep('choose')} />} />
-        <div className="np-center">
-          <div className="np-wrap">
-            <StepBar current={2} total={3} label="O teu trabalho" />
-            <h1 className="np-headline">Envia o que já fizeste.</h1>
-            <p className="np-sub">
-              O relatório da PAP, a apresentação, fotos do protótipo. Lemos tudo e mostramos-te o que encontrámos antes de criar seja o que for.
-            </p>
-
-            <FilePicker files={files} onAdd={addFiles} onRemove={i => setFiles(f => f.filter((_, k) => k !== i))} />
-
-            {files.length > 0 && (
-              <>
-                <div className="np-filemeta">
-                  {files.length} {files.length === 1 ? 'ficheiro' : 'ficheiros'} · {prettySize(totalBytes)}
-                </div>
-                <label className="np-notes-label" htmlFor="np-notes">Queres acrescentar alguma coisa? (opcional)</label>
-                <textarea
-                  id="np-notes"
-                  className="np-notes"
-                  rows={2}
-                  value={importNotes}
-                  onChange={e => setImportNotes(e.target.value)}
-                  placeholder="Ex: o relatório está incompleto, os resultados estão só nos slides."
-                />
-              </>
-            )}
-
-            <TypeRow value={projectType} onChange={setProjectType} />
-
-            {error && <p className="np-err"><AlertTriangle size={13} /> {error}</p>}
-
-            <button className="np-btn-primary" onClick={handleImport} disabled={!files.length}>
-              <Sparkles size={15} /> Analisar o meu trabalho <ArrowRight size={15} />
+            {/* "Criar do 0" continua visível, só deixa de ser o destaque —
+                é a exceção, não a regra, para quem chega a este ecrã. */}
+            <button className="np-alt-path" onClick={() => { if (!requireAccount('/novo')) setStep('describe') }}>
+              Prefiro criar do 0 <ChevronRight size={13} />
             </button>
-            <button className="np-btn-quiet" onClick={() => setStep('describe')}>
-              Prefiro escrever de raiz
-            </button>
-            <AiUsageBadge feature="createProject" style={{ marginTop: 8 }} />
           </div>
         </div>
       </NpShell>
@@ -430,10 +401,10 @@ export default function NewProject() {
     return (
       <NpShell>
         <Toast {...toast} />
-        <Navbar showLinks={false} mobileLeft={<BackButton onClick={() => setStep('import')} />} />
+        <Navbar showLinks={false} mobileLeft={<BackButton onClick={() => setStep('choose')} />} />
         <div className="np-center">
           <div className="np-wrap">
-            <StepBar current={3} total={3} label="O que encontrámos" />
+            <StepBar current={2} total={2} label="O que encontrámos" />
             <h1 className="np-headline">Encontrámos isto no teu trabalho.</h1>
             {found.summary && <p className="np-sub">{found.summary}</p>}
 
@@ -469,7 +440,7 @@ export default function NewProject() {
             <button className="np-btn-primary" onClick={() => setStep('review')}>
               Rever e ajustar <ArrowRight size={15} />
             </button>
-            <button className="np-btn-quiet" onClick={() => { setFound(null); setStep('import') }}>
+            <button className="np-btn-quiet" onClick={() => { setFound(null); setStep('choose') }}>
               Enviar outro ficheiro
             </button>
           </div>
