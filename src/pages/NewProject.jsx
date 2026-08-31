@@ -50,11 +50,13 @@ const ACCEPT = '.pdf,.docx,.pptx,.txt,.md,image/png,image/jpeg,image/webp'
 const MAX_FILES = 5
 const MAX_TOTAL_MB = 12
 
+/* Usado tanto por "Criar com IA" como por "Responder a perguntas guiadas"
+   — nenhum dos dois lê um ficheiro (isso só acontece em "Adicionar", que
+   nem passa por este ecrã), por isso a linguagem tem de servir só texto. */
 const ANALYSIS_BEATS = [
-  'A abrir o teu trabalho…',
-  'A identificar as secções…',
-  'A recolher objetivos e resultados…',
-  'A preparar a ficha do projeto…',
+  'A ler a tua ideia…',
+  'A perceber o essencial…',
+  'A preparar o próximo passo…',
 ]
 
 function prettySize(bytes) {
@@ -498,8 +500,6 @@ export default function NewProject() {
         <div className="np-center">
           <div className="np-wrap">
             <StepBar current={2} total={3} label="Perguntas" />
-            <h2 className="np-headline np-headline--sm">Vamos construir o teu projeto juntos.</h2>
-            <p className="np-sub">Responde a cada pergunta. A IA usa as tuas respostas para criar o projeto.</p>
             <InterviewPanel
               data={interviewData}
               onComplete={answers => {

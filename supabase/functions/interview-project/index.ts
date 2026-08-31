@@ -66,12 +66,12 @@ Campos que precisas de recolher: ${fields}
 
 Gera EXATAMENTE este JSON (sem markdown, sem texto extra):
 {
-  "understanding": "<1-2 frases que provam que leste a descrição — menciona pelo menos 1 detalhe específico do projeto (tecnologia, tema, contexto) e diz que vais ajudar a APRESENTÁ-LO. Ex: 'Percebi — fizeste uma app em Flutter para gerir tarefas escolares. Vamos montar a página para a apresentares.' NUNCA uses uma frase genérica tipo 'Ótimo projeto!' nem dês a entender que vais construir algo por ele>",
+  "understanding": "<UMA frase curta, máximo 18 palavras, que prova que leste a descrição — menciona 1 detalhe específico do projeto (tecnologia, tema, contexto) e diz que vais ajudar a apresentá-lo. Ex: 'Percebi, uma app em Flutter para gerir tarefas escolares. Vamos montar a página.' NUNCA uses uma frase genérica tipo 'Ótimo projeto!' nem dês a entender que vais construir algo por ele>",
   "questions": [
     {
       "id": "<field_name>",
       "label": "<nome curto do campo, 2-3 palavras max>",
-      "question": "<pergunta natural, direta, como se fosses um mentor experiente — sem 'por favor' nem formalidades excessivas>",
+      "question": "<pergunta curta e direta, máximo 15 palavras, UMA frase só, como se fosses um mentor experiente — sem 'por favor', sem formalidades, sem exemplos entre parênteses dentro da própria pergunta (os exemplos vão no placeholder/suggestions, não aqui)>",
       "field": "<nome do campo do projeto: name | area | goal | school | course | pap_supervisor | technologies | problem | solution | features | target_audience | challenges | results | learnings>",
       "placeholder": "<exemplo realista do que seria uma boa resposta, 5-10 palavras>",
       "suggestions": ["<sugestão 1 específica ao projeto>", "<sugestão 2>", "<sugestão 3 opcional>"]
@@ -83,7 +83,7 @@ REGRAS CRÍTICAS:
 - Máximo 6 perguntas, mínimo 5
 - NÃO perguntes o que já está claramente na descrição — usa isso como contexto, não volta a perguntar
 - Cada pergunta deve ser diferente das outras — sem sobreposições
-- O campo "name" tem de pedir um TÍTULO CURTO (1-4 palavras, estilo marca/app) — nunca uma frase ou descrição. Ex: "Que nome darias ao projeto? Pensa num nome curto, tipo marca — como 'StudyFor' ou 'TaskFlow'."
+- O campo "name" tem de pedir um TÍTULO CURTO (1-4 palavras, estilo marca/app) — nunca uma frase ou descrição. Pergunta curta, sem exemplos dentro dela (os exemplos vão nas suggestions). Ex: "Que nome darias ao projeto?"
 - Para o campo "name", OBRIGATORIAMENTE gera 2-3 sugestões de nomes criativos e curtos baseados na descrição do estudante. Analisa a descrição e inventa nomes que soem a app/marca/projeto real (ex: se o estudante descreveu "uma app para ajudar a estudar", sugere ["StudyBuddy", "FocusApp", "LearnFlow"]). Isto é CRÍTICO porque muitos estudantes não sabem que nome dar e acabam por escrever frases longas como nome
 - Suggestions dos outros campos devem ser específicas ao projeto descrito, não genéricas
 - Para o campo "technologies": sugere tecnologias relevantes à descrição. Se o estudante claramente não é técnico (ex: projeto de gestão, marketing, design sem código), substitui esta pergunta por "ferramentas" (ex: Canva, Excel, Figma) em vez de tecnologia de programação
@@ -117,9 +117,9 @@ REGRAS CRÍTICAS:
   } catch (err) {
     console.error(err)
     return new Response(JSON.stringify({
-      understanding: 'Ótimo! Vou fazer-te algumas perguntas rápidas para criar o teu perfil de projeto.',
+      understanding: 'Vamos por partes: algumas perguntas rápidas sobre o teu projeto.',
       questions: [
-        { id: 'name', label: 'Nome', question: 'Que nome darias ao teu projeto? Pensa num nome curto, tipo marca — como "StudyFor" ou "TaskFlow".', field: 'name', placeholder: 'ex: TaskFlow, EduApp...', suggestions: [] },
+        { id: 'name', label: 'Nome', question: 'Que nome darias ao teu projeto?', field: 'name', placeholder: 'ex: TaskFlow, EduApp...', suggestions: [] },
         { id: 'area', label: 'Área', question: 'Em que área se enquadra este projeto?', field: 'area', placeholder: 'ex: Saúde, Educação, Tecnologia...', suggestions: ['Tecnologia', 'Saúde', 'Educação'] },
         { id: 'goal', label: 'Objetivo', question: 'Qual é o objetivo principal deste projeto?', field: 'goal', placeholder: 'O que este projeto pretende alcançar...', suggestions: [] },
         { id: 'problem', label: 'Problema', question: 'Que problema resolve?', field: 'problem', placeholder: 'O problema que identificaste...', suggestions: [] },
