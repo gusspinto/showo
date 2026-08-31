@@ -231,7 +231,7 @@
 .np-types-school-group {
   display: flex; gap: 6px;
   padding: 3px;
-  border: 1px dashed var(--color-border);
+  border: 1px dashed var(--color-primary);
   border-radius: var(--radius-full);
 }
 .np-type {
