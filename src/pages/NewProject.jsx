@@ -440,7 +440,7 @@ export default function NewProject() {
           <div className="np-wrap">
             <StepBar current={2} total={3} label="O teu projeto" />
             <h1 className="np-headline">Conta-nos sobre o teu projeto.</h1>
-            <p className="np-sub">Descreve a ideia em 2–3 frases. A IA ajuda-te a desenvolvê-la.</p>
+            <p className="np-sub">Descreve a tua ideia, a IA ajuda-te a desenvolvê-la.</p>
 
             <DescribeTextarea value={description} onChange={setDescription} onSubmit={handleGenerate} />
 
@@ -680,10 +680,13 @@ function TypeRow({ value, onChange }) {
   return (
     <div className="np-types">
       {personal.map(renderType)}
-      {/* "De escola"/PAP à parte — não é o caminho principal de quem usa
-          a conta individual, mas continua acessível para quem precisar. */}
-      <span className="np-types-divider" aria-hidden="true" />
-      {school.map(renderType)}
+      {/* "De escola"/PAP numa secção própria, visivelmente à parte — não
+          é o caminho principal de quem usa a conta individual, mas
+          continua acessível para quem precisar. */}
+      <div className="np-types-school">
+        <span className="np-types-school-label">Escola</span>
+        <div className="np-types-school-pills">{school.map(renderType)}</div>
+      </div>
     </div>
   )
 }

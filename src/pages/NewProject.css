@@ -220,10 +220,24 @@
 
 
 /* ── Tipo de projeto — "Pessoal" é o caminho principal (conta
-   individual), "De escola"/PAP ficam à parte, separados por uma
-   réguazinha, como o conjunto secundário. ── */
-.np-types { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin: 18px 0 24px; }
-.np-types-divider { width: 1px; height: 16px; background: var(--color-border); margin: 0 2px; }
+   individual), sozinho na primeira linha. "De escola"/PAP ficam
+   claramente à parte, numa secção própria com etiqueta e moldura —
+   um divisor fino não se notava o suficiente. ── */
+.np-types { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; margin: 18px 0 24px; }
+.np-types > .np-type { margin: 0; }
+.np-types-school {
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 10px 12px 12px;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+  width: 100%; box-sizing: border-box;
+}
+.np-types-school-label {
+  font-size: 10.5px; font-weight: 700;
+  color: var(--color-text-tertiary);
+  text-transform: uppercase; letter-spacing: 0.08em;
+}
+.np-types-school-pills { display: flex; gap: 6px; flex-wrap: wrap; }
 .np-type {
   padding: 7px 14px; border-radius: var(--radius-full);
   border: 1.5px solid var(--color-border);
