@@ -120,7 +120,11 @@ export default function NewProject() {
 
   async function guardProjectCount() {
     if (!user?.id) return true
-    const { count } = await supabase.from('projects').select('id', { count: 'exact', head: true }).eq('user_id', user.id)
+    // Só conta os 'full' (a ficha AI-estruturada) — é esse o recurso que
+    // o limite do plano quer controlar. Itens da Biblioteca (upload sem
+    // IA) não entram nesta conta.
+    const { count } = await supabase.from('projects').select('id', { count: 'exact', head: true })
+      .eq('user_id', user.id).eq('entry_kind', 'full')
     const maxGate = checkGate('maxProjects', count ?? 0)
     if (!maxGate.allowed) { setGateMsg(maxGate.message); return false }
     return true
@@ -202,7 +206,11 @@ export default function NewProject() {
   async function handleAddToLibrary() {
     if (!files.length) return
     if (requireAccount('/novo')) return
-    if (!(await guardProjectCount())) return
+    // Sem guardProjectCount aqui de propósito — esse limite é do plano
+    // para projetos AI-estruturados (entry_kind='full'), não faz sentido
+    // aplicá-lo a um upload leve sem IA nenhuma envolvida. Era isto que
+    // estava a bloquear tudo em silêncio: quem já tinha 3 projetos
+    // "full" nunca conseguia adicionar mais nada à Biblioteca.
 
     setSavingToLibrary(true)
     setError(null)
