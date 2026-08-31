@@ -288,37 +288,38 @@
   cursor: not-allowed;
 }
 
-/* "Criar com IA" — o gradiente floresce a partir de onde o cursor entra
-   e recolhe para onde sai (--mx/--my, escrito em ambos os eventos).
-   A tentativa com mask-image + @property partiu-se num browser real
-   (o custom property animado dentro do gradient stop não pegou —
-   ficava sempre visível, mesmo parado). clip-path é standard, anima
-   sozinho sem @property nenhum, e com blur() a amaciar o contorno já
-   não lê como "uma bola" — é o caminho robusto. */
-.np-btn-ai { position: relative; overflow: hidden; z-index: 0; --mx: 50%; --my: 50%; }
-.np-btn-ai::before {
-  content: '';
-  position: absolute; inset: 0; z-index: -1;
-  background-image: linear-gradient(115deg, #2478f0 0%, #db4a3d 50%, #cc9a1e 100%);
-  background-size: 220% 220%;
-  background-position: 0% 50%;
-  clip-path: circle(0% at var(--mx) var(--my));
-  filter: blur(16px);
-  transition: clip-path 0.55s cubic-bezier(0.22,1,0.36,1);
-  pointer-events: none;
-}
-.np-btn-ai:hover:not(:disabled) { color: #fff; transition: color 0.25s ease 0.2s; }
-.np-btn-ai:hover:not(:disabled)::before {
-  clip-path: circle(85% at var(--mx) var(--my));
-  animation: np-ai-paint 2.4s ease infinite;
-}
-@keyframes np-ai-paint {
-  0%, 100% { background-position: 0% 50%; }
-  50%      { background-position: 100% 50%; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .np-btn-ai::before { transition: none; }
-  .np-btn-ai:hover:not(:disabled)::before { animation: none; }
+/* "Criar com IA" — duas tentativas de fazer o gradiente "florescer" a
+   partir do cursor (mask+@property, depois clip-path+blur) saíram
+   ambas com problemas visuais reais num browser a sério — numa caixa
+   larga e baixa como esta, um círculo nunca chega a cobrir as pontas
+   sem cortar reto contra o topo/fundo, lê-se sempre partido. Fica o
+   caminho simples e à prova de bugs: o gradiente inteiro entra em
+   fade, sem depender de posição nenhuma. Só em ecrãs com rato de
+   verdade — em touch não há hover para isto fazer sentido. */
+@media (hover: hover) and (pointer: fine) {
+  .np-btn-ai { position: relative; overflow: hidden; z-index: 0; }
+  .np-btn-ai::before {
+    content: '';
+    position: absolute; inset: 0; z-index: -1;
+    background-image: linear-gradient(115deg, #2478f0 0%, #db4a3d 50%, #cc9a1e 100%);
+    background-size: 220% 220%;
+    background-position: 0% 50%;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+    pointer-events: none;
+  }
+  .np-btn-ai:hover:not(:disabled) { color: #fff; transition: color 0.25s ease 0.1s; }
+  .np-btn-ai:hover:not(:disabled)::before {
+    opacity: 1;
+    animation: np-ai-paint 2.4s ease infinite;
+  }
+  @keyframes np-ai-paint {
+    0%, 100% { background-position: 0% 50%; }
+    50%      { background-position: 100% 50%; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .np-btn-ai:hover:not(:disabled)::before { animation: none; }
+  }
 }
 
 .np-btn-quiet {

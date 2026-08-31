@@ -112,18 +112,6 @@ async function generateLibraryThumbnail(projectId, file) {
   }
 }
 
-/* Botão "Criar com IA" — o gradiente floresce a partir do sítio exato
-   onde o cursor entra, e recolhe para o sítio exato onde sai (não o
-   mesmo ponto de entrada) — por isso duas funções, uma por evento,
-   ambas só escrevem --mx/--my; quem cresce/encolhe é o CSS. */
-function setAiBtnOrigin(e) {
-  const rect = e.currentTarget.getBoundingClientRect()
-  const x = ((e.clientX - rect.left) / rect.width) * 100
-  const y = ((e.clientY - rect.top) / rect.height) * 100
-  e.currentTarget.style.setProperty('--mx', `${x}%`)
-  e.currentTarget.style.setProperty('--my', `${y}%`)
-}
-
 /* Só para mandar um .docx/.pptx à edge function office-thumbnail converter
    — não tem mais nenhum uso (o upload em si vai direto, sem passar por
    base64). */
@@ -460,13 +448,7 @@ export default function NewProject() {
 
             {error && <p className="np-err"><AlertTriangle size={13} /> {error}</p>}
 
-            <button
-              className="np-btn-primary np-btn-ai"
-              onClick={handleGenerate}
-              onMouseEnter={setAiBtnOrigin}
-              onMouseLeave={setAiBtnOrigin}
-              disabled={!description.trim()}
-            >
+            <button className="np-btn-primary np-btn-ai" onClick={handleGenerate} disabled={!description.trim()}>
               <Sparkles size={15} /> Criar com IA
             </button>
 
