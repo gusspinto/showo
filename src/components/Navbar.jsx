@@ -766,6 +766,10 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
     e.currentTarget.style.setProperty('--mx', `${x}%`)
     e.currentTarget.style.setProperty('--my', `${y}%`)
   }
+  const handleGradientLeave = (e) => {
+    e.currentTarget.style.removeProperty('--mx')
+    e.currentTarget.style.removeProperty('--my')
+  }
 
   // Mobile "Gerir projeto" popup — opened from the paintbrush that replaces the
   // "+" while viewing your own project (keeps those actions out of the drawer).
@@ -1105,7 +1109,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   <Paintbrush size={18} strokeWidth={2} />
                 </button>
               ) : !isTeacher && !isAdmin ? (
-                <button className="mob-nav-icon-btn primary gradient-cta" onMouseMove={handleGradientMove} onClick={() => navigate('/novo')} aria-label="Criar projeto">
+                <button className="mob-nav-icon-btn primary gradient-cta" onMouseMove={handleGradientMove} onMouseLeave={handleGradientLeave} onClick={() => navigate('/novo')} aria-label="Criar projeto">
                   <Plus size={20} strokeWidth={2.5} />
                 </button>
               ) : null}
@@ -1175,6 +1179,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               className="ham-btn mob-only-create gradient-cta"
               onClick={() => navigate('/novo')}
               onMouseMove={handleGradientMove}
+              onMouseLeave={handleGradientLeave}
               aria-label="Criar projeto"
               style={{
                 border: 'none',
@@ -1405,7 +1410,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               {user && !isTeacher && !isAdmin && (
                 <div className={`sb-create-wrap ${extras ? 'hidden' : 'visible'}`}>
                   <div className="sb-create-inner">
-                    <button className="sb-create gradient-cta" onMouseMove={handleGradientMove} onClick={() => navigate('/novo')}>
+                    <button className="sb-create gradient-cta" onMouseMove={handleGradientMove} onMouseLeave={handleGradientLeave} onClick={() => navigate('/novo')}>
                       <Plus size={14} />{!collapsed && showLabels && <span>Criar projeto</span>}
                     </button>
                   </div>

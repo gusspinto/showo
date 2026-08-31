@@ -258,15 +258,30 @@ body.light .sb-collapse-toggle:hover { border-color: rgba(0,0,0,0.75); }
 }
 .gradient-cta:hover { opacity: 1 !important; filter: brightness(1.05); }
 
-/* Botões-ícone (topbar mobile) — força quadrado perfeito; sem isto o
-   flex do cluster pode esticar a caixa e o gradiente lê-se como pílula
-   em vez de chip. */
+/* Sidebar desktop — além do brilho, o próprio gradiente "desloca-se"
+   com o cursor: fundo maior que a caixa (180%), posicionado por
+   --mx/--my, por isso as cores mudam de sítio consoante o rato se
+   mexe lá dentro, não é só um brilho por cima. Parado (--mx/--my nos
+   50% por omissão) continua centrado com as três cores completas. */
+.sb-create.gradient-cta {
+  background-size: 100% 100%, 180% 180% !important;
+  background-position: var(--mx) var(--my), var(--mx) var(--my) !important;
+}
+
+/* Botões-ícone (topbar mobile) — força quadrado perfeito e mais
+   pequeno (ficava demasiado alto ao lado do sino); sem o !important no
+   tamanho, o flex do cluster pode esticar a caixa e o gradiente lê-se
+   como pílula em vez de chip. Azul mais presente que no da sidebar —
+   ao 38px o corte do gradiente escondia-o quase todo. */
 .mob-nav-icon-btn.gradient-cta,
 .mob-only-create.gradient-cta {
-  width: 38px !important; height: 38px !important;
-  flex: 0 0 38px !important;
+  width: 32px !important; height: 32px !important;
+  flex: 0 0 32px !important;
   aspect-ratio: 1 / 1;
-  border-radius: 9px !important;
+  border-radius: 8px !important;
+  background-image:
+    radial-gradient(circle 130px at var(--mx) var(--my), rgba(255,255,255,0.55), transparent 70%),
+    linear-gradient(115deg, #2f6bff 0%, #2f6bff 32%, #ff3b5c 68%, #ffb400 100%) !important;
 }
 .sb-divider { height: 1px; background: var(--color-border); margin: 6px 0; opacity: 0.6; }
 .sb-bottom { padding: 0 10px 14px; }
