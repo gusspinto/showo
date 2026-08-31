@@ -11,6 +11,7 @@ import { UploadIcon as Upload } from '@solar-icons/react/bold/upload'
 import { DocumentTextIcon as FileText } from '@solar-icons/react/bold/document-text'
 import { CloseIcon as X } from '@solar-icons/react/bold/close'
 import { DangerTriangleIcon as AlertTriangle } from '@solar-icons/react/bold/danger-triangle'
+import { PlusIcon } from '../components/icons/PlusIcon'
 import { Navbar } from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
 import { Toast, useToast } from '../components/Toast'
@@ -38,8 +39,9 @@ const REVIEW_FIELDS = [
    ficam de fora de propósito: são formatos binários que não conseguimos ler
    de forma fiável, e é melhor dizê-lo à entrada do que falhar na análise. */
 const ACCEPT = '.pdf,.docx,.pptx,.txt,.md,image/png,image/jpeg,image/webp'
-/* Um só ficheiro — cada item da Biblioteca é um ficheiro, não vários. */
-const MAX_FILES = 1
+/* Dá para adicionar vários de uma vez — cada ficheiro vira o seu próprio
+   item na Biblioteca (não um só projeto com vários anexos). */
+const MAX_FILES = 5
 const MAX_TOTAL_MB = 12
 
 const ANALYSIS_BEATS = [
@@ -205,25 +207,28 @@ export default function NewProject() {
     setSavingToLibrary(true)
     setError(null)
     try {
-      const file = files[0]
-      const path = `${user.id}/${Date.now()}-${file.name}`
-      const { error: upErr } = await supabase.storage.from('library-files').upload(path, file, { contentType: file.type })
-      if (upErr) throw upErr
-      const { data: { publicUrl } } = supabase.storage.from('library-files').getPublicUrl(path)
+      // Cada ficheiro vira o seu próprio item — se vieram vários de uma
+      // vez, sobem todos, um a um.
+      for (const file of files) {
+        const path = `${user.id}/${Date.now()}-${file.name}`
+        const { error: upErr } = await supabase.storage.from('library-files').upload(path, file, { contentType: file.type })
+        if (upErr) throw upErr
+        const { data: { publicUrl } } = supabase.storage.from('library-files').getPublicUrl(path)
 
-      const { error: insErr } = await supabase.from('projects').insert({
-        user_id: user.id,
-        name: file.name.replace(/\.[^.]+$/, ''),
-        slug: crypto.randomUUID(),
-        entry_kind: 'library',
-        library_description: importNotes.trim() || null,
-        library_file_url: publicUrl,
-        library_file_name: file.name,
-        library_file_type: file.type,
-      })
-      if (insErr) throw insErr
+        const { error: insErr } = await supabase.from('projects').insert({
+          user_id: user.id,
+          name: file.name.replace(/\.[^.]+$/, ''),
+          slug: crypto.randomUUID(),
+          entry_kind: 'library',
+          library_description: importNotes.trim() || null,
+          library_file_url: publicUrl,
+          library_file_name: file.name,
+          library_file_type: file.type,
+        })
+        if (insErr) throw insErr
+      }
 
-      showToast('Adicionado à biblioteca.', 'success')
+      showToast(files.length > 1 ? `${files.length} adicionados à biblioteca.` : 'Adicionado à biblioteca.', 'success')
       navigate('/biblioteca')
     } catch (err) {
       console.error(err)
@@ -295,7 +300,7 @@ export default function NewProject() {
               <FilePicker files={files} onAdd={addFiles} onRemove={i => setFiles(f => f.filter((_, k) => k !== i))} />
 
               {files.length > 0 && (
-                <>
+                <div className="np-notes-block">
                   <div className="np-filemeta">
                     {files.length} {files.length === 1 ? 'ficheiro' : 'ficheiros'} · {prettySize(totalBytes)}
                   </div>
@@ -308,20 +313,20 @@ export default function NewProject() {
                     onChange={e => setImportNotes(e.target.value)}
                     placeholder="Ex: o relatório está incompleto, os resultados estão só nos slides."
                   />
-                </>
+                </div>
               )}
 
               {error && <p className="np-err"><AlertTriangle size={13} /> {error}</p>}
 
               <button className="np-btn-primary" onClick={handleAddToLibrary} disabled={!files.length || savingToLibrary}>
-                {savingToLibrary ? 'A guardar…' : <>Adicionar à Biblioteca <ArrowRight size={15} /></>}
+                {savingToLibrary ? 'A guardar…' : files.length > 1 ? `Adicionar ${files.length} à Biblioteca` : 'Adicionar à Biblioteca'}
               </button>
             </div>
 
-            {/* "Criar do 0" continua visível, só deixa de ser o destaque —
-                é a exceção, não a regra, para quem chega a este ecrã. */}
+            <div className="np-or-divider">ou</div>
+
             <button className="np-alt-path" onClick={() => { if (!requireAccount('/novo')) setStep('describe') }}>
-              Prefiro criar do 0 <ChevronRight size={13} />
+              Criar do 0
             </button>
           </div>
         </div>
@@ -585,9 +590,24 @@ function TypeRow({ value, onChange }) {
 function FilePicker({ files, onAdd, onRemove }) {
   const inputRef = useRef(null)
   const [dragging, setDragging] = useState(false)
+  const canAddMore = files.length < MAX_FILES
 
-  return (
-    <div>
+  const input = (
+    <input
+      ref={inputRef}
+      type="file"
+      multiple
+      accept={ACCEPT}
+      hidden
+      onChange={e => { onAdd(e.target.files); e.target.value = '' }}
+    />
+  )
+
+  // Antes de haver ficheiro nenhum, a caixa grande de arrastar. Depois de
+  // um estar escolhido, ela desaparece — ficava lá sempre visível como se
+  // desse para largar mais coisas, mesmo quando só o primeiro contava.
+  if (files.length === 0) {
+    return (
       <div
         className={`np-drop${dragging ? ' is-dragging' : ''}`}
         onClick={() => inputRef.current?.click()}
@@ -601,31 +621,32 @@ function FilePicker({ files, onAdd, onRemove }) {
         <span className="np-drop-icon"><Upload size={22} /></span>
         <span className="np-drop-title">Escolher ficheiros</span>
         <span className="np-drop-sub">PDF, Word, PowerPoint ou imagens</span>
-        <input
-          ref={inputRef}
-          type="file"
-          multiple
-          accept={ACCEPT}
-          hidden
-          onChange={e => { onAdd(e.target.files); e.target.value = '' }}
-        />
+        {input}
       </div>
+    )
+  }
 
-      {files.length > 0 && (
-        <ul className="np-files">
-          {files.map((f, i) => (
-            <li key={`${f.name}-${i}`} className="np-file">
-              <FileText size={15} className="np-file-icon" />
-              <span className="np-file-name">{f.name}</span>
-              <span className="np-file-size">{prettySize(f.size)}</span>
-              <button className="np-file-remove" onClick={() => onRemove(i)} aria-label={`Remover ${f.name}`}>
-                <X size={14} />
-              </button>
-            </li>
-          ))}
-        </ul>
+  return (
+    <ul className="np-files">
+      {files.map((f, i) => (
+        <li key={`${f.name}-${i}`} className="np-file">
+          <FileText size={15} className="np-file-icon" />
+          <span className="np-file-name">{f.name}</span>
+          <span className="np-file-size">{prettySize(f.size)}</span>
+          <button className="np-file-remove" onClick={() => onRemove(i)} aria-label={`Remover ${f.name}`}>
+            <X size={14} />
+          </button>
+        </li>
+      ))}
+      {canAddMore && (
+        <li className="np-file-add" onClick={() => inputRef.current?.click()} role="button" tabIndex={0}
+          onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') inputRef.current?.click() }}>
+          <PlusIcon size={13} /> Adicionar outro ficheiro
+          {input}
+        </li>
       )}
-    </div>
+      {!canAddMore && input}
+    </ul>
   )
 }
 

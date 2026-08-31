@@ -90,6 +90,7 @@
 
 .np-add-card {
   width: 100%; box-sizing: border-box;
+  display: flex; flex-direction: column; gap: 18px;
   padding: 24px;
   background: var(--color-surface);
   border: 1.5px solid var(--color-border);
@@ -104,18 +105,30 @@
   .np-add-card { animation: none; }
 }
 
-/* "Criar do 0" — visível, mas claramente o caminho secundário: sem
-   fundo próprio, texto discreto, sem competir com o cartão de cima. */
-.np-alt-path {
-  display: flex; align-items: center; justify-content: center; gap: 4px;
-  width: 100%; margin-top: 14px; padding: 10px 0;
-  background: none; border: none;
+/* "ou" entre as duas opções — nem um nem outro é tratado como o
+   "verdadeiro" caminho por defeito na própria separação visual. */
+.np-or-divider {
+  display: flex; align-items: center; gap: 12px;
+  margin: 16px 0 20px;
   color: var(--color-text-tertiary);
-  font-size: 13px; font-weight: 500; cursor: pointer;
-  font-family: inherit; -webkit-tap-highlight-color: transparent;
-  transition: color 0.15s;
+  font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;
 }
-.np-alt-path:hover { color: var(--color-text-secondary); }
+.np-or-divider::before, .np-or-divider::after {
+  content: ''; flex: 1; height: 1px; background: var(--color-border);
+}
+
+/* "Criar do 0" — mesmo tratamento preto/branco do botão principal,
+   só que fora do cartão, como segunda opção e não a mesma coisa. */
+.np-alt-path {
+  display: flex; align-items: center; justify-content: center;
+  width: 100%; padding: 15px 0;
+  background: var(--color-text); color: var(--color-bg);
+  border: none; border-radius: var(--radius-lg);
+  font-size: 15px; font-weight: 700; cursor: pointer;
+  font-family: inherit; -webkit-tap-highlight-color: transparent;
+  transition: opacity 0.15s;
+}
+.np-alt-path:hover { opacity: 0.88; }
 
 /* ── Upload ── */
 .np-drop {
@@ -131,20 +144,20 @@
   transition: border-color 0.16s, background 0.16s;
 }
 .np-drop:hover, .np-drop.is-dragging {
-  border-color: var(--color-primary);
-  background: var(--color-primary-subtle);
+  border-color: var(--color-text);
+  background: var(--color-bg-alt);
 }
 .np-drop-icon {
   display: flex; align-items: center; justify-content: center;
   width: 44px; height: 44px; margin-bottom: 4px;
   border-radius: var(--radius-full);
-  background: var(--color-primary-subtle);
-  color: var(--color-primary);
+  background: var(--color-bg-alt);
+  color: var(--color-text);
 }
 .np-drop-title { font-size: 15px; font-weight: 700; }
 .np-drop-sub { font-size: var(--text-sm); color: var(--color-text-tertiary); }
 
-.np-files { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.np-files { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
 .np-file {
   display: flex; align-items: center; gap: 10px;
   padding: 10px 12px;
@@ -152,7 +165,7 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
 }
-.np-file-icon { color: var(--color-primary); flex-shrink: 0; }
+.np-file-icon { color: var(--color-text-secondary); flex-shrink: 0; }
 .np-file-name {
   flex: 1; min-width: 0; font-size: 13.5px;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
@@ -165,14 +178,33 @@
 }
 .np-file-remove:hover { color: var(--color-error); background: var(--color-error-subtle); }
 
+/* Fila extra para adicionar mais um ficheiro depois do primeiro — em
+   vez de deixar a caixa grande de drop sempre visível e ambígua sobre
+   se dá para largar mais coisas lá. */
+.np-file-add {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 10px 12px;
+  border: 1.5px dashed var(--color-border-hover);
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color 0.15s, color 0.15s;
+}
+.np-file-add:hover { border-color: var(--color-text); color: var(--color-text); }
+
+/* Agrupa meta+label+textarea como um bloco só — dentro do bloco a
+   espaçar pouco (são a mesma ideia), o gap do .np-add-card já trata do
+   espaço à volta dele. */
+.np-notes-block { display: flex; flex-direction: column; gap: 8px; }
+
 .np-filemeta {
   font-size: var(--text-xs); color: var(--color-text-tertiary);
-  margin: 10px 0 16px;
 }
 
 .np-notes-label {
   display: block; font-size: var(--text-sm); font-weight: 600;
-  color: var(--color-text-secondary); margin-bottom: 6px;
+  color: var(--color-text-secondary); margin: 0;
 }
 .np-notes {
   width: 100%; box-sizing: border-box;
@@ -222,18 +254,20 @@
   box-shadow: 0 0 0 3px var(--color-primary-subtle);
 }
 
-/* ── Botões ── */
+/* ── Botões — preto/branco invertido, como o resto da app; a cor fica
+   só no título, não aqui. ── */
 .np-btn-primary {
   width: 100%;
   display: flex; align-items: center; justify-content: center; gap: 8px;
-  background: var(--color-primary);
-  color: #fff; border: none;
+  background: var(--color-text);
+  color: var(--color-bg); border: none;
   border-radius: var(--radius-lg);
   padding: 15px 0;
   font-size: 15px; font-weight: 700;
   cursor: pointer; font-family: inherit;
-  transition: background 0.2s, transform 0.14s var(--ease-out);
+  transition: opacity 0.2s, transform 0.14s var(--ease-out);
 }
+.np-btn-primary:hover:not(:disabled) { opacity: 0.88; }
 .np-btn-primary:active:not(:disabled) { transform: scale(0.985); }
 .np-btn-primary:disabled {
   background: var(--color-border);
