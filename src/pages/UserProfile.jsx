@@ -17,8 +17,11 @@ import { StarIcon as Star } from '@solar-icons/react/bold/star'
 import { ChatRoundLineIcon as MessageSquare } from '@solar-icons/react/bold/chat-round-line'
 import { SquareAcademicCapIcon as GraduationCap } from '@solar-icons/react/bold/square-academic-cap'
 import { PlaneIcon as Send } from '@solar-icons/react/bold/plane'
+import { PaletteIcon as Palette } from '@solar-icons/react/bold/palette'
 import ConvidarVagaModal from '../components/ConvidarVagaModal'
+import ProfileCustomizer from '../components/ProfileCustomizer'
 import { PlanBadge } from '../components/PlanGate'
+import { appearanceVars, appearanceClass } from '../lib/profileAppearance'
 import './UserProfile.css'
 
 function scoreColor(score) {
@@ -189,12 +192,15 @@ export default function UserProfile() {
   const [savingCandidate, setSavingCandidate] = useState(false)
   const [recruiterVagas, setRecruiterVagas] = useState([])
   const [showInvite, setShowInvite] = useState(false)
+  const [customizing, setCustomizing] = useState(false)
+  const [draftAppearance, setDraftAppearance] = useState({})
+  const [savingAppearance, setSavingAppearance] = useState(false)
 
   useEffect(() => {
     async function load() {
       const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(username)
 
-      const PROFILE_COLS = 'id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size, skills, school, total_xp, created_at, area'
+      const PROFILE_COLS = 'id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size, skills, school, total_xp, created_at, area, profile_appearance'
       const { data: profileData, error: profileErr } = isUUID
         ? await supabase.from('profiles').select(PROFILE_COLS).eq('id', username).single()
         : await supabase.from('profiles').select(PROFILE_COLS).eq('username', username).single()
@@ -293,6 +299,28 @@ export default function UserProfile() {
   const displayName  = profile?.full_name || profile?.username || 'Utilizador'
   const profileUrl   = window.location.href
 
+  // Aparência mostrada: o rascunho enquanto o painel está aberto, senão o
+  // que está guardado. É isto que dá o preview ao vivo.
+  const appearance = customizing ? draftAppearance : (profile?.profile_appearance || {})
+
+  function openCustomizer() {
+    setDraftAppearance(profile?.profile_appearance || {})
+    setCustomizing(true)
+  }
+
+  async function saveAppearance() {
+    setSavingAppearance(true)
+    const { error } = await supabase
+      .from('profiles')
+      .update({ profile_appearance: draftAppearance })
+      .eq('id', user.id)
+    setSavingAppearance(false)
+    if (!error) {
+      setProfile(p => ({ ...p, profile_appearance: draftAppearance }))
+      setCustomizing(false)
+    }
+  }
+
   if (loading) return (
     <div className="min-h-screen bg-page">
       <Navbar />
@@ -313,7 +341,10 @@ export default function UserProfile() {
   )
 
   return (
-    <div className="min-h-screen bg-page">
+    <div
+      className={`min-h-screen bg-page up-root ${appearanceClass(appearance)}`}
+      style={appearanceVars(appearance)}
+    >
       <Helmet>
         <title>{displayName} — Showo</title>
         <meta name="description" content={profile.bio || `Projetos de ${displayName} no Showo`} />
@@ -324,7 +355,13 @@ export default function UserProfile() {
 
       <Navbar />
 
-      <div className="page-content">
+      {appearance.bannerUrl && (
+        <div className="up-banner">
+          <img src={appearance.bannerUrl} alt="" />
+        </div>
+      )}
+
+      <div className={`page-content${appearance.bannerUrl ? ' has-banner' : ''}`}>
 
         {/* ── Profile header card: centrado ── */}
         <div className="up-header">
@@ -360,6 +397,11 @@ export default function UserProfile() {
             <button onClick={() => setShowQR(true)} className="up-icon-btn" title="QR Code" aria-label="QR Code">
               <QrCode size={15} />
             </button>
+            {isOwnProfile && (
+              <button onClick={openCustomizer} className="up-icon-btn" title="Personalizar perfil" aria-label="Personalizar perfil">
+                <Palette size={15} />
+              </button>
+            )}
             {isOwnProfile && (
               <button onClick={() => navigate('/settings')} className="up-icon-btn" title="Editar perfil" aria-label="Editar perfil">
                 <Pencil size={15} />
@@ -456,6 +498,17 @@ export default function UserProfile() {
           )}
         </div>
       </div>
+
+      {customizing && (
+        <ProfileCustomizer
+          appearance={draftAppearance}
+          onChange={setDraftAppearance}
+          onSave={saveAppearance}
+          onClose={() => setCustomizing(false)}
+          saving={savingAppearance}
+          userId={user.id}
+        />
+      )}
 
       {showQR && <QRModal profileUrl={profileUrl} username={profile?.username || profile?.id || ''} onClose={() => setShowQR(false)} />}
       {showInvite && profile && (
