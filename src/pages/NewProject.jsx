@@ -293,7 +293,6 @@ export default function NewProject() {
 
             <div className="np-tiles">
               <button className="np-tile is-blue" onClick={() => { if (!requireAccount('/novo?import=1')) setStep('import') }}>
-                <Upload size={128} className="np-tile-watermark" />
                 <span className="np-tile-icon"><Upload size={22} /></span>
                 <span className="np-tile-title">Já tenho o trabalho feito</span>
                 <span className="np-tile-desc">Envia o relatório ou as imagens. Lemos tudo e preenchemos a ficha por ti.</span>
@@ -302,7 +301,6 @@ export default function NewProject() {
               </button>
 
               <button className="np-tile is-red" onClick={() => { if (!requireAccount('/novo')) setStep('describe') }}>
-                <PenLine size={128} className="np-tile-watermark" />
                 <span className="np-tile-icon"><PenLine size={22} /></span>
                 <span className="np-tile-title">Descrever em duas frases</span>
                 <span className="np-tile-desc">Conta o que fizeste. A IA trata do resto.</span>
