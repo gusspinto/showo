@@ -23,6 +23,7 @@ import { UserPlusRoundedIcon as UserPlus } from '@solar-icons/react/bold/user-pl
 import { Widget4Icon as LayoutDashboard } from '@solar-icons/react/bold/widget-4'
 import { PlusIcon as Plus } from './icons/PlusIcon'
 import { CompassIcon as Compass } from '@solar-icons/react/bold/compass'
+import { LibraryIcon } from '@solar-icons/react/bold/library'
 import { Sun2Icon as Sun } from '@solar-icons/react/bold/sun-2'
 import { MoonIcon as Moon } from '@solar-icons/react/bold/moon'
 import { StarsIcon as Sparkles } from '@solar-icons/react/bold/stars'
@@ -1372,6 +1373,11 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   <LayoutDashboard size={16} />{!collapsed && showLabels && <span>Dashboard</span>}
                 </button>
               )}
+              {user && (
+                <button className={`sb-item${isActive('/biblioteca') ? ' active' : ''}`} onClick={() => navigate('/biblioteca')}>
+                  <LibraryIcon size={16} />{!collapsed && showLabels && <span>Biblioteca</span>}
+                </button>
+              )}
               {isSchoolAccount && (
                 <button className={`sb-item${isActive('/turmas') ? ' active' : ''}`} onClick={() => navigate('/turmas')}>
                   <Users2 size={16} />{!collapsed && showLabels && <span>Turmas</span>}
@@ -1703,6 +1709,11 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   {user && (
                     <button className={`mob-nav-btn${isActive('/dashboard') ? ' active' : ''}`} onClick={() => { navigate('/dashboard'); setMenuOpen(false) }}>
                       <LayoutDashboard size={18} /> Dashboard
+                    </button>
+                  )}
+                  {user && (
+                    <button className={`mob-nav-btn${isActive('/biblioteca') ? ' active' : ''}`} onClick={() => { navigate('/biblioteca'); setMenuOpen(false) }}>
+                      <LibraryIcon size={18} /> Biblioteca
                     </button>
                   )}
                   {/* Visitante sem conta: o menu é o mapa do site — a explicação

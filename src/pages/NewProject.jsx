@@ -6,7 +6,6 @@ import { StarsIcon as Sparkles } from '@solar-icons/react/bold/stars'
 import { ArrowRightIcon as ArrowRight } from '@solar-icons/react/bold/arrow-right'
 import { ArrowLeftIcon as ArrowLeft } from '@solar-icons/react/bold/arrow-left'
 import { Pen2Icon as Pencil } from '@solar-icons/react/bold/pen-2'
-import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
 import { AltArrowRightIcon as ChevronRight } from '@solar-icons/react/bold/alt-arrow-right'
 import { UploadIcon as Upload } from '@solar-icons/react/bold/upload'
 import { DocumentTextIcon as FileText } from '@solar-icons/react/bold/document-text'
@@ -39,7 +38,8 @@ const REVIEW_FIELDS = [
    ficam de fora de propósito: são formatos binários que não conseguimos ler
    de forma fiável, e é melhor dizê-lo à entrada do que falhar na análise. */
 const ACCEPT = '.pdf,.docx,.pptx,.txt,.md,image/png,image/jpeg,image/webp'
-const MAX_FILES = 5
+/* Um só ficheiro — cada item da Biblioteca é um ficheiro, não vários. */
+const MAX_FILES = 1
 const MAX_TOTAL_MB = 12
 
 const ANALYSIS_BEATS = [
@@ -48,15 +48,6 @@ const ANALYSIS_BEATS = [
   'A recolher objetivos e resultados…',
   'A preparar a ficha do projeto…',
 ]
-
-function fileToBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => resolve(String(reader.result).split(',')[1] ?? '')
-    reader.onerror = reject
-    reader.readAsDataURL(file)
-  })
-}
 
 function prettySize(bytes) {
   if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`
@@ -69,7 +60,7 @@ export default function NewProject() {
   const { user, checkGate, consumeAI } = useAuth()
   const { toast, show: showToast } = useToast()
 
-  /* Passos: choose → describe | loading → found → review → submitting
+  /* Passos: choose → describe | loading → review → submitting
      "choose" já traz a caixa de enviar ficheiros consigo — deixou de haver
      um ecrã "import" à parte, por isso ?import=1 (link partilhável antigo)
      também aterra aqui; é ignorado de propósito, não precisa de fazer nada. */
@@ -91,10 +82,10 @@ export default function NewProject() {
   const [interviewData, setInterviewData] = useState(null)
   const [gateMsg, setGateMsg] = useState(null)
 
-  /* Importação */
+  /* Adicionar (Biblioteca) */
   const [files, setFiles] = useState([])
   const [importNotes, setImportNotes] = useState('')
-  const [found, setFound] = useState(null)   // { summary, confidence, missing, read }
+  const [savingToLibrary, setSavingToLibrary] = useState(false)
   const [beat, setBeat] = useState(0)
 
   function set(key, val) { setForm(p => ({ ...p, [key]: val })) }
@@ -201,38 +192,44 @@ export default function NewProject() {
     })
   }
 
-  async function handleImport() {
+  /* "Adicionar" já não gera a ficha AI-estruturada de sempre (goal/problem/
+     solution/etc) — vira um item leve na Biblioteca: o ficheiro, o nome
+     (do próprio ficheiro) e a descrição breve que a pessoa escrever. Sem
+     IA nenhuma a analisar o conteúdo, por isso também não gasta o gate de
+     AI. "Criar do 0" continua a gerar a ficha completa como sempre. */
+  async function handleAddToLibrary() {
     if (!files.length) return
-    if (requireAccount('/novo?import=1')) return
+    if (requireAccount('/novo')) return
     if (!(await guardProjectCount())) return
-    const aiGate = checkGate('createProject')
-    if (!aiGate.allowed) { setGateMsg(aiGate.message); return }
 
-    setStep('loading')
+    setSavingToLibrary(true)
     setError(null)
     try {
-      const payload = await Promise.all(files.map(async f => ({
-        name: f.name,
-        type: f.type,
-        data: await fileToBase64(f),
-      })))
-      const { data, error: fnErr } = await supabase.functions.invoke('import-project', {
-        body: { files: payload, projectType, notes: importNotes },
+      const file = files[0]
+      const path = `${user.id}/${Date.now()}-${file.name}`
+      const { error: upErr } = await supabase.storage.from('library-files').upload(path, file, { contentType: file.type })
+      if (upErr) throw upErr
+      const { data: { publicUrl } } = supabase.storage.from('library-files').getPublicUrl(path)
+
+      const { error: insErr } = await supabase.from('projects').insert({
+        user_id: user.id,
+        name: file.name.replace(/\.[^.]+$/, ''),
+        slug: crypto.randomUUID(),
+        entry_kind: 'library',
+        library_description: importNotes.trim() || null,
+        library_file_url: publicUrl,
+        library_file_name: file.name,
+        library_file_type: file.type,
       })
-      if (fnErr || !data || data.error) throw new Error(data?.error || '')
-      consumeAI('createProject')
-      setForm({ ...(data.prefill ?? {}), project_type: projectType })
-      setFound({
-        summary: data.summary ?? '',
-        confidence: data.confidence ?? {},
-        missing: data.missing ?? [],
-        read: data.read ?? [],
-        skipped: data.skipped ?? [],
-      })
-      setStep('found')
+      if (insErr) throw insErr
+
+      showToast('Adicionado à biblioteca.', 'success')
+      navigate('/biblioteca')
     } catch (err) {
-      setError(err?.message || 'Não conseguimos ler estes ficheiros. Exporta o trabalho como PDF e tenta outra vez.')
-      setStep('choose')
+      console.error(err)
+      setError('Não foi possível guardar. Tenta novamente.')
+    } finally {
+      setSavingToLibrary(false)
     }
   }
 
@@ -314,14 +311,11 @@ export default function NewProject() {
                 </>
               )}
 
-              <TypeRow value={projectType} onChange={setProjectType} />
-
               {error && <p className="np-err"><AlertTriangle size={13} /> {error}</p>}
 
-              <button className="np-btn-primary" onClick={handleImport} disabled={!files.length}>
-                <Sparkles size={15} /> Analisar o meu trabalho <ArrowRight size={15} />
+              <button className="np-btn-primary" onClick={handleAddToLibrary} disabled={!files.length || savingToLibrary}>
+                {savingToLibrary ? 'A guardar…' : <>Adicionar à Biblioteca <ArrowRight size={15} /></>}
               </button>
-              <AiUsageBadge feature="createProject" style={{ marginTop: 8 }} />
             </div>
 
             {/* "Criar do 0" continua visível, só deixa de ser o destaque —
@@ -373,9 +367,7 @@ export default function NewProject() {
      PASSO: loading / submitting
   ────────────────────────────────────────────────────────────────────────── */
   if (step === 'loading' || step === 'submitting') {
-    const title = step === 'submitting'
-      ? 'A guardar o teu projeto…'
-      : found === null && files.length ? ANALYSIS_BEATS[beat] : 'A estruturar o teu projeto…'
+    const title = step === 'submitting' ? 'A guardar o teu projeto…' : ANALYSIS_BEATS[beat]
     return (
       <NpShell>
         <div className="np-loading">
@@ -388,61 +380,6 @@ export default function NewProject() {
             {[['55%', 100], ['80%', 60], ['70%', 80], ['45%', 90]].map(([w, delay], i) => (
               <div key={i} className="np-loading-line" style={{ height: i === 0 ? 12 : 9, width: w, animation: `np-sh 1.5s ease-in-out infinite ${delay}ms, np-in 0.3s ease-out ${i * 80}ms both` }} />
             ))}
-          </div>
-        </div>
-      </NpShell>
-    )
-  }
-
-  /* ──────────────────────────────────────────────────────────────────────────
-     PASSO: found — o que a IA encontrou, antes de tocar em nada
-  ────────────────────────────────────────────────────────────────────────── */
-  if (step === 'found' && found) {
-    return (
-      <NpShell>
-        <Toast {...toast} />
-        <Navbar showLinks={false} mobileLeft={<BackButton onClick={() => setStep('choose')} />} />
-        <div className="np-center">
-          <div className="np-wrap">
-            <StepBar current={2} total={2} label="O que encontrámos" />
-            <h1 className="np-headline">Encontrámos isto no teu trabalho.</h1>
-            {found.summary && <p className="np-sub">{found.summary}</p>}
-
-            <div className="np-found-list">
-              {REVIEW_FIELDS.map(f => {
-                const value = (form[f.key] ?? '').trim()
-                const conf = found.confidence?.[f.key]
-                return (
-                  <div key={f.key} className={`np-found-row${value ? '' : ' is-empty'}`}>
-                    <span className="np-found-check">
-                      {value ? <Check size={13} /> : <span className="np-found-dot" />}
-                    </span>
-                    <span className="np-found-body">
-                      <span className="np-found-label">
-                        {f.label}
-                        {value && conf === 'media' && <span className="np-found-tag">a confirmar</span>}
-                      </span>
-                      <span className="np-found-value">
-                        {value || 'Não estava no ficheiro. Preenches a seguir.'}
-                      </span>
-                    </span>
-                  </div>
-                )
-              })}
-            </div>
-
-            {found.skipped?.length > 0 && (
-              <p className="np-found-note">
-                Não conseguimos ler: {found.skipped.map(s => s.name).join(', ')}.
-              </p>
-            )}
-
-            <button className="np-btn-primary" onClick={() => setStep('review')}>
-              Rever e ajustar <ArrowRight size={15} />
-            </button>
-            <button className="np-btn-quiet" onClick={() => { setFound(null); setStep('choose') }}>
-              Enviar outro ficheiro
-            </button>
           </div>
         </div>
       </NpShell>
@@ -482,7 +419,7 @@ export default function NewProject() {
   return (
     <NpShell>
       <Toast {...toast} />
-      <Navbar showLinks={false} mobileLeft={<BackButton onClick={() => setStep(found ? 'found' : 'describe')} />} />
+      <Navbar showLinks={false} mobileLeft={<BackButton onClick={() => setStep('describe')} />} />
       <div className="np-center np-center--review">
         <div className="np-wrap np-wrap--review">
           <StepBar current={3} total={3} label="Rever" />
@@ -663,7 +600,7 @@ function FilePicker({ files, onAdd, onRemove }) {
       >
         <span className="np-drop-icon"><Upload size={22} /></span>
         <span className="np-drop-title">Escolher ficheiros</span>
-        <span className="np-drop-sub">PDF, Word, PowerPoint ou imagens · até {MAX_FILES} ficheiros</span>
+        <span className="np-drop-sub">PDF, Word, PowerPoint ou imagens</span>
         <input
           ref={inputRef}
           type="file"

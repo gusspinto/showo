@@ -225,18 +225,21 @@ export default function StudentDashboard({ user, profile }) {
       .then(({ data }) => { if (data?.name) setOrgName(data.name) })
   }, [isSchoolAccount, profile?.organization_id])
 
-  /* ── Projetos ── */
+  /* ── Projetos ──
+     entry_kind='library' fica de fora — esses são itens leves adicionados
+     (ficheiro + nome + descrição breve), vivem na Biblioteca, não aqui. */
   useEffect(() => {
     async function load() {
       let { data, error } = await supabase
         .from('projects')
         .select('id, name, slug, score, area, created_at, ai_tagline, views, defense_date, cover_url, teacher_score, review_status, project_type, is_pap, featured, featured_order, dashboard_pinned, class_projects(class_id), collaborator_count:project_collaborators(count)')
         .eq('user_id', user.id)
+        .eq('entry_kind', 'full')
         .order('created_at', { ascending: false })
       if (error) {
         const fallback = await supabase.from('projects')
           .select('id, name, slug, score, area, created_at, ai_tagline, views, defense_date, cover_url, teacher_score, project_type, is_pap, dashboard_pinned')
-          .eq('user_id', user.id).order('created_at', { ascending: false })
+          .eq('user_id', user.id).eq('entry_kind', 'full').order('created_at', { ascending: false })
         data = fallback.data
       }
       setProjects((data || []).map(p => ({

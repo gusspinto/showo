@@ -908,15 +908,18 @@ export default function Dashboard() {
   useEffect(() => {
     if (!user || !isStaffView) return
     async function load() {
+      // entry_kind='library' fica de fora — esses vivem na Biblioteca, não
+      // na lista de Portfólio da Dashboard.
       let { data, error } = await supabase
         .from('projects')
         .select('id, name, slug, score, area, created_at, ai_tagline, views, defense_date, ai_feedback, cover_url, teacher_score, project_type, class_projects(class_id), collaborator_count:project_collaborators(count)')
         .eq('user_id', user.id)
+        .eq('entry_kind', 'full')
         .order('created_at', { ascending: false })
       if (error) {
         const fallback = await supabase.from('projects')
           .select('id, name, slug, score, area, created_at, ai_tagline, views, defense_date, ai_feedback, cover_url, teacher_score, project_type')
-          .eq('user_id', user.id).order('created_at', { ascending: false })
+          .eq('user_id', user.id).eq('entry_kind', 'full').order('created_at', { ascending: false })
         data = fallback.data; error = fallback.error
       }
       setProjects((data || []).map(p => ({
