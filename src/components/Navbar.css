@@ -234,18 +234,12 @@ body.light .sb-collapse-toggle:hover { border-color: rgba(0,0,0,0.75); }
 
 /* ── Botão de criar — gradiente de marca ─────────────────────────────
    Único ponto de cor "quente" fora da dashboard: destaca a ação mais
-   importante da app. Animado no desktop (onde há espaço e tempo para
-   reparar no movimento); estático em tablet/mobile — mesma cor, sem
-   distração enquanto se navega ao toque. */
+   importante da app. Exatamente as três cores do ícone da Showo, nada
+   a mais — sem camadas de brilho branco a desbotar a cor. Estático em
+   tablet/mobile; no desktop o gradiente desloca-se com o rato só
+   enquanto está em hover (ver .sb-create.gradient-cta:hover abaixo). */
 .gradient-cta {
-  --mx: 50%; --my: 50%;
-  /* Camada de brilho que segue o rato (JS escreve --mx/--my em cada
-     mousemove) por cima do gradiente das três cores, sempre visível
-     inteiro — nunca "corta" nenhuma cor, parado ou em movimento. */
-  background-image:
-    radial-gradient(circle 130px at var(--mx) var(--my), rgba(255,255,255,0.55), transparent 70%),
-    linear-gradient(115deg, #2f6bff 0%, #ff3b5c 52%, #ffb400 100%) !important;
-  background-blend-mode: soft-light, normal !important;
+  background-image: linear-gradient(115deg, #2478f0 0%, #db4a3d 50%, #cc9a1e 100%) !important;
   background-color: transparent !important;
   background-size: 100% 100% !important;
   background-position: center !important;
@@ -258,30 +252,32 @@ body.light .sb-collapse-toggle:hover { border-color: rgba(0,0,0,0.75); }
 }
 .gradient-cta:hover { opacity: 1 !important; filter: brightness(1.05); }
 
-/* Sidebar desktop — além do brilho, o próprio gradiente "desloca-se"
-   com o cursor: fundo maior que a caixa (180%), posicionado por
-   --mx/--my, por isso as cores mudam de sítio consoante o rato se
-   mexe lá dentro, não é só um brilho por cima. Parado (--mx/--my nos
-   50% por omissão) continua centrado com as três cores completas. */
+/* Sidebar desktop — só em :hover o fundo cresce (180%) e desloca-se
+   com --mx/--my (escrito pelo handleGradientMove no mousemove); em
+   repouso fica exatamente igual ao .gradient-cta base, 100% centrado,
+   as três cores completas. background-size/-position têm o mesmo
+   número de camadas (uma só) nos dois estados, por isso a transição
+   ao sair do hover é suave em vez de cortar de repente. */
 .sb-create.gradient-cta {
-  background-size: 100% 100%, 180% 180% !important;
-  background-position: var(--mx) var(--my), var(--mx) var(--my) !important;
+  --mx: 50%; --my: 50%;
+  transition: filter 0.2s ease, background-size 0.5s ease, background-position 0.5s ease;
+}
+@media (min-width: 901px) {
+  .sb-create.gradient-cta:hover {
+    background-size: 180% 180% !important;
+    background-position: var(--mx) var(--my) !important;
+  }
 }
 
-/* Botões-ícone (topbar mobile) — força quadrado perfeito e mais
-   pequeno (ficava demasiado alto ao lado do sino); sem o !important no
-   tamanho, o flex do cluster pode esticar a caixa e o gradiente lê-se
-   como pílula em vez de chip. Azul mais presente que no da sidebar —
-   ao 38px o corte do gradiente escondia-o quase todo. */
+/* Botões-ícone (topbar mobile) — quadrado, mas do tamanho do sino ao
+   lado (44px) para não desequilibrar a barra; sem o !important no
+   tamanho, o flex do cluster pode esticar a caixa. */
 .mob-nav-icon-btn.gradient-cta,
 .mob-only-create.gradient-cta {
-  width: 32px !important; height: 32px !important;
-  flex: 0 0 32px !important;
+  width: 40px !important; height: 40px !important;
+  flex: 0 0 40px !important;
   aspect-ratio: 1 / 1;
-  border-radius: 8px !important;
-  background-image:
-    radial-gradient(circle 130px at var(--mx) var(--my), rgba(255,255,255,0.55), transparent 70%),
-    linear-gradient(115deg, #2f6bff 0%, #2f6bff 32%, #ff3b5c 68%, #ffb400 100%) !important;
+  border-radius: 9px !important;
 }
 .sb-divider { height: 1px; background: var(--color-border); margin: 6px 0; opacity: 0.6; }
 .sb-bottom { padding: 0 10px 14px; }
