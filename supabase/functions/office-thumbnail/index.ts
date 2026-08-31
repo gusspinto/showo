@@ -1,0 +1,73 @@
+import { checkRateLimit, getAuthUser, getCorsHeaders } from '../_shared/rateLimit.ts'
+
+/* ══════════════════════════════════════════════════════════════════════════
+   PREVIEW DE .docx/.pptx PARA A BIBLIOTECA
+   ──────────────────────────────────────────────────────────────────────────
+   O browser sozinho não sabe abrir Word/PowerPoint e desenhar a 1ª página
+   (ao contrário do PDF, que já é feito no cliente via pdfjs). Aqui só
+   convertemos o ficheiro para PDF através do Gotenberg (self-hosted, ver
+   GOTENBERG_URL) — quem transforma esse PDF na miniatura JPEG continua a
+   ser o mesmo código do cliente (renderPdfThumbnail), reaproveitado. O URL
+   do Gotenberg nunca fica exposto no browser: só esta função o conhece.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+const GOTENBERG_URL = Deno.env.get('GOTENBERG_URL')
+
+function bytesToB64(bytes: Uint8Array): string {
+  let binary = ''
+  const chunk = 0x8000
+  for (let i = 0; i < bytes.length; i += chunk) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunk))
+  }
+  return btoa(binary)
+}
+
+function b64ToBytes(b64: string): Uint8Array {
+  const bin = atob(b64)
+  const out = new Uint8Array(bin.length)
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i)
+  return out
+}
+
+Deno.serve(async (req) => {
+  const cors = getCorsHeaders(req)
+  if (req.method === 'OPTIONS') return new Response(null, { headers: cors })
+
+  const json = (body: unknown, status = 200) =>
+    new Response(JSON.stringify(body), { status, headers: { ...cors, 'Content-Type': 'application/json' } })
+
+  const user = await getAuthUser(req)
+  if (!user) return json({ error: 'not authenticated' }, 401)
+
+  if (!(await checkRateLimit(req, 'office-thumbnail', 20))) {
+    return json({ error: 'Demasiados pedidos. Tenta outra vez daqui a pouco.' }, 429)
+  }
+
+  if (!GOTENBERG_URL) {
+    console.error('[office-thumbnail] GOTENBERG_URL não configurado')
+    return json({ error: 'Conversor não configurado' }, 500)
+  }
+
+  try {
+    const { name, type, data } = await req.json()
+    if (!name || !type || !data) return json({ error: 'faltam dados do ficheiro' }, 400)
+
+    const bytes = b64ToBytes(data)
+    const form = new FormData()
+    form.append('files', new Blob([bytes], { type }), name)
+
+    // Nota: Render (tier grátis) "adormece" ao fim de inatividade — a
+    // primeira conversão depois disso pode demorar 30-60s a arrancar.
+    const resp = await fetch(`${GOTENBERG_URL}/forms/libreoffice/convert`, {
+      method: 'POST',
+      body: form,
+    })
+    if (!resp.ok) throw new Error(`Gotenberg respondeu ${resp.status}`)
+
+    const pdfBytes = new Uint8Array(await resp.arrayBuffer())
+    return json({ pdf: bytesToB64(pdfBytes) })
+  } catch (err) {
+    console.error('[office-thumbnail]', err)
+    return json({ error: 'Não foi possível converter o ficheiro' }, 500)
+  }
+})

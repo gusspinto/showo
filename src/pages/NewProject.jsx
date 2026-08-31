@@ -56,6 +56,24 @@ function prettySize(bytes) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
+/* Só para mandar um .docx/.pptx à edge function office-thumbnail converter
+   — não tem mais nenhum uso (o upload em si vai direto, sem passar por
+   base64). */
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(String(reader.result).split(',')[1] ?? '')
+    reader.onerror = reject
+    reader.readAsDataURL(file)
+  })
+}
+function b64ToBytes(b64) {
+  const bin = atob(b64)
+  const out = new Uint8Array(bin.length)
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i)
+  return out
+}
+
 export default function NewProject() {
   const navigate = useNavigate()
   const location = useLocation()
@@ -223,22 +241,35 @@ export default function NewProject() {
         if (upErr) throw upErr
         const { data: { publicUrl } } = supabase.storage.from('library-files').getPublicUrl(path)
 
-        // Preview real da 1ª página, tipo Drive — só para PDF (é o único
-        // tipo que dá para renderizar no browser sem mandar para um
-        // serviço externo). Nunca bloqueia o upload: falha em silêncio,
+        // Preview real da 1ª página, tipo Drive. PDF renderiza-se direto
+        // no browser (pdfjs). Word/PowerPoint passam primeiro pelo
+        // conversor (Gotenberg, via edge function — o browser não sabe
+        // abrir esses formatos sozinho) que devolve um PDF; a partir daí
+        // é o mesmo caminho. Nunca bloqueia o upload: falha em silêncio,
         // fica só o cartão colorido por tipo de ficheiro na Biblioteca.
         let thumbUrl = null
-        if (file.type === 'application/pdf') {
+        const isOfficeDoc = file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+          || file.type === 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+        if (file.type === 'application/pdf' || isOfficeDoc) {
           try {
             const { renderPdfThumbnail } = await import('../lib/pdfThumbnail')
-            const thumbBlob = await renderPdfThumbnail(file)
+            let pdfSource = file
+            if (isOfficeDoc) {
+              const b64 = await fileToBase64(file)
+              const { data: convData, error: convErr } = await supabase.functions.invoke('office-thumbnail', {
+                body: { name: file.name, type: file.type, data: b64 },
+              })
+              if (convErr || !convData?.pdf) throw convErr || new Error(convData?.error || 'conversão falhou')
+              pdfSource = new Blob([b64ToBytes(convData.pdf)], { type: 'application/pdf' })
+            }
+            const thumbBlob = await renderPdfThumbnail(pdfSource)
             const thumbPath = `${user.id}/thumbs/${Date.now()}-${file.name.replace(/\.[^.]+$/, '')}.jpg`
             const { error: thumbErr } = await supabase.storage.from('library-files').upload(thumbPath, thumbBlob, { contentType: 'image/jpeg' })
             if (!thumbErr) {
               thumbUrl = supabase.storage.from('library-files').getPublicUrl(thumbPath).data.publicUrl
             }
           } catch (thumbErr) {
-            console.error('Preview do PDF falhou (não crítico):', thumbErr)
+            console.error('Preview do ficheiro falhou (não crítico):', thumbErr)
           }
         }
 
