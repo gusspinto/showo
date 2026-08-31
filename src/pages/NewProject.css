@@ -32,7 +32,7 @@
   background: var(--color-border);
   transition: background 0.25s var(--ease-out);
 }
-.np-stepdot.is-done { background: var(--color-primary); }
+.np-stepdot.is-done { background: var(--color-text); }
 .np-stepbar-label {
   font-size: var(--text-xs); font-weight: 700;
   color: var(--color-text-tertiary);
@@ -231,9 +231,9 @@
   transition: border-color 0.15s, color 0.15s, background 0.15s;
 }
 .np-type.is-active {
-  border-color: var(--color-primary);
-  background: var(--color-primary-subtle);
-  color: var(--color-primary);
+  border-color: var(--color-text);
+  background: var(--color-bg-alt);
+  color: var(--color-text);
   font-weight: 700;
 }
 
@@ -250,8 +250,8 @@
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 .np-describe:focus {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px var(--color-primary-subtle);
+  border-color: var(--color-text);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-text) 12%, transparent);
 }
 
 /* ── Botões — preto/branco invertido, como o resto da app; a cor fica
@@ -328,8 +328,8 @@
 .np-field:hover { border-color: var(--color-border-hover); }
 .np-field.is-editing {
   cursor: default;
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px var(--color-primary-subtle);
+  border-color: var(--color-text);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-text) 12%, transparent);
 }
 .np-field-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
 .np-field-label {
@@ -375,9 +375,9 @@
 .np-interview { display: flex; flex-direction: column; gap: 16px; }
 .np-interview-intro {
   padding: 12px 14px;
-  background: var(--color-primary-subtle);
-  border: 1px solid var(--color-primary-muted);
-  border-left: 3px solid var(--color-primary);
+  background: var(--color-bg-alt);
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-text);
   border-radius: var(--radius-md);
   font-size: 13px; line-height: 1.65;
 }
@@ -388,7 +388,7 @@
 }
 .np-interview-track { flex: 1; height: 3px; background: var(--color-border); border-radius: var(--radius-full); }
 .np-interview-fill {
-  height: 100%; background: var(--color-primary);
+  height: 100%; background: var(--color-text);
   border-radius: var(--radius-full);
   transition: width 0.35s var(--ease-out);
 }
@@ -412,8 +412,8 @@
   resize: vertical; line-height: 1.6;
 }
 .np-interview-input:focus {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px var(--color-primary-subtle);
+  border-color: var(--color-text);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-text) 12%, transparent);
 }
 .np-interview-actions { display: flex; gap: 8px; }
 .np-interview-skip {
