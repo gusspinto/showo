@@ -52,7 +52,7 @@
 }
 .mob-nav-auth-btn.ghost { background: transparent; border: 1px solid var(--color-border); color: var(--color-text); }
 .mob-nav-auth-btn.ghost:active { background: var(--color-surface-hover); }
-.mob-nav-auth-btn.primary { background: var(--color-primary); border: none; color: #fff; box-shadow: 0 3px 12px rgba(26,138,122,0.3); }
+.mob-nav-auth-btn.primary { background: var(--color-text); border: none; color: var(--color-bg); box-shadow: 0 3px 12px rgba(26,138,122,0.3); }
 .mob-nav-auth-btn.primary:active { transform: scale(0.96); }
 .mob-nav-icon-btn {
   width: 38px; height: 38px; border-radius: 9px;
@@ -63,7 +63,7 @@
 }
 .mob-nav-icon-btn.ghost { background: transparent; border: 1px solid var(--color-border); color: var(--color-text-tertiary); }
 .mob-nav-icon-btn.ghost:active { background: var(--color-surface-hover); color: var(--color-text); }
-.mob-nav-icon-btn.primary { background: var(--color-primary); border: none; color: #fff; box-shadow: 0 4px 12px rgba(26,138,122,0.35); }
+.mob-nav-icon-btn.primary { background: var(--color-text); border: none; color: var(--color-bg); box-shadow: 0 4px 12px rgba(26,138,122,0.35); }
 .mob-nav-icon-btn.primary:active { transform: scale(0.92); }
 .nav-mob-theme {
   display: none; align-items: center; justify-content: center;
@@ -177,8 +177,8 @@ body.light .sb-collapse-toggle:hover { border-color: rgba(0,0,0,0.75); }
 }
 .sb-item {
   display: flex; align-items: center; gap: 10px;
-  width: 100%; padding: 9px 10px;
-  border-radius: 6px; border: none;
+  width: 100%; padding: 9px 11px;
+  border-radius: 9px; border: none;
   background: transparent; color: var(--color-text-secondary);
   font-size: 13px; font-weight: 500;
   cursor: pointer; font-family: inherit;
@@ -186,14 +186,36 @@ body.light .sb-collapse-toggle:hover { border-color: rgba(0,0,0,0.75); }
   text-align: left; white-space: nowrap;
   position: relative;
 }
+
+/* ── Entrada da sidebar, como a folha do telemóvel já tinha ──
+   Só corre uma vez, quando a sidebar monta (login/refresh) — não é um
+   drawer que abre e fecha como no telemóvel, por isso o desvio é menor
+   e mais rápido, só o suficiente para se notar sem parecer um efeito
+   à parte. */
+@keyframes sb-item-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.sb-section > * { animation: sb-item-in 0.26s cubic-bezier(0.22,1,0.36,1) both; }
+.sb-section > *:nth-child(1)  { animation-delay: 0.02s; }
+.sb-section > *:nth-child(2)  { animation-delay: 0.05s; }
+.sb-section > *:nth-child(3)  { animation-delay: 0.08s; }
+.sb-section > *:nth-child(4)  { animation-delay: 0.11s; }
+.sb-section > *:nth-child(5)  { animation-delay: 0.14s; }
+.sb-section > *:nth-child(6)  { animation-delay: 0.17s; }
+.sb-section > *:nth-child(7)  { animation-delay: 0.20s; }
+.sb-section > *:nth-child(n+8) { animation-delay: 0.22s; }
+@media (prefers-reduced-motion: reduce) {
+  .sb-section > * { animation: none; }
+}
 .sb-item:hover { background: var(--color-surface-hover); color: var(--color-text); }
-.sb-item.active { color: var(--color-primary); font-weight: 600; }
+.sb-item.active { color: var(--color-text); font-weight: 600; }
 .sb-item.active::before {
   content: '';
   position: absolute;
   left: -10px; top: 25%; bottom: 25%;
   width: 2px;
-  background: var(--color-primary);
+  background: var(--color-text);
 }
 .sb-item.danger { color: var(--color-error); }
 .sb-item.danger:hover { color: #f87171; }
@@ -201,9 +223,9 @@ body.light .sb-collapse-toggle:hover { border-color: rgba(0,0,0,0.75); }
   display: flex; align-items: center; gap: 8px;
   margin: 8px 0 4px;
   padding: 9px 13px;
-  background: var(--color-primary);
-  border: 1px solid var(--color-primary); border-radius: 6px;
-  color: #fff; font-size: 13px; font-weight: 700;
+  background: var(--color-text);
+  border: 1px solid var(--color-text); border-radius: 9px;
+  color: var(--color-bg); font-size: 13px; font-weight: 700;
   cursor: pointer; font-family: inherit;
   transition: opacity 0.15s;
   width: 100%;
@@ -250,7 +272,7 @@ body.sidebar-collapsed .proj-manage-float { left: 84px; }
   position: relative;
 }
 .proj-manage-float .pmf-btn:hover { color: var(--color-text); background: var(--color-surface-hover); }
-.proj-manage-float .pmf-btn.active { color: var(--color-primary); background: var(--color-primary-subtle); }
+.proj-manage-float .pmf-btn.active { color: var(--color-text); background: var(--color-surface-hover); }
 .proj-manage-float .pmf-divider { width: 24px; height: 1px; background: var(--color-border); margin: 2px 0; }
 
 /* Preview button — tricolor outer glow that tracks the mouse */
@@ -471,7 +493,7 @@ body.sidebar-collapsed .proj-manage-float { left: 84px; }
   -webkit-tap-highlight-color: transparent;
 }
 .mob-nav-btn:active { background: var(--color-surface-hover); color: var(--color-text); }
-.mob-nav-btn.active { color: var(--color-primary); background: var(--color-primary-subtle); }
+.mob-nav-btn.active { color: var(--color-text); background: var(--color-surface-hover); }
 .mob-nav-btn.danger { color: var(--color-error); }
 .mob-nav-btn.danger:active { background: var(--color-error-subtle); color: var(--color-error); }
 .mob-nav-soon {
@@ -499,11 +521,11 @@ body.sidebar-collapsed .proj-manage-float { left: 84px; }
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 .mob-project-section {
-  background: var(--color-primary-subtle); border: 1px solid var(--color-primary-muted);
+  background: var(--color-surface-hover); border: 1px solid var(--color-border-hover);
   border-radius: 12px; margin: 8px 0; padding: 4px 0 6px;
 }
-.mob-project-section .mob-nav-section-label { color: var(--color-primary); padding-top: 8px; }
-.mob-project-section .mob-nav-btn:active { background: var(--color-primary-subtle); }
+.mob-project-section .mob-nav-section-label { color: var(--color-text); padding-top: 8px; }
+.mob-project-section .mob-nav-btn:active { background: var(--color-surface-hover); }
 
 .mob-drawer-label {
   font-size: 10.5px; font-weight: 700; color: var(--color-text-tertiary);
@@ -519,9 +541,9 @@ body.sidebar-collapsed .proj-manage-float { left: 84px; }
   border: 2px solid var(--color-bg);
 }
 .nav-unread-dot {
-  background: var(--color-primary); border-radius: 50%;
+  background: var(--color-text); border-radius: 50%;
   min-width: 18px; height: 18px; font-size: 10px; font-weight: 700;
-  color: #fff; display: flex; align-items: center; justify-content: center;
+  color: var(--color-bg); display: flex; align-items: center; justify-content: center;
   padding: 0 4px;
 }
 

@@ -1,4 +1,9 @@
-import { ArrowUpRight, Plus, CalendarClock, Pencil, Trash2, BookOpen } from 'lucide-react'
+import { ArrowRightUpIcon as ArrowUpRight } from '@solar-icons/react/bold/arrow-right-up'
+import { AddCircleIcon as Plus } from '@solar-icons/react/bold/add-circle'
+import { CalendarMarkIcon as CalendarClock } from '@solar-icons/react/bold/calendar-mark'
+import { Pen2Icon as Pencil } from '@solar-icons/react/bold/pen-2'
+import { TrashBinMinimalisticIcon as Trash2 } from '@solar-icons/react/bold/trash-bin-minimalistic'
+import { Book2Icon as BookOpen } from '@solar-icons/react/bold/book-2'
 import { useState } from 'react'
 import { KIND_BY_ID, JOURNAL_KINDS, timeAgoLabel, suggestNextKind } from '../../lib/journal'
 

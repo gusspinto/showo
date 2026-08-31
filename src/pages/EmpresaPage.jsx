@@ -3,7 +3,16 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
-import { MapPin, Globe, Users, Briefcase, MessageSquare, ExternalLink, Building2, Link, ArrowLeft, Settings } from 'lucide-react'
+import { MapPointIcon as MapPin } from '@solar-icons/react/bold/map-point'
+import { GlobeIcon as Globe } from '@solar-icons/react/bold/globe'
+import { UsersGroupRoundedIcon as Users } from '@solar-icons/react/bold/users-group-rounded'
+import { CaseIcon as Briefcase } from '@solar-icons/react/bold/case'
+import { ChatRoundLineIcon as MessageSquare } from '@solar-icons/react/bold/chat-round-line'
+import { SquareArrowRightUpIcon as ExternalLink } from '@solar-icons/react/bold/square-arrow-right-up'
+import { Buildings2Icon as Building2 } from '@solar-icons/react/bold/buildings-2'
+import { LinkIcon as Link } from '@solar-icons/react/bold/link'
+import { ArrowLeftIcon as ArrowLeft } from '@solar-icons/react/bold/arrow-left'
+import { SettingsIcon as Settings } from '@solar-icons/react/bold/settings'
 
 const C = {
   bg:     'var(--color-bg)',

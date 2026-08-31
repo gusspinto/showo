@@ -1,7 +1,13 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
-import { MessageSquare, Send, Pencil, Trash2, X, Check, AlertTriangle } from 'lucide-react'
+import { ChatRoundLineIcon as MessageSquare } from '@solar-icons/react/bold/chat-round-line'
+import { PlaneIcon as Send } from '@solar-icons/react/bold/plane'
+import { Pen2Icon as Pencil } from '@solar-icons/react/bold/pen-2'
+import { TrashBinMinimalisticIcon as Trash2 } from '@solar-icons/react/bold/trash-bin-minimalistic'
+import { CloseIcon as X } from '@solar-icons/react/bold/close'
+import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
+import { DangerTriangleIcon as AlertTriangle } from '@solar-icons/react/bold/danger-triangle'
 import { containsProfanity } from '../lib/profanity'
 import { looksLikeSpam } from '../lib/score'
 
@@ -171,7 +177,7 @@ export default function ProjectComments({ projectId, projectAuthorId }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <MessageSquare size={18} color="var(--color-primary)" />
+        <MessageSquare size={18} color="var(--color-text)" />
         <h3 style={{
           margin: 0, fontSize: 16, fontWeight: 700,
           fontFamily: 'var(--font-heading)', color: 'var(--color-text)',
@@ -179,7 +185,7 @@ export default function ProjectComments({ projectId, projectAuthorId }) {
           Comentários {comments.length > 0 && (
             <span style={{
               marginLeft: 6, fontSize: 12, fontWeight: 600,
-              background: 'var(--color-primary-subtle)', color: 'var(--color-primary)',
+              background: 'var(--color-surface-hover)', color: 'var(--color-text)',
               borderRadius: 20, padding: '2px 8px',
             }}>{comments.length}</span>
           )}
@@ -225,9 +231,9 @@ export default function ProjectComments({ projectId, projectAuthorId }) {
                   ) : (
                     <div style={{
                       width: 34, height: 34, borderRadius: '50%',
-                      background: 'var(--color-primary)',
+                      background: 'var(--color-text)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: 12, fontWeight: 700, color: '#fff',
+                      fontSize: 12, fontWeight: 700, color: 'var(--color-bg)',
                     }}>
                       {initials(p)}
                     </div>
@@ -333,9 +339,9 @@ export default function ProjectComments({ projectId, projectAuthorId }) {
                           <button
                             onClick={() => saveEdit(c.id)}
                             style={{
-                              background: 'var(--color-primary)',
+                              background: 'var(--color-text)',
                               border: 'none', borderRadius: 8, padding: '5px 12px',
-                              fontSize: 12, color: '#fff', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600,
+                              fontSize: 12, color: 'var(--color-bg)', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600,
                             }}
                           >Guardar</button>
                         </div>
@@ -361,9 +367,9 @@ export default function ProjectComments({ projectId, projectAuthorId }) {
           ) : (
             <div style={{
               width: 34, height: 34, borderRadius: '50%', flexShrink: 0,
-              background: 'var(--color-primary)',
+              background: 'var(--color-text)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 12, fontWeight: 700, color: '#fff',
+              fontSize: 12, fontWeight: 700, color: 'var(--color-bg)',
             }}>
               {initials(profile)}
             </div>
@@ -388,7 +394,7 @@ export default function ProjectComments({ projectId, projectAuthorId }) {
                   outline: 'none', lineHeight: 1.5,
                   transition: 'border-color 0.15s',
                 }}
-                onFocus={e => { if (!sendError) e.currentTarget.style.borderColor = 'var(--color-primary)' }}
+                onFocus={e => { if (!sendError) e.currentTarget.style.borderColor = 'var(--color-text)' }}
                 onBlur={e => { if (!sendError) e.currentTarget.style.borderColor = 'var(--color-border)' }}
               />
               <button
@@ -396,14 +402,14 @@ export default function ProjectComments({ projectId, projectAuthorId }) {
                 disabled={!draft.trim() || sending}
                 style={{
                   flexShrink: 0, width: 38, height: 38,
-                  background: draft.trim() ? 'linear-gradient(135deg,var(--color-primary),#4f46e5)' : 'var(--color-bg-alt)',
+                  background: draft.trim() ? 'var(--color-text)' : 'var(--color-bg-alt)',
                   border: '1px solid var(--color-border)',
                   borderRadius: 10, cursor: draft.trim() ? 'pointer' : 'default',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   transition: 'all 0.15s',
                 }}
               >
-                <Send size={16} color={draft.trim() ? '#fff' : 'var(--color-text-secondary)'} />
+                <Send size={16} color={draft.trim() ? 'var(--color-bg)' : 'var(--color-text-secondary)'} />
               </button>
             </div>
             {sendError && (
@@ -415,7 +421,7 @@ export default function ProjectComments({ projectId, projectAuthorId }) {
         </div>
       ) : (
         <p style={{ margin: 0, fontSize: 13, color: 'var(--color-text-secondary)', textAlign: 'center' }}>
-          <a href="/login" style={{ color: 'var(--color-primary)' }}>Entra</a> para comentar.
+          <a href="/login" style={{ color: 'var(--color-text)' }}>Entra</a> para comentar.
         </p>
       )}
     </div>

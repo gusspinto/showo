@@ -1,5 +1,8 @@
 import { useMemo, useState } from 'react'
-import { Plus, CalendarSync, CalendarDays, ChevronDown } from 'lucide-react'
+import { AddCircleIcon as Plus } from '@solar-icons/react/bold/add-circle'
+import { RefreshCircleIcon as CalendarSync } from '@solar-icons/react/bold/refresh-circle'
+import { CalendarMinimalisticIcon as CalendarDays } from '@solar-icons/react/bold/calendar-minimalistic'
+import { AltArrowDownIcon as ChevronDown } from '@solar-icons/react/bold/alt-arrow-down'
 import MonthCalendar from './MonthCalendar'
 
 const DOW = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D']

@@ -1,14 +1,17 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
-import { X, Briefcase, Send, Check } from 'lucide-react'
+import { CloseIcon as X } from '@solar-icons/react/bold/close'
+import { CaseIcon as Briefcase } from '@solar-icons/react/bold/case'
+import { PlaneIcon as Send } from '@solar-icons/react/bold/plane'
+import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
 
 const C = {
   bg:           'var(--color-bg)',
   card:         'var(--color-surface)',
   border:       'var(--color-border)',
   borderBright: 'var(--color-border-hover)',
-  blue:         'var(--color-primary)',
+  blue:         'var(--color-text)',
   text:         'var(--color-text)',
   muted:        'var(--color-text-secondary)',
   green:        'var(--color-success)',
@@ -121,8 +124,8 @@ export default function ConvidarVagaModal({ studentId, studentName, vagas, onClo
                       style={{
                         display: 'flex', alignItems: 'center', gap: 10,
                         padding: '10px 14px', borderRadius: 10, textAlign: 'left',
-                        background: selectedVaga === v.id ? 'var(--color-primary-subtle)' : C.bg,
-                        border: `1.5px solid ${selectedVaga === v.id ? 'var(--color-primary-subtle)' : C.border}`,
+                        background: selectedVaga === v.id ? 'var(--color-surface-hover)' : C.bg,
+                        border: `1.5px solid ${selectedVaga === v.id ? 'var(--color-surface-hover)' : C.border}`,
                         cursor: 'pointer', fontFamily: 'inherit', width: '100%', transition: 'all 0.15s',
                       }}
                     >
@@ -185,16 +188,16 @@ export default function ConvidarVagaModal({ studentId, studentName, vagas, onClo
                 style={{
                   width: '100%', padding: '12px 0', borderRadius: 10,
                   background: selectedVaga
-                    ? 'var(--color-primary)'
+                    ? 'var(--color-text)'
                     : C.border,
                   border: 'none',
-                  color: selectedVaga ? '#fff' : C.muted,
+                  color: selectedVaga ? 'var(--color-bg)' : C.muted,
                   fontSize: 14, fontWeight: 700,
                   cursor: selectedVaga ? 'pointer' : 'default',
                   fontFamily: 'inherit',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                   transition: 'all 0.15s',
-                  boxShadow: selectedVaga ? '0 4px 16px var(--color-primary-subtle)' : 'none',
+                  boxShadow: selectedVaga ? '0 4px 16px var(--color-surface-hover)' : 'none',
                 }}
               >
                 <Send size={14} />

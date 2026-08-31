@@ -3,7 +3,15 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { Navbar } from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
-import { Search, Building2, Eye, Briefcase, Users, GraduationCap, BookOpen, SlidersHorizontal, X } from 'lucide-react'
+import { MagnifierIcon as Search } from '@solar-icons/react/bold/magnifier'
+import { Buildings2Icon as Building2 } from '@solar-icons/react/bold/buildings-2'
+import { EyeIcon as Eye } from '@solar-icons/react/bold/eye'
+import { CaseIcon as Briefcase } from '@solar-icons/react/bold/case'
+import { UsersGroupRoundedIcon as Users } from '@solar-icons/react/bold/users-group-rounded'
+import { SquareAcademicCapIcon as GraduationCap } from '@solar-icons/react/bold/square-academic-cap'
+import { Book2Icon as BookOpen } from '@solar-icons/react/bold/book-2'
+import { Tuning2Icon as SlidersHorizontal } from '@solar-icons/react/bold/tuning-2'
+import { CloseIcon as X } from '@solar-icons/react/bold/close'
 import { Select } from '../components/ui'
 import './Explore.css'
 
@@ -464,7 +472,7 @@ export default function Explore() {
                           {[project.creator_name, project.school_year].filter(Boolean).join(' · ')}
                         </div>
                       ) : <div />}
-                      <svg className="explore-card-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <svg className="explore-card-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-text)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M5 12h14M12 5l7 7-7 7"/>
                       </svg>
                     </div>

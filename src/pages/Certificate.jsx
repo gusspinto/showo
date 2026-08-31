@@ -5,12 +5,16 @@ import { useSidebar } from '../context/SidebarContext'
 import { Helmet } from 'react-helmet-async'
 import { QRCodeSVG } from 'qrcode.react'
 import { supabase } from '../lib/supabase'
-import { Link2, Check, Sparkles, Download, ArrowLeft } from 'lucide-react'
+import { LinkIcon as Link2 } from '@solar-icons/react/bold/link'
+import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
+import { StarsIcon as Sparkles } from '@solar-icons/react/bold/stars'
+import { DownloadIcon as Download } from '@solar-icons/react/bold/download'
+import { ArrowLeftIcon as ArrowLeft } from '@solar-icons/react/bold/arrow-left'
 
 const C = {
   bg: 'var(--color-bg)',
   border: 'var(--color-border)',
-  blue: 'var(--color-primary)',
+  blue: 'var(--color-text)',
   text: 'var(--color-text)',
   muted: 'var(--color-text-secondary)',
 }
@@ -98,7 +102,7 @@ export default function Certificate() {
         <p style={{ fontSize: 18, color: C.muted, textAlign: 'center' }}>
           {!project ? 'Projeto não encontrado.' : 'Este projeto ainda não atingiu o score mínimo de 75 para certificado.'}
         </p>
-        <button onClick={() => navigate(`/projeto/${slug}`)} style={{ background: C.blue, border: 'none', color: '#fff', borderRadius: 10, padding: '12px 24px', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+        <button onClick={() => navigate(`/projeto/${slug}`)} style={{ background: C.blue, border: 'none', color: 'var(--color-bg)', borderRadius: 10, padding: '12px 24px', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
           Ver projeto
         </button>
       </div>
@@ -141,7 +145,7 @@ export default function Certificate() {
         style={{
           width: '100%', maxWidth: 800,
           background: 'linear-gradient(135deg, #0a1020 0%, #0d1a2e 50%, #0a1020 100%)',
-          border: '1px solid var(--color-primary-subtle)',
+          border: '1px solid var(--color-surface-hover)',
           borderRadius: 16,
           padding: '52px 56px',
           position: 'relative',
@@ -150,11 +154,11 @@ export default function Certificate() {
         }}
       >
         {/* Background decoration */}
-        <div style={{ position: 'absolute', top: -80, right: -80, width: 320, height: 320, borderRadius: '50%', background: 'radial-gradient(circle, var(--color-primary-subtle) 0%, transparent 65%)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', top: -80, right: -80, width: 320, height: 320, borderRadius: '50%', background: 'radial-gradient(circle, var(--color-surface-hover) 0%, transparent 65%)', pointerEvents: 'none' }} />
         <div style={{ position: 'absolute', bottom: -60, left: -60, width: 240, height: 240, borderRadius: '50%', background: 'radial-gradient(circle, rgba(79,70,229,0.06) 0%, transparent 65%)', pointerEvents: 'none' }} />
 
         {/* Top line */}
-        <div style={{ width: '100%', height: 1, background: 'linear-gradient(90deg, transparent, var(--color-primary), transparent)', marginBottom: 40, borderRadius: 1, opacity: 0.6 }} />
+        <div style={{ width: '100%', height: 1, background: 'linear-gradient(90deg, transparent, var(--color-text), transparent)', marginBottom: 40, borderRadius: 1, opacity: 0.6 }} />
 
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 40 }}>
@@ -174,15 +178,15 @@ export default function Certificate() {
             {project.creator_name || 'Estudante'}
           </div>
           <div style={{ fontSize: 14, color: C.muted, marginBottom: 8, fontWeight: 500 }}>concluiu com sucesso o projeto</div>
-          <div style={{ fontSize: 'clamp(20px, 3vw, 32px)', fontWeight: 400, color: 'var(--color-primary)', letterSpacing: '-0.5px', lineHeight: 1.2, fontFamily: 'var(--font-heading)' }}>
+          <div style={{ fontSize: 'clamp(20px, 3vw, 32px)', fontWeight: 400, color: 'var(--color-text)', letterSpacing: '-0.5px', lineHeight: 1.2, fontFamily: 'var(--font-heading)' }}>
             {project.name}
           </div>
         </div>
 
         {/* Stats row */}
         <div style={{ display: 'flex', gap: 24, marginBottom: 40, flexWrap: 'wrap' }}>
-          <div style={{ background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 12, padding: '14px 20px', minWidth: 100 }}>
-            <div style={{ fontSize: 28, fontWeight: 900, color: 'var(--color-primary)', letterSpacing: '-1px', lineHeight: 1 }}>{project.score}</div>
+          <div style={{ background: 'var(--color-surface-hover)', border: '1px solid var(--color-surface-hover)', borderRadius: 12, padding: '14px 20px', minWidth: 100 }}>
+            <div style={{ fontSize: 28, fontWeight: 900, color: 'var(--color-text)', letterSpacing: '-1px', lineHeight: 1 }}>{project.score}</div>
             <div style={{ fontSize: 11, color: C.muted, fontWeight: 600, marginTop: 4, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Score</div>
           </div>
           <div style={{ background: 'var(--color-success-subtle)', border: '1px solid var(--color-success-subtle)', borderRadius: 12, padding: '14px 20px' }}>
@@ -212,7 +216,7 @@ export default function Certificate() {
         </div>
 
         {/* Bottom line */}
-        <div style={{ width: '100%', height: 1, background: 'linear-gradient(90deg, transparent, var(--color-primary), transparent)', marginTop: 40, borderRadius: 1, opacity: 0.6 }} />
+        <div style={{ width: '100%', height: 1, background: 'linear-gradient(90deg, transparent, var(--color-text), transparent)', marginTop: 40, borderRadius: 1, opacity: 0.6 }} />
       </div>
 
       {/* Actions */}
@@ -222,11 +226,11 @@ export default function Certificate() {
           onClick={handleDownload}
           disabled={downloading}
           style={{
-            background: 'var(--color-primary)',
-            color: '#fff', border: 'none', borderRadius: 10,
+            background: 'var(--color-text)',
+            color: 'var(--color-bg)', border: 'none', borderRadius: 10,
             padding: '14px 28px', fontSize: 15, fontWeight: 700,
             cursor: downloading ? 'default' : 'pointer', fontFamily: 'inherit',
-            boxShadow: '0 2px 8px var(--color-primary-subtle)',
+            boxShadow: '0 2px 8px var(--color-surface-hover)',
             opacity: downloading ? 0.7 : 1,
           }}
         >

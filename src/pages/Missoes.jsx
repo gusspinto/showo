@@ -3,11 +3,25 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
-import {
-  Swords, Lock, CheckCircle2, Circle, ChevronRight,
-  Zap, Star, Target, BookOpen, Users, Globe, TrendingUp,
-  Folder, Award, Lightbulb, ArrowRight, Medal, Send, Eye,
-} from 'lucide-react'
+import { FlagIcon as Swords } from '@solar-icons/react/bold/flag'
+import { LockKeyholeIcon as Lock } from '@solar-icons/react/bold/lock-keyhole'
+import { CheckCircleIcon as CheckCircle2 } from '@solar-icons/react/bold/check-circle'
+import { RecordCircleIcon as Circle } from '@solar-icons/react/bold/record-circle'
+import { AltArrowRightIcon as ChevronRight } from '@solar-icons/react/bold/alt-arrow-right'
+import { LightningIcon as Zap } from '@solar-icons/react/bold/lightning'
+import { StarIcon as Star } from '@solar-icons/react/bold/star'
+import { TargetIcon as Target } from '@solar-icons/react/bold/target'
+import { Book2Icon as BookOpen } from '@solar-icons/react/bold/book-2'
+import { UsersGroupRoundedIcon as Users } from '@solar-icons/react/bold/users-group-rounded'
+import { GlobeIcon as Globe } from '@solar-icons/react/bold/globe'
+import { GraphNewUpIcon as TrendingUp } from '@solar-icons/react/bold/graph-new-up'
+import { FolderIcon as Folder } from '@solar-icons/react/bold/folder'
+import { MedalStarIcon as Award } from '@solar-icons/react/bold/medal-star'
+import { LightbulbIcon as Lightbulb } from '@solar-icons/react/bold/lightbulb'
+import { ArrowRightIcon as ArrowRight } from '@solar-icons/react/bold/arrow-right'
+import { MedalStarIcon as Medal } from '@solar-icons/react/bold/medal-star'
+import { PlaneIcon as Send } from '@solar-icons/react/bold/plane'
+import { EyeIcon as Eye } from '@solar-icons/react/bold/eye'
 
 const C = {
   bg: 'var(--color-bg)',

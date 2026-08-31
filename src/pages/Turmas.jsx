@@ -3,10 +3,16 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
-import {
-  Users2, Plus, ChevronRight, Search, Copy, Check,
-  BookOpen, Folder, ArrowRight, X,
-} from 'lucide-react'
+import { UsersGroupTwoRoundedIcon as Users2 } from '@solar-icons/react/bold/users-group-two-rounded'
+import { AddCircleIcon as Plus } from '@solar-icons/react/bold/add-circle'
+import { AltArrowRightIcon as ChevronRight } from '@solar-icons/react/bold/alt-arrow-right'
+import { MagnifierIcon as Search } from '@solar-icons/react/bold/magnifier'
+import { CopyIcon as Copy } from '@solar-icons/react/bold/copy'
+import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
+import { Book2Icon as BookOpen } from '@solar-icons/react/bold/book-2'
+import { FolderIcon as Folder } from '@solar-icons/react/bold/folder'
+import { ArrowRightIcon as ArrowRight } from '@solar-icons/react/bold/arrow-right'
+import { CloseIcon as X } from '@solar-icons/react/bold/close'
 
 const C = {
   bg: 'var(--color-bg)',
@@ -249,7 +255,12 @@ export default function Turmas() {
 
   useEffect(() => {
     if (!user) { navigate('/login'); return }
-    if (profile && !isTeacher && !isSchoolStudent && !profile?.organization_id) { navigate('/dashboard'); return }
+    // Teachers and school-account students can access this page. Dois
+    // sinais de "conta de escola" coexistem: organization_id (mais antigo,
+    // usado em todo o resto da app) e account_type==='school' (novo, do
+    // registo institucional). Sem confirmar que o registo novo também
+    // preenche organization_id, o seguro é aceitar qualquer um dos dois.
+    if (profile && !isTeacher && !profile?.organization_id && !isSchoolStudent) { navigate('/dashboard'); return }
 
     async function load() {
       if (isTeacher) {
@@ -297,7 +308,7 @@ export default function Turmas() {
     setShowJoin(false)
   }
 
-  if (!user || (profile && !isTeacher && !isSchoolStudent && !profile?.organization_id)) return null
+  if (!user || (profile && !isTeacher && !profile?.organization_id && !isSchoolStudent)) return null
 
   return (
     <div style={{ minHeight: '100vh', background: C.bg }}>

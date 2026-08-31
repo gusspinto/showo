@@ -17,7 +17,80 @@ import { useTheme } from '../context/ThemeContext'
 import DefenseMode from '../components/DefenseMode'
 import ProjectComments from '../components/ProjectComments'
 import { analyzeProject } from '../lib/analyzeProject'
-import { Check, X, Loader, GraduationCap, Save, Sparkles, Bot, Lightbulb, Pencil, Search, Target, Wrench, Zap, TrendingUp, Briefcase, Users, Rocket, Trophy, BarChart2, CheckCircle, BookOpen, ChevronDown, Eye, EyeOff, UserPlus, Calendar, Mail, ArrowRight, ChevronRight, ChevronLeft, Globe, Image, MessageSquare, Quote, Layout, Type, Link, GripVertical, Plus, AlignLeft, Star, Camera, FileText, ClipboardList, Copy, Monitor, Tablet, Smartphone, Minus, Video, AlignCenter, AlignRight, Palette, AlertTriangle, User, Settings, Bell, Swords, Paintbrush, LayoutTemplate } from 'lucide-react'
+import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
+import { CloseIcon as X } from '@solar-icons/react/bold/close'
+import { RefreshCircleIcon as Loader } from '@solar-icons/react/bold/refresh-circle'
+import { SquareAcademicCapIcon as GraduationCap } from '@solar-icons/react/bold/square-academic-cap'
+import { DisketteIcon as Save } from '@solar-icons/react/bold/diskette'
+import { StarsIcon as Sparkles } from '@solar-icons/react/bold/stars'
+import { FaceScanCircleIcon as Bot } from '@solar-icons/react/bold/face-scan-circle'
+import { LightbulbIcon as Lightbulb } from '@solar-icons/react/bold/lightbulb'
+import { Pen2Icon as Pencil } from '@solar-icons/react/bold/pen-2'
+import { MagnifierIcon as Search } from '@solar-icons/react/bold/magnifier'
+import { TargetIcon as Target } from '@solar-icons/react/bold/target'
+import { SettingsMinimalisticIcon as Wrench } from '@solar-icons/react/bold/settings-minimalistic'
+import { LightningIcon as Zap } from '@solar-icons/react/bold/lightning'
+import { GraphNewUpIcon as TrendingUp } from '@solar-icons/react/bold/graph-new-up'
+import { CaseIcon as Briefcase } from '@solar-icons/react/bold/case'
+import { UsersGroupRoundedIcon as Users } from '@solar-icons/react/bold/users-group-rounded'
+import { RocketIcon as Rocket } from '@solar-icons/react/bold/rocket'
+import { CupStarIcon as Trophy } from '@solar-icons/react/bold/cup-star'
+import { Chart2Icon as BarChart2 } from '@solar-icons/react/bold/chart-2'
+import { CheckCircleIcon as CheckCircle } from '@solar-icons/react/bold/check-circle'
+import { Book2Icon as BookOpen } from '@solar-icons/react/bold/book-2'
+import { AltArrowDownIcon as ChevronDown } from '@solar-icons/react/bold/alt-arrow-down'
+import { EyeIcon as Eye } from '@solar-icons/react/bold/eye'
+import { EyeClosedIcon as EyeOff } from '@solar-icons/react/bold/eye-closed'
+import { UserPlusRoundedIcon as UserPlus } from '@solar-icons/react/bold/user-plus-rounded'
+import { CalendarIcon as Calendar } from '@solar-icons/react/bold/calendar'
+import { LetterIcon as Mail } from '@solar-icons/react/bold/letter'
+import { ArrowRightIcon as ArrowRight } from '@solar-icons/react/bold/arrow-right'
+import { AltArrowRightIcon as ChevronRight } from '@solar-icons/react/bold/alt-arrow-right'
+import { AltArrowLeftIcon as ChevronLeft } from '@solar-icons/react/bold/alt-arrow-left'
+import { GlobeIcon as Globe } from '@solar-icons/react/bold/globe'
+import { GalleryWideIcon as Image } from '@solar-icons/react/bold/gallery-wide'
+import { ChatRoundLineIcon as MessageSquare } from '@solar-icons/react/bold/chat-round-line'
+import { ChatRoundLineIcon as Quote } from '@solar-icons/react/bold/chat-round-line'
+import { Widget4Icon as Layout } from '@solar-icons/react/bold/widget-4'
+import { TextBoldIcon as Type } from '@solar-icons/react/bold/text-bold'
+import { LinkIcon as Link } from '@solar-icons/react/bold/link'
+import { SortVerticalIcon as GripVertical } from '@solar-icons/react/bold/sort-vertical'
+import { AddCircleIcon as Plus } from '@solar-icons/react/bold/add-circle'
+import { AlignLeftIcon as AlignLeft } from '@solar-icons/react/bold/align-left'
+import { StarIcon as Star } from '@solar-icons/react/bold/star'
+import { CameraIcon as Camera } from '@solar-icons/react/bold/camera'
+import { DocumentTextIcon as FileText } from '@solar-icons/react/bold/document-text'
+import { ClipboardTextIcon as ClipboardList } from '@solar-icons/react/bold/clipboard-text'
+import { CopyIcon as Copy } from '@solar-icons/react/bold/copy'
+import { MonitorIcon as Monitor } from '@solar-icons/react/bold/monitor'
+import { TabletIcon as Tablet } from '@solar-icons/react/bold/tablet'
+import { SmartphoneIcon as Smartphone } from '@solar-icons/react/bold/smartphone'
+import { MinusCircleIcon as Minus } from '@solar-icons/react/bold/minus-circle'
+import { VideocameraIcon as Video } from '@solar-icons/react/bold/videocamera'
+import { AlignHorizontalCenterIcon as AlignCenter } from '@solar-icons/react/bold/align-horizontal-center'
+import { AlignRightIcon as AlignRight } from '@solar-icons/react/bold/align-right'
+import { Palette2Icon as Palette } from '@solar-icons/react/bold/palette-2'
+import { DangerTriangleIcon as AlertTriangle } from '@solar-icons/react/bold/danger-triangle'
+import { UserIcon as User } from '@solar-icons/react/bold/user'
+import { SettingsIcon as Settings } from '@solar-icons/react/bold/settings'
+import { BellIcon as Bell } from '@solar-icons/react/bold/bell'
+import { FlagIcon as Swords } from '@solar-icons/react/bold/flag'
+import { PaintRollerIcon as Paintbrush } from '@solar-icons/react/bold/paint-roller'
+import { WindowFrameIcon as LayoutTemplate } from '@solar-icons/react/bold/window-frame'
+
+// Colunas que quem não tem sessão tem grant para ler (065_security_hardening
+// + 089_anon_project_select_columns) — sem notas do professor. Autenticado
+// continua a usar select('*'), este só entra em jogo para visitantes.
+const ANON_PROJECT_COLUMNS = [
+  'id', 'created_at', 'user_id', 'name', 'area', 'goal', 'problem', 'solution',
+  'target_audience', 'features', 'technologies', 'challenges', 'results', 'learnings',
+  'cover_url', 'slug', 'ai_tagline', 'ai_description', 'ai_highlights',
+  'school_year', 'course', 'school', 'creator_name', 'is_pap', 'pap_supervisor', 'pap_date',
+  'project_type', 'score', 'linkedin_url', 'github_url', 'portfolio_url',
+  'views', 'defense_date', 'preview_style', 'tags', 'guide_config', 'preview_blocks',
+  'likes_count', 'interest_count', 'review_status', 'review_status_updated_at',
+  'visibility', 'edit_token', 'notified_milestones',
+].join(', ')
 
 const colors = {
   bg: 'var(--color-bg)',
@@ -3088,7 +3161,7 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
               flexWrap: 'wrap', gap: 12,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Star size={18} fill="var(--color-warning)" color="var(--color-warning)" />
+                <Star size={18} color="var(--color-warning)" />
                 <div>
                   <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--color-warning)' }}>Interesse guardado!</div>
                   <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 1 }}>
@@ -4536,9 +4609,15 @@ export default function ProjectPage() {
   // Effect 1: fetch project + public data — runs only when slug changes (never re-runs due to auth)
   useEffect(() => {
     async function fetchProject() {
+      // `select('*')` exige grant em TODAS as colunas da tabela — quem não
+      // tem sessão só tem grant numa lista explícita (065_security_hardening,
+      // esconde notas do professor), por isso `*` falha por inteiro para
+      // anon. Usa a lista explícita só quando não há sessão; autenticado
+      // mantém `*` como sempre, sem mudar nada do que já funcionava.
+      const { data: { user: currentUser } } = await supabase.auth.getUser()
       const { data, error } = await supabase
         .from('projects')
-        .select('*')
+        .select(currentUser ? '*' : ANON_PROJECT_COLUMNS)
         .eq('slug', slug)
         .single()
 
@@ -4549,7 +4628,6 @@ export default function ProjectPage() {
 
       // Visibility gate: private projects are owner-only
       if (data.visibility === 'private') {
-        const { data: { user: currentUser } } = await supabase.auth.getUser()
         const isOwner = currentUser?.id === data.user_id
         const hasToken = data.edit_token && localStorage.getItem(`edit_token_${data.slug}`) === data.edit_token
         if (!isOwner && !hasToken) {
@@ -8037,7 +8115,7 @@ export default function ProjectPage() {
                 onMouseEnter={e => { e.currentTarget.style.background = 'var(--color-warning-subtle)' }}
                 onMouseLeave={e => { e.currentTarget.style.background = 'var(--color-warning-subtle)' }}
               >
-                <Star size={14} fill="var(--color-warning)" />
+                <Star size={14} color="var(--color-warning)" />
                 {interestCount} recrutador{interestCount !== 1 ? 'es' : ''} com interesse
               </button>
             )}
@@ -8057,7 +8135,7 @@ export default function ProjectPage() {
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <Star size={18} fill="var(--color-warning)" color="var(--color-warning)" />
+                    <Star size={18} color="var(--color-warning)" />
                     <span style={{ fontWeight: 700, fontSize: 16 }}>Recrutadores interessados</span>
                   </div>
                   <button onClick={() => setShowInterestors(false)} className="icon-btn-ghost">

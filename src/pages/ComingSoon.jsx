@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
-import { Bell, Check, ArrowRight } from 'lucide-react'
+import { BellIcon as Bell } from '@solar-icons/react/bold/bell'
+import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
+import { ArrowRightIcon as ArrowRight } from '@solar-icons/react/bold/arrow-right'
 import { supabase } from '../lib/supabase'
 import { getGeoInfo } from '../lib/geolocation'
 
@@ -33,7 +35,7 @@ function CountdownUnit({ value, label }) {
         position: 'relative',
         width: 'clamp(56px, 16vw, 72px)', height: 'clamp(64px, 18vw, 80px)',
         background: 'rgba(14,23,41,0.8)',
-        border: '1px solid rgba(27,120,247,0.15)',
+        border: '1px solid color-mix(in srgb, var(--color-text) 15%, transparent)',
         borderRadius: 14,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         overflow: 'hidden',
@@ -43,7 +45,7 @@ function CountdownUnit({ value, label }) {
       }}>
         <div style={{
           position: 'absolute', top: '50%', left: 0, right: 0, height: 1,
-          background: 'rgba(27,120,247,0.08)',
+          background: 'color-mix(in srgb, var(--color-text) 8%, transparent)',
         }} />
         <span style={{
           fontFamily: 'var(--font-heading, system-ui)', fontWeight: 800,
@@ -108,7 +110,7 @@ function NotifyMe() {
           letterSpacing: '0.02em', color: 'rgba(214,224,238,0.75)',
           transition: 'border-color 0.2s',
         }}
-        onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(27,120,247,0.5)'}
+        onMouseEnter={e => e.currentTarget.style.borderColor = 'color-mix(in srgb, var(--color-text) 50%, transparent)'}
         onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(125,147,176,0.25)'}
       >
         <Bell size={13} strokeWidth={2} style={{ opacity: 0.7 }} />
@@ -146,7 +148,7 @@ function NotifyMe() {
         style={{
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           width: 30, height: 30, borderRadius: '50%', flexShrink: 0,
-          background: 'rgba(27,120,247,0.18)', border: '1px solid rgba(27,120,247,0.4)',
+          background: 'color-mix(in srgb, var(--color-text) 18%, transparent)', border: '1px solid color-mix(in srgb, var(--color-text) 40%, transparent)',
           cursor: status === 'loading' ? 'default' : 'pointer', opacity: status === 'loading' ? 0.5 : 1,
         }}
       >
@@ -179,14 +181,14 @@ export default function ComingSoon() {
       <img
         src="/icon.png"
         alt=""
-        style={{ width: 38, opacity: 0.5, filter: 'drop-shadow(0 0 18px rgba(27,120,247,0.3))' }}
+        style={{ width: 38, opacity: 0.5, filter: 'drop-shadow(0 0 18px color-mix(in srgb, var(--color-text) 30%, transparent))' }}
       />
 
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, position: 'relative' }}>
         <div style={{
           display: 'flex', alignItems: 'center', gap: 8,
           padding: '6px 14px', borderRadius: 999,
-          background: 'rgba(27,120,247,0.08)', border: '1px solid rgba(27,120,247,0.15)',
+          background: 'color-mix(in srgb, var(--color-text) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--color-text) 15%, transparent)',
         }}>
           <span style={{
             fontFamily: 'var(--font-body)', fontWeight: 600, fontSize: 11,
@@ -217,11 +219,11 @@ export default function ComingSoon() {
         display: 'flex', gap: 'clamp(6px, 2vw, 12px)', position: 'relative',
       }}>
         <CountdownUnit value={time.days} label="dias" />
-        <div style={{ display: 'flex', alignItems: 'center', paddingBottom: 28, color: 'rgba(27,120,247,0.3)', fontSize: 24, fontWeight: 700 }}>:</div>
+        <div style={{ display: 'flex', alignItems: 'center', paddingBottom: 28, color: 'color-mix(in srgb, var(--color-text) 30%, transparent)', fontSize: 24, fontWeight: 700 }}>:</div>
         <CountdownUnit value={time.hours} label="horas" />
-        <div style={{ display: 'flex', alignItems: 'center', paddingBottom: 28, color: 'rgba(27,120,247,0.3)', fontSize: 24, fontWeight: 700 }}>:</div>
+        <div style={{ display: 'flex', alignItems: 'center', paddingBottom: 28, color: 'color-mix(in srgb, var(--color-text) 30%, transparent)', fontSize: 24, fontWeight: 700 }}>:</div>
         <CountdownUnit value={time.minutes} label="min" />
-        <div style={{ display: 'flex', alignItems: 'center', paddingBottom: 28, color: 'rgba(27,120,247,0.3)', fontSize: 24, fontWeight: 700 }}>:</div>
+        <div style={{ display: 'flex', alignItems: 'center', paddingBottom: 28, color: 'color-mix(in srgb, var(--color-text) 30%, transparent)', fontSize: 24, fontWeight: 700 }}>:</div>
         <CountdownUnit value={time.seconds} label="seg" />
       </div>
 

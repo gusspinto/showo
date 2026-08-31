@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { Check } from 'lucide-react'
+import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
 import AuthSidePanel from '../components/AuthSidePanel'
 import { useTheme } from '../context/ThemeContext'
 
 const C = {
   bg:     'var(--color-bg)',
   border: 'var(--color-border)',
-  blue:   'var(--color-primary)',
+  blue:   'var(--color-text)',
   muted:  'var(--color-text-secondary)',
   text:   'var(--color-text)',
   error:  'var(--color-error)',
@@ -112,7 +112,7 @@ export default function RecuperarPassword({ onDone }) {
           font-size: clamp(22px, 2.6vw, 36px); line-height: 1.3;
           letter-spacing: -0.5px; color: #fff; margin: 0; text-align: left;
         }
-        .auth-side-highlight { background: var(--color-primary); color: #fff; padding: 2px 10px 9px; border-radius: 0 0 14px 14px; display: inline-block; }
+        .auth-side-highlight { background: var(--color-text); color: var(--color-bg); padding: 2px 10px 9px; border-radius: 0 0 14px 14px; display: inline-block; }
         .auth-side-letter { display: inline-block; }
         .auth-main { flex: 1; display: flex; align-items: center; justify-content: center; padding: 24px 16px; }
         .auth-card { width: 100%; max-width: 380px; }
@@ -149,7 +149,7 @@ export default function RecuperarPassword({ onDone }) {
               <p style={{ color: C.muted, fontSize: 14, margin: '0 0 24px', lineHeight: 1.5 }}>
                 Este link de recuperação já não é válido. Pede um novo na página de entrada.
               </p>
-              <Link to="/login" style={{ display: 'inline-block', background: 'var(--color-primary)', color: '#fff', textDecoration: 'none', borderRadius: 8, padding: '11px 20px', fontSize: 14, fontWeight: 700 }}>
+              <Link to="/login" style={{ display: 'inline-block', background: 'var(--color-text)', color: 'var(--color-bg)', textDecoration: 'none', borderRadius: 8, padding: '11px 20px', fontSize: 14, fontWeight: 700 }}>
                 Voltar a entrar
               </Link>
             </>
@@ -174,8 +174,8 @@ export default function RecuperarPassword({ onDone }) {
                   type="submit" disabled={loading}
                   className="auth-submit"
                   style={{
-                    background: loading ? 'var(--color-border)' : 'var(--color-primary)',
-                    color: '#fff', border: 'none',
+                    background: loading ? 'var(--color-border)' : 'var(--color-text)',
+                    color: 'var(--color-bg)', border: 'none',
                     borderRadius: 8, padding: '13px', fontSize: 14, fontWeight: 700,
                     cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
                   }}

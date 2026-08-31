@@ -1,8 +1,14 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
-import { verifyPersonalAccount, exportSchoolProjects } from '../lib/exportProjects'
+import { verifyDestinationAccount, exportProjects } from '../lib/exportProjects'
 import { useAuth } from '../context/AuthContext'
-import { X, GraduationCap, CheckSquare, Square, ArrowRight, Check, AlertTriangle } from 'lucide-react'
+import { CloseIcon as X } from '@solar-icons/react/bold/close'
+import { UploadIcon as Export } from '@solar-icons/react/bold/upload'
+import { CheckSquareIcon as CheckSquare } from '@solar-icons/react/bold/check-square'
+import { StopIcon as Square } from '@solar-icons/react/bold/stop'
+import { ArrowRightIcon as ArrowRight } from '@solar-icons/react/bold/arrow-right'
+import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
+import { DangerTriangleIcon as AlertTriangle } from '@solar-icons/react/bold/danger-triangle'
 
 const C = {
   overlay: {
@@ -27,8 +33,8 @@ const C = {
   },
   btn: (primary, disabled) => ({
     padding: '10px 18px', borderRadius: 'var(--radius-md)', border: primary ? 'none' : '1px solid var(--color-border)',
-    background: disabled ? 'var(--color-border)' : primary ? 'var(--color-primary)' : 'transparent',
-    color: primary ? '#fff' : 'var(--color-text)',
+    background: disabled ? 'var(--color-border)' : primary ? 'var(--color-text)' : 'transparent',
+    color: primary ? 'var(--color-bg)' : 'var(--color-text)',
     fontWeight: 600, fontSize: '0.85rem', cursor: disabled ? 'not-allowed' : 'pointer',
     fontFamily: 'inherit',
   }),
@@ -92,7 +98,7 @@ export default function ExportProjectsModal({ onClose }) {
     e.preventDefault()
     setError('')
     setVerifying(true)
-    const { userId, error: err } = await verifyPersonalAccount(personalEmail.trim(), personalPwd)
+    const { userId, error: err } = await verifyDestinationAccount(personalEmail.trim(), personalPwd)
     setVerifying(false)
     if (err) { setError(err); return }
     setDestUserId(userId)
@@ -102,7 +108,7 @@ export default function ExportProjectsModal({ onClose }) {
   async function handleExport() {
     setError('')
     setExporting(true)
-    const { result, error: err } = await exportSchoolProjects(selected, destUserId)
+    const { result, error: err } = await exportProjects(selected, destUserId)
     setExporting(false)
     if (err) { setError(err); return }
     setExportResult(result)
@@ -121,13 +127,13 @@ export default function ExportProjectsModal({ onClose }) {
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <GraduationCap size={18} color="var(--color-primary)" />
+              <Export size={18} color="var(--color-text)" />
               <p style={C.title}>Exportar projetos</p>
             </div>
             <p style={C.sub}>
-              {step === 'select' && 'Escolhe os projetos desta conta escolar que queres copiar para a tua conta pessoal.'}
-              {step === 'auth'   && 'Entra com as credenciais da tua conta pessoal para confirmar o destino.'}
-              {step === 'confirm' && 'Confirma a exportação. Os projetos serão copiados; a conta escolar não perde nada.'}
+              {step === 'select' && 'Escolhe os projetos que queres copiar para outra conta Showo.'}
+              {step === 'auth'   && 'Entra com as credenciais da conta de destino para confirmar.'}
+              {step === 'confirm' && 'Confirma a exportação. Os projetos serão copiados; esta conta não perde nada.'}
               {step === 'done'   && 'Exportação concluída.'}
             </p>
           </div>
@@ -142,7 +148,7 @@ export default function ExportProjectsModal({ onClose }) {
             {loadingProjects ? (
               <p style={C.sub}>A carregar projetos…</p>
             ) : projects.length === 0 ? (
-              <p style={C.sub}>Não tens projetos nesta conta escolar.</p>
+              <p style={C.sub}>Não tens projetos nesta conta.</p>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {projects.map(p => {
@@ -159,7 +165,7 @@ export default function ExportProjectsModal({ onClose }) {
                         textAlign: 'left', fontFamily: 'inherit', transition: 'all 0.12s',
                       }}
                     >
-                      <span style={{ color: isSelected ? 'var(--color-primary)' : 'var(--color-text-secondary)', flexShrink: 0 }}>
+                      <span style={{ color: isSelected ? 'var(--color-text)' : 'var(--color-text-secondary)', flexShrink: 0 }}>
                         {isSelected ? <CheckSquare size={16} /> : <Square size={16} />}
                       </span>
                       {p.cover_url && (
@@ -191,7 +197,7 @@ export default function ExportProjectsModal({ onClose }) {
         {step === 'auth' && (
           <form onSubmit={handleVerify} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div>
-              <label style={C.label}>Email da conta pessoal</label>
+              <label style={C.label}>Email da conta de destino</label>
               <input
                 type="email" value={personalEmail} onChange={e => setPersonalEmail(e.target.value)}
                 placeholder="tu@email.com" required style={C.input}
@@ -203,7 +209,7 @@ export default function ExportProjectsModal({ onClose }) {
                 <input
                   type={showPwd ? 'text' : 'password'}
                   value={personalPwd} onChange={e => setPersonalPwd(e.target.value)}
-                  placeholder="Palavra-passe da conta pessoal" required
+                  placeholder="Palavra-passe da conta de destino" required
                   style={{ ...C.input, paddingRight: 40 }}
                 />
                 <button
@@ -245,7 +251,7 @@ export default function ExportProjectsModal({ onClose }) {
                 Projetos a copiar: <strong style={{ color: 'var(--color-text)' }}>{selected.length}</strong>
               </div>
               <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', lineHeight: 1.5, marginTop: 4 }}>
-                Os projetos são copiados; a conta escolar mantém os originais. Limites de plano da conta pessoal são respeitados.
+                Os projetos são copiados; esta conta mantém os originais. Limites de plano da conta de destino são respeitados.
               </div>
             </div>
 
@@ -271,7 +277,7 @@ export default function ExportProjectsModal({ onClose }) {
               {copiedCount > 0 && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.25)', borderRadius: 10, padding: '12px 14px', fontSize: 14, color: 'var(--color-success)', fontWeight: 600 }}>
                   <Check size={16} />
-                  {copiedCount === 1 ? '1 projeto copiado' : `${copiedCount} projetos copiados`} com sucesso para a conta pessoal.
+                  {copiedCount === 1 ? '1 projeto copiado' : `${copiedCount} projetos copiados`} com sucesso para a conta de destino.
                 </div>
               )}
 
@@ -279,7 +285,7 @@ export default function ExportProjectsModal({ onClose }) {
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: 10, padding: '12px 14px', fontSize: 13, lineHeight: 1.5, color: 'var(--color-text)' }}>
                   <AlertTriangle size={16} style={{ flexShrink: 0, marginTop: 1, color: 'var(--color-warning)' }} />
                   <span>
-                    {skippedCount === 1 ? '1 projeto não foi copiado' : `${skippedCount} projetos não foram copiados`}: a conta pessoal atingiu o limite do plano {exportResult?.dest_plan === 'free' ? 'Grátis (3 projetos)' : 'Build (10 projetos)'}. Faz upgrade para continuar.
+                    {skippedCount === 1 ? '1 projeto não foi copiado' : `${skippedCount} projetos não foram copiados`}: a conta de destino atingiu o limite do plano {exportResult?.dest_plan === 'free' ? 'Grátis (3 projetos)' : 'Build (10 projetos)'}. Faz upgrade para continuar.
                   </span>
                 </div>
               )}

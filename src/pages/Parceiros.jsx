@@ -3,16 +3,26 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
-import {
-  Building2, Plus, X, ChevronDown, ChevronRight, Mail, Phone, Globe2,
-  UserPlus, Trash2, Pencil, ExternalLink, Send, CheckCircle2,
-} from 'lucide-react'
+import { Buildings2Icon as Building2 } from '@solar-icons/react/bold/buildings-2'
+import { AddCircleIcon as Plus } from '@solar-icons/react/bold/add-circle'
+import { CloseIcon as X } from '@solar-icons/react/bold/close'
+import { AltArrowDownIcon as ChevronDown } from '@solar-icons/react/bold/alt-arrow-down'
+import { AltArrowRightIcon as ChevronRight } from '@solar-icons/react/bold/alt-arrow-right'
+import { LetterIcon as Mail } from '@solar-icons/react/bold/letter'
+import { PhoneIcon as Phone } from '@solar-icons/react/bold/phone'
+import { GlobeIcon as Globe2 } from '@solar-icons/react/bold/globe'
+import { UserPlusRoundedIcon as UserPlus } from '@solar-icons/react/bold/user-plus-rounded'
+import { TrashBinMinimalisticIcon as Trash2 } from '@solar-icons/react/bold/trash-bin-minimalistic'
+import { Pen2Icon as Pencil } from '@solar-icons/react/bold/pen-2'
+import { SquareArrowRightUpIcon as ExternalLink } from '@solar-icons/react/bold/square-arrow-right-up'
+import { PlaneIcon as Send } from '@solar-icons/react/bold/plane'
+import { CheckCircleIcon as CheckCircle2 } from '@solar-icons/react/bold/check-circle'
 import { Select } from '../components/ui'
 
 const C = {
   bg: 'var(--color-bg)', bgAlt: 'var(--color-bg-alt)', card: 'var(--color-surface)', cardHover: 'var(--color-surface-hover)',
   border: 'var(--color-border)', borderBright: 'var(--color-border-hover)',
-  blue: 'var(--color-primary)', text: 'var(--color-text)', muted: 'var(--color-text-secondary)', subtle: 'var(--color-text-tertiary)',
+  blue: 'var(--color-text)', text: 'var(--color-text)', muted: 'var(--color-text-secondary)', subtle: 'var(--color-text-tertiary)',
   green: 'var(--color-success)', yellow: 'var(--color-warning)', red: 'var(--color-error)', purple: 'var(--color-accent)',
   glass: 'var(--color-glass)', glassHover: 'var(--color-glass-hover)',
   glassBorder: 'var(--color-glass-border)', glassBorderBright: 'var(--color-glass-border-bright)',
@@ -99,7 +109,7 @@ function CompanyModal({ initial, onClose, onSave }) {
             <label style={labelStyle}>Notas</label>
             <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={3} placeholder="ex: Costumam receber estagiários no 2º período." style={{ ...inputStyle, resize: 'vertical', fontFamily: 'inherit' }} />
           </div>
-          <button type="submit" disabled={saving || !name.trim()} style={{ background: 'var(--color-primary)', border: 'none', borderRadius: 8, padding: '11px', color: '#fff', fontSize: 14, fontWeight: 600, cursor: saving ? 'default' : 'pointer', opacity: saving ? 0.7 : 1, fontFamily: 'inherit', marginTop: 4, boxShadow: '0 2px 8px var(--color-primary-subtle)' }}>
+          <button type="submit" disabled={saving || !name.trim()} style={{ background: 'var(--color-text)', border: 'none', borderRadius: 8, padding: '11px', color: 'var(--color-bg)', fontSize: 14, fontWeight: 600, cursor: saving ? 'default' : 'pointer', opacity: saving ? 0.7 : 1, fontFamily: 'inherit', marginTop: 4, boxShadow: '0 2px 8px var(--color-surface-hover)' }}>
             {saving ? 'A guardar…' : initial ? 'Guardar alterações' : 'Criar empresa'}
           </button>
         </form>
@@ -142,7 +152,7 @@ function LeadModal({ students, onClose, onSave }) {
               options={STATUS_ORDER.map(s => ({ value: s, label: STATUS_META[s].label }))}
               inputStyle={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 14 }} />
           </div>
-          <button type="submit" disabled={saving || !studentId} style={{ background: 'var(--color-primary)', border: 'none', borderRadius: 8, padding: '11px', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', opacity: saving || !studentId ? 0.6 : 1, fontFamily: 'inherit', marginTop: 4 }}>
+          <button type="submit" disabled={saving || !studentId} style={{ background: 'var(--color-text)', border: 'none', borderRadius: 8, padding: '11px', color: 'var(--color-bg)', fontSize: 14, fontWeight: 600, cursor: 'pointer', opacity: saving || !studentId ? 0.6 : 1, fontFamily: 'inherit', marginTop: 4 }}>
             {saving ? 'A guardar…' : 'Associar'}
           </button>
         </form>
@@ -180,8 +190,8 @@ function CompanyCard({ company, leads, students, onEdit, onDelete, onAddLead, on
     <div style={{ ...C.glassStyle, background: hov ? C.glassHover : C.glass, border: `1px solid ${hov ? C.glassBorderBright : C.glassBorder}`, borderRadius: 12, transition: 'background 0.15s, border-color 0.15s' }}
       onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', cursor: 'pointer' }} onClick={() => setOpen(o => !o)}>
-        <div style={{ width: 38, height: 38, borderRadius: 9, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <Building2 size={16} color="var(--color-primary)" />
+        <div style={{ width: 38, height: 38, borderRadius: 9, background: 'var(--color-surface-hover)', border: '1px solid var(--color-surface-hover)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <Building2 size={16} color="var(--color-text)" />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ color: C.text, fontSize: 14, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{company.name}</div>
@@ -220,7 +230,7 @@ function CompanyCard({ company, leads, students, onEdit, onDelete, onAddLead, on
             <button
               onClick={async e => { e.stopPropagation(); setInviting(true); await onInvite(company); setInviting(false) }}
               disabled={inviting}
-              style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 8, padding: '8px 12px', color: C.blue, fontSize: 12, fontWeight: 700, cursor: inviting ? 'default' : 'pointer', fontFamily: 'inherit', marginBottom: 12, opacity: inviting ? 0.6 : 1 }}
+              style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--color-surface-hover)', border: '1px solid var(--color-surface-hover)', borderRadius: 8, padding: '8px 12px', color: C.blue, fontSize: 12, fontWeight: 700, cursor: inviting ? 'default' : 'pointer', fontFamily: 'inherit', marginBottom: 12, opacity: inviting ? 0.6 : 1 }}
             >
               <Send size={12} /> {inviting ? 'A enviar…' : invited ? 'Reenviar convite' : 'Convidar empresa para o Showo'}
             </button>
@@ -386,7 +396,7 @@ export default function Parceiros() {
           </div>
           <button
             onClick={() => { setEditingCompany(null); setShowCompanyModal(true) }}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, background: C.blue, border: 'none', borderRadius: 8, color: '#fff', fontSize: 13, fontWeight: 700, padding: '10px 16px', cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px var(--color-primary-subtle)' }}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, background: C.blue, border: 'none', borderRadius: 8, color: 'var(--color-bg)', fontSize: 13, fontWeight: 700, padding: '10px 16px', cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px var(--color-surface-hover)' }}
           >
             <Plus size={15} /> Nova empresa
           </button>
@@ -400,14 +410,14 @@ export default function Parceiros() {
           </div>
         ) : companies.length === 0 ? (
           <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '48px 24px', textAlign: 'center' }}>
-            <div style={{ width: 56, height: 56, borderRadius: 14, margin: '0 auto 16px', background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Building2 size={26} color="var(--color-primary)" />
+            <div style={{ width: 56, height: 56, borderRadius: 14, margin: '0 auto 16px', background: 'var(--color-surface-hover)', border: '1px solid var(--color-surface-hover)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Building2 size={26} color="var(--color-text)" />
             </div>
             <p style={{ margin: '0 0 6px', fontSize: 16, fontWeight: 700, color: C.text }}>Ainda não tens empresas parceiras</p>
             <p style={{ margin: '0 0 20px', fontSize: 13, color: C.muted }}>Adiciona empresas que costumam receber estagiários e associa alunos interessados.</p>
             <button
               onClick={() => setShowCompanyModal(true)}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: C.blue, border: 'none', borderRadius: 8, color: '#fff', fontSize: 13, fontWeight: 700, padding: '10px 18px', cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px var(--color-primary-subtle)' }}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: C.blue, border: 'none', borderRadius: 8, color: 'var(--color-bg)', fontSize: 13, fontWeight: 700, padding: '10px 18px', cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px var(--color-surface-hover)' }}
             >
               <Plus size={15} /> Adicionar empresa
             </button>

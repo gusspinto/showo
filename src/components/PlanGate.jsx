@@ -18,8 +18,8 @@ const C = {
   actions: { display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '4px' },
   btn: (primary) => ({
     padding: '9px 18px', borderRadius: 'var(--radius-md)', border: primary ? 'none' : '1px solid var(--color-border)',
-    background: primary ? 'var(--color-primary)' : 'transparent',
-    color: primary ? '#fff' : 'var(--color-text)',
+    background: primary ? 'var(--color-text)' : 'transparent',
+    color: primary ? 'var(--color-bg)' : 'var(--color-text)',
     fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', fontFamily: 'var(--font-body)',
   }),
 }

@@ -1,8 +1,17 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { claimAnonymousProjects } from '../lib/claimAnonymousProjects'
-import { GraduationCap, BookOpen, Search, Building2, ArrowLeft, Users2, Mail, Check } from 'lucide-react'
+import { ArrowLeftIcon as ArrowLeft } from '@solar-icons/react/bold/arrow-left'
+import { LetterIcon as Mail } from '@solar-icons/react/bold/letter'
+import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
+// Ícones dos cartões de papel do registo — escolhidos um a um, ao contrário
+// do mapeamento automático aplicado ao resto da app.
+import { DiplomaIcon } from '@solar-icons/react/bold/diploma'
+import { UsersGroupRoundedIcon } from '@solar-icons/react/bold/users-group-rounded'
+import { Book2Icon } from '@solar-icons/react/bold/book-2'
+import { MagnifierIcon } from '@solar-icons/react/bold/magnifier'
+import { Buildings2Icon } from '@solar-icons/react/bold/buildings-2'
 import AuthSidePanel from '../components/AuthSidePanel'
 import GoogleButton from '../components/GoogleButton'
 import { useTheme } from '../context/ThemeContext'
@@ -25,11 +34,11 @@ const REGISTER_PHRASES = [
 ]
 
 const ROLES = [
-  { id: 'aluno',               icon: <GraduationCap size={22} />, label: 'Aluno',               sub: 'Conta pessoal',             color: 'var(--color-primary)' },
-  { id: 'aluno_institucional', icon: <Users2 size={22} />,        label: 'Aluno Institucional',  sub: 'Tenho código de turma',     color: 'var(--color-info)' },
-  { id: 'professor',           icon: <BookOpen size={22} />,      label: 'Professor',            sub: 'Gerir turmas e alunos',     color: 'var(--color-success)' },
-  { id: 'recrutador',          icon: <Search size={22} />,        label: 'Recrutador',           color: 'var(--color-accent)', disabled: true },
-  { id: 'empresa',             icon: <Building2 size={22} />,     label: 'Empresa',              color: 'var(--color-warning)', disabled: true },
+  { id: 'aluno',               icon: <DiplomaIcon size={23} />,           label: 'Aluno',               sub: 'Conta pessoal',             color: 'var(--color-primary)' },
+  { id: 'aluno_institucional', icon: <UsersGroupRoundedIcon size={23} />, label: 'Aluno Institucional',  sub: 'Tenho código de turma',     color: 'var(--color-info)' },
+  { id: 'professor',           icon: <Book2Icon size={23} />,             label: 'Professor',            sub: 'Gerir turmas e alunos',     color: 'var(--color-success)' },
+  { id: 'recrutador',          icon: <MagnifierIcon size={21} />,         label: 'Recrutador',           color: 'var(--color-accent)', disabled: true },
+  { id: 'empresa',             icon: <Buildings2Icon size={23} />,        label: 'Empresa',              color: 'var(--color-warning)', disabled: true },
 ]
 
 function EyeIcon({ visible }) {
@@ -95,7 +104,20 @@ export default function Register() {
   const nextPath = rawNext && rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : null
   const claimSlug = location.state?.claimSlug ?? null
   const { theme } = useTheme()
-  const { refreshProfile } = useAuth()
+  const { user, refreshProfile } = useAuth()
+
+  // Uma sessão já existente ao ENTRAR nesta página (ex: mudar o URL para
+  // /register à mão enquanto autenticado) redireciona logo para a
+  // dashboard — não faz sentido dar acesso ao ecrã de criar conta a quem
+  // já tem uma. Mas a sessão criada PELO PRÓPRIO fluxo de registo (signUp
+  // com autoconfirm, ou o auto-login depois de confirmar por outro
+  // dispositivo) não deve disparar isto — por isso o `hasStartedSignup` fica
+  // true assim que o registo começa, e o guard ignora o user a partir daí.
+  const hasStartedSignup = useRef(false)
+  useEffect(() => {
+    if (user && !hasStartedSignup.current) navigate(nextPath ?? '/dashboard', { replace: true })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user])
 
   // Detect context to skip role selection
   const params = new URLSearchParams(location.search)
@@ -179,9 +201,99 @@ export default function Register() {
     return !claimErr
   }
 
+  // Tudo o que falta depois de existir uma sessão válida — resgatar convite/
+  // turma/parceiro, guardar geo/telefone, referral, welcome email, reclamar
+  // projetos anónimos, e ir para a dashboard. Corre tanto logo a seguir ao
+  // signUp (quando não precisa de confirmação de email) como mais tarde,
+  // quando a confirmação chega por outro dispositivo (ver autoLoginAfterConfirm).
+  async function finishAccountSetup() {
+    if (needsInviteCode) {
+      const ok = await redeemInviteCode()
+      if (!ok) {
+        setLoading(false)
+        setAccountCreated(true)
+        setError('A tua conta foi criada, mas o código de acesso é inválido ou já foi utilizado. Verifica o código e tenta novamente.')
+        return
+      }
+      await refreshProfile()
+    }
+
+    if (isPartnerFlow) {
+      const ok = await claimPartnerInvite()
+      if (!ok) {
+        setLoading(false)
+        setAccountCreated(true)
+        setError('A tua conta foi criada, mas não foi possível ligá-la a esta empresa. O convite pode já ter sido usado.')
+        return
+      }
+      await refreshProfile()
+    }
+
+    if (needsClassCode) {
+      const { data: regResult } = await supabase.rpc('register_institutional_student', { p_class_code: classCode.trim(), p_email: email.trim() })
+      if (!regResult?.ok) {
+        setLoading(false)
+        setAccountCreated(true)
+        if (regResult?.reason === 'class_not_found') {
+          setError('A tua conta foi criada, mas o código de turma é inválido. Verifica com o teu professor.')
+        } else if (regResult?.reason === 'domain_mismatch') {
+          setError(`A tua conta foi criada, mas o teu email tem de ser @${regResult.expected_domain} para entrar na turma de ${regResult.school_name}.`)
+        } else {
+          setError('A tua conta foi criada, mas houve um erro ao entrar na turma. Tenta novamente.')
+        }
+        return
+      }
+      await refreshProfile()
+    }
+
+    // Associate school organization if the email domain matches
+    if (detectedOrg) {
+      await supabase.rpc('associate_organization_by_email').catch(() => {})
+    }
+
+    // Store geolocation, referrer and phone on the new profile
+    const params = new URLSearchParams(window.location.search)
+    const geo = await getGeoInfo()
+    const { data: { user: newUser } } = await supabase.auth.getUser()
+    if (newUser) {
+      await supabase.from('profiles').update({
+        signup_country: geo?.country || null,
+        signup_city: geo?.city || null,
+        signup_referrer: document.referrer || null,
+        signup_utm_source: params.get('utm_source') || null,
+        phone: phone.trim() || null,
+      }).eq('id', newUser.id)
+    }
+
+    // Claim referral code (ambassador system)
+    if (newUser) {
+      const storedRef = localStorage.getItem('showo_ref')
+      if (storedRef) {
+        await supabase.rpc('claim_referral', { code: storedRef }).catch(() => {})
+        localStorage.removeItem('showo_ref')
+      }
+    }
+
+    // Send welcome email (fire-and-forget)
+    if (newUser) {
+      supabase.functions.invoke('send-welcome-email').catch(() => {})
+    }
+
+    // Claim all anonymously-created projects from this browser (edit_token_* in localStorage)
+    let claimedSlugs = []
+    if (newUser) {
+      claimedSlugs = await claimAnonymousProjects(newUser.id)
+    }
+
+    setLoading(false)
+    const primaryClaimed = claimSlug || claimedSlugs[0]
+    navigate(nextPath ?? '/dashboard', primaryClaimed ? { state: { claimedSlug: primaryClaimed } } : undefined)
+  }
+
   async function handleSubmit(e) {
     e.preventDefault()
     setError('')
+    hasStartedSignup.current = true
 
     // Account already exists (signUp succeeded on a previous attempt) — this
     // submit is just retrying the invite code / partner claim / class join.
@@ -289,88 +401,39 @@ export default function Register() {
     }
 
     // Session exists (e.g. autoconfirm on or OAuth) — process immediately
-    if (needsInviteCode) {
-      const ok = await redeemInviteCode()
-      if (!ok) {
-        setLoading(false)
-        setAccountCreated(true)
-        setError('A tua conta foi criada, mas o código de acesso é inválido ou já foi utilizado. Verifica o código e tenta novamente.')
-        return
-      }
-      await refreshProfile()
-    }
-
-    if (isPartnerFlow) {
-      const ok = await claimPartnerInvite()
-      if (!ok) {
-        setLoading(false)
-        setAccountCreated(true)
-        setError('A tua conta foi criada, mas não foi possível ligá-la a esta empresa. O convite pode já ter sido usado.')
-        return
-      }
-      await refreshProfile()
-    }
-
-    if (needsClassCode) {
-      const { data: regResult } = await supabase.rpc('register_institutional_student', { p_class_code: classCode.trim(), p_email: email.trim() })
-      if (!regResult?.ok) {
-        setLoading(false)
-        setAccountCreated(true)
-        if (regResult?.reason === 'class_not_found') {
-          setError('A tua conta foi criada, mas o código de turma é inválido. Verifica com o teu professor.')
-        } else if (regResult?.reason === 'domain_mismatch') {
-          setError(`A tua conta foi criada, mas o teu email tem de ser @${regResult.expected_domain} para entrar na turma de ${regResult.school_name}.`)
-        } else {
-          setError('A tua conta foi criada, mas houve um erro ao entrar na turma. Tenta novamente.')
-        }
-        return
-      }
-      await refreshProfile()
-    }
-
-    // Associate school organization if the email domain matches
-    if (detectedOrg) {
-      await supabase.rpc('associate_organization_by_email').catch(() => {})
-    }
-
-    // Store geolocation, referrer and phone on the new profile
-    const params = new URLSearchParams(window.location.search)
-    const geo = await getGeoInfo()
-    const { data: { user: newUser } } = await supabase.auth.getUser()
-    if (newUser) {
-      await supabase.from('profiles').update({
-        signup_country: geo?.country || null,
-        signup_city: geo?.city || null,
-        signup_referrer: document.referrer || null,
-        signup_utm_source: params.get('utm_source') || null,
-        phone: phone.trim() || null,
-      }).eq('id', newUser.id)
-    }
-
-    // Claim referral code (ambassador system)
-    if (newUser) {
-      const storedRef = localStorage.getItem('showo_ref')
-      if (storedRef) {
-        await supabase.rpc('claim_referral', { code: storedRef }).catch(() => {})
-        localStorage.removeItem('showo_ref')
-      }
-    }
-
-    // Send welcome email (fire-and-forget)
-    if (newUser) {
-      supabase.functions.invoke('send-welcome-email').catch(() => {})
-    }
-
-    // Claim all anonymously-created projects from this browser (edit_token_* in localStorage)
-    let claimedSlugs = []
-    if (newUser) {
-      claimedSlugs = await claimAnonymousProjects(newUser.id)
-    }
-
-    setLoading(false)
-    const primaryClaimed = claimSlug || claimedSlugs[0]
-    navigate(nextPath ?? '/dashboard', primaryClaimed ? { state: { claimedSlug: primaryClaimed } } : undefined)
+    await finishAccountSetup()
   }
+
+  // ── Auto-login quando a confirmação chega por outro dispositivo ──
+  // O PC fica no ecrã "Verifica o teu email" sem sessão própria. Se a
+  // pessoa confirma pelo telemóvel, esse dispositivo é que fica autenticado
+  // — este separador não sabe, a não ser que pergunte. Enquanto o ecrã
+  // estiver visível, pergunta de vez em quando (função pública com
+  // rate-limit, só devolve um boolean) e, assim que vier confirmado, entra
+  // sozinho com o email/password que já tem em memória desde o submit.
+  useEffect(() => {
+    if (!confirmationPending) return
+
+    let cancelled = false
+    let attempts = 0
+    const MAX_ATTEMPTS = 75 // ~5 minutos a cada 4s
+
+    const interval = setInterval(async () => {
+      attempts++
+      if (attempts > MAX_ATTEMPTS) { clearInterval(interval); return }
+
+      const { data: confirmed } = await supabase.rpc('check_email_confirmed', { p_email: email })
+      if (!confirmed || cancelled) return
+
+      clearInterval(interval)
+      const { data: signInData, error: signInErr } = await supabase.auth.signInWithPassword({ email, password })
+      if (signInErr || cancelled) return
+      await finishAccountSetup()
+    }, 4000)
+
+    return () => { cancelled = true; clearInterval(interval) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [confirmationPending])
 
   const selectedRole = ROLES.find(r => r.id === role)
 
@@ -382,7 +445,7 @@ export default function Register() {
         .auth-side {
           position: relative; overflow: hidden;
           flex: 0 0 42%; display: flex; align-items: center; justify-content: flex-start;
-          padding: 0 0 0 64px; background: linear-gradient(115deg, #000 0%, #050b1c 40%, #0e2249 85%, #143169 100%);
+          padding: 0 0 0 64px; background: #000000;
           border-right: 1px solid var(--color-border);
         }
         .auth-side-content {
@@ -403,7 +466,7 @@ export default function Register() {
           to   { opacity: 1; transform: translateY(0); }
         }
         .auth-side-highlight {
-          background: var(--color-primary); color: #fff;
+          background: var(--color-text); color: var(--color-bg);
           padding: 2px 10px 9px; border-radius: 0 0 14px 14px;
           display: inline-block;
         }
@@ -442,14 +505,20 @@ export default function Register() {
         @media (max-width: 860px) {
           .auth-side { display: none; }
         }
-        @media (max-width: 350px) { .register-role-grid { grid-template-columns: 1fr !important; } }
+        /* Em pilar no telemóvel — duas colunas apertava demais os subtítulos
+           ("Tenho código de turma", "Gerir turmas e alunos") em ecrãs
+           normais, não só nos muito estreitos que o 350px cobria. */
+        @media (max-width: 600px) { .register-role-grid { grid-template-columns: 1fr !important; } }
       `}</style>
 
       <AuthSidePanel phrases={REGISTER_PHRASES} />
 
       <div className="auth-main">
         <div className="auth-card">
-          <div className="auth-main-logo" style={{ marginBottom: 36 }}>
+          <div
+            className="auth-main-logo"
+            style={{ marginBottom: 36, display: 'flex', justifyContent: 'center' }}
+          >
             <img
               src={theme === 'light' ? '/lightmode_icon_logo.png' : '/darkmode_icon_logo.png'}
               alt="Showo"
@@ -459,22 +528,23 @@ export default function Register() {
           </div>
 
           {confirmationPending ? (
-            /* ── EMAIL CONFIRMATION PENDING ── */
-            <div style={{ textAlign: 'center', padding: '20px 0' }}>
-              <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(59,130,246,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
-                <Mail size={26} style={{ color: C.blue }} />
+            /* ── EMAIL CONFIRMATION PENDING ──
+               Reduzido ao essencial: ícone, título, para onde foi o email,
+               e a única ação que importa (reenviar). O resto (spam, texto
+               a repetir o que o título já diz) só acrescentava ruído. */
+            <div style={{ textAlign: 'center', padding: '16px 0' }}>
+              <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px' }}>
+                <Mail size={20} style={{ color: C.muted }} />
               </div>
-              <h1 style={{ color: C.text, fontSize: 22, fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 10px', letterSpacing: '-0.5px' }}>
+              <h1 style={{ color: C.text, fontSize: 21, fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 8px', letterSpacing: '-0.4px' }}>
                 Verifica o teu email
               </h1>
-              <p style={{ color: C.muted, fontSize: 14, lineHeight: 1.6, margin: '0 0 24px' }}>
-                Enviámos um link de confirmação para<br />
-                <strong style={{ color: C.text }}>{email}</strong>.<br />
-                Clica no link para ativar a tua conta.
+              <p style={{ color: C.muted, fontSize: 14, lineHeight: 1.6, margin: '0 0 22px' }}>
+                Enviámos um link para <strong style={{ color: C.text }}>{email}</strong>
               </p>
               {resendState === 'sent' ? (
                 <p style={{ color: 'var(--color-success)', fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-                  <Check size={14} /> Novo email enviado!
+                  <Check size={14} /> Novo email enviado
                 </p>
               ) : (
                 <button
@@ -486,24 +556,25 @@ export default function Register() {
                   }}
                   disabled={resendState === 'sending'}
                   style={{
-                    background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.25)',
-                    borderRadius: 8, padding: '10px 20px',
-                    color: C.blue, fontSize: 13, fontWeight: 600,
+                    background: 'transparent', border: '1px solid var(--color-border)',
+                    borderRadius: 9, padding: '10px 20px',
+                    color: C.text, fontSize: 13, fontWeight: 600,
                     cursor: 'pointer', fontFamily: 'inherit',
                   }}
                 >
-                  {resendState === 'sending' ? 'A enviar...' : 'Reenviar email de confirmação'}
+                  {resendState === 'sending' ? 'A enviar...' : 'Reenviar email'}
                 </button>
               )}
-              <p style={{ color: C.muted, fontSize: 13, marginTop: 16 }}>
-                Não recebes nada? Verifica a pasta de spam.
-              </p>
             </div>
           ) : step === 'role' ? (
             /* ── STEP 1: escolha de tipo de conta ── */
             <>
-              <h1 style={{ color: C.text, fontSize: 26, fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 6px', letterSpacing: '-0.5px' }}>Criar conta</h1>
-              <p style={{ color: C.muted, fontSize: 14, margin: '0 0 28px' }}>Como vais usar o Showo?</p>
+              {/* "Criar conta" saiu — dizia o óbvio (a pessoa já sabe que
+                  está a criar conta) e duplicava o que a pergunta a seguir
+                  já diz. Fica só a pergunta, centrada. */}
+              <h1 style={{ color: C.text, fontSize: 22, fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 28px', letterSpacing: '-0.4px', textAlign: 'center' }}>
+                Como vais usar o Showo?
+              </h1>
 
               {partnerToken && partnerInvite === 'invalid' && (
                 <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 8, padding: '10px 14px', marginBottom: 20, color: C.error, fontSize: 13 }}>
@@ -516,6 +587,13 @@ export default function Register() {
                 </div>
               )}
 
+              {/* Cada papel tinha a sua cor (azul, verde, info) — bonito
+                  isoladamente, mas ao lado do herói novo (Google/email a
+                  branco, sem cor nenhuma a mais) lia-se como duas linguagens
+                  visuais diferentes na mesma jornada. Um estado só —
+                  selecionado ou não — como o resto do fluxo de auth agora
+                  usa: neutro, com o branco (var(--color-text)) a marcar a
+                  escolha, não uma cor por papel. */}
               <div className="register-role-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 28 }}>
                 {ROLES.filter(r => !r.disabled).map(r => {
                   const selected = role === r.id
@@ -525,19 +603,22 @@ export default function Register() {
                       className="role-card"
                       onClick={() => setRole(r.id)}
                       style={{
-                        border: `1px solid ${selected ? r.color : C.border}`,
-                        borderRadius: 8, padding: '16px 14px',
-                        display: 'flex', alignItems: 'center', gap: 10,
-                        cursor: 'pointer',
+                        border: `1px solid ${selected ? C.text : C.border}`,
+                        borderRadius: 8, padding: '14px',
+                        display: 'flex', flexDirection: 'column', alignItems: 'center',
+                        gap: 3, textAlign: 'center', cursor: 'pointer',
                       }}
                     >
-                      <span style={{ color: r.color, display: 'flex', alignItems: 'center' }}>{r.icon}</span>
-                      <div>
-                        <div style={{ fontSize: 14, fontWeight: 700, color: selected ? r.color : C.text }}>
-                          {r.label}
-                        </div>
-                        {r.sub && <div style={{ fontSize: 11, color: C.muted, fontWeight: 400, marginTop: 2 }}>{r.sub}</div>}
+                      {/* Ícone ao lado do nome, não por cima — três linhas
+                          por cartão (ícone sozinho, nome, subtítulo) fazia
+                          cada cartão mais alto do que precisava. O bloco
+                          continua centrado no cartão, só a organização
+                          interna muda de vertical para uma linha + legenda. */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span style={{ color: selected ? C.text : C.muted, display: 'flex', alignItems: 'center' }}>{r.icon}</span>
+                        <span style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{r.label}</span>
                       </div>
+                      {r.sub && <div style={{ fontSize: 11, color: C.muted, fontWeight: 400 }}>{r.sub}</div>}
                     </div>
                   )
                 })}
@@ -549,8 +630,8 @@ export default function Register() {
                 className="auth-submit"
                 style={{
                   width: '100%',
-                  background: role ? (selectedRole?.color ?? C.blue) : 'var(--color-border)',
-                  color: '#fff', border: 'none', borderRadius: 10, padding: '12px 0',
+                  background: role ? C.text : 'var(--color-border)',
+                  color: role ? C.bg : C.muted, border: 'none', borderRadius: 10, padding: '12px 0',
                   fontSize: 15, fontWeight: 700, cursor: role ? 'pointer' : 'not-allowed',
                   fontFamily: 'inherit',
                 }}
@@ -564,8 +645,8 @@ export default function Register() {
             <>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ color: selectedRole?.color, display: 'flex', alignItems: 'center', transform: 'scale(0.85)' }}>{selectedRole?.icon}</span>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: selectedRole?.color }}>
+                  <span style={{ color: C.text, display: 'flex', alignItems: 'center', transform: 'scale(0.85)' }}>{selectedRole?.icon}</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: C.text }}>
                     {selectedRole?.label}
                   </span>
                 </div>
@@ -591,7 +672,7 @@ export default function Register() {
 
               {!accountCreated && (
                 <>
-                  <GoogleButton label="Continuar com Google" variant="subtle" />
+                  <GoogleButton label="Continuar com Google" />
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '18px 0' }}>
                     <div style={{ flex: 1, height: 1, background: C.border }} />
                     <span style={{ fontSize: 12, color: 'var(--color-text-tertiary)', fontWeight: 600 }}>ou</span>
@@ -651,10 +732,10 @@ export default function Register() {
                       {detectedOrg && (
                         <div style={{
                           marginTop: 8, display: 'flex', alignItems: 'center', gap: 8,
-                          background: 'rgba(43,126,245,0.08)', border: '1px solid rgba(43,126,245,0.25)',
-                          borderRadius: 8, padding: '8px 12px', fontSize: 13, color: 'var(--color-primary)',
+                          background: 'var(--color-bg-alt)', border: '1px solid var(--color-border)',
+                          borderRadius: 8, padding: '8px 12px', fontSize: 13, color: C.text,
                         }}>
-                          <GraduationCap size={14} />
+                          <DiplomaIcon size={14} />
                           <span>Conta escolar — <strong>{detectedOrg.name}</strong></span>
                         </div>
                       )}
@@ -692,8 +773,8 @@ export default function Register() {
                   type="submit" disabled={loading}
                   className="auth-submit"
                   style={{
-                    background: loading ? 'var(--color-border)' : 'var(--color-primary)',
-                    color: '#fff', border: 'none',
+                    background: loading ? 'var(--color-border)' : C.text,
+                    color: loading ? C.muted : C.bg, border: 'none',
                     borderRadius: 10, padding: '12px 0', fontSize: 15, fontWeight: 700,
                     cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit', marginTop: 4,
                   }}
@@ -706,7 +787,7 @@ export default function Register() {
 
           <p style={{ textAlign: 'center', color: C.muted, fontSize: 14, marginTop: 24 }}>
             Já tens conta?{' '}
-            <Link to="/login" style={{ color: C.blue, textDecoration: 'none', fontWeight: 500 }}>Entrar</Link>
+            <Link to="/login" style={{ color: C.text, textDecoration: 'underline', fontWeight: 700 }}>Entrar</Link>
           </p>
         </div>
       </div>

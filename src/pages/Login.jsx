@@ -1,11 +1,13 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { claimAnonymousProjects } from '../lib/claimAnonymousProjects'
-import { Mail, Check } from 'lucide-react'
+import { LetterIcon as Mail } from '@solar-icons/react/bold/letter'
+import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
 import AuthSidePanel from '../components/AuthSidePanel'
 import GoogleButton from '../components/GoogleButton'
 import { useTheme } from '../context/ThemeContext'
+import { useAuth } from '../context/AuthContext'
 
 const C = {
   bg:          'var(--color-bg)',
@@ -67,6 +69,15 @@ export default function Login() {
   const navigate = useNavigate()
   const location = useLocation()
   const { theme } = useTheme()
+  const { user } = useAuth()
+
+  // Já tens sessão? Não faz sentido ver o ecrã de login — troca direto para
+  // a dashboard. Sem isto, mudar o URL para /login à mão dava acesso ao
+  // formulário mesmo estando autenticado.
+  useEffect(() => {
+    if (user) navigate('/dashboard', { replace: true })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user])
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -144,7 +155,7 @@ export default function Login() {
         .auth-side {
           position: relative; overflow: hidden;
           flex: 0 0 42%; display: flex; align-items: center; justify-content: flex-start;
-          padding: 0 0 0 64px; background: linear-gradient(115deg, #000 0%, #050b1c 40%, #0e2249 85%, #143169 100%);
+          padding: 0 0 0 64px; background: #000000;
           border-right: 1px solid var(--color-border);
         }
         .auth-side-content {
@@ -165,7 +176,7 @@ export default function Login() {
           to   { opacity: 1; transform: translateY(0); }
         }
         .auth-side-highlight {
-          background: var(--color-primary); color: #fff;
+          background: var(--color-text); color: var(--color-bg);
           padding: 2px 10px 9px; border-radius: 0 0 14px 14px;
           display: inline-block;
         }
@@ -221,7 +232,7 @@ export default function Login() {
 
       <div className="auth-main">
         <div className="auth-card">
-          <div className="auth-main-logo" style={{ marginBottom: 36 }}>
+          <div className="auth-main-logo" style={{ marginBottom: 36, display: 'flex', justifyContent: 'center' }}>
             <img
               src={theme === 'light' ? '/lightmode_icon_logo.png' : '/darkmode_icon_logo.png'}
               alt="Showo"
@@ -232,8 +243,8 @@ export default function Login() {
 
           {mode === 'forgot' ? (
             <>
-              <h1 style={{ color: C.text, fontSize: 26, fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 8px', letterSpacing: '-0.5px' }}>Recuperar acesso</h1>
-              <p style={{ color: C.muted, fontSize: 14, margin: '0 0 32px' }}>Enviamos-te um link para definires uma nova palavra-passe</p>
+              <h1 style={{ color: C.text, fontSize: 26, fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 8px', letterSpacing: '-0.5px', textAlign: 'center' }}>Recuperar acesso</h1>
+              <p style={{ color: C.muted, fontSize: 14, margin: '0 0 32px', textAlign: 'center' }}>Enviamos-te um link para definires uma nova palavra-passe</p>
 
               {forgotSent ? (
                 <div style={{ background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.25)', borderRadius: 10, padding: '16px 18px' }}>
@@ -259,8 +270,8 @@ export default function Login() {
                     type="submit" disabled={forgotLoading}
                     className="auth-submit"
                     style={{
-                      background: forgotLoading ? 'var(--color-border)' : 'var(--color-primary)',
-                      color: '#fff', border: 'none',
+                      background: forgotLoading ? 'var(--color-border)' : C.text,
+                      color: forgotLoading ? C.muted : C.bg, border: 'none',
                       borderRadius: 10, padding: '12px 0', fontSize: 15, fontWeight: 700,
                       cursor: forgotLoading ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
                     }}
@@ -282,10 +293,12 @@ export default function Login() {
             </>
           ) : (
           <>
-          <h1 style={{ color: C.text, fontSize: 26, fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 8px', letterSpacing: '-0.5px' }}>Entrar</h1>
-          <p style={{ color: C.muted, fontSize: 14, margin: '0 0 28px' }}>Acede ao teu painel de projetos</p>
+          {/* "Entrar" como título repetia o botão logo a seguir — a mesma
+              palavra duas vezes na mesma página. Fica só o subtítulo, que
+              diz o que o botão não diz (o destino, não a ação). */}
+          <p style={{ color: C.muted, fontSize: 15, margin: '0 0 28px', textAlign: 'center' }}>Acede ao teu painel de projetos</p>
 
-          <GoogleButton variant="subtle" />
+          <GoogleButton />
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '18px 0' }}>
             <div style={{ flex: 1, height: 1, background: C.border }} />
@@ -356,12 +369,16 @@ export default function Login() {
               </div>
             )}
 
+            {/* Invertido em vez de azul — o mesmo tom que o herói da home já
+                usa nos botões Google/email: var(--color-text) sobre
+                var(--color-bg), não #fff, porque esta página segue o tema
+                (o herói não, é sempre escuro). */}
             <button
               type="submit" disabled={loading}
               className="auth-submit"
               style={{
-                background: loading ? 'var(--color-border)' : 'var(--color-primary)',
-                color: '#fff', border: 'none',
+                background: loading ? 'var(--color-border)' : C.text,
+                color: loading ? C.muted : C.bg, border: 'none',
                 borderRadius: 10, padding: '12px 0', fontSize: 15, fontWeight: 700,
                 cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
                 marginTop: 4,

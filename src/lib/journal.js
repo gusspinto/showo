@@ -1,6 +1,10 @@
-import {
-  TrendingUp, AlertTriangle, GitBranch, Search, Lightbulb, CheckCircle2, StickyNote,
-} from 'lucide-react'
+import { GraphNewUpIcon as TrendingUp } from '@solar-icons/react/bold/graph-new-up'
+import { DangerTriangleIcon as AlertTriangle } from '@solar-icons/react/bold/danger-triangle'
+import { BranchingPathsDownIcon as GitBranch } from '@solar-icons/react/bold/branching-paths-down'
+import { MagnifierIcon as Search } from '@solar-icons/react/bold/magnifier'
+import { LightbulbIcon as Lightbulb } from '@solar-icons/react/bold/lightbulb'
+import { CheckCircleIcon as CheckCircle2 } from '@solar-icons/react/bold/check-circle'
+import { NotebookMinimalisticIcon as StickyNote } from '@solar-icons/react/bold/notebook-minimalistic'
 
 /* ══════════════════════════════════════════════════════════════════════════
    DIÁRIO DO PROJETO

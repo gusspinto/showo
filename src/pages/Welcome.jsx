@@ -2,7 +2,13 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
-import { GraduationCap, BookOpen, Building2, Search, Mail, ArrowRight, CheckCircle } from 'lucide-react'
+import { SquareAcademicCapIcon as GraduationCap } from '@solar-icons/react/bold/square-academic-cap'
+import { Book2Icon as BookOpen } from '@solar-icons/react/bold/book-2'
+import { Buildings2Icon as Building2 } from '@solar-icons/react/bold/buildings-2'
+import { MagnifierIcon as Search } from '@solar-icons/react/bold/magnifier'
+import { LetterIcon as Mail } from '@solar-icons/react/bold/letter'
+import { ArrowRightIcon as ArrowRight } from '@solar-icons/react/bold/arrow-right'
+import { CheckCircleIcon as CheckCircle } from '@solar-icons/react/bold/check-circle'
 
 const ROLES = [
   { id: 'aluno',      icon: <GraduationCap size={22} />, label: 'Aluno',      color: 'var(--color-primary)',  direct: true },
@@ -50,7 +56,7 @@ export default function Welcome() {
   if (loading || !user || !needsRoleSelect) return null
 
   const C = {
-    blue:   'var(--color-primary)',
+    blue:   'var(--color-text)',
     muted:  'var(--color-text-secondary)',
     text:   'var(--color-text)',
     border: 'var(--color-border)',
@@ -117,7 +123,7 @@ export default function Welcome() {
               style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                 width: '100%', boxSizing: 'border-box',
-                background: 'var(--color-primary)', color: '#fff',
+                background: 'var(--color-text)', color: 'var(--color-bg)',
                 borderRadius: 10, padding: '13px 0',
                 fontSize: 15, fontWeight: 700, textDecoration: 'none',
                 marginBottom: 12,
@@ -154,8 +160,8 @@ export default function Welcome() {
               onClick={finishAsAluno}
               style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                width: '100%', background: 'var(--color-primary)',
-                color: '#fff', border: 'none', borderRadius: 10,
+                width: '100%', background: 'var(--color-text)',
+                color: 'var(--color-bg)', border: 'none', borderRadius: 10,
                 padding: '13px 0', fontSize: 15, fontWeight: 700,
                 cursor: 'pointer', fontFamily: 'inherit',
               }}

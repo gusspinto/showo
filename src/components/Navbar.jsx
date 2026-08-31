@@ -4,20 +4,64 @@ import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
 import { useSidebar } from '../context/SidebarContext'
 import { supabase } from '../lib/supabase'
-import { Check, X, FolderOpen, User, Settings as SettingsIcon, Shield, Globe, Trophy, LogOut, ArrowRightToLine, Bell, Eye, Target, TrendingUp, GraduationCap, UserPlus, LayoutDashboard, Plus, Compass, Sun, Moon, Sparkles, Pencil, ArrowLeft, Briefcase, Users2, Building2, Search, Star, MessageSquare, Kanban, Heart, CheckCircle, XCircle, AlignJustify, Paintbrush, Mail, ChevronRight, Monitor, Tablet, Smartphone, ListChecks, CheckCircle2, BookMarked, BookOpen, Bug } from 'lucide-react'
+import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
+import { CloseIcon as X } from '@solar-icons/react/bold/close'
+import { Folder2Icon as FolderOpen } from '@solar-icons/react/bold/folder-2'
+import { UserIcon as User } from '@solar-icons/react/bold/user'
+import { SettingsIcon as SettingsIcon } from '@solar-icons/react/bold/settings'
+import { ShieldCheckIcon as Shield } from '@solar-icons/react/bold/shield-check'
+import { GlobeIcon as Globe } from '@solar-icons/react/bold/globe'
+import { CupStarIcon as Trophy } from '@solar-icons/react/bold/cup-star'
+import { Logout2Icon as LogOut } from '@solar-icons/react/bold/logout-2'
+import { DoubleAltArrowRightIcon as ArrowRightToLine } from '@solar-icons/react/bold/double-alt-arrow-right'
+import { BellIcon as Bell } from '@solar-icons/react/bold/bell'
+import { EyeIcon as Eye } from '@solar-icons/react/bold/eye'
+import { TargetIcon as Target } from '@solar-icons/react/bold/target'
+import { GraphNewUpIcon as TrendingUp } from '@solar-icons/react/bold/graph-new-up'
+import { SquareAcademicCapIcon as GraduationCap } from '@solar-icons/react/bold/square-academic-cap'
+import { UserPlusRoundedIcon as UserPlus } from '@solar-icons/react/bold/user-plus-rounded'
+import { Widget4Icon as LayoutDashboard } from '@solar-icons/react/bold/widget-4'
+import { AddCircleIcon as Plus } from '@solar-icons/react/bold/add-circle'
+import { CompassIcon as Compass } from '@solar-icons/react/bold/compass'
+import { Sun2Icon as Sun } from '@solar-icons/react/bold/sun-2'
+import { MoonIcon as Moon } from '@solar-icons/react/bold/moon'
+import { StarsIcon as Sparkles } from '@solar-icons/react/bold/stars'
+import { Pen2Icon as Pencil } from '@solar-icons/react/bold/pen-2'
+import { ArrowLeftIcon as ArrowLeft } from '@solar-icons/react/bold/arrow-left'
+import { CaseIcon as Briefcase } from '@solar-icons/react/bold/case'
+import { UsersGroupTwoRoundedIcon as Users2 } from '@solar-icons/react/bold/users-group-two-rounded'
+import { Buildings2Icon as Building2 } from '@solar-icons/react/bold/buildings-2'
+import { MagnifierIcon as Search } from '@solar-icons/react/bold/magnifier'
+import { StarIcon as Star } from '@solar-icons/react/bold/star'
+import { ChatRoundLineIcon as MessageSquare } from '@solar-icons/react/bold/chat-round-line'
+import { Widget5Icon as Kanban } from '@solar-icons/react/bold/widget-5'
+import { HeartIcon as Heart } from '@solar-icons/react/bold/heart'
+import { CheckCircleIcon as CheckCircle } from '@solar-icons/react/bold/check-circle'
+import { CloseCircleIcon as XCircle } from '@solar-icons/react/bold/close-circle'
+import { AlignHorizontalSpacingIcon as AlignJustify } from '@solar-icons/react/bold/align-horizontal-spacing'
+import { PaintRollerIcon as Paintbrush } from '@solar-icons/react/bold/paint-roller'
+import { LetterIcon as Mail } from '@solar-icons/react/bold/letter'
+import { AltArrowRightIcon as ChevronRight } from '@solar-icons/react/bold/alt-arrow-right'
+import { MonitorIcon as Monitor } from '@solar-icons/react/bold/monitor'
+import { TabletIcon as Tablet } from '@solar-icons/react/bold/tablet'
+import { SmartphoneIcon as Smartphone } from '@solar-icons/react/bold/smartphone'
+import { ChecklistIcon as ListChecks } from '@solar-icons/react/bold/checklist'
+import { CheckCircleIcon as CheckCircle2 } from '@solar-icons/react/bold/check-circle'
+import { BookBookmarkIcon as BookMarked } from '@solar-icons/react/bold/book-bookmark'
+import { Book2Icon as BookOpen } from '@solar-icons/react/bold/book-2'
+import { BugIcon as Bug } from '@solar-icons/react/bold/bug'
 
 // Strip emoji characters from notification messages coming from the DB
 function stripEmoji(str) {
   if (!str) return str
   return str.replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27FF}\u{2900}-\u{297F}\u{1F300}-\u{1F9FF}\u{FE00}-\u{FEFF}]/gu, '').replace(/\s{2,}/g, ' ').trim()
 }
-import FeedbackButton from './FeedbackButton'
 import './Navbar.css'
 
 const C = {
   bg: 'var(--color-sidebar-bg)',
   border: 'var(--color-border)',
-  blue: 'var(--color-primary)',
+  blue: 'var(--color-text)',
   muted: 'var(--color-text-secondary)',
   text: 'var(--color-text)',
 }
@@ -348,11 +392,11 @@ function InviteInbox({ userId, sidebar = false, collapsed = false }) {
         onClick={() => setOpen(o => !o)}
         style={{
           position: 'relative',
-          background: open ? 'rgba(27,120,247,0.13)' : 'transparent',
+          background: open ? 'color-mix(in srgb, var(--color-text) 13%, transparent)' : 'transparent',
           border: 'none',
           borderRadius: 8, width: 44, height: 44,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          cursor: 'pointer', color: open ? 'var(--color-primary)' : 'var(--color-text-secondary)',
+          cursor: 'pointer', color: open ? 'var(--color-text)' : 'var(--color-text-secondary)',
           transition: 'background 0.13s, color 0.13s', flexShrink: 0,
         }}
         onMouseEnter={e => { if (!open) { e.currentTarget.style.background = 'var(--color-surface-hover)'; e.currentTarget.style.color = 'var(--color-text)' } }}
@@ -402,7 +446,7 @@ function InviteInbox({ userId, sidebar = false, collapsed = false }) {
                   const isActing = !!acting[invite.id]
                   return (
                     <div key={invite.id} style={{
-                      background: 'rgba(27,120,247,0.05)', border: '1px solid rgba(27,120,247,0.15)',
+                      background: 'color-mix(in srgb, var(--color-text) 5%, transparent)', border: '1px solid color-mix(in srgb, var(--color-text) 15%, transparent)',
                       borderRadius: 10, padding: '12px 14px', marginBottom: 6,
                     }}>
                       <p style={{ margin: '0 0 2px', fontSize: 14, fontWeight: 700, color: C.text }}>{invite.projectName}</p>
@@ -410,7 +454,7 @@ function InviteInbox({ userId, sidebar = false, collapsed = false }) {
                       <div style={{ display: 'flex', gap: 6 }}>
                         <button
                           onClick={() => respond(invite, 'accepted')} disabled={isActing}
-                          style={{ flex: 1, padding: '7px 0', background: 'var(--color-primary)', border: 'none', borderRadius: 7, color: '#fff', fontSize: 12, fontWeight: 700, cursor: isActing ? 'default' : 'pointer', fontFamily: 'inherit' }}
+                          style={{ flex: 1, padding: '7px 0', background: 'var(--color-text)', border: 'none', borderRadius: 7, color: '#fff', fontSize: 12, fontWeight: 700, cursor: isActing ? 'default' : 'pointer', fontFamily: 'inherit' }}
                         >{acting[invite.id] === 'accepted' ? '...' : <><Check size={12} style={{ verticalAlign: 'middle', marginRight: 3 }} />Aceitar</>}</button>
                         <button
                           onClick={() => respond(invite, 'declined')} disabled={isActing}
@@ -502,9 +546,9 @@ function InviteInbox({ userId, sidebar = false, collapsed = false }) {
                     }}
                     style={{
                       borderRadius: 10, padding: '10px 12px', marginBottom: 4,
-                      background: n.anyUnread ? (roleColor ? `${roleColor}0d` : 'rgba(27,120,247,0.05)') : 'transparent',
-                      border: `1px solid ${n.anyUnread ? (roleColor ? `${roleColor}20` : 'rgba(27,120,247,0.12)') : 'transparent'}`,
-                      borderLeft: n.anyUnread ? `3px solid ${roleColor || 'rgba(27,120,247,0.5)'}` : '3px solid transparent',
+                      background: n.anyUnread ? `color-mix(in srgb, ${roleColor || 'var(--color-text)'} 5%, transparent)` : 'transparent',
+                      border: `1px solid ${n.anyUnread ? `color-mix(in srgb, ${roleColor || 'var(--color-text)'} 12%, transparent)` : 'transparent'}`,
+                      borderLeft: n.anyUnread ? `3px solid ${roleColor || 'color-mix(in srgb, var(--color-text) 50%, transparent)'}` : '3px solid transparent',
                       cursor: n.project_slug ? 'pointer' : 'default',
                       display: 'flex', alignItems: 'flex-start', gap: 10,
                       transition: 'background 0.12s',
@@ -566,7 +610,7 @@ function AvatarCircle({ avatarUrl, initial, size = 28, fontSize = 13 }) {
   ) : (
     <div style={{
       width: size, height: size, borderRadius: '50%',
-      background: 'var(--color-primary)',
+      background: 'var(--color-text)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       fontSize, fontWeight: 700, color: '#fff', flexShrink: 0,
       userSelect: 'none',
@@ -622,7 +666,7 @@ function UserChip({ user, profile, onClick, onProfile, onSettings, onSignOut, on
                 <button
                   onClick={() => { onCreateProject(); setOpen(false) }}
                   style={{ ...dropItemStyle, color: C.blue }}
-                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(27,120,247,0.08)'}
+                  onMouseEnter={e => e.currentTarget.style.background = 'color-mix(in srgb, var(--color-text) 8%, transparent)'}
                   onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                 >
                   <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -666,7 +710,7 @@ function UserChip({ user, profile, onClick, onProfile, onSettings, onSignOut, on
               onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.08)'}
               onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
             >
-              Sair
+              <LogOut size={18} /> Sair
             </button>
           </div>
         </>
@@ -691,9 +735,6 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
   const { extras } = useSidebar()
   const [open, setOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
-  // Feedback anónimo — já não tem botão flutuante próprio, abre a partir de
-  // uma entrada normal na sidebar (desktop) e no drawer (mobile).
-  const [feedbackOpen, setFeedbackOpen] = useState(false)
   // Keeps the mobile menu sheet mounted for one extra animation cycle after
   // menuOpen flips to false, so the closing slide-down/fade can actually play
   // instead of the sheet just vanishing — every existing setMenuOpen(false)
@@ -849,7 +890,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   </button>
                   <button className="mobile-drawer-btn" onClick={() => { navigate('/mensagens'); setOpen(false) }}>
                     <MessageSquare size={16} /> Mensagens
-                    {unreadMsgs > 0 && <span style={{ marginLeft: 'auto', background: 'var(--color-primary)', color: '#fff', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{unreadMsgs > 9 ? '9+' : unreadMsgs}</span>}
+                    {unreadMsgs > 0 && <span style={{ marginLeft: 'auto', background: 'var(--color-text)', color: 'var(--color-bg)', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{unreadMsgs > 9 ? '9+' : unreadMsgs}</span>}
                   </button>
                 </>
               ) : (
@@ -862,7 +903,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   )}
                   <button className="mobile-drawer-btn" onClick={() => { navigate('/mensagens'); setOpen(false) }}>
                     <MessageSquare size={16} /> Mensagens
-                    {unreadMsgs > 0 && <span style={{ marginLeft: 'auto', background: 'var(--color-primary)', color: '#fff', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{unreadMsgs > 9 ? '9+' : unreadMsgs}</span>}
+                    {unreadMsgs > 0 && <span style={{ marginLeft: 'auto', background: 'var(--color-text)', color: 'var(--color-bg)', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{unreadMsgs > 9 ? '9+' : unreadMsgs}</span>}
                   </button>
                 </>
               )}
@@ -873,7 +914,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               {/* Project management extras */}
               {extras?.type === 'project' && (
                 <>
-                  <span className="mob-drawer-label" style={{ color: 'var(--color-primary)' }}>Gerir projeto</span>
+                  <span className="mob-drawer-label" style={{ color: 'var(--color-text)' }}>Gerir projeto</span>
                   {extras.showBack && (
                     <button className="mobile-drawer-btn" onClick={() => { navigate(`/projeto/${extras.slug}`); setOpen(false) }}>
                       <ArrowLeft size={16} /> Ver projeto
@@ -905,7 +946,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                     </button>
                   )}
                   {extras.onTogglePublicView && (
-                    <button className="mobile-drawer-btn" style={{ color: extras.viewAsPublic ? 'var(--color-primary)' : undefined }}
+                    <button className="mobile-drawer-btn" style={{ color: extras.viewAsPublic ? 'var(--color-text)' : undefined }}
                       onClick={() => { extras.onTogglePublicView(); setOpen(false) }}>
                       <Globe size={16} /> {extras.viewAsPublic ? 'Sair da preview' : 'Preview visitante'}
                     </button>
@@ -942,7 +983,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               >Entrar</button>
               <button
                 onClick={() => { navigate('/register'); setOpen(false) }}
-                style={{ flex: 1, padding: '12px 0', background: 'var(--color-primary)', border: 'none', borderRadius: 10, color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 16px rgba(27,120,247,0.3)' }}
+                style={{ flex: 1, padding: '12px 0', background: 'var(--color-text)', border: 'none', borderRadius: 10, color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 16px color-mix(in srgb, var(--color-text) 30%, transparent)' }}
               >Criar conta</button>
             </div>
           )}
@@ -969,7 +1010,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
             className="mob-drawer-trigger"
             onClick={() => setMenuOpen(o => !o)}
             aria-label="Abrir menu"
-            style={{ color: menuOpen ? 'var(--color-primary)' : undefined, borderColor: menuOpen ? 'var(--color-primary)' : undefined }}
+            style={{ color: menuOpen ? 'var(--color-text)' : undefined, borderColor: menuOpen ? 'var(--color-text)' : undefined }}
           >
             <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <rect x="3" y="3" width="18" height="18" rx="2" />
@@ -1045,7 +1086,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   data-tour="preview"
                   onClick={() => setProjMenuOpen(o => !o)}
                   aria-label="Gerir projeto"
-                  style={{ background: projMenuOpen ? '#1564d4' : undefined }}
+                  style={{ background: projMenuOpen ? 'color-mix(in srgb, var(--color-text) 85%, transparent)' : undefined }}
                 >
                   <Paintbrush size={18} strokeWidth={2} />
                 </button>
@@ -1105,7 +1146,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                     padding: '8px 16px', color: '#fff', fontSize: 14, fontWeight: 600,
                     cursor: 'pointer', fontFamily: 'inherit', transition: 'background 0.15s', whiteSpace: 'nowrap',
                   }}
-                  onMouseEnter={e => e.target.style.background = '#1564d4'}
+                  onMouseEnter={e => e.target.style.background = 'color-mix(in srgb, var(--color-text) 85%, transparent)'}
                   onMouseLeave={e => e.target.style.background = C.blue}
                 >
                   Criar conta
@@ -1121,12 +1162,12 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               onClick={() => navigate('/novo')}
               aria-label="Criar projeto"
               style={{
-                background: 'var(--color-primary)',
+                background: 'var(--color-text)',
                 border: 'none',
                 borderRadius: 8, width: 38, height: 38,
                 flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                 cursor: 'pointer', padding: 0, flexShrink: 0,
-                boxShadow: '0 4px 12px rgba(27,120,247,0.35)',
+                boxShadow: '0 4px 12px color-mix(in srgb, var(--color-text) 35%, transparent)',
               }}
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -1141,7 +1182,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               className="ham-btn" onClick={() => setOpen(o => !o)} aria-label="Menu"
               style={{
                 background: 'transparent',
-                border: `1px solid ${open ? 'var(--color-primary)' : C.border}`,
+                border: `1px solid ${open ? 'var(--color-text)' : C.border}`,
                 borderRadius: 8, width: 38, height: 38,
                 flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                 gap: 5, cursor: 'pointer', padding: 0, transition: 'border-color 0.2s', flexShrink: 0,
@@ -1206,7 +1247,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               </button>
             )}
             {extras.onTogglePublicView && (
-              <button className="mob-nav-btn" style={{ color: extras.viewAsPublic ? 'var(--color-primary)' : undefined }}
+              <button className="mob-nav-btn" style={{ color: extras.viewAsPublic ? 'var(--color-text)' : undefined }}
                 onClick={() => { extras.onTogglePublicView(); setProjMenuOpen(false) }}>
                 <Globe size={18} /> {extras.viewAsPublic ? 'Sair da preview' : 'Preview visitante'}
               </button>
@@ -1242,7 +1283,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
         )}
         {isSchoolAccount && showLabels && (
           <div style={{ padding: '0 16px 8px' }}>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 600, color: 'var(--color-primary)', background: 'color-mix(in srgb, var(--color-primary) 12%, transparent)', borderRadius: 6, padding: '3px 8px', letterSpacing: '0.02em' }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 600, color: 'var(--color-text)', background: 'color-mix(in srgb, var(--color-text) 12%, transparent)', borderRadius: 6, padding: '3px 8px', letterSpacing: '0.02em' }}>
               <GraduationCap size={12} strokeWidth={2.5} /> Modo Escola
             </span>
           </div>
@@ -1275,7 +1316,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                 style={{ position: 'relative' }}>
                 <MessageSquare size={16} />{!collapsed && showLabels && <span>Mensagens</span>}
                 {!collapsed && showLabels && unreadMsgs > 0 && (
-                  <span style={{ marginLeft: 'auto', background: 'var(--color-primary)', color: '#fff', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>
+                  <span style={{ marginLeft: 'auto', background: 'var(--color-text)', color: 'var(--color-bg)', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>
                     {unreadMsgs > 9 ? '9+' : unreadMsgs}
                   </span>
                 )}
@@ -1296,7 +1337,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                 style={{ position: 'relative' }}>
                 <MessageSquare size={16} />{!collapsed && showLabels && <span>Mensagens</span>}
                 {!collapsed && showLabels && unreadMsgs > 0 && (
-                  <span style={{ marginLeft: 'auto', background: 'var(--color-primary)', color: '#fff', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>
+                  <span style={{ marginLeft: 'auto', background: 'var(--color-text)', color: 'var(--color-bg)', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>
                     {unreadMsgs > 9 ? '9+' : unreadMsgs}
                   </span>
                 )}
@@ -1331,7 +1372,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                     style={{ position: 'relative' }}>
                     <MessageSquare size={16} />{!collapsed && showLabels && <span>Mensagens</span>}
                     {!collapsed && showLabels && unreadMsgs > 0 && (
-                      <span style={{ marginLeft: 'auto', background: 'var(--color-primary)', color: '#fff', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>
+                      <span style={{ marginLeft: 'auto', background: 'var(--color-text)', color: 'var(--color-bg)', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>
                         {unreadMsgs > 9 ? '9+' : unreadMsgs}
                       </span>
                     )}
@@ -1364,19 +1405,6 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
 
         <div className="sb-divider" />
 
-        {/* Feedback — já não é um botão flutuante por cima do conteúdo em
-            todos os ecrãs; passou a um ícone pequeno aqui, disponível a
-            qualquer papel e mesmo sem conta (não exige login). Só o ícone,
-            nunca com texto ao lado — o mesmo botão pequeno que Definições/
-            Tema já usam, não uma linha da lista. */}
-        <div style={{ padding: '2px 10px 4px', display: 'flex', justifyContent: collapsed ? 'center' : 'flex-start' }}>
-          <button className="sb-action-btn" onClick={() => setFeedbackOpen(true)} title="Reportar um problema" aria-label="Reportar um problema">
-            <Bug size={16} />
-          </button>
-        </div>
-
-        <div className="sb-divider" />
-
         {/* Bottom — user section */}
         <div className="sb-bottom">
           {user ? (
@@ -1395,6 +1423,13 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                     {showLabels && <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{getDisplayName(user)}</span>}
                   </button>
                 )}
+
+                {/* Feedback — ao lado das notificações (não mais uma secção
+                    sozinha, à parte, com dois separadores a rodeá-la). Fica
+                    à esquerda do sino em qualquer estado da sidebar. */}
+                <button className="sb-action-btn" onClick={() => navigate(`/feedback?from=${encodeURIComponent(location.pathname)}`)} title="Reportar um problema" aria-label="Reportar um problema">
+                  <Bug size={16} />
+                </button>
 
                 {/* Notificações — stays visible when collapsed */}
                 <InviteInbox userId={user.id} sidebar={true} collapsed={collapsed} />
@@ -1594,7 +1629,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                 <>
                   <span className="mob-nav-section-label">Ações</span>
                   <button className="mob-nav-btn" onClick={() => { setMenuOpen(false); navigate('/novo') }}>
-                    Criar projeto
+                    <Plus size={18} /> Criar projeto
                   </button>
                   <div className="mob-nav-divider" />
                 </>
@@ -1607,7 +1642,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                 <>
                   <button className={`mob-nav-btn${isActive('/admin') ? ' active' : ''}`} style={{ color: 'var(--color-accent)' }}
                     onClick={() => { navigate('/admin'); setMenuOpen(false) }}>
-                    Painel de Admin
+                    <Shield size={18} /> Painel de Admin
                   </button>
                   <div className="mob-nav-divider" />
                 </>
@@ -1617,39 +1652,39 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               {isRecruiter ? (
                 <>
                   <button className={`mob-nav-btn${isActive('/dashboard') ? ' active' : ''}`} onClick={() => { navigate('/dashboard'); setMenuOpen(false) }}>
-                    Dashboard
+                    <LayoutDashboard size={18} /> Dashboard
                   </button>
                   <button className={`mob-nav-btn${isActive('/explorar') ? ' active' : ''}`} onClick={() => { navigate('/explorar'); setMenuOpen(false) }}>
-                    Explorar
+                    <Compass size={18} /> Explorar
                   </button>
                   <button className={`mob-nav-btn${isActive('/mensagens') ? ' active' : ''}`} onClick={() => { navigate('/mensagens'); setMenuOpen(false) }}>
-                    Mensagens
-                    {unreadMsgs > 0 && <span style={{ marginLeft: 'auto', background: 'var(--color-primary)', color: '#fff', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{unreadMsgs > 9 ? '9+' : unreadMsgs}</span>}
+                    <MessageSquare size={18} /> Mensagens
+                    {unreadMsgs > 0 && <span style={{ marginLeft: 'auto', background: 'var(--color-text)', color: 'var(--color-bg)', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{unreadMsgs > 9 ? '9+' : unreadMsgs}</span>}
                   </button>
                 </>
               ) : isTeacher ? (
                 <>
                   {user && (
                     <button className={`mob-nav-btn${isActive('/dashboard') ? ' active' : ''}`} onClick={() => { navigate('/dashboard'); setMenuOpen(false) }}>
-                      Dashboard
+                      <LayoutDashboard size={18} /> Dashboard
                     </button>
                   )}
                   <button className={`mob-nav-btn${isActive('/turmas') ? ' active' : ''}`} onClick={() => { navigate('/turmas'); setMenuOpen(false) }}>
-                    Turmas
+                    <Users2 size={18} /> Turmas
                   </button>
                   <button className={`mob-nav-btn${isActive('/mensagens') ? ' active' : ''}`} onClick={() => { navigate('/mensagens'); setMenuOpen(false) }}>
-                    Mensagens
-                    {unreadMsgs > 0 && <span style={{ marginLeft: 'auto', background: 'var(--color-primary)', color: '#fff', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{unreadMsgs > 9 ? '9+' : unreadMsgs}</span>}
+                    <MessageSquare size={18} /> Mensagens
+                    {unreadMsgs > 0 && <span style={{ marginLeft: 'auto', background: 'var(--color-text)', color: 'var(--color-bg)', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{unreadMsgs > 9 ? '9+' : unreadMsgs}</span>}
                   </button>
                   <button className={`mob-nav-btn${isActive('/explorar') ? ' active' : ''}`} onClick={() => { navigate('/explorar'); setMenuOpen(false) }}>
-                    Explorar
+                    <Compass size={18} /> Explorar
                   </button>
                 </>
               ) : (
                 <>
                   {user && (
                     <button className={`mob-nav-btn${isActive('/dashboard') ? ' active' : ''}`} onClick={() => { navigate('/dashboard'); setMenuOpen(false) }}>
-                      Dashboard
+                      <LayoutDashboard size={18} /> Dashboard
                     </button>
                   )}
                   {/* Visitante sem conta: o menu é o mapa do site — a explicação
@@ -1662,29 +1697,29 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                       isso. */}
                   {!user && (
                     <button className={`mob-nav-btn${isActive('/aprende') ? ' active' : ''}`} onClick={() => { navigate('/aprende'); setMenuOpen(false) }}>
-                      Aprende a usar
+                      <BookOpen size={18} /> Aprende a usar
                     </button>
                   )}
                   <button className={`mob-nav-btn${isActive('/explorar') ? ' active' : ''}`} onClick={() => { navigate('/explorar'); setMenuOpen(false) }}>
-                    Explorar
+                    <Compass size={18} /> Explorar
                   </button>
                   {!user && (
                     <button className={`mob-nav-btn${isActive('/pricing') ? ' active' : ''}`} onClick={() => { navigate('/pricing'); setMenuOpen(false) }}>
-                      Planos
+                      <Sparkles size={18} /> Planos
                     </button>
                   )}
                   {user && (
                     <>
                       <span className="mob-nav-section-label">Comunidade</span>
                       <button className={`mob-nav-btn${isActive('/mensagens') ? ' active' : ''}`} onClick={() => { navigate('/mensagens'); setMenuOpen(false) }}>
-                        Mensagens
-                        {unreadMsgs > 0 && <span style={{ marginLeft: 'auto', background: 'var(--color-primary)', color: '#fff', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{unreadMsgs > 9 ? '9+' : unreadMsgs}</span>}
+                        <MessageSquare size={18} /> Mensagens
+                        {unreadMsgs > 0 && <span style={{ marginLeft: 'auto', background: 'var(--color-text)', color: 'var(--color-bg)', borderRadius: 99, minWidth: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{unreadMsgs > 9 ? '9+' : unreadMsgs}</span>}
                       </button>
                       <button className={`mob-nav-btn${isActive('/pricing') ? ' active' : ''}`} onClick={() => { navigate('/pricing'); setMenuOpen(false) }}>
-                        Planos
+                        <Sparkles size={18} /> Planos
                       </button>
                       <button className={`mob-nav-btn${isActive('/aprende') ? ' active' : ''}`} onClick={() => { navigate('/aprende'); setMenuOpen(false) }}>
-                        Aprende a usar
+                        <BookOpen size={18} /> Aprende a usar
                       </button>
                     </>
                   )}
@@ -1698,14 +1733,14 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                 <>
                   {isAdmin && (
                     <button className="mob-nav-btn" onClick={() => { navigate('/admin'); setMenuOpen(false) }} style={{ color: 'var(--color-accent)' }}>
-                      Administração
+                      <Shield size={18} /> Administração
                     </button>
                   )}
                   <button className={`mob-nav-btn${isActive('/settings') ? ' active' : ''}`} onClick={() => { navigate('/settings'); setMenuOpen(false) }}>
-                    Definições
+                    <SettingsIcon size={18} /> Definições
                   </button>
                   <button className="mob-nav-btn danger" onClick={() => { handleSignOut(); setMenuOpen(false) }}>
-                    Sair
+                    <LogOut size={18} /> Sair
                   </button>
                 </>
               )}
@@ -1722,7 +1757,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                         <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email}</div>
                       </div>
                     </button>
-                    <button className="mob-foot-theme" onClick={() => { setFeedbackOpen(true); setMenuOpen(false) }} aria-label="Reportar um problema" title="Feedback">
+                    <button className="mob-foot-theme" onClick={() => { setMenuOpen(false); navigate(`/feedback?from=${encodeURIComponent(location.pathname)}`) }} aria-label="Reportar um problema" title="Feedback">
                       <Bug size={18} />
                     </button>
                     <button className="mob-foot-theme" onClick={toggleTheme} aria-label="Alternar tema">
@@ -1733,7 +1768,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '2px 8px' }}>
                     <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text-secondary)' }}>Aspeto</span>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                      <button className="mob-foot-theme" onClick={() => { setFeedbackOpen(true); setMenuOpen(false) }} aria-label="Reportar um problema" title="Feedback">
+                      <button className="mob-foot-theme" onClick={() => { setMenuOpen(false); navigate(`/feedback?from=${encodeURIComponent(location.pathname)}`) }} aria-label="Reportar um problema" title="Feedback">
                         <Bug size={18} />
                       </button>
                       <button className="mob-foot-theme" onClick={toggleTheme} aria-label="Alternar tema">
@@ -1748,8 +1783,6 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
           </div>
         </>
       )}
-
-      <FeedbackButton open={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
     </>
   )
 }

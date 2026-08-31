@@ -1,5 +1,11 @@
 import { useState, useMemo } from 'react'
-import { X, CheckCircle, Flame, Sparkles, BookOpen, ChevronLeft, ChevronRight } from 'lucide-react'
+import { CloseIcon as X } from '@solar-icons/react/bold/close'
+import { CheckCircleIcon as CheckCircle } from '@solar-icons/react/bold/check-circle'
+import { FlameIcon as Flame } from '@solar-icons/react/bold/flame'
+import { StarsIcon as Sparkles } from '@solar-icons/react/bold/stars'
+import { Book2Icon as BookOpen } from '@solar-icons/react/bold/book-2'
+import { AltArrowLeftIcon as ChevronLeft } from '@solar-icons/react/bold/alt-arrow-left'
+import { AltArrowRightIcon as ChevronRight } from '@solar-icons/react/bold/alt-arrow-right'
 import { supabase } from '../../lib/supabase'
 import { KIND_BY_ID, computeEngagementSignal, weekStartISO } from '../../lib/journal'
 

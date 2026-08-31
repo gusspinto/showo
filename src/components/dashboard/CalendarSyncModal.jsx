@@ -1,5 +1,9 @@
 import { useState, useEffect } from 'react'
-import { Copy, Check, ExternalLink, Link as LinkIcon, RefreshCw } from 'lucide-react'
+import { CopyIcon as Copy } from '@solar-icons/react/bold/copy'
+import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
+import { SquareArrowRightUpIcon as ExternalLink } from '@solar-icons/react/bold/square-arrow-right-up'
+import { LinkIcon as LinkIcon } from '@solar-icons/react/bold/link'
+import { RefreshCircleIcon as RefreshCw } from '@solar-icons/react/bold/refresh-circle'
 import { supabase } from '../../lib/supabase'
 import { Modal, Button } from '../ui'
 

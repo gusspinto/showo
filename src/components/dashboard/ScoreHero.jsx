@@ -1,5 +1,8 @@
 import { useState } from 'react'
-import { TrendingUp, Zap, Info, X } from 'lucide-react'
+import { GraphNewUpIcon as TrendingUp } from '@solar-icons/react/bold/graph-new-up'
+import { LightningIcon as Zap } from '@solar-icons/react/bold/lightning'
+import { InfoCircleIcon as Info } from '@solar-icons/react/bold/info-circle'
+import { CloseIcon as X } from '@solar-icons/react/bold/close'
 import { calculatePotential } from '../../lib/score'
 
 const DIMS = [

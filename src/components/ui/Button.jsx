@@ -8,8 +8,8 @@ const sizes = {
 
 const variants = {
   primary: (h) => ({
-    background: h ? 'var(--color-primary-hover)' : 'var(--color-primary)',
-    color: '#fff',
+    background: h ? 'color-mix(in srgb, var(--color-text) 85%, transparent)' : 'var(--color-text)',
+    color: 'var(--color-bg)',
     border: 'none',
     boxShadow: h ? 'var(--shadow-md)' : 'var(--shadow-sm)',
   }),

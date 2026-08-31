@@ -4,7 +4,30 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
 import { Navbar } from '../components/Navbar'
-import { Loader, Check, X, AlertTriangle, Camera, ArrowLeft, GraduationCap, BookOpen, Search, Building2, Lock, Briefcase, Sun, Moon, BarChart2, Bell, Mail, Megaphone, Rocket, FolderOpen, Eye, EyeOff, Globe, Shield, CreditCard } from 'lucide-react'
+import { RefreshCircleIcon as Loader } from '@solar-icons/react/bold/refresh-circle'
+import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
+import { CloseIcon as X } from '@solar-icons/react/bold/close'
+import { DangerTriangleIcon as AlertTriangle } from '@solar-icons/react/bold/danger-triangle'
+import { CameraIcon as Camera } from '@solar-icons/react/bold/camera'
+import { ArrowLeftIcon as ArrowLeft } from '@solar-icons/react/bold/arrow-left'
+import { SquareAcademicCapIcon as GraduationCap } from '@solar-icons/react/bold/square-academic-cap'
+import { Book2Icon as BookOpen } from '@solar-icons/react/bold/book-2'
+import { MagnifierIcon as Search } from '@solar-icons/react/bold/magnifier'
+import { Buildings2Icon as Building2 } from '@solar-icons/react/bold/buildings-2'
+import { LockKeyholeIcon as Lock } from '@solar-icons/react/bold/lock-keyhole'
+import { Sun2Icon as Sun } from '@solar-icons/react/bold/sun-2'
+import { MoonIcon as Moon } from '@solar-icons/react/bold/moon'
+import { Chart2Icon as BarChart2 } from '@solar-icons/react/bold/chart-2'
+import { BellIcon as Bell } from '@solar-icons/react/bold/bell'
+import { LetterIcon as Mail } from '@solar-icons/react/bold/letter'
+import { VolumeLoudIcon as Megaphone } from '@solar-icons/react/bold/volume-loud'
+import { RocketIcon as Rocket } from '@solar-icons/react/bold/rocket'
+import { Folder2Icon as FolderOpen } from '@solar-icons/react/bold/folder-2'
+import { EyeIcon as Eye } from '@solar-icons/react/bold/eye'
+import { EyeClosedIcon as EyeOff } from '@solar-icons/react/bold/eye-closed'
+import { GlobeIcon as Globe } from '@solar-icons/react/bold/globe'
+import { ShieldCheckIcon as Shield } from '@solar-icons/react/bold/shield-check'
+import { CardIcon as CreditCard } from '@solar-icons/react/bold/card'
 import { CropModal } from '../components/CropModal'
 import { containsProfanity } from '../lib/profanity'
 import SkillsPicker from '../components/SkillsPicker'
@@ -177,7 +200,6 @@ export default function Settings() {
   const [avatarUploading, setAvatarUploading] = useState(false)
   const [avatarCropFile, setAvatarCropFile] = useState(null)
   const avatarInputRef = useRef(null)
-  const [availableForWork, setAvailableForWork] = useState(false)
   const [monthlyReportOptIn, setMonthlyReportOptIn] = useState(false)
   // Guardado no momento em que se toca, e não no botão "Guardar" lá em baixo:
   // é um interruptor de um email, não parte do perfil que se edita em bloco.
@@ -219,14 +241,13 @@ export default function Settings() {
   useEffect(() => {
     if (!user) return
     setFullName(user.user_metadata?.full_name ?? '')
-    supabase.from('profiles').select('username, bio, role, avatar_url, available_for_work, monthly_report_opt_in, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size, skills, area, phone, notify_newsletter, notify_marketing, notify_product_updates, notify_project_activity, profile_visibility, show_email_publicly, weekly_recap_email_opt_in').eq('id', user.id).single().then(({ data }) => {
+    supabase.from('profiles').select('username, bio, role, avatar_url, monthly_report_opt_in, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size, skills, area, phone, notify_newsletter, notify_marketing, notify_product_updates, notify_project_activity, profile_visibility, show_email_publicly, weekly_recap_email_opt_in').eq('id', user.id).single().then(({ data }) => {
       if (data) {
         setUsername(data.username ?? '')
         setOriginalUsername(data.username ?? '')
         setBio(data.bio ?? '')
         setRole(data.role ?? 'aluno')
         setAvatarUrl(data.avatar_url ?? '')
-        setAvailableForWork(data.available_for_work ?? false)
         setMonthlyReportOptIn(data.monthly_report_opt_in ?? false)
         setWeeklyRecapEmail(data.weekly_recap_email_opt_in ?? true)
         setCompany(data.company ?? '')
@@ -336,7 +357,7 @@ export default function Settings() {
         p_bio:                     bio.trim() || null,
         p_phone:                   phone.trim() || null,
         p_role:                    safeRole,
-        p_available_for_work:      availableForWork,
+        p_available_for_work:      false,
         p_skills:                  (role === 'aluno' || role === 'professor') ? skills : [],
         p_area:                    role === 'aluno' ? (area || null) : null,
         p_monthly_report_opt_in:   role === 'professor' ? monthlyReportOptIn : false,
@@ -581,26 +602,6 @@ export default function Settings() {
                     </div>
                   )}
 
-                  {role === 'aluno' && (
-                    <div className="settings-field">
-                      <label className="settings-label">Disponibilidade</label>
-                      <button type="button" onClick={() => setAvailableForWork(v => !v)} className={`settings-toggle${availableForWork ? ' active' : ''}`}>
-                        <div className={`settings-toggle-track ${availableForWork ? 'on' : 'off'}`}>
-                          <div className={`settings-toggle-knob ${availableForWork ? 'on' : 'off'}`} />
-                        </div>
-                        <div>
-                          <div className="settings-toggle-title" style={{ color: availableForWork ? 'var(--color-success)' : undefined }}>
-                            <Briefcase size={14} className="flex-shrink-0" />
-                            {availableForWork ? 'Disponível para estágio' : 'Não disponível para estágio'}
-                          </div>
-                          <div className="settings-toggle-desc">
-                            {availableForWork ? 'O teu perfil aparece nos resultados de recrutadores e empresas.' : 'Ativa para aparecer em pesquisas de recrutadores.'}
-                          </div>
-                        </div>
-                      </button>
-                    </div>
-                  )}
-
                   {/* Recap semanal — só quem tem carreira no plano (Launch ou
                       conta de escola). Quem não tem não vê um interruptor
                       morto: vê a funcionalidade na página de planos. */}
@@ -737,7 +738,7 @@ export default function Settings() {
                     ].map(v => (
                       <button key={v.value} type="button" onClick={() => setProfileVisibility(v.value)}
                         className={`settings-visibility-option${profileVisibility === v.value ? ' active' : ''}`}>
-                        <div className="settings-visibility-icon" style={{ color: profileVisibility === v.value ? 'var(--color-accent)' : undefined }}>{v.icon}</div>
+                        <div className="settings-visibility-icon" style={{ color: profileVisibility === v.value ? 'var(--color-text)' : undefined }}>{v.icon}</div>
                         <div>
                           <div className="text-base font-semibold">{v.label}</div>
                           <div className="text-sm text-muted">{v.desc}</div>
@@ -839,32 +840,34 @@ export default function Settings() {
                   <p className="text-base text-muted mb-3" style={{ lineHeight: 1.65 }}>Terminar sessão em todos os dispositivos.</p>
                   <button onClick={async () => { await supabase.auth.signOut(); navigate('/') }} className="settings-danger-btn">Terminar sessão</button>
                 </SectionCard>
-                {isSchoolAccount && (
-                  <SectionCard title="Conta escolar">
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <SectionCard title={isSchoolAccount ? 'Conta escolar' : 'Exportar projetos'}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                    {isSchoolAccount && (
                       <div style={{
                         display: 'flex', alignItems: 'center', gap: 10,
-                        background: 'rgba(43,126,245,0.07)', border: '1px solid rgba(43,126,245,0.25)',
+                        background: 'var(--color-surface-hover)', border: '1px solid var(--color-border)',
                         borderRadius: 10, padding: '12px 14px',
-                        fontSize: 13, color: 'var(--color-primary)', fontWeight: 600,
+                        fontSize: 13, color: 'var(--color-text)', fontWeight: 600,
                       }}>
                         <GraduationCap size={16} />
                         Esta é uma conta escolar. O teu plano é gerido pela instituição.
                       </div>
-                      <p className="text-base text-muted" style={{ lineHeight: 1.65, margin: 0 }}>
-                        Podes copiar os teus projetos escolares para uma conta pessoal Showo — os originais ficam intactos nesta conta.
-                      </p>
-                      <button
-                        onClick={() => setShowExportModal(true)}
-                        className="settings-save-btn"
-                        style={{ alignSelf: 'flex-start' }}
-                      >
-                        Exportar projetos para conta pessoal
-                      </button>
-                    </div>
-                    {showExportModal && <ExportProjectsModal onClose={() => setShowExportModal(false)} />}
-                  </SectionCard>
-                )}
+                    )}
+                    <p className="text-base text-muted" style={{ lineHeight: 1.65, margin: 0 }}>
+                      {isSchoolAccount
+                        ? 'Podes copiar os teus projetos desta conta escolar para uma conta pessoal Showo — os originais ficam intactos nesta conta.'
+                        : 'Podes copiar os teus projetos já feitos para uma conta escolar ou para qualquer outra conta Showo — os originais ficam intactos nesta conta.'}
+                    </p>
+                    <button
+                      onClick={() => setShowExportModal(true)}
+                      className="settings-save-btn"
+                      style={{ alignSelf: 'flex-start' }}
+                    >
+                      {isSchoolAccount ? 'Exportar projetos para conta pessoal' : 'Exportar projetos para outra conta'}
+                    </button>
+                  </div>
+                  {showExportModal && <ExportProjectsModal onClose={() => setShowExportModal(false)} />}
+                </SectionCard>
                 <SectionCard title="Zona de perigo">{dangerZone}</SectionCard>
               </>
             )}

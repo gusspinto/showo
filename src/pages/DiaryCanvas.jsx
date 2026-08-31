@@ -1,9 +1,18 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import {
-  ArrowLeft, StickyNote, Lightbulb, Star, Trash2,
-  ZoomIn, ZoomOut, RotateCcw, Plus, Undo2, Redo2, Save, Check,
-} from 'lucide-react'
+import { ArrowLeftIcon as ArrowLeft } from '@solar-icons/react/bold/arrow-left'
+import { NotebookMinimalisticIcon as StickyNote } from '@solar-icons/react/bold/notebook-minimalistic'
+import { LightbulbIcon as Lightbulb } from '@solar-icons/react/bold/lightbulb'
+import { StarIcon as Star } from '@solar-icons/react/bold/star'
+import { TrashBinMinimalisticIcon as Trash2 } from '@solar-icons/react/bold/trash-bin-minimalistic'
+import { MagnifierZoomInIcon as ZoomIn } from '@solar-icons/react/bold/magnifier-zoom-in'
+import { MagnifierZoomOutIcon as ZoomOut } from '@solar-icons/react/bold/magnifier-zoom-out'
+import { RestartIcon as RotateCcw } from '@solar-icons/react/bold/restart'
+import { AddCircleIcon as Plus } from '@solar-icons/react/bold/add-circle'
+import { UndoLeftIcon as Undo2 } from '@solar-icons/react/bold/undo-left'
+import { RefreshIcon as Redo2 } from '@solar-icons/react/bold/refresh'
+import { DisketteIcon as Save } from '@solar-icons/react/bold/diskette'
+import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import './DiaryCanvas.css'

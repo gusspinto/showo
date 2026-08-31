@@ -1,6 +1,11 @@
 import { useState, useEffect, lazy, Suspense, Component } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
-import { AlertTriangle, X as XIcon, Frown, RefreshCw, ArrowLeft, Phone } from 'lucide-react'
+import { DangerTriangleIcon as AlertTriangle } from '@solar-icons/react/bold/danger-triangle'
+import { CloseIcon as XIcon } from '@solar-icons/react/bold/close'
+import { SadCircleIcon as Frown } from '@solar-icons/react/bold/sad-circle'
+import { RefreshCircleIcon as RefreshCw } from '@solar-icons/react/bold/refresh-circle'
+import { ArrowLeftIcon as ArrowLeft } from '@solar-icons/react/bold/arrow-left'
+import { PhoneIcon as Phone } from '@solar-icons/react/bold/phone'
 import { HelmetProvider } from 'react-helmet-async'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
@@ -66,6 +71,7 @@ const DiaryCanvas  = lazy(() => import('./pages/DiaryCanvas'))
 const AprendeAUsar = lazy(() => import('./pages/AprendeAUsar'))
 const Pricing      = lazy(() => import('./pages/Pricing'))
 const Welcome      = lazy(() => import('./pages/Welcome'))
+const Feedback     = lazy(() => import('./pages/Feedback'))
 
 function PageLoader() {
   return (
@@ -432,10 +438,12 @@ export default function App() {
         <AuthProvider>
           <AuthErrorBanner />
           {splashMounted && <SplashScreen visible={splashVisible} />}
-          <RestReminder />
           <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
             <Analytics />
             <CookieConsent />
+            {/* Precisa de useLocation (para não aparecer em /login, /register,
+                etc.) — por isso mora dentro do Router, não fora. */}
+            <RestReminder />
             <PageViewTracker />
             <ErrorBoundary>
             <RecoveryGate pwRecovery={pwRecovery}>
@@ -470,6 +478,7 @@ export default function App() {
               <Route path="/aprende"            element={<AprendeAUsar />}  />
               <Route path="/pricing"            element={<Pricing />}       />
               <Route path="/welcome"            element={<Welcome />}       />
+              <Route path="/feedback"           element={<Feedback />}      />
               <Route path="*"                   element={<NotFound />}      />
             </Routes>
             </Suspense>

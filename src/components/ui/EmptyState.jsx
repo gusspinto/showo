@@ -12,11 +12,11 @@ export default function EmptyState({ icon, title, description, action, actionLab
       {icon && (
         <div style={{
           width: 56, height: 56, borderRadius: 'var(--radius-lg)',
-          background: 'var(--color-primary-subtle)',
-          border: '1px solid var(--color-primary-muted)',
+          background: 'var(--color-surface-hover)',
+          border: '1px solid var(--color-border-hover)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           marginBottom: 'var(--sp-4)',
-          color: 'var(--color-primary)',
+          color: 'var(--color-text)',
         }}>
           {icon}
         </div>

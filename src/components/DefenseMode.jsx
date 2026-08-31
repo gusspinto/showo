@@ -2,13 +2,35 @@ import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { AiUsageBadge, ConfirmUseModal } from './PlanGate'
-import { Hand, Search, Lightbulb, Settings, Wrench, Trophy, BookOpen, Mic, GraduationCap, Check, X, Smartphone, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, ArrowRight, Eye, EyeOff, SlidersHorizontal, AlignLeft, Play, Pause } from 'lucide-react'
+import { HandShakeIcon as Hand } from '@solar-icons/react/bold/hand-shake'
+import { MagnifierIcon as Search } from '@solar-icons/react/bold/magnifier'
+import { LightbulbIcon as Lightbulb } from '@solar-icons/react/bold/lightbulb'
+import { SettingsIcon as Settings } from '@solar-icons/react/bold/settings'
+import { SettingsMinimalisticIcon as Wrench } from '@solar-icons/react/bold/settings-minimalistic'
+import { CupStarIcon as Trophy } from '@solar-icons/react/bold/cup-star'
+import { Book2Icon as BookOpen } from '@solar-icons/react/bold/book-2'
+import { MicrophoneIcon as Mic } from '@solar-icons/react/bold/microphone'
+import { SquareAcademicCapIcon as GraduationCap } from '@solar-icons/react/bold/square-academic-cap'
+import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
+import { CloseIcon as X } from '@solar-icons/react/bold/close'
+import { SmartphoneIcon as Smartphone } from '@solar-icons/react/bold/smartphone'
+import { AltArrowUpIcon as ChevronUp } from '@solar-icons/react/bold/alt-arrow-up'
+import { AltArrowDownIcon as ChevronDown } from '@solar-icons/react/bold/alt-arrow-down'
+import { AltArrowLeftIcon as ChevronLeft } from '@solar-icons/react/bold/alt-arrow-left'
+import { AltArrowRightIcon as ChevronRight } from '@solar-icons/react/bold/alt-arrow-right'
+import { ArrowRightIcon as ArrowRight } from '@solar-icons/react/bold/arrow-right'
+import { EyeIcon as Eye } from '@solar-icons/react/bold/eye'
+import { EyeClosedIcon as EyeOff } from '@solar-icons/react/bold/eye-closed'
+import { Tuning2Icon as SlidersHorizontal } from '@solar-icons/react/bold/tuning-2'
+import { AlignLeftIcon as AlignLeft } from '@solar-icons/react/bold/align-left'
+import { PlayCircleIcon as Play } from '@solar-icons/react/bold/play-circle'
+import { PauseCircleIcon as Pause } from '@solar-icons/react/bold/pause-circle'
 
 const C = {
   bg: 'var(--color-bg)',
   card: 'var(--color-surface)',
   border: 'var(--color-border)',
-  blue: 'var(--color-primary)',
+  blue: 'var(--color-text)',
   yellow: 'var(--color-warning)',
   green: 'var(--color-success)',
   red: 'var(--color-error)',
@@ -107,7 +129,7 @@ function NotesPanel({ aiData, loadingAI, aiError, onRetry }) {
       <p style={{ color: C.muted, fontSize: 13, margin: '0 0 20px', lineHeight: 1.6 }}>
         A IA não conseguiu processar o projeto de momento. Certifica-te de que os campos principais estão preenchidos e tenta novamente.
       </p>
-      <button onClick={onRetry} style={{ background: C.blue, color: '#fff', border: 'none', borderRadius: 8, padding: '10px 22px', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+      <button onClick={onRetry} style={{ background: C.blue, color: 'var(--color-bg)', border: 'none', borderRadius: 8, padding: '10px 22px', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
         Tentar novamente
       </button>
     </div>
@@ -119,7 +141,7 @@ function NotesPanel({ aiData, loadingAI, aiError, onRetry }) {
       <p style={{ color: C.muted, fontSize: 13, margin: '0 0 20px', lineHeight: 1.6 }}>
         A IA vai gerar notas personalizadas para cada secção da tua apresentação com base no conteúdo do projeto.
       </p>
-      <button onClick={onRetry} style={{ background: C.blue, color: '#fff', border: 'none', borderRadius: 8, padding: '10px 22px', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+      <button onClick={onRetry} style={{ background: C.blue, color: 'var(--color-bg)', border: 'none', borderRadius: 8, padding: '10px 22px', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
         Gerar notas
       </button>
     </div>
@@ -132,7 +154,7 @@ function NotesPanel({ aiData, loadingAI, aiError, onRetry }) {
   return (
     <div>
       {tip && (
-        <div style={{ background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 12, padding: '14px 18px', marginBottom: 24, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+        <div style={{ background: 'var(--color-surface-hover)', border: '1px solid var(--color-surface-hover)', borderRadius: 12, padding: '14px 18px', marginBottom: 24, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
           <Lightbulb size={18} color={C.blue} style={{ flexShrink: 0 }} />
           <p style={{ margin: 0, fontSize: 14, color: C.muted, lineHeight: 1.6 }}>{tip}</p>
         </div>
@@ -150,7 +172,7 @@ function NotesPanel({ aiData, loadingAI, aiError, onRetry }) {
         {filled.length === 0 && (
           <div style={{ textAlign: 'center', padding: '40px 0', color: C.muted }}>
             <p style={{ fontSize: 14, margin: '0 0 16px' }}>Não foi possível gerar notas para este projeto.</p>
-            <button onClick={onRetry} style={{ background: C.blue, color: '#fff', border: 'none', borderRadius: 8, padding: '9px 20px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+            <button onClick={onRetry} style={{ background: C.blue, color: 'var(--color-bg)', border: 'none', borderRadius: 8, padding: '9px 20px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
               Tentar novamente
             </button>
           </div>
@@ -174,7 +196,7 @@ function JuryPanel({ aiData, loadingAI, aiError, onRetry }) {
       <p style={{ color: C.muted, fontSize: 13, margin: '0 0 20px', lineHeight: 1.6 }}>
         A IA não conseguiu processar o projeto de momento. Certifica-te de que os campos principais estão preenchidos e tenta novamente.
       </p>
-      <button onClick={onRetry} style={{ background: C.blue, color: '#fff', border: 'none', borderRadius: 8, padding: '10px 22px', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+      <button onClick={onRetry} style={{ background: C.blue, color: 'var(--color-bg)', border: 'none', borderRadius: 8, padding: '10px 22px', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
         Tentar novamente
       </button>
     </div>
@@ -186,7 +208,7 @@ function JuryPanel({ aiData, loadingAI, aiError, onRetry }) {
       <p style={{ color: C.muted, fontSize: 13, margin: '0 0 20px', lineHeight: 1.6 }}>
         A IA vai simular as perguntas que um júri faria sobre o teu projeto, com respostas sugeridas.
       </p>
-      <button onClick={onRetry} style={{ background: C.blue, color: '#fff', border: 'none', borderRadius: 8, padding: '10px 22px', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+      <button onClick={onRetry} style={{ background: C.blue, color: 'var(--color-bg)', border: 'none', borderRadius: 8, padding: '10px 22px', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
         Gerar perguntas
       </button>
     </div>
@@ -198,7 +220,7 @@ function JuryPanel({ aiData, loadingAI, aiError, onRetry }) {
   if (questions.length === 0) return (
     <div style={{ textAlign: 'center', padding: '40px 0', color: C.muted }}>
       <p style={{ fontSize: 14, margin: '0 0 16px' }}>Não foi possível gerar perguntas para este projeto.</p>
-      <button onClick={onRetry} style={{ background: C.blue, color: '#fff', border: 'none', borderRadius: 8, padding: '9px 20px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+      <button onClick={onRetry} style={{ background: C.blue, color: 'var(--color-bg)', border: 'none', borderRadius: 8, padding: '9px 20px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
         Tentar novamente
       </button>
     </div>
@@ -355,14 +377,14 @@ function tpCoverFallback(project) {
 // ─── Presenter guide (phone companion) ───────────────────────────────────────
 
 const SECTIONS = [
-  { id: 'cover',        label: 'Introdução',      Icon: Hand,     accent: 'var(--color-primary)' },
+  { id: 'cover',        label: 'Introdução',      Icon: Hand,     accent: 'var(--color-text)' },
   { id: 'problem',      label: 'O Problema',       Icon: Search,   accent: 'var(--color-warning)' },
   { id: 'solution',     label: 'A Solução',        Icon: Lightbulb,accent: 'var(--color-success)' },
   { id: 'features',     label: 'Funcionalidades',  Icon: Settings, accent: '#06b6d4' },
   { id: 'technologies', label: 'Ferramentas & Recursos',      Icon: Wrench,   accent: '#818cf8' },
   { id: 'results',      label: 'Resultados',       Icon: Trophy,   accent: 'var(--color-success)' },
   { id: 'learnings',    label: 'Aprendizagens',    Icon: BookOpen, accent: '#f472b6' },
-  { id: 'closing',      label: 'Encerramento',     Icon: Mic,      accent: 'var(--color-primary)' },
+  { id: 'closing',      label: 'Encerramento',     Icon: Mic,      accent: 'var(--color-text)' },
 ]
 
 function hasContent(project, id) {
@@ -480,7 +502,7 @@ function GuideEditor({ project, onSave }) {
         onClick={handleSave}
         disabled={saving}
         className="dm-cta-btn"
-        style={{ marginTop: 14, width: '100%', padding: '10px 0', background: saved ? 'var(--color-success-subtle)' : 'var(--color-primary)', border: saved ? '1px solid var(--color-success-subtle)' : 'none', borderRadius: 10, color: saved ? C.green : '#fff', fontSize: 13, fontWeight: 700, cursor: saving ? 'default' : 'pointer', fontFamily: 'inherit' }}
+        style={{ marginTop: 14, width: '100%', padding: '10px 0', background: saved ? 'var(--color-success-subtle)' : 'var(--color-text)', border: saved ? '1px solid var(--color-success-subtle)' : 'none', borderRadius: 10, color: saved ? C.green : 'var(--color-bg)', fontSize: 13, fontWeight: 700, cursor: saving ? 'default' : 'pointer', fontFamily: 'inherit' }}
       >
         {saving ? 'A guardar...' : saved ? 'Guardado' : 'Guardar personalização'}
       </button>
@@ -633,7 +655,7 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
           <button
             onClick={() => { setFinished(false); setTimer(0); setTimerOn(false); setCurrent(0); setChecked({}); setShowNote(false) }}
             className="dm-cta-btn"
-            style={{ padding: '14px 0', background: 'var(--color-primary)', border: 'none', borderRadius: 14, color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 6px 24px var(--color-primary-subtle)' }}
+            style={{ padding: '14px 0', background: 'var(--color-text)', border: 'none', borderRadius: 14, color: 'var(--color-bg)', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 6px 24px var(--color-surface-hover)' }}
           >
             Recomeçar do início
           </button>
@@ -666,7 +688,7 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
 
         <div style={{ maxWidth: 360, width: '100%', textAlign: 'center', animation: 'fadeUp 0.3s ease-out' }}>
           {/* Icon */}
-          <div style={{ width: 72, height: 72, borderRadius: 20, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+          <div style={{ width: 72, height: 72, borderRadius: 20, background: 'var(--color-surface-hover)', border: '1px solid var(--color-surface-hover)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
             <Mic size={34} color={C.blue} />
           </div>
 
@@ -699,7 +721,7 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
 
           {loadingAI && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center', marginBottom: 16 }}>
-              <div style={{ width: 14, height: 14, border: '2px solid #1e3050', borderTop: '2px solid var(--color-primary)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+              <div style={{ width: 14, height: 14, border: '2px solid var(--color-border)', borderTop: '2px solid var(--color-text)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
               <span style={{ fontSize: 13, color: C.muted }}>A preparar pontos-chave com IA...</span>
             </div>
           )}
@@ -709,11 +731,11 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
             className="dm-cta-btn"
             style={{
               width: '100%', padding: '16px 0',
-              background: 'var(--color-primary)',
+              background: 'var(--color-text)',
               border: 'none', borderRadius: 14,
-              color: '#fff', fontSize: 17, fontWeight: 700,
+              color: 'var(--color-bg)', fontSize: 17, fontWeight: 700,
               cursor: 'pointer', fontFamily: 'inherit',
-              boxShadow: '0 8px 32px var(--color-primary-subtle)',
+              boxShadow: '0 8px 32px var(--color-surface-hover)',
             }}
           >
             Começar apresentação <ArrowRight size={16} style={{ verticalAlign: 'middle', marginLeft: 4 }} />
@@ -921,7 +943,7 @@ function PresenterGuide({ project, aiData, loadingAI, aiError, onRetry, onClose,
                   }
                 </button>
                 {showNote && (
-                  <div style={{ marginTop: 10, background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 12, padding: '14px 16px', animation: 'pop 0.2s ease-out' }}>
+                  <div style={{ marginTop: 10, background: 'var(--color-surface-hover)', border: '1px solid var(--color-surface-hover)', borderRadius: 12, padding: '14px 16px', animation: 'pop 0.2s ease-out' }}>
                     <p style={{ margin: 0, fontSize: 14, color: C.muted, lineHeight: 1.75 }}>{speakerNote}</p>
                   </div>
                 )}
@@ -1155,7 +1177,7 @@ function GrupoPanel({ project }) {
         <button
           onClick={doSearch}
           disabled={!search.trim() || searching}
-          style={{ background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 10, padding: '10px 16px', color: C.blue, fontSize: 13, fontWeight: 600, cursor: search.trim() ? 'pointer' : 'default', fontFamily: 'inherit' }}
+          style={{ background: 'var(--color-surface-hover)', border: '1px solid var(--color-surface-hover)', borderRadius: 10, padding: '10px 16px', color: C.blue, fontSize: 13, fontWeight: 600, cursor: search.trim() ? 'pointer' : 'default', fontFamily: 'inherit' }}
         >
           {searching ? '...' : 'Procurar'}
         </button>
@@ -1164,14 +1186,14 @@ function GrupoPanel({ project }) {
       {searchErr && <p style={{ color: C.red, fontSize: 13, margin: '0 0 16px' }}>{searchErr}</p>}
 
       {searchResult && (
-        <div style={{ background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 12, padding: '14px 16px', marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ background: 'var(--color-surface-hover)', border: '1px solid var(--color-surface-hover)', borderRadius: 12, padding: '14px 16px', marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
             <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{searchResult.full_name || searchResult.username}</div>
             <div style={{ fontSize: 12, color: C.muted }}>@{searchResult.username}</div>
           </div>
           <button
             onClick={addCollaborator}
-            style={{ background: 'var(--color-primary)', border: 'none', borderRadius: 8, padding: '8px 16px', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+            style={{ background: 'var(--color-text)', border: 'none', borderRadius: 8, padding: '8px 16px', color: 'var(--color-bg)', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
           >
             Adicionar
           </button>
@@ -1227,8 +1249,8 @@ function GrupoPanel({ project }) {
                             key={s.id}
                             onClick={() => toggleSection(collab.user_id, s.id)}
                             style={{
-                              background: on ? 'var(--color-primary-subtle)' : 'transparent',
-                              border: `1px solid ${on ? 'var(--color-primary-subtle)' : C.border}`,
+                              background: on ? 'var(--color-surface-hover)' : 'transparent',
+                              border: `1px solid ${on ? 'var(--color-surface-hover)' : C.border}`,
                               borderRadius: 7, padding: '5px 10px',
                               color: on ? C.blue : C.muted,
                               fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
@@ -1252,10 +1274,10 @@ function GrupoPanel({ project }) {
               disabled={saving}
               style={{
                 padding: '12px 0', width: '100%',
-                background: saved ? 'var(--color-success-subtle)' : 'var(--color-primary)',
+                background: saved ? 'var(--color-success-subtle)' : 'var(--color-text)',
                 border: saved ? '1px solid var(--color-success-subtle)' : 'none',
                 borderRadius: 12,
-                color: saved ? C.green : '#fff',
+                color: saved ? C.green : 'var(--color-bg)',
                 fontSize: 14, fontWeight: 700, cursor: saving ? 'default' : 'pointer', fontFamily: 'inherit',
               }}
             >
@@ -1389,8 +1411,8 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
               onClick={() => setTab(t.id)}
               className={`dm-tab-btn${tab === t.id ? ' active' : ''}`}
               style={{
-                background: tab === t.id ? 'var(--color-primary-subtle)' : 'transparent',
-                border: `1px solid ${tab === t.id ? 'var(--color-primary-subtle)' : C.border}`,
+                background: tab === t.id ? 'var(--color-surface-hover)' : 'transparent',
+                border: `1px solid ${tab === t.id ? 'var(--color-surface-hover)' : C.border}`,
                 borderRadius: 9, padding: '8px 16px',
                 color: tab === t.id ? C.blue : C.muted,
                 fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
@@ -1405,7 +1427,7 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
         {/* Content */}
         <div style={{ flex: 1, overflow: 'auto', padding: '20px 28px 28px' }}>
           {!canSeeFullPrep && (
-            <div style={{ background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 12, padding: '20px', textAlign: 'center' }}>
+            <div style={{ background: 'var(--color-surface-hover)', border: '1px solid var(--color-surface-hover)', borderRadius: 12, padding: '20px', textAlign: 'center' }}>
               <p style={{ margin: 0, color: C.muted, fontSize: 14 }}>A preparação completa está disponível para o criador e colaboradores do projeto.</p>
             </div>
           )}
@@ -1420,8 +1442,8 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
                   className="dm-ghost-btn"
                   style={{
                     display: 'flex', alignItems: 'center', gap: 7,
-                    background: showGuideEditor ? 'var(--color-primary-subtle)' : 'var(--color-bg-alt)',
-                    border: `1px solid ${showGuideEditor ? 'var(--color-primary-subtle)' : C.border}`,
+                    background: showGuideEditor ? 'var(--color-surface-hover)' : 'var(--color-bg-alt)',
+                    border: `1px solid ${showGuideEditor ? 'var(--color-surface-hover)' : C.border}`,
                     borderRadius: 9, padding: '8px 14px', marginBottom: 16,
                     color: showGuideEditor ? C.blue : C.muted, fontSize: 13, fontWeight: 600,
                     cursor: 'pointer', fontFamily: 'inherit',
@@ -1435,10 +1457,10 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
                 <GuideEditor project={effectiveProject} onSave={saveGuideConfig} />
               )}
 
-              {/* Preview card — bold blue glass, matching the hero's treatment */}
+              {/* Preview card — sempre escuro, como o herói (preto plano, não gradiente). */}
               <div style={{
                 position: 'relative', overflow: 'hidden',
-                background: 'linear-gradient(135deg, #1454c2 0%, var(--color-primary) 55%, #2f8bff 100%)',
+                background: '#000000',
                 border: '1px solid rgba(255,255,255,0.18)', borderRadius: 20,
                 padding: '24px 26px', marginBottom: 20, color: '#fff',
               }}>
@@ -1468,7 +1490,7 @@ export default function DefenseMode({ project, isOwner, collaboratorSections, on
                       width: '100%', padding: '14px 0',
                       background: '#fff',
                       border: 'none', borderRadius: 12,
-                      color: '#0d3a96', fontSize: 15, fontWeight: 700,
+                      color: '#000000', fontSize: 15, fontWeight: 700,
                       cursor: 'pointer', fontFamily: 'inherit',
                       boxShadow: '0 8px 28px rgba(0,0,0,0.25)',
                     }}

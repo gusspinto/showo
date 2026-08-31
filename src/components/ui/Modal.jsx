@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { X } from 'lucide-react'
+import { CloseIcon as X } from '@solar-icons/react/bold/close'
 
 export default function Modal({ children, onClose, title, subtitle, width = 440 }) {
   useEffect(() => {

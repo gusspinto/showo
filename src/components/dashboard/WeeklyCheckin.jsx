@@ -1,5 +1,10 @@
 import { useState, useEffect } from 'react'
-import { X, Send, MessageCircle, AlertTriangle, Flame, Reply } from 'lucide-react'
+import { CloseIcon as X } from '@solar-icons/react/bold/close'
+import { PlaneIcon as Send } from '@solar-icons/react/bold/plane'
+import { ChatRoundDotsIcon as MessageCircle } from '@solar-icons/react/bold/chat-round-dots'
+import { DangerTriangleIcon as AlertTriangle } from '@solar-icons/react/bold/danger-triangle'
+import { FlameIcon as Flame } from '@solar-icons/react/bold/flame'
+import { ReplyIcon as Reply } from '@solar-icons/react/bold/reply'
 import { supabase } from '../../lib/supabase'
 import { weekStartISO } from '../../lib/journal'
 

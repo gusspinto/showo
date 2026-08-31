@@ -3,11 +3,24 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
-import {
-  AlertTriangle, HelpCircle, User, Folder, Star,
-  Shield, BarChart2, MapPin, Calendar, Check, X, Search,
-  KeyRound, Plus, Copy, Megaphone, School, Trash2,
-} from 'lucide-react'
+import { DangerTriangleIcon as AlertTriangle } from '@solar-icons/react/bold/danger-triangle'
+import { QuestionCircleIcon as HelpCircle } from '@solar-icons/react/bold/question-circle'
+import { UserIcon as User } from '@solar-icons/react/bold/user'
+import { FolderIcon as Folder } from '@solar-icons/react/bold/folder'
+import { StarIcon as Star } from '@solar-icons/react/bold/star'
+import { ShieldCheckIcon as Shield } from '@solar-icons/react/bold/shield-check'
+import { Chart2Icon as BarChart2 } from '@solar-icons/react/bold/chart-2'
+import { MapPointIcon as MapPin } from '@solar-icons/react/bold/map-point'
+import { CalendarIcon as Calendar } from '@solar-icons/react/bold/calendar'
+import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
+import { CloseIcon as X } from '@solar-icons/react/bold/close'
+import { MagnifierIcon as Search } from '@solar-icons/react/bold/magnifier'
+import { KeyMinimalisticIcon as KeyRound } from '@solar-icons/react/bold/key-minimalistic'
+import { AddCircleIcon as Plus } from '@solar-icons/react/bold/add-circle'
+import { CopyIcon as Copy } from '@solar-icons/react/bold/copy'
+import { VolumeLoudIcon as Megaphone } from '@solar-icons/react/bold/volume-loud'
+import { PresentationGraphIcon as School } from '@solar-icons/react/bold/presentation-graph'
+import { TrashBinMinimalisticIcon as Trash2 } from '@solar-icons/react/bold/trash-bin-minimalistic'
 import { Select } from '../components/ui'
 
 const C = {
@@ -1533,8 +1546,13 @@ export default function Admin() {
     { id: 'projects', label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Folder size={14} /> Projetos ({projects.length})</span> },
     { id: 'signups',  label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Star size={14} /> Signups ({signups.length})</span> },
     { id: 'invites',  label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><KeyRound size={14} /> Convites Professor</span> },
+    /* Duas coisas diferentes que calhavam com o mesmo nome ("Escolas") em
+       cada lado do merge — não é o mesmo separador reescrito duas vezes, é
+       "orgs" (organizações com plano, já existia) e "schools" (domínios de
+       email para validar registo institucional, novo no main). Ficam os
+       dois, com nomes que dizem o que cada um faz. */
     { id: 'orgs',     label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Shield size={14} /> Organizações</span> },
-    { id: 'schools',  label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><School size={14} /> Escolas</span> },
+    { id: 'schools',  label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><School size={14} /> Domínios de Escola</span> },
     { id: 'ambassadors', label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Megaphone size={14} /> Embaixadores</span> },
   ]
 

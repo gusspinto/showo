@@ -5,19 +5,22 @@ import { QRCodeSVG } from 'qrcode.react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
-import { Search, FolderOpen, X, Download, Rocket, QrCode, Pencil, Globe, ExternalLink, Link, Briefcase, ArrowRight, Star, MessageSquare, GraduationCap, Send, Lock } from 'lucide-react'
+import { MagnifierIcon as Search } from '@solar-icons/react/bold/magnifier'
+import { Folder2Icon as FolderOpen } from '@solar-icons/react/bold/folder-2'
+import { CloseIcon as X } from '@solar-icons/react/bold/close'
+import { DownloadIcon as Download } from '@solar-icons/react/bold/download'
+import { RocketIcon as Rocket } from '@solar-icons/react/bold/rocket'
+import { QrCodeIcon as QrCode } from '@solar-icons/react/bold/qr-code'
+import { Pen2Icon as Pencil } from '@solar-icons/react/bold/pen-2'
+import { SquareArrowRightUpIcon as ExternalLink } from '@solar-icons/react/bold/square-arrow-right-up'
+import { ArrowRightIcon as ArrowRight } from '@solar-icons/react/bold/arrow-right'
+import { StarIcon as Star } from '@solar-icons/react/bold/star'
+import { ChatRoundLineIcon as MessageSquare } from '@solar-icons/react/bold/chat-round-line'
+import { SquareAcademicCapIcon as GraduationCap } from '@solar-icons/react/bold/square-academic-cap'
+import { PlaneIcon as Send } from '@solar-icons/react/bold/plane'
 import ConvidarVagaModal from '../components/ConvidarVagaModal'
 import { PlanBadge } from '../components/PlanGate'
 import './UserProfile.css'
-
-function areaGradient(area) {
-  const a = (area || '').toLowerCase()
-  if (a.includes('educa'))                                                     return ['#1e3a5f', '#2d6a4f']
-  if (a.includes('comercial') || a.includes('marketing') || a.includes('vendas')) return ['#3d1a6e', '#1a3a6e']
-  if (a.includes('tecnolog') || a.includes('informátic') || a.includes('programaç') || a.includes('software')) return ['#0d2137', '#1a4a6e']
-  if (a.includes('saúde') || a.includes('saude') || a.includes('medical') || a.includes('bio')) return ['#1a4a2e', '#2d6a4f']
-  return ['#1a1a3a', '#1a2d4a']
-}
 
 function scoreColor(score) {
   if (score == null) return 'var(--color-text-secondary)'
@@ -29,7 +32,6 @@ function scoreColor(score) {
 
 function ProjectCard({ project, onClick, featured }) {
   const color = scoreColor(project.score)
-  const [c1, c2] = areaGradient(project.area)
 
   return (
     <div className={`up-project-card${featured ? ' up-project-card--featured' : ''}`} onClick={onClick}>
@@ -38,7 +40,7 @@ function ProjectCard({ project, onClick, featured }) {
           <img src={project.cover_url} alt="" />
         </div>
       ) : (
-        <div className="up-card-cover-fallback" style={{ background: `linear-gradient(135deg, ${c1}, ${c2})` }}>
+        <div className="up-card-cover-fallback">
           <span className="up-card-cover-letter">
             {project.name ? project.name[0].toUpperCase() : '?'}
           </span>
@@ -235,9 +237,6 @@ export default function UserProfile() {
   const isOwnProfile = user?.id === profile?.id
   const displayName  = profile?.full_name || profile?.username || 'Utilizador'
   const profileUrl   = window.location.href
-  const scores       = projects.map(p => p.score).filter(Boolean)
-  const bestScore    = scores.length ? Math.max(...scores) : null
-  const [c1, c2]     = areaGradient(profile?.area || profile?.course || '')
 
   if (loading) return (
     <div className="min-h-screen bg-page">
@@ -268,160 +267,89 @@ export default function UserProfile() {
         <meta property="og:url" content={profileUrl} />
       </Helmet>
 
-      <style>{`
-        .up-header::before {
-          content: '';
-          position: absolute;
-          top: -60px; right: -60px;
-          width: 280px; height: 280px;
-          border-radius: 50%;
-          background: radial-gradient(circle, ${c1}bb 0%, transparent 60%);
-          pointer-events: none;
-        }
-        body.light .up-header::before { display: none; }
-      `}</style>
-
       <Navbar />
 
       <div className="page-content">
 
-        {/* ── Profile header card ── */}
+        {/* ── Profile header card: centrado ── */}
         <div className="up-header">
-          <div className="up-card-btns-mobile">
-            <button onClick={() => setShowQR(true)} className="up-icon-btn" title="QR Code">
-              <QrCode size={15} />
-            </button>
-            {isOwnProfile && (
-              <button onClick={() => navigate('/settings')} className="up-icon-btn" title="Editar perfil">
-                <Pencil size={15} />
-              </button>
+          <div className="up-identity">
+            {profile.avatar_url
+              ? <img src={profile.avatar_url} alt={displayName} className="up-avatar" />
+              : <div className="up-avatar-placeholder">{displayName[0].toUpperCase()}</div>
+            }
+
+            <div className="up-name-row">
+              <h1 className="up-name">{displayName}</h1>
+              {isOwnProfile && <PlanBadge />}
+              {projects.some(p => (p.score || 0) >= 100) && (
+                <span className="up-perfect-badge" title="Tem um projeto com score perfeito">
+                  <GraduationCap size={13} />
+                </span>
+              )}
+            </div>
+
+            <div className="up-meta-row">
+              {profile.username && <span>@{profile.username}</span>}
+              {(profile.area || profile.course) && <><span className="up-meta-sep">·</span><span>{profile.area || profile.course}</span></>}
+              {profile.school && <><span className="up-meta-sep">·</span><span>{profile.school}</span></>}
+              {profile.role === 'professor' && <><span className="up-meta-sep">·</span><span>Professor</span></>}
+            </div>
+
+            {isOwnProfile && profile.role === 'aluno' && (
+              <p className="up-hint">Brevemente: partilha o teu portfólio com empresas</p>
             )}
           </div>
 
-          {!isOwnProfile && user && (
-            <div className="up-msg-wrap">
-              <button onClick={() => navigate(`/mensagens?to=${profile.id}`)} className="up-msg-btn">
-                <MessageSquare size={14} /> Mensagem
+          <div className="up-header-actions">
+            <button onClick={() => setShowQR(true)} className="up-icon-btn" title="QR Code" aria-label="QR Code">
+              <QrCode size={15} />
+            </button>
+            {isOwnProfile && (
+              <button onClick={() => navigate('/settings')} className="up-icon-btn" title="Editar perfil" aria-label="Editar perfil">
+                <Pencil size={15} />
               </button>
-            </div>
-          )}
-
-          <div className="up-header-inner">
-            {profile.avatar_url
-              ? <img src={profile.avatar_url} alt={displayName} className="up-avatar" style={{ borderColor: c1 }} />
-              : <div className="up-avatar-placeholder" style={{ background: `linear-gradient(135deg, ${c1}, ${c2})`, borderColor: c1 }}>{displayName[0].toUpperCase()}</div>
-            }
-
-            <div className="up-info">
-              <div className="up-name-row">
-                <h1 className="up-name">
-                  {displayName}
-                  {projects.some(p => (p.score || 0) >= 100) && (
-                    <span className="up-perfect-badge" title="Tem um projeto com score perfeito">
-                      <GraduationCap size={15} color="#fff" />
-                    </span>
-                  )}
-                </h1>
-                {profile.username && <span className="up-username">@{profile.username}</span>}
-                {isOwnProfile && <PlanBadge style={{ marginTop: 2 }} />}
-              </div>
-
-              {(profile.area || profile.course || profile.school) && (
-                <div className="up-area-row">
-                  {(profile.area || profile.course) && (
-                    <span className="up-area-label">{profile.area || profile.course}</span>
-                  )}
-                  {profile.school && (
-                    <>
-                      {(profile.area || profile.course) && <span className="up-area-sep">·</span>}
-                      <span className="up-school">{profile.school}</span>
-                    </>
-                  )}
-                </div>
-              )}
-
-              {profile.bio && <p className="up-bio">{profile.bio}</p>}
-
-              {profile.available_for_work && profile.role === 'aluno' && (
-                <div className="up-available-badge">
-                  <Briefcase size={13} className="flex-shrink-0" /> Disponível para estágio
-                </div>
-              )}
-
-              <div className="up-stat-pills">
-                <span className="up-stat-pill">
-                  <strong>{projects.length}</strong> projeto{projects.length !== 1 ? 's' : ''}
-                </span>
-                {bestScore != null && (
-                  <span className="up-stat-pill">
-                    Melhor score: <strong style={{ color: scoreColor(bestScore) }}>{bestScore}</strong>
-                  </span>
-                )}
-                {profile.role === 'professor' && (
-                  <span className="up-stat-pill">
-                    <strong className="text-primary">Professor</strong>
-                  </span>
-                )}
-              </div>
-
-              {(profile.linkedin || profile.github || profile.website) && (
-                <div className="up-social-row">
-                  {profile.linkedin && (
-                    <a href={profile.linkedin} target="_blank" rel="noopener noreferrer" className="up-social-link">
-                      <ExternalLink size={12} /> LinkedIn
-                    </a>
-                  )}
-                  {profile.github && (
-                    <a href={profile.github} target="_blank" rel="noopener noreferrer" className="up-social-link">
-                      <Link size={12} /> GitHub
-                    </a>
-                  )}
-                  {profile.website && (
-                    <a href={profile.website} target="_blank" rel="noopener noreferrer" className="up-social-link">
-                      <Globe size={12} /> Website
-                    </a>
-                  )}
-                </div>
-              )}
-
-              {profile.skills && profile.skills.length > 0 && (
-                <div className="up-skills-row">
-                  {profile.skills.map(skill => (
-                    <span key={skill} className="up-skill-chip">{skill}</span>
-                  ))}
-                </div>
-              )}
-
-              <div className="up-actions">
-                <button className="up-action-btn up-hide-mobile" onClick={() => setShowQR(true)}>
-                  <QrCode size={13} /> QR Code
+            )}
+            {!isOwnProfile && user && (
+              <button onClick={() => navigate(`/mensagens?to=${profile.id}`)} className="up-action-btn primary">
+                <MessageSquare size={13} /> Mensagem
+              </button>
+            )}
+            {!isOwnProfile && isRecruiter && (
+              <>
+                <button onClick={toggleSave} disabled={savingCandidate}
+                  className={`up-action-btn${saved ? ' saved' : ''}`}
+                  title={saved ? 'Remover dos guardados' : 'Guardar candidato'}>
+                  <Star size={13} color={saved ? 'var(--color-warning)' : undefined} />
+                  {saved ? 'Guardado' : 'Guardar'}
                 </button>
-                {isOwnProfile && (
-                  <button className="up-action-btn up-hide-mobile" onClick={() => navigate('/settings')}>
-                    <Pencil size={13} /> Editar perfil
-                  </button>
-                )}
-                {!isOwnProfile && isRecruiter && (
-                  <>
-                    <button onClick={toggleSave} disabled={savingCandidate}
-                      className={`up-action-btn${saved ? ' saved' : ''}`}
-                      title={saved ? 'Remover dos guardados' : 'Guardar candidato'}>
-                      <Star size={13} fill={saved ? 'var(--color-warning)' : 'none'} />
-                      {saved ? 'Guardado' : 'Guardar'}
-                    </button>
-                    <button onClick={() => setShowInvite(true)} className="up-action-btn primary">
-                      <Send size={13} /> Convidar para vaga
-                    </button>
-                  </>
-                )}
-              </div>
-
-              {isOwnProfile && profile.role === 'aluno' && (
-                <p className="up-hint">Brevemente: partilha o teu portfólio com empresas</p>
-              )}
-            </div>
+                <button onClick={() => setShowInvite(true)} className="up-action-btn primary">
+                  <Send size={13} /> Convidar
+                </button>
+              </>
+            )}
           </div>
         </div>
+
+        {/* ── Sobre: secção separada, só aparece se houver algo a mostrar ── */}
+        {(profile.bio || profile.skills?.length > 0 || profile.linkedin_url) && (
+          <div className="up-about">
+            <p className="up-about-label">Sobre</p>
+            {profile.bio && <p className="up-bio">{profile.bio}</p>}
+            {(profile.skills?.length > 0 || profile.linkedin_url) && (
+              <div className="up-chips-row">
+                {profile.linkedin_url && (
+                  <a href={profile.linkedin_url} target="_blank" rel="noopener noreferrer" className="up-chip up-chip--link">
+                    <ExternalLink size={11} /> LinkedIn
+                  </a>
+                )}
+                {profile.skills?.map(skill => (
+                  <span key={skill} className="up-chip">{skill}</span>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* ── Projects ── */}
         <div>
@@ -439,7 +367,7 @@ export default function UserProfile() {
             return (
               <div className="up-featured-section">
                 <p className="up-featured-label">
-                  <Star size={12} fill="currentColor" /> Em destaque
+                  <Star size={12} /> Em destaque
                 </p>
                 <div className="up-featured-grid">
                   {featured.map(project => (
