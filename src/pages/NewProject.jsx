@@ -311,7 +311,7 @@ export default function NewProject() {
                     rows={2}
                     value={importNotes}
                     onChange={e => setImportNotes(e.target.value)}
-                    placeholder="Ex: Trabalho final de Matemática, 12º ano."
+                    placeholder="Ex: App de gestão de tarefas, feita em React."
                   />
                 </div>
               )}
