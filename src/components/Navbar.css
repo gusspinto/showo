@@ -244,21 +244,34 @@ body.light .sb-collapse-toggle:hover { border-color: rgba(0,0,0,0.75); }
   border-color: transparent !important;
   color: #fff !important;
   box-shadow: 0 4px 14px color-mix(in srgb, #ff3b5c 30%, transparent);
+  transition: filter 0.2s ease;
 }
-.gradient-cta:hover { opacity: 1 !important; filter: brightness(1.06); }
+.gradient-cta:hover { opacity: 1 !important; filter: brightness(1.05); }
 @keyframes gradient-cta-shift {
   0%   { background-position: 0% 50%; }
   50%  { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
 }
+/* Parado em repouso; ao pairar o rato (só faz sentido no desktop, onde
+   há rato) as cores do gradiente começam a mexer-se — é essa a
+   "animação profissional", não o botão a levantar-se. */
 @media (min-width: 901px) {
-  .gradient-cta {
-    background-size: 300% 300%;
-    animation: gradient-cta-shift 9s ease infinite;
-  }
+  .gradient-cta { background-size: 300% 300%; }
+  .gradient-cta:hover { animation: gradient-cta-shift 2.4s ease infinite; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .gradient-cta { animation: none !important; }
+  .gradient-cta:hover { animation: none !important; }
+}
+
+/* Botões-ícone (topbar mobile) — força quadrado perfeito; sem isto o
+   flex do cluster pode esticar a caixa e o gradiente lê-se como pílula
+   em vez de chip. */
+.mob-nav-icon-btn.gradient-cta,
+.mob-only-create.gradient-cta {
+  width: 38px !important; height: 38px !important;
+  flex: 0 0 38px !important;
+  aspect-ratio: 1 / 1;
+  border-radius: 9px !important;
 }
 .sb-divider { height: 1px; background: var(--color-border); margin: 6px 0; opacity: 0.6; }
 .sb-bottom { padding: 0 10px 14px; }
