@@ -578,26 +578,42 @@ const NP_TITLE_FRAMES = [
   { word1: 'Cria',     alt1: false, word3: 'projeto',  alt3: false, hold: 1300 },
 ]
 
+// Gradiente aplicado LETRA A LETRA (não na palavra toda) — cada letra é o
+// elemento que tem o texto diretamente lá dentro, por isso o
+// background-clip:text recorta-o sem problemas. backgroundSize maior que
+// a própria letra + backgroundPosition a andar com o índice faz cada
+// letra mostrar uma fatia diferente do mesmo gradiente, como se corresse
+// a fluir ao longo da palavra toda.
+function gradientLetterStyle(i, n) {
+  return {
+    backgroundImage: 'linear-gradient(90deg, #2478f0, #db4a3d 50%, #cc9a1e)',
+    backgroundSize: `${Math.max(n, 1) * 100}% 100%`,
+    backgroundPosition: `${n > 1 ? (i / (n - 1)) * 100 : 0}% 50%`,
+    WebkitBackgroundClip: 'text',
+    backgroundClip: 'text',
+    color: 'transparent',
+  }
+}
+
 function NpTitleWord({ text, gradient, animate }) {
-  const cls = `np-title-word${gradient ? ' is-gradient' : ''}`
+  const letters = text.split('')
+  const n = letters.length
+
   // Na primeiríssima pintura da página não há "troca" nenhuma a assinalar
-  // — texto simples, visível de imediato. As letras só sobem quando a
-  // palavra realmente muda (a partir daí, key={text} força o remount).
-  if (!animate) return <span className={cls}>{text}</span>
-
-  // Palavra a gradiente: um único nó de texto, sem letras separadas em
-  // spans próprios. background-clip:text precisa do texto colado ao
-  // elemento que leva a classe — meter cada letra num inline-block por
-  // baixo (para o keyframe subir) parte esse recorte e a palavra fica
-  // invisível (era exatamente isto que estava a acontecer). A palavra
-  // branca não tem esse problema (não depende de clip), por isso essa
-  // continua a subir letra a letra.
-  if (gradient) return <span key={text} className={`${cls} np-title-rise`}>{text}</span>
-
+  // — texto simples, visível de imediato, sem subir. A partir da primeira
+  // troca real (key={text} força o remount) é que entra com o mesmo efeito
+  // de letras a subir, staggered, seja a palavra branca ou a gradiente.
   return (
-    <span key={text} className={cls}>
-      {text.split('').map((ch, i) => (
-        <span key={i} className="np-title-letter" style={{ animationDelay: `${i * 0.03}s` }}>{ch}</span>
+    <span key={animate ? text : undefined} className="np-title-word">
+      {letters.map((ch, i) => (
+        <span
+          key={i}
+          className={`np-title-letter${animate ? ' is-rising' : ''}`}
+          style={{
+            animationDelay: animate ? `${i * 0.03}s` : undefined,
+            ...(gradient ? gradientLetterStyle(i, n) : null),
+          }}
+        >{ch}</span>
       ))}
     </span>
   )
