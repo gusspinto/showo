@@ -6,16 +6,20 @@ import { Navbar } from '../components/Navbar'
 import { PlusIcon as Plus } from '../components/icons/PlusIcon'
 import { DocumentTextIcon as FileText } from '@solar-icons/react/bold/document-text'
 import { GalleryIcon as ImageIcon } from '@solar-icons/react/bold/gallery'
+import { FolderIcon as Folder } from '@solar-icons/react/bold/folder'
 import { TrashBinTrashIcon as Trash } from '@solar-icons/react/bold/trash-bin-trash'
 import { LibraryIcon } from '@solar-icons/react/bold/library'
 import { CloseIcon as X } from '@solar-icons/react/bold/close'
 import { ArrowRightUpIcon as ExternalLink } from '@solar-icons/react/bold/arrow-right-up'
 import './Biblioteca.css'
 
-/* Biblioteca — onde vivem os projetos "adicionados" (upload direto, sem
-   virarem a ficha completa de sempre). "Criar do 0" continua a gerar a
-   página estruturada normal em /projeto/:slug; isto aqui é o espaço mais
-   leve, tipo portefólio, para quem só quer mostrar o que já tem feito. */
+/* Biblioteca — todos os projetos do user, "criados" (entry_kind='full',
+   a ficha estruturada de sempre) e "adicionados" (entry_kind='library',
+   ficheiro + nome + descrição breve), lado a lado na mesma lista. Um
+   espaço só, sem condicionar nenhum dos dois caminhos — cada um continua
+   com o seu próprio sentido: criados podem aparecer no Explorar e pedir
+   ajuda a melhorar; adicionados formam o portefólio, mostrado por opção
+   do user no perfil (isso ainda não está construído). */
 
 function fileIconFor(type) {
   if (type?.startsWith('image/')) return ImageIcon
@@ -57,9 +61,8 @@ export default function Biblioteca() {
     let cancelled = false
     supabase
       .from('projects')
-      .select('id, name, library_description, library_file_url, library_file_name, library_file_type, created_at')
+      .select('id, name, slug, entry_kind, area, score, ai_tagline, cover_url, library_description, library_file_url, library_file_name, library_file_type, created_at')
       .eq('user_id', user.id)
-      .eq('entry_kind', 'library')
       .order('created_at', { ascending: false })
       .then(({ data }) => { if (!cancelled) setItems(data ?? []) })
     return () => { cancelled = true }
@@ -80,7 +83,7 @@ export default function Biblioteca() {
         <div className="lib-header">
           <h1 className="lib-title">Biblioteca</h1>
           <button className="lib-add-btn" onClick={() => navigate('/novo')}>
-            <Plus size={15} /> Adicionar
+            <Plus size={15} /> Novo projeto
           </button>
         </div>
 
@@ -92,35 +95,39 @@ export default function Biblioteca() {
           <div className="lib-empty">
             <span className="lib-empty-icon"><LibraryIcon size={26} /></span>
             <p className="lib-empty-title">Ainda não tens nada aqui.</p>
-            <p className="lib-empty-desc">Envia um relatório, uma apresentação ou umas imagens do que já fizeste.</p>
+            <p className="lib-empty-desc">Cria um projeto do zero ou adiciona algo que já tens feito.</p>
             <button className="lib-add-btn" onClick={() => navigate('/novo')}>
-              <Plus size={15} /> Adicionar
+              <Plus size={15} /> Novo projeto
             </button>
           </div>
         ) : (
           <div className="lib-grid">
             {items.map(item => {
-              const Icon = fileIconFor(item.library_file_type)
-              const isImage = item.library_file_type?.startsWith('image/')
+              const isFull = item.entry_kind === 'full'
+              const isImage = !isFull && item.library_file_type?.startsWith('image/')
+              const Icon = isFull ? Folder : fileIconFor(item.library_file_type)
+              const thumbSrc = isImage ? item.library_file_url : (isFull ? item.cover_url : null)
+              const desc = isFull ? item.ai_tagline || item.area : item.library_description
+              const clickable = isFull || !!item.library_file_url
               return (
                 <button
                   key={item.id}
                   type="button"
-                  className={`lib-card${item.library_file_url ? ' is-clickable' : ''}`}
-                  onClick={() => item.library_file_url && setViewing(item)}
+                  className={`lib-card${clickable ? ' is-clickable' : ''}`}
+                  onClick={() => { if (isFull) navigate(`/projeto/${item.slug}`); else if (item.library_file_url) setViewing(item) }}
                 >
-                  <span className={`lib-card-icon${isImage ? ' has-thumb' : ''}`}>
-                    {isImage ? <img src={item.library_file_url} alt="" loading="lazy" /> : <Icon size={20} />}
+                  <span className={`lib-card-icon${thumbSrc ? ' has-thumb' : ''}`}>
+                    {thumbSrc ? <img src={thumbSrc} alt="" loading="lazy" /> : <Icon size={20} />}
                   </span>
                   <div className="lib-card-body">
                     <span className="lib-card-name">{item.name}</span>
-                    {item.library_description && (
-                      <span className="lib-card-desc">{item.library_description}</span>
-                    )}
-                    <span className="lib-card-meta">{prettyDate(item.created_at)}</span>
+                    {desc && <span className="lib-card-desc">{desc}</span>}
+                    <span className="lib-card-meta">
+                      {isFull ? 'Criado' : 'Adicionado'} · {prettyDate(item.created_at)}
+                    </span>
                   </div>
                   <div className="lib-card-actions">
-                    {item.library_file_url && (
+                    {clickable && (
                       <span className="lib-card-hint" aria-hidden="true"><ExternalLink size={15} /></span>
                     )}
                     <span
