@@ -1,6 +1,7 @@
 /* ══════════════════════════════════════════════════════════════════════════
-   BIBLIOTECA — todos os projetos do user. "Adicionados" em lista compacta
-   (utilitário, ficheiro + nome); "A criar" em tiles com capa (portefólio).
+   BIBLIOTECA — todos os projetos do user. "Adicionados" em tiles com
+   preview (é o portefólio, tem destaque); "A criar" em lista compacta
+   (ainda em construção, sem o destaque todo).
    ══════════════════════════════════════════════════════════════════════════ */
 
 .lib-header {
@@ -33,9 +34,9 @@
   margin: 0 0 12px;
 }
 
-/* ── Adicionados — lista compacta e utilitária de propósito. É o oposto
-   dos tiles dos "criados" logo abaixo: sente-se a diferença ao bater o
-   olho, não só pelo texto do título da secção. ── */
+/* ── A criar — lista compacta, de propósito discreta: ainda está em
+   construção, não é a montra. O oposto dos tiles dos "adicionados"
+   acima, onde sim há destaque. ── */
 .lib-added-list { display: flex; flex-direction: column; gap: 6px; }
 
 .lib-row {
@@ -75,13 +76,14 @@
 }
 .lib-row-delete:hover { background: var(--color-error-subtle); color: var(--color-error); }
 
-/* ── A criar — tiles visuais com capa em destaque, pensados para
-   parecer portefólio a sério, não uma entrada de lista. ── */
+/* ── Adicionados — tiles com preview de verdade (à Drive), é o
+   portefólio, o que merece destaque. ── */
 .lib-tile-grid {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
   gap: 16px;
 }
 .lib-tile { position: relative; }
+.lib-tile--skeleton { height: 178px; background: var(--color-bg-alt); border-radius: 16px; border: none; }
 .lib-tile-main {
   display: flex; flex-direction: column;
   width: 100%; padding: 0;
@@ -102,6 +104,12 @@
   background: var(--color-bg-alt); color: var(--color-text-tertiary);
 }
 .lib-tile-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.lib-tile-filetype {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+}
+.lib-tile-filetype-label {
+  font-size: 10.5px; font-weight: 800; letter-spacing: 0.04em;
+}
 .lib-tile-footer {
   display: flex; align-items: center; justify-content: space-between; gap: 8px;
   padding: 12px 14px;

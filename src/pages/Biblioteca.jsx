@@ -15,15 +15,31 @@ import './Biblioteca.css'
 
 /* Biblioteca — todos os projetos do user, "criados" (entry_kind='full',
    a ficha estruturada de sempre) e "adicionados" (entry_kind='library',
-   ficheiro + nome + descrição breve), lado a lado na mesma lista. Um
-   espaço só, sem condicionar nenhum dos dois caminhos — cada um continua
-   com o seu próprio sentido: criados podem aparecer no Explorar e pedir
-   ajuda a melhorar; adicionados formam o portefólio, mostrado por opção
-   do user no perfil (isso ainda não está construído). */
+   ficheiro + nome + descrição breve). Um espaço só, sem condicionar
+   nenhum dos dois caminhos, mas com pesos visuais opostos: adicionados
+   é o portefólio — tiles com preview, com destaque; criados ainda
+   estão em construção — lista compacta, sem destaque nenhum. Criados
+   podem aparecer no Explorar e pedir ajuda a melhorar; adicionados
+   formam o portefólio, mostrado por opção do user no perfil (isso
+   ainda não está construído). */
 
 function fileIconFor(type) {
   if (type?.startsWith('image/')) return ImageIcon
   return FileText
+}
+
+/* Cor por tipo de ficheiro, à Google Drive — não é decoração, é a pista
+   visual que substitui a preview real quando não há uma (só imagens têm
+   preview de verdade; PDF/Word/PowerPoint mostram-se por cor+etiqueta). */
+const FILE_TYPE_STYLE = {
+  'application/pdf': { color: '#e05a4e', label: 'PDF' },
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': { color: '#3b6fd6', label: 'DOC' },
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation': { color: '#e08a2e', label: 'PPT' },
+  'text/plain': { color: '#8a8f98', label: 'TXT' },
+  'text/markdown': { color: '#8a8f98', label: 'MD' },
+}
+function fileTypeStyle(type) {
+  return FILE_TYPE_STYLE[type] || { color: '#8a8f98', label: 'FICHEIRO' }
 }
 
 /* Ficheiros que o próprio browser sabe mostrar num <iframe>/<img> direto.
@@ -42,56 +58,35 @@ function prettyDate(iso) {
   } catch { return '' }
 }
 
-/* Item da Biblioteca (entry_kind='library') — ficheiro + nome + descrição
-   breve. Lista compacta e utilitária de propósito: é o oposto do cartão
-   dos "criados", para se sentir a diferença entre as duas secções. */
-function LibAddedRow({ item, onOpen, onDelete, removing }) {
+/* Item da Biblioteca (entry_kind='library') — o portefólio, o que mais
+   se quer mostrar. Tile com preview de verdade quando é imagem; para o
+   resto (PDF/Word/PowerPoint), um cartão colorido por tipo à Drive —
+   ainda mais reconhecível que um ícone cinzento genérico. */
+function LibAddedTile({ item, onOpen, onDelete, removing }) {
   const isImage = item.library_file_type?.startsWith('image/')
-  const Icon = fileIconFor(item.library_file_type)
-  const clickable = !!item.library_file_url
+  const ft = fileTypeStyle(item.library_file_type)
 
-  return (
-    <button type="button" className={`lib-row${clickable ? ' is-clickable' : ''}`} onClick={() => onOpen(item)}>
-      <span className={`lib-row-icon${isImage ? ' has-thumb' : ''}`}>
-        {isImage ? <img src={item.library_file_url} alt="" loading="lazy" /> : <Icon size={17} />}
-      </span>
-      <div className="lib-row-body">
-        <span className="lib-row-name">{item.name}</span>
-        {item.library_description && <span className="lib-row-desc">{item.library_description}</span>}
-      </div>
-      <span className="lib-row-date">{prettyDate(item.created_at)}</span>
-      {clickable && <span className="lib-row-hint" aria-hidden="true"><ExternalLink size={14} /></span>}
-      <span
-        role="button"
-        tabIndex={0}
-        className="lib-row-delete"
-        onClick={e => { e.stopPropagation(); if (removing !== item.id) onDelete(item.id) }}
-        onKeyDown={e => { if ((e.key === 'Enter' || e.key === ' ') && removing !== item.id) { e.stopPropagation(); onDelete(item.id) } }}
-        aria-label="Remover"
-        aria-disabled={removing === item.id}
-      >
-        <Trash size={14} />
-      </span>
-    </button>
-  )
-}
-
-/* Projeto "criado" (entry_kind='full') — o oposto da linha compacta de
-   cima: um tile visual, capa em destaque, pensado para parecer
-   portefólio a sério, não uma entrada de lista de ficheiros. */
-function LibFullTile({ item, onOpen, onDelete, removing }) {
   return (
     <div className="lib-tile">
       <button type="button" className="lib-tile-main" onClick={() => onOpen(item)}>
-        <span className="lib-tile-cover">
-          {item.cover_url ? <img src={item.cover_url} alt="" loading="lazy" /> : <Folder size={26} />}
+        <span
+          className="lib-tile-cover"
+          style={!isImage ? { background: `color-mix(in srgb, ${ft.color} 16%, var(--color-bg-alt))` } : undefined}
+        >
+          {isImage ? (
+            <img src={item.library_file_url} alt="" loading="lazy" />
+          ) : (
+            <span className="lib-tile-filetype" style={{ color: ft.color }}>
+              <FileText size={30} />
+              <span className="lib-tile-filetype-label">{ft.label}</span>
+            </span>
+          )}
         </span>
         <span className="lib-tile-footer">
           <span className="lib-tile-text">
             <span className="lib-tile-name">{item.name}</span>
-            {item.area && <span className="lib-tile-area">{item.area}</span>}
+            {item.library_description && <span className="lib-tile-area">{item.library_description}</span>}
           </span>
-          {item.score > 0 && <span className="lib-tile-score">{item.score}</span>}
         </span>
       </button>
       <span
@@ -106,6 +101,35 @@ function LibFullTile({ item, onOpen, onDelete, removing }) {
         <Trash size={14} />
       </span>
     </div>
+  )
+}
+
+/* Projeto "criado" (entry_kind='full') — ainda em construção, por isso
+   sem o destaque todo: linha compacta, não tile. */
+function LibBuildingRow({ item, onOpen, onDelete, removing }) {
+  return (
+    <button type="button" className="lib-row is-clickable" onClick={() => onOpen(item)}>
+      <span className={`lib-row-icon${item.cover_url ? ' has-thumb' : ''}`}>
+        {item.cover_url ? <img src={item.cover_url} alt="" loading="lazy" /> : <Folder size={16} />}
+      </span>
+      <div className="lib-row-body">
+        <span className="lib-row-name">{item.name}</span>
+        {item.area && <span className="lib-row-desc">{item.area}</span>}
+      </div>
+      {item.score > 0 && <span className="lib-row-date">{item.score}</span>}
+      <span className="lib-row-hint" aria-hidden="true"><ExternalLink size={14} /></span>
+      <span
+        role="button"
+        tabIndex={0}
+        className="lib-row-delete"
+        onClick={e => { e.stopPropagation(); if (removing !== item.id) onDelete(item.id) }}
+        onKeyDown={e => { if ((e.key === 'Enter' || e.key === ' ') && removing !== item.id) { e.stopPropagation(); onDelete(item.id) } }}
+        aria-label="Remover"
+        aria-disabled={removing === item.id}
+      >
+        <Trash size={14} />
+      </span>
+    </button>
   )
 }
 
@@ -158,8 +182,8 @@ export default function Biblioteca() {
         </div>
 
         {items === null ? (
-          <div className="lib-added-list">
-            {[0, 1, 2].map(i => <div key={i} className="lib-row lib-row--skeleton" />)}
+          <div className="lib-tile-grid">
+            {[0, 1, 2].map(i => <div key={i} className="lib-tile-main lib-tile--skeleton" />)}
           </div>
         ) : items.length === 0 ? (
           <div className="lib-empty">
@@ -173,28 +197,27 @@ export default function Biblioteca() {
         ) : (
           <>
             {/* Adicionados primeiro — é o portefólio, o que faz sentido
-                ver logo à chegada. Lista compacta de propósito: é o
-                oposto visual dos "criados" logo abaixo. */}
+                ver com destaque. Tile com preview, à Drive. */}
             {added.length > 0 && (
               <div className="lib-section">
                 <h2 className="lib-section-title">Adicionados</h2>
-                <div className="lib-added-list">
+                <div className="lib-tile-grid">
                   {added.map(item => (
-                    <LibAddedRow key={item.id} item={item} removing={removing} onDelete={handleDelete}
+                    <LibAddedTile key={item.id} item={item} removing={removing} onDelete={handleDelete}
                       onOpen={it => it.library_file_url && setViewing(it)} />
                   ))}
                 </div>
               </div>
             )}
 
-            {/* "A criar" — tiles com capa em destaque, para parecer um
-                portefólio a sério, não uma lista de ficheiros. */}
+            {/* "A criar" — ainda em construção, por isso sem o destaque
+                todo: linha compacta, não tile. */}
             {building.length > 0 && (
               <div className="lib-section">
                 <h2 className="lib-section-title">A criar</h2>
-                <div className="lib-tile-grid">
+                <div className="lib-added-list">
                   {building.map(item => (
-                    <LibFullTile key={item.id} item={item} removing={removing} onDelete={handleDelete}
+                    <LibBuildingRow key={item.id} item={item} removing={removing} onDelete={handleDelete}
                       onOpen={it => navigate(`/projeto/${it.slug}`)} />
                   ))}
                 </div>
