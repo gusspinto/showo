@@ -304,14 +304,14 @@ export default function NewProject() {
                   <div className="np-filemeta">
                     {files.length} {files.length === 1 ? 'ficheiro' : 'ficheiros'} · {prettySize(totalBytes)}
                   </div>
-                  <label className="np-notes-label" htmlFor="np-notes">Queres acrescentar alguma coisa? (opcional)</label>
+                  <label className="np-notes-label" htmlFor="np-notes">Uma descrição breve (opcional)</label>
                   <textarea
                     id="np-notes"
                     className="np-notes"
                     rows={2}
                     value={importNotes}
                     onChange={e => setImportNotes(e.target.value)}
-                    placeholder="Ex: o relatório está incompleto, os resultados estão só nos slides."
+                    placeholder="Ex: Trabalho final de Matemática, 12º ano."
                   />
                 </div>
               )}

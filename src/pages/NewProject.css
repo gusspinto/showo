@@ -216,7 +216,7 @@
   padding: 10px 12px; resize: none; outline: none;
   line-height: 1.55;
 }
-.np-notes:focus { border-color: var(--color-primary); }
+.np-notes:focus { border-color: var(--color-text); }
 
 
 /* ── Tipo de projeto ── */
