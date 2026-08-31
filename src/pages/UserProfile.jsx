@@ -36,8 +36,8 @@ function ProfileItem({ project, onOpen }) {
   const isLibrary = project.entry_kind === 'library'
   const cover =
     project.cover_url ||
-    project.library_thumb_url ||
-    (project.library_file_type?.startsWith('image/') ? project.library_file_url : null)
+    project._signedThumbUrl ||
+    (project.library_file_type?.startsWith('image/') ? project._signedFileUrl : null)
   const subtitle = project.ai_tagline || project.library_description || null
 
   if (project.profile_layout === 'row') {
@@ -232,12 +232,33 @@ export default function UserProfile() {
         finalProjects = fallback
       }
 
-      setProjects((finalProjects ?? []).map(p => ({
+      const normalized = (finalProjects ?? []).map(p => ({
         ...p,
         collaborator_count: Array.isArray(p.collaborator_count)
           ? (p.collaborator_count[0]?.count ?? 0)
           : (p.collaborator_count ?? 0),
-      })))
+      }))
+
+      // Ficheiros da Biblioteca são privados (097); os que estão no perfil
+      // ficam legíveis via signed URL graças à policy do 104. O visitante
+      // (mesmo anónimo) assina-os aqui para a thumbnail/abertura funcionar.
+      const paths = normalized.flatMap(p =>
+        p.entry_kind === 'library'
+          ? [p.library_file_url, p.library_thumb_url].filter(u => u && !u.startsWith('http'))
+          : [],
+      )
+      if (paths.length) {
+        const { data: signed } = await supabase.storage.from('library-files').createSignedUrls(paths, 3600)
+        const urlMap = {}
+        signed?.forEach(s => { if (s.signedUrl) urlMap[s.path] = s.signedUrl })
+        normalized.forEach(p => {
+          if (p.entry_kind !== 'library') return
+          p._signedFileUrl = urlMap[p.library_file_url] || p.library_file_url
+          p._signedThumbUrl = urlMap[p.library_thumb_url] || p.library_thumb_url
+        })
+      }
+
+      setProjects(normalized)
       if (isRecruiterVisitor) setSaved(!!sc)
 
       setLoading(false)
@@ -429,7 +450,8 @@ export default function UserProfile() {
                   project={project}
                   onOpen={() => {
                     if (project.entry_kind === 'library') {
-                      if (project.library_file_url) window.open(project.library_file_url, '_blank', 'noopener')
+                      const url = project._signedFileUrl || project.library_file_url
+                      if (url) window.open(url, '_blank', 'noopener')
                     } else {
                       navigate(`/projeto/${project.slug}`)
                     }
