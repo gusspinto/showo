@@ -3,11 +3,10 @@
    ══════════════════════════════════════════════════════════════════════════ */
 
 .lib-header {
-  display: flex; align-items: flex-start; justify-content: space-between;
+  display: flex; align-items: center; justify-content: space-between;
   gap: 16px; margin: 28px 0 24px;
 }
-.lib-title { font-size: 26px; font-weight: 800; letter-spacing: -0.4px; margin: 0 0 4px; }
-.lib-subtitle { font-size: 14px; color: var(--color-text-secondary); margin: 0; }
+.lib-title { font-size: 26px; font-weight: 800; letter-spacing: -0.4px; margin: 0; }
 
 .lib-add-btn {
   display: flex; align-items: center; gap: 7px; flex-shrink: 0;
@@ -30,7 +29,13 @@
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: 14px;
+  text-decoration: none; color: inherit;
+  transition: border-color 0.15s, background 0.15s;
 }
+/* Card inteiro clicável — abre o ficheiro numa aba nova. O botão de
+   remover tem stopPropagation, não dispara o link. */
+.lib-card.is-clickable { cursor: pointer; }
+.lib-card.is-clickable:hover { border-color: var(--color-border-hover); background: var(--color-surface-hover); }
 .lib-card--skeleton { height: 92px; background: var(--color-bg-alt); border-style: dashed; }
 
 .lib-card-icon {
@@ -59,6 +64,14 @@
 .lib-card-btn:hover { background: var(--color-surface-hover); color: var(--color-text); }
 .lib-card-btn.danger:hover { background: var(--color-error-subtle); color: var(--color-error); }
 .lib-card-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Ícone de "abrir" — só um sinal visual de que o card é clicável, não
+   é ele próprio um botão independente (por isso sem hover próprio). */
+.lib-card-hint {
+  display: flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px;
+  color: var(--color-text-tertiary);
+}
 
 .lib-empty {
   display: flex; flex-direction: column; align-items: center; text-align: center;

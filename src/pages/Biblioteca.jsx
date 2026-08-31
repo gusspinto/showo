@@ -59,10 +59,7 @@ export default function Biblioteca() {
       <Navbar />
       <div className="page-content">
         <div className="lib-header">
-          <div>
-            <h1 className="lib-title">Biblioteca</h1>
-            <p className="lib-subtitle">O que já tens feito, guardado aqui — sem virar uma página inteira.</p>
-          </div>
+          <h1 className="lib-title">Biblioteca</h1>
           <button className="lib-add-btn" onClick={() => navigate('/novo')}>
             <Plus size={15} /> Adicionar
           </button>
@@ -86,7 +83,14 @@ export default function Biblioteca() {
             {items.map(item => {
               const Icon = fileIconFor(item.library_file_type)
               return (
-                <div key={item.id} className="lib-card">
+                <a
+                  key={item.id}
+                  className={`lib-card${item.library_file_url ? ' is-clickable' : ''}`}
+                  href={item.library_file_url || undefined}
+                  target={item.library_file_url ? '_blank' : undefined}
+                  rel={item.library_file_url ? 'noopener noreferrer' : undefined}
+                  onClick={e => { if (!item.library_file_url) e.preventDefault() }}
+                >
                   <span className="lib-card-icon"><Icon size={20} /></span>
                   <div className="lib-card-body">
                     <span className="lib-card-name">{item.name}</span>
@@ -97,15 +101,18 @@ export default function Biblioteca() {
                   </div>
                   <div className="lib-card-actions">
                     {item.library_file_url && (
-                      <a className="lib-card-btn" href={item.library_file_url} target="_blank" rel="noopener noreferrer" aria-label="Abrir ficheiro">
-                        <Download size={15} />
-                      </a>
+                      <span className="lib-card-hint" aria-hidden="true"><Download size={15} /></span>
                     )}
-                    <button className="lib-card-btn danger" onClick={() => handleDelete(item.id)} disabled={removing === item.id} aria-label="Remover">
+                    <button
+                      className="lib-card-btn danger"
+                      onClick={e => { e.preventDefault(); e.stopPropagation(); handleDelete(item.id) }}
+                      disabled={removing === item.id}
+                      aria-label="Remover"
+                    >
                       <Trash size={15} />
                     </button>
                   </div>
-                </div>
+                </a>
               )
             })}
           </div>
