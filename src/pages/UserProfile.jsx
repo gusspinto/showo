@@ -21,7 +21,7 @@ import { PaletteIcon as Palette } from '@solar-icons/react/bold/palette'
 import ConvidarVagaModal from '../components/ConvidarVagaModal'
 import ProfileCustomizer from '../components/ProfileCustomizer'
 import { PlanBadge } from '../components/PlanGate'
-import { appearanceVars, appearanceClass } from '../lib/profileAppearance'
+import { appearanceVars } from '../lib/profileAppearance'
 import './UserProfile.css'
 
 function scoreColor(score) {
@@ -194,13 +194,14 @@ export default function UserProfile() {
   const [showInvite, setShowInvite] = useState(false)
   const [customizing, setCustomizing] = useState(false)
   const [draftAppearance, setDraftAppearance] = useState({})
+  const [draftHeadline, setDraftHeadline] = useState('')
   const [savingAppearance, setSavingAppearance] = useState(false)
 
   useEffect(() => {
     async function load() {
       const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(username)
 
-      const PROFILE_COLS = 'id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size, skills, school, total_xp, created_at, area, profile_appearance'
+      const PROFILE_COLS = 'id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size, skills, school, total_xp, created_at, area, profile_appearance, profile_headline'
       const { data: profileData, error: profileErr } = isUUID
         ? await supabase.from('profiles').select(PROFILE_COLS).eq('id', username).single()
         : await supabase.from('profiles').select(PROFILE_COLS).eq('username', username).single()
@@ -299,24 +300,26 @@ export default function UserProfile() {
   const displayName  = profile?.full_name || profile?.username || 'Utilizador'
   const profileUrl   = window.location.href
 
-  // Aparência mostrada: o rascunho enquanto o painel está aberto, senão o
-  // que está guardado. É isto que dá o preview ao vivo.
+  // Preview ao vivo: o rascunho enquanto o painel está aberto, senão o guardado.
   const appearance = customizing ? draftAppearance : (profile?.profile_appearance || {})
+  const headline   = customizing ? draftHeadline : (profile?.profile_headline || '')
 
   function openCustomizer() {
     setDraftAppearance(profile?.profile_appearance || {})
+    setDraftHeadline(profile?.profile_headline || '')
     setCustomizing(true)
   }
 
   async function saveAppearance() {
     setSavingAppearance(true)
+    const cleanHeadline = draftHeadline.trim() || null
     const { error } = await supabase
       .from('profiles')
-      .update({ profile_appearance: draftAppearance })
+      .update({ profile_appearance: draftAppearance, profile_headline: cleanHeadline })
       .eq('id', user.id)
     setSavingAppearance(false)
     if (!error) {
-      setProfile(p => ({ ...p, profile_appearance: draftAppearance }))
+      setProfile(p => ({ ...p, profile_appearance: draftAppearance, profile_headline: cleanHeadline }))
       setCustomizing(false)
     }
   }
@@ -342,7 +345,7 @@ export default function UserProfile() {
 
   return (
     <div
-      className={`min-h-screen bg-page up-root ${appearanceClass(appearance)}`}
+      className="min-h-screen bg-page up-root"
       style={appearanceVars(appearance)}
     >
       <Helmet>
@@ -387,6 +390,8 @@ export default function UserProfile() {
               {profile.school && <><span className="up-meta-sep">·</span><span>{profile.school}</span></>}
               {profile.role === 'professor' && <><span className="up-meta-sep">·</span><span>Professor</span></>}
             </div>
+
+            {headline && <p className="up-headline">{headline}</p>}
 
             {isOwnProfile && profile.role === 'aluno' && (
               <p className="up-hint">Brevemente: partilha o teu portfólio com empresas</p>
@@ -503,6 +508,8 @@ export default function UserProfile() {
         <ProfileCustomizer
           appearance={draftAppearance}
           onChange={setDraftAppearance}
+          headline={draftHeadline}
+          onHeadlineChange={setDraftHeadline}
           onSave={saveAppearance}
           onClose={() => setCustomizing(false)}
           saving={savingAppearance}

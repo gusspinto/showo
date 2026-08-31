@@ -772,16 +772,29 @@
   }
 }
 
-/* ══ Personalização do perfil-portefólio ═══════════════════════════════════
-   .up-root redefine os tokens globais (via style inline vindo de
-   appearanceVars) — os filhos que usam var(--color-*) apanham sozinhos.
-   Aqui fica só o que precisa do accent explícito, o banner e os estilos
-   de card. */
-.up-root {
-  transition: background-color 0.2s ease, color 0.2s ease;
+/* ══ Marca do perfil-portefólio ═══════════════════════════════════════════
+   Deliberadamente pequeno: uma cor de destaque e uma tipografia, vindas
+   de appearanceVars() como --up-accent / --up-font-*. Sem tema de fundo
+   nem estilo de card por-superfície (fragmentava a identidade). */
+
+/* Tipografia da marca — só nos títulos e no corpo do conteúdo do perfil,
+   não na Navbar. Fallback: os tokens globais. */
+.up-root .up-name,
+.up-root .up-headline,
+.up-root .up-section-label,
+.up-root .up-about-label,
+.up-root .up-card-name,
+.up-root .up-pf-row-name {
+  font-family: var(--up-font-heading, var(--font-heading));
+}
+.up-root .up-bio,
+.up-root .up-card-tagline,
+.up-root .up-pf-row-sub,
+.up-root .up-meta-row {
+  font-family: var(--up-font-body, var(--font-body));
 }
 
-/* Accent — aplicado com parcimónia: ações primárias, links, realce no hover */
+/* Accent — com parcimónia: ações primárias, links, realce no hover. */
 .up-root .up-action-btn.primary,
 .up-root .up-empty-cta {
   background: var(--up-accent);
@@ -801,8 +814,15 @@
 .up-root .up-pf-row:hover {
   border-color: var(--up-accent);
 }
-.up-root .up-section-label {
-  color: color-mix(in srgb, var(--up-accent) 70%, var(--color-text-secondary));
+
+/* ── Frase de topo ── */
+.up-headline {
+  margin: 10px 0 0;
+  max-width: 42ch;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.45;
+  color: var(--color-text);
 }
 
 /* ── Banner ── */
@@ -823,23 +843,4 @@
 }
 .page-content.has-banner .up-header {
   margin-top: -56px;
-}
-
-/* ── Estilos de card ── */
-.up-cards-plano .up-project-card {
-  border-color: transparent;
-  background: var(--color-bg-alt);
-}
-.up-cards-plano .up-pf-row {
-  border-color: transparent;
-  background: var(--color-bg-alt);
-}
-.up-cards-moldura .up-project-card,
-.up-cards-moldura .up-pf-row {
-  border-radius: 3px;
-  border-color: var(--color-text);
-}
-.up-cards-moldura .up-card-cover-img,
-.up-cards-moldura .up-card-cover-fallback {
-  border-radius: 0;
 }
