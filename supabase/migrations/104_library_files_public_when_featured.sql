@@ -25,6 +25,6 @@ CREATE POLICY "Library file read when featured"
       SELECT 1 FROM public.projects p
       WHERE p.entry_kind = 'library'
         AND p.profile_featured = true
-        AND storage.objects.name IN (p.library_file_url, p.library_thumb_url)
+        AND objects.name IN (p.library_file_url, p.library_thumb_url)
     )
   );
