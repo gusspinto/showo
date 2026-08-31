@@ -42,26 +42,58 @@ function prettyDate(iso) {
   } catch { return '' }
 }
 
+/* Item da Biblioteca (entry_kind='library') — ficheiro + nome + descrição
+   breve, sempre um card pequeno e utilitário. */
 function LibCard({ item, onOpen, onDelete, removing }) {
-  const isFull = item.entry_kind === 'full'
-  const isImage = !isFull && item.library_file_type?.startsWith('image/')
-  const Icon = isFull ? Folder : fileIconFor(item.library_file_type)
-  const thumbSrc = isImage ? item.library_file_url : (isFull ? item.cover_url : null)
-  const desc = isFull ? item.ai_tagline || item.area : item.library_description
-  const clickable = isFull || !!item.library_file_url
+  const isImage = item.library_file_type?.startsWith('image/')
+  const Icon = fileIconFor(item.library_file_type)
+  const clickable = !!item.library_file_url
 
   return (
     <button type="button" className={`lib-card${clickable ? ' is-clickable' : ''}`} onClick={() => onOpen(item)}>
-      <span className={`lib-card-icon${thumbSrc ? ' has-thumb' : ''}`}>
-        {thumbSrc ? <img src={thumbSrc} alt="" loading="lazy" /> : <Icon size={20} />}
+      <span className={`lib-card-icon${isImage ? ' has-thumb' : ''}`}>
+        {isImage ? <img src={item.library_file_url} alt="" loading="lazy" /> : <Icon size={20} />}
       </span>
       <div className="lib-card-body">
         <span className="lib-card-name">{item.name}</span>
-        {desc && <span className="lib-card-desc">{desc}</span>}
+        {item.library_description && <span className="lib-card-desc">{item.library_description}</span>}
         <span className="lib-card-meta">{prettyDate(item.created_at)}</span>
       </div>
       <div className="lib-card-actions">
         {clickable && <span className="lib-card-hint" aria-hidden="true"><ExternalLink size={15} /></span>}
+        <span
+          role="button"
+          tabIndex={0}
+          className="lib-card-btn danger"
+          onClick={e => { e.stopPropagation(); if (removing !== item.id) onDelete(item.id) }}
+          onKeyDown={e => { if ((e.key === 'Enter' || e.key === ' ') && removing !== item.id) { e.stopPropagation(); onDelete(item.id) } }}
+          aria-label="Remover"
+          aria-disabled={removing === item.id}
+        >
+          <Trash size={15} />
+        </span>
+      </div>
+    </button>
+  )
+}
+
+/* Projeto "criado" (entry_kind='full') — tem mais por trás (score, área,
+   progresso) do que um item da Biblioteca, mas o pedido foi minimalista:
+   capa se houver (num quadrado pequeno, não uma hero image), nome, área
+   como etiqueta discreta e o score num número simples — nada de tagline
+   nem parágrafos, isso fica para dentro do próprio projeto. */
+function LibFullCard({ item, onOpen, onDelete, removing }) {
+  return (
+    <button type="button" className="lib-card lib-card--full is-clickable" onClick={() => onOpen(item)}>
+      <span className={`lib-card-icon lib-card-icon--full${item.cover_url ? ' has-thumb' : ''}`}>
+        {item.cover_url ? <img src={item.cover_url} alt="" loading="lazy" /> : <Folder size={20} />}
+      </span>
+      <div className="lib-card-body">
+        <span className="lib-card-name">{item.name}</span>
+        {item.area && <span className="lib-card-tag">{item.area}</span>}
+      </div>
+      <div className="lib-card-actions">
+        {item.score > 0 && <span className="lib-card-score">{item.score}</span>}
         <span
           role="button"
           tabIndex={0}
@@ -161,7 +193,7 @@ export default function Biblioteca() {
                 <h2 className="lib-section-title">A criar</h2>
                 <div className="lib-grid">
                   {building.map(item => (
-                    <LibCard key={item.id} item={item} removing={removing} onDelete={handleDelete}
+                    <LibFullCard key={item.id} item={item} removing={removing} onDelete={handleDelete}
                       onOpen={it => navigate(`/projeto/${it.slug}`)} />
                   ))}
                 </div>
