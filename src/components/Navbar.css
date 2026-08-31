@@ -244,8 +244,8 @@ body.light .sb-collapse-toggle:hover { border-color: rgba(0,0,0,0.75); }
      inteiro — nunca "corta" nenhuma cor, parado ou em movimento. */
   background-image:
     radial-gradient(circle 130px at var(--mx) var(--my), rgba(255,255,255,0.55), transparent 70%),
-    linear-gradient(115deg, #2f6bff 0%, #ff3b5c 52%, #ffb400 100%);
-  background-blend-mode: soft-light, normal;
+    linear-gradient(115deg, #2f6bff 0%, #ff3b5c 52%, #ffb400 100%) !important;
+  background-blend-mode: soft-light, normal !important;
   background-color: transparent !important;
   background-size: 100% 100% !important;
   background-position: center !important;
