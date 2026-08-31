@@ -1,5 +1,5 @@
 -- ============================================================================
--- 097_profile_featured_library.sql — Editar perfil a partir da Biblioteca.
+-- 103_profile_featured_library.sql — Editar perfil a partir da Biblioteca.
 --
 -- A secção "Projetos" do perfil público deixava de listar TODOS os projetos
 -- "full" por score. Passa a mostrar só os itens que o dono marcou na
