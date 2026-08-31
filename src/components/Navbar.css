@@ -238,12 +238,15 @@ body.light .sb-collapse-toggle:hover { border-color: rgba(0,0,0,0.75); }
    reparar no movimento); estático em tablet/mobile — mesma cor, sem
    distração enquanto se navega ao toque. */
 .gradient-cta {
-  background: linear-gradient(115deg, #2f6bff 0%, #ff3b5c 52%, #ffb400 100%) !important;
-  background-size: 220% 220%;
-  background-position: 0% 50%;
-  border-color: transparent !important;
+  background-image: linear-gradient(115deg, #2f6bff 0%, #ff3b5c 52%, #ffb400 100%) !important;
+  background-color: transparent !important;
+  background-size: 260% 260% !important;
+  background-position: 0% 50% !important;
+  background-repeat: no-repeat !important;
+  border: none !important;
+  outline: none !important;
   color: #fff !important;
-  box-shadow: 0 4px 14px color-mix(in srgb, #ff3b5c 30%, transparent);
+  box-shadow: none !important;
   transition: filter 0.2s ease;
 }
 .gradient-cta:hover { opacity: 1 !important; filter: brightness(1.05); }
@@ -256,8 +259,7 @@ body.light .sb-collapse-toggle:hover { border-color: rgba(0,0,0,0.75); }
    há rato) as cores do gradiente começam a mexer-se — é essa a
    "animação profissional", não o botão a levantar-se. */
 @media (min-width: 901px) {
-  .gradient-cta { background-size: 300% 300%; }
-  .gradient-cta:hover { animation: gradient-cta-shift 2.4s ease infinite; }
+  .gradient-cta:hover { animation: gradient-cta-shift 2.4s ease infinite !important; }
 }
 @media (prefers-reduced-motion: reduce) {
   .gradient-cta:hover { animation: none !important; }
