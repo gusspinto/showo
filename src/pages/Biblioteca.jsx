@@ -42,6 +42,42 @@ function prettyDate(iso) {
   } catch { return '' }
 }
 
+function LibCard({ item, onOpen, onDelete, removing }) {
+  const isFull = item.entry_kind === 'full'
+  const isImage = !isFull && item.library_file_type?.startsWith('image/')
+  const Icon = isFull ? Folder : fileIconFor(item.library_file_type)
+  const thumbSrc = isImage ? item.library_file_url : (isFull ? item.cover_url : null)
+  const desc = isFull ? item.ai_tagline || item.area : item.library_description
+  const clickable = isFull || !!item.library_file_url
+
+  return (
+    <button type="button" className={`lib-card${clickable ? ' is-clickable' : ''}`} onClick={() => onOpen(item)}>
+      <span className={`lib-card-icon${thumbSrc ? ' has-thumb' : ''}`}>
+        {thumbSrc ? <img src={thumbSrc} alt="" loading="lazy" /> : <Icon size={20} />}
+      </span>
+      <div className="lib-card-body">
+        <span className="lib-card-name">{item.name}</span>
+        {desc && <span className="lib-card-desc">{desc}</span>}
+        <span className="lib-card-meta">{prettyDate(item.created_at)}</span>
+      </div>
+      <div className="lib-card-actions">
+        {clickable && <span className="lib-card-hint" aria-hidden="true"><ExternalLink size={15} /></span>}
+        <span
+          role="button"
+          tabIndex={0}
+          className="lib-card-btn danger"
+          onClick={e => { e.stopPropagation(); if (removing !== item.id) onDelete(item.id) }}
+          onKeyDown={e => { if ((e.key === 'Enter' || e.key === ' ') && removing !== item.id) { e.stopPropagation(); onDelete(item.id) } }}
+          aria-label="Remover"
+          aria-disabled={removing === item.id}
+        >
+          <Trash size={15} />
+        </span>
+      </div>
+    </button>
+  )
+}
+
 export default function Biblioteca() {
   const navigate = useNavigate()
   const { user } = useAuth()
@@ -76,6 +112,9 @@ export default function Biblioteca() {
     setRemoving(null)
   }
 
+  const added = items?.filter(i => i.entry_kind === 'library') ?? []
+  const building = items?.filter(i => i.entry_kind === 'full') ?? []
+
   return (
     <div className="min-h-screen bg-page font-body">
       <Navbar />
@@ -101,51 +140,34 @@ export default function Biblioteca() {
             </button>
           </div>
         ) : (
-          <div className="lib-grid">
-            {items.map(item => {
-              const isFull = item.entry_kind === 'full'
-              const isImage = !isFull && item.library_file_type?.startsWith('image/')
-              const Icon = isFull ? Folder : fileIconFor(item.library_file_type)
-              const thumbSrc = isImage ? item.library_file_url : (isFull ? item.cover_url : null)
-              const desc = isFull ? item.ai_tagline || item.area : item.library_description
-              const clickable = isFull || !!item.library_file_url
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  className={`lib-card${clickable ? ' is-clickable' : ''}`}
-                  onClick={() => { if (isFull) navigate(`/projeto/${item.slug}`); else if (item.library_file_url) setViewing(item) }}
-                >
-                  <span className={`lib-card-icon${thumbSrc ? ' has-thumb' : ''}`}>
-                    {thumbSrc ? <img src={thumbSrc} alt="" loading="lazy" /> : <Icon size={20} />}
-                  </span>
-                  <div className="lib-card-body">
-                    <span className="lib-card-name">{item.name}</span>
-                    {desc && <span className="lib-card-desc">{desc}</span>}
-                    <span className="lib-card-meta">
-                      {isFull ? 'Criado' : 'Adicionado'} · {prettyDate(item.created_at)}
-                    </span>
-                  </div>
-                  <div className="lib-card-actions">
-                    {clickable && (
-                      <span className="lib-card-hint" aria-hidden="true"><ExternalLink size={15} /></span>
-                    )}
-                    <span
-                      role="button"
-                      tabIndex={0}
-                      className="lib-card-btn danger"
-                      onClick={e => { e.stopPropagation(); if (removing !== item.id) handleDelete(item.id) }}
-                      onKeyDown={e => { if ((e.key === 'Enter' || e.key === ' ') && removing !== item.id) { e.stopPropagation(); handleDelete(item.id) } }}
-                      aria-label="Remover"
-                      aria-disabled={removing === item.id}
-                    >
-                      <Trash size={15} />
-                    </span>
-                  </div>
-                </button>
-              )
-            })}
-          </div>
+          <>
+            {/* Adicionados primeiro — é o portefólio, o que faz sentido
+                ver logo à chegada. "A criar" fica por baixo: é trabalho
+                em curso, não a montra. */}
+            {added.length > 0 && (
+              <div className="lib-section">
+                <h2 className="lib-section-title">Adicionados</h2>
+                <div className="lib-grid">
+                  {added.map(item => (
+                    <LibCard key={item.id} item={item} removing={removing} onDelete={handleDelete}
+                      onOpen={it => it.library_file_url && setViewing(it)} />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {building.length > 0 && (
+              <div className="lib-section">
+                <h2 className="lib-section-title">A criar</h2>
+                <div className="lib-grid">
+                  {building.map(item => (
+                    <LibCard key={item.id} item={item} removing={removing} onDelete={handleDelete}
+                      onOpen={it => navigate(`/projeto/${it.slug}`)} />
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
 
