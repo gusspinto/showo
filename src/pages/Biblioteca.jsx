@@ -161,6 +161,24 @@ export default function Biblioteca() {
     return () => { cancelled = true }
   }, [user])
 
+  // A thumbnail de um item "adicionado" gera-se em segundo plano (ver
+  // generateLibraryThumbnail em NewProject.jsx) — sem isto, só aparecia
+  // depois de recarregar a página à mão. Ouve o próprio UPDATE da linha
+  // e troca o cartão colorido pela preview a sério assim que chega.
+  useEffect(() => {
+    if (!user) return
+    const channel = supabase
+      .channel(`biblioteca-${user.id}`)
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'projects', filter: `user_id=eq.${user.id}` }, payload => {
+        setItems(prev => prev?.map(i => (i.id === payload.new.id ? { ...i, ...payload.new } : i)) ?? prev)
+      })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'projects', filter: `user_id=eq.${user.id}` }, payload => {
+        setItems(prev => (prev?.some(i => i.id === payload.new.id) ? prev : [payload.new, ...(prev ?? [])]))
+      })
+      .subscribe()
+    return () => { supabase.removeChannel(channel) }
+  }, [user])
+
   function handleDelete(id) {
     setConfirmingDelete(id)
   }
