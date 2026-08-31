@@ -294,7 +294,7 @@ export default function NewProject() {
             <div className="np-tiles">
               <button className="np-tile is-blue" onClick={() => { if (!requireAccount('/novo?import=1')) setStep('import') }}>
                 <span className="np-tile-icon"><Upload size={22} /></span>
-                <span className="np-tile-title">Já tenho o trabalho feito</span>
+                <span className="np-tile-title">Adicionar</span>
                 <span className="np-tile-desc">Envia o relatório ou as imagens. Lemos tudo e preenchemos a ficha por ti.</span>
                 <span className="np-tile-meta">PDF · Word · PowerPoint · Imagens</span>
                 <span className="np-tile-go"><ChevronRight size={16} /></span>
@@ -302,7 +302,7 @@ export default function NewProject() {
 
               <button className="np-tile is-red" onClick={() => { if (!requireAccount('/novo')) setStep('describe') }}>
                 <span className="np-tile-icon"><PenLine size={22} /></span>
-                <span className="np-tile-title">Descrever em duas frases</span>
+                <span className="np-tile-title">Criar do 0</span>
                 <span className="np-tile-desc">Conta o que fizeste. A IA trata do resto.</span>
                 <span className="np-tile-go"><ChevronRight size={16} /></span>
               </button>
