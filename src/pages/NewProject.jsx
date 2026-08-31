@@ -112,6 +112,18 @@ async function generateLibraryThumbnail(projectId, file) {
   }
 }
 
+/* Botão "Criar com IA" — o gradiente "floresce" a partir do sítio exato
+   onde o cursor entra no botão, não do centro. Só a entrada interessa
+   (onMouseEnter dispara uma vez, ao contrário de mousemove); o CSS trata
+   do resto via clip-path a crescer a partir de --mx/--my. */
+function handleAiBtnEnter(e) {
+  const rect = e.currentTarget.getBoundingClientRect()
+  const x = ((e.clientX - rect.left) / rect.width) * 100
+  const y = ((e.clientY - rect.top) / rect.height) * 100
+  e.currentTarget.style.setProperty('--mx', `${x}%`)
+  e.currentTarget.style.setProperty('--my', `${y}%`)
+}
+
 /* Só para mandar um .docx/.pptx à edge function office-thumbnail converter
    — não tem mais nenhum uso (o upload em si vai direto, sem passar por
    base64). */
@@ -448,7 +460,7 @@ export default function NewProject() {
 
             {error && <p className="np-err"><AlertTriangle size={13} /> {error}</p>}
 
-            <button className="np-btn-primary np-btn-ai" onClick={handleGenerate} disabled={!description.trim()}>
+            <button className="np-btn-primary np-btn-ai" onClick={handleGenerate} onMouseEnter={handleAiBtnEnter} disabled={!description.trim()}>
               <Sparkles size={15} /> Criar com IA
             </button>
 
