@@ -43,70 +43,69 @@ function prettyDate(iso) {
 }
 
 /* Item da Biblioteca (entry_kind='library') — ficheiro + nome + descrição
-   breve, sempre um card pequeno e utilitário. */
-function LibCard({ item, onOpen, onDelete, removing }) {
+   breve. Lista compacta e utilitária de propósito: é o oposto do cartão
+   dos "criados", para se sentir a diferença entre as duas secções. */
+function LibAddedRow({ item, onOpen, onDelete, removing }) {
   const isImage = item.library_file_type?.startsWith('image/')
   const Icon = fileIconFor(item.library_file_type)
   const clickable = !!item.library_file_url
 
   return (
-    <button type="button" className={`lib-card${clickable ? ' is-clickable' : ''}`} onClick={() => onOpen(item)}>
-      <span className={`lib-card-icon${isImage ? ' has-thumb' : ''}`}>
-        {isImage ? <img src={item.library_file_url} alt="" loading="lazy" /> : <Icon size={20} />}
+    <button type="button" className={`lib-row${clickable ? ' is-clickable' : ''}`} onClick={() => onOpen(item)}>
+      <span className={`lib-row-icon${isImage ? ' has-thumb' : ''}`}>
+        {isImage ? <img src={item.library_file_url} alt="" loading="lazy" /> : <Icon size={17} />}
       </span>
-      <div className="lib-card-body">
-        <span className="lib-card-name">{item.name}</span>
-        {item.library_description && <span className="lib-card-desc">{item.library_description}</span>}
-        <span className="lib-card-meta">{prettyDate(item.created_at)}</span>
+      <div className="lib-row-body">
+        <span className="lib-row-name">{item.name}</span>
+        {item.library_description && <span className="lib-row-desc">{item.library_description}</span>}
       </div>
-      <div className="lib-card-actions">
-        {clickable && <span className="lib-card-hint" aria-hidden="true"><ExternalLink size={15} /></span>}
-        <span
-          role="button"
-          tabIndex={0}
-          className="lib-card-btn danger"
-          onClick={e => { e.stopPropagation(); if (removing !== item.id) onDelete(item.id) }}
-          onKeyDown={e => { if ((e.key === 'Enter' || e.key === ' ') && removing !== item.id) { e.stopPropagation(); onDelete(item.id) } }}
-          aria-label="Remover"
-          aria-disabled={removing === item.id}
-        >
-          <Trash size={15} />
-        </span>
-      </div>
+      <span className="lib-row-date">{prettyDate(item.created_at)}</span>
+      {clickable && <span className="lib-row-hint" aria-hidden="true"><ExternalLink size={14} /></span>}
+      <span
+        role="button"
+        tabIndex={0}
+        className="lib-row-delete"
+        onClick={e => { e.stopPropagation(); if (removing !== item.id) onDelete(item.id) }}
+        onKeyDown={e => { if ((e.key === 'Enter' || e.key === ' ') && removing !== item.id) { e.stopPropagation(); onDelete(item.id) } }}
+        aria-label="Remover"
+        aria-disabled={removing === item.id}
+      >
+        <Trash size={14} />
+      </span>
     </button>
   )
 }
 
-/* Projeto "criado" (entry_kind='full') — tem mais por trás (score, área,
-   progresso) do que um item da Biblioteca, mas o pedido foi minimalista:
-   capa se houver (num quadrado pequeno, não uma hero image), nome, área
-   como etiqueta discreta e o score num número simples — nada de tagline
-   nem parágrafos, isso fica para dentro do próprio projeto. */
-function LibFullCard({ item, onOpen, onDelete, removing }) {
+/* Projeto "criado" (entry_kind='full') — o oposto da linha compacta de
+   cima: um tile visual, capa em destaque, pensado para parecer
+   portefólio a sério, não uma entrada de lista de ficheiros. */
+function LibFullTile({ item, onOpen, onDelete, removing }) {
   return (
-    <button type="button" className="lib-card lib-card--full is-clickable" onClick={() => onOpen(item)}>
-      <span className={`lib-card-icon lib-card-icon--full${item.cover_url ? ' has-thumb' : ''}`}>
-        {item.cover_url ? <img src={item.cover_url} alt="" loading="lazy" /> : <Folder size={20} />}
-      </span>
-      <div className="lib-card-body">
-        <span className="lib-card-name">{item.name}</span>
-        {item.area && <span className="lib-card-tag">{item.area}</span>}
-      </div>
-      <div className="lib-card-actions">
-        {item.score > 0 && <span className="lib-card-score">{item.score}</span>}
-        <span
-          role="button"
-          tabIndex={0}
-          className="lib-card-btn danger"
-          onClick={e => { e.stopPropagation(); if (removing !== item.id) onDelete(item.id) }}
-          onKeyDown={e => { if ((e.key === 'Enter' || e.key === ' ') && removing !== item.id) { e.stopPropagation(); onDelete(item.id) } }}
-          aria-label="Remover"
-          aria-disabled={removing === item.id}
-        >
-          <Trash size={15} />
+    <div className="lib-tile">
+      <button type="button" className="lib-tile-main" onClick={() => onOpen(item)}>
+        <span className="lib-tile-cover">
+          {item.cover_url ? <img src={item.cover_url} alt="" loading="lazy" /> : <Folder size={26} />}
         </span>
-      </div>
-    </button>
+        <span className="lib-tile-footer">
+          <span className="lib-tile-text">
+            <span className="lib-tile-name">{item.name}</span>
+            {item.area && <span className="lib-tile-area">{item.area}</span>}
+          </span>
+          {item.score > 0 && <span className="lib-tile-score">{item.score}</span>}
+        </span>
+      </button>
+      <span
+        role="button"
+        tabIndex={0}
+        className="lib-tile-delete"
+        onClick={e => { e.stopPropagation(); if (removing !== item.id) onDelete(item.id) }}
+        onKeyDown={e => { if ((e.key === 'Enter' || e.key === ' ') && removing !== item.id) { e.stopPropagation(); onDelete(item.id) } }}
+        aria-label="Remover"
+        aria-disabled={removing === item.id}
+      >
+        <Trash size={14} />
+      </span>
+    </div>
   )
 }
 
@@ -159,8 +158,8 @@ export default function Biblioteca() {
         </div>
 
         {items === null ? (
-          <div className="lib-grid">
-            {[0, 1, 2].map(i => <div key={i} className="lib-card lib-card--skeleton" />)}
+          <div className="lib-added-list">
+            {[0, 1, 2].map(i => <div key={i} className="lib-row lib-row--skeleton" />)}
           </div>
         ) : items.length === 0 ? (
           <div className="lib-empty">
@@ -174,26 +173,28 @@ export default function Biblioteca() {
         ) : (
           <>
             {/* Adicionados primeiro — é o portefólio, o que faz sentido
-                ver logo à chegada. "A criar" fica por baixo: é trabalho
-                em curso, não a montra. */}
+                ver logo à chegada. Lista compacta de propósito: é o
+                oposto visual dos "criados" logo abaixo. */}
             {added.length > 0 && (
               <div className="lib-section">
                 <h2 className="lib-section-title">Adicionados</h2>
-                <div className="lib-grid">
+                <div className="lib-added-list">
                   {added.map(item => (
-                    <LibCard key={item.id} item={item} removing={removing} onDelete={handleDelete}
+                    <LibAddedRow key={item.id} item={item} removing={removing} onDelete={handleDelete}
                       onOpen={it => it.library_file_url && setViewing(it)} />
                   ))}
                 </div>
               </div>
             )}
 
+            {/* "A criar" — tiles com capa em destaque, para parecer um
+                portefólio a sério, não uma lista de ficheiros. */}
             {building.length > 0 && (
               <div className="lib-section">
                 <h2 className="lib-section-title">A criar</h2>
-                <div className="lib-grid">
+                <div className="lib-tile-grid">
                   {building.map(item => (
-                    <LibFullCard key={item.id} item={item} removing={removing} onDelete={handleDelete}
+                    <LibFullTile key={item.id} item={item} removing={removing} onDelete={handleDelete}
                       onOpen={it => navigate(`/projeto/${it.slug}`)} />
                   ))}
                 </div>
