@@ -1091,7 +1091,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   <Paintbrush size={18} strokeWidth={2} />
                 </button>
               ) : !isTeacher && !isAdmin ? (
-                <button className="mob-nav-icon-btn primary" onClick={() => navigate('/novo')} aria-label="Criar projeto">
+                <button className="mob-nav-icon-btn primary gradient-cta" onClick={() => navigate('/novo')} aria-label="Criar projeto">
                   <Plus size={20} strokeWidth={2.5} />
                 </button>
               ) : null}
@@ -1158,16 +1158,14 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
           {/* Mobile quick-create button — only on mobile (not tablet) */}
           {showLinks && !isTeacher && !isAdmin && (
             <button
-              className="ham-btn mob-only-create"
+              className="ham-btn mob-only-create gradient-cta"
               onClick={() => navigate('/novo')}
               aria-label="Criar projeto"
               style={{
-                background: 'var(--color-text)',
                 border: 'none',
                 borderRadius: 8, width: 38, height: 38,
                 flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                 cursor: 'pointer', padding: 0, flexShrink: 0,
-                boxShadow: '0 4px 12px color-mix(in srgb, var(--color-text) 35%, transparent)',
               }}
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -1392,7 +1390,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               {user && !isTeacher && !isAdmin && (
                 <div className={`sb-create-wrap ${extras ? 'hidden' : 'visible'}`}>
                   <div className="sb-create-inner">
-                    <button className="sb-create" onClick={() => navigate('/novo')}>
+                    <button className="sb-create gradient-cta" onClick={() => navigate('/novo')}>
                       <Plus size={14} />{!collapsed && showLabels && <span>Criar projeto</span>}
                     </button>
                   </div>
