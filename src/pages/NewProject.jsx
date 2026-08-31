@@ -11,7 +11,6 @@ import { AltArrowRightIcon as ChevronRight } from '@solar-icons/react/bold/alt-a
 import { UploadIcon as Upload } from '@solar-icons/react/bold/upload'
 import { DocumentTextIcon as FileText } from '@solar-icons/react/bold/document-text'
 import { CloseIcon as X } from '@solar-icons/react/bold/close'
-import { PenNewRoundIcon as PenLine } from '@solar-icons/react/bold/pen-new-round'
 import { DangerTriangleIcon as AlertTriangle } from '@solar-icons/react/bold/danger-triangle'
 import { Navbar } from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
@@ -293,7 +292,6 @@ export default function NewProject() {
 
             <div className="np-tiles">
               <button className="np-tile is-blue" onClick={() => { if (!requireAccount('/novo?import=1')) setStep('import') }}>
-                <span className="np-tile-icon"><Upload size={22} /></span>
                 <span className="np-tile-title">Adicionar</span>
                 <span className="np-tile-desc">Envia o relatório ou as imagens. Lemos tudo e preenchemos a ficha por ti.</span>
                 <span className="np-tile-meta">PDF · Word · PowerPoint · Imagens</span>
@@ -301,7 +299,6 @@ export default function NewProject() {
               </button>
 
               <button className="np-tile is-red" onClick={() => { if (!requireAccount('/novo')) setStep('describe') }}>
-                <span className="np-tile-icon"><PenLine size={22} /></span>
                 <span className="np-tile-title">Criar do 0</span>
                 <span className="np-tile-desc">Conta o que fizeste. A IA trata do resto.</span>
                 <span className="np-tile-go"><ChevronRight size={16} /></span>

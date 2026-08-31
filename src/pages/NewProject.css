@@ -118,14 +118,14 @@
   .np-tile { animation: none; }
 }
 
-.np-tile-icon {
-  display: flex; align-items: center; justify-content: center;
-  width: 48px; height: 48px; flex-shrink: 0;
-  border-radius: 13px; color: #fff;
+/* Sem ícone em cima do título — ficava a mais. A cor de cada cartão
+   fica só nesta réguazinha no topo (4px) e no hover da borda/seta. */
+.np-tile::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
 }
-.np-tile.is-blue .np-tile-icon { background: linear-gradient(135deg, #2478f0, #5b9bff); }
+.np-tile.is-blue::before { background: #2478f0; }
 .np-tile.is-blue:hover { border-color: #2478f0; }
-.np-tile.is-red .np-tile-icon { background: linear-gradient(135deg, #db4a3d, #ef8177); }
+.np-tile.is-red::before { background: #db4a3d; }
 .np-tile.is-red:hover { border-color: #db4a3d; }
 
 .np-tile-title { font-size: 17px; font-weight: 800; letter-spacing: -0.2px; }
