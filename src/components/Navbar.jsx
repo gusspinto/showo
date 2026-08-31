@@ -394,7 +394,7 @@ function InviteInbox({ userId, sidebar = false, collapsed = false }) {
           position: 'relative',
           background: open ? 'color-mix(in srgb, var(--color-text) 13%, transparent)' : 'transparent',
           border: 'none',
-          borderRadius: 8, width: 44, height: 44,
+          borderRadius: sidebar ? 8 : 8, width: sidebar ? 32 : 44, height: sidebar ? 32 : 44,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           cursor: 'pointer', color: open ? 'var(--color-text)' : 'var(--color-text-secondary)',
           transition: 'background 0.13s, color 0.13s', flexShrink: 0,
@@ -403,7 +403,7 @@ function InviteInbox({ userId, sidebar = false, collapsed = false }) {
         onMouseLeave={e => { if (!open) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--color-text-secondary)' } }}
         title="Notificações"
       >
-        <Bell size={15} />
+        <Bell size={sidebar ? 16 : 15} />
         {count > 0 && (
           <span style={{
             position: 'absolute', top: -4, right: -4,
