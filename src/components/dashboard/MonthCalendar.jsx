@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import { AltArrowLeftIcon as ChevronLeft } from '@solar-icons/react/bold/alt-arrow-left'
 import { AltArrowRightIcon as ChevronRight } from '@solar-icons/react/bold/alt-arrow-right'
-import { AddCircleIcon as Plus } from '@solar-icons/react/bold/add-circle'
+import { PlusIcon as Plus } from '../icons/PlusIcon'
 
 const WEEKDAYS = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D']
 const MONTHS = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']

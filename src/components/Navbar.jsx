@@ -21,7 +21,7 @@ import { GraphNewUpIcon as TrendingUp } from '@solar-icons/react/bold/graph-new-
 import { SquareAcademicCapIcon as GraduationCap } from '@solar-icons/react/bold/square-academic-cap'
 import { UserPlusRoundedIcon as UserPlus } from '@solar-icons/react/bold/user-plus-rounded'
 import { Widget4Icon as LayoutDashboard } from '@solar-icons/react/bold/widget-4'
-import { AddCircleIcon as Plus } from '@solar-icons/react/bold/add-circle'
+import { PlusIcon as Plus } from './icons/PlusIcon'
 import { CompassIcon as Compass } from '@solar-icons/react/bold/compass'
 import { Sun2Icon as Sun } from '@solar-icons/react/bold/sun-2'
 import { MoonIcon as Moon } from '@solar-icons/react/bold/moon'

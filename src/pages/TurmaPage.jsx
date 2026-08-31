@@ -24,7 +24,7 @@ import { DangerTriangleIcon as AlertTriangle } from '@solar-icons/react/bold/dan
 import { ChecklistIcon as ListChecks } from '@solar-icons/react/bold/checklist'
 import { RecordCircleIcon as Circle } from '@solar-icons/react/bold/record-circle'
 import { TrashBinMinimalisticIcon as Trash2 } from '@solar-icons/react/bold/trash-bin-minimalistic'
-import { AddCircleIcon as Plus } from '@solar-icons/react/bold/add-circle'
+import { PlusIcon as Plus } from '../components/icons/PlusIcon'
 import { CalendarIcon as Calendar } from '@solar-icons/react/bold/calendar'
 import { ClipboardTextIcon as ClipboardList } from '@solar-icons/react/bold/clipboard-text'
 import { ScaleIcon as Scale } from '@solar-icons/react/bold/scale'

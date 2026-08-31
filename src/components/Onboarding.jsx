@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useLayoutEffect } from 'react'
 import { CloseIcon as X } from '@solar-icons/react/bold/close'
 import { CursorIcon as MousePointer } from '@solar-icons/react/bold/cursor'
-import { AddCircleIcon as Plus } from '@solar-icons/react/bold/add-circle'
+import { PlusIcon as Plus } from './icons/PlusIcon'
 import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
 import './Onboarding.css'
 
