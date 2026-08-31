@@ -287,34 +287,26 @@ export default function NewProject() {
       <NpShell>
         <Toast {...toast} />
         <Navbar showLinks={false} mobileLeft={<BackButton onClick={() => navigate(-1)} />} />
-        <div className="np-center">
-          <div className="np-wrap">
+        <div className="np-center np-center--choose">
+          <div className="np-wrap np-wrap--choose">
             <StepBar current={1} total={3} label="Como queres começar" />
-            <h1 className="np-headline">Vamos pôr o teu projeto na Showo.</h1>
-            <p className="np-sub">Escolhe o caminho mais curto para ti.</p>
+            <h1 className="np-headline">Cria o teu projeto</h1>
+            <div className="np-brand-rule" />
 
-            <div className="np-choices">
-              <button className="np-choice" onClick={() => { if (!requireAccount('/novo?import=1')) setStep('import') }}>
-                <span className="np-choice-icon"><Upload size={19} /></span>
-                <span className="np-choice-body">
-                  <span className="np-choice-title">Já tenho o trabalho feito</span>
-                  <span className="np-choice-desc">
-                    Envia o relatório, os slides ou as imagens. Lemos o ficheiro e preenchemos a ficha por ti; tu só confirmas.
-                  </span>
-                  <span className="np-choice-meta">PDF · Word · PowerPoint · Imagens</span>
-                </span>
-                <ChevronRight size={17} className="np-choice-arrow" />
+            <div className="np-tiles">
+              <button className="np-tile is-blue" onClick={() => { if (!requireAccount('/novo?import=1')) setStep('import') }}>
+                <span className="np-tile-icon"><Upload size={22} /></span>
+                <span className="np-tile-title">Já tenho o trabalho feito</span>
+                <span className="np-tile-desc">Envia o relatório ou as imagens — lemos e preenchemos por ti.</span>
+                <span className="np-tile-meta">PDF · Word · PowerPoint · Imagens</span>
+                <span className="np-tile-go"><ChevronRight size={16} /></span>
               </button>
 
-              <button className="np-choice" onClick={() => { if (!requireAccount('/novo')) setStep('describe') }}>
-                <span className="np-choice-icon"><PenLine size={19} /></span>
-                <span className="np-choice-body">
-                  <span className="np-choice-title">Descrever em duas frases</span>
-                  <span className="np-choice-desc">
-                    Conta o que fizeste e a IA estrutura o resto. Ideal para começar do zero.
-                  </span>
-                </span>
-                <ChevronRight size={17} className="np-choice-arrow" />
+              <button className="np-tile is-red" onClick={() => { if (!requireAccount('/novo')) setStep('describe') }}>
+                <span className="np-tile-icon"><PenLine size={22} /></span>
+                <span className="np-tile-title">Descrever em duas frases</span>
+                <span className="np-tile-desc">Conta o que fizeste — a IA trata do resto.</span>
+                <span className="np-tile-go"><ChevronRight size={16} /></span>
               </button>
             </div>
           </div>
