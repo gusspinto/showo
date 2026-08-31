@@ -70,6 +70,42 @@ function safePathSegment(name) {
   return `${cleanBase || 'ficheiro'}${ext.replace(/[^a-zA-Z0-9.]/g, '')}`
 }
 
+/* Preview real da 1ª página, tipo Drive — corre em segundo plano, depois
+   do item já estar criado (por isso é função solta, não presa ao ciclo de
+   vida do componente: continua mesmo depois de já se ter navegado para a
+   Biblioteca). PDF renderiza-se direto no browser (pdfjs). Word/PowerPoint
+   passam primeiro pelo conversor (Gotenberg, via edge function — o browser
+   não sabe abrir esses formatos sozinho) que devolve um PDF; a partir daí
+   é o mesmo caminho. Nunca é crítico: falha em silêncio, fica só o cartão
+   colorido por tipo de ficheiro na Biblioteca. */
+async function generateLibraryThumbnail(projectId, file) {
+  const isOfficeDoc = file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    || file.type === 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+  if (file.type !== 'application/pdf' && !isOfficeDoc) return
+
+  try {
+    const { renderPdfThumbnail } = await import('../lib/pdfThumbnail')
+    let pdfSource = file
+    if (isOfficeDoc) {
+      const b64 = await fileToBase64(file)
+      const { data: convData, error: convErr } = await supabase.functions.invoke('office-thumbnail', {
+        body: { name: file.name, type: file.type, data: b64 },
+      })
+      if (convErr || !convData?.pdf) throw convErr || new Error(convData?.error || 'conversão falhou')
+      pdfSource = new Blob([b64ToBytes(convData.pdf)], { type: 'application/pdf' })
+    }
+    const thumbBlob = await renderPdfThumbnail(pdfSource)
+    const { data: { user } } = await supabase.auth.getUser()
+    const thumbPath = `${user.id}/thumbs/${Date.now()}-${safePathSegment(file.name).replace(/\.[^.]+$/, '')}.jpg`
+    const { error: thumbErr } = await supabase.storage.from('library-files').upload(thumbPath, thumbBlob, { contentType: 'image/jpeg' })
+    if (thumbErr) throw thumbErr
+    const { data: { publicUrl } } = supabase.storage.from('library-files').getPublicUrl(thumbPath)
+    await supabase.from('projects').update({ library_thumb_url: publicUrl }).eq('id', projectId)
+  } catch (err) {
+    console.error('Preview do ficheiro falhou (não crítico):', err)
+  }
+}
+
 /* Só para mandar um .docx/.pptx à edge function office-thumbnail converter
    — não tem mais nenhum uso (o upload em si vai direto, sem passar por
    base64). */
@@ -248,46 +284,18 @@ export default function NewProject() {
     setError(null)
     try {
       // Cada ficheiro vira o seu próprio item — se vieram vários de uma
-      // vez, sobem todos, um a um.
+      // vez, sobem todos, um a um. A preview NÃO bloqueia nada disto: o
+      // item é criado logo a seguir ao upload, e a thumbnail (que pode
+      // demorar, sobretudo Word/PowerPoint a passar pelo Gotenberg) gera-se
+      // depois, em segundo plano, sem o user à espera — só aparece um
+      // pouco mais tarde na Biblioteca, com o cartão colorido entretanto.
       for (const file of files) {
         const path = `${user.id}/${Date.now()}-${safePathSegment(file.name)}`
         const { error: upErr } = await supabase.storage.from('library-files').upload(path, file, { contentType: file.type })
         if (upErr) throw upErr
         const { data: { publicUrl } } = supabase.storage.from('library-files').getPublicUrl(path)
 
-        // Preview real da 1ª página, tipo Drive. PDF renderiza-se direto
-        // no browser (pdfjs). Word/PowerPoint passam primeiro pelo
-        // conversor (Gotenberg, via edge function — o browser não sabe
-        // abrir esses formatos sozinho) que devolve um PDF; a partir daí
-        // é o mesmo caminho. Nunca bloqueia o upload: falha em silêncio,
-        // fica só o cartão colorido por tipo de ficheiro na Biblioteca.
-        let thumbUrl = null
-        const isOfficeDoc = file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-          || file.type === 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
-        if (file.type === 'application/pdf' || isOfficeDoc) {
-          try {
-            const { renderPdfThumbnail } = await import('../lib/pdfThumbnail')
-            let pdfSource = file
-            if (isOfficeDoc) {
-              const b64 = await fileToBase64(file)
-              const { data: convData, error: convErr } = await supabase.functions.invoke('office-thumbnail', {
-                body: { name: file.name, type: file.type, data: b64 },
-              })
-              if (convErr || !convData?.pdf) throw convErr || new Error(convData?.error || 'conversão falhou')
-              pdfSource = new Blob([b64ToBytes(convData.pdf)], { type: 'application/pdf' })
-            }
-            const thumbBlob = await renderPdfThumbnail(pdfSource)
-            const thumbPath = `${user.id}/thumbs/${Date.now()}-${safePathSegment(file.name).replace(/\.[^.]+$/, '')}.jpg`
-            const { error: thumbErr } = await supabase.storage.from('library-files').upload(thumbPath, thumbBlob, { contentType: 'image/jpeg' })
-            if (!thumbErr) {
-              thumbUrl = supabase.storage.from('library-files').getPublicUrl(thumbPath).data.publicUrl
-            }
-          } catch (thumbErr) {
-            console.error('Preview do ficheiro falhou (não crítico):', thumbErr)
-          }
-        }
-
-        const { error: insErr } = await supabase.from('projects').insert({
+        const { data: inserted, error: insErr } = await supabase.from('projects').insert({
           user_id: user.id,
           name: file.name.replace(/\.[^.]+$/, ''),
           slug: crypto.randomUUID(),
@@ -301,9 +309,10 @@ export default function NewProject() {
           library_file_url: publicUrl,
           library_file_name: file.name,
           library_file_type: file.type,
-          library_thumb_url: thumbUrl,
-        })
+        }).select('id').single()
         if (insErr) throw insErr
+
+        generateLibraryThumbnail(inserted.id, file) // fire-and-forget, não espera
       }
 
       showToast(files.length > 1 ? `${files.length} adicionados à biblioteca.` : 'Adicionado à biblioteca.', 'success')
