@@ -1,4 +1,5 @@
 import Anthropic from 'npm:@anthropic-ai/sdk@0.36.3'
+import JSZip from 'npm:jszip@3.10.1'
 import { checkRateLimit, getAuthUser, getCorsHeaders, checkPlanLimit } from '../_shared/rateLimit.ts'
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -32,49 +33,6 @@ function b64ToBytes(b64: string): Uint8Array {
   return out
 }
 
-async function inflateRaw(bytes: Uint8Array): Promise<Uint8Array> {
-  const ds = new DecompressionStream('deflate-raw')
-  const stream = new Blob([bytes]).stream().pipeThrough(ds)
-  return new Uint8Array(await new Response(stream).arrayBuffer())
-}
-
-/* ── ZIP mínimo ──
-   .docx e .pptx são ZIPs de XML. Só precisamos de percorrer os cabeçalhos
-   locais e inflacionar as entradas que interessam, por isso não vale a pena
-   arrastar uma biblioteca inteira para aqui. */
-async function readZipEntries(bytes: Uint8Array, wanted: (name: string) => boolean) {
-  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength)
-  const decoder = new TextDecoder()
-  const entries: { name: string; data: Uint8Array }[] = []
-  let off = 0
-
-  while (off + 30 <= bytes.length) {
-    if (view.getUint32(off, true) !== 0x04034b50) break   // "PK\x03\x04"
-    const method     = view.getUint16(off + 8, true)
-    const flags      = view.getUint16(off + 6, true)
-    let compressed   = view.getUint32(off + 18, true)
-    const nameLen    = view.getUint16(off + 26, true)
-    const extraLen   = view.getUint16(off + 28, true)
-    const nameStart  = off + 30
-    const name       = decoder.decode(bytes.subarray(nameStart, nameStart + nameLen))
-    const dataStart  = nameStart + nameLen + extraLen
-
-    // Streamed entries (bit 3) põem os tamanhos num descritor à frente dos
-    // dados — não conseguimos saltá-las às cegas, por isso paramos aqui.
-    if (flags & 0x08 && compressed === 0) break
-    if (compressed === 0 && view.getUint32(off + 22, true) === 0) compressed = 0
-
-    if (wanted(name) && compressed > 0) {
-      const raw = bytes.subarray(dataStart, dataStart + compressed)
-      try {
-        entries.push({ name, data: method === 8 ? await inflateRaw(raw) : raw })
-      } catch { /* entrada corrompida: ignora-se, o resto do ficheiro serve */ }
-    }
-    off = dataStart + compressed
-  }
-  return entries
-}
-
 function xmlToText(xml: string): string {
   return xml
     // Quebras que o Word/PowerPoint marcam com tags próprias.
@@ -88,19 +46,33 @@ function xmlToText(xml: string): string {
 }
 
 async function officeToText(bytes: Uint8Array, kind: 'docx' | 'pptx'): Promise<string> {
+  // JSZip trata de todas as variantes de ZIP (data descriptors, etc.) — o
+  // parser à mão de antes rebentava com ficheiros do Word/LibreOffice reais.
+  let zip: JSZip
+  try {
+    zip = await JSZip.loadAsync(bytes)
+  } catch {
+    return ''
+  }
+
   const wanted = kind === 'docx'
     ? (n: string) => n === 'word/document.xml'
     : (n: string) => /^ppt\/(slides\/slide\d+|notesSlides\/notesSlide\d+)\.xml$/.test(n)
-  const entries = await readZipEntries(bytes, wanted)
-  if (!entries.length) return ''
-  const decoder = new TextDecoder()
-  // Slides por ordem numérica, não pela ordem em que aparecem no ZIP.
-  entries.sort((a, b) => {
-    const na = Number(a.name.match(/(\d+)\.xml$/)?.[1] ?? 0)
-    const nb = Number(b.name.match(/(\d+)\.xml$/)?.[1] ?? 0)
+
+  const names = Object.keys(zip.files).filter(wanted).sort((a, b) => {
+    const na = Number(a.match(/(\d+)\.xml$/)?.[1] ?? 0)
+    const nb = Number(b.match(/(\d+)\.xml$/)?.[1] ?? 0)
     return na - nb
   })
-  return entries.map(e => xmlToText(decoder.decode(e.data))).join('\n\n').slice(0, MAX_TEXT_PER_FILE)
+  if (!names.length) return ''
+
+  const parts: string[] = []
+  for (const n of names) {
+    try {
+      parts.push(xmlToText(await zip.files[n].async('string')))
+    } catch { /* entrada corrompida: ignora */ }
+  }
+  return parts.join('\n\n').slice(0, MAX_TEXT_PER_FILE)
 }
 
 const IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif']
