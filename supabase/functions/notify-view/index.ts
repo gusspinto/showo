@@ -1,5 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { checkRateLimit, getCorsHeaders, getAuthUser } from '../_shared/rateLimit.ts'
+import { checkRateLimit, getCorsHeaders } from '../_shared/rateLimit.ts'
 
 const VALID_TYPES = ['PROJECT_VIEW', 'COMPANY_VIEW']
 const VALID_ROLES = ['empresa', 'recrutador', 'estudante', 'outro', '']
@@ -8,15 +8,13 @@ Deno.serve(async (req) => {
   const corsHeaders = getCorsHeaders(req)
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
-  const user = await getAuthUser(req)
-  if (!user) {
-    return new Response(JSON.stringify({ ok: false, error: 'auth' }), {
-      status: 401,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+  const origin = req.headers.get('origin') ?? ''
+  const validOrigin = origin === 'https://showo.pt' || origin === 'https://www.showo.pt' || origin.startsWith('http://localhost')
+  if (!validOrigin) {
+    return new Response(JSON.stringify({ ok: false }), { status: 403, headers: corsHeaders })
   }
 
-  const allowed = await checkRateLimit(req, 'notify-view', 30)
+  const allowed = await checkRateLimit(req, 'notify-view', 10)
   if (!allowed) {
     return new Response(JSON.stringify({ ok: false }), {
       status: 429,
