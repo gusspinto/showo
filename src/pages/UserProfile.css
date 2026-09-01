@@ -815,14 +815,18 @@
   border-color: var(--up-accent);
 }
 
-/* ── Frase de topo ── */
+/* ── Frase de topo: entre o nome e a meta. Secundária ao nome, mas o
+   "hook" de identidade — por isso não é itálico nem tão apagada como a meta. */
 .up-headline {
-  margin: 10px 0 0;
-  max-width: 42ch;
-  font-size: 15px;
-  font-weight: 600;
+  margin: 5px 0 0;
+  max-width: 44ch;
+  font-size: 14.5px;
+  font-weight: 500;
   line-height: 1.45;
-  color: var(--color-text);
+  color: var(--color-text-secondary);
+}
+.up-headline + .up-meta-row {
+  margin-top: 9px;
 }
 
 /* ── Banner ── */

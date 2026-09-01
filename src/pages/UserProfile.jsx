@@ -384,18 +384,14 @@ export default function UserProfile() {
               )}
             </div>
 
+            {headline && <p className="up-headline">{headline}</p>}
+
             <div className="up-meta-row">
               {profile.username && <span>@{profile.username}</span>}
               {(profile.area || profile.course) && <><span className="up-meta-sep">·</span><span>{profile.area || profile.course}</span></>}
               {profile.school && <><span className="up-meta-sep">·</span><span>{profile.school}</span></>}
               {profile.role === 'professor' && <><span className="up-meta-sep">·</span><span>Professor</span></>}
             </div>
-
-            {headline && <p className="up-headline">{headline}</p>}
-
-            {isOwnProfile && profile.role === 'aluno' && (
-              <p className="up-hint">Brevemente: partilha o teu portfólio com empresas</p>
-            )}
           </div>
 
           <div className="up-header-actions">
