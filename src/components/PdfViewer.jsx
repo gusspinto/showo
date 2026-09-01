@@ -10,7 +10,8 @@ export default function PdfViewer({ url }) {
 
   useEffect(() => {
     let cancelled = false
-    let doc
+    let doc = null
+    let renderTask = null
 
     async function run() {
       setStatus('loading')
@@ -32,6 +33,7 @@ export default function PdfViewer({ url }) {
         for (let n = 1; n <= doc.numPages; n++) {
           if (cancelled) return
           const page = await doc.getPage(n)
+          if (cancelled) return
           const base = page.getViewport({ scale: 1 })
           const viewport = page.getViewport({ scale: (cssWidth / base.width) * dpr })
 
@@ -43,18 +45,31 @@ export default function PdfViewer({ url }) {
           canvas.style.height = `${Math.round(viewport.height / dpr)}px`
           container.appendChild(canvas)
 
-          await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise
+          renderTask = page.render({ canvasContext: canvas.getContext('2d'), viewport })
+          try {
+            await renderTask.promise
+          } catch (err) {
+            if (err?.name === 'RenderingCancelledException') return
+            throw err
+          }
+          renderTask = null
           if (n === 1 && !cancelled) setStatus('ready')
         }
         if (!cancelled) setStatus('ready')
       } catch (err) {
-        console.error('[PdfViewer]', err)
-        if (!cancelled) setStatus('error')
+        if (!cancelled) {
+          console.error('[PdfViewer]', err)
+          setStatus('error')
+        }
       }
     }
 
     run()
-    return () => { cancelled = true; try { doc?.destroy?.() } catch { /* noop */ } }
+    return () => {
+      cancelled = true
+      try { renderTask?.cancel() } catch { /* noop */ }
+      try { doc?.destroy?.() } catch { /* noop */ }
+    }
   }, [url])
 
   return (
