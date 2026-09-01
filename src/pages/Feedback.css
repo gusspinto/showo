@@ -4,31 +4,36 @@
    usam os tokens diretamente, sem a versão hardcoded que o herói precisa.
    ══════════════════════════════════════════════════════════════════════════ */
 
+/* Página normal (não é modal) — centrada no ecrã, como uma tarefa a
+   fazer, não uma folha a preencher encostada ao topo. */
 .fbp-page {
   min-height: 100vh;
   background: var(--color-bg);
   color: var(--color-text);
+  display: flex;
+  flex-direction: column;
 }
 
 .fbp-wrap {
+  flex: 1;
+  width: 100%;
   max-width: 520px;
   margin: 0 auto;
-  padding: 64px 24px 80px;
+  padding: 48px 24px 80px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .fbp-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
   margin-bottom: 28px;
 }
 .fbp-title {
-  margin: 0 0 6px;
+  margin: 0 0 8px;
   font-family: var(--font-heading);
-  font-size: 24px;
+  font-size: clamp(26px, 4vw, 38px);
   font-weight: 400;
-  letter-spacing: -0.4px;
+  letter-spacing: -0.5px;
   color: var(--color-text);
 }
 .fbp-sub {
@@ -37,15 +42,6 @@
   color: var(--color-text-secondary);
   line-height: 1.5;
 }
-.fbp-close {
-  flex-shrink: 0;
-  width: 36px; height: 36px;
-  display: flex; align-items: center; justify-content: center;
-  background: transparent; border: 1px solid var(--color-border);
-  border-radius: 9px; color: var(--color-text-tertiary);
-  cursor: pointer; transition: background 0.13s, color 0.13s;
-}
-.fbp-close:hover { background: var(--color-surface-hover); color: var(--color-text); }
 
 .fbp-form { display: flex; flex-direction: column; }
 
@@ -146,8 +142,7 @@
 .fbp-done .fbp-submit { width: 100%; max-width: 220px; }
 
 @media (max-width: 600px) {
-  .fbp-wrap { padding: 32px 20px calc(48px + env(safe-area-inset-bottom, 0px)); }
-  .fbp-title { font-size: 21px; }
+  .fbp-wrap { padding: 32px 20px calc(48px + env(safe-area-inset-bottom, 0px)); justify-content: flex-start; }
   .fbp-actions { flex-direction: column-reverse; }
   .fbp-cancel, .fbp-submit { width: 100%; }
 }

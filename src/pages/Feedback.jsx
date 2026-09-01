@@ -107,13 +107,8 @@ export default function Feedback() {
         ) : (
           <>
             <div className="fbp-head">
-              <div>
-                <h1 className="fbp-title">Reportar um problema</h1>
-                <p className="fbp-sub">O que aconteceu? Qual o erro ou a página?</p>
-              </div>
-              <button className="fbp-close" onClick={goBack} aria-label="Cancelar">
-                <X size={18} />
-              </button>
+              <h1 className="fbp-title">Reportar um problema</h1>
+              <p className="fbp-sub">O que aconteceu? Qual o erro ou a página?</p>
             </div>
 
             <form onSubmit={handleSubmit} className="fbp-form">
