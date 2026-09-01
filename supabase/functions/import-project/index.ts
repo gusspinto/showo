@@ -1,4 +1,5 @@
 import Anthropic from 'npm:@anthropic-ai/sdk@0.36.3'
+import JSZip from 'npm:jszip@3.10.1'
 import { checkRateLimit, getAuthUser, getCorsHeaders, checkPlanLimit } from '../_shared/rateLimit.ts'
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -32,49 +33,6 @@ function b64ToBytes(b64: string): Uint8Array {
   return out
 }
 
-async function inflateRaw(bytes: Uint8Array): Promise<Uint8Array> {
-  const ds = new DecompressionStream('deflate-raw')
-  const stream = new Blob([bytes]).stream().pipeThrough(ds)
-  return new Uint8Array(await new Response(stream).arrayBuffer())
-}
-
-/* ── ZIP mínimo ──
-   .docx e .pptx são ZIPs de XML. Só precisamos de percorrer os cabeçalhos
-   locais e inflacionar as entradas que interessam, por isso não vale a pena
-   arrastar uma biblioteca inteira para aqui. */
-async function readZipEntries(bytes: Uint8Array, wanted: (name: string) => boolean) {
-  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength)
-  const decoder = new TextDecoder()
-  const entries: { name: string; data: Uint8Array }[] = []
-  let off = 0
-
-  while (off + 30 <= bytes.length) {
-    if (view.getUint32(off, true) !== 0x04034b50) break   // "PK\x03\x04"
-    const method     = view.getUint16(off + 8, true)
-    const flags      = view.getUint16(off + 6, true)
-    let compressed   = view.getUint32(off + 18, true)
-    const nameLen    = view.getUint16(off + 26, true)
-    const extraLen   = view.getUint16(off + 28, true)
-    const nameStart  = off + 30
-    const name       = decoder.decode(bytes.subarray(nameStart, nameStart + nameLen))
-    const dataStart  = nameStart + nameLen + extraLen
-
-    // Streamed entries (bit 3) põem os tamanhos num descritor à frente dos
-    // dados — não conseguimos saltá-las às cegas, por isso paramos aqui.
-    if (flags & 0x08 && compressed === 0) break
-    if (compressed === 0 && view.getUint32(off + 22, true) === 0) compressed = 0
-
-    if (wanted(name) && compressed > 0) {
-      const raw = bytes.subarray(dataStart, dataStart + compressed)
-      try {
-        entries.push({ name, data: method === 8 ? await inflateRaw(raw) : raw })
-      } catch { /* entrada corrompida: ignora-se, o resto do ficheiro serve */ }
-    }
-    off = dataStart + compressed
-  }
-  return entries
-}
-
 function xmlToText(xml: string): string {
   return xml
     // Quebras que o Word/PowerPoint marcam com tags próprias.
@@ -88,25 +46,93 @@ function xmlToText(xml: string): string {
 }
 
 async function officeToText(bytes: Uint8Array, kind: 'docx' | 'pptx'): Promise<string> {
+  // JSZip trata de todas as variantes de ZIP (data descriptors, etc.) — o
+  // parser à mão de antes rebentava com ficheiros do Word/LibreOffice reais.
+  let zip: JSZip
+  try {
+    zip = await JSZip.loadAsync(bytes)
+  } catch {
+    return ''
+  }
+
   const wanted = kind === 'docx'
     ? (n: string) => n === 'word/document.xml'
     : (n: string) => /^ppt\/(slides\/slide\d+|notesSlides\/notesSlide\d+)\.xml$/.test(n)
-  const entries = await readZipEntries(bytes, wanted)
-  if (!entries.length) return ''
-  const decoder = new TextDecoder()
-  // Slides por ordem numérica, não pela ordem em que aparecem no ZIP.
-  entries.sort((a, b) => {
-    const na = Number(a.name.match(/(\d+)\.xml$/)?.[1] ?? 0)
-    const nb = Number(b.name.match(/(\d+)\.xml$/)?.[1] ?? 0)
+
+  const names = Object.keys(zip.files).filter(wanted).sort((a, b) => {
+    const na = Number(a.match(/(\d+)\.xml$/)?.[1] ?? 0)
+    const nb = Number(b.match(/(\d+)\.xml$/)?.[1] ?? 0)
     return na - nb
   })
-  return entries.map(e => xmlToText(decoder.decode(e.data))).join('\n\n').slice(0, MAX_TEXT_PER_FILE)
+  if (!names.length) return ''
+
+  const parts: string[] = []
+  for (const n of names) {
+    try {
+      parts.push(xmlToText(await zip.files[n].async('string')))
+    } catch { /* entrada corrompida: ignora */ }
+  }
+  return parts.join('\n\n').slice(0, MAX_TEXT_PER_FILE)
 }
 
 const IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif']
 
+/* Tira o texto da resposta do modelo com defesa: pode vir um bloco que não
+   é texto (refusal, etc.) ou content vazio — em vez de rebentar com
+   "reading 'trim'", registamos o que veio para se perceber. */
+// deno-lint-ignore no-explicit-any
+function modelText(message: any): string {
+  const block = (message?.content ?? []).find((c: { type?: string }) => c?.type === 'text')
+  const text = (block?.text ?? '').trim()
+  if (!text) {
+    console.error('[import-project] modelo sem texto:', JSON.stringify({
+      stop_reason: message?.stop_reason,
+      model: message?.model,
+      content: (message?.content ?? []).map((c: Record<string, unknown>) =>
+        c?.type === 'text' ? { type: 'text', len: String(c.text ?? '').length } : c),
+      error: message?.error,
+    }))
+  }
+  return text
+}
+
 function extOf(name: string) {
   return (name.split('.').pop() ?? '').toLowerCase()
+}
+
+function bytesToB64(bytes: Uint8Array): string {
+  let bin = ''
+  const chunk = 0x8000
+  for (let i = 0; i < bytes.length; i += chunk) {
+    bin += String.fromCharCode(...bytes.subarray(i, i + chunk))
+  }
+  return btoa(bin)
+}
+
+/* Word/PowerPoint → PDF via Gotenberg (mesmo conversor da miniatura da
+   Biblioteca). O Claude lê PDF nativamente e bem — muito melhor do que
+   raspar o XML dos slides. Devolve null se o Gotenberg estiver em baixo,
+   e nesse caso caímos na extração de texto com jszip. */
+async function officeToPdfB64(bytes: Uint8Array, name: string, mime: string): Promise<string | null> {
+  const GOTENBERG_URL = Deno.env.get('GOTENBERG_URL')
+  if (!GOTENBERG_URL) return null
+  try {
+    const form = new FormData()
+    form.append('files', new Blob([bytes], { type: mime }), name)
+    const resp = await fetch(`${GOTENBERG_URL}/forms/libreoffice/convert`, {
+      method: 'POST',
+      body: form,
+      signal: AbortSignal.timeout(50_000),
+    })
+    if (!resp.ok) {
+      console.error('[import-project] gotenberg', resp.status, (await resp.text()).slice(0, 200))
+      return null
+    }
+    return bytesToB64(new Uint8Array(await resp.arrayBuffer()))
+  } catch (err) {
+    console.error('[import-project] gotenberg falhou', err)
+    return null
+  }
 }
 
 Deno.serve(async (req) => {
@@ -119,17 +145,29 @@ Deno.serve(async (req) => {
   const user = await getAuthUser(req)
   if (!user) return json({ error: 'Autenticação necessária.' }, 401)
 
-  if (!(await checkRateLimit(req, 'import-project', 12))) {
+  if (!(await checkRateLimit(req, 'import-project', 20))) {
     return json({ error: 'Demasiados pedidos. Tenta daqui a pouco.' }, 429)
   }
 
-  const planCheck = await checkPlanLimit(req, 'createProject', user.id)
-  if (planCheck && !planCheck.allowed) {
-    return json({ error: 'Limite do plano atingido.', remaining: 0, limit: planCheck.limit }, 403)
+  let body: { files?: unknown; projectType?: string; notes?: string; light?: boolean }
+  try {
+    body = await req.json()
+  } catch {
+    return json({ error: 'Pedido inválido.' }, 400)
+  }
+  const { files, projectType, notes, light } = body
+
+  // O modo "light" corre em segundo plano quando o aluno só adiciona o
+  // ficheiro à Biblioteca — só tira competências + resumo, com haiku, e
+  // NÃO gasta a quota de criar projeto.
+  if (!light) {
+    const planCheck = await checkPlanLimit(req, 'createProject', user.id)
+    if (planCheck && !planCheck.allowed) {
+      return json({ error: 'Limite do plano atingido.', remaining: 0, limit: planCheck.limit }, 403)
+    }
   }
 
   try {
-    const { files, projectType, notes } = await req.json()
     if (!Array.isArray(files) || files.length === 0) {
       return json({ error: 'Nenhum ficheiro recebido.' }, 400)
     }
@@ -163,9 +201,25 @@ Deno.serve(async (req) => {
       } else if (IMAGE_TYPES.includes(mime)) {
         content.push({ type: 'image', source: { type: 'base64', media_type: mime, data: b64 } })
         readNames.push(name)
-      } else if (ext === 'docx' || ext === 'pptx') {
-        const text = await officeToText(bytes, ext as 'docx' | 'pptx')
-        if (!text) { skipped.push({ name, reason: 'não foi possível ler' }); continue }
+      } else if (ext === 'docx' || ext === 'pptx' || mime.includes('officedocument')) {
+        // 1º: converter para PDF (Gotenberg) — o Claude lê PDF muito melhor.
+        const officeMime = ext === 'pptx'
+          ? 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+          : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        const pdfB64 = await officeToPdfB64(bytes, name, mime || officeMime)
+        if (pdfB64) {
+          content.push({ type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: pdfB64 } })
+          readNames.push(name)
+          continue
+        }
+        // 2º: fallback — extrair texto do próprio ZIP.
+        const kind = ext === 'pptx' ? 'pptx' : 'docx'
+        const text = await officeToText(bytes, kind)
+        if (!text) {
+          console.error('[import-project] office ilegível:', name, 'bytes', bytes.length)
+          skipped.push({ name, reason: 'não foi possível ler' })
+          continue
+        }
         content.push({ type: 'text', text: `--- Conteúdo de ${name} ---\n${text}` })
         readNames.push(name)
       } else if (ext === 'txt' || ext === 'md' || mime.startsWith('text/')) {
@@ -180,14 +234,50 @@ Deno.serve(async (req) => {
     }
 
     if (content.length === 0) {
-      return json({
-        error: 'Não conseguimos ler estes ficheiros. Exporta o trabalho como PDF e tenta outra vez.',
-        skipped,
-      }, 422)
+      const reasons = skipped.map(s => s.reason)
+      const msg = reasons.includes('demasiado grande')
+        ? 'O ficheiro é demasiado grande (máx. 12 MB). Comprime-o ou exporta como PDF.'
+        : reasons.includes('formato não suportado')
+        ? 'Formato não suportado. Aceita PDF, Word, PowerPoint, imagens e texto.'
+        : 'Não conseguimos ler o conteúdo deste ficheiro. Exporta como PDF e tenta outra vez.'
+      console.error('[import-project] nada lido:', JSON.stringify(skipped))
+      return json({ error: msg, skipped }, 422)
     }
 
     const typeLabel = TYPE_LABELS[projectType] ?? 'Projeto'
     const extraNotes = String(notes ?? '').trim().slice(0, 600)
+
+    // ── Modo light: só etiquetar (competências + resumo + área), rápido e
+    //    barato, sem preencher a ficha toda. Corre em segundo plano. ──
+    if (light) {
+      content.push({
+        type: 'text',
+        text: `Este é um trabalho de um estudante português que ele guardou na Biblioteca (não vai virar página de projeto agora). Lê-o e devolve só o essencial para o portefólio dele:
+- Português de Portugal.
+- "skills": 3 a 8 competências concretas demonstradas no trabalho (ferramentas, métodos, áreas — ex: "Figma", "Investigação de utilizadores", "Copywriting", "Análise de dados"). Só o que está mesmo lá.
+- "area": a área geral numa expressão curta (ex: "Design e Multimédia", "Marketing", "Programação").
+- "summary": uma frase a dizer o que é o trabalho.
+
+Devolve APENAS este JSON: {"skills": [], "area": "", "summary": ""}`,
+      })
+
+      const client = new Anthropic({ apiKey: Deno.env.get('ANTHROPIC_API_KEY') ?? '' })
+      const message = await client.messages.create({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 500,
+        messages: [{ role: 'user', content: content as never }],
+      })
+      const raw = modelText(message)
+      const m = raw.match(/\{[\s\S]*\}/)
+      const p = m ? JSON.parse(m[0]) : {}
+      return json({
+        skills: Array.isArray(p.skills) ? p.skills.slice(0, 8).map((s: unknown) => String(s)) : [],
+        area: typeof p.area === 'string' ? p.area : '',
+        summary: typeof p.summary === 'string' ? p.summary : '',
+        read: readNames,
+        skipped,
+      })
+    }
 
     content.push({
       type: 'text',
@@ -217,14 +307,14 @@ Devolve APENAS este JSON, sem markdown à volta:
 
     const client = new Anthropic({ apiKey: Deno.env.get('ANTHROPIC_API_KEY') ?? '' })
     const message = await client.messages.create({
-      model: 'claude-sonnet-5',
-      max_tokens: 1600,
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 2000,
       messages: [{ role: 'user', content: content as never }],
     })
 
-    const rawText = (message.content[0] as { type: string; text: string }).text.trim()
+    const rawText = modelText(message)
     const match = rawText.match(/\{[\s\S]*\}/)
-    if (!match) throw new Error('Resposta inválida do modelo')
+    if (!match) throw new Error('O modelo não devolveu uma ficha. Tenta com um PDF.')
     const parsed = JSON.parse(match[0])
 
     return json({

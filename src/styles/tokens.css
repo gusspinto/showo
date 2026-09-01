@@ -15,6 +15,13 @@
   --font-body: 'Montserrat', 'Inter', system-ui, -apple-system, sans-serif;
   --font-mono: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
 
+  /* ── Gradiente da marca ──
+     As três cores do ícone da Showo. Usado só na ação mais importante de
+     cada ecrã (Criar projeto, gerar com IA, Personalizar perfil). Fonte
+     única — mudar aqui muda em todo o lado. Blue segura os primeiros 10%
+     para o azul não ficar espremido. */
+  --brand-gradient: linear-gradient(115deg, #2478f0 0%, #2478f0 10%, #db4a3d 62%, #cc9a1e 100%);
+
   /* ── Type scale ── */
   --text-2xs:  10px;
   --text-xs:   11px;

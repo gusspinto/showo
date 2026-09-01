@@ -31,25 +31,30 @@
   overflow: hidden;
   background: #000000;
   border-bottom: 1px solid rgba(255,255,255,0.08);
-  padding: 120px 40px 80px;
   color: #fff;
 }
 
+/* Split cheio à largura, como os ecrãs de login/registo: frase à esquerda
+   sobre cinza, arranque de sessão à direita sobre preto. */
 .home-hero-grid {
   position: relative;
   z-index: 1;
-  max-width: 1060px;
-  margin: 0 auto;
-  display: grid;
-  grid-template-columns: 1fr 400px;
-  gap: 64px;
-  align-items: center;
+  display: flex;
+  width: 100%;
+  align-items: stretch;
 }
 
 .home-hero-copy {
+  flex: 1 1 55%;
+  min-width: 0;
+  background: #141414;
+  border-right: 1px solid rgba(255, 255, 255, 0.09);
   display: flex;
   flex-direction: column;
   justify-content: center;
+  /* Vertical simétrico → a frase fica mesmo ao centro do painel cinza;
+     horizontal generoso → afasta-se da margem, para o meio do painel. */
+  padding: 80px clamp(40px, 7vw, 150px);
 }
 
 /* Mesma frase em qualquer ecrã — sem destaque de cor, sem itálico, sem
@@ -98,11 +103,19 @@
    haver dois caminhos: isto é a coluna direita do grid em qualquer
    largura. */
 .home-hero-start {
+  flex: 1 1 45%;
+  min-width: 0;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px clamp(28px, 4vw, 56px);
+  margin: 0;
+  max-width: none;
+}
+.home-hero-start > * {
   width: 100%;
-  max-width: 340px;
-  margin: 0 auto;
+  max-width: 344px;
 }
 
 .home-hero-start .google-btn {
@@ -506,16 +519,23 @@
 /* ══ RESPONSIVE ══ */
 @media (max-width: 860px) {
   .home-hero-grid {
-    grid-template-columns: 1fr;
+    flex-direction: column;
+    align-items: stretch;
     text-align: center;
-    gap: 32px;
+  }
+  .home-hero-copy {
+    order: 1;
+    flex: none;
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+    align-items: center;
+    padding: 72px clamp(24px, 6vw, 48px) 48px;
   }
   .home-hero-start {
-    max-width: 420px;
-    margin: 0 auto;
     order: 2;
+    flex: none;
+    padding: 44px clamp(24px, 6vw, 48px) 64px;
   }
-  .home-hero-copy { order: 1; }
   .home-hero-stats { justify-content: center; }
 }
 
@@ -530,13 +550,10 @@
   .home-hero {
     min-height: calc(100dvh - 62px);
     display: flex;
-    align-items: center;
-    padding: 24px 24px 48px;
+    align-items: stretch;
   }
 
-  .home-hero-start { margin: 32px auto 0; }
-
-  .home-hero-grid { gap: 24px; width: 100%; }
+  .home-hero-grid { width: 100%; }
   .how-it-works-grid { grid-template-columns: 1fr; }
 
   /* O herói vira uma peça de anúncio, não um parágrafo: título e texto
@@ -546,11 +563,11 @@
     order: 1;
     text-align: center;
     align-items: center;
+    padding: 56px 24px 40px;
   }
   .home-hero-start {
     order: 2;
-    max-width: none;
-    margin: 0;
+    padding: 36px 24px 56px;
   }
   .home-hero-h1 {
     font-size: clamp(38px, 12vw, 52px);

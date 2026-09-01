@@ -9,7 +9,6 @@ import { MagnifierIcon as Search } from '@solar-icons/react/bold/magnifier'
 import { Folder2Icon as FolderOpen } from '@solar-icons/react/bold/folder-2'
 import { CloseIcon as X } from '@solar-icons/react/bold/close'
 import { DownloadIcon as Download } from '@solar-icons/react/bold/download'
-import { RocketIcon as Rocket } from '@solar-icons/react/bold/rocket'
 import { QrCodeIcon as QrCode } from '@solar-icons/react/bold/qr-code'
 import { Pen2Icon as Pencil } from '@solar-icons/react/bold/pen-2'
 import { SquareArrowRightUpIcon as ExternalLink } from '@solar-icons/react/bold/square-arrow-right-up'
@@ -18,8 +17,14 @@ import { StarIcon as Star } from '@solar-icons/react/bold/star'
 import { ChatRoundLineIcon as MessageSquare } from '@solar-icons/react/bold/chat-round-line'
 import { SquareAcademicCapIcon as GraduationCap } from '@solar-icons/react/bold/square-academic-cap'
 import { PlaneIcon as Send } from '@solar-icons/react/bold/plane'
+import { PaletteIcon as Palette } from '@solar-icons/react/bold/palette'
 import ConvidarVagaModal from '../components/ConvidarVagaModal'
+import ProfileCustomizer from '../components/ProfileCustomizer'
+import LibFileViewer from '../components/LibFileViewer'
 import { PlanBadge } from '../components/PlanGate'
+import { DocumentTextIcon as FileText } from '@solar-icons/react/bold/document-text'
+import { appearanceVars } from '../lib/profileAppearance'
+import { fileTypeStyle, withSignedLibraryUrls } from '../lib/libraryFile'
 import './UserProfile.css'
 
 function scoreColor(score) {
@@ -30,15 +35,58 @@ function scoreColor(score) {
   return 'var(--color-error)'
 }
 
-function ProjectCard({ project, onClick, featured }) {
-  const color = scoreColor(project.score)
+/* Um item do perfil — projeto criado ou ficheiro da Biblioteca — no layout
+   que o dono escolheu: 'tile' (capa grande) ou 'row' (linha compacta).
+   Os ficheiros da Biblioteca mostram-se como na própria Biblioteca:
+   thumbnail real quando existe, senão cartão colorido por tipo. */
+function ProfileItem({ project, onOpen }) {
+  const isLibrary = project.entry_kind === 'library'
+  const cover =
+    project.cover_url ||
+    project._signedThumbUrl ||
+    (project.library_file_type?.startsWith('image/') ? project._signedFileUrl : null)
+  const subtitle = project.ai_tagline || project.library_description || null
+  const ft = isLibrary ? fileTypeStyle(project.library_file_type) : null
+
+  const filetypeCard = ft && (
+    <span className="up-filetype" style={{ color: ft.color, background: `color-mix(in srgb, ${ft.color} 14%, var(--color-bg-alt))` }}>
+      <FileText size={26} />
+      <span className="up-filetype-label">{ft.label}</span>
+    </span>
+  )
+
+  if (project.profile_layout === 'row') {
+    return (
+      <button type="button" className="up-pf-row" onClick={onOpen}>
+        <span className={`up-pf-row-thumb${cover ? ' has-img' : ''}`}>
+          {cover
+            ? <img src={cover} alt="" loading="lazy" />
+            : ft
+              ? <span className="up-pf-row-ft" style={{ color: ft.color }}>{ft.label}</span>
+              : <span className="up-pf-row-letter">{(project.name || '?')[0].toUpperCase()}</span>}
+        </span>
+        <span className="up-pf-row-text">
+          <span className="up-pf-row-name">{project.name}</span>
+          {(subtitle || project.area) && (
+            <span className="up-pf-row-sub">{subtitle || project.area}</span>
+          )}
+        </span>
+        {!isLibrary && project.score != null && (
+          <span className="up-pf-row-score" style={{ color: scoreColor(project.score) }}>
+            {project.score}
+          </span>
+        )}
+        {isLibrary && <span className="up-pf-row-ext"><ExternalLink size={13} /></span>}
+      </button>
+    )
+  }
 
   return (
-    <div className={`up-project-card${featured ? ' up-project-card--featured' : ''}`} onClick={onClick}>
-      {project.cover_url ? (
-        <div className="up-card-cover-img">
-          <img src={project.cover_url} alt="" />
-        </div>
+    <div className="up-project-card" onClick={onOpen}>
+      {cover ? (
+        <div className="up-card-cover-img"><img src={cover} alt="" /></div>
+      ) : isLibrary ? (
+        <div className="up-card-cover-file">{filetypeCard}</div>
       ) : (
         <div className="up-card-cover-fallback">
           <span className="up-card-cover-letter">
@@ -50,12 +98,12 @@ function ProjectCard({ project, onClick, featured }) {
       <div className="up-card-body">
         <div className="up-card-title-row">
           <span className="up-card-name">{project.name}</span>
-          {project.score != null && (
-            <span className="up-card-score" style={{ color }}>{project.score}</span>
+          {!isLibrary && project.score != null && (
+            <span className="up-card-score" style={{ color: scoreColor(project.score) }}>{project.score}</span>
           )}
         </div>
-        {project.ai_tagline && <p className="up-card-tagline">{project.ai_tagline}</p>}
-        {project.area && <span className="up-card-area">{project.area}</span>}
+        {subtitle && <p className="up-card-tagline">{subtitle}</p>}
+        {!isLibrary && project.area && <span className="up-card-area">{project.area}</span>}
       </div>
     </div>
   )
@@ -161,12 +209,20 @@ export default function UserProfile() {
   const [savingCandidate, setSavingCandidate] = useState(false)
   const [recruiterVagas, setRecruiterVagas] = useState([])
   const [showInvite, setShowInvite] = useState(false)
+  const [viewingFile, setViewingFile] = useState(null)
+  const [customizing, setCustomizing] = useState(false)
+  const [draftAppearance, setDraftAppearance] = useState({})
+  const [draftHeadline, setDraftHeadline] = useState('')
+  const [savingAppearance, setSavingAppearance] = useState(false)
 
   useEffect(() => {
     async function load() {
       const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(username)
 
-      const PROFILE_COLS = 'id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size, skills, school, total_xp, created_at, area'
+      // Sem is_admin (o 065 tirou-o do grant anon de propósito e não é usado
+      // aqui) — bastava estar na lista para o SELECT inteiro falhar para
+      // visitantes sem conta, e o perfil dava "não encontrado".
+      const PROFILE_COLS = 'id, username, full_name, bio, banned_at, role, avatar_url, available_for_work, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size, skills, school, total_xp, created_at, area, profile_appearance, profile_headline'
       const { data: profileData, error: profileErr } = isUUID
         ? await supabase.from('profiles').select(PROFILE_COLS).eq('id', username).single()
         : await supabase.from('profiles').select(PROFILE_COLS).eq('username', username).single()
@@ -174,15 +230,17 @@ export default function UserProfile() {
       if (profileErr || !profileData) { setNotFound(true); setLoading(false); return }
       setProfile(profileData)
 
+      // A secção "Projetos" mostra só o que o dono escolheu na Biblioteca
+      // (profile_featured), pela ordem que definiu — projetos criados e
+      // ficheiros adicionados juntos. Deixou de listar tudo por score.
+      const PROJECT_COLS = 'id, user_id, name, slug, score, area, ai_tagline, cover_url, created_at, views, entry_kind, profile_featured, profile_featured_order, profile_layout, library_description, library_file_url, library_file_name, library_file_type, library_thumb_url, library_pdf_url'
       const projectsPromise = supabase
         .from('projects')
-        .select('id, name, slug, score, area, ai_tagline, cover_url, created_at, views, ai_feedback, featured, featured_order, collaborator_count:project_collaborators(count)')
+        .select(`${PROJECT_COLS}, collaborator_count:project_collaborators(count)`)
         .eq('user_id', profileData.id)
-        // Itens da Biblioteca (entry_kind='library') não têm ficha nenhuma
-        // — ficheiro+nome+descrição, sempre privados. Nunca fazem sentido
-        // aqui, apareciam partidos (sem capa, score a 0).
-        .eq('entry_kind', 'full')
-        .order('score', { ascending: false })
+        .eq('profile_featured', true)
+        .is('parent_project_id', null)
+        .order('profile_featured_order', { ascending: true })
 
       const isRecruiterVisitor = user && (myProfile?.role === 'recrutador' || myProfile?.role === 'empresa') && profileData.id !== user.id
       const savedPromise = isRecruiterVisitor
@@ -195,19 +253,25 @@ export default function UserProfile() {
       if (projErr || !projectsData) {
         const { data: fallback } = await supabase
           .from('projects')
-          .select('id, name, slug, score, area, ai_tagline, cover_url, created_at, views, ai_feedback, featured, featured_order')
+          .select(PROJECT_COLS)
           .eq('user_id', profileData.id)
-          .eq('entry_kind', 'full')
-          .order('score', { ascending: false })
+          .eq('profile_featured', true)
+          .is('parent_project_id', null)
+          .order('profile_featured_order', { ascending: true })
         finalProjects = fallback
       }
 
-      setProjects((finalProjects ?? []).map(p => ({
+      const normalized = (finalProjects ?? []).map(p => ({
         ...p,
         collaborator_count: Array.isArray(p.collaborator_count)
           ? (p.collaborator_count[0]?.count ?? 0)
           : (p.collaborator_count ?? 0),
-      })))
+      }))
+
+      // Ficheiros da Biblioteca são privados (097); os que estão no perfil
+      // ficam legíveis via signed URL graças à policy do 104. Assina-os aqui
+      // (aceita tanto path novo como URL público antigo).
+      setProjects(await withSignedLibraryUrls(normalized))
       if (isRecruiterVisitor) setSaved(!!sc)
 
       setLoading(false)
@@ -243,6 +307,30 @@ export default function UserProfile() {
   const displayName  = profile?.full_name || profile?.username || 'Utilizador'
   const profileUrl   = window.location.href
 
+  // Preview ao vivo: o rascunho enquanto o painel está aberto, senão o guardado.
+  const appearance = customizing ? draftAppearance : (profile?.profile_appearance || {})
+  const headline   = customizing ? draftHeadline : (profile?.profile_headline || '')
+
+  function openCustomizer() {
+    setDraftAppearance(profile?.profile_appearance || {})
+    setDraftHeadline(profile?.profile_headline || '')
+    setCustomizing(true)
+  }
+
+  async function saveAppearance() {
+    setSavingAppearance(true)
+    const cleanHeadline = draftHeadline.trim() || null
+    const { error } = await supabase
+      .from('profiles')
+      .update({ profile_appearance: draftAppearance, profile_headline: cleanHeadline })
+      .eq('id', user.id)
+    setSavingAppearance(false)
+    if (!error) {
+      setProfile(p => ({ ...p, profile_appearance: draftAppearance, profile_headline: cleanHeadline }))
+      setCustomizing(false)
+    }
+  }
+
   if (loading) return (
     <div className="min-h-screen bg-page">
       <Navbar />
@@ -263,7 +351,10 @@ export default function UserProfile() {
   )
 
   return (
-    <div className="min-h-screen bg-page">
+    <div
+      className="min-h-screen bg-page up-root"
+      style={appearanceVars(appearance)}
+    >
       <Helmet>
         <title>{displayName} — Showo</title>
         <meta name="description" content={profile.bio || `Projetos de ${displayName} no Showo`} />
@@ -274,73 +365,81 @@ export default function UserProfile() {
 
       <Navbar />
 
-      <div className="page-content">
-
-        {/* ── Profile header card: centrado ── */}
-        <div className="up-header">
-          <div className="up-identity">
-            {profile.avatar_url
-              ? <img src={profile.avatar_url} alt={displayName} className="up-avatar" />
-              : <div className="up-avatar-placeholder">{displayName[0].toUpperCase()}</div>
-            }
-
-            <div className="up-name-row">
-              <h1 className="up-name">{displayName}</h1>
-              {isOwnProfile && <PlanBadge />}
-              {projects.some(p => (p.score || 0) >= 100) && (
-                <span className="up-perfect-badge" title="Tem um projeto com score perfeito">
-                  <GraduationCap size={13} />
-                </span>
-              )}
-            </div>
-
-            <div className="up-meta-row">
-              {profile.username && <span>@{profile.username}</span>}
-              {(profile.area || profile.course) && <><span className="up-meta-sep">·</span><span>{profile.area || profile.course}</span></>}
-              {profile.school && <><span className="up-meta-sep">·</span><span>{profile.school}</span></>}
-              {profile.role === 'professor' && <><span className="up-meta-sep">·</span><span>Professor</span></>}
-            </div>
-
-            {isOwnProfile && profile.role === 'aluno' && (
-              <p className="up-hint">Brevemente: partilha o teu portfólio com empresas</p>
-            )}
-          </div>
-
-          <div className="up-header-actions">
-            <button onClick={() => setShowQR(true)} className="up-icon-btn" title="QR Code" aria-label="QR Code">
-              <QrCode size={15} />
-            </button>
-            {isOwnProfile && (
-              <button onClick={() => navigate('/settings')} className="up-icon-btn" title="Editar perfil" aria-label="Editar perfil">
-                <Pencil size={15} />
-              </button>
-            )}
-            {!isOwnProfile && user && (
-              <button onClick={() => navigate(`/mensagens?to=${profile.id}`)} className="up-action-btn primary">
-                <MessageSquare size={13} /> Mensagem
-              </button>
-            )}
-            {!isOwnProfile && isRecruiter && (
-              <>
-                <button onClick={toggleSave} disabled={savingCandidate}
-                  className={`up-action-btn${saved ? ' saved' : ''}`}
-                  title={saved ? 'Remover dos guardados' : 'Guardar candidato'}>
-                  <Star size={13} color={saved ? 'var(--color-warning)' : undefined} />
-                  {saved ? 'Guardado' : 'Guardar'}
-                </button>
-                <button onClick={() => setShowInvite(true)} className="up-action-btn primary">
-                  <Send size={13} /> Convidar
-                </button>
-              </>
-            )}
-          </div>
+      {appearance.bannerUrl && (
+        <div className="up-banner">
+          <img src={appearance.bannerUrl} alt="" />
         </div>
+      )}
 
-        {/* ── Sobre: secção separada, só aparece se houver algo a mostrar ── */}
-        {(profile.bio || profile.skills?.length > 0 || profile.linkedin_url) && (
-          <div className="up-about">
-            <p className="up-about-label">Sobre</p>
+      <div className={`page-content${appearance.bannerUrl ? ' has-banner' : ''}`}>
+
+        {/* ── Cabeçalho: portefólio, alinhado à esquerda, sem cartão ── */}
+        <header className="up-head">
+          {profile.avatar_url
+            ? <img src={profile.avatar_url} alt={displayName} className="up-avatar" />
+            : <div className="up-avatar-placeholder">{displayName[0].toUpperCase()}</div>
+          }
+
+          <div className="up-head-main">
+            <div className="up-head-top">
+              <div className="up-head-identity">
+                <div className="up-name-row">
+                  <h1 className="up-name">{displayName}</h1>
+                  {isOwnProfile && <PlanBadge />}
+                  {projects.some(p => (p.score || 0) >= 100) && (
+                    <span className="up-perfect-badge" title="Tem um projeto com score perfeito">
+                      <GraduationCap size={13} />
+                    </span>
+                  )}
+                </div>
+
+                {headline && <p className="up-headline">{headline}</p>}
+
+                <div className="up-meta-row">
+                  {profile.username && <span>@{profile.username}</span>}
+                  {(profile.area || profile.course) && <><span className="up-meta-sep">·</span><span>{profile.area || profile.course}</span></>}
+                  {profile.school && <><span className="up-meta-sep">·</span><span>{profile.school}</span></>}
+                  {profile.role === 'professor' && <><span className="up-meta-sep">·</span><span>Professor</span></>}
+                </div>
+              </div>
+
+              <div className="up-head-actions">
+                {isOwnProfile && (
+                  <>
+                    <button onClick={openCustomizer} className="up-icon-btn up-personalize" title="Personalizar perfil" aria-label="Personalizar perfil">
+                      <Palette size={15} />
+                    </button>
+                    <button onClick={() => navigate('/settings')} className="up-icon-btn" title="Editar perfil" aria-label="Editar perfil">
+                      <Pencil size={15} />
+                    </button>
+                  </>
+                )}
+                <button onClick={() => setShowQR(true)} className="up-icon-btn" title="QR Code" aria-label="QR Code">
+                  <QrCode size={15} />
+                </button>
+                {!isOwnProfile && user && (
+                  <button onClick={() => navigate(`/mensagens?to=${profile.id}`)} className="up-action-btn primary">
+                    <MessageSquare size={13} /> Mensagem
+                  </button>
+                )}
+                {!isOwnProfile && isRecruiter && (
+                  <>
+                    <button onClick={toggleSave} disabled={savingCandidate}
+                      className={`up-action-btn${saved ? ' saved' : ''}`}
+                      title={saved ? 'Remover dos guardados' : 'Guardar candidato'}>
+                      <Star size={13} color={saved ? 'var(--color-warning)' : undefined} />
+                      {saved ? 'Guardado' : 'Guardar'}
+                    </button>
+                    <button onClick={() => setShowInvite(true)} className="up-action-btn primary">
+                      <Send size={13} /> Convidar
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+
             {profile.bio && <p className="up-bio">{profile.bio}</p>}
+
             {(profile.skills?.length > 0 || profile.linkedin_url) && (
               <div className="up-chips-row">
                 {profile.linkedin_url && (
@@ -354,51 +453,27 @@ export default function UserProfile() {
               </div>
             )}
           </div>
-        )}
+        </header>
 
-        {/* ── Projects ── */}
-        <div>
+        {/* ── Trabalho ── */}
+        <div className="up-work">
           <p className="up-section-label">
-            Projetos
+            Trabalho
             {projects.length > 0 && <span className="up-section-count">({projects.length})</span>}
           </p>
 
-          {/* Featured projects */}
-          {(() => {
-            const featured = projects
-              .filter(p => p.featured)
-              .sort((a, b) => (a.featured_order ?? 99) - (b.featured_order ?? 99))
-            if (!featured.length) return null
-            return (
-              <div className="up-featured-section">
-                <p className="up-featured-label">
-                  <Star size={12} /> Em destaque
-                </p>
-                <div className="up-featured-grid">
-                  {featured.map(project => (
-                    <ProjectCard key={project.id} project={project} onClick={() => navigate(`/projeto/${project.slug}`)} featured />
-                  ))}
-                </div>
-              </div>
-            )
-          })()}
-
           {projects.length === 0 ? (
             isOwnProfile ? (
-              <div className="up-empty">
-                <div className="up-empty-icon"><Rocket size={40} color="var(--color-primary)" /></div>
-                <p className="up-empty-title">
-                  {myProfile?.role === 'professor' ? 'Ainda não tens projetos' : 'O teu portfólio começa aqui'}
+              <div className="up-empty up-empty--slim">
+                <p className="up-empty-slim-text">
+                  {myProfile?.role === 'professor'
+                    ? 'Ainda não tens projetos.'
+                    : 'Escolhe na Biblioteca o que aparece aqui.'}
                 </p>
                 {myProfile?.role !== 'professor' && (
-                  <>
-                    <p className="up-empty-desc">
-                      Adiciona o teu primeiro projeto e constrói o teu portfólio profissional.
-                    </p>
-                    <button onClick={() => navigate('/novo')} className="up-empty-cta">
-                      Criar projeto <ArrowRight size={14} />
-                    </button>
-                  </>
+                  <button onClick={() => navigate('/biblioteca')} className="up-empty-cta">
+                    Ir para a Biblioteca <ArrowRight size={14} />
+                  </button>
                 )}
               </div>
             ) : (
@@ -411,14 +486,39 @@ export default function UserProfile() {
               </div>
             )
           ) : (
-            <div className="up-projects-grid">
+            <div className="up-profile-items">
               {projects.map(project => (
-                <ProjectCard key={project.id} project={project} onClick={() => navigate(`/projeto/${project.slug}`)} />
+                <ProfileItem
+                  key={project.id}
+                  project={project}
+                  onOpen={() => {
+                    if (project.entry_kind === 'library') {
+                      setViewingFile(project)
+                    } else {
+                      navigate(`/projeto/${project.slug}`)
+                    }
+                  }}
+                />
               ))}
             </div>
           )}
         </div>
       </div>
+
+      {viewingFile && <LibFileViewer item={viewingFile} onClose={() => setViewingFile(null)} />}
+
+      {customizing && (
+        <ProfileCustomizer
+          appearance={draftAppearance}
+          onChange={setDraftAppearance}
+          headline={draftHeadline}
+          onHeadlineChange={setDraftHeadline}
+          onSave={saveAppearance}
+          onClose={() => setCustomizing(false)}
+          saving={savingAppearance}
+          userId={user.id}
+        />
+      )}
 
       {showQR && <QRModal profileUrl={profileUrl} username={profile?.username || profile?.id || ''} onClose={() => setShowQR(false)} />}
       {showInvite && profile && (

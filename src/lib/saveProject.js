@@ -19,7 +19,7 @@ function generateSlug(name) {
   )
 }
 
-export async function saveProject(formData, aiResult, userId = null) {
+export async function saveProject(formData, aiResult, userId = null, opts = {}) {
   const slug = generateSlug(formData.name)
   const isPap = formData.is_pap || formData.project_type === 'pap'
   const { score } = calculateScore(formData)
@@ -27,6 +27,9 @@ export async function saveProject(formData, aiResult, userId = null) {
 
   const payload = {
     user_id: userId || null,
+    // Definido já no insert (não num update a seguir) para o trigger de
+    // limite de projetos ver que é um anexo e não o contar.
+    parent_project_id: opts.parentProjectId || null,
     name: formData.name,
     area: formData.area,
     goal: formData.goal,

@@ -1,7 +1,4 @@
-import * as pdfjsLib from 'pdfjs-dist'
-import pdfjsWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
-
-pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorkerUrl
+import pdfjsLib from './pdfjs'
 
 /* Renderiza a primeira página de um PDF para um blob JPEG — a preview
    tipo Drive da Biblioteca. Tudo no browser, sem backend nenhum.

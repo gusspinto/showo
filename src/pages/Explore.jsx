@@ -156,6 +156,8 @@ export default function Explore() {
         // aparecem aqui — já vêm 'private' desde a origem, isto é só
         // defesa extra caso essa coluna mude de outra forma.
         .neq('entry_kind', 'library')
+        // Anexos aparecem dentro da página do projeto pai, nunca soltos aqui.
+        .is('parent_project_id', null)
         .order('score', { ascending: false })
         .limit(300)
 

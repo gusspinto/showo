@@ -26,6 +26,65 @@
 }
 .lib-add-btn:hover { opacity: 0.88; }
 
+.lib-header-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+.lib-edit-btn {
+  padding: 10px 14px;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  font-size: 13px; font-weight: 700; cursor: pointer;
+  font-family: inherit; color: var(--color-text);
+  transition: background 0.15s, border-color 0.15s;
+}
+.lib-edit-btn:hover { background: var(--color-surface-hover); }
+.lib-edit-btn.is-on { background: var(--color-text); color: var(--color-bg); border-color: var(--color-text); }
+
+/* ── Modo "Organizar" — escolher o que aparece no perfil público.
+   Sem painel à parte: o controlo vive no próprio item. ── */
+.lib-edit-hint {
+  margin: -8px 0 24px;
+  font-size: 12.5px; line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+
+/* Barra de edição colada a baixo de cada item (tile ou linha). */
+.lib-edit-bar {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.lib-check {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 10px; border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface); color: var(--color-text-secondary);
+  font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit;
+  transition: background 0.14s, border-color 0.14s, color 0.14s;
+}
+.lib-check:hover { border-color: var(--color-border-hover); }
+.lib-check.is-on { background: var(--color-text); color: var(--color-bg); border-color: var(--color-text); }
+
+.lib-seg { display: inline-flex; background: var(--color-bg-alt); border-radius: 8px; padding: 2px; }
+.lib-seg-btn {
+  padding: 5px 10px; border: none; background: transparent;
+  font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit;
+  color: var(--color-text-secondary); border-radius: 6px;
+  transition: background 0.14s, color 0.14s;
+}
+.lib-seg-btn.is-on { background: var(--color-surface); color: var(--color-text); box-shadow: 0 1px 2px rgba(0,0,0,0.08); }
+
+/* Item ligado ao perfil — anel subtil à volta. */
+.lib-tile.is-on .lib-tile-main,
+.lib-row-wrap.is-on {
+  border-color: var(--color-text);
+  box-shadow: 0 0 0 1px var(--color-text);
+}
+.lib-row-wrap { border: 1px solid transparent; border-radius: 10px; }
+.lib-row-wrap.is-on { padding: 2px; }
+.lib-row-wrap.is-on .lib-row { border-bottom-color: transparent; }
+.lib-row-wrap .lib-edit-bar { padding: 2px 10px 8px; }
+
 .lib-section { margin-bottom: 32px; }
 .lib-section-title {
   font-size: 12px; font-weight: 700;
@@ -117,16 +176,50 @@
 .lib-tile-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .lib-tile-name { font-size: 14px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .lib-tile-area { font-size: 11.5px; color: var(--color-text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lib-tile-skills { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.lib-tile-skill {
+  font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 999px;
+  background: var(--color-bg-alt); color: var(--color-text-secondary);
+  white-space: nowrap;
+}
 .lib-tile-score { font-size: 15px; font-weight: 800; flex-shrink: 0; }
-.lib-tile-delete {
+
+/* Cluster de ações no canto superior direito do tile — renomear + apagar. */
+.lib-tile-tools {
   position: absolute; top: 8px; right: 8px; z-index: 1;
+  display: flex; gap: 4px;
+  opacity: 0; transition: opacity 0.14s;
+}
+.lib-tile:hover .lib-tile-tools,
+.lib-tile:focus-within .lib-tile-tools { opacity: 1; }
+.lib-tile-tool {
   display: flex; align-items: center; justify-content: center;
   width: 28px; height: 28px; border-radius: 8px;
-  background: rgba(0,0,0,0.55); color: #fff; cursor: pointer;
-  opacity: 0; transition: opacity 0.14s, background 0.14s;
+  background: rgba(0,0,0,0.6); color: #fff; cursor: pointer;
+  transition: background 0.14s;
 }
-.lib-tile:hover .lib-tile-delete { opacity: 1; }
-.lib-tile-delete:hover { background: var(--color-error); }
+.lib-tile-tool:hover { background: rgba(0,0,0,0.82); }
+.lib-tile-tool--danger:hover { background: var(--color-error); }
+
+/* Renomear no próprio tile — sobrepõe-se ao rodapé (o input não pode
+   viver dentro do <button> do tile). */
+.lib-tile-rename {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 2;
+  padding: 12px 14px;
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+}
+.lib-tile-name-input {
+  width: 100%;
+  font-size: 14px; font-weight: 700; font-family: inherit;
+  color: var(--color-text);
+  background: var(--color-bg);
+  border: 1px solid var(--color-text);
+  border-radius: 6px;
+  padding: 5px 8px;
+  outline: none;
+  box-sizing: border-box;
+}
 
 /* Botão pequeno genérico usado no visualizador (abrir noutra aba / fechar). */
 .lib-card-btn {

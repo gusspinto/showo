@@ -134,6 +134,68 @@
   cursor: not-allowed;
 }
 
+/* Variante discreta — o "guardar sem analisar" a seguir ao botão de IA. */
+.np-alt-path--quiet {
+  background: transparent; color: var(--color-text-secondary);
+  border: 1px solid var(--color-border); padding: 12px 0;
+  font-size: 13.5px; font-weight: 600; margin-top: 8px;
+}
+.np-alt-path--quiet:hover:not(:disabled) { opacity: 1; border-color: var(--color-border-hover); color: var(--color-text); }
+.np-alt-path--quiet:disabled { background: transparent; }
+
+/* Resumo do que a IA leu do ficheiro, no topo do passo "rever". */
+.np-import-summary {
+  margin: 4px 0 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-alt);
+}
+.np-import-summary-text {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--color-text);
+}
+.np-import-missing {
+  display: flex; align-items: flex-start; gap: 6px;
+  margin: 10px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--color-warning);
+}
+.np-import-missing svg { flex-shrink: 0; margin-top: 2px; }
+
+/* Como aparece — página própria vs anexo. */
+.np-present { margin: 18px 0 4px; }
+.np-present-label {
+  margin: 0 0 8px;
+  font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--color-text-tertiary);
+}
+.np-present-opts { display: flex; gap: 8px; }
+.np-present-opt {
+  flex: 1; display: flex; flex-direction: column; gap: 3px; text-align: left;
+  padding: 12px 14px; border-radius: 12px;
+  border: 1px solid var(--color-border); background: var(--color-surface);
+  cursor: pointer; font-family: inherit;
+  transition: border-color 0.14s, background 0.14s;
+}
+.np-present-opt:hover { border-color: var(--color-border-hover); }
+.np-present-opt.is-on { border-color: var(--color-text); background: var(--color-bg-alt); }
+.np-present-opt strong { font-size: 13px; font-weight: 700; color: var(--color-text); }
+.np-present-opt span { font-size: 11.5px; color: var(--color-text-secondary); line-height: 1.4; }
+.np-present-select {
+  width: 100%; margin-top: 8px; padding: 10px 12px;
+  border: 1px solid var(--color-border); border-radius: 10px;
+  background: var(--color-bg); color: var(--color-text);
+  font-size: 13.5px; font-family: inherit;
+}
+
+@media (max-width: 560px) {
+  .np-present-opts { flex-direction: column; }
+}
+
 /* ── Upload ── */
 .np-drop {
   display: flex; flex-direction: column;
@@ -301,7 +363,7 @@
   .np-btn-ai::before {
     content: '';
     position: absolute; inset: 0; z-index: -1;
-    background-image: linear-gradient(115deg, #2478f0 0%, #db4a3d 50%, #cc9a1e 100%);
+    background-image: var(--brand-gradient);
     background-size: 220% 220%;
     background-position: 0% 50%;
     opacity: 0;

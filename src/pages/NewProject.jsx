@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { saveProject } from '../lib/saveProject'
+import { officeFileToPdfBlob, isOfficeFile } from '../lib/officeToPdf'
 import { StarsIcon as Sparkles } from '@solar-icons/react/bold/stars'
 import { ArrowRightIcon as ArrowRight } from '@solar-icons/react/bold/arrow-right'
 import { ArrowLeftIcon as ArrowLeft } from '@solar-icons/react/bold/arrow-left'
@@ -92,6 +93,10 @@ async function generateLibraryThumbnail(projectId, file) {
 
   try {
     const { renderPdfThumbnail } = await import('../lib/pdfThumbnail')
+    const { data: { user } } = await supabase.auth.getUser()
+    const baseName = safePathSegment(file.name).replace(/\.[^.]+$/, '')
+    const patch = {}
+
     let pdfSource = file
     if (isOfficeDoc) {
       const b64 = await fileToBase64(file)
@@ -100,13 +105,20 @@ async function generateLibraryThumbnail(projectId, file) {
       })
       if (convErr || !convData?.pdf) throw convErr || new Error(convData?.error || 'conversão falhou')
       pdfSource = new Blob([b64ToBytes(convData.pdf)], { type: 'application/pdf' })
+
+      // Guarda o PDF convertido — o visualizador (Biblioteca + perfil)
+      // mostra sempre este, sem reconverter.
+      const pdfPath = `${user.id}/pdf/${Date.now()}-${baseName}.pdf`
+      const { error: pdfErr } = await supabase.storage.from('library-files').upload(pdfPath, pdfSource, { contentType: 'application/pdf' })
+      if (!pdfErr) patch.library_pdf_url = pdfPath
     }
+
     const thumbBlob = await renderPdfThumbnail(pdfSource)
-    const { data: { user } } = await supabase.auth.getUser()
-    const thumbPath = `${user.id}/thumbs/${Date.now()}-${safePathSegment(file.name).replace(/\.[^.]+$/, '')}.jpg`
+    const thumbPath = `${user.id}/thumbs/${Date.now()}-${baseName}.jpg`
     const { error: thumbErr } = await supabase.storage.from('library-files').upload(thumbPath, thumbBlob, { contentType: 'image/jpeg' })
-    if (thumbErr) throw thumbErr
-    await supabase.from('projects').update({ library_thumb_url: thumbPath }).eq('id', projectId)
+    if (!thumbErr) patch.library_thumb_url = thumbPath
+
+    if (Object.keys(patch).length) await supabase.from('projects').update(patch).eq('id', projectId)
   } catch (err) {
     console.error('Preview do ficheiro falhou (não crítico):', err)
   }
@@ -158,11 +170,29 @@ export default function NewProject() {
   const [interviewData, setInterviewData] = useState(null)
   const [gateMsg, setGateMsg] = useState(null)
 
-  /* Adicionar (Biblioteca) */
+  /* Adicionar — enviar um trabalho já feito */
   const [files, setFiles] = useState([])
   const [importNotes, setImportNotes] = useState('')
   const [savingToLibrary, setSavingToLibrary] = useState(false)
+  const [importSummary, setImportSummary] = useState(null)
+  const [importMissing, setImportMissing] = useState([])
   const [beat, setBeat] = useState(0)
+
+  /* Fase 2 — como aparece: página própria ou anexo de outro projeto */
+  const [presentation, setPresentation] = useState('page')
+  const [parentId, setParentId] = useState('')
+  const [myProjects, setMyProjects] = useState([])
+
+  useEffect(() => {
+    if (!user?.id) return
+    supabase.from('projects')
+      .select('id, name')
+      .eq('user_id', user.id)
+      .eq('entry_kind', 'full')
+      .is('parent_project_id', null)
+      .order('created_at', { ascending: false })
+      .then(({ data }) => setMyProjects(data ?? []))
+  }, [user?.id])
 
   function set(key, val) { setForm(p => ({ ...p, [key]: val })) }
 
@@ -272,12 +302,92 @@ export default function NewProject() {
     })
   }
 
-  /* "Adicionar" já não gera a ficha AI-estruturada de sempre (goal/problem/
-     solution/etc) — vira um item leve na Biblioteca: o ficheiro, o nome
-     (do próprio ficheiro) e a descrição breve que a pessoa escrever. Sem
-     IA nenhuma a analisar o conteúdo, por isso também não gasta o gate de
-     AI. "Descrever o que estou a fazer" continua a gerar a ficha completa
-     como sempre. */
+  /* ── Analisar o trabalho e transformá-lo numa página ──
+     O caminho principal do "Adicionar": o aluno não envia para guardar,
+     envia para transformar. A IA (import-project) lê o ficheiro e devolve
+     a ficha campo a campo; o aluno revê, completa o que falta e cria uma
+     página de projeto a sério — não um item de "drive". */
+  async function handleAnalyzeFiles() {
+    if (!files.length) return
+    if (requireAccount('/novo')) return
+    if (!(await guardProjectCount())) return
+    const aiGate = checkGate('createProject')
+    if (!aiGate.allowed) { setGateMsg(aiGate.message); return }
+
+    setStep('loading')
+    setError(null)
+    try {
+      // Word/PPT → converte-se para PDF AQUI (via office-thumbnail, o mesmo
+      // caminho que já funciona para as miniaturas) antes de mandar para a
+      // IA. Assim o import-project só lida com PDFs e imagens — sem parsing
+      // de ZIP frágil nem Gotenberg do lado do servidor.
+      const payload = await Promise.all(files.map(async f => {
+        if (isOfficeFile(f)) {
+          try {
+            const pdf = await officeFileToPdfBlob(f)
+            return { name: f.name.replace(/\.[^.]+$/, '') + '.pdf', type: 'application/pdf', data: await fileToBase64(pdf) }
+          } catch (e) {
+            console.error('conversão office falhou, envia original', e)
+          }
+        }
+        return { name: f.name, type: f.type, data: await fileToBase64(f) }
+      }))
+      const { data, error: fnErr } = await supabase.functions.invoke('import-project', {
+        body: { files: payload, projectType, notes: importNotes.trim() || undefined },
+      })
+      if (fnErr) {
+        // supabase-js devolve data:null num non-2xx — o erro real está no
+        // corpo da resposta, dentro do FunctionsHttpError.
+        let body = null
+        try { body = await fnErr.context?.json?.() } catch { /* ignore */ }
+        throw new Error(body?.error || 'analyze_failed')
+      }
+      if (data?.error) throw new Error(data.error)
+      consumeAI('createProject')
+      setForm({ ...(data?.prefill ?? {}), project_type: projectType })
+      setImportSummary(data?.summary ?? null)
+      setImportMissing(Array.isArray(data?.missing) ? data.missing : [])
+      setSkippedFields(new Set())
+      setStep('review')
+    } catch (err) {
+      setError(
+        err.message === 'analyze_failed' || !err.message
+          ? 'Não foi possível analisar o ficheiro. Se for Word/PowerPoint, tenta exportar como PDF.'
+          : err.message
+      )
+      setStep('choose')
+    }
+  }
+
+  /* Etiquetagem em segundo plano — o aluno só adicionou o ficheiro à
+     Biblioteca, mas a IA lê-o à mesma (light mode, haiku, sem gastar quota)
+     e tira competências + área + resumo. Silencioso: nada de bloquear a
+     navegação, nada de erros na cara se falhar. */
+  async function tagLibraryItem(itemId, file, hadNotes) {
+    try {
+      let f = { name: file.name, type: file.type, data: await fileToBase64(file) }
+      if (isOfficeFile(file)) {
+        try {
+          const pdf = await officeFileToPdfBlob(file)
+          f = { name: file.name.replace(/\.[^.]+$/, '') + '.pdf', type: 'application/pdf', data: await fileToBase64(pdf) }
+        } catch { /* envia original */ }
+      }
+      const { data } = await supabase.functions.invoke('import-project', {
+        body: { files: [f], projectType: 'personal', light: true },
+      })
+      if (!data) return
+      const patch = {}
+      if (Array.isArray(data.skills) && data.skills.length) patch.library_skills = data.skills.slice(0, 8)
+      if (data.area) patch.area = data.area
+      if (data.summary && !hadNotes) patch.library_description = data.summary
+      if (Object.keys(patch).length) {
+        await supabase.from('projects').update(patch).eq('id', itemId).eq('user_id', user.id)
+      }
+    } catch { /* background — silencioso */ }
+  }
+
+  /* "Adicionar à Biblioteca" — cria o item leve (ficheiro + nome + descrição)
+     de imediato; a IA etiqueta-o por trás (tagLibraryItem). */
   async function handleAddToLibrary() {
     if (!files.length) return
     if (requireAccount('/novo')) return
@@ -315,6 +425,7 @@ export default function NewProject() {
         if (insErr) throw insErr
 
         generateLibraryThumbnail(inserted.id, file) // fire-and-forget, não espera
+        tagLibraryItem(inserted.id, file, !!importNotes.trim()) // IA etiqueta por trás
       }
 
       showToast(files.length > 1 ? `${files.length} adicionados à biblioteca.` : 'Adicionado à biblioteca.', 'success')
@@ -349,15 +460,44 @@ export default function NewProject() {
       const { data } = await supabase.functions.invoke('generate-project', { body: { data: form } })
       if (data?.tagline) aiResult = data
     } catch { /* não é crítico */ }
+    const asAttachment = !!(user?.id && presentation === 'attachment' && parentId)
     try {
-      const project = await saveProject(form, aiResult, user?.id ?? null)
+      const project = await saveProject(form, aiResult, user?.id ?? null, {
+        parentProjectId: asAttachment ? parentId : null,
+      })
       if (user?.id) localStorage.setItem(`edit_token_${project.slug}`, project.edit_token)
+
+      // Veio de um ficheiro? Anexa o original ao projeto — fica transferível
+      // e serve de fonte. Não bloqueia a navegação.
+      if (user?.id && files[0]) {
+        const f = files[0]
+        supabase.storage.from('library-files')
+          .upload(`${user.id}/${Date.now()}-${safePathSegment(f.name)}`, f, { contentType: f.type })
+          .then(({ data: up, error: upErr }) => {
+            if (upErr || !up?.path) return
+            supabase.from('projects').update({
+              library_file_url: up.path, library_file_name: f.name, library_file_type: f.type,
+            }).eq('id', project.id).then(() => generateLibraryThumbnail(project.id, f))
+          })
+      }
+
       navigate(`/projeto/${project.slug}`, {
-        state: { newProject: true, projectData: project, message: 'Projeto criado! Começa a melhorar o teu score.' }
+        state: {
+          newProject: true,
+          projectData: project,
+          message: asAttachment ? 'Anexo adicionado.' : 'Projeto criado! Começa a melhorar o teu score.',
+        },
       })
     } catch (err) {
       console.error(err)
-      showToast('Erro ao criar o projeto. Tenta novamente.', 'error')
+      const raw = err?.message || ''
+      if (raw.includes('max_projects_reached')) {
+        setGateMsg('Atingiste o limite de projetos do teu plano. Faz upgrade para criar mais — ou adiciona este como anexo de um projeto que já tens.')
+      } else {
+        showToast(raw.includes('duplicate') || raw.includes('23505')
+          ? 'Já tens um projeto com esse nome. Muda o nome e tenta outra vez.'
+          : 'Erro ao criar o projeto. Tenta novamente.', 'error')
+      }
       setStep('review')
     }
   }
@@ -393,23 +533,30 @@ export default function NewProject() {
                   <div className="np-filemeta">
                     {files.length} {files.length === 1 ? 'ficheiro' : 'ficheiros'} · {prettySize(totalBytes)}
                   </div>
-                  <label className="np-notes-label" htmlFor="np-notes">Uma descrição breve (opcional)</label>
+                  <TypeRow value={projectType} onChange={setProjectType} />
+                  <label className="np-notes-label" htmlFor="np-notes">Algo a acrescentar antes de a IA ler? (opcional)</label>
                   <textarea
                     id="np-notes"
                     className="np-notes"
                     rows={2}
                     value={importNotes}
                     onChange={e => setImportNotes(e.target.value)}
-                    placeholder="Ex: App de gestão de tarefas, feita em React."
+                    placeholder="Ex: o meu papel foi o design e a investigação de utilizadores."
                   />
                 </div>
               )}
 
               {error && <p className="np-err"><AlertTriangle size={13} /> {error}</p>}
 
-              <button className="np-btn-primary" onClick={handleAddToLibrary} disabled={!files.length || savingToLibrary}>
-                {savingToLibrary ? 'A guardar…' : files.length > 1 ? `Adicionar ${files.length} à Biblioteca` : 'Adicionar à Biblioteca'}
+              <button className="np-btn-primary np-btn-ai" onClick={handleAnalyzeFiles} disabled={!files.length}>
+                <Sparkles size={15} /> Analisar e criar página
               </button>
+              {files.length > 0 && (
+                <button className="np-alt-path np-alt-path--quiet" onClick={handleAddToLibrary} disabled={savingToLibrary}>
+                  {savingToLibrary ? 'A guardar…' : 'Adicionar à Biblioteca'}
+                </button>
+              )}
+              <AiUsageBadge feature="createProject" style={{ marginTop: 8 }} />
             </div>
 
             <div className="np-or-divider">ou</div>
@@ -507,12 +654,25 @@ export default function NewProject() {
   ────────────────────────────────────────────────────────────────────────── */
   return (
     <NpShell>
+      {gateMsg && <PlanGateModal message={gateMsg} onClose={() => setGateMsg(null)} />}
       <Toast {...toast} />
-      <Navbar showLinks={false} mobileLeft={<BackButton onClick={() => setStep('describe')} />} />
+      <Navbar showLinks={false} mobileLeft={<BackButton onClick={() => setStep(importSummary ? 'choose' : 'describe')} />} />
       <div className="np-center np-center--review">
         <div className="np-wrap np-wrap--review">
           <StepBar current={3} total={3} label="Rever" />
-          <h2 className="np-headline np-headline--sm">Parece bem?</h2>
+          <h2 className="np-headline np-headline--sm">{importSummary ? 'Isto foi o que a IA encontrou.' : 'Parece bem?'}</h2>
+
+          {importSummary && (
+            <div className="np-import-summary">
+              <p className="np-import-summary-text">{importSummary}</p>
+              {importMissing.length > 0 && (
+                <p className="np-import-missing">
+                  <AlertTriangle size={12} /> A IA não conseguiu tirar do ficheiro: {importMissing.join(', ')}. Preenche o que puderes.
+                </p>
+              )}
+            </div>
+          )}
+
           <p className="np-sub">
             {filledCount} de {REVIEW_FIELDS.length} campos preenchidos. Toca em qualquer um para editar antes de criar.
           </p>
@@ -535,14 +695,53 @@ export default function NewProject() {
           </div>
 
           {error && <p className="np-err"><AlertTriangle size={13} /> {error}</p>}
+
+          {/* Como aparece — página própria ou anexo de outro projeto. */}
+          {user && myProjects.length > 0 && (
+            <div className="np-present">
+              <p className="np-present-label">Como aparece</p>
+              <div className="np-present-opts">
+                <button
+                  type="button"
+                  className={`np-present-opt${presentation === 'page' ? ' is-on' : ''}`}
+                  onClick={() => setPresentation('page')}
+                >
+                  <strong>Página própria</strong>
+                  <span>Um projeto Showo a sério, no perfil e no Explorar.</span>
+                </button>
+                <button
+                  type="button"
+                  className={`np-present-opt${presentation === 'attachment' ? ' is-on' : ''}`}
+                  onClick={() => setPresentation('attachment')}
+                >
+                  <strong>Anexo de outro projeto</strong>
+                  <span>Aparece dentro da página de um projeto maior.</span>
+                </button>
+              </div>
+              {presentation === 'attachment' && (
+                <select
+                  className="np-present-select"
+                  value={parentId}
+                  onChange={e => setParentId(e.target.value)}
+                >
+                  <option value="">Escolhe o projeto…</option>
+                  {myProjects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                </select>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
       {/* Ação principal fixa ao fundo: numa lista longa de campos, o botão de
           criar não pode estar a 3 scrolls de distância no telemóvel. */}
       <div className="np-sticky-action">
-        <button className="np-btn-primary" onClick={handleSubmit} disabled={!canSubmit}>
-          Criar projeto <ArrowRight size={15} />
+        <button
+          className="np-btn-primary"
+          onClick={handleSubmit}
+          disabled={!canSubmit || (presentation === 'attachment' && !parentId)}
+        >
+          {presentation === 'attachment' ? 'Adicionar como anexo' : 'Criar projeto'} <ArrowRight size={15} />
         </button>
         {!canSubmit && (
           <span className="np-sticky-hint">Faltam campos obrigatórios (marcados com *)</span>

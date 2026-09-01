@@ -445,8 +445,8 @@ export default function Register() {
         .auth-side {
           position: relative; overflow: hidden;
           flex: 0 0 42%; display: flex; align-items: center; justify-content: flex-start;
-          padding: 0 0 0 64px; background: #000000;
-          border-right: 1px solid var(--color-border);
+          padding: 0 0 0 64px; background: #141414;
+          border-right: 1px solid rgba(255,255,255,0.09);
         }
         .auth-side-content {
           position: relative; z-index: 3;
