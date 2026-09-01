@@ -886,6 +886,16 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
           <button className="mobile-drawer-btn" onClick={() => { navigate('/explorar'); setOpen(false) }}>
             <Compass size={17} /> Explorar
           </button>
+          {!user && (
+            <>
+              <button className="mobile-drawer-btn" onClick={() => { navigate('/aprende'); setOpen(false) }}>
+                <BookMarked size={16} /> Aprende a usar
+              </button>
+              <button className="mobile-drawer-btn" onClick={() => { navigate('/pricing'); setOpen(false) }}>
+                <Sparkles size={16} /> Planos
+              </button>
+            </>
+          )}
           {user ? (
             <div className="nav-drawer-profile">
               {/* User header */}
@@ -1064,10 +1074,18 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
         {/* Mobile-only left slot */}
         {mobileLeft && <div className="nav-mob-left">{mobileLeft}</div>}
 
-        {/* Left */}
+        {/* Left — visitante sem conta vê a navegação pública (nada de auth
+            aqui: Entrar/Criar conta saíram do topo por serem ruído para
+            quem chega de um link partilhado). */}
         {showLinks && (
           <div className="nav-left">
             <button onClick={() => navigate('/explorar')} style={btnStyle} className="nav-btn">Explorar</button>
+            {!user && (
+              <>
+                <button onClick={() => navigate('/aprende')} style={btnStyle} className="nav-btn">Aprende a usar</button>
+                <button onClick={() => navigate('/pricing')} style={btnStyle} className="nav-btn">Planos</button>
+              </>
+            )}
           </div>
         )}
 
@@ -1137,51 +1155,32 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
             </button>
           )}
 
-          {/* Auth section */}
-          <div className="nav-auth">
-            {user ? (
-              <>
-                {isAdmin && (
-                  <button
-                    onClick={() => navigate('/admin')}
-                    style={{
-                      background: 'rgba(168,85,247,0.08)', border: '1px solid rgba(168,85,247,0.25)',
-                      color: 'var(--color-accent)', borderRadius: 8, padding: '6px 12px',
-                      fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-                    }}
-                    title="Painel de administração"
-                  ><Shield size={14} /></button>
-                )}
-                <UserChip
-                  user={user}
-                  profile={profile}
-                  onClick={() => navigate('/dashboard')}
-                  onProfile={profileUrl ? () => navigate(profileUrl) : null}
-                  onSettings={() => navigate('/settings')}
-                  onSignOut={handleSignOut}
-                  onCreateProject={showCreateProject && !isTeacher && !isAdmin ? () => navigate('/novo') : undefined}
-                />
-              </>
-            ) : (
-              <>
-                <button onClick={() => navigate('/login')} style={btnStyle} className="nav-btn">
-                  Entrar
-                </button>
+          {/* Auth section — só para quem tem sessão. Visitante sem conta não
+              tem nada aqui; entra pelo herói da Home ou pelo menu no mobile. */}
+          {user && (
+            <div className="nav-auth">
+              {isAdmin && (
                 <button
-                  onClick={() => navigate('/register')}
+                  onClick={() => navigate('/admin')}
                   style={{
-                    background: C.blue, border: 'none', borderRadius: 8,
-                    padding: '8px 16px', color: '#fff', fontSize: 14, fontWeight: 600,
-                    cursor: 'pointer', fontFamily: 'inherit', transition: 'background 0.15s', whiteSpace: 'nowrap',
+                    background: 'rgba(168,85,247,0.08)', border: '1px solid rgba(168,85,247,0.25)',
+                    color: 'var(--color-accent)', borderRadius: 8, padding: '6px 12px',
+                    fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
                   }}
-                  onMouseEnter={e => e.target.style.background = 'color-mix(in srgb, var(--color-text) 85%, transparent)'}
-                  onMouseLeave={e => e.target.style.background = C.blue}
-                >
-                  Criar conta
-                </button>
-              </>
-            )}
-          </div>
+                  title="Painel de administração"
+                ><Shield size={14} /></button>
+              )}
+              <UserChip
+                user={user}
+                profile={profile}
+                onClick={() => navigate('/dashboard')}
+                onProfile={profileUrl ? () => navigate(profileUrl) : null}
+                onSettings={() => navigate('/settings')}
+                onSignOut={handleSignOut}
+                onCreateProject={showCreateProject && !isTeacher && !isAdmin ? () => navigate('/novo') : undefined}
+              />
+            </div>
+          )}
 
           {/* Mobile quick-create button — only on mobile (not tablet) */}
           {showLinks && !isTeacher && !isAdmin && (
