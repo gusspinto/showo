@@ -236,6 +236,19 @@
   color: var(--color-text);
 }
 
+/* Personalizar — a ação de "montar o teu perfil". Mesmo gradiente da
+   Showo usado no "Criar projeto": o único ponto de cor quente, para a
+   ação mais importante deste ecrã. */
+.up-icon-btn.up-personalize,
+.up-icon-btn.up-personalize:hover {
+  background-image: linear-gradient(115deg, #2478f0 0%, #db4a3d 50%, #cc9a1e 100%);
+  background-color: transparent;
+  border-color: transparent;
+  color: #fff;
+}
+.up-icon-btn.up-personalize { transition: filter 0.2s ease; }
+.up-icon-btn.up-personalize:hover { filter: brightness(1.06); }
+
 @media (max-width: 600px) {
   .up-head-actions .up-action-btn.primary {
     flex: 1;

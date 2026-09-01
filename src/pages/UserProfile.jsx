@@ -415,7 +415,7 @@ export default function UserProfile() {
               <div className="up-head-actions">
                 {isOwnProfile && (
                   <>
-                    <button onClick={openCustomizer} className="up-icon-btn" title="Personalizar perfil" aria-label="Personalizar perfil">
+                    <button onClick={openCustomizer} className="up-icon-btn up-personalize" title="Personalizar perfil" aria-label="Personalizar perfil">
                       <Palette size={15} />
                     </button>
                     <button onClick={() => navigate('/settings')} className="up-icon-btn" title="Editar perfil" aria-label="Editar perfil">
