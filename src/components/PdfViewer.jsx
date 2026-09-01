@@ -48,7 +48,11 @@ export default function PdfViewer({ url }) {
       if (!container) return
       try {
         container.innerHTML = ''
-        const dpr = window.devicePixelRatio || 1
+        // Desenha acima da resolução de ecrã (supersampling) e mostra em
+        // tamanho menor — o downscale do browser dá páginas nítidas. Cap
+        // por página para não rebentar a memória com um canvas gigante.
+        const quality = Math.max(window.devicePixelRatio || 1, 2)
+        const MAX_PX = 6_000_000
         const baseWidth = Math.min(container.clientWidth || 760, 900)
         const cssWidth = Math.round(baseWidth * scale)
 
@@ -57,17 +61,27 @@ export default function PdfViewer({ url }) {
           const page = await pdfDoc.getPage(n)
           if (cancelled) return
           const base = page.getViewport({ scale: 1 })
-          const viewport = page.getViewport({ scale: (cssWidth / base.width) * dpr })
+          const ratio = base.height / base.width
+          const displayW = cssWidth
+          const displayH = Math.round(cssWidth * ratio)
+
+          let renderScale = (cssWidth / base.width) * quality
+          const projected = (base.width * renderScale) * (base.height * renderScale)
+          if (projected > MAX_PX) renderScale *= Math.sqrt(MAX_PX / projected)
+          const viewport = page.getViewport({ scale: renderScale })
 
           const canvas = document.createElement('canvas')
           canvas.className = 'pdfv-page'
           canvas.width = Math.round(viewport.width)
           canvas.height = Math.round(viewport.height)
-          canvas.style.width = `${cssWidth}px`
-          canvas.style.height = `${Math.round(viewport.height / dpr)}px`
+          canvas.style.width = `${displayW}px`
+          canvas.style.height = `${displayH}px`
           container.appendChild(canvas)
 
-          renderTask = page.render({ canvasContext: canvas.getContext('2d'), viewport })
+          const ctx = canvas.getContext('2d')
+          ctx.imageSmoothingEnabled = true
+          ctx.imageSmoothingQuality = 'high'
+          renderTask = page.render({ canvasContext: ctx, viewport })
           try {
             await renderTask.promise
           } catch (err) {
