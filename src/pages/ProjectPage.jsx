@@ -5099,7 +5099,8 @@ export default function ProjectPage() {
       setAiFeedback(result)
       await supabase.from('projects').update({ ai_feedback: result }).eq('id', project.id)
     } catch (e) {
-      setAnalyzeError('Erro ao analisar. Tenta novamente.')
+      console.error('[analyze]', e)
+      setAnalyzeError(e?.message || 'Erro ao analisar. Tenta novamente.')
     }
     setAnalyzingAI(false)
   }
