@@ -9,9 +9,9 @@ import { GalleryIcon as ImageIcon } from '@solar-icons/react/bold/gallery'
 import { FolderIcon as Folder } from '@solar-icons/react/bold/folder'
 import { TrashBinTrashIcon as Trash } from '@solar-icons/react/bold/trash-bin-trash'
 import { LibraryIcon } from '@solar-icons/react/bold/library'
-import { CloseIcon as X } from '@solar-icons/react/bold/close'
 import { ArrowRightUpIcon as ExternalLink } from '@solar-icons/react/bold/arrow-right-up'
 import { fileTypeStyle, withSignedLibraryUrls } from '../lib/libraryFile'
+import LibFileViewer from '../components/LibFileViewer'
 import './Biblioteca.css'
 
 /* Biblioteca — todos os projetos do user, "criados" (entry_kind='full',
@@ -28,15 +28,6 @@ function fileIconFor(type) {
   if (type?.startsWith('image/')) return ImageIcon
   return FileText
 }
-
-function previewUrlFor(item) {
-  const url = item._signedFileUrl
-  const type = item.library_file_type
-  if (!url) return null
-  if (type?.startsWith('image/') || type === 'application/pdf') return url
-  return null
-}
-
 
 function prettyDate(iso) {
   try {
@@ -337,30 +328,7 @@ export default function Biblioteca() {
         )}
       </div>
 
-      {viewing && (
-        <div className="lib-viewer-backdrop" onClick={() => setViewing(null)}>
-          <div className="lib-viewer" onClick={e => e.stopPropagation()}>
-            <div className="lib-viewer-head">
-              <span className="lib-viewer-title">{viewing.name}</span>
-              <div className="lib-viewer-actions">
-                <a className="lib-card-btn" href={viewing._signedFileUrl} target="_blank" rel="noopener noreferrer" aria-label="Abrir noutra aba">
-                  <ExternalLink size={16} />
-                </a>
-                <button className="lib-card-btn" onClick={() => setViewing(null)} aria-label="Fechar">
-                  <X size={17} />
-                </button>
-              </div>
-            </div>
-            <div className="lib-viewer-body">
-              {viewing.library_file_type?.startsWith('image/') ? (
-                <img src={viewing._signedFileUrl} alt={viewing.name} className="lib-viewer-img" />
-              ) : (
-                <iframe title={viewing.name} src={previewUrlFor(viewing)} className="lib-viewer-frame" />
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      {viewing && <LibFileViewer item={viewing} onClose={() => setViewing(null)} />}
 
       {confirmingDelete && (
         <div className="lib-confirm-backdrop" onClick={() => setConfirmingDelete(null)}>

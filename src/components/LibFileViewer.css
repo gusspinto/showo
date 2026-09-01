@@ -1,0 +1,108 @@
+.lfv-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  background: rgba(0, 0, 0, 0.62);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  animation: lfv-fade 0.15s ease;
+}
+@keyframes lfv-fade { from { opacity: 0; } to { opacity: 1; } }
+
+.lfv {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 940px;
+  height: min(86vh, 960px);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.lfv-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 8px 12px 18px;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--color-border);
+}
+.lfv-title {
+  font-size: 14.5px;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lfv-actions { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
+.lfv-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.14s, color 0.14s;
+}
+.lfv-btn:hover { background: var(--color-surface-hover); color: var(--color-text); }
+
+.lfv-body {
+  flex: 1;
+  min-height: 0;
+  background: var(--color-bg-alt);
+  display: flex;
+}
+
+.lfv-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.lfv-text {
+  margin: 0;
+  padding: 20px;
+  width: 100%;
+  overflow: auto;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--color-text);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.lfv-msg {
+  margin: auto;
+  padding: 40px 24px;
+  text-align: center;
+  font-size: 13.5px;
+  color: var(--color-text-secondary);
+}
+.lfv-nopreview { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.lfv-nopreview p { margin: 0; }
+.lfv-download {
+  padding: 9px 16px;
+  border-radius: 9px;
+  background: var(--color-text);
+  color: var(--color-bg);
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+@media (max-width: 600px) {
+  .lfv-backdrop { padding: 0; }
+  .lfv { height: 100dvh; max-width: 100%; border-radius: 0; border: none; }
+}

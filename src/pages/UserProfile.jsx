@@ -20,6 +20,7 @@ import { PlaneIcon as Send } from '@solar-icons/react/bold/plane'
 import { PaletteIcon as Palette } from '@solar-icons/react/bold/palette'
 import ConvidarVagaModal from '../components/ConvidarVagaModal'
 import ProfileCustomizer from '../components/ProfileCustomizer'
+import LibFileViewer from '../components/LibFileViewer'
 import { PlanBadge } from '../components/PlanGate'
 import { DocumentTextIcon as FileText } from '@solar-icons/react/bold/document-text'
 import { appearanceVars } from '../lib/profileAppearance'
@@ -208,6 +209,7 @@ export default function UserProfile() {
   const [savingCandidate, setSavingCandidate] = useState(false)
   const [recruiterVagas, setRecruiterVagas] = useState([])
   const [showInvite, setShowInvite] = useState(false)
+  const [viewingFile, setViewingFile] = useState(null)
   const [customizing, setCustomizing] = useState(false)
   const [draftAppearance, setDraftAppearance] = useState({})
   const [draftHeadline, setDraftHeadline] = useState('')
@@ -486,8 +488,7 @@ export default function UserProfile() {
                   project={project}
                   onOpen={() => {
                     if (project.entry_kind === 'library') {
-                      const url = project._signedFileUrl || project.library_file_url
-                      if (url) window.open(url, '_blank', 'noopener')
+                      setViewingFile(project)
                     } else {
                       navigate(`/projeto/${project.slug}`)
                     }
@@ -498,6 +499,8 @@ export default function UserProfile() {
           )}
         </div>
       </div>
+
+      {viewingFile && <LibFileViewer item={viewingFile} onClose={() => setViewingFile(null)} />}
 
       {customizing && (
         <ProfileCustomizer
