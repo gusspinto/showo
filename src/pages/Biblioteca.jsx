@@ -328,7 +328,16 @@ export default function Biblioteca() {
         )}
       </div>
 
-      {viewing && <LibFileViewer item={viewing} onClose={() => setViewing(null)} />}
+      {viewing && (
+        <LibFileViewer
+          item={viewing}
+          onClose={() => setViewing(null)}
+          onRename={name => {
+            patchItem(viewing.id, { name })
+            setViewing(v => (v ? { ...v, name } : v))
+          }}
+        />
+      )}
 
       {confirmingDelete && (
         <div className="lib-confirm-backdrop" onClick={() => setConfirmingDelete(null)}>

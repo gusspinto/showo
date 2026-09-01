@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { CloseIcon as X } from '@solar-icons/react/bold/close'
 import { DownloadIcon as Download } from '@solar-icons/react/bold/download'
+import { Pen2Icon as Pencil } from '@solar-icons/react/bold/pen-2'
+import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
 import PdfViewer from './PdfViewer'
 import { officeToPdfBlob, persistLibraryPdf } from '../lib/officeToPdf'
 import './LibFileViewer.css'
@@ -13,16 +15,25 @@ const OFFICE_TYPES = new Set([
 /* Abre um ficheiro da Biblioteca DENTRO da app: imagem, PDF e texto
    renderizam-se aqui; Word/PowerPoint ainda não (fica para a conversão
    para PDF — fase 2). Usado na Biblioteca e no perfil público. */
-export default function LibFileViewer({ item, onClose }) {
+export default function LibFileViewer({ item, onClose, onRename }) {
+  const [renaming, setRenaming] = useState(false)
+  const [nameDraft, setNameDraft] = useState(item?.name || '')
+
   useEffect(() => {
-    const onKey = e => { if (e.key === 'Escape') onClose() }
+    const onKey = e => { if (e.key === 'Escape') { renaming ? setRenaming(false) : onClose() } }
     document.addEventListener('keydown', onKey)
     document.body.style.overflow = 'hidden'
     return () => {
       document.removeEventListener('keydown', onKey)
       document.body.style.overflow = ''
     }
-  }, [onClose])
+  }, [onClose, renaming])
+
+  function saveName() {
+    const v = nameDraft.trim()
+    setRenaming(false)
+    if (v && v !== item.name) onRename(v)
+  }
 
   const url = item?._signedFileUrl
   const type = item?.library_file_type || ''
@@ -35,8 +46,30 @@ export default function LibFileViewer({ item, onClose }) {
     <div className="lfv-backdrop" onClick={onClose}>
       <div className="lfv" onClick={e => e.stopPropagation()}>
         <div className="lfv-head">
-          <span className="lfv-title">{item?.name}</span>
+          {renaming ? (
+            <input
+              className="lfv-title-input"
+              value={nameDraft}
+              autoFocus
+              maxLength={120}
+              onChange={e => setNameDraft(e.target.value)}
+              onBlur={saveName}
+              onKeyDown={e => { if (e.key === 'Enter') saveName() }}
+            />
+          ) : (
+            <span className="lfv-title">{item?.name}</span>
+          )}
           <div className="lfv-actions">
+            {onRename && !renaming && (
+              <button className="lfv-btn" onClick={() => { setNameDraft(item.name || ''); setRenaming(true) }} aria-label="Mudar o nome">
+                <Pencil size={15} />
+              </button>
+            )}
+            {renaming && (
+              <button className="lfv-btn" onClick={saveName} aria-label="Guardar nome">
+                <Check size={16} />
+              </button>
+            )}
             {url && (
               <a className="lfv-btn" href={url} target="_blank" rel="noopener noreferrer" aria-label="Transferir">
                 <Download size={16} />
