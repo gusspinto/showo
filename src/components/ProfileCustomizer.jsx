@@ -59,10 +59,18 @@ export default function ProfileCustomizer({
             {a.bannerUrl ? (
               <>
                 <div className="pc-banner-preview">
-                  <img src={a.bannerUrl} alt="" />
-                  <button className="pc-banner-remove" onClick={() => set({ bannerUrl: null })} aria-label="Remover imagem">
+                  <img src={a.bannerUrl} alt="" style={{ objectPosition: `50% ${a.bannerPosition ?? 50}%` }} />
+                  <button className="pc-banner-remove" onClick={() => set({ bannerUrl: null, bannerPosition: null })} aria-label="Remover imagem">
                     <Trash size={13} />
                   </button>
+                </div>
+                <div className="pc-banner-position">
+                  <span className="pc-banner-position-label">Posição da imagem</span>
+                  <input
+                    type="range" min="0" max="100"
+                    value={a.bannerPosition ?? 50}
+                    onChange={e => set({ bannerPosition: Number(e.target.value) })}
+                  />
                 </div>
                 <button className="pc-textbtn" onClick={() => fileRef.current?.click()} disabled={bannerBusy}>
                   {bannerBusy ? 'A carregar…' : 'Trocar'}

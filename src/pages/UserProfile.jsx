@@ -367,7 +367,7 @@ export default function UserProfile() {
 
       {appearance.bannerUrl && (
         <div className="up-banner">
-          <img src={appearance.bannerUrl} alt="" />
+          <img src={appearance.bannerUrl} alt="" style={{ objectPosition: `50% ${appearance.bannerPosition ?? 50}%` }} />
         </div>
       )}
 
