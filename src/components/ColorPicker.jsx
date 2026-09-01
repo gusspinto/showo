@@ -91,14 +91,14 @@ export default function ColorPicker({ value, onChange, onClose }) {
       <div
         className="cpk-square"
         ref={sqRef}
-        style={{ background: `linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, ${hueColor})` }}
+        style={{ backgroundImage: `linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, ${hueColor})` }}
         onMouseDown={e => startDrag('square', e)}
       >
         <div className="cpk-square-thumb" style={{ left: `${s}%`, top: `${100 - v}%` }} />
       </div>
 
       <div className="cpk-hue" ref={hueRef} onMouseDown={e => startDrag('hue', e)}>
-        <div className="cpk-hue-thumb" style={{ left: `${(h / 360) * 100}%`, background: hueColor }} />
+        <div className="cpk-hue-thumb" style={{ left: `${(h / 360) * 100}%` }} />
       </div>
 
       <div className="cpk-row">
