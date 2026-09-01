@@ -77,6 +77,22 @@ async function officeToText(bytes: Uint8Array, kind: 'docx' | 'pptx'): Promise<s
 
 const IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif']
 
+/* Tira o texto da resposta do modelo com defesa: pode vir um bloco que não
+   é texto (refusal, etc.) ou content vazio — em vez de rebentar com
+   "reading 'trim'", registamos o que veio para se perceber. */
+// deno-lint-ignore no-explicit-any
+function modelText(message: any): string {
+  const block = (message?.content ?? []).find((c: { type?: string }) => c?.type === 'text')
+  const text = (block?.text ?? '').trim()
+  if (!text) {
+    console.error('[import-project] modelo sem texto:', JSON.stringify({
+      stop_reason: message?.stop_reason,
+      types: (message?.content ?? []).map((c: { type?: string }) => c?.type),
+    }))
+  }
+  return text
+}
+
 function extOf(name: string) {
   return (name.split('.').pop() ?? '').toLowerCase()
 }
@@ -248,7 +264,7 @@ Devolve APENAS este JSON: {"skills": [], "area": "", "summary": ""}`,
         max_tokens: 500,
         messages: [{ role: 'user', content: content as never }],
       })
-      const raw = (message.content[0] as { type: string; text: string }).text.trim()
+      const raw = modelText(message)
       const m = raw.match(/\{[\s\S]*\}/)
       const p = m ? JSON.parse(m[0]) : {}
       return json({
@@ -293,9 +309,9 @@ Devolve APENAS este JSON, sem markdown à volta:
       messages: [{ role: 'user', content: content as never }],
     })
 
-    const rawText = (message.content[0] as { type: string; text: string }).text.trim()
+    const rawText = modelText(message)
     const match = rawText.match(/\{[\s\S]*\}/)
-    if (!match) throw new Error('Resposta inválida do modelo')
+    if (!match) throw new Error('O modelo não devolveu uma ficha. Tenta com um PDF.')
     const parsed = JSON.parse(match[0])
 
     return json({
