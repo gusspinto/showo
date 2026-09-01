@@ -219,7 +219,10 @@ export default function UserProfile() {
     async function load() {
       const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(username)
 
-      const PROFILE_COLS = 'id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size, skills, school, total_xp, created_at, area, profile_appearance, profile_headline'
+      // Sem is_admin (o 065 tirou-o do grant anon de propósito e não é usado
+      // aqui) — bastava estar na lista para o SELECT inteiro falhar para
+      // visitantes sem conta, e o perfil dava "não encontrado".
+      const PROFILE_COLS = 'id, username, full_name, bio, banned_at, role, avatar_url, available_for_work, company, company_role, company_website, linkedin_url, looking_for, company_description, company_location, company_industry, company_size, skills, school, total_xp, created_at, area, profile_appearance, profile_headline'
       const { data: profileData, error: profileErr } = isUUID
         ? await supabase.from('profiles').select(PROFILE_COLS).eq('id', username).single()
         : await supabase.from('profiles').select(PROFILE_COLS).eq('username', username).single()
@@ -230,7 +233,7 @@ export default function UserProfile() {
       // A secção "Projetos" mostra só o que o dono escolheu na Biblioteca
       // (profile_featured), pela ordem que definiu — projetos criados e
       // ficheiros adicionados juntos. Deixou de listar tudo por score.
-      const PROJECT_COLS = 'id, user_id, name, slug, score, area, ai_tagline, cover_url, created_at, views, ai_feedback, entry_kind, profile_featured, profile_featured_order, profile_layout, library_description, library_file_url, library_file_name, library_file_type, library_thumb_url, library_pdf_url'
+      const PROJECT_COLS = 'id, user_id, name, slug, score, area, ai_tagline, cover_url, created_at, views, entry_kind, profile_featured, profile_featured_order, profile_layout, library_description, library_file_url, library_file_name, library_file_type, library_thumb_url, library_pdf_url'
       const projectsPromise = supabase
         .from('projects')
         .select(`${PROJECT_COLS}, collaborator_count:project_collaborators(count)`)
