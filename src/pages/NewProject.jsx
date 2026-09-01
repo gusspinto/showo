@@ -460,14 +460,12 @@ export default function NewProject() {
       const { data } = await supabase.functions.invoke('generate-project', { body: { data: form } })
       if (data?.tagline) aiResult = data
     } catch { /* não é crítico */ }
+    const asAttachment = !!(user?.id && presentation === 'attachment' && parentId)
     try {
-      const project = await saveProject(form, aiResult, user?.id ?? null)
+      const project = await saveProject(form, aiResult, user?.id ?? null, {
+        parentProjectId: asAttachment ? parentId : null,
+      })
       if (user?.id) localStorage.setItem(`edit_token_${project.slug}`, project.edit_token)
-
-      const asAttachment = user?.id && presentation === 'attachment' && parentId
-      if (asAttachment) {
-        await supabase.from('projects').update({ parent_project_id: parentId }).eq('id', project.id)
-      }
 
       // Veio de um ficheiro? Anexa o original ao projeto — fica transferível
       // e serve de fonte. Não bloqueia a navegação.
@@ -484,11 +482,22 @@ export default function NewProject() {
       }
 
       navigate(`/projeto/${project.slug}`, {
-        state: { newProject: true, projectData: project, message: 'Projeto criado! Começa a melhorar o teu score.' }
+        state: {
+          newProject: true,
+          projectData: project,
+          message: asAttachment ? 'Anexo adicionado.' : 'Projeto criado! Começa a melhorar o teu score.',
+        },
       })
     } catch (err) {
       console.error(err)
-      showToast('Erro ao criar o projeto. Tenta novamente.', 'error')
+      const raw = err?.message || ''
+      if (raw.includes('max_projects_reached')) {
+        setGateMsg('Atingiste o limite de projetos do teu plano. Faz upgrade para criar mais — ou adiciona este como anexo de um projeto que já tens.')
+      } else {
+        showToast(raw.includes('duplicate') || raw.includes('23505')
+          ? 'Já tens um projeto com esse nome. Muda o nome e tenta outra vez.'
+          : 'Erro ao criar o projeto. Tenta novamente.', 'error')
+      }
       setStep('review')
     }
   }
@@ -645,6 +654,7 @@ export default function NewProject() {
   ────────────────────────────────────────────────────────────────────────── */
   return (
     <NpShell>
+      {gateMsg && <PlanGateModal message={gateMsg} onClose={() => setGateMsg(null)} />}
       <Toast {...toast} />
       <Navbar showLinks={false} mobileLeft={<BackButton onClick={() => setStep(importSummary ? 'choose' : 'describe')} />} />
       <div className="np-center np-center--review">
