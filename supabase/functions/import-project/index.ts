@@ -87,7 +87,10 @@ function modelText(message: any): string {
   if (!text) {
     console.error('[import-project] modelo sem texto:', JSON.stringify({
       stop_reason: message?.stop_reason,
-      types: (message?.content ?? []).map((c: { type?: string }) => c?.type),
+      model: message?.model,
+      content: (message?.content ?? []).map((c: Record<string, unknown>) =>
+        c?.type === 'text' ? { type: 'text', len: String(c.text ?? '').length } : c),
+      error: message?.error,
     }))
   }
   return text
@@ -304,8 +307,8 @@ Devolve APENAS este JSON, sem markdown à volta:
 
     const client = new Anthropic({ apiKey: Deno.env.get('ANTHROPIC_API_KEY') ?? '' })
     const message = await client.messages.create({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 1600,
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 2000,
       messages: [{ role: 'user', content: content as never }],
     })
 
