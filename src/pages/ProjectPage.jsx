@@ -8326,7 +8326,7 @@ export default function ProjectPage() {
             onClick={() => setCoachOpen(true)}
             className="proj-coach-fab"
             style={{
-              position: 'fixed', bottom: 88, right: 20, zIndex: 200,
+              position: 'fixed', bottom: 20, right: 20, zIndex: 200,
               width: 44, height: 44, borderRadius: '50%',
               background: 'var(--color-primary)',
               border: '2px solid transparent',
@@ -8351,8 +8351,8 @@ export default function ProjectPage() {
           <div
             className="proj-coach-panel"
             style={{
-              position: 'fixed', bottom: 80, right: 20,
-              width: 360, height: 'calc(100dvh - 136px)',
+              position: 'fixed', bottom: 20, right: 20,
+              width: 360, height: 'calc(100dvh - 100px)',
               maxHeight: 560,
               zIndex: 200,
               background: 'var(--color-surface)',
