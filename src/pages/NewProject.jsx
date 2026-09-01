@@ -145,7 +145,7 @@ function b64ToBytes(b64) {
 export default function NewProject() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { user, checkGate, consumeAI } = useAuth()
+  const { user, profile, checkGate, consumeAI } = useAuth()
   const { toast, show: showToast } = useToast()
 
   /* Passos: choose → describe | loading → review → submitting
@@ -461,8 +461,16 @@ export default function NewProject() {
       if (data?.tagline) aiResult = data
     } catch { /* não é crítico */ }
     const asAttachment = !!(user?.id && presentation === 'attachment' && parentId)
+    // A app já sabe quem é o aluno — pré-preenche o "sobre o criador" a
+    // partir do perfil, para ele não ter de reescrever o nome/escola.
+    const withCreator = {
+      ...form,
+      creator_name: form.creator_name || profile?.full_name || '',
+      school: form.school || profile?.school || '',
+      course: form.course || profile?.area || '',
+    }
     try {
-      const project = await saveProject(form, aiResult, user?.id ?? null, {
+      const project = await saveProject(withCreator, aiResult, user?.id ?? null, {
         parentProjectId: asAttachment ? parentId : null,
       })
       if (user?.id) localStorage.setItem(`edit_token_${project.slug}`, project.edit_token)

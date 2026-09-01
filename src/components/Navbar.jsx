@@ -1127,15 +1127,24 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
                   <Paintbrush size={18} strokeWidth={2} />
                 </button>
               ) : extras?.type === 'project' ? (
-                <button
-                  className="mob-nav-icon-btn primary"
-                  data-tour="preview"
-                  onClick={() => setProjMenuOpen(o => !o)}
-                  aria-label="Gerir projeto"
-                  style={{ background: projMenuOpen ? 'color-mix(in srgb, var(--color-text) 85%, transparent)' : undefined }}
-                >
-                  <Paintbrush size={18} strokeWidth={2} />
-                </button>
+                <>
+                  {/* Dentro de um projeto continua a haver o "Criar projeto" —
+                      não desaparece só por estarmos numa página de projeto. */}
+                  {!isTeacher && !isAdmin && (
+                    <button className="mob-nav-icon-btn primary gradient-cta" onMouseMove={handleGradientMove} onMouseLeave={handleGradientLeave} onClick={() => navigate('/novo')} aria-label="Criar projeto">
+                      <Plus size={15} />
+                    </button>
+                  )}
+                  <button
+                    className="mob-nav-icon-btn primary"
+                    data-tour="preview"
+                    onClick={() => setProjMenuOpen(o => !o)}
+                    aria-label="Gerir projeto"
+                    style={{ background: projMenuOpen ? 'color-mix(in srgb, var(--color-text) 85%, transparent)' : undefined }}
+                  >
+                    <Paintbrush size={18} strokeWidth={2} />
+                  </button>
+                </>
               ) : !isTeacher && !isAdmin ? (
                 <button className="mob-nav-icon-btn primary gradient-cta" onMouseMove={handleGradientMove} onMouseLeave={handleGradientLeave} onClick={() => navigate('/novo')} aria-label="Criar projeto">
                   <Plus size={15} />
@@ -1424,7 +1433,7 @@ export function Navbar({ children, showLinks = true, showCreateProject = false, 
               </button>
 
               {user && !isTeacher && !isAdmin && (
-                <div className={`sb-create-wrap ${extras ? 'hidden' : 'visible'}`}>
+                <div className="sb-create-wrap visible">
                   <div className="sb-create-inner">
                     <button className="sb-create gradient-cta" onMouseMove={handleGradientMove} onMouseLeave={handleGradientLeave} onClick={() => navigate('/novo')}>
                       <Plus size={14} />{!collapsed && showLabels && <span>Criar projeto</span>}
