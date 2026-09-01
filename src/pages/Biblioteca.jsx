@@ -11,7 +11,7 @@ import { TrashBinTrashIcon as Trash } from '@solar-icons/react/bold/trash-bin-tr
 import { LibraryIcon } from '@solar-icons/react/bold/library'
 import { CloseIcon as X } from '@solar-icons/react/bold/close'
 import { ArrowRightUpIcon as ExternalLink } from '@solar-icons/react/bold/arrow-right-up'
-import { fileTypeStyle } from '../lib/libraryFile'
+import { fileTypeStyle, withSignedLibraryUrls } from '../lib/libraryFile'
 import './Biblioteca.css'
 
 /* Biblioteca — todos os projetos do user, "criados" (entry_kind='full',
@@ -37,26 +37,6 @@ function previewUrlFor(item) {
   return null
 }
 
-async function signLibraryUrls(items) {
-  const toSign = []
-  for (const it of items) {
-    if (it.entry_kind !== 'library') continue
-    if (it.library_file_url && !it.library_file_url.startsWith('http')) toSign.push(it.library_file_url)
-    if (it.library_thumb_url && !it.library_thumb_url.startsWith('http')) toSign.push(it.library_thumb_url)
-  }
-  if (!toSign.length) return items
-  const { data: signed } = await supabase.storage.from('library-files').createSignedUrls(toSign, 900)
-  const urlMap = {}
-  if (signed) signed.forEach(s => { if (s.signedUrl) urlMap[s.path] = s.signedUrl })
-  return items.map(it => {
-    if (it.entry_kind !== 'library') return it
-    return {
-      ...it,
-      _signedFileUrl: urlMap[it.library_file_url] || it.library_file_url,
-      _signedThumbUrl: urlMap[it.library_thumb_url] || it.library_thumb_url,
-    }
-  })
-}
 
 function prettyDate(iso) {
   try {
@@ -112,7 +92,7 @@ function ProfileControls({ item, onTogglePin, onSetLayout }) {
    ainda mais reconhecível que um ícone cinzento genérico. */
 function LibAddedTile({ item, onOpen, onDelete, removing, editing, onTogglePin, onSetLayout }) {
   const isImage = item.library_file_type?.startsWith('image/')
-  const previewSrc = isImage ? (item._signedFileUrl || item.library_file_url) : (item._signedThumbUrl || item.library_thumb_url)
+  const previewSrc = isImage ? item._signedFileUrl : item._signedThumbUrl
   const ft = fileTypeStyle(item.library_file_type)
 
   return (
@@ -212,7 +192,7 @@ export default function Biblioteca() {
       .order('created_at', { ascending: false })
       .then(async ({ data }) => {
         if (cancelled) return
-        const withUrls = await signLibraryUrls(data ?? [])
+        const withUrls = await withSignedLibraryUrls(data ?? [])
         if (!cancelled) setItems(withUrls)
       })
     return () => { cancelled = true }
@@ -227,11 +207,11 @@ export default function Biblioteca() {
     const channel = supabase
       .channel(`biblioteca-${user.id}`)
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'projects', filter: `user_id=eq.${user.id}` }, async payload => {
-        const [signed] = await signLibraryUrls([payload.new])
+        const [signed] = await withSignedLibraryUrls([payload.new])
         setItems(prev => prev?.map(i => (i.id === signed.id ? { ...i, ...signed } : i)) ?? prev)
       })
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'projects', filter: `user_id=eq.${user.id}` }, async payload => {
-        const [signed] = await signLibraryUrls([payload.new])
+        const [signed] = await withSignedLibraryUrls([payload.new])
         setItems(prev => (prev?.some(i => i.id === signed.id) ? prev : [signed, ...(prev ?? [])]))
       })
       .subscribe()
@@ -363,7 +343,7 @@ export default function Biblioteca() {
             <div className="lib-viewer-head">
               <span className="lib-viewer-title">{viewing.name}</span>
               <div className="lib-viewer-actions">
-                <a className="lib-card-btn" href={viewing._signedFileUrl || viewing.library_file_url} target="_blank" rel="noopener noreferrer" aria-label="Abrir noutra aba">
+                <a className="lib-card-btn" href={viewing._signedFileUrl} target="_blank" rel="noopener noreferrer" aria-label="Abrir noutra aba">
                   <ExternalLink size={16} />
                 </a>
                 <button className="lib-card-btn" onClick={() => setViewing(null)} aria-label="Fechar">
@@ -373,7 +353,7 @@ export default function Biblioteca() {
             </div>
             <div className="lib-viewer-body">
               {viewing.library_file_type?.startsWith('image/') ? (
-                <img src={viewing._signedFileUrl || viewing.library_file_url} alt={viewing.name} className="lib-viewer-img" />
+                <img src={viewing._signedFileUrl} alt={viewing.name} className="lib-viewer-img" />
               ) : (
                 <iframe title={viewing.name} src={previewUrlFor(viewing)} className="lib-viewer-frame" />
               )}

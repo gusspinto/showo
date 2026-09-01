@@ -10,8 +10,14 @@ export function pushRoute(pathname) {
   if (stack.length > 12) stack.shift()
 }
 
-export function previousRoute() {
-  return stack.length > 1 ? stack[stack.length - 2] : null
+/* O último caminho diferente de `current`. Passa-se `current` porque a
+   página que pergunta pode montar ANTES de o tracker registar a própria
+   rota — nesse instante o topo do stack ainda é a página anterior. */
+export function previousRoute(current) {
+  for (let i = stack.length - 1; i >= 0; i--) {
+    if (stack[i] !== current) return stack[i]
+  }
+  return null
 }
 
 /* Traduz um caminho no destino + rótulo do botão "voltar". */

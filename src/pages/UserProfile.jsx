@@ -23,7 +23,7 @@ import ProfileCustomizer from '../components/ProfileCustomizer'
 import { PlanBadge } from '../components/PlanGate'
 import { DocumentTextIcon as FileText } from '@solar-icons/react/bold/document-text'
 import { appearanceVars } from '../lib/profileAppearance'
-import { fileTypeStyle } from '../lib/libraryFile'
+import { fileTypeStyle, withSignedLibraryUrls } from '../lib/libraryFile'
 import './UserProfile.css'
 
 function scoreColor(score) {
@@ -262,25 +262,9 @@ export default function UserProfile() {
       }))
 
       // Ficheiros da Biblioteca são privados (097); os que estão no perfil
-      // ficam legíveis via signed URL graças à policy do 104. O visitante
-      // (mesmo anónimo) assina-os aqui para a thumbnail/abertura funcionar.
-      const paths = normalized.flatMap(p =>
-        p.entry_kind === 'library'
-          ? [p.library_file_url, p.library_thumb_url].filter(u => u && !u.startsWith('http'))
-          : [],
-      )
-      if (paths.length) {
-        const { data: signed } = await supabase.storage.from('library-files').createSignedUrls(paths, 3600)
-        const urlMap = {}
-        signed?.forEach(s => { if (s.signedUrl) urlMap[s.path] = s.signedUrl })
-        normalized.forEach(p => {
-          if (p.entry_kind !== 'library') return
-          p._signedFileUrl = urlMap[p.library_file_url] || p.library_file_url
-          p._signedThumbUrl = urlMap[p.library_thumb_url] || p.library_thumb_url
-        })
-      }
-
-      setProjects(normalized)
+      // ficam legíveis via signed URL graças à policy do 104. Assina-os aqui
+      // (aceita tanto path novo como URL público antigo).
+      setProjects(await withSignedLibraryUrls(normalized))
       if (isRecruiterVisitor) setSaved(!!sc)
 
       setLoading(false)

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
@@ -183,6 +183,7 @@ export default function Settings() {
   const { user, profile, loading: authLoading, refreshProfile, planId, isSchoolAccount, checkGate } = useAuth()
   const { theme, toggleTheme } = useTheme()
   const navigate = useNavigate()
+  const location = useLocation()
 
   const [activeTab, setActiveTab] = useState(() => {
     const t = new URLSearchParams(window.location.search).get('tab')
@@ -196,7 +197,7 @@ export default function Settings() {
   const [saving, setSaving] = useState(false)
   const [saveMsg, setSaveMsg] = useState(null)
   const [justSaved, setJustSaved] = useState(false)
-  const [back] = useState(() => resolveBack(previousRoute()))
+  const [back] = useState(() => resolveBack(previousRoute(location.pathname)))
   const [usernameStatus, setUsernameStatus] = useState(null)
   const debounceRef = useRef(null)
   const [avatarUrl, setAvatarUrl] = useState('')
