@@ -322,7 +322,14 @@ export default function NewProject() {
       const { data, error: fnErr } = await supabase.functions.invoke('import-project', {
         body: { files: payload, projectType, notes: importNotes.trim() || undefined },
       })
-      if (fnErr || data?.error) throw new Error(data?.error || 'analyze_failed')
+      if (fnErr) {
+        // supabase-js devolve data:null num non-2xx — o erro real está no
+        // corpo da resposta, dentro do FunctionsHttpError.
+        let body = null
+        try { body = await fnErr.context?.json?.() } catch { /* ignore */ }
+        throw new Error(body?.error || 'analyze_failed')
+      }
+      if (data?.error) throw new Error(data.error)
       consumeAI('createProject')
       setForm({ ...(data?.prefill ?? {}), project_type: projectType })
       setImportSummary(data?.summary ?? null)
