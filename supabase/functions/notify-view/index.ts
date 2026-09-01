@@ -1,15 +1,20 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { checkRateLimit } from '../_shared/rateLimit.ts'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': 'https://showo.pt',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { checkRateLimit, getCorsHeaders, getAuthUser } from '../_shared/rateLimit.ts'
 
 const VALID_TYPES = ['PROJECT_VIEW', 'COMPANY_VIEW']
+const VALID_ROLES = ['empresa', 'recrutador', 'estudante', 'outro', '']
 
 Deno.serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req)
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
+
+  const user = await getAuthUser(req)
+  if (!user) {
+    return new Response(JSON.stringify({ ok: false, error: 'auth' }), {
+      status: 401,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
+  }
 
   const allowed = await checkRateLimit(req, 'notify-view', 30)
   if (!allowed) {
@@ -20,7 +25,9 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { project_slug, type, city, visitor_role } = await req.json()
+    const { project_slug, type, city: rawCity, visitor_role: rawRole } = await req.json()
+    const city = typeof rawCity === 'string' ? rawCity.slice(0, 100).replace(/[<>"'&]/g, '') : ''
+    const visitor_role = VALID_ROLES.includes(rawRole) ? rawRole : ''
 
     if (typeof project_slug !== 'string' || !/^[a-z0-9_-]{1,100}$/i.test(project_slug)) {
       return new Response(JSON.stringify({ ok: false }), { status: 400, headers: corsHeaders })
@@ -66,7 +73,7 @@ Deno.serve(async (req) => {
 
     // Build message based on visitor role
     let message: string
-    const location = city && city !== 'Portugal' ? `de ${city}` : 'de Portugal'
+    const location = city && city !== 'Portugal' ? `de ${city.slice(0, 50)}` : 'de Portugal'
 
     if (type === 'COMPANY_VIEW') {
       if (visitor_role === 'empresa') {
