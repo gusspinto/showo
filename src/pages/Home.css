@@ -41,9 +41,16 @@
   max-width: 1060px;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: 1fr 400px;
-  gap: 64px;
+  grid-template-columns: 1fr 1px 400px;
+  gap: 0 56px;
   align-items: center;
+}
+
+/* Traço a dividir a frase (esquerda) do arranque de sessão (direita). */
+.home-hero-divider {
+  align-self: stretch;
+  width: 1px;
+  background: rgba(255, 255, 255, 0.12);
 }
 
 .home-hero-copy {
@@ -510,10 +517,13 @@
     text-align: center;
     gap: 32px;
   }
+  .home-hero-divider { display: none; }
   .home-hero-start {
     max-width: 420px;
     margin: 0 auto;
     order: 2;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 32px;
   }
   .home-hero-copy { order: 1; }
   .home-hero-stats { justify-content: center; }
@@ -534,7 +544,7 @@
     padding: 24px 24px 48px;
   }
 
-  .home-hero-start { margin: 32px auto 0; }
+  .home-hero-start { margin: 24px auto 0; padding-top: 24px; }
 
   .home-hero-grid { gap: 24px; width: 100%; }
   .how-it-works-grid { grid-template-columns: 1fr; }

@@ -239,7 +239,7 @@ body.light .sb-collapse-toggle:hover { border-color: rgba(0,0,0,0.75); }
    tablet/mobile; no desktop o gradiente desloca-se com o rato só
    enquanto está em hover (ver .sb-create.gradient-cta:hover abaixo). */
 .gradient-cta {
-  background-image: linear-gradient(115deg, #2478f0 0%, #db4a3d 50%, #cc9a1e 100%) !important;
+  background-image: var(--brand-gradient) !important;
   background-color: transparent !important;
   background-size: 100% 100% !important;
   background-position: center !important;

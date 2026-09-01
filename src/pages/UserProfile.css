@@ -241,7 +241,7 @@
    ação mais importante deste ecrã. */
 .up-icon-btn.up-personalize,
 .up-icon-btn.up-personalize:hover {
-  background: linear-gradient(115deg, #2478f0 0%, #db4a3d 52%, #cc9a1e 100%) center / 150% 150% no-repeat;
+  background: var(--brand-gradient) center / 150% 150% no-repeat;
   border: 1px solid transparent;
   color: #fff;
   transition: filter 0.2s ease;
