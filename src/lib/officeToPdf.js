@@ -49,9 +49,19 @@ function safeFilename(name, type) {
 export async function officeToPdfBlob(fileUrl, name, type) {
   const res = await fetch(fileUrl)
   if (!res.ok) throw new Error(`fetch original ${res.status}`)
-  const b64 = bytesToBase64(new Uint8Array(await res.arrayBuffer()))
-  const body = { name: safeFilename(name, type), type, data: b64 }
+  return officeBytesToPdfBlob(new Uint8Array(await res.arrayBuffer()), name, type)
+}
 
+/* Como officeToPdfBlob mas a partir de um File/Blob (não de um URL). Usado
+   no "Analisar e criar página": converte-se o Word/PPT em PDF no cliente
+   ANTES de mandar para a IA, para o import-project só lidar com PDFs. */
+export async function officeFileToPdfBlob(file) {
+  const bytes = new Uint8Array(await file.arrayBuffer())
+  return officeBytesToPdfBlob(bytes, file.name, file.type)
+}
+
+async function officeBytesToPdfBlob(bytes, name, type) {
+  const body = { name: safeFilename(name, type), type, data: bytesToBase64(bytes) }
   let lastErr
   for (let attempt = 0; attempt < 2; attempt++) {
     if (attempt) await new Promise(r => setTimeout(r, 6000))
@@ -60,6 +70,14 @@ export async function officeToPdfBlob(fileUrl, name, type) {
     lastErr = error || new Error(data?.error || 'conversão falhou')
   }
   throw lastErr
+}
+
+export const OFFICE_MIME = new Set([
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+])
+export function isOfficeFile(f) {
+  return OFFICE_MIME.has(f?.type) || /\.(docx|pptx)$/i.test(f?.name || '')
 }
 
 /* Guarda o PDF convertido para não voltar a converter (e para os visitantes

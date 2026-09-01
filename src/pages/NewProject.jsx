@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { saveProject } from '../lib/saveProject'
+import { officeFileToPdfBlob, isOfficeFile } from '../lib/officeToPdf'
 import { StarsIcon as Sparkles } from '@solar-icons/react/bold/stars'
 import { ArrowRightIcon as ArrowRight } from '@solar-icons/react/bold/arrow-right'
 import { ArrowLeftIcon as ArrowLeft } from '@solar-icons/react/bold/arrow-left'
@@ -316,9 +317,21 @@ export default function NewProject() {
     setStep('loading')
     setError(null)
     try {
-      const payload = await Promise.all(files.map(async f => ({
-        name: f.name, type: f.type, data: await fileToBase64(f),
-      })))
+      // Word/PPT → converte-se para PDF AQUI (via office-thumbnail, o mesmo
+      // caminho que já funciona para as miniaturas) antes de mandar para a
+      // IA. Assim o import-project só lida com PDFs e imagens — sem parsing
+      // de ZIP frágil nem Gotenberg do lado do servidor.
+      const payload = await Promise.all(files.map(async f => {
+        if (isOfficeFile(f)) {
+          try {
+            const pdf = await officeFileToPdfBlob(f)
+            return { name: f.name.replace(/\.[^.]+$/, '') + '.pdf', type: 'application/pdf', data: await fileToBase64(pdf) }
+          } catch (e) {
+            console.error('conversão office falhou, envia original', e)
+          }
+        }
+        return { name: f.name, type: f.type, data: await fileToBase64(f) }
+      }))
       const { data, error: fnErr } = await supabase.functions.invoke('import-project', {
         body: { files: payload, projectType, notes: importNotes.trim() || undefined },
       })
@@ -352,8 +365,15 @@ export default function NewProject() {
      navegação, nada de erros na cara se falhar. */
   async function tagLibraryItem(itemId, file, hadNotes) {
     try {
+      let f = { name: file.name, type: file.type, data: await fileToBase64(file) }
+      if (isOfficeFile(file)) {
+        try {
+          const pdf = await officeFileToPdfBlob(file)
+          f = { name: file.name.replace(/\.[^.]+$/, '') + '.pdf', type: 'application/pdf', data: await fileToBase64(pdf) }
+        } catch { /* envia original */ }
+      }
       const { data } = await supabase.functions.invoke('import-project', {
-        body: { files: [{ name: file.name, type: file.type, data: await fileToBase64(file) }], projectType: 'personal', light: true },
+        body: { files: [f], projectType: 'personal', light: true },
       })
       if (!data) return
       const patch = {}
