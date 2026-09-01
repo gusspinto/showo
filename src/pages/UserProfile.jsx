@@ -230,7 +230,7 @@ export default function UserProfile() {
       // A secção "Projetos" mostra só o que o dono escolheu na Biblioteca
       // (profile_featured), pela ordem que definiu — projetos criados e
       // ficheiros adicionados juntos. Deixou de listar tudo por score.
-      const PROJECT_COLS = 'id, name, slug, score, area, ai_tagline, cover_url, created_at, views, ai_feedback, entry_kind, profile_featured, profile_featured_order, profile_layout, library_description, library_file_url, library_file_name, library_file_type, library_thumb_url'
+      const PROJECT_COLS = 'id, user_id, name, slug, score, area, ai_tagline, cover_url, created_at, views, ai_feedback, entry_kind, profile_featured, profile_featured_order, profile_layout, library_description, library_file_url, library_file_name, library_file_type, library_thumb_url, library_pdf_url'
       const projectsPromise = supabase
         .from('projects')
         .select(`${PROJECT_COLS}, collaborator_count:project_collaborators(count)`)

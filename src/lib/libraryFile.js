@@ -36,6 +36,10 @@ export async function withSignedLibraryUrls(items, expiresIn = 3600) {
     const f = storagePath(it.library_file_url); if (f) paths.add(f)
     const t = storagePath(it.library_thumb_url); if (t) paths.add(t)
   }
+  for (const it of items || []) {
+    if (it.entry_kind !== 'library') continue
+    const p = storagePath(it.library_pdf_url); if (p) paths.add(p)
+  }
   if (!paths.size) return items
   const { data: signed } = await supabase.storage
     .from('library-files')
@@ -46,5 +50,6 @@ export async function withSignedLibraryUrls(items, expiresIn = 3600) {
     ...it,
     _signedFileUrl: map[storagePath(it.library_file_url)] || null,
     _signedThumbUrl: map[storagePath(it.library_thumb_url)] || null,
+    _signedPdfUrl: map[storagePath(it.library_pdf_url)] || null,
   })
 }

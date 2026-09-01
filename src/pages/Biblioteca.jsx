@@ -178,7 +178,7 @@ export default function Biblioteca() {
     let cancelled = false
     supabase
       .from('projects')
-      .select('id, name, slug, entry_kind, area, score, ai_tagline, cover_url, library_description, library_file_url, library_file_name, library_file_type, library_thumb_url, profile_featured, profile_featured_order, profile_layout, created_at')
+      .select('id, user_id, name, slug, entry_kind, area, score, ai_tagline, cover_url, library_description, library_file_url, library_file_name, library_file_type, library_thumb_url, library_pdf_url, profile_featured, profile_featured_order, profile_layout, created_at')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .then(async ({ data }) => {

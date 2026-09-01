@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { CloseIcon as X } from '@solar-icons/react/bold/close'
 import { DownloadIcon as Download } from '@solar-icons/react/bold/download'
 import PdfViewer from './PdfViewer'
+import { officeToPdfBlob, persistLibraryPdf } from '../lib/officeToPdf'
 import './LibFileViewer.css'
 
 const OFFICE_TYPES = new Set([
@@ -28,6 +29,7 @@ export default function LibFileViewer({ item, onClose }) {
   const isImage = type.startsWith('image/')
   const isPdf = type === 'application/pdf'
   const isText = type === 'text/plain' || type === 'text/markdown'
+  const isOffice = OFFICE_TYPES.has(type)
 
   return (
     <div className="lfv-backdrop" onClick={onClose}>
@@ -55,13 +57,13 @@ export default function LibFileViewer({ item, onClose }) {
             <PdfViewer url={url} />
           ) : isText ? (
             <TextViewer url={url} />
+          ) : isOffice ? (
+            item._signedPdfUrl
+              ? <PdfViewer url={item._signedPdfUrl} />
+              : <OfficeViewer item={item} />
           ) : (
             <div className="lfv-msg lfv-nopreview">
-              <p>
-                {OFFICE_TYPES.has(type)
-                  ? 'Word e PowerPoint ainda não abrem dentro da app.'
-                  : 'Este tipo de ficheiro ainda não abre dentro da app.'}
-              </p>
+              <p>Este tipo de ficheiro ainda não abre dentro da app.</p>
               <a className="lfv-download" href={url} target="_blank" rel="noopener noreferrer">
                 Transferir ficheiro
               </a>
@@ -71,6 +73,48 @@ export default function LibFileViewer({ item, onClose }) {
       </div>
     </div>
   )
+}
+
+/* Office sem PDF guardado ainda: converte na hora (office-thumbnail →
+   Gotenberg) e mostra. Se for o dono, guarda o resultado para as próximas
+   vezes e para os visitantes do perfil. Visitante anónimo → a função exige
+   sessão, falha, cai na transferência. */
+function OfficeViewer({ item }) {
+  const [state, setState] = useState('converting')
+  const [pdfUrl, setPdfUrl] = useState(null)
+  const objUrlRef = useRef(null)
+
+  useEffect(() => {
+    let cancelled = false
+    async function run() {
+      setState('converting')
+      try {
+        const blob = await officeToPdfBlob(item._signedFileUrl, item.name, item.library_file_type)
+        if (cancelled) return
+        objUrlRef.current = URL.createObjectURL(blob)
+        setPdfUrl(objUrlRef.current)
+        setState('ready')
+        persistLibraryPdf(item, blob).catch(() => {})
+      } catch (err) {
+        console.error('[OfficeViewer]', err)
+        if (!cancelled) setState('error')
+      }
+    }
+    run()
+    return () => {
+      cancelled = true
+      if (objUrlRef.current) { URL.revokeObjectURL(objUrlRef.current); objUrlRef.current = null }
+    }
+  }, [item])
+
+  if (state === 'converting') return <div className="lfv-msg">A preparar pré-visualização…</div>
+  if (state === 'error') return (
+    <div className="lfv-msg lfv-nopreview">
+      <p>Não foi possível pré-visualizar este ficheiro.</p>
+      <a className="lfv-download" href={item._signedFileUrl} target="_blank" rel="noopener noreferrer">Transferir ficheiro</a>
+    </div>
+  )
+  return <PdfViewer url={pdfUrl} />
 }
 
 function TextViewer({ url }) {

@@ -92,6 +92,10 @@ async function generateLibraryThumbnail(projectId, file) {
 
   try {
     const { renderPdfThumbnail } = await import('../lib/pdfThumbnail')
+    const { data: { user } } = await supabase.auth.getUser()
+    const baseName = safePathSegment(file.name).replace(/\.[^.]+$/, '')
+    const patch = {}
+
     let pdfSource = file
     if (isOfficeDoc) {
       const b64 = await fileToBase64(file)
@@ -100,13 +104,20 @@ async function generateLibraryThumbnail(projectId, file) {
       })
       if (convErr || !convData?.pdf) throw convErr || new Error(convData?.error || 'conversão falhou')
       pdfSource = new Blob([b64ToBytes(convData.pdf)], { type: 'application/pdf' })
+
+      // Guarda o PDF convertido — o visualizador (Biblioteca + perfil)
+      // mostra sempre este, sem reconverter.
+      const pdfPath = `${user.id}/pdf/${Date.now()}-${baseName}.pdf`
+      const { error: pdfErr } = await supabase.storage.from('library-files').upload(pdfPath, pdfSource, { contentType: 'application/pdf' })
+      if (!pdfErr) patch.library_pdf_url = pdfPath
     }
+
     const thumbBlob = await renderPdfThumbnail(pdfSource)
-    const { data: { user } } = await supabase.auth.getUser()
-    const thumbPath = `${user.id}/thumbs/${Date.now()}-${safePathSegment(file.name).replace(/\.[^.]+$/, '')}.jpg`
+    const thumbPath = `${user.id}/thumbs/${Date.now()}-${baseName}.jpg`
     const { error: thumbErr } = await supabase.storage.from('library-files').upload(thumbPath, thumbBlob, { contentType: 'image/jpeg' })
-    if (thumbErr) throw thumbErr
-    await supabase.from('projects').update({ library_thumb_url: thumbPath }).eq('id', projectId)
+    if (!thumbErr) patch.library_thumb_url = thumbPath
+
+    if (Object.keys(patch).length) await supabase.from('projects').update(patch).eq('id', projectId)
   } catch (err) {
     console.error('Preview do ficheiro falhou (não crítico):', err)
   }
