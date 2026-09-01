@@ -774,18 +774,10 @@
   font-family: var(--up-font-body, var(--font-body));
 }
 
-/* Accent — com parcimónia: ações primárias, links, realce no hover. */
-.up-root .up-action-btn.primary,
-.up-root .up-empty-cta {
-  background: var(--up-accent);
-  border-color: var(--up-accent);
-  color: #fff;
-}
-.up-root .up-action-btn.primary:hover,
-.up-root .up-empty-cta:hover {
-  filter: brightness(1.08);
-  opacity: 1;
-}
+/* Accent — com parcimónia e SEM assumir contraste com texto branco (o user
+   pode escolher uma cor clara). Só onde o accent É o texto ou a borda:
+   link do LinkedIn e realce no hover dos cards. Botões preenchidos ficam
+   neutros (var(--color-text) / var(--color-bg)). */
 .up-root .up-chip--link {
   color: var(--up-accent);
   border-color: color-mix(in srgb, var(--up-accent) 45%, var(--color-border));
