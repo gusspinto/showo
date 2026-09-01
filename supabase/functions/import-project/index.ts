@@ -81,6 +81,41 @@ function extOf(name: string) {
   return (name.split('.').pop() ?? '').toLowerCase()
 }
 
+function bytesToB64(bytes: Uint8Array): string {
+  let bin = ''
+  const chunk = 0x8000
+  for (let i = 0; i < bytes.length; i += chunk) {
+    bin += String.fromCharCode(...bytes.subarray(i, i + chunk))
+  }
+  return btoa(bin)
+}
+
+/* Word/PowerPoint → PDF via Gotenberg (mesmo conversor da miniatura da
+   Biblioteca). O Claude lê PDF nativamente e bem — muito melhor do que
+   raspar o XML dos slides. Devolve null se o Gotenberg estiver em baixo,
+   e nesse caso caímos na extração de texto com jszip. */
+async function officeToPdfB64(bytes: Uint8Array, name: string, mime: string): Promise<string | null> {
+  const GOTENBERG_URL = Deno.env.get('GOTENBERG_URL')
+  if (!GOTENBERG_URL) return null
+  try {
+    const form = new FormData()
+    form.append('files', new Blob([bytes], { type: mime }), name)
+    const resp = await fetch(`${GOTENBERG_URL}/forms/libreoffice/convert`, {
+      method: 'POST',
+      body: form,
+      signal: AbortSignal.timeout(50_000),
+    })
+    if (!resp.ok) {
+      console.error('[import-project] gotenberg', resp.status, (await resp.text()).slice(0, 200))
+      return null
+    }
+    return bytesToB64(new Uint8Array(await resp.arrayBuffer()))
+  } catch (err) {
+    console.error('[import-project] gotenberg falhou', err)
+    return null
+  }
+}
+
 Deno.serve(async (req) => {
   const cors = getCorsHeaders(req)
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
@@ -135,9 +170,25 @@ Deno.serve(async (req) => {
       } else if (IMAGE_TYPES.includes(mime)) {
         content.push({ type: 'image', source: { type: 'base64', media_type: mime, data: b64 } })
         readNames.push(name)
-      } else if (ext === 'docx' || ext === 'pptx') {
-        const text = await officeToText(bytes, ext as 'docx' | 'pptx')
-        if (!text) { skipped.push({ name, reason: 'não foi possível ler' }); continue }
+      } else if (ext === 'docx' || ext === 'pptx' || mime.includes('officedocument')) {
+        // 1º: converter para PDF (Gotenberg) — o Claude lê PDF muito melhor.
+        const officeMime = ext === 'pptx'
+          ? 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+          : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        const pdfB64 = await officeToPdfB64(bytes, name, mime || officeMime)
+        if (pdfB64) {
+          content.push({ type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: pdfB64 } })
+          readNames.push(name)
+          continue
+        }
+        // 2º: fallback — extrair texto do próprio ZIP.
+        const kind = ext === 'pptx' ? 'pptx' : 'docx'
+        const text = await officeToText(bytes, kind)
+        if (!text) {
+          console.error('[import-project] office ilegível:', name, 'bytes', bytes.length)
+          skipped.push({ name, reason: 'não foi possível ler' })
+          continue
+        }
         content.push({ type: 'text', text: `--- Conteúdo de ${name} ---\n${text}` })
         readNames.push(name)
       } else if (ext === 'txt' || ext === 'md' || mime.startsWith('text/')) {
@@ -152,10 +203,14 @@ Deno.serve(async (req) => {
     }
 
     if (content.length === 0) {
-      return json({
-        error: 'Não conseguimos ler estes ficheiros. Exporta o trabalho como PDF e tenta outra vez.',
-        skipped,
-      }, 422)
+      const reasons = skipped.map(s => s.reason)
+      const msg = reasons.includes('demasiado grande')
+        ? 'O ficheiro é demasiado grande (máx. 12 MB). Comprime-o ou exporta como PDF.'
+        : reasons.includes('formato não suportado')
+        ? 'Formato não suportado. Aceita PDF, Word, PowerPoint, imagens e texto.'
+        : 'Não conseguimos ler o conteúdo deste ficheiro. Exporta como PDF e tenta outra vez.'
+      console.error('[import-project] nada lido:', JSON.stringify(skipped))
+      return json({ error: msg, skipped }, 422)
     }
 
     const typeLabel = TYPE_LABELS[projectType] ?? 'Projeto'
