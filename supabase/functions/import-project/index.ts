@@ -126,17 +126,29 @@ Deno.serve(async (req) => {
   const user = await getAuthUser(req)
   if (!user) return json({ error: 'Autenticação necessária.' }, 401)
 
-  if (!(await checkRateLimit(req, 'import-project', 12))) {
+  if (!(await checkRateLimit(req, 'import-project', 20))) {
     return json({ error: 'Demasiados pedidos. Tenta daqui a pouco.' }, 429)
   }
 
-  const planCheck = await checkPlanLimit(req, 'createProject', user.id)
-  if (planCheck && !planCheck.allowed) {
-    return json({ error: 'Limite do plano atingido.', remaining: 0, limit: planCheck.limit }, 403)
+  let body: { files?: unknown; projectType?: string; notes?: string; light?: boolean }
+  try {
+    body = await req.json()
+  } catch {
+    return json({ error: 'Pedido inválido.' }, 400)
+  }
+  const { files, projectType, notes, light } = body
+
+  // O modo "light" corre em segundo plano quando o aluno só adiciona o
+  // ficheiro à Biblioteca — só tira competências + resumo, com haiku, e
+  // NÃO gasta a quota de criar projeto.
+  if (!light) {
+    const planCheck = await checkPlanLimit(req, 'createProject', user.id)
+    if (planCheck && !planCheck.allowed) {
+      return json({ error: 'Limite do plano atingido.', remaining: 0, limit: planCheck.limit }, 403)
+    }
   }
 
   try {
-    const { files, projectType, notes } = await req.json()
     if (!Array.isArray(files) || files.length === 0) {
       return json({ error: 'Nenhum ficheiro recebido.' }, 400)
     }
@@ -215,6 +227,38 @@ Deno.serve(async (req) => {
 
     const typeLabel = TYPE_LABELS[projectType] ?? 'Projeto'
     const extraNotes = String(notes ?? '').trim().slice(0, 600)
+
+    // ── Modo light: só etiquetar (competências + resumo + área), rápido e
+    //    barato, sem preencher a ficha toda. Corre em segundo plano. ──
+    if (light) {
+      content.push({
+        type: 'text',
+        text: `Este é um trabalho de um estudante português que ele guardou na Biblioteca (não vai virar página de projeto agora). Lê-o e devolve só o essencial para o portefólio dele:
+- Português de Portugal.
+- "skills": 3 a 8 competências concretas demonstradas no trabalho (ferramentas, métodos, áreas — ex: "Figma", "Investigação de utilizadores", "Copywriting", "Análise de dados"). Só o que está mesmo lá.
+- "area": a área geral numa expressão curta (ex: "Design e Multimédia", "Marketing", "Programação").
+- "summary": uma frase a dizer o que é o trabalho.
+
+Devolve APENAS este JSON: {"skills": [], "area": "", "summary": ""}`,
+      })
+
+      const client = new Anthropic({ apiKey: Deno.env.get('ANTHROPIC_API_KEY') ?? '' })
+      const message = await client.messages.create({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 500,
+        messages: [{ role: 'user', content: content as never }],
+      })
+      const raw = (message.content[0] as { type: string; text: string }).text.trim()
+      const m = raw.match(/\{[\s\S]*\}/)
+      const p = m ? JSON.parse(m[0]) : {}
+      return json({
+        skills: Array.isArray(p.skills) ? p.skills.slice(0, 8).map((s: unknown) => String(s)) : [],
+        area: typeof p.area === 'string' ? p.area : '',
+        summary: typeof p.summary === 'string' ? p.summary : '',
+        read: readNames,
+        skipped,
+      })
+    }
 
     content.push({
       type: 'text',

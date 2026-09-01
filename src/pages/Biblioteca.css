@@ -176,6 +176,12 @@
 .lib-tile-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .lib-tile-name { font-size: 14px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .lib-tile-area { font-size: 11.5px; color: var(--color-text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lib-tile-skills { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.lib-tile-skill {
+  font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 999px;
+  background: var(--color-bg-alt); color: var(--color-text-secondary);
+  white-space: nowrap;
+}
 .lib-tile-score { font-size: 15px; font-weight: 800; flex-shrink: 0; }
 .lib-tile-delete {
   position: absolute; top: 8px; right: 8px; z-index: 1;

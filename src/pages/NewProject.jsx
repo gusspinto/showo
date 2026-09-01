@@ -346,9 +346,28 @@ export default function NewProject() {
     }
   }
 
-  /* "Guardar sem analisar" — o escape hatch. Fica um item leve na
-     Biblioteca (ficheiro + nome + descrição breve), sem IA. Para quando
-     é mesmo só um ficheiro de referência, não um projeto. */
+  /* Etiquetagem em segundo plano — o aluno só adicionou o ficheiro à
+     Biblioteca, mas a IA lê-o à mesma (light mode, haiku, sem gastar quota)
+     e tira competências + área + resumo. Silencioso: nada de bloquear a
+     navegação, nada de erros na cara se falhar. */
+  async function tagLibraryItem(itemId, file, hadNotes) {
+    try {
+      const { data } = await supabase.functions.invoke('import-project', {
+        body: { files: [{ name: file.name, type: file.type, data: await fileToBase64(file) }], projectType: 'personal', light: true },
+      })
+      if (!data) return
+      const patch = {}
+      if (Array.isArray(data.skills) && data.skills.length) patch.library_skills = data.skills.slice(0, 8)
+      if (data.area) patch.area = data.area
+      if (data.summary && !hadNotes) patch.library_description = data.summary
+      if (Object.keys(patch).length) {
+        await supabase.from('projects').update(patch).eq('id', itemId).eq('user_id', user.id)
+      }
+    } catch { /* background — silencioso */ }
+  }
+
+  /* "Adicionar à Biblioteca" — cria o item leve (ficheiro + nome + descrição)
+     de imediato; a IA etiqueta-o por trás (tagLibraryItem). */
   async function handleAddToLibrary() {
     if (!files.length) return
     if (requireAccount('/novo')) return
@@ -386,6 +405,7 @@ export default function NewProject() {
         if (insErr) throw insErr
 
         generateLibraryThumbnail(inserted.id, file) // fire-and-forget, não espera
+        tagLibraryItem(inserted.id, file, !!importNotes.trim()) // IA etiqueta por trás
       }
 
       showToast(files.length > 1 ? `${files.length} adicionados à biblioteca.` : 'Adicionado à biblioteca.', 'success')
@@ -504,7 +524,7 @@ export default function NewProject() {
               </button>
               {files.length > 0 && (
                 <button className="np-alt-path np-alt-path--quiet" onClick={handleAddToLibrary} disabled={savingToLibrary}>
-                  {savingToLibrary ? 'A guardar…' : 'Guardar sem analisar'}
+                  {savingToLibrary ? 'A guardar…' : 'Adicionar à Biblioteca'}
                 </button>
               )}
               <AiUsageBadge feature="createProject" style={{ marginTop: 8 }} />

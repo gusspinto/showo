@@ -106,6 +106,11 @@ function LibAddedTile({ item, onOpen, onDelete, removing, editing, onTogglePin, 
           <span className="lib-tile-text">
             <span className="lib-tile-name">{item.name}</span>
             {item.library_description && <span className="lib-tile-area">{item.library_description}</span>}
+            {item.library_skills?.length > 0 && (
+              <span className="lib-tile-skills">
+                {item.library_skills.slice(0, 3).map(s => <span key={s} className="lib-tile-skill">{s}</span>)}
+              </span>
+            )}
           </span>
         </span>
       </button>
@@ -178,7 +183,7 @@ export default function Biblioteca() {
     let cancelled = false
     supabase
       .from('projects')
-      .select('id, user_id, name, slug, entry_kind, area, score, ai_tagline, cover_url, library_description, library_file_url, library_file_name, library_file_type, library_thumb_url, library_pdf_url, profile_featured, profile_featured_order, profile_layout, created_at')
+      .select('id, user_id, name, slug, entry_kind, area, score, ai_tagline, cover_url, library_description, library_skills, library_file_url, library_file_name, library_file_type, library_thumb_url, library_pdf_url, profile_featured, profile_featured_order, profile_layout, created_at')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .then(async ({ data }) => {
