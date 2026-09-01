@@ -8,6 +8,7 @@ import { DocumentTextIcon as FileText } from '@solar-icons/react/bold/document-t
 import { GalleryIcon as ImageIcon } from '@solar-icons/react/bold/gallery'
 import { FolderIcon as Folder } from '@solar-icons/react/bold/folder'
 import { TrashBinTrashIcon as Trash } from '@solar-icons/react/bold/trash-bin-trash'
+import { Pen2Icon as Pencil } from '@solar-icons/react/bold/pen-2'
 import { LibraryIcon } from '@solar-icons/react/bold/library'
 import { ArrowRightUpIcon as ExternalLink } from '@solar-icons/react/bold/arrow-right-up'
 import { fileTypeStyle, withSignedLibraryUrls } from '../lib/libraryFile'
@@ -81,10 +82,19 @@ function ProfileControls({ item, onTogglePin, onSetLayout }) {
    se quer mostrar. Tile com preview de verdade quando é imagem; para o
    resto (PDF/Word/PowerPoint), um cartão colorido por tipo à Drive —
    ainda mais reconhecível que um ícone cinzento genérico. */
-function LibAddedTile({ item, onOpen, onDelete, removing, editing, onTogglePin, onSetLayout }) {
+function LibAddedTile({ item, onOpen, onDelete, removing, editing, onTogglePin, onSetLayout, renaming, onStartRename, onRename, onCancelRename }) {
   const isImage = item.library_file_type?.startsWith('image/')
   const previewSrc = isImage ? item._signedFileUrl : item._signedThumbUrl
   const ft = fileTypeStyle(item.library_file_type)
+  const [draft, setDraft] = useState(item.name || '')
+
+  useEffect(() => { if (renaming) setDraft(item.name || '') }, [renaming, item.name])
+
+  function commitName() {
+    const v = draft.trim()
+    onCancelRename()
+    if (v && v !== item.name) onRename(v)
+  }
 
   return (
     <div className={`lib-tile${editing ? ' is-editing' : ''}${editing && item.profile_featured ? ' is-on' : ''}`}>
@@ -114,18 +124,48 @@ function LibAddedTile({ item, onOpen, onDelete, removing, editing, onTogglePin, 
           </span>
         </span>
       </button>
+
+      {renaming && (
+        <div className="lib-tile-rename">
+          <input
+            className="lib-tile-name-input"
+            value={draft}
+            autoFocus
+            maxLength={120}
+            onChange={e => setDraft(e.target.value)}
+            onBlur={commitName}
+            onKeyDown={e => {
+              if (e.key === 'Enter') commitName()
+              if (e.key === 'Escape') onCancelRename()
+            }}
+          />
+        </div>
+      )}
+
       {editing && <ProfileControls item={item} onTogglePin={onTogglePin} onSetLayout={onSetLayout} />}
-      <span
-        role="button"
-        tabIndex={0}
-        className="lib-tile-delete"
-        onClick={e => { e.stopPropagation(); if (removing !== item.id) onDelete(item.id) }}
-        onKeyDown={e => { if ((e.key === 'Enter' || e.key === ' ') && removing !== item.id) { e.stopPropagation(); onDelete(item.id) } }}
-        aria-label="Remover"
-        aria-disabled={removing === item.id}
-      >
-        <Trash size={14} />
-      </span>
+      <div className="lib-tile-tools">
+        <span
+          role="button"
+          tabIndex={0}
+          className="lib-tile-tool"
+          onClick={e => { e.stopPropagation(); onStartRename(item.id) }}
+          onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); onStartRename(item.id) } }}
+          aria-label="Mudar o nome"
+        >
+          <Pencil size={13} />
+        </span>
+        <span
+          role="button"
+          tabIndex={0}
+          className="lib-tile-tool lib-tile-tool--danger"
+          onClick={e => { e.stopPropagation(); if (removing !== item.id) onDelete(item.id) }}
+          onKeyDown={e => { if ((e.key === 'Enter' || e.key === ' ') && removing !== item.id) { e.stopPropagation(); onDelete(item.id) } }}
+          aria-label="Remover"
+          aria-disabled={removing === item.id}
+        >
+          <Trash size={13} />
+        </span>
+      </div>
     </div>
   )
 }
@@ -170,6 +210,7 @@ export default function Biblioteca() {
   const [viewing, setViewing] = useState(null)
   const [confirmingDelete, setConfirmingDelete] = useState(null)
   const [editing, setEditing] = useState(false)
+  const [renamingId, setRenamingId] = useState(null)
 
   useEffect(() => {
     if (!viewing && !confirmingDelete) return
@@ -309,6 +350,10 @@ export default function Biblioteca() {
                   {added.map(item => (
                     <LibAddedTile key={item.id} item={item} removing={removing} onDelete={handleDelete}
                       editing={editing} onTogglePin={togglePin} onSetLayout={setLayout}
+                      renaming={renamingId === item.id}
+                      onStartRename={setRenamingId}
+                      onCancelRename={() => setRenamingId(null)}
+                      onRename={name => patchItem(item.id, { name })}
                       onOpen={it => it.library_file_url && setViewing(it)} />
                   ))}
                 </div>

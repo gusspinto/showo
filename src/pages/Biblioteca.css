@@ -183,15 +183,43 @@
   white-space: nowrap;
 }
 .lib-tile-score { font-size: 15px; font-weight: 800; flex-shrink: 0; }
-.lib-tile-delete {
+
+/* Cluster de ações no canto superior direito do tile — renomear + apagar. */
+.lib-tile-tools {
   position: absolute; top: 8px; right: 8px; z-index: 1;
+  display: flex; gap: 4px;
+  opacity: 0; transition: opacity 0.14s;
+}
+.lib-tile:hover .lib-tile-tools,
+.lib-tile:focus-within .lib-tile-tools { opacity: 1; }
+.lib-tile-tool {
   display: flex; align-items: center; justify-content: center;
   width: 28px; height: 28px; border-radius: 8px;
-  background: rgba(0,0,0,0.55); color: #fff; cursor: pointer;
-  opacity: 0; transition: opacity 0.14s, background 0.14s;
+  background: rgba(0,0,0,0.6); color: #fff; cursor: pointer;
+  transition: background 0.14s;
 }
-.lib-tile:hover .lib-tile-delete { opacity: 1; }
-.lib-tile-delete:hover { background: var(--color-error); }
+.lib-tile-tool:hover { background: rgba(0,0,0,0.82); }
+.lib-tile-tool--danger:hover { background: var(--color-error); }
+
+/* Renomear no próprio tile — sobrepõe-se ao rodapé (o input não pode
+   viver dentro do <button> do tile). */
+.lib-tile-rename {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 2;
+  padding: 12px 14px;
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+}
+.lib-tile-name-input {
+  width: 100%;
+  font-size: 14px; font-weight: 700; font-family: inherit;
+  color: var(--color-text);
+  background: var(--color-bg);
+  border: 1px solid var(--color-text);
+  border-radius: 6px;
+  padding: 5px 8px;
+  outline: none;
+  box-sizing: border-box;
+}
 
 /* Botão pequeno genérico usado no visualizador (abrir noutra aba / fechar). */
 .lib-card-btn {
