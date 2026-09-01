@@ -1,0 +1,50 @@
+.cpk {
+  position: absolute; z-index: 20; top: calc(100% + 8px); left: 0;
+  width: 200px; padding: 12px; border-radius: 12px;
+  background: var(--color-surface); border: 1px solid var(--color-border);
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.28);
+}
+
+.cpk-square {
+  position: relative; width: 100%; height: 120px; border-radius: 8px;
+  cursor: crosshair; overflow: hidden;
+  border: 1px solid var(--color-border);
+}
+.cpk-square-thumb {
+  position: absolute; width: 12px; height: 12px; margin: -6px;
+  border-radius: 50%; border: 2px solid #fff;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+}
+
+.cpk-hue {
+  position: relative; width: 100%; height: 12px; margin-top: 10px;
+  border-radius: 6px; cursor: pointer;
+  background: linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
+  border: 1px solid var(--color-border);
+}
+.cpk-hue-thumb {
+  position: absolute; top: 50%; width: 16px; height: 16px; margin: -8px 0 0 -8px;
+  border-radius: 50%; border: 2px solid #fff;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+}
+
+.cpk-row {
+  display: flex; align-items: center; gap: 8px; margin-top: 10px;
+}
+.cpk-swatch {
+  flex-shrink: 0; width: 24px; height: 24px; border-radius: 7px;
+  border: 1px solid var(--color-border);
+}
+.cpk-hash {
+  color: var(--color-text-tertiary); font-size: 13px; font-weight: 700;
+}
+.cpk-hex {
+  flex: 1; min-width: 0; padding: 6px 8px; border-radius: 6px;
+  border: 1px solid var(--color-border); background: var(--color-bg);
+  color: var(--color-text); font-size: 13px; font-weight: 700;
+  font-family: inherit; letter-spacing: 0.03em; text-transform: uppercase;
+  outline: none;
+}
+.cpk-hex:focus { border-color: var(--color-text); }

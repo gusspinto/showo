@@ -4,6 +4,7 @@ import { CloseIcon as X } from '@solar-icons/react/bold/close'
 import { GalleryIcon as ImageIcon } from '@solar-icons/react/bold/gallery'
 import { TrashBinTrashIcon as Trash } from '@solar-icons/react/bold/trash-bin-trash'
 import { ACCENT_SWATCHES, FONTS, DEFAULT_ACCENT } from '../lib/profileAppearance'
+import ColorPicker from './ColorPicker'
 import './ProfileCustomizer.css'
 
 const HEADLINE_MAX = 90
@@ -18,6 +19,7 @@ export default function ProfileCustomizer({
   const fileRef = useRef(null)
   const [bannerBusy, setBannerBusy] = useState(false)
   const [bannerErr, setBannerErr] = useState(null)
+  const [pickerOpen, setPickerOpen] = useState(false)
 
   function set(patch) { onChange({ ...a, ...patch }) }
 
@@ -113,9 +115,22 @@ export default function ProfileCustomizer({
                   aria-label={c}
                 />
               ))}
-              <label className="pc-swatch pc-swatch--custom" title="Cor personalizada">
-                <input type="color" value={a.accent || DEFAULT_ACCENT} onChange={e => set({ accent: e.target.value })} />
-              </label>
+              <div className="pc-swatch-custom-wrap">
+                <button
+                  type="button"
+                  className="pc-swatch pc-swatch--custom"
+                  title="Cor personalizada"
+                  onClick={() => setPickerOpen(o => !o)}
+                  aria-label="Escolher cor personalizada"
+                />
+                {pickerOpen && (
+                  <ColorPicker
+                    value={a.accent || DEFAULT_ACCENT}
+                    onChange={c => set({ accent: c })}
+                    onClose={() => setPickerOpen(false)}
+                  />
+                )}
+              </div>
             </div>
           </section>
 
