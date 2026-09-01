@@ -169,10 +169,12 @@ export default function NewProject() {
   const [interviewData, setInterviewData] = useState(null)
   const [gateMsg, setGateMsg] = useState(null)
 
-  /* Adicionar (Biblioteca) */
+  /* Adicionar — enviar um trabalho já feito */
   const [files, setFiles] = useState([])
   const [importNotes, setImportNotes] = useState('')
   const [savingToLibrary, setSavingToLibrary] = useState(false)
+  const [importSummary, setImportSummary] = useState(null)
+  const [importMissing, setImportMissing] = useState([])
   const [beat, setBeat] = useState(0)
 
   function set(key, val) { setForm(p => ({ ...p, [key]: val })) }
@@ -283,12 +285,47 @@ export default function NewProject() {
     })
   }
 
-  /* "Adicionar" já não gera a ficha AI-estruturada de sempre (goal/problem/
-     solution/etc) — vira um item leve na Biblioteca: o ficheiro, o nome
-     (do próprio ficheiro) e a descrição breve que a pessoa escrever. Sem
-     IA nenhuma a analisar o conteúdo, por isso também não gasta o gate de
-     AI. "Descrever o que estou a fazer" continua a gerar a ficha completa
-     como sempre. */
+  /* ── Analisar o trabalho e transformá-lo numa página ──
+     O caminho principal do "Adicionar": o aluno não envia para guardar,
+     envia para transformar. A IA (import-project) lê o ficheiro e devolve
+     a ficha campo a campo; o aluno revê, completa o que falta e cria uma
+     página de projeto a sério — não um item de "drive". */
+  async function handleAnalyzeFiles() {
+    if (!files.length) return
+    if (requireAccount('/novo')) return
+    if (!(await guardProjectCount())) return
+    const aiGate = checkGate('createProject')
+    if (!aiGate.allowed) { setGateMsg(aiGate.message); return }
+
+    setStep('loading')
+    setError(null)
+    try {
+      const payload = await Promise.all(files.map(async f => ({
+        name: f.name, type: f.type, data: await fileToBase64(f),
+      })))
+      const { data, error: fnErr } = await supabase.functions.invoke('import-project', {
+        body: { files: payload, projectType, notes: importNotes.trim() || undefined },
+      })
+      if (fnErr || data?.error) throw new Error(data?.error || 'analyze_failed')
+      consumeAI('createProject')
+      setForm({ ...(data?.prefill ?? {}), project_type: projectType })
+      setImportSummary(data?.summary ?? null)
+      setImportMissing(Array.isArray(data?.missing) ? data.missing : [])
+      setSkippedFields(new Set())
+      setStep('review')
+    } catch (err) {
+      setError(
+        err.message === 'analyze_failed' || !err.message
+          ? 'Não foi possível analisar o ficheiro. Se for Word/PowerPoint, tenta exportar como PDF.'
+          : err.message
+      )
+      setStep('choose')
+    }
+  }
+
+  /* "Guardar sem analisar" — o escape hatch. Fica um item leve na
+     Biblioteca (ficheiro + nome + descrição breve), sem IA. Para quando
+     é mesmo só um ficheiro de referência, não um projeto. */
   async function handleAddToLibrary() {
     if (!files.length) return
     if (requireAccount('/novo')) return
@@ -363,6 +400,21 @@ export default function NewProject() {
     try {
       const project = await saveProject(form, aiResult, user?.id ?? null)
       if (user?.id) localStorage.setItem(`edit_token_${project.slug}`, project.edit_token)
+
+      // Veio de um ficheiro? Anexa o original ao projeto — fica transferível
+      // e serve de fonte. Não bloqueia a navegação.
+      if (user?.id && files[0]) {
+        const f = files[0]
+        supabase.storage.from('library-files')
+          .upload(`${user.id}/${Date.now()}-${safePathSegment(f.name)}`, f, { contentType: f.type })
+          .then(({ data: up, error: upErr }) => {
+            if (upErr || !up?.path) return
+            supabase.from('projects').update({
+              library_file_url: up.path, library_file_name: f.name, library_file_type: f.type,
+            }).eq('id', project.id).then(() => generateLibraryThumbnail(project.id, f))
+          })
+      }
+
       navigate(`/projeto/${project.slug}`, {
         state: { newProject: true, projectData: project, message: 'Projeto criado! Começa a melhorar o teu score.' }
       })
@@ -404,23 +456,30 @@ export default function NewProject() {
                   <div className="np-filemeta">
                     {files.length} {files.length === 1 ? 'ficheiro' : 'ficheiros'} · {prettySize(totalBytes)}
                   </div>
-                  <label className="np-notes-label" htmlFor="np-notes">Uma descrição breve (opcional)</label>
+                  <TypeRow value={projectType} onChange={setProjectType} />
+                  <label className="np-notes-label" htmlFor="np-notes">Algo a acrescentar antes de a IA ler? (opcional)</label>
                   <textarea
                     id="np-notes"
                     className="np-notes"
                     rows={2}
                     value={importNotes}
                     onChange={e => setImportNotes(e.target.value)}
-                    placeholder="Ex: App de gestão de tarefas, feita em React."
+                    placeholder="Ex: o meu papel foi o design e a investigação de utilizadores."
                   />
                 </div>
               )}
 
               {error && <p className="np-err"><AlertTriangle size={13} /> {error}</p>}
 
-              <button className="np-btn-primary" onClick={handleAddToLibrary} disabled={!files.length || savingToLibrary}>
-                {savingToLibrary ? 'A guardar…' : files.length > 1 ? `Adicionar ${files.length} à Biblioteca` : 'Adicionar à Biblioteca'}
+              <button className="np-btn-primary np-btn-ai" onClick={handleAnalyzeFiles} disabled={!files.length}>
+                <Sparkles size={15} /> Analisar e criar página
               </button>
+              {files.length > 0 && (
+                <button className="np-alt-path np-alt-path--quiet" onClick={handleAddToLibrary} disabled={savingToLibrary}>
+                  {savingToLibrary ? 'A guardar…' : 'Guardar sem analisar'}
+                </button>
+              )}
+              <AiUsageBadge feature="createProject" style={{ marginTop: 8 }} />
             </div>
 
             <div className="np-or-divider">ou</div>
@@ -519,11 +578,23 @@ export default function NewProject() {
   return (
     <NpShell>
       <Toast {...toast} />
-      <Navbar showLinks={false} mobileLeft={<BackButton onClick={() => setStep('describe')} />} />
+      <Navbar showLinks={false} mobileLeft={<BackButton onClick={() => setStep(importSummary ? 'choose' : 'describe')} />} />
       <div className="np-center np-center--review">
         <div className="np-wrap np-wrap--review">
           <StepBar current={3} total={3} label="Rever" />
-          <h2 className="np-headline np-headline--sm">Parece bem?</h2>
+          <h2 className="np-headline np-headline--sm">{importSummary ? 'Isto foi o que a IA encontrou.' : 'Parece bem?'}</h2>
+
+          {importSummary && (
+            <div className="np-import-summary">
+              <p className="np-import-summary-text">{importSummary}</p>
+              {importMissing.length > 0 && (
+                <p className="np-import-missing">
+                  <AlertTriangle size={12} /> A IA não conseguiu tirar do ficheiro: {importMissing.join(', ')}. Preenche o que puderes.
+                </p>
+              )}
+            </div>
+          )}
+
           <p className="np-sub">
             {filledCount} de {REVIEW_FIELDS.length} campos preenchidos. Toca em qualquer um para editar antes de criar.
           </p>

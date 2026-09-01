@@ -134,6 +134,38 @@
   cursor: not-allowed;
 }
 
+/* Variante discreta — o "guardar sem analisar" a seguir ao botão de IA. */
+.np-alt-path--quiet {
+  background: transparent; color: var(--color-text-secondary);
+  border: 1px solid var(--color-border); padding: 12px 0;
+  font-size: 13.5px; font-weight: 600; margin-top: 8px;
+}
+.np-alt-path--quiet:hover:not(:disabled) { opacity: 1; border-color: var(--color-border-hover); color: var(--color-text); }
+.np-alt-path--quiet:disabled { background: transparent; }
+
+/* Resumo do que a IA leu do ficheiro, no topo do passo "rever". */
+.np-import-summary {
+  margin: 4px 0 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-alt);
+}
+.np-import-summary-text {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--color-text);
+}
+.np-import-missing {
+  display: flex; align-items: flex-start; gap: 6px;
+  margin: 10px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--color-warning);
+}
+.np-import-missing svg { flex-shrink: 0; margin-top: 2px; }
+
 /* ── Upload ── */
 .np-drop {
   display: flex; flex-direction: column;
