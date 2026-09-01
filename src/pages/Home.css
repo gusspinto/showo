@@ -52,7 +52,9 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 108px clamp(32px, 6vw, 100px) 88px;
+  /* Vertical simétrico → a frase fica mesmo ao centro do painel cinza;
+     horizontal generoso → afasta-se da margem, para o meio do painel. */
+  padding: 80px clamp(40px, 7vw, 150px);
 }
 
 /* Mesma frase em qualquer ecrã — sem destaque de cor, sem itálico, sem
@@ -107,7 +109,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 108px clamp(28px, 4vw, 56px) 88px;
+  padding: 80px clamp(28px, 4vw, 56px);
   margin: 0;
   max-width: none;
 }
