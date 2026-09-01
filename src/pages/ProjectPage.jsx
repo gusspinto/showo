@@ -990,9 +990,11 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
 
   function uploadSectionMedia(sectionKey) {
     const input = document.createElement('input')
-    input.type = 'file'; input.accept = 'image/*'
+    input.type = 'file'; input.accept = 'image/jpeg,image/png,image/webp,image/gif'
     input.onchange = async (e) => {
       const file = e.target.files[0]; if (!file) return
+      if (file.size > 10 * 1024 * 1024) { alert('Ficheiro demasiado grande (máx 10 MB)'); return }
+      if (!file.type.startsWith('image/')) { alert('Apenas imagens são permitidas'); return }
       const ext = file.name.split('.').pop()
       const path = `sections/${project.id}/${sectionKey}_${Date.now()}.${ext}`
       const { data, error } = await supabase.storage.from('project-images').upload(path, file, { upsert: true })
@@ -1045,9 +1047,11 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
 
   function uploadImage(blockId, field) {
     const input = document.createElement('input')
-    input.type = 'file'; input.accept = 'image/*'
+    input.type = 'file'; input.accept = 'image/jpeg,image/png,image/webp,image/gif'
     input.onchange = async (e) => {
       const file = e.target.files[0]; if (!file) return
+      if (file.size > 10 * 1024 * 1024) { alert('Ficheiro demasiado grande (máx 10 MB)'); return }
+      if (!file.type.startsWith('image/')) { alert('Apenas imagens são permitidas'); return }
       const ext = file.name.split('.').pop()
       const path = `preview/${project.id}/${blockId}_${field}_${Date.now()}.${ext}`
       const { data, error } = await supabase.storage.from('project-images').upload(path, file, { upsert: true })
@@ -2112,9 +2116,11 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                   <button
                     onClick={() => {
                       const input = document.createElement('input')
-                      input.type = 'file'; input.accept = 'image/*'
+                      input.type = 'file'; input.accept = 'image/jpeg,image/png,image/webp,image/gif'
                       input.onchange = async () => {
                         const file = input.files[0]; if (!file) return
+                        if (file.size > 10 * 1024 * 1024) { alert('Ficheiro demasiado grande (máx 10 MB)'); return }
+                        if (!file.type.startsWith('image/')) { alert('Apenas imagens são permitidas'); return }
                         const ext = file.name.split('.').pop()
                         const path = `${project.id}/cover_${Date.now()}.${ext}`
                         const { error: upErr } = await supabase.storage.from('covers').upload(path, file, { upsert: true })
@@ -5093,7 +5099,8 @@ export default function ProjectPage() {
       setAiFeedback(result)
       await supabase.from('projects').update({ ai_feedback: result }).eq('id', project.id)
     } catch (e) {
-      setAnalyzeError('Erro ao analisar. Tenta novamente.')
+      console.error('[analyze]', e)
+      setAnalyzeError(e?.message || 'Erro ao analisar. Tenta novamente.')
     }
     setAnalyzingAI(false)
   }

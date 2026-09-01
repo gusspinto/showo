@@ -16,19 +16,16 @@
 // ============================================================================
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { getCorsHeaders } from '../_shared/rateLimit.ts'
 
-const CORS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, content-type',
-  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-}
+let _cors: Record<string, string> = {}
 
 const SCOPES = 'https://www.googleapis.com/auth/calendar.events'
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { ...CORS, 'Content-Type': 'application/json' },
+    headers: { ..._cors, 'Content-Type': 'application/json' },
   })
 }
 
@@ -125,7 +122,8 @@ async function pushShowoEvents(sb: any, userId: string, accessToken: string) {
 }
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS })
+  _cors = { ...getCorsHeaders(req), 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS' }
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: _cors })
 
   const url = new URL(req.url)
   const action = url.searchParams.get('action')

@@ -1,12 +1,8 @@
 import Anthropic from 'npm:@anthropic-ai/sdk@0.36.3'
-import { checkRateLimit, getAuthUser, clip, checkPlanLimit } from '../_shared/rateLimit.ts'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': 'https://showo.pt',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { checkRateLimit, getAuthUser, clip, checkPlanLimit, getCorsHeaders } from '../_shared/rateLimit.ts'
 
 Deno.serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req)
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
   const user = await getAuthUser(req)
