@@ -238,6 +238,11 @@ export default function Settings() {
     if (!authLoading && !user) navigate('/login')
   }, [user, authLoading, navigate])
 
+  // Semeia o formulário a partir da BD UMA vez por utilizador. Chave em
+  // user?.id, não no objeto `user`: um updateUser (ao guardar), um refresh
+  // de token ou o SIGNED_IN ao voltar à aba trocam a referência de `user`
+  // sem trocar o id — e antes isso re-corria este efeito e apagava o que o
+  // utilizador tinha acabado de escrever, voltando ao valor antigo.
   useEffect(() => {
     if (!user) return
     setFullName(user.user_metadata?.full_name ?? '')
@@ -273,7 +278,8 @@ export default function Settings() {
     supabase.rpc('get_ambassador_stats').then(({ data }) => {
       if (data && Object.keys(data).length > 0) setAmbassadorStats(data)
     })
-  }, [user])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id])
 
   useEffect(() => {
     clearTimeout(debounceRef.current)
