@@ -177,6 +177,22 @@ export default function NewProject() {
   const [importMissing, setImportMissing] = useState([])
   const [beat, setBeat] = useState(0)
 
+  /* Fase 2 — como aparece: página própria ou anexo de outro projeto */
+  const [presentation, setPresentation] = useState('page')
+  const [parentId, setParentId] = useState('')
+  const [myProjects, setMyProjects] = useState([])
+
+  useEffect(() => {
+    if (!user?.id) return
+    supabase.from('projects')
+      .select('id, name')
+      .eq('user_id', user.id)
+      .eq('entry_kind', 'full')
+      .is('parent_project_id', null)
+      .order('created_at', { ascending: false })
+      .then(({ data }) => setMyProjects(data ?? []))
+  }, [user?.id])
+
   function set(key, val) { setForm(p => ({ ...p, [key]: val })) }
 
   function toggleSkip(key) {
@@ -401,6 +417,11 @@ export default function NewProject() {
       const project = await saveProject(form, aiResult, user?.id ?? null)
       if (user?.id) localStorage.setItem(`edit_token_${project.slug}`, project.edit_token)
 
+      const asAttachment = user?.id && presentation === 'attachment' && parentId
+      if (asAttachment) {
+        await supabase.from('projects').update({ parent_project_id: parentId }).eq('id', project.id)
+      }
+
       // Veio de um ficheiro? Anexa o original ao projeto — fica transferível
       // e serve de fonte. Não bloqueia a navegação.
       if (user?.id && files[0]) {
@@ -617,14 +638,53 @@ export default function NewProject() {
           </div>
 
           {error && <p className="np-err"><AlertTriangle size={13} /> {error}</p>}
+
+          {/* Como aparece — página própria ou anexo de outro projeto. */}
+          {user && myProjects.length > 0 && (
+            <div className="np-present">
+              <p className="np-present-label">Como aparece</p>
+              <div className="np-present-opts">
+                <button
+                  type="button"
+                  className={`np-present-opt${presentation === 'page' ? ' is-on' : ''}`}
+                  onClick={() => setPresentation('page')}
+                >
+                  <strong>Página própria</strong>
+                  <span>Um projeto Showo a sério, no perfil e no Explorar.</span>
+                </button>
+                <button
+                  type="button"
+                  className={`np-present-opt${presentation === 'attachment' ? ' is-on' : ''}`}
+                  onClick={() => setPresentation('attachment')}
+                >
+                  <strong>Anexo de outro projeto</strong>
+                  <span>Aparece dentro da página de um projeto maior.</span>
+                </button>
+              </div>
+              {presentation === 'attachment' && (
+                <select
+                  className="np-present-select"
+                  value={parentId}
+                  onChange={e => setParentId(e.target.value)}
+                >
+                  <option value="">Escolhe o projeto…</option>
+                  {myProjects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                </select>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
       {/* Ação principal fixa ao fundo: numa lista longa de campos, o botão de
           criar não pode estar a 3 scrolls de distância no telemóvel. */}
       <div className="np-sticky-action">
-        <button className="np-btn-primary" onClick={handleSubmit} disabled={!canSubmit}>
-          Criar projeto <ArrowRight size={15} />
+        <button
+          className="np-btn-primary"
+          onClick={handleSubmit}
+          disabled={!canSubmit || (presentation === 'attachment' && !parentId)}
+        >
+          {presentation === 'attachment' ? 'Adicionar como anexo' : 'Criar projeto'} <ArrowRight size={15} />
         </button>
         {!canSubmit && (
           <span className="np-sticky-hint">Faltam campos obrigatórios (marcados com *)</span>

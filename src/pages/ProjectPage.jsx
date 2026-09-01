@@ -22,6 +22,7 @@ import { CloseIcon as X } from '@solar-icons/react/bold/close'
 import { RefreshCircleIcon as Loader } from '@solar-icons/react/bold/refresh-circle'
 import { SquareAcademicCapIcon as GraduationCap } from '@solar-icons/react/bold/square-academic-cap'
 import { DisketteIcon as Save } from '@solar-icons/react/bold/diskette'
+import { DownloadIcon as Download } from '@solar-icons/react/bold/download'
 import { StarsIcon as Sparkles } from '@solar-icons/react/bold/stars'
 import { FaceScanCircleIcon as Bot } from '@solar-icons/react/bold/face-scan-circle'
 import { LightbulbIcon as Lightbulb } from '@solar-icons/react/bold/lightbulb'
@@ -90,6 +91,7 @@ const ANON_PROJECT_COLUMNS = [
   'views', 'defense_date', 'preview_style', 'tags', 'guide_config', 'preview_blocks',
   'likes_count', 'interest_count', 'review_status', 'review_status_updated_at',
   'visibility', 'edit_token', 'notified_milestones',
+  'library_file_url', 'library_file_name', 'library_file_type', 'parent_project_id',
 ].join(', ')
 
 const colors = {
@@ -863,6 +865,87 @@ const wsInputNew = {
   color: 'var(--color-text)', fontSize: 12,
   fontFamily: 'inherit', outline: 'none',
   transition: 'border-color 0.2s',
+}
+
+/* Anexos — projetos-filho (parent_project_id) + o ficheiro-fonte deste
+   projeto, se veio de um upload analisado pela IA. Nem tudo merece página
+   própria; isto é onde os trabalhos mais pequenos vivem dentro do maior. */
+function ProjectAttachments({ project }) {
+  const navigate = useNavigate()
+  const [children, setChildren] = useState([])
+  const [srcUrl, setSrcUrl] = useState(null)
+
+  useEffect(() => {
+    let cancelled = false
+    supabase.from('projects')
+      .select('id, name, slug, ai_tagline, area, cover_url')
+      .eq('parent_project_id', project.id)
+      .order('created_at', { ascending: true })
+      .then(({ data }) => { if (!cancelled) setChildren(data ?? []) })
+    return () => { cancelled = true }
+  }, [project.id])
+
+  useEffect(() => {
+    const path = project.library_file_url
+    if (!path) return
+    if (path.startsWith('http')) { setSrcUrl(path); return }
+    let cancelled = false
+    supabase.storage.from('library-files').createSignedUrl(path, 3600)
+      .then(({ data }) => { if (!cancelled && data?.signedUrl) setSrcUrl(data.signedUrl) })
+    return () => { cancelled = true }
+  }, [project.library_file_url])
+
+  if (!children.length && !srcUrl) return null
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {children.length > 0 && (
+        <>
+          <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.12em' }}>Trabalhos</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12 }}>
+            {children.map(c => (
+              <button
+                key={c.id} type="button" onClick={() => navigate(`/projeto/${c.slug}`)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left',
+                  padding: 10, border: '1px solid var(--color-border)', borderRadius: 12,
+                  background: 'var(--color-surface)', cursor: 'pointer', fontFamily: 'inherit',
+                }}
+              >
+                <span style={{
+                  width: 44, height: 44, flexShrink: 0, borderRadius: 9, overflow: 'hidden',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  background: 'var(--color-bg-alt)', color: 'var(--color-text-tertiary)',
+                  fontSize: 18, fontWeight: 800,
+                }}>
+                  {c.cover_url
+                    ? <img src={c.cover_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    : (c.name || '?')[0].toUpperCase()}
+                </span>
+                <span style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name}</span>
+                  {(c.ai_tagline || c.area) && <span style={{ fontSize: 12, color: 'var(--color-text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.ai_tagline || c.area}</span>}
+                </span>
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+      {srcUrl && (
+        <a
+          href={srcUrl} target="_blank" rel="noopener noreferrer"
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: 7, alignSelf: 'flex-start',
+            padding: '8px 14px', borderRadius: 9, border: '1px solid var(--color-border)',
+            background: 'var(--color-surface)', color: 'var(--color-text-secondary)',
+            fontSize: 13, fontWeight: 600, textDecoration: 'none',
+          }}
+        >
+          <Download size={14} /> {project.library_file_name || 'Documento original'}
+        </a>
+      )}
+    </div>
+  )
 }
 
 function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview, previewBlocks, setPreviewBlocks, previewStyle, setPreviewStyle, previewEditing, setPreviewEditing,
@@ -3079,6 +3162,8 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
           )),
         ]
         })()}
+
+        <ProjectAttachments project={project} />
 
         {/* Creator card */}
         {(displayName || course || school) && (

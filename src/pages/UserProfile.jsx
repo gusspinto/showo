@@ -239,6 +239,7 @@ export default function UserProfile() {
         .select(`${PROJECT_COLS}, collaborator_count:project_collaborators(count)`)
         .eq('user_id', profileData.id)
         .eq('profile_featured', true)
+        .is('parent_project_id', null)
         .order('profile_featured_order', { ascending: true })
 
       const isRecruiterVisitor = user && (myProfile?.role === 'recrutador' || myProfile?.role === 'empresa') && profileData.id !== user.id
@@ -255,6 +256,7 @@ export default function UserProfile() {
           .select(PROJECT_COLS)
           .eq('user_id', profileData.id)
           .eq('profile_featured', true)
+          .is('parent_project_id', null)
           .order('profile_featured_order', { ascending: true })
         finalProjects = fallback
       }
