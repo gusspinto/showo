@@ -477,10 +477,10 @@ export default function EditProject() {
                     </Field>
                   </div>
                   <div style={{ marginTop: 20 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 700, color: colors.subtle, marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0.6 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 700, color: colors.subtle, marginBottom: 14, textTransform: 'uppercase', letterSpacing: 0.6 }}>
                       <Link2 size={12} /> Links e redes
+                      <span style={{ fontWeight: 600, textTransform: 'none', letterSpacing: 0, color: colors.subtle, opacity: 0.8 }}>(opcional)</span>
                     </div>
-                    <p style={{ margin: '0 0 14px', fontSize: 12, color: colors.subtle }}>Opcional. Se puseres, tem de ser um link a sério.</p>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                       <Field
                         label="LinkedIn"
