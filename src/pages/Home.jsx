@@ -262,8 +262,6 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="home-hero-divider" aria-hidden="true" />
-
           {/* ── Arranque ── Mesmo bloco em qualquer ecrã, já não só no
               telemóvel: auth em primeiro plano, como o Claude — mas com uma
               saída que o Claude não tem, "Continuar a explorar", sempre

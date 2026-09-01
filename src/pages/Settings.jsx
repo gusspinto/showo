@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
+import { previousRoute, resolveBack } from '../lib/routeHistory'
 import { Navbar } from '../components/Navbar'
 import { RefreshCircleIcon as Loader } from '@solar-icons/react/bold/refresh-circle'
 import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
@@ -194,6 +195,8 @@ export default function Settings() {
   const [role, setRole] = useState('aluno')
   const [saving, setSaving] = useState(false)
   const [saveMsg, setSaveMsg] = useState(null)
+  const [justSaved, setJustSaved] = useState(false)
+  const [back] = useState(() => resolveBack(previousRoute()))
   const [usernameStatus, setUsernameStatus] = useState(null)
   const debounceRef = useRef(null)
   const [avatarUrl, setAvatarUrl] = useState('')
@@ -392,7 +395,9 @@ export default function Settings() {
         throw profileError
       }
       setOriginalUsername(username.trim()); setUsernameStatus(null); refreshProfile()
-      setSaveMsg({ type: 'ok', text: 'Perfil guardado.' })
+      setSaveMsg(null)
+      setJustSaved(true)
+      setTimeout(() => setJustSaved(false), 2200)
     } catch (err) {
       const raw = err.message ?? ''
       const text = raw.includes('row-level security') || raw.includes('RLS')
@@ -479,14 +484,15 @@ export default function Settings() {
     </div>
   )
 
-  const saveBlock = (
-    <div className="settings-save-inline">
-      {saveMsg && <div className={`settings-msg ${saveMsg.type}`}>{saveMsg.text}</div>}
-      <button onClick={handleSaveProfile} disabled={saving} className="settings-save-btn">
-        {saving ? 'A guardar...' : 'Guardar'}
-      </button>
-    </div>
-  )
+  // Só o erro fica inline junto à secção. O sucesso deixou de ser um
+  // banner permanente ("Perfil guardado.") — passou a um estado curto no
+  // próprio botão (ver justSaved). O botão de guardar vive no topo
+  // (cabeçalho no desktop, barra fixa no telemóvel), sem obrigar a descer.
+  const saveBlock = saveMsg?.type === 'err'
+    ? <div className="settings-save-inline"><div className="settings-msg err">{saveMsg.text}</div></div>
+    : null
+
+  const saveButtonLabel = saving ? 'A guardar…' : justSaved ? 'Guardado ✓' : 'Guardar'
 
   const tabsWithSave = ['perfil', 'empresa', 'recrutamento', 'notificacoes', 'privacidade']
   const showMobileSave = tabsWithSave.includes(activeTab)
@@ -569,13 +575,21 @@ export default function Settings() {
       <Navbar />
       <div className="page-content">
         <div className="settings-header">
-          <div>
-            <h1 className="settings-title">Definições</h1>
-            <p className="settings-subtitle">Gere o teu perfil e conta</p>
+          <h1 className="settings-title">Definições</h1>
+          <div className="settings-header-actions">
+            {showMobileSave && (
+              <button
+                onClick={handleSaveProfile}
+                disabled={saving}
+                className={`settings-save-btn settings-header-save${justSaved ? ' is-saved' : ''}`}
+              >
+                {saveButtonLabel}
+              </button>
+            )}
+            <button onClick={() => navigate(back.path)} className="settings-back-btn">
+              <ArrowLeft size={14} /> {back.label}
+            </button>
           </div>
-          <button onClick={() => navigate('/dashboard')} className="settings-back-btn">
-            <ArrowLeft size={14} /> Dashboard
-          </button>
         </div>
 
         <div className="settings-layout">
@@ -883,9 +897,9 @@ export default function Settings() {
 
       {showMobileSave && (
         <div className="settings-mobile-save-bar">
-          {saveMsg && <span className={`settings-mobile-save-msg ${saveMsg.type}`}>{saveMsg.text}</span>}
-          <button onClick={handleSaveProfile} disabled={saving} className="settings-save-btn settings-mobile-save-btn">
-            {saving ? 'A guardar...' : 'Guardar'}
+          {saveMsg?.type === 'err' && <span className="settings-mobile-save-msg err">{saveMsg.text}</span>}
+          <button onClick={handleSaveProfile} disabled={saving} className={`settings-save-btn settings-mobile-save-btn${justSaved ? ' is-saved' : ''}`}>
+            {saveButtonLabel}
           </button>
         </div>
       )}

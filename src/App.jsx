@@ -16,6 +16,7 @@ import SplashScreen from './components/SplashScreen'
 import { Analytics } from '@vercel/analytics/react'
 import { captureError } from './lib/errorTracking'
 import { trackPageview } from './lib/analytics'
+import { pushRoute } from './lib/routeHistory'
 import { supabase } from './lib/supabase'
 import ComingSoon from './pages/ComingSoon'
 
@@ -341,6 +342,7 @@ function PageViewTracker() {
   const location = useLocation()
   useEffect(() => {
     trackPageview(location.pathname + location.search)
+    pushRoute(location.pathname)
   }, [location.pathname, location.search])
   return null
 }
