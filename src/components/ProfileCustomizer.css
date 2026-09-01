@@ -42,8 +42,10 @@
 /* Swatches */
 .pc-swatches { display: flex; flex-wrap: wrap; gap: 8px; }
 .pc-swatch {
+  -webkit-appearance: none; appearance: none; outline: none;
+  box-sizing: border-box;
   width: 26px; height: 26px; border-radius: 50%;
-  border: 2px solid transparent; cursor: pointer; padding: 0;
+  border: 2px solid transparent; cursor: pointer; padding: 0; margin: 0;
   box-shadow: 0 0 0 1px var(--color-border) inset;
   transition: transform 0.12s;
 }
@@ -51,9 +53,9 @@
 .pc-swatch.is-on { border-color: var(--color-text); }
 .pc-swatch-custom-wrap { position: relative; }
 .pc-swatch--custom {
-  display: flex; align-items: center; justify-content: center;
+  display: block; background-clip: padding-box;
   overflow: hidden; position: relative; border-radius: 50%;
-  background: conic-gradient(from 180deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
+  background-image: conic-gradient(from 180deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
 }
 
 /* Options (font / bg / cards) */
