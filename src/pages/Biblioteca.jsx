@@ -11,6 +11,7 @@ import { TrashBinTrashIcon as Trash } from '@solar-icons/react/bold/trash-bin-tr
 import { LibraryIcon } from '@solar-icons/react/bold/library'
 import { CloseIcon as X } from '@solar-icons/react/bold/close'
 import { ArrowRightUpIcon as ExternalLink } from '@solar-icons/react/bold/arrow-right-up'
+import { fileTypeStyle } from '../lib/libraryFile'
 import './Biblioteca.css'
 
 /* Biblioteca — todos os projetos do user, "criados" (entry_kind='full',
@@ -26,20 +27,6 @@ import './Biblioteca.css'
 function fileIconFor(type) {
   if (type?.startsWith('image/')) return ImageIcon
   return FileText
-}
-
-/* Cor por tipo de ficheiro, à Google Drive — não é decoração, é a pista
-   visual que substitui a preview real quando não há uma (só imagens têm
-   preview de verdade; PDF/Word/PowerPoint mostram-se por cor+etiqueta). */
-const FILE_TYPE_STYLE = {
-  'application/pdf': { color: '#e05a4e', label: 'PDF' },
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': { color: '#3b6fd6', label: 'DOC' },
-  'application/vnd.openxmlformats-officedocument.presentationml.presentation': { color: '#e08a2e', label: 'PPT' },
-  'text/plain': { color: '#8a8f98', label: 'TXT' },
-  'text/markdown': { color: '#8a8f98', label: 'MD' },
-}
-function fileTypeStyle(type) {
-  return FILE_TYPE_STYLE[type] || { color: '#8a8f98', label: 'FICHEIRO' }
 }
 
 function previewUrlFor(item) {

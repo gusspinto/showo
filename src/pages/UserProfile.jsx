@@ -21,7 +21,9 @@ import { PaletteIcon as Palette } from '@solar-icons/react/bold/palette'
 import ConvidarVagaModal from '../components/ConvidarVagaModal'
 import ProfileCustomizer from '../components/ProfileCustomizer'
 import { PlanBadge } from '../components/PlanGate'
+import { DocumentTextIcon as FileText } from '@solar-icons/react/bold/document-text'
 import { appearanceVars } from '../lib/profileAppearance'
+import { fileTypeStyle } from '../lib/libraryFile'
 import './UserProfile.css'
 
 function scoreColor(score) {
@@ -33,7 +35,9 @@ function scoreColor(score) {
 }
 
 /* Um item do perfil — projeto criado ou ficheiro da Biblioteca — no layout
-   que o dono escolheu: 'tile' (capa grande) ou 'row' (linha compacta). */
+   que o dono escolheu: 'tile' (capa grande) ou 'row' (linha compacta).
+   Os ficheiros da Biblioteca mostram-se como na própria Biblioteca:
+   thumbnail real quando existe, senão cartão colorido por tipo. */
 function ProfileItem({ project, onOpen }) {
   const isLibrary = project.entry_kind === 'library'
   const cover =
@@ -41,6 +45,14 @@ function ProfileItem({ project, onOpen }) {
     project._signedThumbUrl ||
     (project.library_file_type?.startsWith('image/') ? project._signedFileUrl : null)
   const subtitle = project.ai_tagline || project.library_description || null
+  const ft = isLibrary ? fileTypeStyle(project.library_file_type) : null
+
+  const filetypeCard = ft && (
+    <span className="up-filetype" style={{ color: ft.color, background: `color-mix(in srgb, ${ft.color} 14%, var(--color-bg-alt))` }}>
+      <FileText size={26} />
+      <span className="up-filetype-label">{ft.label}</span>
+    </span>
+  )
 
   if (project.profile_layout === 'row') {
     return (
@@ -48,7 +60,9 @@ function ProfileItem({ project, onOpen }) {
         <span className={`up-pf-row-thumb${cover ? ' has-img' : ''}`}>
           {cover
             ? <img src={cover} alt="" loading="lazy" />
-            : <span className="up-pf-row-letter">{(project.name || '?')[0].toUpperCase()}</span>}
+            : ft
+              ? <span className="up-pf-row-ft" style={{ color: ft.color }}>{ft.label}</span>
+              : <span className="up-pf-row-letter">{(project.name || '?')[0].toUpperCase()}</span>}
         </span>
         <span className="up-pf-row-text">
           <span className="up-pf-row-name">{project.name}</span>
@@ -70,6 +84,8 @@ function ProfileItem({ project, onOpen }) {
     <div className="up-project-card" onClick={onOpen}>
       {cover ? (
         <div className="up-card-cover-img"><img src={cover} alt="" /></div>
+      ) : isLibrary ? (
+        <div className="up-card-cover-file">{filetypeCard}</div>
       ) : (
         <div className="up-card-cover-fallback">
           <span className="up-card-cover-letter">
@@ -366,74 +382,73 @@ export default function UserProfile() {
 
       <div className={`page-content${appearance.bannerUrl ? ' has-banner' : ''}`}>
 
-        {/* ── Profile header card: centrado ── */}
-        <div className="up-header">
-          <div className="up-identity">
-            {profile.avatar_url
-              ? <img src={profile.avatar_url} alt={displayName} className="up-avatar" />
-              : <div className="up-avatar-placeholder">{displayName[0].toUpperCase()}</div>
-            }
+        {/* ── Cabeçalho: portefólio, alinhado à esquerda, sem cartão ── */}
+        <header className="up-head">
+          {profile.avatar_url
+            ? <img src={profile.avatar_url} alt={displayName} className="up-avatar" />
+            : <div className="up-avatar-placeholder">{displayName[0].toUpperCase()}</div>
+          }
 
-            <div className="up-name-row">
-              <h1 className="up-name">{displayName}</h1>
-              {isOwnProfile && <PlanBadge />}
-              {projects.some(p => (p.score || 0) >= 100) && (
-                <span className="up-perfect-badge" title="Tem um projeto com score perfeito">
-                  <GraduationCap size={13} />
-                </span>
-              )}
+          <div className="up-head-main">
+            <div className="up-head-top">
+              <div className="up-head-identity">
+                <div className="up-name-row">
+                  <h1 className="up-name">{displayName}</h1>
+                  {isOwnProfile && <PlanBadge />}
+                  {projects.some(p => (p.score || 0) >= 100) && (
+                    <span className="up-perfect-badge" title="Tem um projeto com score perfeito">
+                      <GraduationCap size={13} />
+                    </span>
+                  )}
+                </div>
+
+                {headline && <p className="up-headline">{headline}</p>}
+
+                <div className="up-meta-row">
+                  {profile.username && <span>@{profile.username}</span>}
+                  {(profile.area || profile.course) && <><span className="up-meta-sep">·</span><span>{profile.area || profile.course}</span></>}
+                  {profile.school && <><span className="up-meta-sep">·</span><span>{profile.school}</span></>}
+                  {profile.role === 'professor' && <><span className="up-meta-sep">·</span><span>Professor</span></>}
+                </div>
+              </div>
+
+              <div className="up-head-actions">
+                {isOwnProfile && (
+                  <>
+                    <button onClick={openCustomizer} className="up-icon-btn" title="Personalizar perfil" aria-label="Personalizar perfil">
+                      <Palette size={15} />
+                    </button>
+                    <button onClick={() => navigate('/settings')} className="up-icon-btn" title="Editar perfil" aria-label="Editar perfil">
+                      <Pencil size={15} />
+                    </button>
+                  </>
+                )}
+                <button onClick={() => setShowQR(true)} className="up-icon-btn" title="QR Code" aria-label="QR Code">
+                  <QrCode size={15} />
+                </button>
+                {!isOwnProfile && user && (
+                  <button onClick={() => navigate(`/mensagens?to=${profile.id}`)} className="up-action-btn primary">
+                    <MessageSquare size={13} /> Mensagem
+                  </button>
+                )}
+                {!isOwnProfile && isRecruiter && (
+                  <>
+                    <button onClick={toggleSave} disabled={savingCandidate}
+                      className={`up-action-btn${saved ? ' saved' : ''}`}
+                      title={saved ? 'Remover dos guardados' : 'Guardar candidato'}>
+                      <Star size={13} color={saved ? 'var(--color-warning)' : undefined} />
+                      {saved ? 'Guardado' : 'Guardar'}
+                    </button>
+                    <button onClick={() => setShowInvite(true)} className="up-action-btn primary">
+                      <Send size={13} /> Convidar
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
 
-            {headline && <p className="up-headline">{headline}</p>}
-
-            <div className="up-meta-row">
-              {profile.username && <span>@{profile.username}</span>}
-              {(profile.area || profile.course) && <><span className="up-meta-sep">·</span><span>{profile.area || profile.course}</span></>}
-              {profile.school && <><span className="up-meta-sep">·</span><span>{profile.school}</span></>}
-              {profile.role === 'professor' && <><span className="up-meta-sep">·</span><span>Professor</span></>}
-            </div>
-          </div>
-
-          <div className="up-header-actions">
-            <button onClick={() => setShowQR(true)} className="up-icon-btn" title="QR Code" aria-label="QR Code">
-              <QrCode size={15} />
-            </button>
-            {isOwnProfile && (
-              <button onClick={openCustomizer} className="up-icon-btn" title="Personalizar perfil" aria-label="Personalizar perfil">
-                <Palette size={15} />
-              </button>
-            )}
-            {isOwnProfile && (
-              <button onClick={() => navigate('/settings')} className="up-icon-btn" title="Editar perfil" aria-label="Editar perfil">
-                <Pencil size={15} />
-              </button>
-            )}
-            {!isOwnProfile && user && (
-              <button onClick={() => navigate(`/mensagens?to=${profile.id}`)} className="up-action-btn primary">
-                <MessageSquare size={13} /> Mensagem
-              </button>
-            )}
-            {!isOwnProfile && isRecruiter && (
-              <>
-                <button onClick={toggleSave} disabled={savingCandidate}
-                  className={`up-action-btn${saved ? ' saved' : ''}`}
-                  title={saved ? 'Remover dos guardados' : 'Guardar candidato'}>
-                  <Star size={13} color={saved ? 'var(--color-warning)' : undefined} />
-                  {saved ? 'Guardado' : 'Guardar'}
-                </button>
-                <button onClick={() => setShowInvite(true)} className="up-action-btn primary">
-                  <Send size={13} /> Convidar
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-
-        {/* ── Sobre: secção separada, só aparece se houver algo a mostrar ── */}
-        {(profile.bio || profile.skills?.length > 0 || profile.linkedin_url) && (
-          <div className="up-about">
-            <p className="up-about-label">Sobre</p>
             {profile.bio && <p className="up-bio">{profile.bio}</p>}
+
             {(profile.skills?.length > 0 || profile.linkedin_url) && (
               <div className="up-chips-row">
                 {profile.linkedin_url && (
@@ -447,12 +462,12 @@ export default function UserProfile() {
               </div>
             )}
           </div>
-        )}
+        </header>
 
-        {/* ── Projects ── */}
-        <div>
+        {/* ── Trabalho ── */}
+        <div className="up-work">
           <p className="up-section-label">
-            Projetos
+            Trabalho
             {projects.length > 0 && <span className="up-section-count">({projects.length})</span>}
           </p>
 
