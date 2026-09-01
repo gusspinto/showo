@@ -1115,11 +1115,14 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
           from { transform: translateY(100%); opacity: 0; }
           to   { transform: translateY(0);    opacity: 1; }
         }
-        /* Desktop: right sidebar */
-        /* Desktop: preview começa após a sidebar (z-index 100) — segue a sidebar quando comprimida */
+        /* Desktop: a preview começa depois da sidebar — MAS só quem tem sessão
+           tem sidebar. Visitante sem conta (body sem .has-sidebar) não tem
+           sidebar nenhuma: preview a toda a largura, a começar abaixo da
+           top-nav (que aí fica visível). */
         @media (min-width: 861px) {
-          .pv-outer { left: 232px !important; transition: left 0.22s cubic-bezier(0.4,0,0.2,1); }
-          body.sidebar-collapsed .pv-outer { left: 64px !important; }
+          body.has-sidebar .pv-outer { left: 232px !important; transition: left 0.22s cubic-bezier(0.4,0,0.2,1); }
+          body.has-sidebar.sidebar-collapsed .pv-outer { left: 64px !important; }
+          body:not(.has-sidebar) .pv-outer { top: 62px !important; }
         }
         /* Tablet: top-nav visível (62px) — container e painel começam abaixo */
         @media (min-width: 601px) and (max-width: 860px) {
