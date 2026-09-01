@@ -89,7 +89,11 @@ function OfficeViewer({ item }) {
     async function run() {
       setState('converting')
       try {
-        const blob = await officeToPdfBlob(item._signedFileUrl, item.name, item.library_file_type)
+        const blob = await officeToPdfBlob(
+          item._signedFileUrl,
+          item.library_file_name || item.name,
+          item.library_file_type,
+        )
         if (cancelled) return
         objUrlRef.current = URL.createObjectURL(blob)
         setPdfUrl(objUrlRef.current)
