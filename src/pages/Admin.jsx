@@ -1050,11 +1050,11 @@ function OrgsTab() {
   async function handleCreate(e) {
     e.preventDefault()
     setCreateMsg(null)
-    if (!name.trim() || !domain.trim()) { setCreateMsg({ ok: false, text: 'Preenche nome e domínio.' }); return }
+    if (!name.trim()) { setCreateMsg({ ok: false, text: 'Preenche o nome da escola.' }); return }
     setCreating(true)
     const { data, error } = await supabase.rpc('admin_create_organization', {
       p_name: name.trim(),
-      p_email_domain: domain.trim().toLowerCase().replace(/^@/, ''),
+      p_email_domain: domain.trim() ? domain.trim().toLowerCase().replace(/^@/, '') : null,
       p_plan: plan,
     })
     setCreating(false)
@@ -1070,7 +1070,7 @@ function OrgsTab() {
       <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '20px 22px' }}>
         <h3 style={{ margin: '0 0 4px', fontSize: 15, fontWeight: 700, color: C.text }}>Registar escola</h3>
         <p style={{ margin: '0 0 16px', fontSize: 13, color: C.muted }}>
-          Alunos que se registem com um email desse domínio recebem automaticamente a conta escolar com plano Build.
+          O domínio é opcional — se preenchido, alunos com esse email entram automaticamente. Sem domínio, os alunos entram pelo código de turma do professor.
         </p>
         <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
@@ -1080,7 +1080,7 @@ function OrgsTab() {
             </div>
             <div>
               <label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: 'block', marginBottom: 5 }}>Domínio de email</label>
-              <input value={domain} onChange={e => setDomain(e.target.value)} placeholder="Ex: esmad.ipp.pt" style={fieldStyle} />
+              <input value={domain} onChange={e => setDomain(e.target.value)} placeholder="Opcional (ex: esmad.ipp.pt)" style={fieldStyle} />
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -1124,7 +1124,7 @@ function OrgsTab() {
               }}>
                 <div>
                   <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{o.name}</div>
-                  <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>@{o.email_domain}</div>
+                  <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>{o.email_domain ? `@${o.email_domain}` : 'Sem domínio · entrada por código de turma'}</div>
                 </div>
                 <span style={{
                   padding: '3px 10px', borderRadius: 99, fontSize: 12, fontWeight: 700,
