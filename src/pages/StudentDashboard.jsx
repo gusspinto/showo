@@ -110,7 +110,9 @@ function JoinTurmaStudentModal({ onClose, onJoined }) {
     if (!trimmed) return
     setLoading(true)
     setError('')
-    const { data, error: sbErr } = await supabase.rpc('join_class', { p_code: trimmed })
+    // join_class é RETURNS TABLE → o RPC devolve um array, não um objeto.
+    const { data: rows, error: sbErr } = await supabase.rpc('join_class', { p_code: trimmed })
+    const data = rows?.[0]
     setLoading(false)
     if (sbErr || !data) {
       const msg = sbErr?.message || ''
@@ -150,7 +152,7 @@ function JoinTurmaStudentModal({ onClose, onJoined }) {
 export default function StudentDashboard({ user, profile }) {
   const navigate = useNavigate()
   const location = useLocation()
-  const { checkGate, isSchoolAccount } = useAuth()
+  const { checkGate, isSchoolAccount, refreshProfile } = useAuth()
   /* ── Dados ── */
   const [projects, setProjects] = useState([])
   const [loadingProjects, setLoadingProjects] = useState(true)
@@ -674,6 +676,9 @@ export default function StudentDashboard({ user, profile }) {
             setSchoolClasses(prev => prev.find(c => c.id === cls.id) ? prev : [...prev, cls])
             setShowJoinTurma(false)
             showToast(`Entraste na turma ${cls.name}!`)
+            // join_class promove a conta a 'school' no servidor; sem refrescar,
+            // a TurmaPage vê account_type antigo e devolve ao dashboard.
+            refreshProfile?.()
           }}
         />
       )}

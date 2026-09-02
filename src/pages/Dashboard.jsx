@@ -824,7 +824,7 @@ function ActivityChart({ myInterests, feedbackHistory }) {
    ══════════════════════════════════════════════════════════════════════════ */
 
 export default function Dashboard() {
-  const { user, profile, loading: authLoading, isAdmin } = useAuth()
+  const { user, profile, loading: authLoading, isAdmin, refreshProfile } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const [claimedSlug] = useState(() => location.state?.claimedSlug ?? null)
@@ -1241,6 +1241,9 @@ export default function Dashboard() {
       {showJoinModal && <JoinTurmaModal onClose={() => setShowJoinModal(false)} navigate={navigate} onJoined={(turma) => {
         setStudentTurmas(prev => prev.find(t => t.id === turma.id) ? prev : [...prev, turma])
         try { const lsKey = `showo_turmas_${user.id}`; const existing = JSON.parse(localStorage.getItem(lsKey) || '[]'); if (!existing.find(t => t.id === turma.id)) localStorage.setItem(lsKey, JSON.stringify([...existing, turma])) } catch {}
+        // join_class promove a conta a 'school' no servidor — sem isto o
+        // profile em memória fica 'individual' e a TurmaPage devolve ao dashboard.
+        refreshProfile?.()
       }} />}
       {showTurmasModal && <TurmasListModal turmas={studentTurmas} onClose={() => setShowTurmasModal(false)} navigate={navigate} onJoin={() => setShowJoinModal(true)} />}
       {showAddReminder && <AddReminderModal userId={user.id} initialDate={showAddReminder}
