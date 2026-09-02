@@ -6132,7 +6132,7 @@ export default function ProjectPage() {
                     <div style={{ fontSize: 11, fontWeight: 700, color: colors.muted, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 8 }}>Por secção</div>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 8 }}>
                       {Object.entries(aiFeedback.sections).map(([key, sec]) => {
-                        const LABELS = { goal: 'Objetivo', problem: 'Problema', solution: 'Solução', target_audience: 'Público-alvo', features: 'Funcionalidades', technologies: 'Tecnologias', results: 'Resultados', learnings: 'Aprendizagens' }
+                        const LABELS = { goal: 'Objetivo', problem: 'Problema', solution: 'Solução', target_audience: 'Público-alvo', features: 'Funcionalidades', technologies: 'Tecnologias', challenges: 'Desafios', results: 'Resultados', learnings: 'Aprendizagens' }
                         const ICONS = { goal: Target, problem: AlertTriangle, solution: Wrench, target_audience: Users, features: Zap, technologies: Wrench, results: TrendingUp, learnings: BookOpen }
                         const SecIcon = ICONS[key] || CheckCircle
                         const ratingColor = sec.rating === 'forte' ? colors.green : sec.rating === 'médio' ? colors.yellow : colors.orange
