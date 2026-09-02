@@ -1,5 +1,5 @@
 import Anthropic from 'npm:@anthropic-ai/sdk@0.36.3'
-import { checkRateLimit, getAuthUser, getCorsHeaders, checkPlanLimit } from '../_shared/rateLimit.ts'
+import { checkRateLimit, getAuthUser, getCorsHeaders, checkPlanLimit, repairJson } from '../_shared/rateLimit.ts'
 
 const TYPE_LABELS: Record<string, string> = {
   school:   'Projeto de Escola',
@@ -91,10 +91,7 @@ Devolve APENAS este JSON (sem markdown, sem explicações):
     })
 
     const raw = (message.content[0] as { type: string; text: string }).text.trim()
-    const jsonMatch = raw.match(/\{[\s\S]*\}/)
-    if (!jsonMatch) throw new Error('Resposta inválida')
-
-    const prefill = JSON.parse(jsonMatch[0])
+    const prefill = repairJson(raw)
 
     return new Response(JSON.stringify({ prefill }), {
       headers: { ...cors, 'Content-Type': 'application/json' },

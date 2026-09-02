@@ -6108,7 +6108,14 @@ export default function ProjectPage() {
               <div>
                 {/* Summary */}
                 <div style={{ marginBottom: 20 }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: colors.muted, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 8 }}>Resumo</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: colors.muted, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Resumo</div>
+                    {aiFeedback.score != null && (
+                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: aiFeedback.score >= 7 ? 'var(--color-success-subtle, #e6f9e6)' : aiFeedback.score >= 4 ? 'var(--color-warning-subtle, #fff8e1)' : 'var(--color-error-subtle, #ffeaea)', border: `1px solid ${aiFeedback.score >= 7 ? colors.green : aiFeedback.score >= 4 ? colors.yellow : colors.orange}`, borderRadius: 8, padding: '3px 10px', fontSize: 13, fontWeight: 800, color: aiFeedback.score >= 7 ? colors.green : aiFeedback.score >= 4 ? colors.yellow : colors.orange }}>
+                        {aiFeedback.score}/10
+                      </div>
+                    )}
+                  </div>
                   <p style={{ margin: 0, fontSize: 13.5, color: 'var(--color-text)', lineHeight: 1.6 }}>
                     {aiFeedback.overall}
                   </p>

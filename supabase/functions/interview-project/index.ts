@@ -1,5 +1,5 @@
 import Anthropic from 'npm:@anthropic-ai/sdk@0.36.3'
-import { checkRateLimit, getAuthUser, getCorsHeaders, checkPlanLimit } from '../_shared/rateLimit.ts'
+import { checkRateLimit, getAuthUser, getCorsHeaders, checkPlanLimit, PTPT_RULES, repairJson } from '../_shared/rateLimit.ts'
 
 const TYPE_CONTEXT: Record<string, string> = {
   school:       'Projeto de escola — trabalho desenvolvido no contexto académico, individual ou de grupo, para uma disciplina ou unidade curricular.',
@@ -98,18 +98,17 @@ REGRAS CRÍTICAS:
 - TEMPO VERBAL: as perguntas devem ser sempre no PASSADO ou PRESENTE — "O que fizeste?", "O que usaste?", "Que resultado tiveste?". NUNCA uses futuro como "O que queres fazer?" ou "O que vais criar?" — a Showo documenta trabalho feito, não planeia trabalho futuro
 - Se a descrição vier vazia, muito curta, vaga ou parecer uma ideia futura em vez de um projeto real: NUNCA peças desculpa nem soes a aviso/erro (nada de "chegou vazia, mas sem problema", "lamento", etc). O "understanding" fica só "Vamos por partes." ou equivalente igualmente curto e neutro — a mesma regra de 1 frase/18 palavras aplica-se sempre, sem exceção para este caso
 - Para estudantes que parecem ter pouca certeza ou pouco conteúdo na descrição (descrição curta, vaga ou genérica), adapta as perguntas para serem mais guiadas e concretas: em vez de "Que tecnologias usaste?" pergunta algo como "O que usaste para construir isto — apps, programas, materiais?" O objetivo é nunca deixar o estudante sem saber o que responder, mas sem alongar a pergunta por causa disso (mantém o máximo de 15 palavras)
-- OBRIGATÓRIO: inclui SEMPRE uma pergunta com field="area" (ex: "Em que área se enquadra este projeto? Saúde, educação, tecnologia...") e uma com field="goal" (ex: "Qual é o objetivo principal deste projeto?"). Estas duas são essenciais para o formulário.`
+- OBRIGATÓRIO: inclui SEMPRE uma pergunta com field="area" (ex: "Em que área se enquadra este projeto? Saúde, educação, tecnologia...") e uma com field="goal" (ex: "Qual é o objetivo principal deste projeto?"). Estas duas são essenciais para o formulário.
+${PTPT_RULES}`
 
     const msg = await client.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 1200,
+      model: 'claude-sonnet-4-6',
+      max_tokens: 1500,
       messages: [{ role: 'user', content: prompt }],
     })
 
     const raw = (msg.content[0] as { type: string; text: string }).text.trim()
-    const jsonMatch = raw.match(/\{[\s\S]*\}/)
-    if (!jsonMatch) throw new Error('Invalid response')
-    const result = JSON.parse(jsonMatch[0])
+    const result = repairJson(raw)
 
     return new Response(JSON.stringify(result), {
       headers: { ...cors, 'Content-Type': 'application/json' },

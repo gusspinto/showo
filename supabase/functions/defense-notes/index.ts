@@ -1,6 +1,6 @@
 import Anthropic from 'npm:@anthropic-ai/sdk@0.36.3'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { checkRateLimit, getAuthUser, getCorsHeaders, checkPlanLimit } from '../_shared/rateLimit.ts'
+import { checkRateLimit, getAuthUser, getCorsHeaders, checkPlanLimit, PTPT_RULES, repairJson } from '../_shared/rateLimit.ts'
 
 Deno.serve(async (req) => {
   const corsHeaders = getCorsHeaders(req)
@@ -146,22 +146,21 @@ Devolve APENAS este JSON (sem markdown):
     { "q": "<pergunta sobre as aprendizagens pessoais e profissionais>", "a": "<resposta concreta, não genérica>" },
     { "q": "<pergunta sobre o futuro ou escalabilidade do projeto>", "a": "<resposta realista e fundamentada>" }
   ],
-  "tip": "<um conselho de apresentação ESPECÍFICO para este projeto — algo que este estudante deve fazer ou evitar dado o conteúdo concreto do projeto>"
-}`
+  "tip": "<um conselho de apresentacao ESPECIFICO para este projeto - algo que este estudante deve fazer ou evitar dado o conteudo concreto do projeto>"
+}
+${PTPT_RULES}`
 
     let notes: Record<string, unknown> | null = null
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
         const message = await client.messages.create({
           model: 'claude-sonnet-4-6',
-          max_tokens: 2800,
+          max_tokens: 4000,
           messages: [{ role: 'user', content: prompt }],
         })
 
         const raw = (message.content[0] as { type: string; text: string }).text.trim()
-        const jsonMatch = raw.match(/\{[\s\S]*\}/)
-        if (!jsonMatch) throw new Error('Resposta inválida')
-        notes = JSON.parse(jsonMatch[0])
+        notes = repairJson(raw) as Record<string, unknown>
         break
       } catch (retryErr) {
         console.warn(`[defense-notes] attempt ${attempt + 1} failed:`, retryErr.message)

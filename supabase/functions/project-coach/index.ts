@@ -1,5 +1,5 @@
 import Anthropic from 'npm:@anthropic-ai/sdk@0.36.3'
-import { checkRateLimit, getAuthUser, clip, getCorsHeaders, checkPlanLimit } from '../_shared/rateLimit.ts'
+import { checkRateLimit, getAuthUser, clip, getCorsHeaders, checkPlanLimit, PTPT_RULES } from '../_shared/rateLimit.ts'
 
 const SYSTEM = (p: Record<string, string>) => `És um assistente pessoal para estudantes portugueses que estão a documentar e melhorar os seus projetos académicos — PAPs, estágios, projetos universitários e pessoais — na plataforma Showo.
 
@@ -32,7 +32,8 @@ REGRAS:
 - Para sugestões de melhorias usa listas com - e **negrito** para destacar o essencial.
 - Nunca inventes factos sobre o projeto. Se precisas de informação que não está acima, pergunta primeiro — uma pergunta de cada vez.
 - Nunca uses travessões (—) nem expressões genéricas como "de forma eficaz", "no âmbito de", "é fundamental", "aprendi muito".
-- Se o estudante agradecer ou fizer smalltalk, responde brevemente e redireciona para o projeto.`
+- Se o estudante agradecer ou fizer smalltalk, responde brevemente e redireciona para o projeto.
+${PTPT_RULES}`
 
 Deno.serve(async (req) => {
   const cors = getCorsHeaders(req)
@@ -109,8 +110,8 @@ Deno.serve(async (req) => {
       .map(m => ({ role: m.role as 'user' | 'assistant', content: m.content }))
 
     const response = await client.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 900,
+      model: 'claude-sonnet-4-6',
+      max_tokens: 1500,
       system: SYSTEM(project ?? {}) + diaryBlock + feedbackBlock + defenseBlock,
       messages: [...history, { role: 'user', content: message.trim() }],
     })
