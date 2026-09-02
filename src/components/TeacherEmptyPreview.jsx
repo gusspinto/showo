@@ -5,14 +5,14 @@ import { Chart2Icon as BarChart2 } from '@solar-icons/react/bold/chart-2'
 import { Button, Card, SectionLabel } from './ui'
 import './TeacherEmptyPreview.css'
 
-/* Estado vazio do professor. Em vez de uma frase "ainda não tens turmas",
-   mostra o que a ferramenta faz — os três pilares + um preview estático
-   (dados de exemplo, sem interação) do dashboard já com uma turma. */
+/* Estado vazio do professor. Diz em três palavras o que a ferramenta faz
+   e mostra um preview estático (dados de exemplo) do dashboard já com
+   uma turma. */
 
 const PILLARS = [
-  { Icon: Clipboard, title: 'Tarefas', desc: 'Com prazo. Vês quem cumpriu.' },
-  { Icon: BarChart2, title: 'Progresso', desc: 'Score de cada aluno num relance.' },
-  { Icon: MessageSquare, title: 'Avaliação', desc: 'Notas, feedback e correções.' },
+  { Icon: Clipboard, label: 'Tarefas' },
+  { Icon: BarChart2, label: 'Progresso' },
+  { Icon: MessageSquare, label: 'Avaliação' },
 ]
 
 const SAMPLE_STATS = [
@@ -35,23 +35,23 @@ export default function TeacherEmptyPreview({ onCreate }) {
 
   return (
     <div className="tep">
-      <div className="tep-intro">
+      <div className="tep-hero">
         <h2 className="tep-title">Cria a tua primeira turma</h2>
         <p className="tep-sub">Gera um código e partilha com os teus alunos.</p>
+
+        <div className="tep-pillars">
+          {PILLARS.map(({ Icon, label }) => (
+            <div key={label} className="tep-pillar">
+              <span className="tep-pillar-icon"><Icon size={17} /></span>
+              <span className="tep-pillar-label">{label}</span>
+            </div>
+          ))}
+        </div>
+
         <Button icon={<Users2 size={15} />} onClick={onCreate}>Criar turma</Button>
       </div>
 
-      <div className="tep-pillars">
-        {PILLARS.map(({ Icon, title, desc }) => (
-          <div key={title} className="tep-pillar">
-            <span className="tep-pillar-icon"><Icon size={16} /></span>
-            <div>
-              <div className="tep-pillar-title">{title}</div>
-              <div className="tep-pillar-desc">{desc}</div>
-            </div>
-          </div>
-        ))}
-      </div>
+      <div className="tep-divider" />
 
       <div className="tep-preview-wrap">
         <span className="tep-preview-tag">Exemplo</span>
