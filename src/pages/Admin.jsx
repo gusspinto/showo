@@ -1085,12 +1085,12 @@ function OrgsTab() {
   async function saveEdit() {
     if (!editName.trim()) return
     setSaving(true)
-    const updates = {
-      name: editName.trim(),
-      email_domain: editDomain.trim() ? editDomain.trim().toLowerCase().replace(/^@/, '') : null,
-      plan: editPlan,
-    }
-    const { error } = await supabase.from('organizations').update(updates).eq('id', editing)
+    const { error } = await supabase.rpc('admin_update_organization', {
+      p_id: editing,
+      p_name: editName.trim(),
+      p_email_domain: editDomain.trim() ? editDomain.trim().toLowerCase().replace(/^@/, '') : null,
+      p_plan: editPlan,
+    })
     setSaving(false)
     if (error) { setCreateMsg({ ok: false, text: 'Erro ao guardar: ' + error.message }); return }
     setEditing(null)
