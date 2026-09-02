@@ -1254,30 +1254,35 @@ export default function Dashboard() {
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: '24px 32px 80px', boxSizing: 'border-box' }}>
 
         {/* ══════════════════════ HEADER ══════════════════════ */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--sp-4)', marginBottom: 14, flexWrap: 'wrap' }}>
-          <div>
-            <h1 style={{ fontSize: 'clamp(22px, 3vw, 30px)', fontWeight: 400, fontFamily: 'var(--font-heading)', letterSpacing: '-0.4px', lineHeight: 1.15, margin: '0 0 4px', color: 'var(--color-text)' }}>{greeting}</h1>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Badge variant={isTeacher ? 'success' : isRecruiter ? 'accent' : 'primary'}>
-                {{ aluno: 'Aluno', professor: 'Professor', recrutador: 'Recrutador', empresa: 'Empresa' }[profile?.role] ?? 'Aluno'}
-              </Badge>
-              <span style={{ color: 'var(--color-text-tertiary)', fontSize: 'var(--text-sm)' }}>{user.email}</span>
-            </div>
-          </div>
-          <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-            {!isTeacher && !isRecruiter && (
-              <>
-                <Button variant="secondary" size="sm" icon={<User size={14} />} onClick={() => navigate(`/u/${profile?.username || user?.id || ''}`)}>Perfil</Button>
-                <Button variant="primary" size="sm" icon={<Plus size={14} />} onClick={() => navigate('/novo')}>Novo projeto</Button>
-              </>
-            )}
-          </div>
-        </div>
+        {(() => {
+          const dateStr = new Date().toLocaleDateString('pt-PT', { weekday: 'long', day: 'numeric', month: 'long' })
+          const roleLabel = { aluno: 'Aluno', professor: 'Professor', recrutador: 'Recrutador', empresa: 'Empresa' }[profile?.role] ?? 'Aluno'
+          const nextStep = !isTeacher ? null
+            : turmas.length === 0 ? { label: 'Criar a primeira turma', action: () => setShowCreateTurma(true) }
+            : totalMembers === 0 ? { label: `Convidar alunos para ${turmas[0]?.name || 'a turma'}`, action: () => navigate(`/turma/${turmas[0]?.code}`) }
+            : null
+          return (
+            <header className="dash-hero">
+              <div className="dash-hero-main">
+                <span className="dash-hero-date">{dateStr}</span>
+                <h1 className="dash-hero-greeting">{greeting}</h1>
+                <div className="dash-hero-meta">
+                  <Badge variant={isTeacher ? 'success' : isRecruiter ? 'accent' : 'primary'}>{roleLabel}</Badge>
+                  <span>{user.email}</span>
+                </div>
+              </div>
+              {nextStep && (
+                <aside className="dash-hero-side">
+                  <span className="dash-hero-eyebrow">Próximos passos</span>
+                  <button className="dash-hero-next" onClick={nextStep.action}>{nextStep.label}</button>
+                </aside>
+              )}
+            </header>
+          )
+        })()}
 
         {/* ══════════════════════ TEACHER DASHBOARD ══════════════════════ */}
-        {isTeacher && turmas.length === 0 && (
-          <TeacherEmptyPreview onCreate={() => setShowCreateTurma(true)} />
-        )}
+        {isTeacher && turmas.length === 0 && <TeacherEmptyPreview />}
         {isTeacher && turmas.length > 0 && (
           <>
             {/* Stats */}
@@ -1326,36 +1331,6 @@ export default function Dashboard() {
                 )}
               </Card>
             )}
-
-            {/* Teacher onboarding steps */}
-            {(() => {
-              const done = (turmas.length > 0 ? 1 : 0) + (totalMembers > 0 ? 1 : 0)
-              if (done >= 2) return null
-              const step = turmas.length === 0
-                ? { Icon: Users2, title: 'Cria a tua primeira turma', desc: 'Gera um código e partilha-o com os teus alunos.', cta: 'Criar turma', action: () => setShowCreateTurma(true) }
-                : { Icon: Users, title: 'Convida os teus alunos', desc: `Partilha o código de ${turmas[0]?.name ?? 'uma turma'}.`, cta: 'Ver turma', action: () => navigate(`/turma/${turmas[0]?.code}`) }
-              return (
-                <div style={{ marginBottom: 'var(--sp-5)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 'var(--sp-2)' }}>
-                    <SectionLabel style={{ marginBottom: 0 }}>Primeiros passos</SectionLabel>
-                    <ProgressBar value={done} max={2} size="sm" style={{ width: 60 }} />
-                    <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)' }}>{done}/2</span>
-                  </div>
-                  <Card padding="md" style={{ borderLeft: '3px solid var(--color-primary)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-4)' }}>
-                      <div style={{ width: 44, height: 44, borderRadius: 'var(--radius-lg)', background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <step.Icon size={20} color="var(--color-primary)" />
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 'var(--text-base)', fontWeight: 700, color: 'var(--color-text)', marginBottom: 2 }}>{step.title}</div>
-                        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)' }}>{step.desc}</div>
-                      </div>
-                      <Button onClick={step.action}>{step.cta}</Button>
-                    </div>
-                  </Card>
-                </div>
-              )
-            })()}
 
             {/* Teacher 2-column */}
             <div className="dash-teacher-grid">
