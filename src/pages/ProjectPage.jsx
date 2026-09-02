@@ -4407,8 +4407,27 @@ export default function ProjectPage() {
   const [coachInput, setCoachInput] = useState('')
   const [coachLoading, setCoachLoading] = useState(false)
   const [coachOpen, setCoachOpen] = useState(false)
-  const [coachShowHistory, setCoachShowHistory] = useState(false)
+  const [coachSessionsOpen, setCoachSessionsOpen] = useState(false)
   const coachBottomRef = useRef(null)
+
+  const coachSessions = useMemo(() => {
+    if (!coachAllMessages.length) return []
+    const sessions = []
+    let current = []
+    for (let i = 0; i < coachAllMessages.length; i++) {
+      const m = coachAllMessages[i]
+      if (current.length && m.created_at && current[current.length - 1].created_at) {
+        const gap = new Date(m.created_at) - new Date(current[current.length - 1].created_at)
+        if (gap > 60 * 60 * 1000) {
+          sessions.push(current)
+          current = []
+        }
+      }
+      current.push(m)
+    }
+    if (current.length) sessions.push(current)
+    return sessions
+  }, [coachAllMessages])
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [generatingNarrative, setGeneratingNarrative] = useState(false)
   const [narrativePreview, setNarrativePreview]       = useState(null)
@@ -4537,9 +4556,20 @@ export default function ProjectPage() {
         if (cancelled || !data?.length) return
         const all = data.map(m => ({ role: m.role, content: m.content, created_at: m.created_at }))
         setCoachAllMessages(all)
-        const clearedAt = localStorage.getItem(`coach_cleared_${project.id}`)
-        const visible = clearedAt ? all.filter(m => m.created_at > clearedAt) : all
-        setCoachMessages(visible.map(m => ({ role: m.role, content: m.content })))
+        const activeIdx = localStorage.getItem(`coach_session_${project.id}`)
+        if (activeIdx === 'new') {
+          setCoachMessages([])
+        } else {
+          // Group into sessions to find which one to show
+          const sess = []; let cur = []
+          for (let i = 0; i < all.length; i++) {
+            if (cur.length && all[i].created_at && cur[cur.length - 1].created_at && new Date(all[i].created_at) - new Date(cur[cur.length - 1].created_at) > 3600000) { sess.push(cur); cur = [] }
+            cur.push(all[i])
+          }
+          if (cur.length) sess.push(cur)
+          const target = activeIdx != null ? sess[Number(activeIdx)] : sess[sess.length - 1]
+          setCoachMessages((target || []).map(m => ({ role: m.role, content: m.content })))
+        }
       })
     return () => { cancelled = true }
   }, [project?.id, user?.id])
@@ -7197,42 +7227,41 @@ export default function ProjectPage() {
                 <div style={{ fontSize: 12, color: colors.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{project.name}</div>
               </div>
               <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexShrink: 0 }}>
-                {coachShowHistory ? (
-                  <button onClick={() => setCoachShowHistory(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.blue, fontSize: 12, fontFamily: 'inherit', padding: '4px 8px' }}>Voltar</button>
-                ) : (<>
-                  {coachAllMessages.length > coachMessages.length && (
-                    <button onClick={() => setCoachShowHistory(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.blue, fontSize: 12, fontFamily: 'inherit', padding: '4px 8px' }} title="Histórico">Histórico</button>
-                  )}
-                  {coachMessages.length > 0 && (
-                    <button onClick={() => { if (project?.id) localStorage.setItem(`coach_cleared_${project.id}`, new Date().toISOString()); setCoachMessages([]); setCoachShowHistory(false) }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.muted, fontSize: 12, fontFamily: 'inherit', padding: '4px 8px' }} title="Nova conversa">Nova</button>
-                  )}
-                </>)}
+                {coachSessions.length > 1 && (
+                  <button onClick={() => setCoachSessionsOpen(v => !v)} style={{ background: coachSessionsOpen ? 'var(--color-primary-subtle)' : 'none', border: 'none', cursor: 'pointer', color: coachSessionsOpen ? colors.blue : colors.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 6, borderRadius: 6 }} title="Conversas">
+                    <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="1.5" rx=".75" fill="currentColor"/><rect x="2" y="7.25" width="12" height="1.5" rx=".75" fill="currentColor"/><rect x="2" y="11.5" width="12" height="1.5" rx=".75" fill="currentColor"/></svg>
+                  </button>
+                )}
+                <button onClick={() => { setCoachMessages([]); setCoachSessionsOpen(false); if (project?.id) localStorage.setItem(`coach_session_${project.id}`, 'new') }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 6, borderRadius: 6 }} title="Nova conversa">
+                  <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
+                </button>
               </div>
             </div>
+            {/* Sessions panel (mobile) */}
+            {coachSessionsOpen && (
+              <div style={{ position: 'absolute', top: 60, left: 0, right: 0, bottom: 0, zIndex: 10, background: 'var(--color-bg)', overflowY: 'auto', padding: '8px 14px' }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: colors.muted, textTransform: 'uppercase', letterSpacing: '0.06em', padding: '8px 4px 12px' }}>Conversas anteriores</div>
+                {coachSessions.map((sess, idx) => {
+                  const firstUserM = sess.find(m => m.role === 'user')
+                  const previewM = firstUserM ? firstUserM.content.slice(0, 55) + (firstUserM.content.length > 55 ? '...' : '') : 'Conversa'
+                  const dateM = sess[0]?.created_at ? new Date(sess[0].created_at).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' }) : ''
+                  const cntM = sess.filter(m => m.role === 'user').length
+                  return (
+                    <button key={idx} onClick={() => { setCoachMessages(sess.map(m => ({ role: m.role, content: m.content }))); setCoachSessionsOpen(false); if (project?.id) localStorage.setItem(`coach_session_${project.id}`, String(idx)) }}
+                      style={{ display: 'block', width: '100%', textAlign: 'left', background: 'var(--color-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: 10, padding: '11px 14px', marginBottom: 6, cursor: 'pointer', fontFamily: 'inherit' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 3 }}>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: colors.text }}>{dateM}</span>
+                        <span style={{ fontSize: 10, color: colors.muted }}>{cntM} {cntM === 1 ? 'msg' : 'msgs'}</span>
+                      </div>
+                      <div style={{ fontSize: 12, color: colors.muted, lineHeight: 1.4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{previewM}</div>
+                    </button>
+                  )
+                })}
+                {coachSessions.length === 0 && <div style={{ textAlign: 'center', color: colors.muted, fontSize: 13, padding: 20 }}>Sem conversas anteriores.</div>}
+              </div>
+            )}
             {/* Messages */}
             <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12, padding: '16px 14px', paddingBottom: 'calc(16px + env(safe-area-inset-bottom, 0px))' }}>
-              {coachShowHistory ? (() => {
-                const clearedAtM = project?.id ? localStorage.getItem(`coach_cleared_${project.id}`) : null
-                const historyM = clearedAtM ? coachAllMessages.filter(m => m.created_at <= clearedAtM) : coachAllMessages
-                if (!historyM.length) return <div style={{ textAlign: 'center', color: colors.muted, fontSize: 13, padding: 20 }}>Sem conversas anteriores.</div>
-                let lastDateM = ''
-                return historyM.map((m, i) => {
-                  const dm = m.created_at?.slice(0, 10) || ''
-                  const showDateM = dm !== lastDateM
-                  lastDateM = dm
-                  return (<div key={i}>
-                    {showDateM && <div style={{ textAlign: 'center', fontSize: 10, color: colors.muted, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', padding: '8px 0 4px' }}>{new Date(dm).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short', year: 'numeric' })}</div>}
-                    <div style={{
-                      alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start', maxWidth: '85%',
-                      background: m.role === 'user' ? 'var(--color-primary)' : 'var(--color-bg-alt)',
-                      border: m.role === 'user' ? 'none' : `1px solid ${colors.border}`,
-                      borderRadius: m.role === 'user' ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
-                      padding: '10px 14px', fontSize: 12.5, opacity: 0.75,
-                      color: m.role === 'user' ? '#fff' : colors.text, lineHeight: 1.6,
-                    }}>{m.role === 'assistant' ? renderMd(m.content) : m.content}</div>
-                  </div>)
-                })
-              })() : (<>
               {coachMessages.length === 0 && (() => {
                 const empty = []
                 const weak = []
@@ -7288,7 +7317,6 @@ export default function ProjectPage() {
                 </div>
               )}
               <div ref={coachBottomRef} />
-              </>)}
             </div>
             {/* Input — pinned to the bottom */}
             <form onSubmit={sendCoach} style={{ display: 'flex', gap: 8, padding: '10px 12px calc(10px + env(safe-area-inset-bottom, 0px))', borderTop: `1px solid ${colors.border}`, flexShrink: 0 }}>
@@ -8446,63 +8474,64 @@ export default function ProjectPage() {
                 <div style={{ fontSize: 13, fontWeight: 700, color: colors.text }}>Assistente IA</div>
                 <div style={{ fontSize: 11, color: colors.muted, display: 'flex', alignItems: 'center', gap: 6 }}>Tutor do teu projeto <AiUsageBadge feature="coach" compact /></div>
               </div>
-              {coachShowHistory ? (
+              {coachSessions.length > 1 && (
                 <button
-                  onClick={() => setCoachShowHistory(false)}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.blue, fontSize: 11, fontFamily: 'inherit', padding: '4px 8px', borderRadius: 6 }}
-                >Voltar</button>
-              ) : (<>
-                {coachAllMessages.length > coachMessages.length && (
-                  <button
-                    onClick={() => setCoachShowHistory(true)}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.blue, fontSize: 11, fontFamily: 'inherit', padding: '4px 8px', borderRadius: 6 }}
-                    title="Ver conversas anteriores"
-                  >Histórico</button>
-                )}
-                {coachMessages.length > 0 && (
-                  <button
-                    onClick={() => {
-                      if (project?.id) localStorage.setItem(`coach_cleared_${project.id}`, new Date().toISOString())
-                      setCoachMessages([])
-                      setCoachShowHistory(false)
-                    }}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.muted, fontSize: 11, fontFamily: 'inherit', padding: '4px 8px', borderRadius: 6 }}
-                    title="Nova conversa"
-                  >Nova conversa</button>
-                )}
-              </>)}
+                  onClick={() => setCoachSessionsOpen(v => !v)}
+                  style={{ background: coachSessionsOpen ? 'var(--color-primary-subtle)' : 'none', border: 'none', cursor: 'pointer', color: coachSessionsOpen ? colors.blue : colors.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 5, borderRadius: 6, transition: 'all 0.15s' }}
+                  title="Conversas"
+                >
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="1.5" rx=".75" fill="currentColor"/><rect x="2" y="7.25" width="12" height="1.5" rx=".75" fill="currentColor"/><rect x="2" y="11.5" width="12" height="1.5" rx=".75" fill="currentColor"/></svg>
+                </button>
+              )}
               <button
-                onClick={() => setCoachOpen(false)}
+                onClick={() => { setCoachMessages([]); setCoachSessionsOpen(false); if (project?.id) localStorage.setItem(`coach_session_${project.id}`, 'new') }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 5, borderRadius: 6 }}
+                title="Nova conversa"
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
+              </button>
+              <button
+                onClick={() => { setCoachOpen(false); setCoachSessionsOpen(false) }}
                 style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 4, borderRadius: 6 }}
                 title="Fechar"
               ><X size={16} /></button>
             </div>
 
+            {/* Sessions panel */}
+            {coachSessionsOpen && (
+              <div style={{ position: 'absolute', top: 58, left: 0, right: 0, bottom: 0, zIndex: 10, background: 'var(--color-surface)', overflowY: 'auto', padding: '8px 12px' }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: colors.muted, textTransform: 'uppercase', letterSpacing: '0.06em', padding: '8px 6px 12px' }}>Conversas anteriores</div>
+                {coachSessions.map((sess, idx) => {
+                  const firstUser = sess.find(m => m.role === 'user')
+                  const preview = firstUser ? firstUser.content.slice(0, 60) + (firstUser.content.length > 60 ? '...' : '') : 'Conversa sem mensagens'
+                  const date = sess[0]?.created_at ? new Date(sess[0].created_at).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' }) : ''
+                  const msgCount = sess.filter(m => m.role === 'user').length
+                  return (
+                    <button
+                      key={idx}
+                      onClick={() => {
+                        setCoachMessages(sess.map(m => ({ role: m.role, content: m.content })))
+                        setCoachSessionsOpen(false)
+                        if (project?.id) localStorage.setItem(`coach_session_${project.id}`, String(idx))
+                      }}
+                      style={{ display: 'block', width: '100%', textAlign: 'left', background: 'var(--color-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: 10, padding: '10px 13px', marginBottom: 6, cursor: 'pointer', fontFamily: 'inherit', transition: 'border-color 0.15s' }}
+                      onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--color-primary)'}
+                      onMouseLeave={e => e.currentTarget.style.borderColor = colors.border}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 3 }}>
+                        <span style={{ fontSize: 12, fontWeight: 700, color: colors.text }}>{date}</span>
+                        <span style={{ fontSize: 10, color: colors.muted }}>{msgCount} {msgCount === 1 ? 'msg' : 'msgs'}</span>
+                      </div>
+                      <div style={{ fontSize: 12, color: colors.muted, lineHeight: 1.4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{preview}</div>
+                    </button>
+                  )
+                })}
+                {coachSessions.length === 0 && <div style={{ textAlign: 'center', color: colors.muted, fontSize: 13, padding: 20 }}>Sem conversas anteriores.</div>}
+              </div>
+            )}
+
             {/* Messages */}
             <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12, padding: '16px 18px' }}>
-              {coachShowHistory ? (() => {
-                const clearedAt = project?.id ? localStorage.getItem(`coach_cleared_${project.id}`) : null
-                const history = clearedAt ? coachAllMessages.filter(m => m.created_at <= clearedAt) : coachAllMessages
-                if (!history.length) return <div style={{ textAlign: 'center', color: colors.muted, fontSize: 13, padding: 20 }}>Sem conversas anteriores.</div>
-                let lastDate = ''
-                return history.map((m, i) => {
-                  const d = m.created_at?.slice(0, 10) || ''
-                  const showDate = d !== lastDate
-                  lastDate = d
-                  return (<div key={i}>
-                    {showDate && <div style={{ textAlign: 'center', fontSize: 10, color: colors.muted, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', padding: '8px 0 4px' }}>{new Date(d).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short', year: 'numeric' })}</div>}
-                    <div style={{
-                      alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start',
-                      maxWidth: '87%',
-                      background: m.role === 'user' ? 'var(--color-primary)' : 'var(--color-bg-alt)',
-                      border: m.role === 'user' ? 'none' : `1px solid ${colors.border}`,
-                      borderRadius: m.role === 'user' ? '14px 14px 4px 14px' : '14px 14px 14px 4px',
-                      padding: '10px 14px', fontSize: 12.5, opacity: 0.75,
-                      color: m.role === 'user' ? '#fff' : colors.text, lineHeight: 1.6,
-                    }}>{m.role === 'assistant' ? renderMd(m.content) : m.content}</div>
-                  </div>)
-                })
-              })() : (<>
               {coachMessages.length === 0 && (() => {
                 const emptyD = []
                 const weakD = []
@@ -8561,7 +8590,6 @@ export default function ProjectPage() {
                 </div>
               )}
               <div ref={coachBottomRef} />
-              </>)}
             </div>
 
             {/* Input */}
