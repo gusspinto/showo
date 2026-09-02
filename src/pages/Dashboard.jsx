@@ -64,6 +64,7 @@ import StudentDashboard from './StudentDashboard'
 import TeacherEmptyState from '../components/TeacherEmptyState'
 import SegmentedTabs from '../components/SegmentedTabs'
 import AreaChart from '../components/AreaChart'
+import StudentRoster from '../components/StudentRoster'
 
 /* ══════════════════════════════════════════════════════════════════════════
    Helpers
@@ -76,6 +77,22 @@ function getScoreColor(score) {
   if (score >= 51) return 'var(--color-info)'
   if (score >= 31) return 'var(--color-warning)'
   return 'var(--color-error)'
+}
+
+/* % dos campos-chave de um projeto que estão preenchidos (mesma fórmula
+   da TurmaPage). */
+function projectCompletude(p) {
+  if (!p) return 0
+  const checks = [
+    !!(p.goal || p.problem),
+    !!p.solution,
+    !!p.technologies,
+    !!p.features,
+    !!p.results,
+    !!(p.linkedin_url || p.github_url || p.portfolio_url),
+    !!p.cover_url,
+  ]
+  return Math.round((checks.filter(Boolean).length / checks.length) * 100)
 }
 
 function getDisplayName(user) {
@@ -840,6 +857,7 @@ export default function Dashboard() {
   const [resubmitted, setResubmitted] = useState([])
   const [totalMembers, setTotalMembers] = useState(0)
   const [weeklyActivity, setWeeklyActivity] = useState([])
+  const [roster, setRoster] = useState([]) // [{ user_id, name, avatar_url, className, project, completude, lastActivity, status }]
   const [studentTurmas, setStudentTurmas] = useState([])
   const [loadingStudentTurmas, setLoadingStudentTurmas] = useState(true)
   const [profNotifs, setProfNotifs] = useState([])
@@ -1027,13 +1045,23 @@ export default function Dashboard() {
     if (!user || profile?.role !== 'professor') return
     async function loadTurmas() {
       const { data: cls } = await supabase.from('classes').select('id, name, subject, code, academic_year, created_at').eq('teacher_id', user.id).order('created_at', { ascending: false })
-      if (!cls?.length) { setTurmas([]); setNeedsReview([]); setFlaggedForRevision([]); setResubmitted([]); setTotalMembers(0); setWeeklyActivity([]); return }
+      if (!cls?.length) { setTurmas([]); setNeedsReview([]); setFlaggedForRevision([]); setResubmitted([]); setTotalMembers(0); setWeeklyActivity([]); setRoster([]); return }
 
       const [{ data: cp }, { data: members }] = await Promise.all([
         supabase.from('class_projects').select('class_id, project_id').in('class_id', cls.map(c => c.id)),
         supabase.from('class_members').select('class_id, user_id').in('class_id', cls.map(c => c.id)),
       ])
       setTotalMembers(new Set((members || []).map(m => m.user_id)).size)
+
+      // Perfis dos membros (para a grelha de alunos)
+      const memberIds = [...new Set((members || []).map(m => m.user_id))]
+      const classNameByMember = {}
+      ;(members || []).forEach(m => { const c = cls.find(x => x.id === m.class_id); if (c) classNameByMember[m.user_id] = c.name })
+      let memberProfiles = []
+      if (memberIds.length) {
+        const { data: mp } = await supabase.from('profiles').select('id, full_name, username, avatar_url').in('id', memberIds)
+        memberProfiles = mp || []
+      }
 
       const counts = {}; const classProjects = {}
       cp?.forEach(r => { counts[r.class_id] = (counts[r.class_id] || 0) + 1; if (!classProjects[r.class_id]) classProjects[r.class_id] = []; classProjects[r.class_id].push(r.project_id) })
@@ -1043,14 +1071,18 @@ export default function Dashboard() {
       const classNameByProject = {}
       Object.entries(classProjects).forEach(([classId, ids]) => { const cls_ = cls.find(c => c.id === classId); ids.forEach(pid => { classNameByProject[pid] = cls_?.name }) })
 
+      let projsForRoster = []
+      let reviewedIdsForRoster = new Set()
       if (allProjectIds.length) {
         const [{ data: projDetails }, { data: myFeedback }] = await Promise.all([
-          supabase.from('projects').select('id, name, slug, creator_name, score, created_at, defense_date, review_status').in('id', allProjectIds),
+          supabase.from('projects').select('id, name, slug, creator_name, score, created_at, updated_at, defense_date, review_status, user_id, goal, problem, solution, technologies, features, results, linkedin_url, github_url, portfolio_url, cover_url').in('id', allProjectIds),
           supabase.from('teacher_feedback').select('project_id').eq('teacher_id', user.id).in('project_id', allProjectIds),
         ])
         const projs = projDetails || []
+        projsForRoster = projs
         projs.forEach(p => { scoreMap[p.id] = p.score })
         const reviewedIds = new Set((myFeedback || []).map(f => f.project_id))
+        reviewedIdsForRoster = reviewedIds
         setNeedsReview(projs.filter(p => !reviewedIds.has(p.id)).map(p => ({ ...p, className: classNameByProject[p.id] })))
         setFlaggedForRevision(projs.filter(p => p.review_status === 'needs_revision').map(p => ({ ...p, className: classNameByProject[p.id] })))
         setResubmitted(projs.filter(p => p.review_status === 'resubmitted').map(p => ({ ...p, className: classNameByProject[p.id] })))
@@ -1069,6 +1101,36 @@ export default function Dashboard() {
       } else {
         setNeedsReview([]); setRecentActivity([]); setUpcomingDefenses([]); setFlaggedForRevision([]); setResubmitted([]); setWeeklyActivity([])
       }
+
+      // ── Grelha de alunos ──
+      const projByUser = {}
+      projsForRoster.forEach(p => { if (p.user_id) projByUser[p.user_id] = p })
+      const nowMs = Date.now()
+      const roster = memberProfiles.map(mp => {
+        const project = projByUser[mp.id] || null
+        const completude = projectCompletude(project)
+        const lastActivity = project ? new Date(project.updated_at || project.created_at).getTime() : null
+        const daysSince = lastActivity != null ? Math.floor((nowMs - lastActivity) / 86400000) : null
+        let status
+        if (!project) status = 'no_project'
+        else if (!reviewedIdsForRoster.has(project.id) && (project.review_status === 'resubmitted' || completude >= 60)) status = 'needs_review'
+        else if (daysSince != null && daysSince >= 14) status = 'stalled'
+        else if (daysSince != null && daysSince >= 7) status = 'slowing'
+        else status = 'on_track'
+        return {
+          user_id: mp.id,
+          name: mp.full_name || mp.username || 'Aluno',
+          avatar_url: mp.avatar_url,
+          className: classNameByMember[mp.id],
+          project,
+          completude,
+          daysSince,
+          status,
+        }
+      })
+      const statusRank = { needs_review: 0, stalled: 1, slowing: 2, no_project: 3, on_track: 4 }
+      roster.sort((a, b) => statusRank[a.status] - statusRank[b.status] || a.name.localeCompare(b.name))
+      setRoster(roster)
 
       const memberCounts = {}; members?.forEach(m => { memberCounts[m.class_id] = (memberCounts[m.class_id] || 0) + 1 })
       setTurmas(cls.map(c => {
@@ -1329,6 +1391,19 @@ export default function Dashboard() {
                       </div>
                     )}
                   </Card>
+                )}
+
+                {roster.length > 0 && (
+                  <div className="dash-section" style={{ marginBottom: 'var(--sp-5)' }}>
+                    <div className="dash-sec-header">
+                      <div className="dash-sec-label"><Users size={13} /> Alunos <span className="dash-sec-count">{roster.length}</span></div>
+                    </div>
+                    <StudentRoster
+                      students={roster}
+                      showClass={turmas.length > 1}
+                      onOpenProject={slug => navigate(`/projeto/${slug}`)}
+                    />
+                  </div>
                 )}
 
                 <div className="dash-section">
