@@ -1075,7 +1075,7 @@ export default function Dashboard() {
       let reviewedIdsForRoster = new Set()
       if (allProjectIds.length) {
         const [{ data: projDetails }, { data: myFeedback }] = await Promise.all([
-          supabase.from('projects').select('id, name, slug, creator_name, score, created_at, updated_at, defense_date, review_status, user_id, goal, problem, solution, technologies, features, results, linkedin_url, github_url, portfolio_url, cover_url').in('id', allProjectIds),
+          supabase.from('projects').select('id, name, slug, creator_name, score, created_at, defense_date, review_status, review_status_updated_at, user_id, goal, problem, solution, technologies, features, results, linkedin_url, github_url, portfolio_url, cover_url').in('id', allProjectIds),
           supabase.from('teacher_feedback').select('project_id').eq('teacher_id', user.id).in('project_id', allProjectIds),
         ])
         const projs = projDetails || []
@@ -1117,8 +1117,13 @@ export default function Dashboard() {
           || (mp.full_name ? projByName[mp.full_name.trim().toLowerCase()] : null)
           || null
         const completude = projectCompletude(project)
-        const lastActivity = project ? new Date(project.updated_at || project.created_at).getTime() : null
-        const daysSince = lastActivity != null ? Math.floor((nowMs - lastActivity) / 86400000) : null
+        const lastActivity = project
+          ? Math.max(
+              new Date(project.created_at || 0).getTime(),
+              project.review_status_updated_at ? new Date(project.review_status_updated_at).getTime() : 0,
+            )
+          : null
+        const daysSince = lastActivity ? Math.floor((nowMs - lastActivity) / 86400000) : null
         let status
         if (!project) status = 'no_project'
         else if (!reviewedIdsForRoster.has(project.id) && (project.review_status === 'resubmitted' || completude >= 60)) status = 'needs_review'
