@@ -7190,17 +7190,32 @@ export default function ProjectPage() {
             </div>
             {/* Messages */}
             <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12, padding: '16px 14px', paddingBottom: 'calc(16px + env(safe-area-inset-bottom, 0px))' }}>
-              {coachMessages.length === 0 && (
+              {coachMessages.length === 0 && (() => {
+                const empty = []
+                const weak = []
+                const FIELD_LABELS = { goal: 'objetivo', problem: 'problema', solution: 'solução', target_audience: 'público-alvo', features: 'funcionalidades', technologies: 'tecnologias', challenges: 'desafios', results: 'resultados', learnings: 'aprendizagens' }
+                for (const [k, label] of Object.entries(FIELD_LABELS)) {
+                  const v = (project[k] || '').trim()
+                  if (!v) empty.push(label)
+                  else if (v.length < 30) weak.push(label)
+                }
+                const suggestions = []
+                if (empty.length) suggestions.push(`Tenho ${empty.length === 1 ? 'o campo' : 'os campos'} ${empty.slice(0, 2).join(' e ')} ${empty.length === 1 ? 'vazio' : 'vazios'}. Ajuda-me a preencher.`)
+                if (weak.length) suggestions.push(`A secção de ${weak[0]} está curta. Podes ajudar-me a desenvolvê-la?`)
+                if (suggestions.length < 3) suggestions.push('O que está mais fraco no meu projeto?')
+                if (suggestions.length < 3) suggestions.push('Escreve-me um texto para a secção de resultados.')
+                const greetingDetail = empty.length > 0
+                  ? ` Vi que tens ${empty.length} ${empty.length === 1 ? 'campo vazio' : 'campos vazios'}${weak.length ? ` e ${weak.length} ${weak.length === 1 ? 'secção curta' : 'secções curtas'}` : ''}. Posso ajudar-te a preencher cada um.`
+                  : weak.length > 0
+                  ? ` Tens ${weak.length} ${weak.length === 1 ? 'secção que podia estar mais desenvolvida' : 'secções que podiam estar mais desenvolvidas'}. Vamos melhorá-las?`
+                  : ' Posso ajudar-te a tornar cada secção mais convincente para um júri ou recrutador.'
+                return (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                   <div style={{ background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 14, padding: '14px 16px', fontSize: 13.5, color: colors.text, lineHeight: 1.6 }}>
-                    Olá! Sou o teu assistente para melhorar o <strong>{project.name}</strong>. Posso ajudar-te a tornar cada secção mais convincente para um júri ou recrutador. Em que queres trabalhar hoje?
+                    Olá! Sou o teu assistente para melhorar o <strong>{project.name}</strong>.{greetingDetail}
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-                    {[
-                      'O que está mais fraco no meu projeto?',
-                      'Como posso melhorar a secção do problema?',
-                      'O meu público-alvo está bem definido?',
-                    ].map(q => (
+                    {suggestions.slice(0, 3).map(q => (
                       <button
                         key={q}
                         onClick={() => { setCoachInput(q); setTimeout(() => document.getElementById('coach-input')?.focus(), 50) }}
@@ -7209,7 +7224,7 @@ export default function ProjectPage() {
                     ))}
                   </div>
                 </div>
-              )}
+                )})()}
               {coachMessages.map((m, i) => (
                 <div key={i} style={{
                   alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start',
@@ -8406,18 +8421,33 @@ export default function ProjectPage() {
 
             {/* Messages */}
             <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12, padding: '16px 18px' }}>
-              {coachMessages.length === 0 && (
+              {coachMessages.length === 0 && (() => {
+                const emptyD = []
+                const weakD = []
+                const FIELD_LABELS_D = { goal: 'objetivo', problem: 'problema', solution: 'solução', target_audience: 'público-alvo', features: 'funcionalidades', technologies: 'tecnologias', challenges: 'desafios', results: 'resultados', learnings: 'aprendizagens' }
+                for (const [k, label] of Object.entries(FIELD_LABELS_D)) {
+                  const v = (project[k] || '').trim()
+                  if (!v) emptyD.push(label)
+                  else if (v.length < 30) weakD.push(label)
+                }
+                const suggestionsD = []
+                if (emptyD.length) suggestionsD.push(`Tenho ${emptyD.length === 1 ? 'o campo' : 'os campos'} ${emptyD.slice(0, 2).join(' e ')} ${emptyD.length === 1 ? 'vazio' : 'vazios'}. Ajuda-me a preencher.`)
+                if (weakD.length) suggestionsD.push(`A secção de ${weakD[0]} está curta. Podes ajudar-me a desenvolvê-la?`)
+                if (suggestionsD.length < 3) suggestionsD.push('O que está mais fraco no meu projeto?')
+                if (suggestionsD.length < 3) suggestionsD.push('Como me preparo para a defesa?')
+                const greetingD = emptyD.length > 0
+                  ? ` Vi que tens ${emptyD.length} ${emptyD.length === 1 ? 'campo vazio' : 'campos vazios'}${weakD.length ? ` e ${weakD.length} ${weakD.length === 1 ? 'secção curta' : 'secções curtas'}` : ''}. Posso ajudar-te a preencher cada um.`
+                  : weakD.length > 0
+                  ? ` Tens ${weakD.length} ${weakD.length === 1 ? 'secção que podia estar mais desenvolvida' : 'secções que podiam estar mais desenvolvidas'}. Vamos melhorá-las?`
+                  : ' Posso ajudar-te a melhorar cada secção, pensar na estrutura, ou preparar a apresentação.'
+                return (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                   <div style={{ background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 12, padding: '14px 16px', fontSize: 13, color: colors.text, lineHeight: 1.6 }}>
                     <span style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--color-primary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>Assistente IA</span>
-                    Olá! Sou o teu assistente para o <strong>{project.name}</strong>. Posso ajudar-te a melhorar cada secção, pensar na estrutura, ou preparar a apresentação. Em que queres trabalhar?
+                    Olá! Sou o teu assistente para o <strong>{project.name}</strong>.{greetingD}
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    {[
-                      'O que está mais fraco no meu projeto?',
-                      'Como posso melhorar a secção do problema?',
-                      'Como me preparo para a defesa?',
-                    ].map(q => (
+                    {suggestionsD.slice(0, 3).map(q => (
                       <button
                         key={q}
                         onClick={() => { setCoachInput(q); setTimeout(() => document.getElementById('coach-input-desktop')?.focus(), 50) }}
@@ -8428,7 +8458,7 @@ export default function ProjectPage() {
                     ))}
                   </div>
                 </div>
-              )}
+                )})()}
               {coachMessages.map((m, i) => (
                 <div key={i} style={{
                   alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start',
