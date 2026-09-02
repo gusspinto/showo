@@ -139,7 +139,6 @@ function TurmaCard({ turma, navigate }) {
             <span style={{ color: 'var(--color-text-secondary)', fontWeight: 700, letterSpacing: 1 }}>{turma.code}</span>
             {turma.member_count != null && <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}><Users size={10} />{turma.member_count} aluno{turma.member_count !== 1 ? 's' : ''}</span>}
             {turma.project_count != null && <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}><Folder size={10} />{turma.project_count} projeto{turma.project_count !== 1 ? 's' : ''}</span>}
-            {turma.avg_score != null && <span style={{ color: getScoreColor(turma.avg_score), fontWeight: 700 }}>⌀ {turma.avg_score}</span>}
           </div>
         </div>
         <ChevronRight size={16} color="var(--color-text-tertiary)" />
@@ -1282,11 +1281,10 @@ export default function Dashboard() {
           <>
             {/* Stats */}
             {turmas.length > 0 && (
-              <div className="dash-section" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 'var(--sp-3)', marginBottom: 'var(--sp-5)' }}>
+              <div className="dash-section" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--sp-3)', marginBottom: 'var(--sp-5)' }}>
                 {[
                   { label: 'Alunos', value: totalMembers },
                   { label: 'Projetos', value: turmas.reduce((s, t) => s + (t.project_count || 0), 0) },
-                  { label: 'Score médio', value: (() => { const ws = turmas.filter(t => t.avg_score != null); return ws.length ? Math.round(ws.reduce((s, t) => s + t.avg_score, 0) / ws.length) : '—' })() },
                   { label: 'Por rever', value: needsReview.length, accent: needsReview.length > 0 },
                 ].map(stat => (
                   <Card key={stat.label} padding="md" style={stat.accent ? { borderColor: 'var(--color-error)' } : undefined}>
@@ -1445,7 +1443,6 @@ export default function Dashboard() {
                           iconBg="var(--color-success-subtle)" iconColor="var(--color-success)"
                           title={p.name}
                           subtitle={`${p.creator_name || 'Aluno'}${p.className ? ` · ${p.className}` : ''} · ${timeAgoLabel(p.created_at)}`}
-                          rightContent={p.score != null ? <Badge variant={p.score >= 71 ? 'success' : p.score >= 40 ? 'warning' : 'error'}>{p.score}</Badge> : undefined}
                         />
                       ))}
                     </Card>
