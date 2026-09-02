@@ -85,6 +85,9 @@ export default function ColorPicker({ value, onChange, onClose }) {
   }
 
   const hueColor = hsvToHex(h, 100, 100)
+  // Mantém o thumb sempre inteiro dentro da área — sem isto encosta ao canto
+  // e fica meio cortado por cima do fundo do painel.
+  const inset = (pct, px = 7) => `calc(${pct}% + ${((50 - pct) / 50) * px}px)`
 
   return (
     <div className="cpk" ref={rootRef} role="dialog" aria-label="Escolher cor personalizada">
@@ -94,11 +97,11 @@ export default function ColorPicker({ value, onChange, onClose }) {
         style={{ backgroundImage: `linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, ${hueColor})` }}
         onMouseDown={e => startDrag('square', e)}
       >
-        <div className="cpk-square-thumb" style={{ left: `${s}%`, top: `${100 - v}%` }} />
+        <div className="cpk-square-thumb" style={{ left: inset(s), top: inset(100 - v) }} />
       </div>
 
       <div className="cpk-hue" ref={hueRef} onMouseDown={e => startDrag('hue', e)}>
-        <div className="cpk-hue-thumb" style={{ left: `${(h / 360) * 100}%` }} />
+        <div className="cpk-hue-thumb" style={{ left: inset((h / 360) * 100) }} />
       </div>
 
       <div className="cpk-row">
