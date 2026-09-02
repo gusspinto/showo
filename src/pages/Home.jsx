@@ -173,20 +173,23 @@ export default function Home() {
     if (!email.trim() || authLoading) return
     setAuthError('')
     setAuthLoading(true)
-    const { data: exists, error: checkErr } = await supabase.rpc('check_email_exists', { p_email: email.trim() })
+    const { data: methods, error: checkErr } = await supabase.rpc('check_email_auth_methods', { p_email: email.trim() })
     setAuthLoading(false)
     if (checkErr) {
-      // check_email_exists (024) limita a 5 pedidos por IP por hora — de
-      // propósito, para não virar um oráculo de "que emails existem". Um
-      // "erro de ligação" para isto era enganador: não é a rede, é o
-      // limite. Mesmo texto que o Login.jsx já usa para o mesmo caso.
+      // check_email_* (024/087) limita os pedidos por IP — de propósito,
+      // para não virar um oráculo de "que emails existem". Um "erro de
+      // ligação" para isto era enganador: não é a rede, é o limite.
       setAuthError('Demasiadas tentativas. Aguarda um pouco e tenta novamente.')
       return
     }
-    if (exists) {
-      setHeroAuthStep('password')
-    } else {
+    if (!methods?.exists) {
       navigate(`/register?email=${encodeURIComponent(email.trim())}`)
+    } else if (!methods.has_password && methods.has_google) {
+      // Conta só-Google: não tem palavra-passe, o signInWithPassword ia
+      // falhar sempre. Mandamos para o botão do Google.
+      setHeroAuthStep('google-only')
+    } else {
+      setHeroAuthStep('password')
     }
   }
 
@@ -196,7 +199,7 @@ export default function Home() {
     setNotConfirmed(false)
     setAuthLoading(true)
 
-    const emailExistsPromise = supabase.rpc('check_email_exists', { p_email: email.trim() })
+    const methodsPromise = supabase.rpc('check_email_auth_methods', { p_email: email.trim() })
     const { error: err } = await supabase.auth.signInWithPassword({ email: email.trim(), password })
     setAuthLoading(false)
 
@@ -212,9 +215,11 @@ export default function Home() {
       return
     }
 
-    const { data: emailExists } = await emailExistsPromise
-    if (!emailExists) {
+    const { data: methods } = await methodsPromise
+    if (!methods?.exists) {
       setAuthError('Esta conta não existe.')
+    } else if (!methods.has_password && methods.has_google) {
+      setHeroAuthStep('google-only')
     } else {
       setAuthError('Palavra-passe incorreta.')
     }
@@ -277,7 +282,23 @@ export default function Home() {
 
             <div className="home-start-divider"><span>ou</span></div>
 
-            {heroAuthStep === 'email' ? (
+            {heroAuthStep === 'google-only' ? (
+              <div className="home-start-form">
+                <p className="home-start-email-echo">{email}</p>
+                <p className="home-start-note">
+                  Esta conta foi criada com o Google. Entra com o Google acima, ou{' '}
+                  <Link to="/recuperar-password" className="home-start-note-link">define uma palavra-passe</Link>{' '}
+                  para também poderes entrar por aqui.
+                </p>
+                <button
+                  type="button"
+                  className="home-start-back"
+                  onClick={() => { setHeroAuthStep('email'); setAuthError(''); setPassword('') }}
+                >
+                  Usar outro email
+                </button>
+              </div>
+            ) : heroAuthStep === 'email' ? (
               <form onSubmit={handleContinueWithEmail} className="home-start-form">
                 <input
                   type="email"
