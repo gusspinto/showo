@@ -4404,6 +4404,7 @@ export default function ProjectPage() {
   const tabActive = (id) => MOBILE_TAB_GROUP[id] === mobileTab
   const [coachMessages, setCoachMessages] = useState([])
   const [coachAllMessages, setCoachAllMessages] = useState([])
+  const [coachSessionId, setCoachSessionId] = useState(null)
   const [coachInput, setCoachInput] = useState('')
   const [coachLoading, setCoachLoading] = useState(false)
   const [coachOpen, setCoachOpen] = useState(false)
@@ -4412,21 +4413,13 @@ export default function ProjectPage() {
 
   const coachSessions = useMemo(() => {
     if (!coachAllMessages.length) return []
-    const sessions = []
-    let current = []
-    for (let i = 0; i < coachAllMessages.length; i++) {
-      const m = coachAllMessages[i]
-      if (current.length && m.created_at && current[current.length - 1].created_at) {
-        const gap = new Date(m.created_at) - new Date(current[current.length - 1].created_at)
-        if (gap > 60 * 60 * 1000) {
-          sessions.push(current)
-          current = []
-        }
-      }
-      current.push(m)
+    const map = new Map()
+    for (const m of coachAllMessages) {
+      const sid = m.session_id || 'default'
+      if (!map.has(sid)) map.set(sid, [])
+      map.get(sid).push(m)
     }
-    if (current.length) sessions.push(current)
-    return sessions
+    return Array.from(map.entries()).map(([sid, msgs]) => ({ id: sid, messages: msgs }))
   }, [coachAllMessages])
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [generatingNarrative, setGeneratingNarrative] = useState(false)
@@ -4547,28 +4540,24 @@ export default function ProjectPage() {
     let cancelled = false
     supabase
       .from('coach_messages')
-      .select('role, content, created_at')
+      .select('role, content, created_at, session_id')
       .eq('project_id', project.id)
       .eq('user_id', user.id)
       .order('created_at', { ascending: true })
       .limit(200)
       .then(({ data }) => {
         if (cancelled || !data?.length) return
-        const all = data.map(m => ({ role: m.role, content: m.content, created_at: m.created_at }))
+        const all = data.map(m => ({ role: m.role, content: m.content, created_at: m.created_at, session_id: m.session_id }))
         setCoachAllMessages(all)
-        const activeIdx = localStorage.getItem(`coach_session_${project.id}`)
-        if (activeIdx === 'new') {
+        const savedSid = localStorage.getItem(`coach_session_${project.id}`)
+        if (savedSid === 'new') {
           setCoachMessages([])
+          setCoachSessionId(null)
         } else {
-          // Group into sessions to find which one to show
-          const sess = []; let cur = []
-          for (let i = 0; i < all.length; i++) {
-            if (cur.length && all[i].created_at && cur[cur.length - 1].created_at && new Date(all[i].created_at) - new Date(cur[cur.length - 1].created_at) > 3600000) { sess.push(cur); cur = [] }
-            cur.push(all[i])
-          }
-          if (cur.length) sess.push(cur)
-          const target = activeIdx != null ? sess[Number(activeIdx)] : sess[sess.length - 1]
-          setCoachMessages((target || []).map(m => ({ role: m.role, content: m.content })))
+          const lastSid = savedSid || all[all.length - 1]?.session_id
+          const sessionMsgs = all.filter(m => m.session_id === lastSid)
+          setCoachMessages(sessionMsgs.map(m => ({ role: m.role, content: m.content })))
+          setCoachSessionId(lastSid)
         }
       })
     return () => { cancelled = true }
@@ -4592,12 +4581,17 @@ export default function ProjectPage() {
       consumeAI('coach')
       const now = new Date().toISOString()
       setCoachMessages(prev => [...prev, { role: 'assistant', content: reply }])
-      setCoachAllMessages(prev => [...prev, { role: 'user', content: msg, created_at: now }, { role: 'assistant', content: reply, created_at: now }])
       setTimeout(() => coachBottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
+      const sid = coachSessionId || crypto.randomUUID()
+      if (!coachSessionId) {
+        setCoachSessionId(sid)
+        if (project?.id) localStorage.setItem(`coach_session_${project.id}`, sid)
+      }
+      setCoachAllMessages(prev => [...prev, { role: 'user', content: msg, created_at: now, session_id: sid }, { role: 'assistant', content: reply, created_at: now, session_id: sid }])
       if (user?.id && project?.id) {
         supabase.from('coach_messages').insert([
-          { project_id: project.id, user_id: user.id, role: 'user', content: msg },
-          { project_id: project.id, user_id: user.id, role: 'assistant', content: reply },
+          { project_id: project.id, user_id: user.id, role: 'user', content: msg, session_id: sid },
+          { project_id: project.id, user_id: user.id, role: 'assistant', content: reply, session_id: sid },
         ])
       }
     } catch (err) {
@@ -7232,7 +7226,7 @@ export default function ProjectPage() {
                     <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="1.5" rx=".75" fill="currentColor"/><rect x="2" y="7.25" width="12" height="1.5" rx=".75" fill="currentColor"/><rect x="2" y="11.5" width="12" height="1.5" rx=".75" fill="currentColor"/></svg>
                   </button>
                 )}
-                <button onClick={() => { setCoachMessages([]); setCoachSessionsOpen(false); if (project?.id) localStorage.setItem(`coach_session_${project.id}`, 'new') }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 6, borderRadius: 6 }} title="Nova conversa">
+                <button onClick={() => { setCoachMessages([]); setCoachSessionId(null); setCoachSessionsOpen(false); if (project?.id) localStorage.setItem(`coach_session_${project.id}`, 'new') }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 6, borderRadius: 6 }} title="Nova conversa">
                   <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
                 </button>
               </div>
@@ -7241,13 +7235,13 @@ export default function ProjectPage() {
             {coachSessionsOpen && (
               <div style={{ position: 'absolute', top: 60, left: 0, right: 0, bottom: 0, zIndex: 10, background: 'var(--color-bg)', overflowY: 'auto', padding: '8px 14px' }}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: colors.muted, textTransform: 'uppercase', letterSpacing: '0.06em', padding: '8px 4px 12px' }}>Conversas anteriores</div>
-                {coachSessions.map((sess, idx) => {
-                  const firstUserM = sess.find(m => m.role === 'user')
+                {coachSessions.map((sess) => {
+                  const firstUserM = sess.messages.find(m => m.role === 'user')
                   const previewM = firstUserM ? firstUserM.content.slice(0, 55) + (firstUserM.content.length > 55 ? '...' : '') : 'Conversa'
-                  const dateM = sess[0]?.created_at ? new Date(sess[0].created_at).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' }) : ''
-                  const cntM = sess.filter(m => m.role === 'user').length
+                  const dateM = sess.messages[0]?.created_at ? new Date(sess.messages[0].created_at).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' }) : ''
+                  const cntM = sess.messages.filter(m => m.role === 'user').length
                   return (
-                    <button key={idx} onClick={() => { setCoachMessages(sess.map(m => ({ role: m.role, content: m.content }))); setCoachSessionsOpen(false); if (project?.id) localStorage.setItem(`coach_session_${project.id}`, String(idx)) }}
+                    <button key={sess.id} onClick={() => { setCoachMessages(sess.messages.map(m => ({ role: m.role, content: m.content }))); setCoachSessionId(sess.id); setCoachSessionsOpen(false); if (project?.id) localStorage.setItem(`coach_session_${project.id}`, sess.id) }}
                       style={{ display: 'block', width: '100%', textAlign: 'left', background: 'var(--color-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: 10, padding: '11px 14px', marginBottom: 6, cursor: 'pointer', fontFamily: 'inherit' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 3 }}>
                         <span style={{ fontSize: 13, fontWeight: 700, color: colors.text }}>{dateM}</span>
@@ -8484,7 +8478,7 @@ export default function ProjectPage() {
                 </button>
               )}
               <button
-                onClick={() => { setCoachMessages([]); setCoachSessionsOpen(false); if (project?.id) localStorage.setItem(`coach_session_${project.id}`, 'new') }}
+                onClick={() => { setCoachMessages([]); setCoachSessionId(null); setCoachSessionsOpen(false); if (project?.id) localStorage.setItem(`coach_session_${project.id}`, 'new') }}
                 style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 5, borderRadius: 6 }}
                 title="Nova conversa"
               >
@@ -8501,18 +8495,19 @@ export default function ProjectPage() {
             {coachSessionsOpen && (
               <div style={{ position: 'absolute', top: 58, left: 0, right: 0, bottom: 0, zIndex: 10, background: 'var(--color-surface)', overflowY: 'auto', padding: '8px 12px' }}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: colors.muted, textTransform: 'uppercase', letterSpacing: '0.06em', padding: '8px 6px 12px' }}>Conversas anteriores</div>
-                {coachSessions.map((sess, idx) => {
-                  const firstUser = sess.find(m => m.role === 'user')
+                {coachSessions.map((sess) => {
+                  const firstUser = sess.messages.find(m => m.role === 'user')
                   const preview = firstUser ? firstUser.content.slice(0, 60) + (firstUser.content.length > 60 ? '...' : '') : 'Conversa sem mensagens'
-                  const date = sess[0]?.created_at ? new Date(sess[0].created_at).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' }) : ''
-                  const msgCount = sess.filter(m => m.role === 'user').length
+                  const date = sess.messages[0]?.created_at ? new Date(sess.messages[0].created_at).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' }) : ''
+                  const msgCount = sess.messages.filter(m => m.role === 'user').length
                   return (
                     <button
-                      key={idx}
+                      key={sess.id}
                       onClick={() => {
-                        setCoachMessages(sess.map(m => ({ role: m.role, content: m.content })))
+                        setCoachMessages(sess.messages.map(m => ({ role: m.role, content: m.content })))
+                        setCoachSessionId(sess.id)
                         setCoachSessionsOpen(false)
-                        if (project?.id) localStorage.setItem(`coach_session_${project.id}`, String(idx))
+                        if (project?.id) localStorage.setItem(`coach_session_${project.id}`, sess.id)
                       }}
                       style={{ display: 'block', width: '100%', textAlign: 'left', background: 'var(--color-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: 10, padding: '10px 13px', marginBottom: 6, cursor: 'pointer', fontFamily: 'inherit', transition: 'border-color 0.15s' }}
                       onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--color-primary)'}
