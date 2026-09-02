@@ -61,7 +61,7 @@ import CalendarSyncModal from '../components/dashboard/CalendarSyncModal'
 import '../components/dashboard/MonthCalendar.css'
 import './Dashboard.css'
 import StudentDashboard from './StudentDashboard'
-import TeacherEmptyPreview from '../components/TeacherEmptyPreview'
+import TeacherEmptyState from '../components/TeacherEmptyState'
 import SegmentedTabs from '../components/SegmentedTabs'
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -168,7 +168,7 @@ function CreateTurmaModal({ onClose, onCreated }) {
     const { data, error: err } = await supabase
       .from('classes')
       .insert({ name: name.trim(), subject: subject.trim() || null, code, teacher_id: user.id, teacher_name: teacherName, academic_year: academicYear })
-      .select().single()
+      .select('id, name, subject, code, teacher_id, teacher_name, academic_year, created_at').single()
     setSaving(false)
     if (err) { setError(err.message); return }
     onCreated(data); onClose()
@@ -1273,7 +1273,7 @@ export default function Dashboard() {
         })()}
 
         {/* ══════════════════════ TEACHER DASHBOARD ══════════════════════ */}
-        {isTeacher && turmas.length === 0 && <TeacherEmptyPreview onCreate={() => setShowCreateTurma(true)} />}
+        {isTeacher && turmas.length === 0 && <TeacherEmptyState onCreate={() => setShowCreateTurma(true)} />}
         {isTeacher && turmas.length > 0 && (
           <>
             {/* Stats */}
