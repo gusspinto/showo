@@ -146,6 +146,21 @@
   transition: border-color 0.15s, background 0.15s;
 }
 .home-start-input::placeholder { color: rgba(255,255,255,0.4); }
+
+/* Campo de palavra-passe com botão de ver/esconder */
+.home-start-pw { position: relative; }
+.home-start-pw .home-start-input { padding-right: 48px; }
+.home-start-pw-toggle {
+  position: absolute; top: 50%; right: 6px; transform: translateY(-50%);
+  display: flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px; padding: 0;
+  border: none; background: transparent; cursor: pointer;
+  color: rgba(255,255,255,0.5);
+  border-radius: var(--radius-sm, 8px);
+  transition: color 0.15s, background 0.15s;
+}
+.home-start-pw-toggle:hover { color: #fff; background: rgba(255,255,255,0.08); }
+.home-start-pw-toggle:focus-visible { outline: 2px solid rgba(255,255,255,0.5); outline-offset: 1px; }
 .home-start-input:focus { border-color: rgba(255,255,255,0.35); background: rgba(255,255,255,0.09); }
 .home-start-input:-webkit-autofill,
 .home-start-input:-webkit-autofill:hover,

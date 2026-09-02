@@ -5,6 +5,7 @@ import { DocumentTextIcon as FileText } from '@solar-icons/react/bold/document-t
 import { CupStarIcon as Trophy } from '@solar-icons/react/bold/cup-star'
 import { ShareIcon as Share2 } from '@solar-icons/react/bold/share'
 import { EyeIcon as Eye } from '@solar-icons/react/bold/eye'
+import { EyeClosedIcon as EyeOff } from '@solar-icons/react/bold/eye-closed'
 import { RefreshCircleIcon as RefreshCw } from '@solar-icons/react/bold/refresh-circle'
 import { Navbar } from '../components/Navbar'
 import { supabase } from '../lib/supabase'
@@ -81,6 +82,7 @@ export default function Home() {
   const { user } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [authLoading, setAuthLoading] = useState(false)
   const [authError, setAuthError] = useState('')
   // "Email não confirmado" precisa de mais do que uma frase — precisa de um
@@ -297,16 +299,28 @@ export default function Home() {
             ) : (
               <form onSubmit={handleLogin} className="home-start-form">
                 <p className="home-start-email-echo">{email}</p>
-                <input
-                  type="password"
-                  className="home-start-input"
-                  placeholder="Palavra-passe"
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  required
-                  autoFocus
-                  autoComplete="current-password"
-                />
+                <div className="home-start-pw">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    className="home-start-input"
+                    placeholder="Palavra-passe"
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    required
+                    autoFocus
+                    autoComplete="current-password"
+                  />
+                  <button
+                    type="button"
+                    className="home-start-pw-toggle"
+                    onClick={() => setShowPassword(v => !v)}
+                    aria-label={showPassword ? 'Esconder palavra-passe' : 'Mostrar palavra-passe'}
+                    aria-pressed={showPassword}
+                    tabIndex={-1}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
                 {authError && <p className="home-start-error">{authError}</p>}
                 {notConfirmed && (
                   <div className="home-start-confirm">
