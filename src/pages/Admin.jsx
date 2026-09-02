@@ -1144,10 +1144,16 @@ function OrgsTab() {
 function InvitesTab({ codes, loading, onGenerate, generating, onToggleActive }) {
   const [label, setLabel] = useState('')
   const [maxUses, setMaxUses] = useState('') // empty = ilimitado
+  const [orgId, setOrgId] = useState('')
+  const [orgs, setOrgs] = useState([])
   const [justCreated, setJustCreated] = useState(null)
   const [copied, setCopied] = useState(null)
   const [expanded, setExpanded] = useState(null)
   const [togglingId, setTogglingId] = useState(null)
+
+  useEffect(() => {
+    supabase.from('organizations').select('id, name').order('name').then(({ data }) => setOrgs(data ?? []))
+  }, [])
 
   async function handleToggle(c) {
     setTogglingId(c.id)
@@ -1156,8 +1162,8 @@ function InvitesTab({ codes, loading, onGenerate, generating, onToggleActive }) 
   }
 
   async function handleGenerate() {
-    const code = await onGenerate(label, maxUses.trim() ? parseInt(maxUses, 10) : null)
-    if (code) { setJustCreated(code); setLabel(''); setMaxUses('') }
+    const code = await onGenerate(label, maxUses.trim() ? parseInt(maxUses, 10) : null, orgId || null)
+    if (code) { setJustCreated(code); setLabel(''); setMaxUses(''); setOrgId('') }
   }
 
   function copy(code) {
@@ -1174,12 +1180,19 @@ function InvitesTab({ codes, loading, onGenerate, generating, onToggleActive }) 
           Por defeito, o código é reutilizável. Dá para partilhar um único código com uma escola inteira e cada professor regista-se com ele.
           Define um limite de usos só se quiseres um código para uma pessoa em concreto.
         </p>
-        <div style={{ display: 'flex', gap: 10 }}>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
           <input
             value={label} onChange={e => setLabel(e.target.value)}
             placeholder="Nota (ex: Escola Secundária de...)"
-            style={{ flex: 1, background: C.bgAlt, border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 14px', color: C.text, fontSize: 13, fontFamily: 'inherit', outline: 'none' }}
+            style={{ flex: 1, minWidth: 180, background: C.bgAlt, border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 14px', color: C.text, fontSize: 13, fontFamily: 'inherit', outline: 'none' }}
           />
+          <select
+            value={orgId} onChange={e => setOrgId(e.target.value)}
+            style={{ width: 200, background: C.bgAlt, border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 14px', color: C.text, fontSize: 13, fontFamily: 'inherit', outline: 'none', cursor: 'pointer' }}
+          >
+            <option value="">Sem escola</option>
+            {orgs.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
+          </select>
           <input
             value={maxUses} onChange={e => setMaxUses(e.target.value.replace(/\D/g, ''))}
             placeholder="Nº máx. usos (vazio = ilimitado)"
@@ -1223,6 +1236,7 @@ function InvitesTab({ codes, loading, onGenerate, generating, onToggleActive }) 
                     {c.label && <div style={{ fontSize: 12, color: C.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.label}</div>}
                     <div style={{ fontSize: 11, color: C.subtle }}>
                       Criado {new Date(c.created_at).toLocaleDateString('pt-PT')} · {c.max_uses == null ? 'ilimitado' : `limite de ${c.max_uses}`}
+                      {c.organizations?.name && <> · <span style={{ color: C.blue }}>🏫 {c.organizations.name}</span></>}
                     </div>
                   </div>
                   <button onClick={() => copy(c.code)} title="Copiar" style={{ background: 'none', border: 'none', color: C.muted, cursor: 'pointer', display: 'flex', flexShrink: 0 }}>
@@ -1380,7 +1394,7 @@ export default function Admin() {
   const loadCodes = useCallback(async () => {
     setCodesLoading(true)
     const [codesRes, redemptionsRes] = await Promise.all([
-      supabase.from('professor_invite_codes').select('*').order('created_at', { ascending: false }),
+      supabase.from('professor_invite_codes').select('*, organizations(name)').order('created_at', { ascending: false }),
       supabase.from('professor_invite_redemptions').select('code_id, user_id, redeemed_at').order('redeemed_at', { ascending: false }),
     ])
     if (codesRes.error) showToast('Erro ao carregar códigos: ' + codesRes.error.message)
@@ -1412,9 +1426,9 @@ export default function Admin() {
     if (isAdmin && tab === 'invites' && !codesLoaded && !codesLoading) loadCodes()
   }, [isAdmin, tab, codesLoaded, codesLoading, loadCodes])
 
-  async function handleGenerateCode(label, maxUses) {
+  async function handleGenerateCode(label, maxUses, orgId) {
     setGeneratingCode(true)
-    const { data, error } = await supabase.rpc('create_professor_invite_code', { p_label: label || null, p_max_uses: maxUses })
+    const { data, error } = await supabase.rpc('create_professor_invite_code', { p_label: label || null, p_max_uses: maxUses, p_org_id: orgId || null })
     setGeneratingCode(false)
     if (error) { showToast('Erro ao gerar código: ' + error.message); return null }
     loadCodes()
