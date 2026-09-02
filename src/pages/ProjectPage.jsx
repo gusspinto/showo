@@ -7221,7 +7221,7 @@ export default function ProjectPage() {
                 <div style={{ fontSize: 12, color: colors.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{project.name}</div>
               </div>
               <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexShrink: 0 }}>
-                {coachSessions.length > 1 && (
+                {coachSessions.length >= 1 && (
                   <button onClick={() => setCoachSessionsOpen(v => !v)} style={{ background: coachSessionsOpen ? 'var(--color-primary-subtle)' : 'none', border: 'none', cursor: 'pointer', color: coachSessionsOpen ? colors.blue : colors.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 6, borderRadius: 6 }} title="Conversas">
                     <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="1.5" rx=".75" fill="currentColor"/><rect x="2" y="7.25" width="12" height="1.5" rx=".75" fill="currentColor"/><rect x="2" y="11.5" width="12" height="1.5" rx=".75" fill="currentColor"/></svg>
                   </button>
@@ -8468,7 +8468,7 @@ export default function ProjectPage() {
                 <div style={{ fontSize: 13, fontWeight: 700, color: colors.text }}>Assistente IA</div>
                 <div style={{ fontSize: 11, color: colors.muted, display: 'flex', alignItems: 'center', gap: 6 }}>Tutor do teu projeto <AiUsageBadge feature="coach" compact /></div>
               </div>
-              {coachSessions.length > 1 && (
+              {coachSessions.length >= 1 && (
                 <button
                   onClick={() => setCoachSessionsOpen(v => !v)}
                   style={{ background: coachSessionsOpen ? 'var(--color-primary-subtle)' : 'none', border: 'none', cursor: 'pointer', color: coachSessionsOpen ? colors.blue : colors.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 5, borderRadius: 6, transition: 'all 0.15s' }}
