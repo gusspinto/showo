@@ -1033,6 +1033,11 @@ function OrgsTab() {
   const [plan, setPlan] = useState('build')
   const [creating, setCreating] = useState(false)
   const [createMsg, setCreateMsg] = useState(null)
+  const [editing, setEditing] = useState(null)
+  const [editName, setEditName] = useState('')
+  const [editDomain, setEditDomain] = useState('')
+  const [editPlan, setEditPlan] = useState('build')
+  const [saving, setSaving] = useState(false)
 
   const fieldStyle = {
     background: 'var(--color-bg)', border: '1px solid var(--color-border)',
@@ -1063,6 +1068,33 @@ function OrgsTab() {
     setName(''); setDomain('')
     const { data: fresh } = await supabase.from('organizations').select('*').order('created_at', { ascending: false })
     if (fresh) setOrgs(fresh)
+  }
+
+  async function refreshOrgs() {
+    const { data: fresh } = await supabase.from('organizations').select('*').order('created_at', { ascending: false })
+    if (fresh) setOrgs(fresh)
+  }
+
+  function startEdit(o) {
+    setEditing(o.id)
+    setEditName(o.name)
+    setEditDomain(o.email_domain || '')
+    setEditPlan(o.plan)
+  }
+
+  async function saveEdit() {
+    if (!editName.trim()) return
+    setSaving(true)
+    const updates = {
+      name: editName.trim(),
+      email_domain: editDomain.trim() ? editDomain.trim().toLowerCase().replace(/^@/, '') : null,
+      plan: editPlan,
+    }
+    const { error } = await supabase.from('organizations').update(updates).eq('id', editing)
+    setSaving(false)
+    if (error) { setCreateMsg({ ok: false, text: 'Erro ao guardar: ' + error.message }); return }
+    setEditing(null)
+    refreshOrgs()
   }
 
   return (
@@ -1117,20 +1149,43 @@ function OrgsTab() {
           <p style={{ fontSize: 13, color: C.muted }}>Nenhuma escola registada ainda.</p>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {orgs.map(o => (
+            {orgs.map(o => editing === o.id ? (
+              <div key={o.id} style={{
+                background: C.card, border: `1px solid ${C.blue}`, borderRadius: 10,
+                padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 10,
+              }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                  <input value={editName} onChange={e => setEditName(e.target.value)} placeholder="Nome" style={fieldStyle} />
+                  <input value={editDomain} onChange={e => setEditDomain(e.target.value)} placeholder="Domínio (opcional)" style={fieldStyle} />
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <select value={editPlan} onChange={e => setEditPlan(e.target.value)} style={{ ...fieldStyle, width: 'auto', paddingRight: 28 }}>
+                    <option value="build">Build</option>
+                    <option value="launch">Launch</option>
+                  </select>
+                  <button onClick={saveEdit} disabled={saving} style={{ background: C.blue, color: '#fff', border: 'none', borderRadius: 8, padding: '7px 16px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+                    {saving ? 'A guardar…' : 'Guardar'}
+                  </button>
+                  <button onClick={() => setEditing(null)} style={{ background: 'none', border: 'none', color: C.muted, cursor: 'pointer', fontSize: 12, fontFamily: 'inherit' }}>Cancelar</button>
+                </div>
+              </div>
+            ) : (
               <div key={o.id} style={{
                 background: C.card, border: `1px solid ${C.border}`, borderRadius: 10,
                 padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               }}>
-                <div>
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{o.name}</div>
                   <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>{o.email_domain ? `@${o.email_domain}` : 'Sem domínio · entrada por código de turma'}</div>
                 </div>
-                <span style={{
-                  padding: '3px 10px', borderRadius: 99, fontSize: 12, fontWeight: 700,
-                  background: PLAN_COLORS[o.plan] + '22', color: PLAN_COLORS[o.plan],
-                  border: `1px solid ${PLAN_COLORS[o.plan]}44`,
-                }}>{PLAN_LABELS[o.plan] ?? o.plan}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{
+                    padding: '3px 10px', borderRadius: 99, fontSize: 12, fontWeight: 700,
+                    background: PLAN_COLORS[o.plan] + '22', color: PLAN_COLORS[o.plan],
+                    border: `1px solid ${PLAN_COLORS[o.plan]}44`,
+                  }}>{PLAN_LABELS[o.plan] ?? o.plan}</span>
+                  <button onClick={() => startEdit(o)} style={{ background: 'none', border: 'none', color: C.blue, cursor: 'pointer', fontSize: 12, fontWeight: 600, fontFamily: 'inherit' }}>Editar</button>
+                </div>
               </div>
             ))}
           </div>
