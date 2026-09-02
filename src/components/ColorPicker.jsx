@@ -24,11 +24,11 @@ export default function ColorPicker({ value, onChange, onClose }) {
   }, [])
 
   useEffect(() => {
-    function onDocClick(e) {
+    function onDocDown(e) {
       if (rootRef.current && !rootRef.current.contains(e.target)) onClose?.()
     }
-    document.addEventListener('mousedown', onDocClick)
-    return () => document.removeEventListener('mousedown', onDocClick)
+    document.addEventListener('pointerdown', onDocDown)
+    return () => document.removeEventListener('pointerdown', onDocDown)
   }, [onClose])
 
   function commit(nh, ns, nv) {
@@ -60,8 +60,9 @@ export default function ColorPicker({ value, onChange, onClose }) {
     dragging.current = kind
     if (kind === 'square') pickFromSquare(e.clientX, e.clientY)
     else pickFromHue(e.clientX)
-    window.addEventListener('mousemove', onMove)
-    window.addEventListener('mouseup', onUp)
+    window.addEventListener('pointermove', onMove)
+    window.addEventListener('pointerup', onUp)
+    window.addEventListener('pointercancel', onUp)
   }
   function onMove(e) {
     if (dragging.current === 'square') pickFromSquare(e.clientX, e.clientY)
@@ -69,8 +70,9 @@ export default function ColorPicker({ value, onChange, onClose }) {
   }
   function onUp() {
     dragging.current = null
-    window.removeEventListener('mousemove', onMove)
-    window.removeEventListener('mouseup', onUp)
+    window.removeEventListener('pointermove', onMove)
+    window.removeEventListener('pointerup', onUp)
+    window.removeEventListener('pointercancel', onUp)
   }
 
   function onHexChange(e) {
@@ -90,17 +92,19 @@ export default function ColorPicker({ value, onChange, onClose }) {
   const inset = (pct, px = 7) => `calc(${pct}% + ${((50 - pct) / 50) * px}px)`
 
   return (
+    <>
+    <div className="cpk-scrim" onPointerDown={onClose} aria-hidden="true" />
     <div className="cpk" ref={rootRef} role="dialog" aria-label="Escolher cor personalizada">
       <div
         className="cpk-square"
         ref={sqRef}
         style={{ backgroundImage: `linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, ${hueColor})` }}
-        onMouseDown={e => startDrag('square', e)}
+        onPointerDown={e => startDrag('square', e)}
       >
         <div className="cpk-square-thumb" style={{ left: inset(s), top: inset(100 - v) }} />
       </div>
 
-      <div className="cpk-hue" ref={hueRef} onMouseDown={e => startDrag('hue', e)}>
+      <div className="cpk-hue" ref={hueRef} onPointerDown={e => startDrag('hue', e)}>
         <div className="cpk-hue-thumb" style={{ left: inset((h / 360) * 100) }} />
       </div>
 
@@ -113,9 +117,13 @@ export default function ColorPicker({ value, onChange, onClose }) {
           onChange={onHexChange}
           maxLength={6}
           spellCheck={false}
+          autoCapitalize="characters"
+          autoCorrect="off"
+          inputMode="text"
           aria-label="Código hexadecimal"
         />
       </div>
     </div>
+    </>
   )
 }
