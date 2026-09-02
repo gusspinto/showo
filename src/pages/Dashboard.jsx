@@ -126,8 +126,8 @@ function TurmaCard({ turma, navigate }) {
   return (
     <Card hoverable onClick={() => navigate(`/turma/${turma.code}`)} padding="md">
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)' }}>
-        <div style={{ width: 36, height: 36, borderRadius: 'var(--radius-md)', background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <Users2 size={16} color="var(--color-primary)" />
+        <div style={{ width: 36, height: 36, borderRadius: 'var(--radius-md)', background: 'var(--color-surface-hover)', border: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <Users2 size={16} color="var(--color-text-secondary)" />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -136,7 +136,7 @@ function TurmaCard({ turma, navigate }) {
           </div>
           {turma.subject && <div style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--text-sm)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{turma.subject}</div>}
           <div style={{ color: 'var(--color-text-tertiary)', fontSize: 'var(--text-xs)', marginTop: 4, display: 'flex', gap: 10, alignItems: 'center' }}>
-            <span style={{ color: 'var(--color-primary)', fontWeight: 700, letterSpacing: 1 }}>{turma.code}</span>
+            <span style={{ color: 'var(--color-text-secondary)', fontWeight: 700, letterSpacing: 1 }}>{turma.code}</span>
             {turma.member_count != null && <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}><Users size={10} />{turma.member_count} aluno{turma.member_count !== 1 ? 's' : ''}</span>}
             {turma.project_count != null && <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}><Folder size={10} />{turma.project_count} projeto{turma.project_count !== 1 ? 's' : ''}</span>}
             {turma.avg_score != null && <span style={{ color: getScoreColor(turma.avg_score), fontWeight: 700 }}>⌀ {turma.avg_score}</span>}
@@ -1290,7 +1290,7 @@ export default function Dashboard() {
                   { label: 'Por rever', value: needsReview.length, accent: needsReview.length > 0 },
                 ].map(stat => (
                   <Card key={stat.label} padding="md" style={stat.accent ? { borderColor: 'var(--color-error)' } : undefined}>
-                    <div style={{ fontSize: 'var(--text-2xl)', fontWeight: 700, fontFamily: 'var(--font-heading)', color: stat.accent ? 'var(--color-error)' : 'var(--color-primary)', lineHeight: 1 }}>{stat.value}</div>
+                    <div style={{ fontSize: 'var(--text-2xl)', fontWeight: 700, fontFamily: 'var(--font-heading)', color: stat.accent ? 'var(--color-error)' : 'var(--color-text)', lineHeight: 1 }}>{stat.value}</div>
                     <div style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', fontWeight: 600, marginTop: 6 }}>{stat.label}</div>
                   </Card>
                 ))}
@@ -1298,7 +1298,7 @@ export default function Dashboard() {
             )}
 
             {/* Segmento: Progresso / A rever */}
-            <div className="dash-section" style={{ marginBottom: 'var(--sp-5)' }}>
+            <div className="dash-section" style={{ display: 'flex', justifyContent: 'center', marginBottom: 'var(--sp-5)' }}>
               <SegmentedTabs
                 value={teacherTab}
                 onChange={setTeacherTab}
@@ -1325,9 +1325,9 @@ export default function Dashboard() {
                       data={weeklyActivity.map(w => ({ label: w.label, value: w.count }))}
                     />
                     {!profile?.monthly_report_opt_in && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 'var(--sp-3)', paddingTop: 'var(--sp-3)', borderTop: '1px solid var(--color-border)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginTop: 'var(--sp-4)', paddingTop: 'var(--sp-3)', borderTop: '1px solid var(--color-border)' }}>
                         <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)' }}>Recebe este resumo por email todos os meses.</span>
-                        <Button size="sm" variant="ghost" onClick={() => navigate('/settings')}>Ativar relatório mensal</Button>
+                        <Button size="sm" variant="secondary" onClick={() => navigate('/settings')}>Ativar</Button>
                       </div>
                     )}
                   </Card>
@@ -1336,7 +1336,7 @@ export default function Dashboard() {
                 <div className="dash-section">
                   <div className="dash-sec-header">
                     <div className="dash-sec-label"><Users2 size={13} /> Turmas <span className="dash-sec-count">{turmas.length}</span></div>
-                    <Button size="sm" variant="ghost" iconRight={<ChevronRight size={13} />} onClick={() => navigate('/turmas')}>Gerir</Button>
+                    <Button size="sm" variant="secondary" iconRight={<ChevronRight size={13} />} onClick={() => navigate('/turmas')}>Gerir</Button>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
                     {turmas.map(t => <TurmaCard key={t.id} turma={t} navigate={navigate} />)}

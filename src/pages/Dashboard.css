@@ -236,7 +236,7 @@
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  color: var(--color-success);
+  color: var(--color-text-tertiary);
   margin-bottom: var(--sp-2);
 }
 .dash-hero-greeting {
