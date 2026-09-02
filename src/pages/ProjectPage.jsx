@@ -4403,9 +4403,11 @@ export default function ProjectPage() {
   }
   const tabActive = (id) => MOBILE_TAB_GROUP[id] === mobileTab
   const [coachMessages, setCoachMessages] = useState([])
+  const [coachAllMessages, setCoachAllMessages] = useState([])
   const [coachInput, setCoachInput] = useState('')
   const [coachLoading, setCoachLoading] = useState(false)
   const [coachOpen, setCoachOpen] = useState(false)
+  const [coachShowHistory, setCoachShowHistory] = useState(false)
   const coachBottomRef = useRef(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [generatingNarrative, setGeneratingNarrative] = useState(false)
@@ -4526,13 +4528,18 @@ export default function ProjectPage() {
     let cancelled = false
     supabase
       .from('coach_messages')
-      .select('role, content')
+      .select('role, content, created_at')
       .eq('project_id', project.id)
       .eq('user_id', user.id)
       .order('created_at', { ascending: true })
-      .limit(60)
+      .limit(200)
       .then(({ data }) => {
-        if (!cancelled && data?.length) setCoachMessages(data.map(m => ({ role: m.role, content: m.content })))
+        if (cancelled || !data?.length) return
+        const all = data.map(m => ({ role: m.role, content: m.content, created_at: m.created_at }))
+        setCoachAllMessages(all)
+        const clearedAt = localStorage.getItem(`coach_cleared_${project.id}`)
+        const visible = clearedAt ? all.filter(m => m.created_at > clearedAt) : all
+        setCoachMessages(visible.map(m => ({ role: m.role, content: m.content })))
       })
     return () => { cancelled = true }
   }, [project?.id, user?.id])
@@ -4553,7 +4560,9 @@ export default function ProjectPage() {
     try {
       const reply = await chatProjectCoach({ project: { ...project, journal: projectJournalEntries, teacher_feedback: teacherFeedback }, messages: coachMessages, message: msg })
       consumeAI('coach')
+      const now = new Date().toISOString()
       setCoachMessages(prev => [...prev, { role: 'assistant', content: reply }])
+      setCoachAllMessages(prev => [...prev, { role: 'user', content: msg, created_at: now }, { role: 'assistant', content: reply, created_at: now }])
       setTimeout(() => coachBottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
       if (user?.id && project?.id) {
         supabase.from('coach_messages').insert([
@@ -7187,9 +7196,43 @@ export default function ProjectPage() {
                 <div style={{ fontSize: 15, fontWeight: 800, color: colors.text, lineHeight: 1.2 }}>Assistente IA</div>
                 <div style={{ fontSize: 12, color: colors.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{project.name}</div>
               </div>
+              <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexShrink: 0 }}>
+                {coachShowHistory ? (
+                  <button onClick={() => setCoachShowHistory(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.blue, fontSize: 12, fontFamily: 'inherit', padding: '4px 8px' }}>Voltar</button>
+                ) : (<>
+                  {coachAllMessages.length > coachMessages.length && (
+                    <button onClick={() => setCoachShowHistory(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.blue, fontSize: 12, fontFamily: 'inherit', padding: '4px 8px' }} title="Histórico">Histórico</button>
+                  )}
+                  {coachMessages.length > 0 && (
+                    <button onClick={() => { if (project?.id) localStorage.setItem(`coach_cleared_${project.id}`, new Date().toISOString()); setCoachMessages([]); setCoachShowHistory(false) }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.muted, fontSize: 12, fontFamily: 'inherit', padding: '4px 8px' }} title="Nova conversa">Nova</button>
+                  )}
+                </>)}
+              </div>
             </div>
             {/* Messages */}
             <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12, padding: '16px 14px', paddingBottom: 'calc(16px + env(safe-area-inset-bottom, 0px))' }}>
+              {coachShowHistory ? (() => {
+                const clearedAtM = project?.id ? localStorage.getItem(`coach_cleared_${project.id}`) : null
+                const historyM = clearedAtM ? coachAllMessages.filter(m => m.created_at <= clearedAtM) : coachAllMessages
+                if (!historyM.length) return <div style={{ textAlign: 'center', color: colors.muted, fontSize: 13, padding: 20 }}>Sem conversas anteriores.</div>
+                let lastDateM = ''
+                return historyM.map((m, i) => {
+                  const dm = m.created_at?.slice(0, 10) || ''
+                  const showDateM = dm !== lastDateM
+                  lastDateM = dm
+                  return (<div key={i}>
+                    {showDateM && <div style={{ textAlign: 'center', fontSize: 10, color: colors.muted, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', padding: '8px 0 4px' }}>{new Date(dm).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short', year: 'numeric' })}</div>}
+                    <div style={{
+                      alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start', maxWidth: '85%',
+                      background: m.role === 'user' ? 'var(--color-primary)' : 'var(--color-bg-alt)',
+                      border: m.role === 'user' ? 'none' : `1px solid ${colors.border}`,
+                      borderRadius: m.role === 'user' ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
+                      padding: '10px 14px', fontSize: 12.5, opacity: 0.75,
+                      color: m.role === 'user' ? '#fff' : colors.text, lineHeight: 1.6,
+                    }}>{m.role === 'assistant' ? renderMd(m.content) : m.content}</div>
+                  </div>)
+                })
+              })() : (<>
               {coachMessages.length === 0 && (() => {
                 const empty = []
                 const weak = []
@@ -7245,6 +7288,7 @@ export default function ProjectPage() {
                 </div>
               )}
               <div ref={coachBottomRef} />
+              </>)}
             </div>
             {/* Input — pinned to the bottom */}
             <form onSubmit={sendCoach} style={{ display: 'flex', gap: 8, padding: '10px 12px calc(10px + env(safe-area-inset-bottom, 0px))', borderTop: `1px solid ${colors.border}`, flexShrink: 0 }}>
@@ -8402,16 +8446,31 @@ export default function ProjectPage() {
                 <div style={{ fontSize: 13, fontWeight: 700, color: colors.text }}>Assistente IA</div>
                 <div style={{ fontSize: 11, color: colors.muted, display: 'flex', alignItems: 'center', gap: 6 }}>Tutor do teu projeto <AiUsageBadge feature="coach" compact /></div>
               </div>
-              {coachMessages.length > 0 && (
+              {coachShowHistory ? (
                 <button
-                  onClick={() => {
-                    setCoachMessages([])
-                    if (user?.id && project?.id) supabase.from('coach_messages').delete().eq('project_id', project.id).eq('user_id', user.id)
-                  }}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.muted, fontSize: 11, fontFamily: 'inherit', padding: '4px 8px', borderRadius: 6 }}
-                  title="Limpar conversa"
-                >Limpar</button>
-              )}
+                  onClick={() => setCoachShowHistory(false)}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.blue, fontSize: 11, fontFamily: 'inherit', padding: '4px 8px', borderRadius: 6 }}
+                >Voltar</button>
+              ) : (<>
+                {coachAllMessages.length > coachMessages.length && (
+                  <button
+                    onClick={() => setCoachShowHistory(true)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.blue, fontSize: 11, fontFamily: 'inherit', padding: '4px 8px', borderRadius: 6 }}
+                    title="Ver conversas anteriores"
+                  >Histórico</button>
+                )}
+                {coachMessages.length > 0 && (
+                  <button
+                    onClick={() => {
+                      if (project?.id) localStorage.setItem(`coach_cleared_${project.id}`, new Date().toISOString())
+                      setCoachMessages([])
+                      setCoachShowHistory(false)
+                    }}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.muted, fontSize: 11, fontFamily: 'inherit', padding: '4px 8px', borderRadius: 6 }}
+                    title="Nova conversa"
+                  >Nova conversa</button>
+                )}
+              </>)}
               <button
                 onClick={() => setCoachOpen(false)}
                 style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 4, borderRadius: 6 }}
@@ -8421,6 +8480,29 @@ export default function ProjectPage() {
 
             {/* Messages */}
             <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12, padding: '16px 18px' }}>
+              {coachShowHistory ? (() => {
+                const clearedAt = project?.id ? localStorage.getItem(`coach_cleared_${project.id}`) : null
+                const history = clearedAt ? coachAllMessages.filter(m => m.created_at <= clearedAt) : coachAllMessages
+                if (!history.length) return <div style={{ textAlign: 'center', color: colors.muted, fontSize: 13, padding: 20 }}>Sem conversas anteriores.</div>
+                let lastDate = ''
+                return history.map((m, i) => {
+                  const d = m.created_at?.slice(0, 10) || ''
+                  const showDate = d !== lastDate
+                  lastDate = d
+                  return (<div key={i}>
+                    {showDate && <div style={{ textAlign: 'center', fontSize: 10, color: colors.muted, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', padding: '8px 0 4px' }}>{new Date(d).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short', year: 'numeric' })}</div>}
+                    <div style={{
+                      alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start',
+                      maxWidth: '87%',
+                      background: m.role === 'user' ? 'var(--color-primary)' : 'var(--color-bg-alt)',
+                      border: m.role === 'user' ? 'none' : `1px solid ${colors.border}`,
+                      borderRadius: m.role === 'user' ? '14px 14px 4px 14px' : '14px 14px 14px 4px',
+                      padding: '10px 14px', fontSize: 12.5, opacity: 0.75,
+                      color: m.role === 'user' ? '#fff' : colors.text, lineHeight: 1.6,
+                    }}>{m.role === 'assistant' ? renderMd(m.content) : m.content}</div>
+                  </div>)
+                })
+              })() : (<>
               {coachMessages.length === 0 && (() => {
                 const emptyD = []
                 const weakD = []
@@ -8479,6 +8561,7 @@ export default function ProjectPage() {
                 </div>
               )}
               <div ref={coachBottomRef} />
+              </>)}
             </div>
 
             {/* Input */}
