@@ -61,6 +61,7 @@ import CalendarSyncModal from '../components/dashboard/CalendarSyncModal'
 import '../components/dashboard/MonthCalendar.css'
 import './Dashboard.css'
 import StudentDashboard from './StudentDashboard'
+import TeacherEmptyPreview from '../components/TeacherEmptyPreview'
 
 /* ══════════════════════════════════════════════════════════════════════════
    Helpers
@@ -1277,7 +1278,10 @@ export default function Dashboard() {
         </div>
 
         {/* ══════════════════════ TEACHER DASHBOARD ══════════════════════ */}
-        {isTeacher && (
+        {isTeacher && turmas.length === 0 && (
+          <TeacherEmptyPreview onCreate={() => setShowCreateTurma(true)} />
+        )}
+        {isTeacher && turmas.length > 0 && (
           <>
             {/* Stats */}
             {turmas.length > 0 && (

@@ -1,0 +1,198 @@
+.tep {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.tep-intro { max-width: 460px; }
+.tep-title {
+  margin: 0 0 6px;
+  font-family: var(--font-heading);
+  font-size: 20px;
+  font-weight: 400;
+  letter-spacing: -0.3px;
+  color: var(--color-text);
+}
+.tep-sub {
+  margin: 0 0 16px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--color-text-secondary);
+}
+
+/* Pilares */
+.tep-pillars {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.tep-pillar {
+  padding: 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg, 12px);
+  background: var(--color-surface);
+}
+.tep-pillar-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-md, 9px);
+  background: var(--color-primary-subtle);
+  color: var(--color-primary);
+  margin-bottom: 10px;
+}
+.tep-pillar-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 3px;
+}
+.tep-pillar-desc {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+
+/* Preview estático */
+.tep-preview-wrap {
+  position: relative;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg, 12px);
+  padding: 16px;
+  overflow: hidden;
+  max-height: 340px;
+}
+.tep-preview-tag {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 3px 9px;
+}
+.tep-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  filter: saturate(0.75) opacity(0.9);
+  pointer-events: none;
+  user-select: none;
+}
+.tep-preview-fade {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 90px;
+  background: linear-gradient(to bottom, transparent, var(--color-bg));
+  pointer-events: none;
+}
+
+.tep-preview-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+.tep-stat-value {
+  font-size: 22px;
+  font-weight: 700;
+  font-family: var(--font-heading);
+  color: var(--color-primary);
+  line-height: 1;
+}
+.tep-stat-label {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  font-weight: 600;
+  margin-top: 5px;
+}
+
+.tep-preview-chart-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 12px;
+}
+.tep-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 7px;
+  height: 66px;
+}
+.tep-bar-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  height: 100%;
+  justify-content: flex-end;
+}
+.tep-bar-count {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+.tep-bar {
+  width: 100%;
+  max-width: 24px;
+  border-radius: var(--radius-xs, 3px);
+}
+
+.tep-feed-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+}
+.tep-feed-count {
+  background: var(--color-bg-alt, var(--color-surface));
+  border-radius: 999px;
+  padding: 1px 7px;
+  font-size: 10px;
+}
+.tep-feed-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+}
+.tep-feed-item + .tep-feed-item { border-top: 1px solid var(--color-border); }
+.tep-feed-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-warning);
+  flex-shrink: 0;
+}
+.tep-feed-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+.tep-feed-sub {
+  font-size: 11.5px;
+  color: var(--color-text-tertiary);
+  margin-top: 1px;
+}
+
+@media (max-width: 720px) {
+  .tep-pillars { grid-template-columns: 1fr; }
+  .tep-preview-stats { grid-template-columns: repeat(2, 1fr); }
+  .tep-preview-wrap { max-height: 300px; }
+}
