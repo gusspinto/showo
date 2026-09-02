@@ -1257,32 +1257,21 @@ export default function Dashboard() {
         {(() => {
           const dateStr = new Date().toLocaleDateString('pt-PT', { weekday: 'long', day: 'numeric', month: 'long' })
           const roleLabel = { aluno: 'Aluno', professor: 'Professor', recrutador: 'Recrutador', empresa: 'Empresa' }[profile?.role] ?? 'Aluno'
-          const nextStep = !isTeacher ? null
-            : turmas.length === 0 ? { label: 'Criar a primeira turma', action: () => setShowCreateTurma(true) }
-            : totalMembers === 0 ? { label: `Convidar alunos para ${turmas[0]?.name || 'a turma'}`, action: () => navigate(`/turma/${turmas[0]?.code}`) }
-            : null
           return (
             <header className="dash-hero">
               <div className="dash-hero-main">
                 <span className="dash-hero-date">{dateStr}</span>
-                <h1 className="dash-hero-greeting">{greeting}</h1>
-                <div className="dash-hero-meta">
-                  <Badge variant={isTeacher ? 'success' : isRecruiter ? 'accent' : 'primary'}>{roleLabel}</Badge>
-                  <span>{user.email}</span>
-                </div>
+                <h1 className="dash-hero-greeting">
+                  {greeting}
+                  <Badge variant={isTeacher ? 'success' : isRecruiter ? 'accent' : 'primary'} style={{ verticalAlign: 'middle', marginLeft: 12 }}>{roleLabel}</Badge>
+                </h1>
               </div>
-              {nextStep && (
-                <aside className="dash-hero-side">
-                  <span className="dash-hero-eyebrow">Próximos passos</span>
-                  <button className="dash-hero-next" onClick={nextStep.action}>{nextStep.label}</button>
-                </aside>
-              )}
             </header>
           )
         })()}
 
         {/* ══════════════════════ TEACHER DASHBOARD ══════════════════════ */}
-        {isTeacher && turmas.length === 0 && <TeacherEmptyPreview />}
+        {isTeacher && turmas.length === 0 && <TeacherEmptyPreview onCreate={() => setShowCreateTurma(true)} />}
         {isTeacher && turmas.length > 0 && (
           <>
             {/* Stats */}

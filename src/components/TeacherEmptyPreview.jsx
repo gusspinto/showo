@@ -1,12 +1,13 @@
+import { UsersGroupTwoRoundedIcon as Users2 } from '@solar-icons/react/bold/users-group-two-rounded'
 import { ClipboardListIcon as Clipboard } from '@solar-icons/react/bold/clipboard-list'
 import { ChatRoundLineIcon as MessageSquare } from '@solar-icons/react/bold/chat-round-line'
 import { Chart2Icon as BarChart2 } from '@solar-icons/react/bold/chart-2'
-import { Card, SectionLabel } from './ui'
+import { Button, Card, SectionLabel } from './ui'
 import './TeacherEmptyPreview.css'
 
-/* Estado vazio do professor. O CTA "Criar turma" vive no cabeçalho
-   (Próximos passos). Aqui só ficam os três pilares e um preview
-   estático, com dados de exemplo, do dashboard já com uma turma. */
+/* Estado vazio do professor: um CTA para criar a primeira turma, os três
+   pilares, e um preview estático (dados de exemplo) do dashboard já com
+   uma turma. */
 
 const PILLARS = [
   { Icon: Clipboard, label: 'Tarefas' },
@@ -29,11 +30,17 @@ const SAMPLE_FEED = [
   { name: 'Jogo educativo', who: 'Rita M. · 11º A', tag: 'defesa em 4 dias' },
 ]
 
-export default function TeacherEmptyPreview() {
+export default function TeacherEmptyPreview({ onCreate }) {
   const barMax = Math.max(...SAMPLE_BARS)
 
   return (
     <div className="tep">
+      <div className="tep-intro">
+        <h2 className="tep-title">Cria a tua primeira turma</h2>
+        <p className="tep-sub">Gera um código e partilha com os teus alunos.</p>
+        <Button icon={<Users2 size={15} />} onClick={onCreate}>Criar turma</Button>
+      </div>
+
       <div className="tep-pillars">
         {PILLARS.map(({ Icon, label }) => (
           <div key={label} className="tep-pillar">

@@ -1,7 +1,23 @@
 .tep {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
+  margin-top: 4px;
+}
+
+.tep-intro { margin-bottom: 4px; }
+.tep-title {
+  margin: 0 0 6px;
+  font-family: var(--font-heading);
+  font-size: 20px;
+  font-weight: 400;
+  letter-spacing: -0.3px;
+  color: var(--color-text);
+}
+.tep-sub {
+  margin: 0 0 16px;
+  font-size: 13.5px;
+  color: var(--color-text-secondary);
 }
 
 /* Os três pilares — pills discretas, mesmo raio dos cards da app */
