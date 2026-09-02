@@ -1103,11 +1103,19 @@ export default function Dashboard() {
       }
 
       // ── Grelha de alunos ──
+      // Liga projeto → aluno por user_id; recorre ao nome do criador quando
+      // o user_id não bate (projetos antigos, importados, etc.).
       const projByUser = {}
-      projsForRoster.forEach(p => { if (p.user_id) projByUser[p.user_id] = p })
+      const projByName = {}
+      projsForRoster.forEach(p => {
+        if (p.user_id) projByUser[String(p.user_id)] = p
+        if (p.creator_name) projByName[p.creator_name.trim().toLowerCase()] = p
+      })
       const nowMs = Date.now()
       const roster = memberProfiles.map(mp => {
-        const project = projByUser[mp.id] || null
+        const project = projByUser[String(mp.id)]
+          || (mp.full_name ? projByName[mp.full_name.trim().toLowerCase()] : null)
+          || null
         const completude = projectCompletude(project)
         const lastActivity = project ? new Date(project.updated_at || project.created_at).getTime() : null
         const daysSince = lastActivity != null ? Math.floor((nowMs - lastActivity) / 86400000) : null
