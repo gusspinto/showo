@@ -67,7 +67,20 @@ const inputHandlers = {
   },
 }
 
-function Field({ label, children, required, filled }) {
+/* Um link social só conta como "válido" se for mesmo um URL do sítio certo,
+   com um caminho — não "y", nem "linkedin.com" sozinho. Vazio é válido
+   (o campo é opcional). */
+function socialUrlState(value, host) {
+  const s = String(value || '').trim()
+  if (!s) return { empty: true, valid: true, normalized: '' }
+  let u
+  try { u = new URL(/^https?:\/\//i.test(s) ? s : `https://${s}`) } catch { return { empty: false, valid: false, normalized: s } }
+  const hostOk = u.hostname.replace(/^www\./, '').endsWith(host)
+  const pathOk = u.pathname.replace(/\/+$/, '').length > 1
+  return { empty: false, valid: hostOk && pathOk, normalized: u.toString() }
+}
+
+function Field({ label, children, required, filled, error }) {
   return (
     <div style={{ marginBottom: 18 }}>
       <label style={{
@@ -79,6 +92,7 @@ function Field({ label, children, required, filled }) {
         {filled && <Check size={12} color={colors.blue} strokeWidth={3} style={{ marginLeft: 'auto' }} />}
       </label>
       {children}
+      {error && <p style={{ margin: '6px 0 0', fontSize: 12, color: colors.red }}>{error}</p>}
     </div>
   )
 }
@@ -98,6 +112,7 @@ export default function EditProject() {
   const [dirty, setDirty] = useState(false)
   const [activeSection, setActiveSection] = useState('criador')
   const coverInputRef = useRef(null)
+  const originalRef = useRef({})
 
   useEffect(() => {
     async function load() {
@@ -163,6 +178,13 @@ export default function EditProject() {
         tags: data.tags || [],
         visibility: data.visibility || 'public',
       })
+      originalRef.current = {
+        name: data.name || '', area: data.area || '', problem: data.problem || '',
+        solution: data.solution || '', target_audience: data.target_audience || '',
+        features: data.features || '', technologies: data.technologies || '',
+        challenges: data.challenges || '', results: data.results || '',
+        learnings: data.learnings || '', goal: data.goal || '',
+      }
       setLoading(false)
     }
     load()
@@ -206,14 +228,28 @@ export default function EditProject() {
     for (const key of textFields) {
       const v = String(form[key] || '')
       if (containsProfanity(v)) { setError('Linguagem inapropriada detetada. Remove o conteúdo impróprio antes de guardar.'); return }
-      if (looksLikeSpam(v))     { setError('Texto inválido detetado. Escreve conteúdo real nos campos do projeto.'); return }
+      // Só valida "spam" nos campos que o utilizador mexeu — o conteúdo que
+      // já estava lá (ex: gerado pela IA ao importar) não é re-julgado.
+      if (v !== String(originalRef.current[key] ?? '') && looksLikeSpam(v)) {
+        setError('Texto inválido detetado neste campo. Escreve conteúdo real.'); return
+      }
     }
+
+    const li = socialUrlState(form.linkedin_url, 'linkedin.com')
+    const gh = socialUrlState(form.github_url, 'github.com')
+    if (!li.valid) { setError('O LinkedIn tem de ser um link válido (linkedin.com/…) ou ficar vazio.'); return }
+    if (!gh.valid) { setError('O GitHub tem de ser um link válido (github.com/…) ou ficar vazio.'); return }
 
     setSaving(true)
     setError(null)
     try {
       const editToken = !project.user_id ? localStorage.getItem(`edit_token_${project.slug}`) : null
-      const saved = await updateProject(project.id, { ...form, is_pap: form.project_type === 'pap' }, editToken)
+      const saved = await updateProject(project.id, {
+        ...form,
+        linkedin_url: li.empty ? null : li.normalized,
+        github_url: gh.empty ? null : gh.normalized,
+        is_pap: form.project_type === 'pap',
+      }, editToken)
       navigate(`/projeto/${saved.slug}`)
     } catch (err) {
       setError('Erro ao guardar. Tenta novamente.')
@@ -270,19 +306,21 @@ export default function EditProject() {
   const creatorKeys   = ['creator_name', 'course', 'school_year', 'school']
   const creatorFilled = creatorKeys.filter(isFilled).length
   const creatorTotal  = creatorKeys.length
-  const linkKeys      = ['linkedin_url', 'github_url', 'portfolio_url']
-  const linkFilled    = linkKeys.filter(isFilled).length
   const nameFilled    = isFilled('name') ? 1 : 0
   const typeFilled    = (nameFilled + (form.project_type ? 1 : 0))
   const typeTotal     = 2
   const coverFilled   = (form.cover_url && form.cover_url !== '__uploading__') ? 1 : 0
-  const totalFilled   = creatorFilled + linkFilled + typeFilled + coverFilled
-  const totalAll      = creatorTotal + linkKeys.length + typeTotal + 1
+  // LinkedIn/GitHub são opcionais e NÃO contam para a percentagem.
+  const totalFilled   = creatorFilled + typeFilled + coverFilled
+  const totalAll      = creatorTotal + typeTotal + 1
   const pct           = Math.round((totalFilled / totalAll) * 100)
-  const canSave       = !saving && !!form.name?.trim() && !!form.area?.trim()
+
+  const linkedin = socialUrlState(form.linkedin_url, 'linkedin.com')
+  const github   = socialUrlState(form.github_url, 'github.com')
+  const canSave  = !saving && !!form.name?.trim() && !!form.area?.trim() && linkedin.valid && github.valid
 
   const sections = [
-    { id: 'criador',  label: 'Criador',  Icon: User,   filled: creatorFilled + linkFilled, total: creatorTotal + linkKeys.length },
+    { id: 'criador',  label: 'Criador',  Icon: User,   filled: creatorFilled, total: creatorTotal },
     { id: 'tipo',     label: 'Tipo',     Icon: Layers, filled: typeFilled,    total: typeTotal },
     { id: 'imagem',   label: 'Imagem',   Icon: Image,  filled: coverFilled,   total: 1 },
   ]
@@ -441,16 +479,22 @@ export default function EditProject() {
                   <div style={{ marginTop: 20 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 700, color: colors.subtle, marginBottom: 14, textTransform: 'uppercase', letterSpacing: 0.6 }}>
                       <Link2 size={12} /> Links e redes
+                      <span style={{ fontWeight: 600, textTransform: 'none', letterSpacing: 0, color: colors.subtle, opacity: 0.8 }}>(opcional)</span>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                      <Field label="LinkedIn" filled={isFilled('linkedin_url')}>
+                      <Field
+                        label="LinkedIn"
+                        filled={!linkedin.empty && linkedin.valid}
+                        error={!linkedin.valid ? 'Tem de ser um link do linkedin.com/…' : null}
+                      >
                         <input type="url" value={form.linkedin_url} onChange={e => set('linkedin_url', e.target.value)} style={inputStyle} placeholder="https://linkedin.com/in/..." {...inputHandlers} />
                       </Field>
-                      <Field label="GitHub" filled={isFilled('github_url')}>
+                      <Field
+                        label="GitHub"
+                        filled={!github.empty && github.valid}
+                        error={!github.valid ? 'Tem de ser um link do github.com/…' : null}
+                      >
                         <input type="url" value={form.github_url} onChange={e => set('github_url', e.target.value)} style={inputStyle} placeholder="https://github.com/..." {...inputHandlers} />
-                      </Field>
-                      <Field label="Portfólio" filled={isFilled('portfolio_url')}>
-                        <input type="url" value={form.portfolio_url} onChange={e => set('portfolio_url', e.target.value)} style={inputStyle} placeholder="Portfólio ou site pessoal" {...inputHandlers} />
                       </Field>
                     </div>
                   </div>

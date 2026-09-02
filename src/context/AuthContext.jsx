@@ -50,13 +50,25 @@ export function AuthProvider({ children }) {
     }
 
     if (!data) {
-      const { data: created } = await supabase
+      // A linha de perfil é criada no servidor por um trigger (migração 115).
+      // Este INSERT é só uma rede de segurança para contas antigas anteriores
+      // ao trigger. Tem de ser INSERT e não upsert: o upsert vira
+      // INSERT ... ON CONFLICT DO UPDATE, e o Postgres exige UPDATE em `role`
+      // e `id` — que `authenticated` não tem (migração 100) → 403.
+      const PROFILE_COLS = 'id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, linkedin_url, skills, monthly_report_opt_in, area, plan'
+      const { data: created, error: createErr } = await supabase
         .from('profiles')
-        .upsert({ id: uid, full_name: meta.full_name ?? meta.name ?? null, role: 'aluno', company: meta.company ?? null, school: meta.school ?? null, avatar_url: (meta.avatar_url ?? meta.picture ?? '').replace(/=s\d+-c$/, '=s400-c') || null })
-        .select('id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, linkedin_url, skills, monthly_report_opt_in, area, plan')
+        .insert({ id: uid, full_name: meta.full_name ?? meta.name ?? null, role: 'aluno', company: meta.company ?? null, school: meta.school ?? null, avatar_url: (meta.avatar_url ?? meta.picture ?? '').replace(/=s\d+-c$/, '=s400-c') || null })
+        .select(PROFILE_COLS)
         .single()
-      data = created
-      if (data) localStorage.setItem(`showo_needs_role_${uid}`, '1')
+      if (createErr?.code === '23505') {
+        // Corrida com o trigger (ou outra aba) — a linha já existe, relê.
+        const { data: reread } = await supabase.from('profiles').select(PROFILE_COLS).eq('id', uid).single()
+        data = reread
+      } else {
+        data = created
+        if (data) localStorage.setItem(`showo_needs_role_${uid}`, '1')
+      }
     }
 
     // Process pending signup actions stored in user metadata

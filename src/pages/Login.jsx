@@ -113,7 +113,7 @@ export default function Login() {
     // check — the common case (correct credentials) then only waits on
     // signInWithPassword itself, instead of paying for both round trips back
     // to back on every login attempt.
-    const emailExistsPromise = supabase.rpc('check_email_exists', { p_email: email.trim() })
+    const methodsPromise = supabase.rpc('check_email_auth_methods', { p_email: email.trim() })
     const { error: err } = await supabase.auth.signInWithPassword({ email, password })
     setLoading(false)
 
@@ -131,11 +131,13 @@ export default function Login() {
 
     // Wrong password or unknown account — check which, using the result that's
     // already been in flight since the request started.
-    const { data: emailExists, error: emailCheckError } = await emailExistsPromise
+    const { data: methods, error: emailCheckError } = await methodsPromise
     if (emailCheckError) {
       setError('Demasiadas tentativas. Aguarda um pouco e tenta novamente.')
-    } else if (!emailExists) {
+    } else if (!methods?.exists) {
       setError('Esta conta não existe. Verifica o email ou cria uma conta.')
+    } else if (!methods.has_password && methods.has_google) {
+      setError('Esta conta foi criada com o Google. Entra com o Google, ou define uma palavra-passe em "Esqueceste-te da password?".')
     } else {
       setError('Palavra-passe incorreta.')
     }

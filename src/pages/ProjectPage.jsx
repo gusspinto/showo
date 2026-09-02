@@ -24,7 +24,7 @@ import { SquareAcademicCapIcon as GraduationCap } from '@solar-icons/react/bold/
 import { DisketteIcon as Save } from '@solar-icons/react/bold/diskette'
 import { DownloadIcon as Download } from '@solar-icons/react/bold/download'
 import { StarsIcon as Sparkles } from '@solar-icons/react/bold/stars'
-import { FaceScanCircleIcon as Bot } from '@solar-icons/react/bold/face-scan-circle'
+import { BotIcon as Bot } from '@solar-icons/react/bold/bot'
 import { LightbulbIcon as Lightbulb } from '@solar-icons/react/bold/lightbulb'
 import { Pen2Icon as Pencil } from '@solar-icons/react/bold/pen-2'
 import { MagnifierIcon as Search } from '@solar-icons/react/bold/magnifier'
@@ -8298,7 +8298,9 @@ export default function ProjectPage() {
       )}
 
       {/* ── Desktop AI Coach: floating button + slide-in panel ── */}
-      {/* Mobile-only AI FAB — to the left of the feedback button (bottom-right) */}
+      {/* Mobile-only AI FAB — canto inferior direito. O botão de feedback
+          que estava aqui foi para a sidebar, por isso este ancora agora ao
+          canto em vez de flutuar ao lado de nada. */}
       {isOwner && (
         <button
           className="proj-ia-mobile-fab"
@@ -8306,8 +8308,8 @@ export default function ProjectPage() {
           onClick={() => setMobileTab('ia')}
           style={{
             position: 'fixed',
-            bottom: 'calc(18px + env(safe-area-inset-bottom, 0px))',
-            right: 78,
+            bottom: 'calc(16px + env(safe-area-inset-bottom, 0px))',
+            right: 16,
             zIndex: 200,
             width: 46, height: 46, borderRadius: '50%',
             background: 'var(--color-primary)',
@@ -8317,8 +8319,9 @@ export default function ProjectPage() {
             transition: 'all 0.2s',
           }}
           title="Assistente IA"
+          aria-label="Assistente IA"
         >
-          <Bot size={20} color="#fff" />
+          <Bot size={22} color="#fff" />
         </button>
       )}
 
@@ -8330,7 +8333,7 @@ export default function ProjectPage() {
             onClick={() => setCoachOpen(true)}
             className="proj-coach-fab"
             style={{
-              position: 'fixed', bottom: 88, right: 20, zIndex: 200,
+              position: 'fixed', bottom: 20, right: 20, zIndex: 200,
               width: 44, height: 44, borderRadius: '50%',
               background: 'var(--color-primary)',
               border: '2px solid transparent',
@@ -8355,8 +8358,8 @@ export default function ProjectPage() {
           <div
             className="proj-coach-panel"
             style={{
-              position: 'fixed', bottom: 80, right: 20,
-              width: 360, height: 'calc(100dvh - 136px)',
+              position: 'fixed', bottom: 20, right: 20,
+              width: 360, height: 'calc(100dvh - 100px)',
               maxHeight: 560,
               zIndex: 200,
               background: 'var(--color-surface)',

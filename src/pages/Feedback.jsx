@@ -4,7 +4,7 @@ import { CloseIcon as X } from '@solar-icons/react/bold/close'
 import { PlaneIcon as Send } from '@solar-icons/react/bold/plane'
 import { GalleryWideIcon as Image } from '@solar-icons/react/bold/gallery-wide'
 import { RefreshCircleIcon as Loader2 } from '@solar-icons/react/bold/refresh-circle'
-import { CheckCircleIcon as Check } from '@solar-icons/react/bold/check-circle'
+import { BugIcon as Bug } from '@solar-icons/react/bold/bug'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Navbar } from '../components/Navbar'
@@ -31,7 +31,8 @@ import './Feedback.css'
 export default function Feedback() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
+  const firstName = profile?.full_name?.trim().split(/\s+/)[0] || null
 
   const rawFrom = searchParams.get('from')
   const fromPath = rawFrom && rawFrom.startsWith('/') && !rawFrom.startsWith('//') ? rawFrom : null
@@ -39,7 +40,7 @@ export default function Feedback() {
   const [message, setMessage] = useState('')
   const [imageFile, setImageFile] = useState(null)
   const [imagePreview, setImagePreview] = useState(null)
-  const [status, setStatus] = useState('idle') // idle | sending | done | error
+  const [status, setStatus] = useState('idle') // idle | sending | launching | done | error
   const fileRef = useRef(null)
 
   function handleImageChange(e) {
@@ -87,7 +88,10 @@ export default function Feedback() {
       })
 
       if (error) throw error
-      setStatus('done')
+      // Pequeno easter egg: o avião "voa" antes de aparecer o agradecimento
+      // — só quem envia feedback vê isto.
+      setStatus('launching')
+      setTimeout(() => setStatus('done'), 820)
     } catch {
       setStatus('error')
     }
@@ -99,21 +103,19 @@ export default function Feedback() {
       <div className="fbp-wrap">
         {status === 'done' ? (
           <div className="fbp-done">
-            <div className="fbp-done-icon"><Check size={22} /></div>
-            <h1 className="fbp-done-title">Obrigado!</h1>
-            <p className="fbp-done-sub">O teu feedback foi guardado.</p>
+            <div className="fbp-done-bug" aria-hidden="true">
+              <span className="fbp-done-bug-burst" />
+              <Bug size={26} className="fbp-done-bug-icon" />
+            </div>
+            <h1 className="fbp-done-title">Obrigado pelo feedback{firstName ? `, ${firstName}` : ''}!</h1>
+            <p className="fbp-done-sub">Mais um bug esmagado. A tua ajuda fica registada.</p>
             <button className="fbp-submit" onClick={goBack}>Voltar</button>
           </div>
         ) : (
           <>
             <div className="fbp-head">
-              <div>
-                <h1 className="fbp-title">Reportar um problema</h1>
-                <p className="fbp-sub">O que aconteceu? Qual o erro ou a página?</p>
-              </div>
-              <button className="fbp-close" onClick={goBack} aria-label="Cancelar">
-                <X size={18} />
-              </button>
+              <h1 className="fbp-title">Reportar um problema</h1>
+              <p className="fbp-sub">O que aconteceu? Qual o erro ou a página?</p>
             </div>
 
             <form onSubmit={handleSubmit} className="fbp-form">
@@ -155,15 +157,39 @@ export default function Feedback() {
 
               <div className="fbp-actions">
                 <button type="button" className="fbp-cancel" onClick={goBack}>Cancelar</button>
-                <button type="submit" className="fbp-submit" disabled={!message.trim() || status === 'sending'}>
+                <button
+                  type="submit"
+                  className={`fbp-submit${status === 'launching' ? ' fbp-submit--launch' : ''}`}
+                  disabled={!message.trim() || status === 'sending' || status === 'launching'}
+                >
                   {status === 'sending' ? (
                     <><Loader2 size={16} className="fbp-spin" /> A enviar…</>
+                  ) : status === 'launching' ? (
+                    <>
+                      <span className="fbp-plane-fly" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" width="16" height="16">
+                          <path d="M2 11 21 3 15 21 11 13 2 11Z" fill="url(#fbp-plane-grad)" />
+                        </svg>
+                      </span>
+                      Enviado
+                    </>
                   ) : (
                     <><Send size={15} /> Enviar feedback</>
                   )}
                 </button>
               </div>
             </form>
+
+            {/* Gradiente para o avião de papel do easter egg — svg de 0x0, só as defs */}
+            <svg width="0" height="0" style={{ position: 'absolute' }} aria-hidden="true">
+              <defs>
+                <linearGradient id="fbp-plane-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#2478f0" />
+                  <stop offset="55%" stopColor="#db4a3d" />
+                  <stop offset="100%" stopColor="#cc9a1e" />
+                </linearGradient>
+              </defs>
+            </svg>
           </>
         )}
       </div>

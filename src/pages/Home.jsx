@@ -5,6 +5,7 @@ import { DocumentTextIcon as FileText } from '@solar-icons/react/bold/document-t
 import { CupStarIcon as Trophy } from '@solar-icons/react/bold/cup-star'
 import { ShareIcon as Share2 } from '@solar-icons/react/bold/share'
 import { EyeIcon as Eye } from '@solar-icons/react/bold/eye'
+import { EyeClosedIcon as EyeOff } from '@solar-icons/react/bold/eye-closed'
 import { RefreshCircleIcon as RefreshCw } from '@solar-icons/react/bold/refresh-circle'
 import { Navbar } from '../components/Navbar'
 import { supabase } from '../lib/supabase'
@@ -81,6 +82,7 @@ export default function Home() {
   const { user } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [authLoading, setAuthLoading] = useState(false)
   const [authError, setAuthError] = useState('')
   // "Email não confirmado" precisa de mais do que uma frase — precisa de um
@@ -171,20 +173,23 @@ export default function Home() {
     if (!email.trim() || authLoading) return
     setAuthError('')
     setAuthLoading(true)
-    const { data: exists, error: checkErr } = await supabase.rpc('check_email_exists', { p_email: email.trim() })
+    const { data: methods, error: checkErr } = await supabase.rpc('check_email_auth_methods', { p_email: email.trim() })
     setAuthLoading(false)
     if (checkErr) {
-      // check_email_exists (024) limita a 5 pedidos por IP por hora — de
-      // propósito, para não virar um oráculo de "que emails existem". Um
-      // "erro de ligação" para isto era enganador: não é a rede, é o
-      // limite. Mesmo texto que o Login.jsx já usa para o mesmo caso.
+      // check_email_* (024/087) limita os pedidos por IP — de propósito,
+      // para não virar um oráculo de "que emails existem". Um "erro de
+      // ligação" para isto era enganador: não é a rede, é o limite.
       setAuthError('Demasiadas tentativas. Aguarda um pouco e tenta novamente.')
       return
     }
-    if (exists) {
-      setHeroAuthStep('password')
-    } else {
+    if (!methods?.exists) {
       navigate(`/register?email=${encodeURIComponent(email.trim())}`)
+    } else if (!methods.has_password && methods.has_google) {
+      // Conta só-Google: não tem palavra-passe, o signInWithPassword ia
+      // falhar sempre. Mandamos para o botão do Google.
+      setHeroAuthStep('google-only')
+    } else {
+      setHeroAuthStep('password')
     }
   }
 
@@ -194,7 +199,7 @@ export default function Home() {
     setNotConfirmed(false)
     setAuthLoading(true)
 
-    const emailExistsPromise = supabase.rpc('check_email_exists', { p_email: email.trim() })
+    const methodsPromise = supabase.rpc('check_email_auth_methods', { p_email: email.trim() })
     const { error: err } = await supabase.auth.signInWithPassword({ email: email.trim(), password })
     setAuthLoading(false)
 
@@ -210,9 +215,11 @@ export default function Home() {
       return
     }
 
-    const { data: emailExists } = await emailExistsPromise
-    if (!emailExists) {
+    const { data: methods } = await methodsPromise
+    if (!methods?.exists) {
       setAuthError('Esta conta não existe.')
+    } else if (!methods.has_password && methods.has_google) {
+      setHeroAuthStep('google-only')
     } else {
       setAuthError('Palavra-passe incorreta.')
     }
@@ -275,7 +282,23 @@ export default function Home() {
 
             <div className="home-start-divider"><span>ou</span></div>
 
-            {heroAuthStep === 'email' ? (
+            {heroAuthStep === 'google-only' ? (
+              <div className="home-start-form">
+                <p className="home-start-email-echo">{email}</p>
+                <p className="home-start-note">
+                  Esta conta foi criada com o Google. Entra com o Google acima, ou{' '}
+                  <Link to="/recuperar-password" className="home-start-note-link">define uma palavra-passe</Link>{' '}
+                  para também poderes entrar por aqui.
+                </p>
+                <button
+                  type="button"
+                  className="home-start-back"
+                  onClick={() => { setHeroAuthStep('email'); setAuthError(''); setPassword('') }}
+                >
+                  Usar outro email
+                </button>
+              </div>
+            ) : heroAuthStep === 'email' ? (
               <form onSubmit={handleContinueWithEmail} className="home-start-form">
                 <input
                   type="email"
@@ -297,16 +320,28 @@ export default function Home() {
             ) : (
               <form onSubmit={handleLogin} className="home-start-form">
                 <p className="home-start-email-echo">{email}</p>
-                <input
-                  type="password"
-                  className="home-start-input"
-                  placeholder="Palavra-passe"
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  required
-                  autoFocus
-                  autoComplete="current-password"
-                />
+                <div className="home-start-pw">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    className="home-start-input"
+                    placeholder="Palavra-passe"
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    required
+                    autoFocus
+                    autoComplete="current-password"
+                  />
+                  <button
+                    type="button"
+                    className="home-start-pw-toggle"
+                    onClick={() => setShowPassword(v => !v)}
+                    aria-label={showPassword ? 'Esconder palavra-passe' : 'Mostrar palavra-passe'}
+                    aria-pressed={showPassword}
+                    tabIndex={-1}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
                 {authError && <p className="home-start-error">{authError}</p>}
                 {notConfirmed && (
                   <div className="home-start-confirm">
