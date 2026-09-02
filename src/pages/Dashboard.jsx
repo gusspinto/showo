@@ -63,6 +63,7 @@ import './Dashboard.css'
 import StudentDashboard from './StudentDashboard'
 import TeacherEmptyState from '../components/TeacherEmptyState'
 import SegmentedTabs from '../components/SegmentedTabs'
+import AreaChart from '../components/AreaChart'
 
 /* ══════════════════════════════════════════════════════════════════════════
    Helpers
@@ -1313,24 +1314,16 @@ export default function Dashboard() {
               <>
                 {weeklyActivity.some(w => w.count > 0) && (
                   <Card padding="md" style={{ marginBottom: 'var(--sp-5)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 'var(--sp-4)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 'var(--sp-3)' }}>
                       <BarChart2 size={13} color="var(--color-text-tertiary)" />
                       <SectionLabel style={{ marginBottom: 0 }}>Projetos submetidos, últimas 8 semanas</SectionLabel>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, height: 90 }}>
-                      {(() => {
-                        const max = Math.max(1, ...weeklyActivity.map(w => w.count))
-                        return weeklyActivity.map(w => (
-                          <div key={w.label} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, height: '100%', justifyContent: 'flex-end' }}>
-                            <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: w.count > 0 ? 'var(--color-primary)' : 'var(--color-text-tertiary)' }}>{w.count > 0 ? w.count : ''}</span>
-                            <div style={{ width: '100%', maxWidth: 28, height: `${Math.max(4, (w.count / max) * 56)}px`, background: w.count > 0 ? 'var(--color-primary)' : 'var(--color-border)', borderRadius: 'var(--radius-xs)', transition: 'height 0.3s var(--ease-out)' }} />
-                          </div>
-                        ))
-                      })()}
-                    </div>
-                    <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                      {weeklyActivity.map(w => <span key={w.label} style={{ flex: 1, fontSize: 9, color: 'var(--color-text-tertiary)', textAlign: 'center' }}>{w.label}</span>)}
-                    </div>
+                    <AreaChart
+                      height={130}
+                      color="var(--color-primary)"
+                      valueSuffix=" projetos"
+                      data={weeklyActivity.map(w => ({ label: w.label, value: w.count }))}
+                    />
                     {!profile?.monthly_report_opt_in && (
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 'var(--sp-3)', paddingTop: 'var(--sp-3)', borderTop: '1px solid var(--color-border)' }}>
                         <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)' }}>Recebe este resumo por email todos os meses.</span>
