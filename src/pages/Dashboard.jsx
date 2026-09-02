@@ -1258,7 +1258,7 @@ export default function Dashboard() {
           <div>
             <h1 style={{ fontSize: 'clamp(22px, 3vw, 30px)', fontWeight: 400, fontFamily: 'var(--font-heading)', letterSpacing: '-0.4px', lineHeight: 1.15, margin: '0 0 4px', color: 'var(--color-text)' }}>{greeting}</h1>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Badge variant="primary">
+              <Badge variant={isTeacher ? 'success' : isRecruiter ? 'accent' : 'primary'}>
                 {{ aluno: 'Aluno', professor: 'Professor', recrutador: 'Recrutador', empresa: 'Empresa' }[profile?.role] ?? 'Aluno'}
               </Badge>
               <span style={{ color: 'var(--color-text-tertiary)', fontSize: 'var(--text-sm)' }}>{user.email}</span>
@@ -1270,9 +1270,6 @@ export default function Dashboard() {
                 <Button variant="secondary" size="sm" icon={<User size={14} />} onClick={() => navigate(`/u/${profile?.username || user?.id || ''}`)}>Perfil</Button>
                 <Button variant="primary" size="sm" icon={<Plus size={14} />} onClick={() => navigate('/novo')}>Novo projeto</Button>
               </>
-            )}
-            {isTeacher && (
-              <Button variant="secondary" size="sm" icon={<User size={14} />} onClick={() => navigate(`/u/${profile?.username || user?.id || ''}`)}>Perfil</Button>
             )}
           </div>
         </div>

@@ -1,7 +1,8 @@
 .tep {
   display: flex;
   flex-direction: column;
-  gap: 28px;
+  gap: 24px;
+  margin-top: 28px;
 }
 
 .tep-intro { max-width: 460px; }
@@ -15,8 +16,7 @@
 }
 .tep-sub {
   margin: 0 0 16px;
-  font-size: 14px;
-  line-height: 1.55;
+  font-size: 13.5px;
   color: var(--color-text-secondary);
 }
 
@@ -27,7 +27,10 @@
   gap: 12px;
 }
 .tep-pillar {
-  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg, 12px);
   background: var(--color-surface);
@@ -38,21 +41,20 @@
   justify-content: center;
   width: 34px;
   height: 34px;
+  flex-shrink: 0;
   border-radius: var(--radius-md, 9px);
-  background: var(--color-primary-subtle);
-  color: var(--color-primary);
-  margin-bottom: 10px;
+  background: var(--color-success-subtle);
+  color: var(--color-success);
 }
 .tep-pillar-title {
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 700;
   color: var(--color-text);
-  margin-bottom: 3px;
 }
 .tep-pillar-desc {
-  font-size: 12.5px;
-  line-height: 1.5;
-  color: var(--color-text-secondary);
+  font-size: 12px;
+  color: var(--color-text-tertiary);
+  margin-top: 1px;
 }
 
 /* Preview estático */

@@ -10,21 +10,9 @@ import './TeacherEmptyPreview.css'
    (dados de exemplo, sem interação) do dashboard já com uma turma. */
 
 const PILLARS = [
-  {
-    Icon: Clipboard,
-    title: 'Dá tarefas',
-    desc: 'Define tarefas com prazo. Cada aluno marca as suas — vês quem está em dia.',
-  },
-  {
-    Icon: BarChart2,
-    title: 'Acompanha',
-    desc: 'Score, completude e evolução de cada aluno. Quem precisa de atenção salta à vista.',
-  },
-  {
-    Icon: MessageSquare,
-    title: 'Avalia',
-    desc: 'Feedback por secção no projeto, pedir correções e ver quando o aluno reenvia.',
-  },
+  { Icon: Clipboard, title: 'Tarefas', desc: 'Com prazo. Vês quem cumpriu.' },
+  { Icon: BarChart2, title: 'Progresso', desc: 'Score de cada aluno num relance.' },
+  { Icon: MessageSquare, title: 'Avaliação', desc: 'Notas, feedback e correções.' },
 ]
 
 const SAMPLE_STATS = [
@@ -49,18 +37,18 @@ export default function TeacherEmptyPreview({ onCreate }) {
     <div className="tep">
       <div className="tep-intro">
         <h2 className="tep-title">Cria a tua primeira turma</h2>
-        <p className="tep-sub">
-          Gera um código de 6 letras, partilha-o com os alunos e passas a ter tudo num sítio.
-        </p>
+        <p className="tep-sub">Gera um código e partilha com os teus alunos.</p>
         <Button icon={<Users2 size={15} />} onClick={onCreate}>Criar turma</Button>
       </div>
 
       <div className="tep-pillars">
         {PILLARS.map(({ Icon, title, desc }) => (
           <div key={title} className="tep-pillar">
-            <span className="tep-pillar-icon"><Icon size={17} /></span>
-            <div className="tep-pillar-title">{title}</div>
-            <div className="tep-pillar-desc">{desc}</div>
+            <span className="tep-pillar-icon"><Icon size={16} /></span>
+            <div>
+              <div className="tep-pillar-title">{title}</div>
+              <div className="tep-pillar-desc">{desc}</div>
+            </div>
           </div>
         ))}
       </div>
