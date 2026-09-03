@@ -143,6 +143,7 @@ function FeedbackModal({ project, teacherId, onClose }) {
   const [existing, setExisting] = useState([])
   const [saving, setSaving] = useState(false)
   const [editing, setEditing] = useState(null)
+  const [err, setErr] = useState('')
 
   useEffect(() => {
     supabase
@@ -156,24 +157,29 @@ function FeedbackModal({ project, teacherId, onClose }) {
   async function handleSave() {
     if (!comment.trim()) return
     setSaving(true)
+    setErr('')
     if (editing) {
-      await supabase.from('teacher_feedback').update({ comment: comment.trim() }).eq('id', editing)
+      const { error } = await supabase.from('teacher_feedback').update({ comment: comment.trim() }).eq('id', editing)
+      if (error) { setErr('Não foi possível guardar. Tenta de novo.'); setSaving(false); return }
       setExisting(prev => prev.map(f => f.id === editing ? { ...f, comment: comment.trim() } : f))
     } else {
-      const { data } = await supabase.from('teacher_feedback')
+      const { data, error } = await supabase.from('teacher_feedback')
         .upsert({ project_id: project.id, teacher_id: teacherId, field_key: fieldKey, comment: comment.trim() }, { onConflict: 'project_id,teacher_id,field_key' })
         .select().single()
-      if (data) {
-        setExisting(prev => { const idx = prev.findIndex(f => f.field_key === fieldKey); return idx >= 0 ? prev.map((f, i) => i === idx ? data : f) : [...prev, data] })
-        // Notify the student
-        if (project.user_id) {
-          supabase.rpc('create_notification', {
-            p_user_id: project.user_id,
-            p_type: 'TEACHER_FEEDBACK',
-            p_message: `O teu professor deixou feedback no projeto "${project.name}".`,
-            p_project_slug: project.slug,
-          })
-        }
+      if (error || !data) {
+        console.error('teacher_feedback save failed:', error)
+        setErr(error?.message?.includes('row-level security') ? 'Sem permissão para comentar este projeto.' : 'Não foi possível guardar. Tenta de novo.')
+        setSaving(false)
+        return
+      }
+      setExisting(prev => { const idx = prev.findIndex(f => f.field_key === fieldKey); return idx >= 0 ? prev.map((f, i) => i === idx ? data : f) : [...prev, data] })
+      if (project.user_id) {
+        supabase.rpc('create_notification', {
+          p_user_id: project.user_id,
+          p_type: 'TEACHER_FEEDBACK',
+          p_message: `O teu professor deixou feedback no projeto "${project.name}".`,
+          p_project_slug: project.slug,
+        })
       }
     }
     setComment(''); setEditing(null); setSaving(false)
@@ -227,6 +233,7 @@ function FeedbackModal({ project, teacherId, onClose }) {
             rows={3}
             style={{ width: '100%', background: 'var(--color-bg)', border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 12px', color: C.text, fontSize: 13, fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box', outline: 'none' }}
           />
+          {err && <p style={{ margin: '2px 0 0', fontSize: 12, fontWeight: 600, color: 'var(--color-error)' }}>{err}</p>}
           <div style={{ display: 'flex', gap: 8 }}>
             <button onClick={handleSave} disabled={saving || !comment.trim()} style={{ flex: 1, background: 'var(--color-primary)', border: 'none', borderRadius: 8, padding: '10px', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: saving || !comment.trim() ? 0.6 : 1, fontFamily: 'inherit', boxShadow: '0 2px 8px var(--color-primary-subtle)' }}>
               {saving ? 'A guardar…' : editing ? 'Atualizar' : 'Guardar feedback'}

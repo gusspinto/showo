@@ -337,8 +337,8 @@ const ONBOARDING = {
     subtitle: 'Acompanha e avalia os projetos dos teus alunos.',
     steps: [
       { icon: <GraduationCap size={20} color="var(--color-text-secondary)" />, title: 'Cria uma turma', desc: 'Gera um código único e partilha-o com os teus alunos para que se juntem.' },
-      { icon: <BarChart2 size={20} color="var(--color-text-secondary)" />, title: 'Acompanha o progresso', desc: 'Vê scores, completude e evolução de cada aluno numa tabela clara.' },
-      { icon: <MessageSquare size={20} color="var(--color-text-secondary)" />, title: 'Dá feedback', desc: 'Deixa comentários por secção diretamente nos projetos dos alunos.' },
+      { icon: <BarChart2 size={20} color="var(--color-text-secondary)" />, title: 'Acompanha o progresso', desc: 'Vê a completude e a atividade de cada aluno, e quem precisa de atenção.' },
+      { icon: <MessageSquare size={20} color="var(--color-text-secondary)" />, title: 'Avalia e dá feedback', desc: 'Define critérios de avaliação, dá a nota final e comenta por secção.' },
     ],
     cta: 'Criar a minha primeira turma', ctaAction: 'createTurma',
   },

@@ -4610,6 +4610,10 @@ export default function ProjectPage() {
         supabase.rpc('create_notification', { p_user_id: project.user_id, p_type: 'TEACHER_FEEDBACK', p_message: msg, p_project_slug: project.slug })
           .then(({ error: notifError }) => { if (notifError) console.error('review_status notification failed:', notifError) })
       }
+    } else {
+      console.error('set_project_review_status failed:', error)
+      setToast({ visible: true, message: 'Não foi possível guardar o estado.' })
+      setTimeout(() => setToast({ visible: false, message: '' }), 3000)
     }
     setReviewStatusSaving(false)
   }
