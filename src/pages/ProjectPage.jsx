@@ -4374,6 +4374,7 @@ export default function ProjectPage() {
   const [fbComment, setFbComment] = useState('')
   const [fbFieldKey, setFbFieldKey] = useState('geral')
   const [fbSaving, setFbSaving] = useState(false)
+  const [fbError, setFbError] = useState('')
   const [fbEditing, setFbEditing] = useState(null)
   const [resolvingId, setResolvingId] = useState(null)
   const [resolveNote, setResolveNote] = useState('')
@@ -4439,6 +4440,7 @@ export default function ProjectPage() {
   const [juryNote, setJuryNote] = useState('')
   const [jurySaving, setJurySaving] = useState(false)
   const [jurySaved, setJurySaved] = useState(false)
+  const [juryError, setJuryError] = useState('')
   const [juryEditing, setJuryEditing] = useState(false)
   // Hydrate from the saved grade once the project loads, and default to the
   // collapsed summary if a grade already exists, or straight to the form if not.
@@ -4642,6 +4644,10 @@ export default function ProjectPage() {
         supabase.rpc('create_notification', { p_user_id: project.user_id, p_type: 'TEACHER_FEEDBACK', p_message: msg, p_project_slug: project.slug })
           .then(({ error: notifError }) => { if (notifError) console.error('review_status notification failed:', notifError) })
       }
+    } else {
+      console.error('set_project_review_status failed:', error)
+      setToast({ visible: true, message: 'Não foi possível guardar o estado.' })
+      setTimeout(() => setToast({ visible: false, message: '' }), 3000)
     }
     setReviewStatusSaving(false)
   }
@@ -4762,11 +4768,18 @@ export default function ProjectPage() {
         return
       }
 
-      // Visibility gate: private projects are owner-only
+      // Visibility gate: private projects are owner-only — mais o professor
+      // da turma onde o aluno o adicionou (senão via "não existe" ao abrir
+      // um projeto privado a partir da turma).
       if (data.visibility === 'private') {
         const isOwner = currentUser?.id === data.user_id
         const hasToken = data.edit_token && localStorage.getItem(`edit_token_${data.slug}`) === data.edit_token
-        if (!isOwner && !hasToken) {
+        let teacherOfClass = false
+        if (!isOwner && !hasToken && currentUser?.id) {
+          const { data: inClass } = await supabase.rpc('is_project_in_my_class', { p_project_id: data.id })
+          teacherOfClass = !!inClass
+        }
+        if (!isOwner && !hasToken && !teacherOfClass) {
           setLoading(false)
           return
         }
@@ -5319,25 +5332,35 @@ export default function ProjectPage() {
   async function handleFbSave() {
     if (!fbComment.trim() || !project) return
     setFbSaving(true)
+    setFbError('')
     if (fbEditing) {
-      const { data: updated } = await supabase.from('teacher_feedback').update({ comment: fbComment.trim() }).eq('id', fbEditing).select().single()
-      if (updated) setTeacherFeedback(prev => prev.map(f => f.id === fbEditing ? updated : f))
+      const { data: updated, error } = await supabase.from('teacher_feedback').update({ comment: fbComment.trim() }).eq('id', fbEditing).select().single()
+      if (error || !updated) {
+        console.error('teacher_feedback update failed:', error)
+        setFbError('Não foi possível guardar. Tenta de novo.')
+        setFbSaving(false)
+        return
+      }
+      setTeacherFeedback(prev => prev.map(f => f.id === fbEditing ? updated : f))
       setFbEditing(null)
     } else {
-      const { data: created } = await supabase.from('teacher_feedback')
+      const { data: created, error } = await supabase.from('teacher_feedback')
         .upsert({ project_id: project.id, teacher_id: user.id, field_key: fbFieldKey, comment: fbComment.trim() }, { onConflict: 'project_id,teacher_id,field_key' })
         .select().single()
-      if (created) {
-        setTeacherFeedback(prev => { const idx = prev.findIndex(f => f.field_key === fbFieldKey && f.teacher_id === user.id); return idx >= 0 ? prev.map((f, i) => i === idx ? created : f) : [...prev, created] })
-        // Notify the student (only on new feedback, not edits)
-        if (project.user_id) {
-          supabase.rpc('create_notification', {
-            p_user_id: project.user_id,
-            p_type: 'TEACHER_FEEDBACK',
-            p_message: `O teu professor deixou feedback no projeto "${project.name}".`,
-            p_project_slug: project.slug,
-          })
-        }
+      if (error || !created) {
+        console.error('teacher_feedback save failed:', error)
+        setFbError(error?.message?.includes('row-level security') ? 'Sem permissão para comentar este projeto.' : 'Não foi possível guardar. Tenta de novo.')
+        setFbSaving(false)
+        return
+      }
+      setTeacherFeedback(prev => { const idx = prev.findIndex(f => f.field_key === fbFieldKey && f.teacher_id === user.id); return idx >= 0 ? prev.map((f, i) => i === idx ? created : f) : [...prev, created] })
+      if (project.user_id) {
+        supabase.rpc('create_notification', {
+          p_user_id: project.user_id,
+          p_type: 'TEACHER_FEEDBACK',
+          p_message: `O teu professor deixou feedback no projeto "${project.name}".`,
+          p_project_slug: project.slug,
+        })
       }
     }
     setFbComment(''); setFbSaving(false)
@@ -5431,7 +5454,7 @@ export default function ProjectPage() {
 
         .proj-layout {
           display: grid;
-          grid-template-columns: 1fr 280px;
+          grid-template-columns: minmax(0, 1fr) 320px;
           gap: 28px;
           align-items: start;
         }
@@ -7901,6 +7924,7 @@ export default function ProjectPage() {
                         onClick={async () => {
                           if (!canSave || finalScore == null) return
                           setJurySaving(true)
+                          setJuryError('')
                           const ratings = useClassCriteria ? criterionScores : juryRatings
                           const { error } = await supabase.rpc('set_project_teacher_score', {
                             p_project_id: project.id, p_score: finalScore, p_note: juryNote || null, p_ratings: ratings,
@@ -7910,7 +7934,8 @@ export default function ProjectPage() {
                               const upsertRows = classCriteria.map(c => ({
                                 project_id: project.id, criterion_id: c.id, score: Number(criterionScores[c.id]),
                               }))
-                              await supabase.from('project_criterion_scores').upsert(upsertRows, { onConflict: 'project_id,criterion_id' })
+                              const { error: critErr } = await supabase.from('project_criterion_scores').upsert(upsertRows, { onConflict: 'project_id,criterion_id' })
+                              if (critErr) console.error('criterion scores upsert failed:', critErr)
                             }
                             setProject(p => ({ ...p, teacher_score: finalScore, teacher_score_note: juryNote || null, teacher_score_ratings: ratings }))
                             if (project.user_id) {
@@ -7923,6 +7948,11 @@ export default function ProjectPage() {
                             setJurySaved(true)
                             setJuryEditing(false)
                             setTimeout(() => setJurySaved(false), 3000)
+                          } else {
+                            console.error('set_project_teacher_score failed:', error)
+                            setJuryError(error.message === 'Not authorized'
+                              ? 'Sem permissão para avaliar este projeto.'
+                              : 'Não foi possível guardar. Tenta de novo.')
                           }
                           setJurySaving(false)
                         }}
@@ -7938,6 +7968,9 @@ export default function ProjectPage() {
                       >
                         {jurySaved ? <><Check size={13} /> Avaliação guardada</> : jurySaving ? 'A guardar…' : <><ClipboardList size={13} /> Guardar avaliação</>}
                       </button>
+                      {juryError && (
+                        <p style={{ margin: '8px 0 0', fontSize: 12, fontWeight: 600, color: 'var(--color-error)', textAlign: 'center' }}>{juryError}</p>
+                      )}
                     </div>
                   </>
                 )}
@@ -7988,17 +8021,18 @@ export default function ProjectPage() {
             return (
               <div style={{ ...colors.glassStyle, background: colors.glass, border: `1px solid ${colors.glassBorder}`, borderRadius: 12, overflow: 'hidden' }}>
                 {/* Header */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 16px', borderBottom: myFeedback.length > 0 || showFeedbackForm ? '1px solid var(--color-primary-subtle)' : 'none' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                    <GraduationCap size={14} color="var(--color-primary)" />
-                    <span style={{ fontSize: 13, fontWeight: 700, color: colors.text }}>Feedback do Professor</span>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '12px 14px', borderBottom: myFeedback.length > 0 || showFeedbackForm ? '1px solid var(--color-primary-subtle)' : 'none' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 7, minWidth: 0 }}>
+                    <GraduationCap size={14} color="var(--color-primary)" style={{ flexShrink: 0 }} />
+                    <span style={{ fontSize: 13, fontWeight: 700, color: colors.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Feedback do professor</span>
                   </div>
                   {isProfessor && (
                     <button
                       onClick={() => setShowFeedbackForm(f => !f)}
-                      style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, padding: '4px 9px', borderRadius: 6, border: `1px solid ${showFeedbackForm ? 'var(--color-primary-subtle)' : 'var(--color-primary-subtle)'}`, background: showFeedbackForm ? 'var(--color-primary-subtle)' : 'transparent', color: 'var(--color-primary)', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700 }}
+                      title={showFeedbackForm ? 'Fechar' : 'Editar'}
+                      style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, padding: '4px 9px', borderRadius: 6, border: '1px solid var(--color-primary-subtle)', background: showFeedbackForm ? 'var(--color-primary-subtle)' : 'transparent', color: 'var(--color-primary)', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700, flexShrink: 0 }}
                     >
-                      {showFeedbackForm ? <><X size={11} /> Fechar</> : <><Pencil size={11} /> Editar</>}
+                      {showFeedbackForm ? <X size={12} /> : <><Pencil size={11} /> Editar</>}
                     </button>
                   )}
                 </div>
@@ -8127,10 +8161,11 @@ export default function ProjectPage() {
                     </div>
                     <textarea
                       value={fbComment} onChange={e => setFbComment(e.target.value)}
-                      placeholder={fbFieldKey === 'geral' ? 'Escreve uma nota geral sobre o projeto — avaliação, observações, pontos a melhorar…' : `Feedback sobre ${FB_SECTION_LABELS[fbFieldKey]}…`}
+                      placeholder={fbFieldKey === 'geral' ? 'Nota geral sobre o projeto: avaliação, observações, pontos a melhorar…' : `Feedback sobre ${FB_SECTION_LABELS[fbFieldKey]}…`}
                       rows={fbFieldKey === 'geral' ? 4 : 3}
                       style={{ width: '100%', background: 'var(--color-bg)', border: `1px solid ${colors.border}`, borderRadius: 8, padding: '9px 11px', color: colors.text, fontSize: 13, fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box', outline: 'none' }}
                     />
+                    {fbError && <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: 'var(--color-error)' }}>{fbError}</p>}
                     <div style={{ display: 'flex', gap: 8 }}>
                       <button onClick={handleFbSave} disabled={fbSaving || !fbComment.trim()} style={{ flex: 1, background: 'var(--color-primary)', border: 'none', borderRadius: 8, padding: '9px', color: '#fff', fontSize: 13, fontWeight: 600, cursor: fbSaving || !fbComment.trim() ? 'default' : 'pointer', opacity: fbSaving || !fbComment.trim() ? 0.6 : 1, fontFamily: 'inherit' }}>
                         {fbSaving ? 'A guardar…' : fbEditing ? 'Atualizar' : 'Guardar'}

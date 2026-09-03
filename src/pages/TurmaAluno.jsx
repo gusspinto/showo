@@ -375,7 +375,6 @@ export default function TurmaAluno() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10, marginBottom: 28 }}>
           {[
             { label: 'Projetos na turma', value: projects.length, color: C.blue },
-            { label: 'Score médio', value: avgScore ?? '—', color: scoreColor(avgScore) },
             { label: 'Nota média', value: avgGrade != null ? `${avgGrade}` : '—', color: gradeColor(avgGrade), sub: avgGrade != null ? '/20' : null },
             { label: 'Registos no diário', value: totalEntries || '—', color: totalEntries > 0 ? 'var(--color-success)' : C.subtle },
             { label: 'Tarefas concluídas', value: tasks.length ? `${doneTasks}/${tasks.length}` : '—', color: tasks.length && doneTasks === tasks.length ? C.green : C.blue },
@@ -424,10 +423,6 @@ export default function TurmaAluno() {
                         {p.area || 'Sem área'} · {new Date(p.created_at).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' })}
                         {p.views != null && ` · ${p.views} visualizaç${p.views === 1 ? 'ão' : 'ões'}`}
                       </div>
-                    </div>
-                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                      <div style={{ fontSize: 15, fontWeight: 800, color: scoreColor(p.score) }}>{p.score ?? '—'}</div>
-                      <div style={{ fontSize: 10, color: C.subtle }}>score</div>
                     </div>
                     <div style={{ textAlign: 'right', flexShrink: 0, minWidth: 44 }}>
                       <div style={{ fontSize: 15, fontWeight: 800, color: gradeColor(p.teacher_score) }}>{p.teacher_score != null ? `${p.teacher_score}/20` : '—'}</div>

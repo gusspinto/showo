@@ -37,9 +37,10 @@ const C = {
   border: 'var(--color-border)', borderBright: 'var(--color-border-hover)',
   blue: 'var(--color-primary)', text: 'var(--color-text)', muted: 'var(--color-text-secondary)', subtle: 'var(--color-text-tertiary)',
   green: 'var(--color-success)', yellow: 'var(--color-warning)', red: 'var(--color-error)',
-  glass: 'var(--color-glass)', glassHover: 'var(--color-glass-hover)',
-  glassBorder: 'var(--color-glass-border)', glassBorderBright: 'var(--color-glass-border-bright)',
-  glassStyle: { backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' },
+  // Superfície lisa, sem blur — alinhado ao resto do redesign
+  glass: 'var(--color-surface)', glassHover: 'var(--color-surface-hover)',
+  glassBorder: 'var(--color-border)', glassBorderBright: 'var(--color-border-hover)',
+  glassStyle: {},
 }
 
 function scoreColor(s) {
@@ -80,16 +81,11 @@ function ProjectCard({ project, navigate }) {
         {project.creator_name && (
           <div style={{ fontSize: 12, color: C.muted, marginBottom: 8 }}>{project.creator_name}</div>
         )}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          {project.area && (
-            <span style={{ fontSize: 11, color: C.muted, fontWeight: 600 }}>
-              {project.area}
-            </span>
-          )}
-          <span style={{ fontSize: 12, fontWeight: 800, color: scoreColor(project.score), marginLeft: 'auto' }}>
-            {project.score ?? '—'}
+        {project.area && (
+          <span style={{ fontSize: 11, color: C.muted, fontWeight: 600 }}>
+            {project.area}
           </span>
-        </div>
+        )}
       </div>
     </div>
   )
@@ -148,6 +144,7 @@ function FeedbackModal({ project, teacherId, onClose }) {
   const [existing, setExisting] = useState([])
   const [saving, setSaving] = useState(false)
   const [editing, setEditing] = useState(null)
+  const [err, setErr] = useState('')
 
   useEffect(() => {
     supabase
@@ -161,24 +158,29 @@ function FeedbackModal({ project, teacherId, onClose }) {
   async function handleSave() {
     if (!comment.trim()) return
     setSaving(true)
+    setErr('')
     if (editing) {
-      await supabase.from('teacher_feedback').update({ comment: comment.trim() }).eq('id', editing)
+      const { error } = await supabase.from('teacher_feedback').update({ comment: comment.trim() }).eq('id', editing)
+      if (error) { setErr('Não foi possível guardar. Tenta de novo.'); setSaving(false); return }
       setExisting(prev => prev.map(f => f.id === editing ? { ...f, comment: comment.trim() } : f))
     } else {
-      const { data } = await supabase.from('teacher_feedback')
+      const { data, error } = await supabase.from('teacher_feedback')
         .upsert({ project_id: project.id, teacher_id: teacherId, field_key: fieldKey, comment: comment.trim() }, { onConflict: 'project_id,teacher_id,field_key' })
         .select().single()
-      if (data) {
-        setExisting(prev => { const idx = prev.findIndex(f => f.field_key === fieldKey); return idx >= 0 ? prev.map((f, i) => i === idx ? data : f) : [...prev, data] })
-        // Notify the student
-        if (project.user_id) {
-          supabase.rpc('create_notification', {
-            p_user_id: project.user_id,
-            p_type: 'TEACHER_FEEDBACK',
-            p_message: `O teu professor deixou feedback no projeto "${project.name}".`,
-            p_project_slug: project.slug,
-          })
-        }
+      if (error || !data) {
+        console.error('teacher_feedback save failed:', error)
+        setErr(error?.message?.includes('row-level security') ? 'Sem permissão para comentar este projeto.' : 'Não foi possível guardar. Tenta de novo.')
+        setSaving(false)
+        return
+      }
+      setExisting(prev => { const idx = prev.findIndex(f => f.field_key === fieldKey); return idx >= 0 ? prev.map((f, i) => i === idx ? data : f) : [...prev, data] })
+      if (project.user_id) {
+        supabase.rpc('create_notification', {
+          p_user_id: project.user_id,
+          p_type: 'TEACHER_FEEDBACK',
+          p_message: `O teu professor deixou feedback no projeto "${project.name}".`,
+          p_project_slug: project.slug,
+        })
       }
     }
     setComment(''); setEditing(null); setSaving(false)
@@ -232,6 +234,7 @@ function FeedbackModal({ project, teacherId, onClose }) {
             rows={3}
             style={{ width: '100%', background: 'var(--color-bg)', border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 12px', color: C.text, fontSize: 13, fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box', outline: 'none' }}
           />
+          {err && <p style={{ margin: '2px 0 0', fontSize: 12, fontWeight: 600, color: 'var(--color-error)' }}>{err}</p>}
           <div style={{ display: 'flex', gap: 8 }}>
             <button onClick={handleSave} disabled={saving || !comment.trim()} style={{ flex: 1, background: 'var(--color-primary)', border: 'none', borderRadius: 8, padding: '10px', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: saving || !comment.trim() ? 0.6 : 1, fontFamily: 'inherit', boxShadow: '0 2px 8px var(--color-primary-subtle)' }}>
               {saving ? 'A guardar…' : editing ? 'Atualizar' : 'Guardar feedback'}
@@ -366,7 +369,7 @@ export default function TurmaPage() {
   const [toast, setToast] = useState('')
   const [copied, setCopied] = useState(false)
   const [isTeacher, setIsTeacher] = useState(false)
-  const [sortBy, setSortBy] = useState('score')
+  const [sortBy, setSortBy] = useState('completude')
   const [sortAsc, setSortAsc] = useState(false)
   const [selectedIds, setSelectedIds] = useState(new Set())
   const [bulkSaving, setBulkSaving] = useState(false)
@@ -773,6 +776,8 @@ export default function TurmaPage() {
       setNewCritName('')
       setNewCritWeight('25')
       setCriteriaAdding(false)
+    } else if (error) {
+      showToast('Erro ao adicionar critério: ' + error.message)
     }
     setCritSaving(false)
   }
@@ -790,6 +795,8 @@ export default function TurmaPage() {
     if (!error) {
       setCriteria(c => c.map(x => x.id === editingCrit.id ? { ...x, name, weight } : x))
       setEditingCrit(null)
+    } else {
+      showToast('Erro ao guardar critério: ' + error.message)
     }
     setCritSaving(false)
   }
@@ -797,6 +804,7 @@ export default function TurmaPage() {
   async function deleteCriterion(id) {
     const { error } = await supabase.from('class_evaluation_criteria').delete().eq('id', id)
     if (!error) setCriteria(c => c.filter(x => x.id !== id))
+    else showToast('Erro ao remover critério: ' + error.message)
   }
 
   async function useDefaultCriteria() {
@@ -805,6 +813,7 @@ export default function TurmaPage() {
     const rows = DEFAULT_CRITERIA.map((d, i) => ({ class_id: turma.id, name: d.name, weight: d.weight, sort_order: i }))
     const { data, error } = await supabase.from('class_evaluation_criteria').insert(rows).select()
     if (!error && data) setCriteria(data)
+    else if (error) showToast('Erro ao criar critérios: ' + error.message)
     setCritSaving(false)
   }
 
@@ -812,7 +821,7 @@ export default function TurmaPage() {
     const statusLabel = s => s === 'ready_for_defense' ? 'Pronto para defesa' : s === 'needs_revision' ? 'Precisa de revisão' : s === 'resubmitted' ? 'Correções enviadas' : '—'
     const hasCrit = criteria.length > 0
     const critHeaders = hasCrit ? criteria.map(c => `${c.name} (${c.weight}%)`) : []
-    const headers = ['Aluno', 'Projeto', 'Nota (0-20)', ...critHeaders, 'Score Showo', 'Completude (%)', 'Estado', 'Data', 'Link']
+    const headers = ['Aluno', 'Projeto', 'Nota (0-20)', ...critHeaders, 'Completude (%)', 'Estado', 'Data', 'Link']
     const rows = [headers]
     sortedProjects.forEach(p => {
       const date = p.created_at ? new Date(p.created_at).toLocaleDateString('pt-PT') : '—'
@@ -824,7 +833,6 @@ export default function TurmaPage() {
         p.name,
         p.teacher_score ?? '—',
         ...critScores,
-        p.score ?? '—',
         computeCompletude(p),
         statusLabel(p.review_status),
         date,
@@ -1056,7 +1064,7 @@ export default function TurmaPage() {
                   <div key={p.id} style={{ background: C.bgAlt, border: `1px solid ${C.border}`, borderRadius: 8, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 12 }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 14, fontWeight: 600, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
-                      <div style={{ fontSize: 11, color: C.muted }}>Score: {p.score ?? '—'}</div>
+                      {p.area && <div style={{ fontSize: 11, color: C.muted }}>{p.area}</div>}
                     </div>
                     <button
                       onClick={() => addProject(p.id)}
@@ -1078,23 +1086,26 @@ export default function TurmaPage() {
 
       <div className="page-content">
         {/* Header */}
-        <div style={{ marginBottom: 32 }}>
+        <div style={{ marginBottom: 28, paddingBottom: 20, borderBottom: `1px solid ${C.border}` }}>
+          <span style={{ display: 'block', fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.12em', color: C.subtle, marginBottom: 8 }}>
+            {isTeacher ? 'A tua turma' : 'Turma'}
+          </span>
           <div className="turmapage-hd" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
             <div>
               <div style={{ marginBottom: 8 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <h1 style={{ margin: 0, fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 400, letterSpacing: '-0.8px', fontFamily: 'var(--font-heading)' }}>{turma.name}</h1>
+                  <h1 style={{ margin: 0, fontSize: 'clamp(26px, 4vw, 36px)', fontWeight: 400, letterSpacing: '-0.6px', fontFamily: 'var(--font-heading)', lineHeight: 1.1 }}>{turma.name}</h1>
                   {turma.academic_year && (
-                    <span style={{ fontSize: 12, fontWeight: 700, color: C.muted, background: C.bgAlt, border: `1px solid ${C.border}`, borderRadius: 6, padding: '3px 9px', marginTop: 6 }}>{turma.academic_year}</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: C.muted, background: C.bgAlt, border: `1px solid ${C.border}`, borderRadius: 6, padding: '3px 9px', marginTop: 4 }}>{turma.academic_year}</span>
                   )}
                   {isTeacher && (
                     <button onClick={() => setShowEditTurma(true)} title="Editar turma"
-                      className="icon-btn-ghost" style={{ marginTop: 6 }}>
+                      className="icon-btn-ghost" style={{ marginTop: 4 }}>
                       <Pencil size={16} />
                     </button>
                   )}
                 </div>
-                {turma.subject && <p style={{ margin: 0, fontSize: 14, color: C.muted }}>{turma.subject}</p>}
+                {turma.subject && <p style={{ margin: '2px 0 0', fontSize: 14, color: C.muted }}>{turma.subject}</p>}
               </div>
               <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', fontSize: 13, color: C.subtle }}>
                 {turma.teacher_name && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><User size={13} />{turma.teacher_name}</span>}
@@ -1105,11 +1116,11 @@ export default function TurmaPage() {
               {/* Code badge */}
               <button
                 onClick={copyCode}
-                style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--color-primary-subtle)', border: `1px solid var(--color-primary-subtle)`, borderRadius: 7, padding: '6px 10px', cursor: 'pointer', fontFamily: 'inherit' }}
+                style={{ display: 'flex', alignItems: 'center', gap: 6, background: C.bgAlt, border: `1px solid ${C.border}`, borderRadius: 8, padding: '6px 10px', cursor: 'pointer', fontFamily: 'inherit' }}
               >
-                <span style={{ fontSize: 10, color: C.muted, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>Código</span>
-                <span style={{ fontSize: 14, fontWeight: 800, color: C.blue, letterSpacing: 1.5 }}>{turma.code}</span>
-                <span style={{ color: copied ? C.green : C.muted, display: 'flex' }}>{copied ? <Check size={11} /> : <Copy size={11} />}</span>
+                <span style={{ fontSize: 10, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>Código</span>
+                <span style={{ fontSize: 14, fontWeight: 800, color: C.text, letterSpacing: 1.5 }}>{turma.code}</span>
+                <span style={{ color: copied ? C.green : C.subtle, display: 'flex' }}>{copied ? <Check size={11} /> : <Copy size={11} />}</span>
               </button>
               {/* Copy link */}
               <Button variant="secondary" size="sm" icon={copiedLink ? <Check size={12} /> : <Copy size={12} />} onClick={copyLink}>
@@ -1157,7 +1168,7 @@ export default function TurmaPage() {
                 {[
                   { label: 'Alunos', value: students.length },
                   { label: 'Projetos', value: projects.length },
-                  { label: 'Score médio', value: avgScore ?? '—', color: avgScore != null ? scoreColor(avgScore) : C.muted },
+                  { label: 'Avaliados', value: projects.filter(p => p.teacher_score != null).length },
                   { label: 'Tarefas', value: tasks.length > 0 ? `${tasks.length}` : '—' },
                 ].map(s => (
                   <div key={s.label} style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 10, padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 3, minWidth: 90 }}>
@@ -1633,9 +1644,9 @@ export default function TurmaPage() {
           // Build ranking: best score per student (their projects in this turma)
           const studentMembers = members.filter(m => m.role !== 'professor')
           const ranked = studentMembers.map(m => {
-            const studentProjects = projects.filter(p => p.user_id === m.user_id && p.score != null)
-            const best = studentProjects.reduce((top, p) => p.score > (top?.score ?? -1) ? p : top, null)
-            return { ...m, bestProject: best, bestScore: best?.score ?? null }
+            const studentProjects = projects.filter(p => p.user_id === m.user_id && p.teacher_score != null)
+            const best = studentProjects.reduce((top, p) => p.teacher_score > (top?.teacher_score ?? -1) ? p : top, null)
+            return { ...m, bestProject: best, bestScore: best?.teacher_score ?? null }
           }).sort((a, b) => {
             if (a.bestScore == null && b.bestScore == null) return 0
             if (a.bestScore == null) return 1
@@ -1716,7 +1727,7 @@ export default function TurmaPage() {
                         </div>
                         <div style={{ textAlign: 'right', flexShrink: 0 }}>
                           {m.bestScore != null
-                            ? <span style={{ fontSize: 16, fontWeight: 800, color: scoreColor(m.bestScore), fontFamily: 'var(--font-heading)', letterSpacing: '-0.5px' }}>{m.bestScore}</span>
+                            ? <span style={{ fontSize: 16, fontWeight: 800, color: C.text, fontFamily: 'var(--font-heading)', letterSpacing: '-0.5px' }}>{m.bestScore}<span style={{ fontSize: 11, color: C.subtle, fontWeight: 600 }}>/20</span></span>
                             : <span style={{ fontSize: 13, color: C.subtle }}>—</span>}
                         </div>
                       </div>
@@ -1810,14 +1821,14 @@ export default function TurmaPage() {
           <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, overflow: 'hidden' }}>
             <div style={{ overflowX: 'auto' }}>
             {/* Table header */}
-            <div style={{ display: 'grid', gridTemplateColumns: '28px minmax(160px,1fr) 60px 64px 120px 88px 130px', gap: 0, padding: '10px 16px', borderBottom: `1px solid ${C.border}`, background: 'var(--color-bg)', minWidth: 668, alignItems: 'center' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '28px minmax(160px,1fr) 60px 120px 88px 130px', gap: 0, padding: '10px 16px', borderBottom: `1px solid ${C.border}`, background: 'var(--color-bg)', minWidth: 604, alignItems: 'center' }}>
               <input
                 type="checkbox"
                 checked={sortedProjects.length > 0 && selectedIds.size === sortedProjects.length}
                 onChange={() => setSelectedIds(selectedIds.size === sortedProjects.length ? new Set() : new Set(sortedProjects.map(p => p.id)))}
                 style={{ cursor: 'pointer' }}
               />
-              {[['name','Projeto'], [null,'Nota'], ['score','Score'], ['completude','Completude'], ['updated','Data'], [null,'Ações']].map(([field, label]) => (
+              {[['name','Projeto'], [null,'Nota'], ['completude','Completude'], ['updated','Data'], [null,'Ações']].map(([field, label]) => (
                 <div key={label} onClick={() => field && toggleSort(field)} style={{ fontSize: 11, fontWeight: 700, color: field ? (sortBy === field ? C.blue : C.muted) : C.muted, textTransform: 'uppercase', letterSpacing: 0.5, cursor: field ? 'pointer' : 'default', display: 'flex', alignItems: 'center', gap: 4, userSelect: 'none' }}>
                   {label}
                   {field && sortBy === field && (sortAsc ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}
@@ -1828,7 +1839,7 @@ export default function TurmaPage() {
               const completude = computeCompletude(p)
               const updated = p.created_at ? new Date(p.created_at).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' }) : '—'
               return (
-                <div key={p.id} style={{ display: 'grid', gridTemplateColumns: '28px minmax(160px,1fr) 60px 64px 120px 88px 130px', gap: 0, padding: '12px 16px', borderBottom: i < sortedProjects.length - 1 ? `1px solid ${C.border}` : 'none', alignItems: 'center', transition: 'background 0.12s', minWidth: 668 }}
+                <div key={p.id} style={{ display: 'grid', gridTemplateColumns: '28px minmax(160px,1fr) 60px 120px 88px 130px', gap: 0, padding: '12px 16px', borderBottom: i < sortedProjects.length - 1 ? `1px solid ${C.border}` : 'none', alignItems: 'center', transition: 'background 0.12s', minWidth: 604 }}
                   onMouseEnter={e => e.currentTarget.style.background = C.glassHover}
                   onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                   <input
@@ -1855,7 +1866,6 @@ export default function TurmaPage() {
                   <div style={{ fontSize: 13, fontWeight: 800, color: p.teacher_score == null ? C.subtle : p.teacher_score >= 16 ? C.green : p.teacher_score >= 10 ? C.blue : 'var(--color-warning)' }}>
                     {p.teacher_score != null ? `${p.teacher_score}/20` : '—'}
                   </div>
-                  <div style={{ fontSize: 15, fontWeight: 800, color: scoreColor(p.score) }}>{p.score ?? '—'}</div>
                   <div style={{ paddingRight: 8 }}>
                     <div style={{ fontSize: 12, fontWeight: 600, color: completude >= 80 ? C.green : completude >= 50 ? C.yellow : C.muted, marginBottom: 4 }}>{completude}%</div>
                     <div style={{ height: 4, borderRadius: 2, background: C.border, overflow: 'hidden' }}>
@@ -1865,7 +1875,7 @@ export default function TurmaPage() {
                   <div style={{ fontSize: 12, color: C.muted }}>{updated}</div>
                   <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
                     <button onClick={() => goToProject(p.slug)} style={{ fontSize: 12, padding: '5px 11px', borderRadius: 6, border: `1px solid ${C.border}`, background: 'transparent', color: C.muted, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>Ver</button>
-                    <button onClick={() => setFeedbackProject(p)} title="Feedback" style={{ padding: '5px 8px', borderRadius: 6, border: '1px solid var(--color-primary-subtle)', background: 'var(--color-primary-subtle)', color: C.blue, cursor: 'pointer', display: 'flex', alignItems: 'center', flexShrink: 0 }}><MessageSquare size={12} /></button>
+                    <button onClick={() => setFeedbackProject(p)} title="Feedback" style={{ padding: '5px 8px', borderRadius: 6, border: `1px solid ${C.border}`, background: 'transparent', color: C.muted, cursor: 'pointer', display: 'flex', alignItems: 'center', flexShrink: 0 }}><MessageSquare size={12} /></button>
                     <button onClick={() => removeProject(p.id)} title="Remover" style={{ padding: '5px 8px', borderRadius: 6, border: '1px solid var(--color-error-subtle)', background: 'transparent', color: 'var(--color-error)', cursor: 'pointer', display: 'flex', alignItems: 'center', flexShrink: 0 }}><X size={12} /></button>
                   </div>
                 </div>

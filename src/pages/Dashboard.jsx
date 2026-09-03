@@ -61,6 +61,10 @@ import CalendarSyncModal from '../components/dashboard/CalendarSyncModal'
 import '../components/dashboard/MonthCalendar.css'
 import './Dashboard.css'
 import StudentDashboard from './StudentDashboard'
+import TeacherEmptyState from '../components/TeacherEmptyState'
+import SegmentedTabs from '../components/SegmentedTabs'
+import AreaChart from '../components/AreaChart'
+import StudentRoster from '../components/StudentRoster'
 
 /* ══════════════════════════════════════════════════════════════════════════
    Helpers
@@ -73,6 +77,22 @@ function getScoreColor(score) {
   if (score >= 51) return 'var(--color-info)'
   if (score >= 31) return 'var(--color-warning)'
   return 'var(--color-error)'
+}
+
+/* % dos campos-chave de um projeto que estão preenchidos (mesma fórmula
+   da TurmaPage). */
+function projectCompletude(p) {
+  if (!p) return 0
+  const checks = [
+    !!(p.goal || p.problem),
+    !!p.solution,
+    !!p.technologies,
+    !!p.features,
+    !!p.results,
+    !!(p.linkedin_url || p.github_url || p.portfolio_url),
+    !!p.cover_url,
+  ]
+  return Math.round((checks.filter(Boolean).length / checks.length) * 100)
 }
 
 function getDisplayName(user) {
@@ -123,8 +143,8 @@ function TurmaCard({ turma, navigate }) {
   return (
     <Card hoverable onClick={() => navigate(`/turma/${turma.code}`)} padding="md">
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)' }}>
-        <div style={{ width: 36, height: 36, borderRadius: 'var(--radius-md)', background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <Users2 size={16} color="var(--color-primary)" />
+        <div style={{ width: 36, height: 36, borderRadius: 'var(--radius-md)', background: 'var(--color-surface-hover)', border: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <Users2 size={16} color="var(--color-text-secondary)" />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -133,10 +153,9 @@ function TurmaCard({ turma, navigate }) {
           </div>
           {turma.subject && <div style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--text-sm)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{turma.subject}</div>}
           <div style={{ color: 'var(--color-text-tertiary)', fontSize: 'var(--text-xs)', marginTop: 4, display: 'flex', gap: 10, alignItems: 'center' }}>
-            <span style={{ color: 'var(--color-primary)', fontWeight: 700, letterSpacing: 1 }}>{turma.code}</span>
+            <span style={{ color: 'var(--color-text-secondary)', fontWeight: 700, letterSpacing: 1 }}>{turma.code}</span>
             {turma.member_count != null && <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}><Users size={10} />{turma.member_count} aluno{turma.member_count !== 1 ? 's' : ''}</span>}
             {turma.project_count != null && <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}><Folder size={10} />{turma.project_count} projeto{turma.project_count !== 1 ? 's' : ''}</span>}
-            {turma.avg_score != null && <span style={{ color: getScoreColor(turma.avg_score), fontWeight: 700 }}>⌀ {turma.avg_score}</span>}
           </div>
         </div>
         <ChevronRight size={16} color="var(--color-text-tertiary)" />
@@ -166,7 +185,7 @@ function CreateTurmaModal({ onClose, onCreated }) {
     const { data, error: err } = await supabase
       .from('classes')
       .insert({ name: name.trim(), subject: subject.trim() || null, code, teacher_id: user.id, teacher_name: teacherName, academic_year: academicYear })
-      .select().single()
+      .select('id, name, subject, code, teacher_id, teacher_name, academic_year, created_at').single()
     setSaving(false)
     if (err) { setError(err.message); return }
     onCreated(data); onClose()
@@ -318,8 +337,8 @@ const ONBOARDING = {
     subtitle: 'Acompanha e avalia os projetos dos teus alunos.',
     steps: [
       { icon: <GraduationCap size={20} color="var(--color-text-secondary)" />, title: 'Cria uma turma', desc: 'Gera um código único e partilha-o com os teus alunos para que se juntem.' },
-      { icon: <BarChart2 size={20} color="var(--color-text-secondary)" />, title: 'Acompanha o progresso', desc: 'Vê scores, completude e evolução de cada aluno numa tabela clara.' },
-      { icon: <MessageSquare size={20} color="var(--color-text-secondary)" />, title: 'Dá feedback', desc: 'Deixa comentários por secção diretamente nos projetos dos alunos.' },
+      { icon: <BarChart2 size={20} color="var(--color-text-secondary)" />, title: 'Acompanha o progresso', desc: 'Vê a completude e a atividade de cada aluno, e quem precisa de atenção.' },
+      { icon: <MessageSquare size={20} color="var(--color-text-secondary)" />, title: 'Avalia e dá feedback', desc: 'Define critérios de avaliação, dá a nota final e comenta por secção.' },
     ],
     cta: 'Criar a minha primeira turma', ctaAction: 'createTurma',
   },
@@ -822,7 +841,7 @@ function ActivityChart({ myInterests, feedbackHistory }) {
    ══════════════════════════════════════════════════════════════════════════ */
 
 export default function Dashboard() {
-  const { user, profile, loading: authLoading, isAdmin } = useAuth()
+  const { user, profile, loading: authLoading, isAdmin, refreshProfile } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const [claimedSlug] = useState(() => location.state?.claimedSlug ?? null)
@@ -830,6 +849,7 @@ export default function Dashboard() {
   const [loadingProjects, setLoadingProjects] = useState(true)
   const [turmas, setTurmas] = useState([])
   const [turmaYearFilter, setTurmaYearFilter] = useState('all')
+  const [teacherTab, setTeacherTab] = useState('progresso') // 'progresso' | 'rever'
   const [needsReview, setNeedsReview] = useState([])
   const [recentActivity, setRecentActivity] = useState([])
   const [upcomingDefenses, setUpcomingDefenses] = useState([])
@@ -837,6 +857,7 @@ export default function Dashboard() {
   const [resubmitted, setResubmitted] = useState([])
   const [totalMembers, setTotalMembers] = useState(0)
   const [weeklyActivity, setWeeklyActivity] = useState([])
+  const [roster, setRoster] = useState([]) // [{ user_id, name, avatar_url, className, project, completude, lastActivity, status }]
   const [studentTurmas, setStudentTurmas] = useState([])
   const [loadingStudentTurmas, setLoadingStudentTurmas] = useState(true)
   const [profNotifs, setProfNotifs] = useState([])
@@ -1024,13 +1045,23 @@ export default function Dashboard() {
     if (!user || profile?.role !== 'professor') return
     async function loadTurmas() {
       const { data: cls } = await supabase.from('classes').select('id, name, subject, code, academic_year, created_at').eq('teacher_id', user.id).order('created_at', { ascending: false })
-      if (!cls?.length) { setTurmas([]); setNeedsReview([]); setFlaggedForRevision([]); setResubmitted([]); setTotalMembers(0); setWeeklyActivity([]); return }
+      if (!cls?.length) { setTurmas([]); setNeedsReview([]); setFlaggedForRevision([]); setResubmitted([]); setTotalMembers(0); setWeeklyActivity([]); setRoster([]); return }
 
       const [{ data: cp }, { data: members }] = await Promise.all([
         supabase.from('class_projects').select('class_id, project_id').in('class_id', cls.map(c => c.id)),
         supabase.from('class_members').select('class_id, user_id').in('class_id', cls.map(c => c.id)),
       ])
       setTotalMembers(new Set((members || []).map(m => m.user_id)).size)
+
+      // Perfis dos membros (para a grelha de alunos)
+      const memberIds = [...new Set((members || []).map(m => m.user_id))]
+      const classNameByMember = {}
+      ;(members || []).forEach(m => { const c = cls.find(x => x.id === m.class_id); if (c) classNameByMember[m.user_id] = c.name })
+      let memberProfiles = []
+      if (memberIds.length) {
+        const { data: mp } = await supabase.from('profiles').select('id, full_name, username, avatar_url').in('id', memberIds)
+        memberProfiles = mp || []
+      }
 
       const counts = {}; const classProjects = {}
       cp?.forEach(r => { counts[r.class_id] = (counts[r.class_id] || 0) + 1; if (!classProjects[r.class_id]) classProjects[r.class_id] = []; classProjects[r.class_id].push(r.project_id) })
@@ -1040,14 +1071,18 @@ export default function Dashboard() {
       const classNameByProject = {}
       Object.entries(classProjects).forEach(([classId, ids]) => { const cls_ = cls.find(c => c.id === classId); ids.forEach(pid => { classNameByProject[pid] = cls_?.name }) })
 
+      let projsForRoster = []
+      let reviewedIdsForRoster = new Set()
       if (allProjectIds.length) {
         const [{ data: projDetails }, { data: myFeedback }] = await Promise.all([
-          supabase.from('projects').select('id, name, slug, creator_name, score, created_at, defense_date, review_status').in('id', allProjectIds),
+          supabase.from('projects').select('id, name, slug, creator_name, score, created_at, defense_date, review_status, review_status_updated_at, user_id, goal, problem, solution, technologies, features, results, linkedin_url, github_url, portfolio_url, cover_url').in('id', allProjectIds),
           supabase.from('teacher_feedback').select('project_id').eq('teacher_id', user.id).in('project_id', allProjectIds),
         ])
         const projs = projDetails || []
+        projsForRoster = projs
         projs.forEach(p => { scoreMap[p.id] = p.score })
         const reviewedIds = new Set((myFeedback || []).map(f => f.project_id))
+        reviewedIdsForRoster = reviewedIds
         setNeedsReview(projs.filter(p => !reviewedIds.has(p.id)).map(p => ({ ...p, className: classNameByProject[p.id] })))
         setFlaggedForRevision(projs.filter(p => p.review_status === 'needs_revision').map(p => ({ ...p, className: classNameByProject[p.id] })))
         setResubmitted(projs.filter(p => p.review_status === 'resubmitted').map(p => ({ ...p, className: classNameByProject[p.id] })))
@@ -1066,6 +1101,49 @@ export default function Dashboard() {
       } else {
         setNeedsReview([]); setRecentActivity([]); setUpcomingDefenses([]); setFlaggedForRevision([]); setResubmitted([]); setWeeklyActivity([])
       }
+
+      // ── Grelha de alunos ──
+      // Liga projeto → aluno por user_id; recorre ao nome do criador quando
+      // o user_id não bate (projetos antigos, importados, etc.).
+      const projByUser = {}
+      const projByName = {}
+      projsForRoster.forEach(p => {
+        if (p.user_id) projByUser[String(p.user_id)] = p
+        if (p.creator_name) projByName[p.creator_name.trim().toLowerCase()] = p
+      })
+      const nowMs = Date.now()
+      const roster = memberProfiles.map(mp => {
+        const project = projByUser[String(mp.id)]
+          || (mp.full_name ? projByName[mp.full_name.trim().toLowerCase()] : null)
+          || null
+        const completude = projectCompletude(project)
+        const lastActivity = project
+          ? Math.max(
+              new Date(project.created_at || 0).getTime(),
+              project.review_status_updated_at ? new Date(project.review_status_updated_at).getTime() : 0,
+            )
+          : null
+        const daysSince = lastActivity ? Math.floor((nowMs - lastActivity) / 86400000) : null
+        let status
+        if (!project) status = 'no_project'
+        else if (!reviewedIdsForRoster.has(project.id) && (project.review_status === 'resubmitted' || completude >= 60)) status = 'needs_review'
+        else if (daysSince != null && daysSince >= 14) status = 'stalled'
+        else if (daysSince != null && daysSince >= 7) status = 'slowing'
+        else status = 'on_track'
+        return {
+          user_id: mp.id,
+          name: mp.full_name || mp.username || 'Aluno',
+          avatar_url: mp.avatar_url,
+          className: classNameByMember[mp.id],
+          project,
+          completude,
+          daysSince,
+          status,
+        }
+      })
+      const statusRank = { needs_review: 0, stalled: 1, slowing: 2, no_project: 3, on_track: 4 }
+      roster.sort((a, b) => statusRank[a.status] - statusRank[b.status] || a.name.localeCompare(b.name))
+      setRoster(roster)
 
       const memberCounts = {}; members?.forEach(m => { memberCounts[m.class_id] = (memberCounts[m.class_id] || 0) + 1 })
       setTurmas(cls.map(c => {
@@ -1238,6 +1316,9 @@ export default function Dashboard() {
       {showJoinModal && <JoinTurmaModal onClose={() => setShowJoinModal(false)} navigate={navigate} onJoined={(turma) => {
         setStudentTurmas(prev => prev.find(t => t.id === turma.id) ? prev : [...prev, turma])
         try { const lsKey = `showo_turmas_${user.id}`; const existing = JSON.parse(localStorage.getItem(lsKey) || '[]'); if (!existing.find(t => t.id === turma.id)) localStorage.setItem(lsKey, JSON.stringify([...existing, turma])) } catch {}
+        // join_class promove a conta a 'school' no servidor — sem isto o
+        // profile em memória fica 'individual' e a TurmaPage devolve ao dashboard.
+        refreshProfile?.()
       }} />}
       {showTurmasModal && <TurmasListModal turmas={studentTurmas} onClose={() => setShowTurmasModal(false)} navigate={navigate} onJoin={() => setShowJoinModal(true)} />}
       {showAddReminder && <AddReminderModal userId={user.id} initialDate={showAddReminder}
@@ -1253,143 +1334,124 @@ export default function Dashboard() {
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: '24px 32px 80px', boxSizing: 'border-box' }}>
 
         {/* ══════════════════════ HEADER ══════════════════════ */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--sp-4)', marginBottom: 14, flexWrap: 'wrap' }}>
-          <div>
-            <h1 style={{ fontSize: 'clamp(22px, 3vw, 30px)', fontWeight: 400, fontFamily: 'var(--font-heading)', letterSpacing: '-0.4px', lineHeight: 1.15, margin: '0 0 4px', color: 'var(--color-text)' }}>{greeting}</h1>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Badge variant="primary">
-                {{ aluno: 'Aluno', professor: 'Professor', recrutador: 'Recrutador', empresa: 'Empresa' }[profile?.role] ?? 'Aluno'}
-              </Badge>
-              <span style={{ color: 'var(--color-text-tertiary)', fontSize: 'var(--text-sm)' }}>{user.email}</span>
-            </div>
-          </div>
-          <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-            {!isTeacher && !isRecruiter && (
-              <>
-                <Button variant="secondary" size="sm" icon={<User size={14} />} onClick={() => navigate(`/u/${profile?.username || user?.id || ''}`)}>Perfil</Button>
-                <Button variant="primary" size="sm" icon={<Plus size={14} />} onClick={() => navigate('/novo')}>Novo projeto</Button>
-              </>
-            )}
-            {isTeacher && (
-              <Button variant="secondary" size="sm" icon={<User size={14} />} onClick={() => navigate(`/u/${profile?.username || user?.id || ''}`)}>Perfil</Button>
-            )}
-          </div>
-        </div>
+        {(() => {
+          const dateStr = new Date().toLocaleDateString('pt-PT', { weekday: 'long', day: 'numeric', month: 'long' })
+          const roleLabel = { aluno: 'Aluno', professor: 'Professor', recrutador: 'Recrutador', empresa: 'Empresa' }[profile?.role] ?? 'Aluno'
+          return (
+            <header className="dash-hero">
+              <div className="dash-hero-main">
+                <span className="dash-hero-date">{dateStr}</span>
+                <h1 className="dash-hero-greeting">
+                  {greeting}
+                  <Badge variant={isTeacher ? 'success' : isRecruiter ? 'accent' : 'primary'} style={{ verticalAlign: 'middle', marginLeft: 12 }}>{roleLabel}</Badge>
+                </h1>
+              </div>
+            </header>
+          )
+        })()}
 
         {/* ══════════════════════ TEACHER DASHBOARD ══════════════════════ */}
-        {isTeacher && (
+        {isTeacher && turmas.length === 0 && <TeacherEmptyState onCreate={() => setShowCreateTurma(true)} />}
+        {isTeacher && turmas.length > 0 && (
           <>
             {/* Stats */}
             {turmas.length > 0 && (
-              <div className="dash-section" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 'var(--sp-3)', marginBottom: 'var(--sp-5)' }}>
+              <div className="dash-section" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--sp-3)', marginBottom: 'var(--sp-5)' }}>
                 {[
                   { label: 'Alunos', value: totalMembers },
                   { label: 'Projetos', value: turmas.reduce((s, t) => s + (t.project_count || 0), 0) },
-                  { label: 'Score médio', value: (() => { const ws = turmas.filter(t => t.avg_score != null); return ws.length ? Math.round(ws.reduce((s, t) => s + t.avg_score, 0) / ws.length) : '—' })() },
                   { label: 'Por rever', value: needsReview.length, accent: needsReview.length > 0 },
                 ].map(stat => (
                   <Card key={stat.label} padding="md" style={stat.accent ? { borderColor: 'var(--color-error)' } : undefined}>
-                    <div style={{ fontSize: 'var(--text-2xl)', fontWeight: 700, fontFamily: 'var(--font-heading)', color: stat.accent ? 'var(--color-error)' : 'var(--color-primary)', lineHeight: 1 }}>{stat.value}</div>
+                    <div style={{ fontSize: 'var(--text-2xl)', fontWeight: 700, fontFamily: 'var(--font-heading)', color: stat.accent ? 'var(--color-error)' : 'var(--color-text)', lineHeight: 1 }}>{stat.value}</div>
                     <div style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', fontWeight: 600, marginTop: 6 }}>{stat.label}</div>
                   </Card>
                 ))}
               </div>
             )}
 
-            {/* Weekly activity chart */}
-            {turmas.length > 0 && weeklyActivity.some(w => w.count > 0) && (
-              <Card padding="md" style={{ marginBottom: 'var(--sp-5)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 'var(--sp-4)' }}>
-                  <BarChart2 size={13} color="var(--color-text-tertiary)" />
-                  <SectionLabel style={{ marginBottom: 0 }}>Projetos submetidos — últimas 8 semanas</SectionLabel>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, height: 90 }}>
-                  {(() => {
-                    const max = Math.max(1, ...weeklyActivity.map(w => w.count))
-                    return weeklyActivity.map(w => (
-                      <div key={w.label} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, height: '100%', justifyContent: 'flex-end' }}>
-                        <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: w.count > 0 ? 'var(--color-primary)' : 'var(--color-text-tertiary)' }}>{w.count > 0 ? w.count : ''}</span>
-                        <div style={{ width: '100%', maxWidth: 28, height: `${Math.max(4, (w.count / max) * 56)}px`, background: w.count > 0 ? 'var(--color-primary)' : 'var(--color-border)', borderRadius: 'var(--radius-xs)', transition: 'height 0.3s var(--ease-out)' }} />
+            {/* Segmento: Progresso / A rever */}
+            <div className="dash-section" style={{ display: 'flex', justifyContent: 'center', marginBottom: 'var(--sp-5)' }}>
+              <SegmentedTabs
+                value={teacherTab}
+                onChange={setTeacherTab}
+                options={[
+                  { id: 'progresso', label: 'Progresso', icon: <TrendingUp size={14} /> },
+                  { id: 'rever', label: 'A rever', icon: <MessageSquare size={14} /> },
+                ]}
+              />
+            </div>
+
+            {/* ── Progresso ── */}
+            {teacherTab === 'progresso' && (
+              <>
+                {weeklyActivity.some(w => w.count > 0) && (
+                  <Card padding="md" style={{ marginBottom: 'var(--sp-5)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 'var(--sp-3)' }}>
+                      <BarChart2 size={13} color="var(--color-text-tertiary)" />
+                      <SectionLabel style={{ marginBottom: 0 }}>Projetos submetidos, últimas 8 semanas</SectionLabel>
+                    </div>
+                    <AreaChart
+                      height={130}
+                      color="var(--color-primary)"
+                      valueSuffix=" projetos"
+                      data={weeklyActivity.map(w => ({ label: w.label, value: w.count }))}
+                    />
+                    {!profile?.monthly_report_opt_in && (
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginTop: 'var(--sp-4)', paddingTop: 'var(--sp-3)', borderTop: '1px solid var(--color-border)' }}>
+                        <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)' }}>Recebe este resumo por email todos os meses.</span>
+                        <Button size="sm" variant="secondary" onClick={() => navigate('/settings')}>Ativar</Button>
                       </div>
-                    ))
-                  })()}
-                </div>
-                <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                  {weeklyActivity.map(w => <span key={w.label} style={{ flex: 1, fontSize: 9, color: 'var(--color-text-tertiary)', textAlign: 'center' }}>{w.label}</span>)}
-                </div>
-                {!profile?.monthly_report_opt_in && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 'var(--sp-3)', paddingTop: 'var(--sp-3)', borderTop: '1px solid var(--color-border)' }}>
-                    <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)' }}>Recebe este resumo por email todos os meses.</span>
-                    <Button size="sm" variant="ghost" onClick={() => navigate('/settings')}>Ativar relatório mensal</Button>
+                    )}
+                  </Card>
+                )}
+
+                {roster.length > 0 && (
+                  <div className="dash-section" style={{ marginBottom: 'var(--sp-5)' }}>
+                    <div className="dash-sec-header">
+                      <div className="dash-sec-label"><Users size={13} /> Alunos <span className="dash-sec-count">{roster.length}</span></div>
+                    </div>
+                    <StudentRoster
+                      students={roster}
+                      showClass={turmas.length > 1}
+                      onOpenProject={slug => navigate(`/projeto/${slug}`)}
+                    />
                   </div>
                 )}
-              </Card>
-            )}
 
-            {/* Teacher onboarding steps */}
-            {(() => {
-              const done = (turmas.length > 0 ? 1 : 0) + (totalMembers > 0 ? 1 : 0)
-              if (done >= 2) return null
-              const step = turmas.length === 0
-                ? { Icon: Users2, title: 'Cria a tua primeira turma', desc: 'Gera um código e partilha-o com os teus alunos.', cta: 'Criar turma', action: () => setShowCreateTurma(true) }
-                : { Icon: Users, title: 'Convida os teus alunos', desc: `Partilha o código de ${turmas[0]?.name ?? 'uma turma'}.`, cta: 'Ver turma', action: () => navigate(`/turma/${turmas[0]?.code}`) }
-              return (
-                <div style={{ marginBottom: 'var(--sp-5)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 'var(--sp-2)' }}>
-                    <SectionLabel style={{ marginBottom: 0 }}>Primeiros passos</SectionLabel>
-                    <ProgressBar value={done} max={2} size="sm" style={{ width: 60 }} />
-                    <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)' }}>{done}/2</span>
-                  </div>
-                  <Card padding="md" style={{ borderLeft: '3px solid var(--color-primary)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-4)' }}>
-                      <div style={{ width: 44, height: 44, borderRadius: 'var(--radius-lg)', background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <step.Icon size={20} color="var(--color-primary)" />
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 'var(--text-base)', fontWeight: 700, color: 'var(--color-text)', marginBottom: 2 }}>{step.title}</div>
-                        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)' }}>{step.desc}</div>
-                      </div>
-                      <Button onClick={step.action}>{step.cta}</Button>
-                    </div>
-                  </Card>
-                </div>
-              )
-            })()}
-
-            {/* Teacher 2-column */}
-            <div className="dash-teacher-grid">
-              {/* Left: turmas */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-5)' }}>
                 <div className="dash-section">
                   <div className="dash-sec-header">
-                    <div className="dash-sec-label"><Users2 size={13} /> As minhas turmas {turmas.length > 0 && <span className="dash-sec-count">{turmas.length}</span>}</div>
-                    <Button size="sm" variant="secondary" icon={<Plus size={13} />} onClick={() => setShowCreateTurma(true)}>Nova turma</Button>
+                    <div className="dash-sec-label"><Users2 size={13} /> Turmas <span className="dash-sec-count">{turmas.length}</span></div>
+                    <Button size="sm" variant="secondary" iconRight={<ChevronRight size={13} />} onClick={() => navigate('/turmas')}>Gerir</Button>
                   </div>
-                  {(() => {
-                    const years = [...new Set(turmas.map(t => t.academic_year).filter(Boolean))].sort().reverse()
-                    if (years.length >= 2) return (
-                      <div style={{ display: 'flex', gap: 6, marginBottom: 'var(--sp-3)', flexWrap: 'wrap' }}>
-                        {['all', ...years].map(y => (
-                          <Button key={y} size="sm" variant={turmaYearFilter === y ? 'primary' : 'ghost'} onClick={() => setTurmaYearFilter(y)}>
-                            {y === 'all' ? 'Todos' : y}
-                          </Button>
-                        ))}
-                      </div>
-                    )
-                    return null
-                  })()}
-                  {turmas.length === 0 ? (
-                    <EmptyState icon={<Users2 size={24} />} title="Ainda não tens turmas" description="Cria uma turma e partilha o código com os teus alunos." action={() => setShowCreateTurma(true)} actionLabel="Criar primeira turma" />
-                  ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
-                      {turmas.filter(t => turmaYearFilter === 'all' || t.academic_year === turmaYearFilter).map(t => <TurmaCard key={t.id} turma={t} navigate={navigate} />)}
-                    </div>
-                  )}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
+                    {turmas.map(t => <TurmaCard key={t.id} turma={t} navigate={navigate} />)}
+                  </div>
                 </div>
-              </div>
+              </>
+            )}
 
-              {/* Right: review feed */}
+            {/* ── A rever ── */}
+            {teacherTab === 'rever' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-5)' }}>
+                {(resubmitted.length > 0 || needsReview.length > 0 || flaggedForRevision.length > 0 || upcomingDefenses.length > 0) && (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 'var(--sp-2)' }}>
+                    {[
+                      { label: 'Sem feedback', value: needsReview.length, color: 'var(--color-warning)' },
+                      { label: 'Reenviadas', value: resubmitted.length, color: 'var(--color-info)' },
+                      { label: 'Em correção', value: flaggedForRevision.length, color: 'var(--color-accent)' },
+                      { label: 'Defesas', value: upcomingDefenses.length, color: 'var(--color-primary)' },
+                    ].map(s => (
+                      <Card key={s.label} padding="md" style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: 'var(--text-xl)', fontWeight: 700, fontFamily: 'var(--font-heading)', color: s.value > 0 ? s.color : 'var(--color-text-tertiary)', lineHeight: 1 }}>{s.value}</div>
+                        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', fontWeight: 600, marginTop: 5 }}>{s.label}</div>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+                {resubmitted.length === 0 && needsReview.length === 0 && flaggedForRevision.length === 0 && upcomingDefenses.length === 0 && recentActivity.length === 0 && (
+                  <EmptyState icon={<Check size={24} />} title="Nada por rever agora" description="Quando os alunos submeterem projetos ou pedirem revisão, aparece aqui." />
+                )}
                 {resubmitted.length > 0 && (
                   <div className="dash-section">
                     <div className="dash-sec-header">
@@ -1484,14 +1546,13 @@ export default function Dashboard() {
                           iconBg="var(--color-success-subtle)" iconColor="var(--color-success)"
                           title={p.name}
                           subtitle={`${p.creator_name || 'Aluno'}${p.className ? ` · ${p.className}` : ''} · ${timeAgoLabel(p.created_at)}`}
-                          rightContent={p.score != null ? <Badge variant={p.score >= 71 ? 'success' : p.score >= 40 ? 'warning' : 'error'}>{p.score}</Badge> : undefined}
                         />
                       ))}
                     </Card>
                   </div>
                 )}
               </div>
-            </div>
+            )}
           </>
         )}
 

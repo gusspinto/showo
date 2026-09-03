@@ -287,7 +287,7 @@ export default function Home() {
                 <p className="home-start-email-echo">{email}</p>
                 <p className="home-start-note">
                   Esta conta foi criada com o Google. Entra com o Google acima, ou{' '}
-                  <Link to="/recuperar-password" className="home-start-note-link">define uma palavra-passe</Link>{' '}
+                  <Link to="/login?forgot=1" className="home-start-note-link">define uma palavra-passe</Link>{' '}
                   para também poderes entrar por aqui.
                 </p>
                 <button
@@ -364,7 +364,7 @@ export default function Home() {
                   <button type="button" className="home-start-back" onClick={() => { setHeroAuthStep('email'); setAuthError(''); setNotConfirmed(false) }}>
                     Usar outro email
                   </button>
-                  <Link to="/recuperar-password" className="home-start-back">Esqueceste a password?</Link>
+                  <Link to="/login?forgot=1" className="home-start-back">Esqueceste a password?</Link>
                 </div>
               </form>
             )}

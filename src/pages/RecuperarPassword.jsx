@@ -102,18 +102,28 @@ export default function RecuperarPassword({ onDone }) {
         .auth-side {
           position: relative; overflow: hidden;
           flex: 0 0 42%; display: flex; align-items: center; justify-content: flex-start;
-          padding: 0 0 0 64px; background: linear-gradient(115deg, #000 0%, #050b1c 40%, #0e2249 85%, #143169 100%);
-          border-right: 1px solid var(--color-border);
+          padding: 0 0 0 64px; background: #141414;
+          border-right: 1px solid rgba(255,255,255,0.09);
         }
         .auth-side-content { position: relative; z-index: 3; display: flex; flex-direction: column; align-items: flex-start; gap: 22px; text-align: left; }
-        .auth-side-mark { width: 72px; height: auto; display: block; }
+        .auth-side-mark { width: 160px; height: auto; display: block; }
         .auth-side-phrase {
           font-family: var(--font-heading); font-weight: 400;
           font-size: clamp(22px, 2.6vw, 36px); line-height: 1.3;
-          letter-spacing: -0.5px; color: #fff; margin: 0; text-align: left;
+          letter-spacing: -0.5px; color: #fff; margin: 0;
+          white-space: nowrap; text-align: left;
+          animation: auth-phrase-fade 0.6s ease;
+        }
+        @keyframes auth-phrase-fade {
+          from { opacity: 0; transform: translateY(8px); }
+          to   { opacity: 1; transform: translateY(0); }
         }
         .auth-side-highlight { background: var(--color-text); color: var(--color-bg); padding: 2px 10px 9px; border-radius: 0 0 14px 14px; display: inline-block; }
-        .auth-side-letter { display: inline-block; }
+        .auth-side-letter { display: inline-block; animation: auth-letter-rise 0.45s ease both; }
+        @keyframes auth-letter-rise {
+          from { opacity: 0; transform: translateY(60%); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
         .auth-main { flex: 1; display: flex; align-items: center; justify-content: center; padding: 24px 16px; }
         .auth-card { width: 100%; max-width: 380px; }
         .auth-input, body.light .auth-input {
