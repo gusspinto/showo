@@ -4425,6 +4425,7 @@ export default function ProjectPage() {
   const [juryNote, setJuryNote] = useState('')
   const [jurySaving, setJurySaving] = useState(false)
   const [jurySaved, setJurySaved] = useState(false)
+  const [juryError, setJuryError] = useState('')
   const [juryEditing, setJuryEditing] = useState(false)
   // Hydrate from the saved grade once the project loads, and default to the
   // collapsed summary if a grade already exists, or straight to the form if not.
@@ -7813,6 +7814,7 @@ export default function ProjectPage() {
                         onClick={async () => {
                           if (!canSave || finalScore == null) return
                           setJurySaving(true)
+                          setJuryError('')
                           const ratings = useClassCriteria ? criterionScores : juryRatings
                           const { error } = await supabase.rpc('set_project_teacher_score', {
                             p_project_id: project.id, p_score: finalScore, p_note: juryNote || null, p_ratings: ratings,
@@ -7822,7 +7824,8 @@ export default function ProjectPage() {
                               const upsertRows = classCriteria.map(c => ({
                                 project_id: project.id, criterion_id: c.id, score: Number(criterionScores[c.id]),
                               }))
-                              await supabase.from('project_criterion_scores').upsert(upsertRows, { onConflict: 'project_id,criterion_id' })
+                              const { error: critErr } = await supabase.from('project_criterion_scores').upsert(upsertRows, { onConflict: 'project_id,criterion_id' })
+                              if (critErr) console.error('criterion scores upsert failed:', critErr)
                             }
                             setProject(p => ({ ...p, teacher_score: finalScore, teacher_score_note: juryNote || null, teacher_score_ratings: ratings }))
                             if (project.user_id) {
@@ -7835,6 +7838,11 @@ export default function ProjectPage() {
                             setJurySaved(true)
                             setJuryEditing(false)
                             setTimeout(() => setJurySaved(false), 3000)
+                          } else {
+                            console.error('set_project_teacher_score failed:', error)
+                            setJuryError(error.message === 'Not authorized'
+                              ? 'Sem permissão para avaliar este projeto.'
+                              : 'Não foi possível guardar. Tenta de novo.')
                           }
                           setJurySaving(false)
                         }}
@@ -7850,6 +7858,9 @@ export default function ProjectPage() {
                       >
                         {jurySaved ? <><Check size={13} /> Avaliação guardada</> : jurySaving ? 'A guardar…' : <><ClipboardList size={13} /> Guardar avaliação</>}
                       </button>
+                      {juryError && (
+                        <p style={{ margin: '8px 0 0', fontSize: 12, fontWeight: 600, color: 'var(--color-error)', textAlign: 'center' }}>{juryError}</p>
+                      )}
                     </div>
                   </>
                 )}

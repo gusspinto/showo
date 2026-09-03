@@ -1434,6 +1434,21 @@ export default function Dashboard() {
             {/* ── A rever ── */}
             {teacherTab === 'rever' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-5)' }}>
+                {(resubmitted.length > 0 || needsReview.length > 0 || flaggedForRevision.length > 0 || upcomingDefenses.length > 0) && (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 'var(--sp-2)' }}>
+                    {[
+                      { label: 'Sem feedback', value: needsReview.length, color: 'var(--color-warning)' },
+                      { label: 'Reenviadas', value: resubmitted.length, color: 'var(--color-info)' },
+                      { label: 'Em correção', value: flaggedForRevision.length, color: 'var(--color-accent)' },
+                      { label: 'Defesas', value: upcomingDefenses.length, color: 'var(--color-primary)' },
+                    ].map(s => (
+                      <Card key={s.label} padding="md" style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: 'var(--text-xl)', fontWeight: 700, fontFamily: 'var(--font-heading)', color: s.value > 0 ? s.color : 'var(--color-text-tertiary)', lineHeight: 1 }}>{s.value}</div>
+                        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', fontWeight: 600, marginTop: 5 }}>{s.label}</div>
+                      </Card>
+                    ))}
+                  </div>
+                )}
                 {resubmitted.length === 0 && needsReview.length === 0 && flaggedForRevision.length === 0 && upcomingDefenses.length === 0 && recentActivity.length === 0 && (
                   <EmptyState icon={<Check size={24} />} title="Nada por rever agora" description="Quando os alunos submeterem projetos ou pedirem revisão, aparece aqui." />
                 )}

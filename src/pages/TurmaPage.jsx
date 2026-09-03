@@ -80,16 +80,11 @@ function ProjectCard({ project, navigate }) {
         {project.creator_name && (
           <div style={{ fontSize: 12, color: C.muted, marginBottom: 8 }}>{project.creator_name}</div>
         )}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          {project.area && (
-            <span style={{ fontSize: 11, color: C.muted, fontWeight: 600 }}>
-              {project.area}
-            </span>
-          )}
-          <span style={{ fontSize: 12, fontWeight: 800, color: scoreColor(project.score), marginLeft: 'auto' }}>
-            {project.score ?? '—'}
+        {project.area && (
+          <span style={{ fontSize: 11, color: C.muted, fontWeight: 600 }}>
+            {project.area}
           </span>
-        </div>
+        )}
       </div>
     </div>
   )
@@ -366,7 +361,7 @@ export default function TurmaPage() {
   const [toast, setToast] = useState('')
   const [copied, setCopied] = useState(false)
   const [isTeacher, setIsTeacher] = useState(false)
-  const [sortBy, setSortBy] = useState('score')
+  const [sortBy, setSortBy] = useState('completude')
   const [sortAsc, setSortAsc] = useState(false)
   const [selectedIds, setSelectedIds] = useState(new Set())
   const [bulkSaving, setBulkSaving] = useState(false)
@@ -812,7 +807,7 @@ export default function TurmaPage() {
     const statusLabel = s => s === 'ready_for_defense' ? 'Pronto para defesa' : s === 'needs_revision' ? 'Precisa de revisão' : s === 'resubmitted' ? 'Correções enviadas' : '—'
     const hasCrit = criteria.length > 0
     const critHeaders = hasCrit ? criteria.map(c => `${c.name} (${c.weight}%)`) : []
-    const headers = ['Aluno', 'Projeto', 'Nota (0-20)', ...critHeaders, 'Score Showo', 'Completude (%)', 'Estado', 'Data', 'Link']
+    const headers = ['Aluno', 'Projeto', 'Nota (0-20)', ...critHeaders, 'Completude (%)', 'Estado', 'Data', 'Link']
     const rows = [headers]
     sortedProjects.forEach(p => {
       const date = p.created_at ? new Date(p.created_at).toLocaleDateString('pt-PT') : '—'
@@ -824,7 +819,6 @@ export default function TurmaPage() {
         p.name,
         p.teacher_score ?? '—',
         ...critScores,
-        p.score ?? '—',
         computeCompletude(p),
         statusLabel(p.review_status),
         date,
@@ -1056,7 +1050,7 @@ export default function TurmaPage() {
                   <div key={p.id} style={{ background: C.bgAlt, border: `1px solid ${C.border}`, borderRadius: 8, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 12 }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 14, fontWeight: 600, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
-                      <div style={{ fontSize: 11, color: C.muted }}>Score: {p.score ?? '—'}</div>
+                      {p.area && <div style={{ fontSize: 11, color: C.muted }}>{p.area}</div>}
                     </div>
                     <button
                       onClick={() => addProject(p.id)}
@@ -1157,7 +1151,7 @@ export default function TurmaPage() {
                 {[
                   { label: 'Alunos', value: students.length },
                   { label: 'Projetos', value: projects.length },
-                  { label: 'Score médio', value: avgScore ?? '—', color: avgScore != null ? scoreColor(avgScore) : C.muted },
+                  { label: 'Avaliados', value: projects.filter(p => p.teacher_score != null).length },
                   { label: 'Tarefas', value: tasks.length > 0 ? `${tasks.length}` : '—' },
                 ].map(s => (
                   <div key={s.label} style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 10, padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 3, minWidth: 90 }}>
@@ -1633,9 +1627,9 @@ export default function TurmaPage() {
           // Build ranking: best score per student (their projects in this turma)
           const studentMembers = members.filter(m => m.role !== 'professor')
           const ranked = studentMembers.map(m => {
-            const studentProjects = projects.filter(p => p.user_id === m.user_id && p.score != null)
-            const best = studentProjects.reduce((top, p) => p.score > (top?.score ?? -1) ? p : top, null)
-            return { ...m, bestProject: best, bestScore: best?.score ?? null }
+            const studentProjects = projects.filter(p => p.user_id === m.user_id && p.teacher_score != null)
+            const best = studentProjects.reduce((top, p) => p.teacher_score > (top?.teacher_score ?? -1) ? p : top, null)
+            return { ...m, bestProject: best, bestScore: best?.teacher_score ?? null }
           }).sort((a, b) => {
             if (a.bestScore == null && b.bestScore == null) return 0
             if (a.bestScore == null) return 1
@@ -1716,7 +1710,7 @@ export default function TurmaPage() {
                         </div>
                         <div style={{ textAlign: 'right', flexShrink: 0 }}>
                           {m.bestScore != null
-                            ? <span style={{ fontSize: 16, fontWeight: 800, color: scoreColor(m.bestScore), fontFamily: 'var(--font-heading)', letterSpacing: '-0.5px' }}>{m.bestScore}</span>
+                            ? <span style={{ fontSize: 16, fontWeight: 800, color: C.text, fontFamily: 'var(--font-heading)', letterSpacing: '-0.5px' }}>{m.bestScore}<span style={{ fontSize: 11, color: C.subtle, fontWeight: 600 }}>/20</span></span>
                             : <span style={{ fontSize: 13, color: C.subtle }}>—</span>}
                         </div>
                       </div>
@@ -1810,14 +1804,14 @@ export default function TurmaPage() {
           <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, overflow: 'hidden' }}>
             <div style={{ overflowX: 'auto' }}>
             {/* Table header */}
-            <div style={{ display: 'grid', gridTemplateColumns: '28px minmax(160px,1fr) 60px 64px 120px 88px 130px', gap: 0, padding: '10px 16px', borderBottom: `1px solid ${C.border}`, background: 'var(--color-bg)', minWidth: 668, alignItems: 'center' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '28px minmax(160px,1fr) 60px 120px 88px 130px', gap: 0, padding: '10px 16px', borderBottom: `1px solid ${C.border}`, background: 'var(--color-bg)', minWidth: 604, alignItems: 'center' }}>
               <input
                 type="checkbox"
                 checked={sortedProjects.length > 0 && selectedIds.size === sortedProjects.length}
                 onChange={() => setSelectedIds(selectedIds.size === sortedProjects.length ? new Set() : new Set(sortedProjects.map(p => p.id)))}
                 style={{ cursor: 'pointer' }}
               />
-              {[['name','Projeto'], [null,'Nota'], ['score','Score'], ['completude','Completude'], ['updated','Data'], [null,'Ações']].map(([field, label]) => (
+              {[['name','Projeto'], [null,'Nota'], ['completude','Completude'], ['updated','Data'], [null,'Ações']].map(([field, label]) => (
                 <div key={label} onClick={() => field && toggleSort(field)} style={{ fontSize: 11, fontWeight: 700, color: field ? (sortBy === field ? C.blue : C.muted) : C.muted, textTransform: 'uppercase', letterSpacing: 0.5, cursor: field ? 'pointer' : 'default', display: 'flex', alignItems: 'center', gap: 4, userSelect: 'none' }}>
                   {label}
                   {field && sortBy === field && (sortAsc ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}
@@ -1828,7 +1822,7 @@ export default function TurmaPage() {
               const completude = computeCompletude(p)
               const updated = p.created_at ? new Date(p.created_at).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' }) : '—'
               return (
-                <div key={p.id} style={{ display: 'grid', gridTemplateColumns: '28px minmax(160px,1fr) 60px 64px 120px 88px 130px', gap: 0, padding: '12px 16px', borderBottom: i < sortedProjects.length - 1 ? `1px solid ${C.border}` : 'none', alignItems: 'center', transition: 'background 0.12s', minWidth: 668 }}
+                <div key={p.id} style={{ display: 'grid', gridTemplateColumns: '28px minmax(160px,1fr) 60px 120px 88px 130px', gap: 0, padding: '12px 16px', borderBottom: i < sortedProjects.length - 1 ? `1px solid ${C.border}` : 'none', alignItems: 'center', transition: 'background 0.12s', minWidth: 604 }}
                   onMouseEnter={e => e.currentTarget.style.background = C.glassHover}
                   onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                   <input
@@ -1855,7 +1849,6 @@ export default function TurmaPage() {
                   <div style={{ fontSize: 13, fontWeight: 800, color: p.teacher_score == null ? C.subtle : p.teacher_score >= 16 ? C.green : p.teacher_score >= 10 ? C.blue : 'var(--color-warning)' }}>
                     {p.teacher_score != null ? `${p.teacher_score}/20` : '—'}
                   </div>
-                  <div style={{ fontSize: 15, fontWeight: 800, color: scoreColor(p.score) }}>{p.score ?? '—'}</div>
                   <div style={{ paddingRight: 8 }}>
                     <div style={{ fontSize: 12, fontWeight: 600, color: completude >= 80 ? C.green : completude >= 50 ? C.yellow : C.muted, marginBottom: 4 }}>{completude}%</div>
                     <div style={{ height: 4, borderRadius: 2, background: C.border, overflow: 'hidden' }}>
