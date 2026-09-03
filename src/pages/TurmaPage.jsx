@@ -37,9 +37,10 @@ const C = {
   border: 'var(--color-border)', borderBright: 'var(--color-border-hover)',
   blue: 'var(--color-primary)', text: 'var(--color-text)', muted: 'var(--color-text-secondary)', subtle: 'var(--color-text-tertiary)',
   green: 'var(--color-success)', yellow: 'var(--color-warning)', red: 'var(--color-error)',
-  glass: 'var(--color-glass)', glassHover: 'var(--color-glass-hover)',
-  glassBorder: 'var(--color-glass-border)', glassBorderBright: 'var(--color-glass-border-bright)',
-  glassStyle: { backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' },
+  // Superfície lisa, sem blur — alinhado ao resto do redesign
+  glass: 'var(--color-surface)', glassHover: 'var(--color-surface-hover)',
+  glassBorder: 'var(--color-border)', glassBorderBright: 'var(--color-border-hover)',
+  glassStyle: {},
 }
 
 function scoreColor(s) {
@@ -1079,23 +1080,26 @@ export default function TurmaPage() {
 
       <div className="page-content">
         {/* Header */}
-        <div style={{ marginBottom: 32 }}>
+        <div style={{ marginBottom: 28, paddingBottom: 20, borderBottom: `1px solid ${C.border}` }}>
+          <span style={{ display: 'block', fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.12em', color: C.subtle, marginBottom: 8 }}>
+            {isTeacher ? 'A tua turma' : 'Turma'}
+          </span>
           <div className="turmapage-hd" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
             <div>
               <div style={{ marginBottom: 8 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <h1 style={{ margin: 0, fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 400, letterSpacing: '-0.8px', fontFamily: 'var(--font-heading)' }}>{turma.name}</h1>
+                  <h1 style={{ margin: 0, fontSize: 'clamp(26px, 4vw, 36px)', fontWeight: 400, letterSpacing: '-0.6px', fontFamily: 'var(--font-heading)', lineHeight: 1.1 }}>{turma.name}</h1>
                   {turma.academic_year && (
-                    <span style={{ fontSize: 12, fontWeight: 700, color: C.muted, background: C.bgAlt, border: `1px solid ${C.border}`, borderRadius: 6, padding: '3px 9px', marginTop: 6 }}>{turma.academic_year}</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: C.muted, background: C.bgAlt, border: `1px solid ${C.border}`, borderRadius: 6, padding: '3px 9px', marginTop: 4 }}>{turma.academic_year}</span>
                   )}
                   {isTeacher && (
                     <button onClick={() => setShowEditTurma(true)} title="Editar turma"
-                      className="icon-btn-ghost" style={{ marginTop: 6 }}>
+                      className="icon-btn-ghost" style={{ marginTop: 4 }}>
                       <Pencil size={16} />
                     </button>
                   )}
                 </div>
-                {turma.subject && <p style={{ margin: 0, fontSize: 14, color: C.muted }}>{turma.subject}</p>}
+                {turma.subject && <p style={{ margin: '2px 0 0', fontSize: 14, color: C.muted }}>{turma.subject}</p>}
               </div>
               <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', fontSize: 13, color: C.subtle }}>
                 {turma.teacher_name && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><User size={13} />{turma.teacher_name}</span>}
@@ -1106,11 +1110,11 @@ export default function TurmaPage() {
               {/* Code badge */}
               <button
                 onClick={copyCode}
-                style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--color-primary-subtle)', border: `1px solid var(--color-primary-subtle)`, borderRadius: 7, padding: '6px 10px', cursor: 'pointer', fontFamily: 'inherit' }}
+                style={{ display: 'flex', alignItems: 'center', gap: 6, background: C.bgAlt, border: `1px solid ${C.border}`, borderRadius: 8, padding: '6px 10px', cursor: 'pointer', fontFamily: 'inherit' }}
               >
-                <span style={{ fontSize: 10, color: C.muted, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>Código</span>
-                <span style={{ fontSize: 14, fontWeight: 800, color: C.blue, letterSpacing: 1.5 }}>{turma.code}</span>
-                <span style={{ color: copied ? C.green : C.muted, display: 'flex' }}>{copied ? <Check size={11} /> : <Copy size={11} />}</span>
+                <span style={{ fontSize: 10, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>Código</span>
+                <span style={{ fontSize: 14, fontWeight: 800, color: C.text, letterSpacing: 1.5 }}>{turma.code}</span>
+                <span style={{ color: copied ? C.green : C.subtle, display: 'flex' }}>{copied ? <Check size={11} /> : <Copy size={11} />}</span>
               </button>
               {/* Copy link */}
               <Button variant="secondary" size="sm" icon={copiedLink ? <Check size={12} /> : <Copy size={12} />} onClick={copyLink}>
@@ -1865,7 +1869,7 @@ export default function TurmaPage() {
                   <div style={{ fontSize: 12, color: C.muted }}>{updated}</div>
                   <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
                     <button onClick={() => goToProject(p.slug)} style={{ fontSize: 12, padding: '5px 11px', borderRadius: 6, border: `1px solid ${C.border}`, background: 'transparent', color: C.muted, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>Ver</button>
-                    <button onClick={() => setFeedbackProject(p)} title="Feedback" style={{ padding: '5px 8px', borderRadius: 6, border: '1px solid var(--color-primary-subtle)', background: 'var(--color-primary-subtle)', color: C.blue, cursor: 'pointer', display: 'flex', alignItems: 'center', flexShrink: 0 }}><MessageSquare size={12} /></button>
+                    <button onClick={() => setFeedbackProject(p)} title="Feedback" style={{ padding: '5px 8px', borderRadius: 6, border: `1px solid ${C.border}`, background: 'transparent', color: C.muted, cursor: 'pointer', display: 'flex', alignItems: 'center', flexShrink: 0 }}><MessageSquare size={12} /></button>
                     <button onClick={() => removeProject(p.id)} title="Remover" style={{ padding: '5px 8px', borderRadius: 6, border: '1px solid var(--color-error-subtle)', background: 'transparent', color: 'var(--color-error)', cursor: 'pointer', display: 'flex', alignItems: 'center', flexShrink: 0 }}><X size={12} /></button>
                   </div>
                 </div>
