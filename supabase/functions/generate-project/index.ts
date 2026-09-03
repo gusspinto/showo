@@ -1,5 +1,5 @@
 import Anthropic from 'npm:@anthropic-ai/sdk@0.36.3'
-import { checkRateLimit, getAuthUser, clip, getCorsHeaders, checkPlanLimit } from '../_shared/rateLimit.ts'
+import { checkRateLimit, getAuthUser, clip, getCorsHeaders, checkPlanLimit, PTPT_RULES, repairJson } from '../_shared/rateLimit.ts'
 
 Deno.serve(async (req) => {
   const cors = getCorsHeaders(req)
@@ -75,21 +75,18 @@ Regras absolutas:
 - Nunca uses clichês como "solução inovadora" ou "abordagem revolucionária"
 - Nunca uses travessões (—) no texto gerado
 - Escreve como um mentor orgulhoso que acredita genuinamente neste estudante
-- Sê específico ao projeto dele — nunca genérico
-- Sempre em Português de Portugal (PT-PT)`
+- Se especifico ao projeto dele — nunca generico
+- Sempre em Portugues de Portugal (PT-PT)
+${PTPT_RULES}`
 
     const message = await client.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 900,
+      model: 'claude-sonnet-4-6',
+      max_tokens: 1500,
       messages: [{ role: 'user', content: prompt }],
     })
 
     const raw = (message.content[0] as { type: string; text: string }).text.trim()
-
-    const jsonMatch = raw.match(/\{[\s\S]*\}/)
-    if (!jsonMatch) throw new Error('Resposta inválida da IA')
-
-    const result = JSON.parse(jsonMatch[0])
+    const result = repairJson(raw) as Record<string, unknown>
 
     if (Array.isArray(result.historia)) {
       result.description = result.historia.join('\n\n')

@@ -1033,6 +1033,11 @@ function OrgsTab() {
   const [plan, setPlan] = useState('build')
   const [creating, setCreating] = useState(false)
   const [createMsg, setCreateMsg] = useState(null)
+  const [editing, setEditing] = useState(null)
+  const [editName, setEditName] = useState('')
+  const [editDomain, setEditDomain] = useState('')
+  const [editPlan, setEditPlan] = useState('build')
+  const [saving, setSaving] = useState(false)
 
   const fieldStyle = {
     background: 'var(--color-bg)', border: '1px solid var(--color-border)',
@@ -1050,11 +1055,11 @@ function OrgsTab() {
   async function handleCreate(e) {
     e.preventDefault()
     setCreateMsg(null)
-    if (!name.trim() || !domain.trim()) { setCreateMsg({ ok: false, text: 'Preenche nome e domínio.' }); return }
+    if (!name.trim()) { setCreateMsg({ ok: false, text: 'Preenche o nome da escola.' }); return }
     setCreating(true)
     const { data, error } = await supabase.rpc('admin_create_organization', {
       p_name: name.trim(),
-      p_email_domain: domain.trim().toLowerCase().replace(/^@/, ''),
+      p_email_domain: domain.trim() ? domain.trim().toLowerCase().replace(/^@/, '') : null,
       p_plan: plan,
     })
     setCreating(false)
@@ -1065,12 +1070,39 @@ function OrgsTab() {
     if (fresh) setOrgs(fresh)
   }
 
+  async function refreshOrgs() {
+    const { data: fresh } = await supabase.from('organizations').select('*').order('created_at', { ascending: false })
+    if (fresh) setOrgs(fresh)
+  }
+
+  function startEdit(o) {
+    setEditing(o.id)
+    setEditName(o.name)
+    setEditDomain(o.email_domain || '')
+    setEditPlan(o.plan)
+  }
+
+  async function saveEdit() {
+    if (!editName.trim()) return
+    setSaving(true)
+    const { error } = await supabase.rpc('admin_update_organization', {
+      p_id: editing,
+      p_name: editName.trim(),
+      p_email_domain: editDomain.trim() ? editDomain.trim().toLowerCase().replace(/^@/, '') : null,
+      p_plan: editPlan,
+    })
+    setSaving(false)
+    if (error) { setCreateMsg({ ok: false, text: 'Erro ao guardar: ' + error.message }); return }
+    setEditing(null)
+    refreshOrgs()
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
       <div style={{ ...C.glassStyle, background: C.glass, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: '20px 22px' }}>
         <h3 style={{ margin: '0 0 4px', fontSize: 15, fontWeight: 700, color: C.text }}>Registar escola</h3>
         <p style={{ margin: '0 0 16px', fontSize: 13, color: C.muted }}>
-          Alunos que se registem com um email desse domínio recebem automaticamente a conta escolar com plano Build.
+          O domínio é opcional — se preenchido, alunos com esse email entram automaticamente. Sem domínio, os alunos entram pelo código de turma do professor.
         </p>
         <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
@@ -1080,7 +1112,7 @@ function OrgsTab() {
             </div>
             <div>
               <label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: 'block', marginBottom: 5 }}>Domínio de email</label>
-              <input value={domain} onChange={e => setDomain(e.target.value)} placeholder="Ex: esmad.ipp.pt" style={fieldStyle} />
+              <input value={domain} onChange={e => setDomain(e.target.value)} placeholder="Opcional (ex: esmad.ipp.pt)" style={fieldStyle} />
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -1117,20 +1149,43 @@ function OrgsTab() {
           <p style={{ fontSize: 13, color: C.muted }}>Nenhuma escola registada ainda.</p>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {orgs.map(o => (
+            {orgs.map(o => editing === o.id ? (
+              <div key={o.id} style={{
+                background: C.card, border: `1px solid ${C.blue}`, borderRadius: 10,
+                padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 10,
+              }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                  <input value={editName} onChange={e => setEditName(e.target.value)} placeholder="Nome" style={fieldStyle} />
+                  <input value={editDomain} onChange={e => setEditDomain(e.target.value)} placeholder="Domínio (opcional)" style={fieldStyle} />
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <select value={editPlan} onChange={e => setEditPlan(e.target.value)} style={{ ...fieldStyle, width: 'auto', paddingRight: 28 }}>
+                    <option value="build">Build</option>
+                    <option value="launch">Launch</option>
+                  </select>
+                  <button onClick={saveEdit} disabled={saving} style={{ background: C.blue, color: '#fff', border: 'none', borderRadius: 8, padding: '7px 16px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+                    {saving ? 'A guardar…' : 'Guardar'}
+                  </button>
+                  <button onClick={() => setEditing(null)} style={{ background: 'none', border: 'none', color: C.muted, cursor: 'pointer', fontSize: 12, fontFamily: 'inherit' }}>Cancelar</button>
+                </div>
+              </div>
+            ) : (
               <div key={o.id} style={{
                 background: C.card, border: `1px solid ${C.border}`, borderRadius: 10,
                 padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               }}>
-                <div>
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{o.name}</div>
-                  <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>@{o.email_domain}</div>
+                  <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>{o.email_domain ? `@${o.email_domain}` : 'Sem domínio · entrada por código de turma'}</div>
                 </div>
-                <span style={{
-                  padding: '3px 10px', borderRadius: 99, fontSize: 12, fontWeight: 700,
-                  background: PLAN_COLORS[o.plan] + '22', color: PLAN_COLORS[o.plan],
-                  border: `1px solid ${PLAN_COLORS[o.plan]}44`,
-                }}>{PLAN_LABELS[o.plan] ?? o.plan}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{
+                    padding: '3px 10px', borderRadius: 99, fontSize: 12, fontWeight: 700,
+                    background: PLAN_COLORS[o.plan] + '22', color: PLAN_COLORS[o.plan],
+                    border: `1px solid ${PLAN_COLORS[o.plan]}44`,
+                  }}>{PLAN_LABELS[o.plan] ?? o.plan}</span>
+                  <button onClick={() => startEdit(o)} style={{ background: 'none', border: 'none', color: C.blue, cursor: 'pointer', fontSize: 12, fontWeight: 600, fontFamily: 'inherit' }}>Editar</button>
+                </div>
               </div>
             ))}
           </div>
@@ -1144,10 +1199,16 @@ function OrgsTab() {
 function InvitesTab({ codes, loading, onGenerate, generating, onToggleActive }) {
   const [label, setLabel] = useState('')
   const [maxUses, setMaxUses] = useState('') // empty = ilimitado
+  const [orgId, setOrgId] = useState('')
+  const [orgs, setOrgs] = useState([])
   const [justCreated, setJustCreated] = useState(null)
   const [copied, setCopied] = useState(null)
   const [expanded, setExpanded] = useState(null)
   const [togglingId, setTogglingId] = useState(null)
+
+  useEffect(() => {
+    supabase.from('organizations').select('id, name').order('name').then(({ data }) => setOrgs(data ?? []))
+  }, [])
 
   async function handleToggle(c) {
     setTogglingId(c.id)
@@ -1156,8 +1217,8 @@ function InvitesTab({ codes, loading, onGenerate, generating, onToggleActive }) 
   }
 
   async function handleGenerate() {
-    const code = await onGenerate(label, maxUses.trim() ? parseInt(maxUses, 10) : null)
-    if (code) { setJustCreated(code); setLabel(''); setMaxUses('') }
+    const code = await onGenerate(label, maxUses.trim() ? parseInt(maxUses, 10) : null, orgId || null)
+    if (code) { setJustCreated(code); setLabel(''); setMaxUses(''); setOrgId('') }
   }
 
   function copy(code) {
@@ -1174,12 +1235,19 @@ function InvitesTab({ codes, loading, onGenerate, generating, onToggleActive }) 
           Por defeito, o código é reutilizável. Dá para partilhar um único código com uma escola inteira e cada professor regista-se com ele.
           Define um limite de usos só se quiseres um código para uma pessoa em concreto.
         </p>
-        <div style={{ display: 'flex', gap: 10 }}>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
           <input
             value={label} onChange={e => setLabel(e.target.value)}
             placeholder="Nota (ex: Escola Secundária de...)"
-            style={{ flex: 1, background: C.bgAlt, border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 14px', color: C.text, fontSize: 13, fontFamily: 'inherit', outline: 'none' }}
+            style={{ flex: 1, minWidth: 180, background: C.bgAlt, border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 14px', color: C.text, fontSize: 13, fontFamily: 'inherit', outline: 'none' }}
           />
+          <select
+            value={orgId} onChange={e => setOrgId(e.target.value)}
+            style={{ width: 200, background: C.bgAlt, border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 14px', color: C.text, fontSize: 13, fontFamily: 'inherit', outline: 'none', cursor: 'pointer' }}
+          >
+            <option value="">Sem escola</option>
+            {orgs.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
+          </select>
           <input
             value={maxUses} onChange={e => setMaxUses(e.target.value.replace(/\D/g, ''))}
             placeholder="Nº máx. usos (vazio = ilimitado)"
@@ -1223,6 +1291,7 @@ function InvitesTab({ codes, loading, onGenerate, generating, onToggleActive }) 
                     {c.label && <div style={{ fontSize: 12, color: C.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.label}</div>}
                     <div style={{ fontSize: 11, color: C.subtle }}>
                       Criado {new Date(c.created_at).toLocaleDateString('pt-PT')} · {c.max_uses == null ? 'ilimitado' : `limite de ${c.max_uses}`}
+                      {c.organizations?.name && <> · <span style={{ color: C.blue }}>🏫 {c.organizations.name}</span></>}
                     </div>
                   </div>
                   <button onClick={() => copy(c.code)} title="Copiar" style={{ background: 'none', border: 'none', color: C.muted, cursor: 'pointer', display: 'flex', flexShrink: 0 }}>
@@ -1380,7 +1449,7 @@ export default function Admin() {
   const loadCodes = useCallback(async () => {
     setCodesLoading(true)
     const [codesRes, redemptionsRes] = await Promise.all([
-      supabase.from('professor_invite_codes').select('*').order('created_at', { ascending: false }),
+      supabase.from('professor_invite_codes').select('*, organizations(name)').order('created_at', { ascending: false }),
       supabase.from('professor_invite_redemptions').select('code_id, user_id, redeemed_at').order('redeemed_at', { ascending: false }),
     ])
     if (codesRes.error) showToast('Erro ao carregar códigos: ' + codesRes.error.message)
@@ -1412,9 +1481,9 @@ export default function Admin() {
     if (isAdmin && tab === 'invites' && !codesLoaded && !codesLoading) loadCodes()
   }, [isAdmin, tab, codesLoaded, codesLoading, loadCodes])
 
-  async function handleGenerateCode(label, maxUses) {
+  async function handleGenerateCode(label, maxUses, orgId) {
     setGeneratingCode(true)
-    const { data, error } = await supabase.rpc('create_professor_invite_code', { p_label: label || null, p_max_uses: maxUses })
+    const { data, error } = await supabase.rpc('create_professor_invite_code', { p_label: label || null, p_max_uses: maxUses, p_org_id: orgId || null })
     setGeneratingCode(false)
     if (error) { showToast('Erro ao gerar código: ' + error.message); return null }
     loadCodes()

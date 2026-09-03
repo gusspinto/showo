@@ -4404,10 +4404,24 @@ export default function ProjectPage() {
   }
   const tabActive = (id) => MOBILE_TAB_GROUP[id] === mobileTab
   const [coachMessages, setCoachMessages] = useState([])
+  const [coachAllMessages, setCoachAllMessages] = useState([])
+  const [coachSessionId, setCoachSessionId] = useState(null)
   const [coachInput, setCoachInput] = useState('')
   const [coachLoading, setCoachLoading] = useState(false)
   const [coachOpen, setCoachOpen] = useState(false)
+  const [coachSessionsOpen, setCoachSessionsOpen] = useState(false)
   const coachBottomRef = useRef(null)
+
+  const coachSessions = useMemo(() => {
+    if (!coachAllMessages.length) return []
+    const map = new Map()
+    for (const m of coachAllMessages) {
+      const sid = m.session_id || 'default'
+      if (!map.has(sid)) map.set(sid, [])
+      map.get(sid).push(m)
+    }
+    return Array.from(map.entries()).map(([sid, msgs]) => ({ id: sid, messages: msgs }))
+  }, [coachAllMessages])
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [generatingNarrative, setGeneratingNarrative] = useState(false)
   const [narrativePreview, setNarrativePreview]       = useState(null)
@@ -4528,13 +4542,25 @@ export default function ProjectPage() {
     let cancelled = false
     supabase
       .from('coach_messages')
-      .select('role, content')
+      .select('role, content, created_at, session_id')
       .eq('project_id', project.id)
       .eq('user_id', user.id)
       .order('created_at', { ascending: true })
-      .limit(60)
+      .limit(200)
       .then(({ data }) => {
-        if (!cancelled && data?.length) setCoachMessages(data.map(m => ({ role: m.role, content: m.content })))
+        if (cancelled || !data?.length) return
+        const all = data.map(m => ({ role: m.role, content: m.content, created_at: m.created_at, session_id: m.session_id }))
+        setCoachAllMessages(all)
+        const savedSid = localStorage.getItem(`coach_session_${project.id}`)
+        if (savedSid === 'new') {
+          setCoachMessages([])
+          setCoachSessionId(null)
+        } else {
+          const lastSid = savedSid || all[all.length - 1]?.session_id
+          const sessionMsgs = all.filter(m => m.session_id === lastSid)
+          setCoachMessages(sessionMsgs.map(m => ({ role: m.role, content: m.content })))
+          setCoachSessionId(lastSid)
+        }
       })
     return () => { cancelled = true }
   }, [project?.id, user?.id])
@@ -4555,12 +4581,19 @@ export default function ProjectPage() {
     try {
       const reply = await chatProjectCoach({ project: { ...project, journal: projectJournalEntries, teacher_feedback: teacherFeedback }, messages: coachMessages, message: msg })
       consumeAI('coach')
+      const now = new Date().toISOString()
       setCoachMessages(prev => [...prev, { role: 'assistant', content: reply }])
       setTimeout(() => coachBottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
+      const sid = coachSessionId || crypto.randomUUID()
+      if (!coachSessionId) {
+        setCoachSessionId(sid)
+        if (project?.id) localStorage.setItem(`coach_session_${project.id}`, sid)
+      }
+      setCoachAllMessages(prev => [...prev, { role: 'user', content: msg, created_at: now, session_id: sid }, { role: 'assistant', content: reply, created_at: now, session_id: sid }])
       if (user?.id && project?.id) {
         supabase.from('coach_messages').insert([
-          { project_id: project.id, user_id: user.id, role: 'user', content: msg },
-          { project_id: project.id, user_id: user.id, role: 'assistant', content: reply },
+          { project_id: project.id, user_id: user.id, role: 'user', content: msg, session_id: sid },
+          { project_id: project.id, user_id: user.id, role: 'assistant', content: reply, session_id: sid },
         ])
       }
     } catch (err) {
@@ -6131,7 +6164,14 @@ export default function ProjectPage() {
               <div>
                 {/* Summary */}
                 <div style={{ marginBottom: 20 }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: colors.muted, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 8 }}>Resumo</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: colors.muted, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Resumo</div>
+                    {aiFeedback.score != null && (
+                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: aiFeedback.score >= 7 ? 'var(--color-success-subtle, #e6f9e6)' : aiFeedback.score >= 4 ? 'var(--color-warning-subtle, #fff8e1)' : 'var(--color-error-subtle, #ffeaea)', border: `1px solid ${aiFeedback.score >= 7 ? colors.green : aiFeedback.score >= 4 ? colors.yellow : colors.orange}`, borderRadius: 8, padding: '3px 10px', fontSize: 13, fontWeight: 800, color: aiFeedback.score >= 7 ? colors.green : aiFeedback.score >= 4 ? colors.yellow : colors.orange }}>
+                        {aiFeedback.score}/10
+                      </div>
+                    )}
+                  </div>
                   <p style={{ margin: 0, fontSize: 13.5, color: 'var(--color-text)', lineHeight: 1.6 }}>
                     {aiFeedback.overall}
                   </p>
@@ -6148,7 +6188,7 @@ export default function ProjectPage() {
                     <div style={{ fontSize: 11, fontWeight: 700, color: colors.muted, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 8 }}>Por secção</div>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 8 }}>
                       {Object.entries(aiFeedback.sections).map(([key, sec]) => {
-                        const LABELS = { goal: 'Objetivo', problem: 'Problema', solution: 'Solução', target_audience: 'Público-alvo', features: 'Funcionalidades', technologies: 'Tecnologias', results: 'Resultados', learnings: 'Aprendizagens' }
+                        const LABELS = { goal: 'Objetivo', problem: 'Problema', solution: 'Solução', target_audience: 'Público-alvo', features: 'Funcionalidades', technologies: 'Tecnologias', challenges: 'Desafios', results: 'Resultados', learnings: 'Aprendizagens' }
                         const ICONS = { goal: Target, problem: AlertTriangle, solution: Wrench, target_audience: Users, features: Zap, technologies: Wrench, results: TrendingUp, learnings: BookOpen }
                         const SecIcon = ICONS[key] || CheckCircle
                         const ratingColor = sec.rating === 'forte' ? colors.green : sec.rating === 'médio' ? colors.yellow : colors.orange
@@ -7203,20 +7243,68 @@ export default function ProjectPage() {
                 <div style={{ fontSize: 15, fontWeight: 800, color: colors.text, lineHeight: 1.2 }}>Assistente IA</div>
                 <div style={{ fontSize: 12, color: colors.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{project.name}</div>
               </div>
+              <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexShrink: 0 }}>
+                {coachSessions.length >= 1 && (
+                  <button onClick={() => setCoachSessionsOpen(v => !v)} style={{ background: coachSessionsOpen ? 'var(--color-primary-subtle)' : 'none', border: 'none', cursor: 'pointer', color: coachSessionsOpen ? colors.blue : colors.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 6, borderRadius: 6 }} title="Conversas">
+                    <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="1.5" rx=".75" fill="currentColor"/><rect x="2" y="7.25" width="12" height="1.5" rx=".75" fill="currentColor"/><rect x="2" y="11.5" width="12" height="1.5" rx=".75" fill="currentColor"/></svg>
+                  </button>
+                )}
+                <button onClick={() => { setCoachMessages([]); setCoachSessionId(null); setCoachSessionsOpen(false); if (project?.id) localStorage.setItem(`coach_session_${project.id}`, 'new') }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 6, borderRadius: 6 }} title="Nova conversa">
+                  <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
+                </button>
+              </div>
             </div>
+            {/* Sessions panel (mobile) */}
+            {coachSessionsOpen && (
+              <div style={{ position: 'absolute', top: 60, left: 0, right: 0, bottom: 0, zIndex: 10, background: 'var(--color-bg)', overflowY: 'auto', padding: '8px 14px' }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: colors.muted, textTransform: 'uppercase', letterSpacing: '0.06em', padding: '8px 4px 12px' }}>Conversas anteriores</div>
+                {coachSessions.map((sess) => {
+                  const firstUserM = sess.messages.find(m => m.role === 'user')
+                  const previewM = firstUserM ? firstUserM.content.slice(0, 55) + (firstUserM.content.length > 55 ? '...' : '') : 'Conversa'
+                  const dateM = sess.messages[0]?.created_at ? new Date(sess.messages[0].created_at).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' }) : ''
+                  const cntM = sess.messages.filter(m => m.role === 'user').length
+                  return (
+                    <button key={sess.id} onClick={() => { setCoachMessages(sess.messages.map(m => ({ role: m.role, content: m.content }))); setCoachSessionId(sess.id); setCoachSessionsOpen(false); if (project?.id) localStorage.setItem(`coach_session_${project.id}`, sess.id) }}
+                      style={{ display: 'block', width: '100%', textAlign: 'left', background: 'var(--color-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: 10, padding: '11px 14px', marginBottom: 6, cursor: 'pointer', fontFamily: 'inherit' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 3 }}>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: colors.text }}>{dateM}</span>
+                        <span style={{ fontSize: 10, color: colors.muted }}>{cntM} {cntM === 1 ? 'msg' : 'msgs'}</span>
+                      </div>
+                      <div style={{ fontSize: 12, color: colors.muted, lineHeight: 1.4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{previewM}</div>
+                    </button>
+                  )
+                })}
+                {coachSessions.length === 0 && <div style={{ textAlign: 'center', color: colors.muted, fontSize: 13, padding: 20 }}>Sem conversas anteriores.</div>}
+              </div>
+            )}
             {/* Messages */}
             <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12, padding: '16px 14px', paddingBottom: 'calc(16px + env(safe-area-inset-bottom, 0px))' }}>
-              {coachMessages.length === 0 && (
+              {coachMessages.length === 0 && (() => {
+                const empty = []
+                const weak = []
+                const FIELD_LABELS = { goal: 'objetivo', problem: 'problema', solution: 'solução', target_audience: 'público-alvo', features: 'funcionalidades', technologies: 'tecnologias', challenges: 'desafios', results: 'resultados', learnings: 'aprendizagens' }
+                for (const [k, label] of Object.entries(FIELD_LABELS)) {
+                  const v = (project[k] || '').trim()
+                  if (!v) empty.push(label)
+                  else if (v.length < 30) weak.push(label)
+                }
+                const suggestions = []
+                if (empty.length) suggestions.push(`Tenho ${empty.length === 1 ? 'o campo' : 'os campos'} ${empty.slice(0, 2).join(' e ')} ${empty.length === 1 ? 'vazio' : 'vazios'}. Ajuda-me a preencher.`)
+                if (weak.length) suggestions.push(`A secção de ${weak[0]} está curta. Podes ajudar-me a desenvolvê-la?`)
+                if (suggestions.length < 3) suggestions.push('O que está mais fraco no meu projeto?')
+                if (suggestions.length < 3) suggestions.push('Escreve-me um texto para a secção de resultados.')
+                const greetingDetail = empty.length > 0
+                  ? ` Vi que tens ${empty.length} ${empty.length === 1 ? 'campo vazio' : 'campos vazios'}${weak.length ? ` e ${weak.length} ${weak.length === 1 ? 'secção curta' : 'secções curtas'}` : ''}. Posso ajudar-te a preencher cada um.`
+                  : weak.length > 0
+                  ? ` Tens ${weak.length} ${weak.length === 1 ? 'secção que podia estar mais desenvolvida' : 'secções que podiam estar mais desenvolvidas'}. Vamos melhorá-las?`
+                  : ' Posso ajudar-te a tornar cada secção mais convincente para um júri ou recrutador.'
+                return (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                   <div style={{ background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 14, padding: '14px 16px', fontSize: 13.5, color: colors.text, lineHeight: 1.6 }}>
-                    Olá! Sou o teu assistente para melhorar o <strong>{project.name}</strong>. Posso ajudar-te a tornar cada secção mais convincente para um júri ou recrutador. Em que queres trabalhar hoje?
+                    Olá! Sou o teu assistente para melhorar o <strong>{project.name}</strong>.{greetingDetail}
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-                    {[
-                      'O que está mais fraco no meu projeto?',
-                      'Como posso melhorar a secção do problema?',
-                      'O meu público-alvo está bem definido?',
-                    ].map(q => (
+                    {suggestions.slice(0, 3).map(q => (
                       <button
                         key={q}
                         onClick={() => { setCoachInput(q); setTimeout(() => document.getElementById('coach-input')?.focus(), 50) }}
@@ -7225,7 +7313,7 @@ export default function ProjectPage() {
                     ))}
                   </div>
                 </div>
-              )}
+                )})()}
               {coachMessages.map((m, i) => (
                 <div key={i} style={{
                   alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start',
@@ -8415,37 +8503,92 @@ export default function ProjectPage() {
                 <div style={{ fontSize: 13, fontWeight: 700, color: colors.text }}>Assistente IA</div>
                 <div style={{ fontSize: 11, color: colors.muted, display: 'flex', alignItems: 'center', gap: 6 }}>Tutor do teu projeto <AiUsageBadge feature="coach" compact /></div>
               </div>
-              {coachMessages.length > 0 && (
+              {coachSessions.length >= 1 && (
                 <button
-                  onClick={() => {
-                    setCoachMessages([])
-                    if (user?.id && project?.id) supabase.from('coach_messages').delete().eq('project_id', project.id).eq('user_id', user.id)
-                  }}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.muted, fontSize: 11, fontFamily: 'inherit', padding: '4px 8px', borderRadius: 6 }}
-                  title="Limpar conversa"
-                >Limpar</button>
+                  onClick={() => setCoachSessionsOpen(v => !v)}
+                  style={{ background: coachSessionsOpen ? 'var(--color-primary-subtle)' : 'none', border: 'none', cursor: 'pointer', color: coachSessionsOpen ? colors.blue : colors.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 5, borderRadius: 6, transition: 'all 0.15s' }}
+                  title="Conversas"
+                >
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="1.5" rx=".75" fill="currentColor"/><rect x="2" y="7.25" width="12" height="1.5" rx=".75" fill="currentColor"/><rect x="2" y="11.5" width="12" height="1.5" rx=".75" fill="currentColor"/></svg>
+                </button>
               )}
               <button
-                onClick={() => setCoachOpen(false)}
+                onClick={() => { setCoachMessages([]); setCoachSessionId(null); setCoachSessionsOpen(false); if (project?.id) localStorage.setItem(`coach_session_${project.id}`, 'new') }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 5, borderRadius: 6 }}
+                title="Nova conversa"
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
+              </button>
+              <button
+                onClick={() => { setCoachOpen(false); setCoachSessionsOpen(false) }}
                 style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 4, borderRadius: 6 }}
                 title="Fechar"
               ><X size={16} /></button>
             </div>
 
+            {/* Sessions panel */}
+            {coachSessionsOpen && (
+              <div style={{ position: 'absolute', top: 58, left: 0, right: 0, bottom: 0, zIndex: 10, background: 'var(--color-surface)', overflowY: 'auto', padding: '8px 12px' }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: colors.muted, textTransform: 'uppercase', letterSpacing: '0.06em', padding: '8px 6px 12px' }}>Conversas anteriores</div>
+                {coachSessions.map((sess) => {
+                  const firstUser = sess.messages.find(m => m.role === 'user')
+                  const preview = firstUser ? firstUser.content.slice(0, 60) + (firstUser.content.length > 60 ? '...' : '') : 'Conversa sem mensagens'
+                  const date = sess.messages[0]?.created_at ? new Date(sess.messages[0].created_at).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' }) : ''
+                  const msgCount = sess.messages.filter(m => m.role === 'user').length
+                  return (
+                    <button
+                      key={sess.id}
+                      onClick={() => {
+                        setCoachMessages(sess.messages.map(m => ({ role: m.role, content: m.content })))
+                        setCoachSessionId(sess.id)
+                        setCoachSessionsOpen(false)
+                        if (project?.id) localStorage.setItem(`coach_session_${project.id}`, sess.id)
+                      }}
+                      style={{ display: 'block', width: '100%', textAlign: 'left', background: 'var(--color-bg-alt)', border: `1px solid ${colors.border}`, borderRadius: 10, padding: '10px 13px', marginBottom: 6, cursor: 'pointer', fontFamily: 'inherit', transition: 'border-color 0.15s' }}
+                      onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--color-primary)'}
+                      onMouseLeave={e => e.currentTarget.style.borderColor = colors.border}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 3 }}>
+                        <span style={{ fontSize: 12, fontWeight: 700, color: colors.text }}>{date}</span>
+                        <span style={{ fontSize: 10, color: colors.muted }}>{msgCount} {msgCount === 1 ? 'msg' : 'msgs'}</span>
+                      </div>
+                      <div style={{ fontSize: 12, color: colors.muted, lineHeight: 1.4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{preview}</div>
+                    </button>
+                  )
+                })}
+                {coachSessions.length === 0 && <div style={{ textAlign: 'center', color: colors.muted, fontSize: 13, padding: 20 }}>Sem conversas anteriores.</div>}
+              </div>
+            )}
+
             {/* Messages */}
             <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12, padding: '16px 18px' }}>
-              {coachMessages.length === 0 && (
+              {coachMessages.length === 0 && (() => {
+                const emptyD = []
+                const weakD = []
+                const FIELD_LABELS_D = { goal: 'objetivo', problem: 'problema', solution: 'solução', target_audience: 'público-alvo', features: 'funcionalidades', technologies: 'tecnologias', challenges: 'desafios', results: 'resultados', learnings: 'aprendizagens' }
+                for (const [k, label] of Object.entries(FIELD_LABELS_D)) {
+                  const v = (project[k] || '').trim()
+                  if (!v) emptyD.push(label)
+                  else if (v.length < 30) weakD.push(label)
+                }
+                const suggestionsD = []
+                if (emptyD.length) suggestionsD.push(`Tenho ${emptyD.length === 1 ? 'o campo' : 'os campos'} ${emptyD.slice(0, 2).join(' e ')} ${emptyD.length === 1 ? 'vazio' : 'vazios'}. Ajuda-me a preencher.`)
+                if (weakD.length) suggestionsD.push(`A secção de ${weakD[0]} está curta. Podes ajudar-me a desenvolvê-la?`)
+                if (suggestionsD.length < 3) suggestionsD.push('O que está mais fraco no meu projeto?')
+                if (suggestionsD.length < 3) suggestionsD.push('Como me preparo para a defesa?')
+                const greetingD = emptyD.length > 0
+                  ? ` Vi que tens ${emptyD.length} ${emptyD.length === 1 ? 'campo vazio' : 'campos vazios'}${weakD.length ? ` e ${weakD.length} ${weakD.length === 1 ? 'secção curta' : 'secções curtas'}` : ''}. Posso ajudar-te a preencher cada um.`
+                  : weakD.length > 0
+                  ? ` Tens ${weakD.length} ${weakD.length === 1 ? 'secção que podia estar mais desenvolvida' : 'secções que podiam estar mais desenvolvidas'}. Vamos melhorá-las?`
+                  : ' Posso ajudar-te a melhorar cada secção, pensar na estrutura, ou preparar a apresentação.'
+                return (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                   <div style={{ background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary-subtle)', borderRadius: 12, padding: '14px 16px', fontSize: 13, color: colors.text, lineHeight: 1.6 }}>
                     <span style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--color-primary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>Assistente IA</span>
-                    Olá! Sou o teu assistente para o <strong>{project.name}</strong>. Posso ajudar-te a melhorar cada secção, pensar na estrutura, ou preparar a apresentação. Em que queres trabalhar?
+                    Olá! Sou o teu assistente para o <strong>{project.name}</strong>.{greetingD}
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    {[
-                      'O que está mais fraco no meu projeto?',
-                      'Como posso melhorar a secção do problema?',
-                      'Como me preparo para a defesa?',
-                    ].map(q => (
+                    {suggestionsD.slice(0, 3).map(q => (
                       <button
                         key={q}
                         onClick={() => { setCoachInput(q); setTimeout(() => document.getElementById('coach-input-desktop')?.focus(), 50) }}
@@ -8456,7 +8599,7 @@ export default function ProjectPage() {
                     ))}
                   </div>
                 </div>
-              )}
+                )})()}
               {coachMessages.map((m, i) => (
                 <div key={i} style={{
                   alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start',

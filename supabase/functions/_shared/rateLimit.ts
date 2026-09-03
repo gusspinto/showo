@@ -82,3 +82,38 @@ export async function checkPlanLimit(
 export function clip(v: unknown, maxLen = 4000): string {
   return String(v ?? '').slice(0, maxLen)
 }
+
+// Shared PT-PT anti-slop rules for all AI prompts
+export const PTPT_RULES = `
+LINGUA E ESTILO (aplica a TODO o texto que gerares):
+- Portugues europeu (PT-PT) obrigatorio. Usa: "utilizador", "ecra", "aplicacao", "candidatura", "orientador". NUNCA uses: "usuario", "tela", "aplicativo", "aplicacao" (ptbr), "estagiante", "voce".
+- Proibido: travessoes (—), reticencias (...) no meio de frases, exclamacoes excessivas.
+- Proibido: "de forma eficaz", "no ambito de", "e fundamental", "neste sentido", "importa referir", "solucao inovadora", "abordagem revolucionaria", "aprendi muito", "foi muito importante", "um desafio enorme", "venho por este meio", "proativo e dinamico", "muito a oferecer", "mais-valia".
+- Tom: direto, concreto, humano. Como um colega experiente, nao como um relatorio ou um assistente corporativo.
+- Cada frase deve conter informacao especifica a ESTE projeto. Se uma frase funciona para qualquer projeto, reescreve-a.
+- Prefere frases curtas. Maximo 2 subordinadas por frase.`
+
+// Repair common JSON issues from LLM output
+export function repairJson(raw: string): Record<string, unknown> {
+  const jsonMatch = raw.match(/\{[\s\S]*\}/)
+  if (!jsonMatch) throw new Error('Resposta invalida da IA')
+
+  let jsonStr = jsonMatch[0]
+    .replace(/[“”]/g, '"')
+    .replace(/[‘’]/g, "'")
+    .replace(/—/g, '-')
+    .replace(/,\s*([}\]])/g, '$1')
+    .replace(/\n/g, ' ')
+
+  try {
+    return JSON.parse(jsonStr)
+  } catch (_e1) {
+    jsonStr = jsonStr.replace(/[\x00-\x1F\x7F]/g, ' ')
+    try {
+      return JSON.parse(jsonStr)
+    } catch (e2) {
+      console.error('JSON repair failed:', e2, 'Raw:', raw.slice(0, 500))
+      throw new Error('A IA gerou uma resposta invalida. Tenta novamente.')
+    }
+  }
+}

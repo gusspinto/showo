@@ -1,6 +1,6 @@
 import Anthropic from 'npm:@anthropic-ai/sdk@0.36.3'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { checkRateLimit, getAuthUser, getCorsHeaders, checkPlanLimit } from '../_shared/rateLimit.ts'
+import { checkRateLimit, getAuthUser, getCorsHeaders, checkPlanLimit, PTPT_RULES, repairJson } from '../_shared/rateLimit.ts'
 
 Deno.serve(async (req) => {
   const corsHeaders = getCorsHeaders(req)
@@ -120,45 +120,33 @@ CRITÉRIOS DE AVALIAÇÃO:
 - "médio": conteúdo presente mas genérico, vago, ou demasiado curto para ser convincente.
 - "fraco": vazio, uma frase só, ou informação que não diz nada de útil.
 
-REGRAS CRÍTICAS:
-1. Cita literalmente partes do que o estudante escreveu no feedback (usa aspas)
-2. O "tip" deve ser uma ação concreta e específica — nunca "podes melhorar" sem dizer COMO. Ex mau: "Adiciona mais detalhes". Ex bom: "Acrescenta quantos utilizadores testaram a app e o que disseram — mesmo que seja 'testei com 3 colegas e conseguiram X sem ajuda'."
-3. Se o campo tiver 1-2 palavras como "a" ou "teste", considera FRACO e diz isso claramente
-4. Para campos vazios: feedback = "Este campo está vazio." e tip = o que escrever especificamente naquele campo dado o contexto do projeto
-5. Usa PT-PT natural, direto, sem formalidades nem elogios vazios. Nunca uses travessões (—) no texto gerado
-6. O "overall" nomeia especificamente os 1-2 campos mais fracos e diz o que falta — não é um elogio de encorajamento
-7. O "score_hint" identifica o campo com MAIOR gap entre o que está e o que poderia estar, e diz exatamente o que acrescentar — 1 frase curta e direta
-8. Para o campo "challenges": um júri quer ver que o estudante enfrentou dificuldades reais e as resolveu. Se o campo estiver vazio ou genérico, é sempre um ponto fraco porque parece que o projeto foi fácil demais ou que o estudante não refletiu.
-9. Para o campo "results": sem resultados concretos (números, testes, utilizadores, feedback real) o projeto parece incompleto. Mesmo "testei com 5 pessoas" é melhor que nada.
+REGRAS:
+1. Cita partes do que o estudante escreveu (usa aspas)
+2. O "tip" deve ser uma acao concreta em 1 frase curta. Maximo 25 palavras. Diz O QUE escrever, nao expliques porquê.
+3. Se o campo tiver 1-2 palavras, considera FRACO
+4. Para campos vazios: feedback = "Este campo esta vazio." e tip = o que escrever
+5. Usa PT-PT natural, direto, sem formalidades. Nao uses travessoes no texto
+6. O "overall" nomeia os 1-2 campos mais fracos e o que falta
+7. O "score" e um numero inteiro de 1 a 10. Se rigoroso: campos vazios pesam muito, projeccoes sem validacao real pesam, campos fortes com dados concretos sobem a nota
+8. O "score_hint" identifica o campo com maior gap e o que acrescentar em 1 frase
+9. Se conciso: cada feedback em 1-2 frases curtas
+10. Para "technologies": avalia se o estudante justificou as escolhas E se mencionou custos ou comparou alternativas. Se so listou nomes sem justificacao, e "medio". Se incluiu custos e razoes de escolha, e "forte".
 
-Responde APENAS com este JSON (sem markdown, sem texto extra):
-{
-  "overall": "<nomeia os 2 campos mais fracos e o que falta — 2 frases honestas, sem elogios de encorajamento>",
-  "score_hint": "<campo com maior potencial de melhoria + o que escrever lá — 1 frase, muito específica>",
-  "sections": {
-    "goal":            { "rating": "fraco|médio|forte", "feedback": "<cita o conteúdo com aspas e diz o que falta ou confirma o que está bem>", "tip": "<ação concreta — o quê, não só como>" },
-    "problem":         { "rating": "...", "feedback": "...", "tip": "..." },
-    "solution":        { "rating": "...", "feedback": "...", "tip": "..." },
-    "target_audience": { "rating": "...", "feedback": "...", "tip": "..." },
-    "features":        { "rating": "...", "feedback": "...", "tip": "..." },
-    "technologies":    { "rating": "...", "feedback": "...", "tip": "..." },
-    "challenges":      { "rating": "...", "feedback": "...", "tip": "..." },
-    "results":         { "rating": "...", "feedback": "...", "tip": "..." },
-    "learnings":       { "rating": "...", "feedback": "...", "tip": "..." }
-  }
-}`
+Responde APENAS com JSON valido. NAO uses markdown, NAO uses blocos de codigo com crases, NAO incluas texto antes ou depois do JSON.
+
+O JSON tem esta estrutura: um objeto com "overall" (string), "score" (numero inteiro 1-10), "score_hint" (string), e "sections" (objeto com 9 chaves: goal, problem, solution, target_audience, features, technologies, challenges, results, learnings - cada uma com "rating" que e "fraco" ou "medio" ou "forte", "feedback" string, e "tip" string).
+${PTPT_RULES}`
 
     const message = await client.messages.create({
       model: 'claude-sonnet-4-6',
-      max_tokens: 1800,
+      max_tokens: 4000,
       messages: [{ role: 'user', content: prompt }],
     })
 
     const raw = (message.content[0] as { type: string; text: string }).text.trim()
-    const jsonMatch = raw.match(/\{[\s\S]*\}/)
-    if (!jsonMatch) throw new Error('Resposta inválida da IA')
+    const parsed = repairJson(raw)
 
-    return new Response(jsonMatch[0], {
+    return new Response(JSON.stringify(parsed), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } catch (err) {

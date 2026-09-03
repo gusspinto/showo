@@ -1,5 +1,5 @@
 import Anthropic from 'npm:@anthropic-ai/sdk@0.36.3'
-import { checkRateLimit, getAuthUser, clip, checkPlanLimit, getCorsHeaders } from '../_shared/rateLimit.ts'
+import { checkRateLimit, getAuthUser, clip, checkPlanLimit, getCorsHeaders, PTPT_RULES, repairJson } from '../_shared/rateLimit.ts'
 
 Deno.serve(async (req) => {
   const corsHeaders = getCorsHeaders(req)
@@ -64,20 +64,20 @@ Devolve APENAS este JSON (sem markdown):
   "email_subject": "Assunto específico com nome do estudante e tipo de candidatura",
   "email_body": "Corpo completo do email com saudação, 2-3 parágrafos e despedida natural",
   "linkedin_message": "Mensagem direta para LinkedIn, sem saudação formal, máx 3 frases",
-  "highlight": "1 frase: qual projeto e porquê é o mais relevante para esta empresa"
-}`
+  "highlight": "1 frase: qual projeto e porque e o mais relevante para esta empresa"
+}
+${PTPT_RULES}`
 
     const message = await client.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 800,
+      model: 'claude-sonnet-4-6',
+      max_tokens: 1200,
       messages: [{ role: 'user', content: prompt }],
     })
 
     const raw = (message.content[0] as { type: string; text: string }).text.trim()
-    const jsonMatch = raw.match(/\{[\s\S]*\}/)
-    if (!jsonMatch) throw new Error('Resposta inválida')
+    const result = repairJson(raw)
 
-    return new Response(jsonMatch[0], {
+    return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } catch (err) {

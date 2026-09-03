@@ -258,14 +258,19 @@ export default function Mensagens() {
     if (containsProfanity(content)) { setSendError('Linguagem inapropriada detetada.'); return }
     if (looksLikeSpam(content)) { setSendError('Mensagem detetada como spam. Escreve algo mais elaborado.'); return }
     setSendError(''); setSending(true); setDraft('')
-    const { data } = await supabase.from('mensagens').insert({ from_id: user.id, to_id: activeId, content }).select().single()
-    if (data) {
-      setMessages(prev => [...prev, data])
-      setConversations(prev => {
-        const updated = { otherId: activeId, lastMsg: data, unread: 0 }
-        return [updated, ...prev.filter(c => c.otherId !== activeId)]
-      })
+    const { data, error } = await supabase.from('mensagens').insert({ from_id: user.id, to_id: activeId, content }).select().single()
+    if (error || !data) {
+      console.error('send message failed:', error)
+      setSendError('Não foi possível enviar. Tenta de novo.')
+      setDraft(content) // não perder o que a pessoa escreveu
+      setSending(false)
+      return
     }
+    setMessages(prev => [...prev, data])
+    setConversations(prev => {
+      const updated = { otherId: activeId, lastMsg: data, unread: 0 }
+      return [updated, ...prev.filter(c => c.otherId !== activeId)]
+    })
     setSending(false)
   }
 
@@ -273,11 +278,14 @@ export default function Mensagens() {
     const content = editDraft.trim()
     if (!content) return
     if (containsProfanity(content) || looksLikeSpam(content)) { setSendError('Conteúdo inapropriado ou spam.'); return }
-    const { data } = await supabase.from('mensagens').update({ content, edited_at: new Date().toISOString() }).eq('id', msgId).eq('from_id', user.id).select().single()
-    if (data) {
-      setMessages(prev => prev.map(x => x.id === msgId ? { ...x, ...data } : x))
-      setConversations(prev => prev.map(c => c.lastMsg?.id === msgId ? { ...c, lastMsg: { ...c.lastMsg, content: data.content, edited_at: data.edited_at } } : c))
+    const { data, error } = await supabase.from('mensagens').update({ content, edited_at: new Date().toISOString() }).eq('id', msgId).eq('from_id', user.id).select().single()
+    if (error || !data) {
+      console.error('edit message failed:', error)
+      setSendError('Não foi possível guardar a alteração.')
+      return
     }
+    setMessages(prev => prev.map(x => x.id === msgId ? { ...x, ...data } : x))
+    setConversations(prev => prev.map(c => c.lastMsg?.id === msgId ? { ...c, lastMsg: { ...c.lastMsg, content: data.content, edited_at: data.edited_at } } : c))
     setEditingId(null); setEditDraft('')
   }
 
