@@ -175,11 +175,13 @@ export default function Home() {
     setAuthLoading(true)
     const { data: methods, error: checkErr } = await supabase.rpc('check_email_auth_methods', { p_email: email.trim() })
     setAuthLoading(false)
-    if (checkErr) {
-      // check_email_* (024/087) limita os pedidos por IP — de propósito,
-      // para não virar um oráculo de "que emails existem". Um "erro de
-      // ligação" para isto era enganador: não é a rede, é o limite.
-      setAuthError('Demasiadas tentativas. Aguarda um pouco e tenta novamente.')
+    if (checkErr || !methods) {
+      // A verificação é só para escolher o próximo ecrã (registo vs
+      // password). Se falhar — rate-limit do oráculo de emails, RPC em
+      // baixo, rede — não podemos deixar a pessoa presa: seguimos para o
+      // registo, que é o caminho seguro (se o email já existir, o signUp
+      // diz "já registado" e a pessoa vai para o login).
+      navigate(`/register?email=${encodeURIComponent(email.trim())}`)
       return
     }
     if (!methods?.exists) {

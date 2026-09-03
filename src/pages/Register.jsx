@@ -387,9 +387,28 @@ export default function Register() {
     })
     if (err) {
       setLoading(false)
-      setError(err.message === 'User already registered'
-        ? 'Este email já está registado. Tenta entrar.'
-        : 'Algo correu mal. Tenta novamente.')
+      console.error('signUp failed:', err)
+      const msg = (err.message || '').toLowerCase()
+      if (msg.includes('already registered') || msg.includes('already been registered')) {
+        setError('Este email já está registado. Tenta entrar.')
+      } else if (msg.includes('rate limit') || err.status === 429) {
+        setError('Demasiados registos deste dispositivo. Aguarda alguns minutos e tenta novamente.')
+      } else if (msg.includes('password')) {
+        setError('A palavra-passe não cumpre os requisitos. Usa pelo menos 6 caracteres.')
+      } else if (msg.includes('database error') || msg.includes('saving new user')) {
+        setError('Erro ao criar a conta no servidor. Já estamos a ver — tenta com Google ou daqui a pouco.')
+      } else {
+        setError(err.message || 'Algo correu mal. Tenta novamente.')
+      }
+      return
+    }
+
+    // Supabase devolve um "utilizador" sem identities quando o email já
+    // existe (anti-enumeração). Sem isto, a pessoa ia para "verifica o
+    // teu email" e ficava à espera de um email que nunca chega.
+    if (data?.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+      setLoading(false)
+      setError('Este email já está registado. Tenta entrar.')
       return
     }
 
