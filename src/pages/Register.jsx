@@ -435,22 +435,56 @@ export default function Register() {
 
     let cancelled = false
     let attempts = 0
-    const MAX_ATTEMPTS = 75 // ~5 minutos a cada 4s
+    let running = false
+    const MAX_ATTEMPTS = 150 // ~12 min a cada 5s
 
-    const interval = setInterval(async () => {
+    async function check() {
+      if (cancelled || running) return
+      running = true
+      try {
+        // Se este mesmo browser já ficou com sessão (ex: confirmou noutro
+        // separador), avança já sem passar pela função de polling.
+        const { data: { session } } = await supabase.auth.getSession()
+        let confirmed = !!session
+        if (!confirmed) {
+          const { data } = await supabase.rpc('check_email_confirmed', { p_email: email })
+          confirmed = !!data
+        }
+        if (!confirmed || cancelled) return
+
+        clearInterval(interval)
+        window.removeEventListener('focus', check)
+        document.removeEventListener('visibilitychange', onVis)
+        if (!session) {
+          const { error: signInErr } = await supabase.auth.signInWithPassword({ email, password })
+          if (signInErr || cancelled) return
+        }
+        await finishAccountSetup()
+      } finally {
+        running = false
+      }
+    }
+
+    function onVis() { if (document.visibilityState === 'visible') check() }
+
+    // Verifica logo (a pessoa pode voltar ao PC já com o email confirmado),
+    // depois a cada 5s, e sempre que o separador volta a ficar visível ou
+    // ganha foco — é aí que a pessoa vem confirmar no telemóvel e volta.
+    check()
+    const interval = setInterval(() => {
       attempts++
       if (attempts > MAX_ATTEMPTS) { clearInterval(interval); return }
+      check()
+    }, 5000)
+    window.addEventListener('focus', check)
+    document.addEventListener('visibilitychange', onVis)
 
-      const { data: confirmed } = await supabase.rpc('check_email_confirmed', { p_email: email })
-      if (!confirmed || cancelled) return
-
+    return () => {
+      cancelled = true
       clearInterval(interval)
-      const { data: signInData, error: signInErr } = await supabase.auth.signInWithPassword({ email, password })
-      if (signInErr || cancelled) return
-      await finishAccountSetup()
-    }, 4000)
-
-    return () => { cancelled = true; clearInterval(interval) }
+      window.removeEventListener('focus', check)
+      document.removeEventListener('visibilitychange', onVis)
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [confirmationPending])
 
@@ -558,9 +592,14 @@ export default function Register() {
               <h1 style={{ color: C.text, fontSize: 21, fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 8px', letterSpacing: '-0.4px' }}>
                 Verifica o teu email
               </h1>
-              <p style={{ color: C.muted, fontSize: 14, lineHeight: 1.6, margin: '0 0 22px' }}>
+              <p style={{ color: C.muted, fontSize: 14, lineHeight: 1.6, margin: '0 0 14px' }}>
                 Enviámos um link para <strong style={{ color: C.text }}>{email}</strong>
               </p>
+              <p style={{ color: C.muted, fontSize: 12.5, lineHeight: 1.5, margin: '0 0 22px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}>
+                <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--color-success)', flexShrink: 0, animation: 'reg-pulse 1.6s ease-in-out infinite' }} />
+                Podes confirmar no telemóvel. Esta página avança sozinha.
+              </p>
+              <style>{`@keyframes reg-pulse{0%,100%{opacity:.35}50%{opacity:1}}`}</style>
               {resendState === 'sent' ? (
                 <p style={{ color: 'var(--color-success)', fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
                   <Check size={14} /> Novo email enviado
