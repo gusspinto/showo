@@ -776,6 +776,8 @@ export default function TurmaPage() {
       setNewCritName('')
       setNewCritWeight('25')
       setCriteriaAdding(false)
+    } else if (error) {
+      showToast('Erro ao adicionar critério: ' + error.message)
     }
     setCritSaving(false)
   }
@@ -793,6 +795,8 @@ export default function TurmaPage() {
     if (!error) {
       setCriteria(c => c.map(x => x.id === editingCrit.id ? { ...x, name, weight } : x))
       setEditingCrit(null)
+    } else {
+      showToast('Erro ao guardar critério: ' + error.message)
     }
     setCritSaving(false)
   }
@@ -800,6 +804,7 @@ export default function TurmaPage() {
   async function deleteCriterion(id) {
     const { error } = await supabase.from('class_evaluation_criteria').delete().eq('id', id)
     if (!error) setCriteria(c => c.filter(x => x.id !== id))
+    else showToast('Erro ao remover critério: ' + error.message)
   }
 
   async function useDefaultCriteria() {
@@ -808,6 +813,7 @@ export default function TurmaPage() {
     const rows = DEFAULT_CRITERIA.map((d, i) => ({ class_id: turma.id, name: d.name, weight: d.weight, sort_order: i }))
     const { data, error } = await supabase.from('class_evaluation_criteria').insert(rows).select()
     if (!error && data) setCriteria(data)
+    else if (error) showToast('Erro ao criar critérios: ' + error.message)
     setCritSaving(false)
   }
 
