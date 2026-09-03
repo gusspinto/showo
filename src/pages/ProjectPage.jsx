@@ -4734,11 +4734,18 @@ export default function ProjectPage() {
         return
       }
 
-      // Visibility gate: private projects are owner-only
+      // Visibility gate: private projects are owner-only — mais o professor
+      // da turma onde o aluno o adicionou (senão via "não existe" ao abrir
+      // um projeto privado a partir da turma).
       if (data.visibility === 'private') {
         const isOwner = currentUser?.id === data.user_id
         const hasToken = data.edit_token && localStorage.getItem(`edit_token_${data.slug}`) === data.edit_token
-        if (!isOwner && !hasToken) {
+        let teacherOfClass = false
+        if (!isOwner && !hasToken && currentUser?.id) {
+          const { data: inClass } = await supabase.rpc('is_project_in_my_class', { p_project_id: data.id })
+          teacherOfClass = !!inClass
+        }
+        if (!isOwner && !hasToken && !teacherOfClass) {
           setLoading(false)
           return
         }
