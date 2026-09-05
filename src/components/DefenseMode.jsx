@@ -1300,12 +1300,14 @@ const SECTION_COLORS = {
   learnings: 'EC4899', closing: '1a1a1a',
 }
 
-function extractBullets(text, max = 5) {
-  if (!text) return []
-  const lines = text.split(/\n+/).map(l => l.replace(/^[-•*]\s*/, '').trim()).filter(Boolean)
-  if (lines.length <= max) return lines
-  const short = lines.filter(l => l.length < 120)
-  return short.slice(0, max)
+function extractBullets(text, aiNote, max = 5) {
+  const sources = [text, aiNote].filter(Boolean).join('\n')
+  if (!sources) return []
+  const seen = new Set()
+  const lines = sources.split(/[\n.!?]+/)
+    .map(l => l.replace(/^[-•*\d]+[.)]\s*/, '').replace(/^(PONTOS-CHAVE|O QUE DIZER):?\s*/i, '').trim())
+    .filter(l => l.length > 15 && l.length < 150 && !seen.has(l.toLowerCase()) && (seen.add(l.toLowerCase()), true))
+  return lines.slice(0, max)
 }
 
 function exportPptx(project, aiData) {
@@ -1355,7 +1357,7 @@ function exportPptx(project, aiData) {
     const speakerNote = aiData?.slide_notes?.[section.id] ?? ''
     const accent = SECTION_COLORS[section.id] || '1a1a1a'
     const content = getSlideContent(project, section.id)
-    const bullets = extractBullets(content, 5)
+    const bullets = extractBullets(content, speakerNote, 5)
 
     // Top accent line
     slide.addShape(pptx.ShapeType.rect, { x: 0.8, y: 0.55, w: 0.8, h: 0.05, fill: { color: accent } })
