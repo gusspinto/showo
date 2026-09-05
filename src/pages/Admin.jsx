@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
@@ -99,7 +100,15 @@ function Avatar({ name, color = 'var(--color-primary)', size = 32 }) {
 }
 
 function ConfirmModal({ title, body, onConfirm, onCancel, danger = true }) {
-  return (
+  // Portal direto para document.body: `.page-content` (ancestral desta
+  // modal) tem uma animation com transform (page-in, em index.css) — e
+  // qualquer transform diferente de none num antepassado, mesmo já
+  // terminado, torna-se o "container" de posicionamento para filhos
+  // position:fixed em vez do ecrã. Sem o portal, o fundo escuro aparecia
+  // mas o cartão centrava-se a meio da caixa (alta) do .page-content,
+  // bem fora da zona visível — dava a impressão de um blur "morto", sem
+  // botões, sem nada clicável.
+  return createPortal(
     <div
       style={{
         position: 'fixed', inset: 0, zIndex: 2000,
@@ -129,7 +138,8 @@ function ConfirmModal({ title, body, onConfirm, onCancel, danger = true }) {
           >{danger ? 'Eliminar' : 'Confirmar'}</button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 
