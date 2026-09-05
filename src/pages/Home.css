@@ -45,7 +45,7 @@
 }
 
 .home-hero-copy {
-  flex: 1 1 55%;
+  flex: 1 1 50%;
   min-width: 0;
   background: #141414;
   border-right: 1px solid rgba(255, 255, 255, 0.09);
@@ -103,7 +103,7 @@
    haver dois caminhos: isto é a coluna direita do grid em qualquer
    largura. */
 .home-hero-start {
-  flex: 1 1 45%;
+  flex: 1 1 50%;
   min-width: 0;
   display: flex;
   flex-direction: column;
