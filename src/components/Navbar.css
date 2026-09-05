@@ -392,7 +392,9 @@ body.sidebar-collapsed .proj-manage-float { left: 84px; }
 .mobile-drawer {
   position: fixed;
   top: 62px; left: 0; right: 0;
-  background: var(--color-surface);
+  /* Mesmo preto do sidebar de desktop (--color-sidebar-bg), não o cinza de
+     --color-surface — a app é preta em qualquer largura. */
+  background: var(--color-sidebar-bg);
   border-bottom: 1px solid var(--color-border);
   backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
   padding: 8px 20px 16px;
@@ -446,7 +448,8 @@ body.sidebar-collapsed .proj-manage-float { left: 84px; }
   position: fixed; left: 0; top: 0; bottom: 0; z-index: 400;
   width: min(90vw, 380px);
   height: 100dvh;
-  background: var(--color-surface);
+  /* Mesmo preto do sidebar de desktop, não o cinza de --color-surface. */
+  background: var(--color-sidebar-bg);
   border-right: 1px solid var(--color-border);
   border-radius: 0 20px 20px 0;
   display: flex; flex-direction: column;

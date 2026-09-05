@@ -9,13 +9,16 @@
 /* ── Reveal on scroll ── */
 .reveal-on-scroll {
   opacity: 0;
-  transform: translateY(28px);
-  transition: opacity 0.6s cubic-bezier(0.22,1,0.36,1),
-              transform 0.6s cubic-bezier(0.22,1,0.36,1);
+  transform: translateY(48px) scale(0.96);
+  transition: opacity 0.7s cubic-bezier(0.22,1,0.36,1),
+              transform 0.7s cubic-bezier(0.22,1,0.36,1);
 }
 .reveal-on-scroll.is-visible {
   opacity: 1;
-  transform: translateY(0);
+  transform: translateY(0) scale(1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal-on-scroll { transition: opacity 0.3s ease; transform: none; }
 }
 
 .home-content { display: flex; flex-direction: column; }
@@ -52,8 +55,10 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  /* Vertical simétrico → a frase fica mesmo ao centro do painel cinza;
-     horizontal generoso → afasta-se da margem, para o meio do painel. */
+  /* align-items:center centra o bloco (título + stats) no painel cinza —
+     o texto continua alinhado à esquerda dentro do bloco, mas o bloco em
+     si já não fica colado à margem esquerda do painel. */
+  align-items: center;
   padding: 80px clamp(40px, 7vw, 150px);
 }
 
@@ -291,6 +296,16 @@
   color: var(--color-text);
 }
 
+/* Mesmo gradiente do "Cria projeto" (NewProject.jsx, gradientLetterStyle) —
+   aqui a palavra é estática, por isso um único background-clip:text chega,
+   sem precisar da versão letra-a-letra animada. */
+.home-gradient-word {
+  background-image: linear-gradient(90deg, #2478f0, #db4a3d 50%, #cc9a1e);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
 .home-explore-link {
   background: none;
   border: none;
@@ -440,6 +455,36 @@
 }
 .home-cta-btn:hover { opacity: 0.85; }
 
+/* Mesmo efeito do "Criar com IA" (NewProject.css .np-btn-ai): fica normal
+   (preto/branco invertido) e só no hover, com rato de verdade, o gradiente
+   da marca entra em fade e flui. Nada disto no telemóvel — sem hover, não
+   faz sentido. */
+@media (hover: hover) and (pointer: fine) {
+  .home-cta-btn { position: relative; overflow: hidden; z-index: 0; }
+  .home-cta-btn::before {
+    content: '';
+    position: absolute; inset: 0; z-index: -1;
+    background-image: var(--brand-gradient);
+    background-size: 220% 220%;
+    background-position: 0% 50%;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+    pointer-events: none;
+  }
+  .home-cta-btn:hover { color: #fff; opacity: 1; transition: color 0.25s ease 0.1s; }
+  .home-cta-btn:hover::before {
+    opacity: 1;
+    animation: home-cta-paint 2.4s ease infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .home-cta-btn:hover::before { animation: none; }
+  }
+}
+@keyframes home-cta-paint {
+  0%, 100% { background-position: 0% 50%; }
+  50%      { background-position: 100% 50%; }
+}
+
 @media (max-width: 600px) {
   .home-cta-btn { width: 100%; margin-top: 20px; }
 }
@@ -549,8 +594,9 @@
   .home-hero-copy {
     order: 1;
     flex: none;
+    background: transparent;
     border-right: none;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+    border-bottom: none;
     align-items: center;
     padding: 72px clamp(24px, 6vw, 48px) 48px;
   }
@@ -576,7 +622,10 @@
     align-items: stretch;
   }
 
-  .home-hero-grid { width: 100%; }
+  /* justify-content:center aqui é o que falta para o bloco todo (título +
+     arranque) ficar centrado como uma unidade no ecrã, em vez de empurrado
+     para o topo com o espaço sobrante a acumular-se no fundo. */
+  .home-hero-grid { width: 100%; justify-content: center; }
   .how-it-works-grid { grid-template-columns: 1fr; }
 
   /* O herói vira uma peça de anúncio, não um parágrafo: título e texto

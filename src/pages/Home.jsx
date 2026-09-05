@@ -461,7 +461,7 @@ export default function Home() {
       <Reveal className="home-section">
         <div className="home-section-inner">
           <div className="home-section-header">
-            <h2 className="home-section-title">Projetos em destaque</h2>
+            <h2 className="home-section-title">Projetos em <span className="home-gradient-word">destaque</span></h2>
             <button onClick={() => navigate('/explorar')} className="home-explore-link">
               Ver todos <ArrowRight size={14} />
             </button>
