@@ -193,7 +193,7 @@ export default function Explore() {
     setPeopleLoading(true)
     const { data } = await supabase
       .from('profiles')
-      .select('id, full_name, username, bio, role, avatar_url, company, company_role, looking_for, available_for_work, skills, area')
+      .select('id, full_name, username, bio, role, avatar_url, company, company_role, looking_for, available_for_work, skills, area, organization_id')
       .not('full_name', 'is', null)
       .is('banned_at', null)
       .order('created_at', { ascending: false })
@@ -600,13 +600,21 @@ export default function Explore() {
                 </p>
                 <div className="explore-grid">
                   {filteredPeople.map(p => {
+                    // "aluno" no role da base de dados cobre dois casos que já não
+                    // se chamam ambos "Aluno": conta Individual (sem organização —
+                    // pode já nem estar a estudar) e aluno institucional (com
+                    // organization_id, o código de turma da escola). O azul de
+                    // "Aluno" passa a ser só dos institucionais; Individual fica
+                    // neutro (var(--color-text), branco no tema escuro).
                     const ROLE_MAP = {
-                      aluno:      { color: 'var(--color-primary)', label: 'Aluno',      icon: <GraduationCap size={11} /> },
+                      aluno:      { color: 'var(--color-text)',    label: 'Individual', icon: <Briefcase size={11} /> },
+                      aluno_institucional: { color: 'var(--color-primary)', label: 'Aluno', icon: <GraduationCap size={11} /> },
                       professor:  { color: '#10b981',              label: 'Professor',  icon: <BookOpen size={11} /> },
                       recrutador: { color: 'var(--color-accent)',  label: 'Recrutador', icon: <Search size={11} /> },
                       empresa:    { color: 'var(--color-warning)', label: 'Empresa',    icon: <Building2 size={11} /> },
                     }
-                    const rc = ROLE_MAP[p.role] ?? ROLE_MAP.aluno
+                    const effectiveRole = p.role === 'aluno' && p.organization_id ? 'aluno_institucional' : p.role
+                    const rc = ROLE_MAP[effectiveRole] ?? ROLE_MAP.aluno
                     const displayName = p.full_name || p.username || 'Utilizador'
                     const initial = displayName[0].toUpperCase()
                     const avatarSeeds = ['var(--color-primary)','var(--color-accent)','#0d9488','var(--color-warning)','#ec4899','#10b981']

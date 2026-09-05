@@ -12,6 +12,7 @@ import { DangerTriangleIcon as AlertTriangle } from '@solar-icons/react/bold/dan
 import { CameraIcon as Camera } from '@solar-icons/react/bold/camera'
 import { ArrowLeftIcon as ArrowLeft } from '@solar-icons/react/bold/arrow-left'
 import { SquareAcademicCapIcon as GraduationCap } from '@solar-icons/react/bold/square-academic-cap'
+import { CaseIcon as Briefcase } from '@solar-icons/react/bold/case'
 import { Book2Icon as BookOpen } from '@solar-icons/react/bold/book-2'
 import { MagnifierIcon as Search } from '@solar-icons/react/bold/magnifier'
 import { Buildings2Icon as Building2 } from '@solar-icons/react/bold/buildings-2'
@@ -131,10 +132,9 @@ function PlanSection({ planId, navigate }) {
         {planId !== 'free' && planId !== 'school' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             <button
-              className="settings-save-btn"
+              className="settings-secondary-btn"
               onClick={openPortal}
               disabled={portalLoading}
-              style={{ background: 'transparent', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}
             >
               {portalLoading ? 'A abrir…' : 'Gerir subscrição'}
             </button>
@@ -502,13 +502,19 @@ export default function Settings() {
   const tabsWithSave = ['perfil', 'empresa', 'recrutamento', 'notificacoes', 'privacidade']
   const showMobileSave = tabsWithSave.includes(activeTab)
 
+  // "aluno" no role da base de dados cobre dois casos: conta Individual
+  // (sem organização — já não é sempre "a estudar") e aluno institucional
+  // (com organization_id, entrou por código de turma). Deixaram de se
+  // chamar ambos "Aluno" — ver Explore.jsx para a mesma distinção.
   const ROLE_INFO = {
-    aluno:      { icon: <GraduationCap size={18} />, label: 'Aluno',      color: 'var(--color-primary)' },
+    aluno:      { icon: <Briefcase size={18} />,     label: 'Individual', color: 'var(--color-text)' },
+    aluno_institucional: { icon: <GraduationCap size={18} />, label: 'Aluno', color: 'var(--color-primary)' },
     professor:  { icon: <BookOpen size={18} />,      label: 'Professor',  color: '#10b981' },
     recrutador: { icon: <Search size={18} />,        label: 'Recrutador', color: 'var(--color-accent)' },
     empresa:    { icon: <Building2 size={18} />,     label: 'Empresa',    color: 'var(--color-warning)' },
   }
-  const r = ROLE_INFO[role] ?? ROLE_INFO.aluno
+  const effectiveRoleInfo = role === 'aluno' && isSchoolAccount ? 'aluno_institucional' : role
+  const r = ROLE_INFO[effectiveRoleInfo] ?? ROLE_INFO.aluno
 
   const roleBadge = (
     <div className="settings-field">
@@ -626,14 +632,6 @@ export default function Settings() {
                     </div>
                   )}
 
-                  {role === 'aluno' && (
-                    <div className="settings-field">
-                      <label className="settings-label">Área</label>
-                      <Select value={area} onChange={setArea} placeholder="Seleciona a tua área"
-                        options={['Programação e Informática','Design e Multimédia','Marketing e Comunicação','Gestão e Administração','Eletrónica e Automação','Audiovisual e Cinema','Turismo e Hotelaria','Saúde','Desporto','Artes e Espetáculo','Construção e Engenharia','Outra']} />
-                      <p className="settings-hint">Permite que recrutadores filtrem por área.</p>
-                    </div>
-                  )}
 
                   {/* Recap semanal — só quem tem carreira no plano (Launch ou
                       conta de escola). Quem não tem não vê um interruptor

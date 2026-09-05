@@ -689,7 +689,7 @@ function OverviewTab({ users, projects, activityLog }) {
 }
 
 // ─── USERS TAB ──────────────────────────────────────────────
-const ROLE_LABELS = { aluno: 'Aluno', professor: 'Professor', recrutador: 'Recrutador', empresa: 'Empresa' }
+const ROLE_LABELS = { aluno: 'Individual', professor: 'Professor', recrutador: 'Recrutador', empresa: 'Empresa' }
 
 function UsersTab({ users, projects, onToggleAdmin, onDeleteUser, onChangeRole, onResetPassword }) {
   const [search, setSearch] = useState('')

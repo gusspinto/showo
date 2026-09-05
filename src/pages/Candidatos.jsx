@@ -40,7 +40,7 @@ function Avatar({ profile, size = 44 }) {
 }
 
 const ROLE_LABELS = {
-  aluno:      { label: 'Aluno',      color: 'var(--color-primary)' },
+  aluno:      { label: 'Individual', color: 'var(--color-text)' },
   professor:  { label: 'Professor',  color: '#10b981' },
   recrutador: { label: 'Recrutador', color: 'var(--color-accent)' },
   empresa:    { label: 'Empresa',    color: 'var(--color-warning)' },
