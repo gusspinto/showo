@@ -19,14 +19,15 @@ function generateSlug(name) {
   )
 }
 
-export async function saveProject(formData, aiResult, userId = null, opts = {}) {
+export async function saveProject(formData, aiResult, userId, opts = {}) {
+  if (!userId) throw new Error('saveProject requires an authenticated userId')
   const slug = generateSlug(formData.name)
   const isPap = formData.is_pap || formData.project_type === 'pap'
   const { score } = calculateScore(formData)
   const edit_token = generateToken()
 
   const payload = {
-    user_id: userId || null,
+    user_id: userId,
     // Definido já no insert (não num update a seguir) para o trigger de
     // limite de projetos ver que é um anexo e não o contar.
     parent_project_id: opts.parentProjectId || null,

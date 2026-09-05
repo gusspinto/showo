@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { saveProject } from '../lib/saveProject'
 import { officeFileToPdfBlob, isOfficeFile } from '../lib/officeToPdf'
@@ -144,7 +144,6 @@ function b64ToBytes(b64) {
 
 export default function NewProject() {
   const navigate = useNavigate()
-  const location = useLocation()
   const { user, profile, checkGate, consumeAI } = useAuth()
   const { toast, show: showToast } = useToast()
 
@@ -204,15 +203,6 @@ export default function NewProject() {
       return next
     })
   }
-
-  useEffect(() => {
-    const state = location.state?.prefill
-    if (state?.fromWidget) {
-      setForm(state.answers ?? {})
-      setStep('review')
-      window.history.replaceState({}, '')
-    }
-  }, []) // eslint-disable-line
 
   /* A análise demora — em vez de um spinner mudo, dizemos em que passo vamos.
      É a diferença entre "está pendurado" e "está a trabalhar comigo". */
@@ -453,6 +443,7 @@ export default function NewProject() {
 
   /* ── Criar ── */
   async function handleSubmit() {
+    if (requireAccount('/novo')) return
     setStep('submitting')
     setError(null)
     let aiResult = {}

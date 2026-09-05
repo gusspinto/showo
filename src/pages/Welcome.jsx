@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
+import { supabase } from '../lib/supabase'
 import { SquareAcademicCapIcon as GraduationCap } from '@solar-icons/react/bold/square-academic-cap'
 import { Book2Icon as BookOpen } from '@solar-icons/react/bold/book-2'
 import { Buildings2Icon as Building2 } from '@solar-icons/react/bold/buildings-2'
@@ -26,12 +27,16 @@ function buildMailto(roleId, fullName) {
 }
 
 export default function Welcome() {
-  const { user, profile, loading } = useAuth()
+  const { user, profile, loading, refreshProfile } = useAuth()
   const navigate = useNavigate()
   const { theme } = useTheme()
-  const [step, setStep] = useState('role') // 'role' | 'pending'
+  const [step, setStep] = useState('role') // 'role' | 'pending' | 'code'
   const [selectedRole, setSelectedRole] = useState(null)
   const [emailSent, setEmailSent] = useState(false)
+  const [school, setSchool] = useState('')
+  const [inviteCode, setInviteCode] = useState('')
+  const [codeError, setCodeError] = useState('')
+  const [redeeming, setRedeeming] = useState(false)
 
   const flagKey = user ? `showo_needs_role_${user.id}` : null
   const needsRoleSelect = flagKey && localStorage.getItem(flagKey) === '1'
@@ -50,7 +55,27 @@ export default function Welcome() {
   function handleRoleSelect(roleId) {
     if (roleId === 'aluno') { finishAsAluno(); return }
     setSelectedRole(roleId)
-    setStep('pending')
+    setStep(roleId === 'professor' ? 'code' : 'pending')
+  }
+
+  async function handleRedeemCode(e) {
+    e.preventDefault()
+    if (!inviteCode.trim() || !school.trim()) return
+    setRedeeming(true)
+    setCodeError('')
+    const { error } = await supabase.rpc('redeem_professor_invite_code', {
+      p_code: inviteCode.trim(),
+      p_full_name: profile?.full_name ?? '',
+      p_school: school.trim(),
+    })
+    if (error) {
+      setRedeeming(false)
+      setCodeError('Código inválido ou já utilizado. Verifica o código e tenta novamente.')
+      return
+    }
+    await refreshProfile()
+    if (flagKey) localStorage.removeItem(flagKey)
+    navigate('/dashboard', { replace: true })
   }
 
   if (loading || !user || !needsRoleSelect) return null
@@ -106,6 +131,71 @@ export default function Welcome() {
                 </button>
               ))}
             </div>
+          </>
+        ) : step === 'code' ? (
+          <>
+            <h1 style={{ color: C.text, fontSize: 22, fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 12px', letterSpacing: '-0.5px' }}>
+              Acesso de Professor
+            </h1>
+            <p style={{ color: C.muted, fontSize: 14, margin: '0 0 24px', lineHeight: 1.65 }}>
+              Introduz o código de acesso que a equipa Showo te enviou.
+            </p>
+
+            <form onSubmit={handleRedeemCode}>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 6 }}>Nome da escola</label>
+              <input
+                value={school}
+                onChange={e => setSchool(e.target.value)}
+                placeholder="Ex: Escola Secundária de..."
+                required
+                style={{
+                  width: '100%', boxSizing: 'border-box', border: `1px solid ${C.border}`, borderRadius: 8,
+                  padding: '11px 12px', fontSize: 14, fontFamily: 'inherit', color: C.text, background: 'var(--color-bg)',
+                  marginBottom: 16,
+                }}
+              />
+
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 6 }}>Código de acesso</label>
+              <input
+                value={inviteCode}
+                onChange={e => setInviteCode(e.target.value)}
+                placeholder="Código enviado pela Showo"
+                required
+                style={{
+                  width: '100%', boxSizing: 'border-box', border: `1px solid ${C.border}`, borderRadius: 8,
+                  padding: '11px 12px', fontSize: 14, fontFamily: 'inherit', color: C.text, background: 'var(--color-bg)',
+                  marginBottom: codeError ? 8 : 20,
+                }}
+              />
+              {codeError && (
+                <p style={{ color: 'var(--color-error, #d33)', fontSize: 13, margin: '0 0 16px' }}>{codeError}</p>
+              )}
+
+              <button
+                type="submit"
+                disabled={redeeming}
+                style={{
+                  width: '100%', background: 'var(--color-text)', color: 'var(--color-bg)',
+                  border: 'none', borderRadius: 10, padding: '13px 0', fontSize: 15, fontWeight: 700,
+                  cursor: redeeming ? 'default' : 'pointer', fontFamily: 'inherit', opacity: redeeming ? 0.6 : 1,
+                  marginBottom: 12,
+                }}
+              >
+                {redeeming ? 'A confirmar...' : 'Confirmar acesso'}
+              </button>
+            </form>
+
+            <button
+              onClick={() => { setStep('pending') }}
+              style={{
+                width: '100%', background: 'none',
+                border: `1px solid ${C.border}`, borderRadius: 10,
+                padding: '12px 0', fontSize: 14, color: C.muted,
+                cursor: 'pointer', fontFamily: 'inherit',
+              }}
+            >
+              Ainda não tenho um código
+            </button>
           </>
         ) : !emailSent ? (
           <>
