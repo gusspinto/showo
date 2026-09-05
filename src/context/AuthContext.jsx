@@ -33,7 +33,7 @@ export function AuthProvider({ children }) {
   const fetchProfile = useCallback(async (uid) => {
     if (!uid) { setProfile(null); setAiUsage({}); resetAnalytics(); return }
     const [profileRes, userRes] = await Promise.all([
-      supabase.from('profiles').select('id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, linkedin_url, skills, monthly_report_opt_in, area, plan, phone, organization_id, account_type').eq('id', uid).single(),
+      supabase.from('profiles').select('id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, linkedin_url, skills, monthly_report_opt_in, area, occupation, plan, phone, organization_id, account_type').eq('id', uid).single(),
       supabase.auth.getUser(),
     ])
     const meta = userRes.data?.user?.user_metadata ?? {}
@@ -43,7 +43,7 @@ export function AuthProvider({ children }) {
       // Fallback sem organization_id — migration 056 pode ainda não estar aplicada
       const { data: fallbackData, error: fallbackErr } = await supabase
         .from('profiles')
-        .select('id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, linkedin_url, skills, monthly_report_opt_in, area, plan, phone')
+        .select('id, username, full_name, bio, is_admin, banned_at, role, avatar_url, available_for_work, linkedin_url, skills, monthly_report_opt_in, area, occupation, plan, phone')
         .eq('id', uid).single()
       if (fallbackErr && fallbackErr.code !== 'PGRST116') { setProfile(null); return }
       data = fallbackData ?? null

@@ -18,6 +18,8 @@ import { captureError } from './lib/errorTracking'
 import { trackPageview } from './lib/analytics'
 import { pushRoute } from './lib/routeHistory'
 import { supabase } from './lib/supabase'
+import { OCCUPATIONS } from './lib/occupations'
+import { Select } from './components/ui'
 import ComingSoon from './pages/ComingSoon'
 
 // Shows the "coming soon" cover only on the public domain, and only before
@@ -183,6 +185,87 @@ function PhoneGate({ children }) {
               }}
             >
               {saving ? 'A guardar…' : 'Activar acesso gratuito'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
+// Só a conta Individual (role 'aluno' sem organization_id — quem tem
+// organization_id é aluno institucional, já sabe "o que faz") vê isto,
+// e só quem já não tem occupation preenchida — para quem já respondeu no
+// registo, ou já respondeu aqui uma vez, nunca mais aparece.
+function OccupationGate({ children }) {
+  const { user, profile, refreshProfile } = useAuth()
+  const location = useLocation()
+  const [occupation, setOccupation] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+
+  const isPublic = PUBLIC_PATHS.has(location.pathname) || PUBLIC_PREFIXES.some(p => location.pathname.startsWith(p))
+  const needsOccupation = !isPublic && user && profile
+    && profile.role === 'aluno' && !profile.organization_id && !profile.occupation
+
+  async function handleSubmit(e) {
+    e.preventDefault()
+    if (!occupation) return
+    setSaving(true)
+    setError('')
+    try {
+      const { error: err } = await supabase.from('profiles').update({ occupation }).eq('id', user.id)
+      if (err) { setSaving(false); setError(err.message); return }
+      await refreshProfile()
+    } catch (ex) {
+      setError(String(ex?.message || ex))
+    }
+    setSaving(false)
+  }
+
+  if (!needsOccupation) return children
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 99998, background: 'rgba(0,0,0,0.6)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      fontFamily: 'var(--font-body)', padding: 24,
+    }}>
+      <div style={{
+        width: '100%', maxWidth: 380,
+        background: 'var(--color-surface)', border: '1px solid var(--color-border)',
+        borderRadius: 'var(--radius-xl)', padding: '32px 28px',
+        display: 'flex', flexDirection: 'column', gap: 16,
+      }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <img src="/darkmode_icon_logo.png" alt="Showo" style={{ height: 24, width: 'auto', objectFit: 'contain', alignSelf: 'flex-start', marginBottom: 4 }} />
+          <p style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}>
+            Mais uma coisa
+          </p>
+          <p style={{ margin: 0, fontSize: '0.88rem', color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
+            Diz-nos o que fazes para aparecer no teu perfil público.
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <Select value={occupation} onChange={setOccupation} options={OCCUPATIONS} placeholder="Seleciona uma opção" />
+
+          {error && (
+            <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--color-error)' }}>{error}</p>
+          )}
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 4 }}>
+            <button
+              type="submit"
+              disabled={saving || !occupation}
+              style={{
+                padding: '9px 18px', borderRadius: 'var(--radius-md)', border: 'none',
+                background: (saving || !occupation) ? 'var(--color-border)' : 'var(--color-text)',
+                color: 'var(--color-bg)', fontWeight: 600, fontSize: '0.85rem',
+                cursor: (saving || !occupation) ? 'not-allowed' : 'pointer', fontFamily: 'var(--font-body)',
+              }}
+            >
+              {saving ? 'A guardar…' : 'Guardar'}
             </button>
           </div>
         </form>
@@ -453,6 +536,7 @@ export default function App() {
             <RecoveryGate pwRecovery={pwRecovery}>
             <AuthGate>
             <PhoneGate>
+            <OccupationGate>
             <Suspense fallback={<PageLoader />}>
             <Routes>
               <Route path="/"              element={<HomeRoute />}   />
@@ -487,6 +571,7 @@ export default function App() {
               <Route path="*"                   element={<NotFound />}      />
             </Routes>
             </Suspense>
+            </OccupationGate>
             </PhoneGate>
             </AuthGate>
             </RecoveryGate>
