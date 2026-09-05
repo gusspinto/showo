@@ -318,11 +318,19 @@ function parseGitHubUrl(url) {
   return m ? { owner: m[1], repo: m[2].replace(/\.git$/, '') } : null
 }
 
-const GitHubCard = memo(function GitHubCard({ githubUrl }) {
+const GH_ICON = <svg viewBox="0 0 16 16" width={16} height={16} fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+
+const GH_VARIANTS = [
+  { id: 'full', label: 'Completo' },
+  { id: 'compact', label: 'Compacto' },
+  { id: 'badge', label: 'Badge' },
+  { id: 'langs', label: 'Linguagens' },
+]
+
+function useGitHubRepo(githubUrl) {
   const [data, setData] = useState(null)
   const [langs, setLangs] = useState(null)
   const parsed = useMemo(() => parseGitHubUrl(githubUrl), [githubUrl])
-
   useEffect(() => {
     if (!parsed) return
     let cancelled = false
@@ -337,79 +345,110 @@ const GitHubCard = memo(function GitHubCard({ githubUrl }) {
     }).catch(() => {})
     return () => { cancelled = true }
   }, [parsed])
-
-  if (!parsed || !data) return null
-
   const totalBytes = langs ? Object.values(langs).reduce((a, b) => a + b, 0) : 0
   const topLangs = langs ? Object.entries(langs).slice(0, 6).map(([name, bytes]) => ({
     name, pct: Math.round(bytes / totalBytes * 100),
   })) : []
+  return { parsed, data, topLangs }
+}
 
+function LangBar({ topLangs }) {
+  if (!topLangs.length) return null
   return (
-    <div style={{
-      background: colors.card, border: `1px solid ${colors.border}`, borderRadius: 12,
-      padding: 20, marginTop: 16,
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-        <svg viewBox="0 0 16 16" width={20} height={20} fill={colors.text}>
-          <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
-        </svg>
-        <a href={githubUrl} target="_blank" rel="noopener noreferrer"
-          style={{ fontSize: 15, fontWeight: 600, color: colors.text, textDecoration: 'none' }}>
-          {parsed.owner}/{parsed.repo}
-        </a>
-        {data.stargazers_count > 0 && (
-          <span style={{ fontSize: 12, color: colors.muted, display: 'flex', alignItems: 'center', gap: 3 }}>
-            ⭐ {data.stargazers_count}
-          </span>
-        )}
-        {data.forks_count > 0 && (
-          <span style={{ fontSize: 12, color: colors.muted }}>🍴 {data.forks_count}</span>
-        )}
+    <>
+      <div style={{ display: 'flex', height: 8, borderRadius: 4, overflow: 'hidden', marginBottom: 8 }}>
+        {topLangs.map(l => (
+          <div key={l.name} style={{ width: `${l.pct}%`, background: LANG_COLORS[l.name] || '#8b8b8b', minWidth: l.pct > 0 ? 3 : 0 }} />
+        ))}
       </div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 14px' }}>
+        {topLangs.map(l => (
+          <span key={l.name} style={{ fontSize: 12, color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'center', gap: 5 }}>
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: LANG_COLORS[l.name] || '#8b8b8b', display: 'inline-block' }} />
+            {l.name} <span style={{ color: 'var(--color-text-tertiary)' }}>{l.pct}%</span>
+          </span>
+        ))}
+      </div>
+    </>
+  )
+}
 
-      {data.description && (
-        <p style={{ fontSize: 13, color: colors.muted, margin: '0 0 14px', lineHeight: 1.5 }}>
-          {data.description}
-        </p>
+const GitHubCard = memo(function GitHubCard({ githubUrl, variant = 'full' }) {
+  const { parsed, data, topLangs } = useGitHubRepo(githubUrl)
+  if (!parsed || !data) return null
+
+  const repoLink = <a href={githubUrl} target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'none' }}>{parsed.owner}/{parsed.repo}</a>
+  const stats = (
+    <span style={{ display: 'inline-flex', gap: 10, fontSize: 12, color: 'var(--color-text-secondary)' }}>
+      {data.stargazers_count > 0 && <span>⭐ {data.stargazers_count}</span>}
+      {data.forks_count > 0 && <span>🍴 {data.forks_count}</span>}
+    </span>
+  )
+
+  if (variant === 'badge') return (
+    <a href={githubUrl} target="_blank" rel="noopener noreferrer" style={{
+      display: 'inline-flex', alignItems: 'center', gap: 8,
+      background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 8,
+      padding: '8px 14px', fontSize: 13, fontWeight: 600, color: 'var(--color-text)', textDecoration: 'none',
+    }}>
+      {GH_ICON} {parsed.owner}/{parsed.repo}
+      {data.stargazers_count > 0 && <span style={{ color: 'var(--color-text-secondary)', fontWeight: 400 }}>⭐ {data.stargazers_count}</span>}
+      {topLangs[0] && (
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: 'var(--color-text-tertiary)', fontWeight: 400 }}>
+          <span style={{ width: 8, height: 8, borderRadius: '50%', background: LANG_COLORS[topLangs[0].name] || '#8b8b8b' }} />
+          {topLangs[0].name}
+        </span>
       )}
+    </a>
+  )
 
+  if (variant === 'langs') return (
+    <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 12, padding: 16 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, fontSize: 13, fontWeight: 600, color: 'var(--color-text)' }}>
+        {GH_ICON} {repoLink}
+      </div>
+      <LangBar topLangs={topLangs} />
+    </div>
+  )
+
+  if (variant === 'compact') return (
+    <div style={{
+      background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 12,
+      padding: 16, display: 'flex', alignItems: 'center', gap: 14,
+    }}>
+      <div style={{ color: 'var(--color-text)', flexShrink: 0 }}>{GH_ICON}</div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text)' }}>{repoLink}</div>
+        {data.description && <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{data.description}</div>}
+      </div>
+      {stats}
       {topLangs.length > 0 && (
-        <>
-          <div style={{
-            display: 'flex', height: 8, borderRadius: 4, overflow: 'hidden', marginBottom: 8,
-          }}>
-            {topLangs.map(l => (
-              <div key={l.name} style={{
-                width: `${l.pct}%`, background: LANG_COLORS[l.name] || '#8b8b8b',
-                minWidth: l.pct > 0 ? 3 : 0,
-              }} />
-            ))}
-          </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 14px' }}>
-            {topLangs.map(l => (
-              <span key={l.name} style={{ fontSize: 12, color: colors.muted, display: 'flex', alignItems: 'center', gap: 5 }}>
-                <span style={{
-                  width: 8, height: 8, borderRadius: '50%',
-                  background: LANG_COLORS[l.name] || '#8b8b8b', display: 'inline-block',
-                }} />
-                {l.name} <span style={{ color: colors.subtle }}>{l.pct}%</span>
-              </span>
-            ))}
-          </div>
-        </>
+        <div style={{ display: 'flex', gap: 3, flexShrink: 0 }}>
+          {topLangs.slice(0, 4).map(l => (
+            <span key={l.name} title={`${l.name} ${l.pct}%`} style={{ width: 10, height: 10, borderRadius: '50%', background: LANG_COLORS[l.name] || '#8b8b8b' }} />
+          ))}
+        </div>
       )}
+    </div>
+  )
 
-      <div style={{
-        display: 'flex', gap: 16, marginTop: topLangs.length ? 14 : 0,
-        fontSize: 12, color: colors.subtle,
-      }}>
+  // full (default)
+  return (
+    <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 12, padding: 20 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+        <span style={{ color: 'var(--color-text)' }}>{GH_ICON}</span>
+        <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--color-text)' }}>{repoLink}</span>
+        {stats}
+      </div>
+      {data.description && (
+        <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', margin: '0 0 14px', lineHeight: 1.5 }}>{data.description}</p>
+      )}
+      <LangBar topLangs={topLangs} />
+      <div style={{ display: 'flex', gap: 16, marginTop: topLangs.length ? 14 : 0, fontSize: 12, color: 'var(--color-text-tertiary)' }}>
         {data.updated_at && (
           <span>Último update: {new Date(data.pushed_at || data.updated_at).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
         )}
-        {data.license?.spdx_id && data.license.spdx_id !== 'NOASSERTION' && (
-          <span>📄 {data.license.spdx_id}</span>
-        )}
+        {data.license?.spdx_id && data.license.spdx_id !== 'NOASSERTION' && <span>📄 {data.license.spdx_id}</span>}
       </div>
     </div>
   )
@@ -2380,9 +2419,17 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
                         <input value={block.label || ''} onChange={e => upd(block.id, 'label', e.target.value)} placeholder="Texto (ex: Ver demo)" style={{ ...wsInputNew, marginBottom: 5 }} />
                         <input value={block.url || ''} onChange={e => upd(block.id, 'url', e.target.value)} placeholder="URL (https://...)" style={wsInputNew} />
                       </>)}
-                      {block.type === 'github' && (
-                        <input value={block.url || ''} onChange={e => upd(block.id, 'url', e.target.value)} placeholder="https://github.com/user/repo" style={wsInputNew} />
-                      )}
+                      {block.type === 'github' && (<>
+                        <input value={block.url || ''} onChange={e => upd(block.id, 'url', e.target.value)} placeholder="https://github.com/user/repo" style={{ ...wsInputNew, marginBottom: 5 }} />
+                        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                          {GH_VARIANTS.map(v => (
+                            <button key={v.id} onClick={() => upd(block.id, 'color', v.id)}
+                              style={{ fontSize: 11, padding: '3px 8px', borderRadius: 5, border: '1px solid var(--color-border)', background: (block.color || 'full') === v.id ? 'var(--color-primary)' : 'transparent', color: (block.color || 'full') === v.id ? '#fff' : 'var(--color-text-secondary)', cursor: 'pointer' }}>
+                              {v.label}
+                            </button>
+                          ))}
+                        </div>
+                      </>)}
                       {block.type === 'linkedin' && (<>
                         <input value={block.url || ''} onChange={e => upd(block.id, 'url', e.target.value)} placeholder="https://linkedin.com/in/username" style={{ ...wsInputNew, marginBottom: 5 }} />
                         <input value={block.label || ''} onChange={e => upd(block.id, 'label', e.target.value)} placeholder="Nome (opcional)" style={wsInputNew} />
@@ -2983,7 +3030,7 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
           )
 
           if (block.type === 'github' && block.url) return (
-            <div key={block.id}><GitHubCard githubUrl={block.url} /></div>
+            <div key={block.id}><GitHubCard githubUrl={block.url} variant={block.color || 'full'} /></div>
           )
 
           if (block.type === 'linkedin' && block.url) {
@@ -3454,9 +3501,6 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
               </div>
             </div>
           )}
-
-          {/* GitHub */}
-          {project.github_url && <GitHubCard githubUrl={project.github_url} />}
 
           {/* Comentários */}
           <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 12, padding: '22px 24px', fontFamily: 'var(--font-body, system-ui, sans-serif)' }}>
@@ -7767,8 +7811,6 @@ export default function ProjectPage() {
           </div>
         )}
 
-
-        {project.github_url && <GitHubCard githubUrl={project.github_url} />}
 
         </div>{/* end overview tab section */}
 
