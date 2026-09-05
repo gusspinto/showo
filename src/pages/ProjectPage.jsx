@@ -2586,8 +2586,8 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
             const hidden = new Set(previewStyle.hiddenSections || [])
             const blocksById = Object.fromEntries(previewBlocks.map(b => [b.id, b]))
             const defaultLayout = [
-              ...previewBlocks.map(b => ({ kind: 'block', id: b.id })),
               ...orderedSections.map(key => ({ kind: 'section', key })),
+              ...previewBlocks.map(b => ({ kind: 'block', id: b.id })),
             ]
             const layoutDisplay = previewStyle.layoutOrder?.length ? previewStyle.layoutOrder : defaultLayout
 
@@ -3295,8 +3295,8 @@ function PublicView({ project, ownerProfile, isOwner, isProfessor, onExitPreview
         // before this existed, so nothing shifts for existing customizations.
         const blocksById = Object.fromEntries(previewBlocks.map(b => [b.id, b]))
         const defaultLayout = [
-          ...previewBlocks.map(b => ({ kind: 'block', id: b.id })),
           ...orderedSections.map(key => ({ kind: 'section', key })),
+          ...previewBlocks.map(b => ({ kind: 'block', id: b.id })),
         ]
         const layout = (previewStyle.layoutOrder?.length ? previewStyle.layoutOrder : defaultLayout)
           .filter(item => item.kind === 'block' ? !!blocksById[item.id] : !hiddenSections.has(item.key))
