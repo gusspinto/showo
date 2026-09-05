@@ -8,14 +8,24 @@ import { Book2Icon as BookOpen } from '@solar-icons/react/bold/book-2'
 import { Buildings2Icon as Building2 } from '@solar-icons/react/bold/buildings-2'
 import { MagnifierIcon as Search } from '@solar-icons/react/bold/magnifier'
 import { LetterIcon as Mail } from '@solar-icons/react/bold/letter'
+import { ArrowLeftIcon as ArrowLeft } from '@solar-icons/react/bold/arrow-left'
 import { ArrowRightIcon as ArrowRight } from '@solar-icons/react/bold/arrow-right'
 import { CheckCircleIcon as CheckCircle } from '@solar-icons/react/bold/check-circle'
 
+// Mesma taxonomia do /register — quem entra pelo Google a partir da Home não
+// escolheu nada ainda, por isso o /welcome mostra a mesma escolha em dois
+// níveis (categoria → papel) em vez do seletor antigo de 4 papéis soltos.
 const ROLES = [
-  { id: 'aluno',      icon: <GraduationCap size={22} />, label: 'Aluno',      color: 'var(--color-primary)',  direct: true },
-  { id: 'professor',  icon: <BookOpen size={22} />,      label: 'Professor',  color: 'var(--color-success)' },
-  { id: 'recrutador', icon: <Search size={22} />,        label: 'Recrutador', color: 'var(--color-accent)' },
-  { id: 'empresa',    icon: <Building2 size={22} />,     label: 'Empresa',    color: 'var(--color-warning)' },
+  { id: 'aluno_institucional', icon: <GraduationCap size={22} />, label: 'Aluno Institucional', sub: 'Tenho código de turma',   color: 'var(--color-primary)' },
+  { id: 'professor',           icon: <BookOpen size={22} />,      label: 'Professor',           sub: 'Gerir turmas e alunos',   color: 'var(--color-success)' },
+  { id: 'recrutador',          icon: <Search size={22} />,        label: 'Recrutador',          color: 'var(--color-accent)' },
+  { id: 'empresa',             icon: <Building2 size={22} />,     label: 'Empresa',             color: 'var(--color-warning)' },
+]
+
+const CATEGORIES = [
+  { id: 'individual', label: 'Conta Individual', sub: 'Aluno ou já a começar carreira',  icon: <GraduationCap size={22} /> },
+  { id: 'escola',     label: 'Versão Escola',    sub: 'Aluno institucional ou Professor', icon: <BookOpen size={22} />, roleIds: ['aluno_institucional', 'professor'] },
+  { id: 'empresa',    label: 'Empresa',          sub: 'Recrutadores',                    icon: <Building2 size={22} />, disabled: true },
 ]
 
 function buildMailto(roleId, fullName) {
@@ -43,14 +53,14 @@ export default function Welcome() {
   }
   const intentStep = (() => {
     const i = googleIntent.current
-    if (!i) return 'role'
+    if (!i) return 'category'
     if (i.role === 'professor') return 'code'
     if (i.role === 'aluno_institucional') return 'classcode'
     if (i.role === 'recrutador' || i.role === 'empresa') return 'pending'
-    return 'role' // individual → o useEffect encaminha para a dashboard
+    return 'category' // individual → o useEffect encaminha para a dashboard
   })()
 
-  const [step, setStep] = useState(intentStep) // 'role' | 'pending' | 'code' | 'classcode'
+  const [step, setStep] = useState(intentStep) // 'category' | 'role' | 'pending' | 'code' | 'classcode'
   const [selectedRole, setSelectedRole] = useState(
     ['professor', 'aluno_institucional', 'recrutador', 'empresa'].includes(googleIntent.current?.role)
       ? googleIntent.current.role : null
@@ -95,10 +105,16 @@ export default function Welcome() {
     navigate('/dashboard', { replace: true })
   }
 
-  function handleRoleSelect(roleId) {
-    if (roleId === 'aluno') { finishAsAluno(); return }
+  function selectCategory(catId) {
+    if (catId === 'individual') { finishAsAluno(); return }
+    if (catId === 'empresa') return // desativado por agora
+    setSelectedRole(null)
+    setStep('role')
+  }
+
+  function selectEscolaRole(roleId) {
     setSelectedRole(roleId)
-    setStep(roleId === 'professor' ? 'code' : 'pending')
+    setStep(roleId === 'professor' ? 'code' : 'classcode')
   }
 
   async function handleRedeemCode(e) {
@@ -173,27 +189,72 @@ export default function Welcome() {
           onClick={() => navigate('/')}
         />
 
-        {step === 'role' ? (
+        {step === 'category' ? (
           <>
             <h1 style={{ color: C.text, fontSize: 26, fontWeight: 400, fontFamily: 'var(--font-heading)', margin: '0 0 8px', letterSpacing: '-0.5px' }}>
               {firstName ? `Bem-vindo, ${firstName}!` : 'Bem-vindo!'}
             </h1>
             <p style={{ color: C.muted, fontSize: 14, margin: '0 0 32px' }}>Como vais usar o Showo?</p>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 8 }}>
-              {ROLES.map(r => (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 10, marginBottom: 8 }}>
+              {CATEGORIES.map(cat => (
+                <button
+                  key={cat.id}
+                  className="welcome-role-btn"
+                  disabled={cat.disabled}
+                  onClick={() => selectCategory(cat.id)}
+                  style={{
+                    border: `1px solid ${C.border}`, borderRadius: 10, padding: '16px 14px',
+                    display: 'flex', alignItems: 'center', gap: 12,
+                    background: 'none', fontFamily: 'inherit', textAlign: 'left',
+                    opacity: cat.disabled ? 0.45 : 1,
+                    cursor: cat.disabled ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  <span style={{ color: C.muted, display: 'flex', flexShrink: 0 }}>{cat.icon}</span>
+                  <span style={{ flex: 1, minWidth: 0 }}>
+                    <span style={{ display: 'block', fontSize: 15, fontWeight: 700, color: C.text }}>
+                      {cat.label}{cat.disabled && ' — brevemente'}
+                    </span>
+                    <span style={{ display: 'block', fontSize: 12, color: C.muted }}>{cat.sub}</span>
+                  </span>
+                  {!cat.disabled && <ArrowRight size={16} style={{ color: C.muted, flexShrink: 0 }} />}
+                </button>
+              ))}
+            </div>
+          </>
+        ) : step === 'role' ? (
+          <>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24 }}>
+              <button
+                onClick={() => { setSelectedRole(null); setStep('category') }}
+                style={{ background: 'none', border: 'none', color: C.muted, cursor: 'pointer', padding: 4, display: 'flex' }}
+              >
+                <ArrowLeft size={18} />
+              </button>
+              <h1 style={{ color: C.text, fontSize: 22, fontWeight: 400, fontFamily: 'var(--font-heading)', margin: 0, letterSpacing: '-0.5px' }}>
+                Versão Escola
+              </h1>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 10, marginBottom: 8 }}>
+              {ROLES.filter(r => r.id === 'aluno_institucional' || r.id === 'professor').map(r => (
                 <button
                   key={r.id}
                   className="welcome-role-btn"
-                  onClick={() => handleRoleSelect(r.id)}
+                  onClick={() => selectEscolaRole(r.id)}
                   style={{
-                    border: `1px solid ${C.border}`, borderRadius: 8, padding: '16px 14px',
-                    display: 'flex', alignItems: 'center', gap: 10,
+                    border: `1px solid ${C.border}`, borderRadius: 10, padding: '16px 14px',
+                    display: 'flex', alignItems: 'center', gap: 12,
                     background: 'none', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
                   }}
                 >
                   <span style={{ color: r.color, display: 'flex', flexShrink: 0 }}>{r.icon}</span>
-                  <span style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{r.label}</span>
+                  <span style={{ flex: 1, minWidth: 0 }}>
+                    <span style={{ display: 'block', fontSize: 15, fontWeight: 700, color: C.text }}>{r.label}</span>
+                    {r.sub && <span style={{ display: 'block', fontSize: 12, color: C.muted }}>{r.sub}</span>}
+                  </span>
+                  <ArrowRight size={16} style={{ color: C.muted, flexShrink: 0 }} />
                 </button>
               ))}
             </div>
