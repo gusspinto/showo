@@ -997,15 +997,16 @@ export default function Dashboard() {
     if (!user || role === 'professor' || role === 'recrutador' || role === 'empresa') return
     setMyInterestsLoading(true)
     async function loadMyInterests() {
-      const { data: myProjs } = await supabase.from('projects').select('id, name, slug').eq('user_id', user.id)
-      if (!myProjs?.length) { setMyInterests([]); setMyInterestsLoading(false); return }
-      const projMap = {}; myProjs.forEach(p => { projMap[p.id] = p })
-      const { data: interests } = await supabase.from('recruiter_interests').select('recruiter_id, project_id, created_at').in('project_id', myProjs.map(p => p.id)).order('created_at', { ascending: false })
-      if (!interests?.length) { setMyInterests([]); setMyInterestsLoading(false); return }
-      const recruiterIds = [...new Set(interests.map(i => i.recruiter_id))]
-      const { data: profs } = await supabase.from('profiles').select('id, full_name, username, avatar_url, company, role').in('id', recruiterIds)
-      const profMap = {}; profs?.forEach(p => { profMap[p.id] = p })
-      setMyInterests(interests.map(i => ({ ...i, recruiterProfile: profMap[i.recruiter_id], project: projMap[i.project_id] })).filter(i => i.recruiterProfile && i.project))
+      // Antes eram 3 pedidos em cadeia (os meus projetos → interesses →
+      // perfis dos recrutadores), cada um à espera do anterior — agora é um
+      // só, com o embed relacional do Supabase a trazer tudo de uma vez.
+      const { data: interests, error } = await supabase
+        .from('recruiter_interests')
+        .select('recruiter_id, project_id, created_at, project:projects!inner(id, name, slug, user_id), recruiterProfile:profiles!recruiter_id(id, full_name, username, avatar_url, company, role)')
+        .eq('project.user_id', user.id)
+        .order('created_at', { ascending: false })
+      if (error || !interests?.length) { setMyInterests([]); setMyInterestsLoading(false); return }
+      setMyInterests(interests.filter(i => i.recruiterProfile && i.project))
       setMyInterestsLoading(false)
     }
     loadMyInterests()
